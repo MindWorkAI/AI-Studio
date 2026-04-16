@@ -120,7 +120,7 @@ else
                     var webState = this.assistantState.WebContent[webContent.Name];
                     <div class="@webContent.Class" style="@GetOptionalStyle(webContent.Style)">
                         <ReadWebContent @bind-Content="@webState.Content"
-                                        ProviderSettings="@this.providerSettings"
+                                        ProviderSettings="@this.ProviderSettings"
                                         @bind-AgentIsRunning="@webState.AgentIsRunning"
                                         @bind-Preselect="@webState.Preselect"
                                         @bind-PreselectContentCleanerAgent="@webState.PreselectContentCleanerAgent" />
@@ -349,7 +349,7 @@ else
                 if (component is AssistantProviderSelection providerSelection)
                 {
                     <div class="@providerSelection.Class" style="@GetOptionalStyle(providerSelection.Style)">
-                        <ProviderSelection @bind-ProviderSettings="@this.providerSettings" ValidateProvider="@this.ValidatingProvider" />
+                        <ProviderSelection @bind-ProviderSettings="@this.ProviderSettings" ValidateProvider="@this.ValidatingProvider" />
                     </div>
                 }
                 break;
@@ -359,7 +359,7 @@ else
                 {
                     var selection = profileSelection;
                     <div class="@selection.Class" style="@GetOptionalStyle(selection.Style)">
-                        <ProfileFormSelection Validation="@(profile => this.ValidateProfileSelection(selection, profile))" @bind-Profile="@this.currentProfile" />
+                        <ProfileFormSelection Validation="@(profile => this.ValidateProfileSelection(selection, profile))" @bind-Profile="@this.CurrentProfile" />
                     </div>
                 }
                 break;

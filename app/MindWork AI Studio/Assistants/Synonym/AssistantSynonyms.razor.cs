@@ -167,8 +167,8 @@ public partial class AssistantSynonyms : AssistantBaseCore<SettingsDialogSynonym
     
     private async Task FindSynonyms()
     {
-        await this.form!.Validate();
-        if (!this.inputIsValid)
+        await this.Form!.Validate();
+        if (!this.InputIsValid)
             return;
         
         this.CreateChatThread();

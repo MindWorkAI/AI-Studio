@@ -111,7 +111,7 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
 
     protected override bool SubmitDisabled => this.useCustomPromptGuide && this.customPromptGuideFiles.Count == 0;
 
-    protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
+    protected override ChatThread ConvertToChatThread => (this.ChatThread ?? new()) with
     {
         SystemPrompt = SystemPrompts.DEFAULT,
     };
@@ -218,8 +218,8 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
 
     private async Task OptimizePromptAsync()
     {
-        await this.form!.Validate();
-        if (!this.inputIsValid)
+        await this.Form!.Validate();
+        if (!this.InputIsValid)
             return;
 
         this.ClearInputIssues();
@@ -414,7 +414,7 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
         if (string.IsNullOrWhiteSpace(this.optimizedPrompt))
             return;
 
-        if (this.chatThread is null)
+        if (this.ChatThread is null)
             return;
 
         var visibleResponseContent = new ContentText
@@ -422,7 +422,7 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
             Text = this.optimizedPrompt,
         };
 
-        this.chatThread.Blocks.Add(new ContentBlock
+        this.ChatThread.Blocks.Add(new ContentBlock
         {
             Time = DateTimeOffset.Now,
             ContentType = ContentType.TEXT,

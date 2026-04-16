@@ -125,7 +125,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
     {
         get
         {
-            if (this.chatThread is null || this.chatThread.Blocks.Count < 2)
+            if (this.ChatThread is null || this.ChatThread.Blocks.Count < 2)
             {
                 return new ChatThread
                 {
@@ -144,7 +144,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
                     // that includes the loaded document paths and a standard message about the previous analysis session:
                     new ContentBlock
                     {
-                        Time = this.chatThread.Blocks.First().Time,
+                        Time = this.ChatThread.Blocks.First().Time,
                         Role = ChatRole.USER,
                         HideFromUser = false,
                         ContentType = ContentType.TEXT,
@@ -157,7 +157,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
                     
                     // Then, append the last block of the current chat thread
                     // (which is expected to be the AI response):
-                    this.chatThread.Blocks.Last(),
+                    this.ChatThread.Blocks.Last(),
                 ]
             };
         }
@@ -289,7 +289,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         this.policyDefinitionExpanded = !this.selectedPolicy?.IsProtected ?? true;
         this.ApplyPolicyPreselection(preferPolicyPreselection: true);
         
-        this.form?.ResetValidation();
+        this.Form?.ResetValidation();
         this.ClearInputIssues();
     }
 
@@ -345,7 +345,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         this.ResetForm();
         
         await this.SettingsManager.StoreSettings();
-        this.form?.ResetValidation();
+        this.Form?.ResetValidation();
     }
     
     /// <summary>
@@ -408,10 +408,10 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         if (!preferPolicyPreselection)
         {
             // Keep the current provider if it still satisfies the minimum confidence:
-            if (this.providerSettings != Settings.Provider.NONE &&
-                this.providerSettings.UsedLLMProvider.GetConfidence(this.SettingsManager).Level >= minimumLevel)
+            if (this.ProviderSettings != Settings.Provider.NONE &&
+                this.ProviderSettings.UsedLLMProvider.GetConfidence(this.SettingsManager).Level >= minimumLevel)
             {
-                this.currentProfile = this.ResolveProfileSelection();
+                this.CurrentProfile = this.ResolveProfileSelection();
                 return;
             }
         }
@@ -420,18 +420,18 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         var policyProvider = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.selectedPolicy.PreselectedProvider);
         if (policyProvider is not null && policyProvider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level >= minimumLevel)
         {
-            this.providerSettings = policyProvider;
-            this.currentProfile = this.ResolveProfileSelection();
+            this.ProviderSettings = policyProvider;
+            this.CurrentProfile = this.ResolveProfileSelection();
             return;
         }
 
-        var fallbackProvider = this.SettingsManager.GetPreselectedProvider(this.Component, this.providerSettings.Id);
+        var fallbackProvider = this.SettingsManager.GetPreselectedProvider(this.Component, this.ProviderSettings.Id);
         if (fallbackProvider != Settings.Provider.NONE &&
             fallbackProvider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level < minimumLevel)
             fallbackProvider = Settings.Provider.NONE;
 
-        this.providerSettings = fallbackProvider;
-        this.currentProfile = this.ResolveProfileSelection();
+        this.ProviderSettings = fallbackProvider;
+        this.CurrentProfile = this.ResolveProfileSelection();
     }
 
     private ConfidenceLevel GetPolicyMinimumConfidenceLevel()
@@ -482,7 +482,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
 
         this.policyPreselectedProviderId = providerId;
         this.selectedPolicy.PreselectedProvider = providerId;
-        this.providerSettings = Settings.Provider.NONE;
+        this.ProviderSettings = Settings.Provider.NONE;
         this.ApplyPolicyPreselection();
     }
 
@@ -492,7 +492,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         if (this.selectedPolicy is not null)
             this.selectedPolicy.PreselectedProfile = this.policyPreselectedProfile;
 
-        this.currentProfile = this.ResolveProfileSelection();
+        this.CurrentProfile = this.ResolveProfileSelection();
         await this.AutoSave();
     }
 
@@ -557,7 +557,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         this.ApplyPolicyPreselection(preferPolicyPreselection: true);
 
         // Reset validation state:
-        this.form?.ResetValidation();
+        this.Form?.ResetValidation();
         this.ClearInputIssues();
     }
     
@@ -700,12 +700,12 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
     private async Task Analyze()
     {
         await this.AutoSave();
-        await this.form!.Validate();
-        if (!this.inputIsValid)
+        await this.Form!.Validate();
+        if (!this.InputIsValid)
             return;
         
         this.CreateChatThread();
-        this.chatThread!.IncludeDateTime = true;
+        this.ChatThread!.IncludeDateTime = true;
         
         var userRequest = this.AddUserRequest(
             await this.PromptLoadDocumentsContent(),
@@ -724,8 +724,8 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         }
 
         await this.AutoSave();
-        await this.form!.Validate();
-        if (!this.inputIsValid)
+        await this.Form!.Validate();
+        if (!this.InputIsValid)
         {
             await this.MessageBus.SendError(new (Icons.Material.Filled.Policy, this.T("The selected policy contains invalid data. Please fix the issues before exporting the policy.")));
             return;

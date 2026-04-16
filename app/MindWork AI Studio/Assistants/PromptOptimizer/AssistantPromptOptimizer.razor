@@ -101,7 +101,7 @@
                          CatchAllDocuments="false"
                          UseSmallForm="true"
                          ValidateMediaFileTypes="false"
-                         Provider="@this.providerSettings"/>
+                         Provider="@this.ProviderSettings"/>
     }
 
     <MudTextField T="string"
@@ -121,4 +121,4 @@
     </MudButton>
 </MudStack>
 
-<ProviderSelection @bind-ProviderSettings="@this.providerSettings" ValidateProvider="@this.ValidatingProvider"/>
+<ProviderSelection @bind-ProviderSettings="@this.ProviderSettings" ValidateProvider="@this.ValidatingProvider"/>

@@ -91,8 +91,8 @@ public partial class AssistantLegalCheck : AssistantBaseCore<SettingsDialogLegal
     
     private async Task AksQuestions()
     {
-        await this.form!.Validate();
-        if (!this.inputIsValid)
+        await this.Form!.Validate();
+        if (!this.InputIsValid)
             return;
         
         this.CreateChatThread();

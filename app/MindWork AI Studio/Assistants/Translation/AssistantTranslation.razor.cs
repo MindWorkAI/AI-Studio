@@ -120,8 +120,8 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
 
     private async Task TranslateText(bool force)
     {
-        await this.form!.Validate();
-        if (!this.inputIsValid)
+        await this.Form!.Validate();
+        if (!this.InputIsValid)
             return;
         
         if(!force && this.inputText == this.inputTextLastTranslation)

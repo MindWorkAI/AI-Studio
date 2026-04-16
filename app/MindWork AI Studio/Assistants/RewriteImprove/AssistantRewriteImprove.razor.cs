@@ -127,8 +127,8 @@ public partial class AssistantRewriteImprove : AssistantBaseCore<SettingsDialogR
     
     private async Task RewriteText()
     {
-        await this.form!.Validate();
-        if (!this.inputIsValid)
+        await this.Form!.Validate();
+        if (!this.InputIsValid)
             return;
         
         this.CreateChatThread();

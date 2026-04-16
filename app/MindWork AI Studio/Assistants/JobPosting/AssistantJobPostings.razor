@@ -12,4 +12,4 @@
 <MudTextField T="string" @bind-Text="@this.inputValidUntil" Label="@T("(Optional) Provide the date until the job posting is valid")" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.DateRange" Variant="Variant.Outlined" Margin="Margin.Dense" UserAttributes="@USER_INPUT_ATTRIBUTES" Class="mb-3"/>
 
 <EnumSelection T="CommonLanguages" NameFunc="@(language => language.NameSelectingOptional())" @bind-Value="@this.selectedTargetLanguage" Icon="@Icons.Material.Filled.Translate" Label="@T("Target language")" AllowOther="@true" OtherValue="CommonLanguages.OTHER" @bind-OtherInput="@this.customTargetLanguage" ValidateOther="@this.ValidateCustomLanguage" LabelOther="@T("Custom target language")" />
-<ProviderSelection @bind-ProviderSettings="@this.providerSettings" ValidateProvider="@this.ValidatingProvider"/>
+<ProviderSelection @bind-ProviderSettings="@this.ProviderSettings" ValidateProvider="@this.ValidatingProvider"/>

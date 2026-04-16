@@ -24,7 +24,7 @@
 
     <InnerScrolling>
         <ChildContent>
-            <MudForm @ref="@(this.form)" @bind-IsValid="@(this.inputIsValid)" @bind-Errors="@(this.inputIssues)" FieldChanged="@this.TriggerFormChange" Class="pr-2">
+            <MudForm @ref="@(this.Form)" @bind-IsValid="@(this.InputIsValid)" @bind-Errors="@(this.inputIssues)" FieldChanged="@this.TriggerFormChange" Class="pr-2">
                 <MudText Typo="Typo.body1" Align="Align.Justify" Class="mb-2">
                     @this.Description
                 </MudText>
@@ -41,7 +41,7 @@
                         <MudButton Disabled="@(this.SubmitDisabled || this.isProcessing)" Variant="Variant.Filled" OnClick="@(async () => await this.Start())" Style="@this.SubmitButtonStyle">
                             @this.SubmitText
                         </MudButton>
-                        @if (this.isProcessing && this.cancellationTokenSource is not null)
+                        @if (this.isProcessing && this.CancellationTokenSource is not null)
                         {
                             <MudTooltip Text="@TB("Stop generation")">
                                 <MudIconButton Variant="Variant.Filled" Icon="@Icons.Material.Filled.Stop" Color="Color.Error" OnClick="@(async () => await this.CancelStreaming())"/>
@@ -68,9 +68,9 @@
                 <ContentBlockComponent Role="@(this.resultingContentBlock.Role)" Type="@(this.resultingContentBlock.ContentType)" Time="@(this.resultingContentBlock.Time)" Content="@this.resultingContentBlock.Content"/>
             }
             
-            @if(this.ShowResult && this.ShowEntireChatThread && this.chatThread is not null)
+            @if(this.ShowResult && this.ShowEntireChatThread && this.ChatThread is not null)
             {
-                foreach (var block in this.chatThread.Blocks.OrderBy(n => n.Time))
+                foreach (var block in this.ChatThread.Blocks.OrderBy(n => n.Time))
                 {
                     @if (block is { HideFromUser: false, Content: not null })
                     {
@@ -155,12 +155,12 @@
 
                 @if (this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence)
                 {
-                    <ConfidenceInfo Mode="PopoverTriggerMode.BUTTON" LLMProvider="@this.providerSettings.UsedLLMProvider"/>
+                    <ConfidenceInfo Mode="PopoverTriggerMode.BUTTON" LLMProvider="@this.ProviderSettings.UsedLLMProvider"/>
                 }
 
                 @if (this.AllowProfiles && this.ShowProfileSelection)
                 {
-                    <ProfileSelection MarginLeft="" @bind-CurrentProfile="@this.currentProfile"/>
+                    <ProfileSelection MarginLeft="" @bind-CurrentProfile="@this.CurrentProfile"/>
                 }
 
                 <MudSpacer />
