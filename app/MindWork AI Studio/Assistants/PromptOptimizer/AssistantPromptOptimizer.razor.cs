@@ -341,7 +341,6 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
             if (probe is null || string.IsNullOrWhiteSpace(probe.OptimizedPrompt))
                 return false;
 
-            probe.Recommendations ??= new PromptOptimizationRecommendations();
             parsedResult = probe;
             return true;
         }
