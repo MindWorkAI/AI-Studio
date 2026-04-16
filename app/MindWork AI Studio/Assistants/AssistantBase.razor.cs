@@ -79,7 +79,10 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     
     protected virtual bool ShowReset => true;
 
-    protected virtual ChatThread ConvertToChatThread => this.chatThread ?? new();
+    protected virtual ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
+    {
+        SystemPrompt = SystemPrompts.DEFAULT,
+    };
 
     private protected virtual RenderFragment? HeaderActions => null;
 
