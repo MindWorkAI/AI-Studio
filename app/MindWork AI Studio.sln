@@ -8,6 +8,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Build Script", "Build\Build
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedTools", "SharedTools\SharedTools.csproj", "{969C74DF-7678-4CD5-B269-D03E1ECA3D2A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SourceGeneratedMappings", "SourceGeneratedMappings\SourceGeneratedMappings.csproj", "{4D7141D5-9C22-4D85-B748-290D15FF484C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,6 +32,10 @@ Global
 		{969C74DF-7678-4CD5-B269-D03E1ECA3D2A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{969C74DF-7678-4CD5-B269-D03E1ECA3D2A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{969C74DF-7678-4CD5-B269-D03E1ECA3D2A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4D7141D5-9C22-4D85-B748-290D15FF484C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4D7141D5-9C22-4D85-B748-290D15FF484C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4D7141D5-9C22-4D85-B748-290D15FF484C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4D7141D5-9C22-4D85-B748-290D15FF484C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 	EndGlobalSection

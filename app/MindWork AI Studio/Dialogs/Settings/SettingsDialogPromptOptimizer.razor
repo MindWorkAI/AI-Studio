@@ -1,0 +1,29 @@
+@using AIStudio.Settings
+@inherits SettingsDialogBase
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6" Class="d-flex align-center">
+            <MudIcon Icon="@Icons.Material.Filled.AutoFixHigh" Class="mr-2" />
+            @T("Assistant: Prompt Optimizer Options")
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudPaper Class="pa-3 mb-8 border-dashed border rounded-lg">
+            <ConfigurationOption OptionDescription="@T("Preselect prompt optimizer options?")" LabelOn="@T("Prompt optimizer options are preselected")" LabelOff="@T("No prompt optimizer options are preselected")" State="@(() => this.SettingsManager.ConfigurationData.PromptOptimizer.PreselectOptions)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.PromptOptimizer.PreselectOptions = updatedState)" OptionHelp="@T("When enabled, you can preselect target language, important aspects, and provider defaults for the prompt optimizer assistant.")"/>
+            <ConfigurationSelect OptionDescription="@T("Preselect the target language")" Disabled="@(() => !this.SettingsManager.ConfigurationData.PromptOptimizer.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.PromptOptimizer.PreselectedTargetLanguage)" Data="@ConfigurationSelectDataFactory.GetCommonLanguagesOptionalData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.PromptOptimizer.PreselectedTargetLanguage = selectedValue)" OptionHelp="@T("Which target language should be preselected?")"/>
+            @if (this.SettingsManager.ConfigurationData.PromptOptimizer.PreselectedTargetLanguage is CommonLanguages.OTHER)
+            {
+                <ConfigurationText OptionDescription="@T("Preselect another target language")" Disabled="@(() => !this.SettingsManager.ConfigurationData.PromptOptimizer.PreselectOptions)" Icon="@Icons.Material.Filled.Translate" Text="@(() => this.SettingsManager.ConfigurationData.PromptOptimizer.PreselectedOtherLanguage)" TextUpdate="@(updatedText => this.SettingsManager.ConfigurationData.PromptOptimizer.PreselectedOtherLanguage = updatedText)"/>
+            }
+            <ConfigurationText OptionDescription="@T("Preselect important aspects")" Disabled="@(() => !this.SettingsManager.ConfigurationData.PromptOptimizer.PreselectOptions)" Text="@(() => this.SettingsManager.ConfigurationData.PromptOptimizer.PreselectedImportantAspects)" TextUpdate="@(updatedText => this.SettingsManager.ConfigurationData.PromptOptimizer.PreselectedImportantAspects = updatedText)" NumLines="2" OptionHelp="@T("Preselect aspects the optimizer should emphasize, such as role clarity, structure, or output constraints.")" Icon="@Icons.Material.Filled.List"/>
+            <ConfigurationMinConfidenceSelection Disabled="@(() => !this.SettingsManager.ConfigurationData.PromptOptimizer.PreselectOptions)" RestrictToGlobalMinimumConfidence="@true" SelectedValue="@(() => this.SettingsManager.ConfigurationData.PromptOptimizer.MinimumProviderConfidence)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.PromptOptimizer.MinimumProviderConfidence = selectedValue)"/>
+            <ConfigurationProviderSelection Component="Components.PROMPT_OPTIMIZER_ASSISTANT" Data="@this.availableLLMProviders" Disabled="@(() => !this.SettingsManager.ConfigurationData.PromptOptimizer.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.PromptOptimizer.PreselectedProvider)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.PromptOptimizer.PreselectedProvider = selectedValue)"/>
+        </MudPaper>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Close" Variant="Variant.Filled">
+            @T("Close")
+        </MudButton>
+    </DialogActions>
+</MudDialog>

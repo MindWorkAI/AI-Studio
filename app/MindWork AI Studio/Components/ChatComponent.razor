@@ -13,7 +13,7 @@
                 var block = blocks[i];
                 var isLastBlock = i == blocks.Count - 1;
                 var isSecondLastBlock = i == blocks.Count - 2;
-                @if (!block.HideFromUser)
+                @if (block is { HideFromUser: false, Content: not null })
                 {
                     <ContentBlockComponent
                         @key="@block"

@@ -64,7 +64,7 @@ public static partial class PluginFactory
 
             try
             {
-                if (availablePlugin.IsInternal || SETTINGS_MANAGER.IsPluginEnabled(availablePlugin) || availablePlugin.Type == PluginType.CONFIGURATION)
+                if (availablePlugin.IsInternal || SETTINGS_MANAGER.IsPluginEnabled(availablePlugin) || availablePlugin.Type == PluginType.CONFIGURATION || availablePlugin.Type == PluginType.ASSISTANT)
                     if(await Start(availablePlugin, cancellationToken) is { IsValid: true } plugin)
                     {
                         if (plugin is PluginConfiguration configPlugin)
@@ -95,6 +95,7 @@ public static partial class PluginFactory
 
         var code = await File.ReadAllTextAsync(pluginMainFile, Encoding.UTF8, cancellationToken);
         var plugin = await Load(meta.LocalPath, code, cancellationToken);
+        plugin.PluginPath = meta.LocalPath;
         if (plugin is NoPlugin noPlugin)
         {
             LOG.LogError($"Was not able to start plugin: Id='{meta.Id}', Type='{meta.Type}', Name='{meta.Name}', Version='{meta.Version}'. Reason: {noPlugin.Issues.First()}");

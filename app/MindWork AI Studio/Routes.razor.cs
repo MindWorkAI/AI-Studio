@@ -14,6 +14,7 @@ public sealed partial class Routes
     // ReSharper disable InconsistentNaming
     public const string ASSISTANT_TRANSLATION = "/assistant/translation";
     public const string ASSISTANT_REWRITE = "/assistant/rewrite-improve";
+    public const string ASSISTANT_PROMPT_OPTIMIZER = "/assistant/prompt-optimizer";
     public const string ASSISTANT_ICON_FINDER = "/assistant/icons";
     public const string ASSISTANT_GRAMMAR_SPELLING = "/assistant/grammar-spelling";
     public const string ASSISTANT_SUMMARIZER = "/assistant/summarizer";
@@ -29,5 +30,6 @@ public sealed partial class Routes
     public const string ASSISTANT_ERI = "/assistant/eri";
     public const string ASSISTANT_AI_STUDIO_I18N = "/assistant/ai-studio/i18n";
     public const string ASSISTANT_DOCUMENT_ANALYSIS = "/assistant/document-analysis";
+    public const string ASSISTANT_DYNAMIC = "/assistant/dynamic";
     // ReSharper restore InconsistentNaming
 }

@@ -1,0 +1,29 @@
+﻿namespace AIStudio.Tools.PluginSystem.Assistants.DataModel;
+
+public enum AssistantComponentType
+{
+    FORM,
+    TEXT_AREA,
+    BUTTON,
+    BUTTON_GROUP,
+    DROPDOWN,
+    PROVIDER_SELECTION,
+    PROFILE_SELECTION,
+    SWITCH,
+    HEADING,
+    TEXT,
+    LIST,
+    WEB_CONTENT_READER,
+    FILE_CONTENT_READER,
+    IMAGE,
+    COLOR_PICKER,
+    DATE_PICKER,
+    DATE_RANGE_PICKER,
+    TIME_PICKER,
+    LAYOUT_ITEM,
+    LAYOUT_GRID,
+    LAYOUT_PAPER,
+    LAYOUT_STACK,
+    LAYOUT_ACCORDION,
+    LAYOUT_ACCORDION_SECTION,
+}

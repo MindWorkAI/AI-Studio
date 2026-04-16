@@ -1,5 +1,7 @@
 using System.Security.Cryptography;
 
+using AIStudio.Tools.Rust;
+
 namespace AIStudio.Tools.Services;
 
 public sealed partial class RustService
@@ -116,5 +118,36 @@ public sealed partial class RustService
         }
         
         return await response.Content.ReadAsStringAsync();
+    }
+
+    /// <summary>
+    /// Requests the Rust runtime to exit the entire desktop application.
+    /// </summary>
+    public async Task<bool> ExitApplication()
+    {
+        try
+        {
+            var response = await this.http.PostAsync("/app/exit", null);
+            if (!response.IsSuccessStatusCode)
+            {
+                this.logger?.LogError("Failed to exit the app due to network error: {StatusCode}.", response.StatusCode);
+                return false;
+            }
+
+            var result = await response.Content.ReadFromJsonAsync<AppExitResponse>(this.jsonRustSerializerOptions);
+            if (result is null || !result.Success)
+            {
+                this.logger?.LogError("Failed to exit the app: {Error}", result?.ErrorMessage ?? "Unknown error");
+                return false;
+            }
+
+            this.logger?.LogInformation("Exit request sent to Rust runtime.");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            this.logger?.LogError(ex, "Exception while requesting application exit.");
+            return false;
+        }
     }
 }

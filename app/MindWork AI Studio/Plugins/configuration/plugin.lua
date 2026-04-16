@@ -195,11 +195,11 @@ CONFIG["SETTINGS"] = {}
 -- Configure which assistants should be hidden from the UI.
 -- Allowed values are:
 --   GRAMMAR_SPELLING_ASSISTANT, ICON_FINDER_ASSISTANT, REWRITE_ASSISTANT,
---   TRANSLATION_ASSISTANT, AGENDA_ASSISTANT, CODING_ASSISTANT,
---   TEXT_SUMMARIZER_ASSISTANT, EMAIL_ASSISTANT, LEGAL_CHECK_ASSISTANT,
---   SYNONYMS_ASSISTANT, MY_TASKS_ASSISTANT, JOB_POSTING_ASSISTANT,
---   BIAS_DAY_ASSISTANT, ERI_ASSISTANT, DOCUMENT_ANALYSIS_ASSISTANT,
---   SLIDE_BUILDER_ASSISTANT, I18N_ASSISTANT
+--   PROMPT_OPTIMIZER_ASSISTANT, TRANSLATION_ASSISTANT, AGENDA_ASSISTANT,
+--   CODING_ASSISTANT, TEXT_SUMMARIZER_ASSISTANT, EMAIL_ASSISTANT,
+--   LEGAL_CHECK_ASSISTANT, SYNONYMS_ASSISTANT, MY_TASKS_ASSISTANT,
+--   JOB_POSTING_ASSISTANT, BIAS_DAY_ASSISTANT, ERI_ASSISTANT,
+--   DOCUMENT_ANALYSIS_ASSISTANT, SLIDE_BUILDER_ASSISTANT, I18N_ASSISTANT
 -- CONFIG["SETTINGS"]["DataApp.HiddenAssistants"] = { "ERI_ASSISTANT", "I18N_ASSISTANT" }
 
 -- Configure a global shortcut for starting and stopping dictation.
@@ -265,6 +265,32 @@ CONFIG["CHAT_TEMPLATES"] = {}
 
 -- Document analysis policies for this configuration:
 CONFIG["DOCUMENT_ANALYSIS_POLICIES"] = {}
+
+-- Mandatory infos that users must explicitly accept before using AI Studio:
+-- AI Studio asks users again when Version, Title, or Markdown change.
+-- Changing Version additionally allows the UI to communicate that a new version is available.
+CONFIG["MANDATORY_INFOS"] = {}
+
+-- An example mandatory info:
+-- CONFIG["MANDATORY_INFOS"][#CONFIG["MANDATORY_INFOS"]+1] = {
+--     ["Id"] = "00000000-0000-0000-0000-000000000000",
+--     ["Title"] = "AI Usage Requirements",
+--     ["Version"] = "1",
+--     ["Markdown"] = [===[
+--                         ## Usage Requirements
+--
+--                         Before using this AI offering, please ensure that:
+--
+--                         - you have completed the required internal training,
+--                         - generated output is clearly labeled where necessary,
+--                         - results are reviewed by a human before reuse,
+--                         - all internal policies and applicable law are followed.
+--
+--                         Further information is available in the [internal wiki](https://example.org/wiki).
+--                         ]===],
+--     ["AcceptButtonText"] = "Yes, I comply with these requirements",
+--     ["RejectButtonText"] = "Stop. I do not agree to these requirements"
+-- }
 
 -- An example document analysis policy:
 -- CONFIG["DOCUMENT_ANALYSIS_POLICIES"][#CONFIG["DOCUMENT_ANALYSIS_POLICIES"]+1] = {
