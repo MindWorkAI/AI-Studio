@@ -1,4 +1,3 @@
-using AIStudio.Chat;
 using AIStudio.Dialogs.Settings;
 
 namespace AIStudio.Assistants.GrammarSpelling;
@@ -41,10 +40,9 @@ public partial class AssistantGrammarSpelling : AssistantBaseCore<SettingsDialog
 
     protected override Func<Task> SubmitAction => this.ProofreadText;
 
-    protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
-    {
-        SystemPrompt = SystemPrompts.DEFAULT,
-    };
+    protected override string SendToChatVisibleUserPromptPrefix => T("Check the following text for grammar and spelling mistakes:");
+
+    protected override string SendToChatVisibleUserPromptContent => this.inputText;
     
     protected override void ResetForm()
     {

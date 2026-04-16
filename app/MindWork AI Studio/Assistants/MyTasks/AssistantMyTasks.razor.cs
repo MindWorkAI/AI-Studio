@@ -1,4 +1,3 @@
-using AIStudio.Chat;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Settings;
 
@@ -31,10 +30,9 @@ public partial class AssistantMyTasks : AssistantBaseCore<SettingsDialogMyTasks>
 
     protected override bool ShowProfileSelection => false;
     
-    protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
-    {
-        SystemPrompt = SystemPrompts.DEFAULT,
-    };
+    protected override string SendToChatVisibleUserPromptPrefix => T("Analyze the following text and extract my tasks:");
+
+    protected override string SendToChatVisibleUserPromptContent => this.inputText;
 
     protected override void ResetForm()
     {

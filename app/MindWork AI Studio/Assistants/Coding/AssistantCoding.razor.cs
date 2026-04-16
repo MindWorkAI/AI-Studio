@@ -29,6 +29,10 @@ public partial class AssistantCoding : AssistantBaseCore<SettingsDialogCoding>
 
     protected override Func<Task> SubmitAction => this.GetSupport;
 
+    protected override string SendToChatVisibleUserPromptPrefix => T("Help me with the following coding question:");
+
+    protected override string SendToChatVisibleUserPromptContent => this.questions;
+
     protected override void ResetForm()
     {
         this.codingContexts.Clear();

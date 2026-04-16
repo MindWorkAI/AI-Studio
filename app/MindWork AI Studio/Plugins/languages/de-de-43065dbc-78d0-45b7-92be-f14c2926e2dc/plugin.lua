@@ -258,6 +258,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T553265703"] = "
 -- Please provide a custom language.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T656744944"] = "Bitte wählen Sie eine benutzerdefinierte Sprache aus."
 
+-- Create an agenda for the meeting '{0}' with the following contents:
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T748352577"] = "Erstelle eine Tagesordnung für das Meeting „{0}“ mit den folgenden Inhalten:"
+
 -- Should the participants be involved passively or actively?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T749354834"] = "Sollten die Teilnehmer passiv oder aktiv eingebunden werden?"
 
@@ -353,6 +356,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T1082499335"] = 
 
 -- Yes, provide compiler messages
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T1267219550"] = "Ja, Kompilermeldungen bereitstellen"
+
+-- Help me with the following coding question:
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T1290190584"] = "Hilf mir bei der folgenden Programmierfrage:"
 
 -- Compiler messages
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T2339992872"] = "Kompilermeldungen"
@@ -587,6 +593,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::EMAIL::ASSISTANTEMAIL::T134060413"] = "Ih
 
 -- Please start each line of your content list with a dash (-) to create a bullet point list.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::EMAIL::ASSISTANTEMAIL::T1384718254"] = "Bitte beginnen Sie jede Zeile der Inhaltsliste mit einem Bindestrich (-), um eine Aufzählung zu erstellen."
+
+-- Create an email based on the following bullet points:
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::EMAIL::ASSISTANTEMAIL::T1477828979"] = "Erstelle eine E-Mail basierend auf den folgenden Stichpunkten:"
 
 -- Create email
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::EMAIL::ASSISTANTEMAIL::T1686330485"] = "E-Mail erstellen"
@@ -1098,6 +1107,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING
 -- Check the grammar and spelling of a text.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T3184716499"] = "Grammatik und Rechtschreibung eines Textes überprüfen."
 
+-- Check the following text for grammar and spelling mistakes:
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T3486937812"] = "Prüfe den folgenden Text auf Grammatik- und Rechtschreibfehler:"
+
 -- Please provide a custom language.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T656744944"] = "Bitte geben Sie eine benutzerdefinierte Sprache an."
 
@@ -1197,6 +1209,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ICONFINDER::ASSISTANTICONFINDER::T1302165
 -- Find Icon
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ICONFINDER::ASSISTANTICONFINDER::T1975161003"] = "Icon suchen"
 
+-- Find icon suggestions on {0} for the following context:
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ICONFINDER::ASSISTANTICONFINDER::T2525517053"] = "Finde Icon-Vorschläge auf {0} für den folgenden Kontext:"
+
 -- Finding the right icon for a context, such as for a piece of text, is not easy. The first challenge: You need to extract a concept from your context, such as from a text. Let's take an example where your text contains statements about multiple departments. The sought-after concept could be "departments." The next challenge is that we need to anticipate the bias of the icon designers: under the search term "departments," there may be no relevant icons or only unsuitable ones. Depending on the icon source, it might be more effective to search for "buildings," for instance. LLMs assist you with both steps.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ICONFINDER::ASSISTANTICONFINDER::T347756684"] = "Das richtige Icon für einen bestimmten Kontext zu finden, zum Beispiel für einen Text, ist nicht einfach. Die erste Herausforderung besteht darin, ein Konzept aus dem Kontext, wie etwa aus einem Text, herauszufiltern. Nehmen wir ein Beispiel: Ihr Text enthält Aussagen über verschiedene Abteilungen. Das gesuchte Konzept könnte also „Abteilungen“ sein. Die nächste Herausforderung ist, die Denkweise der Icon-Designer vorherzusehen: Unter dem Suchbegriff „Abteilungen“ gibt es möglicherweise keine passenden oder sogar völlig ungeeignete Icons. Je nach Icon-Quelle kann es daher effektiver sein, zum Beispiel nach „Gebäude“ zu suchen. LLMs unterstützen Sie bei beiden Schritten."
 
@@ -1233,6 +1248,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T133060
 -- Create the job posting
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T1348170275"] = "Stellenanzeige erstellen"
 
+-- Create a job posting.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T1575017511"] = "Erstelle eine Stellenanzeige."
+
 -- This is important to consider the legal framework of the country.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T1652348489"] = "Diese Angabe ist wichtig, um den rechtlichen Rahmen des jeweiligen Landes berücksichtigen zu können."
 
@@ -1251,6 +1269,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T222318
 -- Target language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T237828418"] = "Zielsprache"
 
+-- Create a job posting for {0} based on the following job description:
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T3001516791"] = "Erstelle eine Stellenanzeige für {0} basierend auf der folgenden Stellenbeschreibung:"
+
 -- Please provide a job description.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T3056799310"] = "Bitte beschreiben Sie die Stelle."
 
@@ -1262,6 +1283,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T341483
 
 -- (Optional) Provide the date until the job posting is valid
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T3471426808"] = "(Optional) Geben Sie das Ablaufdatum der Stellenausschreibung an"
+
+-- Create a job posting for {0}.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T3513993280"] = "Erstelle eine Stellenanzeige für {0}."
 
 -- Provide some key points about the job you want to post. The AI will then formulate a suggestion that you can finalize.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T3644893573"] = "Nennen Sie einige wichtige Punkte zu dem Job, den Sie ausschreiben möchten. Die KI wird daraus einen Vorschlag formulieren, den Sie anschließend anpassen können."
@@ -1277,6 +1301,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T393005
 
 -- (Optional) Provide the work location
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T3972042680"] = "(Optional) Geben Sie den Arbeitsort an"
+
+-- Create a job posting based on the following job description:
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T795506638"] = "Erstelle eine Stellenanzeige basierend auf der folgenden Stellenbeschreibung:"
 
 -- Please provide a legal document as input. You might copy the desired text from a document or a website.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LEGALCHECK::ASSISTANTLEGALCHECK::T1160217683"] = "Bitte geben Sie ein rechtliches Dokument ein. Sie können den gewünschten Text aus einem Dokument oder von einer Website kopieren."
@@ -1296,8 +1323,14 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LEGALCHECK::ASSISTANTLEGALCHECK::T4016275
 -- Please provide your questions as input.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LEGALCHECK::ASSISTANTLEGALCHECK::T4154383818"] = "Bitte geben Sie ihre Fragen ein."
 
+-- Answer the following questions about a legal document:
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LEGALCHECK::ASSISTANTLEGALCHECK::T4254597664"] = "Beantworte die folgenden Fragen zu einem rechtlichen Dokument:"
+
 -- Ask your questions
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LEGALCHECK::ASSISTANTLEGALCHECK::T467099852"] = "Stellen Sie ihre Fragen"
+
+-- Analyze the following text and extract my tasks:
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MYTASKS::ASSISTANTMYTASKS::T1349891364"] = "Analysiere den folgenden Text und extrahiere meine Aufgaben:"
 
 -- Please provide some text as input. For example, an email.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MYTASKS::ASSISTANTMYTASKS::T1962809521"] = "Bitte geben Sie einen Text ein. Zum Beispiel eine E-Mail."
@@ -1484,6 +1517,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::
 
 -- Language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T2591284123"] = "Sprache"
+
+-- Rewrite and improve the following text:
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T2875363001"] = "Bitte folgenden Text umschreiben und verbessern:"
 
 -- Custom language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T3032662264"] = "Benutzerdefinierte Sprache"
@@ -1725,6 +1761,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T617902505"
 -- Please provide a custom language.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T656744944"] = "Bitte geben Sie eine benutzerdefinierte Sprache an."
 
+-- Find synonyms for the following word or phrase:
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SYNONYM::ASSISTANTSYNONYMS::T1793532807"] = "Finde Synonyme für das folgende Wort oder die folgende Phrase:"
+
 -- Your word or phrase
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SYNONYM::ASSISTANTSYNONYMS::T1847246020"] = "Ihr Wort oder Phrase"
 
@@ -1749,6 +1788,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SYNONYM::ASSISTANTSYNONYMS::T3501110371"]
 -- Custom target language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SYNONYM::ASSISTANTSYNONYMS::T3848935911"] = "Benutzerdefinierte Zielsprache"
 
+-- Context:
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SYNONYM::ASSISTANTSYNONYMS::T4209715410"] = "Kontext:"
+
 -- Please provide a custom language.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SYNONYM::ASSISTANTSYNONYMS::T656744944"] = "Bitte geben Sie eine benutzerdefinierte Sprache an."
 
@@ -1763,6 +1805,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TEXTSUMMARIZER::ASSISTANTTEXTSUMMARIZER::
 
 -- Text Summarizer
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TEXTSUMMARIZER::ASSISTANTTEXTSUMMARIZER::T1907192403"] = "Texte zusammenfassen"
+
+-- Create a summary of my text.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TEXTSUMMARIZER::ASSISTANTTEXTSUMMARIZER::T2013275370"] = "Erstelle eine Zusammenfassung meines Textes."
 
 -- Target language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TEXTSUMMARIZER::ASSISTANTTEXTSUMMARIZER::T237828418"] = "Zielsprache"
@@ -1826,6 +1871,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T20282
 
 -- Target language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T237828418"] = "Zielsprache"
+
+-- Translate the following text to {0}:
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T2578812023"] = "Übersetze den folgenden Text in {0}:"
 
 -- Translate text from one language to another.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T3230457846"] = "Text aus einer Sprache in eine andere übersetzen."
@@ -1916,6 +1964,9 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T861873672"] = "Chat in 
 
 -- The selected model '{0}' is no longer available from '{1}' (provider={2}). Please adapt your provider settings.
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTTEXT::T3267850764"] = "Das ausgewählte Modell '{0}' ist bei '{1}' (Anbieter={2}) nicht mehr verfügbar. Bitte passen Sie Ihre Anbietereinstellungen an."
+
+-- We could load models from '{0}', but the provider did not return any usable text models.
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTTEXT::T3378120620"] = "Wir konnten Modelle von '{0}' laden, aber der Anbieter hat keine verwendbaren Textmodelle zurückgegeben."
 
 -- The local image file does not exist. Skipping the image.
 UI_TEXT_CONTENT["AISTUDIO::CHAT::IIMAGESOURCEEXTENSIONS::T255679918"] = "Die lokale Bilddatei existiert nicht. Das Bild wird übersprungen."
