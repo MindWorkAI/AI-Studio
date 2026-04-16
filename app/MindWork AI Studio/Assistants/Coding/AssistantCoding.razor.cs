@@ -108,7 +108,7 @@ public partial class AssistantCoding : AssistantBaseCore<SettingsDialogCoding>
             return ValueTask.CompletedTask;
 
         this.codingContexts.RemoveAt(index);
-        this.form?.ResetValidation();
+        this.Form?.ResetValidation();
 
         this.StateHasChanged();
         return ValueTask.CompletedTask;
@@ -116,8 +116,8 @@ public partial class AssistantCoding : AssistantBaseCore<SettingsDialogCoding>
 
     private async Task GetSupport()
     {
-        await this.form!.Validate();
-        if (!this.inputIsValid)
+        await this.Form!.Validate();
+        if (!this.InputIsValid)
             return;
 
         var sbContext = new StringBuilder();

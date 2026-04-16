@@ -18,7 +18,7 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
     {
         try
         {
-            using var response = await this.httpClient.GetAsync("/auth/methods", cancellationToken);
+            using var response = await this.HttpClient.GetAsync("/auth/methods", cancellationToken);
             if (!response.IsSuccessStatusCode)
             {
                 return new()
@@ -66,14 +66,14 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
     {
         try
         {
-            var authMethod = this.dataSource.AuthMethod;
-            var username = this.dataSource.Username;
-            switch (this.dataSource.AuthMethod)
+            var authMethod = this.DataSource.AuthMethod;
+            var username = this.DataSource.Username;
+            switch (this.DataSource.AuthMethod)
             {
                 case AuthMethod.NONE:
                     using (var request = new HttpRequestMessage(HttpMethod.Post, $"auth?authMethod={authMethod}"))
                     {
-                        using var noneAuthResponse = await this.httpClient.SendAsync(request, cancellationToken);
+                        using var noneAuthResponse = await this.HttpClient.SendAsync(request, cancellationToken);
                         if(!noneAuthResponse.IsSuccessStatusCode)
                         {
                             return new()
@@ -93,7 +93,7 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
                             };
                         }
                     
-                        this.securityToken = noneAuthResult.Token ?? string.Empty;
+                        this.SecurityToken = noneAuthResult.Token ?? string.Empty;
                         return new()
                         {
                             Successful = true,
@@ -105,7 +105,7 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
                     string password;
                     if (string.IsNullOrWhiteSpace(temporarySecret))
                     {
-                        var passwordResponse = await rustService.GetSecret(this.dataSource);
+                        var passwordResponse = await rustService.GetSecret(this.DataSource);
                         if (!passwordResponse.Success)
                         {
                             return new()
@@ -127,7 +127,7 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
                         request.Headers.Add("user", username);
                         request.Headers.Add("password", password);
 
-                        using var usernamePasswordAuthResponse = await this.httpClient.SendAsync(request, cancellationToken);
+                        using var usernamePasswordAuthResponse = await this.HttpClient.SendAsync(request, cancellationToken);
                         if(!usernamePasswordAuthResponse.IsSuccessStatusCode)
                         {
                             return new()
@@ -147,7 +147,7 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
                             };
                         }
                     
-                        this.securityToken = usernamePasswordAuthResult.Token ?? string.Empty;
+                        this.SecurityToken = usernamePasswordAuthResult.Token ?? string.Empty;
                         return new()
                         {
                             Successful = true,
@@ -159,7 +159,7 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
                     string token;
                     if (string.IsNullOrWhiteSpace(temporarySecret))
                     {
-                        var tokenResponse = await rustService.GetSecret(this.dataSource);
+                        var tokenResponse = await rustService.GetSecret(this.DataSource);
                         if (!tokenResponse.Success)
                         {
                             return new()
@@ -178,7 +178,7 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
                     {
                         request.Headers.Add("Authorization", $"Bearer {token}");
                     
-                        using var tokenAuthResponse = await this.httpClient.SendAsync(request, cancellationToken);
+                        using var tokenAuthResponse = await this.HttpClient.SendAsync(request, cancellationToken);
                         if(!tokenAuthResponse.IsSuccessStatusCode)
                         {
                             return new()
@@ -198,7 +198,7 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
                             };
                         }
                     
-                        this.securityToken = tokenAuthResult.Token ?? string.Empty;
+                        this.SecurityToken = tokenAuthResult.Token ?? string.Empty;
                         return new()
                         {
                             Successful = true,
@@ -207,7 +207,7 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
                     }
                 
                 default:
-                    this.securityToken = string.Empty;
+                    this.SecurityToken = string.Empty;
                     return new()
                     {
                         Successful = false,
@@ -238,9 +238,9 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
         try
         {
             using var request = new HttpRequestMessage(HttpMethod.Get, "/dataSource");
-            request.Headers.Add("token", this.securityToken);
+            request.Headers.Add("token", this.SecurityToken);
         
-            using var response = await this.httpClient.SendAsync(request, cancellationToken);
+            using var response = await this.HttpClient.SendAsync(request, cancellationToken);
             if(!response.IsSuccessStatusCode)
             {
                 return new()
@@ -289,9 +289,9 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
         try
         {
             using var request = new HttpRequestMessage(HttpMethod.Get, "/embedding/info");
-            request.Headers.Add("token", this.securityToken);
+            request.Headers.Add("token", this.SecurityToken);
         
-            using var response = await this.httpClient.SendAsync(request, cancellationToken);
+            using var response = await this.HttpClient.SendAsync(request, cancellationToken);
             if(!response.IsSuccessStatusCode)
             {
                 return new()
@@ -340,9 +340,9 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
         try
         {
             using var request = new HttpRequestMessage(HttpMethod.Get, "/retrieval/info");
-            request.Headers.Add("token", this.securityToken);
+            request.Headers.Add("token", this.SecurityToken);
         
-            using var response = await this.httpClient.SendAsync(request, cancellationToken);
+            using var response = await this.HttpClient.SendAsync(request, cancellationToken);
             if(!response.IsSuccessStatusCode)
             {
                 return new()
@@ -391,12 +391,12 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
         try
         {
             using var requestMessage = new HttpRequestMessage(HttpMethod.Post, "/retrieval");
-            requestMessage.Headers.Add("token", this.securityToken);
+            requestMessage.Headers.Add("token", this.SecurityToken);
 
             using var content = new StringContent(JsonSerializer.Serialize(request, JSON_OPTIONS), Encoding.UTF8, "application/json");
             requestMessage.Content = content;
         
-            using var response = await this.httpClient.SendAsync(requestMessage, cancellationToken);
+            using var response = await this.HttpClient.SendAsync(requestMessage, cancellationToken);
             if(!response.IsSuccessStatusCode)
             {
                 return new()
@@ -445,9 +445,9 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
         try
         {
             using var request = new HttpRequestMessage(HttpMethod.Get, "/security/requirements");
-            request.Headers.Add("token", this.securityToken);
+            request.Headers.Add("token", this.SecurityToken);
         
-            using var response = await this.httpClient.SendAsync(request, cancellationToken);
+            using var response = await this.HttpClient.SendAsync(request, cancellationToken);
             if(!response.IsSuccessStatusCode)
             {
                 return new()

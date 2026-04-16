@@ -131,8 +131,8 @@ public partial class BiasOfTheDayAssistant : AssistantBaseCore<SettingsDialogAss
             }
         }
         
-        await this.form!.Validate();
-        if (!this.inputIsValid)
+        await this.Form!.Validate();
+        if (!this.InputIsValid)
             return;
 
         this.biasOfTheDay = useDrawnBias ?

@@ -19,8 +19,8 @@ public abstract class SettingsDialogBase : MSGComponentBase
     [Inject]
     protected RustService RustService { get; init; } = null!;
     
-    protected readonly List<ConfigurationSelectData<string>> availableLLMProviders = new();
-    protected readonly List<ConfigurationSelectData<string>> availableEmbeddingProviders = new();
+    protected readonly List<ConfigurationSelectData<string>> AvailableLLMProviders = new();
+    protected readonly List<ConfigurationSelectData<string>> AvailableEmbeddingProviders = new();
     
     #region Overrides of ComponentBase
     
@@ -43,16 +43,16 @@ public abstract class SettingsDialogBase : MSGComponentBase
     [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
     private void UpdateProviders()
     {
-        this.availableLLMProviders.Clear();
+        this.AvailableLLMProviders.Clear();
         foreach (var provider in this.SettingsManager.ConfigurationData.Providers)
-            this.availableLLMProviders.Add(new (provider.InstanceName, provider.Id));
+            this.AvailableLLMProviders.Add(new (provider.InstanceName, provider.Id));
     }
     
     private void UpdateEmbeddingProviders()
     {
-        this.availableEmbeddingProviders.Clear();
+        this.AvailableEmbeddingProviders.Clear();
         foreach (var provider in this.SettingsManager.ConfigurationData.EmbeddingProviders)
-            this.availableEmbeddingProviders.Add(new (provider.Name, provider.Id));
+            this.AvailableEmbeddingProviders.Add(new (provider.Name, provider.Id));
     }
 
     #region Overrides of MSGComponentBase

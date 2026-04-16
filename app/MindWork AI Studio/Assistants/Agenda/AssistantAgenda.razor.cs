@@ -323,8 +323,8 @@ public partial class AssistantAgenda : AssistantBaseCore<SettingsDialogAgenda>
 
     private async Task CreateAgenda()
     {
-        await this.form!.Validate();
-        if (!this.inputIsValid)
+        await this.Form!.Validate();
+        if (!this.InputIsValid)
             return;
         
         this.CreateChatThread();

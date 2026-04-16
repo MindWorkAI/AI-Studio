@@ -110,8 +110,8 @@ public partial class AssistantMyTasks : AssistantBaseCore<SettingsDialogMyTasks>
     
     private async Task AnalyzeText()
     {
-        await this.form!.Validate();
-        if (!this.inputIsValid)
+        await this.Form!.Validate();
+        if (!this.InputIsValid)
             return;
         
         this.CreateChatThread();

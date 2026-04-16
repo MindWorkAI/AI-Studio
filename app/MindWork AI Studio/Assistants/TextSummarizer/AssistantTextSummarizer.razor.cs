@@ -123,8 +123,8 @@ public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogT
 
     private async Task SummarizeText()
     {
-        await this.form!.Validate();
-        if (!this.inputIsValid)
+        await this.Form!.Validate();
+        if (!this.InputIsValid)
             return;
         
         this.CreateChatThread();

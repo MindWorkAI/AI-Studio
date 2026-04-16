@@ -165,7 +165,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
         if (this.assistantPlugin?.HasCustomPromptBuilder != true) return this.CollectUserPromptFallback();
         
         var input = this.BuildPromptInput();
-        var prompt = await this.assistantPlugin.TryBuildPromptAsync(input, this.cancellationTokenSource?.Token ?? CancellationToken.None);
+        var prompt = await this.assistantPlugin.TryBuildPromptAsync(input, this.CancellationTokenSource?.Token ?? CancellationToken.None);
         return !string.IsNullOrWhiteSpace(prompt) ? prompt : this.CollectUserPromptFallback();
     }
 
@@ -178,10 +178,10 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
 
         var profile = new LuaTable
         {
-            ["Name"] = this.currentProfile.Name,
-            ["NeedToKnow"] = this.currentProfile.NeedToKnow,
-            ["Actions"] = this.currentProfile.Actions,
-            ["Num"] = this.currentProfile.Num,
+            ["Name"] = this.CurrentProfile.Name,
+            ["NeedToKnow"] = this.CurrentProfile.NeedToKnow,
+            ["Actions"] = this.CurrentProfile.Actions,
+            ["Num"] = this.CurrentProfile.Num,
         };
         
         state["profile"] = profile;
@@ -233,7 +233,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
         try
         {
             var input = this.BuildPromptInput();
-            var cancellationToken = this.cancellationTokenSource?.Token ?? CancellationToken.None;
+            var cancellationToken = this.CancellationTokenSource?.Token ?? CancellationToken.None;
             var result = await this.assistantPlugin.TryInvokeButtonActionAsync(button, input, cancellationToken);
             if (result is not null)
                 this.ApplyActionResult(result, AssistantComponentType.BUTTON);
@@ -264,7 +264,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
         try
         {
             var input = this.BuildPromptInput();
-            var cancellationToken = this.cancellationTokenSource?.Token ?? CancellationToken.None;
+            var cancellationToken = this.CancellationTokenSource?.Token ?? CancellationToken.None;
             var result = await this.assistantPlugin.TryInvokeSwitchChangedAsync(switchComponent, input, cancellationToken);
             if (result is not null)
                 this.ApplyActionResult(result, AssistantComponentType.SWITCH);

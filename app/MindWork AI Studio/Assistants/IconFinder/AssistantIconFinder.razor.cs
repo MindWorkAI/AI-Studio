@@ -80,8 +80,8 @@ public partial class AssistantIconFinder : AssistantBaseCore<SettingsDialogIconF
 
     private async Task FindIcon()
     {
-        await this.form!.Validate();
-        if (!this.inputIsValid)
+        await this.Form!.Validate();
+        if (!this.InputIsValid)
             return;
         
         this.CreateChatThread();

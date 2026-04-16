@@ -224,8 +224,8 @@ public partial class AssistantEMail : AssistantBaseCore<SettingsDialogWritingEMa
 
     private async Task CreateMail()
     {
-        await this.form!.Validate();
-        if (!this.inputIsValid)
+        await this.Form!.Validate();
+        if (!this.InputIsValid)
             return;
 
         this.CreateChatThread();

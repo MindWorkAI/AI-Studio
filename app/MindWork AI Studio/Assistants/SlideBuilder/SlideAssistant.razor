@@ -8,7 +8,7 @@
 <MudTextField T="string" @bind-Text="@this.inputContent" Validation="@this.ValidatingContext" Adornment="Adornment.Start" Lines="6" MaxLines="12" AutoGrow="@false" Label="@T("Text content")" Variant="Variant.Outlined" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 
 <MudText Typo="Typo.h6"  Class="mb-1 mt-1"> @T("Attach documents")</MudText>
-<AttachDocuments Name="Documents for input" Layer="@DropLayers.ASSISTANTS" @bind-DocumentPaths="@this.loadedDocumentPaths" OnChange="@this.OnDocumentsChanged" CatchAllDocuments="true" UseSmallForm="false" Provider="@this.providerSettings"/>
+<AttachDocuments Name="Documents for input" Layer="@DropLayers.ASSISTANTS" @bind-DocumentPaths="@this.loadedDocumentPaths" OnChange="@this.OnDocumentsChanged" CatchAllDocuments="true" UseSmallForm="false" Provider="@this.ProviderSettings"/>
 
 <MudText Typo="Typo.h5"  Class="mb-3 mt-6"> @T("Details about the desired presentation")</MudText>
 
@@ -66,4 +66,4 @@
 <EnumSelection T="AudienceAgeGroup" NameFunc="@(ageGroup => ageGroup.Name())" @bind-Value="@this.selectedAudienceAgeGroup" Icon="@Icons.Material.Filled.Cake" Label="@T("Audience age group")" />
 <EnumSelection T="AudienceOrganizationalLevel" NameFunc="@(level => level.Name())" @bind-Value="@this.selectedAudienceOrganizationalLevel" Icon="@Icons.Material.Filled.AccountTree" Label="@T("Audience organizational level")" />
 <EnumSelection T="AudienceExpertise" NameFunc="@(expertise => expertise.Name())" @bind-Value="@this.selectedAudienceExpertise" Icon="@Icons.Material.Filled.School" Label="@T("Audience expertise")" />
-<ProviderSelection @bind-ProviderSettings="@this.providerSettings" ValidateProvider="@this.ValidatingProvider"/>
+<ProviderSelection @bind-ProviderSettings="@this.ProviderSettings" ValidateProvider="@this.ValidatingProvider"/>

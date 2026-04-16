@@ -119,8 +119,8 @@ public partial class AssistantGrammarSpelling : AssistantBaseCore<SettingsDialog
 
     private async Task ProofreadText()
     {
-        await this.form!.Validate();
-        if (!this.inputIsValid)
+        await this.Form!.Validate();
+        if (!this.InputIsValid)
             return;
         
         this.CreateChatThread();
