@@ -79,10 +79,29 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     
     protected virtual bool ShowReset => true;
 
-    protected virtual ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
+    protected virtual string? SendToChatVisibleUserPromptPrefix => null;
+
+    protected virtual string? SendToChatVisibleUserPromptContent => null;
+
+    protected virtual string? SendToChatVisibleUserPromptText
     {
-        SystemPrompt = SystemPrompts.DEFAULT,
-    };
+        get
+        {
+            if (string.IsNullOrWhiteSpace(this.SendToChatVisibleUserPromptPrefix))
+                return null;
+
+            if (string.IsNullOrWhiteSpace(this.SendToChatVisibleUserPromptContent))
+                return this.SendToChatVisibleUserPromptPrefix;
+
+            return $"""
+                    {this.SendToChatVisibleUserPromptPrefix}
+                    
+                    {this.SendToChatVisibleUserPromptContent}
+                    """;
+        }
+    }
+
+    protected virtual ChatThread ConvertToChatThread => this.CreateSendToChatThread();
 
     private protected virtual RenderFragment? HeaderActions => null;
 
@@ -337,6 +356,47 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     protected async Task CopyToClipboard()
     {
         await this.RustService.CopyText2Clipboard(this.Snackbar, this.Result2Copy());
+    }
+
+    private ChatThread CreateSendToChatThread()
+    {
+        var originalChatThread = this.chatThread ?? new ChatThread();
+        if (string.IsNullOrWhiteSpace(this.SendToChatVisibleUserPromptText))
+            return originalChatThread with
+            {
+                SystemPrompt = SystemPrompts.DEFAULT,
+            };
+
+        var earliestBlock = originalChatThread.Blocks.MinBy(x => x.Time);
+        var visiblePromptTime = earliestBlock is null
+            ? DateTimeOffset.Now
+            : earliestBlock.Time == DateTimeOffset.MinValue
+                ? earliestBlock.Time
+                : earliestBlock.Time.AddTicks(-1);
+
+        var transferredBlocks = originalChatThread.Blocks
+            .Select(block => block.Role is ChatRole.USER
+                ? block.DeepClone(changeHideState: true)
+                : block.DeepClone())
+            .ToList();
+
+        transferredBlocks.Insert(0, new ContentBlock
+        {
+            Time = visiblePromptTime,
+            ContentType = ContentType.TEXT,
+            HideFromUser = false,
+            Role = ChatRole.USER,
+            Content = new ContentText
+            {
+                Text = this.SendToChatVisibleUserPromptText,
+            },
+        });
+
+        return originalChatThread with
+        {
+            SystemPrompt = SystemPrompts.DEFAULT,
+            Blocks = transferredBlocks,
+        };
     }
     
     private static string? GetButtonIcon(string icon)

@@ -35,11 +35,13 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
     protected override Func<Task> SubmitAction => () => this.TranslateText(true);
 
     protected override bool SubmitDisabled => this.isAgentRunning;
-    
-    protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
-    {
-        SystemPrompt = SystemPrompts.DEFAULT,
-    };
+
+    protected override string SendToChatVisibleUserPromptText =>
+        $"""
+        {string.Format(T("Translate the following text to {0}:"), this.selectedTargetLanguage is CommonLanguages.OTHER ? this.customTargetLanguage : this.selectedTargetLanguage.Name())}
+        
+        {this.inputText}
+        """;
     
     protected override void ResetForm()
     {

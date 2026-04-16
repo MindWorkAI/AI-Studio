@@ -1,6 +1,5 @@
 using System.Text;
 
-using AIStudio.Chat;
 using AIStudio.Dialogs.Settings;
 
 namespace AIStudio.Assistants.Agenda;
@@ -97,10 +96,12 @@ public partial class AssistantAgenda : AssistantBaseCore<SettingsDialogAgenda>
 
     protected override Func<Task> SubmitAction => this.CreateAgenda;
 
-    protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
-    {
-        SystemPrompt = SystemPrompts.DEFAULT,
-    };
+    protected override string SendToChatVisibleUserPromptText =>
+        $"""
+        {string.Format(T("Create an agenda for the meeting '{0}' with the following contents:"), this.inputName)}
+        
+        {this.inputContent}
+        """;
     
     protected override void ResetForm()
     {

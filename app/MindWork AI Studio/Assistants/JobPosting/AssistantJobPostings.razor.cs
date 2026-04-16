@@ -1,4 +1,3 @@
-using AIStudio.Chat;
 using AIStudio.Dialogs.Settings;
 
 namespace AIStudio.Assistants.JobPosting;
@@ -50,11 +49,35 @@ public partial class AssistantJobPostings : AssistantBaseCore<SettingsDialogJobP
     protected override bool SubmitDisabled => false;
 
     protected override bool AllowProfiles => false;
-    
-    protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
+
+    protected override string SendToChatVisibleUserPromptText
     {
-        SystemPrompt = SystemPrompts.DEFAULT,
-    };
+        get
+        {
+            if (!string.IsNullOrWhiteSpace(this.inputCompanyName) && !string.IsNullOrWhiteSpace(this.inputJobDescription))
+            {
+                return $"""
+                        {string.Format(T("Create a job posting for {0} based on the following job description:"), this.inputCompanyName)}
+                        
+                        {this.inputJobDescription}
+                        """;
+            }
+
+            if (!string.IsNullOrWhiteSpace(this.inputCompanyName))
+                return string.Format(T("Create a job posting for {0}."), this.inputCompanyName);
+
+            if (!string.IsNullOrWhiteSpace(this.inputJobDescription))
+            {
+                return $"""
+                        {T("Create a job posting based on the following job description:")}
+                        
+                        {this.inputJobDescription}
+                        """;
+            }
+
+            return T("Create a job posting.");
+        }
+    }
 
     protected override void ResetForm()
     {
