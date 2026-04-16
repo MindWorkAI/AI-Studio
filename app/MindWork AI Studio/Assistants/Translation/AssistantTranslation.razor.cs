@@ -137,7 +137,8 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
                 <TRANSLATION_DELIMITERS>
                 {this.inputText}
                 </TRANSLATION_DELIMITERS>
-             """);
+             """,
+            hideContentFromUser: true);
 
         await this.AddAIResponseAsync(time);
     }
