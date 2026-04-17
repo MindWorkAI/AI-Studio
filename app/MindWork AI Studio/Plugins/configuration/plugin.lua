@@ -263,9 +263,6 @@ CONFIG["CHAT_TEMPLATES"] = {}
 --     }
 -- }
 
--- Document analysis policies for this configuration:
-CONFIG["DOCUMENT_ANALYSIS_POLICIES"] = {}
-
 -- Mandatory infos that users must explicitly accept before using AI Studio:
 -- AI Studio asks users again when Version, Title, or Markdown change.
 -- Changing Version additionally allows the UI to communicate that a new version is available.
@@ -291,6 +288,9 @@ CONFIG["MANDATORY_INFOS"] = {}
 --     ["AcceptButtonText"] = "Yes, I comply with these requirements",
 --     ["RejectButtonText"] = "Stop. I do not agree to these requirements"
 -- }
+
+-- Document analysis policies for this configuration:
+CONFIG["DOCUMENT_ANALYSIS_POLICIES"] = {}
 
 -- An example document analysis policy:
 -- CONFIG["DOCUMENT_ANALYSIS_POLICIES"][#CONFIG["DOCUMENT_ANALYSIS_POLICIES"]+1] = {
