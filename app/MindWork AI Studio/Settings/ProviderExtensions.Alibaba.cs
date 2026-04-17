@@ -35,8 +35,8 @@ public static partial class ProviderExtensions
                     Capability.CHAT_COMPLETION_API,
                 ];
             
-            // Check for Qwen 3.6 plus:
-            if(modelName.StartsWith("qwen3.6-plus"))
+            // Check for Qwen 3.6 family:
+            if(modelName.StartsWith("qwen3.6"))
                 return
                 [
                     Capability.TEXT_INPUT, Capability.VIDEO_INPUT,
