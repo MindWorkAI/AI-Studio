@@ -976,25 +976,36 @@ jobs:
           FORMATTED_BUILD_TIME: ${{ needs.read_metadata.outputs.formatted_build_time }}
           CHANGELOG: ${{ needs.read_metadata.outputs.changelog }}
           
-        run: |          
+        run: |
           # Read the platforms JSON, which was created in the previous step:
           platforms=$(cat $GITHUB_WORKSPACE/.updates/platforms.json)
-          
-          # Replace newlines in changelog with \n
-          changelog=$(echo "$CHANGELOG" | awk '{printf "%s\\n", $0}')
-          
-          # Escape double quotes in changelog:
-          changelog=$(echo "$changelog" | sed 's/"/\\"/g')
-          
-          # Create the latest.json file:
-          cat <<EOOOF > $GITHUB_WORKSPACE/release/assets/latest.json
-          {
-            "version": "$FORMATTED_VERSION",
-            "notes": "$changelog",
-            "pub_date": "$FORMATTED_BUILD_TIME",
-            "platforms": $platforms
-          }
-          EOOOF
+
+          # Create the latest.json file via jq so the changelog is escaped as valid JSON.
+          jq -n \
+            --arg version "$FORMATTED_VERSION" \
+            --arg notes "$CHANGELOG" \
+            --arg pub_date "$FORMATTED_BUILD_TIME" \
+            --argjson platforms "$platforms" \
+            '{
+              version: $version,
+              notes: $notes,
+              pub_date: $pub_date,
+              platforms: $platforms
+            }' > $GITHUB_WORKSPACE/release/assets/latest.json
+
+      - name: Validate latest.json
+        env:
+          CHANGELOG: ${{ needs.read_metadata.outputs.changelog }}
+
+        run: |
+          # Ensure the generated file is valid JSON and the changelog round-trips unchanged.
+          jq -e . $GITHUB_WORKSPACE/release/assets/latest.json > /dev/null
+
+          generated_notes=$(jq -r '.notes' $GITHUB_WORKSPACE/release/assets/latest.json)
+          if [[ "$generated_notes" != "$CHANGELOG" ]]; then
+            echo "The generated notes field does not match the changelog input."
+            exit 1
+          fi
 
       - name: Show all release assets
         run: ls -Rlhat $GITHUB_WORKSPACE/release/assets
