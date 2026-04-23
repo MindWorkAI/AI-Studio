@@ -2,6 +2,8 @@ using System.Globalization;
 using AIStudio.Dialogs;
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Tools.Services;
+using AIStudio.Tools.Rust;
 
 using Microsoft.AspNetCore.Components;
 
@@ -108,14 +110,42 @@ public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
             return;
         
         var deleteSecretResponse = await this.RustService.DeleteAPIKey(provider, SecretStoreType.EMBEDDING_PROVIDER);
-        if(deleteSecretResponse.Success)
+        var deleteTokenizerResponse = await this.RustService.DeleteTokenizer(TokenizerModelId.ForEmbeddingProvider(provider));
+        if(deleteSecretResponse.Success && deleteTokenizerResponse.Success)
         {
+            this.SettingsManager.ConfigurationData.EmbeddingProviders.Remove(provider);
+            await this.SettingsManager.StoreSettings();
+        }
+        else
+        {
+            var issueDialogParameters = new DialogParameters<ConfirmDialog>
+            {
+                { x => x.Message, string.Format(T("Couldn't delete the embedding provider '{0}'. The issue: {1}. We can ignore this issue and delete the embedding provider anyway. Do you want to ignore it and delete this embedding provider?"), provider.Name, BuildDeleteIssue(deleteSecretResponse, deleteTokenizerResponse)) },
+            };
+
+            var issueDialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete Embedding Provider"), issueDialogParameters, DialogOptions.FULLSCREEN);
+            var issueDialogResult = await issueDialogReference.Result;
+            if (issueDialogResult is null || issueDialogResult.Canceled)
+                return;
+
             this.SettingsManager.ConfigurationData.EmbeddingProviders.Remove(provider);
             await this.SettingsManager.StoreSettings();
         }
 
         await this.UpdateEmbeddingProviders();
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+    }
+
+    private static string BuildDeleteIssue(DeleteSecretResponse deleteSecretResponse, TokenizerResponse deleteTokenizerResponse)
+    {
+        var issues = new List<string>();
+        if (!deleteSecretResponse.Success)
+            issues.Add(deleteSecretResponse.Issue);
+
+        if (!deleteTokenizerResponse.Success)
+            issues.Add(deleteTokenizerResponse.Message);
+
+        return string.Join(" | ", issues);
     }
 
     private async Task ExportEmbeddingProvider(EmbeddingProvider provider)

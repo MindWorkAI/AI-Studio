@@ -189,6 +189,8 @@ public sealed record EmbeddingProvider(
                     ["Id"] = "{{Guid.NewGuid().ToString()}}",
                     ["Name"] = "{{LuaTools.EscapeLuaString(this.Name)}}",
                     ["UsedLLMProvider"] = "{{this.UsedLLMProvider}}",
+                    
+                    ["TokenizerPath"] = "{{this.TokenizerPath}}",
                  
                     ["Host"] = "{{this.Host}}",
                     ["Hostname"] = "{{LuaTools.EscapeLuaString(this.Hostname)}}",

@@ -163,13 +163,11 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
         // Load the used instance names:
         this.UsedInstanceNames = this.SettingsManager.ConfigurationData.EmbeddingProviders.Select(x => x.Name.ToLowerInvariant()).ToList();
         
-        Console.WriteLine($"Previous instance names: {this.dataEditingPreviousInstanceName}");
         // When editing, we need to load the data:
         if(this.IsEditing)
         {
             this.dataEditingPreviousInstanceName = this.DataName.ToLowerInvariant();
             this.dataFilePath = this.DataTokenizerPath;
-            Console.WriteLine($"Previous instance name is '{this.dataEditingPreviousInstanceName}'");
             
             // When using self-hosted embedding, we must copy the model name:
             if (this.DataLLMProvider is LLMProviders.SELF_HOSTED)
@@ -243,8 +241,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
         if (!this.dataIsValid)
             return;
         
-        var response = await this.RustService.StoreTokenizer("embedding_"+this.DataName, "embedding_"+this.dataEditingPreviousInstanceName, this.dataFilePath);
-        Console.WriteLine($"Response from Rust: {response.Message}");
+        var response = await this.RustService.StoreTokenizer(TokenizerModelId.ForEmbeddingProviderId(this.DataId), this.dataFilePath);
         if (!response.Success)
         {
             this.dataCustomTokenizerValidationIssue = response.Message;

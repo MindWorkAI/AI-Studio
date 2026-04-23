@@ -29,12 +29,11 @@ public sealed partial class RustService
         return await result.Content.ReadFromJsonAsync<TokenizerResponse>(this.jsonRustSerializerOptions);
     }
     
-    public async Task<TokenizerResponse> StoreTokenizer(string modelId, string previousmodelId, string filePath)
+    public async Task<TokenizerResponse> StoreTokenizer(string modelId, string filePath)
     {
-        this.logger!.LogInformation($"Storing tokenizer for model '{modelId}' with previous model '{previousmodelId}' from file '{filePath}'");
+        this.logger!.LogInformation($"Storing tokenizer for model '{modelId}' from file '{filePath}'");
         var result = await this.http.PostAsJsonAsync("/tokenizer/store", new {
             model_id = modelId,
-            previous_model_id = previousmodelId,
             file_path = filePath,
         }, this.jsonRustSerializerOptions);
 
@@ -44,6 +43,26 @@ public sealed partial class RustService
             return new TokenizerResponse{
                 Success = false,
                 Message = "An error occured while sending the path to the Rust framework for storing: "+result.StatusCode,
+                TokenCount = 0
+            };
+        }
+
+        return await result.Content.ReadFromJsonAsync<TokenizerResponse>(this.jsonRustSerializerOptions);
+    }
+
+    public async Task<TokenizerResponse> DeleteTokenizer(string modelId)
+    {
+        this.logger!.LogInformation($"Deleting tokenizer for model '{modelId}'");
+        var result = await this.http.PostAsJsonAsync("/tokenizer/delete", new {
+            model_id = modelId,
+        }, this.jsonRustSerializerOptions);
+
+        if (!result.IsSuccessStatusCode)
+        {
+            this.logger!.LogError($"Failed to delete the tokenizer '{result.StatusCode}'");
+            return new TokenizerResponse{
+                Success = false,
+                Message = "An error occured while sending the tokenizer delete request to the Rust framework: "+result.StatusCode,
                 TokenCount = 0
             };
         }

@@ -9,6 +9,7 @@ use serde::Deserialize;
 use tauri::PathResolver;
 use tokenizers::Error;
 use tokenizers::tokenizer::{Tokenizer, Error as TokenizerError};
+use tokio::fs::try_exists;
 use crate::api_token::APIToken;
 use crate::environment::DATA_DIRECTORY;
 
@@ -24,8 +25,12 @@ pub struct SetTokenText {
 #[derive(Clone, Deserialize)]
 pub struct TokenizerStorage {
     model_id: String,
-    previous_model_id: String,
     file_path: String,
+}
+
+#[derive(Clone, Deserialize)]
+pub struct TokenizerDelete {
+    model_id: String,
 }
 
 #[derive(Clone, Deserialize)]
@@ -68,7 +73,7 @@ fn tokenizer_state() -> &'static RwLock<Option<Tokenizer>> {
     TOKENIZER.get_or_init(|| RwLock::new(None))
 }
 
-pub fn init_tokenizer(path: &str) -> Result<(), Error> {
+pub fn handle_tokenizer_set(path: &str) -> Result<(), Error> {
     let tokenizer_path = if path.trim().is_empty() {
         let relative_source_path = String::from("resources/tokenizers/tokenizer.json");
         let path_resolver = TOKENIZER_PATH_RESOLVER
@@ -90,7 +95,7 @@ pub fn init_tokenizer(path: &str) -> Result<(), Error> {
     Ok(())
 }
 
-fn validate_tokenizer_at_path(path: &PathBuf) -> Result<usize, TokenizerError> {
+fn handle_tokenizer_validate(path: &PathBuf) -> Result<usize, TokenizerError> {
     if !path.is_file() {
         return Err(TokenizerError::from(format!(
             "Tokenizer file was not found: {}",
@@ -138,16 +143,6 @@ fn handle_tokenizer_store(payload: &TokenizerStorage) -> Result<String, std::io:
 
     let base_path = PathBuf::from(data_dir).join("tokenizers");
 
-    if payload.file_path.trim().is_empty() {
-        if payload.previous_model_id.trim().is_empty() {
-            return Ok(String::from(""));
-        }
-
-        let previous_path = base_path.join(&payload.previous_model_id);
-        fs::remove_dir_all(previous_path)?;
-        return Ok(String::from(""));
-    }
-
     let source_path = PathBuf::from(&payload.file_path);
     let source_name = source_path
         .file_name()
@@ -155,21 +150,44 @@ fn handle_tokenizer_store(payload: &TokenizerStorage) -> Result<String, std::io:
         .ok_or_else(|| std::io::Error::new(std::io::ErrorKind::InvalidInput, "Invalid tokenizer file path"))?;
     let model_path = &base_path.join(&payload.model_id);
     let destination_path = &model_path.join(source_name);
-    if !source_path.eq(destination_path) && model_path.exists() {
-        fs::remove_dir_all(model_path)?;
+
+    if source_path.eq(destination_path) {
+        return Ok(destination_path.to_str().unwrap().to_string());
+    }
+
+    match model_path.try_exists()? {
+        true => fs::remove_dir_all(model_path.clone())?,
+        false => (),
+    }
+
+    if payload.file_path.trim().is_empty() {
+        return Ok(String::from(""));
     }
     fs::create_dir_all(model_path)?;
-    let previous_path = base_path.join(&payload.previous_model_id);
 
-    if !payload.previous_model_id.trim().is_empty() && source_path.starts_with(&previous_path) {
-        fs::rename(&source_path, &destination_path)?;
-        if previous_path.exists() && !previous_path.eq(model_path) {
-            fs::remove_dir_all(previous_path)?;
-        }
-    } else {
-        fs::copy(&source_path, &destination_path)?;
-    }
+    fs::copy(&source_path, &destination_path)?;
+
     Ok(destination_path.to_str().unwrap().to_string())
+}
+
+fn handle_tokenizer_delete(payload: &TokenizerDelete) -> Result<(), std::io::Error> {
+    if payload.model_id.trim().is_empty() {
+        return Ok(());
+    }
+
+    let data_dir = DATA_DIRECTORY
+        .get()
+        .ok_or_else(|| std::io::Error::new(std::io::ErrorKind::Other, "DATA_DIRECTORY not initialized"))?;
+
+    let tokenizer_path = PathBuf::from(data_dir)
+        .join("tokenizers")
+        .join(&payload.model_id);
+
+    if tokenizer_path.exists() {
+        fs::remove_dir_all(tokenizer_path)?;
+    }
+
+    Ok(())
 }
 
 pub fn get_token_count(text: &str) -> Result<usize, TokenizerError> {
@@ -193,7 +211,7 @@ pub fn token_count(_token: APIToken, req: Json<SetTokenText>) -> Json<TokenizerR
 
 #[post("/tokenizer/validate", data = "<payload>")]
 pub fn validate_tokenizer(_token: APIToken, payload: Json<TokenizerPath>) -> Json<TokenizerResponse> {
-    Json(validate_tokenizer_at_path(&PathBuf::from(payload.file_path.clone())).into())
+    Json(handle_tokenizer_validate(&PathBuf::from(payload.file_path.clone())).into())
 }
 
 #[post("/tokenizer/store", data = "<payload>")]
@@ -212,9 +230,25 @@ pub fn store_tokenizer(_token: APIToken, payload: Json<TokenizerStorage>) -> Jso
     }
 }
 
+#[post("/tokenizer/delete", data = "<payload>")]
+pub fn delete_tokenizer(_token: APIToken, payload: Json<TokenizerDelete>) -> Json<TokenizerResponse> {
+    match handle_tokenizer_delete(&payload) {
+        Ok(_) => Json(TokenizerResponse {
+            success: true,
+            token_count: 0,
+            message: "Success".to_string(),
+        }),
+        Err(e) => Json(TokenizerResponse {
+            success: false,
+            token_count: 0,
+            message: e.to_string(),
+        }),
+    }
+}
+
 #[post("/tokenizer/set", data = "<payload>")]
 pub fn set_tokenizer(_token: APIToken, payload: Json<TokenizerPath>) -> Json<TokenizerResponse> {
-    match init_tokenizer(&payload.file_path) {
+    match handle_tokenizer_set(&payload.file_path) {
         Ok(_) => Json(TokenizerResponse {
             success: true,
             token_count: 0,

@@ -11,7 +11,6 @@ use mindwork_ai_studio::environment::is_dev;
 use mindwork_ai_studio::log::init_logging;
 use mindwork_ai_studio::metadata::MetaData;
 use mindwork_ai_studio::runtime_api::start_runtime_api;
-use mindwork_ai_studio::tokenizer::{init_tokenizer};
 
 #[tokio::main]
 async fn main() {

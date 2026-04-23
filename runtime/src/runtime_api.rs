@@ -92,6 +92,7 @@ pub fn start_runtime_api() {
                 crate::tokenizer::token_count,
                 crate::tokenizer::validate_tokenizer,
                 crate::tokenizer::store_tokenizer,
+                crate::tokenizer::delete_tokenizer,
                 crate::tokenizer::set_tokenizer,
                 crate::app_window::register_shortcut,
                 crate::app_window::validate_shortcut,

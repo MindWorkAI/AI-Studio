@@ -254,6 +254,8 @@ public sealed record Provider(
                     ["Id"] = "{{Guid.NewGuid().ToString()}}",
                     ["InstanceName"] = "{{LuaTools.EscapeLuaString(this.InstanceName)}}",
                     ["UsedLLMProvider"] = "{{this.UsedLLMProvider}}",
+                    
+                    ["TokenizerPath"] = "{{this.TokenizerPath}}",
 
                     ["Host"] = "{{this.Host}}",
                     ["Hostname"] = "{{LuaTools.EscapeLuaString(this.Hostname)}}",
