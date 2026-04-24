@@ -9,7 +9,6 @@ use serde::Deserialize;
 use tauri::PathResolver;
 use tokenizers::Error;
 use tokenizers::tokenizer::{Tokenizer, Error as TokenizerError};
-use tokio::fs::try_exists;
 use crate::api_token::APIToken;
 use crate::environment::DATA_DIRECTORY;
 

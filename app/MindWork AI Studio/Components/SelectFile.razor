@@ -1,6 +1,19 @@
-@inherits MSGComponentBase
+﻿@inherits MSGComponentBase
 
-<MudStack Row="@true" Spacing="3" Class="mb-3" StretchItems="StretchItems.None" AlignItems="AlignItems.Center">
+<style>
+    .select-file-button-wrapper {
+        height: 56px;
+        min-height: 56px;
+        max-height: 56px;
+        display: flex;
+        align-items: center;
+        align-self: flex-start;
+        flex-shrink: 0;
+        margin-top: 8px;
+    }
+</style>
+
+<MudStack Row="@true" Spacing="3" Class="mb-3" StretchItems="StretchItems.None" AlignItems="AlignItems.Start">
     <MudTextField
         T="string"
         Text="@this.File"
@@ -11,13 +24,19 @@
         AdornmentIcon="@Icons.Material.Filled.AttachFile"
         UserAttributes="@SPELLCHECK_ATTRIBUTES"
         Variant="Variant.Outlined"
-        Clearable="this.IsClearable"
+        Clearable="@this.IsClearable"
         Error="@this.Error"
         ErrorText="@this.ErrorText"
         OnClearButtonClick="@this.OnClear"
     />
     
-    <MudButton StartIcon="@Icons.Material.Filled.FolderOpen" Variant="Variant.Outlined" Color="Color.Primary" Disabled="this.Disabled" OnClick="@this.OpenFileDialog">
-        @T("Choose File")
-    </MudButton>
+    <div class="select-file-button-wrapper">
+        <MudButton StartIcon="@Icons.Material.Filled.FolderOpen"
+                   Variant="Variant.Outlined"
+                   Color="Color.Primary"
+                   Disabled="@this.Disabled"
+                   OnClick="@this.OpenFileDialog">
+            @T("Choose File")
+        </MudButton>
+    </div>
 </MudStack>
