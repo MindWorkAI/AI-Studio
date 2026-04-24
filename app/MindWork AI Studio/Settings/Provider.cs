@@ -233,40 +233,40 @@ public sealed record Provider(
     /// <returns>A Lua configuration section string.</returns>
     public string ExportAsConfigurationSection(string? encryptedApiKey = null)
     {
-        var hfInferenceProviderLine = string.Empty;
+        var lines = new List<string>
+        {
+            "CONFIG[\"LLM_PROVIDERS\"][#CONFIG[\"LLM_PROVIDERS\"]+1] = {",
+            $"    [\"Id\"] = \"{Guid.NewGuid()}\",",
+            $"    [\"InstanceName\"] = \"{LuaTools.EscapeLuaString(this.InstanceName)}\",",
+            $"    [\"UsedLLMProvider\"] = \"{this.UsedLLMProvider}\",",
+        };
+
+        if (!string.IsNullOrWhiteSpace(this.TokenizerPath))
+        {
+            lines.Add(string.Empty);
+            lines.Add("    -- The tokenizer path shown is local to this model. To use it with the plugin:");
+            lines.Add("        -- 1. Copy the tokenizer into the zip.");
+            lines.Add("        -- 2. Update the path in the plugin file to be relative to the zip's root.");
+            lines.Add($"    [\"TokenizerPath\"] = \"{LuaTools.EscapeLuaString(this.TokenizerPath)}\",");
+        }
+
+        lines.Add(string.Empty);
+        lines.Add($"    [\"Host\"] = \"{this.Host}\",");
+        lines.Add($"    [\"Hostname\"] = \"{LuaTools.EscapeLuaString(this.Hostname)}\",");
+
         if (this.HFInferenceProvider is not HFInferenceProvider.NONE)
-        {
-            hfInferenceProviderLine = $"""
-                                       ["HFInferenceProvider"] = "{this.HFInferenceProvider}",
-                                       """;
-        }
+            lines.Add($"    [\"HFInferenceProvider\"] = \"{this.HFInferenceProvider}\",");
 
-        var apiKeyLine = string.Empty;
         if (!string.IsNullOrWhiteSpace(encryptedApiKey))
-        {
-            apiKeyLine = $"""
-                          ["APIKey"] = "{LuaTools.EscapeLuaString(encryptedApiKey)}",
-                          """;
-        }
+            lines.Add($"    [\"APIKey\"] = \"{LuaTools.EscapeLuaString(encryptedApiKey)}\",");
 
-        return $$"""
-                CONFIG["LLM_PROVIDERS"][#CONFIG["LLM_PROVIDERS"]+1] = {
-                    ["Id"] = "{{Guid.NewGuid().ToString()}}",
-                    ["InstanceName"] = "{{LuaTools.EscapeLuaString(this.InstanceName)}}",
-                    ["UsedLLMProvider"] = "{{this.UsedLLMProvider}}",
-                    
-                    ["TokenizerPath"] = "{{this.TokenizerPath}}",
+        lines.Add($"    [\"AdditionalJsonApiParameters\"] = \"{LuaTools.EscapeLuaString(this.AdditionalJsonApiParameters)}\",");
+        lines.Add("    [\"Model\"] = {");
+        lines.Add($"        [\"Id\"] = \"{LuaTools.EscapeLuaString(this.Model.Id)}\",");
+        lines.Add($"        [\"DisplayName\"] = \"{LuaTools.EscapeLuaString(this.Model.DisplayName ?? this.Model.Id)}\",");
+        lines.Add("    },");
+        lines.Add("}");
 
-                    ["Host"] = "{{this.Host}}",
-                    ["Hostname"] = "{{LuaTools.EscapeLuaString(this.Hostname)}}",
-                    {{hfInferenceProviderLine}}
-                    {{apiKeyLine}}
-                    ["AdditionalJsonApiParameters"] = "{{LuaTools.EscapeLuaString(this.AdditionalJsonApiParameters)}}",
-                    ["Model"] = {
-                        ["Id"] = "{{LuaTools.EscapeLuaString(this.Model.Id)}}",
-                        ["DisplayName"] = "{{LuaTools.EscapeLuaString(this.Model.DisplayName ?? this.Model.Id)}}",
-                    },
-                }
-                """;
+        return string.Join(Environment.NewLine, lines);
     }
 }
