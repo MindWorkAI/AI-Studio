@@ -1,4 +1,3 @@
-using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
@@ -22,55 +21,36 @@ public class ProviderGoogle() : BaseProvider(LLMProviders.GOOGLE, "https://gener
     public override string InstanceName { get; set; } = "Google Gemini";
 
     /// <inheritdoc />
+    public override bool HasModelLoadingCapability => true;
+
+    /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
-        // Get the API key:
-        var requestedSecret = await RUST_SERVICE.GetAPIKey(this, SecretStoreType.LLM_PROVIDER);
-        if(!requestedSecret.Success)
-            yield break;
+        await foreach (var content in this.StreamOpenAICompatibleChatCompletion<ChatCompletionAPIRequest, ChatCompletionDeltaStreamLine, NoChatCompletionAnnotationStreamLine>(
+                           "Google",
+                           chatModel,
+                           chatThread,
+                           settingsManager,
+                           async (systemPrompt, apiParameters) =>
+                           {
+                               // Build the list of messages:
+                               var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel);
 
-        // Prepare the system prompt:
-        var systemPrompt = new TextMessage
-        {
-            Role = "system",
-            Content = chatThread.PrepareSystemPrompt(settingsManager),
-        };
-        
-        // Parse the API parameters:
-        var apiParameters = this.ParseAdditionalApiParameters();
-        
-        // Build the list of messages:
-        var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel);
-        
-        // Prepare the Google HTTP chat request:
-        var geminiChatRequest = JsonSerializer.Serialize(new ChatRequest
-        {
-            Model = chatModel.Id,
-            
-            // Build the messages:
-            // - First of all the system prompt
-            // - Then none-empty user and AI messages
-            Messages = [systemPrompt, ..messages],
-            
-            // Right now, we only support streaming completions:
-            Stream = true,
-            AdditionalApiParameters = apiParameters
-        }, JSON_SERIALIZER_OPTIONS);
+                               return new ChatCompletionAPIRequest
+                               {
+                                   Model = chatModel.Id,
 
-        async Task<HttpRequestMessage> RequestBuilder()
-        {
-            // Build the HTTP post request:
-            var request = new HttpRequestMessage(HttpMethod.Post, "chat/completions");
+                                   // Build the messages:
+                                   // - First of all the system prompt
+                                   // - Then none-empty user and AI messages
+                                   Messages = [systemPrompt, ..messages],
 
-            // Set the authorization header:
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(ENCRYPTION));
-
-            // Set the content:
-            request.Content = new StringContent(geminiChatRequest, Encoding.UTF8, "application/json");
-            return request;
-        }
-        
-        await foreach (var content in this.StreamChatCompletionInternal<ChatCompletionDeltaStreamLine, NoChatCompletionAnnotationStreamLine>("Google", RequestBuilder, token))
+                                   // Right now, we only support streaming completions:
+                                   Stream = true,
+                                   AdditionalApiParameters = apiParameters
+                               };
+                           },
+                           token: token))
             yield return content;
     }
 
@@ -129,7 +109,7 @@ public class ProviderGoogle() : BaseProvider(LLMProviders.GOOGLE, "https://gener
             // Set the content:
             request.Content = new StringContent(embeddingRequest, Encoding.UTF8, "application/json");
             
-            using var response = await this.httpClient.SendAsync(request, token);
+            using var response = await this.HttpClient.SendAsync(request, token);
             var responseBody = await response.Content.ReadAsStringAsync(token);
         
             if (!response.IsSuccessStatusCode)
@@ -161,80 +141,64 @@ public class ProviderGoogle() : BaseProvider(LLMProviders.GOOGLE, "https://gener
     }
 
     /// <inheritdoc />
-    public override async Task<IEnumerable<Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override async Task<ModelLoadResult> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        var models = await this.LoadModels(SecretStoreType.LLM_PROVIDER, token, apiKeyProvisional);
-        return models.Where(model =>
-                model.Id.StartsWith("gemini-", StringComparison.OrdinalIgnoreCase) &&
-                !this.IsEmbeddingModel(model.Id))
-            .Select(this.WithDisplayNameFallback);
+        var result = await this.LoadModels(SecretStoreType.LLM_PROVIDER, token, apiKeyProvisional);
+        return result with
+        {
+            Models =
+            [
+                ..result.Models.Where(model =>
+                        model.Id.StartsWith("gemini-", StringComparison.OrdinalIgnoreCase) &&
+                        !this.IsEmbeddingModel(model.Id))
+                    .Select(this.WithDisplayNameFallback)
+            ]
+        };
     }
 
     /// <inheritdoc />
-    public override Task<IEnumerable<Model>> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override Task<ModelLoadResult> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return Task.FromResult(Enumerable.Empty<Model>());
+        return Task.FromResult(ModelLoadResult.FromModels([]));
     }
 
-    public override async Task<IEnumerable<Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override async Task<ModelLoadResult> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        var models = await this.LoadModels(SecretStoreType.EMBEDDING_PROVIDER, token, apiKeyProvisional);
-        return models.Where(model => this.IsEmbeddingModel(model.Id))
-            .Select(this.WithDisplayNameFallback);
+        var result = await this.LoadModels(SecretStoreType.EMBEDDING_PROVIDER, token, apiKeyProvisional);
+        return result with
+        {
+            Models =
+            [
+                ..result.Models.Where(model => this.IsEmbeddingModel(model.Id))
+                    .Select(this.WithDisplayNameFallback)
+            ]
+        };
     }
     
     /// <inheritdoc />
-    public override Task<IEnumerable<Model>> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override Task<ModelLoadResult> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return Task.FromResult(Enumerable.Empty<Model>());
+        return Task.FromResult(ModelLoadResult.FromModels([]));
     }
     
     #endregion
 
-    private async Task<IReadOnlyList<Model>> LoadModels(SecretStoreType storeType, CancellationToken token, string? apiKeyProvisional = null)
+    private Task<ModelLoadResult> LoadModels(SecretStoreType storeType, CancellationToken token, string? apiKeyProvisional = null)
     {
-        var secretKey = apiKeyProvisional switch
-        {
-            not null => apiKeyProvisional,
-            _ => await RUST_SERVICE.GetAPIKey(this, storeType) switch
-            {
-                { Success: true } result => await result.Secret.Decrypt(ENCRYPTION),
-                _ => null,
-            }
-        };
-
-        if (string.IsNullOrWhiteSpace(secretKey))
-            return [];
-
-        using var request = new HttpRequestMessage(HttpMethod.Get, "models");
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
-        
-        using var response = await this.httpClient.SendAsync(request, token);
-        if(!response.IsSuccessStatusCode)
-        {
-            LOGGER.LogError("Failed to load models with status code {ResponseStatusCode} and body: '{ResponseBody}'.", response.StatusCode, await response.Content.ReadAsStringAsync(token));
-            return [];
-        }
-
-        try
-        {
-            var modelResponse = await response.Content.ReadFromJsonAsync<ModelsResponse>(token);
-            if (modelResponse == default || modelResponse.Data.Count is 0)
-            {
-                LOGGER.LogError("Google model list response did not contain a valid data array.");
-                return [];
-            }
-
-            return modelResponse.Data
+        return this.LoadModelsResponse<ModelsResponse>(
+            storeType,
+            "models",
+            modelResponse => modelResponse.Data
                 .Where(model => !string.IsNullOrWhiteSpace(model.Id))
-                .Select(model => new Model(this.NormalizeModelId(model.Id), model.DisplayName))
-                .ToArray();
-        }
-        catch (Exception e)
-        {
-            LOGGER.LogError("Failed to parse Google model list response: '{Message}'.", e.Message);
-            return [];
-        }
+                .Select(model => new Model(this.NormalizeModelId(model.Id), model.DisplayName)),
+            token,
+            apiKeyProvisional,
+            failureReasonSelector: (response, _) => response.StatusCode switch
+            {
+                System.Net.HttpStatusCode.Forbidden => ModelLoadFailureReason.AUTHENTICATION_OR_PERMISSION_ERROR,
+                System.Net.HttpStatusCode.Unauthorized => ModelLoadFailureReason.INVALID_OR_MISSING_API_KEY,
+                _ => ModelLoadFailureReason.PROVIDER_UNAVAILABLE,
+            });
     }
 
     private bool IsEmbeddingModel(string modelId)

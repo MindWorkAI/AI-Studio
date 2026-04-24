@@ -114,6 +114,8 @@ public sealed class Data
     
     public DataDocumentAnalysis DocumentAnalysis { get; init; } = new();
 
+    public DataMandatoryInformation MandatoryInformation { get; init; } = new();
+
     public DataTextSummarizer TextSummarizer { get; init; } = new();
 
     public DataTextContentCleaner TextContentCleaner { get; init; } = new();
@@ -129,6 +131,8 @@ public sealed class Data
     public DataGrammarSpelling GrammarSpelling { get; init; } = new();
     
     public DataRewriteImprove RewriteImprove { get; init; } = new();
+    
+    public DataPromptOptimizer PromptOptimizer { get; init; } = new();
 
     public DataEMail EMail { get; init; } = new();
     

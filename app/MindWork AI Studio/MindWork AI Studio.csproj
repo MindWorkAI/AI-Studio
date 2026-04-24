@@ -44,12 +44,13 @@
         <EmbeddedResource Include="wwwroot\**" CopyToOutputDirectory="PreserveNewest" />
         <EmbeddedResource Include="Plugins\**" CopyToOutputDirectory="PreserveNewest" />
         <EmbeddedResource Include="Assistants\I18N\allTexts.lua" CopyToOutputDirectory="PreserveNewest" />
+        <EmbeddedResource Include="Assistants\PromptOptimizer\prompting_guideline.md" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
 
     <ItemGroup>
       <PackageReference Include="CodeBeam.MudBlazor.Extensions" Version="8.3.0" />
       <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
-      <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="9.0.14" />
+      <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="9.0.15" />
       <PackageReference Include="MudBlazor" Version="8.15.0" />
       <PackageReference Include="MudBlazor.Markdown" Version="8.11.0" />
       <PackageReference Include="Qdrant.Client" Version="1.17.0" />

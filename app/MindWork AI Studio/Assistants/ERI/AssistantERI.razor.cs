@@ -303,7 +303,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
 
     protected override bool SubmitDisabled => this.IsNoneERIServerSelected;
 
-    protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
+    protected override ChatThread ConvertToChatThread => (this.ChatThread ?? new()) with
     {
         SystemPrompt = this.SystemPrompt,
     };
@@ -400,7 +400,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
         if(this.selectedERIServer is null)
             return;
 
-        this.SettingsManager.ConfigurationData.ERI.PreselectedProvider = this.providerSettings.Id;
+        this.SettingsManager.ConfigurationData.ERI.PreselectedProvider = this.ProviderSettings.Id;
         this.selectedERIServer.ServerName = this.serverName;
         this.selectedERIServer.ServerDescription = this.serverDescription;
         this.selectedERIServer.ERIVersion = this.selectedERIVersion;
@@ -488,7 +488,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
         this.ResetForm();
         
         await this.SettingsManager.StoreSettings();
-        this.form?.ResetValidation();
+        this.Form?.ResetValidation();
     }
     
     private bool IsNoneERIServerSelected => this.selectedERIServer is null;
@@ -940,8 +940,8 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
             return;
         
         await this.AutoSave();
-        await this.form!.Validate();
-        if (!this.inputIsValid)
+        await this.Form!.Validate();
+        if (!this.InputIsValid)
             return;
         
         if(this.retrievalProcesses.Count == 0)

@@ -79,20 +79,46 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     
     protected virtual bool ShowReset => true;
 
-    protected virtual ChatThread ConvertToChatThread => this.chatThread ?? new();
+    protected virtual string? SendToChatVisibleUserPromptPrefix => null;
+
+    protected virtual string? SendToChatVisibleUserPromptContent => null;
+
+    protected virtual string? SendToChatVisibleUserPromptText
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(this.SendToChatVisibleUserPromptPrefix))
+                return null;
+
+            if (string.IsNullOrWhiteSpace(this.SendToChatVisibleUserPromptContent))
+                return this.SendToChatVisibleUserPromptPrefix;
+
+            return $"""
+                    {this.SendToChatVisibleUserPromptPrefix}
+                    
+                    {this.SendToChatVisibleUserPromptContent}
+                    """;
+        }
+    }
+
+    protected virtual ChatThread ConvertToChatThread => this.CreateSendToChatThread();
+
+    private protected virtual RenderFragment? HeaderActions => null;
+
+    private protected virtual RenderFragment? AfterResultContent => null;
 
     protected virtual IReadOnlyList<IButtonData> FooterButtons => [];
 
     protected virtual bool HasSettingsPanel => typeof(TSettings) != typeof(NoSettingsPanel);
     
-    protected AIStudio.Settings.Provider providerSettings = Settings.Provider.NONE;
-    protected MudForm? form;
-    protected bool inputIsValid;
-    protected Profile currentProfile = Profile.NO_PROFILE;
-    protected ChatTemplate currentChatTemplate = ChatTemplate.NO_CHAT_TEMPLATE;
-    protected ChatThread? chatThread;
-    protected IContent? lastUserPrompt;
-    protected CancellationTokenSource? cancellationTokenSource;
+    protected AIStudio.Settings.Provider ProviderSettings = Settings.Provider.NONE;
+    protected MudForm? Form;
+    protected bool InputIsValid;
+    protected Profile CurrentProfile = Profile.NO_PROFILE;
+    protected ChatTemplate CurrentChatTemplate = ChatTemplate.NO_CHAT_TEMPLATE;
+    protected ChatThread? ChatThread;
+    protected IContent? LastUserPrompt;
+    protected CancellationTokenSource? CancellationTokenSource;
     
     private readonly Timer formChangeTimer = new(TimeSpan.FromSeconds(1.6));
 
@@ -121,9 +147,9 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         };
         
         this.MightPreselectValues();
-        this.providerSettings = this.SettingsManager.GetPreselectedProvider(this.Component);
-        this.currentProfile = this.SettingsManager.GetPreselectedProfile(this.Component);
-        this.currentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(this.Component);
+        this.ProviderSettings = this.SettingsManager.GetPreselectedProvider(this.Component);
+        this.CurrentProfile = this.SettingsManager.GetPreselectedProfile(this.Component);
+        this.CurrentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(this.Component);
     }
 
     protected override async Task OnParametersSetAsync()
@@ -139,7 +165,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         // Reset the validation when not editing and on the first render.
         // We don't want to show validation errors when the user opens the dialog.
         if(firstRender)
-            this.form?.ResetValidation();
+            this.Form?.ResetValidation();
         
         await base.OnAfterRenderAsync(firstRender);
     }
@@ -148,7 +174,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     private string TB(string fallbackEN) => this.T(fallbackEN, typeof(AssistantBase<TSettings>).Namespace, nameof(AssistantBase<TSettings>));
 
-    private string SubmitButtonStyle => this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence ? this.providerSettings.UsedLLMProvider.GetConfidence(this.SettingsManager).StyleBorder(this.SettingsManager) : string.Empty;
+    private string SubmitButtonStyle => this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence ? this.ProviderSettings.UsedLLMProvider.GetConfidence(this.SettingsManager).StyleBorder(this.SettingsManager) : string.Empty;
 
     private IReadOnlyList<Tools.Components> VisibleSendToAssistants => Enum.GetValues<AIStudio.Tools.Components>()
         .Where(this.CanSendToAssistant)
@@ -165,12 +191,12 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     private async Task Start()
     {
-        using (this.cancellationTokenSource = new())
+        using (this.CancellationTokenSource = new())
         {
             await this.SubmitAction();
         }
         
-        this.cancellationTokenSource = null;
+        this.CancellationTokenSource = null;
     }
 
     private void TriggerFormChange(FormFieldChangedEventArgs _)
@@ -197,7 +223,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     {
         Array.Resize(ref this.inputIssues, this.inputIssues.Length + 1);
         this.inputIssues[^1] = issue;
-        this.inputIsValid = false;
+        this.InputIsValid = false;
         this.StateHasChanged();
     }
     
@@ -207,17 +233,17 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     protected void ClearInputIssues()
     {
         this.inputIssues = [];
-        this.inputIsValid = true;
+        this.InputIsValid = true;
         this.StateHasChanged();
     }
 
     protected void CreateChatThread()
     {
-        this.chatThread = new()
+        this.ChatThread = new()
         {
             IncludeDateTime = false,
-            SelectedProvider = this.providerSettings.Id,
-            SelectedProfile = this.AllowProfiles ? this.currentProfile.Id : Profile.NO_PROFILE.Id,
+            SelectedProvider = this.ProviderSettings.Id,
+            SelectedProfile = this.AllowProfiles ? this.CurrentProfile.Id : Profile.NO_PROFILE.Id,
             SystemPrompt = this.SystemPrompt,
             WorkspaceId = Guid.Empty,
             ChatId = Guid.NewGuid(),
@@ -229,11 +255,11 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     protected Guid CreateChatThread(Guid workspaceId, string name)
     {
         var chatId = Guid.NewGuid();
-        this.chatThread = new()
+        this.ChatThread = new()
         {
             IncludeDateTime = false,
-            SelectedProvider = this.providerSettings.Id,
-            SelectedProfile = this.AllowProfiles ? this.currentProfile.Id : Profile.NO_PROFILE.Id,
+            SelectedProvider = this.ProviderSettings.Id,
+            SelectedProfile = this.AllowProfiles ? this.CurrentProfile.Id : Profile.NO_PROFILE.Id,
             SystemPrompt = this.SystemPrompt,
             WorkspaceId = workspaceId,
             ChatId = chatId,
@@ -246,27 +272,27 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     protected virtual void ResetProviderAndProfileSelection()
     {
-        this.providerSettings = this.SettingsManager.GetPreselectedProvider(this.Component);
-        this.currentProfile = this.SettingsManager.GetPreselectedProfile(this.Component);
-        this.currentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(this.Component);
+        this.ProviderSettings = this.SettingsManager.GetPreselectedProvider(this.Component);
+        this.CurrentProfile = this.SettingsManager.GetPreselectedProfile(this.Component);
+        this.CurrentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(this.Component);
     }
     
     protected DateTimeOffset AddUserRequest(string request, bool hideContentFromUser = false, params List<FileAttachment> attachments)
     {
         var time = DateTimeOffset.Now;
-        this.lastUserPrompt = new ContentText
+        this.LastUserPrompt = new ContentText
         {
             Text = request,
             FileAttachments = attachments,
         };
         
-        this.chatThread!.Blocks.Add(new ContentBlock
+        this.ChatThread!.Blocks.Add(new ContentBlock
         {
             Time = time,
             ContentType = ContentType.TEXT,
             HideFromUser = hideContentFromUser,
             Role = ChatRole.USER,
-            Content = this.lastUserPrompt,
+            Content = this.LastUserPrompt,
         });
         
         return time;
@@ -274,8 +300,8 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     protected async Task<string> AddAIResponseAsync(DateTimeOffset time, bool hideContentFromUser = false)
     {
-        var manageCancellationLocally = this.cancellationTokenSource is null;
-        this.cancellationTokenSource ??= new CancellationTokenSource();
+        var manageCancellationLocally = this.CancellationTokenSource is null;
+        this.CancellationTokenSource ??= new CancellationTokenSource();
         
         var aiText = new ContentText
         {
@@ -293,10 +319,10 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             HideFromUser = hideContentFromUser,
         };
 
-        if (this.chatThread is not null)
+        if (this.ChatThread is not null)
         {
-            this.chatThread.Blocks.Add(this.resultingContentBlock);
-            this.chatThread.SelectedProvider = this.providerSettings.Id;
+            this.ChatThread.Blocks.Add(this.resultingContentBlock);
+            this.ChatThread.SelectedProvider = this.ProviderSettings.Id;
         }
 
         this.isProcessing = true;
@@ -305,15 +331,15 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         // Use the selected provider to get the AI response.
         // By awaiting this line, we wait for the entire
         // content to be streamed.
-        this.chatThread = await aiText.CreateFromProviderAsync(this.providerSettings.CreateProvider(), this.providerSettings.Model, this.lastUserPrompt, this.chatThread, this.cancellationTokenSource!.Token);
+        this.ChatThread = await aiText.CreateFromProviderAsync(this.ProviderSettings.CreateProvider(), this.ProviderSettings.Model, this.LastUserPrompt, this.ChatThread, this.CancellationTokenSource!.Token);
         
         this.isProcessing = false;
         this.StateHasChanged();
         
         if(manageCancellationLocally)
         {
-            this.cancellationTokenSource.Dispose();
-            this.cancellationTokenSource = null;
+            this.CancellationTokenSource.Dispose();
+            this.CancellationTokenSource = null;
         }
         
         // Return the AI response:
@@ -322,14 +348,55 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     
     private async Task CancelStreaming()
     {
-        if (this.cancellationTokenSource is not null)
-            if(!this.cancellationTokenSource.IsCancellationRequested)
-                await this.cancellationTokenSource.CancelAsync();
+        if (this.CancellationTokenSource is not null)
+            if(!this.CancellationTokenSource.IsCancellationRequested)
+                await this.CancellationTokenSource.CancelAsync();
     }
     
     protected async Task CopyToClipboard()
     {
         await this.RustService.CopyText2Clipboard(this.Snackbar, this.Result2Copy());
+    }
+
+    private ChatThread CreateSendToChatThread()
+    {
+        var originalChatThread = this.ChatThread ?? new ChatThread();
+        if (string.IsNullOrWhiteSpace(this.SendToChatVisibleUserPromptText))
+            return originalChatThread with
+            {
+                SystemPrompt = SystemPrompts.DEFAULT,
+            };
+
+        var earliestBlock = originalChatThread.Blocks.MinBy(x => x.Time);
+        var visiblePromptTime = earliestBlock is null
+            ? DateTimeOffset.Now
+            : earliestBlock.Time == DateTimeOffset.MinValue
+                ? earliestBlock.Time
+                : earliestBlock.Time.AddTicks(-1);
+
+        var transferredBlocks = originalChatThread.Blocks
+            .Select(block => block.Role is ChatRole.USER
+                ? block.DeepClone(changeHideState: true)
+                : block.DeepClone())
+            .ToList();
+
+        transferredBlocks.Insert(0, new ContentBlock
+        {
+            Time = visiblePromptTime,
+            ContentType = ContentType.TEXT,
+            HideFromUser = false,
+            Role = ChatRole.USER,
+            Content = new ContentText
+            {
+                Text = this.SendToChatVisibleUserPromptText,
+            },
+        });
+
+        return originalChatThread with
+        {
+            SystemPrompt = SystemPrompts.DEFAULT,
+            Blocks = transferredBlocks,
+        };
     }
     
     private static string? GetButtonIcon(string icon)
@@ -368,9 +435,14 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         switch (destination)
         {
             case Tools.Components.CHAT:
-                var convertedChatThread = this.ConvertToChatThread;
-                convertedChatThread = convertedChatThread with { SelectedProvider = this.providerSettings.Id };
-                MessageBus.INSTANCE.DeferMessage(this, sendToData.Event, convertedChatThread);
+                if (sendToButton.SendToChatAsInput)
+                    MessageBus.INSTANCE.DeferMessage(this, Event.SEND_TO_CHAT_INPUT, contentToSend);
+                else
+                {
+                    var convertedChatThread = this.ConvertToChatThread;
+                    convertedChatThread = convertedChatThread with { SelectedProvider = this.ProviderSettings.Id };
+                    MessageBus.INSTANCE.DeferMessage(this, sendToData.Event, convertedChatThread);
+                }
                 break;
             
             default:
@@ -393,7 +465,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     private async Task InnerResetForm()
     {
         this.resultingContentBlock = null;
-        this.providerSettings = Settings.Provider.NONE;
+        this.ProviderSettings = Settings.Provider.NONE;
         
         await this.JsRuntime.ClearDiv(RESULT_DIV_ID);
         await this.JsRuntime.ClearDiv(AFTER_RESULT_DIV_ID);
@@ -401,12 +473,12 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         this.ResetForm();
         this.ResetProviderAndProfileSelection();
         
-        this.inputIsValid = false;
+        this.InputIsValid = false;
         this.inputIssues = [];
         
-        this.form?.ResetValidation();
+        this.Form?.ResetValidation();
         this.StateHasChanged();
-        this.form?.ResetValidation();
+        this.Form?.ResetValidation();
     }
 
     private string GetResetColor() => this.SettingsManager.IsDarkMode switch

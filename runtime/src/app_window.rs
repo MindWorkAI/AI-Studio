@@ -135,7 +135,7 @@ pub fn start_tauri() {
         if !matches!(event, RunEvent::MainEventsCleared) {
             debug!(Source = "Tauri"; "Tauri event received: location=app event handler   , event={event:?}");
         }
-        
+
         match event {
             RunEvent::WindowEvent { event, label, .. } => {
                 match event {
@@ -494,6 +494,13 @@ pub struct ShortcutResponse {
     error_message: String,
 }
 
+/// Response for application exit requests.
+#[derive(Serialize)]
+pub struct AppExitResponse {
+    success: bool,
+    error_message: String,
+}
+
 /// Internal helper function to register a shortcut with its callback.
 /// This is used by both `register_shortcut` and `resume_shortcuts` to
 /// avoid code duplication.
@@ -522,6 +529,34 @@ fn register_shortcut_with_callback(
     }
 }
 
+/// Requests a controlled shutdown of the entire desktop application.
+#[post("/app/exit")]
+pub fn exit_app(_token: APIToken) -> Json<AppExitResponse> {
+    let main_window_lock = MAIN_WINDOW.lock().unwrap();
+    let main_window = match main_window_lock.as_ref() {
+        Some(window) => window,
+        None => {
+            error!(Source = "Tauri"; "Cannot exit app: main window not available.");
+            return Json(AppExitResponse {
+                success: false,
+                error_message: "Main window not available".to_string(),
+            });
+        }
+    };
+
+    let app_handle = main_window.app_handle();
+    info!(Source = "Tauri"; "Controlled app exit was requested by the UI.");
+    tauri::async_runtime::spawn(async move {
+        time::sleep(Duration::from_millis(50)).await;
+        app_handle.exit(0);
+    });
+
+    Json(AppExitResponse {
+        success: true,
+        error_message: String::new(),
+    })
+}
+
 /// Registers or updates a global shortcut. If the shortcut string is empty,
 /// the existing shortcut for that name will be unregistered.
 #[post("/shortcuts/register", data = "<payload>")]
@@ -536,7 +571,7 @@ pub fn register_shortcut(_token: APIToken, payload: Json<RegisterShortcutRequest
             error_message: "Cannot register NONE shortcut".to_string(),
         });
     }
-    
+
     info!(Source = "Tauri"; "Registering global shortcut '{}' with key '{new_shortcut}'.", id);
 
     // Get the main window to access the global shortcut manager:

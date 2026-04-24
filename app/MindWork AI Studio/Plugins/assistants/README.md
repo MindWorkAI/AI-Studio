@@ -50,6 +50,19 @@ Use this README in layers. The early sections are a quick reference for the over
 
 When you build a plugin, start with the directory layout and the `Structure` section, then jump to the component references you actually use. The resource links at the end are the primary sources for Lua and MudBlazor behavior, and the `General Tips` section collects the practical rules and gotchas that matter most while authoring `plugin.lua`.
 
+## Minimal Example
+If you want to see a complete assistant plugin, start with `examples/translation/plugin.lua` in this folder. It mirrors the built-in translation assistant in a reduced form.
+
+This example shows:
+- `WEB_CONTENT_READER`
+- `FILE_CONTENT_READER`
+- a plain `TEXT_AREA`
+- a `DROPDOWN` for the target language
+- `PROVIDER_SELECTION`
+- `ASSISTANT.BuildPrompt(input)` for prompt assembly
+
+Treat the example as the recommended minimum viable pattern for assistant plugins, not as a feature-by-feature clone of `AssistantTranslation.razor`.
+
 ## Directory Structure
 Each assistant plugin lives in its own directory under the assistants plugin root. In practice, you usually keep the manifest in `plugin.lua`, optional icon rendering in `icon.lua`, and any bundled media in `assets/`.
 
@@ -214,7 +227,8 @@ More information on rendered components can be found [here](https://www.mudblazo
 - Behavior notes:
   - For single-select dropdowns, `input.<Name>.Value` is a single raw value such as `germany`.
   - For multiselect dropdowns, `input.<Name>.Value` is an array-like Lua table of raw values.
-  - The UI shows the `Display` text, while prompt assembly and `BuildPrompt(input)` receive the raw `Value`.
+  - `input.<Name>.Display` contains the visible label for single-select dropdowns.
+  - For multiselect dropdowns, `input.<Name>.Display` is an array-like Lua table of visible labels in the same order as `Value`.
   - `Default` should usually also exist in `Items`. If it is missing there, the runtime currently still renders it as an available option.
 
 #### Example Dropdown component
@@ -697,6 +711,21 @@ ASSISTANT.BuildPrompt = function(input)
   return label .. ": " .. value
 end
 ```
+
+#### Example: resolve a dropdown display value
+```lua
+ASSISTANT.BuildPrompt = function(input)
+  local language = input.TargetLanguage
+  if not language then
+    return ""
+  end
+
+  local selectedValue = language.Value or ""
+  local selectedDisplay = language.Display or selectedValue
+
+  return "Translate to: " .. selectedDisplay .. " (" .. selectedValue .. ")"
+end
+```
 ---
 
 ### Callback result shape
@@ -1037,11 +1066,13 @@ The assistant runtime exposes basic logging helpers to Lua. Use them to debug cu
 - `LogInfo(message)`
 - `LogWarning(message)`
 - `LogError(message)`
+- `InspectTable(table)` returns a readable string representation of a Lua table for debugging.
 
 #### Example: Use Logging in lua functions
 ```lua
 ASSISTANT.BuildPrompt = function(input)
   LogInfo("BuildPrompt called")
+  LogDebug(InspectTable(input))
   return input.Text and input.Text.Value or ""
 end
 ```
@@ -1073,6 +1104,7 @@ LogInfo(dt.day .. "." .. dt.month .. "." .. dt.year)
 5. Keep `Preselect`/`PreselectContentCleanerAgent` flags in `WEB_CONTENT_READER` to simplify the initial UI for the user.
 
 ## Useful Resources
+- [translation example](./examples/translation/plugin.lua)
 - [plugin.lua - Lua Manifest](https://github.com/MindWorkAI/AI-Studio/tree/main/app/MindWork%20AI%20Studio/Plugins/assistants/plugin.lua)
 - [Supported Icons](https://www.mudblazor.com/features/icons#icons)
 - [AI Studio Repository](https://github.com/MindWorkAI/AI-Studio/)

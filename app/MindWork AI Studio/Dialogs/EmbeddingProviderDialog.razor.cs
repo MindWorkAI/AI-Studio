@@ -360,10 +360,12 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
 
         try
         {
-            var models = await provider.GetEmbeddingModels(this.dataAPIKey);
+            var result = await provider.GetEmbeddingModels(this.dataAPIKey);
+            if (!result.Success)
+                this.dataLoadingModelsIssue = result.FailureReason.ToUserMessage(provider.InstanceName);
 
             // Order descending by ID means that the newest models probably come first:
-            var orderedModels = models.OrderByDescending(n => n.Id);
+            var orderedModels = result.Models.OrderByDescending(n => n.Id);
 
             this.availableModels.Clear();
             this.availableModels.AddRange(orderedModels);

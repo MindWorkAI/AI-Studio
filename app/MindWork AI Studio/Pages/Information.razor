@@ -222,6 +222,18 @@
             <ExpansionPanel HeaderIcon="@Icons.Material.Filled.EventNote" HeaderText="@T("Changelog")">
                 <Changelog/>
             </ExpansionPanel>
+
+            @foreach (var mandatoryInfoPanel in this.mandatoryInfoPanels)
+            {
+                <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Gavel" HeaderText="@mandatoryInfoPanel.HeaderText">
+                    <MudText Typo="Typo.body2" Class="mb-3">
+                        @string.Format(T("Provided by configuration plugin: {0}"), mandatoryInfoPanel.PluginName)
+                    </MudText>
+                    <MandatoryInfoDisplay Info="@mandatoryInfoPanel.Info"
+                                          Acceptance="@mandatoryInfoPanel.Acceptance"
+                                          ShowAcceptanceMetadata="@true"/>
+                </ExpansionPanel>
+            }
             
             <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Book" HeaderText="@T("Logbook")">
                 <MudText Typo="Typo.h4">

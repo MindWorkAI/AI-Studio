@@ -174,10 +174,24 @@ public sealed class ContentText : IContent
             return false;
         }
 
-        IEnumerable<Model> loadedModels;
+        if (!provider.HasModelLoadingCapability)
+            return true;
+
+        IReadOnlyList<Model> loadedModels;
         try
         {
-            loadedModels = await provider.GetTextModels(token: token);
+            var modelLoadResult = await provider.GetTextModels(token: token);
+            if (!modelLoadResult.Success)
+            {
+                var userMessage = modelLoadResult.FailureReason.ToUserMessage(provider.InstanceName);
+                if (!string.IsNullOrWhiteSpace(userMessage))
+                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, userMessage));
+
+                LOGGER.LogWarning("Skipping selected model availability check for '{ProviderInstanceName}' (provider={ProviderType}) because loading the model list failed with reason {FailureReason}.", provider.InstanceName, provider.Provider, modelLoadResult.FailureReason);
+                return false;
+            }
+
+            loadedModels = modelLoadResult.Models;
         }
         catch (OperationCanceledException)
         {
@@ -192,6 +206,11 @@ public sealed class ContentText : IContent
         var availableModels = loadedModels.Where(model => !string.IsNullOrWhiteSpace(model.Id)).ToList();
         if (availableModels.Count == 0)
         {
+            var emptyModelsMessage = string.Format(
+                TB("We could load models from '{0}', but the provider did not return any usable text models."),
+                provider.InstanceName);
+
+            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, emptyModelsMessage));
             LOGGER.LogWarning("Skipping AI request because there are no models available from '{ProviderInstanceName}' (provider={ProviderType}).", provider.InstanceName, provider.Provider);
             return false;
         }

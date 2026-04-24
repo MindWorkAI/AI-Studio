@@ -10,6 +10,22 @@ public sealed partial class RustService
         {
             var cts = new CancellationTokenSource(TimeSpan.FromSeconds(45));
             var response = await this.http.GetFromJsonAsync<UpdateResponse>("/updates/check", this.jsonRustSerializerOptions, cts.Token);
+            
+            if (response == default)
+            {
+                this.logger!.LogError("Failed to check for an update: the Rust endpoint returned an empty response.");
+                return new UpdateResponse
+                {
+                    Error = true,
+                    UpdateIsAvailable = false,
+                    NewVersion = string.Empty,
+                    Changelog = string.Empty
+                };
+            }
+
+            if (response.Error)
+                this.logger!.LogWarning("The Rust updater reported an error while checking for updates.");
+
             this.logger!.LogInformation($"Checked for an update: update available='{response.UpdateIsAvailable}'; error='{response.Error}'; next version='{response.NewVersion}'; changelog len='{response.Changelog.Length}'");
             return response;
         }
@@ -20,6 +36,8 @@ public sealed partial class RustService
             {
                 Error = true,
                 UpdateIsAvailable = false,
+                NewVersion = string.Empty,
+                Changelog = string.Empty
             };
         }
     }

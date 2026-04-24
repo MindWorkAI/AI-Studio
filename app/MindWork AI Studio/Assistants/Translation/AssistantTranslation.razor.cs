@@ -1,4 +1,3 @@
-using AIStudio.Chat;
 using AIStudio.Dialogs.Settings;
 
 namespace AIStudio.Assistants.Translation;
@@ -35,11 +34,13 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
     protected override Func<Task> SubmitAction => () => this.TranslateText(true);
 
     protected override bool SubmitDisabled => this.isAgentRunning;
-    
-    protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
-    {
-        SystemPrompt = SystemPrompts.DEFAULT,
-    };
+
+    protected override string SendToChatVisibleUserPromptText =>
+        $"""
+        {string.Format(T("Translate the following text to {0}:"), this.selectedTargetLanguage is CommonLanguages.OTHER ? this.customTargetLanguage : this.selectedTargetLanguage.Name())}
+        
+        {this.inputText}
+        """;
     
     protected override void ResetForm()
     {
@@ -118,8 +119,8 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
 
     private async Task TranslateText(bool force)
     {
-        await this.form!.Validate();
-        if (!this.inputIsValid)
+        await this.Form!.Validate();
+        if (!this.InputIsValid)
             return;
         
         if(!force && this.inputText == this.inputTextLastTranslation)
@@ -137,7 +138,8 @@ public partial class AssistantTranslation : AssistantBaseCore<SettingsDialogTran
                 <TRANSLATION_DELIMITERS>
                 {this.inputText}
                 </TRANSLATION_DELIMITERS>
-             """);
+             """,
+            hideContentFromUser: true);
 
         await this.AddAIResponseAsync(time);
     }

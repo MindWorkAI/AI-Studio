@@ -76,6 +76,7 @@ pub fn start_runtime_api() {
                 crate::file_actions::select_file,
                 crate::file_actions::select_files,
                 crate::file_actions::save_file,
+                crate::app_window::exit_app,
                 crate::secret::get_secret,
                 crate::secret::store_secret,
                 crate::secret::delete_secret,

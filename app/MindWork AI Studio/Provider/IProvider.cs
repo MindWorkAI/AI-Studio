@@ -34,6 +34,11 @@ public interface IProvider
     /// </summary>
     public string TokenizerPath { get; }
     
+    /// Whether this provider instance can load available models from the backend/API.
+    /// This capability may differ by provider type, host, or modality.
+    /// </summary>
+    public bool HasModelLoadingCapability { get; }
+    
     /// <summary>
     /// Starts a chat completion stream.
     /// </summary>
@@ -81,7 +86,7 @@ public interface IProvider
     /// <param name="apiKeyProvisional">The provisional API key to use. Useful when the user is adding a new provider. When null, the stored API key is used.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>The list of text models.</returns>
-    public Task<IEnumerable<Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default);
+    public Task<ModelLoadResult> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default);
 
     /// <summary>
     /// Load all possible image models that can be used with this provider.
@@ -89,7 +94,7 @@ public interface IProvider
     /// <param name="apiKeyProvisional">The provisional API key to use. Useful when the user is adding a new provider. When null, the stored API key is used.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>The list of image models.</returns>
-    public Task<IEnumerable<Model>> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default);
+    public Task<ModelLoadResult> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default);
 
     /// <summary>
     /// Load all possible embedding models that can be used with this provider.
@@ -97,7 +102,7 @@ public interface IProvider
     /// <param name="apiKeyProvisional">The provisional API key to use. Useful when the user is adding a new provider. When null, the stored API key is used.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>The list of embedding models.</returns>
-    public Task<IEnumerable<Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default);
+    public Task<ModelLoadResult> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default);
     
     /// <summary>
     /// Load all possible transcription models that can be used with this provider.
@@ -105,5 +110,5 @@ public interface IProvider
     /// <param name="apiKeyProvisional">The provisional API key to use. Useful when the user is adding a new provider. When null, the stored API key is used.</param>
     /// <param name="token">>The cancellation token.</param>
     /// <returns>>The list of transcription models.</returns>
-    public Task<IEnumerable<Model>> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default);
+    public Task<ModelLoadResult> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default);
 }
