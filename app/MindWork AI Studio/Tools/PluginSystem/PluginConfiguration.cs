@@ -37,6 +37,8 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
 
         if (!dryRun)
         {
+            await PluginConfigurationObject.SyncManagedTokenizersAsync(this.Id, this.PluginPath);
+
             // Store any decrypted API keys from enterprise configuration in the OS keyring:
             await StoreEnterpriseApiKeysAsync();
 

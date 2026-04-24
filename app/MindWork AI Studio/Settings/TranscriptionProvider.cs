@@ -167,28 +167,26 @@ public sealed record TranscriptionProvider(
     /// <returns>A Lua configuration section string.</returns>
     public string ExportAsConfigurationSection(string? encryptedApiKey = null)
     {
-        var apiKeyLine = string.Empty;
-        if (!string.IsNullOrWhiteSpace(encryptedApiKey))
+        var lines = new List<string>
         {
-            apiKeyLine = $"""
-                          ["APIKey"] = "{LuaTools.EscapeLuaString(encryptedApiKey)}",
-                          """;
-        }
+            "CONFIG[\"TRANSCRIPTION_PROVIDERS\"][#CONFIG[\"TRANSCRIPTION_PROVIDERS\"]+1] = {",
+            $"    [\"Id\"] = \"{Guid.NewGuid()}\",",
+            $"    [\"Name\"] = \"{LuaTools.EscapeLuaString(this.Name)}\",",
+            $"    [\"UsedLLMProvider\"] = \"{this.UsedLLMProvider}\",",
+            string.Empty,
+            $"    [\"Host\"] = \"{this.Host}\",",
+            $"    [\"Hostname\"] = \"{LuaTools.EscapeLuaString(this.Hostname)}\",",
+        };
 
-        return $$"""
-                CONFIG["TRANSCRIPTION_PROVIDERS"][#CONFIG["TRANSCRIPTION_PROVIDERS"]+1] = {
-                    ["Id"] = "{{Guid.NewGuid().ToString()}}",
-                    ["Name"] = "{{LuaTools.EscapeLuaString(this.Name)}}",
-                    ["UsedLLMProvider"] = "{{this.UsedLLMProvider}}",
+        if (!string.IsNullOrWhiteSpace(encryptedApiKey))
+            lines.Add($"    [\"APIKey\"] = \"{LuaTools.EscapeLuaString(encryptedApiKey)}\",");
 
-                    ["Host"] = "{{this.Host}}",
-                    ["Hostname"] = "{{LuaTools.EscapeLuaString(this.Hostname)}}",
-                    {{apiKeyLine}}
-                    ["Model"] = {
-                        ["Id"] = "{{LuaTools.EscapeLuaString(this.Model.Id)}}",
-                        ["DisplayName"] = "{{LuaTools.EscapeLuaString(this.Model.DisplayName ?? string.Empty)}}",
-                    },
-                }
-                """;
+        lines.Add("    [\"Model\"] = {");
+        lines.Add($"        [\"Id\"] = \"{LuaTools.EscapeLuaString(this.Model.Id)}\",");
+        lines.Add($"        [\"DisplayName\"] = \"{LuaTools.EscapeLuaString(this.Model.DisplayName ?? string.Empty)}\",");
+        lines.Add("    },");
+        lines.Add("}");
+
+        return string.Join(Environment.NewLine, lines);
     }
 }

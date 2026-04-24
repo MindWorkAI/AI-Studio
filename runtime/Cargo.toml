@@ -41,6 +41,7 @@ pptx-to-md = "0.4.0"
 tempfile = "3.27.0"
 strum_macros = "0.28.0"
 sysinfo = "0.38.4"
+tokenizers = "0.22.2"
 
 # Fixes security vulnerability downstream, where the upstream is not fixed yet:
 time = "0.3.47" # -> Rocket

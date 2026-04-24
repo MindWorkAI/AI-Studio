@@ -12,7 +12,6 @@ use mindwork_ai_studio::log::init_logging;
 use mindwork_ai_studio::metadata::MetaData;
 use mindwork_ai_studio::runtime_api::start_runtime_api;
 
-
 #[tokio::main]
 async fn main() {
     let metadata = MetaData::init_from_string(include_str!("../../metadata.txt"));

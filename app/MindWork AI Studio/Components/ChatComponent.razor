@@ -34,7 +34,7 @@
     </ChildContent>
     <FooterContent>
         <MudElement Style="flex: 0 0 auto;">
-            <MudTextField
+            <UserPromptComponent
                 T="string"
                 @ref="@this.inputField"
                 @bind-Text="@this.userInput"
@@ -50,8 +50,11 @@
                 Disabled="@this.IsInputForbidden()"
                 Immediate="@true"
                 OnKeyUp="@this.InputKeyEvent"
+                WhenTextChangedAsync="@(_ =>this.CalculateTokenCount())"
                 UserAttributes="@USER_INPUT_ATTRIBUTES"
                 Class="@this.UserInputClass"
+                DebounceTime="TimeSpan.FromSeconds(1)" 
+                HelperText="@this.TokenCountMessage"
                 Style="@this.UserInputStyle"/>
         </MudElement>
         <MudToolBar WrapContent="true" Gutters="@false" Class="border border-solid rounded" Style="border-color: lightgrey; gap: 2px;">
