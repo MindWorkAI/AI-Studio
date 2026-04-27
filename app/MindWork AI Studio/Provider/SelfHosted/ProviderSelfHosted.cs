@@ -172,19 +172,28 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
     private async Task<ModelLoadResult> LoadModels(SecretStoreType storeType, string[] ignorePhrases, string[] filterPhrases, CancellationToken token, string? apiKeyProvisional = null)
     {
         var secretKey = await this.GetModelLoadingSecretKey(storeType, apiKeyProvisional, true);
-                    
-        using var lmStudioRequest = new HttpRequestMessage(HttpMethod.Get, "models");
-        if(secretKey is not null)
-            lmStudioRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
-                    
-        using var lmStudioResponse = await this.HttpClient.SendAsync(lmStudioRequest, token);
-        if(!lmStudioResponse.IsSuccessStatusCode)
-            return FailedModelLoadResult(GetDefaultModelLoadFailureReason(lmStudioResponse), $"Status={(int)lmStudioResponse.StatusCode} {lmStudioResponse.ReasonPhrase}");
 
-        var lmStudioModelResponse = await lmStudioResponse.Content.ReadFromJsonAsync<ModelsResponse>(token);
-        return SuccessfulModelLoadResult(lmStudioModelResponse.Data.
-            Where(model => !ignorePhrases.Any(ignorePhrase => model.Id.Contains(ignorePhrase, StringComparison.InvariantCulture)) &&
-                           filterPhrases.All( filter => model.Id.Contains(filter, StringComparison.InvariantCulture)))
-            .Select(n => new Provider.Model(n.Id, null)));
+        try
+        {
+            using var lmStudioRequest = new HttpRequestMessage(HttpMethod.Get, "models");
+            if(secretKey is not null)
+                lmStudioRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
+
+            using var lmStudioResponse = await this.HttpClient.SendAsync(lmStudioRequest, token);
+            if(!lmStudioResponse.IsSuccessStatusCode)
+                return FailedModelLoadResult(GetDefaultModelLoadFailureReason(lmStudioResponse), $"Status={(int)lmStudioResponse.StatusCode} {lmStudioResponse.ReasonPhrase}");
+
+            var lmStudioModelResponse = await lmStudioResponse.Content.ReadFromJsonAsync<ModelsResponse>(token);
+            return SuccessfulModelLoadResult(lmStudioModelResponse.Data.
+                Where(model => !ignorePhrases.Any(ignorePhrase => model.Id.Contains(ignorePhrase, StringComparison.InvariantCulture)) &&
+                               filterPhrases.All( filter => model.Id.Contains(filter, StringComparison.InvariantCulture)))
+                .Select(n => new Provider.Model(n.Id, null)));
+        }
+        catch (Exception e) when (this.IsTimeoutException(e, token))
+        {
+            await this.SendTimeoutError("loading the available models");
+            LOGGER.LogError(e, "Timed out while loading models from self-hosted provider '{ProviderInstanceName}'.", this.InstanceName);
+            return FailedModelLoadResult(ModelLoadFailureReason.PROVIDER_UNAVAILABLE, e.Message);
+        }
     }
 }

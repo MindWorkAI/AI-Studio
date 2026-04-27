@@ -24,6 +24,8 @@ namespace AIStudio.Provider;
 /// </summary>
 public abstract class BaseProvider : IProvider, ISecretId
 {
+    private static readonly TimeSpan HTTP_TIMEOUT = TimeSpan.FromHours(1);
+
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(BaseProvider).Namespace, nameof(BaseProvider));
     
     /// <summary>
@@ -74,6 +76,7 @@ public abstract class BaseProvider : IProvider, ISecretId
 
         // Set the base URL:
         this.HttpClient.BaseAddress = new(url);
+        this.HttpClient.Timeout = HTTP_TIMEOUT;
     }
     
     #region Handling of IProvider, which all providers must implement
@@ -136,6 +139,28 @@ public abstract class BaseProvider : IProvider, ISecretId
 
     protected static ModelLoadResult FailedModelLoadResult(ModelLoadFailureReason failureReason, string? technicalDetails = null) => ModelLoadResult.Failure(failureReason, technicalDetails);
 
+    protected bool IsTimeoutException(Exception exception, CancellationToken token = default)
+    {
+        if (token.IsCancellationRequested)
+            return false;
+
+        if (exception is TimeoutException)
+            return true;
+
+        if (exception is OperationCanceledException)
+            return true;
+
+        return exception.InnerException is not null && this.IsTimeoutException(exception.InnerException, token);
+    }
+
+    protected Task SendTimeoutError(string action) => MessageBus.INSTANCE.SendError(new(
+        Icons.Material.Filled.HourglassTop,
+        string.Format(
+            TB("The request to the LLM provider '{0}' (type={1}) timed out after 1 hour while {2}. Please try again or check whether the provider is still responding."),
+            this.InstanceName,
+            this.Provider,
+            action)));
+
     protected async Task<string?> GetModelLoadingSecretKey(SecretStoreType storeType, string? apiKeyProvisional = null, bool isTryingSecret = false) => apiKeyProvisional switch
     {
         not null => apiKeyProvisional,
@@ -175,25 +200,34 @@ public abstract class BaseProvider : IProvider, ISecretId
         else if (!string.IsNullOrWhiteSpace(secretKey))
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
 
-        using var response = await this.HttpClient.SendAsync(request, token);
-        var responseBody = await response.Content.ReadAsStringAsync(token);
-        if (!response.IsSuccessStatusCode)
-        {
-            var failureReason = failureReasonSelector?.Invoke(response, responseBody) ?? GetDefaultModelLoadFailureReason(response);
-            return FailedModelLoadResult(failureReason, $"Status={(int)response.StatusCode} {response.ReasonPhrase}; Body='{responseBody}'");
-        }
-
         try
         {
-            var parsedResponse = JsonSerializer.Deserialize<TResponse>(responseBody, jsonSerializerOptions ?? JSON_SERIALIZER_OPTIONS);
-            if (parsedResponse is null)
-                return FailedModelLoadResult(ModelLoadFailureReason.INVALID_RESPONSE, "Model list response could not be deserialized.");
+            using var response = await this.HttpClient.SendAsync(request, token);
+            var responseBody = await response.Content.ReadAsStringAsync(token);
+            if (!response.IsSuccessStatusCode)
+            {
+                var failureReason = failureReasonSelector?.Invoke(response, responseBody) ?? GetDefaultModelLoadFailureReason(response);
+                return FailedModelLoadResult(failureReason, $"Status={(int)response.StatusCode} {response.ReasonPhrase}; Body='{responseBody}'");
+            }
 
-            return SuccessfulModelLoadResult(modelFactory(parsedResponse));
+            try
+            {
+                var parsedResponse = JsonSerializer.Deserialize<TResponse>(responseBody, jsonSerializerOptions ?? JSON_SERIALIZER_OPTIONS);
+                if (parsedResponse is null)
+                    return FailedModelLoadResult(ModelLoadFailureReason.INVALID_RESPONSE, "Model list response could not be deserialized.");
+
+                return SuccessfulModelLoadResult(modelFactory(parsedResponse));
+            }
+            catch (Exception e)
+            {
+                return FailedModelLoadResult(ModelLoadFailureReason.INVALID_RESPONSE, e.Message);
+            }
         }
-        catch (Exception e)
+        catch (Exception e) when (this.IsTimeoutException(e, token))
         {
-            return FailedModelLoadResult(ModelLoadFailureReason.INVALID_RESPONSE, e.Message);
+            await this.SendTimeoutError("loading the available models");
+            this.logger.LogError(e, "Timed out while loading models from provider '{ProviderInstanceName}' (provider={ProviderType}).", this.InstanceName, this.Provider);
+            return FailedModelLoadResult(ModelLoadFailureReason.PROVIDER_UNAVAILABLE, e.Message);
         }
     }
     
@@ -223,7 +257,18 @@ public abstract class BaseProvider : IProvider, ISecretId
             // Please notice: We do not dispose the response here. The caller is responsible
             // for disposing the response object. This is important because the response
             // object is used to read the stream.
-            var nextResponse = await this.HttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, token);
+            HttpResponseMessage nextResponse;
+            try
+            {
+                nextResponse = await this.HttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, token);
+            }
+            catch (Exception e) when (this.IsTimeoutException(e, token))
+            {
+                await this.SendTimeoutError("waiting for the chat response");
+                this.logger.LogError(e, "Timed out while sending a streaming request to provider '{ProviderInstanceName}' (provider={ProviderType}).", this.InstanceName, this.Provider);
+                return new HttpRateLimitedStreamResult(false, true, e.Message, response);
+            }
+
             if (nextResponse.IsSuccessStatusCode)
             {
                 response = nextResponse;
@@ -341,8 +386,20 @@ public abstract class BaseProvider : IProvider, ISecretId
         }
         catch(Exception e)
         {
-            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Stream, string.Format(TB("Tried to communicate with the LLM provider '{0}'. There were some problems with the request. The provider message is: '{1}'"), this.InstanceName, e.Message)));
-            this.logger.LogError($"Failed to stream chat completion from {providerName} '{this.InstanceName}': {e.Message}");
+            if (token.IsCancellationRequested)
+            {
+                this.logger.LogWarning("The user canceled the chat completion request for {ProviderName} '{ProviderInstanceName}' before the response stream was opened.", providerName, this.InstanceName);
+            }
+            else if (this.IsTimeoutException(e, token))
+            {
+                await this.SendTimeoutError("opening the chat response stream");
+                this.logger.LogError(e, "Timed out while opening the chat completion stream from {ProviderName} '{ProviderInstanceName}'.", providerName, this.InstanceName);
+            }
+            else
+            {
+                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Stream, string.Format(TB("Tried to communicate with the LLM provider '{0}'. There were some problems with the request. The provider message is: '{1}'"), this.InstanceName, e.Message)));
+                this.logger.LogError($"Failed to stream chat completion from {providerName} '{this.InstanceName}': {e.Message}");
+            }
         }
 
         if (streamReader is null)
@@ -383,8 +440,21 @@ public abstract class BaseProvider : IProvider, ISecretId
             }
             catch (Exception e)
             {
-                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Stream, string.Format(TB("Tried to stream the LLM provider '{0}' answer. Was not able to read the stream. The message is: '{1}'"), this.InstanceName, e.Message)));
-                this.logger.LogError($"Failed to read the stream from {providerName} '{this.InstanceName}': {e.Message}");
+                if (token.IsCancellationRequested)
+                {
+                    this.logger.LogWarning("The user canceled the chat completion stream for {ProviderName} '{ProviderInstanceName}' while reading the next chunk.", providerName, this.InstanceName);
+                }
+                else if (this.IsTimeoutException(e, token))
+                {
+                    await this.SendTimeoutError("reading the chat response stream");
+                    this.logger.LogError(e, "Timed out while reading the chat stream from {ProviderName} '{ProviderInstanceName}'.", providerName, this.InstanceName);
+                }
+                else
+                {
+                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Stream, string.Format(TB("Tried to stream the LLM provider '{0}' answer. Was not able to read the stream. The message is: '{1}'"), this.InstanceName, e.Message)));
+                    this.logger.LogError($"Failed to read the stream from {providerName} '{this.InstanceName}': {e.Message}");
+                }
+
                 break;
             }
 
@@ -505,8 +575,20 @@ public abstract class BaseProvider : IProvider, ISecretId
         }
         catch(Exception e)
         {
-            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Stream, string.Format(TB("Tried to communicate with the LLM provider '{0}'. There were some problems with the request. The provider message is: '{1}'"), this.InstanceName, e.Message)));
-            this.logger.LogError($"Failed to stream responses from {providerName} '{this.InstanceName}': {e.Message}");
+            if (token.IsCancellationRequested)
+            {
+                this.logger.LogWarning("The user canceled the responses request for {ProviderName} '{ProviderInstanceName}' before the response stream was opened.", providerName, this.InstanceName);
+            }
+            else if (this.IsTimeoutException(e, token))
+            {
+                await this.SendTimeoutError("opening the chat response stream");
+                this.logger.LogError(e, "Timed out while opening the responses stream from {ProviderName} '{ProviderInstanceName}'.", providerName, this.InstanceName);
+            }
+            else
+            {
+                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Stream, string.Format(TB("Tried to communicate with the LLM provider '{0}'. There were some problems with the request. The provider message is: '{1}'"), this.InstanceName, e.Message)));
+                this.logger.LogError($"Failed to stream responses from {providerName} '{this.InstanceName}': {e.Message}");
+            }
         }
 
         if (streamReader is null)
@@ -547,8 +629,21 @@ public abstract class BaseProvider : IProvider, ISecretId
             }
             catch (Exception e)
             {
-                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Stream, string.Format(TB("Tried to stream the LLM provider '{0}' answer. Was not able to read the stream. The message is: '{1}'"), this.InstanceName, e.Message)));
-                this.logger.LogError($"Failed to read the stream from {providerName} '{this.InstanceName}': {e.Message}");
+                if (token.IsCancellationRequested)
+                {
+                    this.logger.LogWarning("The user canceled the responses stream for {ProviderName} '{ProviderInstanceName}' while reading the next chunk.", providerName, this.InstanceName);
+                }
+                else if (this.IsTimeoutException(e, token))
+                {
+                    await this.SendTimeoutError("reading the chat response stream");
+                    this.logger.LogError(e, "Timed out while reading the responses stream from {ProviderName} '{ProviderInstanceName}'.", providerName, this.InstanceName);
+                }
+                else
+                {
+                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Stream, string.Format(TB("Tried to stream the LLM provider '{0}' answer. Was not able to read the stream. The message is: '{1}'"), this.InstanceName, e.Message)));
+                    this.logger.LogError($"Failed to read the stream from {providerName} '{this.InstanceName}': {e.Message}");
+                }
+
                 break;
             }
 
@@ -784,6 +879,9 @@ public abstract class BaseProvider : IProvider, ISecretId
         }
         catch (Exception e)
         {
+            if (this.IsTimeoutException(e, token))
+                await this.SendTimeoutError("transcribing audio");
+
             this.logger.LogError("Failed to perform transcription request: '{Message}'.", e.Message);
             return string.Empty;
         }
@@ -859,6 +957,9 @@ public abstract class BaseProvider : IProvider, ISecretId
         }
         catch (Exception e)
         {
+            if (this.IsTimeoutException(e, token))
+                await this.SendTimeoutError("creating embeddings");
+
             this.logger.LogError("Failed to perform embedding request: '{Message}'.", e.Message);
             return [];
         }
