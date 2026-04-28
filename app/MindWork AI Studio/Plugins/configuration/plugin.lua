@@ -212,6 +212,10 @@ CONFIG["SETTINGS"] = {}
 -- Examples are: "CmdOrControl+Shift+D", "Alt+F9", "F8"
 -- CONFIG["SETTINGS"]["DataApp.ShortcutVoiceRecording"] = "CmdOrControl+1"
 
+-- Configure the HTTP timeout for requests to LLM providers, in seconds.
+-- The default is 3600 (1 hour).
+-- CONFIG["SETTINGS"]["DataApp.ProviderHttpTimeoutSeconds"] = 3600
+
 -- Example chat templates for this configuration:
 CONFIG["CHAT_TEMPLATES"] = {}
 

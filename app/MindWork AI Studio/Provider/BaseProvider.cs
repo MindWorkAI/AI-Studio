@@ -24,9 +24,10 @@ namespace AIStudio.Provider;
 /// </summary>
 public abstract class BaseProvider : IProvider, ISecretId
 {
-    private static readonly TimeSpan HTTP_TIMEOUT = TimeSpan.FromHours(1);
+    private const int DEFAULT_HTTP_TIMEOUT_SECONDS = 3600;
 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(BaseProvider).Namespace, nameof(BaseProvider));
+    private static readonly SettingsManager SETTINGS_MANAGER = Program.SERVICE_PROVIDER.GetRequiredService<SettingsManager>();
     
     /// <summary>
     /// The HTTP client to use it for all requests.
@@ -76,7 +77,7 @@ public abstract class BaseProvider : IProvider, ISecretId
 
         // Set the base URL:
         this.HttpClient.BaseAddress = new(url);
-        this.HttpClient.Timeout = HTTP_TIMEOUT;
+        this.HttpClient.Timeout = GetProviderHttpTimeout();
     }
     
     #region Handling of IProvider, which all providers must implement
@@ -156,10 +157,40 @@ public abstract class BaseProvider : IProvider, ISecretId
     protected Task SendTimeoutError(string action) => MessageBus.INSTANCE.SendError(new(
         Icons.Material.Filled.HourglassTop,
         string.Format(
-            TB("The request to the LLM provider '{0}' (type={1}) timed out after 1 hour while {2}. Please try again or check whether the provider is still responding."),
+            TB("The request to the LLM provider '{0}' (type={1}) timed out after {2} while {3}. Please try again or check whether the provider is still responding."),
             this.InstanceName,
             this.Provider,
+            GetProviderHttpTimeoutDescription(),
             action)));
+
+    private static TimeSpan GetProviderHttpTimeout()
+    {
+        var seconds = SETTINGS_MANAGER.ConfigurationData.App.ProviderHttpTimeoutSeconds;
+        if (seconds <= 0)
+            seconds = DEFAULT_HTTP_TIMEOUT_SECONDS;
+
+        return TimeSpan.FromSeconds(seconds);
+    }
+
+    private static string GetProviderHttpTimeoutDescription()
+    {
+        var timeout = GetProviderHttpTimeout();
+
+        if (timeout.TotalHours >= 1 && timeout.TotalMinutes % 60 == 0)
+        {
+            var hours = (int)timeout.TotalHours;
+            return hours == 1 ? "1 hour" : $"{hours} hours";
+        }
+
+        if (timeout.TotalMinutes >= 1 && timeout.TotalSeconds % 60 == 0)
+        {
+            var minutes = (int)timeout.TotalMinutes;
+            return minutes == 1 ? "1 minute" : $"{minutes} minutes";
+        }
+
+        var seconds = (int)timeout.TotalSeconds;
+        return seconds == 1 ? "1 second" : $"{seconds} seconds";
+    }
 
     protected async Task<string?> GetModelLoadingSecretKey(SecretStoreType storeType, string? apiKeyProvisional = null, bool isTryingSecret = false) => apiKeyProvisional switch
     {
