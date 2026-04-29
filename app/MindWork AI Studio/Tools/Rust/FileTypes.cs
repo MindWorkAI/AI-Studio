@@ -45,7 +45,7 @@ public static class FileTypes
     // Document hierarchy
     public static readonly FileTypeFilter PDF         = FileTypeFilter.Leaf("PDF", "pdf");
     public static readonly FileTypeFilter TEXT        = FileTypeFilter.Leaf(TB("Text"), "txt", "md", "rtf");
-    public static readonly FileTypeFilter MS_WORD     = FileTypeFilter.Leaf("Microsoft Word", "docx", "doc");
+    public static readonly FileTypeFilter MS_WORD     = FileTypeFilter.Leaf("Microsoft Word", "docx");
     public static readonly FileTypeFilter WORD        = FileTypeFilter.Composite("Word", ["odt"], MS_WORD);
     public static readonly FileTypeFilter EXCEL       = FileTypeFilter.Leaf("Excel", "xls", "xlsx");
     public static readonly FileTypeFilter POWER_POINT = FileTypeFilter.Leaf("PowerPoint", "ppt", "pptx");

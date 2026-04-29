@@ -7611,6 +7611,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::FILEEXTENSIONVALIDATION::T13982828
 -- File has no extension
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::FILEEXTENSIONVALIDATION::T1555980031"] = "Datei hat keine Erweiterung"
 
+-- This file format is not supported. Please convert .doc file to .docx (e.g. with Word).
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::FILEEXTENSIONVALIDATION::T2634293666"] = "Dieses Dateiformat wird nicht unterstützt. Bitte konvertieren Sie die .doc-Datei in .docx (z. B. mit Word)."
+
 -- Audio files are not supported yet
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::FILEEXTENSIONVALIDATION::T2919730669"] = "Audio-Dateien werden noch nicht unterstützt."
 
