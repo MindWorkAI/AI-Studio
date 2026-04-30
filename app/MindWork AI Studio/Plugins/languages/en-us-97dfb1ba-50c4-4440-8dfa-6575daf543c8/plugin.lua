@@ -7624,7 +7624,7 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::FILEEXTENSIONVALIDATION::T29806295
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::FILEEXTENSIONVALIDATION::T305247150"] = "Images are not supported at this place"
 
 -- Dieses Dateiformat wird nicht unterstützt. Bitte .doc Datei nach .docx konvertiern (z.B. mit Word).
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::FILEEXTENSIONVALIDATION::T1506058512"] = "Dieses Dateiformat wird nicht unterstützt. Bitte .doc Datei nach .docx konvertiern (z.B. mit Word)."
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::FILEEXTENSIONVALIDATION::T1506058512"] = "This file format is not supported. Please convert .doc file to .docx (e.g. with Word)."
 
 -- Unsupported file type
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::FILEEXTENSIONVALIDATION::T4041351522"] = "Unsupported file type"

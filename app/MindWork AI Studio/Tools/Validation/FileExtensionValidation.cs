@@ -11,7 +11,6 @@ namespace AIStudio.Tools.Validation;
 public static class FileExtensionValidation
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(FileExtensionValidation).Namespace, nameof(FileExtensionValidation));
-    private const string DOC = ".doc";
 
     /// <summary>
     /// Defines the use cases for file extension validation.
@@ -44,7 +43,7 @@ public static class FileExtensionValidation
     /// <returns>True if valid, false if invalid (error/warning already sent via MessageBus).</returns>
     public static async Task<bool> IsExtensionValidWithNotifyAsync(UseCase useCae, string filePath, bool validateMediaFileTypes = true, Settings.Provider? provider = null)
     {
-        if (string.Equals(Path.GetExtension(filePath), DOC, StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(Path.GetExtension(filePath), ".doc", StringComparison.OrdinalIgnoreCase))
         {
             await MessageBus.INSTANCE.SendWarning(new(
                 Icons.Material.Filled.Description,
