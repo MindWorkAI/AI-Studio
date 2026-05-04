@@ -47,7 +47,7 @@ public static class FileExtensionValidation
         {
             await MessageBus.INSTANCE.SendWarning(new(
                 Icons.Material.Filled.Description,
-                TB("This file format is not supported. Please convert .doc file to .docx (e.g. with Word).")));
+                TB("This file format is not supported. Please convert the .doc file to .docx (e.g. with Microsoft Word).")));
             return false;
         }
 
