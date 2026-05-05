@@ -21,59 +21,68 @@ const SOUND_EFFECT_PATHS = [
     '/sounds/transcription_done.ogg'
 ];
 
+function createSoundEffectsInitResult(success, failedPaths = [], errorMessage = null) {
+    return {
+        success: success,
+        failedPaths: failedPaths,
+        errorMessage: errorMessage
+    };
+}
+
 // Initialize the audio context with low-latency settings.
 // Should be called from a user interaction (click, keypress)
 // to satisfy browser autoplay policies:
 window.initSoundEffects = async function() {
 
-    if (soundEffectContext && soundEffectContext.state !== 'closed') {
-        // Already initialized, just ensure it's running:
-        if (soundEffectContext.state === 'suspended') {
-            await soundEffectContext.resume();
-        }
-
-        return;
-    }
-
     try {
-        // Create the context with the interactive latency hint for the lowest latency:
-        soundEffectContext = new (window.AudioContext || window.webkitAudioContext)({
-            latencyHint: 'interactive'
-        });
+        if (soundEffectContext && soundEffectContext.state !== 'closed') {
+            // Already initialized, just ensure it's running:
+            if (soundEffectContext.state === 'suspended') {
+                await soundEffectContext.resume();
+            }
+        } else {
+            // Create the context with the interactive latency hint for the lowest latency:
+            soundEffectContext = new (window.AudioContext || window.webkitAudioContext)({
+                latencyHint: 'interactive'
+            });
 
-        // Resume immediately (needed for Safari/macOS):
-        if (soundEffectContext.state === 'suspended') {
-            await soundEffectContext.resume();
+            // Resume immediately (needed for Safari/macOS):
+            if (soundEffectContext.state === 'suspended') {
+                await soundEffectContext.resume();
+            }
+
+            // Reset the queue timing:
+            nextAvailablePlayTime = 0;
+
+            //
+            // Play a very short silent buffer to "warm up" the audio pipeline.
+            // This helps prevent the first real sound from being cut off:
+            //
+            const silentBuffer = soundEffectContext.createBuffer(1, 1, soundEffectContext.sampleRate);
+            const silentSource = soundEffectContext.createBufferSource();
+            silentSource.buffer = silentBuffer;
+            silentSource.connect(soundEffectContext.destination);
+            silentSource.start(0);
+
+            console.log('Sound effects - AudioContext initialized with latency:', soundEffectContext.baseLatency);
         }
-
-        // Reset the queue timing:
-        nextAvailablePlayTime = 0;
-
-        //
-        // Play a very short silent buffer to "warm up" the audio pipeline.
-        // This helps prevent the first real sound from being cut off:
-        //
-        const silentBuffer = soundEffectContext.createBuffer(1, 1, soundEffectContext.sampleRate);
-        const silentSource = soundEffectContext.createBufferSource();
-        silentSource.buffer = silentBuffer;
-        silentSource.connect(soundEffectContext.destination);
-        silentSource.start(0);
-
-        console.log('Sound effects - AudioContext initialized with latency:', soundEffectContext.baseLatency);
 
         // Preload all sound effects in parallel:
         if (!soundEffectsPreloaded) {
-            await window.preloadSoundEffects();
+            return await window.preloadSoundEffects();
         }
+
+        return createSoundEffectsInitResult(true);
     } catch (error) {
         console.warn('Failed to initialize sound effects:', error);
+        return createSoundEffectsInitResult(false, [], error?.message || String(error));
     }
 };
 
 // Preload all sound effect files into the cache:
 window.preloadSoundEffects = async function() {
     if (soundEffectsPreloaded) {
-        return;
+        return createSoundEffectsInitResult(true);
     }
 
     // Ensure that the context exists:
@@ -84,10 +93,15 @@ window.preloadSoundEffects = async function() {
     }
 
     console.log('Sound effects - preloading', SOUND_EFFECT_PATHS.length, 'sound files...');
+    const failedPaths = [];
 
     const preloadPromises = SOUND_EFFECT_PATHS.map(async (soundPath) => {
         try {
             const response = await fetch(soundPath);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
             const arrayBuffer = await response.arrayBuffer();
             const audioBuffer = await soundEffectContext.decodeAudioData(arrayBuffer);
             soundEffectCache.set(soundPath, audioBuffer);
@@ -95,12 +109,20 @@ window.preloadSoundEffects = async function() {
             console.log('Sound effects - preloaded:', soundPath, 'duration:', audioBuffer.duration.toFixed(2), 's');
         } catch (error) {
             console.warn('Sound effects - failed to preload:', soundPath, error);
+            failedPaths.push(soundPath);
         }
     });
 
     await Promise.all(preloadPromises);
-    soundEffectsPreloaded = true;
-    console.log('Sound effects - all files preloaded');
+    soundEffectsPreloaded = failedPaths.length === 0;
+
+    if (soundEffectsPreloaded) {
+        console.log('Sound effects - all files preloaded');
+        return createSoundEffectsInitResult(true);
+    }
+
+    console.warn('Sound effects - preload finished with failures:', failedPaths);
+    return createSoundEffectsInitResult(false, failedPaths, 'One or more sound effects could not be loaded.');
 };
 
 window.playSound = async function(soundPath) {

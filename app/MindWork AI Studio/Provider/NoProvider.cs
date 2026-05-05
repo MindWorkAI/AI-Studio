@@ -18,13 +18,16 @@ public class NoProvider : IProvider
     /// <inheritdoc />
     public string AdditionalJsonApiParameters { get; init; } = string.Empty;
 
-    public Task<IEnumerable<Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default) => Task.FromResult<IEnumerable<Model>>([]);
+    /// <inheritdoc />
+    public bool HasModelLoadingCapability => false;
 
-    public Task<IEnumerable<Model>> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default) => Task.FromResult<IEnumerable<Model>>([]);
+    public Task<ModelLoadResult> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default) => Task.FromResult(ModelLoadResult.FromModels([]));
+
+    public Task<ModelLoadResult> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default) => Task.FromResult(ModelLoadResult.FromModels([]));
     
-    public Task<IEnumerable<Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default) => Task.FromResult<IEnumerable<Model>>([]);
+    public Task<ModelLoadResult> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default) => Task.FromResult(ModelLoadResult.FromModels([]));
     
-    public Task<IEnumerable<Model>> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default) => Task.FromResult<IEnumerable<Model>>([]);
+    public Task<ModelLoadResult> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default) => Task.FromResult(ModelLoadResult.FromModels([]));
 
     public async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatChatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {

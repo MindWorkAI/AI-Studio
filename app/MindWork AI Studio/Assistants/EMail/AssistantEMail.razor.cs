@@ -1,6 +1,5 @@
 using System.Text;
 
-using AIStudio.Chat;
 using AIStudio.Dialogs.Settings;
 
 namespace AIStudio.Assistants.EMail;
@@ -26,10 +25,9 @@ public partial class AssistantEMail : AssistantBaseCore<SettingsDialogWritingEMa
 
     protected override Func<Task> SubmitAction => this.CreateMail;
 
-    protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
-    {
-        SystemPrompt = SystemPrompts.DEFAULT,
-    };
+    protected override string SendToChatVisibleUserPromptPrefix => T("Create an email based on the following bullet points:");
+
+    protected override string SendToChatVisibleUserPromptContent => this.inputBulletPoints;
     
     protected override void ResetForm()
     {
@@ -226,8 +224,8 @@ public partial class AssistantEMail : AssistantBaseCore<SettingsDialogWritingEMa
 
     private async Task CreateMail()
     {
-        await this.form!.Validate();
-        if (!this.inputIsValid)
+        await this.Form!.Validate();
+        if (!this.InputIsValid)
             return;
 
         this.CreateChatThread();

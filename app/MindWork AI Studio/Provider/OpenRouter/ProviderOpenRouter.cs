@@ -1,7 +1,5 @@
 using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Text.Json;
 
 using AIStudio.Chat;
 using AIStudio.Provider.OpenAI;
@@ -25,59 +23,42 @@ public sealed class ProviderOpenRouter() : BaseProvider(LLMProviders.OPEN_ROUTER
     public override string InstanceName { get; set; } = "OpenRouter";
 
     /// <inheritdoc />
+    public override bool HasModelLoadingCapability => true;
+
+    /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
-        // Get the API key:
-        var requestedSecret = await RUST_SERVICE.GetAPIKey(this, SecretStoreType.LLM_PROVIDER);
-        if(!requestedSecret.Success)
-            yield break;
+        await foreach (var content in this.StreamOpenAICompatibleChatCompletion<ChatCompletionAPIRequest, ChatCompletionDeltaStreamLine, NoChatCompletionAnnotationStreamLine>(
+                           "OpenRouter",
+                           chatModel,
+                           chatThread,
+                           settingsManager,
+                           async (systemPrompt, apiParameters) =>
+                           {
+                               // Build the list of messages:
+                               var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel);
 
-        // Prepare the system prompt:
-        var systemPrompt = new TextMessage
-        {
-            Role = "system",
-            Content = chatThread.PrepareSystemPrompt(settingsManager),
-        };
+                               return new ChatCompletionAPIRequest
+                               {
+                                   Model = chatModel.Id,
 
-        // Parse the API parameters:
-        var apiParameters = this.ParseAdditionalApiParameters();
-        
-        // Build the list of messages:
-        var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel);
+                                   // Build the messages:
+                                   // - First of all the system prompt
+                                   // - Then none-empty user and AI messages
+                                   Messages = [systemPrompt, ..messages],
 
-        // Prepare the OpenRouter HTTP chat request:
-        var openRouterChatRequest = JsonSerializer.Serialize(new ChatCompletionAPIRequest
-        {
-            Model = chatModel.Id,
-
-            // Build the messages:
-            // - First of all the system prompt
-            // - Then none-empty user and AI messages
-            Messages = [systemPrompt, ..messages],
-
-            // Right now, we only support streaming completions:
-            Stream = true,
-            AdditionalApiParameters = apiParameters
-        }, JSON_SERIALIZER_OPTIONS);
-
-        async Task<HttpRequestMessage> RequestBuilder()
-        {
-            // Build the HTTP post request:
-            var request = new HttpRequestMessage(HttpMethod.Post, "chat/completions");
-
-            // Set the authorization header:
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(ENCRYPTION));
-            
-            // Set custom headers for project identification:
-            request.Headers.Add("HTTP-Referer", PROJECT_WEBSITE);
-            request.Headers.Add("X-Title", PROJECT_NAME);
-
-            // Set the content:
-            request.Content = new StringContent(openRouterChatRequest, Encoding.UTF8, "application/json");
-            return request;
-        }
-
-        await foreach (var content in this.StreamChatCompletionInternal<ChatCompletionDeltaStreamLine, NoChatCompletionAnnotationStreamLine>("OpenRouter", RequestBuilder, token))
+                                   // Right now, we only support streaming completions:
+                                   Stream = true,
+                                   AdditionalApiParameters = apiParameters
+                               };
+                           },
+                           headersAction: headers =>
+                           {
+                               // Set custom headers for project identification:
+                               headers.Add("HTTP-Referer", PROJECT_WEBSITE);
+                               headers.Add("X-Title", PROJECT_NAME);
+                           },
+                           token: token))
             yield return content;
     }
 
@@ -103,102 +84,70 @@ public sealed class ProviderOpenRouter() : BaseProvider(LLMProviders.OPEN_ROUTER
     }
 
     /// <inheritdoc />
-    public override Task<IEnumerable<Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override Task<ModelLoadResult> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
         return this.LoadModels(SecretStoreType.LLM_PROVIDER, token, apiKeyProvisional);
     }
 
     /// <inheritdoc />
-    public override Task<IEnumerable<Model>> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override Task<ModelLoadResult> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return Task.FromResult(Enumerable.Empty<Model>());
+        return Task.FromResult(ModelLoadResult.FromModels([]));
     }
 
     /// <inheritdoc />
-    public override Task<IEnumerable<Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override Task<ModelLoadResult> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
         return this.LoadEmbeddingModels(token, apiKeyProvisional);
     }
     
     /// <inheritdoc />
-    public override Task<IEnumerable<Model>> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override Task<ModelLoadResult> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return Task.FromResult(Enumerable.Empty<Model>());
+        return Task.FromResult(ModelLoadResult.FromModels([]));
     }
 
     #endregion
 
-    private async Task<IEnumerable<Model>> LoadModels(SecretStoreType storeType, CancellationToken token, string? apiKeyProvisional = null)
+    private Task<ModelLoadResult> LoadModels(SecretStoreType storeType, CancellationToken token, string? apiKeyProvisional = null)
     {
-        var secretKey = apiKeyProvisional switch
-        {
-            not null => apiKeyProvisional,
-            _ => await RUST_SERVICE.GetAPIKey(this, storeType) switch
+        return this.LoadModelsResponse<OpenRouterModelsResponse>(
+            storeType,
+            "models",
+            modelResponse => modelResponse.Data
+                .Where(n =>
+                    !n.Id.Contains("whisper", StringComparison.OrdinalIgnoreCase) &&
+                    !n.Id.Contains("dall-e", StringComparison.OrdinalIgnoreCase) &&
+                    !n.Id.Contains("tts", StringComparison.OrdinalIgnoreCase) &&
+                    !n.Id.Contains("embedding", StringComparison.OrdinalIgnoreCase) &&
+                    !n.Id.Contains("moderation", StringComparison.OrdinalIgnoreCase) &&
+                    !n.Id.Contains("stable-diffusion", StringComparison.OrdinalIgnoreCase) &&
+                    !n.Id.Contains("flux", StringComparison.OrdinalIgnoreCase) &&
+                    !n.Id.Contains("midjourney", StringComparison.OrdinalIgnoreCase))
+                .Select(n => new Model(n.Id, n.Name)),
+            token,
+            apiKeyProvisional,
+            requestConfigurator: (request, secretKey) =>
             {
-                { Success: true } result => await result.Secret.Decrypt(ENCRYPTION),
-                _ => null,
-            }
-        };
-
-        if (secretKey is null)
-            return [];
-
-        using var request = new HttpRequestMessage(HttpMethod.Get, "models");
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
-        
-        // Set custom headers for project identification:
-        request.Headers.Add("HTTP-Referer", PROJECT_WEBSITE);
-        request.Headers.Add("X-Title", PROJECT_NAME);
-
-        using var response = await this.httpClient.SendAsync(request, token);
-        if(!response.IsSuccessStatusCode)
-            return [];
-
-        var modelResponse = await response.Content.ReadFromJsonAsync<OpenRouterModelsResponse>(token);
-
-        // Filter out non-text models (image, audio, embedding models) and convert to Model
-        return modelResponse.Data
-            .Where(n =>
-                !n.Id.Contains("whisper", StringComparison.OrdinalIgnoreCase) &&
-                !n.Id.Contains("dall-e", StringComparison.OrdinalIgnoreCase) &&
-                !n.Id.Contains("tts", StringComparison.OrdinalIgnoreCase) &&
-                !n.Id.Contains("embedding", StringComparison.OrdinalIgnoreCase) &&
-                !n.Id.Contains("moderation", StringComparison.OrdinalIgnoreCase) &&
-                !n.Id.Contains("stable-diffusion", StringComparison.OrdinalIgnoreCase) &&
-                !n.Id.Contains("flux", StringComparison.OrdinalIgnoreCase) &&
-                !n.Id.Contains("midjourney", StringComparison.OrdinalIgnoreCase))
-            .Select(n => new Model(n.Id, n.Name));
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
+                request.Headers.Add("HTTP-Referer", PROJECT_WEBSITE);
+                request.Headers.Add("X-Title", PROJECT_NAME);
+            });
     }
 
-    private async Task<IEnumerable<Model>> LoadEmbeddingModels(CancellationToken token, string? apiKeyProvisional = null)
+    private Task<ModelLoadResult> LoadEmbeddingModels(CancellationToken token, string? apiKeyProvisional = null)
     {
-        var secretKey = apiKeyProvisional switch
-        {
-            not null => apiKeyProvisional,
-            _ => await RUST_SERVICE.GetAPIKey(this, SecretStoreType.EMBEDDING_PROVIDER) switch
+        return this.LoadModelsResponse<OpenRouterModelsResponse>(
+            SecretStoreType.EMBEDDING_PROVIDER,
+            "embeddings/models",
+            modelResponse => modelResponse.Data.Select(n => new Model(n.Id, n.Name)),
+            token,
+            apiKeyProvisional,
+            requestConfigurator: (request, secretKey) =>
             {
-                { Success: true } result => await result.Secret.Decrypt(ENCRYPTION),
-                _ => null,
-            }
-        };
-
-        if (secretKey is null)
-            return [];
-
-        using var request = new HttpRequestMessage(HttpMethod.Get, "embeddings/models");
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
-        
-        // Set custom headers for project identification:
-        request.Headers.Add("HTTP-Referer", PROJECT_WEBSITE);
-        request.Headers.Add("X-Title", PROJECT_NAME);
-
-        using var response = await this.httpClient.SendAsync(request, token);
-        if(!response.IsSuccessStatusCode)
-            return [];
-
-        var modelResponse = await response.Content.ReadFromJsonAsync<OpenRouterModelsResponse>(token);
-
-        // Convert all embedding models to Model
-        return modelResponse.Data.Select(n => new Model(n.Id, n.Name));
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
+                request.Headers.Add("HTTP-Referer", PROJECT_WEBSITE);
+                request.Headers.Add("X-Title", PROJECT_NAME);
+            });
     }
 }

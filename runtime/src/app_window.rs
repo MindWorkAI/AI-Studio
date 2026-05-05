@@ -12,10 +12,9 @@ use strum_macros::Display;
 use tauri::{DragDropEvent,RunEvent, Manager, WindowEvent, generate_context};
 use tauri::path::PathResolver;
 use tauri::WebviewWindow;
-use tauri_plugin_dialog::{DialogExt, FileDialogBuilder};
 use tauri_plugin_updater::{UpdaterExt, Update};
 use tauri_plugin_global_shortcut::GlobalShortcutExt;
-use tauri_plugin_shell::ShellExt;
+use tauri_plugin_opener::OpenerExt;
 use tokio::sync::broadcast;
 use tokio::time;
 use crate::api_token::APIToken;
@@ -28,7 +27,7 @@ use crate::qdrant::{cleanup_qdrant, start_qdrant_server, stop_qdrant_server};
 use crate::dotnet::create_startup_env_file;
 
 /// The Tauri main window.
-static MAIN_WINDOW: Lazy<Mutex<Option<WebviewWindow>>> = Lazy::new(|| Mutex::new(None));
+pub static MAIN_WINDOW: Lazy<Mutex<Option<WebviewWindow>>> = Lazy::new(|| Mutex::new(None));
 
 /// The update response coming from the Tauri updater.
 static CHECK_UPDATE_RESPONSE: Lazy<Mutex<Option<Update>>> = Lazy::new(|| Mutex::new(None));
@@ -89,7 +88,7 @@ pub fn start_tauri() {
                         return true;
                     }
 
-                    match webview.app_handle().shell().open(url.as_str(), None) {
+                    match webview.app_handle().opener().open_url(url.as_str(), None::<&str>) {
                         Ok(_) => {
                             info!(Source = "Tauri"; "Opening external URL in system browser: {url}");
                         },
@@ -134,15 +133,15 @@ pub fn start_tauri() {
             DATA_DIRECTORY.set(data_path.to_str().unwrap().to_string()).map_err(|_| error!("Was not able to set the data directory.")).unwrap();
             CONFIG_DIRECTORY.set(app.path().app_config_dir().unwrap().to_str().unwrap().to_string()).map_err(|_| error!("Was not able to set the config directory.")).unwrap();
 
-            cleanup_qdrant();
-            cleanup_dotnet_server();
-
             if is_dev() {
                 #[cfg(debug_assertions)]
                 create_startup_env_file();
             } else {
+                cleanup_dotnet_server();
                 start_dotnet_server(app.handle().clone());
             }
+
+            cleanup_qdrant();
             start_qdrant_server(app.handle().clone());
 
             info!(Source = "Bootloader Tauri"; "Reconfigure the file logger to use the app data directory {data_path:?}");
@@ -160,7 +159,7 @@ pub fn start_tauri() {
         if !matches!(event, RunEvent::MainEventsCleared) {
             debug!(Source = "Tauri"; "Tauri event received: location=app event handler   , event={event:?}");
         }
-        
+
         match event {
             RunEvent::WindowEvent { event, label, .. } => {
                 match event {
@@ -535,289 +534,6 @@ pub async fn install_update(_token: APIToken) {
     }
 }
 
-/// Let the user select a directory.
-#[post("/select/directory?<title>", data = "<previous_directory>")]
-pub fn select_directory(_token: APIToken, title: &str, previous_directory: Option<Json<PreviousDirectory>>) -> Json<DirectorySelectionResponse> {
-    let main_window_lock = MAIN_WINDOW.lock().unwrap();
-    let main_window = match main_window_lock.as_ref() {
-        Some(window) => window,
-        None => {
-            error!(Source = "Tauri"; "Cannot open directory dialog: main window not available.");
-            return Json(DirectorySelectionResponse {
-                user_cancelled: true,
-                selected_directory: String::from(""),
-            });
-        }
-    };
-
-    let mut dialog = main_window.app_handle().dialog().file().set_title(title);
-    if let Some(previous) = previous_directory {
-        dialog = dialog.set_directory(previous.path.clone());
-    }
-
-    let folder_path = dialog.blocking_pick_folder();
-    
-    match folder_path {
-        Some(path) => {
-            match path.into_path() {
-                Ok(pb) => {
-                    info!("User selected directory: {pb:?}");
-                    Json(DirectorySelectionResponse {
-                        user_cancelled: false,
-                        selected_directory: pb.to_string_lossy().to_string(),
-                    })
-                }
-                Err(e) => {
-                    error!(Source = "Tauri"; "Failed to convert directory path: {e}");
-                    Json(DirectorySelectionResponse {
-                        user_cancelled: true,
-                        selected_directory: String::new(),
-                    })
-                }
-            }
-        },
-
-        None => {
-            info!("User cancelled directory selection.");
-            Json(DirectorySelectionResponse {
-                user_cancelled: true,
-                selected_directory: String::from(""),
-            })
-        },
-    }
-}
-
-#[derive(Clone, Deserialize)]
-pub struct PreviousDirectory {
-    path: String,
-}
-
-#[derive(Clone, Deserialize)]
-pub struct FileTypeFilter {
-    filter_name: String,
-    filter_extensions: Vec<String>,
-}
-
-#[derive(Clone, Deserialize)]
-pub struct SelectFileOptions {
-    title: String,
-    previous_file: Option<PreviousFile>,
-    filter: Option<FileTypeFilter>,
-}
-
-#[derive(Clone, Deserialize)]
-pub struct SaveFileOptions {
-    title: String,
-    name_file: Option<PreviousFile>,
-    filter: Option<FileTypeFilter>,
-}
-
-#[derive(Serialize)]
-pub struct DirectorySelectionResponse {
-    user_cancelled: bool,
-    selected_directory: String,
-}
-
-/// Let the user select a file.
-#[post("/select/file", data = "<payload>")]
-pub fn select_file(_token: APIToken, payload: Json<SelectFileOptions>) -> Json<FileSelectionResponse> {
-
-    // Create a new file dialog builder:
-    let file_dialog = MAIN_WINDOW
-        .lock()
-        .unwrap()
-        .as_ref()
-        .map(|w| w.app_handle().dialog().file().set_title(&payload.title));
-
-    let Some(mut file_dialog) = file_dialog else {
-        error!(Source = "Tauri"; "Cannot open file dialog: main window not available.");
-        return Json(FileSelectionResponse {
-            user_cancelled: true,
-            selected_file_path: String::from(""),
-        });
-    };
-
-    // Set the file type filter if provided:
-    file_dialog = apply_filter(file_dialog, &payload.filter);
-
-    // Set the previous file path if provided:
-    if let Some(previous) = &payload.previous_file {
-        let previous_path = previous.file_path.as_str();
-        file_dialog = file_dialog.set_directory(previous_path);
-    }
-
-    // Show the file dialog and get the selected file path:
-    let file_path = file_dialog.blocking_pick_file();
-    match file_path {
-        Some(path) => match path.into_path() {
-            Ok(pb) => {
-                info!("User selected file: {pb:?}");
-                Json(FileSelectionResponse {
-                    user_cancelled: false,
-                    selected_file_path: pb.to_string_lossy().to_string(),
-                })
-            }
-            Err(e) => {
-                error!(Source = "Tauri"; "Failed to convert file path: {e}");
-                Json(FileSelectionResponse {
-                    user_cancelled: true,
-                    selected_file_path: String::new(),
-                })
-            }
-        },
-
-        None => {
-            info!("User cancelled file selection.");
-            Json(FileSelectionResponse {
-                user_cancelled: true,
-                selected_file_path: String::from(""),
-            })
-        },
-    }
-}
-
-/// Let the user select some files.
-#[post("/select/files", data = "<payload>")]
-pub fn select_files(_token: APIToken, payload: Json<SelectFileOptions>) -> Json<FilesSelectionResponse> {
-
-    // Create a new file dialog builder:
-    let file_dialog = MAIN_WINDOW
-        .lock()
-        .unwrap()
-        .as_ref()
-        .map(|w| w.app_handle().dialog().file().set_title(&payload.title));
-
-    let Some(mut file_dialog) = file_dialog else {
-        error!(Source = "Tauri"; "Cannot open file dialog: main window not available.");
-        return Json(FilesSelectionResponse {
-            user_cancelled: true,
-            selected_file_paths: Vec::new(),
-        });
-    };
-
-    // Set the file type filter if provided:
-    file_dialog = apply_filter(file_dialog, &payload.filter);
-
-    // Set the previous file path if provided:
-    if let Some(previous) = &payload.previous_file {
-        let previous_path = previous.file_path.as_str();
-        file_dialog = file_dialog.set_directory(previous_path);
-    }
-
-    // Show the file dialog and get the selected file path:
-    let file_paths = file_dialog.blocking_pick_files();
-    match file_paths {
-        Some(paths) => {
-            let converted: Vec<String> = paths.into_iter().filter_map(|p| p.into_path().ok()).map(|pb| pb.to_string_lossy().to_string()).collect();
-            info!("User selected {} files.", converted.len());
-            Json(FilesSelectionResponse {
-                user_cancelled: false,
-                selected_file_paths: converted,
-            })
-        }
-
-        None => {
-            info!("User cancelled file selection.");
-            Json(FilesSelectionResponse {
-                user_cancelled: true,
-                selected_file_paths: Vec::new(),
-            })
-        },
-    }
-}
-
-#[post("/save/file", data = "<payload>")]
-pub fn save_file(_token: APIToken, payload: Json<SaveFileOptions>) -> Json<FileSaveResponse> {
-
-    // Create a new file dialog builder:
-    let file_dialog = MAIN_WINDOW
-        .lock()
-        .unwrap()
-        .as_ref()
-        .map(|w| w.app_handle().dialog().file().set_title(&payload.title));
-
-    let Some(mut file_dialog) = file_dialog else {
-        error!(Source = "Tauri"; "Cannot open save dialog: main window not available.");
-        return Json(FileSaveResponse {
-            user_cancelled: true,
-            save_file_path: String::from(""),
-        });
-    };
-
-    // Set the file type filter if provided:
-    file_dialog = apply_filter(file_dialog, &payload.filter);
-
-    // Set the previous file path if provided:
-    if let Some(previous) = &payload.name_file {
-        let previous_path = previous.file_path.as_str();
-        file_dialog = file_dialog.set_directory(previous_path);
-    }
-
-    // Displays the file dialogue box and select the file:
-    let file_path = file_dialog.blocking_save_file();
-    match file_path {
-        Some(path) => match path.into_path() {
-            Ok(pb) => {
-                info!("User selected file for writing operation: {pb:?}");
-                Json(FileSaveResponse {
-                    user_cancelled: false,
-                    save_file_path: pb.to_string_lossy().to_string(),
-                })
-            }
-            Err(e) => {
-                error!(Source = "Tauri"; "Failed to convert save file path: {e}");
-                Json(FileSaveResponse {
-                    user_cancelled: true,
-                    save_file_path: String::new(),
-                })
-            }
-        },
-
-        None => {
-            info!("User cancelled file selection.");
-            Json(FileSaveResponse {
-                user_cancelled: true,
-                save_file_path: String::from(""),
-            })
-        },
-    }
-}
-
-#[derive(Clone, Deserialize)]
-pub struct PreviousFile {
-    file_path: String,
-}
-
-/// Applies an optional file type filter to a FileDialogBuilder.
-fn apply_filter<R: tauri::Runtime>(file_dialog: FileDialogBuilder<R>, filter: &Option<FileTypeFilter>) -> FileDialogBuilder<R> {
-    match filter {
-        Some(f) => file_dialog.add_filter(
-            &f.filter_name,
-            &f.filter_extensions.iter().map(|s| s.as_str()).collect::<Vec<&str>>(),
-        ),
-
-        None => file_dialog,
-    }
-}
-
-#[derive(Serialize)]
-pub struct FileSelectionResponse {
-    user_cancelled: bool,
-    selected_file_path: String,
-}
-
-#[derive(Serialize)]
-pub struct FilesSelectionResponse {
-    user_cancelled: bool,
-    selected_file_paths: Vec<String>,
-}
-
-#[derive(Serialize)]
-pub struct FileSaveResponse {
-    user_cancelled: bool,
-    save_file_path: String,
-}
-
 /// Request payload for registering a global shortcut.
 #[derive(Clone, Deserialize)]
 pub struct RegisterShortcutRequest {
@@ -832,6 +548,13 @@ pub struct RegisterShortcutRequest {
 /// Response for shortcut registration.
 #[derive(Serialize)]
 pub struct ShortcutResponse {
+    success: bool,
+    error_message: String,
+}
+
+/// Response for application exit requests.
+#[derive(Serialize)]
+pub struct AppExitResponse {
     success: bool,
     error_message: String,
 }
@@ -858,6 +581,35 @@ fn register_shortcut_with_callback<R: tauri::Runtime>(
     })
 }
 
+/// Requests a controlled shutdown of the entire desktop application.
+#[post("/app/exit")]
+pub fn exit_app(_token: APIToken) -> Json<AppExitResponse> {
+    let app_handle = {
+        let main_window_lock = MAIN_WINDOW.lock().unwrap();
+        match main_window_lock.as_ref() {
+            Some(window) => window.app_handle().clone(),
+            None => {
+                error!(Source = "Tauri"; "Cannot exit app: main window not available.");
+                return Json(AppExitResponse {
+                    success: false,
+                    error_message: "Main window not available".to_string(),
+                });
+            }
+        }
+    };
+
+    info!(Source = "Tauri"; "Controlled app exit was requested by the UI.");
+    tauri::async_runtime::spawn(async move {
+        time::sleep(Duration::from_millis(50)).await;
+        app_handle.exit(0);
+    });
+
+    Json(AppExitResponse {
+        success: true,
+        error_message: String::new(),
+    })
+}
+
 /// Registers or updates a global shortcut. If the shortcut string is empty,
 /// the existing shortcut for that name will be unregistered.
 #[post("/shortcuts/register", data = "<payload>")]
@@ -872,7 +624,7 @@ pub fn register_shortcut(_token: APIToken, payload: Json<RegisterShortcutRequest
             error_message: "Cannot register NONE shortcut".to_string(),
         });
     }
-    
+
     info!(Source = "Tauri"; "Registering global shortcut '{}' with key '{new_shortcut}'.", id);
 
     // Get the main window to access the global shortcut manager:

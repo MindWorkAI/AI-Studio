@@ -1,0 +1,26 @@
+@inherits MSGComponentBase
+
+<MudDialog>
+    <DialogContent>
+        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+            @T("The full prompting guideline used by the Prompt Optimizer.")
+        </MudJustifiedText>
+        
+        <MudField
+            Variant="Variant.Outlined"
+            AdornmentIcon="@Icons.Material.Filled.MenuBook"
+            Adornment="Adornment.Start"
+            Label="@T("Prompting Guideline")"
+            FullWidth="true"
+            Class="ma-2 pe-4">
+            <div style="max-height: 62vh; overflow-y: auto;">
+                <MudMarkdown Value="@this.GuidelineMarkdown" Props="Markdown.DefaultConfig" Styling="@this.MarkdownStyling" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE"/>
+            </div>
+        </MudField>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Close" Variant="Variant.Filled" Color="Color.Primary">
+            @T("Close")
+        </MudButton>
+    </DialogActions>
+</MudDialog>

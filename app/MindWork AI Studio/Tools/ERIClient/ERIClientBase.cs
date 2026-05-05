@@ -7,7 +7,7 @@ namespace AIStudio.Tools.ERIClient;
 
 public abstract class ERIClientBase(IERIDataSource dataSource) : IDisposable
 {
-    protected readonly IERIDataSource dataSource = dataSource;
+    protected readonly IERIDataSource DataSource = dataSource;
     
     protected static readonly JsonSerializerOptions JSON_OPTIONS = new()
     {
@@ -23,18 +23,18 @@ public abstract class ERIClientBase(IERIDataSource dataSource) : IDisposable
         }
     };
     
-    protected readonly HttpClient httpClient = new()
+    protected readonly HttpClient HttpClient = new()
     {
         BaseAddress = new Uri($"{dataSource.Hostname}:{dataSource.Port}"),
     };
     
-    protected string securityToken = string.Empty;
+    protected string SecurityToken = string.Empty;
     
     #region Implementation of IDisposable
 
     public void Dispose()
     {
-        this.httpClient.Dispose();
+        this.HttpClient.Dispose();
     }
 
     #endregion

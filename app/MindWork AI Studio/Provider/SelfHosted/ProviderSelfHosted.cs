@@ -1,7 +1,5 @@
 using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Text.Json;
 
 using AIStudio.Chat;
 using AIStudio.Provider.OpenAI;
@@ -18,65 +16,51 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
 
     #region Implementation of IProvider
 
+    /// <inheritdoc />
     public override string Id => LLMProviders.SELF_HOSTED.ToName();
     
+    /// <inheritdoc />
     public override string InstanceName { get; set; } = "Self-hosted";
+
+    /// <inheritdoc />
+    public override bool HasModelLoadingCapability => host is Host.OLLAMA or Host.LM_STUDIO or Host.VLLM;
     
     /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Provider.Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
-        // Get the API key:
-        var requestedSecret = await RUST_SERVICE.GetAPIKey(this, SecretStoreType.LLM_PROVIDER, isTrying: true);
-        
-        // Prepare the system prompt:
-        var systemPrompt = new TextMessage
-        {
-            Role = "system",
-            Content = chatThread.PrepareSystemPrompt(settingsManager),
-        };
-        
-        // Parse the API parameters:
-        var apiParameters = this.ParseAdditionalApiParameters();
+        await foreach (var content in this.StreamOpenAICompatibleChatCompletion<ChatCompletionAPIRequest, ChatCompletionDeltaStreamLine, ChatCompletionAnnotationStreamLine>(
+                           "self-hosted provider",
+                           chatModel,
+                           chatThread,
+                           settingsManager,
+                           async (systemPrompt, apiParameters) =>
+                           {
+                               // Build the list of messages. The image format depends on the host:
+                               // - Ollama uses the direct image URL format: { "type": "image_url", "image_url": "data:..." }
+                               // - LM Studio, vLLM, and llama.cpp use the nested image URL format: { "type": "image_url", "image_url": { "url": "data:..." } }
+                               var messages = host switch
+                               {
+                                   Host.OLLAMA => await chatThread.Blocks.BuildMessagesUsingDirectImageUrlAsync(this.Provider, chatModel),
+                                   _ => await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel),
+                               };
 
-        // Build the list of messages. The image format depends on the host:
-        // - Ollama uses the direct image URL format: { "type": "image_url", "image_url": "data:..." }
-        // - LM Studio, vLLM, and llama.cpp use the nested image URL format: { "type": "image_url", "image_url": { "url": "data:..." } }
-        var messages = host switch
-        {
-            Host.OLLAMA => await chatThread.Blocks.BuildMessagesUsingDirectImageUrlAsync(this.Provider, chatModel),
-            _ => await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel),
-        };
-        
-        // Prepare the OpenAI HTTP chat request:
-        var providerChatRequest = JsonSerializer.Serialize(new ChatRequest
-        {
-            Model = chatModel.Id,
-            
-            // Build the messages:
-            // - First of all the system prompt
-            // - Then none-empty user and AI messages
-            Messages = [systemPrompt, ..messages],
-            
-            // Right now, we only support streaming completions:
-            Stream = true,
-            AdditionalApiParameters = apiParameters
-        }, JSON_SERIALIZER_OPTIONS);
+                               return new ChatCompletionAPIRequest
+                               {
+                                   Model = chatModel.Id,
 
-        async Task<HttpRequestMessage> RequestBuilder()
-        {
-            // Build the HTTP post request:
-            var request = new HttpRequestMessage(HttpMethod.Post, host.ChatURL());
+                                   // Build the messages:
+                                   // - First of all the system prompt
+                                   // - Then none-empty user and AI messages
+                                   Messages = [systemPrompt, ..messages],
 
-            // Set the authorization header:
-            if (requestedSecret.Success)
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(ENCRYPTION));
-
-            // Set the content:
-            request.Content = new StringContent(providerChatRequest, Encoding.UTF8, "application/json");
-            return request;
-        }
-        
-        await foreach (var content in this.StreamChatCompletionInternal<ChatCompletionDeltaStreamLine, ChatCompletionAnnotationStreamLine>("self-hosted provider", RequestBuilder, token))
+                                   // Right now, we only support streaming completions:
+                                   Stream = true,
+                                   AdditionalApiParameters = apiParameters
+                               };
+                           },
+                           isTryingSecret: true,
+                           requestPath: host.ChatURL(),
+                           token: token))
             yield return content;
     }
 
@@ -102,7 +86,7 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
         return await this.PerformStandardTextEmbeddingRequest(requestedSecret, embeddingModel, host, token: token, texts: texts);
     }
     
-    public override async Task<IEnumerable<Provider.Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override async Task<ModelLoadResult> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
         try
         {
@@ -111,7 +95,7 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
                 case Host.LLAMA_CPP:
                     // Right now, llama.cpp only supports one model.
                     // There is no API to list the model(s).
-                    return [ new Provider.Model("as configured by llama.cpp", null) ];
+                    return ModelLoadResult.FromModels([ new Provider.Model("as configured by llama.cpp", null) ]);
             
                 case Host.LM_STUDIO:
                 case Host.OLLAMA:
@@ -119,22 +103,22 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
                     return await this.LoadModels( SecretStoreType.LLM_PROVIDER, ["embed"], [], token, apiKeyProvisional);
             }
 
-            return [];
+            return ModelLoadResult.FromModels([]);
         }
         catch(Exception e)
         {
             LOGGER.LogError($"Failed to load text models from self-hosted provider: {e.Message}");
-            return [];
+            return ModelLoadResult.Failure(ModelLoadFailureReason.UNKNOWN, e.Message);
         }
     }
 
     /// <inheritdoc />
-    public override Task<IEnumerable<Provider.Model>> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override Task<ModelLoadResult> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return Task.FromResult(Enumerable.Empty<Provider.Model>());
+        return Task.FromResult(ModelLoadResult.FromModels([]));
     }
 
-    public override async Task<IEnumerable<Provider.Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override async Task<ModelLoadResult> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
         try
         {
@@ -146,69 +130,61 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
                     return await this.LoadModels( SecretStoreType.EMBEDDING_PROVIDER, [], ["embed"], token, apiKeyProvisional);
             }
 
-            return [];
+            return ModelLoadResult.FromModels([]);
         }
         catch(Exception e)
         {
             LOGGER.LogError($"Failed to load text models from self-hosted provider: {e.Message}");
-            return [];
+            return ModelLoadResult.Failure(ModelLoadFailureReason.UNKNOWN, e.Message);
         }
     }
     
     /// <inheritdoc />
-    public override async Task<IEnumerable<Provider.Model>> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override async Task<ModelLoadResult> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
         try
         {
             switch (host)
             {
                 case Host.WHISPER_CPP:
-                    return new List<Provider.Model>
-                    {
-                        new("loaded-model", TB("Model as configured by whisper.cpp")),
-                    };
+                    return ModelLoadResult.FromModels(
+                    [
+                        new Provider.Model("loaded-model", TB("Model as configured by whisper.cpp")),
+                    ]);
                 
                 case Host.OLLAMA:
                 case Host.VLLM:
                     return await this.LoadModels(SecretStoreType.TRANSCRIPTION_PROVIDER, [], [], token, apiKeyProvisional);
                 
                 default:
-                    return [];
+                    return ModelLoadResult.FromModels([]);
             }
         }
         catch (Exception e)
         {
             LOGGER.LogError($"Failed to load transcription models from self-hosted provider: {e.Message}");
-            return [];
+            return ModelLoadResult.Failure(ModelLoadFailureReason.UNKNOWN, e.Message);
         }
     }
     
     #endregion
 
-    private async Task<IEnumerable<Provider.Model>> LoadModels(SecretStoreType storeType, string[] ignorePhrases, string[] filterPhrases, CancellationToken token, string? apiKeyProvisional = null)
+    private async Task<ModelLoadResult> LoadModels(SecretStoreType storeType, string[] ignorePhrases, string[] filterPhrases, CancellationToken token, string? apiKeyProvisional = null)
     {
-        var secretKey = apiKeyProvisional switch
-        {
-            not null => apiKeyProvisional,
-            _ => await RUST_SERVICE.GetAPIKey(this, storeType, isTrying: true) switch
-            {
-                { Success: true } result => await result.Secret.Decrypt(ENCRYPTION),
-                _ => null,
-            }
-        };
+        var secretKey = await this.GetModelLoadingSecretKey(storeType, apiKeyProvisional, true);
                     
         using var lmStudioRequest = new HttpRequestMessage(HttpMethod.Get, "models");
         if(secretKey is not null)
-            lmStudioRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKeyProvisional);
+            lmStudioRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
                     
-        using var lmStudioResponse = await this.httpClient.SendAsync(lmStudioRequest, token);
+        using var lmStudioResponse = await this.HttpClient.SendAsync(lmStudioRequest, token);
         if(!lmStudioResponse.IsSuccessStatusCode)
-            return [];
+            return FailedModelLoadResult(GetDefaultModelLoadFailureReason(lmStudioResponse), $"Status={(int)lmStudioResponse.StatusCode} {lmStudioResponse.ReasonPhrase}");
 
         var lmStudioModelResponse = await lmStudioResponse.Content.ReadFromJsonAsync<ModelsResponse>(token);
-        return lmStudioModelResponse.Data.
+        return SuccessfulModelLoadResult(lmStudioModelResponse.Data.
             Where(model => !ignorePhrases.Any(ignorePhrase => model.Id.Contains(ignorePhrase, StringComparison.InvariantCulture)) &&
                            filterPhrases.All( filter => model.Id.Contains(filter, StringComparison.InvariantCulture)))
-            .Select(n => new Provider.Model(n.Id, null));
+            .Select(n => new Provider.Model(n.Id, null)));
     }
 }

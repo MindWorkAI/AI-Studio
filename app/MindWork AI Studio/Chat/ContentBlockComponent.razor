@@ -96,11 +96,25 @@
                             }
                             else
                             {
-                                <MudMarkdown Value="@NormalizeMarkdownForRendering(textContent.Text)" Props="Markdown.DefaultConfig" Styling="@this.MarkdownStyling" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE" />
-                                @if (textContent.Sources.Count > 0)
-                                {
-                                    <MudMarkdown Value="@textContent.Sources.ToMarkdown()" Props="Markdown.DefaultConfig" Styling="@this.MarkdownStyling" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE" />
-                                }
+                                var renderPlan = this.GetMarkdownRenderPlan(textContent.Text);
+                                <div @ref="this.mathContentContainer" class="chat-math-container">
+                                    @foreach (var segment in renderPlan.Segments)
+                                    {
+                                        var segmentContent = segment.GetContent(renderPlan.Source);
+                                        if (segment.Type is MarkdownRenderSegmentType.MARKDOWN)
+                                        {
+                                            <MudMarkdown @key="@segment.RenderKey" Value="@segmentContent" Props="Markdown.DefaultConfig" Styling="@this.MarkdownStyling" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE" />
+                                        }
+                                        else
+                                        {
+                                            <MathJaxBlock @key="@segment.RenderKey" Value="@segmentContent" Class="mb-5" />
+                                        }
+                                    }
+                                    @if (textContent.Sources.Count > 0)
+                                    {
+                                        <MudMarkdown Value="@textContent.Sources.ToMarkdown()" Props="Markdown.DefaultConfig" Styling="@this.MarkdownStyling" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE" />
+                                    }
+                                </div>
                             }
                         }
                     }

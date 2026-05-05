@@ -11,6 +11,15 @@ public partial class SettingsPanelApp : SettingsPanelBase
         var secret = EnterpriseEncryption.GenerateSecret();
         await this.RustService.CopyText2Clipboard(this.Snackbar, secret);
     }
+    
+    private string GetStartPageHelpText()
+    {
+        var helpText = T("Choose which page AI Studio should open first when you start the app. Changes take effect the next time you launch AI Studio.");
+        if (!ManagedConfiguration.TryGet(x => x.App, x => x.StartPage, out var meta) || meta.ManagedMode is not ManagedConfigurationMode.EDITABLE_DEFAULT)
+            return helpText;
+
+        return $"{helpText} {T("Your organization provided a default start page, but you can still change it.")}";
+    }
 
     private IEnumerable<ConfigurationSelectData<string>> GetFilteredTranscriptionProviders()
     {

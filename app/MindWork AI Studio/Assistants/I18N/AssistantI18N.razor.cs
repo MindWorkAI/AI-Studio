@@ -269,8 +269,8 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
     
     private async Task LocalizeTextContent()
     {
-        await this.form!.Validate();
-        if (!this.inputIsValid)
+        await this.Form!.Validate();
+        if (!this.InputIsValid)
             return;
         
         if(this.selectedLanguagePlugin is null)
@@ -291,7 +291,7 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
             this.localizedContent = this.addedContent.ToDictionary();
         }
 
-        if(this.cancellationTokenSource!.IsCancellationRequested)
+        if(this.CancellationTokenSource!.IsCancellationRequested)
             return;
         
         //
@@ -302,7 +302,7 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
         //
         foreach (var keyValuePair in this.selectedLanguagePlugin.Content)
         {
-            if (this.cancellationTokenSource!.IsCancellationRequested)
+            if (this.CancellationTokenSource!.IsCancellationRequested)
                 break;
             
             if (this.localizedContent.ContainsKey(keyValuePair.Key))
@@ -314,7 +314,7 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
             this.localizedContent.Add(keyValuePair.Key, keyValuePair.Value);
         }
         
-        if(this.cancellationTokenSource!.IsCancellationRequested)
+        if(this.CancellationTokenSource!.IsCancellationRequested)
             return;
         
         //
@@ -324,7 +324,7 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
         var commentContent = new Dictionary<string, string>(this.addedContent);
         foreach (var keyValuePair in PluginFactory.BaseLanguage.Content)
         {
-            if  (this.cancellationTokenSource!.IsCancellationRequested)  
+            if  (this.CancellationTokenSource!.IsCancellationRequested)  
                 break;
             
             if (this.removedContent.ContainsKey(keyValuePair.Key))
@@ -342,7 +342,7 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
         var minimumTime = TimeSpan.FromMilliseconds(500);
         foreach (var keyValuePair in this.addedContent)
         {
-            if(this.cancellationTokenSource!.IsCancellationRequested)
+            if(this.CancellationTokenSource!.IsCancellationRequested)
                 break;
             
             //
@@ -360,7 +360,7 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
             var time = this.AddUserRequest(keyValuePair.Value);
             this.localizedContent.Add(keyValuePair.Key, await this.AddAIResponseAsync(time));
             
-            if (this.cancellationTokenSource!.IsCancellationRequested)
+            if (this.CancellationTokenSource!.IsCancellationRequested)
                 break;
             
             //
@@ -375,7 +375,7 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
     private void Phase2CreateLuaCode(IReadOnlyDictionary<string, string> commentContent)
     {
         this.finalLuaCode.Clear();
-        LuaTable.Create(ref this.finalLuaCode, "UI_TEXT_CONTENT", this.localizedContent, commentContent, this.cancellationTokenSource!.Token);
+        LuaTable.Create(ref this.finalLuaCode, "UI_TEXT_CONTENT", this.localizedContent, commentContent, this.CancellationTokenSource!.Token);
 
         // Next, we must remove the `root::` prefix from the keys:
         this.finalLuaCode.Replace("""UI_TEXT_CONTENT["root::""", """

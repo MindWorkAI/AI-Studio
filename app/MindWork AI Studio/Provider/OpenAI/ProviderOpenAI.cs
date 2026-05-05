@@ -24,6 +24,9 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, "https
     public override string InstanceName { get; set; } = "OpenAI";
 
     /// <inheritdoc />
+    public override bool HasModelLoadingCapability => true;
+
+    /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
         // Get the API key:
@@ -79,9 +82,9 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, "https
         //
         // Prepare the tools we want to use:
         //
-        IList<Tool> tools = modelCapabilities.Contains(Capability.WEB_SEARCH) switch
+        IList<ProviderTool> providerTools = modelCapabilities.Contains(Capability.WEB_SEARCH) switch
         {
-            true => [ Tools.WEB_SEARCH ],
+            true => [ ProviderTools.WEB_SEARCH ],
             _ => []
         };
         
@@ -178,7 +181,7 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, "https
                 Store = false,
                 
                 // Tools we want to use:
-                Tools = tools,
+                ProviderTools = providerTools,
                 
                 // Additional API parameters:
                 AdditionalApiParameters = apiParameters
@@ -233,61 +236,57 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, "https
     }
 
     /// <inheritdoc />
-    public override async Task<IEnumerable<Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override async Task<ModelLoadResult> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        var models = await this.LoadModels(SecretStoreType.LLM_PROVIDER, ["chatgpt-", "gpt-", "o1-", "o3-", "o4-"], token, apiKeyProvisional);
-        return models.Where(model => !model.Id.Contains("image", StringComparison.OrdinalIgnoreCase) &&
-                                     !model.Id.Contains("realtime", StringComparison.OrdinalIgnoreCase) &&
-                                     !model.Id.Contains("audio", StringComparison.OrdinalIgnoreCase) &&
-                                     !model.Id.Contains("tts", StringComparison.OrdinalIgnoreCase) &&
-                                     !model.Id.Contains("transcribe", StringComparison.OrdinalIgnoreCase));
+        var result = await this.LoadModels(SecretStoreType.LLM_PROVIDER, ["chatgpt-", "gpt-", "o1-", "o3-", "o4-"], token, apiKeyProvisional);
+        return result with
+        {
+            Models =
+            [
+                ..result.Models.Where(model => !model.Id.Contains("image", StringComparison.OrdinalIgnoreCase) &&
+                                               !model.Id.Contains("realtime", StringComparison.OrdinalIgnoreCase) &&
+                                               !model.Id.Contains("audio", StringComparison.OrdinalIgnoreCase) &&
+                                               !model.Id.Contains("tts", StringComparison.OrdinalIgnoreCase) &&
+                                               !model.Id.Contains("transcribe", StringComparison.OrdinalIgnoreCase))
+            ]
+        };
     }
 
     /// <inheritdoc />
-    public override Task<IEnumerable<Model>> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override Task<ModelLoadResult> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
         return this.LoadModels(SecretStoreType.IMAGE_PROVIDER, ["dall-e-", "gpt-image"], token, apiKeyProvisional);
     }
     
     /// <inheritdoc />
-    public override Task<IEnumerable<Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override Task<ModelLoadResult> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
         return this.LoadModels(SecretStoreType.EMBEDDING_PROVIDER, ["text-embedding-"], token, apiKeyProvisional);
     }
     
     /// <inheritdoc />
-    public override async Task<IEnumerable<Model>> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override async Task<ModelLoadResult> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        var models = await this.LoadModels(SecretStoreType.TRANSCRIPTION_PROVIDER, ["whisper-", "gpt-"], token, apiKeyProvisional);
-        return models.Where(model => model.Id.StartsWith("whisper-", StringComparison.InvariantCultureIgnoreCase) ||
-                                     model.Id.Contains("-transcribe", StringComparison.InvariantCultureIgnoreCase));
+        var result = await this.LoadModels(SecretStoreType.TRANSCRIPTION_PROVIDER, ["whisper-", "gpt-"], token, apiKeyProvisional);
+        return result with
+        {
+            Models =
+            [
+                ..result.Models.Where(model => model.Id.StartsWith("whisper-", StringComparison.InvariantCultureIgnoreCase) ||
+                                               model.Id.Contains("-transcribe", StringComparison.InvariantCultureIgnoreCase))
+            ]
+        };
     }
     
     #endregion
 
-    private async Task<IEnumerable<Model>> LoadModels(SecretStoreType storeType, string[] prefixes, CancellationToken token, string? apiKeyProvisional = null)
+    private Task<ModelLoadResult> LoadModels(SecretStoreType storeType, string[] prefixes, CancellationToken token, string? apiKeyProvisional = null)
     {
-        var secretKey = apiKeyProvisional switch
-        {
-            not null => apiKeyProvisional,
-            _ => await RUST_SERVICE.GetAPIKey(this, storeType) switch
-            {
-                { Success: true } result => await result.Secret.Decrypt(ENCRYPTION),
-                _ => null,
-            }
-        };
-
-        if (secretKey is null)
-            return [];
-        
-        using var request = new HttpRequestMessage(HttpMethod.Get, "models");
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
-
-        using var response = await this.httpClient.SendAsync(request, token);
-        if(!response.IsSuccessStatusCode)
-            return [];
-
-        var modelResponse = await response.Content.ReadFromJsonAsync<ModelsResponse>(token);
-        return modelResponse.Data.Where(model => prefixes.Any(prefix => model.Id.StartsWith(prefix, StringComparison.InvariantCulture)));
+        return this.LoadModelsResponse<ModelsResponse>(
+            storeType,
+            "models",
+            modelResponse => modelResponse.Data.Where(model => prefixes.Any(prefix => model.Id.StartsWith(prefix, StringComparison.InvariantCulture))),
+            token,
+            apiKeyProvisional);
     }
 }

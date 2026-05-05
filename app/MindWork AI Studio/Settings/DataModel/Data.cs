@@ -1,3 +1,5 @@
+using AIStudio.Tools.PluginSystem.Assistants;
+
 namespace AIStudio.Settings.DataModel;
 
 /// <summary>
@@ -52,6 +54,16 @@ public sealed class Data
     public List<Guid> EnabledPlugins { get; set; } = [];
 
     /// <summary>
+    /// Metadata for managed settings that use a plugin-provided editable default.
+    /// </summary>
+    public Dictionary<string, ManagedEditableDefaultState> ManagedEditableDefaults { get; set; } = [];
+
+    /// <summary>
+    /// Cached audit results for assistant plugins.
+    /// </summary>
+    public List<PluginAssistantAudit> AssistantPluginAudits { get; set; } = [];
+
+    /// <summary>
     /// The next provider number to use.
     /// </summary>
     public uint NextProviderNum { get; set; } = 1;
@@ -102,6 +114,8 @@ public sealed class Data
     
     public DataDocumentAnalysis DocumentAnalysis { get; init; } = new();
 
+    public DataMandatoryInformation MandatoryInformation { get; init; } = new();
+
     public DataTextSummarizer TextSummarizer { get; init; } = new();
 
     public DataTextContentCleaner TextContentCleaner { get; init; } = new();
@@ -109,14 +123,20 @@ public sealed class Data
     public DataAgentDataSourceSelection AgentDataSourceSelection { get; init; } = new();
     
     public DataAgentRetrievalContextValidation AgentRetrievalContextValidation { get; init; } = new();
+
+    public DataAssistantPluginAudit AssistantPluginAudit { get; init; } = new(x => x.AssistantPluginAudit);
     
     public DataAgenda Agenda { get; init; } = new();
     
     public DataGrammarSpelling GrammarSpelling { get; init; } = new();
     
     public DataRewriteImprove RewriteImprove { get; init; } = new();
+    
+    public DataPromptOptimizer PromptOptimizer { get; init; } = new();
 
     public DataEMail EMail { get; init; } = new();
+    
+    public DataSlideBuilder SlideBuilder { get; init; } = new();
     
     public DataLegalCheck LegalCheck { get; init; } = new();
     

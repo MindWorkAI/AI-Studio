@@ -9,13 +9,13 @@ namespace AIStudio.Provider.OpenAI;
 /// <param name="Input">The chat messages.</param>
 /// <param name="Stream">Whether to stream the response.</param>
 /// <param name="Store">Whether to store the response on the server (usually OpenAI's infrastructure).</param>
-/// <param name="Tools">The tools to use for the request.</param>
+/// <param name="ProviderTools">The provider-side tools to use for the request.</param>
 public record ResponsesAPIRequest(
     string Model,
     IList<IMessageBase> Input,
     bool Stream,
     bool Store,
-    IList<Tool> Tools)
+    [property: JsonPropertyName("tools")] IList<ProviderTool> ProviderTools)
 {
     public ResponsesAPIRequest() : this(string.Empty, [], true, false, [])
     {

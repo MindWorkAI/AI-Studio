@@ -53,6 +53,16 @@ public sealed class SettingsManager
     public bool IsDarkMode { get; set; }
 
     /// <summary>
+    /// Ensures that the startup start-page redirect is evaluated at most once per app session.
+    /// </summary>
+    public bool StartupStartPageRedirectHandled { get; set; }
+
+    /// <summary>
+    /// Indicates that the initial settings load attempt has completed.
+    /// </summary>
+    public bool HasCompletedInitialSettingsLoad { get; private set; }
+
+    /// <summary>
     /// The configuration data.
     /// </summary>
     public Data ConfigurationData { get; private set; } = new();
@@ -67,6 +77,8 @@ public sealed class SettingsManager
         var settingsSnapshot = await this.TryReadSettingsSnapshot();
         if (settingsSnapshot is not null)
             this.ConfigurationData = settingsSnapshot;
+
+        this.HasCompletedInitialSettingsLoad = true;
     }
 
     /// <summary>
@@ -292,14 +304,71 @@ public sealed class SettingsManager
         return this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.ConfigurationData.App.PreselectedProvider && x.UsedLLMProvider.GetConfidence(this).Level >= minimumLevel) ?? Provider.NONE;
     }
 
+    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
+    public Provider GetChatProviderForLoadedChat(string? chatProviderId = null)
+    {
+        var minimumLevel = this.GetMinimumConfidenceLevel(Tools.Components.CHAT);
+
+        bool IsSelectableProvider(Provider provider) =>
+            provider != Provider.NONE
+            && provider.UsedLLMProvider != LLMProviders.NONE
+            && provider.UsedLLMProvider.GetConfidence(this).Level >= minimumLevel;
+
+        Provider? FindProviderById(string? providerId)
+        {
+            if (string.IsNullOrWhiteSpace(providerId))
+                return null;
+
+            var provider = this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == providerId);
+            return provider is not null && IsSelectableProvider(provider) ? provider : null;
+        }
+
+        var chatProvider = FindProviderById(chatProviderId);
+        if (chatProvider is not null)
+            return chatProvider;
+
+        var defaultChatProvider = this.ConfigurationData.Chat.PreselectOptions
+            ? FindProviderById(this.ConfigurationData.Chat.PreselectedProvider)
+            : null;
+        if (defaultChatProvider is not null)
+            return defaultChatProvider;
+
+        var defaultAppProvider = FindProviderById(this.ConfigurationData.App.PreselectedProvider);
+        if (defaultAppProvider is not null)
+            return defaultAppProvider;
+
+        var selectableProviders = this.ConfigurationData.Providers.Where(IsSelectableProvider).ToList();
+        return selectableProviders.Count == 1 ? selectableProviders[0] : Provider.NONE;
+    }
+
     public Profile GetPreselectedProfile(Tools.Components component)
     {
-        var preselection = component.PreselectedProfile(this);
-        if (preselection != Profile.NO_PROFILE)
-            return preselection;
-        
-        preselection = this.ConfigurationData.Profiles.FirstOrDefault(x => x.Id.Equals(this.ConfigurationData.App.PreselectedProfile, StringComparison.OrdinalIgnoreCase));
-        return preselection ?? Profile.NO_PROFILE;
+        var preselection = component.GetProfilePreselection(this);
+        if (preselection.DoNotPreselectProfile)
+            return Profile.NO_PROFILE;
+
+        if (preselection.UseSpecificProfile)
+        {
+            var componentProfile = this.ConfigurationData.Profiles.FirstOrDefault(x => x.Id.Equals(preselection.SpecificProfileId, StringComparison.OrdinalIgnoreCase));
+            return componentProfile ?? Profile.NO_PROFILE;
+        }
+
+        var appPreselection = ProfilePreselection.FromStoredValue(this.ConfigurationData.App.PreselectedProfile);
+        if (appPreselection.DoNotPreselectProfile || !appPreselection.UseSpecificProfile)
+            return Profile.NO_PROFILE;
+
+        var appProfile = this.ConfigurationData.Profiles.FirstOrDefault(x => x.Id.Equals(appPreselection.SpecificProfileId, StringComparison.OrdinalIgnoreCase));
+        return appProfile ?? Profile.NO_PROFILE;
+    }
+
+    public Profile GetAppPreselectedProfile()
+    {
+        var appPreselection = ProfilePreselection.FromStoredValue(this.ConfigurationData.App.PreselectedProfile);
+        if (appPreselection.DoNotPreselectProfile || !appPreselection.UseSpecificProfile)
+            return Profile.NO_PROFILE;
+
+        var appProfile = this.ConfigurationData.Profiles.FirstOrDefault(x => x.Id.Equals(appPreselection.SpecificProfileId, StringComparison.OrdinalIgnoreCase));
+        return appProfile ?? Profile.NO_PROFILE;
     }
     
     public ChatTemplate GetPreselectedChatTemplate(Tools.Components component)

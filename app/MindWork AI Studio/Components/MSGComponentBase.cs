@@ -100,7 +100,7 @@ public abstract class MSGComponentBase : ComponentBase, IDisposable, IMessageBus
             Event.PLUGINS_RELOADED,
         };
         
-        this.MessageBus.ApplyFilters(this, filterComponents, eventsList.ToArray());
+        this.MessageBus.ApplyFilters(this, filterComponents, eventsList.ToHashSet());
     }
     
     protected virtual void DisposeResources()

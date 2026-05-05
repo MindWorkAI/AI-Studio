@@ -5,15 +5,142 @@ on:
       - main
     tags:
       - "v*.*.*"
+  pull_request:
+    types:
+      - opened
+      - labeled
+      - synchronize
+      - reopened
 
 env:
   RETENTION_INTERMEDIATE_ASSETS: 1
   RETENTION_RELEASE_ASSETS: 30
     
 jobs:
+  determine_run_mode:
+    name: Determine run mode
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      is_release: ${{ steps.determine.outputs.is_release }}
+      is_main_push: ${{ steps.determine.outputs.is_main_push }}
+      is_labeled_pr: ${{ steps.determine.outputs.is_labeled_pr }}
+      is_pr_build: ${{ steps.determine.outputs.is_pr_build }}
+      is_internal_pr: ${{ steps.determine.outputs.is_internal_pr }}
+      build_enabled: ${{ steps.determine.outputs.build_enabled }}
+      artifact_retention_days: ${{ steps.determine.outputs.artifact_retention_days }}
+      skip_reason: ${{ steps.determine.outputs.skip_reason }}
+
+    steps:
+      - name: Determine run mode
+        id: determine
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF: ${{ github.ref }}
+          PR_LABELS: ${{ join(github.event.pull_request.labels.*.name, ' ') }}
+          PR_HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          is_release=false
+          is_main_push=false
+          is_labeled_pr=false
+          is_pr_build=false
+          is_internal_pr=false
+          build_enabled=false
+          artifact_retention_days=0
+          skip_reason="Build disabled: event did not match main push, release tag, or labeled internal PR."
+
+          if [[ "$EVENT_NAME" == "pull_request" && "$PR_HEAD_REPO" == "$REPOSITORY" ]]; then
+            is_internal_pr=true
+          fi
+
+          if [[ "$REF" == refs/tags/v* ]]; then
+            is_release=true
+            build_enabled=true
+            artifact_retention_days=${{ env.RETENTION_INTERMEDIATE_ASSETS }}
+            skip_reason=""
+          elif [[ "$EVENT_NAME" == "push" && "$REF" == "refs/heads/main" ]]; then
+            is_main_push=true
+            build_enabled=true
+            artifact_retention_days=7
+            skip_reason=""
+          elif [[ "$EVENT_NAME" == "pull_request" && " $PR_LABELS " == *" run-pipeline "* ]]; then
+            is_labeled_pr=true
+            is_pr_build=true
+            build_enabled=true
+            artifact_retention_days=3
+            skip_reason=""
+          elif [[ "$EVENT_NAME" == "pull_request" && " $PR_LABELS " != *" run-pipeline "* ]]; then
+            skip_reason="Build disabled: PR does not have the required 'run-pipeline' label."
+          fi
+
+          echo "is_release=${is_release}" >> "$GITHUB_OUTPUT"
+          echo "is_main_push=${is_main_push}" >> "$GITHUB_OUTPUT"
+          echo "is_labeled_pr=${is_labeled_pr}" >> "$GITHUB_OUTPUT"
+          echo "is_pr_build=${is_pr_build}" >> "$GITHUB_OUTPUT"
+          echo "is_internal_pr=${is_internal_pr}" >> "$GITHUB_OUTPUT"
+          echo "build_enabled=${build_enabled}" >> "$GITHUB_OUTPUT"
+          echo "artifact_retention_days=${artifact_retention_days}" >> "$GITHUB_OUTPUT"
+          echo "skip_reason=${skip_reason}" >> "$GITHUB_OUTPUT"
+
+      - name: Log run mode
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF: ${{ github.ref }}
+          PR_LABELS: ${{ join(github.event.pull_request.labels.*.name, ', ') }}
+          PR_HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          REPOSITORY: ${{ github.repository }}
+          IS_RELEASE: ${{ steps.determine.outputs.is_release }}
+          IS_MAIN_PUSH: ${{ steps.determine.outputs.is_main_push }}
+          IS_LABELED_PR: ${{ steps.determine.outputs.is_labeled_pr }}
+          IS_PR_BUILD: ${{ steps.determine.outputs.is_pr_build }}
+          IS_INTERNAL_PR: ${{ steps.determine.outputs.is_internal_pr }}
+          BUILD_ENABLED: ${{ steps.determine.outputs.build_enabled }}
+          ARTIFACT_RETENTION_DAYS: ${{ steps.determine.outputs.artifact_retention_days }}
+          SKIP_REASON: ${{ steps.determine.outputs.skip_reason }}
+        run: |
+          echo "event_name: ${EVENT_NAME}"
+          echo "ref: ${REF}"
+          echo "repository: ${REPOSITORY}"
+          echo "pr_head_repo: ${PR_HEAD_REPO}"
+          echo "pr_labels: ${PR_LABELS}"
+          echo "is_release: ${IS_RELEASE}"
+          echo "is_main_push: ${IS_MAIN_PUSH}"
+          echo "is_labeled_pr: ${IS_LABELED_PR}"
+          echo "is_pr_build: ${IS_PR_BUILD}"
+          echo "is_internal_pr: ${IS_INTERNAL_PR}"
+          echo "build_enabled: ${BUILD_ENABLED}"
+          echo "artifact_retention_days: ${ARTIFACT_RETENTION_DAYS}"
+          echo "skip_reason: ${SKIP_REASON}"
+
+          {
+            echo "### Run Mode"
+            echo ""
+            echo "| Key | Value |"
+            echo "| --- | --- |"
+            echo "| event_name | ${EVENT_NAME} |"
+            echo "| ref | ${REF} |"
+            echo "| repository | ${REPOSITORY} |"
+            echo "| pr_head_repo | ${PR_HEAD_REPO} |"
+            echo "| pr_labels | ${PR_LABELS} |"
+            echo "| is_release | ${IS_RELEASE} |"
+            echo "| is_main_push | ${IS_MAIN_PUSH} |"
+            echo "| is_labeled_pr | ${IS_LABELED_PR} |"
+            echo "| is_pr_build | ${IS_PR_BUILD} |"
+            echo "| is_internal_pr | ${IS_INTERNAL_PR} |"
+            echo "| build_enabled | ${BUILD_ENABLED} |"
+            echo "| artifact_retention_days | ${ARTIFACT_RETENTION_DAYS} |"
+            echo "| skip_reason | ${SKIP_REASON} |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
   read_metadata:
     name: Read metadata
     runs-on: ubuntu-latest
+    needs: determine_run_mode
+    if: needs.determine_run_mode.outputs.build_enabled == 'true'
+    permissions:
+      contents: read
     outputs:
       formatted_version: ${{ steps.format_metadata.outputs.formatted_version }}
       formatted_build_time: ${{ steps.format_metadata.outputs.formatted_build_time }}
@@ -60,6 +187,7 @@ jobs:
 
       - name: Read changelog
         id: read_changelog
+        if: needs.determine_run_mode.outputs.is_release == 'true'
         run: |
           # Ensure, that the matching changelog file for the current version exists:
           if [ ! -f "app/MindWork AI Studio/wwwroot/changelog/${FORMATTED_VERSION}.md" ]; then
@@ -79,7 +207,10 @@ jobs:
 
   build_main:
     name: Build app (${{ matrix.dotnet_runtime }})
-    needs: read_metadata
+    needs: [determine_run_mode, read_metadata]
+    if: needs.determine_run_mode.outputs.build_enabled == 'true'
+    permissions:
+      contents: read
     
     strategy:
       fail-fast: true
@@ -89,37 +220,43 @@ jobs:
             rust_target: 'aarch64-apple-darwin'
             dotnet_runtime: 'osx-arm64'
             dotnet_name_postfix: '-aarch64-apple-darwin'
-            tauri_bundle: 'dmg'
+            tauri_bundle: 'dmg,updater'
+            tauri_bundle_pr: 'dmg'
 
           - platform: 'macos-latest' # for Intel-based macOS
             rust_target: 'x86_64-apple-darwin'
             dotnet_runtime: 'osx-x64'
             dotnet_name_postfix: '-x86_64-apple-darwin'
-            tauri_bundle: 'dmg'
+            tauri_bundle: 'dmg,updater'
+            tauri_bundle_pr: 'dmg'
 
           - platform: 'ubuntu-22.04' # for x86-based Linux
             rust_target: 'x86_64-unknown-linux-gnu'
             dotnet_runtime: 'linux-x64'
             dotnet_name_postfix: '-x86_64-unknown-linux-gnu'
-            tauri_bundle: 'appimage deb'
+            tauri_bundle: 'appimage,deb,updater'
+            tauri_bundle_pr: 'appimage,deb'
             
           - platform: 'ubuntu-22.04-arm' # for ARM-based Linux
             rust_target: 'aarch64-unknown-linux-gnu'
             dotnet_runtime: 'linux-arm64'
             dotnet_name_postfix: '-aarch64-unknown-linux-gnu'
-            tauri_bundle: 'appimage deb'
+            tauri_bundle: 'appimage,deb,updater'
+            tauri_bundle_pr: 'appimage,deb'
 
           - platform: 'windows-latest' # for x86-based Windows
             rust_target: 'x86_64-pc-windows-msvc'
             dotnet_runtime: 'win-x64'
             dotnet_name_postfix: '-x86_64-pc-windows-msvc.exe'
-            tauri_bundle: 'nsis'
+            tauri_bundle: 'nsis,updater'
+            tauri_bundle_pr: 'nsis'
 
           - platform: 'windows-latest' # for ARM-based Windows
             rust_target: 'aarch64-pc-windows-msvc'
             dotnet_runtime: 'win-arm64'
             dotnet_name_postfix: '-aarch64-pc-windows-msvc.exe'
-            tauri_bundle: 'nsis'
+            tauri_bundle: 'nsis,updater'
+            tauri_bundle_pr: 'nsis'
     
     runs-on: ${{ matrix.platform }}
     steps:
@@ -629,10 +766,18 @@ jobs:
           PRIVATE_PUBLISH_KEY: ${{ secrets.PRIVATE_PUBLISH_KEY }}
           PRIVATE_PUBLISH_KEY_PASSWORD: ${{ secrets.PRIVATE_PUBLISH_KEY_PASSWORD }}
         run: |
+          bundles="${{ matrix.tauri_bundle }}"
+
+          if [ "${{ needs.determine_run_mode.outputs.is_pr_build }}" = "true" ]; then
+            echo "Running PR test build without updater bundle signing"
+            bundles="${{ matrix.tauri_bundle_pr }}"
+          else
+            export TAURI_SIGNING_PRIVATE_KEY="$PRIVATE_PUBLISH_KEY"
+            export TAURI_SIGNING_PRIVATE_KEY_PASSWORD="$PRIVATE_PUBLISH_KEY_PASSWORD"
+          fi
+
           cd runtime
-          export TAURI_SIGNING_PRIVATE_KEY="$PRIVATE_PUBLISH_KEY"
-          export TAURI_SIGNING_PRIVATE_KEY_PASSWORD="$PRIVATE_PUBLISH_KEY_PASSWORD"
-          cargo tauri build --target ${{ matrix.rust_target }} --bundles ${{ matrix.tauri_bundle }}
+          cargo tauri build --target ${{ matrix.rust_target }} --bundles "$bundles"
           
       - name: Build Tauri project (Windows)
         if: matrix.platform == 'windows-latest'
@@ -640,13 +785,21 @@ jobs:
           PRIVATE_PUBLISH_KEY: ${{ secrets.PRIVATE_PUBLISH_KEY }}
           PRIVATE_PUBLISH_KEY_PASSWORD: ${{ secrets.PRIVATE_PUBLISH_KEY_PASSWORD }}
         run: |
+          $bundles = "${{ matrix.tauri_bundle }}"
+
+          if ("${{ needs.determine_run_mode.outputs.is_pr_build }}" -eq "true") {
+            Write-Output "Running PR test build without updater bundle signing"
+            $bundles = "${{ matrix.tauri_bundle_pr }}"
+          } else {
+            $env:TAURI_SIGNING_PRIVATE_KEY="$env:PRIVATE_PUBLISH_KEY"
+            $env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD="$env:PRIVATE_PUBLISH_KEY_PASSWORD"
+          }
+
           cd runtime
-          $env:TAURI_SIGNING_PRIVATE_KEY="$env:PRIVATE_PUBLISH_KEY"
-          $env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD="$env:PRIVATE_PUBLISH_KEY_PASSWORD"
-          cargo tauri build --target ${{ matrix.rust_target }} --bundles ${{ matrix.tauri_bundle }}
+          cargo tauri build --target ${{ matrix.rust_target }} --bundles $bundles
 
       - name: Upload artifact (macOS)
-        if: startsWith(matrix.platform, 'macos') && startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(matrix.platform, 'macos')
         uses: actions/upload-artifact@v4
         with:
           name: MindWork AI Studio (macOS ${{ matrix.dotnet_runtime }})
@@ -654,10 +807,10 @@ jobs:
             runtime/target/${{ matrix.rust_target }}/release/bundle/dmg/MindWork AI Studio_*.dmg
             runtime/target/${{ matrix.rust_target }}/release/bundle/macos/MindWork AI Studio.app.tar.gz*
           if-no-files-found: error
-          retention-days: ${{ env.RETENTION_INTERMEDIATE_ASSETS }}
+          retention-days: ${{ fromJSON(needs.determine_run_mode.outputs.artifact_retention_days) }}
           
       - name: Upload artifact (Windows - MSI)
-        if: startsWith(matrix.platform, 'windows') && contains(matrix.tauri_bundle, 'msi') && startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(matrix.platform, 'windows') && contains(matrix.tauri_bundle, 'msi')
         uses: actions/upload-artifact@v4
         with:
           name: MindWork AI Studio (Windows - MSI ${{ matrix.dotnet_runtime }})
@@ -665,10 +818,10 @@ jobs:
             runtime/target/${{ matrix.rust_target }}/release/bundle/msi/MindWork AI Studio_*.msi
             runtime/target/${{ matrix.rust_target }}/release/bundle/msi/MindWork AI Studio*msi.zip*
           if-no-files-found: error
-          retention-days: ${{ env.RETENTION_INTERMEDIATE_ASSETS }}
+          retention-days: ${{ fromJSON(needs.determine_run_mode.outputs.artifact_retention_days) }}
           
       - name: Upload artifact (Windows - NSIS)
-        if: startsWith(matrix.platform, 'windows') && contains(matrix.tauri_bundle, 'nsis') && startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(matrix.platform, 'windows') && contains(matrix.tauri_bundle, 'nsis')
         uses: actions/upload-artifact@v4
         with:
           name: MindWork AI Studio (Windows - NSIS ${{ matrix.dotnet_runtime }})
@@ -676,20 +829,20 @@ jobs:
             runtime/target/${{ matrix.rust_target }}/release/bundle/nsis/MindWork AI Studio_*.exe
             runtime/target/${{ matrix.rust_target }}/release/bundle/nsis/MindWork AI Studio*nsis.zip*
           if-no-files-found: error
-          retention-days: ${{ env.RETENTION_INTERMEDIATE_ASSETS }}
+          retention-days: ${{ fromJSON(needs.determine_run_mode.outputs.artifact_retention_days) }}
           
       - name: Upload artifact (Linux - Debian Package)
-        if: startsWith(matrix.platform, 'ubuntu') && contains(matrix.tauri_bundle, 'deb') && startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(matrix.platform, 'ubuntu') && contains(matrix.tauri_bundle, 'deb')
         uses: actions/upload-artifact@v4
         with:
           name: MindWork AI Studio (Linux - deb ${{ matrix.dotnet_runtime }})
           path: |
             runtime/target/${{ matrix.rust_target }}/release/bundle/deb/mind-work-ai-studio_*.deb
           if-no-files-found: error
-          retention-days: ${{ env.RETENTION_INTERMEDIATE_ASSETS }}
+          retention-days: ${{ fromJSON(needs.determine_run_mode.outputs.artifact_retention_days) }}
           
       - name: Upload artifact (Linux - AppImage)
-        if: startsWith(matrix.platform, 'ubuntu') && contains(matrix.tauri_bundle, 'appimage') && startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(matrix.platform, 'ubuntu') && contains(matrix.tauri_bundle, 'appimage')
         uses: actions/upload-artifact@v4
         with:
           name: MindWork AI Studio (Linux - AppImage ${{ matrix.dotnet_runtime }})
@@ -697,13 +850,14 @@ jobs:
             runtime/target/${{ matrix.rust_target }}/release/bundle/appimage/mind-work-ai-studio_*.AppImage
             runtime/target/${{ matrix.rust_target }}/release/bundle/appimage/mind-work-ai-studio*AppImage.tar.gz*
           if-no-files-found: error
-          retention-days: ${{ env.RETENTION_INTERMEDIATE_ASSETS }}
+          retention-days: ${{ fromJSON(needs.determine_run_mode.outputs.artifact_retention_days) }}
         
   create_release:
     name: Prepare & create release
     runs-on: ubuntu-latest
     needs: [build_main, read_metadata]
     if: startsWith(github.ref, 'refs/tags/v')
+    permissions: {}
     steps:
       - name: Create artifact directory
         run: mkdir -p $GITHUB_WORKSPACE/artifacts
@@ -823,25 +977,36 @@ jobs:
           FORMATTED_BUILD_TIME: ${{ needs.read_metadata.outputs.formatted_build_time }}
           CHANGELOG: ${{ needs.read_metadata.outputs.changelog }}
           
-        run: |          
+        run: |
           # Read the platforms JSON, which was created in the previous step:
           platforms=$(cat $GITHUB_WORKSPACE/.updates/platforms.json)
-          
-          # Replace newlines in changelog with \n
-          changelog=$(echo "$CHANGELOG" | awk '{printf "%s\\n", $0}')
-          
-          # Escape double quotes in changelog:
-          changelog=$(echo "$changelog" | sed 's/"/\\"/g')
-          
-          # Create the latest.json file:
-          cat <<EOOOF > $GITHUB_WORKSPACE/release/assets/latest.json
-          {
-            "version": "$FORMATTED_VERSION",
-            "notes": "$changelog",
-            "pub_date": "$FORMATTED_BUILD_TIME",
-            "platforms": $platforms
-          }
-          EOOOF
+
+          # Create the latest.json file via jq so the changelog is escaped as valid JSON.
+          jq -n \
+            --arg version "$FORMATTED_VERSION" \
+            --arg notes "$CHANGELOG" \
+            --arg pub_date "$FORMATTED_BUILD_TIME" \
+            --argjson platforms "$platforms" \
+            '{
+              version: $version,
+              notes: $notes,
+              pub_date: $pub_date,
+              platforms: $platforms
+            }' > $GITHUB_WORKSPACE/release/assets/latest.json
+
+      - name: Validate latest.json
+        env:
+          CHANGELOG: ${{ needs.read_metadata.outputs.changelog }}
+
+        run: |
+          # Ensure the generated file is valid JSON and the changelog round-trips unchanged.
+          jq -e . $GITHUB_WORKSPACE/release/assets/latest.json > /dev/null
+
+          generated_notes=$(jq -r '.notes' $GITHUB_WORKSPACE/release/assets/latest.json)
+          if [[ "$generated_notes" != "$CHANGELOG" ]]; then
+            echo "The generated notes field does not match the changelog input."
+            exit 1
+          fi
 
       - name: Show all release assets
         run: ls -Rlhat $GITHUB_WORKSPACE/release/assets

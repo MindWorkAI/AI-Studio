@@ -1,8 +1,10 @@
 using AIStudio.Agents;
+using AIStudio.Agents.AssistantAudit;
 using AIStudio.Settings;
 using AIStudio.Tools.Databases;
 using AIStudio.Tools.Databases.Qdrant;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.PluginSystem.Assistants;
 using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Server.Kestrel.Core;
@@ -86,37 +88,46 @@ internal sealed class Program
         }
         
         var qdrantInfo = await rust.GetQdrantInfo();
-        if (qdrantInfo.Path == string.Empty)
+        DatabaseClient databaseClient;
+        if (!qdrantInfo.IsAvailable)
         {
-            Console.WriteLine("Error: Failed to get the Qdrant path from Rust.");
-            return;
+            Console.WriteLine($"Warning: Qdrant is not available. Starting without vector database. Reason: '{qdrantInfo.UnavailableReason ?? "unknown"}'.");
+            databaseClient = new NoDatabaseClient("Qdrant", qdrantInfo.UnavailableReason);
         }
-        
-        if (qdrantInfo.PortHttp == 0)
+        else
         {
-            Console.WriteLine("Error: Failed to get the Qdrant HTTP port from Rust.");
-            return;
-        }
+            if (qdrantInfo.Path == string.Empty)
+            {
+                Console.WriteLine("Error: Failed to get the Qdrant path from Rust.");
+                return;
+            }
+            
+            if (qdrantInfo.PortHttp == 0)
+            {
+                Console.WriteLine("Error: Failed to get the Qdrant HTTP port from Rust.");
+                return;
+            }
 
-        if (qdrantInfo.PortGrpc == 0)
-        {
-            Console.WriteLine("Error: Failed to get the Qdrant gRPC port from Rust.");
-            return;
-        }
+            if (qdrantInfo.PortGrpc == 0)
+            {
+                Console.WriteLine("Error: Failed to get the Qdrant gRPC port from Rust.");
+                return;
+            }
 
-        if (qdrantInfo.Fingerprint == string.Empty)
-        {
-            Console.WriteLine("Error: Failed to get the Qdrant fingerprint from Rust.");
-            return;
-        }
-        
-        if (qdrantInfo.ApiToken == string.Empty)
-        {
-            Console.WriteLine("Error: Failed to get the Qdrant API token from Rust.");
-            return;
-        }
+            if (qdrantInfo.Fingerprint == string.Empty)
+            {
+                Console.WriteLine("Error: Failed to get the Qdrant fingerprint from Rust.");
+                return;
+            }
+            
+            if (qdrantInfo.ApiToken == string.Empty)
+            {
+                Console.WriteLine("Error: Failed to get the Qdrant API token from Rust.");
+                return;
+            }
 
-        var databaseClient = new QdrantClientImplementation("Qdrant", qdrantInfo.Path, qdrantInfo.PortHttp, qdrantInfo.PortGrpc, qdrantInfo.Fingerprint, qdrantInfo.ApiToken);
+            databaseClient = new QdrantClientImplementation("Qdrant", qdrantInfo.Path, qdrantInfo.PortHttp, qdrantInfo.PortGrpc, qdrantInfo.Fingerprint, qdrantInfo.ApiToken);
+        }
         
         var builder = WebApplication.CreateBuilder();
         builder.WebHost.ConfigureKestrel(kestrelServerOptions =>
@@ -160,16 +171,19 @@ internal sealed class Program
         builder.Services.AddMudMarkdownClipboardService<MarkdownClipboardService>();
         builder.Services.AddSingleton<SettingsManager>();
         builder.Services.AddSingleton<ThreadSafeRandom>();
+        builder.Services.AddSingleton<VoiceRecordingAvailabilityService>();
         builder.Services.AddSingleton<DataSourceService>();
         builder.Services.AddScoped<PandocAvailabilityService>();
         builder.Services.AddTransient<HTMLParser>();
         builder.Services.AddTransient<AgentDataSourceSelection>();
         builder.Services.AddTransient<AgentRetrievalContextValidation>();
         builder.Services.AddTransient<AgentTextContentCleaner>();
+        builder.Services.AddTransient<AssistantAuditAgent>();
+        builder.Services.AddTransient<AssistantPluginAuditService>();
         builder.Services.AddHostedService<UpdateService>();
         builder.Services.AddHostedService<TemporaryChatService>();
         builder.Services.AddHostedService<EnterpriseEnvironmentService>();
-        builder.Services.AddSingleton<DatabaseClient>(databaseClient);
+        builder.Services.AddSingleton(databaseClient);
         builder.Services.AddHostedService<GlobalShortcutService>();
         builder.Services.AddHostedService<RustAvailabilityMonitorService>();
         

@@ -32,7 +32,7 @@ public partial class SettingsDialogDataSources : SettingsDialogBase
                 var localFileDialogParameters = new DialogParameters<DataSourceLocalFileDialog>
                 {
                     { x => x.IsEditing, false },
-                    { x => x.AvailableEmbeddings, this.availableEmbeddingProviders }
+                    { x => x.AvailableEmbeddings, this.AvailableEmbeddingProviders }
                 };
         
                 var localFileDialogReference = await this.DialogService.ShowAsync<DataSourceLocalFileDialog>(T("Add Local File as Data Source"), localFileDialogParameters, DialogOptions.FULLSCREEN);
@@ -49,7 +49,7 @@ public partial class SettingsDialogDataSources : SettingsDialogBase
                 var localDirectoryDialogParameters = new DialogParameters<DataSourceLocalDirectoryDialog>
                 {
                     { x => x.IsEditing, false },
-                    { x => x.AvailableEmbeddings, this.availableEmbeddingProviders }
+                    { x => x.AvailableEmbeddings, this.AvailableEmbeddingProviders }
                 };
         
                 var localDirectoryDialogReference = await this.DialogService.ShowAsync<DataSourceLocalDirectoryDialog>(T("Add Local Directory as Data Source"), localDirectoryDialogParameters, DialogOptions.FULLSCREEN);
@@ -97,7 +97,7 @@ public partial class SettingsDialogDataSources : SettingsDialogBase
                 {
                     { x => x.IsEditing, true },
                     { x => x.DataSource, localFile },
-                    { x => x.AvailableEmbeddings, this.availableEmbeddingProviders }
+                    { x => x.AvailableEmbeddings, this.AvailableEmbeddingProviders }
                 };
         
                 var localFileDialogReference = await this.DialogService.ShowAsync<DataSourceLocalFileDialog>(T("Edit Local File Data Source"), localFileDialogParameters, DialogOptions.FULLSCREEN);
@@ -113,7 +113,7 @@ public partial class SettingsDialogDataSources : SettingsDialogBase
                 {
                     { x => x.IsEditing, true },
                     { x => x.DataSource, localDirectory },
-                    { x => x.AvailableEmbeddings, this.availableEmbeddingProviders }
+                    { x => x.AvailableEmbeddings, this.AvailableEmbeddingProviders }
                 };
         
                 var localDirectoryDialogReference = await this.DialogService.ShowAsync<DataSourceLocalDirectoryDialog>(T("Edit Local Directory Data Source"), localDirectoryDialogParameters, DialogOptions.FULLSCREEN);
