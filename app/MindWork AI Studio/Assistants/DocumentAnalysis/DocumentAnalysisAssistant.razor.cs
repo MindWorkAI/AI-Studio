@@ -417,6 +417,13 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         }
 
         // Try to apply the policy preselection:
+        if (Settings.Provider.IsNoProviderPreselection(this.selectedPolicy.PreselectedProvider))
+        {
+            this.ProviderSettings = Settings.Provider.NONE;
+            this.CurrentProfile = this.ResolveProfileSelection();
+            return;
+        }
+
         var policyProvider = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.selectedPolicy.PreselectedProvider);
         if (policyProvider is not null && policyProvider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level >= minimumLevel)
         {
@@ -763,7 +770,9 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
                      ["MinimumProviderConfidence"] = "{{this.selectedPolicy.MinimumProviderConfidence}}",
                  
                      -- Optional: preselect a provider or profile by ID.
-                     -- The IDs must exist in CONFIG["LLM_PROVIDERS"] or CONFIG["PROFILES"].
+                     -- Use an empty provider ID to fall back to the app default provider.
+                     -- Use "{{Settings.Provider.NO_PROVIDER_PRESELECTION_ID}}" to explicitly preselect no provider.
+                     -- Any other IDs must exist in CONFIG["LLM_PROVIDERS"] or CONFIG["PROFILES"].
                      ["PreselectedProvider"] = "{{preselectedProvider}}",
                      ["PreselectedProfile"] = "{{preselectedProfile}}",
                  

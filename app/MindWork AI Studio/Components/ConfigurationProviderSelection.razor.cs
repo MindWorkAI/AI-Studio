@@ -4,6 +4,7 @@ using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem;
 using Microsoft.AspNetCore.Components;
+using SettingsProvider = AIStudio.Settings.Provider;
 
 namespace AIStudio.Components;
 
@@ -38,8 +39,11 @@ public partial class ConfigurationProviderSelection : MSGComponentBase
     [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
     private IEnumerable<ConfigurationSelectData<string>> FilteredData()
     {
-        if(this.Component is not Tools.Components.NONE and not Tools.Components.APP_SETTINGS)
+        if(this.Component.SupportsAppDefaultProviderSelection())
+        {
             yield return new(T("Use app default"), string.Empty);
+            yield return new(T("No provider"), SettingsProvider.NO_PROVIDER_PRESELECTION_ID);
+        }
         
         // Get the minimum confidence level for this component, and/or the enforced global minimum confidence level:
         var minimumLevel = this.SettingsManager.GetMinimumConfidenceLevel(this.Component);
@@ -68,11 +72,11 @@ public partial class ConfigurationProviderSelection : MSGComponentBase
         {
             case Event.CONFIGURATION_CHANGED:
                 
-                if(string.IsNullOrWhiteSpace(this.SelectedValue()))
+                if(string.IsNullOrWhiteSpace(this.SelectedValue()) || SettingsProvider.IsNoProviderPreselection(this.SelectedValue()))
                     break;
                 
                 // Check if the selected value is still valid:
-                if (this.Data.All(x => x.Value != this.SelectedValue()))
+                if (this.FilteredData().All(x => x.Value != this.SelectedValue()))
                 {
                     this.SelectedValue = () => string.Empty;
                     this.SelectionUpdate(string.Empty);
