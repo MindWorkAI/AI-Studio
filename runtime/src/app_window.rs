@@ -38,6 +38,9 @@ static EVENT_BROADCAST: Lazy<Mutex<Option<broadcast::Sender<Event>>>> = Lazy::ne
 /// Stores the currently registered global shortcuts (name -> shortcut string).
 static REGISTERED_SHORTCUTS: Lazy<Mutex<HashMap<Shortcut, String>>> = Lazy::new(|| Mutex::new(HashMap::new()));
 
+/// Stores the localhost origin of the Blazor app after the .NET server is ready.
+static APPROVED_APP_URL: Lazy<Mutex<Option<tauri::Url>>> = Lazy::new(|| Mutex::new(None));
+
 /// Enum identifying global keyboard shortcuts.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Display)]
 #[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
@@ -81,6 +84,7 @@ pub fn start_tauri() {
     let app = tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_opener::init())
         .plugin(
             tauri::plugin::Builder::<tauri::Wry, ()>::new("external-link-handler")
                 .on_navigation(|webview, url| {
@@ -199,16 +203,35 @@ fn is_local_host(host: Option<&str>) -> bool {
     matches!(host, Some("localhost") | Some("127.0.0.1") | Some("::1") | Some("[::1]"))
 }
 
+fn is_local_http_url(url: &tauri::Url) -> bool {
+    matches!(url.scheme(), "http" | "https") && is_local_host(url.host_str())
+}
+
+fn same_origin(left: &tauri::Url, right: &tauri::Url) -> bool {
+    left.scheme() == right.scheme()
+        && left.host_str() == right.host_str()
+        && left.port_or_known_default() == right.port_or_known_default()
+}
+
 fn should_open_in_system_browser<R: tauri::Runtime>(webview: &tauri::Webview<R>, url: &tauri::Url) -> bool {
-    if !matches!(url.scheme(), "http" | "https") {
-        return false;
+    match url.scheme() {
+        "mailto" | "tel" => return true,
+        "http" | "https" => {},
+        _ => return false,
+    }
+
+    if let Some(approved_app_url) = APPROVED_APP_URL.lock().unwrap().as_ref() {
+        if same_origin(approved_app_url, url) {
+            return false;
+        }
+
+        if is_local_http_url(url) {
+            return true;
+        }
     }
 
     if let Ok(current_url) = webview.url() {
-        let same_origin = current_url.scheme() == url.scheme()
-            && current_url.host_str() == url.host_str()
-            && current_url.port_or_known_default() == url.port_or_known_default();
-        if same_origin {
+        if same_origin(&current_url, url) {
             return false;
         }
     }
@@ -374,6 +397,12 @@ pub async fn change_location_to(url: &str) {
             }
 
             time::sleep(Duration::from_millis(100)).await;
+        }
+    }
+
+    if let Ok(parsed_url) = tauri::Url::parse(url) {
+        if is_local_http_url(&parsed_url) {
+            *APPROVED_APP_URL.lock().unwrap() = Some(parsed_url);
         }
     }
 
