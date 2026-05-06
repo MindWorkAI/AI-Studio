@@ -704,30 +704,31 @@ jobs:
         if: matrix.platform == 'ubuntu-22.04' && contains(matrix.rust_target, 'x86_64')
         run: |
           sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf libfuse2
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf libfuse2
           
       - name: Setup dependencies (Ubuntu-specific, ARM)
         if: matrix.platform == 'ubuntu-22.04-arm' && contains(matrix.rust_target, 'aarch64')
         run: |
           sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf libfuse2
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf libfuse2
           
       - name: Setup Tauri (Unix)
         if: matrix.platform != 'windows-latest'
         run: |
-          if ! cargo tauri --version > /dev/null 2>&1; then
-            cargo install --version 1.6.2 tauri-cli
+          if ! cargo tauri --version 2>/dev/null | grep -Eq '^tauri-cli 2\.'; then
+            cargo install tauri-cli --version "^2.0.0" --locked --force
           else
-            echo "Tauri is already installed"
+            echo "Tauri CLI v2 is already installed"
           fi
           
       - name: Setup Tauri (Windows)
         if: matrix.platform == 'windows-latest'
         run: |
-          if (-not (cargo tauri --version 2>$null)) {
-            cargo install --version 1.6.2 tauri-cli
+          $tauriVersion = cargo tauri --version 2>$null
+          if (-not $tauriVersion -or $tauriVersion -notmatch '^tauri-cli 2\.') {
+            cargo install tauri-cli --version "^2.0.0" --locked --force
           } else {
-            Write-Output "Tauri is already installed"
+            Write-Output "Tauri CLI v2 is already installed"
           }
           
       - name: Delete previous artifact, which may exist due to caching (macOS)
@@ -771,8 +772,8 @@ jobs:
             echo "Running PR test build without updater bundle signing"
             bundles="${{ matrix.tauri_bundle_pr }}"
           else
-            export TAURI_PRIVATE_KEY="$PRIVATE_PUBLISH_KEY"
-            export TAURI_KEY_PASSWORD="$PRIVATE_PUBLISH_KEY_PASSWORD"
+            export TAURI_SIGNING_PRIVATE_KEY="$PRIVATE_PUBLISH_KEY"
+            export TAURI_SIGNING_PRIVATE_KEY_PASSWORD="$PRIVATE_PUBLISH_KEY_PASSWORD"
           fi
 
           cd runtime
@@ -790,8 +791,8 @@ jobs:
             Write-Output "Running PR test build without updater bundle signing"
             $bundles = "${{ matrix.tauri_bundle_pr }}"
           } else {
-            $env:TAURI_PRIVATE_KEY="$env:PRIVATE_PUBLISH_KEY"
-            $env:TAURI_KEY_PASSWORD="$env:PRIVATE_PUBLISH_KEY_PASSWORD"
+            $env:TAURI_SIGNING_PRIVATE_KEY="$env:PRIVATE_PUBLISH_KEY"
+            $env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD="$env:PRIVATE_PUBLISH_KEY_PASSWORD"
           }
 
           cd runtime
@@ -883,14 +884,14 @@ jobs:
           # Find and process files in the artifacts directory:
           find "$GITHUB_WORKSPACE/artifacts" -type f | while read -r FILE; do
           
-            if [[ "$FILE" == *"osx-x64"* && "$FILE" == *".tar.gz" ]]; then
-              TARGET_NAME="MindWork AI Studio_x64.app.tar.gz"
-            elif [[ "$FILE" == *"osx-x64"* && "$FILE" == *".tar.gz.sig" ]]; then
+            if [[ "$FILE" == *"osx-x64"* && "$FILE" == *".tar.gz.sig" ]]; then
               TARGET_NAME="MindWork AI Studio_x64.app.tar.gz.sig"
-            elif [[ "$FILE" == *"osx-arm64"* && "$FILE" == *".tar.gz" ]]; then
-              TARGET_NAME="MindWork AI Studio_aarch64.app.tar.gz"
+            elif [[ "$FILE" == *"osx-x64"* && "$FILE" == *".tar.gz" ]]; then
+              TARGET_NAME="MindWork AI Studio_x64.app.tar.gz"
             elif [[ "$FILE" == *"osx-arm64"* && "$FILE" == *".tar.gz.sig" ]]; then
               TARGET_NAME="MindWork AI Studio_aarch64.app.tar.gz.sig"
+            elif [[ "$FILE" == *"osx-arm64"* && "$FILE" == *".tar.gz" ]]; then
+              TARGET_NAME="MindWork AI Studio_aarch64.app.tar.gz"
             else
               TARGET_NAME="$(basename "$FILE")"
               TARGET_NAME=$(echo "$TARGET_NAME" | sed "s/_${VERSION}//")
@@ -941,9 +942,9 @@ jobs:
               platform="linux-x86_64"
             elif [[ "$sig_file" == *"aarch64.AppImage"* ]]; then
               platform="linux-aarch64"
-            elif [[ "$sig_file" == *"x64-setup.nsis"* ]]; then
+            elif [[ "$sig_file" == *"x64-setup"* ]]; then
               platform="windows-x86_64"
-            elif [[ "$sig_file" == *"arm64-setup.nsis"* ]]; then
+            elif [[ "$sig_file" == *"arm64-setup"* ]]; then
               platform="windows-aarch64"
             else
               echo "Platform not recognized: '$sig_file'"

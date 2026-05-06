@@ -1,44 +1,52 @@
 {
+  "productName": "MindWork AI Studio",
+  "mainBinaryName": "MindWork AI Studio",
+  "version": "26.5.2",
+  "identifier": "com.github.mindwork-ai.ai-studio",
+  
   "build": {
-    "devPath": "ui/",
-    "distDir": "ui/",
-    "withGlobalTauri": false
+    "frontendDist": "ui/"
   },
-  "package": {
-    "productName": "MindWork AI Studio",
-	"version": "26.5.1"
-  },
-  "tauri": {
-    "allowlist": {
-      "all": false,
-      "shell": {
-        "sidecar": true,
-        "all": false,
-        "open": true,
-        "scope": [
-          {
-            "name": "../app/MindWork AI Studio/bin/dist/mindworkAIStudioServer",
-            "sidecar": true,
-            "args": true
-          },
-          {
-            "name": "target/databases/qdrant/qdrant",
-            "sidecar": true,
-            "args": true
-          }
-        ]
-      },
-      "http" : {
-        "all": true,
-        "request": true,
-        "scope": [
-          "http://localhost"
-        ]
-      },
-      "fs": {
-        "scope": ["$RESOURCE/resources/*"]
-      }
+  
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "externalBin": [
+      "../app/MindWork AI Studio/bin/dist/mindworkAIStudioServer",
+      "target/databases/qdrant/qdrant"
+    ],
+    "resources": [
+      "resources/databases/qdrant/config.yaml",
+      "resources/libraries/*"
+    ],
+    "macOS": {
+      "exceptionDomain": "localhost"
     },
+    "createUpdaterArtifacts": "v1Compatible"
+  },
+  
+  "plugins": {
+    "updater": {
+      "windows": {
+        "installMode": "passive"
+      },
+      "endpoints": [
+        "https://github.com/MindWorkAI/AI-Studio/releases/download/v26.5.3/latest.json"
+      ],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDM3MzE4MTM4RTNDMkM0NEQKUldSTnhNTGpPSUV4TjFkczFxRFJOZWgydzFQN1dmaFlKbXhJS1YyR1RKS1RnR09jYUpMaGsrWXYK"
+    }
+  },
+  
+  "app": {
+    "withGlobalTauri": false,
+    
     "windows": [
       {
         "fullscreen": false,
@@ -46,51 +54,13 @@
         "title": "MindWork AI Studio",
         "width": 1920,
         "height": 1080,
-        "fileDropEnabled": true
+        "dragDropEnabled": true,
+        "useHttpsScheme": true
       }
     ],
+    
     "security": {
-      "csp": null,
-      "dangerousRemoteDomainIpcAccess": [
-        {
-          "domain": "localhost",
-          "windows": ["main"],
-          "enableTauriAPI": true
-        }
-      ]
-    },
-    "bundle": {
-      "active": true,
-      "targets": "all",
-      "identifier": "com.github.mindwork-ai.ai-studio",
-      "externalBin": [
-        "../app/MindWork AI Studio/bin/dist/mindworkAIStudioServer",
-        "target/databases/qdrant/qdrant"
-      ],
-      "resources": [
-        "resources/**"
-      ],
-      "macOS": {
-        "exceptionDomain": "localhost"
-      },
-      "icon": [
-        "icons/32x32.png",
-        "icons/128x128.png",
-        "icons/128x128@2x.png",
-        "icons/icon.icns",
-        "icons/icon.ico"
-      ]
-    },
-    "updater": {
-      "active": true,
-      "endpoints": [
-        "https://github.com/MindWorkAI/AI-Studio/releases/download/v26.5.2/latest.json"
-      ],
-      "dialog": false,
-      "windows": {
-        "installMode": "passive"
-      },
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDM3MzE4MTM4RTNDMkM0NEQKUldSTnhNTGpPSUV4TjFkczFxRFJOZWgydzFQN1dmaFlKbXhJS1YyR1RKS1RnR09jYUpMaGsrWXYK"
+      "csp": null
     }
   }
 }

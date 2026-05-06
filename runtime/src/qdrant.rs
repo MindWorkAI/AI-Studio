@@ -10,15 +10,17 @@ use once_cell::sync::Lazy;
 use rocket::get;
 use rocket::serde::json::Json;
 use rocket::serde::Serialize;
-use tauri::api::process::{Command, CommandChild, CommandEvent};
 use crate::api_token::{APIToken};
 use crate::environment::{is_dev, DATA_DIRECTORY};
 use crate::certificate_factory::generate_certificate;
 use std::path::PathBuf;
-use tauri::PathResolver;
+use tauri::Manager;
+use tauri::path::BaseDirectory;
 use tempfile::{TempDir, Builder};
 use crate::stale_process_cleanup::{kill_stale_process, log_potential_stale_process};
 use crate::sidecar_types::SidecarType;
+use tauri_plugin_shell::process::{CommandChild, CommandEvent};
+use tauri_plugin_shell::ShellExt;
 
 // Qdrant server process started in a separate process and can communicate
 // via HTTP or gRPC with the .NET server and the runtime process
@@ -98,7 +100,7 @@ pub fn qdrant_port(_token: APIToken) -> Json<ProvideQdrantInfo> {
 }
 
 /// Starts the Qdrant server in a separate process.
-pub fn start_qdrant_server(path_resolver: PathResolver){
+pub fn start_qdrant_server<R: tauri::Runtime>(app_handle: tauri::AppHandle<R>){
     let path = qdrant_base_path();
     if !path.exists() {
         if let Err(e) = fs::create_dir_all(&path){
@@ -121,7 +123,7 @@ pub fn start_qdrant_server(path_resolver: PathResolver){
     let snapshot_path = path.join("snapshots").to_string_lossy().to_string();
     let init_path = path.join(".qdrant-initialized").to_string_lossy().to_string();
     
-    let qdrant_server_environment = HashMap::from_iter([
+    let qdrant_server_environment: HashMap<String, String> = HashMap::from_iter([
         (String::from("QDRANT__SERVICE__HTTP_PORT"), QDRANT_SERVER_PORT_HTTP.to_string()),
         (String::from("QDRANT__SERVICE__GRPC_PORT"), QDRANT_SERVER_PORT_GRPC.to_string()),
         (String::from("QDRANT_INIT_FILE_PATH"), init_path),
@@ -135,9 +137,9 @@ pub fn start_qdrant_server(path_resolver: PathResolver){
     
     let server_spawn_clone = QDRANT_SERVER.clone();
     let qdrant_relative_source_path = "resources/databases/qdrant/config.yaml";
-    let qdrant_source_path = match path_resolver.resolve_resource(qdrant_relative_source_path) {
-        Some(path) => path,
-        None => {
+    let qdrant_source_path = match app_handle.path().resolve(qdrant_relative_source_path, BaseDirectory::Resource) {
+        Ok(path) => path,
+        Err(_) => {
             let reason = format!("The Qdrant config resource '{qdrant_relative_source_path}' could not be resolved.");
             error!(Source = "Qdrant"; "{reason} Starting the app without Qdrant.");
             set_qdrant_unavailable(reason);
@@ -147,7 +149,9 @@ pub fn start_qdrant_server(path_resolver: PathResolver){
 
     let qdrant_source_path_display = qdrant_source_path.to_string_lossy().to_string();
     tauri::async_runtime::spawn(async move {
-        let sidecar = match Command::new_sidecar("qdrant") {
+        let shell = app_handle.shell();
+
+        let sidecar = match shell.sidecar("qdrant") {
             Ok(sidecar) => sidecar,
             Err(e) => {
                 let reason = format!("Failed to create sidecar for Qdrant: {e}");
@@ -183,7 +187,8 @@ pub fn start_qdrant_server(path_resolver: PathResolver){
         while let Some(event) = rx.recv().await {
             match event {
                 CommandEvent::Stdout(line) => {
-                    let line = line.trim_end();
+                    let line_utf8 = String::from_utf8_lossy(&line).to_string();
+                    let line = line_utf8.trim_end();
                     if line.contains("INFO") || line.contains("info") {
                         info!(Source = "Qdrant Server"; "{line}");
                     } else if line.contains("WARN") || line.contains("warning") {
@@ -196,7 +201,8 @@ pub fn start_qdrant_server(path_resolver: PathResolver){
                 },
             
                 CommandEvent::Stderr(line) => {
-                    error!(Source = "Qdrant Server (stderr)"; "{line}");
+                    let line_utf8 = String::from_utf8_lossy(&line).to_string();
+                    error!(Source = "Qdrant Server (stderr)"; "{line_utf8}");
                 },
             
                 _ => {}
