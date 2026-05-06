@@ -32,7 +32,7 @@ pbkdf2 = "0.12.2"
 hmac = "0.12.1"
 sha2 = "0.10.8"
 rcgen = { version = "0.14.7", features = ["pem"] }
-file-format = "0.28.0"
+file-format = "0.29.0"
 calamine = "0.34.0"
 pdfium-render = "0.8.37"
 sys-locale = "0.3.2"
@@ -45,9 +45,6 @@ sysinfo = "0.38.4"
 # Fixes security vulnerability downstream, where the upstream is not fixed yet:
 time = "0.3.47" # -> Rocket
 bytes = "1.11.1" # -> almost every dependency
-tauri-plugin-shell = "2.3.5"
-tauri-plugin-dialog = "2.6.0"
-tauri-plugin-opener = "2.5.4"
 
 [target.'cfg(target_os = "linux")'.dependencies]
 # See issue https://github.com/tauri-apps/tauri/issues/4470
