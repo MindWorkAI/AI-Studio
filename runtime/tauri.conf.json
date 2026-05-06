@@ -6,7 +6,7 @@
   },
   "package": {
     "productName": "MindWork AI Studio",
-	"version": "26.4.1"
+	"version": "26.5.1"
   },
   "tauri": {
     "allowlist": {
@@ -84,7 +84,7 @@
     "updater": {
       "active": true,
       "endpoints": [
-        "https://github.com/MindWorkAI/AI-Studio/releases/latest/download/latest.json"
+        "https://github.com/MindWorkAI/AI-Studio/releases/download/v26.5.2/latest.json"
       ],
       "dialog": false,
       "windows": {
