@@ -35,7 +35,7 @@
         "installMode": "passive"
       },
       "endpoints": [
-        "https://github.com/MindWorkAI/AI-Studio/releases/latest/download/latest.json"
+        "https://github.com/MindWorkAI/AI-Studio/releases/download/v26.5.3/latest.json"
       ],
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDM3MzE4MTM4RTNDMkM0NEQKUldSTnhNTGpPSUV4TjFkczFxRFJOZWgydzFQN1dmaFlKbXhJS1YyR1RKS1RnR09jYUpMaGsrWXYK"
     }
