@@ -1,7 +1,13 @@
 {
+  "productName": "MindWork AI Studio",
+  "mainBinaryName": "MindWork AI Studio",
+  "version": "26.5.2",
+  "identifier": "com.github.mindwork-ai.ai-studio",
+  
   "build": {
     "frontendDist": "ui/"
   },
+  
   "bundle": {
     "active": true,
     "targets": "all",
@@ -25,10 +31,7 @@
     },
     "createUpdaterArtifacts": "v1Compatible"
   },
-  "productName": "MindWork AI Studio",
-  "mainBinaryName": "MindWork AI Studio",
-  "version": "26.5.1",
-  "identifier": "com.github.mindwork-ai.ai-studio",
+  
   "plugins": {
     "updater": {
       "windows": {
@@ -40,8 +43,10 @@
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDM3MzE4MTM4RTNDMkM0NEQKUldSTnhNTGpPSUV4TjFkczFxRFJOZWgydzFQN1dmaFlKbXhJS1YyR1RKS1RnR09jYUpMaGsrWXYK"
     }
   },
+  
   "app": {
     "withGlobalTauri": false,
+    
     "windows": [
       {
         "fullscreen": false,
@@ -53,6 +58,7 @@
         "useHttpsScheme": true
       }
     ],
+    
     "security": {
       "csp": null
     }
