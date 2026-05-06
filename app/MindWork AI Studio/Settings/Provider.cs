@@ -32,7 +32,8 @@ public sealed record Provider(
     string Hostname = "http://localhost:1234",
     Host Host = Host.NONE,
     HFInferenceProvider HFInferenceProvider = HFInferenceProvider.NONE,
-    string AdditionalJsonApiParameters = "") : ConfigurationBaseObject, ISecretId
+    string AdditionalJsonApiParameters = "",
+    string TokenizerPath = "") : ConfigurationBaseObject, ISecretId
 {
     private static readonly ILogger<Provider> LOGGER = Program.LOGGER_FACTORY.CreateLogger<Provider>();
     
@@ -151,6 +152,13 @@ public sealed record Provider(
             additionalJsonApiParameters = string.Empty;
         }
 
+        var tokenizerPath = string.Empty;
+        if (table.TryGetValue("TokenizerPath", out var tokenizerPathValue) && !tokenizerPathValue.TryRead<string>(out tokenizerPath))
+        {
+            LOGGER.LogWarning($"The configured provider {idx} does not contain a valid tokenizer path. (Plugin ID: {configPluginId})");
+            tokenizerPath = string.Empty;
+        }
+
         provider = new Provider
         {
             Num = 0, // will be set later by the PluginConfigurationObject
@@ -165,6 +173,7 @@ public sealed record Provider(
             Host = host,
             HFInferenceProvider = hfInferenceProvider,
             AdditionalJsonApiParameters = additionalJsonApiParameters,
+            TokenizerPath = tokenizerPath,
         };
 
         // Handle encrypted API key if present:
@@ -224,38 +233,40 @@ public sealed record Provider(
     /// <returns>A Lua configuration section string.</returns>
     public string ExportAsConfigurationSection(string? encryptedApiKey = null)
     {
-        var hfInferenceProviderLine = string.Empty;
+        var lines = new List<string>
+        {
+            "CONFIG[\"LLM_PROVIDERS\"][#CONFIG[\"LLM_PROVIDERS\"]+1] = {",
+            $"    [\"Id\"] = \"{Guid.NewGuid()}\",",
+            $"    [\"InstanceName\"] = \"{LuaTools.EscapeLuaString(this.InstanceName)}\",",
+            $"    [\"UsedLLMProvider\"] = \"{this.UsedLLMProvider}\",",
+        };
+
+        if (!string.IsNullOrWhiteSpace(this.TokenizerPath))
+        {
+            lines.Add(string.Empty);
+            lines.Add("    -- The tokenizer path shown is local to this model. To use it with the plugin:");
+            lines.Add("        -- 1. Copy the tokenizer into the zip.");
+            lines.Add("        -- 2. Update the path in the plugin file to be relative to the zip's root.");
+            lines.Add($"    [\"TokenizerPath\"] = \"{LuaTools.EscapeLuaString(this.TokenizerPath)}\",");
+        }
+
+        lines.Add(string.Empty);
+        lines.Add($"    [\"Host\"] = \"{this.Host}\",");
+        lines.Add($"    [\"Hostname\"] = \"{LuaTools.EscapeLuaString(this.Hostname)}\",");
+
         if (this.HFInferenceProvider is not HFInferenceProvider.NONE)
-        {
-            hfInferenceProviderLine = $"""
-                                       ["HFInferenceProvider"] = "{this.HFInferenceProvider}",
-                                       """;
-        }
+            lines.Add($"    [\"HFInferenceProvider\"] = \"{this.HFInferenceProvider}\",");
 
-        var apiKeyLine = string.Empty;
         if (!string.IsNullOrWhiteSpace(encryptedApiKey))
-        {
-            apiKeyLine = $"""
-                          ["APIKey"] = "{LuaTools.EscapeLuaString(encryptedApiKey)}",
-                          """;
-        }
+            lines.Add($"    [\"APIKey\"] = \"{LuaTools.EscapeLuaString(encryptedApiKey)}\",");
 
-        return $$"""
-                CONFIG["LLM_PROVIDERS"][#CONFIG["LLM_PROVIDERS"]+1] = {
-                    ["Id"] = "{{Guid.NewGuid().ToString()}}",
-                    ["InstanceName"] = "{{LuaTools.EscapeLuaString(this.InstanceName)}}",
-                    ["UsedLLMProvider"] = "{{this.UsedLLMProvider}}",
+        lines.Add($"    [\"AdditionalJsonApiParameters\"] = \"{LuaTools.EscapeLuaString(this.AdditionalJsonApiParameters)}\",");
+        lines.Add("    [\"Model\"] = {");
+        lines.Add($"        [\"Id\"] = \"{LuaTools.EscapeLuaString(this.Model.Id)}\",");
+        lines.Add($"        [\"DisplayName\"] = \"{LuaTools.EscapeLuaString(this.Model.DisplayName ?? this.Model.Id)}\",");
+        lines.Add("    },");
+        lines.Add("}");
 
-                    ["Host"] = "{{this.Host}}",
-                    ["Hostname"] = "{{LuaTools.EscapeLuaString(this.Hostname)}}",
-                    {{hfInferenceProviderLine}}
-                    {{apiKeyLine}}
-                    ["AdditionalJsonApiParameters"] = "{{LuaTools.EscapeLuaString(this.AdditionalJsonApiParameters)}}",
-                    ["Model"] = {
-                        ["Id"] = "{{LuaTools.EscapeLuaString(this.Model.Id)}}",
-                        ["DisplayName"] = "{{LuaTools.EscapeLuaString(this.Model.DisplayName ?? this.Model.Id)}}",
-                    },
-                }
-                """;
+        return string.Join(Environment.NewLine, lines);
     }
 }

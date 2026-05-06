@@ -1,3 +1,4 @@
+using AIStudio.Chat;
 using AIStudio.Components;
 using AIStudio.Provider;
 using AIStudio.Settings;
@@ -5,7 +6,7 @@ using AIStudio.Tools.Services;
 using AIStudio.Tools.Validation;
 
 using Microsoft.AspNetCore.Components;
-
+using Microsoft.AspNetCore.Components.Web;
 using Host = AIStudio.Provider.SelfHosted.Host;
 
 namespace AIStudio.Dialogs;
@@ -68,6 +69,9 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
     /// </summary>
     [Parameter]
     public bool IsEditing { get; init; }
+
+    [Parameter]
+    public string DataTokenizerPath { get; set; } = string.Empty;
     
     [Inject]
     private RustService RustService { get; init; } = null!;
@@ -89,6 +93,11 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
     private string dataAPIKeyStorageIssue = string.Empty;
     private string dataEditingPreviousInstanceName = string.Empty;
     private string dataLoadingModelsIssue = string.Empty;
+    private string dataFilePath = string.Empty;
+    private string dataCustomTokenizerValidationIssue = string.Empty;
+    private Task dataTokenizerValidationTask = Task.CompletedTask;
+    private bool dataStoreWasAttempted;
+    private int dataTokenizerValidationRevision;
 
     // We get the form reference from Blazor code to validate it manually:
     private MudForm form = null!;
@@ -96,7 +105,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
     private readonly List<Model> availableModels = new();
     private readonly Encryption encryption = Program.ENCRYPTION;
     private readonly ProviderValidation providerValidation;
-    
+
     public EmbeddingProviderDialog()
     {
         this.providerValidation = new()
@@ -107,6 +116,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
             GetUsedInstanceNames = () => this.UsedInstanceNames,
             GetHost = () => this.DataHost,
             IsModelProvidedManually = () => this.DataLLMProvider is LLMProviders.SELF_HOSTED && this.DataHost is Host.OLLAMA,
+            GetCustomTokenizerValidationIssue = () => this.dataCustomTokenizerValidationIssue,
         };
     }
     
@@ -136,6 +146,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
             Host = this.DataHost,
             IsEnterpriseConfiguration = false,
             EnterpriseConfigurationPluginId = Guid.Empty,
+            TokenizerPath = this.dataFilePath,
         };
     }
     
@@ -156,6 +167,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
         if(this.IsEditing)
         {
             this.dataEditingPreviousInstanceName = this.DataName.ToLowerInvariant();
+            this.dataFilePath = this.DataTokenizerPath;
             
             // When using self-hosted embedding, we must copy the model name:
             if (this.DataLLMProvider is LLMProviders.SELF_HOSTED)
@@ -211,6 +223,8 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
     
     private async Task Store()
     {
+        this.dataStoreWasAttempted = true;
+        await this.dataTokenizerValidationTask;
         await this.form.Validate();
         this.dataAPIKeyStorageIssue = string.Empty;
 
@@ -226,6 +240,15 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
         // When the data is not valid, we don't store it:
         if (!this.dataIsValid)
             return;
+        
+        var response = await this.RustService.StoreTokenizer(TokenizerModelId.ForEmbeddingProviderId(this.DataId), this.dataFilePath);
+        if (!response.Success)
+        {
+            this.dataCustomTokenizerValidationIssue = response.Message;
+            await this.form.Validate();
+            return;
+        }
+        this.dataFilePath = response.Message;
         
         // Use the data model to store the provider.
         // We just return this data to the parent component:
@@ -262,6 +285,58 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
         {
             this.dataAPIKeyStorageIssue = string.Empty;
             await this.form.Validate();
+        }
+    }
+
+    private Task ClearPathTokenizer(MouseEventArgs _)
+    {
+        return this.OnDataFilePathChanged(string.Empty);
+    }
+    
+    private async Task OnDataFilePathChanged(string filePath)
+    {
+        this.dataFilePath = filePath;
+        var validationRevision = ++this.dataTokenizerValidationRevision;
+        this.dataTokenizerValidationTask = this.ValidateCustomTokenizer(filePath, validationRevision);
+        await this.dataTokenizerValidationTask;
+
+        if (validationRevision != this.dataTokenizerValidationRevision)
+            return;
+
+        if (this.dataStoreWasAttempted)
+            await this.form.Validate();
+        else
+            this.form.ResetValidation();
+    }
+
+    private async Task ValidateCustomTokenizer(string filePath, int validationRevision)
+    {
+        if (string.IsNullOrWhiteSpace(filePath))
+        {
+            if (validationRevision == this.dataTokenizerValidationRevision)
+                this.dataCustomTokenizerValidationIssue = string.Empty;
+
+            return;
+        }
+
+        try
+        {
+            var response = await this.RustService.ValidateTokenizer(filePath);
+            if (validationRevision != this.dataTokenizerValidationRevision)
+                return;
+
+            if (response.Success)
+                this.dataCustomTokenizerValidationIssue = string.Empty;
+            else
+                this.dataCustomTokenizerValidationIssue = T("Invalid tokenizer: ") + response.Message;
+        }
+        catch (Exception e)
+        {
+            if (validationRevision != this.dataTokenizerValidationRevision)
+                return;
+
+            this.Logger.LogError(e, "Failed to validate custom tokenizer.");
+            this.dataCustomTokenizerValidationIssue = T("Failed to validate the selected tokenizer. Please try again.");
         }
     }
 

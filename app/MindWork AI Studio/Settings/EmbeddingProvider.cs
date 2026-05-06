@@ -19,7 +19,8 @@ public sealed record EmbeddingProvider(
     bool IsEnterpriseConfiguration = false,
     Guid EnterpriseConfigurationPluginId = default,
     string Hostname = "http://localhost:1234",
-    Host Host = Host.NONE) : ConfigurationBaseObject, ISecretId
+    Host Host = Host.NONE,
+    string TokenizerPath = "") : ConfigurationBaseObject, ISecretId
 {
     private static readonly ILogger<EmbeddingProvider> LOGGER = Program.LOGGER_FACTORY.CreateLogger<EmbeddingProvider>();
 
@@ -96,6 +97,13 @@ public sealed record EmbeddingProvider(
             return false;
         }
 
+        var tokenizerPath = string.Empty;
+        if (table.TryGetValue("TokenizerPath", out var tokenizerPathValue) && !tokenizerPathValue.TryRead<string>(out tokenizerPath))
+        {
+            LOGGER.LogWarning($"The configured embedding provider {idx} does not contain a valid tokenizer path. (Plugin ID: {configPluginId})");
+            tokenizerPath = string.Empty;
+        }
+
         provider = new EmbeddingProvider
         {
             Num = 0, // will be set later by the PluginConfigurationObject
@@ -108,6 +116,7 @@ public sealed record EmbeddingProvider(
             EnterpriseConfigurationPluginId = configPluginId,
             Hostname = hostname,
             Host = host,
+            TokenizerPath = tokenizerPath,
         };
 
         // Handle encrypted API key if present:
@@ -167,28 +176,36 @@ public sealed record EmbeddingProvider(
     /// <returns>A Lua configuration section string.</returns>
     public string ExportAsConfigurationSection(string? encryptedApiKey = null)
     {
-        var apiKeyLine = string.Empty;
-        if (!string.IsNullOrWhiteSpace(encryptedApiKey))
+        var lines = new List<string>
         {
-            apiKeyLine = $"""
-                          ["APIKey"] = "{LuaTools.EscapeLuaString(encryptedApiKey)}",
-                          """;
+            "CONFIG[\"EMBEDDING_PROVIDERS\"][#CONFIG[\"EMBEDDING_PROVIDERS\"]+1] = {",
+            $"    [\"Id\"] = \"{Guid.NewGuid()}\",",
+            $"    [\"Name\"] = \"{LuaTools.EscapeLuaString(this.Name)}\",",
+            $"    [\"UsedLLMProvider\"] = \"{this.UsedLLMProvider}\",",
+        };
+
+        if (!string.IsNullOrWhiteSpace(this.TokenizerPath))
+        {
+            lines.Add(string.Empty);
+            lines.Add("    -- The tokenizer path shown is local to this model. To use it with the plugin:");
+            lines.Add("        -- 1. Copy the tokenizer into the zip.");
+            lines.Add("        -- 2. Update the path in the plugin file to be relative to the zip's root.");
+            lines.Add($"    [\"TokenizerPath\"] = \"{LuaTools.EscapeLuaString(this.TokenizerPath)}\",");
         }
 
-        return $$"""
-                CONFIG["EMBEDDING_PROVIDERS"][#CONFIG["EMBEDDING_PROVIDERS"]+1] = {
-                    ["Id"] = "{{Guid.NewGuid().ToString()}}",
-                    ["Name"] = "{{LuaTools.EscapeLuaString(this.Name)}}",
-                    ["UsedLLMProvider"] = "{{this.UsedLLMProvider}}",
-                 
-                    ["Host"] = "{{this.Host}}",
-                    ["Hostname"] = "{{LuaTools.EscapeLuaString(this.Hostname)}}",
-                    {{apiKeyLine}}
-                    ["Model"] = {
-                        ["Id"] = "{{LuaTools.EscapeLuaString(this.Model.Id)}}",
-                        ["DisplayName"] = "{{LuaTools.EscapeLuaString(this.Model.DisplayName ?? string.Empty)}}",
-                    },
-                }
-                """;
+        lines.Add(string.Empty);
+        lines.Add($"    [\"Host\"] = \"{this.Host}\",");
+        lines.Add($"    [\"Hostname\"] = \"{LuaTools.EscapeLuaString(this.Hostname)}\",");
+
+        if (!string.IsNullOrWhiteSpace(encryptedApiKey))
+            lines.Add($"    [\"APIKey\"] = \"{LuaTools.EscapeLuaString(encryptedApiKey)}\",");
+
+        lines.Add("    [\"Model\"] = {");
+        lines.Add($"        [\"Id\"] = \"{LuaTools.EscapeLuaString(this.Model.Id)}\",");
+        lines.Add($"        [\"DisplayName\"] = \"{LuaTools.EscapeLuaString(this.Model.DisplayName ?? string.Empty)}\",");
+        lines.Add("    },");
+        lines.Add("}");
+
+        return string.Join(Environment.NewLine, lines);
     }
 }

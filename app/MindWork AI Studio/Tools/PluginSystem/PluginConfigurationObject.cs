@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 
 using AIStudio.Settings;
@@ -162,6 +163,42 @@ public sealed record PluginConfigurationObject
         return true;
     }
 
+    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed", Justification = "Tokenizer synchronization needs indexed access to update enterprise-managed providers in place.")]
+    public static async Task<bool> SyncManagedTokenizersAsync(Guid configPluginId, string pluginPath)
+    {
+        var wasConfigurationChanged = false;
+
+        for (var i = 0; i < SETTINGS_MANAGER.ConfigurationData.Providers.Count; i++)
+        {
+            var provider = SETTINGS_MANAGER.ConfigurationData.Providers[i];
+            if (!provider.IsEnterpriseConfiguration || provider.EnterpriseConfigurationPluginId != configPluginId)
+                continue;
+
+            var syncedProvider = await SyncProviderTokenizerAsync(provider, pluginPath);
+            if (syncedProvider == provider)
+                continue;
+
+            SETTINGS_MANAGER.ConfigurationData.Providers[i] = syncedProvider;
+            wasConfigurationChanged = true;
+        }
+
+        for (var i = 0; i < SETTINGS_MANAGER.ConfigurationData.EmbeddingProviders.Count; i++)
+        {
+            var provider = SETTINGS_MANAGER.ConfigurationData.EmbeddingProviders[i];
+            if (!provider.IsEnterpriseConfiguration || provider.EnterpriseConfigurationPluginId != configPluginId)
+                continue;
+
+            var syncedProvider = await SyncEmbeddingTokenizerAsync(provider, pluginPath);
+            if (syncedProvider == provider)
+                continue;
+
+            SETTINGS_MANAGER.ConfigurationData.EmbeddingProviders[i] = syncedProvider;
+            wasConfigurationChanged = true;
+        }
+
+        return wasConfigurationChanged;
+    }
+
     /// <summary>
     /// Cleans up configuration objects of a specified type that are no longer associated with any available plugin.
     /// </summary>
@@ -217,6 +254,19 @@ public sealed record PluginConfigurationObject
         var wasConfigurationChanged = leftOverObjects.Count > 0;
         foreach (var item in leftOverObjects.Distinct())
         {
+            if (item is Settings.Provider provider)
+            {
+                var deleteTokenizerResult = await RUST_SERVICE.DeleteTokenizer(TokenizerModelId.ForProvider(provider));
+                if (!deleteTokenizerResult.Success)
+                    LOG.LogWarning("Failed to delete tokenizer for removed enterprise provider '{ProviderName}': {Issue}", provider.InstanceName, deleteTokenizerResult.Message);
+            }
+            else if (item is EmbeddingProvider embeddingProvider)
+            {
+                var deleteTokenizerResult = await RUST_SERVICE.DeleteTokenizer(TokenizerModelId.ForEmbeddingProvider(embeddingProvider));
+                if (!deleteTokenizerResult.Success)
+                    LOG.LogWarning("Failed to delete tokenizer for removed enterprise embedding provider '{ProviderName}': {Issue}", embeddingProvider.Name, deleteTokenizerResult.Message);
+            }
+
             configuredObjects.Remove(item);
         
             // Delete the API key from the OS keyring if the removed object has one:
@@ -231,5 +281,90 @@ public sealed record PluginConfigurationObject
         }
 
         return wasConfigurationChanged;
+    }
+
+    private static async Task<Settings.Provider> SyncProviderTokenizerAsync(Settings.Provider provider, string pluginPath)
+    {
+        var syncedTokenizerPath = await SyncTokenizerAsync(
+            provider.TokenizerPath,
+            pluginPath,
+            TokenizerModelId.ForProvider(provider),
+            $"provider '{provider.InstanceName}'");
+
+        return provider with { TokenizerPath = syncedTokenizerPath };
+    }
+
+    private static async Task<EmbeddingProvider> SyncEmbeddingTokenizerAsync(EmbeddingProvider provider, string pluginPath)
+    {
+        var syncedTokenizerPath = await SyncTokenizerAsync(
+            provider.TokenizerPath,
+            pluginPath,
+            TokenizerModelId.ForEmbeddingProvider(provider),
+            $"embedding provider '{provider.Name}'");
+
+        return provider with { TokenizerPath = syncedTokenizerPath };
+    }
+
+    private static async Task<string> SyncTokenizerAsync(string configuredTokenizerPath, string pluginPath, string modelId, string logName)
+    {
+        if (string.IsNullOrWhiteSpace(configuredTokenizerPath))
+        {
+            var deleteResult = await RUST_SERVICE.DeleteTokenizer(modelId);
+            if (!deleteResult.Success)
+                LOG.LogWarning("Failed to delete tokenizer for {LogName}: {Issue}", logName, deleteResult.Message);
+
+            return string.Empty;
+        }
+
+        var resolvedPath = ResolvePluginTokenizerPath(configuredTokenizerPath, pluginPath);
+        if (resolvedPath is null)
+        {
+            var deleteResult = await RUST_SERVICE.DeleteTokenizer(modelId);
+            if (!deleteResult.Success)
+                LOG.LogWarning("Failed to delete tokenizer after invalid path for {LogName}: {Issue}", logName, deleteResult.Message);
+
+            LOG.LogWarning("The configured tokenizer path '{TokenizerPath}' for {LogName} is invalid. The tokenizer path must stay within the plugin directory '{PluginPath}'.", configuredTokenizerPath, logName, pluginPath);
+            return string.Empty;
+        }
+
+        var validateResult = await RUST_SERVICE.ValidateTokenizer(resolvedPath);
+        if (!validateResult.Success)
+        {
+            var deleteResult = await RUST_SERVICE.DeleteTokenizer(modelId);
+            if (!deleteResult.Success)
+                LOG.LogWarning("Failed to delete tokenizer after validation failure for {LogName}: {Issue}", logName, deleteResult.Message);
+
+            LOG.LogWarning("The configured tokenizer for {LogName} is invalid. Path='{TokenizerPath}', issue='{Issue}'", logName, resolvedPath, validateResult.Message);
+            return string.Empty;
+        }
+
+        var storeResult = await RUST_SERVICE.StoreTokenizer(modelId, resolvedPath);
+        if (!storeResult.Success)
+        {
+            LOG.LogWarning("Failed to store tokenizer for {LogName}. Path='{TokenizerPath}', issue='{Issue}'", logName, resolvedPath, storeResult.Message);
+            return string.Empty;
+        }
+
+        return storeResult.Message;
+    }
+
+    private static string? ResolvePluginTokenizerPath(string configuredTokenizerPath, string pluginPath)
+    {
+        if (string.IsNullOrWhiteSpace(pluginPath))
+            return null;
+
+        var fullPluginPath = Path.GetFullPath(pluginPath);
+        var candidatePath = Path.GetFullPath(Path.Combine(fullPluginPath, configuredTokenizerPath));
+
+        if (candidatePath.Equals(fullPluginPath, StringComparison.OrdinalIgnoreCase))
+            return null;
+
+        var pluginPrefix = fullPluginPath.EndsWith(Path.DirectorySeparatorChar)
+            ? fullPluginPath
+            : fullPluginPath + Path.DirectorySeparatorChar;
+
+        return candidatePath.StartsWith(pluginPrefix, StringComparison.OrdinalIgnoreCase)
+            ? candidatePath
+            : null;
     }
 }
