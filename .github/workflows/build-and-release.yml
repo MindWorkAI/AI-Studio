@@ -716,7 +716,7 @@ jobs:
         if: matrix.platform != 'windows-latest'
         run: |
           if ! cargo tauri --version 2>/dev/null | grep -Eq '^tauri-cli 2\.'; then
-            cargo install tauri-cli --version "^2.0.0" --locked --force
+            cargo install tauri-cli --version "^2.11.0" --locked --force
           else
             echo "Tauri CLI v2 is already installed"
           fi
@@ -726,7 +726,7 @@ jobs:
         run: |
           $tauriVersion = cargo tauri --version 2>$null
           if (-not $tauriVersion -or $tauriVersion -notmatch '^tauri-cli 2\.') {
-            cargo install tauri-cli --version "^2.0.0" --locked --force
+            cargo install tauri-cli --version "^2.11.0" --locked --force
           } else {
             Write-Output "Tauri CLI v2 is already installed"
           }
