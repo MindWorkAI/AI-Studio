@@ -735,7 +735,7 @@ jobs:
         if: startsWith(matrix.platform, 'macos')
         run: |
           rm -f runtime/target/${{ matrix.rust_target }}/release/bundle/dmg/MindWork AI Studio_*.dmg
-          rm -f runtime/target/${{ matrix.rust_target }}/release/bundle/macos/MindWork AI Studio.app.tar.gz*
+          rm -f runtime/target/${{ matrix.rust_target }}/release/bundle/macos/*.app.tar.gz*
 
       - name: Delete previous artifact, which may exist due to caching (Windows - MSI)
         if: startsWith(matrix.platform, 'windows') && contains(matrix.tauri_bundle, 'msi')
@@ -800,7 +800,7 @@ jobs:
           name: MindWork AI Studio (macOS ${{ matrix.dotnet_runtime }})
           path: |
             runtime/target/${{ matrix.rust_target }}/release/bundle/dmg/MindWork AI Studio_*.dmg
-            runtime/target/${{ matrix.rust_target }}/release/bundle/macos/MindWork AI Studio.app.tar.gz*
+            runtime/target/${{ matrix.rust_target }}/release/bundle/macos/*.app.tar.gz*
           if-no-files-found: error
           retention-days: ${{ fromJSON(needs.determine_run_mode.outputs.artifact_retention_days) }}
           
@@ -992,6 +992,13 @@ jobs:
             echo "The generated notes field does not match the changelog input."
             exit 1
           fi
+
+          for platform in darwin-aarch64 darwin-x86_64 linux-aarch64 linux-x86_64 windows-aarch64 windows-x86_64; do
+            if ! jq -e --arg platform "$platform" '.platforms[$platform]' $GITHUB_WORKSPACE/release/assets/latest.json > /dev/null; then
+              echo "The generated latest.json is missing platform '$platform'."
+              exit 1
+            fi
+          done
 
       - name: Show all release assets
         run: ls -Rlhat $GITHUB_WORKSPACE/release/assets
