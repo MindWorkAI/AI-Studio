@@ -220,14 +220,14 @@ jobs:
             rust_target: 'aarch64-apple-darwin'
             dotnet_runtime: 'osx-arm64'
             dotnet_name_postfix: '-aarch64-apple-darwin'
-            tauri_bundle: 'dmg,updater'
+            tauri_bundle: 'dmg,app,updater'
             tauri_bundle_pr: 'dmg'
 
           - platform: 'macos-latest' # for Intel-based macOS
             rust_target: 'x86_64-apple-darwin'
             dotnet_runtime: 'osx-x64'
             dotnet_name_postfix: '-x86_64-apple-darwin'
-            tauri_bundle: 'dmg,updater'
+            tauri_bundle: 'dmg,app,updater'
             tauri_bundle_pr: 'dmg'
 
           - platform: 'ubuntu-22.04' # for x86-based Linux
@@ -734,8 +734,17 @@ jobs:
       - name: Delete previous artifact, which may exist due to caching (macOS)
         if: startsWith(matrix.platform, 'macos')
         run: |
-          rm -f runtime/target/${{ matrix.rust_target }}/release/bundle/dmg/MindWork AI Studio_*.dmg
-          rm -f runtime/target/${{ matrix.rust_target }}/release/bundle/macos/*.app.tar.gz*
+          dmg_dir="runtime/target/${{ matrix.rust_target }}/release/bundle/dmg"
+          macos_dir="runtime/target/${{ matrix.rust_target }}/release/bundle/macos"
+
+          if [ -d "$dmg_dir" ]; then
+            find "$dmg_dir" -maxdepth 1 -name 'MindWork AI Studio_*.dmg' -delete
+          fi
+
+          if [ -d "$macos_dir" ]; then
+            find "$macos_dir" -maxdepth 1 -name '*.app' -exec rm -rf {} +
+            find "$macos_dir" -maxdepth 1 -name '*.app.tar.gz*' -delete
+          fi
 
       - name: Delete previous artifact, which may exist due to caching (Windows - MSI)
         if: startsWith(matrix.platform, 'windows') && contains(matrix.tauri_bundle, 'msi')
@@ -773,6 +782,16 @@ jobs:
 
           cd runtime
           cargo tauri build --target ${{ matrix.rust_target }} --bundles "$bundles"
+
+          if [ "${{ needs.determine_run_mode.outputs.is_pr_build }}" != "true" ] && [[ "${{ matrix.platform }}" == macos* ]]; then
+            app_update_archive_count=$(find target/${{ matrix.rust_target }}/release/bundle/macos -maxdepth 1 -name '*.app.tar.gz' | wc -l)
+            app_update_signature_count=$(find target/${{ matrix.rust_target }}/release/bundle/macos -maxdepth 1 -name '*.app.tar.gz.sig' | wc -l)
+
+            if [ "$app_update_archive_count" -eq 0 ] || [ "$app_update_signature_count" -eq 0 ]; then
+              echo "Expected macOS updater artifacts were not generated."
+              exit 1
+            fi
+          fi
           
       - name: Build Tauri project (Windows)
         if: matrix.platform == 'windows-latest'
