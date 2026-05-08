@@ -29,7 +29,7 @@ public partial class Information : MSGComponentBase
     private ISnackbar Snackbar { get; init; } = null!;
     
     [Inject]
-    private DatabaseClient DatabaseClient { get; init; } = null!;
+    private EmbeddingStore EmbeddingStore { get; init; } = null!;
     
     private static readonly Assembly ASSEMBLY = Assembly.GetExecutingAssembly();
     private static readonly MetaDataAttribute META_DATA = ASSEMBLY.GetCustomAttribute<MetaDataAttribute>()!;
@@ -59,9 +59,9 @@ public partial class Information : MSGComponentBase
     
     private string VersionPdfium => $"{T("Used PDFium version")}: v{META_DATA_LIBRARIES.PdfiumVersion}";
     
-    private string VersionDatabase => this.DatabaseClient.IsAvailable
-        ? $"{T("Database version")}: {this.DatabaseClient.Name} v{META_DATA_DATABASES.DatabaseVersion}"
-        : $"{T("Database")}: {this.DatabaseClient.Name} - {T("not available")}";
+    private string VersionDatabase => this.EmbeddingStore.IsAvailable
+        ? $"{T("Database version")}: {this.EmbeddingStore.Name} v{META_DATA_DATABASES.DatabaseVersion}"
+        : $"{T("Database")}: {this.EmbeddingStore.Name} - {T("not available")}";
     
     private string versionPandoc = TB("Determine Pandoc version, please wait...");
     private PandocInstallation pandocInstallation;
@@ -130,7 +130,7 @@ public partial class Information : MSGComponentBase
         this.osLanguage = await this.RustService.ReadUserLanguage();
         this.logPaths = await this.RustService.GetLogPaths();
         
-        await foreach (var (label, value) in this.DatabaseClient.GetDisplayInfo())
+        await foreach (var (label, value) in this.EmbeddingStore.GetDisplayInfo())
         {
             this.databaseDisplayInfo.Add(new DatabaseDisplayInfo(label, value));
         }

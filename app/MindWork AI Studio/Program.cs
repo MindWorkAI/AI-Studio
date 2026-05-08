@@ -2,7 +2,6 @@ using AIStudio.Agents;
 using AIStudio.Agents.AssistantAudit;
 using AIStudio.Settings;
 using AIStudio.Tools.Databases;
-using AIStudio.Tools.Databases.Qdrant;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.PluginSystem.Assistants;
 using AIStudio.Tools.Services;
@@ -28,7 +27,7 @@ internal sealed class Program
     public static string API_TOKEN = null!;
     public static IServiceProvider SERVICE_PROVIDER = null!;
     public static ILoggerFactory LOGGER_FACTORY = null!;
-    public static DatabaseClient DATABASE_CLIENT = null!;
+    public static EmbeddingStore EMBEDDING_STORE = null!;
     
     public static async Task Main()
     {
@@ -87,47 +86,9 @@ internal sealed class Program
             return;
         }
         
-        var qdrantInfo = await rust.GetQdrantInfo();
-        DatabaseClient databaseClient;
-        if (!qdrantInfo.IsAvailable)
-        {
-            Console.WriteLine($"Warning: Qdrant is not available. Starting without vector database. Reason: '{qdrantInfo.UnavailableReason ?? "unknown"}'.");
-            databaseClient = new NoDatabaseClient("Qdrant", qdrantInfo.UnavailableReason);
-        }
-        else
-        {
-            if (qdrantInfo.Path == string.Empty)
-            {
-                Console.WriteLine("Error: Failed to get the Qdrant path from Rust.");
-                return;
-            }
-            
-            if (qdrantInfo.PortHttp == 0)
-            {
-                Console.WriteLine("Error: Failed to get the Qdrant HTTP port from Rust.");
-                return;
-            }
-
-            if (qdrantInfo.PortGrpc == 0)
-            {
-                Console.WriteLine("Error: Failed to get the Qdrant gRPC port from Rust.");
-                return;
-            }
-
-            if (qdrantInfo.Fingerprint == string.Empty)
-            {
-                Console.WriteLine("Error: Failed to get the Qdrant fingerprint from Rust.");
-                return;
-            }
-            
-            if (qdrantInfo.ApiToken == string.Empty)
-            {
-                Console.WriteLine("Error: Failed to get the Qdrant API token from Rust.");
-                return;
-            }
-
-            databaseClient = new QdrantClientImplementation("Qdrant", qdrantInfo.Path, qdrantInfo.PortHttp, qdrantInfo.PortGrpc, qdrantInfo.Fingerprint, qdrantInfo.ApiToken);
-        }
+        var embeddingStoreConfig = await rust.GetEmbeddingStoreConfiguration(EmbeddingStoreKind.QDRANT_REMOTE);
+        
+        EmbeddingStore embeddingStore = EmbeddingStoreFactory.Create(embeddingStoreConfig);
         
         var builder = WebApplication.CreateBuilder();
         builder.WebHost.ConfigureKestrel(kestrelServerOptions =>
@@ -173,6 +134,7 @@ internal sealed class Program
         builder.Services.AddSingleton<ThreadSafeRandom>();
         builder.Services.AddSingleton<VoiceRecordingAvailabilityService>();
         builder.Services.AddSingleton<DataSourceService>();
+        builder.Services.AddSingleton<DataSourceEmbeddingService>();
         builder.Services.AddScoped<PandocAvailabilityService>();
         builder.Services.AddTransient<HTMLParser>();
         builder.Services.AddTransient<AgentDataSourceSelection>();
@@ -183,7 +145,8 @@ internal sealed class Program
         builder.Services.AddHostedService<UpdateService>();
         builder.Services.AddHostedService<TemporaryChatService>();
         builder.Services.AddHostedService<EnterpriseEnvironmentService>();
-        builder.Services.AddSingleton(databaseClient);
+        builder.Services.AddHostedService(sp => sp.GetRequiredService<DataSourceEmbeddingService>());
+        builder.Services.AddSingleton(embeddingStore);
         builder.Services.AddHostedService<GlobalShortcutService>();
         builder.Services.AddHostedService<RustAvailabilityMonitorService>();
         
@@ -243,9 +206,9 @@ internal sealed class Program
         RUST_SERVICE = rust;
         ENCRYPTION = encryption;
         
-        var databaseLogger = app.Services.GetRequiredService<ILogger<DatabaseClient>>();
-        databaseClient.SetLogger(databaseLogger);
-        DATABASE_CLIENT = databaseClient;
+        var databaseLogger = app.Services.GetRequiredService<ILogger<EmbeddingStore>>();
+        embeddingStore.SetLogger(databaseLogger);
+        EMBEDDING_STORE = embeddingStore;
 
         programLogger.LogInformation("Initialize internal file system.");
         app.Use(Redirect.HandlerContentAsync);
@@ -283,7 +246,7 @@ internal sealed class Program
         await serverTask;
         
         RUST_SERVICE.Dispose();
-        DATABASE_CLIENT.Dispose();
+        EMBEDDING_STORE.Dispose();
         PluginFactory.Dispose();
         programLogger.LogInformation("The AI Studio server was stopped.");
     }

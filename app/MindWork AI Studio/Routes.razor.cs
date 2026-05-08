@@ -4,6 +4,7 @@ public sealed partial class Routes
 {
     public const string HOME = "/";
     public const string CHAT = "/chat";
+    public const string EMBEDDINGS = "/embeddings";
     public const string ABOUT = "/about";
     public const string ASSISTANTS = "/assistants";
     public const string SETTINGS = "/settings";

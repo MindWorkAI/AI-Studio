@@ -25,7 +25,17 @@
                         
                         <MudSpacer/>
                         
-                        <MudStack AlignItems="AlignItems.Center">
+                        @if (this.embeddingOverview.IsVisible)
+                        {
+                            <MudNavMenu>
+                                <MudTooltip Text="@this.EmbeddingNavigationTooltip" Placement="Placement.Right">
+                                    <MudNavLink Href="@this.embeddingItem.Path" Match="@(this.embeddingItem.MatchAll ? NavLinkMatch.All : NavLinkMatch.Prefix)" Icon="@this.embeddingItem.Icon" Style="@this.embeddingItem.SetColorStyle(this.SettingsManager)" Class="custom-icon-color">
+                                        @T("Data sync")
+                                    </MudNavLink>
+                                </MudTooltip>
+                            </MudNavMenu>
+                        }
+                        <MudStack AlignItems="AlignItems.Center" Class="pb-2">
                             <MudToolBar WrapContent="true">
                                 <VoiceRecorder />
                             </MudToolBar>
@@ -53,8 +63,23 @@
                     </MudNavMenu>
 
                     <MudSpacer/>
-
-                    <MudStack AlignItems="AlignItems.Center">
+                    
+                    @if (this.embeddingOverview.IsVisible)
+                    {
+                        <MudNavMenu>
+                            @if (this.SettingsManager.ConfigurationData.App.NavigationBehavior is NavBehavior.NEVER_EXPAND_USE_TOOLTIPS)
+                            {
+                                <MudTooltip Text="@this.EmbeddingNavigationTooltip" Placement="Placement.Right">
+                                    <MudNavLink Href="@this.embeddingItem.Path" Match="@(this.embeddingItem.MatchAll ? NavLinkMatch.All : NavLinkMatch.Prefix)" Icon="@this.embeddingItem.Icon" Style="@this.embeddingItem.SetColorStyle(this.SettingsManager)" Class="custom-icon-color"/>
+                                </MudTooltip>
+                            }
+                            else
+                            {
+                            <MudNavLink Href="@this.embeddingItem.Path" Match="@(this.embeddingItem.MatchAll ? NavLinkMatch.All : NavLinkMatch.Prefix)" Icon="@this.embeddingItem.Icon" Style="@this.embeddingItem.SetColorStyle(this.SettingsManager)" Class="custom-icon-color"/>
+                            }
+                        </MudNavMenu>
+                    }
+                    <MudStack AlignItems="AlignItems.Center" Class="pb-2">
                         <MudToolBar WrapContent="true">
                             <VoiceRecorder />
                         </MudToolBar>

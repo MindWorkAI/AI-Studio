@@ -37,6 +37,7 @@ public enum Event
     
     // RAG events:
     RAG_AUTO_DATA_SOURCES_SELECTED,
+    RAG_EMBEDDING_STATUS_CHANGED,
     
     // File attachment events:
     REGISTER_FILE_DROP_AREA,

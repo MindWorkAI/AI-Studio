@@ -13,6 +13,9 @@ namespace AIStudio.Components.Settings;
 
 public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
 {
+    [Inject]
+    private DataSourceEmbeddingService DataSourceEmbeddingService { get; init; } = null!;
+
     [Parameter]
     public List<ConfigurationSelectData<string>> AvailableEmbeddingProviders { get; set; } = new();
     
@@ -59,6 +62,7 @@ public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
         await this.UpdateEmbeddingProviders();
         
         await this.SettingsManager.StoreSettings();
+        await this.DataSourceEmbeddingService.QueueAllInternalDataSourcesAsync();
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
     
@@ -94,6 +98,7 @@ public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
         await this.UpdateEmbeddingProviders();
         
         await this.SettingsManager.StoreSettings();
+        await this.DataSourceEmbeddingService.QueueAllInternalDataSourcesAsync();
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
 
@@ -133,6 +138,7 @@ public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
         }
 
         await this.UpdateEmbeddingProviders();
+        await this.DataSourceEmbeddingService.QueueAllInternalDataSourcesAsync();
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
 

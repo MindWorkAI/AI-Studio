@@ -1,6 +1,6 @@
 ﻿namespace AIStudio.Tools.Databases;
 
-public abstract class DatabaseClient(string name, string path)
+public abstract class EmbeddingStore(string name, string path)
 {
     public string Name => name;
 
@@ -8,7 +8,7 @@ public abstract class DatabaseClient(string name, string path)
     
     private string Path => path;
 
-    private ILogger<DatabaseClient>? logger;
+    private ILogger<EmbeddingStore>? logger;
     
     public abstract IAsyncEnumerable<(string Label, string Value)> GetDisplayInfo();
 
@@ -45,10 +45,19 @@ public abstract class DatabaseClient(string name, string path)
         return $"{size:0##} {suffixes[suffixIndex]}";
     }
     
-    public void SetLogger(ILogger<DatabaseClient> logService)
+    public void SetLogger(ILogger<EmbeddingStore> logService)
     {
         this.logger = logService;
     }
+    
+
+    public abstract Task EnsureEmbeddingStoreExists(string collectionName, int vectorSize, CancellationToken token);
+
+    public abstract Task InsertEmbedding(string collectionName, IReadOnlyList<EmbeddingStoragePoint> points, CancellationToken token);
+
+    public abstract Task DeleteEmbeddingByFile(string collectionName, string filePath, CancellationToken token);
+
+    public abstract Task DeleteEmbeddingStore(string collectionName, CancellationToken token);
 
     public abstract void Dispose();
 }

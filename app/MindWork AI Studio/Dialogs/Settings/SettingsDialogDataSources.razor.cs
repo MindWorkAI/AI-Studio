@@ -1,11 +1,17 @@
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.ERIClient.DataModel;
+using AIStudio.Tools.Services;
+
+using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Dialogs.Settings;
 
 public partial class SettingsDialogDataSources : SettingsDialogBase
 {
+    [Inject]
+    private DataSourceEmbeddingService DataSourceEmbeddingService { get; init; } = null!;
+
     private string GetEmbeddingName(IDataSource dataSource)
     {
         if(dataSource is IInternalDataSource internalDataSource)
@@ -84,6 +90,7 @@ public partial class SettingsDialogDataSources : SettingsDialogBase
         
         this.SettingsManager.ConfigurationData.DataSources.Add(addedDataSource);
         await this.SettingsManager.StoreSettings();
+        await this.DataSourceEmbeddingService.QueueDataSourceAsync(addedDataSource);
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
     
@@ -146,6 +153,7 @@ public partial class SettingsDialogDataSources : SettingsDialogBase
         this.SettingsManager.ConfigurationData.DataSources[this.SettingsManager.ConfigurationData.DataSources.IndexOf(dataSource)] = editedDataSource;
 
         await this.SettingsManager.StoreSettings();
+        await this.DataSourceEmbeddingService.QueueDataSourceAsync(editedDataSource);
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
     
@@ -184,6 +192,7 @@ public partial class SettingsDialogDataSources : SettingsDialogBase
         {
             this.SettingsManager.ConfigurationData.DataSources.Remove(dataSource);
             await this.SettingsManager.StoreSettings();
+            await this.DataSourceEmbeddingService.RemoveDataSourceAsync(dataSource);
             await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
         }
     }
