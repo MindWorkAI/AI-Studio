@@ -203,6 +203,14 @@ fn is_local_host(host: Option<&str>) -> bool {
     matches!(host, Some("localhost") | Some("127.0.0.1") | Some("::1") | Some("[::1]"))
 }
 
+fn is_tauri_asset_host(host: Option<&str>) -> bool {
+    matches!(host, Some("tauri.localhost"))
+}
+
+fn is_tauri_asset_url(url: &tauri::Url) -> bool {
+    matches!(url.scheme(), "http" | "https") && is_tauri_asset_host(url.host_str())
+}
+
 fn is_local_http_url(url: &tauri::Url) -> bool {
     matches!(url.scheme(), "http" | "https") && is_local_host(url.host_str())
 }
@@ -218,6 +226,10 @@ fn should_open_in_system_browser<R: tauri::Runtime>(webview: &tauri::Webview<R>,
         "mailto" | "tel" => return true,
         "http" | "https" => {},
         _ => return false,
+    }
+
+    if is_tauri_asset_url(url) {
+        return false;
     }
 
     if let Some(approved_app_url) = APPROVED_APP_URL.lock().unwrap().as_ref() {
@@ -940,6 +952,36 @@ fn validate_shortcut_syntax(shortcut: &str) -> bool {
     }
 
     has_key
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn tauri_localhost_is_tauri_asset_url() {
+        let https_url = tauri::Url::parse("https://tauri.localhost/index.html").unwrap();
+        let http_url = tauri::Url::parse("http://tauri.localhost/index.html").unwrap();
+
+        assert!(is_tauri_asset_url(&https_url));
+        assert!(is_tauri_asset_url(&http_url));
+    }
+
+    #[test]
+    fn localhost_app_url_is_not_tauri_asset_url() {
+        let url = tauri::Url::parse("http://localhost:12345/").unwrap();
+
+        assert!(!is_tauri_asset_url(&url));
+        assert!(is_local_http_url(&url));
+    }
+
+    #[test]
+    fn external_url_is_not_internal_url() {
+        let url = tauri::Url::parse("https://example.com/").unwrap();
+
+        assert!(!is_tauri_asset_url(&url));
+        assert!(!is_local_http_url(&url));
+    }
 }
 
 fn set_pdfium_path<R: tauri::Runtime>(path_resolver: &PathResolver<R>) {
