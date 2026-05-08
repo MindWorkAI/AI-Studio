@@ -12,6 +12,7 @@
     "active": true,
     "targets": [
       "appimage",
+      "app",
       "dmg",
       "nsis"
     ],
