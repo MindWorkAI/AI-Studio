@@ -1,19 +1,18 @@
 ﻿use std::cmp::min;
+use std::convert::Infallible;
 use crate::api_token::APIToken;
 use crate::pandoc::PandocProcessBuilder;
 use crate::pdfium::PdfiumInit;
 use async_stream::stream;
+use axum::extract::Query;
+use axum::response::sse::{Event, Sse};
 use base64::{engine::general_purpose, Engine as _};
 use calamine::{open_workbook_auto, Reader};
 use file_format::{FileFormat, Kind};
 use futures::{Stream, StreamExt};
 use pdfium_render::prelude::Pdfium;
 use pptx_to_md::{ImageHandlingMode, ParserConfig, PptxContainer};
-use rocket::get;
-use rocket::response::stream::{Event, EventStream};
-use rocket::serde::Serialize;
-use rocket::tokio::select;
-use rocket::Shutdown;
+use serde::{Deserialize, Serialize};
 use std::path::Path;
 use std::pin::Pin;
 use log::{debug, error};
@@ -82,39 +81,45 @@ const IMAGE_SEGMENT_SIZE_IN_CHARS: usize = 8_192; // equivalent to ~ 5500 token
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 type ChunkStream = Pin<Box<dyn Stream<Item = Result<Chunk>> + Send>>;
 
-#[get("/retrieval/fs/extract?<path>&<stream_id>&<extract_images>")]
-pub async fn extract_data(_token: APIToken, path: String, stream_id: String, extract_images: bool, mut end: Shutdown) -> EventStream![] {
-    EventStream! {
-        let stream_result = stream_data(&path, extract_images).await;
-        let id_ref = &stream_id;
-        
+#[derive(Deserialize)]
+pub struct ExtractDataQuery {
+    path: String,
+    stream_id: String,
+    extract_images: bool,
+}
+
+pub async fn extract_data(
+    _token: APIToken,
+    Query(query): Query<ExtractDataQuery>,
+) -> Sse<impl Stream<Item = std::result::Result<Event, Infallible>>> {
+    let stream = stream! {
+        let stream_result = stream_data(&query.path, query.extract_images).await;
+        let id_ref = &query.stream_id;
+
         match stream_result {
             Ok(mut stream) => {
-                loop {
-                    let chunk = select! {
-                        chunk = stream.next() => match chunk {
-                            Some(Ok(mut chunk)) => {
-                                chunk.set_stream_id(id_ref);
-                                chunk
-                            },
-                            Some(Err(e)) => {
-                                yield Event::json(&format!("Error: {e}"));
-                                break;
-                            },
-                            None => break,
+                while let Some(chunk) = stream.next().await {
+                    match chunk {
+                        Ok(mut chunk) => {
+                            chunk.set_stream_id(id_ref);
+                            yield Ok(Event::default().json_data(&chunk).unwrap_or_else(|e| Event::default().data(format!("Error: {e}"))));
                         },
-                        _ = &mut end => break,
-                    };
-                    
-                    yield Event::json(&chunk);
+
+                        Err(e) => {
+                            yield Ok(Event::default().json_data(format!("Error: {e}")).unwrap_or_else(|_| Event::default().data(format!("Error: {e}"))));
+                            break;
+                        },
+                    }
                 }
             },
 
             Err(e) => {
-                yield Event::json(&format!("Error starting stream: {e}"));
+                yield Ok(Event::default().json_data(format!("Error starting stream: {e}")).unwrap_or_else(|_| Event::default().data(format!("Error starting stream: {e}"))));
             }
         }
-    }
+    };
+
+    Sse::new(stream)
 }
 
 async fn stream_data(file_path: &str, extract_images: bool) -> Result<ChunkStream> {

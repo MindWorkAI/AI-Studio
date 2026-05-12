@@ -1,14 +1,13 @@
 use arboard::Clipboard;
 use log::{debug, error};
-use rocket::post;
-use rocket::serde::json::Json;
+use axum::Json;
 use serde::Serialize;
 use crate::api_token::APIToken;
 use crate::encryption::{EncryptedText, ENCRYPTION};
 
 /// Sets the clipboard text to the provided encrypted text.
-#[post("/clipboard/set", data = "<encrypted_text>")]
-pub fn set_clipboard(_token: APIToken, encrypted_text: EncryptedText) -> Json<SetClipboardResponse> {
+pub async fn set_clipboard(_token: APIToken, encrypted_text: String) -> Json<SetClipboardResponse> {
+    let encrypted_text = EncryptedText::new(encrypted_text);
 
     // Decrypt this text first:
     let decrypted_text = match ENCRYPTION.decrypt(&encrypted_text) {

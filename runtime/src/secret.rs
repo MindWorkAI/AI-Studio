@@ -1,15 +1,13 @@
 use keyring::Entry;
 use log::{error, info, warn};
-use rocket::post;
-use rocket::serde::json::Json;
+use axum::Json;
 use serde::{Deserialize, Serialize};
 use keyring::error::Error::NoEntry;
 use crate::api_token::APIToken;
 use crate::encryption::{EncryptedText, ENCRYPTION};
 
 /// Stores a secret in the secret store using the operating system's keyring.
-#[post("/secrets/store", data = "<request>")]
-pub fn store_secret(_token: APIToken, request: Json<StoreSecret>) -> Json<StoreSecretResponse> {
+pub async fn store_secret(_token: APIToken, request: Json<StoreSecret>) -> Json<StoreSecretResponse> {
     let user_name = request.user_name.as_str();
     let decrypted_text = match ENCRYPTION.decrypt(&request.secret) {
         Ok(text) => text,
@@ -60,8 +58,7 @@ pub struct StoreSecretResponse {
 }
 
 /// Retrieves a secret from the secret store using the operating system's keyring.
-#[post("/secrets/get", data = "<request>")]
-pub fn get_secret(_token: APIToken, request: Json<RequestSecret>) -> Json<RequestedSecret> {
+pub async fn get_secret(_token: APIToken, request: Json<RequestSecret>) -> Json<RequestedSecret> {
     let user_name = request.user_name.as_str();
     let service = format!("mindwork-ai-studio::{}", request.destination);
     let entry = Entry::new(service.as_str(), user_name).unwrap();
@@ -121,8 +118,7 @@ pub struct RequestedSecret {
 }
 
 /// Deletes a secret from the secret store using the operating system's keyring.
-#[post("/secrets/delete", data = "<request>")]
-pub fn delete_secret(_token: APIToken, request: Json<RequestSecret>) -> Json<DeleteSecretResponse> {
+pub async fn delete_secret(_token: APIToken, request: Json<RequestSecret>) -> Json<DeleteSecretResponse> {
     let user_name = request.user_name.as_str();
     let service = format!("mindwork-ai-studio::{}", request.destination);
     let entry = Entry::new(service.as_str(), user_name).unwrap();

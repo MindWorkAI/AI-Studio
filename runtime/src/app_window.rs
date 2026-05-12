@@ -1,13 +1,16 @@
 use std::collections::HashMap;
+use std::convert::Infallible;
 use std::sync::Mutex;
 use std::time::Duration;
+use async_stream::stream;
+use axum::body::Body;
+use axum::http::header::CONTENT_TYPE;
+use axum::response::{IntoResponse, Response};
+use axum::Json;
+use bytes::Bytes;
 use log::{debug, error, info, trace, warn};
 use once_cell::sync::Lazy;
-use rocket::{get, post};
-use rocket::response::stream::TextStream;
-use rocket::serde::json::Json;
-use rocket::serde::Serialize;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use strum_macros::Display;
 use tauri::{DragDropEvent,RunEvent, Manager, WindowEvent, generate_context};
 use tauri::path::PathResolver;
@@ -256,8 +259,7 @@ fn should_open_in_system_browser<R: tauri::Runtime>(webview: &tauri::Webview<R>,
 /// When the client disconnects, the stream is closed. But we try to not lose events in between.
 /// The client is expected to reconnect automatically when the connection is closed and continue
 /// listening for events.
-#[get("/events")]
-pub async fn get_event_stream(_token: APIToken) -> TextStream![String] {
+pub async fn get_event_stream(_token: APIToken) -> Response {
     // Get the lock to the event broadcast sender:
     let event_broadcast_lock = EVENT_BROADCAST.lock().unwrap();
 
@@ -269,8 +271,7 @@ pub async fn get_event_stream(_token: APIToken) -> TextStream![String] {
     // Drop the lock to allow other access to the sender:
     drop(event_broadcast_lock);
 
-    // Create the event stream:
-    TextStream! {
+    let stream = stream! {
         loop {
             // Wait at most 3 seconds for an event:
             match time::timeout(Duration::from_secs(3), event_receiver.recv()).await {
@@ -281,11 +282,11 @@ pub async fn get_event_stream(_token: APIToken) -> TextStream![String] {
                     // is serialized as a single line so that the client can parse it
                     // correctly:
                     let event_json = serde_json::to_string(&event).unwrap();
-                    yield event_json;
+                    yield Ok::<Bytes, Infallible>(Bytes::from(event_json));
 
                     // The client expects a newline after each event because we are using
                     // a method to read the stream line-by-line:
-                    yield "\n".to_string();
+                    yield Ok::<Bytes, Infallible>(Bytes::from("\n"));
                 },
 
                 // Case: we lagged behind and missed some events
@@ -305,15 +306,17 @@ pub async fn get_event_stream(_token: APIToken) -> TextStream![String] {
 
                     // Again, we have to serialize the event as a single line:
                     let event_json = serde_json::to_string(&ping_event).unwrap();
-                    yield event_json;
+                    yield Ok::<Bytes, Infallible>(Bytes::from(event_json));
 
                     // The client expects a newline after each event because we are using
                     // a method to read the stream line-by-line:
-                    yield "\n".to_string();
+                    yield Ok::<Bytes, Infallible>(Bytes::from("\n"));
                 },
             }
         }
-    }
+    };
+
+    ([(CONTENT_TYPE, "application/jsonl")], Body::from_stream(stream)).into_response()
 }
 
 /// Data structure representing a Tauri event for our event API.
@@ -428,7 +431,6 @@ pub async fn change_location_to(url: &str) {
 }
 
 /// Checks for updates.
-#[get("/updates/check")]
 pub async fn check_for_update(_token: APIToken) -> Json<CheckUpdateResponse> {
     if is_dev() {
         warn!(Source = "Updater"; "The app is running in development mode; skipping update check.");
@@ -514,7 +516,6 @@ pub struct CheckUpdateResponse {
 }
 
 /// Installs the update.
-#[get("/updates/install")]
 pub async fn install_update(_token: APIToken) {
     if is_dev() {
         warn!(Source = "Updater"; "The app is running in development mode; skipping update installation.");
@@ -623,8 +624,7 @@ fn register_shortcut_with_callback<R: tauri::Runtime>(
 }
 
 /// Requests a controlled shutdown of the entire desktop application.
-#[post("/app/exit")]
-pub fn exit_app(_token: APIToken) -> Json<AppExitResponse> {
+pub async fn exit_app(_token: APIToken) -> Json<AppExitResponse> {
     let app_handle = {
         let main_window_lock = MAIN_WINDOW.lock().unwrap();
         match main_window_lock.as_ref() {
@@ -653,8 +653,7 @@ pub fn exit_app(_token: APIToken) -> Json<AppExitResponse> {
 
 /// Registers or updates a global shortcut. If the shortcut string is empty,
 /// the existing shortcut for that name will be unregistered.
-#[post("/shortcuts/register", data = "<payload>")]
-pub fn register_shortcut(_token: APIToken, payload: Json<RegisterShortcutRequest>) -> Json<ShortcutResponse> {
+pub async fn register_shortcut(_token: APIToken, payload: Json<RegisterShortcutRequest>) -> Json<ShortcutResponse> {
     let id = payload.id;
     let new_shortcut = payload.shortcut.clone();
 
@@ -761,8 +760,7 @@ pub struct ShortcutValidationResponse {
 /// Validates a shortcut string without registering it.
 /// Checks if the shortcut syntax is valid and if it
 /// conflicts with existing shortcuts.
-#[post("/shortcuts/validate", data = "<payload>")]
-pub fn validate_shortcut(_token: APIToken, payload: Json<ValidateShortcutRequest>) -> Json<ShortcutValidationResponse> {
+pub async fn validate_shortcut(_token: APIToken, payload: Json<ValidateShortcutRequest>) -> Json<ShortcutValidationResponse> {
     let shortcut = payload.shortcut.clone();
 
     // Empty shortcuts are always valid (means "disabled"):
@@ -816,8 +814,7 @@ pub fn validate_shortcut(_token: APIToken, payload: Json<ValidateShortcutRequest
 /// The shortcuts remain in our internal map, so they can be re-registered on resume.
 /// This is useful when opening a dialog to configure shortcuts, so the user can
 /// press the current shortcut to re-enter it without triggering the action.
-#[post("/shortcuts/suspend")]
-pub fn suspend_shortcuts(_token: APIToken) -> Json<ShortcutResponse> {
+pub async fn suspend_shortcuts(_token: APIToken) -> Json<ShortcutResponse> {
     // Get the main window to access the global shortcut manager:
     let main_window_lock = MAIN_WINDOW.lock().unwrap();
     let main_window = match main_window_lock.as_ref() {
@@ -853,8 +850,7 @@ pub fn suspend_shortcuts(_token: APIToken) -> Json<ShortcutResponse> {
 }
 
 /// Resumes shortcut processing by re-registering all shortcuts with the OS.
-#[post("/shortcuts/resume")]
-pub fn resume_shortcuts(_token: APIToken) -> Json<ShortcutResponse> {
+pub async fn resume_shortcuts(_token: APIToken) -> Json<ShortcutResponse> {
     // Get the main window to access the global shortcut manager:
     let main_window_lock = MAIN_WINDOW.lock().unwrap();
     let main_window = match main_window_lock.as_ref() {
@@ -954,6 +950,35 @@ fn validate_shortcut_syntax(shortcut: &str) -> bool {
     has_key
 }
 
+fn set_pdfium_path<R: tauri::Runtime>(path_resolver: &PathResolver<R>) {
+    let resource_dir = match path_resolver.resource_dir() {
+        Ok(path) => path,
+        Err(error) => {
+            error!(Source = "Bootloader Tauri"; "Failed to resolve resource dir: {error}");
+            return;
+        }
+    };
+
+    let candidate_paths = [
+        resource_dir.join("resources").join("libraries"),
+        resource_dir.join("libraries"),
+    ];
+
+    let pdfium_source_path = candidate_paths
+        .iter()
+        .find(|path| path.exists())
+        .map(|path| path.to_string_lossy().to_string());
+
+    match pdfium_source_path {
+        Some(path) => {
+            *PDFIUM_LIB_PATH.lock().unwrap() = Some(path);
+        }
+        None => {
+            error!(Source = "Bootloader Tauri"; "Failed to set the PDFium library path.");
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -981,34 +1006,5 @@ mod tests {
 
         assert!(!is_tauri_asset_url(&url));
         assert!(!is_local_http_url(&url));
-    }
-}
-
-fn set_pdfium_path<R: tauri::Runtime>(path_resolver: &PathResolver<R>) {
-    let resource_dir = match path_resolver.resource_dir() {
-        Ok(path) => path,
-        Err(error) => {
-            error!(Source = "Bootloader Tauri"; "Failed to resolve resource dir: {error}");
-            return;
-        }
-    };
-
-    let candidate_paths = [
-        resource_dir.join("resources").join("libraries"),
-        resource_dir.join("libraries"),
-    ];
-
-    let pdfium_source_path = candidate_paths
-        .iter()
-        .find(|path| path.exists())
-        .map(|path| path.to_string_lossy().to_string());
-
-    match pdfium_source_path {
-        Some(path) => {
-            *PDFIUM_LIB_PATH.lock().unwrap() = Some(path);
-        }
-        None => {
-            error!(Source = "Bootloader Tauri"; "Failed to set the PDFium library path.");
-        }
     }
 }

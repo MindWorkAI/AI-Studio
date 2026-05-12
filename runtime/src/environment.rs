@@ -1,7 +1,6 @@
 use crate::api_token::APIToken;
+use axum::Json;
 use log::{debug, info, warn};
-use rocket::get;
-use rocket::serde::json::Json;
 use serde::Serialize;
 use std::collections::{HashMap, HashSet};
 use std::env;
@@ -29,8 +28,7 @@ pub static CONFIG_DIRECTORY: OnceLock<String> = OnceLock::new();
 static USER_LANGUAGE: OnceLock<String> = OnceLock::new();
 
 /// Returns the config directory.
-#[get("/system/directories/config")]
-pub fn get_config_directory(_token: APIToken) -> String {
+pub async fn get_config_directory(_token: APIToken) -> String {
     match CONFIG_DIRECTORY.get() {
         Some(config_directory) => config_directory.clone(),
         None => String::from(""),
@@ -38,8 +36,7 @@ pub fn get_config_directory(_token: APIToken) -> String {
 }
 
 /// Returns the data directory.
-#[get("/system/directories/data")]
-pub fn get_data_directory(_token: APIToken) -> String {
+pub async fn get_data_directory(_token: APIToken) -> String {
     match DATA_DIRECTORY.get() {
         Some(data_directory) => data_directory.clone(),
         None => String::from(""),
@@ -150,8 +147,7 @@ fn detect_user_language() -> (String, LanguageDetectionSource) {
     )
 }
 
-#[get("/system/language")]
-pub fn read_user_language(_token: APIToken) -> String {
+pub async fn read_user_language(_token: APIToken) -> String {
     USER_LANGUAGE
         .get_or_init(|| {
             let (user_language, source) = detect_user_language();
@@ -194,8 +190,7 @@ struct EnterpriseSourceData {
     encryption_secret: String,
 }
 
-#[get("/system/enterprise/config/id")]
-pub fn read_enterprise_env_config_id(_token: APIToken) -> String {
+pub async fn read_enterprise_env_config_id(_token: APIToken) -> String {
     debug!("Trying to read the effective enterprise configuration ID.");
     resolve_effective_enterprise_config_source()
         .configs
@@ -205,8 +200,7 @@ pub fn read_enterprise_env_config_id(_token: APIToken) -> String {
         .unwrap_or_default()
 }
 
-#[get("/system/enterprise/config/server")]
-pub fn read_enterprise_env_config_server_url(_token: APIToken) -> String {
+pub async fn read_enterprise_env_config_server_url(_token: APIToken) -> String {
     debug!("Trying to read the effective enterprise configuration server URL.");
     resolve_effective_enterprise_config_source()
         .configs
@@ -216,15 +210,13 @@ pub fn read_enterprise_env_config_server_url(_token: APIToken) -> String {
         .unwrap_or_default()
 }
 
-#[get("/system/enterprise/config/encryption_secret")]
-pub fn read_enterprise_env_config_encryption_secret(_token: APIToken) -> String {
+pub async fn read_enterprise_env_config_encryption_secret(_token: APIToken) -> String {
     debug!("Trying to read the effective enterprise configuration encryption secret.");
     resolve_effective_enterprise_secret_source().encryption_secret
 }
 
 /// Returns all enterprise configurations from the effective source.
-#[get("/system/enterprise/configs")]
-pub fn read_enterprise_configs(_token: APIToken) -> Json<Vec<EnterpriseConfig>> {
+pub async fn read_enterprise_configs(_token: APIToken) -> Json<Vec<EnterpriseConfig>> {
     info!("Trying to read the effective enterprise configurations.");
     Json(resolve_effective_enterprise_config_source().configs)
 }
