@@ -8,8 +8,7 @@ public sealed partial class RustService
     public async Task<string> ReadArbitraryFileData(string path, int maxChunks, bool extractImages = false)
     {
         var streamId = Guid.NewGuid().ToString();
-        var extractImagesQueryValue = extractImages ? "true" : "false";
-        var requestUri = $"/retrieval/fs/extract?path={Uri.EscapeDataString(path)}&stream_id={streamId}&extract_images={extractImagesQueryValue}";
+        var requestUri = $"/retrieval/fs/extract?path={Uri.EscapeDataString(path)}&stream_id={streamId}&extract_images={extractImages}";
         var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
         var response = await this.http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
 
