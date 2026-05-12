@@ -6028,9 +6028,6 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1924365263"] = "This library is 
 -- Encryption secret: is configured
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1931141322"] = "Encryption secret: is configured"
 
--- We use Rocket to implement the runtime API. This is necessary because the runtime must be able to communicate with the user interface (IPC). Rocket is a great framework for implementing web APIs in Rust.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1943216839"] = "We use Rocket to implement the runtime API. This is necessary because the runtime must be able to communicate with the user interface (IPC). Rocket is a great framework for implementing web APIs in Rust."
-
 -- Copies the following to the clipboard
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2029659664"] = "Copies the following to the clipboard"
 
@@ -6133,6 +6130,12 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3178730036"] = "Have feature ide
 -- Hide Details
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3183837919"] = "Hide Details"
 
+-- Axum server runs the internal axum service over a secure local connection. This helps AI Studio protect the communication between the Rust runtime and the user interface.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3208719461"] = "Axum server runs the internal axum service over a secure local connection. This helps AI Studio protect the communication between the Rust runtime and the user interface."
+
+-- Rustls helps secure the internal connection between the app's user interface and the Rust runtime. This protects the local communication that AI Studio needs while it is running.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3239817808"] = "Rustls helps secure the internal connection between the app's user interface and the Rust runtime. This protects the local communication that AI Studio needs while it is running."
+
 -- Update Pandoc
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3249965383"] = "Update Pandoc"
 
@@ -6225,6 +6228,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T836298648"] = "Provided by confi
 
 -- We use this library to be able to read PowerPoint files. This allows us to insert content from slides into prompts and take PowerPoint files into account in RAG processes. We thank Nils Kruthoff for his work on this Rust crate.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T855925638"] = "We use this library to be able to read PowerPoint files. This allows us to insert content from slides into prompts and take PowerPoint files into account in RAG processes. We thank Nils Kruthoff for his work on this Rust crate."
+
+-- Axum is used to provide the small internal service that connects the Rust runtime with the app's user interface. This lets both parts of AI Studio exchange information while the app is running.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T864851737"] = "Axum is used to provide the small internal service that connects the Rust runtime with the app's user interface. This lets both parts of AI Studio exchange information while the app is running."
 
 -- For some data transfers, we need to encode the data in base64. This Rust library is great for this purpose.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T870640199"] = "For some data transfers, we need to encode the data in base64. This Rust library is great for this purpose."

@@ -7,9 +7,8 @@ use std::path::Path;
 use std::sync::{Arc, Mutex, OnceLock};
 use log::{debug, error, info, warn};
 use once_cell::sync::Lazy;
-use rocket::get;
-use rocket::serde::json::Json;
-use rocket::serde::Serialize;
+use axum::Json;
+use serde::Serialize;
 use crate::api_token::{APIToken};
 use crate::environment::{is_dev, DATA_DIRECTORY};
 use crate::certificate_factory::generate_certificate;
@@ -70,8 +69,7 @@ pub struct ProvideQdrantInfo {
     unavailable_reason: Option<String>,
 }
 
-#[get("/system/qdrant/info")]
-pub fn qdrant_port(_token: APIToken) -> Json<ProvideQdrantInfo> {
+pub async fn qdrant_port(_token: APIToken) -> Json<ProvideQdrantInfo> {
     let status = QDRANT_STATUS.lock().unwrap();
     let is_available = status.is_available;
     let unavailable_reason = status.unavailable_reason.clone();

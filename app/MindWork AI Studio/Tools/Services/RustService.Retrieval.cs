@@ -13,7 +13,16 @@ public sealed partial class RustService
         var response = await this.http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
 
         if (!response.IsSuccessStatusCode)
+        {
+            var responseBody = await response.Content.ReadAsStringAsync();
+            this.logger?.LogError(
+                "Failed to read arbitrary file data from Rust runtime. Status: {StatusCode}, reason: '{ReasonPhrase}', path: '{Path}', body: '{Body}'",
+                response.StatusCode,
+                response.ReasonPhrase,
+                path,
+                responseBody);
             return string.Empty;
+        }
 
         var resultBuilder = new StringBuilder();
 

@@ -5,7 +5,6 @@ use base64::Engine;
 use base64::prelude::BASE64_STANDARD;
 use log::{error, info, warn};
 use once_cell::sync::Lazy;
-use rocket::get;
 use tauri::Url;
 use tauri_plugin_shell::process::{CommandChild, CommandEvent};
 use tauri_plugin_shell::ShellExt;
@@ -89,8 +88,7 @@ fn sanitize_stdout_line(line: &str) -> String {
 
 /// Returns the desired port of the .NET server. Our .NET app calls this endpoint to get
 /// the port where the .NET server should listen to.
-#[get("/system/dotnet/port")]
-pub fn dotnet_port(_token: APIToken) -> String {
+pub async fn dotnet_port(_token: APIToken) -> String {
     let dotnet_server_port = *DOTNET_SERVER_PORT;
     format!("{dotnet_server_port}")
 }
@@ -179,7 +177,6 @@ pub fn start_dotnet_server<R: tauri::Runtime>(app_handle: tauri::AppHandle<R>) {
 }
 
 /// This endpoint is called by the .NET server to signal that the server is ready.
-#[get("/system/dotnet/ready")]
 pub async fn dotnet_ready(_token: APIToken) {
 
     // We create a manual scope for the lock to be released as soon as possible.

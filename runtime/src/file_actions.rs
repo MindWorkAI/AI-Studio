@@ -1,7 +1,7 @@
 ﻿use log::{error, info};
-use rocket::post;
-use rocket::serde::{Deserialize, Serialize};
-use rocket::serde::json::Json;
+use axum::extract::Query;
+use axum::Json;
+use serde::{Deserialize, Serialize};
 use tauri_plugin_dialog::{DialogExt, FileDialogBuilder};
 use crate::api_token::APIToken;
 use crate::app_window::MAIN_WINDOW;
@@ -9,6 +9,11 @@ use crate::app_window::MAIN_WINDOW;
 #[derive(Clone, Deserialize)]
 pub struct PreviousDirectory {
     path: String,
+}
+
+#[derive(Deserialize)]
+pub struct SelectDirectoryQuery {
+    title: String,
 }
 
 #[derive(Clone, Deserialize)]
@@ -61,10 +66,9 @@ pub struct PreviousFile {
 }
 
 /// Let the user select a directory.
-#[post("/select/directory?<title>", data = "<previous_directory>")]
-pub fn select_directory(
+pub async fn select_directory(
     _token: APIToken,
-    title: &str,
+    Query(query): Query<SelectDirectoryQuery>,
     previous_directory: Option<Json<PreviousDirectory>>,
 ) -> Json<DirectorySelectionResponse> {
     let main_window_lock = MAIN_WINDOW.lock().unwrap();
@@ -79,7 +83,7 @@ pub fn select_directory(
         }
     };
 
-    let mut dialog = main_window.dialog().file().set_parent(main_window).set_title(title);
+    let mut dialog = main_window.dialog().file().set_parent(main_window).set_title(&query.title);
     if let Some(previous) = previous_directory {
         dialog = dialog.set_directory(previous.path.clone());
     }
@@ -118,8 +122,7 @@ pub fn select_directory(
 }
 
 /// Let the user select a file.
-#[post("/select/file", data = "<payload>")]
-pub fn select_file(
+pub async fn select_file(
     _token: APIToken,
     payload: Json<SelectFileOptions>,
 ) -> Json<FileSelectionResponse> {
@@ -178,8 +181,7 @@ pub fn select_file(
 }
 
 /// Let the user select some files.
-#[post("/select/files", data = "<payload>")]
-pub fn select_files(
+pub async fn select_files(
     _token: APIToken,
     payload: Json<SelectFileOptions>,
 ) -> Json<FilesSelectionResponse> {
@@ -229,8 +231,7 @@ pub fn select_files(
     }
 }
 
-#[post("/save/file", data = "<payload>")]
-pub fn save_file(_token: APIToken, payload: Json<SaveFileOptions>) -> Json<FileSaveResponse> {
+pub async fn save_file(_token: APIToken, payload: Json<SaveFileOptions>) -> Json<FileSaveResponse> {
     // Create a new file dialog builder:
     let file_dialog = MAIN_WINDOW
         .lock()

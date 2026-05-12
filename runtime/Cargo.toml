@@ -25,7 +25,9 @@ async-stream = "0.3.6"
 flexi_logger = "0.31.8"
 log = { version = "0.4.29", features = ["kv"] }
 once_cell = "1.21.4"
-rocket = { version = "0.5.1", features = ["json", "tls"] }
+axum = { version = "0.8.9", features = ["http2", "json", "query", "tokio"] }
+axum-server = { version = "0.8.0", features = ["tls-rustls"] }
+rustls = { version = "0.23.28", default-features = false, features = ["aws_lc_rs"] }
 rand = "0.10.1"
 rand_chacha = "0.10.0"
 base64 = "0.22.1"
@@ -46,7 +48,6 @@ strum_macros = "0.28.0"
 sysinfo = "0.38.4"
 
 # Fixes security vulnerability downstream, where the upstream is not fixed yet:
-time = "0.3.47" # -> Rocket
 bytes = "1.11.1" # -> almost every dependency
 
 [target.'cfg(target_os = "linux")'.dependencies]

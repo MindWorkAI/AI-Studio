@@ -1,11 +1,15 @@
 use log::info;
 use once_cell::sync::Lazy;
-use rocket::config::Shutdown;
-use rocket::figment::Figment;
-use rocket::routes;
+use axum::routing::{get, post};
+use axum::Router;
+use axum_server::tls_rustls::RustlsConfig;
+use std::net::SocketAddr;
+use std::sync::Once;
 use crate::runtime_certificate::{CERTIFICATE, CERTIFICATE_PRIVATE_KEY};
 use crate::environment::is_dev;
 use crate::network::get_available_port;
+
+static RUSTLS_CRYPTO_PROVIDER_INIT: Once = Once::new();
 
 /// The port used for the runtime API server. In the development environment, we use a fixed
 /// port, in the production environment we use the next available port. This differentiation
@@ -24,109 +28,55 @@ pub static API_SERVER_PORT: Lazy<u16> = Lazy::new(|| {
 pub fn start_runtime_api() {
     let api_port = *API_SERVER_PORT;
     info!("Try to start the API server on 'http://localhost:{api_port}'...");
-    
-    // Get the shutdown configuration:
-    let shutdown = create_shutdown();
 
-    // Configure the runtime API server:
-    let figment = Figment::from(rocket::Config::release_default())
+    let app = Router::new()
+        .route("/system/dotnet/port", get(crate::dotnet::dotnet_port))
+        .route("/system/dotnet/ready", get(crate::dotnet::dotnet_ready))
+        .route("/system/qdrant/info", get(crate::qdrant::qdrant_port))
+        .route("/clipboard/set", post(crate::clipboard::set_clipboard))
+        .route("/events", get(crate::app_window::get_event_stream))
+        .route("/updates/check", get(crate::app_window::check_for_update))
+        .route("/updates/install", get(crate::app_window::install_update))
+        .route("/app/exit", post(crate::app_window::exit_app))
+        .route("/select/directory", post(crate::file_actions::select_directory))
+        .route("/select/file", post(crate::file_actions::select_file))
+        .route("/select/files", post(crate::file_actions::select_files))
+        .route("/save/file", post(crate::file_actions::save_file))
+        .route("/secrets/get", post(crate::secret::get_secret))
+        .route("/secrets/store", post(crate::secret::store_secret))
+        .route("/secrets/delete", post(crate::secret::delete_secret))
+        .route("/system/directories/config", get(crate::environment::get_config_directory))
+        .route("/system/directories/data", get(crate::environment::get_data_directory))
+        .route("/system/language", get(crate::environment::read_user_language))
+        .route("/system/enterprise/config/id", get(crate::environment::read_enterprise_env_config_id))
+        .route("/system/enterprise/config/server", get(crate::environment::read_enterprise_env_config_server_url))
+        .route("/system/enterprise/config/encryption_secret", get(crate::environment::read_enterprise_env_config_encryption_secret))
+        .route("/system/enterprise/configs", get(crate::environment::read_enterprise_configs))
+        .route("/retrieval/fs/extract", get(crate::file_data::extract_data))
+        .route("/log/paths", get(crate::log::get_log_paths))
+        .route("/log/event", post(crate::log::log_event))
+        .route("/shortcuts/register", post(crate::app_window::register_shortcut))
+        .route("/shortcuts/validate", post(crate::app_window::validate_shortcut))
+        .route("/shortcuts/suspend", post(crate::app_window::suspend_shortcuts))
+        .route("/shortcuts/resume", post(crate::app_window::resume_shortcuts));
 
-        // We use the next available port which was determined before:
-        .merge(("port", api_port))
-
-        // The runtime API server should be accessible only from the local machine:
-        .merge(("address", "127.0.0.1"))
-
-        // We do not want to use the Ctrl+C signal to stop the server:
-        .merge(("ctrlc", false))
-
-        // Set a name for the server:
-        .merge(("ident", "AI Studio Runtime API"))
-
-        // Set the maximum number of workers and blocking threads:
-        .merge(("workers", 3))
-        .merge(("max_blocking", 12))
-
-        // No colors and emojis in the log output:
-        .merge(("cli_colors", false))
-
-        // Read the TLS certificate and key from the generated certificate data in-memory:
-        .merge(("tls.certs", CERTIFICATE.get().unwrap()))
-        .merge(("tls.key", CERTIFICATE_PRIVATE_KEY.get().unwrap()))
-
-        // Set the shutdown configuration:
-        .merge(("shutdown", shutdown));
-
-    //
-    // Start the runtime API server in a separate thread. This is necessary
-    // because the server is blocking, and we need to run the Tauri app in
-    // parallel:
-    //
     tauri::async_runtime::spawn(async move {
-        rocket::custom(figment)
-            .mount("/", routes![
-                crate::dotnet::dotnet_port,
-                crate::dotnet::dotnet_ready,
-                crate::qdrant::qdrant_port,
-                crate::clipboard::set_clipboard,
-                crate::app_window::get_event_stream,
-                crate::app_window::check_for_update,
-                crate::app_window::install_update,
-                crate::app_window::exit_app,
-                crate::file_actions::select_directory,
-                crate::file_actions::select_file,
-                crate::file_actions::select_files,
-                crate::file_actions::save_file,
-                crate::secret::get_secret,
-                crate::secret::store_secret,
-                crate::secret::delete_secret,
-                crate::environment::get_data_directory,
-                crate::environment::get_config_directory,
-                crate::environment::read_user_language,
-                crate::environment::read_enterprise_env_config_id,
-                crate::environment::read_enterprise_env_config_server_url,
-                crate::environment::read_enterprise_env_config_encryption_secret,
-                crate::environment::read_enterprise_configs,
-                crate::file_data::extract_data,
-                crate::log::get_log_paths,
-                crate::log::log_event,
-                crate::app_window::register_shortcut,
-                crate::app_window::validate_shortcut,
-                crate::app_window::suspend_shortcuts,
-                crate::app_window::resume_shortcuts,
-            ])
-            .ignite().await.unwrap()
-            .launch().await.unwrap();
+        install_rustls_crypto_provider();
+
+        let cert = CERTIFICATE.get().unwrap().clone();
+        let key = CERTIFICATE_PRIVATE_KEY.get().unwrap().clone();
+        let tls_config = RustlsConfig::from_pem(cert, key).await.unwrap();
+        let addr = SocketAddr::from(([127, 0, 0, 1], api_port));
+
+        axum_server::bind_rustls(addr, tls_config)
+            .serve(app.into_make_service())
+            .await
+            .unwrap();
     });
 }
 
-fn create_shutdown() -> Shutdown {
-    //
-    // Create a shutdown configuration, depending on the operating system:
-    //
-    #[cfg(unix)]
-    {
-        use std::collections::HashSet;
-        let mut shutdown = Shutdown {
-            // We do not want to use the Ctrl+C signal to stop the server:
-            ctrlc: false,
-
-            // Everything else is set to default for now:
-            ..Shutdown::default()
-        };
-
-        shutdown.signals = HashSet::new();
-        shutdown
-    }
-
-    #[cfg(windows)]
-    {
-        Shutdown {
-            // We do not want to use the Ctrl+C signal to stop the server:
-            ctrlc: false,
-
-            // Everything else is set to default for now:
-            ..Shutdown::default()
-        }
-    }
+fn install_rustls_crypto_provider() {
+    RUSTLS_CRYPTO_PROVIDER_INIT.call_once(|| {
+        let _ = rustls::crypto::aws_lc_rs::default_provider().install_default();
+    });
 }
