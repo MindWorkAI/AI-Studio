@@ -13,9 +13,11 @@ use file_format::{FileFormat, Kind};
 use futures::{Stream, StreamExt};
 use pdfium_render::prelude::Pdfium;
 use pptx_to_md::{ImageHandlingMode, ParserConfig, PptxContainer};
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
+use serde::de::{Error as SerdeError, Visitor};
 use std::path::Path;
 use std::pin::Pin;
+use std::fmt;
 use log::{debug, error, warn};
 use tokio::io::AsyncBufReadExt;
 use tokio::sync::mpsc;
@@ -86,7 +88,40 @@ type ChunkStream = Pin<Box<dyn Stream<Item = Result<Chunk>> + Send>>;
 pub struct ExtractDataQuery {
     path: String,
     stream_id: String,
+    #[serde(deserialize_with = "deserialize_bool_case_insensitive")]
     extract_images: bool,
+}
+
+fn deserialize_bool_case_insensitive<'de, D>(deserializer: D) -> std::result::Result<bool, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    struct BoolVisitor;
+
+    impl<'de> Visitor<'de> for BoolVisitor {
+        type Value = bool;
+
+        fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+            formatter.write_str("a boolean value")
+        }
+
+        fn visit_bool<E>(self, value: bool) -> std::result::Result<Self::Value, E> {
+            Ok(value)
+        }
+
+        fn visit_str<E>(self, value: &str) -> std::result::Result<Self::Value, E>
+        where
+            E: SerdeError,
+        {
+            match value.to_ascii_lowercase().as_str() {
+                "true" | "1" => Ok(true),
+                "false" | "0" => Ok(false),
+                _ => Err(E::invalid_value(serde::de::Unexpected::Str(value), &self)),
+            }
+        }
+    }
+
+    deserializer.deserialize_any(BoolVisitor)
 }
 
 pub async fn extract_data(
