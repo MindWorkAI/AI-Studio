@@ -5,6 +5,7 @@ use crate::pandoc::PandocProcessBuilder;
 use crate::pdfium::PdfiumInit;
 use async_stream::stream;
 use axum::extract::Query;
+use axum::extract::rejection::QueryRejection;
 use axum::response::sse::{Event, Sse};
 use base64::{engine::general_purpose, Engine as _};
 use calamine::{open_workbook_auto, Reader};
@@ -15,7 +16,7 @@ use pptx_to_md::{ImageHandlingMode, ParserConfig, PptxContainer};
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 use std::pin::Pin;
-use log::{debug, error};
+use log::{debug, error, warn};
 use tokio::io::AsyncBufReadExt;
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::ReceiverStream;
@@ -90,32 +91,49 @@ pub struct ExtractDataQuery {
 
 pub async fn extract_data(
     _token: APIToken,
-    Query(query): Query<ExtractDataQuery>,
+    query: std::result::Result<Query<ExtractDataQuery>, QueryRejection>,
 ) -> Sse<impl Stream<Item = std::result::Result<Event, Infallible>>> {
+    let query = match query {
+        Ok(Query(query)) => Ok(query),
+        Err(e) => {
+            let message = format!("Invalid query for '/retrieval/fs/extract': {e}");
+            warn!("{message}");
+            Err(message)
+        },
+    };
+
     let stream = stream! {
-        let stream_result = stream_data(&query.path, query.extract_images).await;
-        let id_ref = &query.stream_id;
+        match query {
+            Ok(query) => {
+                let stream_result = stream_data(&query.path, query.extract_images).await;
+                let id_ref = &query.stream_id;
 
-        match stream_result {
-            Ok(mut stream) => {
-                while let Some(chunk) = stream.next().await {
-                    match chunk {
-                        Ok(mut chunk) => {
-                            chunk.set_stream_id(id_ref);
-                            yield Ok(Event::default().json_data(&chunk).unwrap_or_else(|e| Event::default().data(format!("Error: {e}"))));
-                        },
+                match stream_result {
+                    Ok(mut stream) => {
+                        while let Some(chunk) = stream.next().await {
+                            match chunk {
+                                Ok(mut chunk) => {
+                                    chunk.set_stream_id(id_ref);
+                                    yield Ok(Event::default().json_data(&chunk).unwrap_or_else(|e| Event::default().data(format!("Error: {e}"))));
+                                },
 
-                        Err(e) => {
-                            yield Ok(Event::default().json_data(format!("Error: {e}")).unwrap_or_else(|_| Event::default().data(format!("Error: {e}"))));
-                            break;
-                        },
+                                Err(e) => {
+                                    yield Ok(Event::default().json_data(format!("Error: {e}")).unwrap_or_else(|_| Event::default().data(format!("Error: {e}"))));
+                                    break;
+                                },
+                            }
+                        }
+                    },
+
+                    Err(e) => {
+                        yield Ok(Event::default().json_data(format!("Error starting stream: {e}")).unwrap_or_else(|_| Event::default().data(format!("Error starting stream: {e}"))));
                     }
-                }
+                };
             },
 
             Err(e) => {
                 yield Ok(Event::default().json_data(format!("Error starting stream: {e}")).unwrap_or_else(|_| Event::default().data(format!("Error starting stream: {e}"))));
-            }
+            },
         }
     };
 

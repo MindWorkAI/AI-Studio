@@ -8,12 +8,22 @@ public sealed partial class RustService
     public async Task<string> ReadArbitraryFileData(string path, int maxChunks, bool extractImages = false)
     {
         var streamId = Guid.NewGuid().ToString();
-        var requestUri = $"/retrieval/fs/extract?path={Uri.EscapeDataString(path)}&stream_id={streamId}&extract_images={extractImages}";
+        var extractImagesQueryValue = extractImages ? "true" : "false";
+        var requestUri = $"/retrieval/fs/extract?path={Uri.EscapeDataString(path)}&stream_id={streamId}&extract_images={extractImagesQueryValue}";
         var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
         var response = await this.http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
 
         if (!response.IsSuccessStatusCode)
+        {
+            var responseBody = await response.Content.ReadAsStringAsync();
+            this.logger?.LogError(
+                "Failed to read arbitrary file data from Rust runtime. Status: {StatusCode}, reason: '{ReasonPhrase}', path: '{Path}', body: '{Body}'",
+                response.StatusCode,
+                response.ReasonPhrase,
+                path,
+                responseBody);
             return string.Empty;
+        }
 
         var resultBuilder = new StringBuilder();
 
