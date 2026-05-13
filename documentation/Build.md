@@ -9,7 +9,7 @@ Therefore, we cannot provide a static list here that is valid for all Linux syst
 ## Prerequisites
 1. Install the [.NET 9 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/9.0).
 2. [Install the Rust compiler](https://www.rust-lang.org/tools/install) in the latest stable version.
-3. Met the prerequisites for building [Tauri](https://tauri.app/v1/guides/getting-started/prerequisites/). Node.js is **not** required, though.
+3. Meet the prerequisites for building [Tauri](https://v2.tauri.app/start/prerequisites/). Node.js is **not** required, though.
 4. The core team uses [JetBrains](https://www.jetbrains.com/) [Rider](https://www.jetbrains.com/rider/) and [RustRover](https://www.jetbrains.com/rust/) for development. Both IDEs are free to use for open-source projects for non-commercial use. They are available for macOS, Linux, and Windows systems. Profiles are provided for these IDEs, so you can get started right away. However, you can also use a different IDE.
 4. Clone the repository.
 
@@ -17,7 +17,7 @@ Therefore, we cannot provide a static list here that is valid for all Linux syst
 Regardless of whether you want to build the app locally for yourself (not trusting the pre-built binaries) or test your changes before creating a PR, you have to run the following commands at least once:
 
 1. Open a terminal.
-2. Install the Tauri CLI by running `cargo install --version 1.6.2 tauri-cli`.
+2. Install the Tauri CLI by running `cargo install tauri-cli --version 2.11.0 --locked`.
 3. Navigate to the `/app/Build` directory within the repository.
 4. Run `dotnet run build` to build the entire app.
 
