@@ -35,14 +35,15 @@ public abstract class EmbeddingStore(string name, string path)
     {
         string[] suffixes = { "B", "KB", "MB", "GB", "TB", "PB" };
         int suffixIndex = 0;
+        double convertedSize = size;
     
-        while (size >= 1024 && suffixIndex < suffixes.Length - 1)
+        while (convertedSize >= 1024 && suffixIndex < suffixes.Length - 1)
         {
-            size /= 1024;
+            convertedSize /= 1024;
             suffixIndex++;
         }
     
-        return $"{size:0##} {suffixes[suffixIndex]}";
+        return $"{convertedSize:0.##} {suffixes[suffixIndex]}";
     }
     
     public void SetLogger(ILogger<EmbeddingStore> logService)

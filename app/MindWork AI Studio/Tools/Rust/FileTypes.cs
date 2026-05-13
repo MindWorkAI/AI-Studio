@@ -59,7 +59,7 @@ public static class FileTypes
 
     // Media hierarchy
     public static readonly FileTypeFilter IMAGE = FileTypeFilter.Leaf(TB("Image"),
-        "jpg", "jpeg", "png", "gif", "bmp", "tiff", "svg", "webp", "heic");
+        "jpg", "jpeg", "png", "gif", "bmp", "tiff", "svg", "webp", "heic", "avif");
     public static readonly FileTypeFilter AUDIO = FileTypeFilter.Leaf(TB("Audio"),
         "mp3", "wav", "wave", "aac", "flac", "ogg", "m4a", "wma", "alac", "aiff", "m4b");
     public static readonly FileTypeFilter VIDEO = FileTypeFilter.Leaf(TB("Video"),

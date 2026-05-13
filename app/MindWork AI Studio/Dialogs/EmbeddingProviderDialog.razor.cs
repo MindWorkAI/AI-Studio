@@ -2,6 +2,7 @@ using AIStudio.Chat;
 using AIStudio.Components;
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 using AIStudio.Tools.Validation;
 
@@ -115,7 +116,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
             GetPreviousInstanceName = () => this.dataEditingPreviousInstanceName,
             GetUsedInstanceNames = () => this.UsedInstanceNames,
             GetHost = () => this.DataHost,
-            IsModelProvidedManually = () => this.DataLLMProvider is LLMProviders.SELF_HOSTED && this.DataHost is Host.OLLAMA,
+            IsModelProvidedManually = () => this.DataLLMProvider.IsEmbeddingModelProvidedManually(this.DataHost),
             GetCustomTokenizerValidationIssue = () => this.dataCustomTokenizerValidationIssue,
         };
     }
@@ -126,7 +127,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
         Model model = default;
         if(this.DataLLMProvider is LLMProviders.SELF_HOSTED)
         {
-            if (this.DataHost is Host.OLLAMA)
+            if (this.DataLLMProvider.IsEmbeddingModelProvidedManually(this.DataHost))
                 model = new Model(this.dataManuallyModel, null);
             else if (this.DataHost is Host.LM_STUDIO)
                 model = this.DataModel;
@@ -176,7 +177,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
             //
             // We cannot load the API key for self-hosted providers:
             //
-            if (this.DataLLMProvider is LLMProviders.SELF_HOSTED && this.DataHost is not Host.OLLAMA)
+            if (this.DataLLMProvider is LLMProviders.SELF_HOSTED && this.DataHost is not Host.OLLAMA && this.DataHost is not Host.VLLM)
             {
                 await this.ReloadModels();
                 await base.OnInitializedAsync();
@@ -241,10 +242,10 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
         if (!this.dataIsValid)
             return;
         
-        var response = await this.RustService.StoreTokenizer(TokenizerModelId.ForEmbeddingProviderId(this.DataId), this.dataFilePath);
+        var response = await this.StoreOrDeleteTokenizerAsync();
         if (!response.Success)
         {
-            this.dataCustomTokenizerValidationIssue = response.Message;
+            this.dataCustomTokenizerValidationIssue = string.IsNullOrWhiteSpace(response.Message) ? string.Empty : response.Message;
             await this.form.Validate();
             return;
         }
@@ -338,6 +339,15 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
             this.Logger.LogError(e, "Failed to validate custom tokenizer.");
             this.dataCustomTokenizerValidationIssue = T("Failed to validate the selected tokenizer. Please try again.");
         }
+    }
+
+    private Task<TokenizerResponse> StoreOrDeleteTokenizerAsync()
+    {
+        var tokenizerId = TokenizerModelId.ForEmbeddingProviderId(this.DataId);
+        if (string.IsNullOrWhiteSpace(this.dataFilePath))
+            return this.RustService.DeleteTokenizer(tokenizerId);
+
+        return this.RustService.StoreTokenizer(tokenizerId, this.dataFilePath);
     }
 
     private void OnHostChanged(Host selectedHost)

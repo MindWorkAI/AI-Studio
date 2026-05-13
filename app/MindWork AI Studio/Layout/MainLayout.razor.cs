@@ -60,9 +60,10 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     private bool startupCompleted;
     private readonly SemaphoreSlim mandatoryInfoDialogSemaphore = new(1, 1);
 
-    private DataSourceEmbeddingOverview embeddingOverview = new(false, true, DataSourceEmbeddingState.COMPLETED, 0, 0, 0, string.Empty);
+    private DataSourceEmbeddingOverview embeddingOverview = new(false, DataSourceEmbeddingState.COMPLETED, 0, 0, 0);
     private IReadOnlyCollection<NavBarItem> navItems = [];
-    private NavBarItem embeddingItem = new NavBarItem(string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, false);
+    private NavBarItem embeddingItem = new (string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, false);
+    private bool showEmbeddingStatusIcon = false;
     
     #region Overrides of ComponentBase
 
@@ -93,7 +94,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         
         // Ensure that all settings are loaded:
         await this.SettingsManager.LoadSettings();
-        await this.DataSourceEmbeddingService.QueueAllInternalDataSourcesAsync();
+        await this.DataSourceEmbeddingService.QueueAllInternalDataSourcesIfAutomaticRefreshAsync();
         
         // Register this component with the message bus:
         this.MessageBus.RegisterComponent(this);
@@ -325,6 +326,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     private void LoadEmbeddingItem()
     {
         this.embeddingOverview = this.DataSourceEmbeddingService.GetOverview();
+        this.showEmbeddingStatusIcon = this.embeddingOverview.IsVisible;
         var palette = this.ColorTheme.GetCurrentPalette(this.SettingsManager);
         (string icon, string lightcolor, string darkcolor) embeddingIcon = this.embeddingOverview.State switch
         {
@@ -345,7 +347,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         DataSourceEmbeddingState.FAILED => this.embeddingOverview.FailedFiles > 0
             ? string.Format(T("Some embeddings failed. {0} file(s) need attention."), this.embeddingOverview.FailedFiles)
             : T("Some embeddings failed and need attention."),
-        _ => this.embeddingOverview.NavLabel,
+        _ => string.Empty
     };
 
     private async Task ShowUpdateDialog()

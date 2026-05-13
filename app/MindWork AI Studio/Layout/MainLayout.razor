@@ -25,7 +25,7 @@
                         
                         <MudSpacer/>
                         
-                        @if (this.embeddingOverview.IsVisible)
+                        @if (this.showEmbeddingStatusIcon)
                         {
                             <MudNavMenu>
                                 <MudTooltip Text="@this.EmbeddingNavigationTooltip" Placement="Placement.Right">
@@ -64,7 +64,7 @@
 
                     <MudSpacer/>
                     
-                    @if (this.embeddingOverview.IsVisible)
+                    @if (this.showEmbeddingStatusIcon)
                     {
                         <MudNavMenu>
                             @if (this.SettingsManager.ConfigurationData.App.NavigationBehavior is NavBehavior.NEVER_EXPAND_USE_TOOLTIPS)

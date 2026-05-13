@@ -14,6 +14,13 @@
             @T("You might configure different data sources. A data source can include one file, all files in a directory, or data from your company. Later, you can incorporate these data sources as needed when the AI requires this data to complete a certain task.")
         </MudJustifiedText>
 
+        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-3" Wrap="Wrap.Wrap">
+            <MudTextSwitch Label="@T("Automatic local data source refresh")" Value="@this.SettingsManager.ConfigurationData.DataSourceIndexing.AutomaticRefresh" LabelOn="@T("Local data sources refresh when files change.")" LabelOff="@T("Local data sources refresh only when triggered manually.")" ValueChanged="@this.AutomaticRefreshChanged"/>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Sync" Disabled="@(!this.HasRefreshableDataSources())" OnClick="@this.RefreshAllDataSources">
+                @T("Refresh all")
+            </MudButton>
+        </MudStack>
+
         <MudTable Items="@this.SettingsManager.ConfigurationData.DataSources" Hover="@true" Class="border-dashed border rounded-lg">
             <ColGroup>
                 <col style="width: 3em;"/>
@@ -38,6 +45,9 @@
                 <MudTd>
                     <MudStack Row="true" Class="mb-2 mt-2" Wrap="Wrap.Wrap">
                         <MudIconButton Variant="Variant.Filled" Color="Color.Info" Icon="@Icons.Material.Filled.Info" OnClick="() => this.ShowInformation(context)"/>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Sync" Disabled="@(!this.CanRefreshDataSource(context))" OnClick="() => this.RefreshDataSource(context)">
+                            @T("Refresh")
+                        </MudButton>
                         <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Edit" OnClick="() => this.EditDataSource(context)">
                             @T("Edit")
                         </MudButton>

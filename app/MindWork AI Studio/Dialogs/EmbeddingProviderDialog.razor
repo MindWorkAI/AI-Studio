@@ -123,7 +123,8 @@
                 AdornmentColor="Color.Info"
                 Validation="@this.providerValidation.ValidatingInstanceName"
                 UserAttributes="@SPELLCHECK_ATTRIBUTES"/>
-            @if (this.DataModel != default){
+            @if (this.DataLLMProvider != LLMProviders.NONE)
+            {
                 <MudJustifiedText Typo="Typo.body1" Class="mb-3">
                     @T("For better embeddings and less storage usage, it's recommended to use a custom tokenizer to enable a more accurate token count.")
                 </MudJustifiedText>
@@ -137,8 +138,7 @@
                     Error="@(!string.IsNullOrWhiteSpace(this.dataCustomTokenizerValidationIssue))"
                     ErrorText="@(this.dataCustomTokenizerValidationIssue)"
                     Validation="@this.providerValidation.ValidatingCustomTokenizer"
-                    OnClear = "@this.ClearPathTokenizer"
-                    />
+                    OnClear="@this.ClearPathTokenizer" />
             }
         </MudForm>
         @if (this.dataStoreWasAttempted)

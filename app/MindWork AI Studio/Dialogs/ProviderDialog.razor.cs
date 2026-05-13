@@ -4,6 +4,7 @@ using System.Text.Json;
 using AIStudio.Components;
 using AIStudio.Provider;
 using AIStudio.Provider.HuggingFace;
+using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 using AIStudio.Tools.Validation;
 
@@ -268,7 +269,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         if (!this.dataIsValid)
             return;
 
-        var tokenizerResponse = await this.RustService.StoreTokenizer(TokenizerModelId.ForProviderId(this.DataId), this.dataFilePath);
+        var tokenizerResponse = await this.StoreOrDeleteTokenizerAsync();
         if (!tokenizerResponse.Success)
         {
             this.dataCustomTokenizerValidationIssue = tokenizerResponse.Message;
@@ -365,6 +366,15 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
             this.Logger.LogError(e, "Failed to validate custom tokenizer.");
             this.dataCustomTokenizerValidationIssue = T("Failed to validate the selected tokenizer. Please try again.");
         }
+    }
+
+    private Task<TokenizerResponse> StoreOrDeleteTokenizerAsync()
+    {
+        var tokenizerId = TokenizerModelId.ForProviderId(this.DataId);
+        if (string.IsNullOrWhiteSpace(this.dataFilePath))
+            return this.RustService.DeleteTokenizer(tokenizerId);
+
+        return this.RustService.StoreTokenizer(tokenizerId, this.dataFilePath);
     }
 
     private void OnHostChanged(Host selectedHost)

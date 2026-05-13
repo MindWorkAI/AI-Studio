@@ -28,6 +28,39 @@ public partial class SettingsDialogDataSources : SettingsDialogBase
         
         return T("Unknown");
     }
+
+    private bool CanRefreshDataSource(IDataSource dataSource)
+    {
+        return dataSource is DataSourceLocalDirectory or DataSourceLocalFile;
+    }
+
+    private bool HasRefreshableDataSources()
+    {
+        return this.SettingsManager.ConfigurationData.DataSources.Any(this.CanRefreshDataSource);
+    }
+
+    private async Task AutomaticRefreshChanged(bool enabled)
+    {
+        this.SettingsManager.ConfigurationData.DataSourceIndexing.AutomaticRefresh = enabled;
+        await this.SettingsManager.StoreSettings();
+        this.DataSourceEmbeddingService.RefreshAutomaticWatchers();
+        await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+    }
+
+    private async Task RefreshAllDataSources()
+    {
+        await this.DataSourceEmbeddingService.QueueAllInternalDataSourcesAsync();
+        await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+    }
+
+    private async Task RefreshDataSource(IDataSource dataSource)
+    {
+        if (!this.CanRefreshDataSource(dataSource))
+            return;
+
+        await this.DataSourceEmbeddingService.QueueDataSourceAsync(dataSource);
+        await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+    }
     
     private async Task AddDataSource(DataSourceType type)
     {

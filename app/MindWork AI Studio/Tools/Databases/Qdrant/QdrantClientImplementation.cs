@@ -1,5 +1,6 @@
 ﻿using Qdrant.Client;
 using Qdrant.Client.Grpc;
+using Grpc.Core;
 using AIStudio.Tools.PluginSystem;
 using static Qdrant.Client.Grpc.Conditions;
 
@@ -104,14 +105,32 @@ public class QdrantClientImplementation : EmbeddingStore
         return this.GrpcClient.UpsertAsync(collectionName, qdrantPoints, true, null, null, token);
     }
 
-    public override Task DeleteEmbeddingByFile(string collectionName, string filePath, CancellationToken token)
+    public override async Task DeleteEmbeddingByFile(string collectionName, string filePath, CancellationToken token)
     {
-        return this.GrpcClient.DeleteAsync(collectionName, MatchKeyword("file_path", filePath), true, null, null, token);
+        try
+        {
+            await this.GrpcClient.DeleteAsync(collectionName, MatchKeyword("file_path", filePath), true, null, null, token);
+        }
+        catch (RpcException exception) when (exception.StatusCode is StatusCode.NotFound)
+        {
+            return;
+        }
     }
 
-    public override Task DeleteEmbeddingStore(string collectionName, CancellationToken token)
+    public override async Task DeleteEmbeddingStore(string collectionName, CancellationToken token)
     {
-        return this.GrpcClient.DeleteCollectionAsync(collectionName, cancellationToken: token);
+        var exists = await this.GrpcClient.CollectionExistsAsync(collectionName, token);
+        if (!exists)
+            return;
+
+        try
+        {
+            await this.GrpcClient.DeleteCollectionAsync(collectionName, cancellationToken: token);
+        }
+        catch (RpcException exception) when (exception.StatusCode is StatusCode.NotFound)
+        {
+            return;
+        }
     }
 
     public override void Dispose() => this.GrpcClient.Dispose();

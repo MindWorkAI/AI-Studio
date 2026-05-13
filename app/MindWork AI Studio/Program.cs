@@ -88,7 +88,7 @@ internal sealed class Program
         
         var embeddingStoreConfig = await rust.GetEmbeddingStoreConfiguration(EmbeddingStoreKind.QDRANT_REMOTE);
         
-        EmbeddingStore embeddingStore = EmbeddingStoreFactory.Create(embeddingStoreConfig);
+        var embeddingStore = EmbeddingStoreFactory.Create(embeddingStoreConfig);
         
         var builder = WebApplication.CreateBuilder();
         builder.WebHost.ConfigureKestrel(kestrelServerOptions =>
