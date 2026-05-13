@@ -1,7 +1,7 @@
 {
   "productName": "MindWork AI Studio",
   "mainBinaryName": "MindWork AI Studio",
-  "version": "26.5.2",
+  "version": "26.5.3",
   "identifier": "com.github.mindwork-ai.ai-studio",
   
   "build": {
@@ -43,7 +43,7 @@
         "installMode": "passive"
       },
       "endpoints": [
-        "https://github.com/MindWorkAI/AI-Studio/releases/download/v26.5.3/latest.json"
+        "https://github.com/MindWorkAI/AI-Studio/releases/download/v26.5.4/latest.json"
       ],
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDM3MzE4MTM4RTNDMkM0NEQKUldSTnhNTGpPSUV4TjFkczFxRFJOZWgydzFQN1dmaFlKbXhJS1YyR1RKS1RnR09jYUpMaGsrWXYK"
     }
