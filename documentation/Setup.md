@@ -84,4 +84,4 @@ We have to figure out if you have an Intel/AMD or a modern ARM system on your Li
 2. Open a terminal and navigate to the Downloads folder: `cd Downloads`.
 3. Make the AppImage executable: `chmod +x mind-work-ai-studio_amd64.AppImage`.
 4. You might want to move the AppImage to a more convenient location, e.g., your home directory: `mv mind-work-ai-studio_amd64.AppImage ~/`.
-4. Now you can run the AppImage from your file manager (double-click) or the terminal: `./mind-work-ai-studio_amd64.AppImage`.
+5. Now you can run the AppImage from your file manager (double-click) or the terminal: `./mind-work-ai-studio_amd64.AppImage`.
