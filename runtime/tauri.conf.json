@@ -1,7 +1,7 @@
 {
   "productName": "MindWork AI Studio",
   "mainBinaryName": "MindWork AI Studio",
-  "version": "26.5.3",
+  "version": "26.5.4",
   "identifier": "com.github.mindwork-ai.ai-studio",
   
   "build": {
