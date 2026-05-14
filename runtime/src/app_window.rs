@@ -889,7 +889,7 @@ pub async fn resume_shortcuts(_token: APIToken) -> Json<ShortcutResponse> {
             continue;
         }
 
-        match register_shortcut_with_callback(&app_handle, shortcut, *shortcut_id, event_sender.clone()) {
+        match register_shortcut_with_callback(app_handle, shortcut, *shortcut_id, event_sender.clone()) {
             Ok(_) => {
                 info!(Source = "Tauri"; "Re-registered shortcut '{shortcut}' for '{}'.", shortcut_id);
                 success_count += 1;
