@@ -2,7 +2,7 @@ use std::fmt;
 use std::time::Instant;
 use base64::Engine;
 use base64::prelude::BASE64_STANDARD;
-use aes::cipher::{block_padding::Pkcs7, BlockDecryptMut, BlockEncryptMut, KeyIvInit};
+use aes::cipher::{block_padding::Pkcs7, BlockModeDecrypt, BlockModeEncrypt, KeyIvInit};
 use hmac::Hmac;
 use log::{error, info};
 use once_cell::sync::Lazy;
@@ -107,7 +107,7 @@ impl Encryption {
         let mut buffer = vec![0u8; data.len() + 16];
         buffer[..data.len()].copy_from_slice(data);
         let encrypted = cipher
-            .encrypt_padded_mut::<Pkcs7>(&mut buffer, data.len())
+            .encrypt_padded::<Pkcs7>(&mut buffer, data.len())
             .map_err(|e| format!("Error encrypting data: {e}"))?;
         let mut result = BASE64_STANDARD.encode(self.secret_key_salt);
         result.push_str(&BASE64_STANDARD.encode(encrypted));
@@ -130,7 +130,7 @@ impl Encryption {
         let cipher = Aes256CbcDec::new(&self.key.into(), &self.iv.into());
         let mut buffer = encrypted.to_vec();
         let decrypted = cipher
-            .decrypt_padded_mut::<Pkcs7>(&mut buffer)
+            .decrypt_padded::<Pkcs7>(&mut buffer)
             .map_err(|e| format!("Error decrypting data: {e}"))?;
 
         String::from_utf8(decrypted.to_vec()).map_err(|e| format!("Error converting decrypted data to string: {}", e))

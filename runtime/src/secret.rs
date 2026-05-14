@@ -1,10 +1,42 @@
-use keyring::Entry;
-use log::{error, info, warn};
 use axum::Json;
+use keyring_core::{Entry, Error as KeyringError};
+use log::{error, info, warn};
 use serde::{Deserialize, Serialize};
-use keyring::error::Error::NoEntry;
 use crate::api_token::APIToken;
 use crate::encryption::{EncryptedText, ENCRYPTION};
+
+/// Initializes the native credential store used by keyring-core.
+pub fn init_secret_store() {
+    cfg_if::cfg_if! {
+        if #[cfg(target_os = "macos")] {
+            match apple_native_keyring_store::keychain::Store::new() {
+                Ok(store) => {
+                    keyring_core::set_default_store(store);
+                    info!(Source = "Secret Store"; "Initialized the macOS Keychain credential store.");
+                },
+                Err(e) => error!(Source = "Secret Store"; "Failed to initialize the macOS Keychain credential store: {e}."),
+            }
+        } else if #[cfg(target_os = "windows")] {
+            match windows_native_keyring_store::Store::new() {
+                Ok(store) => {
+                    keyring_core::set_default_store(store);
+                    info!(Source = "Secret Store"; "Initialized the Windows Credential Manager store.");
+                },
+                Err(e) => error!(Source = "Secret Store"; "Failed to initialize the Windows Credential Manager store: {e}."),
+            }
+        } else if #[cfg(target_os = "linux")] {
+            match dbus_secret_service_keyring_store::Store::new() {
+                Ok(store) => {
+                    keyring_core::set_default_store(store);
+                    info!(Source = "Secret Store"; "Initialized the DBus Secret Service credential store.");
+                },
+                Err(e) => error!(Source = "Secret Store"; "Failed to initialize the DBus Secret Service credential store: {e}."),
+            }
+        } else {
+            warn!(Source = "Secret Store"; "No native credential store is configured for this platform.");
+        }
+    }
+}
 
 /// Stores a secret in the secret store using the operating system's keyring.
 pub async fn store_secret(_token: APIToken, request: Json<StoreSecret>) -> Json<StoreSecretResponse> {
@@ -21,7 +53,16 @@ pub async fn store_secret(_token: APIToken, request: Json<StoreSecret>) -> Json<
     };
 
     let service = format!("mindwork-ai-studio::{}", request.destination);
-    let entry = Entry::new(service.as_str(), user_name).unwrap();
+    let entry = match Entry::new(service.as_str(), user_name) {
+        Ok(entry) => entry,
+        Err(e) => {
+            error!(Source = "Secret Store"; "Failed to create secret entry for {service} and user {user_name}: {e}.");
+            return Json(StoreSecretResponse {
+                success: false,
+                issue: e.to_string(),
+            });
+        },
+    };
     let result = entry.set_password(decrypted_text.as_str());
     match result {
         Ok(_) => {
@@ -61,7 +102,20 @@ pub struct StoreSecretResponse {
 pub async fn get_secret(_token: APIToken, request: Json<RequestSecret>) -> Json<RequestedSecret> {
     let user_name = request.user_name.as_str();
     let service = format!("mindwork-ai-studio::{}", request.destination);
-    let entry = Entry::new(service.as_str(), user_name).unwrap();
+    let entry = match Entry::new(service.as_str(), user_name) {
+        Ok(entry) => entry,
+        Err(e) => {
+            if !request.is_trying {
+                error!(Source = "Secret Store"; "Failed to create secret entry for '{service}' and user '{user_name}': {e}.");
+            }
+
+            return Json(RequestedSecret {
+                success: false,
+                secret: EncryptedText::new(String::from("")),
+                issue: format!("Failed to create secret entry for '{service}' and user '{user_name}': {e}"),
+            });
+        },
+    };
     let secret = entry.get_password();
     match secret {
         Ok(s) => {
@@ -121,7 +175,17 @@ pub struct RequestedSecret {
 pub async fn delete_secret(_token: APIToken, request: Json<RequestSecret>) -> Json<DeleteSecretResponse> {
     let user_name = request.user_name.as_str();
     let service = format!("mindwork-ai-studio::{}", request.destination);
-    let entry = Entry::new(service.as_str(), user_name).unwrap();
+    let entry = match Entry::new(service.as_str(), user_name) {
+        Ok(entry) => entry,
+        Err(e) => {
+            error!(Source = "Secret Store"; "Failed to create secret entry for {service} and user {user_name}: {e}.");
+            return Json(DeleteSecretResponse {
+                success: false,
+                was_entry_found: false,
+                issue: e.to_string(),
+            });
+        },
+    };
     let result = entry.delete_credential();
 
     match result {
@@ -134,7 +198,7 @@ pub async fn delete_secret(_token: APIToken, request: Json<RequestSecret>) -> Js
             })
         },
 
-        Err(NoEntry) => {
+        Err(KeyringError::NoEntry) => {
             warn!(Source = "Secret Store"; "No secret for {service} and user {user_name} was found.");
             Json(DeleteSecretResponse {
                 success: true,

@@ -10,6 +10,7 @@ use mindwork_ai_studio::environment::is_dev;
 use mindwork_ai_studio::log::init_logging;
 use mindwork_ai_studio::metadata::MetaData;
 use mindwork_ai_studio::runtime_api::start_runtime_api;
+use mindwork_ai_studio::secret::init_secret_store;
 
 #[tokio::main]
 async fn main() {
@@ -41,6 +42,7 @@ async fn main() {
         info!("Running in production mode.");
     }
 
+    init_secret_store();
     generate_runtime_certificate();
     start_runtime_api();
     

@@ -771,17 +771,29 @@ jobs:
           PRIVATE_PUBLISH_KEY_PASSWORD: ${{ secrets.PRIVATE_PUBLISH_KEY_PASSWORD }}
         run: |
           bundles="${{ matrix.tauri_bundle }}"
+          tauri_config_args=()
 
           if [ "${{ needs.determine_run_mode.outputs.is_pr_build }}" = "true" ]; then
             echo "Running PR test build without updater bundle signing"
             bundles="${{ matrix.tauri_bundle_pr }}"
+            tauri_config_args=(--config '{"bundle":{"createUpdaterArtifacts":false}}')
           else
             export TAURI_SIGNING_PRIVATE_KEY="$PRIVATE_PUBLISH_KEY"
             export TAURI_SIGNING_PRIVATE_KEY_PASSWORD="$PRIVATE_PUBLISH_KEY_PASSWORD"
           fi
 
           cd runtime
-          cargo tauri build --target ${{ matrix.rust_target }} --bundles "$bundles"
+          cargo tauri build --target ${{ matrix.rust_target }} --bundles "$bundles" "${tauri_config_args[@]}"
+
+          if [ "${{ needs.determine_run_mode.outputs.is_pr_build }}" = "true" ]; then
+            updater_artifact_count=$(find target/${{ matrix.rust_target }}/release/bundle -type f \( -name '*.app.tar.gz*' -o -name '*.AppImage.tar.gz*' -o -name '*nsis.zip*' \) | wc -l)
+
+            if [ "$updater_artifact_count" -ne 0 ]; then
+              echo "PR builds must not generate updater artifacts."
+              find target/${{ matrix.rust_target }}/release/bundle -type f \( -name '*.app.tar.gz*' -o -name '*.AppImage.tar.gz*' -o -name '*nsis.zip*' \)
+              exit 1
+            fi
+          fi
 
           if [ "${{ needs.determine_run_mode.outputs.is_pr_build }}" != "true" ] && [[ "${{ matrix.platform }}" == macos* ]]; then
             app_update_archive_count=$(find target/${{ matrix.rust_target }}/release/bundle/macos -maxdepth 1 -name '*.app.tar.gz' | wc -l)
@@ -800,17 +812,29 @@ jobs:
           PRIVATE_PUBLISH_KEY_PASSWORD: ${{ secrets.PRIVATE_PUBLISH_KEY_PASSWORD }}
         run: |
           $bundles = "${{ matrix.tauri_bundle }}"
+          $tauriConfigArgs = @()
 
           if ("${{ needs.determine_run_mode.outputs.is_pr_build }}" -eq "true") {
             Write-Output "Running PR test build without updater bundle signing"
             $bundles = "${{ matrix.tauri_bundle_pr }}"
+            $tauriConfigArgs = @("--config", '{"bundle":{"createUpdaterArtifacts":false}}')
           } else {
             $env:TAURI_SIGNING_PRIVATE_KEY="$env:PRIVATE_PUBLISH_KEY"
             $env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD="$env:PRIVATE_PUBLISH_KEY_PASSWORD"
           }
 
           cd runtime
-          cargo tauri build --target ${{ matrix.rust_target }} --bundles $bundles
+          cargo tauri build --target ${{ matrix.rust_target }} --bundles $bundles @tauriConfigArgs
+
+          if ("${{ needs.determine_run_mode.outputs.is_pr_build }}" -eq "true") {
+            $updaterArtifacts = Get-ChildItem -Path "target/${{ matrix.rust_target }}/release/bundle" -Recurse -File -Include "*.app.tar.gz*", "*.AppImage.tar.gz*", "*nsis.zip*" -ErrorAction SilentlyContinue
+
+            if ($updaterArtifacts.Count -ne 0) {
+              Write-Error "PR builds must not generate updater artifacts."
+              $updaterArtifacts | ForEach-Object { Write-Error $_.FullName }
+              exit 1
+            }
+          }
 
       - name: Upload artifact (macOS)
         if: startsWith(matrix.platform, 'macos')
