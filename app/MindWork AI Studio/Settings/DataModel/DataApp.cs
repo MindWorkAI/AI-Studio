@@ -95,6 +95,11 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     public string ShortcutVoiceRecording { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ShortcutVoiceRecording, string.Empty);
 
     /// <summary>
+    /// The HTTP timeout in seconds for requests to LLM providers.
+    /// </summary>
+    public int ProviderHttpTimeoutSeconds { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ProviderHttpTimeoutSeconds, 3600);
+
+    /// <summary>
     /// Should the user be allowed to add providers?
     /// </summary>
     public bool AllowUserToAddProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToAddProvider, true);

@@ -135,6 +135,9 @@ public class ProviderGoogle() : BaseProvider(LLMProviders.GOOGLE, "https://gener
         }
         catch (Exception e)
         {
+            if (this.IsTimeoutException(e, token))
+                await this.SendTimeoutError("creating embeddings");
+
             LOGGER.LogError("Failed to perform embedding request: '{Message}'.", e.Message);
             return [];
         }

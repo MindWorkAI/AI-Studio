@@ -140,6 +140,9 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         
         // Config: global voice recording shortcut
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.ShortcutVoiceRecording, this.Id, settingsTable, dryRun);
+
+        // Config: timeout for HTTP requests to providers
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.ProviderHttpTimeoutSeconds, this.Id, settingsTable, dryRun);
         
         // Handle configured LLM providers:
         PluginConfigurationObject.TryParse(PluginConfigurationObjectType.LLM_PROVIDER, x => x.Providers, x => x.NextProviderNum, mainTable, this.Id, ref this.configObjects, dryRun);
