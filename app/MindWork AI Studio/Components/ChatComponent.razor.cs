@@ -939,7 +939,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         if(lastBlockContent is null)
             return Task.CompletedTask;
         
-        this.userInput = textBlock.Text;
+        this.RestoreComposerFromTextBlock(textBlock);
         this.ChatThread.Remove(block);
         this.ChatThread.Remove(lastBlockContent);
         this.hasUnsavedChanges = true;
@@ -956,12 +956,21 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         if (block is not ContentText textBlock)
             return Task.CompletedTask;
         
-        this.userInput = textBlock.Text;
+        this.RestoreComposerFromTextBlock(textBlock);
         this.ChatThread.Remove(block);
         this.hasUnsavedChanges = true;
         this.StateHasChanged();
         
         return Task.CompletedTask;
+    }
+
+    private void RestoreComposerFromTextBlock(ContentText textBlock)
+    {
+        this.userInput = textBlock.Text;
+        this.chatDocumentPaths.Clear();
+
+        foreach (var attachment in textBlock.FileAttachments)
+            this.chatDocumentPaths.Add(attachment.Normalize());
     }
     
     #region Overrides of MSGComponentBase
