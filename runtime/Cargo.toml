@@ -50,10 +50,6 @@ sysinfo = "0.38.4"
 # Fixes security vulnerability downstream, where the upstream is not fixed yet:
 bytes = "1.11.1" # -> almost every dependency
 
-[target.'cfg(target_os = "linux")'.dependencies]
-# See issue https://github.com/tauri-apps/tauri/issues/4470
-reqwest = { version = "0.13.2", features = ["native-tls-vendored"] }
-
 [target.'cfg(target_os = "windows")'.dependencies]
 windows-registry = "0.6.1"
 
