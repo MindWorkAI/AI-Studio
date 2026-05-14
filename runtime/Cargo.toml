@@ -38,14 +38,14 @@ hmac = "0.12.1"
 sha2 = "0.10.8"
 rcgen = { version = "0.14.7", features = ["pem"] }
 file-format = "0.29.0"
-calamine = "0.34.0"
+calamine = "0.35.0"
 pdfium-render = "0.8.37"
 sys-locale = "0.3.2"
 cfg-if = "1.0.4"
 pptx-to-md = "0.4.0"
 tempfile = "3.27.0"
 strum_macros = "0.28.0"
-sysinfo = "0.38.4"
+sysinfo = "0.39.1"
 
 # Fixes security vulnerability downstream, where the upstream is not fixed yet:
 bytes = "1.11.1" # -> almost every dependency
