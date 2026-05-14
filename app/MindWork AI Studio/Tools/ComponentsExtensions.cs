@@ -8,6 +8,17 @@ namespace AIStudio.Tools;
 public static class ComponentsExtensions
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ComponentsExtensions).Namespace, nameof(ComponentsExtensions));
+
+    public static bool SupportsAppDefaultProviderSelection(this Components component) => component switch
+    {
+        Components.NONE => false,
+        Components.APP_SETTINGS => false,
+        Components.AGENT_TEXT_CONTENT_CLEANER => false,
+        Components.AGENT_DATA_SOURCE_SELECTION => false,
+        Components.AGENT_RETRIEVAL_CONTEXT_VALIDATION => false,
+        Components.AGENT_ASSISTANT_PLUGIN_AUDIT => false,
+        _ => true,
+    };
     
     public static bool AllowSendTo(this Components component) => component switch
     {
@@ -103,9 +114,40 @@ public static class ComponentsExtensions
         _ => default,
     };
 
+    public static bool HasExplicitNoProviderPreselection(this Components component, SettingsManager settingsManager)
+    {
+        var preselectedProviderId = component switch
+        {
+            Components.GRAMMAR_SPELLING_ASSISTANT => settingsManager.ConfigurationData.GrammarSpelling.PreselectOptions ? settingsManager.ConfigurationData.GrammarSpelling.PreselectedProvider : string.Empty,
+            Components.ICON_FINDER_ASSISTANT => settingsManager.ConfigurationData.IconFinder.PreselectOptions ? settingsManager.ConfigurationData.IconFinder.PreselectedProvider : string.Empty,
+            Components.REWRITE_ASSISTANT => settingsManager.ConfigurationData.RewriteImprove.PreselectOptions ? settingsManager.ConfigurationData.RewriteImprove.PreselectedProvider : string.Empty,
+            Components.PROMPT_OPTIMIZER_ASSISTANT => settingsManager.ConfigurationData.PromptOptimizer.PreselectOptions ? settingsManager.ConfigurationData.PromptOptimizer.PreselectedProvider : string.Empty,
+            Components.TRANSLATION_ASSISTANT => settingsManager.ConfigurationData.Translation.PreselectOptions ? settingsManager.ConfigurationData.Translation.PreselectedProvider : string.Empty,
+            Components.AGENDA_ASSISTANT => settingsManager.ConfigurationData.Agenda.PreselectOptions ? settingsManager.ConfigurationData.Agenda.PreselectedProvider : string.Empty,
+            Components.CODING_ASSISTANT => settingsManager.ConfigurationData.Coding.PreselectOptions ? settingsManager.ConfigurationData.Coding.PreselectedProvider : string.Empty,
+            Components.TEXT_SUMMARIZER_ASSISTANT => settingsManager.ConfigurationData.TextSummarizer.PreselectOptions ? settingsManager.ConfigurationData.TextSummarizer.PreselectedProvider : string.Empty,
+            Components.EMAIL_ASSISTANT => settingsManager.ConfigurationData.EMail.PreselectOptions ? settingsManager.ConfigurationData.EMail.PreselectedProvider : string.Empty,
+            Components.LEGAL_CHECK_ASSISTANT => settingsManager.ConfigurationData.LegalCheck.PreselectOptions ? settingsManager.ConfigurationData.LegalCheck.PreselectedProvider : string.Empty,
+            Components.SYNONYMS_ASSISTANT => settingsManager.ConfigurationData.Synonyms.PreselectOptions ? settingsManager.ConfigurationData.Synonyms.PreselectedProvider : string.Empty,
+            Components.MY_TASKS_ASSISTANT => settingsManager.ConfigurationData.MyTasks.PreselectOptions ? settingsManager.ConfigurationData.MyTasks.PreselectedProvider : string.Empty,
+            Components.JOB_POSTING_ASSISTANT => settingsManager.ConfigurationData.JobPostings.PreselectOptions ? settingsManager.ConfigurationData.JobPostings.PreselectedProvider : string.Empty,
+            Components.BIAS_DAY_ASSISTANT => settingsManager.ConfigurationData.BiasOfTheDay.PreselectOptions ? settingsManager.ConfigurationData.BiasOfTheDay.PreselectedProvider : string.Empty,
+            Components.ERI_ASSISTANT => settingsManager.ConfigurationData.ERI.PreselectOptions ? settingsManager.ConfigurationData.ERI.PreselectedProvider : string.Empty,
+            Components.I18N_ASSISTANT => settingsManager.ConfigurationData.I18N.PreselectOptions ? settingsManager.ConfigurationData.I18N.PreselectedProvider : string.Empty,
+            Components.SLIDE_BUILDER_ASSISTANT => settingsManager.ConfigurationData.SlideBuilder.PreselectOptions ? settingsManager.ConfigurationData.SlideBuilder.PreselectedProvider : string.Empty,
+            Components.CHAT => settingsManager.ConfigurationData.Chat.PreselectOptions ? settingsManager.ConfigurationData.Chat.PreselectedProvider : string.Empty,
+            _ => string.Empty,
+        };
+
+        return Settings.Provider.IsNoProviderPreselection(preselectedProviderId);
+    }
+
     [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
     public static AIStudio.Settings.Provider PreselectedProvider(this Components component, SettingsManager settingsManager)
     {
+        if (component.HasExplicitNoProviderPreselection(settingsManager))
+            return Settings.Provider.NONE;
+
         var preselectedProvider = component switch
         {
             Components.GRAMMAR_SPELLING_ASSISTANT => settingsManager.ConfigurationData.GrammarSpelling.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.GrammarSpelling.PreselectedProvider) : null,

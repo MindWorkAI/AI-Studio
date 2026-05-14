@@ -256,9 +256,10 @@ public sealed class SettingsManager
     public Provider GetPreselectedProvider(Tools.Components component, string? currentProviderId = null, bool usePreselectionBeforeCurrentProvider = false)
     {
         var minimumLevel = this.GetMinimumConfidenceLevel(component);
+        var hasExplicitNoProviderPreselection = component.HasExplicitNoProviderPreselection(this);
         
         // When there is only one provider, and it has a confidence level that is high enough, we return it:
-        if (this.ConfigurationData.Providers.Count == 1 && this.ConfigurationData.Providers[0].UsedLLMProvider.GetConfidence(this).Level >= minimumLevel)
+        if (!hasExplicitNoProviderPreselection && this.ConfigurationData.Providers.Count == 1 && this.ConfigurationData.Providers[0].UsedLLMProvider.GetConfidence(this).Level >= minimumLevel)
             return this.ConfigurationData.Providers[0];
 
         // Is there a current provider with a sufficiently high confidence level?
@@ -290,6 +291,9 @@ public sealed class SettingsManager
         //
         if(currentProvider != Provider.NONE)
             return currentProvider;
+
+        if (hasExplicitNoProviderPreselection)
+            return Provider.NONE;
         
         //
         // Case: The current provider should be used before the preselected provider,
@@ -308,6 +312,7 @@ public sealed class SettingsManager
     public Provider GetChatProviderForLoadedChat(string? chatProviderId = null)
     {
         var minimumLevel = this.GetMinimumConfidenceLevel(Tools.Components.CHAT);
+        var hasExplicitNoChatProviderPreselection = Tools.Components.CHAT.HasExplicitNoProviderPreselection(this);
 
         bool IsSelectableProvider(Provider provider) =>
             provider != Provider.NONE
@@ -332,6 +337,9 @@ public sealed class SettingsManager
             : null;
         if (defaultChatProvider is not null)
             return defaultChatProvider;
+
+        if (hasExplicitNoChatProviderPreselection)
+            return Provider.NONE;
 
         var defaultAppProvider = FindProviderById(this.ConfigurationData.App.PreselectedProvider);
         if (defaultAppProvider is not null)
