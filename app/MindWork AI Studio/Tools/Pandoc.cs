@@ -35,12 +35,13 @@ public static partial class Pandoc
     private static bool HAS_LOGGED_AVAILABILITY_CHECK_ONCE;
 
     private static readonly HttpClient WEB_CLIENT = new();
+    private static readonly SemaphoreSlim INSTALLATION_LOCK = new(1, 1);
 
     /// <summary>
     /// Prepares a Pandoc process by using the Pandoc process builder.
     /// </summary>
     /// <returns>The Pandoc process builder with default settings.</returns>
-    public static PandocProcessBuilder PreparePandocProcess() => PandocProcessBuilder.Create();
+    private static PandocProcessBuilder PreparePandocProcess() => PandocProcessBuilder.Create();
 
     /// <summary>
     /// Checks if pandoc is available on the system and can be started as a process or is present in AI Studio's data dir.
@@ -165,25 +166,33 @@ public static partial class Pandoc
     /// <returns>None</returns>
     public static async Task InstallAsync(RustService rustService)
     {
+        await INSTALLATION_LOCK.WaitAsync();
+
         var latestVersion = await FetchLatestVersionAsync();
         var installDir = await GetPandocDataFolder(rustService);
-        ClearFolder(installDir);
+        var installParentDir = Path.GetDirectoryName(installDir) ?? Path.GetTempPath();
+        var stagingDir = Path.Combine(installParentDir, $"pandoc-install-{Guid.NewGuid():N}");
+        var pandocTempDownloadFile = Path.GetTempFileName();
         
         LOG.LogInformation("Trying to install Pandoc v{0} to '{1}'...", latestVersion, installDir);
         
         try
         {
-            if (!Directory.Exists(installDir))
-                Directory.CreateDirectory(installDir);
-            
-            // Create a temporary file to download the archive to:
-            var pandocTempDownloadFile = Path.GetTempFileName();
+            if (!Directory.Exists(installParentDir))
+                Directory.CreateDirectory(installParentDir);
             
             //
             // Download the latest Pandoc archive from GitHub:
             //
-            var uri = await GenerateArchiveUriAsync();
-            var response = await WEB_CLIENT.GetAsync(uri);
+            var uri = GenerateArchiveUri(latestVersion);
+            if (string.IsNullOrWhiteSpace(uri))
+            {
+                await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Error, TB("Pandoc was not installed successfully, because the archive type is unknown.")));
+                LOG.LogError("Pandoc was not installed, no archive is available for architecture '{Architecture}'.", CPU_ARCHITECTURE.ToUserFriendlyName());
+                return;
+            }
+
+            using var response = await WEB_CLIENT.GetAsync(uri);
             if (!response.IsSuccessStatusCode)
             {
                 await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Error, TB("Pandoc was not installed successfully, because the archive was not found.")));
@@ -192,18 +201,33 @@ public static partial class Pandoc
             }
 
             // Download the archive to the temporary file:
-            await using var tempFileStream = File.Create(pandocTempDownloadFile);
-            await response.Content.CopyToAsync(tempFileStream);
+            await using (var tempFileStream = File.Create(pandocTempDownloadFile))
+            {
+                await response.Content.CopyToAsync(tempFileStream);
+                await tempFileStream.FlushAsync();
+            }
 
+            Directory.CreateDirectory(stagingDir);
             if (uri.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
             {
-                ZipFile.ExtractToDirectory(pandocTempDownloadFile, installDir);
+                await RunWithRetriesAsync(
+                    () =>
+                    {
+                        ZipFile.ExtractToDirectory(pandocTempDownloadFile, stagingDir, true);
+                        return Task.CompletedTask;
+                    },
+                    "extracting the Pandoc ZIP archive");
             }
             else if (uri.EndsWith(".tar.gz", StringComparison.OrdinalIgnoreCase))
             {
-                await using var tgzStream = File.Open(pandocTempDownloadFile, FileMode.Open, FileAccess.Read, FileShare.Read);
-                await using var uncompressedStream = new GZipStream(tgzStream, CompressionMode.Decompress);
-                await TarFile.ExtractToDirectoryAsync(uncompressedStream, installDir, true);
+                await RunWithRetriesAsync(
+                    async () =>
+                    {
+                        await using var tgzStream = File.Open(pandocTempDownloadFile, FileMode.Open, FileAccess.Read, FileShare.Read);
+                        await using var uncompressedStream = new GZipStream(tgzStream, CompressionMode.Decompress);
+                        await TarFile.ExtractToDirectoryAsync(uncompressedStream, stagingDir, true);
+                    },
+                    "extracting the Pandoc TAR archive");
             }
             else
             {
@@ -212,8 +236,22 @@ public static partial class Pandoc
                 return;
             }
 
-            File.Delete(pandocTempDownloadFile);
-            
+            var stagedPandocExecutable = FindExecutableInDirectory(stagingDir, PandocProcessBuilder.PandocExecutableName);
+            if (string.IsNullOrWhiteSpace(stagedPandocExecutable))
+            {
+                await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Error, TB("Pandoc was not installed successfully, because the executable was not found in the archive.")));
+                LOG.LogError("Pandoc was not installed, the executable was not found in the extracted archive: '{StagingDir}'.", stagingDir);
+                return;
+            }
+
+            if (!await IsPandocExecutableValidAsync(stagedPandocExecutable))
+            {
+                await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Error, TB("Pandoc was not installed successfully, because the downloaded executable could not be validated.")));
+                LOG.LogError("Pandoc was not installed, the downloaded executable could not be validated: '{Executable}'.", stagedPandocExecutable);
+                return;
+            }
+
+            await ReplaceInstallationDirectoryAsync(stagingDir, installDir);
             await MessageBus.INSTANCE.SendSuccess(new(Icons.Material.Filled.CheckCircle, string.Format(TB("Pandoc v{0} was installed successfully."), latestVersion)));
             LOG.LogInformation("Pandoc v{0} was installed successfully.", latestVersion);
         }
@@ -221,20 +259,158 @@ public static partial class Pandoc
         {
             LOG.LogError(ex, "An error occurred while installing Pandoc.");
         }
+        finally
+        {
+            TryDeleteFile(pandocTempDownloadFile);
+
+            if (Directory.Exists(stagingDir))
+                await TryDeleteFolderAsync(stagingDir);
+
+            INSTALLATION_LOCK.Release();
+        }
     }
     
-    private static void ClearFolder(string path)
+    private static async Task ReplaceInstallationDirectoryAsync(string stagingDir, string installDir)
     {
-        if (!Directory.Exists(path))
-            return;
-        
+        var backupDir = $"{installDir}.backup-{Guid.NewGuid():N}";
+        var hasBackup = false;
+
         try
         {
-            Directory.Delete(path, true);
+            if (Directory.Exists(installDir))
+            {
+                Directory.Move(installDir, backupDir);
+                hasBackup = true;
+            }
+
+            Directory.Move(stagingDir, installDir);
         }
         catch (Exception ex)
         {
-            LOG.LogError(ex, "Error clearing pandoc installation directory.");
+            if (hasBackup && !Directory.Exists(installDir) && Directory.Exists(backupDir))
+                Directory.Move(backupDir, installDir);
+
+            LOG.LogError(ex, "Error replacing pandoc installation directory.");
+            throw;
+        }
+        finally
+        {
+            if (hasBackup && Directory.Exists(backupDir))
+                await TryDeleteFolderAsync(backupDir);
+        }
+    }
+
+    private static async Task<bool> IsPandocExecutableValidAsync(string executable)
+    {
+        try
+        {
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = executable,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+            startInfo.ArgumentList.Add("--version");
+
+            using var process = Process.Start(startInfo);
+            if (process is null)
+                return false;
+
+            var outputTask = process.StandardOutput.ReadToEndAsync();
+            var errorTask = process.StandardError.ReadToEndAsync();
+
+            await process.WaitForExitAsync();
+            var output = await outputTask;
+            var error = await errorTask;
+
+            if (process.ExitCode is not 0)
+            {
+                LOG.LogError("Downloaded Pandoc executable exited with code {ProcessExitCode}. Error output: '{ErrorText}'", process.ExitCode, error);
+                return false;
+            }
+
+            var versionMatch = PandocCmdRegex().Match(output);
+            return versionMatch.Success && Version.Parse(versionMatch.Groups[1].Value) >= MINIMUM_REQUIRED_VERSION;
+        }
+        catch (Exception ex)
+        {
+            LOG.LogError(ex, "Error validating downloaded Pandoc executable.");
+            return false;
+        }
+    }
+
+    private static string FindExecutableInDirectory(string rootDirectory, string executableName)
+    {
+        if (!Directory.Exists(rootDirectory))
+            return string.Empty;
+
+        var rootExecutablePath = Path.Combine(rootDirectory, executableName);
+        if (File.Exists(rootExecutablePath))
+            return rootExecutablePath;
+
+        foreach (var subdirectory in Directory.GetDirectories(rootDirectory, "*", SearchOption.AllDirectories))
+        {
+            var pandocPath = Path.Combine(subdirectory, executableName);
+            if (File.Exists(pandocPath))
+                return pandocPath;
+        }
+
+        return string.Empty;
+    }
+
+    private static async Task RunWithRetriesAsync(Func<Task> operation, string operationName)
+    {
+        const int MAX_ATTEMPTS = 4;
+        for (var attempt = 1; attempt <= MAX_ATTEMPTS; attempt++)
+        {
+            try
+            {
+                await operation();
+                return;
+            }
+            catch (Exception ex) when (attempt < MAX_ATTEMPTS && ex is IOException or UnauthorizedAccessException)
+            {
+                LOG.LogWarning(ex, "Error while {OperationName}; retrying attempt {Attempt}/{MaxAttempts}.", operationName, attempt + 1, MAX_ATTEMPTS);
+                await Task.Delay(TimeSpan.FromMilliseconds(250 * attempt));
+            }
+        }
+    }
+
+    private static void TryDeleteFile(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
+            return;
+
+        try
+        {
+            File.Delete(path);
+        }
+        catch (Exception ex)
+        {
+            LOG.LogWarning(ex, "Was not able to delete temporary Pandoc archive: '{Path}'.", path);
+        }
+    }
+
+    private static async Task TryDeleteFolderAsync(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path) || !Directory.Exists(path))
+            return;
+
+        try
+        {
+            await RunWithRetriesAsync(
+                () =>
+                {
+                    Directory.Delete(path, true);
+                    return Task.CompletedTask;
+                },
+                $"deleting temporary Pandoc directory '{path}'");
+        }
+        catch (Exception ex)
+        {
+            LOG.LogWarning(ex, "Was not able to delete temporary Pandoc directory: '{Path}'.", path);
         }
     }
     
@@ -272,6 +448,11 @@ public static partial class Pandoc
     public static async Task<string> GenerateArchiveUriAsync()
     {
         var version = await FetchLatestVersionAsync();
+        return GenerateArchiveUri(version);
+    }
+
+    private static string GenerateArchiveUri(string version)
+    {
         var baseUri = $"{DOWNLOAD_URL}/{version}/pandoc-{version}-";
         return CPU_ARCHITECTURE switch
         {

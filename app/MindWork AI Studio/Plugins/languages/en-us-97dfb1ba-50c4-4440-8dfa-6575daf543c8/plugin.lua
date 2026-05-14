@@ -6987,6 +6987,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T1885555132"] = "Pandoc v{0} was insta
 -- Was not able to check the Pandoc installation.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T2171727146"] = "Was not able to check the Pandoc installation."
 
+-- Pandoc was not installed successfully, because the executable was not found in the archive.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T2173645304"] = "Pandoc was not installed successfully, because the executable was not found in the archive."
+
 -- Pandoc v{0} is installed, but it doesn't match the required version (v{1}).
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T2299898115"] = "Pandoc v{0} is installed, but it doesn't match the required version (v{1})."
 
@@ -7004,6 +7007,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T3746116957"] = "Pandoc is not availab
 
 -- Pandoc was not installed successfully, because the archive type is unknown.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T3962211670"] = "Pandoc was not installed successfully, because the archive type is unknown."
+
+-- Pandoc was not installed successfully, because the downloaded executable could not be validated.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T4214136908"] = "Pandoc was not installed successfully, because the downloaded executable could not be validated."
 
 -- It seems that Pandoc is not installed.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T567205144"] = "It seems that Pandoc is not installed."
