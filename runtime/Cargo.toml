@@ -18,7 +18,7 @@ serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.149"
 keyring-core = "1.0.0"
 arboard = "3.6.1"
-tokio = { version = "1.50.0", features = ["rt", "rt-multi-thread", "macros", "process"] }
+tokio = { version = "1.52.3", features = ["rt", "rt-multi-thread", "macros", "process"] }
 tokio-stream = "0.1.18"
 futures = "0.3.32"
 async-stream = "0.3.6"
@@ -36,7 +36,7 @@ cbc = "0.2.0"
 pbkdf2 = "0.13.0"
 hmac = "0.13.0"
 sha2 = "0.11.0"
-rcgen = { version = "0.14.7", features = ["pem"] }
+rcgen = { version = "0.14.8", features = ["pem"] }
 file-format = "0.29.0"
 calamine = "0.35.0"
 pdfium-render = "0.9.1"
@@ -46,9 +46,7 @@ pptx-to-md = "0.4.0"
 tempfile = "3.27.0"
 strum_macros = "0.28.0"
 sysinfo = "0.39.1"
-
-# Fixes security vulnerability downstream, where the upstream is not fixed yet:
-bytes = "1.11.1" # -> almost every dependency
+bytes = "1.11.1"
 
 [target.'cfg(target_os = "windows")'.dependencies]
 windows-registry = "0.6.1"
