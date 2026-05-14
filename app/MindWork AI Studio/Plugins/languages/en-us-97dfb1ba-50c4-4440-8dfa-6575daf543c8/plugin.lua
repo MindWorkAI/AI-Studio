@@ -6021,9 +6021,6 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1890416390"] = "Check for update
 -- Vision
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1892426825"] = "Vision"
 
--- In order to use any LLM, each user must store their so-called API key for each LLM provider. This key must be kept secure, similar to a password. The safest way to do this is offered by operating systems like macOS, Windows, and Linux: They have mechanisms to store such data, if available, on special security hardware. Since this is currently not possible in .NET, we use this Rust library.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1915240766"] = "In order to use any LLM, each user must store their so-called API key for each LLM provider. This key must be kept secure, similar to a password. The safest way to do this is offered by operating systems like macOS, Windows, and Linux: They have mechanisms to store such data, if available, on special security hardware. Since this is currently not possible in .NET, we use this Rust library."
-
 -- This library is used to convert HTML to Markdown. This is necessary, e.g., when you provide a URL as input for an assistant.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1924365263"] = "This library is used to convert HTML to Markdown. This is necessary, e.g., when you provide a URL as input for an assistant."
 
@@ -6161,6 +6158,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3449345633"] = "AI Studio runs w
 
 -- Tauri is used to host the Blazor user interface. It is a great project that allows the creation of desktop applications using web technologies. I love Tauri!
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3494984593"] = "Tauri is used to host the Blazor user interface. It is a great project that allows the creation of desktop applications using web technologies. I love Tauri!"
+
+-- AI Studio stores secrets like API keys in your operating system’s secure credential store. The keyring-core library handles this by connecting to macOS Keychain, Windows Credential Manager, and Linux Secret Service.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3527399572"] = "AI Studio stores secrets like API keys in your operating system’s secure credential store. The keyring-core library handles this by connecting to macOS Keychain, Windows Credential Manager, and Linux Secret Service."
 
 -- Motivation
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3563271893"] = "Motivation"
