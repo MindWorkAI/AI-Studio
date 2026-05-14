@@ -7627,6 +7627,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::FILEEXTENSIONVALIDATION::T29806295
 -- Images are not supported at this place
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::FILEEXTENSIONVALIDATION::T305247150"] = "Images are not supported at this place"
 
+-- This file format is not supported. Please convert the .doc file to .docx (e.g. with Microsoft Word).
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::FILEEXTENSIONVALIDATION::T3740637731"] = "This file format is not supported. Please convert the .doc file to .docx (e.g. with Microsoft Word)."
+
 -- Unsupported file type
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::FILEEXTENSIONVALIDATION::T4041351522"] = "Unsupported file type"
 
