@@ -12,6 +12,10 @@ on:
       - synchronize
       - reopened
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && (github.event.action != 'labeled' || github.event.label.name == 'run-pipeline') && github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' && (github.event.action != 'labeled' || github.event.label.name == 'run-pipeline') }}
+
 env:
   RETENTION_INTERMEDIATE_ASSETS: 1
   RETENTION_RELEASE_ASSETS: 30
@@ -37,6 +41,8 @@ jobs:
         id: determine
         env:
           EVENT_NAME: ${{ github.event_name }}
+          PR_ACTION: ${{ github.event.action }}
+          ACTION_LABEL_NAME: ${{ github.event.label.name }}
           REF: ${{ github.ref }}
           PR_LABELS: ${{ join(github.event.pull_request.labels.*.name, ' ') }}
           PR_HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
@@ -55,6 +61,11 @@ jobs:
             is_internal_pr=true
           fi
 
+          has_run_pipeline_label=false
+          if [[ " $PR_LABELS " == *" run-pipeline "* ]]; then
+            has_run_pipeline_label=true
+          fi
+
           if [[ "$REF" == refs/tags/v* ]]; then
             is_release=true
             build_enabled=true
@@ -65,13 +76,21 @@ jobs:
             build_enabled=true
             artifact_retention_days=7
             skip_reason=""
-          elif [[ "$EVENT_NAME" == "pull_request" && " $PR_LABELS " == *" run-pipeline "* ]]; then
+          elif [[ "$EVENT_NAME" == "pull_request" && "$PR_ACTION" == "labeled" && "$ACTION_LABEL_NAME" == "run-pipeline" ]]; then
             is_labeled_pr=true
             is_pr_build=true
             build_enabled=true
             artifact_retention_days=3
             skip_reason=""
-          elif [[ "$EVENT_NAME" == "pull_request" && " $PR_LABELS " != *" run-pipeline "* ]]; then
+          elif [[ "$EVENT_NAME" == "pull_request" && "$PR_ACTION" != "labeled" && "$has_run_pipeline_label" == "true" ]]; then
+            is_labeled_pr=true
+            is_pr_build=true
+            build_enabled=true
+            artifact_retention_days=3
+            skip_reason=""
+          elif [[ "$EVENT_NAME" == "pull_request" && "$PR_ACTION" == "labeled" ]]; then
+            skip_reason="Build disabled: label '${ACTION_LABEL_NAME}' is not 'run-pipeline'."
+          elif [[ "$EVENT_NAME" == "pull_request" && "$has_run_pipeline_label" != "true" ]]; then
             skip_reason="Build disabled: PR does not have the required 'run-pipeline' label."
           fi
 
@@ -685,11 +704,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            ~/.cargo/bin
             ~/.cargo/git/db/
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
-            ~/.rustup/toolchains
             runtime/target
             
           key: target-${{ matrix.dotnet_runtime }}-rust-${{ env.RUST_VERSION }}
