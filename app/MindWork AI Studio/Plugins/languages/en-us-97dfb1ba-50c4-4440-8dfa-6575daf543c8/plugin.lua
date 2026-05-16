@@ -6975,6 +6975,12 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T816853779"] = "Failed
 -- Failed to retrieve the authentication methods: the ERI server did not return a valid response.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T984407320"] = "Failed to retrieve the authentication methods: the ERI server did not return a valid response."
 
+-- AI Studio couldn't install Pandoc because the archive was not found.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T1059477764"] = "AI Studio couldn't install Pandoc because the archive was not found."
+
+-- Pandoc doesn't seem to be installed.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T1090474732"] = "Pandoc doesn't seem to be installed."
+
 -- Was not able to validate the Pandoc installation.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T1364844008"] = "Was not able to validate the Pandoc installation."
 
@@ -6996,20 +7002,20 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T2550598062"] = "Pandoc v{0} is instal
 -- Pandoc v{0} is installed, but it does not match the required version (v{1}).
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T2555465873"] = "Pandoc v{0} is installed, but it does not match the required version (v{1})."
 
--- Pandoc was not installed successfully, because the archive was not found.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T34210248"] = "Pandoc was not installed successfully, because the archive was not found."
+-- AI Studio couldn't install Pandoc because the archive type is unknown.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T3492710362"] = "AI Studio couldn't install Pandoc because the archive type is unknown."
 
 -- Pandoc is not available on the system or the process had issues.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T3746116957"] = "Pandoc is not available on the system or the process had issues."
 
--- Pandoc was not installed successfully, because the archive type is unknown.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T3962211670"] = "Pandoc was not installed successfully, because the archive type is unknown."
+-- AI Studio couldn't install Pandoc because the executable was not found in the archive.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T403983772"] = "AI Studio couldn't install Pandoc because the executable was not found in the archive."
 
--- It seems that Pandoc is not installed.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T567205144"] = "It seems that Pandoc is not installed."
+-- AI Studio couldn't find the latest Pandoc version and will install version {0} instead.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T695293525"] = "AI Studio couldn't find the latest Pandoc version and will install version {0} instead."
 
--- The latest Pandoc version was not found, installing version {0} instead.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T726914939"] = "The latest Pandoc version was not found, installing version {0} instead."
+-- AI Studio couldn't install Pandoc.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T932858631"] = "AI Studio couldn't install Pandoc."
 
 -- Pandoc is required for Microsoft Word export.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOCEXPORT::T1473115556"] = "Pandoc is required for Microsoft Word export."

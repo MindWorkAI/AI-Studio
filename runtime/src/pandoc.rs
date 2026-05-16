@@ -1,13 +1,16 @@
-use std::path::{Path, PathBuf};
+use std::collections::HashSet;
+use std::env;
 use std::fs;
+use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
-use log::warn;
+use log::{info, warn};
 use tokio::process::Command;
 use crate::environment::DATA_DIRECTORY;
 use crate::metadata::META_DATA;
 
 /// Tracks whether the RID mismatch warning has been logged.
 static HAS_LOGGED_RID_MISMATCH: OnceLock<()> = OnceLock::new();
+static HAS_LOGGED_PANDOC_PATH: OnceLock<()> = OnceLock::new();
 
 pub struct PandocExecutable {
     pub executable: String,
@@ -114,28 +117,43 @@ impl PandocProcessBuilder {
         // Any local installation should be preferred over the system-wide installation.
         let data_folder = PathBuf::from(DATA_DIRECTORY.get().unwrap());
         let local_installation_root_directory = data_folder.join("pandoc");
+        let executable_name = Self::pandoc_executable_name();
 
         if local_installation_root_directory.exists() {
-            let executable_name = Self::pandoc_executable_name();
+            if let Ok(pandoc_path) = Self::find_executable_in_dir(&local_installation_root_directory, &executable_name) {
+                HAS_LOGGED_PANDOC_PATH.get_or_init(|| {
+                    info!(Source = "PandocProcessBuilder"; "Found local Pandoc installation at: '{}'.", pandoc_path.to_string_lossy()
+                    );
+                });
 
-            if let Ok(entries) = fs::read_dir(&local_installation_root_directory) {
-                for entry in entries.flatten() {
-                    let path = entry.path();
-                    if path.is_dir() {
-                        if let Ok(pandoc_path) = Self::find_executable_in_dir(&path, &executable_name) {
-                            return PandocExecutable {
-                                executable: pandoc_path.to_string_lossy().to_string(),
-                                is_local_installation: true,
-                            };
-                        }
-                    }
-                }
+                return PandocExecutable {
+                    executable: pandoc_path.to_string_lossy().to_string(),
+                    is_local_installation: true,
+                };
+            }
+        }
+
+        for candidate in Self::system_pandoc_executable_candidates(&executable_name) {
+            if candidate.exists() && candidate.is_file() {
+                HAS_LOGGED_PANDOC_PATH.get_or_init(|| {
+                    info!(Source = "PandocProcessBuilder"; "Found system Pandoc installation at: '{}'.", candidate.to_string_lossy()
+                    );
+                });
+
+                return PandocExecutable {
+                    executable: candidate.to_string_lossy().to_string(),
+                    is_local_installation: false,
+                };
             }
         }
 
         // When no local installation was found, we assume that the pandoc executable is in the system PATH:
+        HAS_LOGGED_PANDOC_PATH.get_or_init(|| {
+            warn!(Source = "PandocProcessBuilder"; "Falling back to system PATH for the Pandoc executable: '{}'.", executable_name);
+        });
+
         PandocExecutable {
-            executable: Self::pandoc_executable_name(),
+            executable: executable_name,
             is_local_installation: false,
         }
     }
@@ -159,6 +177,56 @@ impl PandocProcessBuilder {
         }
 
         Err("Executable not found".into())
+    }
+
+    fn system_pandoc_executable_candidates(executable_name: &str) -> Vec<PathBuf> {
+        let mut candidates: Vec<PathBuf> = Vec::new();
+        match env::consts::OS {
+            "windows" => {
+                Self::push_env_candidate(&mut candidates, "LOCALAPPDATA", &["Pandoc", executable_name]);
+                Self::push_env_candidate(&mut candidates, "ProgramFiles", &["Pandoc", executable_name]);
+                Self::push_env_candidate(&mut candidates, "ProgramFiles(x86)", &["Pandoc", executable_name]);
+            },
+            "macos" => {
+                candidates.push(PathBuf::from("/opt/homebrew/bin").join(executable_name));
+                candidates.push(PathBuf::from("/usr/local/bin").join(executable_name));
+                candidates.push(PathBuf::from("/usr/bin").join(executable_name));
+            },
+            "linux" => {
+                candidates.push(PathBuf::from("/usr/local/bin").join(executable_name));
+                candidates.push(PathBuf::from("/usr/bin").join(executable_name));
+                candidates.push(PathBuf::from("/snap/bin").join(executable_name));
+
+                if let Some(home_dir) = env::var_os("HOME") {
+                    candidates.push(PathBuf::from(home_dir).join(".local").join("bin").join(executable_name));
+                }
+            },
+            _ => {},
+        }
+
+        if let Some(path_value) = env::var_os("PATH") {
+            for path_dir in env::split_paths(&path_value) {
+                candidates.push(path_dir.join(executable_name));
+            }
+        }
+
+        let mut seen = HashSet::new();
+        candidates
+            .into_iter()
+            .filter(|path| seen.insert(path.clone()))
+            .collect()
+    }
+
+    fn push_env_candidate(candidates: &mut Vec<PathBuf>, env_name: &str, parts: &[&str]) {
+        if let Some(root) = env::var_os(env_name) {
+            let mut path = PathBuf::from(root);
+
+            for part in parts {
+                path.push(part);
+            }
+
+            candidates.push(path);
+        }
     }
 
     /// Determines the executable name based on the current OS at runtime.
