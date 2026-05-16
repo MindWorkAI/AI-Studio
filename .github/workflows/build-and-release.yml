@@ -716,6 +716,12 @@ jobs:
         with:
           toolchain: ${{ env.RUST_VERSION }}
           targets: ${{ matrix.rust_target }}
+
+      - name: Cache Tauri CLI
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo-tauri-cli
+          key: tauri-cli-v2-${{ runner.os }}-${{ runner.arch }}
       
       - name: Setup dependencies (Ubuntu-specific, x86)
         if: matrix.platform == 'ubuntu-22.04' && contains(matrix.rust_target, 'x86_64')
@@ -732,8 +738,11 @@ jobs:
       - name: Setup Tauri (Unix)
         if: matrix.platform != 'windows-latest'
         run: |
+          echo "$HOME/.cargo-tauri-cli/bin" >> "$GITHUB_PATH"
+          export PATH="$HOME/.cargo-tauri-cli/bin:$PATH"
+
           if ! cargo tauri --version 2>/dev/null | grep -Eq '^tauri-cli 2\.'; then
-            cargo install tauri-cli --version "^2.11.0" --locked --force
+            cargo install tauri-cli --version "^2.11.0" --locked --force --root "$HOME/.cargo-tauri-cli"
           else
             echo "Tauri CLI v2 is already installed"
           fi
@@ -741,9 +750,12 @@ jobs:
       - name: Setup Tauri (Windows)
         if: matrix.platform == 'windows-latest'
         run: |
+          "$env:USERPROFILE\.cargo-tauri-cli\bin" >> $env:GITHUB_PATH
+          $env:PATH = "$env:USERPROFILE\.cargo-tauri-cli\bin;$env:PATH"
+
           $tauriVersion = cargo tauri --version 2>$null
           if (-not $tauriVersion -or $tauriVersion -notmatch '^tauri-cli 2\.') {
-            cargo install tauri-cli --version "^2.11.0" --locked --force
+            cargo install tauri-cli --version "^2.11.0" --locked --force --root "$env:USERPROFILE\.cargo-tauri-cli"
           } else {
             Write-Output "Tauri CLI v2 is already installed"
           }
