@@ -50,7 +50,7 @@ pub fn kill_stale_process(pid_file_path: PathBuf, sidecar_type: SidecarType) -> 
 
         let killed = process.kill_with(Signal::Kill).unwrap_or_else(|| process.kill());
         if !killed {
-            return Err(Error::new(ErrorKind::Other, "Failed to kill process"));
+            return Err(Error::other("Failed to kill process"));
         }
         info!(Source="Stale Process Cleanup";"{}: Killed process: \"{}\"", sidecar_type,pid_file_path.display());
     } else {
