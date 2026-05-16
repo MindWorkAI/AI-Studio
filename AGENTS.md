@@ -49,7 +49,7 @@ Currently, no automated test suite exists in the repository.
 Key modules:
 - `app_window.rs` - Tauri window management, updater integration
 - `dotnet.rs` - Launches and manages the .NET sidecar process
-- `runtime_api.rs` - Rocket-based HTTPS API for .NET ↔ Rust communication
+- `runtime_api.rs` - Axum-based HTTPS API for .NET ↔ Rust communication
 - `certificate.rs` - Generates self-signed TLS certificates for secure IPC
 - `secret.rs` - Secure secret storage using OS keyring (Keychain/Credential Manager)
 - `clipboard.rs` - Cross-platform clipboard operations
@@ -152,7 +152,7 @@ Multi-level confidence scheme allows users to control which providers see which 
 
 **Rust:**
 - Tauri 1.8 - Desktop application framework
-- Rocket - HTTPS API server
+- Axum - HTTPS API server
 - tokio - Async runtime
 - keyring - OS keyring integration
 - pdfium-render - PDF text extraction
