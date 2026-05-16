@@ -173,8 +173,8 @@ CONFIG["SETTINGS"] = {}
 
 -- Configure the enabled preview features:
 -- Allowed values are can be found in https://github.com/MindWorkAI/AI-Studio/app/MindWork%20AI%20Studio/Settings/DataModel/PreviewFeatures.cs
--- Examples are PRE_WRITER_MODE_2024, PRE_RAG_2024, PRE_SPEECH_TO_TEXT_2026.
--- CONFIG["SETTINGS"]["DataApp.EnabledPreviewFeatures"] = { "PRE_RAG_2024", "PRE_SPEECH_TO_TEXT_2026" }
+-- Examples are PRE_WRITER_MODE_2024 and PRE_RAG_2024.
+-- CONFIG["SETTINGS"]["DataApp.EnabledPreviewFeatures"] = { "PRE_RAG_2024" }
 
 -- Configure the preselected provider.
 -- It must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"].
