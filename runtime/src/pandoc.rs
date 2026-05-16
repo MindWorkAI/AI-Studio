@@ -119,18 +119,17 @@ impl PandocProcessBuilder {
         let local_installation_root_directory = data_folder.join("pandoc");
         let executable_name = Self::pandoc_executable_name();
 
-        if local_installation_root_directory.exists() {
-            if let Ok(pandoc_path) = Self::find_executable_in_dir(&local_installation_root_directory, &executable_name) {
-                HAS_LOGGED_PANDOC_PATH.get_or_init(|| {
-                    info!(Source = "PandocProcessBuilder"; "Found local Pandoc installation at: '{}'.", pandoc_path.to_string_lossy()
-                    );
-                });
+        if local_installation_root_directory.exists()
+            && let Ok(pandoc_path) = Self::find_executable_in_dir(&local_installation_root_directory, &executable_name) {
+            HAS_LOGGED_PANDOC_PATH.get_or_init(|| {
+                info!(Source = "PandocProcessBuilder"; "Found local Pandoc installation at: '{}'.", pandoc_path.to_string_lossy()
+                );
+            });
 
-                return PandocExecutable {
-                    executable: pandoc_path.to_string_lossy().to_string(),
-                    is_local_installation: true,
-                };
-            }
+            return PandocExecutable {
+                executable: pandoc_path.to_string_lossy().to_string(),
+                is_local_installation: true,
+            };
         }
 
         for candidate in Self::system_pandoc_executable_candidates(&executable_name) {
@@ -168,10 +167,8 @@ impl PandocProcessBuilder {
         if let Ok(entries) = fs::read_dir(dir) {
             for entry in entries.flatten() {
                 let path = entry.path();
-                if path.is_dir() {
-                    if let Ok(found_path) = Self::find_executable_in_dir(&path, executable_name) {
-                        return Ok(found_path);
-                    }
+                if path.is_dir() && let Ok(found_path) = Self::find_executable_in_dir(&path, executable_name) {
+                    return Ok(found_path);
                 }
             }
         }
@@ -240,33 +237,31 @@ impl PandocProcessBuilder {
             let runtime_os = std::env::consts::OS;
             let runtime_arch = std::env::consts::ARCH;
 
-            if let Ok(metadata) = META_DATA.lock() {
-                if let Some(metadata) = metadata.as_ref() {
-                    let metadata_arch = &metadata.architecture;
+            if let Ok(metadata) = META_DATA.lock() && let Some(metadata) = metadata.as_ref() {
+                let metadata_arch = &metadata.architecture;
 
-                    // Determine expected OS from metadata:
-                    let metadata_is_windows = metadata_arch.starts_with("win-");
-                    let metadata_is_macos = metadata_arch.starts_with("osx-");
-                    let metadata_is_linux = metadata_arch.starts_with("linux-");
+                // Determine expected OS from metadata:
+                let metadata_is_windows = metadata_arch.starts_with("win-");
+                let metadata_is_macos = metadata_arch.starts_with("osx-");
+                let metadata_is_linux = metadata_arch.starts_with("linux-");
 
-                    // Compare with runtime OS:
-                    let runtime_is_windows = runtime_os == "windows";
-                    let runtime_is_macos = runtime_os == "macos";
-                    let runtime_is_linux = runtime_os == "linux";
+                // Compare with runtime OS:
+                let runtime_is_windows = runtime_os == "windows";
+                let runtime_is_macos = runtime_os == "macos";
+                let runtime_is_linux = runtime_os == "linux";
 
-                    let os_mismatch = (metadata_is_windows != runtime_is_windows)
-                        || (metadata_is_macos != runtime_is_macos)
-                        || (metadata_is_linux != runtime_is_linux);
+                let os_mismatch = (metadata_is_windows != runtime_is_windows)
+                    || (metadata_is_macos != runtime_is_macos)
+                    || (metadata_is_linux != runtime_is_linux);
 
-                    if os_mismatch {
-                        warn!(
-                            Source = "Pandoc";
-                            "Runtime-detected OS '{}-{}' differs from metadata architecture '{}'. Using runtime-detected OS. This is expected on dev machines where metadata.txt may be outdated.",
-                            runtime_os,
-                            runtime_arch,
-                            metadata_arch
-                        );
-                    }
+                if os_mismatch {
+                    warn!(
+                        Source = "Pandoc";
+                        "Runtime-detected OS '{}-{}' differs from metadata architecture '{}'. Using runtime-detected OS. This is expected on dev machines where metadata.txt may be outdated.",
+                        runtime_os,
+                        runtime_arch,
+                        metadata_arch
+                    );
                 }
             }
         });

@@ -87,10 +87,8 @@ fn normalize_locale_tag(locale: &str) -> Option<String> {
         return None;
     }
 
-    if let Some(region) = segments.next() {
-        if region.len() == 2 && region.chars().all(|c| c.is_ascii_alphabetic()) {
-            return Some(format!("{}-{}", language, region.to_ascii_uppercase()));
-        }
+    if let Some(region) = segments.next() && region.len() == 2 && region.chars().all(|c| c.is_ascii_alphabetic()) {
+        return Some(format!("{}-{}", language, region.to_ascii_uppercase()));
     }
 
     Some(language)
@@ -418,10 +416,9 @@ fn load_policy_values_from_directories(directories: &[PathBuf]) -> HashMap<Strin
         }
 
         let secret_path = directory.join(ENTERPRISE_POLICY_SECRET_FILE_NAME);
-        if let Some(secret_values) = read_policy_yaml_mapping(&secret_path) {
-            if let Some(secret) = secret_values.get("config_encryption_secret") {
-                insert_first_non_empty_value(&mut values, "config_encryption_secret", secret);
-            }
+        if let Some(secret_values) = read_policy_yaml_mapping(&secret_path)
+            && let Some(secret) = secret_values.get("config_encryption_secret") {
+            insert_first_non_empty_value(&mut values, "config_encryption_secret", secret);
         }
     }
 

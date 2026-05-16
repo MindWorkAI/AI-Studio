@@ -100,12 +100,10 @@ pub async fn qdrant_port(_token: APIToken) -> Json<ProvideQdrantInfo> {
 /// Starts the Qdrant server in a separate process.
 pub fn start_qdrant_server<R: tauri::Runtime>(app_handle: tauri::AppHandle<R>){
     let path = qdrant_base_path();
-    if !path.exists() {
-        if let Err(e) = fs::create_dir_all(&path){
-            error!(Source="Qdrant"; "The required directory to host the Qdrant database could not be created: {}", e);
-            set_qdrant_unavailable(format!("The Qdrant data directory could not be created: {e}"));
-            return;
-        };
+    if !path.exists() && let Err(e) = fs::create_dir_all(&path){
+        error!(Source="Qdrant"; "The required directory to host the Qdrant database could not be created: {}", e);
+        set_qdrant_unavailable(format!("The Qdrant data directory could not be created: {e}"));
+        return;
     }
 
     let (cert_path, key_path) = match create_temp_tls_files(&path) {

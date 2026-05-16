@@ -245,10 +245,8 @@ fn should_open_in_system_browser<R: tauri::Runtime>(webview: &tauri::Webview<R>,
         }
     }
 
-    if let Ok(current_url) = webview.url() {
-        if same_origin(&current_url, url) {
-            return false;
-        }
+    if let Ok(current_url) = webview.url() && same_origin(&current_url, url) {
+        return false;
     }
 
     !is_local_host(url.host_str())
@@ -415,10 +413,8 @@ pub async fn change_location_to(url: &str) {
         }
     }
 
-    if let Ok(parsed_url) = tauri::Url::parse(url) {
-        if is_local_http_url(&parsed_url) {
-            *APPROVED_APP_URL.lock().unwrap() = Some(parsed_url);
-        }
+    if let Ok(parsed_url) = tauri::Url::parse(url) && is_local_http_url(&parsed_url) {
+        *APPROVED_APP_URL.lock().unwrap() = Some(parsed_url);
     }
 
     let js_location_change = format!("window.location = '{url}';");
@@ -685,12 +681,10 @@ pub async fn register_shortcut(_token: APIToken, payload: Json<RegisterShortcutR
     let mut registered_shortcuts = REGISTERED_SHORTCUTS.lock().unwrap();
 
     // Unregister the old shortcut if one exists for this name:
-    if let Some(old_shortcut) = registered_shortcuts.get(&id) {
-        if !old_shortcut.is_empty() {
-            match shortcut_manager.unregister(old_shortcut.as_str()) {
-                Ok(_) => info!(Source = "Tauri"; "Unregistered old shortcut '{old_shortcut}' for '{}'.", id),
-                Err(error) => warn!(Source = "Tauri"; "Failed to unregister old shortcut '{old_shortcut}': {error}"),
-            }
+    if let Some(old_shortcut) = registered_shortcuts.get(&id) && !old_shortcut.is_empty() {
+        match shortcut_manager.unregister(old_shortcut.as_str()) {
+            Ok(_) => info!(Source = "Tauri"; "Unregistered old shortcut '{old_shortcut}' for '{}'.", id),
+            Err(error) => warn!(Source = "Tauri"; "Failed to unregister old shortcut '{old_shortcut}': {error}"),
         }
     }
 
