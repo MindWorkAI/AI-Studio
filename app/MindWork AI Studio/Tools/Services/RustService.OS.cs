@@ -32,4 +32,35 @@ public sealed partial class RustService
             this.userLanguageLock.Release();
         }
     }
+
+    public async Task<string> ReadUserName(bool forceRequest = false)
+    {
+        if (!forceRequest && !string.IsNullOrWhiteSpace(this.cachedUserName))
+            return this.cachedUserName;
+
+        await this.userNameLock.WaitAsync();
+        try
+        {
+            if (!forceRequest && !string.IsNullOrWhiteSpace(this.cachedUserName))
+                return this.cachedUserName;
+
+            var response = await this.http.GetAsync("/system/username");
+            if (!response.IsSuccessStatusCode)
+            {
+                this.logger!.LogError($"Failed to read the user name from Rust: '{response.StatusCode}'");
+                return string.Empty;
+            }
+
+            var userName = (await response.Content.ReadAsStringAsync()).Trim();
+            if (string.IsNullOrWhiteSpace(userName))
+                return string.Empty;
+
+            this.cachedUserName = userName;
+            return userName;
+        }
+        finally
+        {
+            this.userNameLock.Release();
+        }
+    }
 }

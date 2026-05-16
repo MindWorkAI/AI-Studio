@@ -89,6 +89,9 @@ public partial class SettingsDialogDataSources : SettingsDialogBase
     
     private async Task EditDataSource(IDataSource dataSource)
     {
+        if (dataSource.IsEnterpriseConfiguration)
+            return;
+
         IDataSource? editedDataSource = null;
         switch (dataSource)
         {
@@ -151,6 +154,9 @@ public partial class SettingsDialogDataSources : SettingsDialogBase
     
     private async Task DeleteDataSource(IDataSource dataSource)
     {
+        if (dataSource.IsEnterpriseConfiguration)
+            return;
+
         var dialogParameters = new DialogParameters<ConfirmDialog>
         {
             { x => x.Message, string.Format(T("Are you sure you want to delete the data source '{0}' of type {1}?"), dataSource.Name, dataSource.Type.GetDisplayName()) },

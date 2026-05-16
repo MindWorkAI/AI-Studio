@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 
 using AIStudio.Chat;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.RAG;
 
 namespace AIStudio.Settings;
@@ -13,7 +14,7 @@ namespace AIStudio.Settings;
 [JsonDerivedType(typeof(DataSourceLocalDirectory), nameof(DataSourceType.LOCAL_DIRECTORY))]
 [JsonDerivedType(typeof(DataSourceLocalFile), nameof(DataSourceType.LOCAL_FILE))]
 [JsonDerivedType(typeof(DataSourceERI_V1), nameof(DataSourceType.ERI_V1))]
-public interface IDataSource
+public interface IDataSource : IConfigurationObject
 {
     /// <summary>
     /// The number of the data source.
@@ -39,6 +40,16 @@ public interface IDataSource
     /// Which data security policy is applied to this data source?
     /// </summary>
     public DataSourceSecurity SecurityPolicy { get; init; }
+
+    /// <summary>
+    /// Is this data source an enterprise configuration?
+    /// </summary>
+    public bool IsEnterpriseConfiguration { get; init; }
+
+    /// <summary>
+    /// The ID of the enterprise configuration plugin.
+    /// </summary>
+    public Guid EnterpriseConfigurationPluginId { get; init; }
     
     /// <summary>
     /// The maximum number of matches to return when retrieving data from the ERI server.

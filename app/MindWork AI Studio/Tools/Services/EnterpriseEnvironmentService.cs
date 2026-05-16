@@ -263,7 +263,9 @@ public sealed class EnterpriseEnvironmentService(ILogger<EnterpriseEnvironmentSe
         {
             try
             {
-                var deleteResult = await rustService.DeleteAPIKey(target, target.StoreType);
+                var deleteResult = target.StoreType is { } storeType
+                    ? await rustService.DeleteAPIKey(target, storeType)
+                    : await rustService.DeleteSecret(target);
                 if (deleteResult.Success)
                 {
                     if (deleteResult.WasEntryFound)
@@ -289,13 +291,14 @@ public sealed class EnterpriseEnvironmentService(ILogger<EnterpriseEnvironmentSe
         AddEnterpriseManagedSecretTargets(configurationData.Providers, SecretStoreType.LLM_PROVIDER, secretTargets);
         AddEnterpriseManagedSecretTargets(configurationData.EmbeddingProviders, SecretStoreType.EMBEDDING_PROVIDER, secretTargets);
         AddEnterpriseManagedSecretTargets(configurationData.TranscriptionProviders, SecretStoreType.TRANSCRIPTION_PROVIDER, secretTargets);
+        AddEnterpriseManagedSecretTargets(configurationData.DataSources.OfType<IExternalDataSource>(), null, secretTargets);
 
         return secretTargets.ToList();
     }
 
     private static void AddEnterpriseManagedSecretTargets<TSecret>(
         IEnumerable<TSecret> secrets,
-        SecretStoreType storeType,
+        SecretStoreType? storeType,
         ISet<EnterpriseSecretTarget> secretTargets) where TSecret : ISecretId, IConfigurationObject
     {
         foreach (var secret in secrets)

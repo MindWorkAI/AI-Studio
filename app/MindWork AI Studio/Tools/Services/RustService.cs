@@ -18,6 +18,7 @@ public sealed partial class RustService : BackgroundService
     
     private readonly HttpClient http;
     private readonly SemaphoreSlim userLanguageLock = new(1, 1);
+    private readonly SemaphoreSlim userNameLock = new(1, 1);
 
     private readonly JsonSerializerOptions jsonRustSerializerOptions = new()
     {
@@ -31,6 +32,7 @@ public sealed partial class RustService : BackgroundService
     private ILogger<RustService>? logger;
     private Encryption? encryptor;
     private string? cachedUserLanguage;
+    private string? cachedUserName;
     
     private readonly string apiPort;
     private readonly string certificateFingerprint;
@@ -91,6 +93,7 @@ public sealed partial class RustService : BackgroundService
     {
         this.http.Dispose();
         this.userLanguageLock.Dispose();
+        this.userNameLock.Dispose();
         base.Dispose();
     }
 

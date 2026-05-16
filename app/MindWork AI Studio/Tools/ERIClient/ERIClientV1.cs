@@ -2,6 +2,7 @@ using System.Text;
 using System.Text.Json;
 
 using AIStudio.Settings;
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools.ERIClient.DataModel;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Services;
@@ -102,6 +103,19 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
                     }
             
                 case AuthMethod.USERNAME_PASSWORD:
+                    if (this.DataSource.UsernamePasswordMode is DataSourceERIUsernamePasswordMode.OS_USERNAME_SHARED_PASSWORD)
+                    {
+                        username = await rustService.ReadUserName();
+                        if (string.IsNullOrWhiteSpace(username))
+                        {
+                            return new()
+                            {
+                                Successful = false,
+                                Message = TB("Failed to read the user's username from the operating system.")
+                            };
+                        }
+                    }
+
                     string password;
                     if (string.IsNullOrWhiteSpace(temporarySecret))
                     {

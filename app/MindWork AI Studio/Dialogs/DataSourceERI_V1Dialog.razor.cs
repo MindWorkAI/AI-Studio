@@ -169,6 +169,7 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
             Hostname = cleanedHostname.EndsWith('/') ? cleanedHostname[..^1] : cleanedHostname,
             AuthMethod = this.dataAuthMethod,
             Username = this.dataUsername,
+            UsernamePasswordMode = DataSourceERIUsernamePasswordMode.USER_MANAGED,
             Type = DataSourceType.ERI_V1,
             SecurityPolicy = this.dataSecurityPolicy,
             SelectedRetrievalId = this.dataSelectedRetrievalProcess.Id,
