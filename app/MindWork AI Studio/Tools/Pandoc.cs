@@ -244,12 +244,7 @@ public static partial class Pandoc
                 return;
             }
 
-            if (!await IsPandocExecutableValidAsync(stagedPandocExecutable))
-            {
-                await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.Error, TB("Pandoc was not installed successfully, because the downloaded executable could not be validated.")));
-                LOG.LogError("Pandoc was not installed, the downloaded executable could not be validated: '{Executable}'.", stagedPandocExecutable);
-                return;
-            }
+            LOG.LogInformation("Found Pandoc executable in downloaded archive: '{Executable}'.", stagedPandocExecutable);
 
             await ReplaceInstallationDirectoryAsync(stagingDir, installDir);
             await MessageBus.INSTANCE.SendSuccess(new(Icons.Material.Filled.CheckCircle, string.Format(TB("Pandoc v{0} was installed successfully."), latestVersion)));
@@ -257,6 +252,7 @@ public static partial class Pandoc
         }
         catch (Exception ex)
         {
+            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Error, TB("Pandoc was not installed successfully.")));
             LOG.LogError(ex, "An error occurred while installing Pandoc.");
         }
         finally
@@ -274,70 +270,41 @@ public static partial class Pandoc
     {
         var backupDir = $"{installDir}.backup-{Guid.NewGuid():N}";
         var hasBackup = false;
+        var stagingWasMoved = false;
 
         try
         {
             if (Directory.Exists(installDir))
             {
-                Directory.Move(installDir, backupDir);
+                await MoveDirectoryWithRetriesAsync(installDir, backupDir, "moving the previous Pandoc installation to backup");
                 hasBackup = true;
             }
 
-            Directory.Move(stagingDir, installDir);
+            await MoveDirectoryWithRetriesAsync(stagingDir, installDir, "moving the new Pandoc installation into place");
+            stagingWasMoved = true;
         }
         catch (Exception ex)
         {
-            if (hasBackup && !Directory.Exists(installDir) && Directory.Exists(backupDir))
-                Directory.Move(backupDir, installDir);
+            if (hasBackup && !stagingWasMoved && !Directory.Exists(installDir) && Directory.Exists(backupDir))
+            {
+                try
+                {
+                    await MoveDirectoryWithRetriesAsync(backupDir, installDir, "restoring the previous Pandoc installation");
+                    hasBackup = false;
+                }
+                catch (Exception rollbackEx)
+                {
+                    LOG.LogError(rollbackEx, "Error restoring previous Pandoc installation directory. Keeping backup directory at: '{BackupDir}'.", backupDir);
+                }
+            }
 
             LOG.LogError(ex, "Error replacing pandoc installation directory.");
             throw;
         }
         finally
         {
-            if (hasBackup && Directory.Exists(backupDir))
+            if (hasBackup && stagingWasMoved && Directory.Exists(backupDir))
                 await TryDeleteFolderAsync(backupDir);
-        }
-    }
-
-    private static async Task<bool> IsPandocExecutableValidAsync(string executable)
-    {
-        try
-        {
-            var startInfo = new ProcessStartInfo
-            {
-                FileName = executable,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-            startInfo.ArgumentList.Add("--version");
-
-            using var process = Process.Start(startInfo);
-            if (process is null)
-                return false;
-
-            var outputTask = process.StandardOutput.ReadToEndAsync();
-            var errorTask = process.StandardError.ReadToEndAsync();
-
-            await process.WaitForExitAsync();
-            var output = await outputTask;
-            var error = await errorTask;
-
-            if (process.ExitCode is not 0)
-            {
-                LOG.LogError("Downloaded Pandoc executable exited with code {ProcessExitCode}. Error output: '{ErrorText}'", process.ExitCode, error);
-                return false;
-            }
-
-            var versionMatch = PandocCmdRegex().Match(output);
-            return versionMatch.Success && Version.Parse(versionMatch.Groups[1].Value) >= MINIMUM_REQUIRED_VERSION;
-        }
-        catch (Exception ex)
-        {
-            LOG.LogError(ex, "Error validating downloaded Pandoc executable.");
-            return false;
         }
     }
 
@@ -360,19 +327,30 @@ public static partial class Pandoc
         return string.Empty;
     }
 
-    private static async Task RunWithRetriesAsync(Func<Task> operation, string operationName)
+    private static async Task MoveDirectoryWithRetriesAsync(string sourceDir, string destinationDir, string operationName)
     {
-        const int MAX_ATTEMPTS = 4;
-        for (var attempt = 1; attempt <= MAX_ATTEMPTS; attempt++)
+        await RunWithRetriesAsync(
+            () =>
+            {
+                Directory.Move(sourceDir, destinationDir);
+                return Task.CompletedTask;
+            },
+            operationName,
+            maxAttempts: 8);
+    }
+
+    private static async Task RunWithRetriesAsync(Func<Task> operation, string operationName, int maxAttempts = 4)
+    {
+        for (var attempt = 1; attempt <= maxAttempts; attempt++)
         {
             try
             {
                 await operation();
                 return;
             }
-            catch (Exception ex) when (attempt < MAX_ATTEMPTS && ex is IOException or UnauthorizedAccessException)
+            catch (Exception ex) when (attempt < maxAttempts && ex is IOException or UnauthorizedAccessException)
             {
-                LOG.LogWarning(ex, "Error while {OperationName}; retrying attempt {Attempt}/{MaxAttempts}.", operationName, attempt + 1, MAX_ATTEMPTS);
+                LOG.LogWarning(ex, "Error while {OperationName}; retrying attempt {Attempt}/{MaxAttempts}.", operationName, attempt + 1, maxAttempts);
                 await Task.Delay(TimeSpan.FromMilliseconds(250 * attempt));
             }
         }
@@ -406,7 +384,8 @@ public static partial class Pandoc
                     Directory.Delete(path, true);
                     return Task.CompletedTask;
                 },
-                $"deleting temporary Pandoc directory '{path}'");
+                $"deleting temporary Pandoc directory '{path}'",
+                maxAttempts: 3);
         }
         catch (Exception ex)
         {
