@@ -39,9 +39,40 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         {
             // Store any decrypted API keys from enterprise configuration in the OS keyring:
             await StoreEnterpriseApiKeysAsync();
+            await StoreEnterpriseSecretsAsync();
 
             await SETTINGS_MANAGER.StoreSettings();
             await MessageBus.INSTANCE.SendMessage<bool>(null, Event.CONFIGURATION_CHANGED);
+        }
+    }
+
+    /// <summary>
+    /// Stores any pending enterprise secrets in the OS keyring.
+    /// </summary>
+    private static async Task StoreEnterpriseSecretsAsync()
+    {
+        var pendingSecrets = PendingEnterpriseSecrets.GetAndClear();
+        if (pendingSecrets.Count == 0)
+            return;
+
+        LOG.LogInformation($"Storing {pendingSecrets.Count} enterprise secret(s) in the OS keyring.");
+        var rustService = Program.SERVICE_PROVIDER.GetRequiredService<RustService>();
+        foreach (var pendingSecret in pendingSecrets)
+        {
+            try
+            {
+                var secretId = new TemporarySecretId(pendingSecret.SecretId, pendingSecret.SecretName);
+                var result = await rustService.SetSecret(secretId, pendingSecret.SecretData, pendingSecret.StoreType);
+
+                if (result.Success)
+                    LOG.LogDebug($"Successfully stored enterprise secret for '{pendingSecret.SecretName}' in the OS keyring.");
+                else
+                    LOG.LogWarning($"Failed to store enterprise secret for '{pendingSecret.SecretName}': {result.Issue}");
+            }
+            catch (Exception ex)
+            {
+                LOG.LogError(ex, $"Exception while storing enterprise secret for '{pendingSecret.SecretName}'.");
+            }
         }
     }
 
@@ -152,6 +183,9 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
 
         // Handle configured chat templates:
         PluginConfigurationObject.TryParse(PluginConfigurationObjectType.CHAT_TEMPLATE, x => x.ChatTemplates, x => x.NextChatTemplateNum, mainTable, this.Id, ref this.configObjects, dryRun);
+
+        // Handle configured data sources:
+        PluginConfigurationObject.TryParseDataSources(mainTable, this.Id, ref this.configObjects, dryRun);
         
         // Handle configured profiles:
         PluginConfigurationObject.TryParse(PluginConfigurationObjectType.PROFILE, x => x.Profiles, x => x.NextProfileNum, mainTable, this.Id, ref this.configObjects, dryRun);

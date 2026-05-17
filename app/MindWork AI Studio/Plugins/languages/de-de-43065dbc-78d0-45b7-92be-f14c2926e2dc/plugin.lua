@@ -3684,6 +3684,27 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T742006305"] = "
 -- Embeddings
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T951463987"] = "Einbettungen"
 
+-- Use the same username and password for all users
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1USERNAMEPASSWORDEXPORTDIALOG::T1769874785"] = "Für alle Benutzer denselben Benutzernamen und dasselbe Passwort verwenden"
+
+-- Username and password mode
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1USERNAMEPASSWORDEXPORTDIALOG::T1787063064"] = "Modus für den Benutzernamen und das Passwort"
+
+-- How should AI Studio export the username and password configuration for the ERI v1 data source '{0}'?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1USERNAMEPASSWORDEXPORTDIALOG::T3081234668"] = "Wie soll AI Studio die Konfiguration von Benutzername und Passwort für die ERI-v1-Datenquelle „{0}“ exportieren?"
+
+-- User-managed username and password
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1USERNAMEPASSWORDEXPORTDIALOG::T365340972"] = "Vom Benutzer verwaltete Anmeldedaten (Benutzername und Passwort)"
+
+-- Export
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1USERNAMEPASSWORDEXPORTDIALOG::T3898821075"] = "Exportieren"
+
+-- Read each user's username from the operating system and share one password
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1USERNAMEPASSWORDEXPORTDIALOG::T76405695"] = "Den Benutzernamen jedes Benutzers aus dem Betriebssystem auslesen und ein Passwort teilen."
+
+-- Cancel
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1USERNAMEPASSWORDEXPORTDIALOG::T900713019"] = "Abbrechen"
+
 -- Describe what data this directory contains to help the AI select it.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T1136409150"] = "Beschreiben Sie, welche Daten dieses Verzeichnis enthält, um der KI bei der Auswahl zu helfen."
 
@@ -4812,6 +4833,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T145419
 -- Delete
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T1469573738"] = "Löschen"
 
+-- Kerberos/SSO ERI data sources cannot be exported yet. Please configure them manually in the configuration plugin.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T1577531115"] = "Kerberos-/SSO-ERI-Datenquellen können noch nicht exportiert werden. Bitte konfigurieren Sie diese manuell im Konfigurations-Plugin."
+
+-- Cannot export this ERI data source because the authentication secret could not be encrypted.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T1592527757"] = "Diese ERI-Datenquelle kann nicht exportiert werden, da das Authentifizierungsgeheimnis nicht verschlüsselt werden konnte."
+
 -- External (ERI)
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T1652430727"] = "Extern (ERI)"
 
@@ -4842,6 +4869,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T269820
 -- Embedding
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T2838542994"] = "Einbettung"
 
+-- This data source is managed by your organization.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T3031462878"] = "Diese Datenquelle wird von Ihrer Organisation verwaltet."
+
 -- Edit
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T3267849393"] = "Bearbeiten"
 
@@ -4866,8 +4896,17 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T352566
 -- No data sources configured yet.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T3549650120"] = "Noch keine Datenquellen konfiguriert."
 
+-- Export Access Token?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T3595669127"] = "Zugriffstoken exportieren?"
+
+-- Export ERI Data Source
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T3831281036"] = "ERI-Datenquelle exportieren"
+
 -- Actions
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T3865031940"] = "Aktionen"
+
+-- This ERI data source has an access token configured. Do you want to include the encrypted access token in the export? Note: The recipient will need the same encryption secret to use the access token.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T4027572258"] = "Für diese ERI-Datenquelle ist ein Zugriffstoken konfiguriert. Möchten Sie das verschlüsselte Zugriffstoken in den Export aufnehmen? Hinweis: Der Empfänger benötigt dasselbe Geheimnis für die Verschlüsselung, um das Zugriffstoken verwenden zu können."
 
 -- Configured Data Sources
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T543942217"] = "Konfigurierte Datenquellen"
@@ -4875,11 +4914,20 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T543942
 -- Add ERI v1 Data Source
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T590005498"] = "ERI v1 Datenquelle hinzufügen"
 
+-- Cannot export this ERI data source because no enterprise encryption secret is configured.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T750361472"] = "Diese ERI-Datenquelle kann nicht exportiert werden, da kein Geheimnis für die Verschlüsselung konfiguriert ist."
+
 -- External Data (ERI-Server v1)
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T774473996"] = "Externe Daten (ERI-Server v1)"
 
+-- Cannot export this ERI data source because no authentication secret is configured. The issue was: {0}
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T782820095"] = "Diese ERI-Datenquelle kann nicht exportiert werden, da kein Authentifizierungsgeheimnis konfiguriert ist. Das Problem war: {0}"
+
 -- Local Directory
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T926703547"] = "Lokaler Ordner"
+
+-- Export configuration
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T975426229"] = "Konfiguration exportieren"
 
 -- When enabled, you can preselect some ERI server options.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGERISERVER::T1280666275"] = "Wenn aktiviert, können Sie einige ERI-Serveroptionen vorauswählen."
@@ -6171,6 +6219,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3574465749"] = "nicht verfügbar
 -- This library is used to read Excel and OpenDocument spreadsheet files. This is necessary, e.g., for using spreadsheets as a data source for a chat.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3722989559"] = "Diese Bibliothek wird verwendet, um Excel- und OpenDocument-Tabellendateien zu lesen. Dies ist zum Beispiel notwendig, wenn Tabellen als Datenquelle für einen Chat verwendet werden sollen."
 
+-- Username provided by the OS
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3764549776"] = "Vom Betriebssystem bereitgestellter Benutzername"
+
 -- this version does not met the requirements
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3813932670"] = "diese Version erfüllt die Anforderungen nicht"
 
@@ -6191,6 +6242,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4010195468"] = "Versionen"
 
 -- Database
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4036243672"] = "Datenbank"
+
+-- This library is used by the Rust runtime to read the current user's username, e.g. when an organization-managed ERI server uses the OS username for authentication.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4060906280"] = "Diese Bibliothek wird von der Rust-Laufzeitumgebung verwendet, um den Benutzernamen des aktuellen Benutzers auszulesen, z. B. wenn ein von einer Organisation verwalteter ERI-Server den OS-Benutzernamen für die Authentifizierung verwendet."
 
 -- This library is used to create asynchronous streams in Rust. It allows us to work with streams of data that can be produced asynchronously, making it easier to handle events or data that arrive over time. We use this, e.g., to stream arbitrary data from the file system to the embedding system.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4079152443"] = "Diese Bibliothek wird verwendet, um asynchrone Datenströme in Rust zu erstellen. Sie ermöglicht es uns, mit Datenströmen zu arbeiten, die asynchron bereitgestellt werden, wodurch sich Ereignisse oder Daten, die nach und nach eintreffen, leichter verarbeiten lassen. Wir nutzen dies zum Beispiel, um beliebige Daten aus dem Dateisystem an das Einbettungssystem zu übertragen."
@@ -6930,6 +6984,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T2858189239"] = "Authe
 -- Failed to retrieve the security requirements: the request was canceled either by the user or due to a timeout.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T286437836"] = "Die Sicherheitsanforderungen konnten nicht abgerufen werden: Die Anfrage wurde entweder vom Benutzer abgebrochen oder ist aufgrund eines Zeitüberschreitungsfehlers fehlgeschlagen."
 
+-- Failed to read the user's username from the operating system.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T2909734556"] = "Der Benutzername konnte nicht aus dem Betriebssystem ausgelesen werden."
+
 -- Failed to retrieve the security requirements due to an exception: {0}
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T3221004295"] = "Die Sicherheitsanforderungen konnten wegen eines Problems nicht abgerufen werden: {0}"
 
@@ -7505,6 +7562,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PANDOCAVAILABILITYSERVICE::T18544701
 
 -- Pandoc may be required for importing files.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PANDOCAVAILABILITYSERVICE::T2596465560"] = "Zum Importieren von Dateien kann Pandoc erforderlich sein."
+
+-- Failed to store the secret data due to an API issue.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T1110203516"] = "Fehler beim Speichern der geheimen Daten aufgrund eines API-Problems."
 
 -- Failed to delete the secret data due to an API issue.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T2303057928"] = "Das Löschen der geheimen Daten ist aufgrund eines API-Problems fehlgeschlagen."

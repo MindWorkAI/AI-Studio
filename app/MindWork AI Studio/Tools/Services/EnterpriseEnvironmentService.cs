@@ -200,7 +200,7 @@ public sealed class EnterpriseEnvironmentService(ILogger<EnterpriseEnvironmentSe
             {
                 logger.LogInformation("The enterprise encryption secret changed. Refreshing the enterprise encryption service and reloading plugins.");
                 PluginFactory.InitializeEnterpriseEncryption(enterpriseEncryptionSecret);
-                await this.RemoveEnterpriseManagedApiKeysAsync();
+                await this.RemoveEnterpriseManagedSecretsAsync();
                 await PluginFactory.LoadAll();
             }
 
@@ -249,34 +249,36 @@ public sealed class EnterpriseEnvironmentService(ILogger<EnterpriseEnvironmentSe
         return serverUrl.Trim().TrimEnd('/');
     }
 
-    private async Task RemoveEnterpriseManagedApiKeysAsync()
+    private async Task RemoveEnterpriseManagedSecretsAsync()
     {
         var secretTargets = GetEnterpriseManagedSecretTargets();
         if (secretTargets.Count == 0)
         {
-            logger.LogInformation("No enterprise-managed API keys are currently known in the settings. No keyring cleanup is required.");
+            logger.LogInformation("No enterprise-managed secrets are currently known in the settings. No keyring cleanup is required.");
             return;
         }
 
-        logger.LogInformation("Removing {SecretCount} enterprise-managed API key(s) from the OS keyring after an enterprise encryption secret change.", secretTargets.Count);
+        logger.LogInformation("Removing {SecretCount} enterprise-managed secret(s) from the OS keyring after an enterprise encryption secret change.", secretTargets.Count);
         foreach (var target in secretTargets)
         {
             try
             {
-                var deleteResult = await rustService.DeleteAPIKey(target, target.StoreType);
+                var deleteResult = target.StoreType is SecretStoreType.DATA_SOURCE
+                    ? await rustService.DeleteSecret(target, target.StoreType)
+                    : await rustService.DeleteAPIKey(target, target.StoreType);
                 if (deleteResult.Success)
                 {
                     if (deleteResult.WasEntryFound)
-                        logger.LogInformation("Successfully deleted enterprise-managed API key '{SecretName}' from the OS keyring.", target.SecretName);
+                        logger.LogInformation("Successfully deleted enterprise-managed secret '{SecretName}' from the OS keyring.", target.SecretName);
                     else
-                        logger.LogInformation("Enterprise-managed API key '{SecretName}' was already absent from the OS keyring.", target.SecretName);
+                        logger.LogInformation("Enterprise-managed secret '{SecretName}' was already absent from the OS keyring.", target.SecretName);
                 }
                 else
-                    logger.LogWarning("Failed to delete enterprise-managed API key '{SecretName}' from the OS keyring: {Issue}", target.SecretName, deleteResult.Issue);
+                    logger.LogWarning("Failed to delete enterprise-managed secret '{SecretName}' from the OS keyring: {Issue}", target.SecretName, deleteResult.Issue);
             }
             catch (Exception e)
             {
-                logger.LogWarning(e, "Failed to delete enterprise-managed API key '{SecretName}' from the OS keyring.", target.SecretName);
+                logger.LogWarning(e, "Failed to delete enterprise-managed secret '{SecretName}' from the OS keyring.", target.SecretName);
             }
         }
     }
@@ -289,6 +291,7 @@ public sealed class EnterpriseEnvironmentService(ILogger<EnterpriseEnvironmentSe
         AddEnterpriseManagedSecretTargets(configurationData.Providers, SecretStoreType.LLM_PROVIDER, secretTargets);
         AddEnterpriseManagedSecretTargets(configurationData.EmbeddingProviders, SecretStoreType.EMBEDDING_PROVIDER, secretTargets);
         AddEnterpriseManagedSecretTargets(configurationData.TranscriptionProviders, SecretStoreType.TRANSCRIPTION_PROVIDER, secretTargets);
+        AddEnterpriseManagedSecretTargets(configurationData.DataSources.OfType<IExternalDataSource>(), SecretStoreType.DATA_SOURCE, secretTargets);
 
         return secretTargets.ToList();
     }

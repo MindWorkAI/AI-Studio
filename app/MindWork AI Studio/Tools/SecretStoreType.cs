@@ -1,10 +1,10 @@
 namespace AIStudio.Tools;
 
 /// <summary>
-/// Represents the type of secret store used for API keys.
+/// Represents the type of secret store used for API keys and other secrets.
 /// </summary>
 /// <remarks>
-/// Different provider types use different prefixes for storing API keys.
+/// Different provider and secret types use different prefixes for storing secrets.
 /// This prevents collisions when the same instance name is used across
 /// different provider types (e.g., LLM, Embedding, Transcription).
 /// </remarks>
@@ -29,4 +29,9 @@ public enum SecretStoreType
     /// Image provider secrets. Uses the "image::" prefix.
     /// </summary>
     IMAGE_PROVIDER,
+
+    /// <summary>
+    /// Data source secrets. Uses the "data-source::" prefix.
+    /// </summary>
+    DATA_SOURCE,
 }

@@ -49,7 +49,7 @@ Currently, no automated test suite exists in the repository.
 Key modules:
 - `app_window.rs` - Tauri window management, updater integration
 - `dotnet.rs` - Launches and manages the .NET sidecar process
-- `runtime_api.rs` - Rocket-based HTTPS API for .NET ↔ Rust communication
+- `runtime_api.rs` - Axum-based HTTPS API for .NET ↔ Rust communication
 - `certificate.rs` - Generates self-signed TLS certificates for secure IPC
 - `secret.rs` - Secure secret storage using OS keyring (Keychain/Credential Manager)
 - `clipboard.rs` - Cross-platform clipboard operations
@@ -152,7 +152,7 @@ Multi-level confidence scheme allows users to control which providers see which 
 
 **Rust:**
 - Tauri 1.8 - Desktop application framework
-- Rocket - HTTPS API server
+- Axum - HTTPS API server
 - tokio - Async runtime
 - keyring - OS keyring integration
 - pdfium-render - PDF text extraction
@@ -187,6 +187,7 @@ Multi-level confidence scheme allows users to control which providers see which 
 - **File changes require Write/Edit tools** - Never use bash commands like `cat <<EOF` or `echo >`
 - **End of file formatting** - Do not append an extra empty line at the end of files.
 - **No automated formatting for Rust or .NET files** - Never run automated formatters on Rust files (`.rs`) or .NET files (`.cs`, `.razor`, `.csproj`, etc.). Only make the minimal manual formatting changes required for the specific edit.
+- **I18N resources are generated** - Do not manually edit `app/MindWork AI Studio/Assistants/I18N/allTexts.lua`, `app/MindWork AI Studio/Plugins/languages/en-us-97dfb1ba-50c4-4440-8dfa-6575daf543c8/plugin.lua`, or `app/MindWork AI Studio/Plugins/languages/de-de-43065dbc-78d0-45b7-92be-f14c2926e2dc/plugin.lua`. These files are updated automatically by the I18N process.
 - **Spaces in paths** - Always quote paths with spaces in bash commands
 - **Agent-run .NET builds** - Do not run `.NET` builds from an agent. Ask the user to run the build locally in their IDE, preferably via `cd app/Build && dotnet run build` in an IDE terminal, then wait for their feedback before continuing.
 - **Debug environment** - Reads `startup.env` file with IPC credentials
