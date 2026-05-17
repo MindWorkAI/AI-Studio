@@ -3684,6 +3684,60 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T742006305"] = "
 -- Embeddings
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T951463987"] = "Einbettungen"
 
+-- No enterprise encryption secret is configured. The export will contain a placeholder that you need to replace manually.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1EXPORTDIALOG::T1596223167"] = "Es ist kein Geheimnis für die Verschlüsselung konfiguriert. Der Export enthält einen Platzhalter, den Sie manuell ersetzen müssen."
+
+-- Use the same username and password for all users
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1EXPORTDIALOG::T1769874785"] = "Für alle Benutzer denselben Benutzernamen und dasselbe Passwort verwenden"
+
+-- Username and password mode
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1EXPORTDIALOG::T1787063064"] = "Modus für Benutzername und Passwort"
+
+-- Include the configured password in the export?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1EXPORTDIALOG::T1970482908"] = "Das konfigurierte Passwort in den Export aufnehmen?"
+
+-- Yes, export the encrypted access token
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1EXPORTDIALOG::T2049390076"] = "Ja, verschlüsselten Zugriffstoken exportieren"
+
+-- Yes, export the encrypted password
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1EXPORTDIALOG::T2477439782"] = "Ja, verschlüsseltes Passwort exportieren"
+
+-- No, use a password placeholder
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1EXPORTDIALOG::T2964521362"] = "Nein, Passwort-Platzhalter verwenden"
+
+-- Include the configured access token in the export?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1EXPORTDIALOG::T3280293362"] = "Den konfigurierten Zugriffstoken in den Export aufnehmen?"
+
+-- Include the configured secret in the export?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1EXPORTDIALOG::T3513863015"] = "Das konfigurierte Geheimnis in den Export aufnehmen?"
+
+-- Yes, export the encrypted secret
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1EXPORTDIALOG::T3582055719"] = "Ja, verschlüsseltes Geheimnis exportieren"
+
+-- User-managed username and password
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1EXPORTDIALOG::T365340972"] = "Von Benutzern verwalteter Benutzername und Passwort"
+
+-- Export
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1EXPORTDIALOG::T3898821075"] = "Exportieren"
+
+-- Export the ERI v1 data source '{0}' as Lua code for a configuration plugin.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1EXPORTDIALOG::T4143478610"] = "Exportiere die ERI-v1-Datenquelle „{0}“ als Lua-Code für ein Konfigurations-Plugin."
+
+-- No secret is configured for this ERI data source. The export will contain a placeholder that you need to replace manually.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1EXPORTDIALOG::T493307765"] = "Für diese ERI-Datenquelle ist kein Passwort oder Token konfiguriert. Der Export enthält einen Platzhalter, den Sie manuell ersetzen müssen."
+
+-- No, use a placeholder
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1EXPORTDIALOG::T590115959"] = "Nein, Platzhalter verwenden"
+
+-- Read each user's username from the operating system and share one password
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1EXPORTDIALOG::T76405695"] = "Den Benutzernamen jedes Benutzers aus dem Betriebssystem auslesen und ein Passwort teilen."
+
+-- No, use a token placeholder
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1EXPORTDIALOG::T823105114"] = "Nein, einen Token-Platzhalter verwenden"
+
+-- Cancel
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1EXPORTDIALOG::T900713019"] = "Abbrechen"
+
 -- Describe what data this directory contains to help the AI select it.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T1136409150"] = "Beschreiben Sie, welche Daten dieses Verzeichnis enthält, um der KI bei der Auswahl zu helfen."
 
@@ -4812,6 +4866,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T145419
 -- Delete
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T1469573738"] = "Löschen"
 
+-- Kerberos/SSO ERI data sources cannot be exported yet. Please configure them manually in the configuration plugin.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T1577531115"] = "Kerberos-/SSO-ERI-Datenquellen können noch nicht exportiert werden. Bitte konfigurieren Sie diese manuell im Konfigurations-Plugin."
+
 -- External (ERI)
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T1652430727"] = "Extern (ERI)"
 
@@ -4869,6 +4926,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T352566
 -- No data sources configured yet.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T3549650120"] = "Noch keine Datenquellen konfiguriert."
 
+-- Export ERI Data Source
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T3831281036"] = "ERI-Datenquelle exportieren"
+
 -- Actions
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T3865031940"] = "Aktionen"
 
@@ -4881,8 +4941,14 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T590005
 -- External Data (ERI-Server v1)
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T774473996"] = "Externe Daten (ERI-Server v1)"
 
+-- Cannot export the encrypted secret. A placeholder will be used instead.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T856956081"] = "Das verschlüsselte Geheimnis kann nicht exportiert werden. Stattdessen wird ein Platzhalter verwendet."
+
 -- Local Directory
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T926703547"] = "Lokaler Ordner"
+
+-- Export configuration
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T975426229"] = "Konfiguration exportieren"
 
 -- When enabled, you can preselect some ERI server options.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGERISERVER::T1280666275"] = "Wenn aktiviert, können Sie einige ERI-Serveroptionen vorauswählen."
