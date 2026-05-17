@@ -4842,6 +4842,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T269820
 -- Embedding
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T2838542994"] = "Embedding"
 
+-- This data source is managed by your organization.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T3031462878"] = "This data source is managed by your organization."
+
 -- Edit
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T3267849393"] = "Edit"
 
@@ -6171,6 +6174,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3574465749"] = "not available"
 -- This library is used to read Excel and OpenDocument spreadsheet files. This is necessary, e.g., for using spreadsheets as a data source for a chat.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3722989559"] = "This library is used to read Excel and OpenDocument spreadsheet files. This is necessary, e.g., for using spreadsheets as a data source for a chat."
 
+-- Username provided by the OS
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3764549776"] = "Username provided by the OS"
+
 -- this version does not met the requirements
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3813932670"] = "this version does not met the requirements"
 
@@ -6191,6 +6197,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4010195468"] = "Versions"
 
 -- Database
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4036243672"] = "Database"
+
+-- This library is used by the Rust runtime to read the current user's username, e.g. when an organization-managed ERI server uses the OS username for authentication.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4060906280"] = "This library is used by the Rust runtime to read the current user's username, e.g. when an organization-managed ERI server uses the OS username for authentication."
 
 -- This library is used to create asynchronous streams in Rust. It allows us to work with streams of data that can be produced asynchronously, making it easier to handle events or data that arrive over time. We use this, e.g., to stream arbitrary data from the file system to the embedding system.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4079152443"] = "This library is used to create asynchronous streams in Rust. It allows us to work with streams of data that can be produced asynchronously, making it easier to handle events or data that arrive over time. We use this, e.g., to stream arbitrary data from the file system to the embedding system."
@@ -6930,6 +6939,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T2858189239"] = "Faile
 -- Failed to retrieve the security requirements: the request was canceled either by the user or due to a timeout.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T286437836"] = "Failed to retrieve the security requirements: the request was canceled either by the user or due to a timeout."
 
+-- Failed to read the user's username from the operating system.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T2909734556"] = "Failed to read the user's username from the operating system."
+
 -- Failed to retrieve the security requirements due to an exception: {0}
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T3221004295"] = "Failed to retrieve the security requirements due to an exception: {0}"
 
@@ -7505,6 +7517,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PANDOCAVAILABILITYSERVICE::T18544701
 
 -- Pandoc may be required for importing files.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PANDOCAVAILABILITYSERVICE::T2596465560"] = "Pandoc may be required for importing files."
+
+-- Failed to store the secret data due to an API issue.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T1110203516"] = "Failed to store the secret data due to an API issue."
 
 -- Failed to delete the secret data due to an API issue.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T2303057928"] = "Failed to delete the secret data due to an API issue."
