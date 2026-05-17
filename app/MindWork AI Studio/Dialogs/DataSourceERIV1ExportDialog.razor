@@ -1,0 +1,52 @@
+@using AIStudio.Tools.ERIClient.DataModel
+@inherits MSGComponentBase
+
+<MudDialog>
+    <DialogContent>
+        <MudText Typo="Typo.body1" Class="mb-3">
+            @string.Format(T("Export the ERI v1 data source '{0}' as Lua code for a configuration plugin."), this.DataSource.Name)
+        </MudText>
+
+        @if (this.NeedsSecret())
+        {
+            @if (!this.HasConfiguredSecret)
+            {
+                <MudAlert Severity="Severity.Warning" Class="mb-3">
+                    @T("No secret is configured for this ERI data source. The export will contain a placeholder that you need to replace manually.")
+                </MudAlert>
+            }
+            else if (!this.CanEncryptSecret)
+            {
+                <MudAlert Severity="Severity.Warning" Class="mb-3">
+                    @T("No enterprise encryption secret is configured. The export will contain a placeholder that you need to replace manually.")
+                </MudAlert>
+            }
+
+            <MudTextSwitch @bind-Value="@this.includeSecret"
+                           Disabled="@(!this.CanIncludeSecret)"
+                           Label="@this.GetIncludeSecretLabel()"
+                           LabelOn="@this.GetIncludeSecretLabelOn()"
+                           LabelOff="@this.GetIncludeSecretLabelOff()" />
+        }
+
+        @if (this.DataSource.AuthMethod is AuthMethod.USERNAME_PASSWORD)
+        {
+            <MudSelect @bind-Value="@this.usernamePasswordMode" Text="@this.GetUsernamePasswordModeText()" Label="@T("Username and password mode")" Class="mt-3 mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start">
+                @foreach (var mode in this.availableUsernamePasswordModes)
+                {
+                    <MudSelectItem Value="@mode">
+                        @this.GetUsernamePasswordModeText(mode)
+                    </MudSelectItem>
+                }
+            </MudSelect>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">
+            @T("Cancel")
+        </MudButton>
+        <MudButton OnClick="@this.Export" Variant="Variant.Filled" Color="Color.Primary">
+            @T("Export")
+        </MudButton>
+    </DialogActions>
+</MudDialog>

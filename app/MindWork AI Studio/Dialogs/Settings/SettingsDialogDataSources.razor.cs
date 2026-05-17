@@ -1,11 +1,17 @@
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.ERIClient.DataModel;
+using AIStudio.Tools.PluginSystem;
+
+using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Dialogs.Settings;
 
 public partial class SettingsDialogDataSources : SettingsDialogBase
 {
+    [Inject]
+    private ISnackbar Snackbar { get; init; } = null!;
+
     private string GetEmbeddingName(IDataSource dataSource)
     {
         if(dataSource is IInternalDataSource internalDataSource)
@@ -85,6 +91,69 @@ public partial class SettingsDialogDataSources : SettingsDialogBase
         this.SettingsManager.ConfigurationData.DataSources.Add(addedDataSource);
         await this.SettingsManager.StoreSettings();
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+    }
+
+    private async Task ExportDataSource(IDataSource dataSource)
+    {
+        if (!this.SettingsManager.ConfigurationData.App.ShowAdminSettings)
+            return;
+
+        if (dataSource is not DataSourceERI_V1 eriDataSource)
+            return;
+
+        if (eriDataSource.AuthMethod is AuthMethod.KERBEROS)
+        {
+            await this.DialogService.ShowMessageBox(
+                T("Export ERI Data Source"),
+                T("Kerberos/SSO ERI data sources cannot be exported yet. Please configure them manually in the configuration plugin."),
+                T("Close"));
+            return;
+        }
+
+        var needsSecret = eriDataSource.AuthMethod is AuthMethod.TOKEN or AuthMethod.USERNAME_PASSWORD;
+        if (!needsSecret)
+        {
+            var publicLuaCode = eriDataSource.ExportAsConfigurationSection();
+            if (!string.IsNullOrWhiteSpace(publicLuaCode))
+                await this.RustService.CopyText2Clipboard(this.Snackbar, publicLuaCode);
+
+            return;
+        }
+
+        var secretResponse = await this.RustService.GetSecret(eriDataSource, SecretStoreType.DATA_SOURCE, isTrying: true);
+        var canEncryptSecret = PluginFactory.EnterpriseEncryption?.IsAvailable == true;
+
+        var dialogParameters = new DialogParameters<DataSourceERIV1ExportDialog>
+        {
+            { x => x.DataSource, eriDataSource },
+            { x => x.HasConfiguredSecret, secretResponse.Success },
+            { x => x.CanEncryptSecret, canEncryptSecret },
+        };
+
+        var dialogReference = await this.DialogService.ShowAsync<DataSourceERIV1ExportDialog>(T("Export ERI Data Source"), dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        if (dialogResult is null || dialogResult.Canceled || dialogResult.Data is not DataSourceERIV1ExportDialogResult exportResult)
+            return;
+
+        string? encryptedSecret = null;
+        if (exportResult.IncludeSecret && secretResponse.Success)
+        {
+            var decryptedSecret = await secretResponse.Secret.Decrypt(Program.ENCRYPTION);
+            var encryption = PluginFactory.EnterpriseEncryption;
+            if (encryption?.TryEncrypt(decryptedSecret, out var encrypted) == true)
+                encryptedSecret = encrypted;
+            else
+                this.Snackbar.Add(T("Cannot export the encrypted secret. A placeholder will be used instead."), Severity.Warning);
+        }
+
+        var luaCode = eriDataSource.ExportAsConfigurationSection(
+            encryptedSecret,
+            exportResult.UsernamePasswordMode,
+            needsSecret && string.IsNullOrWhiteSpace(encryptedSecret));
+        if (string.IsNullOrWhiteSpace(luaCode))
+            return;
+
+        await this.RustService.CopyText2Clipboard(this.Snackbar, luaCode);
     }
     
     private async Task EditDataSource(IDataSource dataSource)

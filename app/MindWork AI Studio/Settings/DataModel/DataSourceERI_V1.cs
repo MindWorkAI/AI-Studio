@@ -272,6 +272,63 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
         return TryQueueEnterpriseSecret(idx, table, configPluginId, dataSource);
     }
 
+    /// <summary>
+    /// Exports the ERI v1 data source configuration as a Lua configuration section.
+    /// </summary>
+    /// <param name="encryptedSecret">Optional encrypted token or password to include in the export.</param>
+    /// <param name="usernamePasswordMode">The organization-managed username/password mode to export.</param>
+    /// <param name="useSecretPlaceholder">Whether to include a placeholder for the encrypted secret.</param>
+    /// <returns>A Lua configuration section string.</returns>
+    public string ExportAsConfigurationSection(string? encryptedSecret = null, DataSourceERIUsernamePasswordMode usernamePasswordMode = DataSourceERIUsernamePasswordMode.USER_MANAGED, bool useSecretPlaceholder = false)
+    {
+        var secretLine = string.Empty;
+        var usernamePasswordModeLine = string.Empty;
+        var usernameLine = string.Empty;
+
+        switch (this.AuthMethod)
+        {
+            case AuthMethod.TOKEN:
+                secretLine = CreateSecretLine("Token", encryptedSecret, "ENC:v1:<base64-encoded encrypted token>", useSecretPlaceholder);
+                break;
+
+            case AuthMethod.USERNAME_PASSWORD:
+                if (usernamePasswordMode is DataSourceERIUsernamePasswordMode.USER_MANAGED)
+                    usernamePasswordMode = DataSourceERIUsernamePasswordMode.OS_USERNAME_SHARED_PASSWORD;
+
+                usernamePasswordModeLine = $"""
+                                           ["UsernamePasswordMode"] = "{usernamePasswordMode}",
+                                           """;
+
+                if (usernamePasswordMode is DataSourceERIUsernamePasswordMode.SHARED_USERNAME_AND_PASSWORD)
+                {
+                    var username = string.IsNullOrWhiteSpace(this.Username) ? "<shared username>" : this.Username;
+                    usernameLine = $"""
+                                   ["Username"] = "{LuaTools.EscapeLuaString(username)}",
+                                   """;
+                }
+
+                secretLine = CreateSecretLine("Password", encryptedSecret, "ENC:v1:<base64-encoded encrypted password>", useSecretPlaceholder);
+                break;
+        }
+
+        return $$"""
+                CONFIG["DATA_SOURCES"][#CONFIG["DATA_SOURCES"]+1] = {
+                    ["Id"] = "{{Guid.NewGuid().ToString()}}",
+                    ["Name"] = "{{LuaTools.EscapeLuaString(this.Name)}}",
+                    ["Type"] = "ERI_V1",
+                    ["Hostname"] = "{{LuaTools.EscapeLuaString(this.Hostname)}}",
+                    ["Port"] = {{this.Port}},
+                    ["AuthMethod"] = "{{this.AuthMethod}}",
+                    {{usernamePasswordModeLine}}
+                    {{usernameLine}}
+                    {{secretLine}}
+                    ["SecurityPolicy"] = "{{this.SecurityPolicy}}",
+                    ["SelectedRetrievalId"] = "{{LuaTools.EscapeLuaString(this.SelectedRetrievalId)}}",
+                    ["MaxMatches"] = {{this.MaxMatches}},
+                }
+                """;
+    }
+
     private static bool TryQueueEnterpriseSecret(int idx, LuaTable table, Guid configPluginId, DataSourceERI_V1 dataSource)
     {
         var secretFieldName = dataSource.AuthMethod switch
@@ -316,6 +373,22 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
             SecretStoreType.DATA_SOURCE));
         LOGGER.LogDebug($"Successfully decrypted the {secretFieldName} for data source {idx}. It will be stored in the OS keyring. (Plugin ID: {configPluginId})");
         return true;
+    }
+
+    private static string CreateSecretLine(string fieldName, string? encryptedSecret, string placeholder, bool useSecretPlaceholder)
+    {
+        var secret = !string.IsNullOrWhiteSpace(encryptedSecret)
+            ? encryptedSecret
+            : useSecretPlaceholder
+                ? placeholder
+                : string.Empty;
+
+        if (string.IsNullOrWhiteSpace(secret))
+            return string.Empty;
+
+        return $"""
+               ["{fieldName}"] = "{LuaTools.EscapeLuaString(secret)}",
+               """;
     }
 
     private static string CleanHostname(string hostname)
