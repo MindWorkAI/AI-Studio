@@ -2,7 +2,6 @@
 
 using AIStudio.Assistants.ERI;
 using AIStudio.Chat;
-using AIStudio.Tools;
 using AIStudio.Tools.ERIClient;
 using AIStudio.Tools.ERIClient.DataModel;
 using AIStudio.Tools.PluginSystem;
@@ -313,7 +312,8 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
         PendingEnterpriseSecrets.Add(new(
             $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{dataSource.Id}",
             dataSource.Name,
-            decryptedSecret));
+            decryptedSecret,
+            SecretStoreType.DATA_SOURCE));
         LOGGER.LogDebug($"Successfully decrypted the {secretFieldName} for data source {idx}. It will be stored in the OS keyring. (Plugin ID: {configPluginId})");
         return true;
     }

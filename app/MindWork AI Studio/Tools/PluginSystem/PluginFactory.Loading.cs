@@ -175,7 +175,7 @@ public static partial class PluginFactory
             wasConfigurationChanged = true;
 
         // Check data sources:
-        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.DATA_SOURCE, x => x.DataSources, AVAILABLE_PLUGINS, configObjectList, deleteSecret: true))
+        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.DATA_SOURCE, x => x.DataSources, AVAILABLE_PLUGINS, configObjectList, SecretStoreType.DATA_SOURCE, deleteSecret: true))
             wasConfigurationChanged = true;
 
         // Check chat templates:

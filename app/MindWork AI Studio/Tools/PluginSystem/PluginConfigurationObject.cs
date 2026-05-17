@@ -252,6 +252,7 @@ public sealed record PluginConfigurationObject
     /// <param name="availablePlugins">A list of currently available plugins.</param>
     /// <param name="configObjectList">A list of all existing configuration objects.</param>
     /// <param name="secretStoreType">An optional parameter specifying the type of secret store to use for deleting associated API keys from the OS keyring, if applicable.</param>
+    /// <param name="deleteSecret">When true, delete the associated non-API-key secret from the OS keyring.</param>
     /// <returns>Returns true if the configuration was altered during cleanup; otherwise, false.</returns>
     public static async Task<bool> CleanLeftOverConfigurationObjects<TClass>(
         PluginConfigurationObjectType configObjectType,
@@ -304,7 +305,7 @@ public sealed record PluginConfigurationObject
             // Delete the API key from the OS keyring if the removed object has one:
             if(deleteSecret && item is ISecretId regularSecretId)
             {
-                var deleteResult = await RUST_SERVICE.DeleteSecret(regularSecretId);
+                var deleteResult = await RUST_SERVICE.DeleteSecret(regularSecretId, secretStoreType ?? SecretStoreType.DATA_SOURCE);
                 if (deleteResult.Success)
                     LOG.LogInformation($"Successfully deleted secret for removed enterprise object '{item.Name}' from the OS keyring.");
                 else

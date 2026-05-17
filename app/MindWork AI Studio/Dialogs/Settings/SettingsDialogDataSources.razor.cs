@@ -180,7 +180,7 @@ public partial class SettingsDialogDataSources : SettingsDialogBase
             // All other auth methods require a secret, which we need to delete now:
             else
             {
-                var deleteSecretResponse = await this.RustService.DeleteSecret(externalDataSource);
+                var deleteSecretResponse = await this.RustService.DeleteSecret(externalDataSource, SecretStoreType.DATA_SOURCE);
                 if (deleteSecretResponse.Success)
                     applyChanges = true;
             }

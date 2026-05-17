@@ -17,21 +17,6 @@ namespace AIStudio.Settings;
 public interface IDataSource : IConfigurationObject
 {
     /// <summary>
-    /// The number of the data source.
-    /// </summary>
-    public uint Num { get; init; }
-
-    /// <summary>
-    /// The unique identifier of the data source.
-    /// </summary>
-    public string Id { get; init; }
-
-    /// <summary>
-    /// The name of the data source.
-    /// </summary>
-    public string Name { get; init; }
-
-    /// <summary>
     /// Which type of data source is this?
     /// </summary>
     public DataSourceType Type { get; init; }
@@ -40,16 +25,6 @@ public interface IDataSource : IConfigurationObject
     /// Which data security policy is applied to this data source?
     /// </summary>
     public DataSourceSecurity SecurityPolicy { get; init; }
-
-    /// <summary>
-    /// Is this data source an enterprise configuration?
-    /// </summary>
-    public bool IsEnterpriseConfiguration { get; init; }
-
-    /// <summary>
-    /// The ID of the enterprise configuration plugin.
-    /// </summary>
-    public Guid EnterpriseConfigurationPluginId { get; init; }
     
     /// <summary>
     /// The maximum number of matches to return when retrieving data from the ERI server.

@@ -119,7 +119,7 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
                     string password;
                     if (string.IsNullOrWhiteSpace(temporarySecret))
                     {
-                        var passwordResponse = await rustService.GetSecret(this.DataSource);
+                        var passwordResponse = await rustService.GetSecret(this.DataSource, SecretStoreType.DATA_SOURCE);
                         if (!passwordResponse.Success)
                         {
                             return new()
@@ -173,7 +173,7 @@ public class ERIClientV1(IERIDataSource dataSource) : ERIClientBase(dataSource),
                     string token;
                     if (string.IsNullOrWhiteSpace(temporarySecret))
                     {
-                        var tokenResponse = await rustService.GetSecret(this.DataSource);
+                        var tokenResponse = await rustService.GetSecret(this.DataSource, SecretStoreType.DATA_SOURCE);
                         if (!tokenResponse.Success)
                         {
                             return new()

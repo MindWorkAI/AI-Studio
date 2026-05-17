@@ -1,4 +1,5 @@
 using AIStudio.Assistants.ERI;
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools.ERIClient.DataModel;
 
 namespace AIStudio.Settings;

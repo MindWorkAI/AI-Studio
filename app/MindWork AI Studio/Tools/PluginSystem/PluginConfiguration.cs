@@ -62,7 +62,7 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
             try
             {
                 var secretId = new TemporarySecretId(pendingSecret.SecretId, pendingSecret.SecretName);
-                var result = await rustService.SetSecret(secretId, pendingSecret.SecretData);
+                var result = await rustService.SetSecret(secretId, pendingSecret.SecretData, pendingSecret.StoreType);
 
                 if (result.Success)
                     LOG.LogDebug($"Successfully stored enterprise secret for '{pendingSecret.SecretName}' in the OS keyring.");
