@@ -68,7 +68,7 @@ public sealed partial class RustService
             this.logger!.LogError($"Failed to store the secret data for '{secretKey}': '{state.Issue}'");
 
         if (state.Success && storeType is SecretStoreType.DATA_SOURCE)
-            await this.DeleteSecretKey(secretId, LegacySecretKey(secretId));
+            await this.DeleteSecretByKey(LegacySecretKey(secretId));
         
         return state;
     }
@@ -81,11 +81,11 @@ public sealed partial class RustService
     /// <returns>The delete secret response.</returns>
     public async Task<DeleteSecretResponse> DeleteSecret(ISecretId secretId, SecretStoreType storeType)
     {
-        var deleteResult = await this.DeleteSecretKey(secretId, SecretKey(secretId, storeType));
+        var deleteResult = await this.DeleteSecretByKey(SecretKey(secretId, storeType));
         if (storeType is not SecretStoreType.DATA_SOURCE || !deleteResult.Success)
             return deleteResult;
 
-        var legacyDeleteResult = await this.DeleteSecretKey(secretId, LegacySecretKey(secretId));
+        var legacyDeleteResult = await this.DeleteSecretByKey(LegacySecretKey(secretId));
         if (!legacyDeleteResult.Success)
             return legacyDeleteResult;
 
@@ -107,7 +107,7 @@ public sealed partial class RustService
         return await result.Content.ReadFromJsonAsync<RequestedSecret>(this.jsonRustSerializerOptions);
     }
 
-    private async Task<DeleteSecretResponse> DeleteSecretKey(ISecretId secretId, string secretKey)
+    private async Task<DeleteSecretResponse> DeleteSecretByKey(string secretKey)
     {
         var request = new SelectSecretRequest(secretKey, Environment.UserName, false);
         var result = await this.http.PostAsJsonAsync("/secrets/delete", request, this.jsonRustSerializerOptions);
