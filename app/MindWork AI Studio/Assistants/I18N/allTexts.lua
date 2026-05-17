@@ -3682,59 +3682,26 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T742006305"] = "
 -- Embeddings
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T951463987"] = "Embeddings"
 
--- No enterprise encryption secret is configured. The export will contain a placeholder that you need to replace manually.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1EXPORTDIALOG::T1596223167"] = "No enterprise encryption secret is configured. The export will contain a placeholder that you need to replace manually."
-
 -- Use the same username and password for all users
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1EXPORTDIALOG::T1769874785"] = "Use the same username and password for all users"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1USERNAMEPASSWORDEXPORTDIALOG::T1769874785"] = "Use the same username and password for all users"
 
 -- Username and password mode
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1EXPORTDIALOG::T1787063064"] = "Username and password mode"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1USERNAMEPASSWORDEXPORTDIALOG::T1787063064"] = "Username and password mode"
 
--- Include the configured password in the export?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1EXPORTDIALOG::T1970482908"] = "Include the configured password in the export?"
-
--- Yes, export the encrypted access token
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1EXPORTDIALOG::T2049390076"] = "Yes, export the encrypted access token"
-
--- Yes, export the encrypted password
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1EXPORTDIALOG::T2477439782"] = "Yes, export the encrypted password"
-
--- No, use a password placeholder
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1EXPORTDIALOG::T2964521362"] = "No, use a password placeholder"
-
--- Include the configured access token in the export?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1EXPORTDIALOG::T3280293362"] = "Include the configured access token in the export?"
-
--- Include the configured secret in the export?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1EXPORTDIALOG::T3513863015"] = "Include the configured secret in the export?"
-
--- Yes, export the encrypted secret
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1EXPORTDIALOG::T3582055719"] = "Yes, export the encrypted secret"
+-- How should AI Studio export the username and password configuration for the ERI v1 data source '{0}'?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1USERNAMEPASSWORDEXPORTDIALOG::T3081234668"] = "How should AI Studio export the username and password configuration for the ERI v1 data source '{0}'?"
 
 -- User-managed username and password
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1EXPORTDIALOG::T365340972"] = "User-managed username and password"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1USERNAMEPASSWORDEXPORTDIALOG::T365340972"] = "User-managed username and password"
 
 -- Export
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1EXPORTDIALOG::T3898821075"] = "Export"
-
--- Export the ERI v1 data source '{0}' as Lua code for a configuration plugin.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1EXPORTDIALOG::T4143478610"] = "Export the ERI v1 data source '{0}' as Lua code for a configuration plugin."
-
--- No secret is configured for this ERI data source. The export will contain a placeholder that you need to replace manually.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1EXPORTDIALOG::T493307765"] = "No secret is configured for this ERI data source. The export will contain a placeholder that you need to replace manually."
-
--- No, use a placeholder
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1EXPORTDIALOG::T590115959"] = "No, use a placeholder"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1USERNAMEPASSWORDEXPORTDIALOG::T3898821075"] = "Export"
 
 -- Read each user's username from the operating system and share one password
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1EXPORTDIALOG::T76405695"] = "Read each user's username from the operating system and share one password"
-
--- No, use a token placeholder
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1EXPORTDIALOG::T823105114"] = "No, use a token placeholder"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1USERNAMEPASSWORDEXPORTDIALOG::T76405695"] = "Read each user's username from the operating system and share one password"
 
 -- Cancel
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1EXPORTDIALOG::T900713019"] = "Cancel"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1USERNAMEPASSWORDEXPORTDIALOG::T900713019"] = "Cancel"
 
 -- Describe what data this directory contains to help the AI select it.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T1136409150"] = "Describe what data this directory contains to help the AI select it."
@@ -4867,6 +4834,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T146957
 -- Kerberos/SSO ERI data sources cannot be exported yet. Please configure them manually in the configuration plugin.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T1577531115"] = "Kerberos/SSO ERI data sources cannot be exported yet. Please configure them manually in the configuration plugin."
 
+-- Cannot export this ERI data source because the authentication secret could not be encrypted.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T1592527757"] = "Cannot export this ERI data source because the authentication secret could not be encrypted."
+
 -- External (ERI)
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T1652430727"] = "External (ERI)"
 
@@ -4924,11 +4894,17 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T352566
 -- No data sources configured yet.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T3549650120"] = "No data sources configured yet."
 
+-- Export Access Token?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T3595669127"] = "Export Access Token?"
+
 -- Export ERI Data Source
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T3831281036"] = "Export ERI Data Source"
 
 -- Actions
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T3865031940"] = "Actions"
+
+-- This ERI data source has an access token configured. Do you want to include the encrypted access token in the export? Note: The recipient will need the same encryption secret to use the access token.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T4027572258"] = "This ERI data source has an access token configured. Do you want to include the encrypted access token in the export? Note: The recipient will need the same encryption secret to use the access token."
 
 -- Configured Data Sources
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T543942217"] = "Configured Data Sources"
@@ -4936,11 +4912,14 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T543942
 -- Add ERI v1 Data Source
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T590005498"] = "Add ERI v1 Data Source"
 
+-- Cannot export this ERI data source because no enterprise encryption secret is configured.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T750361472"] = "Cannot export this ERI data source because no enterprise encryption secret is configured."
+
 -- External Data (ERI-Server v1)
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T774473996"] = "External Data (ERI-Server v1)"
 
--- Cannot export the encrypted secret. A placeholder will be used instead.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T856956081"] = "Cannot export the encrypted secret. A placeholder will be used instead."
+-- Cannot export this ERI data source because no authentication secret is configured. The issue was: {0}
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T782820095"] = "Cannot export this ERI data source because no authentication secret is configured. The issue was: {0}"
 
 -- Local Directory
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T926703547"] = "Local Directory"
