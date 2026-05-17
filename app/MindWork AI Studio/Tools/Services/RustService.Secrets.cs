@@ -18,24 +18,16 @@ public sealed partial class RustService
     public async Task<RequestedSecret> GetSecret(ISecretId secretId, SecretStoreType storeType, bool isTrying = false)
     {
         var secretKey = SecretKey(secretId, storeType);
-        var secretRequest = new SelectSecretRequest(secretKey, Environment.UserName, isTrying);
-        var result = await this.http.PostAsJsonAsync("/secrets/get", secretRequest, this.jsonRustSerializerOptions);
-        if (!result.IsSuccessStatusCode)
+        var secret = await this.GetSecretByKey(secretKey, isTrying || storeType is SecretStoreType.DATA_SOURCE);
+        if (secret.Success || storeType is not SecretStoreType.DATA_SOURCE)
+            return secret;
+
+        var legacySecretKey = LegacySecretKey(secretId);
+        var legacySecret = await this.GetSecretByKey(legacySecretKey, isTrying: true);
+        if (legacySecret.Success)
         {
-            if(!isTrying)
-                this.logger!.LogError($"Failed to get the secret data for '{secretKey}' due to an API issue: '{result.StatusCode}'");
-            return new RequestedSecret(false, new EncryptedText(string.Empty), TB("Failed to get the secret data due to an API issue."));
-        }
-        
-        var secret = await result.Content.ReadFromJsonAsync<RequestedSecret>(this.jsonRustSerializerOptions);
-        if (!secret.Success && storeType is SecretStoreType.DATA_SOURCE)
-        {
-            var legacySecret = await this.GetLegacySecret(secretId, isTrying: true);
-            if (legacySecret.Success)
-            {
-                this.logger!.LogDebug($"Successfully retrieved the legacy data source secret for '{LegacySecretKey(secretId)}'.");
-                return legacySecret;
-            }
+            this.logger!.LogDebug($"Successfully retrieved the legacy data source secret for '{legacySecretKey}'.");
+            return legacySecret;
         }
 
         if (!secret.Success && !isTrying)
@@ -92,9 +84,8 @@ public sealed partial class RustService
         return deleteResult with { WasEntryFound = deleteResult.WasEntryFound || legacyDeleteResult.WasEntryFound };
     }
 
-    private async Task<RequestedSecret> GetLegacySecret(ISecretId secretId, bool isTrying)
+    private async Task<RequestedSecret> GetSecretByKey(string secretKey, bool isTrying)
     {
-        var secretKey = LegacySecretKey(secretId);
         var secretRequest = new SelectSecretRequest(secretKey, Environment.UserName, isTrying);
         var result = await this.http.PostAsJsonAsync("/secrets/get", secretRequest, this.jsonRustSerializerOptions);
         if (!result.IsSuccessStatusCode)

@@ -121,35 +121,66 @@ public partial class SettingsDialogDataSources : SettingsDialogBase
         }
 
         var secretResponse = await this.RustService.GetSecret(eriDataSource, SecretStoreType.DATA_SOURCE, isTrying: true);
-        var canEncryptSecret = PluginFactory.EnterpriseEncryption?.IsAvailable == true;
-
-        var dialogParameters = new DialogParameters<DataSourceERIV1ExportDialog>
+        if (!secretResponse.Success)
         {
-            { x => x.DataSource, eriDataSource },
-            { x => x.HasConfiguredSecret, secretResponse.Success },
-            { x => x.CanEncryptSecret, canEncryptSecret },
-        };
-
-        var dialogReference = await this.DialogService.ShowAsync<DataSourceERIV1ExportDialog>(T("Export ERI Data Source"), dialogParameters, DialogOptions.FULLSCREEN);
-        var dialogResult = await dialogReference.Result;
-        if (dialogResult is null || dialogResult.Canceled || dialogResult.Data is not DataSourceERIV1ExportDialogResult exportResult)
+            await this.DialogService.ShowMessageBox(
+                T("Export ERI Data Source"),
+                string.Format(T("Cannot export this ERI data source because no authentication secret is configured. The issue was: {0}"), secretResponse.Issue),
+                T("Close"));
             return;
+        }
 
-        string? encryptedSecret = null;
-        if (exportResult.IncludeSecret && secretResponse.Success)
+        var encryption = PluginFactory.EnterpriseEncryption;
+        if (encryption?.IsAvailable != true)
         {
-            var decryptedSecret = await secretResponse.Secret.Decrypt(Program.ENCRYPTION);
-            var encryption = PluginFactory.EnterpriseEncryption;
-            if (encryption?.TryEncrypt(decryptedSecret, out var encrypted) == true)
-                encryptedSecret = encrypted;
-            else
-                this.Snackbar.Add(T("Cannot export the encrypted secret. A placeholder will be used instead."), Severity.Warning);
+            await this.DialogService.ShowMessageBox(
+                T("Export ERI Data Source"),
+                T("Cannot export this ERI data source because no enterprise encryption secret is configured."),
+                T("Close"));
+            return;
+        }
+
+        var usernamePasswordMode = DataSourceERIUsernamePasswordMode.USER_MANAGED;
+        if (eriDataSource.AuthMethod is AuthMethod.TOKEN)
+        {
+            var dialogParameters = new DialogParameters<ConfirmDialog>
+            {
+                { x => x.Message, T("This ERI data source has an access token configured. Do you want to include the encrypted access token in the export? Note: The recipient will need the same encryption secret to use the access token.") },
+            };
+
+            var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Export Access Token?"), dialogParameters, DialogOptions.FULLSCREEN);
+            var dialogResult = await dialogReference.Result;
+            if (dialogResult is null || dialogResult.Canceled)
+                return;
+        }
+        else if (eriDataSource.AuthMethod is AuthMethod.USERNAME_PASSWORD)
+        {
+            var dialogParameters = new DialogParameters<DataSourceERIV1UsernamePasswordExportDialog>
+            {
+                { x => x.DataSource, eriDataSource },
+            };
+
+            var dialogReference = await this.DialogService.ShowAsync<DataSourceERIV1UsernamePasswordExportDialog>(T("Export ERI Data Source"), dialogParameters, DialogOptions.FULLSCREEN);
+            var dialogResult = await dialogReference.Result;
+            if (dialogResult is null || dialogResult.Canceled || dialogResult.Data is not DataSourceERIV1UsernamePasswordExportDialogResult exportResult)
+                return;
+
+            usernamePasswordMode = exportResult.UsernamePasswordMode;
+        }
+
+        var decryptedSecret = await secretResponse.Secret.Decrypt(Program.ENCRYPTION);
+        if (!encryption.TryEncrypt(decryptedSecret, out var encryptedSecret))
+        {
+            await this.DialogService.ShowMessageBox(
+                T("Export ERI Data Source"),
+                T("Cannot export this ERI data source because the authentication secret could not be encrypted."),
+                T("Close"));
+            return;
         }
 
         var luaCode = eriDataSource.ExportAsConfigurationSection(
             encryptedSecret,
-            exportResult.UsernamePasswordMode,
-            needsSecret && string.IsNullOrWhiteSpace(encryptedSecret));
+            usernamePasswordMode);
         if (string.IsNullOrWhiteSpace(luaCode))
             return;
 

@@ -277,9 +277,8 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
     /// </summary>
     /// <param name="encryptedSecret">Optional encrypted token or password to include in the export.</param>
     /// <param name="usernamePasswordMode">The organization-managed username/password mode to export.</param>
-    /// <param name="useSecretPlaceholder">Whether to include a placeholder for the encrypted secret.</param>
     /// <returns>A Lua configuration section string.</returns>
-    public string ExportAsConfigurationSection(string? encryptedSecret = null, DataSourceERIUsernamePasswordMode usernamePasswordMode = DataSourceERIUsernamePasswordMode.USER_MANAGED, bool useSecretPlaceholder = false)
+    public string ExportAsConfigurationSection(string? encryptedSecret = null, DataSourceERIUsernamePasswordMode usernamePasswordMode = DataSourceERIUsernamePasswordMode.USER_MANAGED)
     {
         var secretLine = string.Empty;
         var usernamePasswordModeLine = string.Empty;
@@ -288,7 +287,7 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
         switch (this.AuthMethod)
         {
             case AuthMethod.TOKEN:
-                secretLine = CreateSecretLine("Token", encryptedSecret, "ENC:v1:<base64-encoded encrypted token>", useSecretPlaceholder);
+                secretLine = CreateSecretLine("Token", encryptedSecret);
                 break;
 
             case AuthMethod.USERNAME_PASSWORD:
@@ -307,7 +306,7 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
                                    """;
                 }
 
-                secretLine = CreateSecretLine("Password", encryptedSecret, "ENC:v1:<base64-encoded encrypted password>", useSecretPlaceholder);
+                secretLine = CreateSecretLine("Password", encryptedSecret);
                 break;
         }
 
@@ -375,19 +374,13 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
         return true;
     }
 
-    private static string CreateSecretLine(string fieldName, string? encryptedSecret, string placeholder, bool useSecretPlaceholder)
+    private static string CreateSecretLine(string fieldName, string? encryptedSecret)
     {
-        var secret = !string.IsNullOrWhiteSpace(encryptedSecret)
-            ? encryptedSecret
-            : useSecretPlaceholder
-                ? placeholder
-                : string.Empty;
-
-        if (string.IsNullOrWhiteSpace(secret))
+        if (string.IsNullOrWhiteSpace(encryptedSecret))
             return string.Empty;
 
         return $"""
-               ["{fieldName}"] = "{LuaTools.EscapeLuaString(secret)}",
+               ["{fieldName}"] = "{LuaTools.EscapeLuaString(encryptedSecret)}",
                """;
     }
 
