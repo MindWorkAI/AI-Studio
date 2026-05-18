@@ -66,15 +66,14 @@ public partial class Information : MSGComponentBase
     {
         get
         {
-            var databaseClient = this.databaseClient;
-            if (databaseClient is null)
+            if (this.databaseClient is null)
                 return $"{T("Database")}: {T("checking availability")}";
 
-            return databaseClient.Status switch
+            return this.databaseClient.Status switch
             {
-                DatabaseClientStatus.AVAILABLE => $"{T("Database version")}: {databaseClient.Name} v{META_DATA_DATABASES.DatabaseVersion}",
-                DatabaseClientStatus.STARTING => $"{T("Database")}: {databaseClient.Name} - {T("starting")}",
-                _ => $"{T("Database")}: {databaseClient.Name} - {T("not available")}"
+                DatabaseClientStatus.AVAILABLE => $"{T("Database version")}: {this.databaseClient.Name} v{META_DATA_DATABASES.DatabaseVersion}",
+                DatabaseClientStatus.STARTING => $"{T("Database")}: {this.databaseClient.Name} - {T("starting")}",
+                _ => $"{T("Database")}: {this.databaseClient.Name} - {T("not available")}"
             };
         }
     }
