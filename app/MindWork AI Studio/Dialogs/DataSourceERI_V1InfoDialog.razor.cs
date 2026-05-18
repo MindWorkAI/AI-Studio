@@ -41,6 +41,7 @@ public partial class DataSourceERI_V1InfoDialog : MSGComponentBase, IAsyncDispos
     private readonly List<string> dataIssues = [];
     
     private string serverDescription = string.Empty;
+    private string effectiveUsername = string.Empty;
     private ProviderType securityRequirements = ProviderType.NONE;
     private IReadOnlyList<RetrievalInfo> retrievalInfoformation = [];
     private RetrievalInfo selectedRetrievalInfo;
@@ -50,6 +51,27 @@ public partial class DataSourceERI_V1InfoDialog : MSGComponentBase, IAsyncDispos
     private bool IsConnectionEncrypted() => this.DataSource.Hostname.StartsWith("https://", StringComparison.InvariantCultureIgnoreCase);
     
     private string Port => this.DataSource.Port == 0 ? string.Empty : $"{this.DataSource.Port}";
+
+    private async Task<(bool Success, DataSourceERI_V1 EffectiveDataSource)> CreateEffectiveDataSource()
+    {
+        this.effectiveUsername = this.DataSource.Username;
+        if (this.DataSource is not { AuthMethod: AuthMethod.USERNAME_PASSWORD, UsernamePasswordMode: DataSourceERIUsernamePasswordMode.OS_USERNAME_SHARED_PASSWORD })
+            return (true, this.DataSource);
+
+        var osUsername = await this.RustService.ReadUserName();
+        if (string.IsNullOrWhiteSpace(osUsername))
+        {
+            this.dataIssues.Add(T("Failed to read the user's username from the operating system."));
+            return (false, this.DataSource);
+        }
+
+        this.effectiveUsername = osUsername;
+        return (true, this.DataSource with
+        {
+            Username = osUsername,
+            UsernamePasswordMode = DataSourceERIUsernamePasswordMode.SHARED_USERNAME_AND_PASSWORD,
+        });
+    }
 
     private string RetrievalName(RetrievalInfo retrievalInfo)
     {
@@ -91,15 +113,19 @@ public partial class DataSourceERI_V1InfoDialog : MSGComponentBase, IAsyncDispos
         {
             this.IsOperationInProgress = true;
             this.StateHasChanged();
+
+            var effectiveDataSourceResult = await this.CreateEffectiveDataSource();
+            if (!effectiveDataSourceResult.Success)
+                return;
             
-            using var client = ERIClientFactory.Get(ERIVersion.V1, this.DataSource);
+            using var client = ERIClientFactory.Get(ERIVersion.V1, effectiveDataSourceResult.EffectiveDataSource);
             if(client is null)
             {
                 this.dataIssues.Add(T("Failed to connect to the ERI v1 server. The server is not supported."));
                 return;
             }
             
-            var loginResult = await client.AuthenticateAsync(this.RustService);
+            var loginResult = await client.AuthenticateAsync(this.RustService, cancellationToken: this.cts.Token);
             if (!loginResult.Successful)
             {
                 this.dataIssues.Add(loginResult.Message);
