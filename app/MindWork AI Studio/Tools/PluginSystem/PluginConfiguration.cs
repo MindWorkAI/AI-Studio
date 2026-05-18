@@ -135,6 +135,9 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
 
         // Config: minimum provider confidence per tool
         ManagedConfiguration.TryProcessConfiguration(x => x.Tools, x => x.MinimumProviderConfidenceByToolId, this.Id, settingsTable, dryRun);
+
+        // Config: private hosts allowed for the read web page tool
+        ManagedConfiguration.TryProcessConfiguration(x => x.Tools, x => x.ReadWebPageAllowedPrivateHosts, this.Id, settingsTable, dryRun);
         
         // Handle configured LLM providers:
         PluginConfigurationObject.TryParse(PluginConfigurationObjectType.LLM_PROVIDER, x => x.Providers, x => x.NextProviderNum, mainTable, this.Id, ref this.configObjects, dryRun);

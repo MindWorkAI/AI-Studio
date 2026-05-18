@@ -222,6 +222,14 @@ CONFIG["SETTINGS"] = {}
 --     ["get_current_weather"] = "NONE"
 -- }
 
+-- Configure private or VPN hosts that the Read Web Page tool may access.
+-- Public web pages do not need to be listed here.
+-- Private hosts listed here still require a provider with HIGH confidence before any page content is sent to the model.
+-- Separate host patterns with commas. Wildcards only match subdomains, so add the root domain separately if needed.
+-- Examples:
+-- CONFIG["SETTINGS"]["DataTools.ReadWebPageAllowedPrivateHosts"] = "dlr.de, *.dlr.de"
+-- CONFIG["SETTINGS"]["DataTools.ReadWebPageAllowedPrivateHosts.AllowUserOverride"] = false
+
 -- Example chat templates for this configuration:
 CONFIG["CHAT_TEMPLATES"] = {}
 

@@ -20,4 +20,9 @@ public sealed class DataTools(Expression<Func<Data, DataTools>>? configSelection
         configSelection,
         x => x.MinimumProviderConfidenceByToolId,
         new Dictionary<string, string>(StringComparer.Ordinal));
+
+    public string ReadWebPageAllowedPrivateHosts { get; set; } = ManagedConfiguration.Register<DataTools>(
+        configSelection,
+        x => x.ReadWebPageAllowedPrivateHosts,
+        string.Empty);
 }
