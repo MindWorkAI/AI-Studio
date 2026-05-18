@@ -213,13 +213,12 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataApp.ShortcutVoiceRecording"] = "CmdOrControl+1"
 
 -- Configure the minimum provider confidence level required for individual tools.
--- Tool IDs include: web_search, read_web_page, get_current_weather
+-- Tool IDs include: web_search, read_web_page
 -- Allowed values are: NONE, UNTRUSTED, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
--- Defaults: web_search = MEDIUM, read_web_page = MEDIUM, get_current_weather = NONE
+-- Defaults: web_search = MEDIUM, read_web_page = MEDIUM, but higher confidence is recommended
 -- CONFIG["SETTINGS"]["DataTools.MinimumProviderConfidenceByToolId"] = {
 --     ["web_search"] = "MEDIUM",
---     ["read_web_page"] = "MEDIUM",
---     ["get_current_weather"] = "NONE"
+--     ["read_web_page"] = "MEDIUM"
 -- }
 
 -- Configure private or VPN hosts that the Read Web Page tool may access.
