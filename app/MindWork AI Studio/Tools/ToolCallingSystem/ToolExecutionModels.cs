@@ -13,6 +13,8 @@ public sealed class ToolExecutionContext
     public required SettingsManager SettingsManager { get; init; }
 
     public required IReadOnlyDictionary<string, string> SettingsValues { get; init; }
+
+    public ConfidenceLevel ProviderConfidence { get; init; } = ConfidenceLevel.UNKNOWN;
 }
 
 public sealed class ToolExecutionResult
@@ -29,6 +31,8 @@ public sealed class ToolExecutionResult
         return this.TextContent ?? string.Empty;
     }
 }
+
+public sealed class ToolExecutionBlockedException(string message) : Exception(message);
 
 public enum ToolInvocationTraceStatus
 {

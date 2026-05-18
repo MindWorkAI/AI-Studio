@@ -713,6 +713,7 @@ public abstract class BaseProvider : IProvider, ISecretId
                             toolCall.Function.Name,
                             toolCall.Function.Arguments,
                             runnableTools,
+                            this.Provider.GetConfidence(settingsManager).Level,
                             toolCallCount,
                             token);
 

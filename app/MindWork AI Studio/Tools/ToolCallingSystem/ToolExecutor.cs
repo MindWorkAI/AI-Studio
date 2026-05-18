@@ -1,5 +1,7 @@
 using System.Text.Json;
 
+using AIStudio.Provider;
+
 using Microsoft.Extensions.DependencyInjection;
 
 namespace AIStudio.Tools.ToolCallingSystem;
@@ -11,6 +13,7 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService)
         string toolName,
         string argumentsJson,
         IReadOnlyList<(ToolDefinition Definition, IToolImplementation Implementation)> runnableTools,
+        ConfidenceLevel providerConfidence,
         int order,
         CancellationToken token = default)
     {
@@ -40,6 +43,7 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService)
                 Definition = definition,
                 SettingsManager = Program.SERVICE_PROVIDER.GetRequiredService<Settings.SettingsManager>(),
                 SettingsValues = settingsValues,
+                ProviderConfidence = providerConfidence,
             }, token);
 
             return (result.ToModelContent(), new ToolInvocationTrace
@@ -53,6 +57,31 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService)
                 WasExecuted = true,
                 Arguments = FormatArguments(document.RootElement, implementation.SensitiveTraceArgumentNames),
                 Result = implementation.FormatTraceResult(result.ToModelContent()),
+            });
+        }
+        catch (ToolExecutionBlockedException exception)
+        {
+            Dictionary<string, string> formattedArguments = [];
+            try
+            {
+                using var document = JsonDocument.Parse(string.IsNullOrWhiteSpace(argumentsJson) ? "{}" : argumentsJson);
+                formattedArguments = FormatArguments(document.RootElement, implementation.SensitiveTraceArgumentNames);
+            }
+            catch
+            {
+            }
+
+            return (exception.Message, new ToolInvocationTrace
+            {
+                Order = order,
+                ToolId = definition.Id,
+                ToolName = implementation.GetDisplayName(),
+                ToolIcon = implementation.Icon,
+                ToolCallId = toolCallId,
+                Status = ToolInvocationTraceStatus.BLOCKED,
+                StatusMessage = exception.Message,
+                Arguments = formattedArguments,
+                Result = exception.Message,
             });
         }
         catch (Exception exception)
