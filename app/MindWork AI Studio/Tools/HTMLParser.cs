@@ -11,6 +11,7 @@ namespace AIStudio.Tools;
 public sealed class HTMLParser
 {
     private const string USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) MindWorkAIStudio/1.0";
+    private const int MAX_REDIRECTS = 10;
 
     private static readonly Config MARKDOWN_PARSER_CONFIG = new()
     {
@@ -43,11 +44,12 @@ public sealed class HTMLParser
         return innerHtml;
     }
 
-    public async Task<HTMLParserWebPage> LoadWebPageAsync(Uri url, CancellationToken token = default, int timeoutSeconds = 30)
+    public async Task<HTMLParserWebPage> LoadWebPageAsync(Uri url, CancellationToken token = default, int timeoutSeconds = 30, Func<Uri, CancellationToken, Task>? validateUrlAsync = null)
     {
         using var handler = new HttpClientHandler
         {
             AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli,
+            AllowAutoRedirect = false,
         };
         using var httpClient = new HttpClient(handler)
         {
@@ -55,7 +57,53 @@ public sealed class HTMLParser
         };
         using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(token);
         timeoutCts.CancelAfter(TimeSpan.FromSeconds(timeoutSeconds));
-        using var request = new HttpRequestMessage(HttpMethod.Get, url);
+
+        var currentUrl = url;
+        for (var redirectCount = 0; redirectCount <= MAX_REDIRECTS; redirectCount++)
+        {
+            if (validateUrlAsync is not null)
+                await validateUrlAsync(currentUrl, timeoutCts.Token);
+
+            using var request = CreateRequest(currentUrl);
+            using var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, timeoutCts.Token);
+            if (IsRedirect(response.StatusCode))
+            {
+                if (response.Headers.Location is null)
+                    throw new HttpRequestException($"The server returned a redirect without a Location header for '{currentUrl}'.", null, response.StatusCode);
+
+                currentUrl = response.Headers.Location.IsAbsoluteUri
+                    ? response.Headers.Location
+                    : new Uri(currentUrl, response.Headers.Location);
+
+                continue;
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var statusCode = (int)response.StatusCode;
+                var reasonPhrase = string.IsNullOrWhiteSpace(response.ReasonPhrase) ? "Unknown" : response.ReasonPhrase;
+                throw new HttpRequestException($"The server returned HTTP {statusCode} ({reasonPhrase}) for '{currentUrl}'.", null, response.StatusCode);
+            }
+
+            var html = await response.Content.ReadAsStringAsync(timeoutCts.Token);
+            var document = new HtmlDocument();
+            document.LoadHtml(html);
+
+            return new HTMLParserWebPage
+            {
+                RequestedUrl = url,
+                FinalUrl = response.RequestMessage?.RequestUri ?? currentUrl,
+                ContentType = response.Content.Headers.ContentType?.MediaType ?? string.Empty,
+                Document = document,
+            };
+        }
+
+        throw new HttpRequestException($"The server returned more than {MAX_REDIRECTS} redirects for '{url}'.");
+    }
+
+    private static HttpRequestMessage CreateRequest(Uri url)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get, url);
         request.Headers.TryAddWithoutValidation("User-Agent", USER_AGENT);
         request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/html"));
         request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/xhtml+xml"));
@@ -69,27 +117,10 @@ public sealed class HTMLParser
         request.Headers.TryAddWithoutValidation("Sec-Fetch-Mode", "navigate");
         request.Headers.TryAddWithoutValidation("Sec-Fetch-Dest", "document");
         request.Headers.TryAddWithoutValidation("Sec-Fetch-User", "?1");
-
-        using var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, timeoutCts.Token);
-        if (!response.IsSuccessStatusCode)
-        {
-            var statusCode = (int)response.StatusCode;
-            var reasonPhrase = string.IsNullOrWhiteSpace(response.ReasonPhrase) ? "Unknown" : response.ReasonPhrase;
-            throw new HttpRequestException($"The server returned HTTP {statusCode} ({reasonPhrase}) for '{url}'.", null, response.StatusCode);
-        }
-
-        var html = await response.Content.ReadAsStringAsync(token);
-        var document = new HtmlDocument();
-        document.LoadHtml(html);
-
-        return new HTMLParserWebPage
-        {
-            RequestedUrl = url,
-            FinalUrl = response.RequestMessage?.RequestUri ?? url,
-            ContentType = response.Content.Headers.ContentType?.MediaType ?? string.Empty,
-            Document = document,
-        };
+        return request;
     }
+
+    private static bool IsRedirect(HttpStatusCode statusCode) => (int)statusCode is >= 300 and <= 399;
 
     public string ExtractTitle(HtmlDocument document)
     {
