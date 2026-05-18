@@ -1,9 +1,7 @@
 using System.Net;
-using System.Net.Http;
 using System.Net.Http.Headers;
-
+using System.Net.Sockets;
 using HtmlAgilityPack;
-
 using ReverseMarkdown;
 
 namespace AIStudio.Tools;
@@ -44,13 +42,20 @@ public sealed class HTMLParser
         return innerHtml;
     }
 
-    public async Task<HTMLParserWebPage> LoadWebPageAsync(Uri url, CancellationToken token = default, int timeoutSeconds = 30, Func<Uri, CancellationToken, Task>? validateUrlAsync = null)
+    public async Task<HTMLParserWebPage> LoadWebPageAsync(Uri url, CancellationToken token = default, int timeoutSeconds = 30, Func<Uri, CancellationToken, Task<IReadOnlyList<IPAddress>>>? resolveUrlAddressesAsync = null)
     {
-        using var handler = new HttpClientHandler
+        using var handler = new SocketsHttpHandler
         {
             AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli,
             AllowAutoRedirect = false,
         };
+        if (resolveUrlAddressesAsync is not null)
+        {
+            // The callback binds the request to a vetted target IP; a proxy would change the endpoint being connected to.
+            handler.UseProxy = false;
+            handler.ConnectCallback = async (context, connectionToken) => await ConnectToResolvedAddressAsync(context, resolveUrlAddressesAsync, connectionToken);
+        }
+
         using var httpClient = new HttpClient(handler)
         {
             Timeout = Timeout.InfiniteTimeSpan,
@@ -61,8 +66,7 @@ public sealed class HTMLParser
         var currentUrl = url;
         for (var redirectCount = 0; redirectCount <= MAX_REDIRECTS; redirectCount++)
         {
-            if (validateUrlAsync is not null)
-                await validateUrlAsync(currentUrl, timeoutCts.Token);
+            ValidateHttpOrHttpsUrl(currentUrl);
 
             using var request = CreateRequest(currentUrl);
             using var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, timeoutCts.Token);
@@ -99,6 +103,58 @@ public sealed class HTMLParser
         }
 
         throw new HttpRequestException($"The server returned more than {MAX_REDIRECTS} redirects for '{url}'.");
+    }
+
+    private static void ValidateHttpOrHttpsUrl(Uri url)
+    {
+        if (url.Scheme.Equals(Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase) ||
+            url.Scheme.Equals(Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
+            return;
+
+        throw new HttpRequestException($"Unsupported URL scheme '{url.Scheme}' for '{url}'.");
+    }
+
+    private static async ValueTask<Stream> ConnectToResolvedAddressAsync(
+        SocketsHttpConnectionContext context,
+        Func<Uri, CancellationToken, Task<IReadOnlyList<IPAddress>>> resolveUrlAddressesAsync,
+        CancellationToken token)
+    {
+        var requestUri = context.InitialRequestMessage.RequestUri ??
+                         throw new HttpRequestException("The HTTP request did not contain a target URL.");
+
+        var addresses = await resolveUrlAddressesAsync(requestUri, token);
+        if (addresses.Count == 0)
+            throw new HttpRequestException($"The host '{requestUri.Host}' did not resolve to an IP address.");
+
+        List<SocketException> connectionErrors = [];
+        foreach (var address in addresses.Distinct())
+        {
+            var socket = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp)
+            {
+                NoDelay = true,
+            };
+
+            try
+            {
+                await socket.ConnectAsync(new IPEndPoint(address, context.DnsEndPoint.Port), token);
+                return new NetworkStream(socket, ownsSocket: true);
+            }
+            catch (SocketException exception)
+            {
+                connectionErrors.Add(exception);
+                socket.Dispose();
+            }
+            catch
+            {
+                socket.Dispose();
+                throw;
+            }
+        }
+
+        Exception innerException = connectionErrors.Count == 1
+            ? connectionErrors[0]
+            : new AggregateException(connectionErrors);
+        throw new HttpRequestException($"Could not connect to a validated address for '{requestUri.Host}'.", innerException);
     }
 
     private static HttpRequestMessage CreateRequest(Uri url)

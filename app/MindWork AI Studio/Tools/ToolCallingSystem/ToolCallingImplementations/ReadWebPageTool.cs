@@ -111,7 +111,7 @@ public sealed class ReadWebPageTool(HTMLParser htmlParser, ILogger<ReadWebPageTo
                 url,
                 token,
                 timeoutSeconds,
-                async (candidateUrl, validationToken) => await this.ValidateUrlAccessAsync(candidateUrl, allowedPrivateHosts, context.ProviderConfidence, validationToken));
+                async (candidateUrl, validationToken) => await this.ResolveValidatedUrlAddressesAsync(candidateUrl, allowedPrivateHosts, context.ProviderConfidence, validationToken));
         }
         catch (OperationCanceledException) when (!token.IsCancellationRequested)
         {
@@ -119,6 +119,9 @@ public sealed class ReadWebPageTool(HTMLParser htmlParser, ILogger<ReadWebPageTo
         }
         catch (HttpRequestException exception)
         {
+            if (FindBlockedException(exception) is { } blockedException)
+                throw blockedException;
+
             throw new InvalidOperationException($"Loading the web page failed: {exception.Message}", exception);
         }
 
@@ -183,7 +186,24 @@ public sealed class ReadWebPageTool(HTMLParser htmlParser, ILogger<ReadWebPageTo
         return $"{rawResult[..MAX_TRACE_LENGTH]}...";
     }
 
-    private async Task ValidateUrlAccessAsync(
+    private static ToolExecutionBlockedException? FindBlockedException(Exception exception)
+    {
+        if (exception is ToolExecutionBlockedException blockedException)
+            return blockedException;
+
+        if (exception is AggregateException aggregateException)
+        {
+            foreach (var innerException in aggregateException.InnerExceptions)
+            {
+                if (FindBlockedException(innerException) is { } innerBlockedException)
+                    return innerBlockedException;
+            }
+        }
+
+        return exception.InnerException is null ? null : FindBlockedException(exception.InnerException);
+    }
+
+    private async Task<IReadOnlyList<IPAddress>> ResolveValidatedUrlAddressesAsync(
         Uri url,
         IReadOnlyList<AllowedPrivateHostPattern> allowedPrivateHosts,
         ConfidenceLevel providerConfidence,
@@ -203,13 +223,13 @@ public sealed class ReadWebPageTool(HTMLParser htmlParser, ILogger<ReadWebPageTo
             throw new ToolExecutionBlockedException("Local, link-local, multicast, and unspecified network addresses are not supported.");
 
         if (!addresses.Any(IsNonPublicAddress))
-            return;
+            return addresses;
 
         if (!IsAllowedPrivateHost(url.Host, allowedPrivateHosts))
             throw new ToolExecutionBlockedException("Private or local-network web page URLs are not supported unless their host is explicitly allowed.");
 
         if (providerConfidence >= ConfidenceLevel.HIGH)
-            return;
+            return addresses;
 
         await this.ReportPrivateHostProviderBlockAsync(url, providerConfidence);
         throw new ToolExecutionBlockedException("This private or VPN web page requires a High-confidence provider.");
