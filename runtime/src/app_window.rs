@@ -25,7 +25,7 @@ use crate::dotnet::{cleanup_dotnet_server, start_dotnet_server, stop_dotnet_serv
 use crate::environment::{is_prod, is_dev, CONFIG_DIRECTORY, DATA_DIRECTORY};
 use crate::log::switch_to_file_logging;
 use crate::pdfium::PDFIUM_LIB_PATH;
-use crate::qdrant::{cleanup_qdrant, start_qdrant_server, stop_qdrant_server};
+use crate::qdrant::{start_qdrant_server, stop_qdrant_server};
 #[cfg(debug_assertions)]
 use crate::dotnet::create_startup_env_file;
 
@@ -148,7 +148,6 @@ pub fn start_tauri() {
                 start_dotnet_server(app.handle().clone());
             }
 
-            cleanup_qdrant();
             start_qdrant_server(app.handle().clone());
 
             info!(Source = "Bootloader Tauri"; "Reconfigure the file logger to use the app data directory {data_path:?}");

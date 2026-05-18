@@ -4,7 +4,11 @@ public abstract class DatabaseClient(string name, string path)
 {
     public string Name => name;
 
-    public virtual bool IsAvailable => true;
+    public virtual string CacheKey => name;
+
+    public virtual DatabaseClientStatus Status => DatabaseClientStatus.AVAILABLE;
+
+    public bool IsAvailable => this.Status is DatabaseClientStatus.AVAILABLE;
     
     private string Path => path;
 
