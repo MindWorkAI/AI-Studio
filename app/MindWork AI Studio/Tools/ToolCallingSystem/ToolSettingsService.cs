@@ -5,6 +5,8 @@ namespace AIStudio.Tools.ToolCallingSystem;
 
 public sealed class ToolSettingsService(SettingsManager settingsManager, RustService rustService)
 {
+    private const string READ_WEB_PAGE_ALLOWED_PRIVATE_HOSTS_FIELD = "allowedPrivateHosts";
+
     public async Task<Dictionary<string, string>> GetSettingsAsync(ToolDefinition definition)
     {
         var values = new Dictionary<string, string>(StringComparer.Ordinal);
@@ -13,6 +15,12 @@ public sealed class ToolSettingsService(SettingsManager settingsManager, RustSer
         {
             var fieldName = property.Key;
             var fieldDefinition = property.Value;
+            if (IsReadWebPageAllowedPrivateHostsField(definition, fieldName))
+            {
+                values[fieldName] = settingsManager.ConfigurationData.Tools.ReadWebPageAllowedPrivateHosts;
+                continue;
+            }
+
             if (fieldDefinition.Secret)
             {
                 var response = await rustService.GetSecret(new ToolSettingsSecretId(definition.Id, fieldName), isTrying: true);
@@ -79,6 +87,14 @@ public sealed class ToolSettingsService(SettingsManager settingsManager, RustSer
             values.TryGetValue(fieldName, out var value);
             value ??= string.Empty;
 
+            if (IsReadWebPageAllowedPrivateHostsField(definition, fieldName))
+            {
+                if (!IsReadWebPageAllowedPrivateHostsLocked())
+                    settingsManager.ConfigurationData.Tools.ReadWebPageAllowedPrivateHosts = value;
+
+                continue;
+            }
+
             if (fieldDefinition.Secret)
             {
                 var secretId = new ToolSettingsSecretId(definition.Id, fieldName);
@@ -96,4 +112,11 @@ public sealed class ToolSettingsService(SettingsManager settingsManager, RustSer
         await settingsManager.StoreSettings();
         await MessageBus.INSTANCE.SendMessage<object?>(null, Event.CONFIGURATION_CHANGED, null);
     }
+
+    private static bool IsReadWebPageAllowedPrivateHostsField(ToolDefinition definition, string fieldName) =>
+        definition.Id.Equals(ToolSelectionRules.READ_WEB_PAGE_TOOL_ID, StringComparison.Ordinal) &&
+        fieldName.Equals(READ_WEB_PAGE_ALLOWED_PRIVATE_HOSTS_FIELD, StringComparison.Ordinal);
+
+    private static bool IsReadWebPageAllowedPrivateHostsLocked() =>
+        ManagedConfiguration.TryGet(x => x.Tools, x => x.ReadWebPageAllowedPrivateHosts, out var meta) && meta.IsLocked;
 }
