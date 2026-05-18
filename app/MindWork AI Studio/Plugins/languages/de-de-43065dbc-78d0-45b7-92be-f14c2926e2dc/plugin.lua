@@ -2760,9 +2760,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T1688023907"] = "Werkzeug�
 -- Enabling this tool also enables Read Web Page.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T3023833839"] = "Das Aktivieren dieses Werkzeugs aktiviert auch „Webseite lesen“."
 
--- This tool requires provider confidence {0}. The selected provider has {1}.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T4097602620"] = "Dieses Werkzeug erfordert Anbieter-Vertrauen {0}. Der ausgewählte Anbieter hat {1}."
-
 -- Required settings are missing. Configure this tool before enabling it.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T3119156561"] = "Erforderliche Einstellungen fehlen. Konfigurieren Sie dieses Tool, bevor Sie es aktivieren."
 
@@ -2774,6 +2771,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T3448155331"] = "Schließe
 
 -- No tools are available in this context.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T3904490680"] = "Keine Werkzeuge sind in diesem Kontext verfügbar."
+
+-- This tool requires provider confidence {0}. The selected provider has {1}.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T4097602620"] = "Dieses Werkzeug erfordert Anbieter-Vertrauen {0}. Der ausgewählte Anbieter hat {1}."
 
 -- Tool Selection
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T749664565"] = "Werkzeugauswahl"
@@ -5931,17 +5931,14 @@ UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T1999987800"] = "Wir haben ve
 -- We tried to communicate with the LLM provider '{0}' (type={1}). You might not be able to use this provider from your location. The provider message is: '{2}'
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T2107463087"] = "Wir haben versucht, mit dem LLM-Anbieter „{0}“ (Typ={1}) zu kommunizieren. Möglicherweise können Sie diesen Anbieter von Ihrem Standort aus nicht nutzen. Die Nachricht des Anbieters lautet: „{2}“."
 
--- The tool calling request failed with status code {0}. The provider message is: '{1}'
-UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T2584985559"] = "Die Tool-Aufrufanfrage ist mit dem Statuscode {0} fehlgeschlagen. Die Meldung des Anbieters lautet: „{1}“"
-
--- The tool calling request failed with status code {0}. See the logs for details.
-UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T3117779001"] = "Die Tool-Aufrufanfrage ist mit dem Statuscode {0} fehlgeschlagen. Details finden Sie in den Logs."
-
 -- We tried to communicate with the LLM provider '{0}' (type={1}). Something was not found. The provider message is: '{2}'
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T3014737766"] = "Wir haben versucht, mit dem LLM-Anbieter „{0}“ (Typ={1}) zu kommunizieren. Etwas wurde nicht gefunden. Die Nachricht des Anbieters lautet: „{2}“"
 
 -- We tried to communicate with the LLM provider '{0}' (type={1}). Even after {2} retries, there were some problems with the request. The provider message is: '{3}'.
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T3049689432"] = "Wir haben versucht, mit dem LLM-Anbieter „{0}“ (Typ={1}) zu kommunizieren. Selbst nach {2} erneuten Versuchen gab es weiterhin Probleme mit der Anfrage. Die Meldung des Anbieters lautet: „{3}“."
+
+-- The tool calling request failed with status code {0}. See the logs for details.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T3117779001"] = "Die Tool-Aufrufanfrage ist mit dem Statuscode {0} fehlgeschlagen. Details finden Sie in den Logs."
 
 -- Tried to communicate with the LLM provider '{0}'. There were some problems with the request. The provider message is: '{1}'
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T3573577433"] = "Es wurde versucht, mit dem LLM-Anbieter '{0}' zu kommunizieren. Dabei sind Probleme bei der Anfrage aufgetreten. Die Meldung des Anbieters lautet: '{1}'"
@@ -5972,6 +5969,30 @@ UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T3788466789"] = "Der Anbieter b
 
 -- The provider operates its service from China. In case of suspicion, authorities in the respective countries of operation may access your data. However, **your data is not used for training** purposes.
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T991875725"] = "Der Anbieter betreibt seinen Dienst von China aus. Im Verdachtsfall können Behörden in den jeweiligen Ländern auf ihre Daten zugreifen. **Ihre Daten werden jedoch nicht zum Trainieren** verwendet."
+
+-- Medium
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCELEVELEXTENSIONS::T163471254"] = "Mittel"
+
+-- Moderate
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCELEVELEXTENSIONS::T177463328"] = "Mittel"
+
+-- Unknown confidence level
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCELEVELEXTENSIONS::T1811522309"] = "Unbekanntes Vertrauensniveau"
+
+-- No provider selected
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCELEVELEXTENSIONS::T2897045472"] = "Kein Anbieter ausgewählt"
+
+-- Low
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCELEVELEXTENSIONS::T2984088865"] = "Niedrig"
+
+-- Untrusted
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCELEVELEXTENSIONS::T3063224793"] = "Nicht vertrauenswürdig"
+
+-- High
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCELEVELEXTENSIONS::T3188327965"] = "Hoch"
+
+-- Very Low
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCELEVELEXTENSIONS::T786675843"] = "Sehr niedrig"
 
 -- Self-hosted
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::LLMPROVIDERSEXTENSIONS::T146444217"] = "Selbst gehostet"
@@ -6864,17 +6885,32 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS:
 -- Optional global truncation limit for extracted Markdown returned to the model.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T2066580916"] = "Optionales globales Kürzungslimit für extrahiertes Markdown, das an das Modell zurückgegeben wird."
 
+-- Allowed private hosts must be host names only, without scheme or path.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T2196457612"] = "Zulässige private Hosts dürfen nur Hostnamen enthalten, ohne Schema oder Pfad."
+
+-- Optional host allowlist for private or VPN web pages. Separate host patterns with commas, such as example.de, *.example.de. Allowed private hosts require a High-confidence provider.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T237631450"] = "Optionale Host-Zulassungsliste für private oder VPN-Webseiten. Trennen Sie Host-Muster mit Kommas, zum Beispiel example.de, *.example.de. Zugelassene private Hosts erfordern einen Anbieter mit hoher Vertrauensstufe."
+
 -- Maximum Content Characters
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T2801581200"] = "Maximale Inhaltszeichen"
 
 -- Optional HTTP timeout for loading a web page in seconds.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T2941521561"] = "Optionales HTTP-Zeitlimit zum Laden einer Webseite in Sekunden."
 
+-- Allowed private host '{0}' is not valid.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T3089707139"] = "Der zulässige private Host „{0}“ ist ungültig."
+
+-- Allowed Private Hosts
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T3415515539"] = "Zulässige private Hosts"
+
 -- Timeout Seconds
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T3567699845"] = "Zeitlimit in Sekunden"
 
 -- Read Web Page
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T3612587998"] = "Webseite lesen"
+
+-- The web page was not loaded because private or VPN web pages require a High-confidence provider.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T3856267430"] = "Die Webseite wurde nicht geladen, da private Webseiten oder Webseiten über ein VPN einen Anbieter mit hoher Vertrauensstufe erfordern."
 
 -- Maximum Results
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T1273024715"] = "Maximale Anzahl an Ergebnissen"
