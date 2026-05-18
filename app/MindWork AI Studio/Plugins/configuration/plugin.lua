@@ -136,6 +136,54 @@ CONFIG["EMBEDDING_PROVIDERS"] = {}
 --     }
 -- }
 
+-- ERI v1 data sources for retrieval-augmented generation:
+CONFIG["DATA_SOURCES"] = {}
+
+-- Example: ERI v1 data source with a shared access token.
+-- CONFIG["DATA_SOURCES"][#CONFIG["DATA_SOURCES"]+1] = {
+--     ["Id"] = "00000000-0000-0000-0000-000000000000",
+--     ["Name"] = "<user-friendly data source name>",
+--     ["Type"] = "ERI_V1",
+--     ["Hostname"] = "<https address of the ERI server>",
+--     ["Port"] = 443,
+--     ["AuthMethod"] = "TOKEN",
+--     ["Token"] = "ENC:v1:<base64-encoded encrypted token>",
+--     ["SecurityPolicy"] = "SELF_HOSTED",
+--     ["SelectedRetrievalId"] = "<retrieval process ID from the ERI server>",
+--     ["MaxMatches"] = 10,
+-- }
+
+-- Example: ERI v1 data source with a shared username and password.
+-- CONFIG["DATA_SOURCES"][#CONFIG["DATA_SOURCES"]+1] = {
+--     ["Id"] = "00000000-0000-0000-0000-000000000000",
+--     ["Name"] = "<user-friendly data source name>",
+--     ["Type"] = "ERI_V1",
+--     ["Hostname"] = "<https address of the ERI server>",
+--     ["Port"] = 443,
+--     ["AuthMethod"] = "USERNAME_PASSWORD",
+--     ["UsernamePasswordMode"] = "SHARED_USERNAME_AND_PASSWORD",
+--     ["Username"] = "<shared username>",
+--     ["Password"] = "ENC:v1:<base64-encoded encrypted password>",
+--     ["SecurityPolicy"] = "SELF_HOSTED",
+--     ["SelectedRetrievalId"] = "<retrieval process ID from the ERI server>",
+--     ["MaxMatches"] = 10,
+-- }
+
+-- Example: ERI v1 data source using the user's username and a shared password.
+-- CONFIG["DATA_SOURCES"][#CONFIG["DATA_SOURCES"]+1] = {
+--     ["Id"] = "00000000-0000-0000-0000-000000000000",
+--     ["Name"] = "<user-friendly data source name>",
+--     ["Type"] = "ERI_V1",
+--     ["Hostname"] = "<https address of the ERI server>",
+--     ["Port"] = 443,
+--     ["AuthMethod"] = "USERNAME_PASSWORD",
+--     ["UsernamePasswordMode"] = "OS_USERNAME_SHARED_PASSWORD",
+--     ["Password"] = "ENC:v1:<base64-encoded encrypted password>",
+--     ["SecurityPolicy"] = "SELF_HOSTED",
+--     ["SelectedRetrievalId"] = "<retrieval process ID from the ERI server>",
+--     ["MaxMatches"] = 10,
+-- }
+
 CONFIG["SETTINGS"] = {}
 
 -- Configure the update check interval:

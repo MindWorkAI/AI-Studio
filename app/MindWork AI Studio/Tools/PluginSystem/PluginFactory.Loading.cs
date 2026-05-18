@@ -174,6 +174,10 @@ public static partial class PluginFactory
         if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.EMBEDDING_PROVIDER, x => x.EmbeddingProviders, AVAILABLE_PLUGINS, configObjectList, SecretStoreType.EMBEDDING_PROVIDER))
             wasConfigurationChanged = true;
 
+        // Check data sources:
+        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.DATA_SOURCE, x => x.DataSources, AVAILABLE_PLUGINS, configObjectList, SecretStoreType.DATA_SOURCE, deleteSecret: true))
+            wasConfigurationChanged = true;
+
         // Check chat templates:
         if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.CHAT_TEMPLATE, x => x.ChatTemplates, AVAILABLE_PLUGINS, configObjectList))
             wasConfigurationChanged = true;

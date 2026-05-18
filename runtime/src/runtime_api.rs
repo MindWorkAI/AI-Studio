@@ -48,6 +48,7 @@ pub fn start_runtime_api() {
         .route("/system/directories/config", get(crate::environment::get_config_directory))
         .route("/system/directories/data", get(crate::environment::get_data_directory))
         .route("/system/language", get(crate::environment::read_user_language))
+        .route("/system/username", get(crate::environment::read_user_name))
         .route("/system/enterprise/config/id", get(crate::environment::read_enterprise_env_config_id))
         .route("/system/enterprise/config/server", get(crate::environment::read_enterprise_env_config_server_url))
         .route("/system/enterprise/config/encryption_secret", get(crate::environment::read_enterprise_env_config_encryption_secret))

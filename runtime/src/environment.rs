@@ -1,6 +1,6 @@
 use crate::api_token::APIToken;
 use axum::Json;
-use log::{debug, info, warn};
+use log::{debug, error, info, warn};
 use serde::Serialize;
 use std::collections::{HashMap, HashSet};
 use std::env;
@@ -41,6 +41,14 @@ pub async fn get_data_directory(_token: APIToken) -> String {
         Some(data_directory) => data_directory.clone(),
         None => String::from(""),
     }
+}
+
+/// Returns the current user's username.
+pub async fn read_user_name(_token: APIToken) -> String {
+    whoami::username().unwrap_or_else(|e| {
+        error!("Failed to read the current OS username: {e}.");
+        String::new()
+    })
 }
 
 /// Returns true if the application is running in development mode.

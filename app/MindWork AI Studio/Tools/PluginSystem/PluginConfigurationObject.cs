@@ -163,6 +163,87 @@ public sealed record PluginConfigurationObject
     }
 
     /// <summary>
+    /// Parses configured data sources from a configuration plugin.
+    /// </summary>
+    /// <param name="mainTable">The Lua table containing entries to parse into data sources.</param>
+    /// <param name="configPluginId">The unique identifier of the plugin associated with the data sources.</param>
+    /// <param name="configObjects">The list to populate with the parsed configuration objects.</param>
+    /// <param name="dryRun">Specifies whether to perform the operation as a dry run.</param>
+    /// <returns>True if the table was present and processed; otherwise false.</returns>
+    public static bool TryParseDataSources(
+        LuaTable mainTable,
+        Guid configPluginId,
+        ref List<PluginConfigurationObject> configObjects,
+        bool dryRun)
+    {
+        const string LUA_TABLE_NAME = "DATA_SOURCES";
+        if (!mainTable.TryGetValue(LUA_TABLE_NAME, out var luaValue) || !luaValue.TryRead<LuaTable>(out var luaTable))
+        {
+            LOG.LogWarning("The table '{LuaTableName}' does not exist or is not a valid table (config plugin id: {ConfigPluginId}).", LUA_TABLE_NAME, configPluginId);
+            return false;
+        }
+
+        var storedObjects = SETTINGS_MANAGER.ConfigurationData.DataSources;
+        var numberObjects = luaTable.ArrayLength;
+        ThreadSafeRandom? random = null;
+        for (var i = 1; i <= numberObjects; i++)
+        {
+            var luaObjectTableValue = luaTable[i];
+            if (!luaObjectTableValue.TryRead<LuaTable>(out var luaObjectTable))
+            {
+                LOG.LogWarning("The table '{LuaTableName}' entry at index {Index} is not a valid table (config plugin id: {ConfigPluginId}).", LUA_TABLE_NAME, i, configPluginId);
+                continue;
+            }
+
+            if (!DataSourceERI_V1.TryParseConfiguration(i, luaObjectTable, configPluginId, out var configObject))
+            {
+                LOG.LogWarning("The table '{LuaTableName}' entry at index {Index} does not contain a valid data source (config plugin id: {ConfigPluginId}).", LUA_TABLE_NAME, i, configPluginId);
+                continue;
+            }
+
+            configObjects.Add(new()
+            {
+                ConfigPluginId = configPluginId,
+                Id = Guid.Parse(configObject.Id),
+                Type = PluginConfigurationObjectType.DATA_SOURCE,
+            });
+
+            if (dryRun)
+                continue;
+
+            var objectIndex = storedObjects.FindIndex(t => t.Id == configObject.Id);
+            if (objectIndex > -1)
+            {
+                var existingObject = storedObjects[objectIndex];
+                configObject = configObject with { Num = existingObject.Num };
+                storedObjects[objectIndex] = configObject;
+            }
+            else
+            {
+                if (IncrementDataSourceNum() is { Success: true, UpdatedValue: var nextNum })
+                {
+                    configObject = configObject with { Num = nextNum };
+                    storedObjects.Add(configObject);
+                }
+                else
+                {
+                    random ??= new ThreadSafeRandom();
+                    configObject = configObject with { Num = (uint)random.Next(500_000, 1_000_000) };
+                    storedObjects.Add(configObject);
+                    LOG.LogWarning("The next number for the data source '{ConfigObjectName}' (id={ConfigObjectId}) could not be incremented. Using a random number instead (config plugin id: {ConfigPluginId}).", configObject.Name, configObject.Id, configPluginId);
+                }
+            }
+        }
+
+        return true;
+
+        static IncrementResult<uint> IncrementDataSourceNum()
+        {
+            return ((Expression<Func<Data, uint>>)(x => x.NextDataSourceNum)).TryIncrement(SETTINGS_MANAGER.ConfigurationData, IncrementType.POST);
+        }
+    }
+
+    /// <summary>
     /// Cleans up configuration objects of a specified type that are no longer associated with any available plugin.
     /// </summary>
     /// <typeparam name="TClass">The type of configuration object to clean up.</typeparam>
@@ -171,13 +252,15 @@ public sealed record PluginConfigurationObject
     /// <param name="availablePlugins">A list of currently available plugins.</param>
     /// <param name="configObjectList">A list of all existing configuration objects.</param>
     /// <param name="secretStoreType">An optional parameter specifying the type of secret store to use for deleting associated API keys from the OS keyring, if applicable.</param>
+    /// <param name="deleteSecret">When true, delete the associated non-API-key secret from the OS keyring.</param>
     /// <returns>Returns true if the configuration was altered during cleanup; otherwise, false.</returns>
     public static async Task<bool> CleanLeftOverConfigurationObjects<TClass>(
         PluginConfigurationObjectType configObjectType,
         Expression<Func<Data, List<TClass>>> configObjectSelection,
         IList<IAvailablePlugin> availablePlugins,
         IList<PluginConfigurationObject> configObjectList,
-        SecretStoreType? secretStoreType = null) where TClass : IConfigurationObject
+        SecretStoreType? secretStoreType = null,
+        bool deleteSecret = false) where TClass : IConfigurationObject
     {
         var configuredObjects = configObjectSelection.Compile()(SETTINGS_MANAGER.ConfigurationData);
         var leftOverObjects = new List<TClass>();
@@ -220,7 +303,15 @@ public sealed record PluginConfigurationObject
             configuredObjects.Remove(item);
         
             // Delete the API key from the OS keyring if the removed object has one:
-            if(secretStoreType is not null && item is ISecretId secretId)
+            if(deleteSecret && item is ISecretId regularSecretId)
+            {
+                var deleteResult = await RUST_SERVICE.DeleteSecret(regularSecretId, secretStoreType ?? SecretStoreType.DATA_SOURCE);
+                if (deleteResult.Success)
+                    LOG.LogInformation($"Successfully deleted secret for removed enterprise object '{item.Name}' from the OS keyring.");
+                else
+                    LOG.LogWarning($"Failed to delete secret for removed enterprise object '{item.Name}' from the OS keyring: {deleteResult.Issue}");
+            }
+            else if(secretStoreType is not null && item is ISecretId secretId)
             {
                 var deleteResult = await RUST_SERVICE.DeleteAPIKey(secretId, secretStoreType.Value);
                 if (deleteResult.Success)

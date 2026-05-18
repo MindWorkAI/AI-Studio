@@ -40,6 +40,7 @@ public partial class Information : MSGComponentBase
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(Information).Namespace, nameof(Information));
 
     private string osLanguage = string.Empty;
+    private string osUserName = string.Empty;
     
     private static string VersionApp => $"MindWork AI Studio: v{META_DATA.Version} (commit {META_DATA.AppCommitHash}, build {META_DATA.BuildNum}, {META_DATA_ARCH.Architecture.ToRID().ToUserFriendlyName()})";
     
@@ -49,6 +50,8 @@ public partial class Information : MSGComponentBase
     
     private string OSLanguage => $"{T("User-language provided by the OS")}: '{this.osLanguage}'";
     
+    private string OSUserName => $"{T("Username provided by the OS")}: '{this.osUserName}'";
+
     private string VersionRust => $"{T("Used Rust compiler")}: v{META_DATA.RustVersion}";
     
     private string VersionDotnetRuntime => $"{T("Used .NET runtime")}: v{META_DATA.DotnetVersion}";
@@ -128,6 +131,7 @@ public partial class Information : MSGComponentBase
         this.RefreshEnterpriseConfigurationState();
         
         this.osLanguage = await this.RustService.ReadUserLanguage();
+        this.osUserName = await this.RustService.ReadUserName();
         this.logPaths = await this.RustService.GetLogPaths();
         
         await foreach (var (label, value) in this.DatabaseClient.GetDisplayInfo())

@@ -38,12 +38,27 @@
                 <MudTd>
                     <MudStack Row="true" Class="mb-2 mt-2" Wrap="Wrap.Wrap">
                         <MudIconButton Variant="Variant.Filled" Color="Color.Info" Icon="@Icons.Material.Filled.Info" OnClick="() => this.ShowInformation(context)"/>
-                        <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Edit" OnClick="() => this.EditDataSource(context)">
-                            @T("Edit")
-                        </MudButton>
-                        <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="() => this.DeleteDataSource(context)">
-                            @T("Delete")
-                        </MudButton>
+                        @if (context.IsEnterpriseConfiguration)
+                        {
+                            <MudTooltip Text="@T("This data source is managed by your organization.")">
+                                <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Business" Disabled="true"/>
+                            </MudTooltip>
+                        }
+                        else
+                        {
+                            <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Edit" OnClick="() => this.EditDataSource(context)">
+                                @T("Edit")
+                            </MudButton>
+                            @if (this.SettingsManager.ConfigurationData.App.ShowAdminSettings && context is DataSourceERI_V1)
+                            {
+                                <MudTooltip Text="@T("Export configuration")">
+                                    <MudIconButton Variant="Variant.Filled" Color="Color.Info" Icon="@Icons.Material.Filled.Dataset" OnClick="() => this.ExportDataSource(context)"/>
+                                </MudTooltip>
+                            }
+                            <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="() => this.DeleteDataSource(context)">
+                                @T("Delete")
+                            </MudButton>
+                        }
                     </MudStack>
                 </MudTd>
             </RowTemplate>
