@@ -5,20 +5,23 @@ use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 use std::sync::{Arc, Mutex, OnceLock};
+use std::time::Duration;
 use log::{debug, error, info, warn};
 use once_cell::sync::Lazy;
-use rocket::get;
-use rocket::serde::json::Json;
-use rocket::serde::Serialize;
-use tauri::api::process::{Command, CommandChild, CommandEvent};
+use axum::Json;
+use serde::Serialize;
 use crate::api_token::{APIToken};
 use crate::environment::{is_dev, DATA_DIRECTORY};
 use crate::certificate_factory::generate_certificate;
 use std::path::PathBuf;
-use tauri::PathResolver;
+use tauri::Manager;
+use tauri::path::BaseDirectory;
 use tempfile::{TempDir, Builder};
 use crate::stale_process_cleanup::{kill_stale_process, log_potential_stale_process};
 use crate::sidecar_types::SidecarType;
+use tokio::time;
+use tauri_plugin_shell::process::{CommandChild, CommandEvent};
+use tauri_plugin_shell::ShellExt;
 
 // Qdrant server process started in a separate process and can communicate
 // via HTTP or gRPC with the .NET server and the runtime process
@@ -39,14 +42,24 @@ static API_TOKEN: Lazy<APIToken> = Lazy::new(|| {
 });
 
 static TMPDIR: Lazy<Mutex<Option<TempDir>>> = Lazy::new(|| Mutex::new(None));
-static QDRANT_STATUS: Lazy<Mutex<QdrantStatus>> = Lazy::new(|| Mutex::new(QdrantStatus::default()));
+static QDRANT_STATUS: Lazy<Mutex<QdrantStatusInfo>> = Lazy::new(|| Mutex::new(QdrantStatusInfo::default()));
 
 const PID_FILE_NAME: &str = "qdrant.pid";
 const SIDECAR_TYPE:SidecarType = SidecarType::Qdrant;
+const STARTUP_TIMEOUT: Duration = Duration::from_secs(60);
+const STARTUP_CHECK_INTERVAL: Duration = Duration::from_millis(250);
+
+#[derive(Clone, Copy, Default, Serialize, PartialEq, Eq)]
+enum QdrantStatus {
+    #[default]
+    Starting,
+    Available,
+    Unavailable,
+}
 
 #[derive(Default)]
-struct QdrantStatus {
-    is_available: bool,
+struct QdrantStatusInfo {
+    status: QdrantStatus,
     unavailable_reason: Option<String>,
 }
 
@@ -59,6 +72,7 @@ fn qdrant_base_path() -> PathBuf {
 
 #[derive(Serialize)]
 pub struct ProvideQdrantInfo {
+    status: QdrantStatus,
     path: String,
     port_http: u16,
     port_grpc: u16,
@@ -68,13 +82,14 @@ pub struct ProvideQdrantInfo {
     unavailable_reason: Option<String>,
 }
 
-#[get("/system/qdrant/info")]
-pub fn qdrant_port(_token: APIToken) -> Json<ProvideQdrantInfo> {
+pub async fn qdrant_port(_token: APIToken) -> Json<ProvideQdrantInfo> {
     let status = QDRANT_STATUS.lock().unwrap();
-    let is_available = status.is_available;
+    let current_status = status.status;
+    let is_available = current_status == QdrantStatus::Available;
     let unavailable_reason = status.unavailable_reason.clone();
 
     Json(ProvideQdrantInfo {
+        status: current_status,
         path: if is_available {
             qdrant_base_path().to_string_lossy().to_string()
         } else {
@@ -98,14 +113,20 @@ pub fn qdrant_port(_token: APIToken) -> Json<ProvideQdrantInfo> {
 }
 
 /// Starts the Qdrant server in a separate process.
-pub fn start_qdrant_server(path_resolver: PathResolver){
+pub fn start_qdrant_server<R: tauri::Runtime>(app_handle: tauri::AppHandle<R>){
+    set_qdrant_starting();
+    tauri::async_runtime::spawn(async move {
+        cleanup_qdrant();
+        start_qdrant_server_internal(app_handle);
+    });
+}
+
+fn start_qdrant_server_internal<R: tauri::Runtime>(app_handle: tauri::AppHandle<R>){
     let path = qdrant_base_path();
-    if !path.exists() {
-        if let Err(e) = fs::create_dir_all(&path){
-            error!(Source="Qdrant"; "The required directory to host the Qdrant database could not be created: {}", e);
-            set_qdrant_unavailable(format!("The Qdrant data directory could not be created: {e}"));
-            return;
-        };
+    if !path.exists() && let Err(e) = fs::create_dir_all(&path){
+        error!(Source="Qdrant"; "The required directory to host the Qdrant database could not be created: {}", e);
+        set_qdrant_unavailable(format!("The Qdrant data directory could not be created: {e}"));
+        return;
     }
 
     let (cert_path, key_path) = match create_temp_tls_files(&path) {
@@ -119,12 +140,13 @@ pub fn start_qdrant_server(path_resolver: PathResolver){
 
     let storage_path = path.join("storage").to_string_lossy().to_string();
     let snapshot_path = path.join("snapshots").to_string_lossy().to_string();
-    let init_path = path.join(".qdrant-initialized").to_string_lossy().to_string();
+    let init_path = path.join(".qdrant-initialized");
+    let init_path_environment = init_path.to_string_lossy().to_string();
     
-    let qdrant_server_environment = HashMap::from_iter([
+    let qdrant_server_environment: HashMap<String, String> = HashMap::from_iter([
         (String::from("QDRANT__SERVICE__HTTP_PORT"), QDRANT_SERVER_PORT_HTTP.to_string()),
         (String::from("QDRANT__SERVICE__GRPC_PORT"), QDRANT_SERVER_PORT_GRPC.to_string()),
-        (String::from("QDRANT_INIT_FILE_PATH"), init_path),
+        (String::from("QDRANT_INIT_FILE_PATH"), init_path_environment),
         (String::from("QDRANT__STORAGE__STORAGE_PATH"), storage_path),
         (String::from("QDRANT__STORAGE__SNAPSHOTS_PATH"), snapshot_path),
         (String::from("QDRANT__TLS__CERT"), cert_path.to_string_lossy().to_string()),
@@ -135,9 +157,9 @@ pub fn start_qdrant_server(path_resolver: PathResolver){
     
     let server_spawn_clone = QDRANT_SERVER.clone();
     let qdrant_relative_source_path = "resources/databases/qdrant/config.yaml";
-    let qdrant_source_path = match path_resolver.resolve_resource(qdrant_relative_source_path) {
-        Some(path) => path,
-        None => {
+    let qdrant_source_path = match app_handle.path().resolve(qdrant_relative_source_path, BaseDirectory::Resource) {
+        Ok(path) => path,
+        Err(_) => {
             let reason = format!("The Qdrant config resource '{qdrant_relative_source_path}' could not be resolved.");
             error!(Source = "Qdrant"; "{reason} Starting the app without Qdrant.");
             set_qdrant_unavailable(reason);
@@ -147,7 +169,9 @@ pub fn start_qdrant_server(path_resolver: PathResolver){
 
     let qdrant_source_path_display = qdrant_source_path.to_string_lossy().to_string();
     tauri::async_runtime::spawn(async move {
-        let sidecar = match Command::new_sidecar("qdrant") {
+        let shell = app_handle.shell();
+
+        let sidecar = match shell.sidecar("qdrant") {
             Ok(sidecar) => sidecar,
             Err(e) => {
                 let reason = format!("Failed to create sidecar for Qdrant: {e}");
@@ -172,18 +196,30 @@ pub fn start_qdrant_server(path_resolver: PathResolver){
         };
 
         let server_pid = child.pid();
-        set_qdrant_available();
         info!(Source = "Bootloader Qdrant"; "Qdrant server process started with PID={server_pid}.");
         log_potential_stale_process(path.join(PID_FILE_NAME), server_pid, SIDECAR_TYPE);
 
         // Save the server process to stop it later:
         *server_spawn_clone.lock().unwrap() = Some(child);
 
+        let init_path_clone = init_path.clone();
+        tauri::async_runtime::spawn(async move {
+            if wait_for_qdrant_startup(init_path_clone).await {
+                set_qdrant_available();
+                info!(Source = "Qdrant"; "Qdrant is available.");
+            } else {
+                let reason = "Qdrant did not become available within the startup timeout.".to_string();
+                error!(Source = "Qdrant"; "{reason}");
+                set_qdrant_unavailable(reason);
+            }
+        });
+
         // Log the output of the Qdrant server:
         while let Some(event) = rx.recv().await {
             match event {
                 CommandEvent::Stdout(line) => {
-                    let line = line.trim_end();
+                    let line_utf8 = String::from_utf8_lossy(&line).to_string();
+                    let line = line_utf8.trim_end();
                     if line.contains("INFO") || line.contains("info") {
                         info!(Source = "Qdrant Server"; "{line}");
                     } else if line.contains("WARN") || line.contains("warning") {
@@ -196,12 +232,21 @@ pub fn start_qdrant_server(path_resolver: PathResolver){
                 },
             
                 CommandEvent::Stderr(line) => {
-                    error!(Source = "Qdrant Server (stderr)"; "{line}");
+                    let line_utf8 = String::from_utf8_lossy(&line).to_string();
+                    error!(Source = "Qdrant Server (stderr)"; "{line_utf8}");
                 },
-            
+
                 _ => {}
             }
         }
+
+        let is_available = QDRANT_STATUS.lock().unwrap().status == QdrantStatus::Available;
+        let unavailable_reason = if is_available {
+            "Qdrant server process stopped.".to_string()
+        } else {
+            "Qdrant server process stopped before it became available.".to_string()
+        };
+        set_qdrant_unavailable(unavailable_reason);
     });
 }
 
@@ -222,6 +267,20 @@ pub fn stop_qdrant_server() {
 
     drop_tmpdir();
     cleanup_qdrant();
+}
+
+async fn wait_for_qdrant_startup(init_path: PathBuf) -> bool {
+    let mut elapsed = Duration::ZERO;
+    while elapsed < STARTUP_TIMEOUT {
+        if init_path.exists() {
+            return true;
+        }
+
+        time::sleep(STARTUP_CHECK_INTERVAL).await;
+        elapsed += STARTUP_CHECK_INTERVAL;
+    }
+
+    false
 }
 
 /// Create a temporary directory with TLS relevant files
@@ -276,13 +335,19 @@ pub fn cleanup_qdrant() {
 
 fn set_qdrant_available() {
     let mut status = QDRANT_STATUS.lock().unwrap();
-    status.is_available = true;
+    status.status = QdrantStatus::Available;
+    status.unavailable_reason = None;
+}
+
+fn set_qdrant_starting() {
+    let mut status = QDRANT_STATUS.lock().unwrap();
+    status.status = QdrantStatus::Starting;
     status.unavailable_reason = None;
 }
 
 fn set_qdrant_unavailable(reason: String) {
     let mut status = QDRANT_STATUS.lock().unwrap();
-    status.is_available = false;
+    status.status = QdrantStatus::Unavailable;
     status.unavailable_reason = Some(reason);
 }
 

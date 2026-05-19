@@ -28,12 +28,11 @@ Since November 2024: Work on RAG (integration of your data and files) has begun.
 - [x] ~~App: Implement an [ERI](https://github.com/MindWorkAI/ERI) server coding assistant (PR [#231](https://github.com/MindWorkAI/AI-Studio/pull/231))~~
 - [x] ~~App: Management of data sources (local & external data via [ERI](https://github.com/MindWorkAI/ERI)) (PR [#259](https://github.com/MindWorkAI/AI-Studio/pull/259), [#273](https://github.com/MindWorkAI/AI-Studio/pull/273))~~
 - [x] ~~Runtime: Extract data from txt / md / pdf / docx / xlsx files (PR [#374](https://github.com/MindWorkAI/AI-Studio/pull/374))~~
-- [ ] (*Optional*) Runtime: Implement internal embedding provider through [fastembed-rs](https://github.com/Anush008/fastembed-rs)
 - [x] ~~App: Implement dialog for checking & handling [pandoc](https://pandoc.org/) installation ([PR #393](https://github.com/MindWorkAI/AI-Studio/pull/393), [PR #487](https://github.com/MindWorkAI/AI-Studio/pull/487))~~
 - [x] ~~App: Implement external embedding providers ([PR #654](https://github.com/MindWorkAI/AI-Studio/pull/654))~~
-- [ ] App: Implement the process to vectorize one local file using embeddings
+- [ ] App: Implement the process to vectorize one local file using embeddings (PR [#756](https://github.com/MindWorkAI/AI-Studio/pull/756))
 - [x] ~~Runtime: Integration of the vector database [Qdrant](https://github.com/qdrant/qdrant) ([PR #580](https://github.com/MindWorkAI/AI-Studio/pull/580))~~
-- [ ] App: Implement the continuous process of vectorizing data
+- [ ] App: Implement the continuous process of vectorizing data (PR [#756](https://github.com/MindWorkAI/AI-Studio/pull/756))
 - [x] ~~App: Define a common retrieval context interface for the integration of RAG processes in chats (PR [#281](https://github.com/MindWorkAI/AI-Studio/pull/281), [#284](https://github.com/MindWorkAI/AI-Studio/pull/284), [#286](https://github.com/MindWorkAI/AI-Studio/pull/286), [#287](https://github.com/MindWorkAI/AI-Studio/pull/287))~~
 - [x] ~~App: Define a common augmentation interface for the integration of RAG processes in chats (PR [#288](https://github.com/MindWorkAI/AI-Studio/pull/288), [#289](https://github.com/MindWorkAI/AI-Studio/pull/289))~~
 - [x] ~~App: Integrate data sources in chats (PR [#282](https://github.com/MindWorkAI/AI-Studio/pull/282))~~

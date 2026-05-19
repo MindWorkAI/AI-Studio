@@ -53,6 +53,18 @@ fn update_cargo_toml(cargo_path: &str, version: &str) {
     let cargo_toml_lines = cargo_toml.lines();
     let mut new_cargo_toml = String::new();
 
+    // Return early when the version already matches to avoid unnecessary rewrites.
+    let current_version = cargo_toml.lines().find_map(|line| {
+        let trimmed = line.trim_start();
+        let rest = trimmed.strip_prefix("\"version\": ")?;
+        let quoted = rest.strip_prefix('"')?;
+        let end_idx = quoted.find('"')?;
+        Some(&quoted[..end_idx])
+    });
+    if current_version == Some(version) {
+        return;
+    }
+
     for line in cargo_toml_lines {
         if line.starts_with("version = ") {
             new_cargo_toml.push_str(&format!("version = \"{version}\""));
@@ -67,6 +79,19 @@ fn update_cargo_toml(cargo_path: &str, version: &str) {
 
 fn update_tauri_conf(tauri_conf_path: &str, version: &str) {
     let tauri_conf = std::fs::read_to_string(tauri_conf_path).unwrap();
+
+    // Return early when the version already matches to avoid unnecessary rewrites.
+    let current_version = tauri_conf.lines().find_map(|line| {
+        let trimmed = line.trim_start();
+        let rest = trimmed.strip_prefix("\"version\": ")?;
+        let quoted = rest.strip_prefix('"')?;
+        let end_idx = quoted.find('"')?;
+        Some(&quoted[..end_idx])
+    });
+    if current_version == Some(version) {
+        return;
+    }
+
     let tauri_conf_lines = tauri_conf.lines();
     let mut new_tauri_conf = String::new();
 
@@ -75,7 +100,7 @@ fn update_tauri_conf(tauri_conf_path: &str, version: &str) {
         //  "version": "0.1.0-alpha.0"
         // Please notice, that the version number line might have a leading tab, etc.
         if line.contains("\"version\": ") {
-            new_tauri_conf.push_str(&format!("\t\"version\": \"{version}\""));
+            new_tauri_conf.push_str(&format!("  \"version\": \"{version}\","));
         } else {
             new_tauri_conf.push_str(line);
         }

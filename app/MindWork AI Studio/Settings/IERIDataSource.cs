@@ -1,4 +1,5 @@
 using AIStudio.Assistants.ERI;
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools.ERIClient.DataModel;
 
 namespace AIStudio.Settings;
@@ -24,6 +25,11 @@ public interface IERIDataSource : IExternalDataSource
     /// The username to use for authentication, when the auth. method is USERNAME_PASSWORD.
     /// </summary>
     public string Username { get; init; }
+
+    /// <summary>
+    /// How username/password authentication should obtain the username.
+    /// </summary>
+    public DataSourceERIUsernamePasswordMode UsernamePasswordMode { get; init; }
     
     /// <summary>
     /// The ERI specification to use.

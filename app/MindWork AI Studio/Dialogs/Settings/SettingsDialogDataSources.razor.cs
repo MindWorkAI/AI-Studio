@@ -1,11 +1,17 @@
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.ERIClient.DataModel;
+using AIStudio.Tools.PluginSystem;
+
+using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Dialogs.Settings;
 
 public partial class SettingsDialogDataSources : SettingsDialogBase
 {
+    [Inject]
+    private ISnackbar Snackbar { get; init; } = null!;
+
     private string GetEmbeddingName(IDataSource dataSource)
     {
         if(dataSource is IInternalDataSource internalDataSource)
@@ -86,9 +92,106 @@ public partial class SettingsDialogDataSources : SettingsDialogBase
         await this.SettingsManager.StoreSettings();
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
+
+    private async Task ExportDataSource(IDataSource dataSource)
+    {
+        if (!this.SettingsManager.ConfigurationData.App.ShowAdminSettings)
+            return;
+
+        if (dataSource is not DataSourceERI_V1 eriDataSource)
+            return;
+
+        if (eriDataSource.AuthMethod is AuthMethod.KERBEROS)
+        {
+            await this.DialogService.ShowMessageBox(
+                T("Export ERI Data Source"),
+                T("Kerberos/SSO ERI data sources cannot be exported yet. Please configure them manually in the configuration plugin."),
+                T("Close"));
+            return;
+        }
+
+        var needsSecret = eriDataSource.AuthMethod is AuthMethod.TOKEN or AuthMethod.USERNAME_PASSWORD;
+        if (!needsSecret)
+        {
+            var publicLuaCode = eriDataSource.ExportAsConfigurationSection();
+            if (!string.IsNullOrWhiteSpace(publicLuaCode))
+                await this.RustService.CopyText2Clipboard(this.Snackbar, publicLuaCode);
+
+            return;
+        }
+
+        var secretResponse = await this.RustService.GetSecret(eriDataSource, SecretStoreType.DATA_SOURCE, isTrying: true);
+        if (!secretResponse.Success)
+        {
+            await this.DialogService.ShowMessageBox(
+                T("Export ERI Data Source"),
+                string.Format(T("Cannot export this ERI data source because no authentication secret is configured. The issue was: {0}"), secretResponse.Issue),
+                T("Close"));
+            return;
+        }
+
+        var encryption = PluginFactory.EnterpriseEncryption;
+        if (encryption?.IsAvailable != true)
+        {
+            await this.DialogService.ShowMessageBox(
+                T("Export ERI Data Source"),
+                T("Cannot export this ERI data source because no enterprise encryption secret is configured."),
+                T("Close"));
+            return;
+        }
+
+        var usernamePasswordMode = DataSourceERIUsernamePasswordMode.USER_MANAGED;
+        if (eriDataSource.AuthMethod is AuthMethod.TOKEN)
+        {
+            var dialogParameters = new DialogParameters<ConfirmDialog>
+            {
+                { x => x.Message, T("This ERI data source has an access token configured. Do you want to include the encrypted access token in the export? Note: The recipient will need the same encryption secret to use the access token.") },
+            };
+
+            var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Export Access Token?"), dialogParameters, DialogOptions.FULLSCREEN);
+            var dialogResult = await dialogReference.Result;
+            if (dialogResult is null || dialogResult.Canceled)
+                return;
+        }
+        else if (eriDataSource.AuthMethod is AuthMethod.USERNAME_PASSWORD)
+        {
+            var dialogParameters = new DialogParameters<DataSourceERIV1UsernamePasswordExportDialog>
+            {
+                { x => x.DataSource, eriDataSource },
+            };
+
+            var dialogReference = await this.DialogService.ShowAsync<DataSourceERIV1UsernamePasswordExportDialog>(T("Export ERI Data Source"), dialogParameters, DialogOptions.FULLSCREEN);
+            var dialogResult = await dialogReference.Result;
+            if (dialogResult is null || dialogResult.Canceled || dialogResult.Data is not DataSourceERIV1UsernamePasswordExportDialogResult exportResult)
+                return;
+
+            usernamePasswordMode = exportResult.UsernamePasswordMode;
+        }
+
+        var decryptedSecret = await secretResponse.Secret.Decrypt(Program.ENCRYPTION);
+        if (!encryption.TryEncrypt(decryptedSecret, out var encryptedSecret))
+        {
+            await this.DialogService.ShowMessageBox(
+                T("Export ERI Data Source"),
+                T("Cannot export this ERI data source because the authentication secret could not be encrypted."),
+                T("Close"));
+            return;
+        }
+
+        var luaCode = eriDataSource.ExportAsConfigurationSection(
+            encryptedSecret,
+            usernamePasswordMode);
+        if (string.IsNullOrWhiteSpace(luaCode))
+            return;
+
+        await this.RustService.CopyText2Clipboard(this.Snackbar, luaCode);
+    }
     
     private async Task EditDataSource(IDataSource dataSource)
     {
+        if (dataSource.IsEnterpriseConfiguration)
+            return;
+
         IDataSource? editedDataSource = null;
         switch (dataSource)
         {
@@ -151,6 +254,9 @@ public partial class SettingsDialogDataSources : SettingsDialogBase
     
     private async Task DeleteDataSource(IDataSource dataSource)
     {
+        if (dataSource.IsEnterpriseConfiguration)
+            return;
+
         var dialogParameters = new DialogParameters<ConfirmDialog>
         {
             { x => x.Message, string.Format(T("Are you sure you want to delete the data source '{0}' of type {1}?"), dataSource.Name, dataSource.Type.GetDisplayName()) },
@@ -174,7 +280,7 @@ public partial class SettingsDialogDataSources : SettingsDialogBase
             // All other auth methods require a secret, which we need to delete now:
             else
             {
-                var deleteSecretResponse = await this.RustService.DeleteSecret(externalDataSource);
+                var deleteSecretResponse = await this.RustService.DeleteSecret(externalDataSource, SecretStoreType.DATA_SOURCE);
                 if (deleteSecretResponse.Success)
                     applyChanges = true;
             }

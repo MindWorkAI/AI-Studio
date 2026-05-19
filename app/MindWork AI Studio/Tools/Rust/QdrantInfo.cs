@@ -5,6 +5,8 @@
 /// </summary>
 public readonly record struct QdrantInfo
 {
+    public QdrantStatus Status { get; init; }
+
     public bool IsAvailable { get; init; }
 
     public string? UnavailableReason { get; init; }
