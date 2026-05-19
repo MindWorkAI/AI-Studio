@@ -6006,6 +6006,9 @@ UI_TEXT_CONTENT["AISTUDIO::PROVIDER::LLMPROVIDERSEXTENSIONS::T3424652889"] = "Un
 -- no model selected
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::MODEL::T2234274832"] = "Kein Modell ausgewählt"
 
+-- The tool calling request failed with status code {0}. See the logs for details.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::OPENAI::PROVIDEROPENAI::T3117779001"] = "Die Anfrage zum Aufruf des Tools ist mit dem Statuscode {0} fehlgeschlagen. Details findest du in den Protokollen."
+
 -- Model as configured by whisper.cpp
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::SELFHOSTED::PROVIDERSELFHOSTED::T3313940770"] = "Modell wie in whisper.cpp konfiguriert"
 
@@ -6866,18 +6869,6 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::ITOOLIMPLEMENTATION::T35170
 
 -- Tool description
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::ITOOLIMPLEMENTATION::T4056470505"] = "Werkzeugbeschreibung"
-
--- Current Weather
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::GETCURRENTWEATHERTOOL::T2280588182"] = "Aktuelles Wetter"
-
--- Demo Label
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::GETCURRENTWEATHERTOOL::T459484184"] = "Demo-Beschriftung"
-
--- Required demo setting for validating tool settings in tests. It does not affect the weather result.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::GETCURRENTWEATHERTOOL::T626664936"] = "Erforderliche Demo-Einstellung zur Validierung der Werkzeug-Einstellungen in Tests. Sie beeinflusst das Wetterergebnis nicht."
-
--- Use this demo tool to retrieve the current weather for a given city and state. It is primarily meant to demonstrate tool calling and tool settings in AI Studio.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::GETCURRENTWEATHERTOOL::T653336059"] = "Verwenden Sie dieses Demo-Tool, um das aktuelle Wetter für eine bestimmte Stadt und ein bestimmtes Bundesland abzurufen. Es dient in erster Linie dazu, Tool-Aufrufe und Tool-Einstellungen in AI Studio zu demonstrieren."
 
 -- Load a single web page, extract its main HTML content, and return structured working material for the model. Use the result to synthesize a natural-language answer instead of exposing the raw payload to the user.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T1823236891"] = "Klar — ich kann eine einzelne Webseite laden, ihren Hauptinhalt extrahieren und daraus eine nutzbare, strukturierte Grundlage erstellen. Dem Nutzer gebe ich dann **eine natürlich formulierte Antwort**, nicht den rohen Extraktions-Output.  Bitte sende mir einfach **die URL** der Seite, die ich verarbeiten soll. Wenn du möchtest, kannst du auch kurz dazuschreiben, **was genau ich daraus beantworten oder zusammenfassen soll**."
