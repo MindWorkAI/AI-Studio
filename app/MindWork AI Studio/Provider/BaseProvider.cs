@@ -634,17 +634,7 @@ public abstract class BaseProvider : IProvider, ISecretId
 
             if (runnableTools.Count > 0)
             {
-                var providerTools = runnableTools.Select(x => (object)new
-                {
-                    type = "function",
-                    function = new
-                    {
-                        name = x.Definition.Function.Name,
-                        description = x.Definition.Function.Description,
-                        parameters = x.Definition.Function.Parameters,
-                        strict = x.Definition.Function.Strict,
-                    }
-                }).ToList();
+                var providerTools = runnableTools.Select(x => ProviderToolAdapters.ToChatCompletionTool(x.Definition)).ToList();
 
                 var internalMessages = new List<IMessageBase>();
                 var toolCallCount = 0;

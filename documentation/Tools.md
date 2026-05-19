@@ -15,6 +15,40 @@ At startup, `ToolRegistry` reads all JSON definitions and matches each definitio
 
 The provider only sees tools that are available for the current component, selected by the user or defaults, supported by the model, configured correctly, and allowed by the provider confidence rules.
 
+## Provider API Shapes
+
+The JSON definition in `wwwroot/tool_definitions` is the single source of truth for a tool. Do not create separate tool definition files for different provider APIs. Provider-specific request shapes are generated in code from the same `ToolDefinition`.
+
+Chat Completions compatible APIs use a nested function shape:
+
+```json
+{
+  "type": "function",
+  "function": {
+    "name": "get_current_weather",
+    "description": "Get the current weather in a given location.",
+    "parameters": {},
+    "strict": true
+  }
+}
+```
+
+The OpenAI Responses API uses a flat function shape:
+
+```json
+{
+  "type": "function",
+  "name": "get_current_weather",
+  "description": "Get the current weather in a given location.",
+  "parameters": {},
+  "strict": true
+}
+```
+
+Keep this difference contained in provider adapter code. `ProviderToolAdapters` maps a canonical `ToolDefinition` to the Chat Completions or Responses wire shape. Tool implementations should not know which provider API shape was used.
+
+Tool result handling also differs by API. Chat Completions returns tool calls in `message.tool_calls` and receives results as `role: "tool"` messages. Responses returns `function_call` output items and receives results as `function_call_output` input items correlated by `call_id`. Both paths still execute local tools through `ToolExecutor`, so validation, provider confidence checks, trace formatting, and blocked-call behavior stay shared.
+
 ## Definition File
 
 Create one JSON file per tool under `wwwroot/tool_definitions`. The file describes the user-visible tool metadata, optional settings, and the function schema sent to the model.

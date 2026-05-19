@@ -122,7 +122,8 @@ public sealed class ToolRegistry
         if (!isToolSelectionVisible)
             return [];
 
-        if (!modelCapabilities.Contains(Capability.CHAT_COMPLETION_API) || !modelCapabilities.Contains(Capability.FUNCTION_CALLING))
+        if (!modelCapabilities.Contains(Capability.FUNCTION_CALLING) ||
+            (!modelCapabilities.Contains(Capability.CHAT_COMPLETION_API) && !modelCapabilities.Contains(Capability.RESPONSES_API)))
             return [];
 
         var selectedToolIdSet = ToolSelectionRules.NormalizeSelection(selectedToolIds);
