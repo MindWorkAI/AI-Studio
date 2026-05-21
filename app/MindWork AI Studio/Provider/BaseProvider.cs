@@ -406,6 +406,18 @@ public abstract class BaseProvider : IProvider, ISecretId
         //
         while (true)
         {
+            try
+            {
+                if(streamReader.EndOfStream)
+                    break;
+            }
+            catch (Exception e)
+            {
+                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Stream, string.Format(TB("Tried to stream the LLM provider '{0}' answer. There were some problems with the stream. The message is: '{1}'"), this.InstanceName, e.Message)));
+                this.logger.LogWarning($"Failed to read the end-of-stream state from {providerName} '{this.InstanceName}': {e.Message}");
+                break;
+            }
+
             // Check if the token is canceled:
             if (token.IsCancellationRequested)
             {
@@ -588,6 +600,18 @@ public abstract class BaseProvider : IProvider, ISecretId
         //
         while (true)
         {
+            try
+            {
+                if(streamReader.EndOfStream)
+                    break;
+            }
+            catch (Exception e)
+            {
+                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Stream, string.Format(TB("Tried to stream the LLM provider '{0}' answer. There were some problems with the stream. The message is: '{1}'"), this.InstanceName, e.Message)));
+                this.logger.LogWarning($"Failed to read the end-of-stream state from {providerName} '{this.InstanceName}': {e.Message}");
+                break;
+            }
+
             // Check if the token is canceled:
             if (token.IsCancellationRequested)
             {

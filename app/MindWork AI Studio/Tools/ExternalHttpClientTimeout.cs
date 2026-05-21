@@ -8,7 +8,11 @@ namespace AIStudio.Tools;
 /// </summary>
 public static class ExternalHttpClientTimeout
 {
+    public const int MIN_HTTP_CLIENT_TIMEOUT_SECONDS = 120;
+    public const int MAX_HTTP_CLIENT_TIMEOUT_SECONDS = 3600;
     public const int DEFAULT_HTTP_CLIENT_TIMEOUT_SECONDS = 3600;
+
+    private static readonly Lazy<SettingsManager> SETTINGS_MANAGER = new(() => Program.SERVICE_PROVIDER.GetRequiredService<SettingsManager>());
 
     public static HttpClient CreateHttpClient(Uri? baseAddress = null)
     {
@@ -60,11 +64,11 @@ public static class ExternalHttpClientTimeout
     
     private static TimeSpan GetTimeout()
     {
-        var settingsManager = Program.SERVICE_PROVIDER.GetRequiredService<SettingsManager>();
-        var seconds = settingsManager.ConfigurationData.App.HttpClientTimeoutSeconds;
+        var seconds = SETTINGS_MANAGER.Value.ConfigurationData.App.HttpClientTimeoutSeconds;
         if (seconds <= 0)
             seconds = DEFAULT_HTTP_CLIENT_TIMEOUT_SECONDS;
 
+        seconds = Math.Clamp(seconds, MIN_HTTP_CLIENT_TIMEOUT_SECONDS, MAX_HTTP_CLIENT_TIMEOUT_SECONDS);
         return TimeSpan.FromSeconds(seconds);
     }
     
