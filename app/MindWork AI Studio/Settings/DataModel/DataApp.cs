@@ -95,9 +95,9 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     public string ShortcutVoiceRecording { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ShortcutVoiceRecording, string.Empty);
 
     /// <summary>
-    /// The HTTP timeout in seconds for requests to LLM providers.
+    /// The HTTP timeout in seconds for external HTTP clients.
     /// </summary>
-    public int ProviderHttpTimeoutSeconds { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ProviderHttpTimeoutSeconds, 3600);
+    public int HttpClientTimeoutSeconds { get; set; } = ManagedConfiguration.Register(configSelection, n => n.HttpClientTimeoutSeconds, ExternalHttpClientTimeout.DEFAULT_HTTP_CLIENT_TIMEOUT_SECONDS);
 
     /// <summary>
     /// Should the user be allowed to add providers?

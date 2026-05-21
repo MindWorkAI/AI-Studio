@@ -24,15 +24,12 @@ namespace AIStudio.Provider;
 /// </summary>
 public abstract class BaseProvider : IProvider, ISecretId
 {
-    private const int DEFAULT_HTTP_TIMEOUT_SECONDS = 3600;
-
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(BaseProvider).Namespace, nameof(BaseProvider));
-    private static readonly SettingsManager SETTINGS_MANAGER = Program.SERVICE_PROVIDER.GetRequiredService<SettingsManager>();
     
     /// <summary>
     /// The HTTP client to use it for all requests.
     /// </summary>
-    protected readonly HttpClient HttpClient = new();
+    protected readonly HttpClient HttpClient = ExternalHttpClientTimeout.CreateHttpClient();
     
     /// <summary>
     /// The logger to use.
@@ -77,7 +74,6 @@ public abstract class BaseProvider : IProvider, ISecretId
 
         // Set the base URL:
         this.HttpClient.BaseAddress = new(url);
-        this.HttpClient.Timeout = GetProviderHttpTimeout();
     }
     
     #region Handling of IProvider, which all providers must implement
@@ -145,13 +141,7 @@ public abstract class BaseProvider : IProvider, ISecretId
         if (token.IsCancellationRequested)
             return false;
 
-        if (exception is TimeoutException)
-            return true;
-
-        if (exception is OperationCanceledException)
-            return true;
-
-        return exception.InnerException is not null && this.IsTimeoutException(exception.InnerException, token);
+        return ExternalHttpClientTimeout.IsTimeoutException(exception, token);
     }
 
     protected Task SendTimeoutError(string action) => MessageBus.INSTANCE.SendError(new(
@@ -160,37 +150,8 @@ public abstract class BaseProvider : IProvider, ISecretId
             TB("The request to the LLM provider '{0}' (type={1}) timed out after {2} while {3}. Please try again or check whether the provider is still responding."),
             this.InstanceName,
             this.Provider,
-            GetProviderHttpTimeoutDescription(),
+            ExternalHttpClientTimeout.GetTimeoutDescription(),
             action)));
-
-    private static TimeSpan GetProviderHttpTimeout()
-    {
-        var seconds = SETTINGS_MANAGER.ConfigurationData.App.ProviderHttpTimeoutSeconds;
-        if (seconds <= 0)
-            seconds = DEFAULT_HTTP_TIMEOUT_SECONDS;
-
-        return TimeSpan.FromSeconds(seconds);
-    }
-
-    private static string GetProviderHttpTimeoutDescription()
-    {
-        var timeout = GetProviderHttpTimeout();
-
-        if (timeout.TotalHours >= 1 && timeout.TotalMinutes % 60 == 0)
-        {
-            var hours = (int)timeout.TotalHours;
-            return hours == 1 ? "1 hour" : $"{hours} hours";
-        }
-
-        if (timeout.TotalMinutes >= 1 && timeout.TotalSeconds % 60 == 0)
-        {
-            var minutes = (int)timeout.TotalMinutes;
-            return minutes == 1 ? "1 minute" : $"{minutes} minutes";
-        }
-
-        var seconds = (int)timeout.TotalSeconds;
-        return seconds == 1 ? "1 second" : $"{seconds} seconds";
-    }
 
     protected async Task<string?> GetModelLoadingSecretKey(SecretStoreType storeType, string? apiKeyProvisional = null, bool isTryingSecret = false) => apiKeyProvisional switch
     {
@@ -266,12 +227,14 @@ public abstract class BaseProvider : IProvider, ISecretId
     /// Sends a request and handles rate limiting by exponential backoff.
     /// </summary>
     /// <param name="requestBuilder">A function that builds the request.</param>
-    /// <param name="token">The cancellation token.</param>
+    /// <param name="userCancellationToken">The user cancellation token.</param>
+    /// <param name="requestCancellationToken">The token to use for the HTTP request.</param>
     /// <returns>The status object of the request.</returns>
-    private async Task<HttpRateLimitedStreamResult> SendRequest(Func<Task<HttpRequestMessage>> requestBuilder, CancellationToken token = default)
+    private async Task<HttpRateLimitedStreamResult> SendRequest(Func<Task<HttpRequestMessage>> requestBuilder, CancellationToken userCancellationToken = default, CancellationToken requestCancellationToken = default)
     {
         const int MAX_RETRIES = 6;
         const double RETRY_DELAY_SECONDS = 4;
+        var effectiveCancellationToken = requestCancellationToken.CanBeCanceled ? requestCancellationToken : userCancellationToken;
         
         var retry = 0;
         var response = default(HttpResponseMessage);
@@ -291,9 +254,9 @@ public abstract class BaseProvider : IProvider, ISecretId
             HttpResponseMessage nextResponse;
             try
             {
-                nextResponse = await this.HttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, token);
+                nextResponse = await this.HttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, effectiveCancellationToken);
             }
-            catch (Exception e) when (this.IsTimeoutException(e, token))
+            catch (Exception e) when (this.IsTimeoutException(e, userCancellationToken))
             {
                 await this.SendTimeoutError("waiting for the chat response");
                 this.logger.LogError(e, "Timed out while sending a streaming request to provider '{ProviderInstanceName}' (provider={ProviderType}).", this.InstanceName, this.Provider);
@@ -306,7 +269,7 @@ public abstract class BaseProvider : IProvider, ISecretId
                 break;
             }
 
-            var errorBody = await nextResponse.Content.ReadAsStringAsync(token);
+            var errorBody = await nextResponse.Content.ReadAsStringAsync(effectiveCancellationToken);
             if (nextResponse.StatusCode is HttpStatusCode.Forbidden)
             {
                 await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Block, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). You might not be able to use this provider from your location. The provider message is: '{2}'"), this.InstanceName, this.Provider, nextResponse.ReasonPhrase)));
@@ -372,7 +335,7 @@ public abstract class BaseProvider : IProvider, ISecretId
                 timeSeconds = 90;
             
             this.logger.LogDebug("Failed request with status code {ResponseStatusCode} (message = '{ErrorMessage}'). Retrying in {TimeSeconds:0.00} seconds.", nextResponse.StatusCode, errorMessage, timeSeconds);
-            await Task.Delay(TimeSpan.FromSeconds(timeSeconds), token);
+            await Task.Delay(TimeSpan.FromSeconds(timeSeconds), effectiveCancellationToken);
         }
         
         if(retry >= MAX_RETRIES || !string.IsNullOrWhiteSpace(errorMessage))
@@ -399,10 +362,12 @@ public abstract class BaseProvider : IProvider, ISecretId
         var annotationSupported = typeof(TAnnotation) != typeof(NoResponsesAnnotationStreamLine) && typeof(TAnnotation) != typeof(NoChatCompletionAnnotationStreamLine);
         
         StreamReader? streamReader = null;
+        using var timeoutTokenSource = ExternalHttpClientTimeout.CreateTimeoutTokenSource(token);
+        var timeoutToken = timeoutTokenSource.Token;
         try
         {
             // Send the request using exponential backoff:
-            var responseData = await this.SendRequest(requestBuilder, token);
+            var responseData = await this.SendRequest(requestBuilder, token, timeoutToken);
             if(responseData.IsFailedAfterAllRetries)
             {
                 this.logger.LogError($"The {providerName} chat completion failed: {responseData.ErrorMessage}");
@@ -410,7 +375,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             }
             
             // Open the response stream:
-            var providerStream = await responseData.Response!.Content.ReadAsStreamAsync(token);
+            var providerStream = await responseData.Response!.Content.ReadAsStreamAsync(timeoutToken);
 
             // Add a stream reader to read the stream, line by line:
             streamReader = new StreamReader(providerStream);
@@ -441,18 +406,6 @@ public abstract class BaseProvider : IProvider, ISecretId
         //
         while (true)
         {
-            try
-            {
-                if(streamReader.EndOfStream)
-                    break;
-            }
-            catch (Exception e)
-            {
-                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Stream, string.Format(TB("Tried to stream the LLM provider '{0}' answer. There were some problems with the stream. The message is: '{1}'"), this.InstanceName, e.Message)));
-                this.logger.LogWarning($"Failed to read the end-of-stream state from {providerName} '{this.InstanceName}': {e.Message}");
-                break;
-            }
-                
             // Check if the token is canceled:
             if (token.IsCancellationRequested)
             {
@@ -467,7 +420,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             string? line;
             try
             {
-                line = await streamReader.ReadLineAsync(token);
+                line = await streamReader.ReadLineAsync(timeoutToken);
             }
             catch (Exception e)
             {
@@ -488,6 +441,9 @@ public abstract class BaseProvider : IProvider, ISecretId
 
                 break;
             }
+
+            if (line is null)
+                break;
 
             // Skip empty lines:
             if (string.IsNullOrWhiteSpace(line))
@@ -588,10 +544,12 @@ public abstract class BaseProvider : IProvider, ISecretId
         var annotationSupported = typeof(TAnnotation) != typeof(NoResponsesAnnotationStreamLine) && typeof(TAnnotation) != typeof(NoChatCompletionAnnotationStreamLine);
         
         StreamReader? streamReader = null;
+        using var timeoutTokenSource = ExternalHttpClientTimeout.CreateTimeoutTokenSource(token);
+        var timeoutToken = timeoutTokenSource.Token;
         try
         {
             // Send the request using exponential backoff:
-            var responseData = await this.SendRequest(requestBuilder, token);
+            var responseData = await this.SendRequest(requestBuilder, token, timeoutToken);
             if(responseData.IsFailedAfterAllRetries)
             {
                 this.logger.LogError($"The {providerName} responses call failed: {responseData.ErrorMessage}");
@@ -599,7 +557,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             }
             
             // Open the response stream:
-            var providerStream = await responseData.Response!.Content.ReadAsStreamAsync(token);
+            var providerStream = await responseData.Response!.Content.ReadAsStreamAsync(timeoutToken);
 
             // Add a stream reader to read the stream, line by line:
             streamReader = new StreamReader(providerStream);
@@ -630,18 +588,6 @@ public abstract class BaseProvider : IProvider, ISecretId
         //
         while (true)
         {
-            try
-            {
-                if(streamReader.EndOfStream)
-                    break;
-            }
-            catch (Exception e)
-            {
-                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Stream, string.Format(TB("Tried to stream the LLM provider '{0}' answer. There were some problems with the stream. The message is: '{1}'"), this.InstanceName, e.Message)));
-                this.logger.LogWarning($"Failed to read the end-of-stream state from {providerName} '{this.InstanceName}': {e.Message}");
-                break;
-            }
-                
             // Check if the token is canceled:
             if (token.IsCancellationRequested)
             {
@@ -656,7 +602,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             string? line;
             try
             {
-                line = await streamReader.ReadLineAsync(token);
+                line = await streamReader.ReadLineAsync(timeoutToken);
             }
             catch (Exception e)
             {
@@ -677,6 +623,9 @@ public abstract class BaseProvider : IProvider, ISecretId
 
                 break;
             }
+
+            if (line is null)
+                break;
 
             // Skip empty lines:
             if (string.IsNullOrWhiteSpace(line))

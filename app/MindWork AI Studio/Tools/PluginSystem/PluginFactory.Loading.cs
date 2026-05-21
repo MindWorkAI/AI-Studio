@@ -245,8 +245,8 @@ public static partial class PluginFactory
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.ShortcutVoiceRecording, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;
 
-        // Check for the provider HTTP timeout:
-        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.ProviderHttpTimeoutSeconds, AVAILABLE_PLUGINS))
+        // Check for the external HTTP client timeout:
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.HttpClientTimeoutSeconds, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;
 
         // Check if audit is required before it can be activated
