@@ -220,7 +220,7 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataApp.PreviewVisibility"] = "NONE"
 
 -- Configure the enabled preview features:
--- Allowed values are can be found in https://github.com/MindWorkAI/AI-Studio/app/MindWork%20AI%20Studio/Settings/DataModel/PreviewFeatures.cs
+-- Allowed values are can be found in https://github.com/MindWorkAI/AI-Studio/blob/main/app/MindWork%20AI%20Studio/Settings/DataModel/PreviewFeatures.cs
 -- Examples are PRE_WRITER_MODE_2024 and PRE_RAG_2024.
 -- CONFIG["SETTINGS"]["DataApp.EnabledPreviewFeatures"] = { "PRE_RAG_2024" }
 
@@ -259,6 +259,10 @@ CONFIG["SETTINGS"] = {}
 --
 -- Examples are: "CmdOrControl+Shift+D", "Alt+F9", "F8"
 -- CONFIG["SETTINGS"]["DataApp.ShortcutVoiceRecording"] = "CmdOrControl+1"
+
+-- Configure the HTTP timeout for external requests, in seconds.
+-- The default is 3600 (1 hour).
+-- CONFIG["SETTINGS"]["DataApp.HttpClientTimeoutSeconds"] = 3600
 
 -- Example chat templates for this configuration:
 CONFIG["CHAT_TEMPLATES"] = {}

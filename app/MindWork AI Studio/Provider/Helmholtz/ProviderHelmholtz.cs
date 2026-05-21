@@ -125,31 +125,40 @@ public sealed class ProviderHelmholtz() : BaseProvider(LLMProviders.HELMHOLTZ, "
         if (string.IsNullOrWhiteSpace(secretKey))
             return FailedModelLoadResult(ModelLoadFailureReason.INVALID_OR_MISSING_API_KEY, "No API key available for model loading.");
 
-        using var request = new HttpRequestMessage(HttpMethod.Get, "models");
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
-
-        using var response = await this.HttpClient.SendAsync(request, token);
-        var body = await response.Content.ReadAsStringAsync(token);
-        if (!response.IsSuccessStatusCode)
-            return FailedModelLoadResult(GetDefaultModelLoadFailureReason(response), $"Status={(int)response.StatusCode} {response.ReasonPhrase}; Body='{body}'");
-
         try
         {
-            var modelResponse = JsonSerializer.Deserialize<ModelsResponse>(body, JSON_SERIALIZER_OPTIONS);
-            return SuccessfulModelLoadResult(modelResponse.Data);
+            using var request = new HttpRequestMessage(HttpMethod.Get, "models");
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
+
+            using var response = await this.HttpClient.SendAsync(request, token);
+            var body = await response.Content.ReadAsStringAsync(token);
+            if (!response.IsSuccessStatusCode)
+                return FailedModelLoadResult(GetDefaultModelLoadFailureReason(response), $"Status={(int)response.StatusCode} {response.ReasonPhrase}; Body='{body}'");
+
+            try
+            {
+                var modelResponse = JsonSerializer.Deserialize<ModelsResponse>(body, JSON_SERIALIZER_OPTIONS);
+                return SuccessfulModelLoadResult(modelResponse.Data);
+            }
+            catch (JsonException e)
+            {
+                if (body.Contains("API key", StringComparison.InvariantCultureIgnoreCase))
+                    return FailedModelLoadResult(ModelLoadFailureReason.INVALID_OR_MISSING_API_KEY, body);
+
+                LOGGER.LogError(e, "Unexpected error while parsing models from Helmholtz API response. Status Code: {StatusCode}. Reason: {ReasonPhrase}. Response Body: '{ResponseBody}'", response.StatusCode, response.ReasonPhrase, body);
+                return FailedModelLoadResult(ModelLoadFailureReason.INVALID_RESPONSE, body);
+            }
+            catch (Exception e)
+            {
+                LOGGER.LogError(e, "Unexpected error while loading models from Helmholtz API. Status Code: {StatusCode}. Reason: {ReasonPhrase}", response.StatusCode, response.ReasonPhrase);
+                return FailedModelLoadResult(ModelLoadFailureReason.UNKNOWN, e.Message);
+            }
         }
-        catch (JsonException e)
+        catch (Exception e) when (this.IsTimeoutException(e, token))
         {
-            if (body.Contains("API key", StringComparison.InvariantCultureIgnoreCase))
-                return FailedModelLoadResult(ModelLoadFailureReason.INVALID_OR_MISSING_API_KEY, body);
-            
-            LOGGER.LogError(e, "Unexpected error while parsing models from Helmholtz API response. Status Code: {StatusCode}. Reason: {ReasonPhrase}. Response Body: '{ResponseBody}'", response.StatusCode, response.ReasonPhrase, body);
-            return FailedModelLoadResult(ModelLoadFailureReason.INVALID_RESPONSE, body);
-        }
-        catch (Exception e)
-        {
-            LOGGER.LogError(e, "Unexpected error while loading models from Helmholtz API. Status Code: {StatusCode}. Reason: {ReasonPhrase}", response.StatusCode, response.ReasonPhrase);
-            return FailedModelLoadResult(ModelLoadFailureReason.UNKNOWN, e.Message);
+            await this.SendTimeoutError("loading the available models");
+            LOGGER.LogError(e, "Timed out while loading models from Helmholtz provider '{ProviderInstanceName}'.", this.InstanceName);
+            return FailedModelLoadResult(ModelLoadFailureReason.PROVIDER_UNAVAILABLE, e.Message);
         }
     }
 }
