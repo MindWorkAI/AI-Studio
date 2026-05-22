@@ -4,9 +4,10 @@ using AIStudio.Provider;
 using AIStudio.Provider.HuggingFace;
 using AIStudio.Tools.PluginSystem;
 
-using Lua;
+using SharedTools;
 
 using Host = AIStudio.Provider.SelfHosted.Host;
+using LuaTable = Lua.LuaTable;
 
 namespace AIStudio.Settings;
 

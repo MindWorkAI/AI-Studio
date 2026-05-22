@@ -4752,6 +4752,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T582516016"] =
 -- Customize your AI experience with chat templates. Whether you want to experiment with prompt engineering, simply use a custom system prompt in the standard chat interface, or create a specialized assistant, chat templates give you full control. Similar to common AI companies' playgrounds, you can define your own system prompts and leverage assistant prompts for providers that support them.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T1172171653"] = "Passen Sie ihre KI-Erfahrung mit Chat-Vorlagen an. Egal, ob Sie mit Prompt-Engineering experimentieren, einfach einen eigenen System-Prompt im normalen Chat verwenden oder einen spezialisierten Assistenten erstellen möchten – mit Chat-Vorlagen haben Sie die volle Kontrolle. Ähnlich wie in den Playgrounds gängiger KI-Anbieter können Sie eigene System-Prompts festlegen und bei unterstützenden Anbietern auch Assistenten-Prompts nutzen."
 
+-- Copy attachments into plugin
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T1345613295"] = "Anhänge in das Plugin kopieren"
+
 -- Delete
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T1469573738"] = "Löschen"
 
@@ -4760,6 +4763,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T15483
 
 -- Note: This advanced feature is designed for users familiar with prompt engineering concepts. Furthermore, you have to make sure yourself that your chosen provider supports the use of assistant prompts.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T1909110760"] = "Hinweis: Diese fortgeschrittene Funktion richtet sich an Nutzer, die mit den Grundlagen des Prompt Engineerings vertraut sind. Außerdem müssen Sie selbst sicherstellen, dass Ihr gewählter Anbieter die Verwendung von Assistenten-Prompts unterstützt."
+
+-- Use shared attachment paths
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T2054531878"] = "Gemeinsame Pfade für Anhänge verwenden"
 
 -- No chat templates configured yet.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T2319860307"] = "Noch keine Chat-Vorlagen konfiguriert."
@@ -4779,6 +4785,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T34481
 -- This template is managed by your organization.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T3576775249"] = "Diesee Vorlage wird von Ihrer Organisation verwaltet."
 
+-- Select configuration plugin folder
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T3576816894"] = "Konfigurationsordner für Plugins auswählen"
+
 -- Edit Chat Template
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T3596030597"] = "Chat-Vorlage bearbeiten"
 
@@ -4788,8 +4797,17 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T38241
 -- Actions
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T3865031940"] = "Aktionen"
 
+-- Export
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T3898821075"] = "Exportieren"
+
 -- Delete Chat Template
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T4025180906"] = "Chat-Vorlage löschen"
+
+-- Export Chat Template
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T491504763"] = "Chat-Vorlage exportieren"
+
+-- Export configuration
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T975426229"] = "Konfiguration exportieren"
 
 -- Which programming language should be preselected for added contexts?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCODING::T1073540083"] = "Welche Programmiersprache soll für hinzugefügte Kontexte vorausgewählt werden?"
@@ -5225,6 +5243,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROFILES::T55364659"
 
 -- Are you a project manager in a research facility? You might want to create a profile for your project management activities, one for your scientific work, and a profile for when you need to write program code. In these profiles, you can record how much experience you have or which methods you like or dislike using. Later, you can choose when and where you want to use each profile.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROFILES::T56359901"] = "Sind Sie Projektleiter in einer Forschungseinrichtung? Dann möchten Sie vielleicht ein Profil für ihre Projektmanagement-Aktivitäten anlegen, eines für ihre wissenschaftliche Arbeit und ein weiteres Profil, wenn Sie Programmcode schreiben müssen. In diesen Profilen können Sie festhalten, wie viel Erfahrung Sie haben oder welche Methoden Sie bevorzugen oder nicht gerne verwenden. Später können Sie dann auswählen, wann und wo Sie jedes Profil nutzen möchten."
+
+-- Export configuration
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROFILES::T975426229"] = "Konfiguration exportieren"
 
 -- Preselect the target language
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROMPTOPTIMIZER::T1417990312"] = "Zielsprache vorwählen"
@@ -6555,8 +6576,26 @@ UI_TEXT_CONTENT["AISTUDIO::PROVIDER::MODELLOADFAILUREREASONEXTENSIONS::T39077128
 -- Model as configured by whisper.cpp
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::SELFHOSTED::PROVIDERSELFHOSTED::T3313940770"] = "Modell wie in whisper.cpp konfiguriert"
 
+-- Cannot export this chat template because example message {0} is not a text message.
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CHATTEMPLATE::T1861800849"] = "Diese Chatvorlage kann nicht exportiert werden, da die Beispielnachricht {0} keine Textnachricht ist."
+
+-- Cannot export this chat template because example message {0} uses a role that is not supported by configuration plugins.
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CHATTEMPLATE::T2407395493"] = "Diese Chat-Vorlage kann nicht exportiert werden, da die Beispielnachricht {0} eine Rolle verwendet, die von Konfigurations-Plugins nicht unterstützt wird."
+
+-- Please select a valid configuration plugin folder. The folder must contain a plugin.lua file.
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CHATTEMPLATE::T2542895569"] = "Bitte wählen Sie einen gültigen Konfigurations-Plug-in-Ordner aus. Der Ordner muss eine Datei „plugin.lua“ enthalten."
+
+-- Cannot package the chat template attachments. The issue was: {0}
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CHATTEMPLATE::T3635593138"] = "Die Anhänge der Chat-Vorlage können nicht verpackt werden. Das Problem war: {0}"
+
+-- Cannot package the attachment '{0}' because the file does not exist.
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CHATTEMPLATE::T4121340492"] = "Der Anhang „{0}“ kann nicht gepackt werden, da die Datei nicht existiert."
+
 -- Use no chat template
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CHATTEMPLATE::T4258819635"] = "Keine Chat-Vorlage verwenden"
+
+-- Cannot export this chat template because example message {0} is empty.
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CHATTEMPLATE::T477540958"] = "Diese Chatvorlage kann nicht exportiert werden, da die Beispielnachricht {0} leer ist."
 
 -- Navigation never expands, but there are tooltips
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1095779033"] = "Die Navigationsleiste wird nie ausgeklappt, aber es gibt Tooltips"

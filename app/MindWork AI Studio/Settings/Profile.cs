@@ -1,5 +1,8 @@
 using AIStudio.Tools.PluginSystem;
-using Lua;
+
+using SharedTools;
+
+using LuaTable = Lua.LuaTable;
 
 namespace AIStudio.Settings;
 
@@ -131,5 +134,21 @@ public record Profile(
         };
         
         return true;
+    }
+
+    /// <summary>
+    /// Exports the profile configuration as a Lua configuration section.
+    /// </summary>
+    /// <returns>A Lua configuration section string.</returns>
+    public string ExportAsConfigurationSection()
+    {
+        return $$"""
+                CONFIG["PROFILES"][#CONFIG["PROFILES"]+1] = {
+                    ["Id"] = "{{Guid.NewGuid().ToString()}}",
+                    ["Name"] = {{LuaTools.ToLuaStringLiteral(this.Name)}},
+                    ["NeedToKnow"] = {{LuaTools.ToLuaStringLiteral(this.NeedToKnow)}},
+                    ["Actions"] = {{LuaTools.ToLuaStringLiteral(this.Actions)}},
+                }
+                """;
     }
 }

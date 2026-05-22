@@ -10,6 +10,8 @@ using AIStudio.Settings.DataModel;
 
 using Microsoft.AspNetCore.Components;
 
+using SharedTools;
+
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Assistants.DocumentAnalysis;
@@ -747,16 +749,12 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         return $$"""
                  CONFIG["DOCUMENT_ANALYSIS_POLICIES"][#CONFIG["DOCUMENT_ANALYSIS_POLICIES"]+1] = {
                      ["Id"] = "{{id}}",
-                     ["PolicyName"] = "{{this.selectedPolicy.PolicyName.Trim()}}",
-                     ["PolicyDescription"] = "{{this.selectedPolicy.PolicyDescription.Trim()}}",
+                     ["PolicyName"] = {{LuaTools.ToLuaStringLiteral(this.selectedPolicy.PolicyName.Trim())}},
+                     ["PolicyDescription"] = {{LuaTools.ToLuaStringLiteral(this.selectedPolicy.PolicyDescription.Trim())}},
                  
-                     ["AnalysisRules"] = [===[
-                 {{this.selectedPolicy.AnalysisRules.Trim()}}
-                                         ]===],
+                     ["AnalysisRules"] = {{LuaTools.ToLuaStringLiteral(this.selectedPolicy.AnalysisRules.Trim(), forceLongString: true)}},
                  
-                     ["OutputRules"] =  [===[
-                 {{this.selectedPolicy.OutputRules.Trim()}}
-                                        ]===],
+                     ["OutputRules"] = {{LuaTools.ToLuaStringLiteral(this.selectedPolicy.OutputRules.Trim(), forceLongString: true)}},
                  
                      -- Optional: minimum provider confidence required for this policy.
                      -- Allowed values are: NONE, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
