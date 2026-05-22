@@ -174,6 +174,10 @@ public static partial class PluginFactory
         if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.EMBEDDING_PROVIDER, x => x.EmbeddingProviders, AVAILABLE_PLUGINS, configObjectList, SecretStoreType.EMBEDDING_PROVIDER))
             wasConfigurationChanged = true;
 
+        // Check data sources:
+        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.DATA_SOURCE, x => x.DataSources, AVAILABLE_PLUGINS, configObjectList, SecretStoreType.DATA_SOURCE, deleteSecret: true))
+            wasConfigurationChanged = true;
+
         // Check chat templates:
         if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.CHAT_TEMPLATE, x => x.ChatTemplates, AVAILABLE_PLUGINS, configObjectList))
             wasConfigurationChanged = true;
@@ -239,6 +243,10 @@ public static partial class PluginFactory
         
         // Check for the voice recording shortcut:
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.ShortcutVoiceRecording, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        // Check for the external HTTP client timeout:
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.HttpClientTimeoutSeconds, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;
 
         // Check if audit is required before it can be activated
@@ -318,7 +326,11 @@ public static partial class PluginFactory
                 return new PluginLanguage(isInternal, state, type);
             
             case PluginType.CONFIGURATION:
-                var configPlug = new PluginConfiguration(isInternal, state, type);
+                var configPlug = new PluginConfiguration(isInternal, state, type)
+                {
+                    PluginPath = pluginPath ?? string.Empty
+                };
+                
                 await configPlug.InitializeAsync(true);
                 return configPlug;
             

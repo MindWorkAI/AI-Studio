@@ -9,7 +9,7 @@ namespace AIStudio.Tools.Rust;
 /// </summary>
 public static class FileTypes
 {
-    private static string TB(string fallbackEn) => I18N.I.T(fallbackEn, typeof(FileTypeFilter).Namespace, nameof(FileTypeFilter));
+    private static string TB(string fallbackEn) => I18N.I.T(fallbackEn, typeof(FileTypes).Namespace, nameof(FileTypes));
     
     public static readonly FileTypeFilter SOURCE_LIKE_FILE_NAMES = FileTypeFilter.Leaf(TB("Source like"),
         "Dockerfile", "Containerfile", "Jenkinsfile", "Makefile", "GNUmakefile", "Procfile", "Vagrantfile",

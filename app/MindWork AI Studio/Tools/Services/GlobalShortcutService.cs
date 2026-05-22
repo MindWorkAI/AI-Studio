@@ -185,9 +185,7 @@ public sealed class GlobalShortcutService : BackgroundService, IMessageBusReceiv
             return new(shortcut, isEnabled, false);
 
         var fallbackShortcut = settingsSnapshot.App.ShortcutVoiceRecording;
-        var fallbackEnabled =
-            settingsSnapshot.App.EnabledPreviewFeatures.Contains(PreviewFeatures.PRE_SPEECH_TO_TEXT_2026) &&
-            !string.IsNullOrWhiteSpace(settingsSnapshot.App.UseTranscriptionProvider);
+        var fallbackEnabled = !string.IsNullOrWhiteSpace(settingsSnapshot.App.UseTranscriptionProvider);
 
         if (!fallbackEnabled || string.IsNullOrWhiteSpace(fallbackShortcut))
             return new(shortcut, isEnabled, false);

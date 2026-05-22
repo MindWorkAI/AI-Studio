@@ -1,7 +1,6 @@
 use crate::api_token::APIToken;
-use log::{debug, info, warn};
-use rocket::get;
-use rocket::serde::json::Json;
+use axum::Json;
+use log::{debug, error, info, warn};
 use serde::Serialize;
 use std::collections::{HashMap, HashSet};
 use std::env;
@@ -29,8 +28,7 @@ pub static CONFIG_DIRECTORY: OnceLock<String> = OnceLock::new();
 static USER_LANGUAGE: OnceLock<String> = OnceLock::new();
 
 /// Returns the config directory.
-#[get("/system/directories/config")]
-pub fn get_config_directory(_token: APIToken) -> String {
+pub async fn get_config_directory(_token: APIToken) -> String {
     match CONFIG_DIRECTORY.get() {
         Some(config_directory) => config_directory.clone(),
         None => String::from(""),
@@ -38,12 +36,19 @@ pub fn get_config_directory(_token: APIToken) -> String {
 }
 
 /// Returns the data directory.
-#[get("/system/directories/data")]
-pub fn get_data_directory(_token: APIToken) -> String {
+pub async fn get_data_directory(_token: APIToken) -> String {
     match DATA_DIRECTORY.get() {
         Some(data_directory) => data_directory.clone(),
         None => String::from(""),
     }
+}
+
+/// Returns the current user's username.
+pub async fn read_user_name(_token: APIToken) -> String {
+    whoami::username().unwrap_or_else(|e| {
+        error!("Failed to read the current OS username: {e}.");
+        String::new()
+    })
 }
 
 /// Returns true if the application is running in development mode.
@@ -90,10 +95,8 @@ fn normalize_locale_tag(locale: &str) -> Option<String> {
         return None;
     }
 
-    if let Some(region) = segments.next() {
-        if region.len() == 2 && region.chars().all(|c| c.is_ascii_alphabetic()) {
-            return Some(format!("{}-{}", language, region.to_ascii_uppercase()));
-        }
+    if let Some(region) = segments.next() && region.len() == 2 && region.chars().all(|c| c.is_ascii_alphabetic()) {
+        return Some(format!("{}-{}", language, region.to_ascii_uppercase()));
     }
 
     Some(language)
@@ -150,8 +153,7 @@ fn detect_user_language() -> (String, LanguageDetectionSource) {
     )
 }
 
-#[get("/system/language")]
-pub fn read_user_language(_token: APIToken) -> String {
+pub async fn read_user_language(_token: APIToken) -> String {
     USER_LANGUAGE
         .get_or_init(|| {
             let (user_language, source) = detect_user_language();
@@ -194,8 +196,7 @@ struct EnterpriseSourceData {
     encryption_secret: String,
 }
 
-#[get("/system/enterprise/config/id")]
-pub fn read_enterprise_env_config_id(_token: APIToken) -> String {
+pub async fn read_enterprise_env_config_id(_token: APIToken) -> String {
     debug!("Trying to read the effective enterprise configuration ID.");
     resolve_effective_enterprise_config_source()
         .configs
@@ -205,8 +206,7 @@ pub fn read_enterprise_env_config_id(_token: APIToken) -> String {
         .unwrap_or_default()
 }
 
-#[get("/system/enterprise/config/server")]
-pub fn read_enterprise_env_config_server_url(_token: APIToken) -> String {
+pub async fn read_enterprise_env_config_server_url(_token: APIToken) -> String {
     debug!("Trying to read the effective enterprise configuration server URL.");
     resolve_effective_enterprise_config_source()
         .configs
@@ -216,15 +216,13 @@ pub fn read_enterprise_env_config_server_url(_token: APIToken) -> String {
         .unwrap_or_default()
 }
 
-#[get("/system/enterprise/config/encryption_secret")]
-pub fn read_enterprise_env_config_encryption_secret(_token: APIToken) -> String {
+pub async fn read_enterprise_env_config_encryption_secret(_token: APIToken) -> String {
     debug!("Trying to read the effective enterprise configuration encryption secret.");
     resolve_effective_enterprise_secret_source().encryption_secret
 }
 
 /// Returns all enterprise configurations from the effective source.
-#[get("/system/enterprise/configs")]
-pub fn read_enterprise_configs(_token: APIToken) -> Json<Vec<EnterpriseConfig>> {
+pub async fn read_enterprise_configs(_token: APIToken) -> Json<Vec<EnterpriseConfig>> {
     info!("Trying to read the effective enterprise configurations.");
     Json(resolve_effective_enterprise_config_source().configs)
 }
@@ -426,10 +424,9 @@ fn load_policy_values_from_directories(directories: &[PathBuf]) -> HashMap<Strin
         }
 
         let secret_path = directory.join(ENTERPRISE_POLICY_SECRET_FILE_NAME);
-        if let Some(secret_values) = read_policy_yaml_mapping(&secret_path) {
-            if let Some(secret) = secret_values.get("config_encryption_secret") {
-                insert_first_non_empty_value(&mut values, "config_encryption_secret", secret);
-            }
+        if let Some(secret_values) = read_policy_yaml_mapping(&secret_path)
+            && let Some(secret) = secret_values.get("config_encryption_secret") {
+            insert_first_non_empty_value(&mut values, "config_encryption_secret", secret);
         }
     }
 

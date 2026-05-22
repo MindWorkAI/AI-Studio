@@ -220,6 +220,17 @@ public sealed class PandocProcessBuilder
                 }
             }
 
+            foreach (var candidate in SystemPandocExecutableCandidates(PandocExecutableName))
+            {
+                if (!File.Exists(candidate))
+                    continue;
+
+                if (shouldLog)
+                    LOGGER.LogInformation("Found system Pandoc installation at: '{Path}'.", candidate);
+
+                return new(candidate, false);
+            }
+
             //
             // When no local installation was found, we assume that the pandoc executable is in the system PATH:
             //
@@ -238,4 +249,59 @@ public sealed class PandocProcessBuilder
     /// Reads the os platform to determine the used executable name.
     /// </summary>
     public static string PandocExecutableName => CPU_ARCHITECTURE is RID.WIN_ARM64 or RID.WIN_X64 ? "pandoc.exe" : "pandoc";
+
+    private static IEnumerable<string> SystemPandocExecutableCandidates(string executableName)
+    {
+        var candidates = new List<string>();
+
+        switch (CPU_ARCHITECTURE)
+        {
+            case RID.WIN_X64 or RID.WIN_ARM64:
+                AddCandidate(candidates, Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Pandoc", executableName);
+                AddCandidate(candidates, Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Pandoc", executableName);
+                AddCandidate(candidates, Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Pandoc", executableName);
+                break;
+
+            case RID.OSX_X64 or RID.OSX_ARM64:
+                AddCandidate(candidates, "/opt/homebrew/bin", executableName);
+                AddCandidate(candidates, "/usr/local/bin", executableName);
+                AddCandidate(candidates, "/usr/bin", executableName);
+                break;
+
+            case RID.LINUX_X64 or RID.LINUX_ARM64:
+                AddCandidate(candidates, "/usr/local/bin", executableName);
+                AddCandidate(candidates, "/usr/bin", executableName);
+                AddCandidate(candidates, "/snap/bin", executableName);
+
+                var homeDirectory = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+                AddCandidate(candidates, homeDirectory, ".local", "bin", executableName);
+                break;
+        }
+
+        foreach (var pathDirectory in GetPathDirectories())
+            AddCandidate(candidates, pathDirectory, executableName);
+
+        var comparer = CPU_ARCHITECTURE is RID.WIN_X64 or RID.WIN_ARM64
+            ? StringComparer.OrdinalIgnoreCase
+            : StringComparer.Ordinal;
+        return candidates.Distinct(comparer);
+    }
+
+    private static IEnumerable<string> GetPathDirectories()
+    {
+        var pathValue = Environment.GetEnvironmentVariable("PATH");
+        if (string.IsNullOrWhiteSpace(pathValue))
+            yield break;
+
+        foreach (var pathDirectory in pathValue.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            yield return pathDirectory;
+    }
+
+    private static void AddCandidate(List<string> candidates, params string[] pathParts)
+    {
+        if (pathParts.Any(string.IsNullOrWhiteSpace))
+            return;
+
+        candidates.Add(Path.Combine(pathParts));
+    }
 }

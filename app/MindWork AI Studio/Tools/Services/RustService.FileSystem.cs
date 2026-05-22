@@ -6,8 +6,11 @@ public sealed partial class RustService
 {
     public async Task<DirectorySelectionResponse> SelectDirectory(string title, string? initialDirectory = null)
     {
-        PreviousDirectory? previousDirectory = initialDirectory is null ? null : new (initialDirectory);
-        var result = await this.http.PostAsJsonAsync($"/select/directory?title={title}", previousDirectory, this.jsonRustSerializerOptions);
+        var encodedTitle = Uri.EscapeDataString(title);
+        var result = initialDirectory is null
+            ? await this.http.PostAsync($"/select/directory?title={encodedTitle}", null)
+            : await this.http.PostAsJsonAsync($"/select/directory?title={encodedTitle}", new PreviousDirectory(initialDirectory), this.jsonRustSerializerOptions);
+        
         if (!result.IsSuccessStatusCode)
         {
             this.logger!.LogError($"Failed to select a directory: '{result.StatusCode}'");

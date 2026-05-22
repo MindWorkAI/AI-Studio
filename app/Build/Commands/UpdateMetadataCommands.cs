@@ -245,7 +245,7 @@ public sealed partial class UpdateMetadataCommands
         Console.WriteLine("- Start building the Rust runtime ...");
         
         var pathRuntime = Environment.GetRustRuntimeDirectory();
-        var rustBuildOutput = await this.ReadCommandOutput(pathRuntime, "cargo", "tauri build --bundles none", true);
+        var rustBuildOutput = await this.ReadCommandOutput(pathRuntime, "cargo", "tauri build --no-bundle", true);
         var rustBuildOutputLines = rustBuildOutput.Split([global::System.Environment.NewLine], StringSplitOptions.RemoveEmptyEntries);
         var foundRustIssue = false;
         foreach (var buildOutputLine in rustBuildOutputLines)
