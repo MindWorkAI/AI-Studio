@@ -23,10 +23,7 @@ public abstract class ERIClientBase(IERIDataSource dataSource) : IDisposable
         }
     };
     
-    protected readonly HttpClient HttpClient = new()
-    {
-        BaseAddress = new Uri($"{dataSource.Hostname}:{dataSource.Port}"),
-    };
+    protected readonly HttpClient HttpClient = ExternalHttpClientTimeout.CreateHttpClient(new Uri($"{dataSource.Hostname}:{dataSource.Port}"));
     
     protected string SecurityToken = string.Empty;
     

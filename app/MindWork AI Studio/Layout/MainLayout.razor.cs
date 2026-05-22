@@ -83,7 +83,9 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         // Read the user language from Rust:
         //
         var userLanguage = await this.RustService.ReadUserLanguage();
+        var userName = await this.RustService.ReadUserName();
         this.Logger.LogInformation($"The OS says '{userLanguage}' is the user language.");
+        this.Logger.LogInformation($"The OS says '{userName}' is the username.");
         
         // Ensure that all settings are loaded:
         await this.SettingsManager.LoadSettings();

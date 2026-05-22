@@ -1,33 +1,29 @@
 use once_cell::sync::Lazy;
-use rocket::http::Status;
-use rocket::Request;
-use rocket::request::FromRequest;
+use axum::extract::FromRequestParts;
+use axum::http::request::Parts;
+use axum::http::StatusCode;
 use crate::api_token::{generate_api_token, APIToken};
 
-pub static API_TOKEN: Lazy<APIToken> = Lazy::new(|| generate_api_token());
+pub static API_TOKEN: Lazy<APIToken> = Lazy::new(generate_api_token);
 
-/// The request outcome type used to handle API token requests.
-type RequestOutcome<R, T> = rocket::request::Outcome<R, T>;
+impl<S> FromRequestParts<S> for APIToken
+where
+    S: Send + Sync,
+{
+    type Rejection = StatusCode;
 
-/// The request outcome implementation for the API token.
-#[rocket::async_trait]
-impl<'r> FromRequest<'r> for APIToken {
-    type Error = APITokenError;
-
-    /// Handles the API token requests.
-    async fn from_request(request: &'r Request<'_>) -> RequestOutcome<Self, Self::Error> {
-        let token = request.headers().get_one("token");
-        match token {
+    async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self, Self::Rejection> {
+        match parts.headers.get("token").and_then(|value| value.to_str().ok()) {
             Some(token) => {
                 let received_token = APIToken::from_hex_text(token);
                 if API_TOKEN.validate(&received_token) {
-                    RequestOutcome::Success(received_token)
+                    Ok(received_token)
                 } else {
-                    RequestOutcome::Error((Status::Unauthorized, APITokenError::Invalid))
+                    Err(StatusCode::UNAUTHORIZED)
                 }
             }
 
-            None => RequestOutcome::Error((Status::Unauthorized, APITokenError::Missing)),
+            None => Err(StatusCode::UNAUTHORIZED),
         }
     }
 }

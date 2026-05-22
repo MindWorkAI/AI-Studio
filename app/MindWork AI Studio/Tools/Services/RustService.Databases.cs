@@ -4,13 +4,27 @@ namespace AIStudio.Tools.Services;
 
 public sealed partial class RustService
 {
-    public async Task<QdrantInfo> GetQdrantInfo()
+    public async Task<QdrantInfo> GetQdrantInfo(CancellationToken cancellationToken = default)
     {
         try
         {
-            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(45));
-            var response = await this.http.GetFromJsonAsync<QdrantInfo>("/system/qdrant/info", this.jsonRustSerializerOptions, cts.Token);
-            return response;
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            cts.CancelAfter(TimeSpan.FromSeconds(45));
+            
+            return await this.http.GetFromJsonAsync<QdrantInfo>("/system/qdrant/info", this.jsonRustSerializerOptions, cts.Token);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            if(this.logger is not null)
+                this.logger.LogWarning("Fetching Qdrant info from Rust service was cancelled by caller.");
+            else
+                Console.WriteLine("Fetching Qdrant info from Rust service was cancelled by caller.");
+            
+            return new QdrantInfo
+            {
+                Status = QdrantStatus.UNAVAILABLE,
+                UnavailableReason = "Operation cancelled by caller."
+            };
         }
         catch (Exception e)
         {
@@ -19,7 +33,11 @@ public sealed partial class RustService
             else
                 Console.WriteLine($"Error while fetching Qdrant info from Rust service: '{e}'.");
             
-            return default;
+            return new QdrantInfo
+            {
+                Status = QdrantStatus.UNAVAILABLE,
+                UnavailableReason = e.Message
+            };
         }
     }
 }

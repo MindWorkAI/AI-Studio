@@ -29,7 +29,7 @@ public partial class Information : MSGComponentBase
     private ISnackbar Snackbar { get; init; } = null!;
     
     [Inject]
-    private DatabaseClient DatabaseClient { get; init; } = null!;
+    private DatabaseClientProvider DatabaseClientProvider { get; init; } = null!;
     
     private static readonly Assembly ASSEMBLY = Assembly.GetExecutingAssembly();
     private static readonly MetaDataAttribute META_DATA = ASSEMBLY.GetCustomAttribute<MetaDataAttribute>()!;
@@ -40,6 +40,7 @@ public partial class Information : MSGComponentBase
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(Information).Namespace, nameof(Information));
 
     private string osLanguage = string.Empty;
+    private string osUserName = string.Empty;
     
     private static string VersionApp => $"MindWork AI Studio: v{META_DATA.Version} (commit {META_DATA.AppCommitHash}, build {META_DATA.BuildNum}, {META_DATA_ARCH.Architecture.ToRID().ToUserFriendlyName()})";
     
@@ -49,6 +50,8 @@ public partial class Information : MSGComponentBase
     
     private string OSLanguage => $"{T("User-language provided by the OS")}: '{this.osLanguage}'";
     
+    private string OSUserName => $"{T("Username provided by the OS")}: '{this.osUserName}'";
+
     private string VersionRust => $"{T("Used Rust compiler")}: v{META_DATA.RustVersion}";
     
     private string VersionDotnetRuntime => $"{T("Used .NET runtime")}: v{META_DATA.DotnetVersion}";
@@ -59,9 +62,21 @@ public partial class Information : MSGComponentBase
     
     private string VersionPdfium => $"{T("Used PDFium version")}: v{META_DATA_LIBRARIES.PdfiumVersion}";
     
-    private string VersionDatabase => this.DatabaseClient.IsAvailable
-        ? $"{T("Database version")}: {this.DatabaseClient.Name} v{META_DATA_DATABASES.DatabaseVersion}"
-        : $"{T("Database")}: {this.DatabaseClient.Name} - {T("not available")}";
+    private string VersionDatabase
+    {
+        get
+        {
+            if (this.databaseClient is null)
+                return $"{T("Database")}: {T("checking availability")}";
+
+            return this.databaseClient.Status switch
+            {
+                DatabaseClientStatus.AVAILABLE => $"{T("Database version")}: {this.databaseClient.Name} v{META_DATA_DATABASES.DatabaseVersion}",
+                DatabaseClientStatus.STARTING => $"{T("Database")}: {this.databaseClient.Name} - {T("starting")}",
+                _ => $"{T("Database")}: {this.databaseClient.Name} - {T("not available")}"
+            };
+        }
+    }
     
     private string versionPandoc = TB("Determine Pandoc version, please wait...");
     private PandocInstallation pandocInstallation;
@@ -86,6 +101,8 @@ public partial class Information : MSGComponentBase
     private sealed record MandatoryInfoPanelData(string HeaderText, string PluginName, DataMandatoryInfo Info, DataMandatoryInfoAcceptance? Acceptance);
 
     private readonly List<DatabaseDisplayInfo> databaseDisplayInfo = new();
+    private DatabaseClient? databaseClient;
+    private CancellationTokenSource? databaseRefreshCancellationTokenSource;
 
     private bool HasAnyActiveEnvironment => this.enterpriseEnvironments.Any(e => e.IsActive);
     
@@ -128,12 +145,12 @@ public partial class Information : MSGComponentBase
         this.RefreshEnterpriseConfigurationState();
         
         this.osLanguage = await this.RustService.ReadUserLanguage();
+        this.osUserName = await this.RustService.ReadUserName();
         this.logPaths = await this.RustService.GetLogPaths();
         
-        await foreach (var (label, value) in this.DatabaseClient.GetDisplayInfo())
-        {
-            this.databaseDisplayInfo.Add(new DatabaseDisplayInfo(label, value));
-        }
+        await this.RefreshDatabaseInfo(CancellationToken.None);
+        if (this.databaseClient?.Status is DatabaseClientStatus.STARTING)
+            this.StartShortDatabaseRefreshLoop();
         
         // Determine the Pandoc version may take some time, so we start it here
         // without waiting for the result:
@@ -237,6 +254,69 @@ public partial class Information : MSGComponentBase
         this.showDatabaseDetails = !this.showDatabaseDetails;
     }
 
+    private async Task RefreshDatabaseInfo(CancellationToken cancellationToken)
+    {
+        var refreshedClient = await this.DatabaseClientProvider.RefreshClientAsync(DatabaseRole.VECTOR_STORE, cancellationToken);
+        this.databaseClient = refreshedClient;
+        this.databaseDisplayInfo.Clear();
+
+        try
+        {
+            await foreach (var (label, value) in refreshedClient.GetDisplayInfo().WithCancellation(cancellationToken))
+            {
+                this.databaseDisplayInfo.Add(new DatabaseDisplayInfo(label, value));
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception e)
+        {
+            this.databaseClient = new NoDatabaseClient(refreshedClient.Name, e.Message, DatabaseClientStatus.STARTING);
+            await foreach (var (label, value) in this.databaseClient.GetDisplayInfo().WithCancellation(cancellationToken))
+            {
+                this.databaseDisplayInfo.Add(new DatabaseDisplayInfo(label, value));
+            }
+        }
+    }
+
+    private void StartShortDatabaseRefreshLoop()
+    {
+        this.databaseRefreshCancellationTokenSource?.Cancel();
+        this.databaseRefreshCancellationTokenSource?.Dispose();
+        this.databaseRefreshCancellationTokenSource = new CancellationTokenSource();
+        var cancellationToken = this.databaseRefreshCancellationTokenSource.Token;
+
+        _ = Task.Run(async () =>
+        {
+            const int MAX_TRIES = 12;
+            for (var attempt = 0; attempt < MAX_TRIES; attempt++)
+            {
+                try
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+                    await this.InvokeAsync(async () =>
+                    {
+                        await this.RefreshDatabaseInfo(cancellationToken);
+                        this.StateHasChanged();
+                    });
+
+                    if (this.databaseClient?.Status is not DatabaseClientStatus.STARTING)
+                        return;
+                }
+                catch (OperationCanceledException)
+                {
+                    return;
+                }
+                catch
+                {
+                    return;
+                }
+            }
+        }, cancellationToken);
+    }
+
     private IAvailablePlugin? FindManagedConfigurationPlugin(Guid configurationId)
     {
         return this.configPlugins.FirstOrDefault(plugin => plugin.ManagedConfigurationId == configurationId)
@@ -247,6 +327,13 @@ public partial class Information : MSGComponentBase
     private bool IsManagedConfigurationIdMismatch(IAvailablePlugin plugin, Guid configurationId)
     {
         return plugin.ManagedConfigurationId == configurationId && plugin.Id != configurationId;
+    }
+
+    protected override void DisposeResources()
+    {
+        this.databaseRefreshCancellationTokenSource?.Cancel();
+        this.databaseRefreshCancellationTokenSource?.Dispose();
+        base.DisposeResources();
     }
 
     private async Task CopyStartupLogPath()

@@ -15,7 +15,7 @@ public static partial class PluginFactory
             var serverUrl = configServerUrl.EndsWith('/') ? configServerUrl[..^1] : configServerUrl;
             var downloadUrl = $"{serverUrl}/{configPlugId}.zip";
             
-            using var http = new HttpClient();
+            using var http = ExternalHttpClientTimeout.CreateHttpClient();
             using var request = new HttpRequestMessage(HttpMethod.Get, downloadUrl);
             var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
             if (!response.IsSuccessStatusCode)
@@ -52,7 +52,7 @@ public static partial class PluginFactory
         try
         {
             await LockHotReloadAsync();
-            using var httpClient = new HttpClient();
+            using var httpClient = ExternalHttpClientTimeout.CreateHttpClient();
             var response = await httpClient.GetAsync(downloadUrl, cancellationToken);
             if (!response.IsSuccessStatusCode)
             {
