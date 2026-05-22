@@ -220,6 +220,13 @@ public record ChatTemplate(
         var relativePath = filePath
             .Replace('/', Path.DirectorySeparatorChar)
             .Replace('\\', Path.DirectorySeparatorChar);
+        
+        if (relativePath.Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries).Any(segment => segment == ".."))
+        {
+            LOGGER.LogWarning("The relative FileAttachments entry {AttachmentNum} in chat template {IdxChatTemplate} contains '..' path segments and will be ignored.", attachmentNum, idx);
+            return false;
+        }
+
         var combinedPath = Path.GetFullPath(Path.Combine(pluginRoot, relativePath));
         var pluginRootWithSeparator = pluginRoot.EndsWith(Path.DirectorySeparatorChar)
             ? pluginRoot
