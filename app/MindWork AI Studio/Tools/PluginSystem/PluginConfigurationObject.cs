@@ -52,6 +52,7 @@ public sealed record PluginConfigurationObject
     /// This parameter is passed by reference.</param>
     /// <param name="dryRun">Specifies whether to perform the operation as a dry run, where changes
     /// are not persisted.</param>
+    /// <param name="pluginPath">An optional parameter specifying the file path of the plugin, used for relative paths in the Lua table.</param>
     /// <returns>Returns true if parsing succeeds and configuration objects are added
     /// to the list; otherwise, false.</returns>
     public static bool TryParse<TClass>(
@@ -61,7 +62,8 @@ public sealed record PluginConfigurationObject
         LuaTable mainTable,
         Guid configPluginId,
         ref List<PluginConfigurationObject> configObjects,
-        bool dryRun
+        bool dryRun,
+        string pluginPath = ""
     ) where TClass : ConfigurationBaseObject
     {
         var luaTableName = configObjectType switch
@@ -104,7 +106,7 @@ public sealed record PluginConfigurationObject
             var (wasParsingSuccessful, configObject) = configObjectType switch
             {
                 PluginConfigurationObjectType.LLM_PROVIDER => (Settings.Provider.TryParseProviderTable(i, luaObjectTable, configPluginId, out var configurationObject) && configurationObject != Settings.Provider.NONE, configurationObject),
-                PluginConfigurationObjectType.CHAT_TEMPLATE => (ChatTemplate.TryParseChatTemplateTable(i, luaObjectTable, configPluginId, out var configurationObject) && configurationObject != ChatTemplate.NO_CHAT_TEMPLATE, configurationObject),
+                PluginConfigurationObjectType.CHAT_TEMPLATE => (ChatTemplate.TryParseChatTemplateTable(i, luaObjectTable, configPluginId, pluginPath, out var configurationObject) && configurationObject != ChatTemplate.NO_CHAT_TEMPLATE, configurationObject),
                 PluginConfigurationObjectType.PROFILE => (Profile.TryParseProfileTable(i, luaObjectTable, configPluginId, out var configurationObject) && configurationObject != Profile.NO_PROFILE, configurationObject),
                 PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER => (TranscriptionProvider.TryParseTranscriptionProviderTable(i, luaObjectTable, configPluginId, out var configurationObject) && configurationObject != TranscriptionProvider.NONE, configurationObject),
                 PluginConfigurationObjectType.EMBEDDING_PROVIDER => (EmbeddingProvider.TryParseEmbeddingProviderTable(i, luaObjectTable, configPluginId, out var configurationObject) && configurationObject != EmbeddingProvider.NONE, configurationObject),

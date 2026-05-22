@@ -298,7 +298,8 @@ CONFIG["CHAT_TEMPLATES"] = {}
 --     ["AllowProfileUsage"] = true,
 --     -- Optional: Pre-attach files that will be automatically included when using this template.
 --     -- These files will be loaded when the user selects this chat template.
---     -- Note: File paths must be absolute paths and accessible to all users.
+--     -- Note: File paths can be absolute paths that are accessible to all users, or relative paths
+--     -- inside this plugin folder, for example "attachments/00000000-0000-0000-0000-000000000001/Guidelines.pdf".
 --     ["FileAttachments"] = {
 --         "G:\\Company\\Documents\\Guidelines.pdf",
 --         "G:\\Company\\Documents\\CompanyPolicies.docx"

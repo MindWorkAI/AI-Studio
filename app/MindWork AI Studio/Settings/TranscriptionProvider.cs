@@ -3,9 +3,10 @@ using System.Text.Json.Serialization;
 using AIStudio.Provider;
 using AIStudio.Tools.PluginSystem;
 
-using Lua;
+using SharedTools;
 
 using Host = AIStudio.Provider.SelfHosted.Host;
+using LuaTable = Lua.LuaTable;
 
 namespace AIStudio.Settings;
 

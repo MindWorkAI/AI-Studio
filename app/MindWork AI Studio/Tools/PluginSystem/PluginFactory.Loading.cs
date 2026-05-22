@@ -326,7 +326,11 @@ public static partial class PluginFactory
                 return new PluginLanguage(isInternal, state, type);
             
             case PluginType.CONFIGURATION:
-                var configPlug = new PluginConfiguration(isInternal, state, type);
+                var configPlug = new PluginConfiguration(isInternal, state, type)
+                {
+                    PluginPath = pluginPath ?? string.Empty
+                };
+                
                 await configPlug.InitializeAsync(true);
                 return configPlug;
             

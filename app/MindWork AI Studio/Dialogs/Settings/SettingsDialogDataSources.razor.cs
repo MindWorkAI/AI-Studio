@@ -3,15 +3,10 @@ using AIStudio.Settings.DataModel;
 using AIStudio.Tools.ERIClient.DataModel;
 using AIStudio.Tools.PluginSystem;
 
-using Microsoft.AspNetCore.Components;
-
 namespace AIStudio.Dialogs.Settings;
 
 public partial class SettingsDialogDataSources : SettingsDialogBase
 {
-    [Inject]
-    private ISnackbar Snackbar { get; init; } = null!;
-
     private string GetEmbeddingName(IDataSource dataSource)
     {
         if(dataSource is IInternalDataSource internalDataSource)

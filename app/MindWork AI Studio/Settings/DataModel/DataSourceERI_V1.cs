@@ -8,10 +8,11 @@ using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.RAG;
 using AIStudio.Tools.Services;
 
-using Lua;
+using SharedTools;
 
 using ChatThread = AIStudio.Chat.ChatThread;
 using ContentType = AIStudio.Tools.ERIClient.DataModel.ContentType;
+using LuaTable = Lua.LuaTable;
 
 namespace AIStudio.Settings.DataModel;
 
