@@ -361,7 +361,15 @@ public partial class VoiceRecorder : MSGComponentBase
 
             // Call the transcription API:
             this.Logger.LogInformation("Starting transcription with provider '{ProviderName}' and model '{ModelName}'.", transcriptionProviderSettings.UsedLLMProvider, transcriptionProviderSettings.Model.ToString());
-            var transcribedText = await provider.TranscribeAudioAsync(transcriptionProviderSettings.Model, this.finalRecordingPath, this.SettingsManager);
+            var transcriptionResult = await provider.TranscribeAudioAsync(transcriptionProviderSettings.Model, this.finalRecordingPath, this.SettingsManager);
+            if (!transcriptionResult.Success)
+            {
+                this.Logger.LogWarning("The transcription request failed.");
+                await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, this.T("Unfortunately, there was an error communicating with the AI system.")));
+                return;
+            }
+
+            var transcribedText = transcriptionResult.Text;
 
             if (string.IsNullOrWhiteSpace(transcribedText))
             {

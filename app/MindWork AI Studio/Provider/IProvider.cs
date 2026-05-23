@@ -64,7 +64,7 @@ public interface IProvider
     /// <param name="settingsManager">The settings manager instance to use.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>>The transcription result.</returns>
-    public Task<string> TranscribeAudioAsync(Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default);
+    public Task<TranscriptionResult> TranscribeAudioAsync(Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default);
         
     /// <summary>
     /// Embed a text file.
