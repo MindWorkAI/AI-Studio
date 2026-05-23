@@ -63,9 +63,9 @@ public class ProviderGoogle() : BaseProvider(LLMProviders.GOOGLE, "https://gener
     #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 
     /// <inheritdoc />
-    public override Task<string> TranscribeAudioAsync(Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default)
+    public override Task<TranscriptionResult> TranscribeAudioAsync(Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default)
     {
-        return Task.FromResult(string.Empty);
+        return Task.FromResult(TranscriptionResult.Failure());
     }
     
     /// <inhertidoc />

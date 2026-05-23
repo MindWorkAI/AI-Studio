@@ -100,7 +100,7 @@ public abstract class BaseProvider : IProvider, ISecretId
     public abstract IAsyncEnumerable<ImageURL> StreamImageCompletion(Model imageModel, string promptPositive, string promptNegative = FilterOperator.String.Empty, ImageURL referenceImageURL = default, CancellationToken token = default);
     
     /// <inheritdoc />
-    public abstract Task<string> TranscribeAudioAsync(Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default);
+    public abstract Task<TranscriptionResult> TranscribeAudioAsync(Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default);
     
     /// <inheritdoc />
     public abstract Task<IReadOnlyList<IReadOnlyList<float>>> EmbedTextAsync(Model embeddingModel, SettingsManager settingsManager, CancellationToken token = default, params List<string> texts);
@@ -804,7 +804,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             yield return content;
     }
 
-    protected async Task<string> PerformStandardTranscriptionRequest(RequestedSecret requestedSecret, Model transcriptionModel, string audioFilePath, Host host = Host.NONE, CancellationToken token = default)
+    protected async Task<TranscriptionResult> PerformStandardTranscriptionRequest(RequestedSecret requestedSecret, Model transcriptionModel, string audioFilePath, Host host = Host.NONE, CancellationToken token = default)
     {
         try
         {
@@ -846,7 +846,7 @@ public abstract class BaseProvider : IProvider, ISecretId
                     if(!requestedSecret.Success)
                     {
                         this.logger.LogError("No valid API key available for transcription request.");
-                        return string.Empty;
+                        return TranscriptionResult.Failure();
                     }
                     
                     request.Headers.Add("Authorization", await requestedSecret.Secret.Decrypt(ENCRYPTION));
@@ -856,7 +856,7 @@ public abstract class BaseProvider : IProvider, ISecretId
                     if(!requestedSecret.Success)
                     {
                         this.logger.LogError("No valid API key available for transcription request.");
-                        return string.Empty;
+                        return TranscriptionResult.Failure();
                     }
                     
                     request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(ENCRYPTION));
@@ -864,22 +864,22 @@ public abstract class BaseProvider : IProvider, ISecretId
             }
             
             using var response = await this.HttpClient.SendAsync(request, token);
-            var responseBody = response.Content.ReadAsStringAsync(token).Result;
+            var responseBody = await response.Content.ReadAsStringAsync(token);
         
             if (!response.IsSuccessStatusCode)
             {
                 this.logger.LogError("Transcription request failed with status code {ResponseStatusCode} and body: '{ResponseBody}'.", response.StatusCode, responseBody);
-                return string.Empty;
+                return TranscriptionResult.Failure();
             }
 
             var transcriptionResponse = JsonSerializer.Deserialize<TranscriptionResponse>(responseBody, JSON_SERIALIZER_OPTIONS);
             if(transcriptionResponse is null)
             {
                 this.logger.LogError("Was not able to deserialize the transcription response.");
-                return string.Empty;
+                return TranscriptionResult.Failure();
             }
 
-            return transcriptionResponse.Text;
+            return TranscriptionResult.FromText(transcriptionResponse.Text);
         }
         catch (Exception e)
         {
@@ -887,7 +887,7 @@ public abstract class BaseProvider : IProvider, ISecretId
                 await this.SendTimeoutError("transcribing audio");
 
             this.logger.LogError("Failed to perform transcription request: '{Message}'.", e.Message);
-            return string.Empty;
+            return TranscriptionResult.Failure();
         }
     }
     
