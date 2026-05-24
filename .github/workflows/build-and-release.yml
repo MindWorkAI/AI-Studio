@@ -1178,7 +1178,7 @@ jobs:
             with:
               prerelease: true
               draft: false
-              make_latest: true
+              make_latest: false
               body: ${{ env.CHANGELOG }}
               name: "Release ${{ env.FORMATTED_VERSION }}"
               fail_on_unmatched_files: true
