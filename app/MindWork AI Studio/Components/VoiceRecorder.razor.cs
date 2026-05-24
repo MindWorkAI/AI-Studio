@@ -132,6 +132,7 @@ public partial class VoiceRecorder : MSGComponentBase
             }
 
             var mimeTypes = GetPreferredMimeTypes(
+                Builder.Create().UseAudio().UseSubtype(AudioSubtype.WEBM).Build(),
                 Builder.Create().UseAudio().UseSubtype(AudioSubtype.OGG).Build(),
                 Builder.Create().UseAudio().UseSubtype(AudioSubtype.AAC).Build(),
                 Builder.Create().UseAudio().UseSubtype(AudioSubtype.MP3).Build(),
