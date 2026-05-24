@@ -2,6 +2,7 @@ using AIStudio.Agents;
 using AIStudio.Agents.AssistantAudit;
 using AIStudio.Settings;
 using AIStudio.Tools.Databases;
+using AIStudio.Tools.AIJobs;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.PluginSystem.Assistants;
 using AIStudio.Tools.Services;
@@ -128,6 +129,7 @@ internal sealed class Program
         builder.Services.AddMudMarkdownClipboardService<MarkdownClipboardService>();
         builder.Services.AddSingleton<SettingsManager>();
         builder.Services.AddSingleton<ThreadSafeRandom>();
+        builder.Services.AddSingleton<AIJobService>();
         builder.Services.AddSingleton<VoiceRecordingAvailabilityService>();
         builder.Services.AddSingleton<DataSourceService>();
         builder.Services.AddScoped<PandocAvailabilityService>();
