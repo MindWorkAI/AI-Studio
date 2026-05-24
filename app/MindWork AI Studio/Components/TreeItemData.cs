@@ -12,9 +12,15 @@ public class TreeItemData : ITreeItem
 
     public string Icon { get; init; } = string.Empty;
 
+    public string DefaultIcon { get; init; } = string.Empty;
+
     public TreeItemType Type { get; init; }
 
     public string Path { get; init; } = string.Empty;
+
+    public Guid ChatId { get; init; }
+
+    public Guid WorkspaceId { get; init; }
 
     public bool Expandable { get; init; } = true;
 

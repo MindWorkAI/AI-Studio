@@ -3,6 +3,7 @@ using AIStudio.Dialogs;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.AIJobs;
 
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
@@ -47,6 +48,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     [Inject]
     private IJSRuntime JsRuntime { get; init; } = null!;
 
+    [Inject]
+    private AIJobService AIJobService { get; init; } = null!;
+
     private const Placement TOOLBAR_TOOLTIP_PLACEMENT = Placement.Top;
     private static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
 
@@ -58,7 +62,6 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private bool mustScrollToBottomAfterRender;
     private InnerScrolling scrollingArea = null!;
     private byte scrollRenderCountdown;
-    private bool isStreaming;
     private string userInput = string.Empty;
     private bool mustStoreChat;
     private bool mustLoadChat;
@@ -67,8 +70,8 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private string currentWorkspaceName = string.Empty;
     private Guid currentWorkspaceId = Guid.Empty;
     private Guid currentChatThreadId = Guid.Empty;
+    private Guid foregroundChatId = Guid.Empty;
     private int workspaceHeaderSyncVersion;
-    private CancellationTokenSource? cancellationTokenSource;
     private HashSet<FileAttachment> chatDocumentPaths = [];
 
     // Unfortunately, we need the input field reference to blur the focus away. Without
@@ -80,7 +83,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     protected override async Task OnInitializedAsync()
     {
         // Apply the filters for the message bus:
-        this.ApplyFilters([], [ Event.HAS_CHAT_UNSAVED_CHANGES, Event.RESET_CHAT_STATE, Event.CHAT_STREAMING_DONE, Event.WORKSPACE_LOADED_CHAT_CHANGED ]);
+        this.ApplyFilters([], [ Event.HAS_CHAT_UNSAVED_CHANGES, Event.RESET_CHAT_STATE, Event.CHAT_STREAMING_DONE, Event.WORKSPACE_LOADED_CHAT_CHANGED, Event.AI_JOB_CHANGED, Event.AI_JOB_FINISHED, Event.CHAT_GENERATION_CHANGED ]);
         
         // Configure the spellchecking for the user input:
         this.SettingsManager.InjectSpellchecking(USER_INPUT_ATTRIBUTES);
@@ -217,6 +220,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         
         // Select the correct provider:
         await this.SelectProviderWhenLoadingChat();
+        await this.SyncForegroundChatAsync();
         await base.OnInitializedAsync();
     }
 
@@ -273,6 +277,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     protected override async Task OnParametersSetAsync()
     {
         await this.SyncWorkspaceHeaderWithChatThreadAsync();
+        await this.SyncForegroundChatAsync();
         await base.OnParametersSetAsync();
     }
 
@@ -333,7 +338,23 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         this.WorkspaceName(this.currentWorkspaceName);
     }
 
+    private async Task SyncForegroundChatAsync()
+    {
+        var nextForegroundChatId = this.ChatThread?.ChatId ?? Guid.Empty;
+        if (this.foregroundChatId == nextForegroundChatId)
+            return;
+
+        if (this.foregroundChatId != Guid.Empty)
+            await this.AIJobService.SetForegroundAsync(AIJobKind.CHAT_GENERATION, this.foregroundChatId, false);
+
+        this.foregroundChatId = nextForegroundChatId;
+        if (this.foregroundChatId != Guid.Empty)
+            await this.AIJobService.SetForegroundAsync(AIJobKind.CHAT_GENERATION, this.foregroundChatId, true);
+    }
+
     private bool IsProviderSelected => this.Provider.UsedLLMProvider != LLMProviders.NONE;
+
+    private bool IsCurrentChatStreaming => this.ChatThread is not null && this.AIJobService.IsChatGenerationActive(this.ChatThread.ChatId);
     
     private string ProviderPlaceholder => this.IsProviderSelected ? T("Type your input here...") : T("Select a provider first");
 
@@ -453,7 +474,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         if (!this.IsProviderSelected)
             return true;
         
-        if(this.isStreaming)
+        if(this.IsCurrentChatStreaming)
             return true;
         
         if(!this.ChatThread.IsLLMProviderAllowed(this.Provider))
@@ -614,7 +635,6 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         await this.inputField.BlurAsync();
         
         // Enable the stream state for the chat component:
-        this.isStreaming = true;
         this.hasUnsavedChanges = true;
         
         if (this.SettingsManager.ConfigurationData.Chat.ShowLatestMessageAfterLoading)
@@ -624,38 +644,23 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         }
         
         this.Logger.LogDebug($"Start processing user input using provider '{this.Provider.InstanceName}' with model '{this.Provider.Model}'.");
-        
-        using (this.cancellationTokenSource = new())
+        await this.AIJobService.TryStartChatGenerationAsync(new ChatGenerationRequest
         {
-            this.StateHasChanged();
-            
-            // Use the selected provider to get the AI response.
-            // By awaiting this line, we wait for the entire
-            // content to be streamed.
-            this.ChatThread = await aiText.CreateFromProviderAsync(this.Provider.CreateProvider(), this.Provider.Model, lastUserPrompt, this.ChatThread, this.cancellationTokenSource.Token);
-        }
-        
-        this.cancellationTokenSource = null;
+            ChatThread = this.ChatThread!,
+            AIText = aiText,
+            LastUserPrompt = lastUserPrompt,
+            ProviderSettings = this.Provider,
+            IsForeground = true,
+        });
 
-        // Save the chat:
-        if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
-        {
-            await this.SaveThread();
-            this.hasUnsavedChanges = false;
-        }
-
-        // Disable the stream state:
-        this.isStreaming = false;
-        
-        // Update the UI:
+        await this.SyncForegroundChatAsync();
         this.StateHasChanged();
     }
     
     private async Task CancelStreaming()
     {
-        if (this.cancellationTokenSource is not null)
-            if(!this.cancellationTokenSource.IsCancellationRequested)
-                await this.cancellationTokenSource.CancelAsync();
+        if (this.ChatThread is not null)
+            await this.AIJobService.CancelChatGenerationAsync(this.ChatThread.ChatId);
     }
     
     private async Task SaveThread()
@@ -685,7 +690,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         // Want the user to manage the chat storage manually? In that case, we have to ask the user
         // about possible data loss:
         //
-        if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_MANUALLY && this.hasUnsavedChanges)
+        if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_MANUALLY && this.hasUnsavedChanges && !this.IsCurrentChatStreaming)
         {
             var dialogParameters = new DialogParameters<ConfirmDialog>
             {
@@ -718,7 +723,6 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         //
         // Reset our state:
         //
-        this.isStreaming = false;
         this.hasUnsavedChanges = false;
         this.userInput = string.Empty;
         
@@ -788,6 +792,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         this.ApplyStandardDataSourceOptions();
         
         // Notify the parent component about the change:
+        await this.SyncForegroundChatAsync();
         await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
     }
     
@@ -796,7 +801,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         if(this.ChatThread is null)
             return;
         
-        if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_MANUALLY && this.hasUnsavedChanges)
+        if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_MANUALLY && this.hasUnsavedChanges && !this.IsCurrentChatStreaming)
         {
             var confirmationDialogParameters = new DialogParameters<ConfirmDialog>
             {
@@ -836,18 +841,21 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     
     private async Task LoadedChatChanged()
     {
-        this.isStreaming = false;
         this.hasUnsavedChanges = false;
         this.userInput = string.Empty;
 
         if (this.ChatThread is not null)
         {
+            this.ChatThread = this.AIJobService.TryGetLiveChatThread(this.ChatThread.ChatId) ?? this.ChatThread;
+            await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
             await this.SyncWorkspaceHeaderWithChatThreadAsync();
+            await this.SyncForegroundChatAsync();
             this.dataSourceSelectionComponent?.ChangeOptionWithoutSaving(this.ChatThread.DataSourceOptions, this.ChatThread.AISelectedDataSources);
         }
         else
         {
             this.ClearWorkspaceHeaderState();
+            await this.SyncForegroundChatAsync();
             this.ApplyStandardDataSourceOptions();
         }
         
@@ -863,12 +871,12 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     
     private async Task ResetState()
     {
-        this.isStreaming = false;
         this.hasUnsavedChanges = false;
         this.userInput = string.Empty;
         this.ClearWorkspaceHeaderState();
         
         this.ChatThread = null;
+        await this.SyncForegroundChatAsync();
         this.ApplyStandardDataSourceOptions();
         await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
     }
@@ -995,6 +1003,19 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             case Event.WORKSPACE_LOADED_CHAT_CHANGED:
                 await this.LoadedChatChanged();
                 break;
+
+            case Event.AI_JOB_CHANGED:
+            case Event.AI_JOB_FINISHED:
+            case Event.CHAT_GENERATION_CHANGED:
+                if (data is AIJobSnapshot { Kind: AIJobKind.CHAT_GENERATION } snapshot && this.ChatThread?.ChatId == snapshot.SubjectId)
+                {
+                    this.ChatThread = this.AIJobService.TryGetLiveChatThread(snapshot.SubjectId) ?? this.ChatThread;
+                    if (!snapshot.IsActive)
+                        this.hasUnsavedChanges = false;
+
+                    this.StateHasChanged();
+                }
+                break;
         }
     }
 
@@ -1004,6 +1025,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         {
             case Event.HAS_CHAT_UNSAVED_CHANGES:
                 if(this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
+                    return Task.FromResult((TResult?) (object) false);
+
+                if (this.IsCurrentChatStreaming)
                     return Task.FromResult((TResult?) (object) false);
                 
                 return Task.FromResult((TResult?)(object)this.hasUnsavedChanges);
@@ -1024,20 +1048,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             this.hasUnsavedChanges = false;
         }
 
-        if (this.cancellationTokenSource is not null)
-        {
-            try
-            {
-                if(!this.cancellationTokenSource.IsCancellationRequested)
-                    await this.cancellationTokenSource.CancelAsync();
-            
-                this.cancellationTokenSource.Dispose();
-            }
-            catch
-            {
-                // ignored
-            }
-        }
+        await this.AIJobService.SetForegroundAsync(AIJobKind.CHAT_GENERATION, this.foregroundChatId, false);
     }
 
     #endregion

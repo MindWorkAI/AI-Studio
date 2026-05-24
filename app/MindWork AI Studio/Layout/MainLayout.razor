@@ -17,7 +17,7 @@
                         <MudNavMenu>
                             @foreach (var navBarItem in this.navItems)
                             {
-                                <MudNavLink Href="@navBarItem.Path" Match="@(navBarItem.MatchAll ? NavLinkMatch.All : NavLinkMatch.Prefix)" Icon="@navBarItem.Icon" Style="@navBarItem.SetColorStyle(this.SettingsManager)" Class="custom-icon-color">
+                                    <MudNavLink Href="@navBarItem.Path" Match="@(navBarItem.MatchAll ? NavLinkMatch.All : NavLinkMatch.Prefix)" Icon="@(navBarItem.Path == Routes.CHAT && this.AIJobService.HasActiveJobs ? Icons.Material.Filled.AutoAwesome : navBarItem.Icon)" Style="@navBarItem.SetColorStyle(this.SettingsManager)" Class="custom-icon-color">
                                     @navBarItem.Name
                                 </MudNavLink>
                             }
@@ -42,12 +42,12 @@
                             if (this.SettingsManager.ConfigurationData.App.NavigationBehavior is NavBehavior.NEVER_EXPAND_USE_TOOLTIPS)
                             {
                                 <MudTooltip Text="@navBarItem.Name" Placement="Placement.Right">
-                                    <MudNavLink Href="@navBarItem.Path" Match="@(navBarItem.MatchAll ? NavLinkMatch.All : NavLinkMatch.Prefix)" Icon="@navBarItem.Icon" Style="@navBarItem.SetColorStyle(this.SettingsManager)" Class="custom-icon-color"/>
+                                    <MudNavLink Href="@navBarItem.Path" Match="@(navBarItem.MatchAll ? NavLinkMatch.All : NavLinkMatch.Prefix)" Icon="@(navBarItem.Path == Routes.CHAT && this.AIJobService.HasActiveJobs ? Icons.Material.Filled.AutoAwesome : navBarItem.Icon)" Style="@navBarItem.SetColorStyle(this.SettingsManager)" Class="custom-icon-color"/>
                                 </MudTooltip>
                             }
                             else
                             {
-                                <MudNavLink Href="@navBarItem.Path" Match="@(navBarItem.MatchAll ? NavLinkMatch.All : NavLinkMatch.Prefix)" Icon="@navBarItem.Icon" Style="@navBarItem.SetColorStyle(this.SettingsManager)" Class="custom-icon-color"/>
+                                <MudNavLink Href="@navBarItem.Path" Match="@(navBarItem.MatchAll ? NavLinkMatch.All : NavLinkMatch.Prefix)" Icon="@(navBarItem.Path == Routes.CHAT && this.AIJobService.HasActiveJobs ? Icons.Material.Filled.AutoAwesome : navBarItem.Icon)" Style="@navBarItem.SetColorStyle(this.SettingsManager)" Class="custom-icon-color"/>
                             }
                         }
                     </MudNavMenu>

@@ -30,6 +30,9 @@ public enum Event
     RESET_CHAT_STATE,
     LOAD_CHAT,
     CHAT_STREAMING_DONE,
+    AI_JOB_CHANGED,
+    AI_JOB_FINISHED,
+    CHAT_GENERATION_CHANGED,
     
     // Workspace events:
     WORKSPACE_LOADED_CHAT_CHANGED,

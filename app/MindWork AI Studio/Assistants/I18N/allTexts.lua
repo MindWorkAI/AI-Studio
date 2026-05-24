@@ -6817,6 +6817,21 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::THEMESEXTENSIONS::T534715610"] =
 -- Use no profile
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::PROFILE::T2205839602"] = "Use no profile"
 
+-- The selected model is not available.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::AIJOBS::AIJOBSERVICE::T1578005752"] = "The selected model is not available."
+
+-- The selected provider is not allowed for this chat.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::AIJOBS::AIJOBSERVICE::T174545104"] = "The selected provider is not allowed for this chat."
+
+-- The AI job failed. The message is: '{0}'
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::AIJOBS::AIJOBSERVICE::T237448388"] = "The AI job failed. The message is: '{0}'"
+
+-- The selected model '{0}' is no longer available from '{1}' (provider={2}). Please adapt your provider settings.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::AIJOBS::AIJOBSERVICE::T3267850764"] = "The selected model '{0}' is no longer available from '{1}' (provider={2}). Please adapt your provider settings."
+
+-- We could load models from '{0}', but the provider did not return any usable text models.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::AIJOBS::AIJOBSERVICE::T3378120620"] = "We could load models from '{0}', but the provider did not return any usable text models."
+
 -- SSO (Kerberos)
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::AUTHMETHODSV1EXTENSIONS::T268552140"] = "SSO (Kerberos)"
 
