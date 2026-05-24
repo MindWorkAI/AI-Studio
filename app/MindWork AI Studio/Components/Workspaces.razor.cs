@@ -239,7 +239,7 @@ public partial class Workspaces : MSGComponentBase
         return snapshot?.Status switch
         {
             AIJobStatus.WAITING_FOR_REMOTE => Icons.Material.Filled.HourglassTop,
-            AIJobStatus.RUNNING => Icons.Material.Filled.AutoAwesome,
+            AIJobStatus.RUNNING => Icons.Material.Filled.ChangeCircle,
             AIJobStatus.CANCELED => Icons.Material.Filled.Cancel,
             AIJobStatus.FAILED => Icons.Material.Filled.Error,
             _ => defaultIcon,

@@ -194,6 +194,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
                 case Event.AI_JOB_CHANGED:
                 case Event.AI_JOB_FINISHED:
                 case Event.CHAT_GENERATION_CHANGED:
+                    this.LoadNavItems();
                     this.StateHasChanged();
                     break;
 
@@ -307,7 +308,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         var palette = this.ColorTheme.GetCurrentPalette(this.SettingsManager);
         
         yield return new(T("Home"), Icons.Material.Filled.Home, palette.DarkLighten, palette.GrayLight, Routes.HOME, true);
-        yield return new(T("Chat"), Icons.Material.Filled.Chat, palette.DarkLighten, palette.GrayLight, Routes.CHAT, false);
+        yield return new(T("Chat"), this.AIJobService.HasActiveJobs ? Icons.Material.Filled.Chat : Icons.Material.Outlined.Chat, palette.DarkLighten, palette.GrayLight, Routes.CHAT, false);
         yield return new(T("Assistants"), Icons.Material.Filled.Apps, palette.DarkLighten, palette.GrayLight, Routes.ASSISTANTS, false);
 
         if (PreviewFeatures.PRE_WRITER_MODE_2024.IsEnabled(this.SettingsManager))
