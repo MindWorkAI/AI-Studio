@@ -34,6 +34,11 @@
     "macOS": {
       "exceptionDomain": "localhost"
     },
+    "linux": {
+      "appimage": {
+        "bundleMediaFramework": true
+      }
+    },
     "createUpdaterArtifacts": "v1Compatible"
   },
   
