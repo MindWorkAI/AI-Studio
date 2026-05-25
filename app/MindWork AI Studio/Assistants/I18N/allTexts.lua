@@ -6583,11 +6583,11 @@ UI_TEXT_CONTENT["AISTUDIO::PROVIDER::MODELLOADFAILUREREASONEXTENSIONS::T21156887
 -- We could not load models from '{0}' because the provider returned an unexpected response.
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::MODELLOADFAILUREREASONEXTENSIONS::T2186844789"] = "We could not load models from '{0}' because the provider returned an unexpected response."
 
+-- We could not load models from '{0}' because the account appears to have no API credits left.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::MODELLOADFAILUREREASONEXTENSIONS::T373339048"] = "We could not load models from '{0}' because the account appears to have no API credits left."
+
 -- We could not load models from '{0}' due to an unknown error.
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::MODELLOADFAILUREREASONEXTENSIONS::T3907712809"] = "We could not load models from '{0}' due to an unknown error."
-
--- It looks like you do not have any API credits left with OpenAI. Please add credits to your account and try again.
-UI_TEXT_CONTENT["AISTUDIO::PROVIDER::MODELLOADFAILUREREASONEXTENSIONS::T757371511"] = "It looks like you do not have any API credits left with OpenAI. Please add credits to your account and try again."
 
 -- It looks like you do not have any API credits left with OpenAI. Please add credits to your account and try again.
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::OPENAI::PROVIDEROPENAI::T757371511"] = "It looks like you do not have any API credits left with OpenAI. Please add credits to your account and try again."

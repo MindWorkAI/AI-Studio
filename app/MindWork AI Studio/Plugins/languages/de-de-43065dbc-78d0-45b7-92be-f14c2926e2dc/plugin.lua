@@ -6471,6 +6471,12 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::WRITER::T779923726"] = "Ihre Regieanweisungen"
 -- We tried to communicate with the LLM provider '{0}' (type={1}). The server might be down or having issues. The provider message is: '{2}'
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T1000247110"] = "Wir haben versucht, mit dem LLM-Anbieter „{0}“ (Typ={1}) zu kommunizieren. Der Server ist möglicherweise nicht erreichbar oder hat Probleme. Die Nachricht des Anbieters lautet: „{2}“"
 
+-- The provider '{0}' reported an error while streaming the response.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T1008706234"] = "Der Anbieter „{0}“ hat einen Fehler beim Streamen der Antwort gemeldet."
+
+-- The provider rejected the request because too many requests were sent. Please wait a moment and try again.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T1028424693"] = "Der Anbieter hat die Anfrage abgelehnt, weil zu viele Anfragen gesendet wurden. Bitte warten Sie einen Moment und versuchen Sie es erneut."
+
 -- The request to the LLM provider '{0}' (type={1}) timed out after {2} while {3}. Please try again or check whether the provider is still responding.
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T1069211263"] = "Die Anfrage an den LLM-Anbieter „{0}“ (Typ={1}) hat nach {2} während „{3}“ das Zeitlimit überschritten. Bitte versuchen Sie es erneut oder prüfen Sie, ob der Anbieter noch antwortet."
 
@@ -6503,6 +6509,9 @@ UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T3759732886"] = "Wir haben ve
 
 -- We tried to communicate with the LLM provider '{0}' (type={1}). The data of the chat, including all file attachments, is probably too large for the selected model and provider. The provider message is: '{2}'
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T4049517041"] = "Wir haben versucht, mit dem LLM-Anbieter „{0}“ (Typ={1}) zu kommunizieren. Die Daten des Chats, einschließlich aller Dateianhänge, sind vermutlich zu groß für das ausgewählte Modell und den Anbieter. Die Nachricht des Anbieters lautet: „{2}“"
+
+-- The provider '{0}' reported an error: {1}
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T700894460"] = "Der Anbieter „{0}“ hat einen Fehler gemeldet: {1}"
 
 -- The trust level of this provider **has not yet** been thoroughly **investigated and evaluated**. We do not know if your data is safe.
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T1014558951"] = "Das Vertrauensniveau dieses Anbieters wurde **noch nicht** gründlich **untersucht und bewertet**. Wir wissen nicht, ob ihre Daten sicher sind."
@@ -6564,6 +6573,9 @@ UI_TEXT_CONTENT["AISTUDIO::PROVIDER::MODEL::T2234274832"] = "Kein Modell ausgew�
 -- We could not load models from '{0}'. The account or API key does not have the required permissions.
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::MODELLOADFAILUREREASONEXTENSIONS::T1143085203"] = "Wir konnten keine Modelle von '{0}' laden. Das Konto oder der API-Schlüssel verfügt nicht über die erforderlichen Berechtigungen."
 
+-- We could not load models from '{0}' because too many requests were sent. Please wait a moment and try again.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::MODELLOADFAILUREREASONEXTENSIONS::T155481725"] = "Wir konnten keine Modelle von „{0}“ laden, da zu viele Anfragen gesendet wurden. Bitte warten Sie einen Moment und versuchen Sie es erneut."
+
 -- We could not load models from '{0}'. The API key is probably missing, invalid, or expired.
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::MODELLOADFAILUREREASONEXTENSIONS::T2041046579"] = "Modelle aus '{0}' konnten nicht geladen werden. Wahrscheinlich fehlt der API-Schlüssel, ist ungültig oder abgelaufen."
 
@@ -6573,8 +6585,14 @@ UI_TEXT_CONTENT["AISTUDIO::PROVIDER::MODELLOADFAILUREREASONEXTENSIONS::T21156887
 -- We could not load models from '{0}' because the provider returned an unexpected response.
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::MODELLOADFAILUREREASONEXTENSIONS::T2186844789"] = "Wir konnten keine Modelle von '{0}' laden, da der Anbieter eine unerwartete Antwort zurückgegeben hat."
 
+-- We could not load models from '{0}' because the account appears to have no API credits left.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::MODELLOADFAILUREREASONEXTENSIONS::T373339048"] = "Modelle konnten nicht von „{0}“ geladen werden, da das Konto offenbar keine API-Guthaben mehr hat."
+
 -- We could not load models from '{0}' due to an unknown error.
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::MODELLOADFAILUREREASONEXTENSIONS::T3907712809"] = "Wir konnten die Modelle aus '{0}' aufgrund eines unbekannten Fehlers nicht laden."
+
+-- It looks like you do not have any API credits left with OpenAI. Please add credits to your account and try again.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::OPENAI::PROVIDEROPENAI::T757371511"] = "Anscheinend haben Sie bei OpenAI kein API-Guthaben mehr. Bitte fügen Sie Ihrem Konto Guthaben hinzu und versuchen Sie es erneut."
 
 -- Model as configured by whisper.cpp
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::SELFHOSTED::PROVIDERSELFHOSTED::T3313940770"] = "Modell wie in whisper.cpp konfiguriert"
