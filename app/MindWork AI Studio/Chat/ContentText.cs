@@ -93,59 +93,70 @@ public sealed class ContentText : IContent
         
         // Start another thread by using a task to uncouple
         // the UI thread from the AI processing:
-        await Task.Run(async () =>
+        try
         {
-            // We show the waiting animation until we get the first response:
-            this.InitialRemoteWait = true;
-            
-            // Iterate over the responses from the AI:
-            await foreach (var contentStreamChunk in provider.StreamChatCompletion(chatModel, chatThread, settings, token))
+            await Task.Run(async () =>
             {
-                // When the user cancels the request, we stop the loop:
-                if (token.IsCancellationRequested)
-                    break;
-
-                // Stop the waiting animation:
-                this.InitialRemoteWait = false;
-                this.IsStreaming = true;
-                
-                // Add the response to the text:
-                this.Text += contentStreamChunk;
-                
-                // Merge the sources:
-                this.Sources.MergeSources(contentStreamChunk.Sources);
-                
-                // Notify the UI that the content has changed,
-                // depending on the energy saving mode:
-                var now = DateTimeOffset.Now;
-                switch (settings.ConfigurationData.App.IsSavingEnergy)
+                try
                 {
-                    // Energy saving mode is off. We notify the UI
-                    // as fast as possible -- no matter the odds:
-                    case false:
-                        await this.StreamingEvent();
-                        break;
-                    
-                    // Energy saving mode is on. We notify the UI
-                    // only when the time between two events is
-                    // greater than the minimum time:
-                    case true when now - last > MIN_TIME:
-                        last = now;
-                        await this.StreamingEvent();
-                        break;
+                    // We show the waiting animation until we get the first response:
+                    this.InitialRemoteWait = true;
+
+                    // Iterate over the responses from the AI:
+                    await foreach (var contentStreamChunk in provider.StreamChatCompletion(chatModel, chatThread, settings, token))
+                    {
+                        // When the user cancels the request, we stop the loop:
+                        if (token.IsCancellationRequested)
+                            break;
+
+                        // Stop the waiting animation:
+                        this.InitialRemoteWait = false;
+                        this.IsStreaming = true;
+
+                        // Add the response to the text:
+                        this.Text += contentStreamChunk;
+
+                        // Merge the sources:
+                        this.Sources.MergeSources(contentStreamChunk.Sources);
+
+                        // Notify the UI that the content has changed,
+                        // depending on the energy saving mode:
+                        var now = DateTimeOffset.Now;
+                        switch (settings.ConfigurationData.App.IsSavingEnergy)
+                        {
+                            // Energy saving mode is off. We notify the UI
+                            // as fast as possible -- no matter the odds:
+                            case false:
+                                await this.StreamingEvent();
+                                break;
+
+                            // Energy saving mode is on. We notify the UI
+                            // only when the time between two events is
+                            // greater than the minimum time:
+                            case true when now - last > MIN_TIME:
+                                last = now;
+                                await this.StreamingEvent();
+                                break;
+                        }
+                    }
                 }
-            }
-
-            // Stop the waiting animation (in case the loop
-            // was stopped, or no content was received):
-            this.InitialRemoteWait = false;
-            this.IsStreaming = false;
-        }, token);
-
-        this.Text = this.Text.RemoveThinkTags().Trim();
+                finally
+                {
+                    // Stop the waiting animation (in case the loop
+                    // was stopped, or no content was received):
+                    this.InitialRemoteWait = false;
+                    this.IsStreaming = false;
+                }
+            }, token);
+        }
+        finally
+        {
+            this.Text = this.Text.RemoveThinkTags().Trim();
         
-        // Inform the UI that the streaming is done:
-        await this.StreamingDone();
+            // Inform the UI that the streaming is done:
+            await this.StreamingDone();
+        }
+
         return chatThread;
     }
 

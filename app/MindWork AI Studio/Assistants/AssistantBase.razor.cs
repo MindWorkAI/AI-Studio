@@ -328,22 +328,40 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         this.isProcessing = true;
         this.StateHasChanged();
         
-        // Use the selected provider to get the AI response.
-        // By awaiting this line, we wait for the entire
-        // content to be streamed.
-        this.ChatThread = await aiText.CreateFromProviderAsync(this.ProviderSettings.CreateProvider(), this.ProviderSettings.Model, this.LastUserPrompt, this.ChatThread, this.CancellationTokenSource!.Token);
-        
-        this.isProcessing = false;
-        this.StateHasChanged();
-        
-        if(manageCancellationLocally)
+        try
         {
-            this.CancellationTokenSource.Dispose();
-            this.CancellationTokenSource = null;
+            // Use the selected provider to get the AI response.
+            // By awaiting this line, we wait for the entire
+            // content to be streamed.
+            this.ChatThread = await aiText.CreateFromProviderAsync(this.ProviderSettings.CreateProvider(), this.ProviderSettings.Model, this.LastUserPrompt, this.ChatThread, this.CancellationTokenSource!.Token);
+
+            // Return the AI response:
+            return aiText.Text;
         }
+        catch (ProviderRequestException e)
+        {
+            this.Logger.LogError(e, "The provider request failed for assistant '{AssistantTitle}'. Status={StatusCode}, Reason='{ReasonPhrase}', Body='{ResponseBody}'", this.Title, e.StatusCode, e.ReasonPhrase, e.ResponseBody);
+            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, e.UserMessage));
+
+            if (this.resultingContentBlock is not null && string.IsNullOrWhiteSpace(aiText.Text))
+            {
+                this.ChatThread?.Blocks.Remove(this.resultingContentBlock);
+                this.resultingContentBlock = null;
+            }
+
+            return string.Empty;
+        }
+        finally
+        {
+            this.isProcessing = false;
+            this.StateHasChanged();
         
-        // Return the AI response:
-        return aiText.Text;
+            if(manageCancellationLocally)
+            {
+                this.CancellationTokenSource?.Dispose();
+                this.CancellationTokenSource = null;
+            }
+        }
     }
     
     private async Task CancelStreaming()

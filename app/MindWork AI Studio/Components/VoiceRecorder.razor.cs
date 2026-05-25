@@ -366,7 +366,10 @@ public partial class VoiceRecorder : MSGComponentBase
             if (!transcriptionResult.Success)
             {
                 this.Logger.LogWarning("The transcription request failed.");
-                await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, this.T("Unfortunately, there was an error communicating with the AI system.")));
+                var userMessage = string.IsNullOrWhiteSpace(transcriptionResult.ErrorMessage)
+                    ? this.T("Unfortunately, there was an error communicating with the AI system.")
+                    : transcriptionResult.ErrorMessage;
+                await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, userMessage));
                 return;
             }
 
