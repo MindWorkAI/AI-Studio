@@ -236,12 +236,13 @@ public partial class Workspaces : MSGComponentBase
     private string GetChatTreeIcon(Guid chatId, string defaultIcon)
     {
         var snapshot = this.AIJobService.TryGetChatSnapshot(chatId);
-        return snapshot?.Status switch
+        if (snapshot is null || !snapshot.IsActive)
+            return defaultIcon;
+
+        return snapshot.Status switch
         {
             AIJobStatus.WAITING_FOR_REMOTE => Icons.Material.Filled.HourglassTop,
             AIJobStatus.RUNNING => Icons.Material.Filled.ChangeCircle,
-            AIJobStatus.CANCELED => Icons.Material.Filled.Cancel,
-            AIJobStatus.FAILED => Icons.Material.Filled.Error,
             _ => defaultIcon,
         };
     }
@@ -390,7 +391,6 @@ public partial class Workspaces : MSGComponentBase
             {
                 this.CurrentChatThread = chat;
                 await this.CurrentChatThreadChanged.InvokeAsync(this.CurrentChatThread);
-                await MessageBus.INSTANCE.SendMessage<bool>(this, Event.WORKSPACE_LOADED_CHAT_CHANGED);
             }
             
             return chat;
@@ -439,7 +439,6 @@ public partial class Workspaces : MSGComponentBase
         {
             this.CurrentChatThread = null;
             await this.CurrentChatThreadChanged.InvokeAsync(this.CurrentChatThread);
-            await MessageBus.INSTANCE.SendMessage<bool>(this, Event.WORKSPACE_LOADED_CHAT_CHANGED);
         }
     }
 
@@ -473,7 +472,6 @@ public partial class Workspaces : MSGComponentBase
         {
             this.CurrentChatThread.Name = chat.Name;
             await this.CurrentChatThreadChanged.InvokeAsync(this.CurrentChatThread);
-            await MessageBus.INSTANCE.SendMessage<bool>(this, Event.WORKSPACE_LOADED_CHAT_CHANGED);
         }
         
         await WorkspaceBehaviour.StoreChatAsync(chat);
@@ -596,7 +594,6 @@ public partial class Workspaces : MSGComponentBase
         {
             this.CurrentChatThread = chat;
             await this.CurrentChatThreadChanged.InvokeAsync(this.CurrentChatThread);
-            await MessageBus.INSTANCE.SendMessage<bool>(this, Event.WORKSPACE_LOADED_CHAT_CHANGED);
         }
         
         await WorkspaceBehaviour.StoreChatAsync(chat);

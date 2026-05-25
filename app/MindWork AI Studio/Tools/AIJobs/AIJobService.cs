@@ -17,11 +17,15 @@ public sealed class AIJobService(
     {
         public required CancellationTokenSource CancellationTokenSource { get; init; }
 
+        public required CancellationToken CancellationToken { get; init; }
+
         public required ChatGenerationRequest ChatGenerationRequest { get; init; }
 
         public required AIJobSnapshot Snapshot { get; set; }
 
         public DateTimeOffset LastCheckpoint { get; set; }
+
+        public bool IsCompletionStarted { get; set; }
 
         public readonly Lock SyncRoot = new();
     }
@@ -96,9 +100,11 @@ public sealed class AIJobService(
             UpdatedAt = DateTimeOffset.Now,
         };
 
+        var cancellationTokenSource = new CancellationTokenSource();
         var state = new AIJobState
         {
-            CancellationTokenSource = new CancellationTokenSource(),
+            CancellationTokenSource = cancellationTokenSource,
+            CancellationToken = cancellationTokenSource.Token,
             ChatGenerationRequest = request,
             Snapshot = snapshot,
             LastCheckpoint = DateTimeOffset.MinValue,
@@ -131,8 +137,23 @@ public sealed class AIJobService(
         if (!this.jobs.TryGetValue(jobId, out var job))
             return;
 
-        if (!job.CancellationTokenSource.IsCancellationRequested)
-            await job.CancellationTokenSource.CancelAsync();
+        lock (job.SyncRoot)
+        {
+            if (job.IsCompletionStarted)
+                return;
+        }
+
+        try
+        {
+            if (!job.CancellationTokenSource.IsCancellationRequested)
+                await job.CancellationTokenSource.CancelAsync();
+        }
+        catch (ObjectDisposedException)
+        {
+            return;
+        }
+
+        await this.CompleteChatGenerationAsync(job, AIJobStatus.CANCELED);
     }
 
     public async Task CancelChatGenerationAsync(Guid chatId)
@@ -167,13 +188,14 @@ public sealed class AIJobService(
     private async Task RunChatGenerationAsync(AIJobState state)
     {
         var request = state.ChatGenerationRequest;
-        var token = state.CancellationTokenSource.Token;
+        var token = state.CancellationToken;
 
         try
         {
+            token.ThrowIfCancellationRequested();
+
             var provider = request.ProviderSettings.CreateProvider();
             var chatThread = request.ChatThread;
-            var aiText = request.AIText;
 
             if (!chatThread.IsLLMProviderAllowed(provider))
             {
@@ -187,6 +209,8 @@ public sealed class AIJobService(
                 await this.CompleteChatGenerationAsync(state, AIJobStatus.FAILED, TB("The selected model is not available."));
                 return;
             }
+
+            token.ThrowIfCancellationRequested();
 
             try
             {
@@ -207,21 +231,18 @@ public sealed class AIJobService(
                 logger.LogError(e, "Skipping the RAG process due to an error.");
             }
 
+            token.ThrowIfCancellationRequested();
+
             var lastStreamingEvent = DateTimeOffset.MinValue;
-            aiText.InitialRemoteWait = true;
+            if (!TrySetWaitingForRemote(state, token))
+                return;
             
             await this.NotifyChangedAsync(state);
             await foreach (var contentStreamChunk in provider.StreamChatCompletion(request.ProviderSettings.Model, chatThread, settingsManager, token))
             {
-                if (token.IsCancellationRequested)
+                if (!TryApplyStreamChunk(state, contentStreamChunk, token))
                     break;
 
-                aiText.InitialRemoteWait = false;
-                aiText.IsStreaming = true;
-                aiText.Text += contentStreamChunk;
-                aiText.Sources.MergeSources(contentStreamChunk.Sources);
-
-                UpdateStatus(state, AIJobStatus.RUNNING);
                 var now = DateTimeOffset.Now;
                 if (!settingsManager.ConfigurationData.App.IsSavingEnergy || now - lastStreamingEvent > STREAMING_EVENT_MIN_TIME)
                 {
@@ -255,10 +276,20 @@ public sealed class AIJobService(
 
     private async Task CompleteChatGenerationAsync(AIJobState state, AIJobStatus status, string errorMessage = "")
     {
+        lock (state.SyncRoot)
+        {
+            if (state.IsCompletionStarted)
+                return;
+
+            state.IsCompletionStarted = true;
+        }
+
         var aiText = state.ChatGenerationRequest.AIText;
         aiText.InitialRemoteWait = false;
         aiText.IsStreaming = false;
         aiText.Text = aiText.Text.RemoveThinkTags().Trim();
+
+        RemoveEmptyAIResponse(state);
 
         lock (state.SyncRoot)
         {
@@ -290,18 +321,41 @@ public sealed class AIJobService(
             state.ChatGenerationRequest.ChatThread.Blocks.Remove(aiBlock);
     }
 
-    private static void UpdateStatus(AIJobState state, AIJobStatus status)
+    private static bool TrySetWaitingForRemote(AIJobState state, CancellationToken token)
     {
         lock (state.SyncRoot)
         {
-            if (state.Snapshot.Status == status)
-                return;
+            if (state.IsCompletionStarted || token.IsCancellationRequested)
+                return false;
 
-            state.Snapshot = state.Snapshot with
+            state.ChatGenerationRequest.AIText.InitialRemoteWait = true;
+            return true;
+        }
+    }
+
+    private static bool TryApplyStreamChunk(AIJobState state, ContentStreamChunk contentStreamChunk, CancellationToken token)
+    {
+        lock (state.SyncRoot)
+        {
+            if (state.IsCompletionStarted || token.IsCancellationRequested)
+                return false;
+
+            var aiText = state.ChatGenerationRequest.AIText;
+            aiText.InitialRemoteWait = false;
+            aiText.IsStreaming = true;
+            aiText.Text += contentStreamChunk;
+            aiText.Sources.MergeSources(contentStreamChunk.Sources);
+
+            if (state.Snapshot.Status is not AIJobStatus.RUNNING)
             {
-                Status = status,
-                UpdatedAt = DateTimeOffset.Now,
-            };
+                state.Snapshot = state.Snapshot with
+                {
+                    Status = AIJobStatus.RUNNING,
+                    UpdatedAt = DateTimeOffset.Now,
+                };
+            }
+
+            return true;
         }
     }
 
