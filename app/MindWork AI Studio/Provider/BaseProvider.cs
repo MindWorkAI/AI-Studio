@@ -167,8 +167,16 @@ public abstract class BaseProvider : IProvider, ISecretId
     {
         HttpStatusCode.Unauthorized => ModelLoadFailureReason.INVALID_OR_MISSING_API_KEY,
         HttpStatusCode.Forbidden => ModelLoadFailureReason.AUTHENTICATION_OR_PERMISSION_ERROR,
+        HttpStatusCode.TooManyRequests => ModelLoadFailureReason.TOO_MANY_REQUESTS,
         
         _ => ModelLoadFailureReason.PROVIDER_UNAVAILABLE,
+    };
+
+    protected ModelLoadFailureReason GetModelLoadFailureReason(HttpResponseMessage response, string responseBody) => this.ClassifyProviderRequestFailure(response.StatusCode, responseBody) switch
+    {
+        ProviderRequestFailureReason.INSUFFICIENT_QUOTA => ModelLoadFailureReason.INSUFFICIENT_QUOTA,
+        ProviderRequestFailureReason.TOO_MANY_REQUESTS => ModelLoadFailureReason.TOO_MANY_REQUESTS,
+        _ => GetDefaultModelLoadFailureReason(response),
     };
 
     protected async Task<ModelLoadResult> LoadModelsResponse<TResponse>(
@@ -198,7 +206,8 @@ public abstract class BaseProvider : IProvider, ISecretId
             var responseBody = await response.Content.ReadAsStringAsync(token);
             if (!response.IsSuccessStatusCode)
             {
-                var failureReason = failureReasonSelector?.Invoke(response, responseBody) ?? GetDefaultModelLoadFailureReason(response);
+                var failureReason = failureReasonSelector?.Invoke(response, responseBody) ?? this.GetModelLoadFailureReason(response, responseBody);
+                this.logger.LogError("Model loading request failed with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", response.StatusCode, response.ReasonPhrase, responseBody);
                 return FailedModelLoadResult(failureReason, $"Status={(int)response.StatusCode} {response.ReasonPhrase}; Body='{responseBody}'");
             }
 
@@ -222,6 +231,168 @@ public abstract class BaseProvider : IProvider, ISecretId
             return FailedModelLoadResult(ModelLoadFailureReason.PROVIDER_UNAVAILABLE, e.Message);
         }
     }
+
+    protected virtual string GetProviderRequestFailureUserMessage(ProviderRequestFailureReason failureReason) => failureReason switch
+    {
+        ProviderRequestFailureReason.TOO_MANY_REQUESTS => TB("The provider rejected the request because too many requests were sent. Please wait a moment and try again."),
+        _ => string.Empty,
+    };
+
+    protected virtual ProviderRequestFailureReason ClassifyProviderRequestFailure(HttpStatusCode statusCode, string responseBody)
+    {
+        if (statusCode is not HttpStatusCode.TooManyRequests)
+            return ProviderRequestFailureReason.NONE;
+
+        return ProviderRequestFailureReason.TOO_MANY_REQUESTS;
+    }
+
+    protected virtual ProviderRequestFailureReason ClassifyProviderRequestFailure(string? errorCode, string? errorType, string? errorMessage, string responseBody)
+    {
+        if (IsTooManyRequestsError(errorCode) || IsTooManyRequestsError(errorType) || IsTooManyRequestsError(errorMessage))
+            return ProviderRequestFailureReason.TOO_MANY_REQUESTS;
+
+        return ProviderRequestFailureReason.NONE;
+    }
+
+    private static bool IsTooManyRequestsError(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return false;
+
+        return value.Equals("rate_limit_exceeded", StringComparison.OrdinalIgnoreCase) ||
+               value.Equals("too_many_requests", StringComparison.OrdinalIgnoreCase) ||
+               value.Equals("too_many_request", StringComparison.OrdinalIgnoreCase) ||
+               value.Contains("too many requests", StringComparison.OrdinalIgnoreCase) ||
+               value.Contains("rate limit", StringComparison.OrdinalIgnoreCase) ||
+               value.Contains("rate_limit", StringComparison.OrdinalIgnoreCase) ||
+               value.Contains("throttl", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private bool TryCreateProviderRequestExceptionFromStreamLine(string providerName, string line, out ProviderRequestException exception)
+    {
+        exception = new();
+
+        if (!line.StartsWith("data: ", StringComparison.InvariantCulture))
+            return false;
+
+        var jsonData = line[6..].Trim();
+        if (string.IsNullOrWhiteSpace(jsonData) || jsonData is "[DONE]")
+            return false;
+
+        try
+        {
+            using var document = JsonDocument.Parse(jsonData);
+            var root = document.RootElement;
+            if (!IsProviderStreamFailure(root))
+                return false;
+
+            var eventType = TryGetString(root, "type");
+            TryGetProviderStreamError(root, out var errorCode, out var errorType, out var errorMessage);
+            var failureReason = this.ClassifyProviderRequestFailure(errorCode, errorType, errorMessage, jsonData);
+            var userMessage = this.GetProviderRequestFailureUserMessage(failureReason);
+            if (string.IsNullOrWhiteSpace(userMessage))
+            {
+                userMessage = string.IsNullOrWhiteSpace(errorMessage)
+                    ? string.Format(TB("The provider '{0}' reported an error while streaming the response."), this.InstanceName)
+                    : string.Format(TB("The provider '{0}' reported an error: {1}"), this.InstanceName, errorMessage);
+            }
+
+            this.logger.LogError("The {ProviderName} stream returned an error for provider '{ProviderInstanceName}' (provider={ProviderType}). EventType={StreamEventType}, ErrorCode={ErrorCode}, ErrorType={ErrorType}, ErrorMessage='{ErrorMessage}', Body='{ErrorBody}'", providerName, this.InstanceName, this.Provider, eventType, errorCode, errorType, errorMessage, jsonData);
+            exception = new ProviderRequestException(failureReason, userMessage, responseBody: jsonData);
+            return true;
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+    }
+
+    private static bool IsProviderStreamFailure(JsonElement root)
+    {
+        var eventType = TryGetString(root, "type");
+        if (eventType is not null && (
+                eventType.Equals("error", StringComparison.OrdinalIgnoreCase) ||
+                eventType.Equals("response.error", StringComparison.OrdinalIgnoreCase) ||
+                eventType.Equals("response.failed", StringComparison.OrdinalIgnoreCase)))
+            return true;
+
+        if (HasObjectProperty(root, "error"))
+            return true;
+
+        if (IsTooManyRequestsError(TryGetString(root, "code")) ||
+            IsTooManyRequestsError(TryGetString(root, "type")) ||
+            IsTooManyRequestsError(TryGetString(root, "message")))
+            return true;
+
+        if (TryGetString(root, "message") is not null &&
+            (TryGetString(root, "code") is not null || TryGetString(root, "type") is not null) &&
+            !root.TryGetProperty("choices", out _) &&
+            !root.TryGetProperty("delta", out _))
+            return true;
+
+        if (!root.TryGetProperty("response", out var responseElement) || responseElement.ValueKind is not JsonValueKind.Object)
+            return false;
+
+        if (HasObjectProperty(responseElement, "error"))
+            return true;
+
+        var responseStatus = TryGetString(responseElement, "status");
+        return responseStatus is not null && responseStatus.Equals("failed", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool HasObjectProperty(JsonElement element, string propertyName)
+    {
+        return element.ValueKind is JsonValueKind.Object &&
+               element.TryGetProperty(propertyName, out var propertyElement) &&
+               propertyElement.ValueKind is JsonValueKind.Object;
+    }
+
+    private static void TryGetProviderStreamError(JsonElement root, out string? errorCode, out string? errorType, out string? errorMessage)
+    {
+        errorCode = null;
+        errorType = null;
+        errorMessage = null;
+
+        if (TryGetErrorElement(root, out var errorElement))
+        {
+            errorCode = TryGetString(errorElement, "code");
+            errorType = TryGetString(errorElement, "type");
+            errorMessage = TryGetString(errorElement, "message");
+            return;
+        }
+
+        errorCode = TryGetString(root, "code");
+        errorType = TryGetString(root, "type");
+        errorMessage = TryGetString(root, "message");
+    }
+
+    private static bool TryGetErrorElement(JsonElement root, out JsonElement errorElement)
+    {
+        if (root.ValueKind is JsonValueKind.Object &&
+            root.TryGetProperty("error", out errorElement) &&
+            errorElement.ValueKind is JsonValueKind.Object)
+            return true;
+
+        if (root.ValueKind is JsonValueKind.Object &&
+            root.TryGetProperty("response", out var responseElement) &&
+            responseElement.ValueKind is JsonValueKind.Object &&
+            responseElement.TryGetProperty("error", out errorElement) &&
+            errorElement.ValueKind is JsonValueKind.Object)
+            return true;
+
+        errorElement = default;
+        return false;
+    }
+
+    private static string? TryGetString(JsonElement element, string propertyName)
+    {
+        if (element.ValueKind is not JsonValueKind.Object ||
+            !element.TryGetProperty(propertyName, out var propertyElement) ||
+            propertyElement.ValueKind is not JsonValueKind.String)
+            return null;
+
+        return propertyElement.GetString();
+    }
     
     /// <summary>
     /// Sends a request and handles rate limiting by exponential backoff.
@@ -239,6 +410,10 @@ public abstract class BaseProvider : IProvider, ISecretId
         var retry = 0;
         var response = default(HttpResponseMessage);
         var errorMessage = string.Empty;
+        var lastProviderRequestFailure = ProviderRequestFailureReason.NONE;
+        HttpStatusCode? lastResponseStatusCode = null;
+        var lastResponseReasonPhrase = string.Empty;
+        var lastErrorBody = string.Empty;
         while (retry++ < MAX_RETRIES)
         {
             using var request = await requestBuilder();
@@ -266,10 +441,24 @@ public abstract class BaseProvider : IProvider, ISecretId
             if (nextResponse.IsSuccessStatusCode)
             {
                 response = nextResponse;
+                errorMessage = string.Empty;
+                lastProviderRequestFailure = ProviderRequestFailureReason.NONE;
                 break;
             }
 
             var errorBody = await nextResponse.Content.ReadAsStringAsync(effectiveCancellationToken);
+            lastResponseStatusCode = nextResponse.StatusCode;
+            lastResponseReasonPhrase = nextResponse.ReasonPhrase ?? string.Empty;
+            lastErrorBody = errorBody;
+            var providerRequestFailure = this.ClassifyProviderRequestFailure(nextResponse.StatusCode, errorBody);
+            lastProviderRequestFailure = providerRequestFailure;
+            if (providerRequestFailure is ProviderRequestFailureReason.INSUFFICIENT_QUOTA)
+            {
+                var userMessage = this.GetProviderRequestFailureUserMessage(providerRequestFailure);
+                this.logger.LogError("Failed request with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
+                throw new ProviderRequestException(providerRequestFailure, userMessage, nextResponse.StatusCode, nextResponse.ReasonPhrase ?? string.Empty, errorBody);
+            }
+
             if (nextResponse.StatusCode is HttpStatusCode.Forbidden)
             {
                 await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Block, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). You might not be able to use this provider from your location. The provider message is: '{2}'"), this.InstanceName, this.Provider, nextResponse.ReasonPhrase)));
@@ -340,6 +529,13 @@ public abstract class BaseProvider : IProvider, ISecretId
         
         if(retry >= MAX_RETRIES || !string.IsNullOrWhiteSpace(errorMessage))
         {
+            if (lastProviderRequestFailure is not ProviderRequestFailureReason.NONE)
+            {
+                var userMessage = this.GetProviderRequestFailureUserMessage(lastProviderRequestFailure);
+                this.logger.LogError("The request to provider '{ProviderInstanceName}' (provider={ProviderType}) failed after {MaxRetries} retries with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}'): {ErrorMessage}", this.InstanceName, this.Provider, MAX_RETRIES, lastResponseStatusCode, lastResponseReasonPhrase, lastErrorBody, userMessage);
+                throw new ProviderRequestException(lastProviderRequestFailure, userMessage, lastResponseStatusCode, lastResponseReasonPhrase, lastErrorBody);
+            }
+
             await MessageBus.INSTANCE.SendError(new DataErrorMessage(Icons.Material.Filled.CloudOff, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). Even after {2} retries, there were some problems with the request. The provider message is: '{3}'."), this.InstanceName, this.Provider, MAX_RETRIES, errorMessage)));
             return new HttpRateLimitedStreamResult(false, true, errorMessage ?? $"Failed after {MAX_RETRIES} retries; no provider message available", response);
         }
@@ -379,6 +575,10 @@ public abstract class BaseProvider : IProvider, ISecretId
 
             // Add a stream reader to read the stream, line by line:
             streamReader = new StreamReader(providerStream);
+        }
+        catch(ProviderRequestException)
+        {
+            throw;
         }
         catch(Exception e)
         {
@@ -461,6 +661,9 @@ public abstract class BaseProvider : IProvider, ISecretId
             if (string.IsNullOrWhiteSpace(line))
                 continue;
             
+            if (this.TryCreateProviderRequestExceptionFromStreamLine(providerName, line, out var providerRequestException))
+                throw providerRequestException;
+
             // Skip lines that do not start with "data: ". Regard
             // to the specification, we only want to read the data lines:
             if (!line.StartsWith("data: ", StringComparison.InvariantCulture))
@@ -574,6 +777,10 @@ public abstract class BaseProvider : IProvider, ISecretId
             // Add a stream reader to read the stream, line by line:
             streamReader = new StreamReader(providerStream);
         }
+        catch(ProviderRequestException)
+        {
+            throw;
+        }
         catch(Exception e)
         {
             if (token.IsCancellationRequested)
@@ -655,6 +862,9 @@ public abstract class BaseProvider : IProvider, ISecretId
             if (string.IsNullOrWhiteSpace(line))
                 continue;
             
+            if (this.TryCreateProviderRequestExceptionFromStreamLine(providerName, line, out var providerRequestException))
+                throw providerRequestException;
+
             // Check if the line is the end of the stream:
             if (line.StartsWith("event: response.completed", StringComparison.InvariantCulture))
                 yield break;
@@ -869,7 +1079,8 @@ public abstract class BaseProvider : IProvider, ISecretId
             if (!response.IsSuccessStatusCode)
             {
                 this.logger.LogError("Transcription request failed with status code {ResponseStatusCode} and body: '{ResponseBody}'.", response.StatusCode, responseBody);
-                return TranscriptionResult.Failure();
+                var providerRequestFailure = this.ClassifyProviderRequestFailure(response.StatusCode, responseBody);
+                return TranscriptionResult.Failure(this.GetProviderRequestFailureUserMessage(providerRequestFailure));
             }
 
             var transcriptionResponse = JsonSerializer.Deserialize<TranscriptionResponse>(responseBody, JSON_SERIALIZER_OPTIONS);
@@ -937,11 +1148,16 @@ public abstract class BaseProvider : IProvider, ISecretId
             // Set the content:
             request.Content = new StringContent(embeddingRequest, Encoding.UTF8, "application/json");
             using var response = await this.HttpClient.SendAsync(request, token);
-            var responseBody = response.Content.ReadAsStringAsync(token).Result;
+            var responseBody = await response.Content.ReadAsStringAsync(token);
         
             if (!response.IsSuccessStatusCode)
             {
                 this.logger.LogError("Embedding request failed with status code {ResponseStatusCode} and body: '{ResponseBody}'.", response.StatusCode, responseBody);
+                var providerRequestFailure = this.ClassifyProviderRequestFailure(response.StatusCode, responseBody);
+                var userMessage = this.GetProviderRequestFailureUserMessage(providerRequestFailure);
+                if (!string.IsNullOrWhiteSpace(userMessage))
+                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, userMessage));
+
                 return [];
             }
 

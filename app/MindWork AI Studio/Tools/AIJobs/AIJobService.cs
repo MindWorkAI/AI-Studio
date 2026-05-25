@@ -238,6 +238,13 @@ public sealed class AIJobService(
         {
             await this.CompleteChatGenerationAsync(state, AIJobStatus.CANCELED);
         }
+        catch (ProviderRequestException e)
+        {
+            logger.LogError(e, "The provider request failed for chat generation job '{JobId}'. Status={StatusCode}, Reason='{ReasonPhrase}', Body='{ResponseBody}'", state.Snapshot.JobId, e.StatusCode, e.ReasonPhrase, e.ResponseBody);
+            RemoveEmptyAIResponse(state);
+            await this.CompleteChatGenerationAsync(state, AIJobStatus.FAILED, e.UserMessage);
+            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, e.UserMessage));
+        }
         catch (Exception e)
         {
             logger.LogError(e, "The chat generation job '{JobId}' failed.", state.Snapshot.JobId);
@@ -268,6 +275,19 @@ public sealed class AIJobService(
         await this.NotifyChangedAsync(state);
         await messageBus.SendMessage(null, Event.AI_JOB_FINISHED, state.Snapshot);
         state.CancellationTokenSource.Dispose();
+    }
+
+    private static void RemoveEmptyAIResponse(AIJobState state)
+    {
+        var aiText = state.ChatGenerationRequest.AIText;
+        if (!string.IsNullOrWhiteSpace(aiText.Text))
+            return;
+
+        var aiBlock = state.ChatGenerationRequest.ChatThread.Blocks
+            .LastOrDefault(block => ReferenceEquals(block.Content, aiText));
+
+        if (aiBlock is not null)
+            state.ChatGenerationRequest.ChatThread.Blocks.Remove(aiBlock);
     }
 
     private static void UpdateStatus(AIJobState state, AIJobStatus status)

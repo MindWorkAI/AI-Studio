@@ -181,7 +181,11 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
 
             using var lmStudioResponse = await this.HttpClient.SendAsync(lmStudioRequest, token);
             if(!lmStudioResponse.IsSuccessStatusCode)
-                return FailedModelLoadResult(GetDefaultModelLoadFailureReason(lmStudioResponse), $"Status={(int)lmStudioResponse.StatusCode} {lmStudioResponse.ReasonPhrase}");
+            {
+                var responseBody = await lmStudioResponse.Content.ReadAsStringAsync(token);
+                LOGGER.LogError("Model loading request failed with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", lmStudioResponse.StatusCode, lmStudioResponse.ReasonPhrase, responseBody);
+                return FailedModelLoadResult(this.GetModelLoadFailureReason(lmStudioResponse, responseBody), $"Status={(int)lmStudioResponse.StatusCode} {lmStudioResponse.ReasonPhrase}; Body='{responseBody}'");
+            }
 
             var lmStudioModelResponse = await lmStudioResponse.Content.ReadFromJsonAsync<ModelsResponse>(token);
             return SuccessfulModelLoadResult(lmStudioModelResponse.Data.
