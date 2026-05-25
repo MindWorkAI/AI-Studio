@@ -70,6 +70,8 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private string currentWorkspaceName = string.Empty;
     private Guid currentWorkspaceId = Guid.Empty;
     private Guid currentChatThreadId = Guid.Empty;
+    private Guid loadedParameterChatId = Guid.Empty;
+    private Guid loadedParameterWorkspaceId = Guid.Empty;
     private Guid foregroundChatId = Guid.Empty;
     private int workspaceHeaderSyncVersion;
     private HashSet<FileAttachment> chatDocumentPaths = [];
@@ -83,7 +85,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     protected override async Task OnInitializedAsync()
     {
         // Apply the filters for the message bus:
-        this.ApplyFilters([], [ Event.HAS_CHAT_UNSAVED_CHANGES, Event.RESET_CHAT_STATE, Event.CHAT_STREAMING_DONE, Event.WORKSPACE_LOADED_CHAT_CHANGED, Event.AI_JOB_CHANGED, Event.AI_JOB_FINISHED, Event.CHAT_GENERATION_CHANGED ]);
+        this.ApplyFilters([], [ Event.HAS_CHAT_UNSAVED_CHANGES, Event.RESET_CHAT_STATE, Event.CHAT_STREAMING_DONE, Event.AI_JOB_CHANGED, Event.AI_JOB_FINISHED, Event.CHAT_GENERATION_CHANGED ]);
         
         // Configure the spellchecking for the user input:
         this.SettingsManager.InjectSpellchecking(USER_INPUT_ATTRIBUTES);
@@ -120,6 +122,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             this.ChatThread.IncludeDateTime = true;
             
             this.Logger.LogInformation($"The chat '{this.ChatThread.ChatId}' with {this.ChatThread.Blocks.Count} messages was deferred and will be rendered now.");
+            this.MarkCurrentChatAsLoadedParameter();
             await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
             
             // We know already that the chat thread is not null,
@@ -246,6 +249,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             
             if(this.ChatThread is not null)
             {
+                this.MarkCurrentChatAsLoadedParameter();
                 await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
                 this.Logger.LogInformation($"The chat '{this.ChatThread!.ChatId}' with title '{this.ChatThread.Name}' ({this.ChatThread.Blocks.Count} messages) was loaded successfully.");
 
@@ -276,12 +280,34 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 
     protected override async Task OnParametersSetAsync()
     {
-        await this.SyncWorkspaceHeaderWithChatThreadAsync();
+        await this.ApplyLoadedChatParameterAsync();
         await this.SyncForegroundChatAsync();
         await base.OnParametersSetAsync();
     }
 
     #endregion
+
+    private async Task ApplyLoadedChatParameterAsync()
+    {
+        var chatId = this.ChatThread?.ChatId ?? Guid.Empty;
+        var workspaceId = this.ChatThread?.WorkspaceId ?? Guid.Empty;
+
+        if (this.loadedParameterChatId == chatId && this.loadedParameterWorkspaceId == workspaceId)
+        {
+            await this.SyncWorkspaceHeaderWithChatThreadAsync();
+            return;
+        }
+
+        this.loadedParameterChatId = chatId;
+        this.loadedParameterWorkspaceId = workspaceId;
+        await this.LoadedChatChanged(notifyParent: false);
+    }
+
+    private void MarkCurrentChatAsLoadedParameter()
+    {
+        this.loadedParameterChatId = this.ChatThread?.ChatId ?? Guid.Empty;
+        this.loadedParameterWorkspaceId = this.ChatThread?.WorkspaceId ?? Guid.Empty;
+    }
 
     private async Task SyncWorkspaceHeaderWithChatThreadAsync()
     {
@@ -552,6 +578,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 Blocks = this.currentChatTemplate == ChatTemplate.NO_CHAT_TEMPLATE ? [] : this.currentChatTemplate.ExampleConversation.Select(x => x.DeepClone()).ToList(),
             };
             
+            this.MarkCurrentChatAsLoadedParameter();
             await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
         }
         else
@@ -793,6 +820,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         
         // Notify the parent component about the change:
         await this.SyncForegroundChatAsync();
+        this.MarkCurrentChatAsLoadedParameter();
         await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
     }
     
@@ -834,12 +862,13 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         await WorkspaceBehaviour.DeleteChatAsync(this.DialogService, this.ChatThread!.WorkspaceId, this.ChatThread.ChatId, askForConfirmation: false);
         
         this.ChatThread!.WorkspaceId = workspaceId;
+        this.MarkCurrentChatAsLoadedParameter();
         await this.SaveThread();
 
         await this.SyncWorkspaceHeaderWithChatThreadAsync();
     }
     
-    private async Task LoadedChatChanged()
+    private async Task LoadedChatChanged(bool notifyParent = true)
     {
         this.hasUnsavedChanges = false;
         this.userInput = string.Empty;
@@ -847,13 +876,19 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         if (this.ChatThread is not null)
         {
             this.ChatThread = this.AIJobService.TryGetLiveChatThread(this.ChatThread.ChatId) ?? this.ChatThread;
-            await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
+            this.loadedParameterChatId = this.ChatThread.ChatId;
+            this.loadedParameterWorkspaceId = this.ChatThread.WorkspaceId;
+            if (notifyParent)
+                await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
+
             await this.SyncWorkspaceHeaderWithChatThreadAsync();
             await this.SyncForegroundChatAsync();
             this.dataSourceSelectionComponent?.ChangeOptionWithoutSaving(this.ChatThread.DataSourceOptions, this.ChatThread.AISelectedDataSources);
         }
         else
         {
+            this.loadedParameterChatId = Guid.Empty;
+            this.loadedParameterWorkspaceId = Guid.Empty;
             this.ClearWorkspaceHeaderState();
             await this.SyncForegroundChatAsync();
             this.ApplyStandardDataSourceOptions();
@@ -876,6 +911,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         this.ClearWorkspaceHeaderState();
         
         this.ChatThread = null;
+        this.MarkCurrentChatAsLoadedParameter();
         await this.SyncForegroundChatAsync();
         this.ApplyStandardDataSourceOptions();
         await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
@@ -1000,10 +1036,6 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                     await this.SaveThread();
                 break;
             
-            case Event.WORKSPACE_LOADED_CHAT_CHANGED:
-                await this.LoadedChatChanged();
-                break;
-
             case Event.AI_JOB_CHANGED:
             case Event.AI_JOB_FINISHED:
             case Event.CHAT_GENERATION_CHANGED:
@@ -1049,6 +1081,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         }
 
         await this.AIJobService.SetForegroundAsync(AIJobKind.CHAT_GENERATION, this.foregroundChatId, false);
+        this.Dispose();
     }
 
     #endregion
