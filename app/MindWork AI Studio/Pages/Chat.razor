@@ -89,6 +89,7 @@
                 <ChatComponent
                     @bind-ChatThread="@this.chatThread"
                     @bind-Provider="@this.providerSettings"
+                    ComposerState="@this.composerState"
                     Workspaces="@this.workspaces"
                     WorkspaceName="name => this.UpdateWorkspaceName(name)"/>
             </EndContent>
@@ -115,6 +116,7 @@
             <ChatComponent
                 @bind-ChatThread="@this.chatThread"
                 @bind-Provider="@this.providerSettings"
+                ComposerState="@this.composerState"
                 Workspaces="@this.workspaces"
                 WorkspaceName="name => this.UpdateWorkspaceName(name)"/>
         </MudStack>
@@ -125,6 +127,7 @@
         <ChatComponent
             @bind-ChatThread="@this.chatThread"
             @bind-Provider="@this.providerSettings"
+            ComposerState="@this.composerState"
             Workspaces="@this.workspaces"
             WorkspaceName="name => this.UpdateWorkspaceName(name)"/>
     }

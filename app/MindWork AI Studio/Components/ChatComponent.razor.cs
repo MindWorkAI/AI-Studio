@@ -38,6 +38,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     
     [Parameter]
     public Workspaces? Workspaces { get; set; }
+
+    [Parameter]
+    public ChatComposerState ComposerState { get; set; } = new();
     
     [Inject]
     private ILogger<ChatComponent> Logger { get; set; } = null!;
@@ -62,7 +65,6 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private bool mustScrollToBottomAfterRender;
     private InnerScrolling scrollingArea = null!;
     private byte scrollRenderCountdown;
-    private string userInput = string.Empty;
     private bool mustStoreChat;
     private bool mustLoadChat;
     private LoadChat loadChat;
@@ -74,11 +76,25 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private Guid loadedParameterWorkspaceId = Guid.Empty;
     private Guid foregroundChatId = Guid.Empty;
     private int workspaceHeaderSyncVersion;
-    private HashSet<FileAttachment> chatDocumentPaths = [];
 
     // Unfortunately, we need the input field reference to blur the focus away. Without
     // this, we cannot clear the input field.
     private MudTextField<string> inputField = null!;
+
+    /// <summary>
+    /// Represents the user's input in the chat interface.
+    /// </summary>
+    /// <remarks>
+    /// This property serves as a bridge between the chat component and the
+    /// underlying composer state, allowing user input to be dynamically updated
+    /// and managed. The setter also triggers state changes within the composer
+    /// to track whether the user has drafted any input.
+    /// </remarks>
+    private string UserInput
+    {
+        get => this.ComposerState.UserInput;
+        set => this.ComposerState.SetUserInput(value);
+    }
 
     #region Overrides of ComponentBase
 
@@ -96,15 +112,12 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         
         // Get the preselected chat template:
         this.currentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(Tools.Components.CHAT);
-        this.userInput = this.currentChatTemplate.PredefinedUserPrompt;
+        if (!this.ComposerState.HasUserDraft && !this.ComposerState.HasComposerContent)
+            this.ComposerState.ApplyTemplate(this.currentChatTemplate);
 
         var deferredInput = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_CHAT_INPUT).FirstOrDefault();
         if (!string.IsNullOrWhiteSpace(deferredInput))
-            this.userInput = deferredInput;
-
-        // Apply template's file attachments, if any:
-        foreach (var attachment in this.currentChatTemplate.FileAttachments)
-            this.chatDocumentPaths.Add(attachment.Normalize());
+            this.ComposerState.SetUserInput(deferredInput);
 
         //
         // Check for deferred messages of the kind 'SEND_TO_CHAT',
@@ -450,12 +463,10 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     {
         this.currentChatTemplate = chatTemplate;
         if(!string.IsNullOrWhiteSpace(this.currentChatTemplate.PredefinedUserPrompt))
-            this.userInput = this.currentChatTemplate.PredefinedUserPrompt;
+            this.ComposerState.SetSystemInput(this.currentChatTemplate.PredefinedUserPrompt);
 
         // Apply template's file attachments (replaces existing):
-        this.chatDocumentPaths.Clear();
-        foreach (var attachment in this.currentChatTemplate.FileAttachments)
-            this.chatDocumentPaths.Add(attachment.Normalize());
+        this.ComposerState.ReplaceFileAttachments(this.currentChatTemplate.FileAttachments);
 
         if(this.ChatThread is null)
             return;
@@ -515,6 +526,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             this.dataSourceSelectionComponent.Hide();
         
         this.hasUnsavedChanges = true;
+        this.ComposerState.MarkUserDraft();
         var key = keyEvent.Code.ToLowerInvariant();
         
         // Was the enter key (either enter or numpad enter) pressed?
@@ -546,7 +558,16 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         if(this.dataSourceSelectionComponent?.IsVisible ?? false)
             this.dataSourceSelectionComponent.Hide();
 
-        this.userInput = await this.JsRuntime.InvokeAsync<string>("formatChatInputMarkdown", CHAT_INPUT_ID, formatType);
+        this.ComposerState.SetUserInput(await this.JsRuntime.InvokeAsync<string>("formatChatInputMarkdown", CHAT_INPUT_ID, formatType));
+        this.hasUnsavedChanges = true;
+    }
+
+    private void ComposerAttachmentsChanged(HashSet<FileAttachment> attachments)
+    {
+        if (!ReferenceEquals(this.ComposerState.FileAttachments, attachments))
+            this.ComposerState.ReplaceFileAttachments(attachments);
+
+        this.ComposerState.MarkUserDraft();
         this.hasUnsavedChanges = true;
     }
     
@@ -574,7 +595,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 WorkspaceId = this.currentWorkspaceId,
                 ChatId = Guid.NewGuid(),
                 DataSourceOptions = this.earlyDataSourceOptions,
-                Name = this.ExtractThreadName(this.userInput),
+                Name = this.ExtractThreadName(this.ComposerState.UserInput),
                 Blocks = this.currentChatTemplate == ChatTemplate.NO_CHAT_TEMPLATE ? [] : this.currentChatTemplate.ExampleConversation.Select(x => x.DeepClone()).ToList(),
             };
             
@@ -585,7 +606,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         {
             // Set the thread name if it is empty:
             if (string.IsNullOrWhiteSpace(this.ChatThread.Name))
-                this.ChatThread.Name = this.ExtractThreadName(this.userInput);
+                this.ChatThread.Name = this.ExtractThreadName(this.ComposerState.UserInput);
             
             // Update provider, profile and chat template:
             this.ChatThread.SelectedProvider = this.Provider.Id;
@@ -602,14 +623,14 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         IContent? lastUserPrompt;
         if (!reuseLastUserPrompt)
         {
-            var normalizedAttachments = this.chatDocumentPaths
+            var normalizedAttachments = this.ComposerState.FileAttachments
                 .Select(attachment => attachment.Normalize())
                 .Where(attachment => attachment.IsValid)
                 .ToList();
 
             lastUserPrompt = new ContentText
             {
-                Text = this.userInput,
+                Text = this.ComposerState.UserInput,
                 FileAttachments = normalizedAttachments,
             };
 
@@ -656,8 +677,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         // Clear the input field:
         await this.inputField.FocusAsync();
 
-        this.userInput = string.Empty;
-        this.chatDocumentPaths.Clear();
+        this.ComposerState.Clear();
 
         await this.inputField.BlurAsync();
         
@@ -751,7 +771,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         // Reset our state:
         //
         this.hasUnsavedChanges = false;
-        this.userInput = string.Empty;
+        this.ComposerState.Clear();
         
         //
         // Reset the LLM provider considering the user's settings:
@@ -808,12 +828,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             };
         }
 
-        this.userInput = this.currentChatTemplate.PredefinedUserPrompt;
-
-        // Apply template's file attachments:
-        this.chatDocumentPaths.Clear();
-        foreach (var attachment in this.currentChatTemplate.FileAttachments)
-            this.chatDocumentPaths.Add(attachment.Normalize());
+        this.ComposerState.ApplyTemplate(this.currentChatTemplate);
 
         // Now, we have to reset the data source options as well:
         this.ApplyStandardDataSourceOptions();
@@ -871,7 +886,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private async Task LoadedChatChanged(bool notifyParent = true)
     {
         this.hasUnsavedChanges = false;
-        this.userInput = string.Empty;
+        this.ComposerState.Clear();
 
         if (this.ChatThread is not null)
         {
@@ -907,7 +922,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private async Task ResetState()
     {
         this.hasUnsavedChanges = false;
-        this.userInput = string.Empty;
+        this.ComposerState.Clear();
         this.ClearWorkspaceHeaderState();
         
         this.ChatThread = null;
@@ -1010,11 +1025,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 
     private void RestoreComposerFromTextBlock(ContentText textBlock)
     {
-        this.userInput = textBlock.Text;
-        this.chatDocumentPaths.Clear();
-
-        foreach (var attachment in textBlock.FileAttachments)
-            this.chatDocumentPaths.Add(attachment.Normalize());
+        this.ComposerState.RestoreFromTextBlock(textBlock);
     }
     
     #region Overrides of MSGComponentBase
@@ -1062,7 +1073,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 if (this.IsCurrentChatStreaming)
                     return Task.FromResult((TResult?) (object) false);
                 
-                return Task.FromResult((TResult?)(object)this.hasUnsavedChanges);
+                return Task.FromResult((TResult?)(object)(this.hasUnsavedChanges || this.ComposerState.HasVisibleUserDraft));
         }
         
         return Task.FromResult(default(TResult));
