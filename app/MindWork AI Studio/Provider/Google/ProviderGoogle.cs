@@ -63,9 +63,9 @@ public class ProviderGoogle() : BaseProvider(LLMProviders.GOOGLE, "https://gener
     #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 
     /// <inheritdoc />
-    public override Task<string> TranscribeAudioAsync(Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default)
+    public override Task<TranscriptionResult> TranscribeAudioAsync(Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default)
     {
-        return Task.FromResult(string.Empty);
+        return Task.FromResult(TranscriptionResult.Failure());
     }
     
     /// <inhertidoc />
@@ -135,6 +135,9 @@ public class ProviderGoogle() : BaseProvider(LLMProviders.GOOGLE, "https://gener
         }
         catch (Exception e)
         {
+            if (this.IsTimeoutException(e, token))
+                await this.SendTimeoutError("creating embeddings");
+
             LOGGER.LogError("Failed to perform embedding request: '{Message}'.", e.Message);
             return [];
         }
@@ -197,6 +200,7 @@ public class ProviderGoogle() : BaseProvider(LLMProviders.GOOGLE, "https://gener
             {
                 System.Net.HttpStatusCode.Forbidden => ModelLoadFailureReason.AUTHENTICATION_OR_PERMISSION_ERROR,
                 System.Net.HttpStatusCode.Unauthorized => ModelLoadFailureReason.INVALID_OR_MISSING_API_KEY,
+                System.Net.HttpStatusCode.TooManyRequests => ModelLoadFailureReason.TOO_MANY_REQUESTS,
                 _ => ModelLoadFailureReason.PROVIDER_UNAVAILABLE,
             });
     }

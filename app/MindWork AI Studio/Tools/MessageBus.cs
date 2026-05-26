@@ -64,11 +64,11 @@ public sealed class MessageBus
             {
                 foreach (var (receiver, componentFilter) in this.componentFilters)
                 {
-                    if (componentFilter.Length > 0 && sendingComponent is not null && !componentFilter.Contains(sendingComponent))
+                    if (componentFilter.Length > 0 && message.SendingComponent is not null && !componentFilter.Contains(message.SendingComponent))
                         continue;
 
                     var eventFilter = this.componentEvents[receiver];
-                    if (eventFilter.Length == 0 || eventFilter.Contains(triggeredEvent))
+                    if (eventFilter.Length == 0 || eventFilter.Contains(message.TriggeredEvent))
 
                         // We don't await the task here because we don't want to block the message bus:
                         _ = receiver.ProcessMessage(message.SendingComponent, message.TriggeredEvent, message.Data);

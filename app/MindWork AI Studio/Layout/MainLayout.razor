@@ -17,7 +17,7 @@
                         <MudNavMenu>
                             @foreach (var navBarItem in this.navItems)
                             {
-                                <MudNavLink Href="@navBarItem.Path" Match="@(navBarItem.MatchAll ? NavLinkMatch.All : NavLinkMatch.Prefix)" Icon="@navBarItem.Icon" Style="@navBarItem.SetColorStyle(this.SettingsManager)" Class="custom-icon-color">
+                                    <MudNavLink Href="@navBarItem.Path" Match="@(navBarItem.MatchAll ? NavLinkMatch.All : NavLinkMatch.Prefix)" Icon="@navBarItem.Icon" Style="@navBarItem.SetColorStyle(this.SettingsManager)" Class="custom-icon-color">
                                     @navBarItem.Name
                                 </MudNavLink>
                             }

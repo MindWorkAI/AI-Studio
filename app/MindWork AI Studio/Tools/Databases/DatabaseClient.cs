@@ -4,7 +4,11 @@ public abstract class EmbeddingStore(string name, string path)
 {
     public string Name => name;
 
-    public virtual bool IsAvailable => true;
+    public virtual string CacheKey => name;
+
+    public virtual DatabaseClientStatus Status => DatabaseClientStatus.AVAILABLE;
+
+    public bool IsAvailable => this.Status is DatabaseClientStatus.AVAILABLE;
     
     private string Path => path;
 
@@ -50,15 +54,6 @@ public abstract class EmbeddingStore(string name, string path)
     {
         this.logger = logService;
     }
-    
-
-    public abstract Task EnsureEmbeddingStoreExists(string collectionName, int vectorSize, CancellationToken token);
-
-    public abstract Task InsertEmbedding(string collectionName, IReadOnlyList<EmbeddingStoragePoint> points, CancellationToken token);
-
-    public abstract Task DeleteEmbeddingByFile(string collectionName, string filePath, CancellationToken token);
-
-    public abstract Task DeleteEmbeddingStore(string collectionName, CancellationToken token);
 
     public abstract void Dispose();
 }

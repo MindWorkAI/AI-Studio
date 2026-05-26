@@ -1,13 +1,19 @@
-﻿use log::info;
-use rocket::post;
-use rocket::serde::{Deserialize, Serialize};
-use rocket::serde::json::Json;
-use tauri::api::dialog::blocking::FileDialogBuilder;
+﻿use log::{error, info};
+use axum::extract::Query;
+use axum::Json;
+use serde::{Deserialize, Serialize};
+use tauri_plugin_dialog::{DialogExt, FileDialogBuilder};
 use crate::api_token::APIToken;
+use crate::app_window::MAIN_WINDOW;
 
 #[derive(Clone, Deserialize)]
 pub struct PreviousDirectory {
     path: String,
+}
+
+#[derive(Deserialize)]
+pub struct SelectDirectoryQuery {
+    title: String,
 }
 
 #[derive(Clone, Deserialize)]
@@ -60,31 +66,49 @@ pub struct PreviousFile {
 }
 
 /// Let the user select a directory.
-#[post("/select/directory?<title>", data = "<previous_directory>")]
-pub fn select_directory(_token: APIToken, title: &str, previous_directory: Option<Json<PreviousDirectory>>) -> Json<DirectorySelectionResponse> {
-    let folder_path = match previous_directory {
-        Some(previous) => {
-            let previous_path = previous.path.as_str();
-            FileDialogBuilder::new()
-                .set_title(title)
-                .set_directory(previous_path)
-                .pick_folder()
-        },
-
+pub async fn select_directory(
+    _token: APIToken,
+    Query(query): Query<SelectDirectoryQuery>,
+    previous_directory: Option<Json<PreviousDirectory>>,
+) -> Json<DirectorySelectionResponse> {
+    let main_window_lock = MAIN_WINDOW.lock().unwrap();
+    let main_window = match main_window_lock.as_ref() {
+        Some(window) => window,
         None => {
-            FileDialogBuilder::new()
-                .set_title(title)
-                .pick_folder()
-        },
+            error!(Source = "Tauri"; "Cannot open directory dialog: main window not available.");
+            return Json(DirectorySelectionResponse {
+                user_cancelled: true,
+                selected_directory: String::from(""),
+            });
+        }
     };
 
+    let mut dialog = main_window.dialog().file().set_parent(main_window).set_title(&query.title);
+    if let Some(previous) = previous_directory {
+        dialog = dialog.set_directory(previous.path.clone());
+    }
+
+    drop(main_window_lock);
+
+    let folder_path = dialog.blocking_pick_folder();
     match folder_path {
         Some(path) => {
-            info!("User selected directory: {path:?}");
-            Json(DirectorySelectionResponse {
-                user_cancelled: false,
-                selected_directory: path.to_str().unwrap().to_string(),
-            })
+            match path.into_path() {
+                Ok(pb) => {
+                    info!("User selected directory: {pb:?}");
+                    Json(DirectorySelectionResponse {
+                        user_cancelled: false,
+                        selected_directory: pb.to_string_lossy().to_string(),
+                    })
+                }
+                Err(e) => {
+                    error!(Source = "Tauri"; "Failed to convert directory path: {e}");
+                    Json(DirectorySelectionResponse {
+                        user_cancelled: true,
+                        selected_directory: String::new(),
+                    })
+                }
+            }
         },
 
         None => {
@@ -98,37 +122,52 @@ pub fn select_directory(_token: APIToken, title: &str, previous_directory: Optio
 }
 
 /// Let the user select a file.
-#[post("/select/file", data = "<payload>")]
-pub fn select_file(_token: APIToken, payload: Json<SelectFileOptions>) -> Json<FileSelectionResponse> {
-
+pub async fn select_file(
+    _token: APIToken,
+    payload: Json<SelectFileOptions>,
+) -> Json<FileSelectionResponse> {
     // Create a new file dialog builder:
-    let file_dialog = FileDialogBuilder::new();
+    let file_dialog = MAIN_WINDOW
+        .lock()
+        .unwrap()
+        .as_ref()
+        .map(|w| w.dialog().file().set_parent(w).set_title(&payload.title));
 
-    // Set the title of the file dialog:
-    let file_dialog = file_dialog.set_title(&payload.title);
-
-    // Set the file type filter if provided:
-    let file_dialog = apply_filter(file_dialog, &payload.filter);
-
-    // Set the previous file path if provided:
-    let file_dialog = match &payload.previous_file {
-        Some(previous) => {
-            let previous_path = previous.file_path.as_str();
-            file_dialog.set_directory(previous_path)
-        },
-
-        None => file_dialog,
+    let Some(mut file_dialog) = file_dialog else {
+        error!(Source = "Tauri"; "Cannot open file dialog: main window not available.");
+        return Json(FileSelectionResponse {
+            user_cancelled: true,
+            selected_file_path: String::from(""),
+        });
     };
 
+    // Set the file type filter if provided:
+    file_dialog = apply_filter(file_dialog, &payload.filter);
+
+    // Set the previous file path if provided:
+    if let Some(previous) = &payload.previous_file {
+        let previous_path = previous.file_path.as_str();
+        file_dialog = file_dialog.set_directory(previous_path);
+    }
+
     // Show the file dialog and get the selected file path:
-    let file_path = file_dialog.pick_file();
+    let file_path = file_dialog.blocking_pick_file();
     match file_path {
-        Some(path) => {
-            info!("User selected file: {path:?}");
-            Json(FileSelectionResponse {
-                user_cancelled: false,
-                selected_file_path: path.to_str().unwrap().to_string(),
-            })
+        Some(path) => match path.into_path() {
+            Ok(pb) => {
+                info!("User selected file: {pb:?}");
+                Json(FileSelectionResponse {
+                    user_cancelled: false,
+                    selected_file_path: pb.to_string_lossy().to_string(),
+                })
+            }
+            Err(e) => {
+                error!(Source = "Tauri"; "Failed to convert file path: {e}");
+                Json(FileSelectionResponse {
+                    user_cancelled: true,
+                    selected_file_path: String::new(),
+                })
+            }
         },
 
         None => {
@@ -142,36 +181,43 @@ pub fn select_file(_token: APIToken, payload: Json<SelectFileOptions>) -> Json<F
 }
 
 /// Let the user select some files.
-#[post("/select/files", data = "<payload>")]
-pub fn select_files(_token: APIToken, payload: Json<SelectFileOptions>) -> Json<FilesSelectionResponse> {
-
+pub async fn select_files(
+    _token: APIToken,
+    payload: Json<SelectFileOptions>,
+) -> Json<FilesSelectionResponse> {
     // Create a new file dialog builder:
-    let file_dialog = FileDialogBuilder::new();
+    let file_dialog = MAIN_WINDOW
+        .lock()
+        .unwrap()
+        .as_ref()
+        .map(|w| w.dialog().file().set_parent(w).set_title(&payload.title));
 
-    // Set the title of the file dialog:
-    let file_dialog = file_dialog.set_title(&payload.title);
-
-    // Set the file type filter if provided:
-    let file_dialog = apply_filter(file_dialog, &payload.filter);
-
-    // Set the previous file path if provided:
-    let file_dialog = match &payload.previous_file {
-        Some(previous) => {
-            let previous_path = previous.file_path.as_str();
-            file_dialog.set_directory(previous_path)
-        },
-
-        None => file_dialog,
+    let Some(mut file_dialog) = file_dialog else {
+        error!(Source = "Tauri"; "Cannot open file dialog: main window not available.");
+        return Json(FilesSelectionResponse {
+            user_cancelled: true,
+            selected_file_paths: Vec::new(),
+        });
     };
 
+    // Set the file type filter if provided:
+    file_dialog = apply_filter(file_dialog, &payload.filter);
+
+    // Set the previous file path if provided:
+    if let Some(previous) = &payload.previous_file {
+        let previous_path = previous.file_path.as_str();
+        file_dialog = file_dialog.set_directory(previous_path);
+    }
+
     // Show the file dialog and get the selected file path:
-    let file_paths = file_dialog.pick_files();
+    let file_paths = file_dialog.blocking_pick_files();
     match file_paths {
         Some(paths) => {
-            info!("User selected {} files.", paths.len());
+            let converted: Vec<String> = paths.into_iter().filter_map(|p| p.into_path().ok()).map(|pb| pb.to_string_lossy().to_string()).collect();
+            info!("User selected {} files.", converted.len());
             Json(FilesSelectionResponse {
                 user_cancelled: false,
-                selected_file_paths: paths.iter().map(|p| p.to_str().unwrap().to_string()).collect(),
+                selected_file_paths: converted,
             })
         }
 
@@ -185,37 +231,49 @@ pub fn select_files(_token: APIToken, payload: Json<SelectFileOptions>) -> Json<
     }
 }
 
-#[post("/save/file", data = "<payload>")]
-pub fn save_file(_token: APIToken, payload: Json<SaveFileOptions>) -> Json<FileSaveResponse> {
-
+pub async fn save_file(_token: APIToken, payload: Json<SaveFileOptions>) -> Json<FileSaveResponse> {
     // Create a new file dialog builder:
-    let file_dialog = FileDialogBuilder::new();
+    let file_dialog = MAIN_WINDOW
+        .lock()
+        .unwrap()
+        .as_ref()
+        .map(|w| w.dialog().file().set_parent(w).set_title(&payload.title));
 
-    // Set the title of the file dialog:
-    let file_dialog = file_dialog.set_title(&payload.title);
-
-    // Set the file type filter if provided:
-    let file_dialog = apply_filter(file_dialog, &payload.filter);
-
-    // Set the previous file path if provided:
-    let file_dialog = match &payload.name_file {
-        Some(previous) => {
-            let previous_path = previous.file_path.as_str();
-            file_dialog.set_directory(previous_path)
-        },
-
-        None => file_dialog,
+    let Some(mut file_dialog) = file_dialog else {
+        error!(Source = "Tauri"; "Cannot open save dialog: main window not available.");
+        return Json(FileSaveResponse {
+            user_cancelled: true,
+            save_file_path: String::from(""),
+        });
     };
 
+    // Set the file type filter if provided:
+    file_dialog = apply_filter(file_dialog, &payload.filter);
+
+    // Set the previous file path if provided:
+    if let Some(previous) = &payload.name_file {
+        let previous_path = previous.file_path.as_str();
+        file_dialog = file_dialog.set_directory(previous_path);
+    }
+
     // Displays the file dialogue box and select the file:
-    let file_path = file_dialog.save_file();
+    let file_path = file_dialog.blocking_save_file();
     match file_path {
-        Some(path) => {
-            info!("User selected file for writing operation: {path:?}");
-            Json(FileSaveResponse {
-                user_cancelled: false,
-                save_file_path: path.to_str().unwrap().to_string(),
-            })
+        Some(path) => match path.into_path() {
+            Ok(pb) => {
+                info!("User selected file for writing operation: {pb:?}");
+                Json(FileSaveResponse {
+                    user_cancelled: false,
+                    save_file_path: pb.to_string_lossy().to_string(),
+                })
+            }
+            Err(e) => {
+                error!(Source = "Tauri"; "Failed to convert save file path: {e}");
+                Json(FileSaveResponse {
+                    user_cancelled: true,
+                    save_file_path: String::new(),
+                })
+            }
         },
 
         None => {
@@ -229,7 +287,7 @@ pub fn save_file(_token: APIToken, payload: Json<SaveFileOptions>) -> Json<FileS
 }
 
 /// Applies an optional file type filter to a FileDialogBuilder.
-fn apply_filter(file_dialog: FileDialogBuilder, filter: &Option<FileTypeFilter>) -> FileDialogBuilder {
+fn apply_filter<R: tauri::Runtime>(file_dialog: FileDialogBuilder<R>, filter: &Option<FileTypeFilter>) -> FileDialogBuilder<R> {
     match filter {
         Some(f) => file_dialog.add_filter(
             &f.filter_name,

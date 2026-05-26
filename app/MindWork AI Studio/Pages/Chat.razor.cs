@@ -26,6 +26,7 @@ public partial class Chat : MSGComponentBase
     private string currentWorkspaceName = string.Empty;
     private Workspaces? workspaces;
     private double splitterPosition = 30;
+    private readonly ChatComposerState composerState = new();
     
     private readonly Timer splitterSaveTimer = new(TimeSpan.FromSeconds(1.6));
 

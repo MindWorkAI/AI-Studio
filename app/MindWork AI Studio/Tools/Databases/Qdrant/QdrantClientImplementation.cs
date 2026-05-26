@@ -28,6 +28,8 @@ public class QdrantClientImplementation : EmbeddingStore
         this.ApiToken = apiToken ?? string.Empty;
         this.GrpcClient = this.CreateQdrantClient();
     }
+
+    public override string CacheKey => $"{this.Name}:{this.HttpPort}:{this.GrpcPort}:{this.Fingerprint}";
     
     private const string IP_ADDRESS = "localhost";
 
@@ -47,6 +49,11 @@ public class QdrantClientImplementation : EmbeddingStore
     {
         var operation = await this.GrpcClient.HealthAsync();
         return $"v{operation.Version}";
+    }
+
+    public async Task CheckAvailabilityAsync()
+    {
+        await this.GrpcClient.HealthAsync();
     }
 
     private async Task<string> GetCollectionsAmount()

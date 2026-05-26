@@ -5,49 +5,27 @@ namespace AIStudio.Tools.Services;
 
 public sealed partial class RustService
 {
-    public async Task<EmbeddingStoreConfiguration> GetEmbeddingStoreConfiguration(EmbeddingStoreKind kind)
-    {
-        switch (kind)
-        {
-            case EmbeddingStoreKind.QDRANT_REMOTE:
-            {
-                var qdrantInfo = await this.GetQdrantInfo();
-                var invalidFields = new List<string>();
-                if (!qdrantInfo.IsAvailable)
-                    invalidFields.Add(qdrantInfo.UnavailableReason ?? "unknown");
-                if (string.IsNullOrWhiteSpace(qdrantInfo.Path))
-                    invalidFields.Add("Path");
-                if (qdrantInfo.PortHttp == 0)
-                    invalidFields.Add("HttpPort");
-                if (qdrantInfo.PortGrpc == 0)
-                    invalidFields.Add("GrpcPort");
-                if (string.IsNullOrWhiteSpace(qdrantInfo.Fingerprint))
-                    invalidFields.Add("Fingerprint");
-                if (string.IsNullOrWhiteSpace(qdrantInfo.ApiToken))
-                    invalidFields.Add("ApiToken");
-                if (invalidFields.Count <= 0) return new EmbeddingStoreConfiguration(kind, "Qdrant", new RemoteLocation(qdrantInfo.Path, qdrantInfo.PortHttp, qdrantInfo.PortGrpc, qdrantInfo.Fingerprint, qdrantInfo.ApiToken), null);
-                var reason = string.Join(", ", invalidFields);
-                Console.WriteLine($"Warning: Qdrant is not available. Starting without vector database. Reason: '{reason}'.");
-
-                return new EmbeddingStoreConfiguration(
-                    EmbeddingStoreKind.NONE,
-                    "Qdrant",
-                    null,
-                    reason);
-
-            }
-            default:
-                return new EmbeddingStoreConfiguration(kind, kind.ToString(), null, $"No configuration available for {kind}");
-        }
-    }
-    
-    public async Task<QdrantInfo> GetQdrantInfo()
+    public async Task<QdrantInfo> GetQdrantInfo(CancellationToken cancellationToken = default)
     {
         try
         {
-            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(45));
-            var response = await this.http.GetFromJsonAsync<QdrantInfo>("/system/qdrant/info", this.jsonRustSerializerOptions, cts.Token);
-            return response;
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            cts.CancelAfter(TimeSpan.FromSeconds(45));
+            
+            return await this.http.GetFromJsonAsync<QdrantInfo>("/system/qdrant/info", this.jsonRustSerializerOptions, cts.Token);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            if(this.logger is not null)
+                this.logger.LogWarning("Fetching Qdrant info from Rust service was cancelled by caller.");
+            else
+                Console.WriteLine("Fetching Qdrant info from Rust service was cancelled by caller.");
+            
+            return new QdrantInfo
+            {
+                Status = QdrantStatus.UNAVAILABLE,
+                UnavailableReason = "Operation cancelled by caller."
+            };
         }
         catch (Exception e)
         {
@@ -56,7 +34,11 @@ public sealed partial class RustService
             else
                 Console.WriteLine($"Error while fetching Qdrant info from Rust service: '{e}'.");
             
-            return default;
+            return new QdrantInfo
+            {
+                Status = QdrantStatus.UNAVAILABLE,
+                UnavailableReason = e.Message
+            };
         }
     }
 }

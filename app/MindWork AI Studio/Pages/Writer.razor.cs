@@ -10,6 +10,7 @@ namespace AIStudio.Pages;
 
 public partial class Writer : MSGComponentBase
 {
+    private static readonly ILogger<Writer> LOGGER = Program.LOGGER_FACTORY.CreateLogger<Writer>();
     private static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
     private readonly Timer typeTimer = new(TimeSpan.FromMilliseconds(1_500));
     
@@ -106,22 +107,38 @@ public partial class Writer : MSGComponentBase
             InitialRemoteWait = true,
         };
         
-        this.chatThread?.Blocks.Add(new ContentBlock
+        var aiBlock = new ContentBlock
         {
             Time = time,
             ContentType = ContentType.TEXT,
             Role = ChatRole.AI,
             Content = aiText,
-        });
+        };
+
+        this.chatThread?.Blocks.Add(aiBlock);
         
         this.isStreaming = true;
         this.StateHasChanged();
-        
-        this.chatThread = await aiText.CreateFromProviderAsync(this.providerSettings.CreateProvider(), this.providerSettings.Model, lastUserPrompt, this.chatThread);
-        this.suggestion = aiText.Text;
-        
-        this.isStreaming = false;
-        this.StateHasChanged();
+
+        try
+        {
+            this.chatThread = await aiText.CreateFromProviderAsync(this.providerSettings.CreateProvider(), this.providerSettings.Model, lastUserPrompt, this.chatThread);
+            this.suggestion = aiText.Text;
+        }
+        catch (ProviderRequestException e)
+        {
+            LOGGER.LogError(e, "The provider request failed for writer suggestions. Status={StatusCode}, Reason='{ReasonPhrase}', Body='{ResponseBody}'", e.StatusCode, e.ReasonPhrase, e.ResponseBody);
+            await this.MessageBus.SendError(new(Icons.Material.Filled.CloudOff, e.UserMessage));
+            this.suggestion = string.Empty;
+
+            if (string.IsNullOrWhiteSpace(aiText.Text))
+                this.chatThread?.Blocks.Remove(aiBlock);
+        }
+        finally
+        {
+            this.isStreaming = false;
+            this.StateHasChanged();
+        }
     }
     
     private void AcceptEntireSuggestion()

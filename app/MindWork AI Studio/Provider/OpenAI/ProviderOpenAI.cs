@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -5,6 +6,7 @@ using System.Text.Json;
 
 using AIStudio.Chat;
 using AIStudio.Settings;
+using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Provider.OpenAI;
 
@@ -14,6 +16,8 @@ namespace AIStudio.Provider.OpenAI;
 public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, "https://api.openai.com/v1/", LOGGER)
 {
     private static readonly ILogger<ProviderOpenAI> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderOpenAI>();
+    
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ProviderOpenAI).Namespace, nameof(ProviderOpenAI));
     
     #region Implementation of IProvider
 
@@ -25,6 +29,28 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, "https
 
     /// <inheritdoc />
     public override bool HasModelLoadingCapability => true;
+
+    protected override ProviderRequestFailureReason ClassifyProviderRequestFailure(HttpStatusCode statusCode, string responseBody)
+    {
+        if (statusCode is HttpStatusCode.TooManyRequests && HasInsufficientQuotaError(responseBody))
+            return ProviderRequestFailureReason.INSUFFICIENT_QUOTA;
+
+        return base.ClassifyProviderRequestFailure(statusCode, responseBody);
+    }
+
+    protected override ProviderRequestFailureReason ClassifyProviderRequestFailure(string? errorCode, string? errorType, string? errorMessage, string responseBody)
+    {
+        if (IsInsufficientQuota(errorCode) || IsInsufficientQuota(errorType) || HasInsufficientQuotaError(responseBody))
+            return ProviderRequestFailureReason.INSUFFICIENT_QUOTA;
+
+        return base.ClassifyProviderRequestFailure(errorCode, errorType, errorMessage, responseBody);
+    }
+
+    protected override string GetProviderRequestFailureUserMessage(ProviderRequestFailureReason failureReason) => failureReason switch
+    {
+        ProviderRequestFailureReason.INSUFFICIENT_QUOTA => TB("It looks like you do not have any API credits left with OpenAI. Please add credits to your account and try again."),
+        _ => base.GetProviderRequestFailureUserMessage(failureReason),
+    };
 
     /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
@@ -222,7 +248,7 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, "https
     #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
     
     /// <inheritdoc />
-    public override async Task<string> TranscribeAudioAsync(Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default)
+    public override async Task<TranscriptionResult> TranscribeAudioAsync(Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default)
     {
         var requestedSecret = await RUST_SERVICE.GetAPIKey(this, SecretStoreType.TRANSCRIPTION_PROVIDER);
         return await this.PerformStandardTranscriptionRequest(requestedSecret, transcriptionModel, audioFilePath, token: token);
@@ -288,5 +314,60 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, "https
             modelResponse => modelResponse.Data.Where(model => prefixes.Any(prefix => model.Id.StartsWith(prefix, StringComparison.InvariantCulture))),
             token,
             apiKeyProvisional);
+    }
+
+    private static bool HasInsufficientQuotaError(string responseBody)
+    {
+        if (string.IsNullOrWhiteSpace(responseBody))
+            return false;
+
+        try
+        {
+            using var document = JsonDocument.Parse(responseBody);
+            return HasInsufficientQuotaError(document.RootElement);
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+    }
+
+    private static bool HasInsufficientQuotaError(JsonElement element)
+    {
+        switch (element.ValueKind)
+        {
+            case JsonValueKind.Object:
+                if (HasJsonStringValue(element, "type", "insufficient_quota") ||
+                    HasJsonStringValue(element, "code", "insufficient_quota"))
+                    return true;
+
+                foreach (var property in element.EnumerateObject())
+                    if (HasInsufficientQuotaError(property.Value))
+                        return true;
+
+                return false;
+
+            case JsonValueKind.Array:
+                foreach (var item in element.EnumerateArray())
+                    if (HasInsufficientQuotaError(item))
+                        return true;
+
+                return false;
+
+            default:
+                return false;
+        }
+    }
+
+    private static bool IsInsufficientQuota(string? value)
+    {
+        return value is not null && value.Equals("insufficient_quota", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool HasJsonStringValue(JsonElement element, string propertyName, string expectedValue)
+    {
+        return element.TryGetProperty(propertyName, out var propertyElement) &&
+               propertyElement.ValueKind is JsonValueKind.String &&
+               string.Equals(propertyElement.GetString(), expectedValue, StringComparison.OrdinalIgnoreCase);
     }
 }

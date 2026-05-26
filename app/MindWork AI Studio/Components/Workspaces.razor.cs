@@ -4,6 +4,7 @@ using System.Text.Json;
 using AIStudio.Chat;
 using AIStudio.Dialogs;
 using AIStudio.Settings;
+using AIStudio.Tools.AIJobs;
 
 using Microsoft.AspNetCore.Components;
 
@@ -18,6 +19,9 @@ public partial class Workspaces : MSGComponentBase
     
     [Inject]
     private ILogger<Workspaces> Logger { get; init; } = null!;
+
+    [Inject]
+    private AIJobService AIJobService { get; init; } = null!;
     
     [Parameter]
     public ChatThread? CurrentChatThread { get; set; }
@@ -42,6 +46,7 @@ public partial class Workspaces : MSGComponentBase
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
+        this.ApplyFilters([], [ Event.AI_JOB_CHANGED, Event.AI_JOB_FINISHED, Event.CHAT_GENERATION_CHANGED ]);
         _ = this.LoadTreeItemsAsync(startPrefetch: true);
     }
 
@@ -111,7 +116,7 @@ public partial class Workspaces : MSGComponentBase
         
         var temporaryChatsChildren = new List<TreeItemData<ITreeItem>>();
         foreach (var temporaryChat in snapshot.TemporaryChats.OrderByDescending(x => x.LastEditTime))
-            temporaryChatsChildren.Add(CreateChatTreeItem(temporaryChat, WorkspaceBranch.TEMPORARY_CHATS, depth: 1, icon: Icons.Material.Filled.Timer));
+            temporaryChatsChildren.Add(this.CreateChatTreeItem(temporaryChat, WorkspaceBranch.TEMPORARY_CHATS, depth: 1, icon: Icons.Material.Filled.Timer));
 
         this.treeItems.Add(new TreeItemData<ITreeItem>
         {
@@ -136,7 +141,7 @@ public partial class Workspaces : MSGComponentBase
         if (workspace.ChatsLoaded)
         {
             foreach (var workspaceChat in workspace.Chats.OrderByDescending(x => x.LastEditTime))
-                children.Add(CreateChatTreeItem(workspaceChat, WorkspaceBranch.WORKSPACES, depth: 2, icon: Icons.Material.Filled.Chat));
+                children.Add(this.CreateChatTreeItem(workspaceChat, WorkspaceBranch.WORKSPACES, depth: 2, icon: Icons.Material.Filled.Chat));
         }
         else if (this.loadingWorkspaceChatLists.Contains(workspace.WorkspaceId))
             children.AddRange(this.CreateLoadingRows(workspace.WorkspacePath));
@@ -192,7 +197,7 @@ public partial class Workspaces : MSGComponentBase
         };
     }
 
-    private static TreeItemData<ITreeItem> CreateChatTreeItem(WorkspaceTreeChat chat, WorkspaceBranch branch, int depth, string icon)
+    private TreeItemData<ITreeItem> CreateChatTreeItem(WorkspaceTreeChat chat, WorkspaceBranch branch, int depth, string icon)
     {
         return new TreeItemData<ITreeItem>
         {
@@ -204,10 +209,41 @@ public partial class Workspaces : MSGComponentBase
                 Branch = branch,
                 Text = chat.Name,
                 Icon = icon,
+                DefaultIcon = icon,
                 Expandable = false,
                 Path = chat.ChatPath,
+                ChatId = chat.ChatId,
+                WorkspaceId = chat.WorkspaceId,
                 LastEditTime = chat.LastEditTime,
             },
+        };
+    }
+
+    private string GetTreeItemIcon(TreeItemData treeItem)
+    {
+        if (treeItem.Type is not TreeItemType.CHAT)
+            return treeItem.Icon;
+
+        var defaultIcon = string.IsNullOrWhiteSpace(treeItem.DefaultIcon) ? treeItem.Icon : treeItem.DefaultIcon;
+        return this.GetChatTreeIcon(treeItem.ChatId, defaultIcon);
+    }
+
+    private bool IsChatTreeItemBusy(TreeItemData treeItem)
+    {
+        return treeItem.Type is TreeItemType.CHAT && this.AIJobService.IsChatGenerationActive(treeItem.ChatId);
+    }
+
+    private string GetChatTreeIcon(Guid chatId, string defaultIcon)
+    {
+        var snapshot = this.AIJobService.TryGetChatSnapshot(chatId);
+        if (snapshot is null || !snapshot.IsActive)
+            return defaultIcon;
+
+        return snapshot.Status switch
+        {
+            AIJobStatus.WAITING_FOR_REMOTE => Icons.Material.Filled.HourglassTop,
+            AIJobStatus.RUNNING => Icons.Material.Filled.ChangeCircle,
+            _ => defaultIcon,
         };
     }
 
@@ -348,11 +384,13 @@ public partial class Workspaces : MSGComponentBase
         {
             var chatData = await File.ReadAllTextAsync(Path.Join(chatPath, "thread.json"), Encoding.UTF8);
             var chat = JsonSerializer.Deserialize<ChatThread>(chatData, WorkspaceBehaviour.JSON_OPTIONS);
+            if (chat is not null)
+                chat = this.AIJobService.TryGetLiveChatThread(chat.ChatId) ?? chat;
+
             if (switchToChat)
             {
                 this.CurrentChatThread = chat;
                 await this.CurrentChatThreadChanged.InvokeAsync(this.CurrentChatThread);
-                await MessageBus.INSTANCE.SendMessage<bool>(this, Event.WORKSPACE_LOADED_CHAT_CHANGED);
             }
             
             return chat;
@@ -369,6 +407,9 @@ public partial class Workspaces : MSGComponentBase
     {
         var chat = await this.LoadChatAsync(chatPath, false);
         if (chat is null)
+            return;
+
+        if (this.AIJobService.IsChatGenerationActive(chat.ChatId))
             return;
 
         if (askForConfirmation)
@@ -398,7 +439,6 @@ public partial class Workspaces : MSGComponentBase
         {
             this.CurrentChatThread = null;
             await this.CurrentChatThreadChanged.InvokeAsync(this.CurrentChatThread);
-            await MessageBus.INSTANCE.SendMessage<bool>(this, Event.WORKSPACE_LOADED_CHAT_CHANGED);
         }
     }
 
@@ -406,6 +446,9 @@ public partial class Workspaces : MSGComponentBase
     {
         var chat = await this.LoadChatAsync(chatPath, false);
         if (chat is null)
+            return;
+
+        if (this.AIJobService.IsChatGenerationActive(chat.ChatId))
             return;
         
         var dialogParameters = new DialogParameters<SingleInputDialog>
@@ -429,7 +472,6 @@ public partial class Workspaces : MSGComponentBase
         {
             this.CurrentChatThread.Name = chat.Name;
             await this.CurrentChatThreadChanged.InvokeAsync(this.CurrentChatThread);
-            await MessageBus.INSTANCE.SendMessage<bool>(this, Event.WORKSPACE_LOADED_CHAT_CHANGED);
         }
         
         await WorkspaceBehaviour.StoreChatAsync(chat);
@@ -525,6 +567,9 @@ public partial class Workspaces : MSGComponentBase
         var chat = await this.LoadChatAsync(chatPath, false);
         if (chat is null)
             return;
+
+        if (this.AIJobService.IsChatGenerationActive(chat.ChatId))
+            return;
         
         var dialogParameters = new DialogParameters<WorkspaceSelectionDialog>
         {
@@ -549,7 +594,6 @@ public partial class Workspaces : MSGComponentBase
         {
             this.CurrentChatThread = chat;
             await this.CurrentChatThreadChanged.InvokeAsync(this.CurrentChatThread);
-            await MessageBus.INSTANCE.SendMessage<bool>(this, Event.WORKSPACE_LOADED_CHAT_CHANGED);
         }
         
         await WorkspaceBehaviour.StoreChatAsync(chat);
@@ -596,6 +640,12 @@ public partial class Workspaces : MSGComponentBase
         {
             case Event.PLUGINS_RELOADED:
                 await this.ForceRefreshFromDiskAsync();
+                break;
+
+            case Event.AI_JOB_CHANGED:
+            case Event.AI_JOB_FINISHED:
+            case Event.CHAT_GENERATION_CHANGED:
+                await this.SafeStateHasChanged();
                 break;
         }
     }

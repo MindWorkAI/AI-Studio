@@ -29,17 +29,18 @@ public partial class Information : MSGComponentBase
     private ISnackbar Snackbar { get; init; } = null!;
     
     [Inject]
-    private EmbeddingStore EmbeddingStore { get; init; } = null!;
+    private DatabaseClient DatabaseClient { get; init; } = null!;
     
     private static readonly Assembly ASSEMBLY = Assembly.GetExecutingAssembly();
     private static readonly MetaDataAttribute META_DATA = ASSEMBLY.GetCustomAttribute<MetaDataAttribute>()!;
     private static readonly MetaDataArchitectureAttribute META_DATA_ARCH = ASSEMBLY.GetCustomAttribute<MetaDataArchitectureAttribute>()!;
     private static readonly MetaDataLibrariesAttribute META_DATA_LIBRARIES = ASSEMBLY.GetCustomAttribute<MetaDataLibrariesAttribute>()!;
-    private static readonly MetaDataDatabasesAttribute META_DATA_DATABASES = ASSEMBLY.GetCustomAttribute<MetaDataDatabasesAttribute>()!;
+    private static readonly MetaDataEmbeddingStoreAttribute META_DATA_EMBEDDING_STORE = ASSEMBLY.GetCustomAttribute<MetaDataEmbeddingStoreAttribute>()!;
     
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(Information).Namespace, nameof(Information));
 
     private string osLanguage = string.Empty;
+    private string osUserName = string.Empty;
     
     private static string VersionApp => $"MindWork AI Studio: v{META_DATA.Version} (commit {META_DATA.AppCommitHash}, build {META_DATA.BuildNum}, {META_DATA_ARCH.Architecture.ToRID().ToUserFriendlyName()})";
     
@@ -49,6 +50,8 @@ public partial class Information : MSGComponentBase
     
     private string OSLanguage => $"{T("User-language provided by the OS")}: '{this.osLanguage}'";
     
+    private string OSUserName => $"{T("Username provided by the OS")}: '{this.osUserName}'";
+
     private string VersionRust => $"{T("Used Rust compiler")}: v{META_DATA.RustVersion}";
     
     private string VersionDotnetRuntime => $"{T("Used .NET runtime")}: v{META_DATA.DotnetVersion}";
@@ -59,9 +62,21 @@ public partial class Information : MSGComponentBase
     
     private string VersionPdfium => $"{T("Used PDFium version")}: v{META_DATA_LIBRARIES.PdfiumVersion}";
     
-    private string VersionDatabase => this.EmbeddingStore.IsAvailable
-        ? $"{T("Database version")}: {this.EmbeddingStore.Name} v{META_DATA_DATABASES.DatabaseVersion}"
-        : $"{T("Database")}: {this.EmbeddingStore.Name} - {T("not available")}";
+    private string VersionEmbeddingStore
+    {
+        get
+        {
+            if (this.embeddingStore is null)
+                return $"{T("Embedding store")}: {T("checking availability")}";
+
+            return this.embeddingStore.Status switch
+            {
+                EmbeddingStoreStatus.AVAILABLE => $"{T("Embedding store version")}: {this.embeddingStore.Name} v{META_DATA_EMBEDDING_STORE.DatabaseVersion}",
+                EmbeddingStoreStatus.STARTING => $"{T("Embedding store")}: {this.embeddingStore.Name} - {T("starting")}",
+                _ => $"{T("Embedding store")}: {this.embeddingStore.Name} - {T("not available")}"
+            };
+        }
+    }
     
     private string versionPandoc = TB("Determine Pandoc version, please wait...");
     private PandocInstallation pandocInstallation;
@@ -70,7 +85,7 @@ public partial class Information : MSGComponentBase
     
     private bool showEnterpriseConfigDetails;
 
-    private bool showDatabaseDetails;
+    private bool showEmbeddingStoreDetails;
 
     private List<IAvailablePlugin> configPlugins = PluginFactory.AvailablePlugins
         .Where(x => x.Type is PluginType.CONFIGURATION)
@@ -81,11 +96,13 @@ public partial class Information : MSGComponentBase
 
     private List<MandatoryInfoPanelData> mandatoryInfoPanels = [];
     
-    private sealed record DatabaseDisplayInfo(string Label, string Value);
+    private sealed record EmbeddingStoreDisplayInfo(string Label, string Value);
 
     private sealed record MandatoryInfoPanelData(string HeaderText, string PluginName, DataMandatoryInfo Info, DataMandatoryInfoAcceptance? Acceptance);
 
-    private readonly List<DatabaseDisplayInfo> databaseDisplayInfo = new();
+    private readonly List<EmbeddingStoreDisplayInfo> embeddingStoreDisplayInfo = new();
+    private DatabaseClient? embeddingStore;
+    private CancellationTokenSource? databaseRefreshCancellationTokenSource;
 
     private bool HasAnyActiveEnvironment => this.enterpriseEnvironments.Any(e => e.IsActive);
     
@@ -128,12 +145,12 @@ public partial class Information : MSGComponentBase
         this.RefreshEnterpriseConfigurationState();
         
         this.osLanguage = await this.RustService.ReadUserLanguage();
+        this.osUserName = await this.RustService.ReadUserName();
         this.logPaths = await this.RustService.GetLogPaths();
         
-        await foreach (var (label, value) in this.EmbeddingStore.GetDisplayInfo())
-        {
-            this.databaseDisplayInfo.Add(new DatabaseDisplayInfo(label, value));
-        }
+        await this.RefreshDatabaseInfo(CancellationToken.None);
+        if (this.databaseClient?.Status is DatabaseClientStatus.STARTING)
+            this.StartShortDatabaseRefreshLoop();
         
         // Determine the Pandoc version may take some time, so we start it here
         // without waiting for the result:
@@ -234,7 +251,70 @@ public partial class Information : MSGComponentBase
     
     private void ToggleDatabaseDetails()
     {
-        this.showDatabaseDetails = !this.showDatabaseDetails;
+        this.showEmbeddingStoreDetails = !this.showEmbeddingStoreDetails;
+    }
+
+    private async Task RefreshDatabaseInfo(CancellationToken cancellationToken)
+    {
+        var refreshedClient = await this.DatabaseClientProvider.RefreshClientAsync(DatabaseRole.VECTOR_STORE, cancellationToken);
+        this.databaseClient = refreshedClient;
+        this.embeddingStoreDisplayInfo.Clear();
+
+        try
+        {
+            await foreach (var (label, value) in refreshedClient.GetDisplayInfo().WithCancellation(cancellationToken))
+            {
+                this.embeddingStoreDisplayInfo.Add(new EmbeddingStoreDisplayInfo(label, value));
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception e)
+        {
+            this.databaseClient = new NoDatabaseClient(refreshedClient.Name, e.Message, DatabaseClientStatus.STARTING);
+            await foreach (var (label, value) in this.databaseClient.GetDisplayInfo().WithCancellation(cancellationToken))
+            {
+                this.embeddingStoreDisplayInfo.Add(new EmbeddingStoreDisplayInfo(label, value));
+            }
+        }
+    }
+
+    private void StartShortDatabaseRefreshLoop()
+    {
+        this.databaseRefreshCancellationTokenSource?.Cancel();
+        this.databaseRefreshCancellationTokenSource?.Dispose();
+        this.databaseRefreshCancellationTokenSource = new CancellationTokenSource();
+        var cancellationToken = this.databaseRefreshCancellationTokenSource.Token;
+
+        _ = Task.Run(async () =>
+        {
+            const int MAX_TRIES = 12;
+            for (var attempt = 0; attempt < MAX_TRIES; attempt++)
+            {
+                try
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+                    await this.InvokeAsync(async () =>
+                    {
+                        await this.RefreshDatabaseInfo(cancellationToken);
+                        this.StateHasChanged();
+                    });
+
+                    if (this.databaseClient?.Status is not DatabaseClientStatus.STARTING)
+                        return;
+                }
+                catch (OperationCanceledException)
+                {
+                    return;
+                }
+                catch
+                {
+                    return;
+                }
+            }
+        }, cancellationToken);
     }
 
     private IAvailablePlugin? FindManagedConfigurationPlugin(Guid configurationId)
@@ -247,6 +327,13 @@ public partial class Information : MSGComponentBase
     private bool IsManagedConfigurationIdMismatch(IAvailablePlugin plugin, Guid configurationId)
     {
         return plugin.ManagedConfigurationId == configurationId && plugin.Id != configurationId;
+    }
+
+    protected override void DisposeResources()
+    {
+        this.databaseRefreshCancellationTokenSource?.Cancel();
+        this.databaseRefreshCancellationTokenSource?.Dispose();
+        base.DisposeResources();
     }
 
     private async Task CopyStartupLogPath()

@@ -49,6 +49,19 @@ public partial class SettingsDialogProfiles : SettingsDialogBase
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
 
+    private async Task ExportProfile(Profile profile)
+    {
+        if (!this.SettingsManager.ConfigurationData.App.ShowAdminSettings)
+            return;
+
+        if (profile == Profile.NO_PROFILE || profile.IsEnterpriseConfiguration)
+            return;
+
+        var luaCode = profile.ExportAsConfigurationSection();
+        if (!string.IsNullOrWhiteSpace(luaCode))
+            await this.RustService.CopyText2Clipboard(this.Snackbar, luaCode);
+    }
+
     private async Task DeleteProfile(Profile profile)
     {
         var dialogParameters = new DialogParameters<ConfirmDialog>
