@@ -4,7 +4,7 @@ using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.AIJobs;
-
+using AIStudio.Tools.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 
@@ -1051,7 +1051,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             return;
         if (!tokenizerResponse.Value.Success)
         {
-            this.Logger.LogWarning($"Failed to initialize the tokenizer for the provider: {tokenizerResponse.Value.Message}");
+            this.Logger.LogWarning($"Failed to initialize the tokenizer for the provider: status='{tokenizerResponse.Value.Status}', reason='{tokenizerResponse.Value.Message}'");
             return;
         }
 
@@ -1060,7 +1060,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             return;
         if (!response.Value.Success)
         {
-            this.Logger.LogWarning($"Failed to calculate token count: {response.Value.Message}");
+            this.Logger.LogWarning($"Failed to calculate token count: status='{response.Value.Status}', reason='{response.Value.Message}'");
             return;
         }
         this.tokenCount = response.Value.TokenCount.ToString();

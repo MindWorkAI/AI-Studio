@@ -438,7 +438,7 @@ public sealed record PluginConfigurationObject
             return string.Empty;
         }
 
-        return storeResult.Message;
+        return storeResult.StoredPath;
     }
 
     private static string? ResolvePluginTokenizerPath(string configuredTokenizerPath, string pluginPath)

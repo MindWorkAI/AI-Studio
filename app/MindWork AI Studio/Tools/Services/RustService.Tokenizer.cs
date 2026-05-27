@@ -9,6 +9,31 @@ public sealed partial class RustService
     private string currentTokenizerPath = string.Empty;
     private bool hasInitializedTokenizer;
 
+    private static TokenizerResponse CreateUnavailableTokenizerResponse(string message) => new(
+        false,
+        0,
+        message,
+        TokenizerStatus.UNAVAILABLE,
+        string.Empty);
+
+    public async Task<TokenizerResponse> GetTokenizerInfo(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await this.http.GetFromJsonAsync<TokenizerResponse>("/system/tokenizer/info", this.jsonRustSerializerOptions, cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            this.logger?.LogWarning("Fetching tokenizer info from Rust service was cancelled by caller.");
+            return CreateUnavailableTokenizerResponse("Operation cancelled by caller.");
+        }
+        catch (Exception e)
+        {
+            this.logger?.LogError(e, "Error while fetching tokenizer info from Rust service.");
+            return CreateUnavailableTokenizerResponse(e.Message);
+        }
+    }
+
     public async Task<TokenizerResponse> ValidateTokenizer(string filePath)
     {
         var result = await this.http.PostAsJsonAsync("/tokenizer/validate", new {
@@ -18,15 +43,12 @@ public sealed partial class RustService
         if (!result.IsSuccessStatusCode)
         {
             this.logger!.LogError($"Failed to validate the tokenizer '{result.StatusCode}'");
-            return new TokenizerResponse
-            {
-                Success = false,
-                Message = "An error occured while sending the path to the Rust framework for validation: "+result.StatusCode,
-                TokenCount = 0
-            };
+            return CreateUnavailableTokenizerResponse("An error occured while sending the path to the Rust framework for validation: "+result.StatusCode);
         }
 
-        return await result.Content.ReadFromJsonAsync<TokenizerResponse>(this.jsonRustSerializerOptions);
+        var response = await result.Content.ReadFromJsonAsync<TokenizerResponse>(this.jsonRustSerializerOptions);
+
+        return response;
     }
     
     public async Task<TokenizerResponse> StoreTokenizer(string modelId, string filePath)
@@ -40,11 +62,7 @@ public sealed partial class RustService
         if (!result.IsSuccessStatusCode)
         {
             this.logger!.LogError($"Failed to store the tokenizer '{result.StatusCode}'");
-            return new TokenizerResponse{
-                Success = false,
-                Message = "An error occured while sending the path to the Rust framework for storing: "+result.StatusCode,
-                TokenCount = 0
-            };
+            return CreateUnavailableTokenizerResponse("An error occured while sending the path to the Rust framework for storing: "+result.StatusCode);
         }
 
         return await result.Content.ReadFromJsonAsync<TokenizerResponse>(this.jsonRustSerializerOptions);
@@ -60,11 +78,7 @@ public sealed partial class RustService
         if (!result.IsSuccessStatusCode)
         {
             this.logger!.LogError($"Failed to delete the tokenizer '{result.StatusCode}'");
-            return new TokenizerResponse{
-                Success = false,
-                Message = "An error occured while sending the tokenizer delete request to the Rust framework: "+result.StatusCode,
-                TokenCount = 0
-            };
+            return CreateUnavailableTokenizerResponse("An error occured while sending the tokenizer delete request to the Rust framework: "+result.StatusCode);
         }
 
         return await result.Content.ReadFromJsonAsync<TokenizerResponse>(this.jsonRustSerializerOptions);
@@ -79,14 +93,15 @@ public sealed partial class RustService
         if (!result.IsSuccessStatusCode)
         {
             this.logger!.LogError($"Failed to get the token count '{result.StatusCode}'");
-            return new TokenizerResponse{
-                Success = false,
-                Message = "Error while getting token count from Rust service: "+result.StatusCode,
-                TokenCount = 0
-            };
+            this.hasInitializedTokenizer = false;
+            return CreateUnavailableTokenizerResponse("Error while getting token count from Rust service: "+result.StatusCode);
         }
 
-        return await result.Content.ReadFromJsonAsync<TokenizerResponse>(this.jsonRustSerializerOptions);
+        var response = await result.Content.ReadFromJsonAsync<TokenizerResponse>(this.jsonRustSerializerOptions);
+        if (response is not { Status: TokenizerStatus.AVAILABLE })
+            this.hasInitializedTokenizer = false;
+
+        return response;
     }
 
     public async Task<TokenizerResponse?> SetTokenizer(string providerName, string path)
@@ -99,14 +114,15 @@ public sealed partial class RustService
         if (!result.IsSuccessStatusCode)
         {
             this.logger!.LogError($"Failed to set the tokenizer '{result.StatusCode}'");
-            return new TokenizerResponse{
-                Success = false,
-                Message = "An error occured while sending the path to the Rust framework for setting a tokenizer: "+result.StatusCode,
-                TokenCount = 0
-            };
+            this.hasInitializedTokenizer = false;
+            return CreateUnavailableTokenizerResponse("An error occured while sending the path to the Rust framework for setting a tokenizer: "+result.StatusCode);
         }
 
-        return await result.Content.ReadFromJsonAsync<TokenizerResponse>(this.jsonRustSerializerOptions);
+        var response = await result.Content.ReadFromJsonAsync<TokenizerResponse>(this.jsonRustSerializerOptions);
+        if (response is not { Success: true, Status: TokenizerStatus.AVAILABLE })
+            this.hasInitializedTokenizer = false;
+
+        return response;
     }
 
     public async Task<TokenizerResponse?> EnsureTokenizer(string providerName, string path)
@@ -115,13 +131,18 @@ public sealed partial class RustService
         try
         {
             if (this.hasInitializedTokenizer && this.currentTokenizerPath == path)
-                return new TokenizerResponse(true, 0, "Success");
+                return new TokenizerResponse(true, 0, string.Empty, TokenizerStatus.AVAILABLE);
 
             var response = await this.SetTokenizer(providerName, path);
-            if (response is { Success: true })
+            if (response is { Success: true, Status: TokenizerStatus.AVAILABLE })
             {
                 this.currentTokenizerPath = path;
                 this.hasInitializedTokenizer = true;
+            }
+            else
+            {
+                this.currentTokenizerPath = string.Empty;
+                this.hasInitializedTokenizer = false;
             }
 
             return response;

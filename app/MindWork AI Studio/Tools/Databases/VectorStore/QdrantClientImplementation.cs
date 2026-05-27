@@ -4,9 +4,9 @@ using Grpc.Core;
 using AIStudio.Tools.PluginSystem;
 using static Qdrant.Client.Grpc.Conditions;
 
-namespace AIStudio.Tools.Databases.Qdrant;
+namespace AIStudio.Tools.Databases.VectorStore;
 
-public class QdrantClientImplementation : EmbeddingStore
+public class QdrantClientImplementation : DatabaseClient, IVectorStoreClient
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(QdrantClientImplementation).Namespace, nameof(QdrantClientImplementation));
 
@@ -71,7 +71,7 @@ public class QdrantClientImplementation : EmbeddingStore
         yield return (TB("Number of collections"), await this.GetCollectionsAmount());
     }
 
-    public override async Task EnsureEmbeddingStoreExists(string collectionName, int vectorSize, CancellationToken token)
+    public async Task EnsureVectorStoreExists(string collectionName, int vectorSize, CancellationToken token)
     {
         var exists = await this.GrpcClient.CollectionExistsAsync(collectionName, token);
         if (exists)
@@ -87,7 +87,7 @@ public class QdrantClientImplementation : EmbeddingStore
             cancellationToken: token);
     }
 
-    public override Task InsertEmbedding(string collectionName, IReadOnlyList<EmbeddingStoragePoint> points, CancellationToken token)
+    public Task InsertEmbedding(string collectionName, IReadOnlyList<VectorStoragePoint> points, CancellationToken token)
     {
         var qdrantPoints = points.Select(point => new PointStruct
         {
@@ -112,7 +112,7 @@ public class QdrantClientImplementation : EmbeddingStore
         return this.GrpcClient.UpsertAsync(collectionName, qdrantPoints, true, null, null, token);
     }
 
-    public override async Task DeleteEmbeddingByFile(string collectionName, string filePath, CancellationToken token)
+    public async Task DeleteEmbeddingByFile(string collectionName, string filePath, CancellationToken token)
     {
         try
         {
@@ -120,11 +120,10 @@ public class QdrantClientImplementation : EmbeddingStore
         }
         catch (RpcException exception) when (exception.StatusCode is StatusCode.NotFound)
         {
-            return;
         }
     }
 
-    public override async Task DeleteEmbeddingStore(string collectionName, CancellationToken token)
+    public async Task DeleteVectorStore(string collectionName, CancellationToken token)
     {
         var exists = await this.GrpcClient.CollectionExistsAsync(collectionName, token);
         if (!exists)
@@ -136,7 +135,6 @@ public class QdrantClientImplementation : EmbeddingStore
         }
         catch (RpcException exception) when (exception.StatusCode is StatusCode.NotFound)
         {
-            return;
         }
     }
 

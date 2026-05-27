@@ -14,13 +14,13 @@ public sealed partial class DataSourceEmbeddingService
     
     private void RefreshWatchers()
     {
-        if (!this.settingsManager.ConfigurationData.DataSourceIndexing.AutomaticRefresh)
+        if (!settingsManager.ConfigurationData.DataSourceIndexing.AutomaticRefresh)
         {
             this.RemoveAllWatchers();
             return;
         }
 
-        var supportedSources = this.settingsManager.ConfigurationData.DataSources
+        var supportedSources = settingsManager.ConfigurationData.DataSources
             .Where(this.IsSupportedInternalDataSource)
             .ToDictionary(source => source.Id, StringComparer.OrdinalIgnoreCase);
 
@@ -33,7 +33,7 @@ public sealed partial class DataSourceEmbeddingService
 
     private void EnsureWatcher(IDataSource dataSource)
     {
-        if (!this.settingsManager.ConfigurationData.DataSourceIndexing.AutomaticRefresh)
+        if (!settingsManager.ConfigurationData.DataSourceIndexing.AutomaticRefresh)
             return;
 
         var configuration = GetWatchConfiguration(dataSource);
@@ -73,7 +73,7 @@ public sealed partial class DataSourceEmbeddingService
             watcher.Renamed += (_, _) => this.OnWatchedDataSourceChanged(dataSourceId);
             watcher.Error += (_, args) =>
             {
-                this.logger.LogWarning(args.GetException(), "The file watcher for data source '{DataSourceId}' failed. Recreating it.", dataSourceId);
+                logger.LogWarning(args.GetException(), "The file watcher for data source '{DataSourceId}' failed. Recreating it.", dataSourceId);
                 this.RemoveWatcher(dataSourceId);
                 this.EnsureWatcher(dataSourceId);
                 this.OnWatchedDataSourceChanged(dataSourceId);
@@ -83,7 +83,7 @@ public sealed partial class DataSourceEmbeddingService
         }
         catch (Exception exception)
         {
-            this.logger.LogWarning(exception, "Failed to create file watcher for data source '{DataSourceId}' at '{RootPath}'.", dataSourceId, configuration.RootPath);
+            logger.LogWarning(exception, "Failed to create file watcher for data source '{DataSourceId}' at '{RootPath}'.", dataSourceId, configuration.RootPath);
             return null;
         }
     }
@@ -114,10 +114,10 @@ public sealed partial class DataSourceEmbeddingService
 
     private void OnWatchedDataSourceChanged(string dataSourceId)
     {
-        if (!this.settingsManager.ConfigurationData.DataSourceIndexing.AutomaticRefresh)
+        if (!settingsManager.ConfigurationData.DataSourceIndexing.AutomaticRefresh)
             return;
 
-        this.logger.LogDebug("Detected file system change for data source '{DataSourceId}'. Scheduling a debounced embedding run.", dataSourceId);
+        logger.LogDebug("Detected file system change for data source '{DataSourceId}'. Scheduling a debounced embedding run.", dataSourceId);
         var debounceToken = new CancellationTokenSource();
 
         lock (this.watcherDebounceLock)
@@ -136,12 +136,12 @@ public sealed partial class DataSourceEmbeddingService
                 if (!this.TryCompletePendingWatcherRefresh(dataSourceId, debounceToken))
                     return;
 
-                var dataSource = this.settingsManager.ConfigurationData.DataSources
+                var dataSource = settingsManager.ConfigurationData.DataSources
                     .FirstOrDefault(source => source.Id.Equals(dataSourceId, StringComparison.OrdinalIgnoreCase));
 
                 if (dataSource is not null)
                 {
-                    this.logger.LogInformation("Queueing data source '{DataSourceName}' ({DataSourceId}) after file system changes settled.", dataSource.Name, dataSource.Id);
+                    logger.LogInformation("Queueing data source '{DataSourceName}' ({DataSourceId}) after file system changes settled.", dataSource.Name, dataSource.Id);
                     await this.QueueDataSourceAsync(dataSource);
                 }
             }
@@ -150,7 +150,7 @@ public sealed partial class DataSourceEmbeddingService
             }
             catch (Exception exception)
             {
-                this.logger.LogWarning(exception, "Failed to queue watched data source '{DataSourceId}' after a file system change.", dataSourceId);
+                logger.LogWarning(exception, "Failed to queue watched data source '{DataSourceId}' after a file system change.", dataSourceId);
             }
             finally
             {
@@ -161,7 +161,7 @@ public sealed partial class DataSourceEmbeddingService
 
     private void EnsureWatcher(string dataSourceId)
     {
-        var dataSource = this.settingsManager.ConfigurationData.DataSources
+        var dataSource = settingsManager.ConfigurationData.DataSources
             .FirstOrDefault(source => source.Id.Equals(dataSourceId, StringComparison.OrdinalIgnoreCase));
 
         if (dataSource is not null)

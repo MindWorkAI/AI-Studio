@@ -1,4 +1,5 @@
-﻿using AIStudio.Tools.Rust;
+﻿using AIStudio.Tools.Databases.VectorStore;
+using AIStudio.Tools.Rust;
 
 namespace AIStudio.Tools.Databases;
 
@@ -6,7 +7,7 @@ public sealed partial class DatabaseClientProvider
 {
     private async Task<DatabaseClient> CreateQdrantClientAsync(CancellationToken cancellationToken)
     {
-        var qdrantInfo = await this.rustService.GetQdrantInfo(cancellationToken);
+        var qdrantInfo = await rustService.GetQdrantInfo(cancellationToken);
         if (qdrantInfo.Status is QdrantStatus.STARTING)
         {
             return this.CreateNoDatabaseClient(

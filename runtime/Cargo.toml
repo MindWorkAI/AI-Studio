@@ -1,6 +1,6 @@
 [package]
 name = "mindwork-ai-studio"
-version = "26.4.1"
+version = "26.5.5"
 edition = "2024"
 description = "MindWork AI Studio"
 authors = ["Thorsten Sommer"]
@@ -48,6 +48,7 @@ tempfile = "3.27.0"
 strum_macros = "0.28.0"
 sysinfo = "0.39.1"
 bytes = "1.11.1"
+tokenizers = "0.23.1"
 
 [target.'cfg(target_os = "windows")'.dependencies]
 windows-registry = "0.6.1"

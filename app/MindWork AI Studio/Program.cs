@@ -28,7 +28,7 @@ internal sealed class Program
     public static string API_TOKEN = null!;
     public static IServiceProvider SERVICE_PROVIDER = null!;
     public static ILoggerFactory LOGGER_FACTORY = null!;
-    public static EmbeddingStore EMBEDDING_STORE = null!;
+    public static DatabaseClientProvider DATABASE_CLIENT_PROVIDER = null!;
     
     public static async Task Main()
     {
@@ -87,10 +87,6 @@ internal sealed class Program
             return;
         }
         
-        var embeddingStoreConfig = await rust.GetEmbeddingStoreConfiguration(EmbeddingStoreKind.QDRANT_REMOTE);
-        
-        var embeddingStore = EmbeddingStoreFactory.Create(embeddingStoreConfig);
-        
         var builder = WebApplication.CreateBuilder();
         builder.WebHost.ConfigureKestrel(kestrelServerOptions =>
         {
@@ -148,7 +144,7 @@ internal sealed class Program
         builder.Services.AddHostedService<TemporaryChatService>();
         builder.Services.AddHostedService<EnterpriseEnvironmentService>();
         builder.Services.AddHostedService(sp => sp.GetRequiredService<DataSourceEmbeddingService>());
-        builder.Services.AddSingleton(embeddingStore);
+        builder.Services.AddSingleton<DatabaseClientProvider>();
         builder.Services.AddHostedService<GlobalShortcutService>();
         builder.Services.AddHostedService<RustAvailabilityMonitorService>();
         
@@ -208,9 +204,7 @@ internal sealed class Program
         RUST_SERVICE = rust;
         ENCRYPTION = encryption;
         
-        var databaseLogger = app.Services.GetRequiredService<ILogger<EmbeddingStore>>();
-        embeddingStore.SetLogger(databaseLogger);
-        EMBEDDING_STORE = embeddingStore;
+        DATABASE_CLIENT_PROVIDER = app.Services.GetRequiredService<DatabaseClientProvider>();
 
         programLogger.LogInformation("Initialize internal file system.");
         app.Use(Redirect.HandlerContentAsync);
@@ -248,7 +242,7 @@ internal sealed class Program
         await serverTask;
         
         RUST_SERVICE.Dispose();
-        EMBEDDING_STORE.Dispose();
+        DATABASE_CLIENT_PROVIDER.Dispose();
         PluginFactory.Dispose();
         programLogger.LogInformation("The AI Studio server was stopped.");
     }

@@ -249,7 +249,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
             await this.form.Validate();
             return;
         }
-        this.dataFilePath = response.Message;
+        this.dataFilePath = response.StoredPath;
         
         // Use the data model to store the provider.
         // We just return this data to the parent component:

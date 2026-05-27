@@ -1,6 +1,6 @@
 ﻿namespace AIStudio.Tools.Databases;
 
-public abstract class EmbeddingStore(string name, string path)
+public abstract class DatabaseClient(string name, string path)
 {
     public string Name => name;
 
@@ -12,7 +12,7 @@ public abstract class EmbeddingStore(string name, string path)
     
     private string Path => path;
 
-    private ILogger<EmbeddingStore>? logger;
+    private ILogger<DatabaseClient>? logger;
     
     public abstract IAsyncEnumerable<(string Label, string Value)> GetDisplayInfo();
 
@@ -50,7 +50,7 @@ public abstract class EmbeddingStore(string name, string path)
         return $"{convertedSize:0.##} {suffixes[suffixIndex]}";
     }
     
-    public void SetLogger(ILogger<EmbeddingStore> logService)
+    public void SetLogger(ILogger<DatabaseClient> logService)
     {
         this.logger = logService;
     }

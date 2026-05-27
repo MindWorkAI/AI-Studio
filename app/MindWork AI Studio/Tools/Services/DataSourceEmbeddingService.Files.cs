@@ -23,7 +23,7 @@ public sealed partial class DataSourceEmbeddingService
 
         var currentChunk = new StringBuilder();
 
-        await foreach (var segment in this.rustService.StreamArbitraryFileData(filePath, token: token))
+        await foreach (var segment in rustService.StreamArbitraryFileData(filePath, token: token))
         {
             var normalized = NormalizeChunkSegment(segment);
             if (string.IsNullOrWhiteSpace(normalized))
@@ -118,7 +118,7 @@ public sealed partial class DataSourceEmbeddingService
             }
             catch (Exception exception)
             {
-                this.logger.LogWarning(exception, "Cannot access directory '{DirectoryPath}' while indexing.", currentPath);
+                logger.LogWarning(exception, "Cannot access directory '{DirectoryPath}' while indexing.", currentPath);
                 result.FailedFiles++;
                 result.LastError = $"The directory '{currentPath}' could not be accessed.";
                 continue;
@@ -135,7 +135,7 @@ public sealed partial class DataSourceEmbeddingService
                 }
                 catch (Exception exception)
                 {
-                    this.logger.LogWarning(exception, "Cannot inspect file '{FilePath}' while indexing.", filePath);
+                    logger.LogWarning(exception, "Cannot inspect file '{FilePath}' while indexing.", filePath);
                     result.FailedFiles++;
                     result.LastError = $"The file '{filePath}' could not be inspected.";
                     continue;

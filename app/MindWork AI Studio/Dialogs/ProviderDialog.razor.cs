@@ -276,7 +276,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
             await this.form.Validate();
             return;
         }
-        this.dataFilePath = tokenizerResponse.Message;
+        this.dataFilePath = tokenizerResponse.StoredPath;
         
         // Use the data model to store the provider.
         // We just return this data to the parent component:

@@ -2,9 +2,9 @@ using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Tools.Databases;
 
-public sealed class NoEmbeddingStore(string name, string? unavailableReason, DatabaseClientStatus status = DatabaseClientStatus.UNAVAILABLE) : EmbeddingStore(name, string.Empty)
+public sealed class NoDatabaseClient(string name, string? unavailableReason, DatabaseClientStatus status = DatabaseClientStatus.UNAVAILABLE) : DatabaseClient(name, string.Empty)
 {
-    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(NoEmbeddingStore).Namespace, nameof(NoEmbeddingStore));
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(NoDatabaseClient).Namespace, nameof(NoDatabaseClient));
     
     public override DatabaseClientStatus Status => status;
     

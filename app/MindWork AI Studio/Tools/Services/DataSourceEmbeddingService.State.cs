@@ -1,6 +1,7 @@
 using System.Text.Json;
 
 using AIStudio.Settings;
+using AIStudio.Tools.Databases.VectorStore;
 
 namespace AIStudio.Tools.Services;
 
@@ -70,13 +71,13 @@ public sealed partial class DataSourceEmbeddingService
         await File.WriteAllTextAsync(statePath, json, token);
     }
 
-    private async Task ResetPersistedStateAsync(string dataSourceId)
+    private async Task ResetPersistedStateAsync(string dataSourceId, IVectorStoreClient? vectorStore, CancellationToken token)
     {
-        await this.EnsureStateLoadedAsync(CancellationToken.None);
+        await this.EnsureStateLoadedAsync(token);
         this.manifests.Remove(dataSourceId);
-        await this.DeleteCollectionAsync(this.GetCollectionName(dataSourceId));
-        await this.SaveStateAsync(CancellationToken.None);
-        this.logger.LogInformation("Reset persisted embedding state for data source '{DataSourceId}'.", dataSourceId);
+        await this.DeleteCollectionAsync(this.GetCollectionName(dataSourceId), vectorStore, token);
+        await this.SaveStateAsync(token);
+        logger.LogInformation("Reset persisted embedding state for data source '{DataSourceId}'.", dataSourceId);
     }
 
     private string GetStatePath()

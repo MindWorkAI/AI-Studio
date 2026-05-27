@@ -1,6 +1,6 @@
 namespace AIStudio.Tools.Databases;
 
-public sealed record EmbeddingStoragePoint(
+public sealed record VectorStoragePoint(
     string PointId,
     IReadOnlyList<float> Vector,
     string DataSourceId,
