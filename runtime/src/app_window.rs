@@ -28,6 +28,7 @@ use crate::pdfium::PDFIUM_LIB_PATH;
 use crate::qdrant::{start_qdrant_server, stop_qdrant_server};
 #[cfg(debug_assertions)]
 use crate::dotnet::create_startup_env_file;
+use crate::tokenizer::set_default_tokenizer_path;
 
 /// The Tauri main window.
 pub static MAIN_WINDOW: Lazy<Mutex<Option<WebviewWindow>>> = Lazy::new(|| Mutex::new(None));
@@ -149,6 +150,8 @@ pub fn start_tauri() {
             }
 
             start_qdrant_server(app.handle().clone());
+
+            set_default_tokenizer_path(app.handle().clone());
 
             info!(Source = "Bootloader Tauri"; "Reconfigure the file logger to use the app data directory {data_path:?}");
             switch_to_file_logging(data_path).map_err(|e| error!("Failed to switch logging to file: {e}")).unwrap();

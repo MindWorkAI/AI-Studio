@@ -30,6 +30,10 @@ public interface IProvider
     public string AdditionalJsonApiParameters { get; }
 
     /// <summary>
+    /// The tokenizer path associated with this provider configuration.
+    /// </summary>
+    public string TokenizerPath { get; }
+    
     /// Whether this provider instance can load available models from the backend/API.
     /// This capability may differ by provider type, host, or modality.
     /// </summary>

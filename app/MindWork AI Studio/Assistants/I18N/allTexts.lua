@@ -2110,6 +2110,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3403290862"] = "The selec
 -- Select a provider first
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3654197869"] = "Select a provider first"
 
+-- Estimated amount of tokens:
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T377990776"] = "Estimated amount of tokens:"
+
 -- Start new chat in workspace '{0}'
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T3928697643"] = "Start new chat in workspace '{0}'"
 
@@ -2811,6 +2814,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T32678
 
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T3448155331"] = "Close"
+
+-- Couldn't delete the embedding provider '{0}'. The issue: {1}. We can ignore this issue and delete the embedding provider anyway. Do you want to ignore it and delete this embedding provider?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T3703173892"] = "Couldn't delete the embedding provider '{0}'. The issue: {1}. We can ignore this issue and delete the embedding provider anyway. Do you want to ignore it and delete this embedding provider?"
 
 -- Actions
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T3865031940"] = "Actions"
@@ -4072,6 +4078,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T1324664716"] = "AP
 -- Create account
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T1356621346"] = "Create account"
 
+-- Failed to validate the selected tokenizer. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T1384494471"] = "Failed to validate the selected tokenizer. Please try again."
+
 -- Please enter an embedding model name.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T1661085403"] = "Please enter an embedding model name."
 
@@ -4093,8 +4102,14 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T2189814010"] = "Mo
 -- (Optional) API Key
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T2331453405"] = "(Optional) API Key"
 
+-- Invalid tokenizer:
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T2448302543"] = "Invalid tokenizer:"
+
 -- Add
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T2646845972"] = "Add"
+
+-- Selected file path for the custom tokenizer
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T278585345"] = "Selected file path for the custom tokenizer"
 
 -- No models loaded or available.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T2810182573"] = "No models loaded or available."
@@ -4104,6 +4119,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T2842060373"] = "In
 
 -- Currently, we cannot query the embedding models for the selected provider and/or host. Therefore, please enter the model name manually.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T290547799"] = "Currently, we cannot query the embedding models for the selected provider and/or host. Therefore, please enter the model name manually."
+
+-- Choose a custom tokenizer here
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T3787466119"] = "Choose a custom tokenizer here"
+
+-- For better embeddings and less storage usage, it's recommended to use a custom tokenizer to enable a more accurate token count.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T4126312157"] = "For better embeddings and less storage usage, it's recommended to use a custom tokenizer to enable a more accurate token count."
 
 -- Model selection
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T416738168"] = "Model selection"
@@ -4291,6 +4312,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1324664716"] = "API Key"
 -- Create account
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1356621346"] = "Create account"
 
+-- Failed to validate the selected tokenizer. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1384494471"] = "Failed to validate the selected tokenizer. Please try again."
+
 -- Load models
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T15352225"] = "Load models"
 
@@ -4318,11 +4342,17 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2189814010"] = "Model"
 -- (Optional) API Key
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2331453405"] = "(Optional) API Key"
 
+-- Invalid tokenizer:
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2448302543"] = "Invalid tokenizer:"
+
 -- Add
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2646845972"] = "Add"
 
 -- Additional API parameters
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2728244552"] = "Additional API parameters"
+
+-- Selected file path for the custom tokenizer
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T278585345"] = "Selected file path for the custom tokenizer"
 
 -- No models loaded or available.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2810182573"] = "No models loaded or available."
@@ -4341,6 +4371,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3763891899"] = "Show availa
 
 -- This host uses the model configured at the provider level. No model selection is available.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3783329915"] = "This host uses the model configured at the provider level. No model selection is available."
+
+-- Choose a custom tokenizer here
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3787466119"] = "Choose a custom tokenizer here"
 
 -- Duplicate key '{0}' found.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3804472591"] = "Duplicate key '{0}' found."
@@ -4362,6 +4395,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T900237532"] = "Provider"
 
 -- Cancel
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T900713019"] = "Cancel"
+
+-- For better token estimates, you can configure a custom tokenizer for this provider.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T961454300"] = "For better token estimates, you can configure a custom tokenizer for this provider."
 
 -- The parameter name. It must be unique within the retrieval process.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::RETRIEVALPROCESSDIALOG::T100726215"] = "The parameter name. It must be unique within the retrieval process."
@@ -4852,14 +4888,23 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T108494
 -- Are you sure you want to delete the data source '{0}' of type {1}?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T1096979935"] = "Are you sure you want to delete the data source '{0}' of type {1}?"
 
+-- Automatic local data source refresh
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T1208397349"] = "Automatic local data source refresh"
+
 -- Edit Local Directory Data Source
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T1215599168"] = "Edit Local Directory Data Source"
+
+-- Refresh
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T135637716"] = "Refresh"
 
 -- Add Local Directory as Data Source
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T1454193397"] = "Add Local Directory as Data Source"
 
 -- Delete
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T1469573738"] = "Delete"
+
+-- Refresh all
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T1503082343"] = "Refresh all"
 
 -- Kerberos/SSO ERI data sources cannot be exported yet. Please configure them manually in the configuration plugin.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T1577531115"] = "Kerberos/SSO ERI data sources cannot be exported yet. Please configure them manually in the configuration plugin."
@@ -4927,6 +4972,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T354965
 -- Export Access Token?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T3595669127"] = "Export Access Token?"
 
+-- Local data sources refresh when files change.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T3687976654"] = "Local data sources refresh when files change."
+
 -- Export ERI Data Source
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T3831281036"] = "Export ERI Data Source"
 
@@ -4950,6 +4998,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T774473
 
 -- Cannot export this ERI data source because no authentication secret is configured. The issue was: {0}
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T782820095"] = "Cannot export this ERI data source because no authentication secret is configured. The issue was: {0}"
+
+-- Local data sources refresh only when triggered manually.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T854231603"] = "Local data sources refresh only when triggered manually."
 
 -- Local Directory
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T926703547"] = "Local Directory"
@@ -5764,6 +5815,9 @@ UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T1614176092"] = "Assistants"
 -- Update
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T1847791252"] = "Update"
 
+-- Data sync
+UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T1903948824"] = "Data sync"
+
 -- Leave Chat Page
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T2124749705"] = "Leave Chat Page"
 
@@ -5782,6 +5836,9 @@ UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T2929332068"] = "Supporters"
 -- Writer
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T2979224202"] = "Writer"
 
+-- Embeddings are waiting to be processed.
+UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T3439916590"] = "Embeddings are waiting to be processed."
+
 -- Show details
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T3692372066"] = "Show details"
 
@@ -5790,6 +5847,18 @@ UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T4256323669"] = "Information"
 
 -- Chat
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T578410699"] = "Chat"
+
+-- Some embeddings failed. {0} file(s) need attention.
+UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T640352868"] = "Some embeddings failed. {0} file(s) need attention."
+
+-- Some embeddings failed and need attention.
+UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T671981715"] = "Some embeddings failed and need attention."
+
+-- Embeddings are running: {0} of {1} files are indexed.
+UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T714077986"] = "Embeddings are running: {0} of {1} files are indexed."
+
+-- Embeddings
+UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T951463987"] = "Embeddings"
 
 -- Get coding and debugging support from an LLM.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1243850917"] = "Get coding and debugging support from an LLM."
@@ -5953,6 +6022,30 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T582100343"] = "Chat in Workspace"
 -- Show your workspaces
 UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T733672375"] = "Show your workspaces"
 
+-- AI Studio indexes local RAG data sources in the background. Finished files stay recorded so unchanged files can be skipped after a restart, while added or deleted files are detected during the next run.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T1064986263"] = "AI Studio indexes local RAG data sources in the background. Finished files stay recorded so unchanged files can be skipped after a restart, while added or deleted files are detected during the next run."
+
+-- Current file: {0}
+UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T1166856644"] = "Current file: {0}"
+
+-- Pending files: {0}
+UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T2471889605"] = "Pending files: {0}"
+
+-- {0} of {1} files are indexed.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T2525374657"] = "{0} of {1} files are indexed."
+
+-- Background embeddings
+UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T2547971789"] = "Background embeddings"
+
+-- Failed files: {0}
+UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T309404893"] = "Failed files: {0}"
+
+-- Indexed files: {0}
+UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T3473125711"] = "Indexed files: {0}"
+
+-- No local data source has been queued for embedding yet.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T3774205531"] = "No local data source has been queued for embedding yet."
+
 -- Unlike services like ChatGPT, which impose limits after intensive use, MindWork AI Studio offers unlimited usage through the providers API.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T1009708591"] = "Unlike services like ChatGPT, which impose limits after intensive use, MindWork AI Studio offers unlimited usage through the providers API."
 
@@ -6040,6 +6133,12 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1019424746"] = "Startup log file
 -- Browse AI Studio's source code on GitHub — we welcome your contributions.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1107156991"] = "Browse AI Studio's source code on GitHub — we welcome your contributions."
 
+-- Vector store version
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1124039623"] = "Vector store version"
+
+-- The Tokenizer library serves as the base framework for integrating the DeepSeek tokenizer.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1132433749"] = "The Tokenizer library serves as the base framework for integrating the DeepSeek tokenizer."
+
 -- ID mismatch: the plugin ID differs from the enterprise configuration ID.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1137744461"] = "ID mismatch: the plugin ID differs from the enterprise configuration ID."
 
@@ -6051,9 +6150,6 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1290340974"] = "Unknown configur
 
 -- This library is used to read PDF files. This is necessary, e.g., for using PDFs as a data source for a chat.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1388816916"] = "This library is used to read PDF files. This is necessary, e.g., for using PDFs as a data source for a chat."
-
--- Database version
-UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1420062548"] = "Database version"
 
 -- This library is used to extend the MudBlazor library. It provides additional components that are not part of the MudBlazor library.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1421513382"] = "This library is used to extend the MudBlazor library. It provides additional components that are not part of the MudBlazor library."
@@ -6202,6 +6298,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2924964415"] = "AI Studio runs w
 -- Changelog
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3017574265"] = "Changelog"
 
+-- Vector store
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3046399223"] = "Vector store"
+
 -- Enterprise configuration ID:
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3092349641"] = "Enterprise configuration ID:"
 
@@ -6277,9 +6376,6 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3986423270"] = "Check Pandoc Ins
 -- Versions
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4010195468"] = "Versions"
 
--- Database
-UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4036243672"] = "Database"
-
 -- This library is used by the Rust runtime to read the current user's username, e.g. when an organization-managed ERI server uses the OS username for authentication.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4060906280"] = "This library is used by the Rust runtime to read the current user's username, e.g. when an organization-managed ERI server uses the OS username for authentication."
 
@@ -6300,6 +6396,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T566998575"] = "This is a library
 
 -- Used .NET SDK
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T585329785"] = "Used .NET SDK"
+
+-- We use the DeepSeek Tokenizer to estimate the number of tokens an input will generate.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T591393704"] = "We use the DeepSeek Tokenizer to estimate the number of tokens an input will generate."
 
 -- starting
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T594602073"] = "starting"
@@ -6994,29 +7093,35 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::CONFIDENCESCHEMESEXTENSIONS::T4107860491"] = "
 -- Reason
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::NODATABASECLIENT::T1093747001"] = "Reason"
 
--- Starting
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::NODATABASECLIENT::T1233211769"] = "Starting"
-
 -- Unavailable
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::NODATABASECLIENT::T3662391977"] = "Unavailable"
 
 -- Status
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::NODATABASECLIENT::T6222351"] = "Status"
 
+-- Reason
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::VECTORSTORE::NOVECTORSTORECLIENT::T1093747001"] = "Reason"
+
+-- Unavailable
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::VECTORSTORE::NOVECTORSTORECLIENT::T3662391977"] = "Unavailable"
+
+-- Status
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::VECTORSTORE::NOVECTORSTORECLIENT::T6222351"] = "Status"
+
 -- Storage size
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::QDRANT::QDRANTCLIENTIMPLEMENTATION::T1230141403"] = "Storage size"
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::VECTORSTORE::QDRANTCLIENTIMPLEMENTATION::T1230141403"] = "Storage size"
 
 -- HTTP port
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::QDRANT::QDRANTCLIENTIMPLEMENTATION::T1717573768"] = "HTTP port"
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::VECTORSTORE::QDRANTCLIENTIMPLEMENTATION::T1717573768"] = "HTTP port"
 
 -- Reported version
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::QDRANT::QDRANTCLIENTIMPLEMENTATION::T3556099842"] = "Reported version"
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::VECTORSTORE::QDRANTCLIENTIMPLEMENTATION::T3556099842"] = "Reported version"
 
 -- gRPC port
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::QDRANT::QDRANTCLIENTIMPLEMENTATION::T757840040"] = "gRPC port"
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::VECTORSTORE::QDRANTCLIENTIMPLEMENTATION::T757840040"] = "gRPC port"
 
 -- Number of collections
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::QDRANT::QDRANTCLIENTIMPLEMENTATION::T842647336"] = "Number of collections"
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::VECTORSTORE::QDRANTCLIENTIMPLEMENTATION::T842647336"] = "Number of collections"
 
 -- The related data is not allowed to be sent to any LLM provider. This means that this data source cannot be used at the moment.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::DATAMODEL::PROVIDERTYPEEXTENSIONS::T1555790630"] = "The related data is not allowed to be sent to any LLM provider. This means that this data source cannot be used at the moment."
@@ -7653,6 +7758,21 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T378481461"] = "Source like p
 
 -- Document
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T4165204724"] = "Document"
+
+-- Running
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCEEMBEDDINGMODELS::T1160324588"] = "Running"
+
+-- Idle
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCEEMBEDDINGMODELS::T1168775091"] = "Idle"
+
+-- Needs attention
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCEEMBEDDINGMODELS::T1566837660"] = "Needs attention"
+
+-- Queued
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCEEMBEDDINGMODELS::T2655222900"] = "Queued"
+
+-- Completed
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DATASOURCEEMBEDDINGMODELS::T3968379570"] = "Completed"
 
 -- Pandoc Installation
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PANDOCAVAILABILITYSERVICE::T185447014"] = "Pandoc Installation"

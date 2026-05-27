@@ -132,6 +132,7 @@ internal sealed class Program
         builder.Services.AddSingleton<AIJobService>();
         builder.Services.AddSingleton<VoiceRecordingAvailabilityService>();
         builder.Services.AddSingleton<DataSourceService>();
+        builder.Services.AddSingleton<DataSourceEmbeddingService>();
         builder.Services.AddScoped<PandocAvailabilityService>();
         builder.Services.AddTransient<HTMLParser>();
         builder.Services.AddTransient<AgentDataSourceSelection>();
@@ -142,6 +143,7 @@ internal sealed class Program
         builder.Services.AddHostedService<UpdateService>();
         builder.Services.AddHostedService<TemporaryChatService>();
         builder.Services.AddHostedService<EnterpriseEnvironmentService>();
+        builder.Services.AddHostedService(sp => sp.GetRequiredService<DataSourceEmbeddingService>());
         builder.Services.AddSingleton<DatabaseClientProvider>();
         builder.Services.AddHostedService<GlobalShortcutService>();
         builder.Services.AddHostedService<RustAvailabilityMonitorService>();
@@ -201,6 +203,7 @@ internal sealed class Program
 
         RUST_SERVICE = rust;
         ENCRYPTION = encryption;
+        
         DATABASE_CLIENT_PROVIDER = app.Services.GetRequiredService<DatabaseClientProvider>();
 
         programLogger.LogInformation("Initialize internal file system.");

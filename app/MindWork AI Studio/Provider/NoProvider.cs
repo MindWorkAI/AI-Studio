@@ -19,6 +19,8 @@ public class NoProvider : IProvider
     public string AdditionalJsonApiParameters { get; init; } = string.Empty;
 
     /// <inheritdoc />
+    public string TokenizerPath { get; init; } = string.Empty;
+
     public bool HasModelLoadingCapability => false;
 
     public Task<ModelLoadResult> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default) => Task.FromResult(ModelLoadResult.FromModels([]));

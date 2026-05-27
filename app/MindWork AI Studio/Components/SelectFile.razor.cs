@@ -2,6 +2,7 @@ using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 
 namespace AIStudio.Components;
 
@@ -27,7 +28,19 @@ public partial class SelectFile : MSGComponentBase
     
     [Parameter]
     public Func<string, string?> Validation { get; set; } = _ => null;
-
+    
+    [Parameter]
+    public bool IsClearable { get; set; } = false;
+    
+    [Parameter]
+    public bool Error { get; set; } = false;
+    
+    [Parameter]
+    public string ErrorText { get; set; } = string.Empty;
+    
+    [Parameter]
+    public Func<MouseEventArgs, Task> OnClear { get; set; } = _ => Task.CompletedTask;
+    
     [Inject]
     public RustService RustService { get; set; } = null!;
     
@@ -52,7 +65,7 @@ public partial class SelectFile : MSGComponentBase
         this.File = file;
         this.FileChanged.InvokeAsync(file);
     }
-
+    
     private async Task OpenFileDialog()
     {
         var response = await this.RustService.SelectFile(this.FileDialogTitle, this.Filter, string.IsNullOrWhiteSpace(this.File) ? null : this.File);

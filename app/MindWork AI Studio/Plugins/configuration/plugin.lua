@@ -73,6 +73,9 @@ CONFIG["LLM_PROVIDERS"] = {}
 --     -- Please do not add the enclosing curly braces {} here. Also, no trailing comma is allowed.
 --     ["AdditionalJsonApiParameters"] = "",
 --
+--     -- Optional: tokenizer path for this provider relative to the plugin directory.
+--     -- ["TokenizerPath"] = "",
+--
 --     -- Optional: Hugging Face inference provider. Only relevant for UsedLLMProvider = HUGGINGFACE.
 --     -- Allowed values are: CEREBRAS, NEBIUS_AI_STUDIO, SAMBANOVA, NOVITA, HYPERBOLIC, TOGETHER_AI, FIREWORKS, HF_INFERENCE_API
 --     -- ["HFInferenceProvider"] = "NOVITA",
@@ -129,6 +132,9 @@ CONFIG["EMBEDDING_PROVIDERS"] = {}
 --
 --     -- Optional: Encrypted API key (see LLM_PROVIDERS example for details)
 --     -- ["APIKey"] = "ENC:v1:<base64-encoded encrypted data>",
+
+--     -- Optional: tokenizer path for this provider relative to the plugin directory.
+--     -- ["TokenizerPath"] = "",
 --
 --     ["Model"] = {
 --         ["Id"] = "<the model ID, e.g., nomic-embed-text>",

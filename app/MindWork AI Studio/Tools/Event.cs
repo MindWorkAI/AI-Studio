@@ -168,6 +168,7 @@ public enum Event
     /// Carries data sources that were automatically selected for retrieval-augmented generation.
     /// </summary>
     RAG_AUTO_DATA_SOURCES_SELECTED,
+    RAG_EMBEDDING_STATUS_CHANGED,
     
     
     

@@ -91,6 +91,9 @@ public abstract class BaseProvider : IProvider, ISecretId
     public string AdditionalJsonApiParameters { get; init; } = string.Empty;
 
     /// <inheritdoc />
+    public string TokenizerPath { get; init; } = string.Empty;
+
+    /// <inheritdoc />
     public abstract bool HasModelLoadingCapability { get; }
 
     /// <inheritdoc />

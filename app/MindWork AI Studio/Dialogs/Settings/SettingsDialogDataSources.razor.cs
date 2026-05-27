@@ -2,11 +2,16 @@ using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.ERIClient.DataModel;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Services;
+using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Dialogs.Settings;
 
 public partial class SettingsDialogDataSources : SettingsDialogBase
 {
+    [Inject]
+    private DataSourceEmbeddingService DataSourceEmbeddingService { get; init; } = null!;
+
     private string GetEmbeddingName(IDataSource dataSource)
     {
         if(dataSource is IInternalDataSource internalDataSource)
@@ -22,6 +27,39 @@ public partial class SettingsDialogDataSources : SettingsDialogBase
             return T("External (ERI)");
         
         return T("Unknown");
+    }
+
+    private bool CanRefreshDataSource(IDataSource dataSource)
+    {
+        return dataSource is DataSourceLocalDirectory or DataSourceLocalFile;
+    }
+
+    private bool HasRefreshableDataSources()
+    {
+        return this.SettingsManager.ConfigurationData.DataSources.Any(this.CanRefreshDataSource);
+    }
+
+    private async Task AutomaticRefreshChanged(bool enabled)
+    {
+        this.SettingsManager.ConfigurationData.DataSourceIndexing.AutomaticRefresh = enabled;
+        await this.SettingsManager.StoreSettings();
+        this.DataSourceEmbeddingService.RefreshAutomaticWatchers();
+        await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+    }
+
+    private async Task RefreshAllDataSources()
+    {
+        await this.DataSourceEmbeddingService.QueueAllInternalDataSourcesAsync();
+        await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+    }
+
+    private async Task RefreshDataSource(IDataSource dataSource)
+    {
+        if (!this.CanRefreshDataSource(dataSource))
+            return;
+
+        await this.DataSourceEmbeddingService.QueueDataSourceAsync(dataSource);
+        await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
     
     private async Task AddDataSource(DataSourceType type)
@@ -85,6 +123,7 @@ public partial class SettingsDialogDataSources : SettingsDialogBase
         
         this.SettingsManager.ConfigurationData.DataSources.Add(addedDataSource);
         await this.SettingsManager.StoreSettings();
+        await this.DataSourceEmbeddingService.QueueDataSourceAsync(addedDataSource);
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
 
@@ -244,6 +283,7 @@ public partial class SettingsDialogDataSources : SettingsDialogBase
         this.SettingsManager.ConfigurationData.DataSources[this.SettingsManager.ConfigurationData.DataSources.IndexOf(dataSource)] = editedDataSource;
 
         await this.SettingsManager.StoreSettings();
+        await this.DataSourceEmbeddingService.QueueDataSourceAsync(editedDataSource);
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
     
@@ -285,6 +325,7 @@ public partial class SettingsDialogDataSources : SettingsDialogBase
         {
             this.SettingsManager.ConfigurationData.DataSources.Remove(dataSource);
             await this.SettingsManager.StoreSettings();
+            await this.DataSourceEmbeddingService.RemoveDataSourceAsync(dataSource);
             await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
         }
     }

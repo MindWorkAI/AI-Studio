@@ -1,0 +1,64 @@
+@attribute [Route(Routes.EMBEDDINGS)]
+@inherits MSGComponentBase
+
+<MudStack Spacing="3">
+    <MudPaper Class="pa-4 border-dashed border rounded-lg" Elevation="0">
+        <MudText Typo="Typo.h5">@T("Background embeddings")</MudText>
+        <MudText Typo="Typo.body1" Class="mt-2">
+            @T("AI Studio indexes local RAG data sources in the background. Finished files stay recorded so unchanged files can be skipped after a restart, while added or deleted files are detected during the next run.")
+        </MudText>
+        <MudStack Row="true" Class="mt-3" Wrap="Wrap.Wrap" Spacing="2">
+            <MudChip T="string" Color="Color.Success" Variant="Variant.Filled">@string.Format(T("Indexed files: {0}"), this.TotalIndexedFiles)</MudChip>
+            <MudChip T="string" Color="Color.Info" Variant="Variant.Filled">@string.Format(T("Pending files: {0}"), this.TotalPendingFiles)</MudChip>
+            <MudChip T="string" Color="Color.Error" Variant="Variant.Filled">@string.Format(T("Failed files: {0}"), this.TotalFailedFiles)</MudChip>
+        </MudStack>
+    </MudPaper>
+
+    @if (this.Statuses.Count == 0)
+    {
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
+            @T("No local data source has been queued for embedding yet.")
+        </MudAlert>
+    }
+    else
+    {
+        @foreach (var status in this.Statuses)
+        {
+            <MudPaper Class="pa-4 border rounded-lg" Elevation="0">
+                <MudStack Spacing="2">
+                    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                        <MudText Typo="Typo.h6">@status.DataSourceName</MudText>
+                        <MudChip T="string" Color="@GetStatusColor(status)" Variant="Variant.Filled">@status.StateLabel</MudChip>
+                    </MudStack>
+
+                    <MudProgressLinear Value="@status.ProgressPercent" Rounded="@true" Color="@GetStatusColor(status)" />
+
+                    <MudText Typo="Typo.body2">
+                        @string.Format(T("{0} of {1} files are indexed."), status.IndexedFiles, status.TotalFiles)
+                    </MudText>
+
+                    @if (status.FailedFiles > 0)
+                    {
+                        <MudText Typo="Typo.body2">
+                            @string.Format(T("Failed files: {0}"), status.FailedFiles)
+                        </MudText>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(status.CurrentFile))
+                    {
+                        <MudText Typo="Typo.body2">
+                            @string.Format(T("Current file: {0}"), status.CurrentFile)
+                        </MudText>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(status.LastError))
+                    {
+                        <MudAlert Severity="Severity.Warning" Variant="Variant.Text">
+                            @status.LastError
+                        </MudAlert>
+                    }
+                </MudStack>
+            </MudPaper>
+        }
+    }
+</MudStack>

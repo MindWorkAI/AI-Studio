@@ -18,4 +18,5 @@ pub mod certificate_factory;
 pub mod runtime_api_token;
 pub mod stale_process_cleanup;
 mod sidecar_types;
+pub mod tokenizer;
 mod file_actions;
