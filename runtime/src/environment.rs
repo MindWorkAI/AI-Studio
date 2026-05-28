@@ -386,13 +386,11 @@ fn enterprise_environment_key_name(env_name: &str) -> Option<String> {
         return Some(String::from("config_encryption_secret"));
     }
 
-    if let Some(suffix) = enterprise_env_key_suffix(env_name, ENTERPRISE_ENV_CONFIG_ID_PREFIX)
-        && is_enterprise_slot_suffix(suffix) {
+    if let Some(suffix) = enterprise_env_key_suffix(env_name, ENTERPRISE_ENV_CONFIG_ID_PREFIX) {
         return Some(format!("config_id{suffix}"));
     }
 
-    if let Some(suffix) = enterprise_env_key_suffix(env_name, ENTERPRISE_ENV_CONFIG_SERVER_URL_PREFIX)
-        && is_enterprise_slot_suffix(suffix) {
+    if let Some(suffix) = enterprise_env_key_suffix(env_name, ENTERPRISE_ENV_CONFIG_SERVER_URL_PREFIX) {
         return Some(format!("config_server_url{suffix}"));
     }
 
@@ -417,7 +415,7 @@ fn enterprise_env_key_suffix<'a>(env_name: &'a str, prefix: &str) -> Option<&'a 
 
     let (raw_prefix, suffix) = env_name.split_at(prefix.len());
     if raw_prefix.eq_ignore_ascii_case(prefix) {
-        Some(suffix)
+        normalize_enterprise_slot_suffix(suffix)
     } else {
         None
     }
@@ -425,7 +423,9 @@ fn enterprise_env_key_suffix<'a>(env_name: &'a str, prefix: &str) -> Option<&'a 
 
 #[cfg(not(target_os = "windows"))]
 fn enterprise_env_key_suffix<'a>(env_name: &'a str, prefix: &str) -> Option<&'a str> {
-    env_name.strip_prefix(prefix)
+    env_name
+        .strip_prefix(prefix)
+        .and_then(normalize_enterprise_slot_suffix)
 }
 
 #[cfg(target_os = "windows")]
@@ -529,11 +529,7 @@ fn enterprise_policy_file_slot_suffix(file_name: &str) -> Option<&str> {
         .strip_prefix("config")?
         .strip_suffix(".yaml")?;
 
-    if is_enterprise_slot_suffix(suffix) {
-        Some(suffix)
-    } else {
-        None
-    }
+    normalize_enterprise_slot_suffix(suffix)
 }
 
 fn read_policy_yaml_mapping(path: &Path) -> Option<HashMap<String, String>> {
@@ -635,13 +631,11 @@ fn is_legacy_enterprise_source_key(key_name: &str) -> bool {
 
 #[cfg(target_os = "windows")]
 fn enterprise_indexed_source_key_name(key_name: &str) -> Option<String> {
-    if let Some(suffix) = enterprise_source_key_suffix(key_name, ENTERPRISE_CONFIG_ID_KEY_PREFIX)
-        && is_enterprise_slot_suffix(suffix) {
+    if let Some(suffix) = enterprise_source_key_suffix(key_name, ENTERPRISE_CONFIG_ID_KEY_PREFIX) {
         return Some(format!("config_id{suffix}"));
     }
 
-    if let Some(suffix) = enterprise_source_key_suffix(key_name, ENTERPRISE_CONFIG_SERVER_URL_KEY_PREFIX)
-        && is_enterprise_slot_suffix(suffix) {
+    if let Some(suffix) = enterprise_source_key_suffix(key_name, ENTERPRISE_CONFIG_SERVER_URL_KEY_PREFIX) {
         return Some(format!("config_server_url{suffix}"));
     }
 
@@ -649,7 +643,18 @@ fn enterprise_indexed_source_key_name(key_name: &str) -> Option<String> {
 }
 
 fn enterprise_source_key_suffix<'a>(key_name: &'a str, prefix: &str) -> Option<&'a str> {
-    key_name.strip_prefix(prefix)
+    key_name
+        .strip_prefix(prefix)
+        .and_then(normalize_enterprise_slot_suffix)
+}
+
+fn normalize_enterprise_slot_suffix(raw_suffix: &str) -> Option<&str> {
+    let suffix = raw_suffix.strip_prefix('_').unwrap_or(raw_suffix);
+    if is_enterprise_slot_suffix(suffix) {
+        Some(suffix)
+    } else {
+        None
+    }
 }
 
 fn is_enterprise_slot_suffix(suffix: &str) -> bool {
@@ -696,6 +701,18 @@ fn enterprise_slot_width_rank(suffix: &str) -> u8 {
     }
 }
 
+fn indexed_enterprise_source_value<'a>(
+    values: &'a HashMap<String, String>,
+    prefix: &str,
+    suffix: &str,
+) -> Option<&'a str> {
+    let separated_key = format!("{prefix}_{suffix}");
+    values
+        .get(&separated_key)
+        .or_else(|| values.get(&format!("{prefix}{suffix}")))
+        .map(String::as_str)
+}
+
 fn parse_enterprise_source_values(
     source_name: &str,
     values: &HashMap<String, String>,
@@ -704,13 +721,11 @@ fn parse_enterprise_source_values(
     let mut seen_ids = HashSet::new();
 
     for suffix in collect_enterprise_config_slots(values) {
-        let id_key = format!("config_id{suffix}");
-        let server_url_key = format!("config_server_url{suffix}");
         add_enterprise_config_pair(
             source_name,
             &format!("indexed slot {suffix}"),
-            values.get(&id_key).map(String::as_str),
-            values.get(&server_url_key).map(String::as_str),
+            indexed_enterprise_source_value(values, ENTERPRISE_CONFIG_ID_KEY_PREFIX, &suffix),
+            indexed_enterprise_source_value(values, ENTERPRISE_CONFIG_SERVER_URL_KEY_PREFIX, &suffix),
             &mut configs,
             &mut seen_ids,
         );
@@ -933,14 +948,14 @@ mod tests {
     #[test]
     fn parse_enterprise_source_values_supports_padded_and_high_indexed_slots() {
         let mut values = HashMap::new();
-        values.insert(String::from("config_id00000"), String::from(TEST_ID_A));
+        values.insert(String::from("config_id_00000"), String::from(TEST_ID_A));
         values.insert(
-            String::from("config_server_url00000"),
+            String::from("config_server_url_00000"),
             String::from("https://slot0.example.org"),
         );
-        values.insert(String::from("config_id10503"), String::from(TEST_ID_B));
+        values.insert(String::from("config_id_10503"), String::from(TEST_ID_B));
         values.insert(
-            String::from("config_server_url10503"),
+            String::from("config_server_url_10503"),
             String::from("https://slot10503.example.org"),
         );
 
@@ -964,9 +979,9 @@ mod tests {
     #[test]
     fn parse_enterprise_source_values_treats_slot_widths_as_distinct_slots() {
         let mut values = HashMap::new();
-        values.insert(String::from("config_id00001"), String::from(TEST_ID_A));
+        values.insert(String::from("config_id_00001"), String::from(TEST_ID_A));
         values.insert(
-            String::from("config_server_url00001"),
+            String::from("config_server_url_00001"),
             String::from("https://padded.example.org"),
         );
         values.insert(String::from("config_id1"), String::from(TEST_ID_B));
@@ -995,19 +1010,19 @@ mod tests {
     #[test]
     fn parse_enterprise_source_values_ignores_invalid_slot_suffixes() {
         let mut values = HashMap::new();
-        values.insert(String::from("config_id99999"), String::from(TEST_ID_A));
+        values.insert(String::from("config_id_99999"), String::from(TEST_ID_A));
         values.insert(
-            String::from("config_server_url99999"),
+            String::from("config_server_url_99999"),
             String::from("https://valid.example.org"),
         );
-        values.insert(String::from("config_id100000"), String::from(TEST_ID_B));
+        values.insert(String::from("config_id_100000"), String::from(TEST_ID_B));
         values.insert(
-            String::from("config_server_url100000"),
+            String::from("config_server_url_100000"),
             String::from("https://too-high.example.org"),
         );
-        values.insert(String::from("config_idabc"), String::from(TEST_ID_C));
+        values.insert(String::from("config_id_abc"), String::from(TEST_ID_C));
         values.insert(
-            String::from("config_server_urlabc"),
+            String::from("config_server_url_abc"),
             String::from("https://letters.example.org"),
         );
 
@@ -1025,11 +1040,11 @@ mod tests {
     #[test]
     fn enterprise_environment_key_name_maps_indexed_and_legacy_names() {
         assert_eq!(
-            enterprise_environment_key_name("MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ID10503"),
+            enterprise_environment_key_name("MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ID_10503"),
             Some(String::from("config_id10503"))
         );
         assert_eq!(
-            enterprise_environment_key_name("MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_SERVER_URL00000"),
+            enterprise_environment_key_name("MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_SERVER_URL_00000"),
             Some(String::from("config_server_url00000"))
         );
         assert_eq!(
@@ -1037,7 +1052,7 @@ mod tests {
             Some(String::from("configs"))
         );
         assert_eq!(
-            enterprise_environment_key_name("MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ID100000"),
+            enterprise_environment_key_name("MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ID_100000"),
             None
         );
     }
@@ -1046,15 +1061,15 @@ mod tests {
     fn enterprise_policy_file_slot_suffix_accepts_valid_slot_file_names() {
         assert_eq!(enterprise_policy_file_slot_suffix("config0.yaml"), Some("0"));
         assert_eq!(
-            enterprise_policy_file_slot_suffix("config00000.yaml"),
+            enterprise_policy_file_slot_suffix("config_00000.yaml"),
             Some("00000")
         );
         assert_eq!(
-            enterprise_policy_file_slot_suffix("config10503.yaml"),
+            enterprise_policy_file_slot_suffix("config_10503.yaml"),
             Some("10503")
         );
-        assert_eq!(enterprise_policy_file_slot_suffix("config100000.yaml"), None);
-        assert_eq!(enterprise_policy_file_slot_suffix("configabc.yaml"), None);
+        assert_eq!(enterprise_policy_file_slot_suffix("config_100000.yaml"), None);
+        assert_eq!(enterprise_policy_file_slot_suffix("config_abc.yaml"), None);
     }
 
     #[test]
@@ -1275,17 +1290,17 @@ mod tests {
         let directory = tempdir().unwrap();
 
         fs::write(
-            directory.path().join("config00000.yaml"),
+            directory.path().join("config_00000.yaml"),
             "id: \"9072b77d-ca81-40da-be6a-861da525ef7b\"\nserver_url: \"https://slot0.example.org\"",
         )
         .unwrap();
         fs::write(
-            directory.path().join("config10503.yaml"),
+            directory.path().join("config_10503.yaml"),
             "id: \"a1b2c3d4-e5f6-7890-abcd-ef1234567890\"\nserver_url: \"https://slot10503.example.org\"",
         )
         .unwrap();
         fs::write(
-            directory.path().join("config100000.yaml"),
+            directory.path().join("config_100000.yaml"),
             "id: \"11111111-2222-3333-4444-555555555555\"\nserver_url: \"https://ignored.example.org\"",
         )
         .unwrap();
