@@ -56,9 +56,11 @@ public abstract partial class ConfigurationBase : MSGComponentBase
 
     protected bool IsDisabled => this.Disabled() || this.IsLocked();
     
-    private string Classes => $"{this.GetClassForBase} {MARGIN_CLASS}";
+    private string Classes => $"{this.GetClassForBase} {JUSTIFIED_HELP_CLASS} {MARGIN_CLASS}";
     
     private protected virtual RenderFragment? Body => null;
+
+    private const string JUSTIFIED_HELP_CLASS = "configuration-help-justified";
 
     private const string MARGIN_CLASS = "mb-6";
     

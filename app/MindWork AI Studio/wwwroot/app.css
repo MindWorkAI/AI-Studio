@@ -135,6 +135,13 @@
     text-align: left;
 }
 
+.configuration-help-justified .mud-input-helper-text,
+.configuration-help-justified .mud-form-helpertext {
+    text-align: justify;
+    hyphens: auto;
+    word-break: auto-phrase;
+}
+
 .code-block {
     background-color: #2d2d2d;
     color: #f8f8f2;
