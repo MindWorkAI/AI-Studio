@@ -11,12 +11,21 @@ use sys_locale::get_locale;
 
 const DEFAULT_LANGUAGE: &str = "en-US";
 
-const ENTERPRISE_CONFIG_SLOT_COUNT: usize = 10;
+const ENTERPRISE_CONFIG_SLOT_MAX: u32 = 99_999;
+const ENTERPRISE_CONFIG_SLOT_WIDTH: usize = 5;
+
+const ENTERPRISE_CONFIG_ID_KEY_PREFIX: &str = "config_id";
+const ENTERPRISE_CONFIG_SERVER_URL_KEY_PREFIX: &str = "config_server_url";
 
 #[cfg(target_os = "windows")]
 const ENTERPRISE_REGISTRY_KEY_PATH: &str = r"Software\github\MindWork AI Studio\Enterprise IT";
 
 const ENTERPRISE_POLICY_SECRET_FILE_NAME: &str = "config_encryption_secret.yaml";
+
+const ENTERPRISE_ENV_CONFIG_ID_PREFIX: &str = "MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ID";
+const ENTERPRISE_ENV_CONFIG_SERVER_URL_PREFIX: &str = "MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_SERVER_URL";
+const ENTERPRISE_ENV_CONFIGS: &str = "MINDWORK_AI_STUDIO_ENTERPRISE_CONFIGS";
+const ENTERPRISE_ENV_CONFIG_ENCRYPTION_SECRET: &str = "MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ENCRYPTION_SECRET";
 
 /// The data directory where the application stores its data.
 pub static DATA_DIRECTORY: OnceLock<String> = OnceLock::new();
@@ -187,7 +196,52 @@ pub async fn read_user_language(_token: APIToken) -> String {
 pub struct EnterpriseConfig {
     pub id: String,
     pub server_url: String,
+    pub source: String,
+    pub source_detail: String,
+    pub slot: String,
 }
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+struct EnterpriseSourceValue {
+    value: String,
+    source_detail: String,
+}
+
+impl EnterpriseSourceValue {
+    fn new(value: String, source_detail: String) -> Self {
+        Self {
+            value,
+            source_detail,
+        }
+    }
+}
+
+trait EnterpriseSourceValueAccess {
+    fn value(&self) -> &str;
+    fn source_detail(&self) -> &str;
+}
+
+impl EnterpriseSourceValueAccess for EnterpriseSourceValue {
+    fn value(&self) -> &str {
+        &self.value
+    }
+
+    fn source_detail(&self) -> &str {
+        &self.source_detail
+    }
+}
+
+impl EnterpriseSourceValueAccess for String {
+    fn value(&self) -> &str {
+        self
+    }
+
+    fn source_detail(&self) -> &str {
+        ""
+    }
+}
+
+type EnterpriseSourceValues = HashMap<String, EnterpriseSourceValue>;
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 struct EnterpriseSourceData {
@@ -292,7 +346,7 @@ fn load_registry_enterprise_source() -> EnterpriseSourceData {
 
     info!(r"Trying to read enterprise configuration metadata from 'HKEY_CURRENT_USER\{}'.", ENTERPRISE_REGISTRY_KEY_PATH);
 
-    let mut values = HashMap::new();
+    let mut values = EnterpriseSourceValues::new();
     let key = match CURRENT_USER.open(ENTERPRISE_REGISTRY_KEY_PATH) {
         Ok(key) => key,
         Err(_) => {
@@ -304,32 +358,40 @@ fn load_registry_enterprise_source() -> EnterpriseSourceData {
         }
     };
 
-    for index in 0..ENTERPRISE_CONFIG_SLOT_COUNT {
-        insert_registry_value(&mut values, &key, &format!("config_id{index}"));
-        insert_registry_value(&mut values, &key, &format!("config_server_url{index}"));
-    }
+    match key.values() {
+        Ok(registry_values) => {
+            for (key_name, value) in registry_values {
+                let Some(source_key_name) = enterprise_registry_value_key_name(&key_name) else {
+                    continue;
+                };
 
-    for key_name in [
-        "configs",
-        "config_id",
-        "config_server_url",
-        "config_encryption_secret",
-    ] {
-        insert_registry_value(&mut values, &key, key_name);
+                match String::try_from(value) {
+                    Ok(value) => {
+                        values.insert(source_key_name, EnterpriseSourceValue::new(value, String::new()));
+                    },
+
+                    Err(error) => {
+                        warn!(r"Could not read enterprise registry value 'HKEY_CURRENT_USER\{}\{}' as string: {}.", ENTERPRISE_REGISTRY_KEY_PATH, key_name, error);
+                    },
+                }
+            }
+        },
+
+        Err(error) => {
+            warn!(r"Could not enumerate enterprise registry values from 'HKEY_CURRENT_USER\{}': {}.", ENTERPRISE_REGISTRY_KEY_PATH, error);
+        },
     }
 
     parse_enterprise_source_values("Windows registry", &values)
 }
 
 #[cfg(target_os = "windows")]
-fn insert_registry_value(
-    values: &mut HashMap<String, String>,
-    key: &windows_registry::Key,
-    key_name: &str,
-) {
-    if let Ok(value) = key.get_string(key_name) {
-        values.insert(String::from(key_name), value);
+fn enterprise_registry_value_key_name(key_name: &str) -> Option<String> {
+    if is_legacy_enterprise_source_key(key_name) {
+        return Some(String::from(key_name));
     }
+
+    enterprise_indexed_source_key_name(key_name)
 }
 
 fn load_policy_file_enterprise_source() -> EnterpriseSourceData {
@@ -342,24 +404,83 @@ fn load_policy_file_enterprise_source() -> EnterpriseSourceData {
 
 fn load_environment_enterprise_source() -> EnterpriseSourceData {
     info!("Trying to read enterprise configuration metadata from environment variables.");
-    let mut values = HashMap::new();
-    for index in 0..ENTERPRISE_CONFIG_SLOT_COUNT {
-        insert_env_value(&mut values, &format!("MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ID{index}"), &format!("config_id{index}"));
-        insert_env_value(&mut values, &format!("MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_SERVER_URL{index}"), &format!("config_server_url{index}"));
+    let mut values = EnterpriseSourceValues::new();
+    for (env_name, value) in env::vars() {
+        if let Some(source_key_name) = enterprise_environment_key_name(&env_name) {
+            let source_detail = enterprise_environment_source_detail(&source_key_name, &env_name);
+            values.insert(source_key_name, EnterpriseSourceValue::new(value, source_detail));
+        }
     }
-
-    insert_env_value(&mut values, "MINDWORK_AI_STUDIO_ENTERPRISE_CONFIGS", "configs");
-    insert_env_value(&mut values, "MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ID", "config_id");
-    insert_env_value(&mut values, "MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_SERVER_URL", "config_server_url");
-    insert_env_value(&mut values, "MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ENCRYPTION_SECRET", "config_encryption_secret");
 
     parse_enterprise_source_values("environment variables", &values)
 }
 
-fn insert_env_value(values: &mut HashMap<String, String>, env_name: &str, key_name: &str) {
-    if let Ok(value) = env::var(env_name) {
-        values.insert(String::from(key_name), value);
+fn enterprise_environment_source_detail(source_key_name: &str, env_name: &str) -> String {
+    if source_key_name == "config_id"
+        || enterprise_source_key_suffix(source_key_name, ENTERPRISE_CONFIG_ID_KEY_PREFIX).is_some() {
+        String::from(env_name)
+    } else {
+        String::new()
     }
+}
+
+fn enterprise_environment_key_name(env_name: &str) -> Option<String> {
+    if enterprise_env_key_equals(env_name, ENTERPRISE_ENV_CONFIGS) {
+        return Some(String::from("configs"));
+    }
+
+    if enterprise_env_key_equals(env_name, ENTERPRISE_ENV_CONFIG_ID_PREFIX) {
+        return Some(String::from("config_id"));
+    }
+
+    if enterprise_env_key_equals(env_name, ENTERPRISE_ENV_CONFIG_SERVER_URL_PREFIX) {
+        return Some(String::from("config_server_url"));
+    }
+
+    if enterprise_env_key_equals(env_name, ENTERPRISE_ENV_CONFIG_ENCRYPTION_SECRET) {
+        return Some(String::from("config_encryption_secret"));
+    }
+
+    if let Some(suffix) = enterprise_env_key_suffix(env_name, ENTERPRISE_ENV_CONFIG_ID_PREFIX) {
+        return Some(format!("config_id{suffix}"));
+    }
+
+    if let Some(suffix) = enterprise_env_key_suffix(env_name, ENTERPRISE_ENV_CONFIG_SERVER_URL_PREFIX) {
+        return Some(format!("config_server_url{suffix}"));
+    }
+
+    None
+}
+
+#[cfg(target_os = "windows")]
+fn enterprise_env_key_equals(env_name: &str, expected: &str) -> bool {
+    env_name.eq_ignore_ascii_case(expected)
+}
+
+#[cfg(not(target_os = "windows"))]
+fn enterprise_env_key_equals(env_name: &str, expected: &str) -> bool {
+    env_name == expected
+}
+
+#[cfg(target_os = "windows")]
+fn enterprise_env_key_suffix<'a>(env_name: &'a str, prefix: &str) -> Option<&'a str> {
+    if env_name.len() < prefix.len() {
+        return None;
+    }
+
+    let (raw_prefix, suffix) = env_name.split_at(prefix.len());
+    if raw_prefix.eq_ignore_ascii_case(prefix) {
+        normalize_enterprise_slot_suffix(suffix)
+    } else {
+        None
+    }
+}
+
+#[cfg(not(target_os = "windows"))]
+fn enterprise_env_key_suffix<'a>(env_name: &'a str, prefix: &str) -> Option<&'a str> {
+    env_name
+        .strip_prefix(prefix)
+        .and_then(normalize_enterprise_slot_suffix)
 }
 
 #[cfg(target_os = "windows")]
@@ -406,19 +527,49 @@ fn linux_policy_directories_from_xdg(xdg_config_dirs: Option<&str>) -> Vec<PathB
     directories
 }
 
-fn load_policy_values_from_directories(directories: &[PathBuf]) -> HashMap<String, String> {
-    let mut values = HashMap::new();
+fn load_policy_values_from_directories(directories: &[PathBuf]) -> EnterpriseSourceValues {
+    let mut values = EnterpriseSourceValues::new();
     for directory in directories {
         info!("Checking enterprise policy directory '{}'.", directory.display());
-        for index in 0..ENTERPRISE_CONFIG_SLOT_COUNT {
-            let path = directory.join(format!("config{index}.yaml"));
+        let entries = match fs::read_dir(directory) {
+            Ok(entries) => entries,
+            Err(error) => {
+                info!("Could not enumerate enterprise policy directory '{}': {}.", directory.display(), error);
+                continue;
+            },
+        };
+
+        for entry in entries {
+            let entry = match entry {
+                Ok(entry) => entry,
+                Err(error) => {
+                    warn!("Could not read an entry from enterprise policy directory '{}': {}.", directory.display(), error);
+                    continue;
+                },
+            };
+
+            let file_name = entry.file_name();
+            let Some(file_name) = file_name.to_str() else {
+                continue;
+            };
+
+            let Some(suffix) = enterprise_policy_file_slot_suffix(file_name) else {
+                continue;
+            };
+
+            let path = entry.path();
             if let Some(config_values) = read_policy_yaml_mapping(&path) {
+                let source_detail = path
+                    .canonicalize()
+                    .unwrap_or_else(|_| path.clone())
+                    .to_string_lossy()
+                    .into_owned();
                 if let Some(id) = config_values.get("id") {
-                    insert_first_non_empty_value(&mut values, &format!("config_id{index}"), id);
+                    insert_first_non_empty_value(&mut values, &format!("config_id{suffix}"), id, &source_detail);
                 }
 
                 if let Some(server_url) = config_values.get("server_url") {
-                    insert_first_non_empty_value(&mut values, &format!("config_server_url{index}"), server_url);
+                    insert_first_non_empty_value(&mut values, &format!("config_server_url{suffix}"), server_url, &source_detail);
                 }
             }
         }
@@ -426,11 +577,19 @@ fn load_policy_values_from_directories(directories: &[PathBuf]) -> HashMap<Strin
         let secret_path = directory.join(ENTERPRISE_POLICY_SECRET_FILE_NAME);
         if let Some(secret_values) = read_policy_yaml_mapping(&secret_path)
             && let Some(secret) = secret_values.get("config_encryption_secret") {
-            insert_first_non_empty_value(&mut values, "config_encryption_secret", secret);
+            insert_first_non_empty_value(&mut values, "config_encryption_secret", secret, "");
         }
     }
 
     values
+}
+
+fn enterprise_policy_file_slot_suffix(file_name: &str) -> Option<&str> {
+    let suffix = file_name
+        .strip_prefix("config")?
+        .strip_suffix(".yaml")?;
+
+    normalize_enterprise_slot_suffix(suffix)
 }
 
 fn read_policy_yaml_mapping(path: &Path) -> Option<HashMap<String, String>> {
@@ -516,27 +675,118 @@ fn parse_policy_yaml_value(raw_value: &str) -> Option<String> {
     Some(String::from(trimmed))
 }
 
-fn insert_first_non_empty_value(values: &mut HashMap<String, String>, key: &str, raw_value: &str) {
+fn insert_first_non_empty_value(values: &mut EnterpriseSourceValues, key: &str, raw_value: &str, source_detail: &str) {
     if let Some(value) = normalize_enterprise_value(raw_value) {
-        values.entry(String::from(key)).or_insert(value);
+        values
+            .entry(String::from(key))
+            .or_insert_with(|| EnterpriseSourceValue::new(value, String::from(source_detail)));
     }
 }
 
-fn parse_enterprise_source_values(
+#[cfg(target_os = "windows")]
+fn is_legacy_enterprise_source_key(key_name: &str) -> bool {
+    matches!(
+        key_name,
+        "configs" | "config_id" | "config_server_url" | "config_encryption_secret"
+    )
+}
+
+#[cfg(target_os = "windows")]
+fn enterprise_indexed_source_key_name(key_name: &str) -> Option<String> {
+    if let Some(suffix) = enterprise_source_key_suffix(key_name, ENTERPRISE_CONFIG_ID_KEY_PREFIX) {
+        return Some(format!("config_id{suffix}"));
+    }
+
+    if let Some(suffix) = enterprise_source_key_suffix(key_name, ENTERPRISE_CONFIG_SERVER_URL_KEY_PREFIX) {
+        return Some(format!("config_server_url{suffix}"));
+    }
+
+    None
+}
+
+fn enterprise_source_key_suffix<'a>(key_name: &'a str, prefix: &str) -> Option<&'a str> {
+    key_name
+        .strip_prefix(prefix)
+        .and_then(normalize_enterprise_slot_suffix)
+}
+
+fn normalize_enterprise_slot_suffix(raw_suffix: &str) -> Option<&str> {
+    let suffix = raw_suffix.strip_prefix('_').unwrap_or(raw_suffix);
+    if is_enterprise_slot_suffix(suffix) {
+        Some(suffix)
+    } else {
+        None
+    }
+}
+
+fn is_enterprise_slot_suffix(suffix: &str) -> bool {
+    !suffix.is_empty()
+        && suffix.len() <= ENTERPRISE_CONFIG_SLOT_WIDTH
+        && suffix.chars().all(|c| c.is_ascii_digit())
+        && suffix.parse::<u32>().is_ok_and(|index| index <= ENTERPRISE_CONFIG_SLOT_MAX)
+}
+
+fn collect_enterprise_config_slots<T: EnterpriseSourceValueAccess>(values: &HashMap<String, T>) -> Vec<String> {
+    let mut slots = HashSet::new();
+    for key_name in values.keys() {
+        if let Some(suffix) = enterprise_source_key_suffix(key_name, ENTERPRISE_CONFIG_ID_KEY_PREFIX)
+            && is_enterprise_slot_suffix(suffix) {
+            slots.insert(String::from(suffix));
+            continue;
+        }
+
+        if let Some(suffix) = enterprise_source_key_suffix(key_name, ENTERPRISE_CONFIG_SERVER_URL_KEY_PREFIX)
+            && is_enterprise_slot_suffix(suffix) {
+            slots.insert(String::from(suffix));
+        }
+    }
+
+    let mut slots: Vec<String> = slots.into_iter().collect();
+    slots.sort_by(|left, right| {
+        let left_index = left.parse::<u32>().unwrap_or(ENTERPRISE_CONFIG_SLOT_MAX);
+        let right_index = right.parse::<u32>().unwrap_or(ENTERPRISE_CONFIG_SLOT_MAX);
+
+        left_index
+            .cmp(&right_index)
+            .then_with(|| enterprise_slot_width_rank(left).cmp(&enterprise_slot_width_rank(right)))
+            .then_with(|| left.len().cmp(&right.len()))
+            .then_with(|| left.cmp(right))
+    });
+    slots
+}
+
+fn enterprise_slot_width_rank(suffix: &str) -> u8 {
+    if suffix.len() == ENTERPRISE_CONFIG_SLOT_WIDTH {
+        0
+    } else {
+        1
+    }
+}
+
+fn indexed_enterprise_source_value<'a, T: EnterpriseSourceValueAccess>(
+    values: &'a HashMap<String, T>,
+    prefix: &str,
+    suffix: &str,
+) -> Option<&'a T> {
+    let separated_key = format!("{prefix}_{suffix}");
+    values
+        .get(&separated_key)
+        .or_else(|| values.get(&format!("{prefix}{suffix}")))
+}
+
+fn parse_enterprise_source_values<T: EnterpriseSourceValueAccess>(
     source_name: &str,
-    values: &HashMap<String, String>,
+    values: &HashMap<String, T>,
 ) -> EnterpriseSourceData {
     let mut configs = Vec::new();
     let mut seen_ids = HashSet::new();
 
-    for index in 0..ENTERPRISE_CONFIG_SLOT_COUNT {
-        let id_key = format!("config_id{index}");
-        let server_url_key = format!("config_server_url{index}");
+    for suffix in collect_enterprise_config_slots(values) {
         add_enterprise_config_pair(
             source_name,
-            &format!("indexed slot {index}"),
-            values.get(&id_key).map(String::as_str),
-            values.get(&server_url_key).map(String::as_str),
+            &format!("indexed slot {suffix}"),
+            indexed_enterprise_source_value(values, ENTERPRISE_CONFIG_ID_KEY_PREFIX, &suffix),
+            indexed_enterprise_source_value(values, ENTERPRISE_CONFIG_SERVER_URL_KEY_PREFIX, &suffix),
             &mut configs,
             &mut seen_ids,
         );
@@ -544,7 +794,7 @@ fn parse_enterprise_source_values(
 
     if let Some(combined) = values
         .get("configs")
-        .and_then(|value| normalize_enterprise_value(value))
+        .and_then(|value| normalize_enterprise_value(value.value()))
     {
         add_combined_enterprise_configs(source_name, &combined, &mut configs, &mut seen_ids);
     }
@@ -552,15 +802,15 @@ fn parse_enterprise_source_values(
     add_enterprise_config_pair(
         source_name,
         "legacy single configuration",
-        values.get("config_id").map(String::as_str),
-        values.get("config_server_url").map(String::as_str),
+        values.get("config_id"),
+        values.get("config_server_url"),
         &mut configs,
         &mut seen_ids,
     );
 
     let encryption_secret = values
         .get("config_encryption_secret")
-        .and_then(|value| normalize_enterprise_value(value))
+        .and_then(|value| normalize_enterprise_value(value.value()))
         .unwrap_or_default();
 
     EnterpriseSourceData {
@@ -572,26 +822,32 @@ fn parse_enterprise_source_values(
 
 fn add_enterprise_config_pair(
     source_name: &str,
-    context: &str,
-    raw_id: Option<&str>,
-    raw_server_url: Option<&str>,
+    slot: &str,
+    raw_id: Option<&impl EnterpriseSourceValueAccess>,
+    raw_server_url: Option<&impl EnterpriseSourceValueAccess>,
     configs: &mut Vec<EnterpriseConfig>,
     seen_ids: &mut HashSet<String>,
 ) {
-    let id = raw_id.and_then(normalize_enterprise_config_id);
-    let server_url = raw_server_url.and_then(normalize_enterprise_value);
+    let id = raw_id.and_then(|value| normalize_enterprise_config_id(value.value()));
+    let server_url = raw_server_url.and_then(|value| normalize_enterprise_value(value.value()));
 
     match (id, server_url) {
         (Some(id), Some(server_url)) => {
             if seen_ids.insert(id.clone()) {
-                configs.push(EnterpriseConfig { id, server_url });
+                configs.push(EnterpriseConfig {
+                    id,
+                    server_url,
+                    source: String::from(source_name),
+                    source_detail: raw_id.map(|value| String::from(value.source_detail())).unwrap_or_default(),
+                    slot: String::from(slot),
+                });
             } else {
-                info!("Ignoring duplicate enterprise configuration '{}' from {} in '{}'.", id, source_name, context);
+                info!("Ignoring duplicate enterprise configuration '{}' from {} in '{}'.", id, source_name, slot);
             }
         }
 
         (Some(_), None) | (None, Some(_)) => {
-            warn!("Ignoring incomplete enterprise configuration from {} in '{}'.", source_name, context);
+            warn!("Ignoring incomplete enterprise configuration from {} in '{}'.", source_name, slot);
         }
 
         (None, None) => {}
@@ -615,11 +871,13 @@ fn add_combined_enterprise_configs(
             continue;
         };
 
+        let id = EnterpriseSourceValue::new(String::from(raw_id), String::new());
+        let server_url = EnterpriseSourceValue::new(String::from(raw_server_url), String::new());
         add_enterprise_config_pair(
             source_name,
             &format!("combined legacy entry {}", index + 1),
-            Some(raw_id),
-            Some(raw_server_url),
+            Some(&id),
+            Some(&server_url),
             configs,
             seen_ids,
         );
@@ -642,10 +900,11 @@ fn normalize_enterprise_config_id(value: &str) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::{
+        enterprise_environment_key_name, enterprise_policy_file_slot_suffix,
         linux_policy_directories_from_xdg, load_policy_values_from_directories,
         normalize_locale_tag, parse_enterprise_source_values,
         select_effective_enterprise_config_source, select_effective_enterprise_secret_source,
-        EnterpriseConfig, EnterpriseSourceData,
+        EnterpriseConfig, EnterpriseSourceData, EnterpriseSourceValue, EnterpriseSourceValues,
     };
     use std::collections::HashMap;
     use std::fs;
@@ -655,6 +914,30 @@ mod tests {
     const TEST_ID_A: &str = "9072B77D-CA81-40DA-BE6A-861DA525EF7B";
     const TEST_ID_B: &str = "a1b2c3d4-e5f6-7890-abcd-ef1234567890";
     const TEST_ID_C: &str = "11111111-2222-3333-4444-555555555555";
+
+    fn enterprise_config(
+        id: &str,
+        server_url: &str,
+        source: &str,
+        source_detail: &str,
+        slot: &str,
+    ) -> EnterpriseConfig {
+        EnterpriseConfig {
+            id: String::from(id),
+            server_url: String::from(server_url),
+            source: String::from(source),
+            source_detail: String::from(source_detail),
+            slot: String::from(slot),
+        }
+    }
+
+    fn policy_path(path: PathBuf) -> String {
+        path
+            .canonicalize()
+            .unwrap_or(path)
+            .to_string_lossy()
+            .into_owned()
+    }
 
     #[test]
     fn normalize_locale_tag_supports_common_linux_formats() {
@@ -707,18 +990,9 @@ mod tests {
         assert_eq!(
             source.configs,
             vec![
-                EnterpriseConfig {
-                    id: String::from("9072b77d-ca81-40da-be6a-861da525ef7b"),
-                    server_url: String::from("https://indexed.example.org"),
-                },
-                EnterpriseConfig {
-                    id: String::from(TEST_ID_B),
-                    server_url: String::from("https://combined.example.org"),
-                },
-                EnterpriseConfig {
-                    id: String::from(TEST_ID_C),
-                    server_url: String::from("https://legacy.example.org"),
-                },
+                enterprise_config("9072b77d-ca81-40da-be6a-861da525ef7b", "https://indexed.example.org", "test", "", "indexed slot 0"),
+                enterprise_config(TEST_ID_B, "https://combined.example.org", "test", "", "combined legacy entry 2"),
+                enterprise_config(TEST_ID_C, "https://legacy.example.org", "test", "", "legacy single configuration"),
             ]
         );
         assert_eq!(source.encryption_secret, "secret");
@@ -743,16 +1017,151 @@ mod tests {
         assert_eq!(
             source.configs,
             vec![
-                EnterpriseConfig {
-                    id: String::from("9072b77d-ca81-40da-be6a-861da525ef7b"),
-                    server_url: String::from("https://slot0.example.org"),
-                },
-                EnterpriseConfig {
-                    id: String::from(TEST_ID_B),
-                    server_url: String::from("https://slot4.example.org"),
-                },
+                enterprise_config("9072b77d-ca81-40da-be6a-861da525ef7b", "https://slot0.example.org", "test", "", "indexed slot 0"),
+                enterprise_config(TEST_ID_B, "https://slot4.example.org", "test", "", "indexed slot 4"),
             ]
         );
+    }
+
+    #[test]
+    fn parse_enterprise_source_values_supports_padded_and_high_indexed_slots() {
+        let mut values = HashMap::new();
+        values.insert(String::from("config_id_00000"), String::from(TEST_ID_A));
+        values.insert(
+            String::from("config_server_url_00000"),
+            String::from("https://slot0.example.org"),
+        );
+        values.insert(String::from("config_id_10503"), String::from(TEST_ID_B));
+        values.insert(
+            String::from("config_server_url_10503"),
+            String::from("https://slot10503.example.org"),
+        );
+
+        let source = parse_enterprise_source_values("test", &values);
+
+        assert_eq!(
+            source.configs,
+            vec![
+                enterprise_config("9072b77d-ca81-40da-be6a-861da525ef7b", "https://slot0.example.org", "test", "", "indexed slot 00000"),
+                enterprise_config(TEST_ID_B, "https://slot10503.example.org", "test", "", "indexed slot 10503"),
+            ]
+        );
+    }
+
+    #[test]
+    fn parse_enterprise_source_values_treats_slot_widths_as_distinct_slots() {
+        let mut values = HashMap::new();
+        values.insert(String::from("config_id_00001"), String::from(TEST_ID_A));
+        values.insert(
+            String::from("config_server_url_00001"),
+            String::from("https://padded.example.org"),
+        );
+        values.insert(String::from("config_id1"), String::from(TEST_ID_B));
+        values.insert(
+            String::from("config_server_url1"),
+            String::from("https://legacy-slot.example.org"),
+        );
+
+        let source = parse_enterprise_source_values("test", &values);
+
+        assert_eq!(
+            source.configs,
+            vec![
+                enterprise_config("9072b77d-ca81-40da-be6a-861da525ef7b", "https://padded.example.org", "test", "", "indexed slot 00001"),
+                enterprise_config(TEST_ID_B, "https://legacy-slot.example.org", "test", "", "indexed slot 1"),
+            ]
+        );
+    }
+
+    #[test]
+    fn parse_enterprise_source_values_ignores_invalid_slot_suffixes() {
+        let mut values = HashMap::new();
+        values.insert(String::from("config_id_99999"), String::from(TEST_ID_A));
+        values.insert(
+            String::from("config_server_url_99999"),
+            String::from("https://valid.example.org"),
+        );
+        values.insert(String::from("config_id_100000"), String::from(TEST_ID_B));
+        values.insert(
+            String::from("config_server_url_100000"),
+            String::from("https://too-high.example.org"),
+        );
+        values.insert(String::from("config_id_abc"), String::from(TEST_ID_C));
+        values.insert(
+            String::from("config_server_url_abc"),
+            String::from("https://letters.example.org"),
+        );
+
+        let source = parse_enterprise_source_values("test", &values);
+
+        assert_eq!(
+            source.configs,
+            vec![enterprise_config("9072b77d-ca81-40da-be6a-861da525ef7b", "https://valid.example.org", "test", "", "indexed slot 99999")]
+        );
+    }
+
+    #[test]
+    fn enterprise_environment_key_name_maps_indexed_and_legacy_names() {
+        assert_eq!(
+            enterprise_environment_key_name("MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ID_10503"),
+            Some(String::from("config_id10503"))
+        );
+        assert_eq!(
+            enterprise_environment_key_name("MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_SERVER_URL_00000"),
+            Some(String::from("config_server_url00000"))
+        );
+        assert_eq!(
+            enterprise_environment_key_name("MINDWORK_AI_STUDIO_ENTERPRISE_CONFIGS"),
+            Some(String::from("configs"))
+        );
+        assert_eq!(
+            enterprise_environment_key_name("MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ID_100000"),
+            None
+        );
+    }
+
+    #[test]
+    fn parse_enterprise_source_values_keeps_environment_id_variable_as_source_detail() {
+        let mut values = EnterpriseSourceValues::new();
+        values.insert(
+            String::from("config_id00000"),
+            EnterpriseSourceValue::new(
+                String::from(TEST_ID_A),
+                String::from("MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ID_00000"),
+            ),
+        );
+        values.insert(
+            String::from("config_server_url00000"),
+            EnterpriseSourceValue::new(String::from("https://env.example.org"), String::new()),
+        );
+
+        let source = parse_enterprise_source_values("environment variables", &values);
+
+        assert_eq!(
+            source.configs,
+            vec![enterprise_config(
+                "9072b77d-ca81-40da-be6a-861da525ef7b",
+                "https://env.example.org",
+                "environment variables",
+                "MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ID_00000",
+                "indexed slot 00000"
+            )]
+        );
+    }
+
+    #[test]
+    fn enterprise_policy_file_slot_suffix_accepts_valid_slot_file_names() {
+        assert_eq!(enterprise_policy_file_slot_suffix("config0.yaml"), Some("0"));
+        assert_eq!(
+            enterprise_policy_file_slot_suffix("config_00000.yaml"),
+            Some("00000")
+        );
+        assert_eq!(
+            enterprise_policy_file_slot_suffix("config_10503.yaml"),
+            Some("10503")
+        );
+        assert_eq!(enterprise_policy_file_slot_suffix("config_100000.yaml"), None);
+        assert_eq!(enterprise_policy_file_slot_suffix("config_abc.yaml"), None);
     }
 
     #[test]
@@ -760,18 +1169,12 @@ mod tests {
         let selected = select_effective_enterprise_config_source(vec![
             EnterpriseSourceData {
                 source_name: String::from("registry"),
-                configs: vec![EnterpriseConfig {
-                    id: TEST_ID_A.to_lowercase(),
-                    server_url: String::from("https://registry.example.org"),
-                }],
+                configs: vec![enterprise_config(&TEST_ID_A.to_lowercase(), "https://registry.example.org", "registry", "", "indexed slot 0")],
                 encryption_secret: String::new(),
             },
             EnterpriseSourceData {
                 source_name: String::from("environment"),
-                configs: vec![EnterpriseConfig {
-                    id: String::from(TEST_ID_B),
-                    server_url: String::from("https://env.example.org"),
-                }],
+                configs: vec![enterprise_config(TEST_ID_B, "https://env.example.org", "environment", "", "indexed slot 0")],
                 encryption_secret: String::from("ENV-SECRET"),
             },
         ]);
@@ -791,10 +1194,7 @@ mod tests {
             },
             EnterpriseSourceData {
                 source_name: String::from("environment"),
-                configs: vec![EnterpriseConfig {
-                    id: String::from(TEST_ID_B),
-                    server_url: String::from("https://env.example.org"),
-                }],
+                configs: vec![enterprise_config(TEST_ID_B, "https://env.example.org", "environment", "", "indexed slot 0")],
                 encryption_secret: String::new(),
             },
         ]);
@@ -809,10 +1209,7 @@ mod tests {
         let selected = select_effective_enterprise_secret_source(vec![
             EnterpriseSourceData {
                 source_name: String::from("registry"),
-                configs: vec![EnterpriseConfig {
-                    id: TEST_ID_A.to_lowercase(),
-                    server_url: String::from("https://registry.example.org"),
-                }],
+                configs: vec![enterprise_config(&TEST_ID_A.to_lowercase(), "https://registry.example.org", "registry", "", "indexed slot 0")],
                 encryption_secret: String::new(),
             },
             EnterpriseSourceData {
@@ -918,19 +1315,19 @@ mod tests {
         ]);
 
         assert_eq!(
-            values.get("config_id0").map(String::as_str),
+            values.get("config_id0").map(|value| value.value.as_str()),
             Some("9072b77d-ca81-40da-be6a-861da525ef7b")
         );
         assert_eq!(
-            values.get("config_server_url0").map(String::as_str),
+            values.get("config_server_url0").map(|value| value.value.as_str()),
             Some("https://org.example.org")
         );
         assert_eq!(
-            values.get("config_id1").map(String::as_str),
+            values.get("config_id1").map(|value| value.value.as_str()),
             Some("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb")
         );
         assert_eq!(
-            values.get("config_encryption_secret").map(String::as_str),
+            values.get("config_encryption_secret").map(|value| value.value.as_str()),
             Some("SECRET-A")
         );
     }
@@ -956,14 +1353,40 @@ mod tests {
         assert_eq!(
             source.configs,
             vec![
-                EnterpriseConfig {
-                    id: String::from("9072b77d-ca81-40da-be6a-861da525ef7b"),
-                    server_url: String::from("https://slot0.example.org"),
-                },
-                EnterpriseConfig {
-                    id: String::from(TEST_ID_B),
-                    server_url: String::from("https://slot4.example.org"),
-                },
+                enterprise_config("9072b77d-ca81-40da-be6a-861da525ef7b", "https://slot0.example.org", "policy files", &policy_path(directory.path().join("config0.yaml")), "indexed slot 0"),
+                enterprise_config(TEST_ID_B, "https://slot4.example.org", "policy files", &policy_path(directory.path().join("config4.yaml")), "indexed slot 4"),
+            ]
+        );
+    }
+
+    #[test]
+    fn load_policy_values_from_directories_supports_padded_and_high_policy_slots() {
+        let directory = tempdir().unwrap();
+
+        fs::write(
+            directory.path().join("config_00000.yaml"),
+            "id: \"9072b77d-ca81-40da-be6a-861da525ef7b\"\nserver_url: \"https://slot0.example.org\"",
+        )
+        .unwrap();
+        fs::write(
+            directory.path().join("config_10503.yaml"),
+            "id: \"a1b2c3d4-e5f6-7890-abcd-ef1234567890\"\nserver_url: \"https://slot10503.example.org\"",
+        )
+        .unwrap();
+        fs::write(
+            directory.path().join("config_100000.yaml"),
+            "id: \"11111111-2222-3333-4444-555555555555\"\nserver_url: \"https://ignored.example.org\"",
+        )
+        .unwrap();
+
+        let values = load_policy_values_from_directories(&[directory.path().to_path_buf()]);
+        let source = parse_enterprise_source_values("policy files", &values);
+
+        assert_eq!(
+            source.configs,
+            vec![
+                enterprise_config("9072b77d-ca81-40da-be6a-861da525ef7b", "https://slot0.example.org", "policy files", &policy_path(directory.path().join("config_00000.yaml")), "indexed slot 00000"),
+                enterprise_config(TEST_ID_B, "https://slot10503.example.org", "policy files", &policy_path(directory.path().join("config_10503.yaml")), "indexed slot 10503"),
             ]
         );
     }

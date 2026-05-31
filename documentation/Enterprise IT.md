@@ -39,13 +39,15 @@ AI Studio supports loading multiple enterprise configurations simultaneously. Th
 
 The preferred format is a fixed set of indexed pairs:
 
-- Registry values `config_id0` to `config_id9` together with `config_server_url0` to `config_server_url9`
-- Environment variables `MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ID0` to `MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ID9` together with `MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_SERVER_URL0` to `MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_SERVER_URL9`
-- Policy files `config0.yaml` to `config9.yaml`
+- Registry values `config_id_00000` to `config_id_99999` together with `config_server_url_00000` to `config_server_url_99999`
+- Environment variables `MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ID_00000` to `MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ID_99999` together with `MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_SERVER_URL_00000` to `MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_SERVER_URL_99999`
+- Policy files `config_00000.yaml` to `config_99999.yaml`
 
-Each configuration ID must be a valid [GUID](https://en.wikipedia.org/wiki/Universally_unique_identifier#Globally_unique_identifier). Up to ten configurations are supported per device.
+Each configuration ID must be a valid [GUID](https://en.wikipedia.org/wiki/Universally_unique_identifier#Globally_unique_identifier). Up to 100,000 indexed configuration slots are supported per device.
 
-If multiple configurations define the same setting, the first definition wins. For indexed pairs and policy files, the order is slot `0`, then `1`, and so on up to `9`.
+If multiple configurations define the same setting, the first definition wins. For indexed pairs and policy files, the order is slot `00000`, then `00001`, and so on up to `99999`.
+
+For backwards compatibility, the older slot names `0` to `9` without an underscore are still supported. AI Studio also accepts other numeric slot suffixes with up to five digits. Slot suffixes are matched exactly, so `config_id_1`, `config_id_01`, and `config_id_00001` are treated as separate slots. Use the five-digit format with an underscore for new deployments.
 
 ### Windows registry example
 
@@ -55,10 +57,10 @@ The Windows registry path is:
 
 Example values:
 
-- `config_id0` = `9072b77d-ca81-40da-be6a-861da525ef7b`
-- `config_server_url0` = `https://intranet.example.org/ai-studio/configuration`
-- `config_id1` = `a1b2c3d4-e5f6-7890-abcd-ef1234567890`
-- `config_server_url1` = `https://intranet.example.org/ai-studio/department-config`
+- `config_id_00000` = `9072b77d-ca81-40da-be6a-861da525ef7b`
+- `config_server_url_00000` = `https://intranet.example.org/ai-studio/configuration`
+- `config_id_10503` = `a1b2c3d4-e5f6-7890-abcd-ef1234567890`
+- `config_server_url_10503` = `https://intranet.example.org/ai-studio/department-config`
 - `config_encryption_secret` = `BASE64...`
 
 This approach works well with GPOs because each slot can be managed independently without rewriting a shared combined string.
@@ -85,10 +87,10 @@ The directories from `$XDG_CONFIG_DIRS` are processed in order.
 
 Configuration files:
 
-- `config0.yaml`
-- `config1.yaml`
+- `config_00000.yaml`
+- `config_00001.yaml`
 - ...
-- `config9.yaml`
+- `config_99999.yaml`
 
 Each configuration file contains one configuration ID and one server URL:
 
@@ -110,10 +112,10 @@ config_encryption_secret: "BASE64..."
 If you need the fallback environment-variable format, configure the values like this:
 
 ```bash
-MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ID0=9072b77d-ca81-40da-be6a-861da525ef7b
-MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_SERVER_URL0=https://intranet.example.org/ai-studio/configuration
-MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ID1=a1b2c3d4-e5f6-7890-abcd-ef1234567890
-MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_SERVER_URL1=https://intranet.example.org/ai-studio/department-config
+MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ID_00000=9072b77d-ca81-40da-be6a-861da525ef7b
+MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_SERVER_URL_00000=https://intranet.example.org/ai-studio/configuration
+MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ID_10503=a1b2c3d4-e5f6-7890-abcd-ef1234567890
+MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_SERVER_URL_10503=https://intranet.example.org/ai-studio/department-config
 MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ENCRYPTION_SECRET=BASE64...
 ```
 
