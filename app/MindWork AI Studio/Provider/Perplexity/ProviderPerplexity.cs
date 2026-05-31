@@ -6,7 +6,7 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.Perplexity;
 
-public sealed class ProviderPerplexity() : BaseProvider(LLMProviders.PERPLEXITY, "https://api.perplexity.ai/", LOGGER)
+public sealed class ProviderPerplexity() : BaseProvider(LLMProviders.PERPLEXITY, new Uri("https://api.perplexity.ai/"), ExternalHttpTrustPolicy.SYSTEM_TRUST_ONLY, LOGGER)
 {
     private static readonly ILogger<ProviderPerplexity> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderPerplexity>();
 

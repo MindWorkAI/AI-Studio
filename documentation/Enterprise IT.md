@@ -138,6 +138,38 @@ Finally, AI Studio will send a GET request and download the ZIP file. The ZIP fi
 
 Approximately every 16 minutes, AI Studio checks the metadata of the ZIP file by reading the [ETag](https://en.wikipedia.org/wiki/HTTP_ETag). When the ETag was not changed, no download will be performed. Make sure that your web server supports this. When using multiple configurations, each configuration is checked independently.
 
+### Custom root certificates for Flatpak deployments
+
+On Linux, AI Studio normally relies on the operating system's trusted root certificates for external HTTPS requests. In a Flatpak package, however, the application may not be able to read organization-specific root certificates from the host system. This can affect connections to self-hosted AI providers, embedding providers, transcription providers, ERI servers, and enterprise configuration servers.
+
+If your organization uses private root CAs, place a PEM bundle with the required root CA certificates in a location that is readable inside the Flatpak sandbox. The bundle should contain one or more certificates using the regular PEM marker:
+
+```text
+-----BEGIN CERTIFICATE-----
+...
+-----END CERTIFICATE-----
+```
+
+For the first enterprise configuration download, configure these environment variables before AI Studio starts:
+
+```bash
+MINDWORK_AI_STUDIO_EXTERNAL_HTTP_CUSTOM_ROOT_CERTIFICATES_ENABLED=true
+MINDWORK_AI_STUDIO_EXTERNAL_HTTP_CUSTOM_ROOT_CERTIFICATE_BUNDLE_PATH=/path/in/sandbox/company-root-cas.pem
+MINDWORK_AI_STUDIO_EXTERNAL_HTTP_CUSTOM_ROOT_CERTIFICATE_ALLOWED_HOSTS=*.intra.example.org;eri.example.org
+```
+
+You can also manage the same behavior from a configuration plugin after the plugin has been downloaded:
+
+```lua
+CONFIG["SETTINGS"]["DataApp.ExternalHttpCustomRootCertificatesEnabled"] = true
+CONFIG["SETTINGS"]["DataApp.ExternalHttpCustomRootCertificateBundlePath"] = "/path/in/sandbox/company-root-cas.pem"
+CONFIG["SETTINGS"]["DataApp.ExternalHttpCustomRootCertificateAllowedHosts"] = { "*.intra.example.org", "eri.example.org" }
+```
+
+This feature does not disable TLS verification. AI Studio first uses the system certificate validation. If that fails only because the certificate chain is not trusted, AI Studio tries again with the configured root CA bundle, but only for configured host patterns. Exact hosts such as `eri.intra.example.org` and one-label wildcards such as `*.intra.example.org` are supported. Hostname mismatches, missing certificates, expired certificates, and otherwise invalid chains are still rejected. Built-in cloud provider endpoints, such as OpenAI, Google, etc., never use configured custom root certificates.
+
+As an alternative, your Flatpak launch environment can set `SSL_CERT_FILE` or `SSL_CERT_DIR` to a certificate bundle or directory that .NET/OpenSSL can read. This is useful when your deployment already manages a consistent PEM bundle for the sandbox.
+
 ## Configure the configuration web server
 
 In principle, you can use any web server that can serve ZIP files from a folder. However, keep in mind that AI Studio queries the file's metadata using [ETag](https://en.wikipedia.org/wiki/HTTP_ETag). Your web server must support this feature. For security reasons, you should also make sure that users cannot list the contents of the directory. This is important because the different configurations may contain confidential information such as API keys. Each user should only know their own configuration ID. Otherwise, a user might try to use someone else’s ID to gain access to exclusive resources.

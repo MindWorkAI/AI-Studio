@@ -89,7 +89,7 @@ public static class IImageSourceExtensions
             
             case ContentImageSource.URL:
             {
-                using var httpClient = ExternalHttpClientTimeout.CreateHttpClient();
+                using var httpClient = ExternalHttpClientTimeout.CreateHttpClient(ExternalHttpTrustPolicy.ALLOW_CUSTOM_ROOTS_WHEN_HOST_WHITELISTED);
                 using var timeoutTokenSource = ExternalHttpClientTimeout.CreateTimeoutTokenSource(token);
                 var timeoutToken = timeoutTokenSource.Token;
                 using var response = await httpClient.GetAsync(image.Source, HttpCompletionOption.ResponseHeadersRead, timeoutToken);

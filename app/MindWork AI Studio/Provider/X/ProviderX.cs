@@ -6,7 +6,7 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.X;
 
-public sealed class ProviderX() : BaseProvider(LLMProviders.X, "https://api.x.ai/v1/", LOGGER)
+public sealed class ProviderX() : BaseProvider(LLMProviders.X, new Uri("https://api.x.ai/v1/"), ExternalHttpTrustPolicy.SYSTEM_TRUST_ONLY, LOGGER)
 {
     private static readonly ILogger<ProviderX> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderX>();
     

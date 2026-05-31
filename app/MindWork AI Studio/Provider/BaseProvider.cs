@@ -29,7 +29,7 @@ public abstract class BaseProvider : IProvider, ISecretId
     /// <summary>
     /// The HTTP client to use it for all requests.
     /// </summary>
-    protected readonly HttpClient HttpClient = ExternalHttpClientTimeout.CreateHttpClient();
+    protected readonly HttpClient HttpClient;
     
     /// <summary>
     /// The logger to use.
@@ -65,21 +65,26 @@ public abstract class BaseProvider : IProvider, ISecretId
     /// Constructor for the base provider.
     /// </summary>
     /// <param name="provider">The provider enum value.</param>
-    /// <param name="url">The base URL for the provider.</param>
+    /// <param name="baseUri">The base URI for the provider.</param>
+    /// <param name="trustPolicy">The trust policy for external HTTPS requests to this provider.</param>
     /// <param name="logger">The logger to use.</param>
-    protected BaseProvider(LLMProviders provider, string url, ILogger logger)
+    protected BaseProvider(LLMProviders provider, Uri baseUri, ExternalHttpTrustPolicy trustPolicy, ILogger logger)
     {
         this.logger = logger;
         this.Provider = provider;
-
-        // Set the base URL:
-        this.HttpClient.BaseAddress = new(url);
+        this.BaseUri = baseUri;
+        this.HttpClient = ExternalHttpClientTimeout.CreateHttpClient(baseUri, trustPolicy);
     }
     
     #region Handling of IProvider, which all providers must implement
     
     /// <inheritdoc />
     public LLMProviders Provider { get; }
+
+    /// <summary>
+    /// The base URI for all relative provider requests.
+    /// </summary>
+    public Uri BaseUri { get; }
     
     /// <inheritdoc />
     public abstract string Id { get; }

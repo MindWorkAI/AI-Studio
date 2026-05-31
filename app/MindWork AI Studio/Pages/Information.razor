@@ -147,9 +147,19 @@
                             </MudButton>
                         }
                     </MudListItem>
+                    @if (ExternalHttpClientTimeout.CustomRootCertificateState.IsEnabled)
+                    {
+                        <MudListItem T="string" Icon="@Icons.Material.Outlined.Security">
+                            <ConfigPluginInfoCard HeaderIcon="@Icons.Material.Filled.Security"
+                                                  HeaderText="@T("External HTTPS custom root certificates")"
+                                                  Items="@this.BuildExternalHttpCustomRootCertificateItems()"
+                                                  ShowWarning="@(!ExternalHttpClientTimeout.CustomRootCertificateState.IsUsable)"
+                                                  WarningText="@this.ExternalHttpCustomRootCertificateWarningText"/>
+                        </MudListItem>
+                    }
                 </MudList>
                 <MudStack Row="true">
-                    <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Update" OnClick="@(() => this.CheckForUpdate())">
+                    <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Update" OnClick="@this.CheckForUpdate">
                         @T("Check for updates")
                     </MudButton>
                     <MudButton Variant="Variant.Filled" Color="Color.Default" StartIcon="@Icons.Material.Filled.Download" OnClick="@(async () => await this.ShowPandocDialog())">

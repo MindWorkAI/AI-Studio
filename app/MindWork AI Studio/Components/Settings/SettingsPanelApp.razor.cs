@@ -67,6 +67,21 @@ public partial class SettingsPanelApp : SettingsPanelBase
         return enabled;
     }
 
+    private string GetExternalHttpCustomRootCertificateAllowedHostsText()
+    {
+        return string.Join(Environment.NewLine, this.SettingsManager.ConfigurationData.App.ExternalHttpCustomRootCertificateAllowedHosts.Order(StringComparer.OrdinalIgnoreCase));
+    }
+
+    private void UpdateExternalHttpCustomRootCertificateAllowedHosts(string updatedText)
+    {
+        var patterns = updatedText
+            .Split(['\r', '\n', ';', ','], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(pattern => !string.IsNullOrWhiteSpace(pattern))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        this.SettingsManager.ConfigurationData.App.ExternalHttpCustomRootCertificateAllowedHosts = patterns;
+    }
+
     private void UpdateEnabledPreviewFeatures(HashSet<PreviewFeatures> selectedFeatures)
     {
         selectedFeatures.UnionWith(this.GetPluginContributedPreviewFeatures());
