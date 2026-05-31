@@ -20,6 +20,10 @@ public static class ExternalHttpClientTimeout
     private const string ENV_CUSTOM_ROOT_CERTIFICATE_BUNDLE_PATH = "MINDWORK_AI_STUDIO_EXTERNAL_HTTP_CUSTOM_ROOT_CERTIFICATE_BUNDLE_PATH";
     private const string ENV_CUSTOM_ROOT_CERTIFICATE_ALLOWED_HOSTS = "MINDWORK_AI_STUDIO_EXTERNAL_HTTP_CUSTOM_ROOT_CERTIFICATE_ALLOWED_HOSTS";
 
+    // id-kp-serverAuth: Extended Key Usage for TLS server authentication.
+    // See RFC 5280, section 4.2.1.12: https://www.rfc-editor.org/rfc/rfc5280#section-4.2.1.12
+    private const string TLS_SERVER_AUTHENTICATION_EKU_OID = "1.3.6.1.5.5.7.3.1";
+
     private static string TB(string fallbackEN) => PluginSystem.I18N.I.T(fallbackEN, typeof(ExternalHttpClientTimeout).Namespace, nameof(ExternalHttpClientTimeout));
     private static readonly Lazy<ILogger> LOGGER = new(() => Program.LOGGER_FACTORY.CreateLogger(nameof(ExternalHttpClientTimeout)));
     private static readonly Lazy<SettingsManager> SETTINGS_MANAGER = new(() => Program.SERVICE_PROVIDER.GetRequiredService<SettingsManager>());
@@ -359,7 +363,7 @@ public static class ExternalHttpClientTimeout
             using var customChain = new X509Chain();
             customChain.ChainPolicy.TrustMode = X509ChainTrustMode.CustomRootTrust;
             customChain.ChainPolicy.CustomTrustStore.AddRange(customRootCertificateCache.Certificates);
-            customChain.ChainPolicy.ApplicationPolicy.Add(new Oid("1.3.6.1.5.5.7.3.1"));
+            customChain.ChainPolicy.ApplicationPolicy.Add(new Oid(TLS_SERVER_AUTHENTICATION_EKU_OID));
 
             if (originalChain is not null)
             {
