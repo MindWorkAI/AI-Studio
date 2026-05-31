@@ -14,7 +14,7 @@ public sealed class EnterpriseEnvironmentService(ILogger<EnterpriseEnvironmentSe
     
     private static EnterpriseSecretSnapshot CURRENT_SECRET_SNAPSHOT;
 
-    private readonly record struct EnterpriseEnvironmentSnapshot(Guid ConfigurationId, string ConfigurationServerUrl, string? ETag);
+    private readonly record struct EnterpriseEnvironmentSnapshot(Guid ConfigurationId, string ConfigurationServerUrl, string Source, string SourceDetail, string Slot, string? ETag);
     
     private readonly record struct EnterpriseSecretSnapshot(bool HasSecret, string Fingerprint);
     
@@ -224,6 +224,9 @@ public sealed class EnterpriseEnvironmentService(ILogger<EnterpriseEnvironmentSe
             .Select(environment => new EnterpriseEnvironmentSnapshot(
                 environment.ConfigurationId,
                 NormalizeServerUrl(environment.ConfigurationServerUrl),
+                environment.Source,
+                environment.SourceDetail,
+                environment.Slot,
                 environment.ETag?.ToString()))
             .OrderBy(environment => environment.ConfigurationId)
             .ToList();

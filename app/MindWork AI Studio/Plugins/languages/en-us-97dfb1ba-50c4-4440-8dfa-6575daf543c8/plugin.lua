@@ -6048,8 +6048,14 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1137744461"] = "ID mismatch: the
 -- This is a private AI Studio installation. It runs without an enterprise configuration.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1209549230"] = "This is a private AI Studio installation. It runs without an enterprise configuration."
 
+-- Copies the configuration origin to the clipboard
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T125850635"] = "Copies the configuration origin to the clipboard"
+
 -- Unknown configuration plugin
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1290340974"] = "Unknown configuration plugin"
+
+-- Copies the configuration slot to the clipboard
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1347508205"] = "Copies the configuration slot to the clipboard"
 
 -- This library is used to read PDF files. This is necessary, e.g., for using PDFs as a data source for a chat.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1388816916"] = "This library is used to read PDF files. This is necessary, e.g., for using PDFs as a data source for a chat."
@@ -6147,6 +6153,12 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2371107659"] = "installation pro
 -- Installed Pandoc version: Pandoc is not installed or not available.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2374031539"] = "Installed Pandoc version: Pandoc is not installed or not available."
 
+-- Configuration origin:
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2435772109"] = "Configuration origin:"
+
+-- Configuration slot:
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T254943559"] = "Configuration slot:"
+
 -- This library is used to determine the language of the operating system. This is necessary to set the language of the user interface.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2557014401"] = "This library is used to determine the language of the operating system. This is necessary to set the language of the user interface."
 
@@ -6200,6 +6212,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2868174483"] = "The .NET backend
 
 -- AI Studio runs with an enterprise configuration and configuration servers. The configuration plugins are not yet available.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2924964415"] = "AI Studio runs with an enterprise configuration and configuration servers. The configuration plugins are not yet available."
+
+-- Copies the configuration source to the clipboard
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2929232062"] = "Copies the configuration source to the clipboard"
 
 -- Changelog
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3017574265"] = "Changelog"
@@ -6260,6 +6275,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3722989559"] = "This library is 
 
 -- Username provided by the OS
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3764549776"] = "Username provided by the OS"
+
+-- Configuration source:
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3801531724"] = "Configuration source:"
 
 -- this version does not met the requirements
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3813932670"] = "this version does not met the requirements"

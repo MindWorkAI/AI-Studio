@@ -324,6 +324,55 @@ public partial class Information : MSGComponentBase
                ?? this.configPlugins.FirstOrDefault(plugin => plugin.ManagedConfigurationId is null && plugin.Id == configurationId);
     }
 
+    private IReadOnlyList<ConfigInfoRowItem> BuildEnterpriseConfigurationItems(EnterpriseEnvironment environment, IAvailablePlugin? plugin = null)
+    {
+        var items = new List<ConfigInfoRowItem>
+        {
+            new(Icons.Material.Filled.ArrowRightAlt,
+                $"{T("Enterprise configuration ID:")} {environment.ConfigurationId}",
+                environment.ConfigurationId.ToString(),
+                T("Copies the config ID to the clipboard")),
+
+            new(Icons.Material.Filled.ArrowRightAlt,
+                $"{T("Configuration server:")} {environment.ConfigurationServerUrl}",
+                environment.ConfigurationServerUrl,
+                T("Copies the server URL to the clipboard"),
+                "margin-top: 4px;"),
+
+            new(Icons.Material.Filled.ArrowRightAlt,
+                $"{T("Configuration source:")} {environment.Source}",
+                environment.Source,
+                T("Copies the configuration source to the clipboard"),
+                "margin-top: 4px;"),
+        };
+
+        if (!string.IsNullOrWhiteSpace(environment.SourceDetail))
+        {
+            items.Add(new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
+                $"{T("Configuration origin:")} {environment.SourceDetail}",
+                environment.SourceDetail,
+                T("Copies the configuration origin to the clipboard"),
+                "margin-top: 4px;"));
+        }
+
+        items.Add(new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
+            $"{T("Configuration slot:")} {environment.Slot}",
+            environment.Slot,
+            T("Copies the configuration slot to the clipboard"),
+            "margin-top: 4px;"));
+
+        if (plugin is not null)
+        {
+            items.Add(new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
+                $"{T("Configuration plugin ID:")} {plugin.Id}",
+                plugin.Id.ToString(),
+                T("Copies the configuration plugin ID to the clipboard"),
+                "margin-top: 4px;"));
+        }
+
+        return items;
+    }
+
     private bool IsManagedConfigurationIdMismatch(IAvailablePlugin plugin, Guid configurationId)
     {
         return plugin.ManagedConfigurationId == configurationId && plugin.Id != configurationId;

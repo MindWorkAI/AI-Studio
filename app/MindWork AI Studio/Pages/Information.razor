@@ -89,18 +89,7 @@
                                     {
                                         <ConfigPluginInfoCard HeaderIcon="@Icons.Material.Filled.HourglassBottom"
                                                               HeaderText="@T("Waiting for the configuration plugin...")"
-                                                              Items="@([
-                                                                         new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
-                                                                             $"{T("Enterprise configuration ID:")} {env.ConfigurationId}",
-                                                                             env.ConfigurationId.ToString(),
-                                                                             T("Copies the config ID to the clipboard")),
-                                                                         
-                                                                         new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
-                                                                             $"{T("Configuration server:")} {env.ConfigurationServerUrl}",
-                                                                             env.ConfigurationServerUrl,
-                                                                             T("Copies the server URL to the clipboard"),
-                                                                             "margin-top: 4px;")
-                                                                     ])"/>
+                                                              Items="@this.BuildEnterpriseConfigurationItems(env)"/>
                                     }
                                     
                                     <EncryptionSecretInfo IsConfigured="@(PluginFactory.EnterpriseEncryption?.IsAvailable is true)"
@@ -130,41 +119,13 @@
                                         {
                                             <ConfigPluginInfoCard HeaderIcon="@Icons.Material.Filled.HourglassBottom"
                                                                   HeaderText="@T("Waiting for the configuration plugin...")"
-                                                                  Items="@([
-                                                                             new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
-                                                                                 $"{T("Enterprise configuration ID:")} {env.ConfigurationId}",
-                                                                                 env.ConfigurationId.ToString(),
-                                                                                 T("Copies the config ID to the clipboard")),
-                                                                             
-                                                                             new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
-                                                                                 $"{T("Configuration server:")} {env.ConfigurationServerUrl}",
-                                                                                 env.ConfigurationServerUrl,
-                                                                                 T("Copies the server URL to the clipboard"),
-                                                                                 "margin-top: 4px;")
-                                                                         ])"/>
+                                                                  Items="@this.BuildEnterpriseConfigurationItems(env)"/>
                                             continue;
                                         }
                                         
                                         <ConfigPluginInfoCard HeaderIcon="@Icons.Material.Filled.Extension"
                                                               HeaderText="@matchingPlugin.Name"
-                                                              Items="@([
-                                                                         new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
-                                                                             $"{T("Enterprise configuration ID:")} {env.ConfigurationId}",
-                                                                             env.ConfigurationId.ToString(),
-                                                                             T("Copies the config ID to the clipboard")),
-                                                                         
-                                                                         new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
-                                                                             $"{T("Configuration server:")} {env.ConfigurationServerUrl}",
-                                                                             env.ConfigurationServerUrl,
-                                                                             T("Copies the server URL to the clipboard"),
-                                                                             "margin-top: 4px;"),
-                                                                         
-                                                                         new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
-                                                                             $"{T("Configuration plugin ID:")} {matchingPlugin.Id}",
-                                                                             matchingPlugin.Id.ToString(),
-                                                                             T("Copies the configuration plugin ID to the clipboard"),
-                                                                             "margin-top: 4px;")
-                                                                     ])"
+                                                              Items="@this.BuildEnterpriseConfigurationItems(env, matchingPlugin)"
                                                               ShowWarning="@this.IsManagedConfigurationIdMismatch(matchingPlugin, env.ConfigurationId)"
                                                               WarningText="@T("ID mismatch: the plugin ID differs from the enterprise configuration ID.")"/>
                                     }

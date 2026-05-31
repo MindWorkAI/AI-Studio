@@ -6048,8 +6048,14 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1137744461"] = "ID-Konflikt: Die
 -- This is a private AI Studio installation. It runs without an enterprise configuration.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1209549230"] = "Dies ist eine private AI Studio-Installation. Sie läuft ohne Unternehmenskonfiguration."
 
+-- Copies the configuration origin to the clipboard
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T125850635"] = "Kopiert den Ursprung der Konfiguration in die Zwischenablage"
+
 -- Unknown configuration plugin
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1290340974"] = "Unbekanntes Konfigurations-Plugin"
+
+-- Copies the configuration slot to the clipboard
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1347508205"] = "Kopiert den Slot der Konfiguration in die Zwischenablage"
 
 -- This library is used to read PDF files. This is necessary, e.g., for using PDFs as a data source for a chat.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1388816916"] = "Diese Bibliothek wird verwendet, um PDF-Dateien zu lesen. Das ist zum Beispiel notwendig, um PDFs als Datenquelle für einen Chat zu nutzen."
@@ -6147,6 +6153,12 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2371107659"] = "Installation vom
 -- Installed Pandoc version: Pandoc is not installed or not available.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2374031539"] = "Installierte Pandoc-Version: Pandoc ist nicht installiert oder nicht verfügbar."
 
+-- Configuration origin:
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2435772109"] = "Ursprung der Konfiguration:"
+
+-- Configuration slot:
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T254943559"] = "Slot der Konfiguration:"
+
 -- This library is used to determine the language of the operating system. This is necessary to set the language of the user interface.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2557014401"] = "Diese Bibliothek wird verwendet, um die Sprache des Betriebssystems zu erkennen. Dies ist notwendig, um die Sprache der Benutzeroberfläche einzustellen."
 
@@ -6200,6 +6212,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2868174483"] = "Das .NET-Backend
 
 -- AI Studio runs with an enterprise configuration and configuration servers. The configuration plugins are not yet available.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2924964415"] = "AI Studio wird mit Unternehmenskonfigurationen und Konfigurationsservern betrieben. Die Konfigurations-Plugins sind noch nicht verfügbar."
+
+-- Copies the configuration source to the clipboard
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2929232062"] = "Kopiert die Quelle der Konfiguration in die Zwischenablage"
 
 -- Changelog
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3017574265"] = "Änderungsprotokoll"
@@ -6260,6 +6275,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3722989559"] = "Diese Bibliothek
 
 -- Username provided by the OS
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3764549776"] = "Vom Betriebssystem bereitgestellter Benutzername"
+
+-- Configuration source:
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3801531724"] = "Quelle der Konfiguration:"
 
 -- this version does not met the requirements
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3813932670"] = "diese Version erfüllt die Anforderungen nicht"
