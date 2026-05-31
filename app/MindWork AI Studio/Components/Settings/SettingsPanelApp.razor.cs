@@ -72,6 +72,11 @@ public partial class SettingsPanelApp : SettingsPanelBase
         return string.Join(Environment.NewLine, this.SettingsManager.ConfigurationData.App.ExternalHttpCustomRootCertificateAllowedHosts.Order(StringComparer.OrdinalIgnoreCase));
     }
 
+    private bool AreExternalHttpCustomRootCertificateDetailsDisabled()
+    {
+        return !this.SettingsManager.ConfigurationData.App.ExternalHttpCustomRootCertificatesEnabled;
+    }
+
     private void UpdateExternalHttpCustomRootCertificateAllowedHosts(string updatedText)
     {
         var patterns = updatedText
