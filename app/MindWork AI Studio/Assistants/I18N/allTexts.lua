@@ -6127,6 +6127,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1630237140"] = "AI Studio create
 -- Consent:
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T171952677"] = "Consent:"
 
+-- Copies the executable path to the clipboard
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1722690800"] = "Copies the executable path to the clipboard"
+
 -- This library is used to display the differences between two texts. This is necessary, e.g., for the grammar and spelling assistant.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1772678682"] = "This library is used to display the differences between two texts. This is necessary, e.g., for the grammar and spelling assistant."
 
@@ -6208,6 +6211,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2557066213"] = "Used Open Source
 -- Build time
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T260228112"] = "Build time"
 
+-- unknown
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2608177081"] = "unknown"
+
 -- This library is used to create temporary folders for saving the certificate and private key for communication with Qdrant.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2619858133"] = "This library is used to create temporary folders for saving the certificate and private key for communication with Qdrant."
 
@@ -6276,6 +6282,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3178730036"] = "Have feature ide
 
 -- Hide Details
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3183837919"] = "Hide Details"
+
+-- Linux package
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3196139293"] = "Linux package"
 
 -- External HTTPS custom root certificates are active.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3208455732"] = "External HTTPS custom root certificates are active."
@@ -6352,6 +6361,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3874337003"] = "This library is 
 -- Now we have multiple systems, some developed in .NET and others in Rust. The data format JSON is responsible for translating data between both worlds (called data serialization and deserialization). Serde takes on this task in the Rust world. The counterpart in the .NET world is an integral part of .NET and is located in System.Text.Json.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3908558992"] = "Now we have multiple systems, some developed in .NET and others in Rust. The data format JSON is responsible for translating data between both worlds (called data serialization and deserialization). Serde takes on this task in the Rust world. The counterpart in the .NET world is an integral part of .NET and is located in System.Text.Json."
 
+-- not applicable
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T396609403"] = "not applicable"
+
 -- Copies the allowed host configuration to the clipboard
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3970230163"] = "Copies the allowed host configuration to the clipboard"
 
@@ -6379,8 +6391,14 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4079152443"] = "This library is 
 -- Community & Code
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4158546761"] = "Community & Code"
 
+-- Executable path
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4164953312"] = "Executable path"
+
 -- We use the HtmlAgilityPack to extract content from the web. This is necessary, e.g., when you provide a URL as input for an assistant.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4184485147"] = "We use the HtmlAgilityPack to extract content from the web. This is necessary, e.g., when you provide a URL as input for an assistant."
+
+-- Copies the working directory to the clipboard
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4194302113"] = "Copies the working directory to the clipboard"
 
 -- Certificate bundle:
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4197142390"] = "Certificate bundle:"
@@ -6417,6 +6435,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T70364248"] = "not active"
 
 -- Loaded root certificates:
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T709525418"] = "Loaded root certificates:"
+
+-- Working directory
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T768480635"] = "Working directory"
 
 -- Copies the config ID to the clipboard
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T788846912"] = "Copies the config ID to the clipboard"

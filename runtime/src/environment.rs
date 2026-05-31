@@ -60,6 +60,59 @@ pub async fn read_user_name(_token: APIToken) -> String {
     })
 }
 
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+pub struct RuntimeInfo {
+    pub working_directory: String,
+    pub executable_path: String,
+    pub linux_package_type: String,
+}
+
+pub async fn get_runtime_info(_token: APIToken) -> Json<RuntimeInfo> {
+    Json(RuntimeInfo {
+        working_directory: env::current_dir()
+            .map(|path| path.to_string_lossy().into_owned())
+            .unwrap_or_default(),
+        executable_path: env::current_exe()
+            .map(|path| path.to_string_lossy().into_owned())
+            .unwrap_or_default(),
+        linux_package_type: detect_linux_package_type().to_string(),
+    })
+}
+
+#[cfg(target_os = "linux")]
+fn detect_linux_package_type() -> &'static str {
+    if is_flatpak() {
+        "flatpak"
+    } else if is_appimage() {
+        "appimage"
+    } else {
+        "unknown"
+    }
+}
+
+#[cfg(not(target_os = "linux"))]
+fn detect_linux_package_type() -> &'static str {
+    "not_applicable"
+}
+
+#[cfg(target_os = "linux")]
+fn is_flatpak() -> bool {
+    env_var_has_value("FLATPAK_ID")
+        || Path::new("/.flatpak-info").is_file()
+        || env::var("container")
+            .is_ok_and(|value| value.trim().eq_ignore_ascii_case("flatpak"))
+}
+
+#[cfg(target_os = "linux")]
+fn is_appimage() -> bool {
+    env_var_has_value("APPIMAGE") || env_var_has_value("APPDIR")
+}
+
+#[cfg(target_os = "linux")]
+fn env_var_has_value(key: &str) -> bool {
+    env::var(key).is_ok_and(|value| !value.trim().is_empty())
+}
+
 /// Returns true if the application is running in development mode.
 pub fn is_dev() -> bool {
     cfg!(debug_assertions)
