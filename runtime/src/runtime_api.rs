@@ -47,6 +47,7 @@ pub fn start_runtime_api() {
         .route("/secrets/delete", post(crate::secret::delete_secret))
         .route("/system/directories/config", get(crate::environment::get_config_directory))
         .route("/system/directories/data", get(crate::environment::get_data_directory))
+        .route("/system/runtime/info", get(crate::environment::get_runtime_info))
         .route("/system/language", get(crate::environment::read_user_language))
         .route("/system/username", get(crate::environment::read_user_name))
         .route("/system/enterprise/config/id", get(crate::environment::read_enterprise_env_config_id))

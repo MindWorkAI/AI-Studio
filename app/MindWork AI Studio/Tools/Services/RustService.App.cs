@@ -120,6 +120,12 @@ public sealed partial class RustService
         return await response.Content.ReadAsStringAsync();
     }
 
+    public async Task<RuntimeInfoResponse> GetRuntimeInfo()
+    {
+        var response = await this.http.GetFromJsonAsync<RuntimeInfoResponse>("/system/runtime/info", this.jsonRustSerializerOptions);
+        return response;
+    }
+
     /// <summary>
     /// Requests the Rust runtime to exit the entire desktop application.
     /// </summary>

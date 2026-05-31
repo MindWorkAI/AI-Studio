@@ -41,6 +41,7 @@ public partial class Information : MSGComponentBase
 
     private string osLanguage = string.Empty;
     private string osUserName = string.Empty;
+    private RuntimeInfoResponse runtimeInfo;
     
     private static string VersionApp => $"MindWork AI Studio: v{META_DATA.Version} (commit {META_DATA.AppCommitHash}, build {META_DATA.BuildNum}, {META_DATA_ARCH.Architecture.ToRID().ToUserFriendlyName()})";
     
@@ -51,6 +52,20 @@ public partial class Information : MSGComponentBase
     private string OSLanguage => $"{T("User-language provided by the OS")}: '{this.osLanguage}'";
     
     private string OSUserName => $"{T("Username provided by the OS")}: '{this.osUserName}'";
+
+    private string WorkingDirectory => $"{T("Working directory")}: {this.runtimeInfo.WorkingDirectory}";
+
+    private string ExecutablePath => $"{T("Executable path")}: {this.runtimeInfo.ExecutablePath}";
+
+    private string LinuxPackageType => $"{T("Linux package")}: {this.LinuxPackageTypeDisplayName}";
+
+    private string LinuxPackageTypeDisplayName => this.runtimeInfo.LinuxPackageType switch
+    {
+        "appimage" => "AppImage",
+        "flatpak" => "Flatpak",
+        "unknown" => T("unknown"),
+        _ => T("not applicable")
+    };
 
     private string VersionRust => $"{T("Used Rust compiler")}: v{META_DATA.RustVersion}";
     
@@ -148,6 +163,7 @@ public partial class Information : MSGComponentBase
         
         this.osLanguage = await this.RustService.ReadUserLanguage();
         this.osUserName = await this.RustService.ReadUserName();
+        this.runtimeInfo = await this.RustService.GetRuntimeInfo();
         this.logPaths = await this.RustService.GetLogPaths();
         
         await this.RefreshDatabaseInfo(CancellationToken.None);

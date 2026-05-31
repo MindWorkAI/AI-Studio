@@ -48,6 +48,26 @@
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.Memory" Text="@TauriVersion"/>
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.Translate" Text="@this.OSLanguage"/>
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.AccountCircle" Text="@this.OSUserName"/>
+                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Folder">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <MudText Typo="Typo.body1">
+                                @this.WorkingDirectory
+                            </MudText>
+                            <MudCopyClipboardButton TooltipMessage="@(T("Copies the working directory to the clipboard"))" StringContent="@this.runtimeInfo.WorkingDirectory"/>
+                        </div>
+                    </MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.InsertDriveFile">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <MudText Typo="Typo.body1">
+                                @this.ExecutablePath
+                            </MudText>
+                            <MudCopyClipboardButton TooltipMessage="@(T("Copies the executable path to the clipboard"))" StringContent="@this.runtimeInfo.ExecutablePath"/>
+                        </div>
+                    </MudListItem>
+                    @if (OperatingSystem.IsLinux())
+                    {
+                        <MudListItem T="string" Icon="@Icons.Material.Outlined.Storage" Text="@this.LinuxPackageType"/>
+                    }
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.Business">
                         @switch (HasAnyActiveEnvironment)
                         {
