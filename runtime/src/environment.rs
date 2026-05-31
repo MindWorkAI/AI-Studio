@@ -22,6 +22,9 @@ const ENTERPRISE_REGISTRY_KEY_PATH: &str = r"Software\github\MindWork AI Studio\
 
 const ENTERPRISE_POLICY_SECRET_FILE_NAME: &str = "config_encryption_secret.yaml";
 
+#[cfg(any(target_os = "linux", test))]
+const FLATPAK_ENTERPRISE_POLICY_DIRECTORY: &str = "/app/etc/MindWorkAI";
+
 const ENTERPRISE_ENV_CONFIG_ID_PREFIX: &str = "MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ID";
 const ENTERPRISE_ENV_CONFIG_SERVER_URL_PREFIX: &str = "MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_SERVER_URL";
 const ENTERPRISE_ENV_CONFIGS: &str = "MINDWORK_AI_STUDIO_ENTERPRISE_CONFIGS";
@@ -547,7 +550,7 @@ fn enterprise_policy_directories() -> Vec<PathBuf> {
 #[cfg(target_os = "linux")]
 fn enterprise_policy_directories() -> Vec<PathBuf> {
     let xdg_config_dirs = env::var("XDG_CONFIG_DIRS").ok();
-    linux_policy_directories_from_xdg(xdg_config_dirs.as_deref())
+    linux_policy_directories_from_xdg(xdg_config_dirs.as_deref(), is_flatpak())
 }
 
 #[cfg(target_os = "macos")]
@@ -563,17 +566,23 @@ fn enterprise_policy_directories() -> Vec<PathBuf> {
 }
 
 #[cfg(any(target_os = "linux", test))]
-fn linux_policy_directories_from_xdg(xdg_config_dirs: Option<&str>) -> Vec<PathBuf> {
+fn linux_policy_directories_from_xdg(xdg_config_dirs: Option<&str>, include_flatpak_provisioning: bool) -> Vec<PathBuf> {
     let mut directories = Vec::new();
+    if include_flatpak_provisioning {
+        directories.push(PathBuf::from(FLATPAK_ENTERPRISE_POLICY_DIRECTORY));
+    }
+
+    let mut has_linux_policy_directory = false;
     if let Some(raw_directories) = xdg_config_dirs {
         for path in raw_directories.split(':') {
             if let Some(path) = normalize_enterprise_value(path) {
                 directories.push(PathBuf::from(path).join("mindwork-ai-studio"));
+                has_linux_policy_directory = true;
             }
         }
     }
 
-    if directories.is_empty() {
+    if !has_linux_policy_directory {
         directories.push(PathBuf::from("/etc/xdg/mindwork-ai-studio"));
     }
 
@@ -1313,7 +1322,7 @@ mod tests {
     #[test]
     fn linux_policy_directories_from_xdg_preserves_order_and_falls_back() {
         assert_eq!(
-            linux_policy_directories_from_xdg(Some(" /opt/company:/etc/xdg ")),
+            linux_policy_directories_from_xdg(Some(" /opt/company:/etc/xdg "), false),
             vec![
                 PathBuf::from("/opt/company/mindwork-ai-studio"),
                 PathBuf::from("/etc/xdg/mindwork-ai-studio"),
@@ -1321,12 +1330,32 @@ mod tests {
         );
 
         assert_eq!(
-            linux_policy_directories_from_xdg(Some(" : ")),
+            linux_policy_directories_from_xdg(Some(" : "), false),
             vec![PathBuf::from("/etc/xdg/mindwork-ai-studio")]
         );
         assert_eq!(
-            linux_policy_directories_from_xdg(None),
+            linux_policy_directories_from_xdg(None, false),
             vec![PathBuf::from("/etc/xdg/mindwork-ai-studio")]
+        );
+    }
+
+    #[test]
+    fn linux_policy_directories_from_xdg_checks_flatpak_provisioning_first() {
+        assert_eq!(
+            linux_policy_directories_from_xdg(Some(" /opt/company:/etc/xdg "), true),
+            vec![
+                PathBuf::from("/app/etc/MindWorkAI"),
+                PathBuf::from("/opt/company/mindwork-ai-studio"),
+                PathBuf::from("/etc/xdg/mindwork-ai-studio"),
+            ]
+        );
+
+        assert_eq!(
+            linux_policy_directories_from_xdg(None, true),
+            vec![
+                PathBuf::from("/app/etc/MindWorkAI"),
+                PathBuf::from("/etc/xdg/mindwork-ai-studio"),
+            ]
         );
     }
 
