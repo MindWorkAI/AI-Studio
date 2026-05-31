@@ -79,6 +79,28 @@ AI Studio checks each directory listed in `$XDG_CONFIG_DIRS` and looks for a `mi
 
 The directories from `$XDG_CONFIG_DIRS` are processed in order.
 
+#### Flatpak policy directory
+
+When AI Studio runs as a Flatpak, it first checks this sandbox path before the regular Linux policy directories:
+
+`/app/etc/MindWorkAI/`
+
+This path is intended for a Flatpak provisioning extension like:
+
+```yaml
+add-extensions:
+  org.MindWorkAI.AIStudio.provisioning:
+    directory: etc/MindWorkAI
+    no-autodownload: true
+```
+
+Policy files can then be provided on the host through the extension directories. For example:
+
+- System-wide, read-only: `/var/lib/flatpak/extension/org.MindWorkAI.AIStudio.provisioning/x86_64/stable/`
+- User-specific: `$XDG_DATA_HOME/flatpak/extension/org.MindWorkAI.AIStudio.provisioning/x86_64/stable/`
+
+Files placed there are mounted into the sandbox at `/app/etc/MindWorkAI/`. Use the same policy file names and YAML format described below.
+
 #### macOS policy directory
 
 `/Library/Application Support/MindWork/AI Studio/`
