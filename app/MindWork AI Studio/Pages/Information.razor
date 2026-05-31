@@ -150,11 +150,24 @@
                     @if (ExternalHttpClientTimeout.CustomRootCertificateState.IsEnabled)
                     {
                         <MudListItem T="string" Icon="@Icons.Material.Outlined.Security">
-                            <ConfigPluginInfoCard HeaderIcon="@Icons.Material.Filled.Security"
-                                                  HeaderText="@T("External HTTPS custom root certificates")"
-                                                  Items="@this.BuildExternalHttpCustomRootCertificateItems()"
-                                                  ShowWarning="@(!ExternalHttpClientTimeout.CustomRootCertificateState.IsUsable)"
-                                                  WarningText="@this.ExternalHttpCustomRootCertificateWarningText"/>
+                            <MudText Typo="Typo.body1">
+                                @(ExternalHttpClientTimeout.CustomRootCertificateState.IsUsable
+                                    ? T("External HTTPS custom root certificates are active.")
+                                    : T("External HTTPS custom root certificates are configured but not active."))
+                            </MudText>
+                            <MudCollapse Expanded="@this.showExternalHttpCustomRootCertificateDetails">
+                                <ConfigPluginInfoCard HeaderIcon="@Icons.Material.Filled.Security"
+                                                      HeaderText="@T("External HTTPS custom root certificates")"
+                                                      Items="@this.BuildExternalHttpCustomRootCertificateItems()"
+                                                      ShowWarning="@(!ExternalHttpClientTimeout.CustomRootCertificateState.IsUsable)"
+                                                      WarningText="@this.ExternalHttpCustomRootCertificateWarningText"/>
+                            </MudCollapse>
+                            <MudButton StartIcon="@(this.showExternalHttpCustomRootCertificateDetails ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)"
+                                       Size="Size.Small"
+                                       Variant="Variant.Text"
+                                       OnClick="@this.ToggleExternalHttpCustomRootCertificateDetails">
+                                @(this.showExternalHttpCustomRootCertificateDetails ? T("Hide Details") : T("Show Details"))
+                            </MudButton>
                         </MudListItem>
                     }
                 </MudList>

@@ -6258,6 +6258,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2989678330"] = "Copies the root 
 -- Changelog
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3017574265"] = "Changelog"
 
+-- External HTTPS custom root certificates are configured but not active.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3021325354"] = "External HTTPS custom root certificates are configured but not active."
+
 -- Enterprise configuration ID:
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3092349641"] = "Enterprise configuration ID:"
 
@@ -6269,6 +6272,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3178730036"] = "Have feature ide
 
 -- Hide Details
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3183837919"] = "Hide Details"
+
+-- External HTTPS custom root certificates are active.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3208455732"] = "External HTTPS custom root certificates are active."
 
 -- Axum server runs the internal axum service over a secure local connection. This helps AI Studio protect the communication between the Rust runtime and the user interface.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3208719461"] = "Axum server runs the internal axum service over a secure local connection. This helps AI Studio protect the communication between the Rust runtime and the user interface."

@@ -85,6 +85,8 @@ public partial class Information : MSGComponentBase
     
     private bool showEnterpriseConfigDetails;
 
+    private bool showExternalHttpCustomRootCertificateDetails;
+
     private bool showDatabaseDetails;
 
     private List<IAvailablePlugin> configPlugins = PluginFactory.AvailablePlugins
@@ -247,6 +249,11 @@ public partial class Information : MSGComponentBase
     private void ToggleEnterpriseConfigDetails()
     {
         this.showEnterpriseConfigDetails = !this.showEnterpriseConfigDetails;
+    }
+
+    private void ToggleExternalHttpCustomRootCertificateDetails()
+    {
+        this.showExternalHttpCustomRootCertificateDetails = !this.showExternalHttpCustomRootCertificateDetails;
     }
     
     private void ToggleDatabaseDetails()

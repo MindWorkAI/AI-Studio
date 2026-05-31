@@ -6258,6 +6258,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2989678330"] = "Kopiert den Fing
 -- Changelog
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3017574265"] = "Änderungsprotokoll"
 
+-- External HTTPS custom root certificates are configured but not active.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3021325354"] = "Externe benutzerdefinierte Stammzertifikate sind konfiguriert, aber nicht aktiv."
+
 -- Enterprise configuration ID:
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3092349641"] = "Unternehmenskonfigurations-ID:"
 
@@ -6269,6 +6272,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3178730036"] = "Haben Sie Ideen 
 
 -- Hide Details
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3183837919"] = "Details ausblenden"
+
+-- External HTTPS custom root certificates are active.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3208455732"] = "Externe Stammzertifikate sind aktiv."
 
 -- Axum server runs the internal axum service over a secure local connection. This helps AI Studio protect the communication between the Rust runtime and the user interface.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3208719461"] = "Der Axum-Server führt den internen Axum-Dienst über eine sichere lokale Verbindung aus. Dadurch kann AI Studio die Kommunikation zwischen der Rust-Laufzeitumgebung und der Benutzeroberfläche schützen."
