@@ -2169,6 +2169,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIDENCEINFO::T847071819"] = "Zeigt ode
 -- This feature is managed by your organization and has therefore been disabled.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONBASE::T1416426626"] = "Diese Funktion wird von Ihrer Organisation verwaltet und wurde daher deaktiviert."
 
+-- Choose File
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONFILE::T4285779702"] = "Datei auswählen"
+
 -- Choose the minimum confidence level that all LLM providers must meet. This way, you can ensure that only trustworthy providers are used. You cannot use any provider that falls below this level.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONMINCONFIDENCESELECTION::T2526727283"] = "Wählen Sie das minimale Vertrauensniveau, das alle LLM-Anbieter erfüllen müssen. So stellen Sie sicher, dass nur vertrauenswürdige Anbieter verwendet werden. Anbieter, die dieses Niveau unterschreiten, können nicht verwendet werden."
 
@@ -2756,6 +2759,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T4192032183"]
 
 -- Use additional root certificates for external HTTPS requests?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T4235562267"] = "Zusätzliche Stammzertifikate für externe HTTPS-Anfragen verwenden?"
+
+-- Select a root certificate bundle
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T436881267"] = "Wählen Sie ein Stammzertifikat-Bundle aus"
 
 -- Navigation bar behavior
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T602293588"] = "Verhalten der Navigationsleiste"
@@ -7766,6 +7772,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T2502277006"] = "Benutzerdefi
 
 -- Media
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T3507473059"] = "Medien"
+
+-- Certificate bundle
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T3543954504"] = "Zertifikatsbündel"
 
 -- Source like prefix
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T378481461"] = "Source Code ähnlicher Prefix"

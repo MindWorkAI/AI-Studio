@@ -2169,6 +2169,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIDENCEINFO::T847071819"] = "Shows and
 -- This feature is managed by your organization and has therefore been disabled.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONBASE::T1416426626"] = "This feature is managed by your organization and has therefore been disabled."
 
+-- Choose File
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONFILE::T4285779702"] = "Choose File"
+
 -- Choose the minimum confidence level that all LLM providers must meet. This way, you can ensure that only trustworthy providers are used. You cannot use any provider that falls below this level.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONMINCONFIDENCESELECTION::T2526727283"] = "Choose the minimum confidence level that all LLM providers must meet. This way, you can ensure that only trustworthy providers are used. You cannot use any provider that falls below this level."
 
@@ -2756,6 +2759,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T4192032183"]
 
 -- Use additional root certificates for external HTTPS requests?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T4235562267"] = "Use additional root certificates for external HTTPS requests?"
+
+-- Select a root certificate bundle
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T436881267"] = "Select a root certificate bundle"
 
 -- Navigation bar behavior
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T602293588"] = "Navigation bar behavior"
@@ -7766,6 +7772,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T2502277006"] = "Custom"
 
 -- Media
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T3507473059"] = "Media"
+
+-- Certificate bundle
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T3543954504"] = "Certificate bundle"
 
 -- Source like prefix
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T378481461"] = "Source like prefix"
