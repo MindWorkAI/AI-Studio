@@ -1,6 +1,6 @@
 @inherits ConfigurationBaseCore
 
-<MudStack Row="@true" Spacing="2" AlignItems="AlignItems.Center" StretchItems="StretchItems.Start" Wrap="Wrap.NoWrap">
+<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
     <MudTextField
         T="string"
         Text="@this.Text()"
@@ -15,7 +15,13 @@
         Class="flex-grow-1"
     />
 
-    <MudButton StartIcon="@Icons.Material.Filled.FolderOpen" Variant="Variant.Outlined" Color="Color.Primary" Disabled="@this.IsDisabled" OnClick="@this.OpenFileDialog">
+    <MudButton StartIcon="@Icons.Material.Filled.FolderOpen"
+               Variant="Variant.Outlined"
+               Color="Color.Primary"
+               Size="Size.Small"
+               Disabled="@this.IsDisabled"
+               Class="mb-1"
+               OnClick="@this.OpenFileDialog">
         @T("Choose File")
     </MudButton>
 </MudStack>
