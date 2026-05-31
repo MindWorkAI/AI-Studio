@@ -8,7 +8,7 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.Google;
 
-public class ProviderGoogle() : BaseProvider(LLMProviders.GOOGLE, "https://generativelanguage.googleapis.com/v1beta/openai/", LOGGER)
+public class ProviderGoogle() : BaseProvider(LLMProviders.GOOGLE, new Uri("https://generativelanguage.googleapis.com/v1beta/openai/"), ExternalHttpTrustPolicy.SYSTEM_TRUST_ONLY, LOGGER)
 {
     private static readonly ILogger<ProviderGoogle> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderGoogle>();
 

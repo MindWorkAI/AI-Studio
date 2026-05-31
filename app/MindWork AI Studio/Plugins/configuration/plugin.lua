@@ -264,6 +264,25 @@ CONFIG["SETTINGS"] = {}
 -- The default is 3600 (1 hour).
 -- CONFIG["SETTINGS"]["DataApp.HttpClientTimeoutSeconds"] = 3600
 
+-- Configure additional root certificates for external HTTPS requests.
+--
+-- This is intended for managed Linux/Flatpak deployments where organization-internal
+-- HTTPS certificates chain to a private root CA that is not visible inside the sandbox.
+-- The file must be a PEM bundle with one or more root CA certificates and must be
+-- readable by AI Studio.
+--
+-- IMPORTANT: A configuration plugin cannot fix the very first download of that same
+-- configuration plugin. For bootstrapping enterprise configuration downloads, deploy
+-- the equivalent environment variables before AI Studio starts:
+--
+-- MINDWORK_AI_STUDIO_EXTERNAL_HTTP_CUSTOM_ROOT_CERTIFICATES_ENABLED=true
+-- MINDWORK_AI_STUDIO_EXTERNAL_HTTP_CUSTOM_ROOT_CERTIFICATE_BUNDLE_PATH=/path/in/sandbox/company-root-cas.pem
+-- MINDWORK_AI_STUDIO_EXTERNAL_HTTP_CUSTOM_ROOT_CERTIFICATE_ALLOWED_HOSTS=*.intra.example.org;data.example.org
+--
+-- CONFIG["SETTINGS"]["DataApp.ExternalHttpCustomRootCertificatesEnabled"] = true
+-- CONFIG["SETTINGS"]["DataApp.ExternalHttpCustomRootCertificateBundlePath"] = "/path/in/sandbox/company-root-cas.pem"
+-- CONFIG["SETTINGS"]["DataApp.ExternalHttpCustomRootCertificateAllowedHosts"] = { "*.intra.example.org", "eri.example.org" }
+
 -- Example chat templates for this configuration:
 CONFIG["CHAT_TEMPLATES"] = {}
 

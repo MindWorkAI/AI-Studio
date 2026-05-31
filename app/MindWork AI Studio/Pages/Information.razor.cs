@@ -85,6 +85,8 @@ public partial class Information : MSGComponentBase
     
     private bool showEnterpriseConfigDetails;
 
+    private bool showExternalHttpCustomRootCertificateDetails;
+
     private bool showDatabaseDetails;
 
     private List<IAvailablePlugin> configPlugins = PluginFactory.AvailablePlugins
@@ -248,6 +250,11 @@ public partial class Information : MSGComponentBase
     {
         this.showEnterpriseConfigDetails = !this.showEnterpriseConfigDetails;
     }
+
+    private void ToggleExternalHttpCustomRootCertificateDetails()
+    {
+        this.showExternalHttpCustomRootCertificateDetails = !this.showExternalHttpCustomRootCertificateDetails;
+    }
     
     private void ToggleDatabaseDetails()
     {
@@ -376,6 +383,78 @@ public partial class Information : MSGComponentBase
     private bool IsManagedConfigurationIdMismatch(IAvailablePlugin plugin, Guid configurationId)
     {
         return plugin.ManagedConfigurationId == configurationId && plugin.Id != configurationId;
+    }
+
+    private string ExternalHttpCustomRootCertificateWarningText
+    {
+        get
+        {
+            var state = ExternalHttpClientTimeout.CustomRootCertificateState;
+            return string.IsNullOrWhiteSpace(state.Issue)
+                ? T("The configured root certificates could not be used.")
+                : state.Issue;
+        }
+    }
+
+    private IReadOnlyList<ConfigInfoRowItem> BuildExternalHttpCustomRootCertificateItems()
+    {
+        var state = ExternalHttpClientTimeout.CustomRootCertificateState;
+        var items = new List<ConfigInfoRowItem>
+        {
+            new(Icons.Material.Filled.ArrowRightAlt,
+                $"{T("Status:")} {(state.IsUsable ? T("active") : T("not active"))}",
+                state.IsUsable ? T("active") : T("not active"),
+                T("Copies the status to the clipboard")),
+
+            new(Icons.Material.Filled.ArrowRightAlt,
+                $"{T("Configuration source:")} {state.Source}",
+                state.Source,
+                T("Copies the configuration source to the clipboard"),
+                "margin-top: 4px;"),
+
+            new(Icons.Material.Filled.ArrowRightAlt,
+                $"{T("Certificate bundle:")} {state.BundlePath}",
+                state.BundlePath,
+                T("Copies the certificate bundle path to the clipboard"),
+                "margin-top: 4px;"),
+
+            new(Icons.Material.Filled.ArrowRightAlt,
+                $"{T("Loaded root certificates:")} {state.CertificateCount}",
+                state.CertificateCount.ToString(),
+                T("Copies the number of loaded root certificates to the clipboard"),
+                "margin-top: 4px;")
+        };
+
+        if (state.AllowedHostPatterns.Count == 0)
+        {
+            items.Add(new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
+                T("Allowed hosts: none configured"),
+                string.Empty,
+                T("Copies the allowed host configuration to the clipboard"),
+                "margin-top: 4px;"));
+        }
+        else
+        {
+            foreach (var allowedHostPattern in state.AllowedHostPatterns)
+            {
+                items.Add(new ConfigInfoRowItem(Icons.Material.Filled.Dns,
+                    $"{T("Allowed host:")} {allowedHostPattern}",
+                    allowedHostPattern,
+                    T("Copies the allowed host pattern to the clipboard"),
+                    "margin-top: 4px;"));
+            }
+        }
+
+        foreach (var fingerprint in state.CertificateFingerprints)
+        {
+            items.Add(new ConfigInfoRowItem(Icons.Material.Filled.Fingerprint,
+                $"{T("Root certificate fingerprint:")} {fingerprint}",
+                fingerprint,
+                T("Copies the root certificate fingerprint to the clipboard"),
+                "margin-top: 4px;"));
+        }
+
+        return items;
     }
 
     protected override void DisposeResources()

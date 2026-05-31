@@ -8,7 +8,7 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.Helmholtz;
 
-public sealed class ProviderHelmholtz() : BaseProvider(LLMProviders.HELMHOLTZ, "https://api.helmholtz-blablador.fz-juelich.de/v1/", LOGGER)
+public sealed class ProviderHelmholtz() : BaseProvider(LLMProviders.HELMHOLTZ, new Uri("https://api.helmholtz-blablador.fz-juelich.de/v1/"), ExternalHttpTrustPolicy.SYSTEM_TRUST_ONLY, LOGGER)
 {
     private static readonly ILogger<ProviderHelmholtz> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderHelmholtz>();
 

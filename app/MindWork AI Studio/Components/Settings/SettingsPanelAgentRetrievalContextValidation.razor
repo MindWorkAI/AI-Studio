@@ -1,9 +1,9 @@
 @inherits SettingsPanelBase
 
 <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Assessment" HeaderText="@T("Agent: Retrieval Context Validation Options")">
-    <MudText Typo="Typo.body1" Class="mb-3">
+    <MudJustifiedText Typo="Typo.body1" Class="mb-3">
         @T("Use Case: this agent is used to validate any retrieval context of any retrieval process. Perhaps there are many of these retrieval contexts and you want to validate them all. Therefore, you might want to use a cheap and fast LLM for this job. When using a local or self-hosted LLM, look for a small (e.g. 3B) and fast model.")
-    </MudText>
+    </MudJustifiedText>
     <ConfigurationOption OptionDescription="@T("Enable the retrieval context validation agent?")" LabelOn="@T("The validation agent is enabled")" LabelOff="@T("No validation is performed")" State="@(() => this.SettingsManager.ConfigurationData.AgentRetrievalContextValidation.EnableRetrievalContextValidation)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.AgentRetrievalContextValidation.EnableRetrievalContextValidation = updatedState)" OptionHelp="@T("When enabled, the retrieval context validation agent will check each retrieval context of any retrieval process, whether a context makes sense for the given prompt.")"/>
     @if (this.SettingsManager.ConfigurationData.AgentRetrievalContextValidation.EnableRetrievalContextValidation)
     {

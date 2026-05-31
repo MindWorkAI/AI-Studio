@@ -68,6 +68,7 @@ public static class FileTypes
     public static readonly FileTypeFilter MEDIA = FileTypeFilter.Parent(TB("Media"), IMAGE, AUDIO, VIDEO);
 
     // Other standalone types
+    public static readonly FileTypeFilter CERTIFICATE_BUNDLE = FileTypeFilter.Leaf(TB("Certificate bundle"), "pem", "crt", "cer");
     public static readonly FileTypeFilter EXECUTABLES = FileTypeFilter.Leaf(TB("Executable"), "exe", "app", "bin", "appimage");
     
     public static FileTypeFilter? AsOneFileType(params FileTypeFilter[]? types)

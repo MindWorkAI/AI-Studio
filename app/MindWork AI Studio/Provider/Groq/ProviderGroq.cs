@@ -6,7 +6,7 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.Groq;
 
-public class ProviderGroq() : BaseProvider(LLMProviders.GROQ, "https://api.groq.com/openai/v1/", LOGGER)
+public class ProviderGroq() : BaseProvider(LLMProviders.GROQ, new Uri("https://api.groq.com/openai/v1/"), ExternalHttpTrustPolicy.SYSTEM_TRUST_ONLY, LOGGER)
 {
     private static readonly ILogger<ProviderGroq> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderGroq>();
 
