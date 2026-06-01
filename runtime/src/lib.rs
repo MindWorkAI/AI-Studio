@@ -13,7 +13,7 @@ pub mod file_data;
 pub mod metadata;
 pub mod pdfium;
 pub mod pandoc;
-pub mod qdrant;
+pub mod qdrant_edge_database;
 pub mod certificate_factory;
 pub mod runtime_api_token;
 pub mod stale_process_cleanup;

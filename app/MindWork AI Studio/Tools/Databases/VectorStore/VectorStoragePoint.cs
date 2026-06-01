@@ -1,4 +1,4 @@
-namespace AIStudio.Tools.Databases;
+namespace AIStudio.Tools.Databases.VectorStore;
 
 public sealed record VectorStoragePoint(
     string PointId,

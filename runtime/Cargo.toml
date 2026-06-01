@@ -48,6 +48,7 @@ tempfile = "3.27.0"
 strum_macros = "0.28.0"
 sysinfo = "0.39.1"
 bytes = "1.11.1"
+qdrant-edge = "0.6.1"
 
 [target.'cfg(target_os = "windows")'.dependencies]
 windows-registry = "0.6.1"

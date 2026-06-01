@@ -24,11 +24,9 @@
       "icons/icon.ico"
     ],
     "externalBin": [
-      "../app/MindWork AI Studio/bin/dist/mindworkAIStudioServer",
-      "target/databases/qdrant/qdrant"
+      "../app/MindWork AI Studio/bin/dist/mindworkAIStudioServer"
     ],
     "resources": [
-      "resources/databases/qdrant/config.yaml",
       "resources/libraries/*"
     ],
     "macOS": {

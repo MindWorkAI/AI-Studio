@@ -4,6 +4,7 @@ using AIStudio.Components;
 using AIStudio.Dialogs;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Databases;
+using AIStudio.Tools.Databases.VectorStore;
 using AIStudio.Tools.Metadata;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
@@ -272,7 +273,7 @@ public partial class Information : MSGComponentBase
         }
         catch (Exception e)
         {
-            this.vectorStore = new NoDatabaseClient(refreshedClient.Name, e.Message, DatabaseClientStatus.STARTING);
+            this.vectorStore = new NoVectorStoreClient(refreshedClient.Name, e.Message, DatabaseClientStatus.STARTING);
             await foreach (var (label, value) in this.vectorStore.GetDisplayInfo().WithCancellation(cancellationToken))
             {
                 this.vectorStoreDisplayInfo.Add(new VectorStoreDisplayInfo(label, value));

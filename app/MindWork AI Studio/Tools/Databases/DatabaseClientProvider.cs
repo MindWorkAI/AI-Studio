@@ -3,7 +3,7 @@ using AIStudio.Tools.Databases.VectorStore;
 
 namespace AIStudio.Tools.Databases;
 
-public sealed partial class DatabaseClientProvider(RustService rustService, ILoggerFactory loggerFactory) : IDisposable
+public sealed class DatabaseClientProvider(RustService rustService, ILoggerFactory loggerFactory) : IDisposable
 {
     private readonly Dictionary<DatabaseRole, DatabaseClient> clients = new();
     private readonly Dictionary<DatabaseRole, SemaphoreSlim> locks = new();
@@ -91,16 +91,9 @@ public sealed partial class DatabaseClientProvider(RustService rustService, ILog
 
     private async Task<DatabaseClient> CreateClientAsync(DatabaseRole databaseRole, CancellationToken cancellationToken) => databaseRole switch
     {
-        DatabaseRole.VECTOR_STORE => await this.CreateQdrantClientAsync(cancellationToken),
+        DatabaseRole.VECTOR_STORE => await QdrantEdgeClientImplementation.CreateAsync(rustService, this.logger, this.databaseClientLogger, cancellationToken),
         _ => new NoDatabaseClient(databaseRole.ToString(), "The requested database role is not supported.")
     };
-
-    private NoDatabaseClient CreateNoDatabaseClient(string name, string? unavailableReason, DatabaseClientStatus status)
-    {
-        var client = new NoDatabaseClient(name, unavailableReason, status);
-        client.SetLogger(this.databaseClientLogger);
-        return client;
-    }
 
     private static bool IsSameClient(DatabaseClient left, DatabaseClient right) =>
         left.IsAvailable

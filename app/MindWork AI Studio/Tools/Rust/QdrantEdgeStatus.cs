@@ -1,6 +1,6 @@
 namespace AIStudio.Tools.Rust;
 
-public enum QdrantStatus
+public enum QdrantEdgeStatus
 {
     STARTING,
     AVAILABLE,
