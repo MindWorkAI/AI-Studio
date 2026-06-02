@@ -16,6 +16,10 @@
       "maxContentCharacters": {
         "type": "string",
         "secret": false
+      },
+      "allowedPrivateHosts": {
+        "type": "string",
+        "secret": false
       }
     },
     "required": []

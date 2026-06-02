@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
+using AIStudio.Provider;
 using AIStudio.Settings;
 
 namespace AIStudio.Tools.ToolCallingSystem;
@@ -12,6 +13,8 @@ public sealed class ToolExecutionContext
     public required SettingsManager SettingsManager { get; init; }
 
     public required IReadOnlyDictionary<string, string> SettingsValues { get; init; }
+
+    public ConfidenceLevel ProviderConfidence { get; init; } = ConfidenceLevel.UNKNOWN;
 }
 
 public sealed class ToolExecutionResult
@@ -28,6 +31,8 @@ public sealed class ToolExecutionResult
         return this.TextContent ?? string.Empty;
     }
 }
+
+public sealed class ToolExecutionBlockedException(string message) : Exception(message);
 
 public enum ToolInvocationTraceStatus
 {
@@ -90,6 +95,8 @@ public sealed class ToolCatalogItem
     public required IToolImplementation Implementation { get; init; }
 
     public required ToolConfigurationState ConfigurationState { get; init; }
+
+    public ConfidenceLevel MinimumProviderConfidence { get; init; } = ConfidenceLevel.NONE;
 }
 
 public sealed class ToolSelectionState

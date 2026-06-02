@@ -40,10 +40,12 @@
                         var isSelected = this.SelectedToolIds.Contains(item.Definition.Id);
                         var isConfigured = item.ConfigurationState.IsConfigured;
                         var dependencyHint = this.GetDependencyHint(item.Definition.Id);
+                        var providerConfidenceHint = this.GetProviderConfidenceHint(item);
+                        var isBlockedByProviderConfidence = this.IsBlockedByProviderConfidence(item);
                         <MudPaper Class="pa-2 mb-2 border rounded-lg">
                             <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
                                 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                                    <MudSwitch T="bool" Color="Color.Primary" Value="@isSelected" ValueChanged="@(value => this.ChangeSelection(item.Definition.Id, value))" Disabled="@(!isConfigured || this.Disabled || !this.SupportsTools || this.IsSelectionLockedByDependency(item.Definition.Id))" />
+                                    <MudSwitch T="bool" Color="Color.Primary" Value="@isSelected" ValueChanged="@(value => this.ChangeSelection(item.Definition.Id, value))" Disabled="@(!isConfigured || isBlockedByProviderConfidence || this.Disabled || !this.SupportsTools || this.IsSelectionLockedByDependency(item.Definition.Id))" />
                                     <MudIcon Icon="@item.Implementation.Icon" Color="Color.Info" />
                                     <MudTooltip Text="@item.Implementation.GetDescription()">
                                         <MudText Typo="Typo.body1">@item.Implementation.GetDisplayName()</MudText>
@@ -58,6 +60,10 @@
                             @if (!string.IsNullOrWhiteSpace(dependencyHint))
                             {
                                 <MudText Typo="Typo.caption" Color="Color.Info">@dependencyHint</MudText>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(providerConfidenceHint))
+                            {
+                                <MudText Typo="Typo.caption" Color="Color.Warning">@providerConfidenceHint</MudText>
                             }
                         </MudPaper>
                     }

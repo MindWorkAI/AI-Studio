@@ -1,9 +1,7 @@
 using System.Net;
-using System.Net.Http;
 using System.Net.Http.Headers;
-
+using System.Net.Sockets;
 using HtmlAgilityPack;
-
 using ReverseMarkdown;
 
 namespace AIStudio.Tools;
@@ -11,6 +9,7 @@ namespace AIStudio.Tools;
 public sealed class HTMLParser
 {
     private const string USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) MindWorkAIStudio/1.0";
+    private const int MAX_REDIRECTS = 10;
 
     private static readonly Config MARKDOWN_PARSER_CONFIG = new()
     {
@@ -43,19 +42,124 @@ public sealed class HTMLParser
         return innerHtml;
     }
 
-    public async Task<HTMLParserWebPage> LoadWebPageAsync(Uri url, CancellationToken token = default, int timeoutSeconds = 30)
+    public async Task<HTMLParserWebPage> LoadWebPageAsync(Uri url, CancellationToken token = default, int timeoutSeconds = 30, Func<Uri, CancellationToken, Task<IReadOnlyList<IPAddress>>>? resolveUrlAddressesAsync = null)
     {
-        using var handler = new HttpClientHandler
+        using var handler = new SocketsHttpHandler
         {
             AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli,
+            AllowAutoRedirect = false,
         };
+        if (resolveUrlAddressesAsync is not null)
+        {
+            // The callback binds the request to a vetted target IP; a proxy would change the endpoint being connected to.
+            handler.UseProxy = false;
+            handler.ConnectCallback = async (context, connectionToken) => await ConnectToResolvedAddressAsync(context, resolveUrlAddressesAsync, connectionToken);
+        }
+
         using var httpClient = new HttpClient(handler)
         {
             Timeout = Timeout.InfiniteTimeSpan,
         };
         using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(token);
         timeoutCts.CancelAfter(TimeSpan.FromSeconds(timeoutSeconds));
-        using var request = new HttpRequestMessage(HttpMethod.Get, url);
+
+        var currentUrl = url;
+        for (var redirectCount = 0; redirectCount <= MAX_REDIRECTS; redirectCount++)
+        {
+            ValidateHttpOrHttpsUrl(currentUrl);
+
+            using var request = CreateRequest(currentUrl);
+            using var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, timeoutCts.Token);
+            if (IsRedirect(response.StatusCode))
+            {
+                if (response.Headers.Location is null)
+                    throw new HttpRequestException($"The server returned a redirect without a Location header for '{currentUrl}'.", null, response.StatusCode);
+
+                currentUrl = response.Headers.Location.IsAbsoluteUri
+                    ? response.Headers.Location
+                    : new Uri(currentUrl, response.Headers.Location);
+
+                continue;
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var statusCode = (int)response.StatusCode;
+                var reasonPhrase = string.IsNullOrWhiteSpace(response.ReasonPhrase) ? "Unknown" : response.ReasonPhrase;
+                throw new HttpRequestException($"The server returned HTTP {statusCode} ({reasonPhrase}) for '{currentUrl}'.", null, response.StatusCode);
+            }
+
+            var html = await response.Content.ReadAsStringAsync(timeoutCts.Token);
+            var document = new HtmlDocument();
+            document.LoadHtml(html);
+
+            return new HTMLParserWebPage
+            {
+                RequestedUrl = url,
+                FinalUrl = response.RequestMessage?.RequestUri ?? currentUrl,
+                ContentType = response.Content.Headers.ContentType?.MediaType ?? string.Empty,
+                Document = document,
+            };
+        }
+
+        throw new HttpRequestException($"The server returned more than {MAX_REDIRECTS} redirects for '{url}'.");
+    }
+
+    private static void ValidateHttpOrHttpsUrl(Uri url)
+    {
+        if (url.Scheme.Equals(Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase) ||
+            url.Scheme.Equals(Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
+            return;
+
+        throw new HttpRequestException($"Unsupported URL scheme '{url.Scheme}' for '{url}'.");
+    }
+
+    private static async ValueTask<Stream> ConnectToResolvedAddressAsync(
+        SocketsHttpConnectionContext context,
+        Func<Uri, CancellationToken, Task<IReadOnlyList<IPAddress>>> resolveUrlAddressesAsync,
+        CancellationToken token)
+    {
+        var requestUri = context.InitialRequestMessage.RequestUri ??
+                         throw new HttpRequestException("The HTTP request did not contain a target URL.");
+
+        var addresses = await resolveUrlAddressesAsync(requestUri, token);
+        if (addresses.Count == 0)
+            throw new HttpRequestException($"The host '{requestUri.Host}' did not resolve to an IP address.");
+
+        List<SocketException> connectionErrors = [];
+        foreach (var address in addresses.Distinct())
+        {
+            var socket = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp)
+            {
+                NoDelay = true,
+            };
+
+            try
+            {
+                await socket.ConnectAsync(new IPEndPoint(address, context.DnsEndPoint.Port), token);
+                return new NetworkStream(socket, ownsSocket: true);
+            }
+            catch (SocketException exception)
+            {
+                connectionErrors.Add(exception);
+                socket.Dispose();
+            }
+            catch
+            {
+                socket.Dispose();
+                throw;
+            }
+        }
+
+        Exception innerException = connectionErrors.Count == 1
+            ? connectionErrors[0]
+            : new AggregateException(connectionErrors);
+        throw new HttpRequestException($"Could not connect to a validated address for '{requestUri.Host}'.", innerException);
+    }
+
+    private static HttpRequestMessage CreateRequest(Uri url)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get, url);
         request.Headers.TryAddWithoutValidation("User-Agent", USER_AGENT);
         request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/html"));
         request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/xhtml+xml"));
@@ -69,27 +173,10 @@ public sealed class HTMLParser
         request.Headers.TryAddWithoutValidation("Sec-Fetch-Mode", "navigate");
         request.Headers.TryAddWithoutValidation("Sec-Fetch-Dest", "document");
         request.Headers.TryAddWithoutValidation("Sec-Fetch-User", "?1");
-
-        using var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, timeoutCts.Token);
-        if (!response.IsSuccessStatusCode)
-        {
-            var statusCode = (int)response.StatusCode;
-            var reasonPhrase = string.IsNullOrWhiteSpace(response.ReasonPhrase) ? "Unknown" : response.ReasonPhrase;
-            throw new HttpRequestException($"The server returned HTTP {statusCode} ({reasonPhrase}) for '{url}'.", null, response.StatusCode);
-        }
-
-        var html = await response.Content.ReadAsStringAsync(token);
-        var document = new HtmlDocument();
-        document.LoadHtml(html);
-
-        return new HTMLParserWebPage
-        {
-            RequestedUrl = url,
-            FinalUrl = response.RequestMessage?.RequestUri ?? url,
-            ContentType = response.Content.Headers.ContentType?.MediaType ?? string.Empty,
-            Document = document,
-        };
+        return request;
     }
+
+    private static bool IsRedirect(HttpStatusCode statusCode) => (int)statusCode is >= 300 and <= 399;
 
     public string ExtractTitle(HtmlDocument document)
     {

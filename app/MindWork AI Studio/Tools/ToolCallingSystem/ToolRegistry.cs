@@ -1,6 +1,7 @@
 using System.Text.Json;
 
 using AIStudio.Provider;
+using AIStudio.Settings;
 
 using Microsoft.AspNetCore.Hosting;
 
@@ -9,6 +10,7 @@ namespace AIStudio.Tools.ToolCallingSystem;
 public sealed class ToolRegistry
 {
     private readonly ILogger<ToolRegistry> logger;
+    private readonly SettingsManager settingsManager;
     private readonly ToolSettingsService toolSettingsService;
     private readonly Dictionary<string, ToolDefinition> definitionsById = new(StringComparer.Ordinal);
     private readonly Dictionary<string, IToolImplementation> implementationsByKey = new(StringComparer.Ordinal);
@@ -16,10 +18,12 @@ public sealed class ToolRegistry
     public ToolRegistry(
         IWebHostEnvironment webHostEnvironment,
         IEnumerable<IToolImplementation> implementations,
+        SettingsManager settingsManager,
         ToolSettingsService toolSettingsService,
         ILogger<ToolRegistry> logger)
     {
         this.logger = logger;
+        this.settingsManager = settingsManager;
         this.toolSettingsService = toolSettingsService;
 
         foreach (var implementation in implementations)
@@ -101,6 +105,7 @@ public sealed class ToolRegistry
                 Definition = definition,
                 Implementation = implementation,
                 ConfigurationState = await this.toolSettingsService.GetConfigurationStateAsync(definition, implementation),
+                MinimumProviderConfidence = this.settingsManager.GetMinimumProviderConfidenceForTool(definition.Id),
             });
         }
 
@@ -111,12 +116,14 @@ public sealed class ToolRegistry
         AIStudio.Tools.Components component,
         IEnumerable<string> selectedToolIds,
         IReadOnlyCollection<Capability> modelCapabilities,
+        ConfidenceLevel providerConfidence,
         bool isToolSelectionVisible)
     {
         if (!isToolSelectionVisible)
             return [];
 
-        if (!modelCapabilities.Contains(Capability.CHAT_COMPLETION_API) || !modelCapabilities.Contains(Capability.FUNCTION_CALLING))
+        if (!modelCapabilities.Contains(Capability.FUNCTION_CALLING) ||
+            (!modelCapabilities.Contains(Capability.CHAT_COMPLETION_API) && !modelCapabilities.Contains(Capability.RESPONSES_API)))
             return [];
 
         var selectedToolIdSet = ToolSelectionRules.NormalizeSelection(selectedToolIds);
@@ -129,6 +136,10 @@ public sealed class ToolRegistry
 
             var configurationState = await this.toolSettingsService.GetConfigurationStateAsync(definition, implementation);
             if (!configurationState.IsConfigured)
+                continue;
+
+            var minimumToolConfidence = this.settingsManager.GetMinimumProviderConfidenceForTool(definition.Id);
+            if (!ToolSelectionRules.IsProviderConfidenceAllowed(providerConfidence, minimumToolConfidence))
                 continue;
 
             result.Add((definition, implementation));

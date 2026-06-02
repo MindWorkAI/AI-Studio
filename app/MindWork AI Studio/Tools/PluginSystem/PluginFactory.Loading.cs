@@ -237,6 +237,14 @@ public static partial class PluginFactory
         // Check for the voice recording shortcut:
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.ShortcutVoiceRecording, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;
+
+        // Check for minimum provider confidence per tool:
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Tools, x => x.MinimumProviderConfidenceByToolId, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        // Check for private hosts allowed for the read web page tool:
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Tools, x => x.ReadWebPageAllowedPrivateHosts, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
         
         if (wasConfigurationChanged)
         {

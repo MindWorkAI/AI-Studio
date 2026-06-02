@@ -373,6 +373,30 @@ public sealed class SettingsManager
             this.ConfigurationData.Tools.VisibleToolSelectionComponents.Remove(key);
     }
 
+    public ConfidenceLevel GetMinimumProviderConfidenceForTool(string toolId)
+    {
+        if (this.ConfigurationData.Tools.MinimumProviderConfidenceByToolId.TryGetValue(toolId, out var configuredLevel) &&
+            Enum.TryParse<ConfidenceLevel>(configuredLevel, true, out var confidenceLevel) &&
+            confidenceLevel is not ConfidenceLevel.UNKNOWN)
+        {
+            return confidenceLevel;
+        }
+
+        return ToolSelectionRules.GetDefaultMinimumProviderConfidence(toolId);
+    }
+
+    public void SetMinimumProviderConfidenceForTool(string toolId, ConfidenceLevel confidenceLevel)
+    {
+        var defaultLevel = ToolSelectionRules.GetDefaultMinimumProviderConfidence(toolId);
+        if (confidenceLevel == defaultLevel)
+        {
+            this.ConfigurationData.Tools.MinimumProviderConfidenceByToolId.Remove(toolId);
+            return;
+        }
+
+        this.ConfigurationData.Tools.MinimumProviderConfidenceByToolId[toolId] = confidenceLevel.ToString();
+    }
+
     public ConfidenceLevel GetConfiguredConfidenceLevel(LLMProviders llmProvider)
     {
         if(llmProvider is LLMProviders.NONE)

@@ -59,43 +59,68 @@
           "description": "The search query."
         },
         "categories": {
-          "type": "array",
+          "type": [
+            "array",
+            "null"
+          ],
           "description": "Optional list of SearXNG categories to use for the search.",
           "items": {
             "type": "string"
           }
         },
         "engines": {
-          "type": "array",
+          "type": [
+            "array",
+            "null"
+          ],
           "description": "Optional list of specific SearXNG engines to use when the user requests them explicitly.",
           "items": {
             "type": "string"
           }
         },
         "language": {
-          "type": "string",
+          "type": [
+            "string",
+            "null"
+          ],
           "description": "Optional language code for the search."
         },
         "time_range": {
-          "type": "string",
+          "type": [
+            "string",
+            "null"
+          ],
           "description": "Optional time range filter for engines that support it.",
           "enum": [
+            null,
             "day",
             "month",
             "year"
           ]
         },
         "page": {
-          "type": "integer",
+          "type": [
+            "integer",
+            "null"
+          ],
           "description": "Optional search result page number starting at 1."
         },
         "limit": {
-          "type": "integer",
+          "type": [
+            "integer",
+            "null"
+          ],
           "description": "Optional maximum number of results to return to the model after local truncation."
         }
       },
       "required": [
-        "query"
+        "query",
+        "categories",
+        "engines",
+        "language",
+        "time_range",
+        "page",
+        "limit"
       ],
       "additionalProperties": false
     }

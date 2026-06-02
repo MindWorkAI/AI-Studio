@@ -5,6 +5,12 @@ using System.Text.Json;
 
 using AIStudio.Chat;
 using AIStudio.Settings;
+using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Rust;
+using AIStudio.Tools.ToolCallingSystem;
+using AIStudio.Tools.Services;
+
+using Microsoft.Extensions.DependencyInjection;
 
 namespace AIStudio.Provider.OpenAI;
 
@@ -14,6 +20,7 @@ namespace AIStudio.Provider.OpenAI;
 public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, "https://api.openai.com/v1/", LOGGER)
 {
     private static readonly ILogger<ProviderOpenAI> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderOpenAI>();
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ProviderOpenAI).Namespace, nameof(ProviderOpenAI));
     
     #region Implementation of IProvider
 
@@ -63,12 +70,6 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, "https
         
         // Check if we are using the Responses API or the Chat Completion API:
         var usingResponsesAPI = modelCapabilities.Contains(Capability.RESPONSES_API);
-        var useChatCompletionsForTools =
-            chatThread.RuntimeSelectedToolIds.Count > 0 &&
-            modelCapabilities.Contains(Capability.CHAT_COMPLETION_API) &&
-            modelCapabilities.Contains(Capability.FUNCTION_CALLING);
-        if (useChatCompletionsForTools)
-            usingResponsesAPI = false;
         
         // Prepare the request path based on the API we are using:
         var requestPath = usingResponsesAPI ? "responses" : "chat/completions";
@@ -78,11 +79,12 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, "https
         //
         // Prepare the tools we want to use:
         //
-        IList<ProviderTool> providerTools = modelCapabilities.Contains(Capability.WEB_SEARCH) switch
-        {
-            true => [ ProviderTools.WEB_SEARCH ],
-            _ => []
-        };
+        var providerConfidence = this.Provider.GetConfidence(settingsManager).Level;
+        var minimumWebSearchConfidence = settingsManager.GetMinimumProviderConfidenceForTool(ToolSelectionRules.WEB_SEARCH_TOOL_ID);
+        var isWebSearchAllowed = ToolSelectionRules.IsProviderConfidenceAllowed(providerConfidence, minimumWebSearchConfidence);
+        IList<object> providerTools = modelCapabilities.Contains(Capability.WEB_SEARCH) && isWebSearchAllowed
+            ? [ ProviderTools.WEB_SEARCH ]
+            : [];
         
         
         // Parse the API parameters:
@@ -164,6 +166,43 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, "https
                     ? $"data:{attachment.DetermineMimeType()};base64,{base64Content}"
                     : string.Empty,
             });
+
+        var baseInput = new List<object> { systemPrompt };
+        baseInput.AddRange(messages.Cast<object>());
+
+        var toolRegistry = Program.SERVICE_PROVIDER.GetService<ToolRegistry>();
+        var toolExecutor = Program.SERVICE_PROVIDER.GetService<ToolExecutor>();
+        var currentAssistantContent = chatThread.Blocks.LastOrDefault(x => x.Role is ChatRole.AI)?.Content as ContentText;
+        currentAssistantContent?.ToolInvocations.Clear();
+
+        IReadOnlyList<(ToolDefinition Definition, IToolImplementation Implementation)> runnableTools = toolRegistry is null
+            ? []
+            : await toolRegistry.GetRunnableToolsAsync(
+                chatThread.RuntimeComponent,
+                chatThread.RuntimeSelectedToolIds,
+                modelCapabilities,
+                providerConfidence,
+                settingsManager.IsToolSelectionVisible(chatThread.RuntimeComponent));
+
+        if (usingResponsesAPI && toolExecutor is not null && runnableTools.Count > 0)
+        {
+            await foreach (var content in this.StreamResponsesWithLocalTools(
+                               chatModel,
+                               baseInput,
+                               apiParameters,
+                               runnableTools,
+                               toolExecutor,
+                               currentAssistantContent,
+                               requestedSecret,
+                               providerConfidence,
+                               token))
+                yield return content;
+
+            yield break;
+        }
+
+        if (runnableTools.Count > 0)
+            providerTools = [];
         
         //
         // Create the request: either for the Responses API or the Chat Completion API
@@ -189,7 +228,7 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, "https
                 Model = chatModel.Id,
             
                 // All messages go into the input field:
-                Input = [systemPrompt, ..messages],
+                Input = baseInput,
             
                 // Right now, we only support streaming completions:
                 Stream = true,
@@ -198,7 +237,7 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, "https
                 Store = false,
                 
                 // Tools we want to use:
-                ProviderTools = providerTools,
+                Tools = providerTools,
                 
                 // Additional API parameters:
                 AdditionalApiParameters = apiParameters
@@ -226,6 +265,148 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, "https
         else
             await foreach (var content in this.StreamChatCompletionInternal<ChatCompletionDeltaStreamLine, ChatCompletionAnnotationStreamLine>("OpenAI", RequestBuilder, token))
                 yield return content;
+    }
+
+    private async IAsyncEnumerable<ContentStreamChunk> StreamResponsesWithLocalTools(
+        Model chatModel,
+        IList<object> baseInput,
+        IDictionary<string, object> apiParameters,
+        IReadOnlyList<(ToolDefinition Definition, IToolImplementation Implementation)> runnableTools,
+        ToolExecutor toolExecutor,
+        ContentText? currentAssistantContent,
+        RequestedSecret requestedSecret,
+        ConfidenceLevel providerConfidence,
+        [EnumeratorCancellation] CancellationToken token)
+    {
+        var providerTools = runnableTools
+            .Select(x => (object)ProviderToolAdapters.ToResponsesTool(x.Definition))
+            .ToList();
+        var internalItems = new List<object>();
+        var toolCallCount = 0;
+
+        while (true)
+        {
+            var requestDto = new ResponsesAPIRequest
+            {
+                Model = chatModel.Id,
+                Input = [..baseInput, ..internalItems],
+                Stream = false,
+                Store = false,
+                Tools = providerTools,
+                AdditionalApiParameters = apiParameters,
+            };
+            var response = await this.ExecuteResponsesRequest(requestDto, requestedSecret, token);
+            if (response is null)
+            {
+                if (currentAssistantContent is not null)
+                {
+                    currentAssistantContent.ToolRuntimeStatus = new();
+                    await currentAssistantContent.StreamingEvent();
+                }
+
+                yield break;
+            }
+
+            var functionCalls = response.GetFunctionCalls();
+            if (functionCalls.Count == 0)
+            {
+                if (currentAssistantContent is not null)
+                {
+                    currentAssistantContent.ToolRuntimeStatus = new();
+                    await currentAssistantContent.StreamingEvent();
+                }
+
+                var textOutput = response.GetTextOutput();
+                if (!string.IsNullOrWhiteSpace(textOutput))
+                    yield return new ContentStreamChunk(textOutput, []);
+                else if (toolCallCount > 0)
+                    yield return new ContentStreamChunk("The model completed the tool call but did not return a final answer.", []);
+
+                yield break;
+            }
+
+            if (currentAssistantContent is not null)
+            {
+                currentAssistantContent.ToolRuntimeStatus = new ToolRuntimeStatus
+                {
+                    IsRunning = true,
+                    ToolNames = functionCalls
+                        .Select(x => runnableTools.FirstOrDefault(tool => tool.Definition.Function.Name.Equals(x.Name, StringComparison.Ordinal)).Implementation?.GetDisplayName() ?? x.Name)
+                        .ToList(),
+                };
+                await currentAssistantContent.StreamingEvent();
+            }
+
+            foreach (var outputItem in response.Output)
+                internalItems.Add(outputItem);
+
+            foreach (var functionCall in functionCalls)
+            {
+                toolCallCount++;
+                if (toolCallCount > 10)
+                {
+                    var limitMessage = "Tool calling stopped because the maximum of 10 tool calls was reached.";
+                    currentAssistantContent?.ToolInvocations.Add(new ToolInvocationTrace
+                    {
+                        Order = toolCallCount,
+                        ToolId = functionCall.Name,
+                        ToolName = functionCall.Name,
+                        ToolCallId = functionCall.CallId,
+                        Status = ToolInvocationTraceStatus.BLOCKED,
+                        StatusMessage = limitMessage,
+                        Result = limitMessage,
+                    });
+
+                    if (currentAssistantContent is not null)
+                    {
+                        currentAssistantContent.ToolRuntimeStatus = new();
+                        await currentAssistantContent.StreamingEvent();
+                    }
+
+                    yield return new ContentStreamChunk(limitMessage, []);
+                    yield break;
+                }
+
+                var (toolContent, trace) = await toolExecutor.ExecuteAsync(
+                    functionCall.CallId,
+                    functionCall.Name,
+                    functionCall.Arguments,
+                    runnableTools,
+                    providerConfidence,
+                    toolCallCount,
+                    token);
+
+                currentAssistantContent?.ToolInvocations.Add(trace);
+                internalItems.Add(new ResponsesFunctionCallOutputItem
+                {
+                    CallId = functionCall.CallId,
+                    Output = toolContent,
+                });
+            }
+
+            if (currentAssistantContent is not null)
+                await currentAssistantContent.StreamingEvent();
+        }
+    }
+
+    private async Task<ResponsesResponse?> ExecuteResponsesRequest(ResponsesAPIRequest requestDto, RequestedSecret requestedSecret, CancellationToken token)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, "responses");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(ENCRYPTION));
+        request.Content = new StringContent(JsonSerializer.Serialize(requestDto, JSON_SERIALIZER_OPTIONS), Encoding.UTF8, "application/json");
+
+        using var response = await this.httpClient.SendAsync(request, token);
+        if (!response.IsSuccessStatusCode)
+        {
+            var responseBody = await response.Content.ReadAsStringAsync(token);
+            LOGGER.LogError("Tool calling Responses API request failed with status code {ResponseStatusCode} and body: '{ResponseBody}'.", response.StatusCode, responseBody);
+            await MessageBus.INSTANCE.SendError(new(
+                Icons.Material.Filled.Build,
+                string.Format(TB("The tool calling request failed with status code {0}. See the logs for details."), (int)response.StatusCode)));
+            return null;
+        }
+
+        return await response.Content.ReadFromJsonAsync<ResponsesResponse>(JSON_SERIALIZER_OPTIONS, token);
     }
 
     #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously

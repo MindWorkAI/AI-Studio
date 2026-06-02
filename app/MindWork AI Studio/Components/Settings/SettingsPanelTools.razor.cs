@@ -1,4 +1,6 @@
+using AIStudio.Provider;
 using AIStudio.Dialogs.Settings;
+using AIStudio.Settings;
 using AIStudio.Tools;
 using AIStudio.Tools.ToolCallingSystem;
 
@@ -15,8 +17,9 @@ public partial class SettingsPanelTools : SettingsPanelBase
 
     protected override async Task OnInitializedAsync()
     {
-        await base.OnInitializedAsync();
+        this.ApplyFilters([], [ Event.CONFIGURATION_CHANGED ]);
         this.items = await this.ToolRegistry.GetCatalogAsync(this.ToolRegistry.GetAllDefinitions());
+        await base.OnInitializedAsync();
     }
 
     private async Task OpenSettings(string toolId)
@@ -46,5 +49,41 @@ public partial class SettingsPanelTools : SettingsPanelBase
             return fieldName;
 
         return item.Implementation.GetSettingsFieldLabel(fieldName, fieldDefinition);
+    }
+
+    private IEnumerable<ConfidenceLevel> GetSelectableConfidenceLevels() =>
+        Enum.GetValues<ConfidenceLevel>().OrderBy(x => x).Where(x => x is not ConfidenceLevel.UNKNOWN);
+
+    private string GetCurrentConfidenceLevelName(ToolCatalogItem item) => this.GetConfidenceLevelName(this.GetMinimumProviderConfidence(item));
+
+    private string GetConfidenceLevelName(ConfidenceLevel confidenceLevel) => confidenceLevel is ConfidenceLevel.NONE
+        ? this.T("No minimum confidence level chosen")
+        : confidenceLevel.GetName();
+
+    private string SetCurrentConfidenceLevelColorStyle(ToolCatalogItem item) =>
+        $"background-color: {this.GetMinimumProviderConfidence(item).GetColor(this.SettingsManager)};";
+
+    private bool IsToolConfidenceManaged() =>
+        ManagedConfiguration.TryGet(x => x.Tools, x => x.MinimumProviderConfidenceByToolId, out var meta) && meta.IsLocked;
+
+    private ConfidenceLevel GetMinimumProviderConfidence(ToolCatalogItem item) => this.SettingsManager.GetMinimumProviderConfidenceForTool(item.Definition.Id);
+
+    private async Task ChangeMinimumProviderConfidence(ToolCatalogItem item, ConfidenceLevel confidenceLevel)
+    {
+        this.SettingsManager.SetMinimumProviderConfidenceForTool(item.Definition.Id, confidenceLevel);
+        await this.SettingsManager.StoreSettings();
+        this.items = await this.ToolRegistry.GetCatalogAsync(this.ToolRegistry.GetAllDefinitions());
+        await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+    }
+
+    protected override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
+    {
+        switch (triggeredEvent)
+        {
+            case Event.CONFIGURATION_CHANGED:
+                this.items = await this.ToolRegistry.GetCatalogAsync(this.ToolRegistry.GetAllDefinitions());
+                await this.InvokeAsync(this.StateHasChanged);
+                break;
+        }
     }
 }

@@ -1,3 +1,4 @@
+using AIStudio.Settings;
 using AIStudio.Tools.ToolCallingSystem;
 
 using Microsoft.AspNetCore.Components;
@@ -37,6 +38,12 @@ public partial class ToolSettingsDialog : SettingsDialogBase
 
     private string GetFieldDescription(string fieldName, ToolSettingsFieldDefinition fieldDefinition) =>
         this.implementation?.GetSettingsFieldDescription(fieldName, fieldDefinition) ?? fieldDefinition.Description;
+
+    private bool IsFieldDisabled(string fieldName) =>
+        this.toolDefinition?.Id.Equals(ToolSelectionRules.READ_WEB_PAGE_TOOL_ID, StringComparison.Ordinal) is true &&
+        fieldName.Equals("allowedPrivateHosts", StringComparison.Ordinal) &&
+        ManagedConfiguration.TryGet(x => x.Tools, x => x.ReadWebPageAllowedPrivateHosts, out var meta) &&
+        meta.IsLocked;
 
     private void UpdateValue(string fieldName, string? value) => this.values[fieldName] = value ?? string.Empty;
 

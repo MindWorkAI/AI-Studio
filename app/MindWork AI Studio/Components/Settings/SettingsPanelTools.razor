@@ -1,3 +1,4 @@
+@using AIStudio.Provider
 @using AIStudio.Tools.ToolCallingSystem
 @inherits SettingsPanelBase
 
@@ -11,6 +12,7 @@
             <MudTh>@T("Icon")</MudTh>
             <MudTh>@T("Name")</MudTh>
             <MudTh>@T("Description")</MudTh>
+            <MudTh>@T("Minimum provider confidence")</MudTh>
             <MudTh>@T("State")</MudTh>
             <MudTh>@T("Settings")</MudTh>
         </HeaderContent>
@@ -23,6 +25,16 @@
             </MudTd>
             <MudTd>
                 <MudText Typo="Typo.body2">@context.Implementation.GetDescription()</MudText>
+            </MudTd>
+            <MudTd>
+                <MudMenu StartIcon="@Icons.Material.Filled.Security" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="@this.GetCurrentConfidenceLevelName(context)" Variant="Variant.Filled" Style="@this.SetCurrentConfidenceLevelColorStyle(context)" Disabled="@this.IsToolConfidenceManaged()">
+                    @foreach (var confidenceLevel in this.GetSelectableConfidenceLevels())
+                    {
+                        <MudMenuItem OnClick="@(async () => await this.ChangeMinimumProviderConfidence(context, confidenceLevel))">
+                            @this.GetConfidenceLevelName(confidenceLevel)
+                        </MudMenuItem>
+                    }
+                </MudMenu>
             </MudTd>
             <MudTd>
                 @if (context.ConfigurationState.IsConfigured)

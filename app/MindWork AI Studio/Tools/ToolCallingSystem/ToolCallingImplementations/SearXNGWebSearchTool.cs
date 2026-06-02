@@ -8,6 +8,8 @@ namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations;
 
 public sealed class SearXNGWebSearchTool : IToolImplementation
 {
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(SearXNGWebSearchTool).Namespace, nameof(SearXNGWebSearchTool));
+
     private const int DEFAULT_MAX_RESULTS = 5;
     private const int DEFAULT_TIMEOUT_SECONDS = 20;
     private const int MAX_TRACE_LENGTH = 4000;
@@ -18,32 +20,32 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
 
     public IReadOnlySet<string> SensitiveTraceArgumentNames => new HashSet<string>(StringComparer.Ordinal);
 
-    public string GetDisplayName() => I18N.I.T("Web Search", typeof(SearXNGWebSearchTool).Namespace, nameof(SearXNGWebSearchTool));
+    public string GetDisplayName() => TB("Web Search");
 
-    public string GetDescription() => I18N.I.T("Search the web with a configured SearXNG instance and return candidate URLs for the model. Use Read Web Page on relevant result URLs before answering factual or detailed web questions.", typeof(SearXNGWebSearchTool).Namespace, nameof(SearXNGWebSearchTool));
+    public string GetDescription() => TB("Search the web with a configured SearXNG instance and return candidate URLs for the model. Use Read Web Page on relevant result URLs before answering factual or detailed web questions.");
 
     public string GetSettingsFieldLabel(string fieldName, ToolSettingsFieldDefinition fieldDefinition) => fieldName switch
     {
-        "baseUrl" => I18N.I.T("SearXNG URL", typeof(SearXNGWebSearchTool).Namespace, nameof(SearXNGWebSearchTool)),
-        "defaultLanguage" => I18N.I.T("Default Language", typeof(SearXNGWebSearchTool).Namespace, nameof(SearXNGWebSearchTool)),
-        "defaultSafeSearch" => I18N.I.T("Default Safe Search", typeof(SearXNGWebSearchTool).Namespace, nameof(SearXNGWebSearchTool)),
-        "defaultCategories" => I18N.I.T("Default Categories", typeof(SearXNGWebSearchTool).Namespace, nameof(SearXNGWebSearchTool)),
-        "defaultEngines" => I18N.I.T("Default Engines", typeof(SearXNGWebSearchTool).Namespace, nameof(SearXNGWebSearchTool)),
-        "maxResults" => I18N.I.T("Maximum Results", typeof(SearXNGWebSearchTool).Namespace, nameof(SearXNGWebSearchTool)),
-        "timeoutSeconds" => I18N.I.T("Timeout Seconds", typeof(SearXNGWebSearchTool).Namespace, nameof(SearXNGWebSearchTool)),
-        _ => I18N.I.T(fieldDefinition.Title, typeof(SearXNGWebSearchTool).Namespace, nameof(SearXNGWebSearchTool)),
+        "baseUrl" => TB("SearXNG URL"),
+        "defaultLanguage" => TB("Default Language"),
+        "defaultSafeSearch" => TB("Default Safe Search"),
+        "defaultCategories" => TB("Default Categories"),
+        "defaultEngines" => TB("Default Engines"),
+        "maxResults" => TB("Maximum Results"),
+        "timeoutSeconds" => TB("Timeout Seconds"),
+        _ => TB(fieldDefinition.Title),
     };
 
     public string GetSettingsFieldDescription(string fieldName, ToolSettingsFieldDefinition fieldDefinition) => fieldName switch
     {
-        "baseUrl" => I18N.I.T("Base URL of the SearXNG instance. You can enter either the instance root URL or the /search endpoint.", typeof(SearXNGWebSearchTool).Namespace, nameof(SearXNGWebSearchTool)),
-        "defaultLanguage" => I18N.I.T("Optional fallback language code when the model does not provide a language.", typeof(SearXNGWebSearchTool).Namespace, nameof(SearXNGWebSearchTool)),
-        "defaultSafeSearch" => I18N.I.T("Optional safe search policy sent to SearXNG when configured.", typeof(SearXNGWebSearchTool).Namespace, nameof(SearXNGWebSearchTool)),
-        "defaultCategories" => I18N.I.T("Optional comma-separated default categories. Do not set this together with default engines.", typeof(SearXNGWebSearchTool).Namespace, nameof(SearXNGWebSearchTool)),
-        "defaultEngines" => I18N.I.T("Optional comma-separated default engines. Do not set this together with default categories.", typeof(SearXNGWebSearchTool).Namespace, nameof(SearXNGWebSearchTool)),
-        "maxResults" => I18N.I.T("Optional default maximum number of results returned to the model when the model does not provide a limit.", typeof(SearXNGWebSearchTool).Namespace, nameof(SearXNGWebSearchTool)),
-        "timeoutSeconds" => I18N.I.T("Optional HTTP timeout for the search request in seconds.", typeof(SearXNGWebSearchTool).Namespace, nameof(SearXNGWebSearchTool)),
-        _ => I18N.I.T(fieldDefinition.Description, typeof(SearXNGWebSearchTool).Namespace, nameof(SearXNGWebSearchTool)),
+        "baseUrl" => TB("Base URL of the SearXNG instance. You can enter either the instance root URL or the /search endpoint."),
+        "defaultLanguage" => TB("Optional fallback language code when the model does not provide a language."),
+        "defaultSafeSearch" => TB("Optional safe search policy sent to SearXNG when configured."),
+        "defaultCategories" => TB("Optional comma-separated default categories. Do not set this together with default engines."),
+        "defaultEngines" => TB("Optional comma-separated default engines. Do not set this together with default categories."),
+        "maxResults" => TB("Optional default maximum number of results returned to the model when the model does not provide a limit."),
+        "timeoutSeconds" => TB("Optional HTTP timeout for the search request in seconds."),
+        _ => TB(fieldDefinition.Description),
     };
 
     public Task<ToolConfigurationState?> ValidateConfigurationAsync(
@@ -69,7 +71,7 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
             return Task.FromResult<ToolConfigurationState?>(new ToolConfigurationState
             {
                 IsConfigured = false,
-                Message = I18N.I.T("Default categories and default engines cannot both be set for the web search tool.", typeof(SearXNGWebSearchTool).Namespace, nameof(SearXNGWebSearchTool)),
+                Message = TB("Default categories and default engines cannot both be set for the web search tool."),
             });
         }
 
@@ -122,7 +124,7 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
             engines = SplitCommaSeparatedValues(context.SettingsValues.GetValueOrDefault("defaultEngines"));
 
         if (categories.Count > 0 && engines.Count > 0 && !string.IsNullOrWhiteSpace(context.SettingsValues.GetValueOrDefault("defaultCategories")) && !string.IsNullOrWhiteSpace(context.SettingsValues.GetValueOrDefault("defaultEngines")))
-            throw new InvalidOperationException(I18N.I.T("Default categories and default engines cannot both be set for the web search tool.", typeof(SearXNGWebSearchTool).Namespace, nameof(SearXNGWebSearchTool)));
+            throw new InvalidOperationException(TB("Default categories and default engines cannot both be set for the web search tool."));
 
         var defaultLimit = ReadOptionalPositiveIntSetting(context.SettingsValues, "maxResults") ?? DEFAULT_MAX_RESULTS;
         var effectiveLimit = requestedLimit ?? defaultLimit;
@@ -425,7 +427,7 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
             return true;
         }
 
-        error = I18N.I.T($"The setting '{key}' must be a positive integer.", typeof(SearXNGWebSearchTool).Namespace, nameof(SearXNGWebSearchTool));
+        error = string.Format(TB("The setting '{0}' must be a positive integer."), key);
         return false;
     }
 
@@ -436,19 +438,19 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
 
         if (string.IsNullOrWhiteSpace(rawUrl))
         {
-            error = I18N.I.T("A SearXNG URL is required.", typeof(SearXNGWebSearchTool).Namespace, nameof(SearXNGWebSearchTool));
+            error = TB("A SearXNG URL is required.");
             return false;
         }
 
         if (!Uri.TryCreate(rawUrl.Trim(), UriKind.Absolute, out var parsedUri))
         {
-            error = I18N.I.T("The configured SearXNG URL is not a valid absolute URL.", typeof(SearXNGWebSearchTool).Namespace, nameof(SearXNGWebSearchTool));
+            error = TB("The configured SearXNG URL is not a valid absolute URL.");
             return false;
         }
 
         if (parsedUri.Scheme is not ("http" or "https"))
         {
-            error = I18N.I.T("The configured SearXNG URL must start with http:// or https://.", typeof(SearXNGWebSearchTool).Namespace, nameof(SearXNGWebSearchTool));
+            error = TB("The configured SearXNG URL must start with http:// or https://.");
             return false;
         }
 

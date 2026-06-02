@@ -170,7 +170,6 @@ internal sealed class Program
         builder.Services.AddMudMarkdownClipboardService<MarkdownClipboardService>();
         builder.Services.AddSingleton<SettingsManager>();
         builder.Services.AddSingleton<ToolSettingsService>();
-        builder.Services.AddSingleton<IToolImplementation, GetCurrentWeatherTool>();
         builder.Services.AddSingleton<IToolImplementation, ReadWebPageTool>();
         builder.Services.AddSingleton<IToolImplementation, SearXNGWebSearchTool>();
         builder.Services.AddSingleton<ToolRegistry>();

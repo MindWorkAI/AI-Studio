@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
 
+using AIStudio.Provider;
+
 namespace AIStudio.Tools.ToolCallingSystem;
 
 public static class ToolSelectionRules
@@ -22,4 +24,14 @@ public static class ToolSelectionRules
         var normalized = NormalizeSelection(selectedToolIds);
         return toolId == READ_WEB_PAGE_TOOL_ID && normalized.Contains(WEB_SEARCH_TOOL_ID);
     }
+
+    public static ConfidenceLevel GetDefaultMinimumProviderConfidence(string toolId) => toolId switch
+    {
+        WEB_SEARCH_TOOL_ID => ConfidenceLevel.MEDIUM,
+        READ_WEB_PAGE_TOOL_ID => ConfidenceLevel.MEDIUM,
+        _ => ConfidenceLevel.NONE,
+    };
+
+    public static bool IsProviderConfidenceAllowed(ConfidenceLevel providerConfidence, ConfidenceLevel minimumToolConfidence) =>
+        minimumToolConfidence is ConfidenceLevel.NONE || providerConfidence >= minimumToolConfidence;
 }

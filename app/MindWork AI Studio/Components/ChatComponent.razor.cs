@@ -81,7 +81,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     protected override async Task OnInitializedAsync()
     {
         // Apply the filters for the message bus:
-        this.ApplyFilters([], [ Event.HAS_CHAT_UNSAVED_CHANGES, Event.RESET_CHAT_STATE, Event.CHAT_STREAMING_DONE, Event.WORKSPACE_LOADED_CHAT_CHANGED ]);
+        this.ApplyFilters([], [ Event.HAS_CHAT_UNSAVED_CHANGES, Event.RESET_CHAT_STATE, Event.CHAT_STREAMING_DONE, Event.WORKSPACE_LOADED_CHAT_CHANGED, Event.CONFIGURATION_CHANGED ]);
         
         // Configure the spellchecking for the user input:
         this.SettingsManager.InjectSpellchecking(USER_INPUT_ATTRIBUTES);
@@ -1006,6 +1006,10 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             
             case Event.WORKSPACE_LOADED_CHAT_CHANGED:
                 await this.LoadedChatChanged();
+                break;
+
+            case Event.CONFIGURATION_CHANGED:
+                await this.InvokeAsync(this.StateHasChanged);
                 break;
         }
     }

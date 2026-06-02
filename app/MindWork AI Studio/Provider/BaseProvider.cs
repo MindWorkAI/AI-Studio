@@ -629,21 +629,12 @@ public abstract class BaseProvider : IProvider, ISecretId
                 chatThread.RuntimeComponent,
                 chatThread.RuntimeSelectedToolIds,
                 this.Provider.GetModelCapabilities(chatModel),
+                this.Provider.GetConfidence(settingsManager).Level,
                 settingsManager.IsToolSelectionVisible(chatThread.RuntimeComponent));
 
             if (runnableTools.Count > 0)
             {
-                var providerTools = runnableTools.Select(x => (object)new
-                {
-                    type = "function",
-                    function = new
-                    {
-                        name = x.Definition.Function.Name,
-                        description = x.Definition.Function.Description,
-                        parameters = x.Definition.Function.Parameters,
-                        strict = x.Definition.Function.Strict,
-                    }
-                }).ToList();
+                var providerTools = runnableTools.Select(x => ProviderToolAdapters.ToChatCompletionTool(x.Definition)).ToList();
 
                 var internalMessages = new List<IMessageBase>();
                 var toolCallCount = 0;
@@ -653,13 +644,19 @@ public abstract class BaseProvider : IProvider, ISecretId
                     var response = await this.ExecuteChatCompletionRequest(requestDto, requestPath, requestedSecret, headersAction, token);
                     var responseMessage = response?.Choices.FirstOrDefault()?.Message;
                     if (responseMessage is null)
+                    {
+                        currentAssistantContent!.ToolRuntimeStatus = new();
+                        await currentAssistantContent.StreamingEvent();
                         yield break;
+                    }
 
                     if (responseMessage.ToolCalls.Count == 0)
                     {
                         currentAssistantContent!.ToolRuntimeStatus = new();
                         if (!string.IsNullOrWhiteSpace(responseMessage.Content))
                             yield return new ContentStreamChunk(responseMessage.Content, []);
+                        else if (toolCallCount > 0)
+                            yield return new ContentStreamChunk("The model completed the tool call but did not return a final answer.", []);
 
                         yield break;
                     }
@@ -706,6 +703,7 @@ public abstract class BaseProvider : IProvider, ISecretId
                             toolCall.Function.Name,
                             toolCall.Function.Arguments,
                             runnableTools,
+                            this.Provider.GetConfidence(settingsManager).Level,
                             toolCallCount,
                             token);
 
@@ -763,7 +761,14 @@ public abstract class BaseProvider : IProvider, ISecretId
 
         using var response = await this.httpClient.SendAsync(request, token);
         if (!response.IsSuccessStatusCode)
+        {
+            var responseBody = await response.Content.ReadAsStringAsync(token);
+            this.logger.LogError("Tool calling chat completion request failed with status code {ResponseStatusCode} and body: '{ResponseBody}'.", response.StatusCode, responseBody);
+            await MessageBus.INSTANCE.SendError(new(
+                Icons.Material.Filled.Build,
+                string.Format(TB("The tool calling request failed with status code {0}. See the logs for details."), (int)response.StatusCode)));
             return null;
+        }
 
         return await response.Content.ReadFromJsonAsync<ChatCompletionResponse>(JSON_SERIALIZER_OPTIONS, token);
     }
