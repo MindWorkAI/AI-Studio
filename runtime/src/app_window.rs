@@ -25,7 +25,7 @@ use crate::dotnet::{cleanup_dotnet_server, start_dotnet_server, stop_dotnet_serv
 use crate::environment::{is_prod, is_dev, CONFIG_DIRECTORY, DATA_DIRECTORY};
 use crate::log::switch_to_file_logging;
 use crate::pdfium::PDFIUM_LIB_PATH;
-use crate::qdrant::{start_qdrant_server, stop_qdrant_server};
+use crate::qdrant_edge_database::{start_qdrant_edge_database, stop_qdrant_edge_database};
 #[cfg(debug_assertions)]
 use crate::dotnet::create_startup_env_file;
 
@@ -148,7 +148,7 @@ pub fn start_tauri() {
                 start_dotnet_server(app.handle().clone());
             }
 
-            start_qdrant_server(app.handle().clone());
+            start_qdrant_edge_database(app.handle().clone());
 
             info!(Source = "Bootloader Tauri"; "Reconfigure the file logger to use the app data directory {data_path:?}");
             switch_to_file_logging(data_path).map_err(|e| error!("Failed to switch logging to file: {e}")).unwrap();
@@ -183,7 +183,7 @@ pub fn start_tauri() {
 
             RunEvent::ExitRequested { .. } => {
                 warn!(Source = "Tauri"; "Run event: exit was requested.");
-                stop_qdrant_server();
+                stop_qdrant_edge_database();
                 if is_prod() {
                     warn!("Try to stop the .NET server as well...");
                     stop_dotnet_server();
@@ -537,7 +537,7 @@ pub async fn install_update(_token: APIToken) {
 
                     if is_prod() {
                         stop_dotnet_server();
-                        stop_qdrant_server();
+                        stop_qdrant_edge_database();
                     } else {
                         warn!(Source = "Tauri"; "Development environment detected; do not stop the .NET server.");
                     }

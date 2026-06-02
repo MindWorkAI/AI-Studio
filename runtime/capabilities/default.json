@@ -22,11 +22,6 @@
           "name": "mindworkAIStudioServer",
           "sidecar": true,
           "args": true
-        },
-        {
-          "name": "qdrant",
-          "sidecar": true,
-          "args": true
         }
       ]
     }

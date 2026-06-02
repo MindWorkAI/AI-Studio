@@ -34,7 +34,7 @@ async fn main() {
     info!(".. MudBlazor: v{mud_blazor_version}", mud_blazor_version = metadata.mud_blazor_version);
     info!(".. Tauri: v{tauri_version}", tauri_version = metadata.tauri_version);
     info!(".. PDFium: v{pdfium_version}", pdfium_version = metadata.pdfium_version);
-    info!(".. Qdrant: v{qdrant_version}", qdrant_version = metadata.qdrant_version);
+    info!(".. Vector store: v{vector_store_version}", vector_store_version = metadata.vector_store_version);
 
     if is_dev() {
         warn!("Running in development mode.");
