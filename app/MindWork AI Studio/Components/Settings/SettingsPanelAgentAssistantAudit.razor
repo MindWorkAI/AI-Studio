@@ -3,9 +3,9 @@
 
 <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Policy" HeaderText="@T("Agent: Security Audit for external Assistants")">
     <MudPaper Class="pa-3 mb-8 border-dashed border rounded-lg">
-        <MudText Typo="Typo.body1" Class="mb-3">
+        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
             @T("This Agent audits newly installed or updated external Plugin-Assistant for security risks before they are activated and stores the latest audit card until the plugin manifest changes.")
-        </MudText>
+        </MudJustifiedText>
         <MudField Label="@T("Require a security audit before activating external Assistants?")" Variant="Variant.Outlined" Underline="false" Class="mb-6" InnerPadding="false">
             <MudSwitch T="bool" Value="@this.SettingsManager.ConfigurationData.AssistantPluginAudit.RequireAuditBeforeActivation" ValueChanged="@this.RequireAuditBeforeActivationChanged" Color="Color.Primary">
                 @(this.SettingsManager.ConfigurationData.AssistantPluginAudit.RequireAuditBeforeActivation ? T("External Assistants must be audited before activation") : T("External Assistant can be activated without an audit"))

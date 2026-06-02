@@ -47,7 +47,7 @@ public sealed partial class RustService
         foreach (var config in configs)
         {
             if (Guid.TryParse(config.Id, out var id))
-                environments.Add(new EnterpriseEnvironment(config.ServerUrl, id, null));
+                environments.Add(new EnterpriseEnvironment(config.ServerUrl, id, config.Source, config.SourceDetail, config.Slot, null));
             else
                 this.logger!.LogWarning($"Skipping enterprise config with invalid ID: '{config.Id}'.");
         }

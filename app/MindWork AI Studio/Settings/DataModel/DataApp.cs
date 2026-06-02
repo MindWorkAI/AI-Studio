@@ -100,6 +100,21 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     public int HttpClientTimeoutSeconds { get; set; } = ManagedConfiguration.Register(configSelection, n => n.HttpClientTimeoutSeconds, ExternalHttpClientTimeout.DEFAULT_HTTP_CLIENT_TIMEOUT_SECONDS);
 
     /// <summary>
+    /// Should external HTTP clients trust additional root certificates from a configured PEM bundle?
+    /// </summary>
+    public bool ExternalHttpCustomRootCertificatesEnabled { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ExternalHttpCustomRootCertificatesEnabled, false);
+
+    /// <summary>
+    /// Path to a PEM bundle containing additional root certificates for external HTTP clients.
+    /// </summary>
+    public string ExternalHttpCustomRootCertificateBundlePath { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ExternalHttpCustomRootCertificateBundlePath, string.Empty);
+
+    /// <summary>
+    /// Hostnames for which external HTTP clients may use the additional root certificates.
+    /// </summary>
+    public HashSet<string> ExternalHttpCustomRootCertificateAllowedHosts { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ExternalHttpCustomRootCertificateAllowedHosts, []);
+
+    /// <summary>
     /// Should the user be allowed to add providers?
     /// </summary>
     public bool AllowUserToAddProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToAddProvider, true);

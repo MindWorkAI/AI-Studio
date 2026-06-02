@@ -6,7 +6,7 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.DeepSeek;
 
-public sealed class ProviderDeepSeek() : BaseProvider(LLMProviders.DEEP_SEEK, "https://api.deepseek.com/", LOGGER)
+public sealed class ProviderDeepSeek() : BaseProvider(LLMProviders.DEEP_SEEK, new Uri("https://api.deepseek.com/"), ExternalHttpTrustPolicy.SYSTEM_TRUST_ONLY, LOGGER)
 {
     private static readonly ILogger<ProviderDeepSeek> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderDeepSeek>();
 

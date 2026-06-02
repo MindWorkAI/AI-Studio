@@ -1,0 +1,27 @@
+@inherits ConfigurationBaseCore
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+    <MudTextField
+        T="string"
+        Text="@this.Text()"
+        TextChanged="@this.InternalUpdate"
+        Disabled="@this.IsDisabled"
+        Adornment="Adornment.Start"
+        AdornmentIcon="@this.Icon"
+        AdornmentColor="@this.IconColor"
+        UserAttributes="@SPELLCHECK_ATTRIBUTES"
+        Immediate="@true"
+        Underline="false"
+        Class="flex-grow-1"
+    />
+
+    <MudButton StartIcon="@Icons.Material.Filled.FolderOpen"
+               Variant="Variant.Outlined"
+               Color="Color.Primary"
+               Size="Size.Small"
+               Disabled="@this.IsDisabled"
+               Class="mb-1"
+               OnClick="@this.OpenFileDialog">
+        @T("Choose File")
+    </MudButton>
+</MudStack>

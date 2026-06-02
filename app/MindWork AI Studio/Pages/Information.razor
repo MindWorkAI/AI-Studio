@@ -48,6 +48,26 @@
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.Memory" Text="@TauriVersion"/>
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.Translate" Text="@this.OSLanguage"/>
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.AccountCircle" Text="@this.OSUserName"/>
+                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Folder">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <MudText Typo="Typo.body1">
+                                @this.WorkingDirectory
+                            </MudText>
+                            <MudCopyClipboardButton TooltipMessage="@(T("Copies the working directory to the clipboard"))" StringContent="@this.runtimeInfo.WorkingDirectory"/>
+                        </div>
+                    </MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.InsertDriveFile">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <MudText Typo="Typo.body1">
+                                @this.ExecutablePath
+                            </MudText>
+                            <MudCopyClipboardButton TooltipMessage="@(T("Copies the executable path to the clipboard"))" StringContent="@this.runtimeInfo.ExecutablePath"/>
+                        </div>
+                    </MudListItem>
+                    @if (OperatingSystem.IsLinux())
+                    {
+                        <MudListItem T="string" Icon="@Icons.Material.Outlined.Storage" Text="@this.LinuxPackageType"/>
+                    }
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.Business">
                         @switch (HasAnyActiveEnvironment)
                         {
@@ -89,18 +109,7 @@
                                     {
                                         <ConfigPluginInfoCard HeaderIcon="@Icons.Material.Filled.HourglassBottom"
                                                               HeaderText="@T("Waiting for the configuration plugin...")"
-                                                              Items="@([
-                                                                         new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
-                                                                             $"{T("Enterprise configuration ID:")} {env.ConfigurationId}",
-                                                                             env.ConfigurationId.ToString(),
-                                                                             T("Copies the config ID to the clipboard")),
-                                                                         
-                                                                         new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
-                                                                             $"{T("Configuration server:")} {env.ConfigurationServerUrl}",
-                                                                             env.ConfigurationServerUrl,
-                                                                             T("Copies the server URL to the clipboard"),
-                                                                             "margin-top: 4px;")
-                                                                     ])"/>
+                                                              Items="@this.BuildEnterpriseConfigurationItems(env)"/>
                                     }
                                     
                                     <EncryptionSecretInfo IsConfigured="@(PluginFactory.EnterpriseEncryption?.IsAvailable is true)"
@@ -130,41 +139,13 @@
                                         {
                                             <ConfigPluginInfoCard HeaderIcon="@Icons.Material.Filled.HourglassBottom"
                                                                   HeaderText="@T("Waiting for the configuration plugin...")"
-                                                                  Items="@([
-                                                                             new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
-                                                                                 $"{T("Enterprise configuration ID:")} {env.ConfigurationId}",
-                                                                                 env.ConfigurationId.ToString(),
-                                                                                 T("Copies the config ID to the clipboard")),
-                                                                             
-                                                                             new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
-                                                                                 $"{T("Configuration server:")} {env.ConfigurationServerUrl}",
-                                                                                 env.ConfigurationServerUrl,
-                                                                                 T("Copies the server URL to the clipboard"),
-                                                                                 "margin-top: 4px;")
-                                                                         ])"/>
+                                                                  Items="@this.BuildEnterpriseConfigurationItems(env)"/>
                                             continue;
                                         }
                                         
                                         <ConfigPluginInfoCard HeaderIcon="@Icons.Material.Filled.Extension"
                                                               HeaderText="@matchingPlugin.Name"
-                                                              Items="@([
-                                                                         new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
-                                                                             $"{T("Enterprise configuration ID:")} {env.ConfigurationId}",
-                                                                             env.ConfigurationId.ToString(),
-                                                                             T("Copies the config ID to the clipboard")),
-                                                                         
-                                                                         new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
-                                                                             $"{T("Configuration server:")} {env.ConfigurationServerUrl}",
-                                                                             env.ConfigurationServerUrl,
-                                                                             T("Copies the server URL to the clipboard"),
-                                                                             "margin-top: 4px;"),
-                                                                         
-                                                                         new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
-                                                                             $"{T("Configuration plugin ID:")} {matchingPlugin.Id}",
-                                                                             matchingPlugin.Id.ToString(),
-                                                                             T("Copies the configuration plugin ID to the clipboard"),
-                                                                             "margin-top: 4px;")
-                                                                     ])"
+                                                              Items="@this.BuildEnterpriseConfigurationItems(env, matchingPlugin)"
                                                               ShowWarning="@this.IsManagedConfigurationIdMismatch(matchingPlugin, env.ConfigurationId)"
                                                               WarningText="@T("ID mismatch: the plugin ID differs from the enterprise configuration ID.")"/>
                                     }
@@ -186,9 +167,32 @@
                             </MudButton>
                         }
                     </MudListItem>
+                    @if (ExternalHttpClientTimeout.CustomRootCertificateState.IsEnabled)
+                    {
+                        <MudListItem T="string" Icon="@Icons.Material.Outlined.Security">
+                            <MudText Typo="Typo.body1">
+                                @(ExternalHttpClientTimeout.CustomRootCertificateState.IsUsable
+                                    ? T("External HTTPS custom root certificates are active.")
+                                    : T("External HTTPS custom root certificates are configured but not active."))
+                            </MudText>
+                            <MudCollapse Expanded="@this.showExternalHttpCustomRootCertificateDetails">
+                                <ConfigPluginInfoCard HeaderIcon="@Icons.Material.Filled.Security"
+                                                      HeaderText="@T("External HTTPS custom root certificates")"
+                                                      Items="@this.BuildExternalHttpCustomRootCertificateItems()"
+                                                      ShowWarning="@(!ExternalHttpClientTimeout.CustomRootCertificateState.IsUsable)"
+                                                      WarningText="@this.ExternalHttpCustomRootCertificateWarningText"/>
+                            </MudCollapse>
+                            <MudButton StartIcon="@(this.showExternalHttpCustomRootCertificateDetails ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)"
+                                       Size="Size.Small"
+                                       Variant="Variant.Text"
+                                       OnClick="@this.ToggleExternalHttpCustomRootCertificateDetails">
+                                @(this.showExternalHttpCustomRootCertificateDetails ? T("Hide Details") : T("Show Details"))
+                            </MudButton>
+                        </MudListItem>
+                    }
                 </MudList>
                 <MudStack Row="true">
-                    <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Update" OnClick="@(() => this.CheckForUpdate())">
+                    <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Update" OnClick="@this.CheckForUpdate">
                         @T("Check for updates")
                     </MudButton>
                     <MudButton Variant="Variant.Filled" Color="Color.Default" StartIcon="@Icons.Material.Filled.Download" OnClick="@(async () => await this.ShowPandocDialog())">

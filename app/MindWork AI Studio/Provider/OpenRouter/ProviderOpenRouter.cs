@@ -7,7 +7,7 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.OpenRouter;
 
-public sealed class ProviderOpenRouter() : BaseProvider(LLMProviders.OPEN_ROUTER, "https://openrouter.ai/api/v1/", LOGGER)
+public sealed class ProviderOpenRouter() : BaseProvider(LLMProviders.OPEN_ROUTER, new Uri("https://openrouter.ai/api/v1/"), ExternalHttpTrustPolicy.SYSTEM_TRUST_ONLY, LOGGER)
 {
     private const string PROJECT_WEBSITE = "https://github.com/MindWorkAI/AI-Studio";
     private const string PROJECT_NAME = "MindWork AI Studio";
