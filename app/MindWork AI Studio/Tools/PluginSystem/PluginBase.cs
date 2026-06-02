@@ -85,6 +85,14 @@ public abstract partial class PluginBase : IPluginMetadata
         if(!string.IsNullOrWhiteSpace(parseError))
             issues.Add(parseError);
 
+        if (this is NoPlugin or NoPluginLanguage)
+        {
+            this.IsInternal = isInternal;
+            this.IconSVG = string.Empty;
+            this.baseIssues = issues;
+            return;
+        }
+
         // Notice: when no icon is specified, the default icon will be used.
         this.TryInitIconSVG(out _, out var iconSVG);
         this.IconSVG = iconSVG;
