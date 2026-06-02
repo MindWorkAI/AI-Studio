@@ -329,8 +329,8 @@ jobs:
           pdfium_version=$(sed -n '11p' metadata.txt)
           pdfium_version=$(echo $pdfium_version | cut -d'.' -f3)
           
-          # Next line is the Qdrant version:
-          qdrant_version="v$(sed -n '12p' metadata.txt)"
+          # Next line is the vector store version:
+          vector_store_version="$(sed -n '12p' metadata.txt)"
           
           # Write the metadata to the environment:
           echo "APP_VERSION=${app_version}" >> $GITHUB_ENV
@@ -344,7 +344,7 @@ jobs:
           echo "TAURI_VERSION=${tauri_version}" >> $GITHUB_ENV
           echo "ARCHITECTURE=${{ matrix.dotnet_runtime }}" >> $GITHUB_ENV
           echo "PDFIUM_VERSION=${pdfium_version}" >> $GITHUB_ENV
-          echo "QDRANT_VERSION=${qdrant_version}" >> $GITHUB_ENV
+          echo "VECTOR_STORE_VERSION=${vector_store_version}" >> $GITHUB_ENV
 
           # Log the metadata:
           echo "App version: '${formatted_app_version}'"
@@ -357,7 +357,7 @@ jobs:
           echo "Tauri version: '${tauri_version}'"
           echo "Architecture: '${{ matrix.dotnet_runtime }}'"
           echo "PDFium version: '${pdfium_version}'"
-          echo "Qdrant version: '${qdrant_version}'"
+          echo "Vector store version: '${vector_store_version}'"
           
       - name: Read and format metadata (Windows)
         if: matrix.platform == 'windows-latest'
@@ -402,8 +402,8 @@ jobs:
           $pdfium_version = $metadata[10]
           $pdfium_version = $pdfium_version.Split('.')[2]
           
-          # Next line is the necessary Qdrant version:
-          $qdrant_version = "v$($metadata[11])"
+          # Next line is the vector store version:
+          $vector_store_version = $metadata[11]
           
           # Write the metadata to the environment:
           Write-Output "APP_VERSION=${app_version}" >> $env:GITHUB_ENV
@@ -416,7 +416,7 @@ jobs:
           Write-Output "MUD_BLAZOR_VERSION=${mud_blazor_version}" >> $env:GITHUB_ENV
           Write-Output "ARCHITECTURE=${{ matrix.dotnet_runtime }}" >> $env:GITHUB_ENV
           Write-Output "PDFIUM_VERSION=${pdfium_version}" >> $env:GITHUB_ENV
-          Write-Output "QDRANT_VERSION=${qdrant_version}" >> $env:GITHUB_ENV
+          Write-Output "VECTOR_STORE_VERSION=${vector_store_version}" >> $env:GITHUB_ENV
           
           # Log the metadata:
           Write-Output "App version: '${formatted_app_version}'"
@@ -429,7 +429,7 @@ jobs:
           Write-Output "Tauri version: '${tauri_version}'"
           Write-Output "Architecture: '${{ matrix.dotnet_runtime }}'"
           Write-Output "PDFium version: '${pdfium_version}'"
-          Write-Output "Qdrant version: '${qdrant_version}'"
+          Write-Output "Vector store version: '${vector_store_version}'"
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4

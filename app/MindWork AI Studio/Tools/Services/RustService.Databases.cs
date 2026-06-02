@@ -41,7 +41,7 @@ public sealed partial class RustService
         using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         cts.CancelAfter(TimeSpan.FromMinutes(5));
 
-        var response = await this.http.PostAsJsonAsync(path, request, this.jsonRustSerializerOptions, cts.Token);
+        using var response = await this.http.PostAsJsonAsync(path, request, this.jsonRustSerializerOptions, cts.Token);
         response.EnsureSuccessStatusCode();
 
         var operation = await response.Content.ReadFromJsonAsync<DatabaseOperationResponse>(this.jsonRustSerializerOptions, cts.Token);

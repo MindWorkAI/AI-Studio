@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex};
+use std::sync::Mutex;
 
 use axum::Json;
 use log::{error, info, warn};
@@ -29,8 +29,8 @@ const VECTOR_INDEXING_THRESHOLD_KB: usize = 10_000;
 
 type QdrantEdgeResult<T> = Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
-static QDRANT_EDGE_DATABASE: Lazy<Arc<Mutex<Option<QdrantEdgeDatabase>>>> =
-    Lazy::new(|| Arc::new(Mutex::new(None)));
+static QDRANT_EDGE_DATABASE: Lazy<Mutex<Option<QdrantEdgeDatabase>>> =
+    Lazy::new(|| Mutex::new(None));
 
 static QDRANT_EDGE_STATUS: Lazy<Mutex<QdrantEdgeStatusInfo>> =
     Lazy::new(|| Mutex::new(QdrantEdgeStatusInfo::default()));
@@ -186,6 +186,7 @@ impl QdrantEdgeDatabase {
     }
 
     fn ensure_store_exists(&mut self, store_name: &str, vector_size: usize) -> QdrantEdgeResult<()> {
+        validate_vector_size(vector_size)?;
         self.get_or_create_store(store_name, vector_size)?;
         Ok(())
     }
@@ -196,6 +197,7 @@ impl QdrantEdgeDatabase {
         };
 
         let vector_size = first_point.vector.len();
+        validate_vector_size(vector_size)?;
         if points.iter().any(|point| point.vector.len() != vector_size) {
             return Err("All vectors in one insert request must have the same size.".into());
         }
@@ -241,10 +243,14 @@ impl QdrantEdgeDatabase {
     }
 }
 
-fn qdrant_edge_base_path() -> PathBuf {
-    Path::new(DATA_DIRECTORY.get().unwrap())
+fn qdrant_edge_base_path() -> QdrantEdgeResult<PathBuf> {
+    let data_directory = DATA_DIRECTORY
+        .get()
+        .ok_or("The data directory has not been initialized.")?;
+
+    Ok(Path::new(data_directory)
         .join("databases")
-        .join("vector_database")
+        .join("vector_database"))
 }
 
 pub async fn qdrant_edge_info(_token: APIToken) -> Json<QdrantEdgeServiceInfo> {
@@ -298,7 +304,16 @@ pub fn start_qdrant_edge_database<R: tauri::Runtime>(app_handle: tauri::AppHandl
     set_qdrant_edge_starting();
     remove_obsolete_qdrant_sidecar_files(&app_handle);
 
-    let path = qdrant_edge_base_path();
+    let path = match qdrant_edge_base_path() {
+        Ok(path) => path,
+        Err(e) => {
+            let reason = format!("Qdrant Edge cannot be started: {e}");
+            error!(Source = "Qdrant Edge"; "{reason}");
+            set_qdrant_edge_unavailable(reason);
+            return;
+        },
+    };
+
     match fs::create_dir_all(&path) {
         Ok(_) => {
             let database = QdrantEdgeDatabase::new(path.clone());
@@ -457,6 +472,14 @@ fn has_existing_store(path: &Path) -> bool {
     path.join("edge_config.json").exists() || path.join("segments").exists()
 }
 
+fn validate_vector_size(vector_size: usize) -> QdrantEdgeResult<()> {
+    if vector_size == 0 {
+        return Err("Vector size must be greater than zero.".into());
+    }
+
+    Ok(())
+}
+
 fn vector_store_version() -> QdrantEdgeResult<String> {
     let metadata = META_DATA
         .lock()
@@ -526,6 +549,10 @@ fn validate_store_name(store_name: &str) -> QdrantEdgeResult<()> {
         return Err("Vector store name cannot be empty.".into());
     }
 
+    if matches!(store_name, "." | "..") {
+        return Err(format!("Vector store name '{store_name}' is not supported.").into());
+    }
+
     if store_name
         .chars()
         .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-' || c == '.')
@@ -534,4 +561,20 @@ fn validate_store_name(store_name: &str) -> QdrantEdgeResult<()> {
     }
 
     Err(format!("Vector store name '{store_name}' contains unsupported characters.").into())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn validate_store_name_allows_safe_store_names() {
+        assert!(validate_store_name("rag_1234-abcd.ef").is_ok());
+    }
+
+    #[test]
+    fn validate_store_name_rejects_path_traversal_names() {
+        assert!(validate_store_name(".").is_err());
+        assert!(validate_store_name("..").is_err());
+    }
 }
