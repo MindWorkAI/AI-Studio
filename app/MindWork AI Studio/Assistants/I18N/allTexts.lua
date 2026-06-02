@@ -6268,11 +6268,11 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2989678330"] = "Copies the root 
 -- Changelog
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3017574265"] = "Changelog"
 
--- Vector store
-UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3046399223"] = "Vector store"
-
 -- External HTTPS custom root certificates are configured but not active.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3021325354"] = "External HTTPS custom root certificates are configured but not active."
+
+-- Vector store
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3046399223"] = "Vector store"
 
 -- Enterprise configuration ID:
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3092349641"] = "Enterprise configuration ID:"
