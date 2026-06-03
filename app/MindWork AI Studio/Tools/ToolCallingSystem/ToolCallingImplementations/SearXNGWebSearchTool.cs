@@ -12,6 +12,10 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
 
     private const int DEFAULT_MAX_RESULTS = 5;
     private const int DEFAULT_TIMEOUT_SECONDS = 20;
+    private const int MAX_RESULTS = 20;
+    private const int MAX_PAGE = 20;
+    private const int MAX_TIMEOUT_SECONDS = 60;
+    private const int MAX_RESPONSE_BYTES = 1024 * 1024;
     private const int MAX_TRACE_LENGTH = 4000;
 
     public string ImplementationKey => "web_search";
@@ -127,8 +131,10 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
             throw new InvalidOperationException(TB("Default categories and default engines cannot both be set for the web search tool."));
 
         var defaultLimit = ReadOptionalPositiveIntSetting(context.SettingsValues, "maxResults") ?? DEFAULT_MAX_RESULTS;
-        var effectiveLimit = requestedLimit ?? defaultLimit;
-        var timeoutSeconds = ReadOptionalPositiveIntSetting(context.SettingsValues, "timeoutSeconds") ?? DEFAULT_TIMEOUT_SECONDS;
+        var effectiveLimit = Math.Min(requestedLimit ?? defaultLimit, MAX_RESULTS);
+        var timeoutSeconds = Math.Min(ReadOptionalPositiveIntSetting(context.SettingsValues, "timeoutSeconds") ?? DEFAULT_TIMEOUT_SECONDS, MAX_TIMEOUT_SECONDS);
+        if (page is > MAX_PAGE)
+            throw new ArgumentException($"Argument 'page' must be less than or equal to {MAX_PAGE}.");
 
         var queryParameters = new List<KeyValuePair<string, string>>
         {
@@ -163,7 +169,7 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
         timeoutCts.CancelAfter(TimeSpan.FromSeconds(timeoutSeconds));
 
         using var response = await SendAsync(httpClient, request, timeoutCts.Token, timeoutSeconds, token);
-        var responseBody = await response.Content.ReadAsStringAsync(token);
+        var responseBody = await ReadContentAsStringWithLimitAsync(response.Content, MAX_RESPONSE_BYTES, token);
         if (!response.IsSuccessStatusCode)
         {
             var responseDetails = string.IsNullOrWhiteSpace(responseBody) ? string.Empty : $" Response body: {responseBody[..Math.Min(responseBody.Length, 400)]}";
@@ -407,6 +413,29 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
             return null;
 
         return int.TryParse(value, out var parsedValue) && parsedValue > 0 ? parsedValue : null;
+    }
+
+    private static async Task<string> ReadContentAsStringWithLimitAsync(HttpContent content, int maxResponseBytes, CancellationToken token)
+    {
+        if (content.Headers.ContentLength is long contentLength && contentLength > maxResponseBytes)
+            throw new InvalidOperationException($"The SearXNG response body is too large. Maximum allowed size is {maxResponseBytes} bytes.");
+
+        await using var stream = await content.ReadAsStreamAsync(token);
+        await using var buffer = new MemoryStream();
+        var chunk = new byte[8192];
+        while (true)
+        {
+            var read = await stream.ReadAsync(chunk, token);
+            if (read == 0)
+                break;
+
+            if (buffer.Length + read > maxResponseBytes)
+                throw new InvalidOperationException($"The SearXNG response body is too large. Maximum allowed size is {maxResponseBytes} bytes.");
+
+            buffer.Write(chunk, 0, read);
+        }
+
+        return Encoding.UTF8.GetString(buffer.ToArray());
     }
 
     private static bool TryReadOptionalPositiveInt(

@@ -675,13 +675,14 @@ public abstract class BaseProvider : IProvider, ISecretId
                         Content = responseMessage.Content,
                         ToolCalls = responseMessage.ToolCalls,
                     });
-
+                    
+                    var maxToolCalls = 30;
                     foreach (var toolCall in responseMessage.ToolCalls)
                     {
                         toolCallCount++;
-                        if (toolCallCount > 10)
+                        if (toolCallCount > maxToolCalls)
                         {
-                            var limitMessage = "Tool calling stopped because the maximum of 10 tool calls was reached.";
+                            var limitMessage = $"Tool calling stopped because the maximum of {maxToolCalls} tool calls was reached.";
                             currentAssistantContent.ToolInvocations.Add(new ToolInvocationTrace
                             {
                                 Order = toolCallCount,

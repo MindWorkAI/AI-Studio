@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Sockets;
+using System.Text;
 using HtmlAgilityPack;
 using ReverseMarkdown;
 
@@ -10,6 +11,7 @@ public sealed class HTMLParser
 {
     private const string USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) MindWorkAIStudio/1.0";
     private const int MAX_REDIRECTS = 10;
+    private const int DEFAULT_MAX_RESPONSE_BYTES = 5 * 1024 * 1024;
 
     private static readonly Config MARKDOWN_PARSER_CONFIG = new()
     {
@@ -42,7 +44,7 @@ public sealed class HTMLParser
         return innerHtml;
     }
 
-    public async Task<HTMLParserWebPage> LoadWebPageAsync(Uri url, CancellationToken token = default, int timeoutSeconds = 30, Func<Uri, CancellationToken, Task<IReadOnlyList<IPAddress>>>? resolveUrlAddressesAsync = null)
+    public async Task<HTMLParserWebPage> LoadWebPageAsync(Uri url, CancellationToken token = default, int timeoutSeconds = 30, Func<Uri, CancellationToken, Task<IReadOnlyList<IPAddress>>>? resolveUrlAddressesAsync = null, int maxResponseBytes = DEFAULT_MAX_RESPONSE_BYTES)
     {
         using var handler = new SocketsHttpHandler
         {
@@ -89,7 +91,7 @@ public sealed class HTMLParser
                 throw new HttpRequestException($"The server returned HTTP {statusCode} ({reasonPhrase}) for '{currentUrl}'.", null, response.StatusCode);
             }
 
-            var html = await response.Content.ReadAsStringAsync(timeoutCts.Token);
+            var html = await ReadContentAsStringWithLimitAsync(response.Content, maxResponseBytes, timeoutCts.Token);
             var document = new HtmlDocument();
             document.LoadHtml(html);
 
@@ -177,6 +179,46 @@ public sealed class HTMLParser
     }
 
     private static bool IsRedirect(HttpStatusCode statusCode) => (int)statusCode is >= 300 and <= 399;
+
+    private static async Task<string> ReadContentAsStringWithLimitAsync(HttpContent content, int maxResponseBytes, CancellationToken token)
+    {
+        if (content.Headers.ContentLength is long contentLength && contentLength > maxResponseBytes)
+            throw new HttpRequestException($"The response body is too large. Maximum allowed size is {maxResponseBytes} bytes.");
+
+        await using var stream = await content.ReadAsStreamAsync(token);
+        await using var buffer = new MemoryStream();
+        var chunk = new byte[8192];
+        while (true)
+        {
+            var read = await stream.ReadAsync(chunk, token);
+            if (read == 0)
+                break;
+
+            if (buffer.Length + read > maxResponseBytes)
+                throw new HttpRequestException($"The response body is too large. Maximum allowed size is {maxResponseBytes} bytes.");
+
+            buffer.Write(chunk, 0, read);
+        }
+
+        var encoding = TryGetContentEncoding(content) ?? Encoding.UTF8;
+        return encoding.GetString(buffer.ToArray());
+    }
+
+    private static Encoding? TryGetContentEncoding(HttpContent content)
+    {
+        var charset = content.Headers.ContentType?.CharSet?.Trim();
+        if (string.IsNullOrWhiteSpace(charset))
+            return null;
+
+        try
+        {
+            return Encoding.GetEncoding(charset.Trim('"'));
+        }
+        catch
+        {
+            return null;
+        }
+    }
 
     public string ExtractTitle(HtmlDocument document)
     {

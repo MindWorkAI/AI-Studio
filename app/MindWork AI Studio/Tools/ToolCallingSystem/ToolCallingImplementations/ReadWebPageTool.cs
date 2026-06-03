@@ -14,6 +14,9 @@ public sealed class ReadWebPageTool(HTMLParser htmlParser, ILogger<ReadWebPageTo
 
     private const int DEFAULT_TIMEOUT_SECONDS = 30;
     private const int DEFAULT_MAX_CONTENT_CHARACTERS = 12000;
+    private const int MAX_TIMEOUT_SECONDS = 60;
+    private const int MAX_CONTENT_CHARACTERS = 50000;
+    private const int MAX_RESPONSE_BYTES = 5 * 1024 * 1024;
     private const int MAX_TRACE_LENGTH = 12000;
     private const string ALLOWED_PRIVATE_HOSTS_SETTING = "allowedPrivateHosts";
 
@@ -99,8 +102,8 @@ public sealed class ReadWebPageTool(HTMLParser htmlParser, ILogger<ReadWebPageTo
         if (!Uri.TryCreate(urlText, UriKind.Absolute, out var url) || url is not { Scheme: "http" or "https" })
             throw new ArgumentException("Argument 'url' must be a valid HTTP or HTTPS URL.");
 
-        var timeoutSeconds = ReadOptionalPositiveIntSetting(context.SettingsValues, "timeoutSeconds") ?? DEFAULT_TIMEOUT_SECONDS;
-        var maxContentCharacters = ReadOptionalPositiveIntSetting(context.SettingsValues, "maxContentCharacters") ?? DEFAULT_MAX_CONTENT_CHARACTERS;
+        var timeoutSeconds = Math.Min(ReadOptionalPositiveIntSetting(context.SettingsValues, "timeoutSeconds") ?? DEFAULT_TIMEOUT_SECONDS, MAX_TIMEOUT_SECONDS);
+        var maxContentCharacters = Math.Min(ReadOptionalPositiveIntSetting(context.SettingsValues, "maxContentCharacters") ?? DEFAULT_MAX_CONTENT_CHARACTERS, MAX_CONTENT_CHARACTERS);
         if (!TryReadAllowedPrivateHostPatterns(context.SettingsValues.GetValueOrDefault(ALLOWED_PRIVATE_HOSTS_SETTING), out var allowedPrivateHosts, out var allowlistError))
             throw new InvalidOperationException(allowlistError);
 
@@ -111,7 +114,8 @@ public sealed class ReadWebPageTool(HTMLParser htmlParser, ILogger<ReadWebPageTo
                 url,
                 token,
                 timeoutSeconds,
-                async (candidateUrl, validationToken) => await this.ResolveValidatedUrlAddressesAsync(candidateUrl, allowedPrivateHosts, context.ProviderConfidence, validationToken));
+                async (candidateUrl, validationToken) => await this.ResolveValidatedUrlAddressesAsync(candidateUrl, allowedPrivateHosts, context.ProviderConfidence, validationToken),
+                MAX_RESPONSE_BYTES);
         }
         catch (OperationCanceledException) when (!token.IsCancellationRequested)
         {
