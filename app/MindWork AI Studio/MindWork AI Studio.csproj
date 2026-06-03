@@ -44,22 +44,27 @@
         <EmbeddedResource Include="wwwroot\**" CopyToOutputDirectory="PreserveNewest" />
         <EmbeddedResource Include="Plugins\**" CopyToOutputDirectory="PreserveNewest" />
         <EmbeddedResource Include="Assistants\I18N\allTexts.lua" CopyToOutputDirectory="PreserveNewest" />
+        <EmbeddedResource Include="Assistants\PromptOptimizer\prompting_guideline.md" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
 
     <ItemGroup>
       <PackageReference Include="CodeBeam.MudBlazor.Extensions" Version="8.3.0" />
       <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
-      <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="9.0.14" />
+      <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="9.0.16" />
       <PackageReference Include="MudBlazor" Version="8.15.0" />
       <PackageReference Include="MudBlazor.Markdown" Version="8.11.0" />
-      <PackageReference Include="Qdrant.Client" Version="1.17.0" />
       <PackageReference Include="ReverseMarkdown" Version="5.0.0" />
-      <PackageReference Include="LuaCSharp" Version="0.5.3" />
+      <PackageReference Include="LuaCSharp" Version="0.5.5" />
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\SharedTools\SharedTools.csproj" />
       <ProjectReference Include="..\SourceCodeRules\SourceCodeRules\SourceCodeRules.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
+      <ProjectReference Include="..\SourceGeneratedMappings\SourceGeneratedMappings.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Plugins\assistants\assets\" />
     </ItemGroup>
 
     <!-- Read the meta data file -->
@@ -82,7 +87,7 @@
             <MetaAppCommitHash>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 8 ])</MetaAppCommitHash>
             <MetaArchitecture>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 9 ])</MetaArchitecture>
             <MetaPdfiumVersion>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 10 ])</MetaPdfiumVersion>
-            <MetaQdrantVersion>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 11 ])</MetaQdrantVersion>
+            <MetaVectorStoreVersion>$([System.String]::Copy( $(Metadata) ).Split( ';' )[ 11 ])</MetaVectorStoreVersion>
             
             <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
             
@@ -110,8 +115,8 @@
             <AssemblyAttribute Include="AIStudio.Tools.Metadata.MetaDataLibraries">
                 <_Parameter1>$(MetaPdfiumVersion)</_Parameter1>
             </AssemblyAttribute>
-            <AssemblyAttribute Include="AIStudio.Tools.Metadata.MetaDataDatabases">
-                <_Parameter1>$(MetaQdrantVersion)</_Parameter1>
+            <AssemblyAttribute Include="AIStudio.Tools.Metadata.MetaDataVectorStore">
+                <_Parameter1>$(MetaVectorStoreVersion)</_Parameter1>
             </AssemblyAttribute>
         </ItemGroup>
         

@@ -18,13 +18,16 @@ public class NoProvider : IProvider
     /// <inheritdoc />
     public string AdditionalJsonApiParameters { get; init; } = string.Empty;
 
-    public Task<IEnumerable<Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default) => Task.FromResult<IEnumerable<Model>>([]);
+    /// <inheritdoc />
+    public bool HasModelLoadingCapability => false;
 
-    public Task<IEnumerable<Model>> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default) => Task.FromResult<IEnumerable<Model>>([]);
+    public Task<ModelLoadResult> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default) => Task.FromResult(ModelLoadResult.FromModels([]));
+
+    public Task<ModelLoadResult> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default) => Task.FromResult(ModelLoadResult.FromModels([]));
     
-    public Task<IEnumerable<Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default) => Task.FromResult<IEnumerable<Model>>([]);
+    public Task<ModelLoadResult> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default) => Task.FromResult(ModelLoadResult.FromModels([]));
     
-    public Task<IEnumerable<Model>> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default) => Task.FromResult<IEnumerable<Model>>([]);
+    public Task<ModelLoadResult> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default) => Task.FromResult(ModelLoadResult.FromModels([]));
 
     public async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatChatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
@@ -38,7 +41,7 @@ public class NoProvider : IProvider
         yield break;
     }
 
-    public Task<string> TranscribeAudioAsync(Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default) => Task.FromResult(string.Empty);
+    public Task<TranscriptionResult> TranscribeAudioAsync(Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default) => Task.FromResult(TranscriptionResult.Failure());
     
     public Task<IReadOnlyList<IReadOnlyList<float>>> EmbedTextAsync(Model embeddingModel, SettingsManager settingsManager, CancellationToken token = default, params List<string> texts) => Task.FromResult<IReadOnlyList<IReadOnlyList<float>>>([]);
 

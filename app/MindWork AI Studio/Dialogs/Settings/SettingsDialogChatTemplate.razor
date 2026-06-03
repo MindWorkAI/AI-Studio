@@ -43,6 +43,28 @@
                             <MudTooltip Text="@T("Edit")">
                                 <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Edit" OnClick="@(() => this.EditChatTemplate(context))"/>
                             </MudTooltip>
+                            @if (this.SettingsManager.ConfigurationData.App.ShowAdminSettings)
+                            {
+                                @if (context.FileAttachments.Count == 0)
+                                {
+                                    <MudTooltip Text="@T("Export configuration")">
+                                        <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Dataset" OnClick="@(() => this.ExportChatTemplateWithSharedAttachmentPaths(context))"/>
+                                    </MudTooltip>
+                                }
+                                else
+                                {
+                                    <MudTooltip Text="@T("Export configuration")">
+                                        <MudMenu Icon="@Icons.Material.Filled.Dataset" Color="Color.Info" Variant="Variant.Text">
+                                            <MudMenuItem Icon="@Icons.Material.Filled.Link" OnClick="@(() => this.ExportChatTemplateWithSharedAttachmentPaths(context))">
+                                                @T("Use shared attachment paths")
+                                            </MudMenuItem>
+                                            <MudMenuItem Icon="@Icons.Material.Filled.Folder" OnClick="@(() => this.ExportChatTemplateWithPackagedAttachments(context))">
+                                                @T("Copy attachments into plugin")
+                                            </MudMenuItem>
+                                        </MudMenu>
+                                    </MudTooltip>
+                                }
+                            }
                             <MudTooltip Text="@T("Delete")">
                                 <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Delete" OnClick="@(() => this.DeleteChatTemplate(context))"/>
                             </MudTooltip>

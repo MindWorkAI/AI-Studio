@@ -116,7 +116,7 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
             if (this.dataAuthMethod is AuthMethod.TOKEN or AuthMethod.USERNAME_PASSWORD)
             {
                 // Load the secret:
-                var requestedSecret = await this.RustService.GetSecret(this);
+                var requestedSecret = await this.RustService.GetSecret(this, SecretStoreType.DATA_SOURCE);
                 if (requestedSecret.Success)
                     this.dataSecret = await requestedSecret.Secret.Decrypt(this.encryption);
                 else
@@ -169,6 +169,7 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
             Hostname = cleanedHostname.EndsWith('/') ? cleanedHostname[..^1] : cleanedHostname,
             AuthMethod = this.dataAuthMethod,
             Username = this.dataUsername,
+            UsernamePasswordMode = DataSourceERIUsernamePasswordMode.USER_MANAGED,
             Type = DataSourceType.ERI_V1,
             SecurityPolicy = this.dataSecurityPolicy,
             SelectedRetrievalId = this.dataSelectedRetrievalProcess.Id,
@@ -323,7 +324,7 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
         if (!string.IsNullOrWhiteSpace(this.dataSecret))
         {
             // Store the secret in the OS secure storage:
-            var storeResponse = await this.RustService.SetSecret(this, this.dataSecret);
+            var storeResponse = await this.RustService.SetSecret(this, this.dataSecret, SecretStoreType.DATA_SOURCE);
             if (!storeResponse.Success)
             {
                 this.dataSecretStorageIssue = string.Format(T("Failed to store the auth. secret in the operating system. The message was: {0}. Please try again."), storeResponse.Issue);

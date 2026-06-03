@@ -82,7 +82,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
     {
         get
         {
-            if (this.chatThread is null || this.chatThread.Blocks.Count < 2)
+            if (this.ChatThread is null || this.ChatThread.Blocks.Count < 2)
             {
                 return new ChatThread
                 {
@@ -100,7 +100,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
                     // Visible user block:
                     new ContentBlock
                     {
-                        Time = this.chatThread.Blocks.First().Time,
+                        Time = this.ChatThread.Blocks.First().Time,
                         Role = ChatRole.USER,
                         HideFromUser = false,
                         ContentType = ContentType.TEXT,
@@ -114,7 +114,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
                     // Hidden user block with inputContent data:
                     new ContentBlock
                     {
-                        Time = this.chatThread.Blocks.First().Time,
+                        Time = this.ChatThread.Blocks.First().Time,
                         Role = ChatRole.USER,
                         HideFromUser = true,
                         ContentType = ContentType.TEXT,
@@ -144,7 +144,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
                     
                     // Then, append the last block of the current chat thread
                     // (which is expected to be the AI response):
-                    this.chatThread.Blocks.Last(),
+                    this.ChatThread.Blocks.Last(),
                 ]
             };
         }
@@ -230,8 +230,8 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
 
     private async Task OnDocumentsChanged(HashSet<FileAttachment> _)
     {
-        if(this.form is not null)
-            await this.form.Validate();
+        if(this.Form is not null)
+            await this.Form.Validate();
     }
     
     private string? ValidateCustomLanguage(string language)
@@ -375,8 +375,8 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
 
     private async Task CreateSlideBuilder()
     {
-        await this.form!.Validate();
-        if (!this.inputIsValid)
+        await this.Form!.Validate();
+        if (!this.InputIsValid)
             return;
         
         this.calculatedNumberOfSlides = this.timeSpecification > 0 ? this.CalculateNumberOfSlides() : 0;

@@ -2,7 +2,9 @@ using System.Reflection;
 
 using AIStudio.Components;
 using AIStudio.Dialogs;
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Databases;
+using AIStudio.Tools.Databases.VectorStore;
 using AIStudio.Tools.Metadata;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
@@ -28,17 +30,19 @@ public partial class Information : MSGComponentBase
     private ISnackbar Snackbar { get; init; } = null!;
     
     [Inject]
-    private DatabaseClient DatabaseClient { get; init; } = null!;
+    private DatabaseClientProvider DatabaseClientProvider { get; init; } = null!;
     
     private static readonly Assembly ASSEMBLY = Assembly.GetExecutingAssembly();
     private static readonly MetaDataAttribute META_DATA = ASSEMBLY.GetCustomAttribute<MetaDataAttribute>()!;
     private static readonly MetaDataArchitectureAttribute META_DATA_ARCH = ASSEMBLY.GetCustomAttribute<MetaDataArchitectureAttribute>()!;
     private static readonly MetaDataLibrariesAttribute META_DATA_LIBRARIES = ASSEMBLY.GetCustomAttribute<MetaDataLibrariesAttribute>()!;
-    private static readonly MetaDataDatabasesAttribute META_DATA_DATABASES = ASSEMBLY.GetCustomAttribute<MetaDataDatabasesAttribute>()!;
+    private static readonly MetaDataVectorStoreAttribute META_DATA_VECTOR_STORE = ASSEMBLY.GetCustomAttribute<MetaDataVectorStoreAttribute>()!;
     
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(Information).Namespace, nameof(Information));
 
     private string osLanguage = string.Empty;
+    private string osUserName = string.Empty;
+    private RuntimeInfoResponse runtimeInfo;
     
     private static string VersionApp => $"MindWork AI Studio: v{META_DATA.Version} (commit {META_DATA.AppCommitHash}, build {META_DATA.BuildNum}, {META_DATA_ARCH.Architecture.ToRID().ToUserFriendlyName()})";
     
@@ -48,6 +52,22 @@ public partial class Information : MSGComponentBase
     
     private string OSLanguage => $"{T("User-language provided by the OS")}: '{this.osLanguage}'";
     
+    private string OSUserName => $"{T("Username provided by the OS")}: '{this.osUserName}'";
+
+    private string WorkingDirectory => $"{T("Working directory")}: {this.runtimeInfo.WorkingDirectory}";
+
+    private string ExecutablePath => $"{T("Executable path")}: {this.runtimeInfo.ExecutablePath}";
+
+    private string LinuxPackageType => $"{T("Linux package")}: {this.LinuxPackageTypeDisplayName}";
+
+    private string LinuxPackageTypeDisplayName => this.runtimeInfo.LinuxPackageType switch
+    {
+        "appimage" => "AppImage",
+        "flatpak" => "Flatpak",
+        "unknown" => T("unknown"),
+        _ => T("not applicable")
+    };
+
     private string VersionRust => $"{T("Used Rust compiler")}: v{META_DATA.RustVersion}";
     
     private string VersionDotnetRuntime => $"{T("Used .NET runtime")}: v{META_DATA.DotnetVersion}";
@@ -58,9 +78,21 @@ public partial class Information : MSGComponentBase
     
     private string VersionPdfium => $"{T("Used PDFium version")}: v{META_DATA_LIBRARIES.PdfiumVersion}";
     
-    private string VersionDatabase => this.DatabaseClient.IsAvailable
-        ? $"{T("Database version")}: {this.DatabaseClient.Name} v{META_DATA_DATABASES.DatabaseVersion}"
-        : $"{T("Database")}: {this.DatabaseClient.Name} - {T("not available")}";
+    private string VersionVectorStore
+    {
+        get
+        {
+            if (this.vectorStore is null)
+                return $"{T("Vector store")}: {T("checking availability")}";
+
+            return this.vectorStore.Status switch
+            {
+                DatabaseClientStatus.AVAILABLE => $"{T("Vector store version")}: {this.vectorStore.Name} v{META_DATA_VECTOR_STORE.VectorStoreVersion}",
+                DatabaseClientStatus.STARTING => $"{T("Vector store")}: {this.vectorStore.Name} - {T("starting")}",
+                _ => $"{T("Vector store")}: {this.vectorStore.Name} - {T("not available")}"
+            };
+        }
+    }
     
     private string versionPandoc = TB("Determine Pandoc version, please wait...");
     private PandocInstallation pandocInstallation;
@@ -69,7 +101,8 @@ public partial class Information : MSGComponentBase
     
     private bool showEnterpriseConfigDetails;
 
-    private bool showDatabaseDetails;
+    private bool showVectorStoreDetails;
+    private bool showExternalHttpCustomRootCertificateDetails;
 
     private List<IAvailablePlugin> configPlugins = PluginFactory.AvailablePlugins
         .Where(x => x.Type is PluginType.CONFIGURATION)
@@ -77,10 +110,15 @@ public partial class Information : MSGComponentBase
         .ToList();
 
     private List<EnterpriseEnvironment> enterpriseEnvironments = EnterpriseEnvironmentService.CURRENT_ENVIRONMENTS.ToList();
-    
-    private sealed record DatabaseDisplayInfo(string Label, string Value);
 
-    private readonly List<DatabaseDisplayInfo> databaseDisplayInfo = new();
+    private List<MandatoryInfoPanelData> mandatoryInfoPanels = [];
+
+    private sealed record MandatoryInfoPanelData(string HeaderText, string PluginName, DataMandatoryInfo Info, DataMandatoryInfoAcceptance? Acceptance);
+    
+    private sealed record VectorStoreDisplayInfo(string Label, string Value);
+    private readonly List<VectorStoreDisplayInfo> vectorStoreDisplayInfo = new();
+    private DatabaseClient? vectorStore;
+    private CancellationTokenSource? vectorStoreRefreshCancellationTokenSource;
 
     private bool HasAnyActiveEnvironment => this.enterpriseEnvironments.Any(e => e.IsActive);
     
@@ -117,18 +155,19 @@ public partial class Information : MSGComponentBase
     
     protected override async Task OnInitializedAsync()
     {
-        this.ApplyFilters([], [ Event.ENTERPRISE_ENVIRONMENTS_CHANGED ]);
+        this.ApplyFilters([], [ Event.ENTERPRISE_ENVIRONMENTS_CHANGED, Event.CONFIGURATION_CHANGED ]);
         await base.OnInitializedAsync();
 
         this.RefreshEnterpriseConfigurationState();
         
         this.osLanguage = await this.RustService.ReadUserLanguage();
+        this.osUserName = await this.RustService.ReadUserName();
+        this.runtimeInfo = await this.RustService.GetRuntimeInfo();
         this.logPaths = await this.RustService.GetLogPaths();
         
-        await foreach (var (label, value) in this.DatabaseClient.GetDisplayInfo())
-        {
-            this.databaseDisplayInfo.Add(new DatabaseDisplayInfo(label, value));
-        }
+        await this.RefreshVectorStoreInfo(CancellationToken.None);
+        if (this.vectorStore?.Status is DatabaseClientStatus.STARTING)
+            this.StartShortVectorStoreRefreshLoop();
         
         // Determine the Pandoc version may take some time, so we start it here
         // without waiting for the result:
@@ -145,6 +184,7 @@ public partial class Information : MSGComponentBase
         {
             case Event.PLUGINS_RELOADED:
             case Event.ENTERPRISE_ENVIRONMENTS_CHANGED:
+            case Event.CONFIGURATION_CHANGED:
                 this.RefreshEnterpriseConfigurationState();
                 await this.InvokeAsync(this.StateHasChanged);
                 break;
@@ -163,6 +203,16 @@ public partial class Information : MSGComponentBase
             .ToList();
 
         this.enterpriseEnvironments = EnterpriseEnvironmentService.CURRENT_ENVIRONMENTS.ToList();
+        this.mandatoryInfoPanels = PluginFactory.GetMandatoryInfos()
+            .Select(info =>
+            {
+                var plugin = this.configPlugins.FirstOrDefault(item => item.Id == info.EnterpriseConfigurationPluginId);
+                var pluginName = plugin?.Name ?? T("Unknown configuration plugin");
+                var acceptance = this.SettingsManager.ConfigurationData.MandatoryInformation.FindAcceptance(info.Id);
+                var headerText = $"{T("Consent:")} {info.Title}";
+                return new MandatoryInfoPanelData(headerText, pluginName, info, acceptance);
+            })
+            .ToList();
     }
 
     private async Task DeterminePandocVersion()
@@ -215,10 +265,78 @@ public partial class Information : MSGComponentBase
     {
         this.showEnterpriseConfigDetails = !this.showEnterpriseConfigDetails;
     }
-    
-    private void ToggleDatabaseDetails()
+
+    private void ToggleExternalHttpCustomRootCertificateDetails()
     {
-        this.showDatabaseDetails = !this.showDatabaseDetails;
+        this.showExternalHttpCustomRootCertificateDetails = !this.showExternalHttpCustomRootCertificateDetails;
+    }
+    
+    private void ToggleVectorStoreDetails()
+    {
+        this.showVectorStoreDetails = !this.showVectorStoreDetails;
+    }
+
+    private async Task RefreshVectorStoreInfo(CancellationToken cancellationToken)
+    {
+        var refreshedClient = await this.DatabaseClientProvider.RefreshClientAsync(DatabaseRole.VECTOR_STORE, cancellationToken);
+        this.vectorStore = refreshedClient;
+        this.vectorStoreDisplayInfo.Clear();
+
+        try
+        {
+            await foreach (var (label, value) in refreshedClient.GetDisplayInfo().WithCancellation(cancellationToken))
+            {
+                this.vectorStoreDisplayInfo.Add(new VectorStoreDisplayInfo(label, value));
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception e)
+        {
+            this.vectorStore = new NoVectorStoreClient(refreshedClient.Name, e.Message, DatabaseClientStatus.STARTING);
+            await foreach (var (label, value) in this.vectorStore.GetDisplayInfo().WithCancellation(cancellationToken))
+            {
+                this.vectorStoreDisplayInfo.Add(new VectorStoreDisplayInfo(label, value));
+            }
+        }
+    }
+
+    private void StartShortVectorStoreRefreshLoop()
+    {
+        this.vectorStoreRefreshCancellationTokenSource?.Cancel();
+        this.vectorStoreRefreshCancellationTokenSource?.Dispose();
+        this.vectorStoreRefreshCancellationTokenSource = new CancellationTokenSource();
+        var cancellationToken = this.vectorStoreRefreshCancellationTokenSource.Token;
+
+        _ = Task.Run(async () =>
+        {
+            const int MAX_TRIES = 12;
+            for (var attempt = 0; attempt < MAX_TRIES; attempt++)
+            {
+                try
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+                    await this.InvokeAsync(async () =>
+                    {
+                        await this.RefreshVectorStoreInfo(cancellationToken);
+                        this.StateHasChanged();
+                    });
+
+                    if (this.vectorStore?.Status is not DatabaseClientStatus.STARTING)
+                        return;
+                }
+                catch (OperationCanceledException)
+                {
+                    return;
+                }
+                catch
+                {
+                    return;
+                }
+            }
+        }, cancellationToken);
     }
 
     private IAvailablePlugin? FindManagedConfigurationPlugin(Guid configurationId)
@@ -228,9 +346,137 @@ public partial class Information : MSGComponentBase
                ?? this.configPlugins.FirstOrDefault(plugin => plugin.ManagedConfigurationId is null && plugin.Id == configurationId);
     }
 
+    private IReadOnlyList<ConfigInfoRowItem> BuildEnterpriseConfigurationItems(EnterpriseEnvironment environment, IAvailablePlugin? plugin = null)
+    {
+        var items = new List<ConfigInfoRowItem>
+        {
+            new(Icons.Material.Filled.ArrowRightAlt,
+                $"{T("Enterprise configuration ID:")} {environment.ConfigurationId}",
+                environment.ConfigurationId.ToString(),
+                T("Copies the config ID to the clipboard")),
+
+            new(Icons.Material.Filled.ArrowRightAlt,
+                $"{T("Configuration server:")} {environment.ConfigurationServerUrl}",
+                environment.ConfigurationServerUrl,
+                T("Copies the server URL to the clipboard"),
+                "margin-top: 4px;"),
+
+            new(Icons.Material.Filled.ArrowRightAlt,
+                $"{T("Configuration source:")} {environment.Source}",
+                environment.Source,
+                T("Copies the configuration source to the clipboard"),
+                "margin-top: 4px;"),
+        };
+
+        if (!string.IsNullOrWhiteSpace(environment.SourceDetail))
+        {
+            items.Add(new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
+                $"{T("Configuration origin:")} {environment.SourceDetail}",
+                environment.SourceDetail,
+                T("Copies the configuration origin to the clipboard"),
+                "margin-top: 4px;"));
+        }
+
+        items.Add(new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
+            $"{T("Configuration slot:")} {environment.Slot}",
+            environment.Slot,
+            T("Copies the configuration slot to the clipboard"),
+            "margin-top: 4px;"));
+
+        if (plugin is not null)
+        {
+            items.Add(new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
+                $"{T("Configuration plugin ID:")} {plugin.Id}",
+                plugin.Id.ToString(),
+                T("Copies the configuration plugin ID to the clipboard"),
+                "margin-top: 4px;"));
+        }
+
+        return items;
+    }
+
     private bool IsManagedConfigurationIdMismatch(IAvailablePlugin plugin, Guid configurationId)
     {
         return plugin.ManagedConfigurationId == configurationId && plugin.Id != configurationId;
+    }
+
+    private string ExternalHttpCustomRootCertificateWarningText
+    {
+        get
+        {
+            var state = ExternalHttpClientTimeout.CustomRootCertificateState;
+            return string.IsNullOrWhiteSpace(state.Issue)
+                ? T("The configured root certificates could not be used.")
+                : state.Issue;
+        }
+    }
+
+    private IReadOnlyList<ConfigInfoRowItem> BuildExternalHttpCustomRootCertificateItems()
+    {
+        var state = ExternalHttpClientTimeout.CustomRootCertificateState;
+        var items = new List<ConfigInfoRowItem>
+        {
+            new(Icons.Material.Filled.ArrowRightAlt,
+                $"{T("Status:")} {(state.IsUsable ? T("active") : T("not active"))}",
+                state.IsUsable ? T("active") : T("not active"),
+                T("Copies the status to the clipboard")),
+
+            new(Icons.Material.Filled.ArrowRightAlt,
+                $"{T("Configuration source:")} {state.Source}",
+                state.Source,
+                T("Copies the configuration source to the clipboard"),
+                "margin-top: 4px;"),
+
+            new(Icons.Material.Filled.ArrowRightAlt,
+                $"{T("Certificate bundle:")} {state.BundlePath}",
+                state.BundlePath,
+                T("Copies the certificate bundle path to the clipboard"),
+                "margin-top: 4px;"),
+
+            new(Icons.Material.Filled.ArrowRightAlt,
+                $"{T("Loaded root certificates:")} {state.CertificateCount}",
+                state.CertificateCount.ToString(),
+                T("Copies the number of loaded root certificates to the clipboard"),
+                "margin-top: 4px;")
+        };
+
+        if (state.AllowedHostPatterns.Count == 0)
+        {
+            items.Add(new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
+                T("Allowed hosts: none configured"),
+                string.Empty,
+                T("Copies the allowed host configuration to the clipboard"),
+                "margin-top: 4px;"));
+        }
+        else
+        {
+            foreach (var allowedHostPattern in state.AllowedHostPatterns)
+            {
+                items.Add(new ConfigInfoRowItem(Icons.Material.Filled.Dns,
+                    $"{T("Allowed host:")} {allowedHostPattern}",
+                    allowedHostPattern,
+                    T("Copies the allowed host pattern to the clipboard"),
+                    "margin-top: 4px;"));
+            }
+        }
+
+        foreach (var fingerprint in state.CertificateFingerprints)
+        {
+            items.Add(new ConfigInfoRowItem(Icons.Material.Filled.Fingerprint,
+                $"{T("Root certificate fingerprint:")} {fingerprint}",
+                fingerprint,
+                T("Copies the root certificate fingerprint to the clipboard"),
+                "margin-top: 4px;"));
+        }
+
+        return items;
+    }
+
+    protected override void DisposeResources()
+    {
+        this.vectorStoreRefreshCancellationTokenSource?.Cancel();
+        this.vectorStoreRefreshCancellationTokenSource?.Dispose();
+        base.DisposeResources();
     }
 
     private async Task CopyStartupLogPath()

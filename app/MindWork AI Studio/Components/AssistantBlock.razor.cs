@@ -1,8 +1,6 @@
-using AIStudio.Settings.DataModel;
 using AIStudio.Dialogs.Settings;
-
+using AIStudio.Settings.DataModel;
 using Microsoft.AspNetCore.Components;
-
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Components;
@@ -23,6 +21,12 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase where TSetting
 
     [Parameter]
     public string Link { get; set; } = string.Empty;
+
+    [Parameter]
+    public bool Disabled { get; set; }
+
+    [Parameter]
+    public RenderFragment? SecurityBadge { get; set; }
 
     [Parameter]
     public Tools.Components Component { get; set; } = Tools.Components.NONE;

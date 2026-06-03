@@ -1,4 +1,3 @@
-using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 
 using AIStudio.Chat;
@@ -7,7 +6,7 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.Groq;
 
-public class ProviderGroq() : BaseProvider(LLMProviders.GROQ, "https://api.groq.com/openai/v1/", LOGGER)
+public class ProviderGroq() : BaseProvider(LLMProviders.GROQ, new Uri("https://api.groq.com/openai/v1/"), ExternalHttpTrustPolicy.SYSTEM_TRUST_ONLY, LOGGER)
 {
     private static readonly ILogger<ProviderGroq> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderGroq>();
 
@@ -20,28 +19,39 @@ public class ProviderGroq() : BaseProvider(LLMProviders.GROQ, "https://api.groq.
     public override string InstanceName { get; set; } = "Groq";
 
     /// <inheritdoc />
+    public override bool HasModelLoadingCapability => true;
+
+    /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
-        await foreach (var content in this.StreamOpenAICompatibleChatCompletion<ChatCompletionDeltaStreamLine, ChatCompletionAnnotationStreamLine>(
+        await foreach (var content in this.StreamOpenAICompatibleChatCompletion<ChatCompletionAPIRequest, ChatCompletionDeltaStreamLine, ChatCompletionAnnotationStreamLine>(
                            "Groq",
                            chatModel,
                            chatThread,
                            settingsManager,
-                           () => chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel),
-                           (systemPrompt, messages, apiParameters, stream, tools) =>
+                           async (systemPrompt, apiParameters, tools) =>
                            {
                                if (TryPopIntParameter(apiParameters, "seed", out var parsedSeed))
                                    apiParameters["seed"] = parsedSeed;
 
-                               return Task.FromResult(new ChatCompletionAPIRequest
+                               // Build the list of messages:
+                               var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel);
+
+                               return new ChatCompletionAPIRequest
                                {
                                    Model = chatModel.Id,
+
+                                   // Build the messages:
+                                   // - First of all the system prompt
+                                   // - Then none-empty user and AI messages
                                    Messages = [systemPrompt, ..messages],
-                                   Stream = stream,
+
+                                   // Right now, we only support streaming completions:
+                                   Stream = true,
                                    Tools = tools,
                                    ParallelToolCalls = tools is null ? null : true,
                                    AdditionalApiParameters = apiParameters
-                               });
+                               };
                            },
                            token: token))
             yield return content;
@@ -56,9 +66,9 @@ public class ProviderGroq() : BaseProvider(LLMProviders.GROQ, "https://api.groq.
     #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
     
     /// <inheritdoc />
-    public override Task<string> TranscribeAudioAsync(Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default)
+    public override Task<TranscriptionResult> TranscribeAudioAsync(Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default)
     {
-        return Task.FromResult(string.Empty);
+        return Task.FromResult(TranscriptionResult.Failure());
     }
     
     /// <inhertidoc />
@@ -68,57 +78,41 @@ public class ProviderGroq() : BaseProvider(LLMProviders.GROQ, "https://api.groq.
     }
 
     /// <inheritdoc />
-    public override Task<IEnumerable<Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override Task<ModelLoadResult> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
         return this.LoadModels(SecretStoreType.LLM_PROVIDER, token, apiKeyProvisional);
     }
 
     /// <inheritdoc />
-    public override Task<IEnumerable<Model>> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override Task<ModelLoadResult> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return Task.FromResult<IEnumerable<Model>>([]);
+        return Task.FromResult(ModelLoadResult.FromModels([]));
     }
     
     /// <inheritdoc />
-    public override Task<IEnumerable<Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override Task<ModelLoadResult> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return Task.FromResult(Enumerable.Empty<Model>());
+        return Task.FromResult(ModelLoadResult.FromModels([]));
     }
     
     /// <inheritdoc />
-    public override Task<IEnumerable<Model>> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override Task<ModelLoadResult> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return Task.FromResult(Enumerable.Empty<Model>());
+        return Task.FromResult(ModelLoadResult.FromModels([]));
     }
     
     #endregion
 
-    private async Task<IEnumerable<Model>> LoadModels(SecretStoreType storeType, CancellationToken token, string? apiKeyProvisional = null)
+    private Task<ModelLoadResult> LoadModels(SecretStoreType storeType, CancellationToken token, string? apiKeyProvisional = null)
     {
-        var secretKey = apiKeyProvisional switch
-        {
-            not null => apiKeyProvisional,
-            _ => await RUST_SERVICE.GetAPIKey(this, storeType) switch
-            {
-                { Success: true } result => await result.Secret.Decrypt(ENCRYPTION),
-                _ => null,
-            }
-        };
-
-        if (secretKey is null)
-            return [];
-        
-        using var request = new HttpRequestMessage(HttpMethod.Get, "models");
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
-
-        using var response = await this.httpClient.SendAsync(request, token);
-        if(!response.IsSuccessStatusCode)
-            return [];
-
-        var modelResponse = await response.Content.ReadFromJsonAsync<ModelsResponse>(token);
-        return modelResponse.Data.Where(n =>
-            !n.Id.StartsWith("whisper-", StringComparison.OrdinalIgnoreCase) &&
-            !n.Id.StartsWith("distil-", StringComparison.OrdinalIgnoreCase) &&
-            !n.Id.Contains("-tts", StringComparison.OrdinalIgnoreCase));
+        return this.LoadModelsResponse<ModelsResponse>(
+            storeType,
+            "models",
+            modelResponse => modelResponse.Data.Where(n =>
+                !n.Id.StartsWith("whisper-", StringComparison.OrdinalIgnoreCase) &&
+                !n.Id.StartsWith("distil-", StringComparison.OrdinalIgnoreCase) &&
+                !n.Id.Contains("-tts", StringComparison.OrdinalIgnoreCase)),
+            token,
+            apiKeyProvisional);
     }
 }

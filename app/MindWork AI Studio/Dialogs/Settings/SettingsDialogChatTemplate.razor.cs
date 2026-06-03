@@ -98,4 +98,66 @@ public partial class SettingsDialogChatTemplate : SettingsDialogBase
         
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
+
+    private async Task ExportChatTemplateWithSharedAttachmentPaths(ChatTemplate chatTemplate)
+    {
+        if (!this.SettingsManager.ConfigurationData.App.ShowAdminSettings)
+            return;
+
+        if (chatTemplate == ChatTemplate.NO_CHAT_TEMPLATE || chatTemplate.IsEnterpriseConfiguration)
+            return;
+
+        await this.CopyChatTemplateLuaToClipboard(chatTemplate);
+    }
+
+    private async Task ExportChatTemplateWithPackagedAttachments(ChatTemplate chatTemplate)
+    {
+        if (!this.SettingsManager.ConfigurationData.App.ShowAdminSettings)
+            return;
+
+        if (chatTemplate == ChatTemplate.NO_CHAT_TEMPLATE || chatTemplate.IsEnterpriseConfiguration)
+            return;
+
+        if (chatTemplate.FileAttachments.Count == 0)
+        {
+            await this.ExportChatTemplateWithSharedAttachmentPaths(chatTemplate);
+            return;
+        }
+
+        var pluginDirectoryResponse = await this.RustService.SelectDirectory(T("Select configuration plugin folder"));
+        if (pluginDirectoryResponse.UserCancelled)
+            return;
+
+        await this.CopyPackagedChatTemplateLuaToClipboard(chatTemplate, pluginDirectoryResponse.SelectedDirectory);
+    }
+
+    private async Task CopyChatTemplateLuaToClipboard(ChatTemplate chatTemplate)
+    {
+        if (!chatTemplate.TryExportAsConfigurationSection(out var luaCode, out var issue))
+        {
+            await this.DialogService.ShowMessageBox(
+                T("Export Chat Template"),
+                issue,
+                T("Close"));
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(luaCode))
+            await this.RustService.CopyText2Clipboard(this.Snackbar, luaCode);
+    }
+
+    private async Task CopyPackagedChatTemplateLuaToClipboard(ChatTemplate chatTemplate, string pluginDirectory)
+    {
+        if (!chatTemplate.TryExportAsConfigurationSectionWithPackagedAttachments(pluginDirectory, out var luaCode, out var issue))
+        {
+            await this.DialogService.ShowMessageBox(
+                T("Export Chat Template"),
+                issue,
+                T("Close"));
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(luaCode))
+            await this.RustService.CopyText2Clipboard(this.Snackbar, luaCode);
+    }
 }

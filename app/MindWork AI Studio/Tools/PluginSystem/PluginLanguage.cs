@@ -17,15 +17,15 @@ public sealed class PluginLanguage : PluginBase, ILanguagePlugin
     public PluginLanguage(bool isInternal, LuaState state, PluginType type) : base(isInternal, state, type)
     {
         if(!this.TryInitIETFTag(out var issue, out this.langCultureTag))
-            this.pluginIssues.Add(issue);
+            this.PluginIssues.Add(issue);
         
         if(!this.TryInitLangName(out issue, out this.langName))
-            this.pluginIssues.Add(issue);
+            this.PluginIssues.Add(issue);
         
         if (this.TryInitUITextContent(out issue, out var readContent))
             this.content = readContent;
         else
-            this.pluginIssues.Add(issue);
+            this.PluginIssues.Add(issue);
     }
     
     /// <summary>
@@ -52,7 +52,7 @@ public sealed class PluginLanguage : PluginBase, ILanguagePlugin
     /// <returns>True, when the IETF tag could be read, false otherwise.</returns>
     private bool TryInitIETFTag(out string message, out string readLangCultureTag)
     {
-        if (!this.state.Environment["IETF_TAG"].TryRead(out readLangCultureTag))
+        if (!this.State.Environment["IETF_TAG"].TryRead(out readLangCultureTag))
         {
             message = TB("The field IETF_TAG does not exist or is not a valid string.");
             readLangCultureTag = string.Empty;
@@ -104,7 +104,7 @@ public sealed class PluginLanguage : PluginBase, ILanguagePlugin
     
     private bool TryInitLangName(out string message, out string readLangName)
     {
-        if (!this.state.Environment["LANG_NAME"].TryRead(out readLangName))
+        if (!this.State.Environment["LANG_NAME"].TryRead(out readLangName))
         {
             message = TB("The field LANG_NAME does not exist or is not a valid string.");
             readLangName = string.Empty;

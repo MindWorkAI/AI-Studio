@@ -1,0 +1,25 @@
+@inherits MSGComponentBase
+
+<MudDialog>
+    <DialogContent>
+        <div class="pt-6" style="max-height: calc(100vh - 11rem); overflow-y: auto; overflow-x: hidden; padding-right: 0.5rem;">
+            <MandatoryInfoDisplay Info="@this.Info" Acceptance="@this.Acceptance" ShowAcceptanceMetadata="@true" />
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudStack Row="true" Justify="Justify.SpaceBetween" Class="pa-4" Style="width: 100%;">
+            <MudButton OnClick="@this.Reject"
+                       Variant="Variant.Filled"
+                       Color="Color.Error"
+                       Size="Size.Large">
+                @this.Info.RejectButtonText
+            </MudButton>
+            <MudButton OnClick="@this.Accept"
+                       Variant="Variant.Filled"
+                       Color="Color.Success"
+                       Size="Size.Large">
+                @this.Info.AcceptButtonText
+            </MudButton>
+        </MudStack>
+    </DialogActions>
+</MudDialog>

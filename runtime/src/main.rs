@@ -1,7 +1,6 @@
 // Prevents an additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-extern crate rocket;
 extern crate core;
 
 use log::{info, warn};
@@ -11,7 +10,7 @@ use mindwork_ai_studio::environment::is_dev;
 use mindwork_ai_studio::log::init_logging;
 use mindwork_ai_studio::metadata::MetaData;
 use mindwork_ai_studio::runtime_api::start_runtime_api;
-
+use mindwork_ai_studio::secret::init_secret_store;
 
 #[tokio::main]
 async fn main() {
@@ -35,7 +34,7 @@ async fn main() {
     info!(".. MudBlazor: v{mud_blazor_version}", mud_blazor_version = metadata.mud_blazor_version);
     info!(".. Tauri: v{tauri_version}", tauri_version = metadata.tauri_version);
     info!(".. PDFium: v{pdfium_version}", pdfium_version = metadata.pdfium_version);
-    info!(".. Qdrant: v{qdrant_version}", qdrant_version = metadata.qdrant_version);
+    info!(".. Vector store: v{vector_store_version}", vector_store_version = metadata.vector_store_version);
 
     if is_dev() {
         warn!("Running in development mode.");
@@ -43,6 +42,7 @@ async fn main() {
         info!("Running in production mode.");
     }
 
+    init_secret_store();
     generate_runtime_certificate();
     start_runtime_api();
     

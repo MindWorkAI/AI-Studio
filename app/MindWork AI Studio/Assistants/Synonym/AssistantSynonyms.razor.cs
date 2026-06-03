@@ -1,4 +1,3 @@
-using AIStudio.Chat;
 using AIStudio.Dialogs.Settings;
 
 namespace AIStudio.Assistants.Synonym;
@@ -53,10 +52,29 @@ public partial class AssistantSynonyms : AssistantBaseCore<SettingsDialogSynonym
 
     protected override Func<Task> SubmitAction => this.FindSynonyms;
 
-    protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
+    protected override string SendToChatVisibleUserPromptText
     {
-        SystemPrompt = SystemPrompts.DEFAULT,
-    };
+        get
+        {
+            if (string.IsNullOrWhiteSpace(this.inputContext))
+            {
+                return $"""
+                        {T("Find synonyms for the following word or phrase:")}
+                        
+                        {this.inputText}
+                        """;
+            }
+
+            return $"""
+                    {T("Find synonyms for the following word or phrase:")}
+                    
+                    {this.inputText}
+                    
+                    {T("Context:")}
+                    {this.inputContext}
+                    """;
+        }
+    }
 
     protected override void ResetForm()
     {
@@ -148,8 +166,8 @@ public partial class AssistantSynonyms : AssistantBaseCore<SettingsDialogSynonym
     
     private async Task FindSynonyms()
     {
-        await this.form!.Validate();
-        if (!this.inputIsValid)
+        await this.Form!.Validate();
+        if (!this.InputIsValid)
             return;
         
         this.CreateChatThread();

@@ -1,4 +1,5 @@
 using AIStudio.Settings;
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Services;
 
 using Lua;
@@ -12,11 +13,17 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
     private static readonly ILogger LOG = Program.LOGGER_FACTORY.CreateLogger(nameof(PluginConfiguration));
 
     private List<PluginConfigurationObject> configObjects = [];
+    private List<DataMandatoryInfo> mandatoryInfos = [];
     
     /// <summary>
     /// The list of configuration objects. Configuration objects are, e.g., providers or chat templates. 
     /// </summary>
     public IEnumerable<PluginConfigurationObject> ConfigObjects => this.configObjects;
+
+    /// <summary>
+    /// The list of mandatory infos provided by this configuration plugin.
+    /// </summary>
+    public IReadOnlyList<DataMandatoryInfo> MandatoryInfos => this.mandatoryInfos;
 
     /// <summary>
     /// True/false when explicitly configured in the plugin, otherwise null.
@@ -26,15 +33,46 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
     public async Task InitializeAsync(bool dryRun)
     {
         if(!this.TryProcessConfiguration(dryRun, out var issue))
-            this.pluginIssues.Add(issue);
+            this.PluginIssues.Add(issue);
 
         if (!dryRun)
         {
             // Store any decrypted API keys from enterprise configuration in the OS keyring:
             await StoreEnterpriseApiKeysAsync();
+            await StoreEnterpriseSecretsAsync();
 
             await SETTINGS_MANAGER.StoreSettings();
             await MessageBus.INSTANCE.SendMessage<bool>(null, Event.CONFIGURATION_CHANGED);
+        }
+    }
+
+    /// <summary>
+    /// Stores any pending enterprise secrets in the OS keyring.
+    /// </summary>
+    private static async Task StoreEnterpriseSecretsAsync()
+    {
+        var pendingSecrets = PendingEnterpriseSecrets.GetAndClear();
+        if (pendingSecrets.Count == 0)
+            return;
+
+        LOG.LogInformation($"Storing {pendingSecrets.Count} enterprise secret(s) in the OS keyring.");
+        var rustService = Program.SERVICE_PROVIDER.GetRequiredService<RustService>();
+        foreach (var pendingSecret in pendingSecrets)
+        {
+            try
+            {
+                var secretId = new TemporarySecretId(pendingSecret.SecretId, pendingSecret.SecretName);
+                var result = await rustService.SetSecret(secretId, pendingSecret.SecretData, pendingSecret.StoreType);
+
+                if (result.Success)
+                    LOG.LogDebug($"Successfully stored enterprise secret for '{pendingSecret.SecretName}' in the OS keyring.");
+                else
+                    LOG.LogWarning($"Failed to store enterprise secret for '{pendingSecret.SecretName}': {result.Issue}");
+            }
+            catch (Exception ex)
+            {
+                LOG.LogError(ex, $"Exception while storing enterprise secret for '{pendingSecret.SecretName}'.");
+            }
         }
     }
 
@@ -91,9 +129,10 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
     private bool TryProcessConfiguration(bool dryRun, out string message)
     {
         this.configObjects.Clear();
+        this.mandatoryInfos.Clear();
         
         // Ensure that the main CONFIG table exists and is a valid Lua table:
-        if (!this.state.Environment["CONFIG"].TryRead<LuaTable>(out var mainTable))
+        if (!this.State.Environment["CONFIG"].TryRead<LuaTable>(out var mainTable))
         {
             message = TB("The CONFIG table does not exist or is not a valid table.");
             return false;
@@ -138,6 +177,14 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
 
         // Config: private hosts allowed for the read web page tool
         ManagedConfiguration.TryProcessConfiguration(x => x.Tools, x => x.ReadWebPageAllowedPrivateHosts, this.Id, settingsTable, dryRun);
+
+        // Config: timeout for external HTTP requests
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.HttpClientTimeoutSeconds, this.Id, settingsTable, dryRun);
+
+        // Config: custom root certificates for external HTTP requests
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.ExternalHttpCustomRootCertificatesEnabled, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.ExternalHttpCustomRootCertificateBundlePath, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.ExternalHttpCustomRootCertificateAllowedHosts, this.Id, settingsTable, dryRun);
         
         // Handle configured LLM providers:
         PluginConfigurationObject.TryParse(PluginConfigurationObjectType.LLM_PROVIDER, x => x.Providers, x => x.NextProviderNum, mainTable, this.Id, ref this.configObjects, dryRun);
@@ -149,13 +196,19 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         PluginConfigurationObject.TryParse(PluginConfigurationObjectType.EMBEDDING_PROVIDER, x => x.EmbeddingProviders, x => x.NextEmbeddingNum, mainTable, this.Id, ref this.configObjects, dryRun);
 
         // Handle configured chat templates:
-        PluginConfigurationObject.TryParse(PluginConfigurationObjectType.CHAT_TEMPLATE, x => x.ChatTemplates, x => x.NextChatTemplateNum, mainTable, this.Id, ref this.configObjects, dryRun);
+        PluginConfigurationObject.TryParse(PluginConfigurationObjectType.CHAT_TEMPLATE, x => x.ChatTemplates, x => x.NextChatTemplateNum, mainTable, this.Id, ref this.configObjects, dryRun, this.PluginPath);
+
+        // Handle configured data sources:
+        PluginConfigurationObject.TryParseDataSources(mainTable, this.Id, ref this.configObjects, dryRun);
         
         // Handle configured profiles:
         PluginConfigurationObject.TryParse(PluginConfigurationObjectType.PROFILE, x => x.Profiles, x => x.NextProfileNum, mainTable, this.Id, ref this.configObjects, dryRun);
         
         // Handle configured document analysis policies:
         PluginConfigurationObject.TryParse(PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY, x => x.DocumentAnalysis.Policies, x => x.NextDocumentAnalysisPolicyNum, mainTable, this.Id, ref this.configObjects, dryRun);
+
+        // Handle configured mandatory infos:
+        this.TryReadMandatoryInfos(mainTable);
         
         // Config: preselected provider?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.PreselectedProvider, Guid.Empty, this.Id, settingsTable, dryRun);
@@ -168,5 +221,26 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
 
         message = string.Empty;
         return true;
+    }
+
+    private void TryReadMandatoryInfos(LuaTable mainTable)
+    {
+        if (!mainTable.TryGetValue("MANDATORY_INFOS", out var mandatoryInfosValue) || !mandatoryInfosValue.TryRead<LuaTable>(out var mandatoryInfosTable))
+            return;
+
+        for (var i = 1; i <= mandatoryInfosTable.ArrayLength; i++)
+        {
+            var luaMandatoryInfoValue = mandatoryInfosTable[i];
+            if (!luaMandatoryInfoValue.TryRead<LuaTable>(out var luaMandatoryInfoTable))
+            {
+                LOG.LogWarning("The table 'MANDATORY_INFOS' entry at index {Index} is not a valid table (config plugin id: {ConfigPluginId}).", i, this.Id);
+                continue;
+            }
+
+            if (DataMandatoryInfo.TryParseConfiguration(i, luaMandatoryInfoTable, this.Id, out var mandatoryInfo))
+                this.mandatoryInfos.Add(mandatoryInfo);
+            else
+                LOG.LogWarning("The table 'MANDATORY_INFOS' entry at index {Index} does not contain a valid mandatory info (config plugin id: {ConfigPluginId}).", i, this.Id);
+        }
     }
 }

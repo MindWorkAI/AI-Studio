@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -11,15 +12,18 @@ using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.Services;
 
 using Microsoft.Extensions.DependencyInjection;
+using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Provider.OpenAI;
 
 /// <summary>
 /// The OpenAI provider.
 /// </summary>
-public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, "https://api.openai.com/v1/", LOGGER)
+public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Uri("https://api.openai.com/v1/"), ExternalHttpTrustPolicy.SYSTEM_TRUST_ONLY, LOGGER)
 {
     private static readonly ILogger<ProviderOpenAI> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderOpenAI>();
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ProviderOpenAI).Namespace, nameof(ProviderOpenAI));
+    
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ProviderOpenAI).Namespace, nameof(ProviderOpenAI));
     
     #region Implementation of IProvider
@@ -29,6 +33,31 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, "https
 
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "OpenAI";
+
+    /// <inheritdoc />
+    public override bool HasModelLoadingCapability => true;
+
+    protected override ProviderRequestFailureReason ClassifyProviderRequestFailure(HttpStatusCode statusCode, string responseBody)
+    {
+        if (statusCode is HttpStatusCode.TooManyRequests && HasInsufficientQuotaError(responseBody))
+            return ProviderRequestFailureReason.INSUFFICIENT_QUOTA;
+
+        return base.ClassifyProviderRequestFailure(statusCode, responseBody);
+    }
+
+    protected override ProviderRequestFailureReason ClassifyProviderRequestFailure(string? errorCode, string? errorType, string? errorMessage, string responseBody)
+    {
+        if (IsInsufficientQuota(errorCode) || IsInsufficientQuota(errorType) || HasInsufficientQuotaError(responseBody))
+            return ProviderRequestFailureReason.INSUFFICIENT_QUOTA;
+
+        return base.ClassifyProviderRequestFailure(errorCode, errorType, errorMessage, responseBody);
+    }
+
+    protected override string GetProviderRequestFailureUserMessage(ProviderRequestFailureReason failureReason) => failureReason switch
+    {
+        ProviderRequestFailureReason.INSUFFICIENT_QUOTA => TB("It looks like you do not have any API credits left with OpenAI. Please add credits to your account and try again."),
+        _ => base.GetProviderRequestFailureUserMessage(failureReason),
+    };
 
     /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
@@ -145,6 +174,19 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, "https
             Content = chatThread.PrepareSystemPrompt(settingsManager),
         };
 
+        //
+        // Prepare the tools we want to use:
+        //
+        IList<ProviderTool> providerTools = modelCapabilities.Contains(Capability.WEB_SEARCH) switch
+        {
+            true => [ ProviderTools.WEB_SEARCH ],
+            _ => []
+        };
+        
+        
+        // Parse the API parameters:
+        var apiParameters = this.ParseAdditionalApiParameters("input", "store", "tools");
+
         // Build the list of messages:
         var messages = await chatThread.Blocks.BuildMessagesAsync(
             this.Provider, chatModel,
@@ -237,6 +279,7 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, "https
                 Store = false,
                 
                 // Tools we want to use:
+                ProviderTools = providerTools,
                 Tools = providerTools,
                 
                 // Additional API parameters:
@@ -420,7 +463,7 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, "https
     #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
     
     /// <inheritdoc />
-    public override async Task<string> TranscribeAudioAsync(Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default)
+    public override async Task<TranscriptionResult> TranscribeAudioAsync(Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default)
     {
         var requestedSecret = await RUST_SERVICE.GetAPIKey(this, SecretStoreType.TRANSCRIPTION_PROVIDER);
         return await this.PerformStandardTranscriptionRequest(requestedSecret, transcriptionModel, audioFilePath, token: token);
@@ -434,61 +477,112 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, "https
     }
 
     /// <inheritdoc />
-    public override async Task<IEnumerable<Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override async Task<ModelLoadResult> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        var models = await this.LoadModels(SecretStoreType.LLM_PROVIDER, ["chatgpt-", "gpt-", "o1-", "o3-", "o4-"], token, apiKeyProvisional);
-        return models.Where(model => !model.Id.Contains("image", StringComparison.OrdinalIgnoreCase) &&
-                                     !model.Id.Contains("realtime", StringComparison.OrdinalIgnoreCase) &&
-                                     !model.Id.Contains("audio", StringComparison.OrdinalIgnoreCase) &&
-                                     !model.Id.Contains("tts", StringComparison.OrdinalIgnoreCase) &&
-                                     !model.Id.Contains("transcribe", StringComparison.OrdinalIgnoreCase));
+        var result = await this.LoadModels(SecretStoreType.LLM_PROVIDER, ["chatgpt-", "gpt-", "o1-", "o3-", "o4-"], token, apiKeyProvisional);
+        return result with
+        {
+            Models =
+            [
+                ..result.Models.Where(model => !model.Id.Contains("image", StringComparison.OrdinalIgnoreCase) &&
+                                               !model.Id.Contains("realtime", StringComparison.OrdinalIgnoreCase) &&
+                                               !model.Id.Contains("audio", StringComparison.OrdinalIgnoreCase) &&
+                                               !model.Id.Contains("tts", StringComparison.OrdinalIgnoreCase) &&
+                                               !model.Id.Contains("transcribe", StringComparison.OrdinalIgnoreCase))
+            ]
+        };
     }
 
     /// <inheritdoc />
-    public override Task<IEnumerable<Model>> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override Task<ModelLoadResult> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
         return this.LoadModels(SecretStoreType.IMAGE_PROVIDER, ["dall-e-", "gpt-image"], token, apiKeyProvisional);
     }
     
     /// <inheritdoc />
-    public override Task<IEnumerable<Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override Task<ModelLoadResult> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
         return this.LoadModels(SecretStoreType.EMBEDDING_PROVIDER, ["text-embedding-"], token, apiKeyProvisional);
     }
     
     /// <inheritdoc />
-    public override async Task<IEnumerable<Model>> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override async Task<ModelLoadResult> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        var models = await this.LoadModels(SecretStoreType.TRANSCRIPTION_PROVIDER, ["whisper-", "gpt-"], token, apiKeyProvisional);
-        return models.Where(model => model.Id.StartsWith("whisper-", StringComparison.InvariantCultureIgnoreCase) ||
-                                     model.Id.Contains("-transcribe", StringComparison.InvariantCultureIgnoreCase));
+        var result = await this.LoadModels(SecretStoreType.TRANSCRIPTION_PROVIDER, ["whisper-", "gpt-"], token, apiKeyProvisional);
+        return result with
+        {
+            Models =
+            [
+                ..result.Models.Where(model => model.Id.StartsWith("whisper-", StringComparison.InvariantCultureIgnoreCase) ||
+                                               model.Id.Contains("-transcribe", StringComparison.InvariantCultureIgnoreCase))
+            ]
+        };
     }
     
     #endregion
 
-    private async Task<IEnumerable<Model>> LoadModels(SecretStoreType storeType, string[] prefixes, CancellationToken token, string? apiKeyProvisional = null)
+    private Task<ModelLoadResult> LoadModels(SecretStoreType storeType, string[] prefixes, CancellationToken token, string? apiKeyProvisional = null)
     {
-        var secretKey = apiKeyProvisional switch
+        return this.LoadModelsResponse<ModelsResponse>(
+            storeType,
+            "models",
+            modelResponse => modelResponse.Data.Where(model => prefixes.Any(prefix => model.Id.StartsWith(prefix, StringComparison.InvariantCulture))),
+            token,
+            apiKeyProvisional);
+    }
+
+    private static bool HasInsufficientQuotaError(string responseBody)
+    {
+        if (string.IsNullOrWhiteSpace(responseBody))
+            return false;
+
+        try
         {
-            not null => apiKeyProvisional,
-            _ => await RUST_SERVICE.GetAPIKey(this, storeType) switch
-            {
-                { Success: true } result => await result.Secret.Decrypt(ENCRYPTION),
-                _ => null,
-            }
-        };
+            using var document = JsonDocument.Parse(responseBody);
+            return HasInsufficientQuotaError(document.RootElement);
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+    }
 
-        if (secretKey is null)
-            return [];
-        
-        using var request = new HttpRequestMessage(HttpMethod.Get, "models");
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
+    private static bool HasInsufficientQuotaError(JsonElement element)
+    {
+        switch (element.ValueKind)
+        {
+            case JsonValueKind.Object:
+                if (HasJsonStringValue(element, "type", "insufficient_quota") ||
+                    HasJsonStringValue(element, "code", "insufficient_quota"))
+                    return true;
 
-        using var response = await this.httpClient.SendAsync(request, token);
-        if(!response.IsSuccessStatusCode)
-            return [];
+                foreach (var property in element.EnumerateObject())
+                    if (HasInsufficientQuotaError(property.Value))
+                        return true;
 
-        var modelResponse = await response.Content.ReadFromJsonAsync<ModelsResponse>(token);
-        return modelResponse.Data.Where(model => prefixes.Any(prefix => model.Id.StartsWith(prefix, StringComparison.InvariantCulture)));
+                return false;
+
+            case JsonValueKind.Array:
+                foreach (var item in element.EnumerateArray())
+                    if (HasInsufficientQuotaError(item))
+                        return true;
+
+                return false;
+
+            default:
+                return false;
+        }
+    }
+
+    private static bool IsInsufficientQuota(string? value)
+    {
+        return value is not null && value.Equals("insufficient_quota", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool HasJsonStringValue(JsonElement element, string propertyName, string expectedValue)
+    {
+        return element.TryGetProperty(propertyName, out var propertyElement) &&
+               propertyElement.ValueKind is JsonValueKind.String &&
+               string.Equals(propertyElement.GetString(), expectedValue, StringComparison.OrdinalIgnoreCase);
     }
 }

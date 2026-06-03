@@ -132,6 +132,7 @@ public partial class VoiceRecorder : MSGComponentBase
             }
 
             var mimeTypes = GetPreferredMimeTypes(
+                Builder.Create().UseAudio().UseSubtype(AudioSubtype.WEBM).Build(),
                 Builder.Create().UseAudio().UseSubtype(AudioSubtype.OGG).Build(),
                 Builder.Create().UseAudio().UseSubtype(AudioSubtype.AAC).Build(),
                 Builder.Create().UseAudio().UseSubtype(AudioSubtype.MP3).Build(),
@@ -361,7 +362,18 @@ public partial class VoiceRecorder : MSGComponentBase
 
             // Call the transcription API:
             this.Logger.LogInformation("Starting transcription with provider '{ProviderName}' and model '{ModelName}'.", transcriptionProviderSettings.UsedLLMProvider, transcriptionProviderSettings.Model.ToString());
-            var transcribedText = await provider.TranscribeAudioAsync(transcriptionProviderSettings.Model, this.finalRecordingPath, this.SettingsManager);
+            var transcriptionResult = await provider.TranscribeAudioAsync(transcriptionProviderSettings.Model, this.finalRecordingPath, this.SettingsManager);
+            if (!transcriptionResult.Success)
+            {
+                this.Logger.LogWarning("The transcription request failed.");
+                var userMessage = string.IsNullOrWhiteSpace(transcriptionResult.ErrorMessage)
+                    ? this.T("Unfortunately, there was an error communicating with the AI system.")
+                    : transcriptionResult.ErrorMessage;
+                await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, userMessage));
+                return;
+            }
+
+            var transcribedText = transcriptionResult.Text;
 
             if (string.IsNullOrWhiteSpace(transcribedText))
             {

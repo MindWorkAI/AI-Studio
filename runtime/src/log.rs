@@ -8,9 +8,8 @@ use flexi_logger::{DeferredNow, Duplicate, FileSpec, Logger, LoggerHandle};
 use flexi_logger::writers::FileLogWriter;
 use log::{kv, Level};
 use log::kv::{Key, Value, VisitSource};
-use rocket::{get, post};
-use rocket::serde::json::Json;
-use rocket::serde::{Deserialize, Serialize};
+use axum::Json;
+use serde::{Deserialize, Serialize};
 use crate::api_token::APIToken;
 use crate::environment::is_dev;
 
@@ -34,14 +33,17 @@ pub fn init_logging() {
         false => log_config.push_str("info, "),
     };
 
-    // Set the log level for the Rocket library:
-    log_config.push_str("rocket=info, ");
-
-    // Set the log level for the Rocket server:
-    log_config.push_str("rocket::server=warn, ");
-
-    // Set the log level for the Reqwest library:
-    log_config.push_str("reqwest::async_impl::client=info");
+    // Keep noisy HTTP/TLS internals at info level even in development builds:
+    log_config.push_str("h2=info, ");
+    log_config.push_str("hyper=info, ");
+    log_config.push_str("hyper_util=info, ");
+    log_config.push_str("axum=info, ");
+    log_config.push_str("axum_server=info, ");
+    log_config.push_str("tower=info, ");
+    log_config.push_str("tower_http=info, ");
+    log_config.push_str("rustls=info, ");
+    log_config.push_str("tokio_rustls=info, ");
+    log_config.push_str("reqwest=info");
 
     // Configure the initial filename. On Unix systems, the file should start
     // with a dot to be hidden.
@@ -224,7 +226,6 @@ fn file_logger_format(
     write!(w, "{}", &record.args())
 }
 
-#[get("/log/paths")]
 pub async fn get_log_paths(_token: APIToken) -> Json<LogPathsResponse> {
     Json(LogPathsResponse {
         log_startup_path: LOG_STARTUP_PATH.get().expect("No startup log path was set").clone(),
@@ -269,9 +270,7 @@ fn log_with_level(
 }
 
 /// Logs an event from the .NET server.
-#[post("/log/event", data = "<event>")]
-pub fn log_event(_token: APIToken, event: Json<LogEvent>) -> Json<LogEventResponse> {
-    let event = event.into_inner();
+pub async fn log_event(_token: APIToken, Json(event): Json<LogEvent>) -> Json<LogEventResponse> {
     let level = parse_dotnet_log_level(&event.level);
     let message = event.message.as_str();
     let category = event.category.as_str();

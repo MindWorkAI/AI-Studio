@@ -6,6 +6,7 @@ using AIStudio.Assistants.SlideBuilder;
 using AIStudio.Assistants.TextSummarizer;
 using AIStudio.Assistants.EMail;
 using AIStudio.Provider;
+using AIStudio.Agents.AssistantAudit;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.PluginSystem;
 
@@ -298,5 +299,16 @@ public static class ConfigurationSelectDataFactory
     {
         foreach (var theme in Enum.GetValues<Themes>())
             yield return new(theme.GetName(), theme);
+    }
+
+    public static IEnumerable<ConfigurationSelectData<AssistantAuditLevel>> GetAssistantAuditLevelsData()
+    {
+        foreach (var level in Enum.GetValues<AssistantAuditLevel>())
+        {
+            if (level == AssistantAuditLevel.UNKNOWN)
+                continue;
+
+            yield return new(level.GetName(), level);
+        }
     }
 }

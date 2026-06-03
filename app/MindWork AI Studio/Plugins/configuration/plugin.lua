@@ -136,6 +136,54 @@ CONFIG["EMBEDDING_PROVIDERS"] = {}
 --     }
 -- }
 
+-- ERI v1 data sources for retrieval-augmented generation:
+CONFIG["DATA_SOURCES"] = {}
+
+-- Example: ERI v1 data source with a shared access token.
+-- CONFIG["DATA_SOURCES"][#CONFIG["DATA_SOURCES"]+1] = {
+--     ["Id"] = "00000000-0000-0000-0000-000000000000",
+--     ["Name"] = "<user-friendly data source name>",
+--     ["Type"] = "ERI_V1",
+--     ["Hostname"] = "<https address of the ERI server>",
+--     ["Port"] = 443,
+--     ["AuthMethod"] = "TOKEN",
+--     ["Token"] = "ENC:v1:<base64-encoded encrypted token>",
+--     ["SecurityPolicy"] = "SELF_HOSTED",
+--     ["SelectedRetrievalId"] = "<retrieval process ID from the ERI server>",
+--     ["MaxMatches"] = 10,
+-- }
+
+-- Example: ERI v1 data source with a shared username and password.
+-- CONFIG["DATA_SOURCES"][#CONFIG["DATA_SOURCES"]+1] = {
+--     ["Id"] = "00000000-0000-0000-0000-000000000000",
+--     ["Name"] = "<user-friendly data source name>",
+--     ["Type"] = "ERI_V1",
+--     ["Hostname"] = "<https address of the ERI server>",
+--     ["Port"] = 443,
+--     ["AuthMethod"] = "USERNAME_PASSWORD",
+--     ["UsernamePasswordMode"] = "SHARED_USERNAME_AND_PASSWORD",
+--     ["Username"] = "<shared username>",
+--     ["Password"] = "ENC:v1:<base64-encoded encrypted password>",
+--     ["SecurityPolicy"] = "SELF_HOSTED",
+--     ["SelectedRetrievalId"] = "<retrieval process ID from the ERI server>",
+--     ["MaxMatches"] = 10,
+-- }
+
+-- Example: ERI v1 data source using the user's username and a shared password.
+-- CONFIG["DATA_SOURCES"][#CONFIG["DATA_SOURCES"]+1] = {
+--     ["Id"] = "00000000-0000-0000-0000-000000000000",
+--     ["Name"] = "<user-friendly data source name>",
+--     ["Type"] = "ERI_V1",
+--     ["Hostname"] = "<https address of the ERI server>",
+--     ["Port"] = 443,
+--     ["AuthMethod"] = "USERNAME_PASSWORD",
+--     ["UsernamePasswordMode"] = "OS_USERNAME_SHARED_PASSWORD",
+--     ["Password"] = "ENC:v1:<base64-encoded encrypted password>",
+--     ["SecurityPolicy"] = "SELF_HOSTED",
+--     ["SelectedRetrievalId"] = "<retrieval process ID from the ERI server>",
+--     ["MaxMatches"] = 10,
+-- }
+
 CONFIG["SETTINGS"] = {}
 
 -- Configure the update check interval:
@@ -172,9 +220,9 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataApp.PreviewVisibility"] = "NONE"
 
 -- Configure the enabled preview features:
--- Allowed values are can be found in https://github.com/MindWorkAI/AI-Studio/app/MindWork%20AI%20Studio/Settings/DataModel/PreviewFeatures.cs
--- Examples are PRE_WRITER_MODE_2024, PRE_RAG_2024, PRE_SPEECH_TO_TEXT_2026.
--- CONFIG["SETTINGS"]["DataApp.EnabledPreviewFeatures"] = { "PRE_RAG_2024", "PRE_SPEECH_TO_TEXT_2026" }
+-- Allowed values are can be found in https://github.com/MindWorkAI/AI-Studio/blob/main/app/MindWork%20AI%20Studio/Settings/DataModel/PreviewFeatures.cs
+-- Examples are PRE_WRITER_MODE_2024 and PRE_RAG_2024.
+-- CONFIG["SETTINGS"]["DataApp.EnabledPreviewFeatures"] = { "PRE_RAG_2024" }
 
 -- Configure the preselected provider.
 -- It must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"].
@@ -195,11 +243,11 @@ CONFIG["SETTINGS"] = {}
 -- Configure which assistants should be hidden from the UI.
 -- Allowed values are:
 --   GRAMMAR_SPELLING_ASSISTANT, ICON_FINDER_ASSISTANT, REWRITE_ASSISTANT,
---   TRANSLATION_ASSISTANT, AGENDA_ASSISTANT, CODING_ASSISTANT,
---   TEXT_SUMMARIZER_ASSISTANT, EMAIL_ASSISTANT, LEGAL_CHECK_ASSISTANT,
---   SYNONYMS_ASSISTANT, MY_TASKS_ASSISTANT, JOB_POSTING_ASSISTANT,
---   BIAS_DAY_ASSISTANT, ERI_ASSISTANT, DOCUMENT_ANALYSIS_ASSISTANT,
---   SLIDE_BUILDER_ASSISTANT, I18N_ASSISTANT
+--   PROMPT_OPTIMIZER_ASSISTANT, TRANSLATION_ASSISTANT, AGENDA_ASSISTANT,
+--   CODING_ASSISTANT, TEXT_SUMMARIZER_ASSISTANT, EMAIL_ASSISTANT,
+--   LEGAL_CHECK_ASSISTANT, SYNONYMS_ASSISTANT, MY_TASKS_ASSISTANT,
+--   JOB_POSTING_ASSISTANT, BIAS_DAY_ASSISTANT, ERI_ASSISTANT,
+--   DOCUMENT_ANALYSIS_ASSISTANT, SLIDE_BUILDER_ASSISTANT, I18N_ASSISTANT
 -- CONFIG["SETTINGS"]["DataApp.HiddenAssistants"] = { "ERI_ASSISTANT", "I18N_ASSISTANT" }
 
 -- Configure a global shortcut for starting and stopping dictation.
@@ -228,6 +276,29 @@ CONFIG["SETTINGS"] = {}
 -- Examples:
 -- CONFIG["SETTINGS"]["DataTools.ReadWebPageAllowedPrivateHosts"] = "dlr.de, *.dlr.de"
 -- CONFIG["SETTINGS"]["DataTools.ReadWebPageAllowedPrivateHosts.AllowUserOverride"] = false
+
+-- Configure the HTTP timeout for external requests, in seconds.
+-- The default is 3600 (1 hour).
+-- CONFIG["SETTINGS"]["DataApp.HttpClientTimeoutSeconds"] = 3600
+
+-- Configure additional root certificates for external HTTPS requests.
+--
+-- This is intended for managed Linux/Flatpak deployments where organization-internal
+-- HTTPS certificates chain to a private root CA that is not visible inside the sandbox.
+-- The file must be a PEM bundle with one or more root CA certificates and must be
+-- readable by AI Studio.
+--
+-- IMPORTANT: A configuration plugin cannot fix the very first download of that same
+-- configuration plugin. For bootstrapping enterprise configuration downloads, deploy
+-- the equivalent environment variables before AI Studio starts:
+--
+-- MINDWORK_AI_STUDIO_EXTERNAL_HTTP_CUSTOM_ROOT_CERTIFICATES_ENABLED=true
+-- MINDWORK_AI_STUDIO_EXTERNAL_HTTP_CUSTOM_ROOT_CERTIFICATE_BUNDLE_PATH=/path/in/sandbox/company-root-cas.pem
+-- MINDWORK_AI_STUDIO_EXTERNAL_HTTP_CUSTOM_ROOT_CERTIFICATE_ALLOWED_HOSTS=*.intra.example.org;data.example.org
+--
+-- CONFIG["SETTINGS"]["DataApp.ExternalHttpCustomRootCertificatesEnabled"] = true
+-- CONFIG["SETTINGS"]["DataApp.ExternalHttpCustomRootCertificateBundlePath"] = "/path/in/sandbox/company-root-cas.pem"
+-- CONFIG["SETTINGS"]["DataApp.ExternalHttpCustomRootCertificateAllowedHosts"] = { "*.intra.example.org", "eri.example.org" }
 
 -- Example chat templates for this configuration:
 CONFIG["CHAT_TEMPLATES"] = {}
@@ -263,7 +334,8 @@ CONFIG["CHAT_TEMPLATES"] = {}
 --     ["AllowProfileUsage"] = true,
 --     -- Optional: Pre-attach files that will be automatically included when using this template.
 --     -- These files will be loaded when the user selects this chat template.
---     -- Note: File paths must be absolute paths and accessible to all users.
+--     -- Note: File paths can be absolute paths that are accessible to all users, or relative paths
+--     -- inside this plugin folder, for example "attachments/00000000-0000-0000-0000-000000000001/Guidelines.pdf".
 --     ["FileAttachments"] = {
 --         "G:\\Company\\Documents\\Guidelines.pdf",
 --         "G:\\Company\\Documents\\CompanyPolicies.docx"
@@ -278,6 +350,32 @@ CONFIG["CHAT_TEMPLATES"] = {}
 --             ["Content"] = "Thank you. I'll analyze the documents and provide a comprehensive summary."
 --         }
 --     }
+-- }
+
+-- Mandatory infos that users must explicitly accept before using AI Studio:
+-- AI Studio asks users again when Version, Title, or Markdown change.
+-- Changing Version additionally allows the UI to communicate that a new version is available.
+CONFIG["MANDATORY_INFOS"] = {}
+
+-- An example mandatory info:
+-- CONFIG["MANDATORY_INFOS"][#CONFIG["MANDATORY_INFOS"]+1] = {
+--     ["Id"] = "00000000-0000-0000-0000-000000000000",
+--     ["Title"] = "AI Usage Requirements",
+--     ["Version"] = "1",
+--     ["Markdown"] = [===[
+--                         ## Usage Requirements
+--
+--                         Before using this AI offering, please ensure that:
+--
+--                         - you have completed the required internal training,
+--                         - generated output is clearly labeled where necessary,
+--                         - results are reviewed by a human before reuse,
+--                         - all internal policies and applicable law are followed.
+--
+--                         Further information is available in the [internal wiki](https://example.org/wiki).
+--                         ]===],
+--     ["AcceptButtonText"] = "Yes, I comply with these requirements",
+--     ["RejectButtonText"] = "Stop. I do not agree to these requirements"
 -- }
 
 -- Document analysis policies for this configuration:

@@ -1,7 +1,7 @@
 @attribute [Route(Routes.ASSISTANT_MY_TASKS)]
 @inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogMyTasks>
 
-<ProfileFormSelection Validation="@this.ValidateProfile" @bind-Profile="@this.currentProfile"/>
+<ProfileFormSelection Validation="@this.ValidateProfile" @bind-Profile="@this.CurrentProfile"/>
 <MudTextField T="string" @bind-Text="@this.inputText" Validation="@this.ValidatingText" AdornmentIcon="@Icons.Material.Filled.DocumentScanner" Adornment="Adornment.Start" Label="@T("Text or email")" Variant="Variant.Outlined" Lines="12" AutoGrow="@true" MaxLines="24" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 <EnumSelection T="CommonLanguages" NameFunc="@(language => language.NameSelectingOptional())" @bind-Value="@this.selectedTargetLanguage" Icon="@Icons.Material.Filled.Translate" Label="@T("Target language")" AllowOther="@true" OtherValue="CommonLanguages.OTHER" @bind-OtherInput="@this.customTargetLanguage" ValidateOther="@this.ValidateCustomLanguage" LabelOther="@T("Custom target language")" />
-<ProviderSelection @bind-ProviderSettings="@this.providerSettings" ValidateProvider="@this.ValidatingProvider"/>
+<ProviderSelection @bind-ProviderSettings="@this.ProviderSettings" ValidateProvider="@this.ValidatingProvider"/>

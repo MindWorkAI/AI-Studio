@@ -39,13 +39,15 @@ AI Studio supports loading multiple enterprise configurations simultaneously. Th
 
 The preferred format is a fixed set of indexed pairs:
 
-- Registry values `config_id0` to `config_id9` together with `config_server_url0` to `config_server_url9`
-- Environment variables `MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ID0` to `MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ID9` together with `MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_SERVER_URL0` to `MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_SERVER_URL9`
-- Policy files `config0.yaml` to `config9.yaml`
+- Registry values `config_id_00000` to `config_id_99999` together with `config_server_url_00000` to `config_server_url_99999`
+- Environment variables `MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ID_00000` to `MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ID_99999` together with `MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_SERVER_URL_00000` to `MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_SERVER_URL_99999`
+- Policy files `config_00000.yaml` to `config_99999.yaml`
 
-Each configuration ID must be a valid [GUID](https://en.wikipedia.org/wiki/Universally_unique_identifier#Globally_unique_identifier). Up to ten configurations are supported per device.
+Each configuration ID must be a valid [GUID](https://en.wikipedia.org/wiki/Universally_unique_identifier#Globally_unique_identifier). Up to 100,000 indexed configuration slots are supported per device.
 
-If multiple configurations define the same setting, the first definition wins. For indexed pairs and policy files, the order is slot `0`, then `1`, and so on up to `9`.
+If multiple configurations define the same setting, the first definition wins. For indexed pairs and policy files, the order is slot `00000`, then `00001`, and so on up to `99999`.
+
+For backwards compatibility, the older slot names `0` to `9` without an underscore are still supported. AI Studio also accepts other numeric slot suffixes with up to five digits. Slot suffixes are matched exactly, so `config_id_1`, `config_id_01`, and `config_id_00001` are treated as separate slots. Use the five-digit format with an underscore for new deployments.
 
 ### Windows registry example
 
@@ -55,10 +57,10 @@ The Windows registry path is:
 
 Example values:
 
-- `config_id0` = `9072b77d-ca81-40da-be6a-861da525ef7b`
-- `config_server_url0` = `https://intranet.example.org/ai-studio/configuration`
-- `config_id1` = `a1b2c3d4-e5f6-7890-abcd-ef1234567890`
-- `config_server_url1` = `https://intranet.example.org/ai-studio/department-config`
+- `config_id_00000` = `9072b77d-ca81-40da-be6a-861da525ef7b`
+- `config_server_url_00000` = `https://intranet.example.org/ai-studio/configuration`
+- `config_id_10503` = `a1b2c3d4-e5f6-7890-abcd-ef1234567890`
+- `config_server_url_10503` = `https://intranet.example.org/ai-studio/department-config`
 - `config_encryption_secret` = `BASE64...`
 
 This approach works well with GPOs because each slot can be managed independently without rewriting a shared combined string.
@@ -77,6 +79,28 @@ AI Studio checks each directory listed in `$XDG_CONFIG_DIRS` and looks for a `mi
 
 The directories from `$XDG_CONFIG_DIRS` are processed in order.
 
+#### Flatpak policy directory
+
+When AI Studio runs as a Flatpak, it first checks this sandbox path before the regular Linux policy directories:
+
+`/app/etc/MindWorkAI/`
+
+This path is intended for a Flatpak provisioning extension like:
+
+```yaml
+add-extensions:
+  org.MindWorkAI.AIStudio.provisioning:
+    directory: etc/MindWorkAI
+    no-autodownload: true
+```
+
+Policy files can then be provided on the host through the extension directories. For example:
+
+- System-wide, read-only: `/var/lib/flatpak/extension/org.MindWorkAI.AIStudio.provisioning/x86_64/stable/`
+- User-specific: `$XDG_DATA_HOME/flatpak/extension/org.MindWorkAI.AIStudio.provisioning/x86_64/stable/`
+
+Files placed there are mounted into the sandbox at `/app/etc/MindWorkAI/`. Use the same policy file names and YAML format described below.
+
 #### macOS policy directory
 
 `/Library/Application Support/MindWork/AI Studio/`
@@ -85,10 +109,10 @@ The directories from `$XDG_CONFIG_DIRS` are processed in order.
 
 Configuration files:
 
-- `config0.yaml`
-- `config1.yaml`
+- `config_00000.yaml`
+- `config_00001.yaml`
 - ...
-- `config9.yaml`
+- `config_99999.yaml`
 
 Each configuration file contains one configuration ID and one server URL:
 
@@ -110,10 +134,10 @@ config_encryption_secret: "BASE64..."
 If you need the fallback environment-variable format, configure the values like this:
 
 ```bash
-MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ID0=9072b77d-ca81-40da-be6a-861da525ef7b
-MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_SERVER_URL0=https://intranet.example.org/ai-studio/configuration
-MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ID1=a1b2c3d4-e5f6-7890-abcd-ef1234567890
-MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_SERVER_URL1=https://intranet.example.org/ai-studio/department-config
+MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ID_00000=9072b77d-ca81-40da-be6a-861da525ef7b
+MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_SERVER_URL_00000=https://intranet.example.org/ai-studio/configuration
+MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ID_10503=a1b2c3d4-e5f6-7890-abcd-ef1234567890
+MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_SERVER_URL_10503=https://intranet.example.org/ai-studio/department-config
 MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ENCRYPTION_SECRET=BASE64...
 ```
 
@@ -135,6 +159,38 @@ Let's assume as example that `https://intranet.my-company.com:30100/ai-studio/co
 Finally, AI Studio will send a GET request and download the ZIP file. The ZIP file only contains the files necessary for the configuration. It's normal to include a file for an icon along with the actual configuration plugin.
 
 Approximately every 16 minutes, AI Studio checks the metadata of the ZIP file by reading the [ETag](https://en.wikipedia.org/wiki/HTTP_ETag). When the ETag was not changed, no download will be performed. Make sure that your web server supports this. When using multiple configurations, each configuration is checked independently.
+
+### Custom root certificates for Flatpak deployments
+
+On Linux, AI Studio normally relies on the operating system's trusted root certificates for external HTTPS requests. In a Flatpak package, however, the application may not be able to read organization-specific root certificates from the host system. This can affect connections to self-hosted AI providers, embedding providers, transcription providers, ERI servers, and enterprise configuration servers.
+
+If your organization uses private root CAs, place a PEM bundle with the required root CA certificates in a location that is readable inside the Flatpak sandbox. The bundle should contain one or more certificates using the regular PEM marker:
+
+```text
+-----BEGIN CERTIFICATE-----
+...
+-----END CERTIFICATE-----
+```
+
+For the first enterprise configuration download, configure these environment variables before AI Studio starts:
+
+```bash
+MINDWORK_AI_STUDIO_EXTERNAL_HTTP_CUSTOM_ROOT_CERTIFICATES_ENABLED=true
+MINDWORK_AI_STUDIO_EXTERNAL_HTTP_CUSTOM_ROOT_CERTIFICATE_BUNDLE_PATH=/path/in/sandbox/company-root-cas.pem
+MINDWORK_AI_STUDIO_EXTERNAL_HTTP_CUSTOM_ROOT_CERTIFICATE_ALLOWED_HOSTS=*.intra.example.org;eri.example.org
+```
+
+You can also manage the same behavior from a configuration plugin after the plugin has been downloaded:
+
+```lua
+CONFIG["SETTINGS"]["DataApp.ExternalHttpCustomRootCertificatesEnabled"] = true
+CONFIG["SETTINGS"]["DataApp.ExternalHttpCustomRootCertificateBundlePath"] = "/path/in/sandbox/company-root-cas.pem"
+CONFIG["SETTINGS"]["DataApp.ExternalHttpCustomRootCertificateAllowedHosts"] = { "*.intra.example.org", "eri.example.org" }
+```
+
+This feature does not disable TLS verification. AI Studio first uses the system certificate validation. If that fails only because the certificate chain is not trusted, AI Studio tries again with the configured root CA bundle, but only for configured host patterns. Exact hosts such as `eri.intra.example.org` and one-label wildcards such as `*.intra.example.org` are supported. Hostname mismatches, missing certificates, expired certificates, and otherwise invalid chains are still rejected. Built-in cloud provider endpoints, such as OpenAI, Google, etc., never use configured custom root certificates.
+
+As an alternative, your Flatpak launch environment can set `SSL_CERT_FILE` or `SSL_CERT_DIR` to a certificate bundle or directory that .NET/OpenSSL can read. This is useful when your deployment already manages a consistent PEM bundle for the sandbox.
 
 ## Configure the configuration web server
 

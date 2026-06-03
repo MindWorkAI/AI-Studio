@@ -1,5 +1,6 @@
 ﻿using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
+using System.Text.Json;
 
 using AIStudio.Chat;
 using AIStudio.Provider.OpenAI;
@@ -7,7 +8,7 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.Helmholtz;
 
-public sealed class ProviderHelmholtz() : BaseProvider(LLMProviders.HELMHOLTZ, "https://api.helmholtz-blablador.fz-juelich.de/v1/", LOGGER)
+public sealed class ProviderHelmholtz() : BaseProvider(LLMProviders.HELMHOLTZ, new Uri("https://api.helmholtz-blablador.fz-juelich.de/v1/"), ExternalHttpTrustPolicy.SYSTEM_TRUST_ONLY, LOGGER)
 {
     private static readonly ILogger<ProviderHelmholtz> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderHelmholtz>();
 
@@ -18,26 +19,38 @@ public sealed class ProviderHelmholtz() : BaseProvider(LLMProviders.HELMHOLTZ, "
 
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "Helmholtz Blablador";
+
+    /// <inheritdoc />
+    public override bool HasModelLoadingCapability => true;
     
     /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
-        await foreach (var content in this.StreamOpenAICompatibleChatCompletion<ChatCompletionDeltaStreamLine, ChatCompletionAnnotationStreamLine>(
+        await foreach (var content in this.StreamOpenAICompatibleChatCompletion<ChatCompletionAPIRequest, ChatCompletionDeltaStreamLine, ChatCompletionAnnotationStreamLine>(
                            "Helmholtz",
                            chatModel,
                            chatThread,
                            settingsManager,
-                           () => chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel),
-                           (systemPrompt, messages, apiParameters, stream, tools) =>
-                               Task.FromResult(new ChatCompletionAPIRequest
+                           async (systemPrompt, apiParameters, tools) =>
+                           {
+                               // Build the list of messages:
+                               var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel);
+
+                               return new ChatCompletionAPIRequest
                                {
                                    Model = chatModel.Id,
+
+                                   // Build the messages:
+                                   // - First of all the system prompt
+                                   // - Then none-empty user and AI messages
                                    Messages = [systemPrompt, ..messages],
-                                   Stream = stream,
+
+                                   Stream = true,
                                    Tools = tools,
                                    ParallelToolCalls = tools is null ? null : true,
                                    AdditionalApiParameters = apiParameters
-                               }),
+                               };
+                           },
                            token: token))
             yield return content;
     }
@@ -51,9 +64,9 @@ public sealed class ProviderHelmholtz() : BaseProvider(LLMProviders.HELMHOLTZ, "
     #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
     
     /// <inheritdoc />
-    public override Task<string> TranscribeAudioAsync(Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default)
+    public override Task<TranscriptionResult> TranscribeAudioAsync(Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default)
     {
-        return Task.FromResult(string.Empty);
+        return Task.FromResult(TranscriptionResult.Failure());
     }
     
     /// <inhertidoc />
@@ -64,60 +77,90 @@ public sealed class ProviderHelmholtz() : BaseProvider(LLMProviders.HELMHOLTZ, "
     }
 
     /// <inheritdoc />
-    public override async Task<IEnumerable<Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override async Task<ModelLoadResult> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        var models = await this.LoadModels(SecretStoreType.LLM_PROVIDER, token, apiKeyProvisional);
-        return models.Where(model => !model.Id.StartsWith("text-", StringComparison.InvariantCultureIgnoreCase) &&
-                                     !model.Id.StartsWith("alias-embedding", StringComparison.InvariantCultureIgnoreCase));
+        var result = await this.LoadModels(SecretStoreType.LLM_PROVIDER, token, apiKeyProvisional);
+        return result with
+        {
+            Models =
+            [
+                ..result.Models.Where(model => !model.Id.StartsWith("text-", StringComparison.InvariantCultureIgnoreCase) &&
+                                               !model.Id.Contains("-embedding", StringComparison.InvariantCultureIgnoreCase)
+                                               )
+            ]
+        };
     }
 
     /// <inheritdoc />
-    public override Task<IEnumerable<Model>> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override Task<ModelLoadResult> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return Task.FromResult(Enumerable.Empty<Model>());
+        return Task.FromResult(ModelLoadResult.FromModels([]));
     }
     
     /// <inheritdoc />
-    public override async Task<IEnumerable<Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override async Task<ModelLoadResult> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        var models = await this.LoadModels(SecretStoreType.EMBEDDING_PROVIDER, token, apiKeyProvisional);
-        return models.Where(model => 
-            model.Id.StartsWith("alias-embedding", StringComparison.InvariantCultureIgnoreCase) ||
-            model.Id.StartsWith("text-", StringComparison.InvariantCultureIgnoreCase) ||
-            model.Id.Contains("gritlm", StringComparison.InvariantCultureIgnoreCase));
+        var result = await this.LoadModels(SecretStoreType.EMBEDDING_PROVIDER, token, apiKeyProvisional);
+        return result with
+        {
+            Models =
+            [
+                ..result.Models.Where(model =>
+                    model.Id.Contains("-embedding", StringComparison.InvariantCultureIgnoreCase) ||
+                    model.Id.StartsWith("text-", StringComparison.InvariantCultureIgnoreCase) ||
+                    model.Id.Contains("gritlm", StringComparison.InvariantCultureIgnoreCase))
+            ]
+        };
     }
     
     /// <inheritdoc />
-    public override Task<IEnumerable<Model>> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override Task<ModelLoadResult> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return Task.FromResult(Enumerable.Empty<Model>());
+        return Task.FromResult(ModelLoadResult.FromModels([]));
     }
     
     #endregion
 
-    private async Task<IEnumerable<Model>> LoadModels(SecretStoreType storeType, CancellationToken token, string? apiKeyProvisional = null)
+    private async Task<ModelLoadResult> LoadModels(SecretStoreType storeType, CancellationToken token, string? apiKeyProvisional = null)
     {
-        var secretKey = apiKeyProvisional switch
+        var secretKey = await this.GetModelLoadingSecretKey(storeType, apiKeyProvisional);
+        if (string.IsNullOrWhiteSpace(secretKey))
+            return FailedModelLoadResult(ModelLoadFailureReason.INVALID_OR_MISSING_API_KEY, "No API key available for model loading.");
+
+        try
         {
-            not null => apiKeyProvisional,
-            _ => await RUST_SERVICE.GetAPIKey(this, storeType) switch
+            using var request = new HttpRequestMessage(HttpMethod.Get, "models");
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
+
+            using var response = await this.HttpClient.SendAsync(request, token);
+            var body = await response.Content.ReadAsStringAsync(token);
+            if (!response.IsSuccessStatusCode)
+                return FailedModelLoadResult(GetDefaultModelLoadFailureReason(response), $"Status={(int)response.StatusCode} {response.ReasonPhrase}; Body='{body}'");
+
+            try
             {
-                { Success: true } result => await result.Secret.Decrypt(ENCRYPTION),
-                _ => null,
+                var modelResponse = JsonSerializer.Deserialize<ModelsResponse>(body, JSON_SERIALIZER_OPTIONS);
+                return SuccessfulModelLoadResult(modelResponse.Data);
             }
-        };
+            catch (JsonException e)
+            {
+                if (body.Contains("API key", StringComparison.InvariantCultureIgnoreCase))
+                    return FailedModelLoadResult(ModelLoadFailureReason.INVALID_OR_MISSING_API_KEY, body);
 
-        if (secretKey is null)
-            return [];
-        
-        using var request = new HttpRequestMessage(HttpMethod.Get, "models");
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
-
-        using var response = await this.httpClient.SendAsync(request, token);
-        if(!response.IsSuccessStatusCode)
-            return [];
-
-        var modelResponse = await response.Content.ReadFromJsonAsync<ModelsResponse>(token);
-        return modelResponse.Data;
+                LOGGER.LogError(e, "Unexpected error while parsing models from Helmholtz API response. Status Code: {StatusCode}. Reason: {ReasonPhrase}. Response Body: '{ResponseBody}'", response.StatusCode, response.ReasonPhrase, body);
+                return FailedModelLoadResult(ModelLoadFailureReason.INVALID_RESPONSE, body);
+            }
+            catch (Exception e)
+            {
+                LOGGER.LogError(e, "Unexpected error while loading models from Helmholtz API. Status Code: {StatusCode}. Reason: {ReasonPhrase}", response.StatusCode, response.ReasonPhrase);
+                return FailedModelLoadResult(ModelLoadFailureReason.UNKNOWN, e.Message);
+            }
+        }
+        catch (Exception e) when (this.IsTimeoutException(e, token))
+        {
+            await this.SendTimeoutError("loading the available models");
+            LOGGER.LogError(e, "Timed out while loading models from Helmholtz provider '{ProviderInstanceName}'.", this.InstanceName);
+            return FailedModelLoadResult(ModelLoadFailureReason.PROVIDER_UNAVAILABLE, e.Message);
+        }
     }
 }

@@ -16,14 +16,16 @@ public sealed class UpdateService : BackgroundService, IMessageBusReceiver
     private readonly SettingsManager settingsManager;
     private readonly MessageBus messageBus;
     private readonly RustService rust;
+    private readonly ILogger<UpdateService> logger;
     
     private TimeSpan updateInterval;
     
-    public UpdateService(MessageBus messageBus, SettingsManager settingsManager, RustService rust)
+    public UpdateService(MessageBus messageBus, SettingsManager settingsManager, RustService rust, ILogger<UpdateService> logger)
     {
         this.settingsManager = settingsManager;
         this.messageBus = messageBus;
         this.rust = rust;
+        this.logger = logger;
 
         this.messageBus.RegisterComponent(this);
         this.ApplyFilters([], [ Event.USER_SEARCH_FOR_UPDATE ]);
@@ -113,6 +115,23 @@ public sealed class UpdateService : BackgroundService, IMessageBusReceiver
             return;
         
         var response = await this.rust.CheckForUpdate();
+        if (response.Error)
+        {
+            this.logger.LogWarning("Update check failed. The updater did not return a usable result.");
+
+            if (notifyUserWhenNoUpdate)
+            {
+                SNACKBAR!.Add(TB("Failed to check for updates. Please try again later."), Severity.Error, config =>
+                {
+                    config.Icon = Icons.Material.Filled.Error;
+                    config.IconSize = Size.Large;
+                    config.IconColor = Color.Error;
+                });
+            }
+
+            return;
+        }
+
         if (response.UpdateIsAvailable)
         {
             // ReSharper disable RedundantAssignment

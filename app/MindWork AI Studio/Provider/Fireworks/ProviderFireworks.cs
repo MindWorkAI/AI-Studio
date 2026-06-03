@@ -6,7 +6,7 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.Fireworks;
 
-public class ProviderFireworks() : BaseProvider(LLMProviders.FIREWORKS, "https://api.fireworks.ai/inference/v1/", LOGGER)
+public class ProviderFireworks() : BaseProvider(LLMProviders.FIREWORKS, new Uri("https://api.fireworks.ai/inference/v1/"), ExternalHttpTrustPolicy.SYSTEM_TRUST_ONLY, LOGGER)
 {
     private static readonly ILogger<ProviderFireworks> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderFireworks>();
 
@@ -19,24 +19,37 @@ public class ProviderFireworks() : BaseProvider(LLMProviders.FIREWORKS, "https:/
     public override string InstanceName { get; set; } = "Fireworks.ai";
 
     /// <inheritdoc />
+    public override bool HasModelLoadingCapability => false;
+
+    /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
-        await foreach (var content in this.StreamOpenAICompatibleChatCompletion<ResponseStreamLine, ChatCompletionAnnotationStreamLine>(
+        await foreach (var content in this.StreamOpenAICompatibleChatCompletion<ChatCompletionAPIRequest, ResponseStreamLine, ChatCompletionAnnotationStreamLine>(
                            "Fireworks",
                            chatModel,
                            chatThread,
                            settingsManager,
-                           () => chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel),
-                           (systemPrompt, messages, apiParameters, stream, tools) =>
-                               Task.FromResult(new ChatCompletionAPIRequest
+                           async (systemPrompt, apiParameters, tools) =>
+                           {
+                               // Build the list of messages:
+                               var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel);
+
+                               return new ChatCompletionAPIRequest
                                {
                                    Model = chatModel.Id,
+
+                                   // Build the messages:
+                                   // - First of all the system prompt
+                                   // - Then none-empty user and AI messages
                                    Messages = [systemPrompt, ..messages],
-                                   Stream = stream,
+
+                                   // Right now, we only support streaming completions:
+                                   Stream = true,
                                    Tools = tools,
                                    ParallelToolCalls = tools is null ? null : true,
                                    AdditionalApiParameters = apiParameters
-                               }),
+                               };
+                           },
                            token: token))
             yield return content;
     }
@@ -50,7 +63,7 @@ public class ProviderFireworks() : BaseProvider(LLMProviders.FIREWORKS, "https:/
     #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
     
     /// <inheritdoc />
-    public override async Task<string> TranscribeAudioAsync(Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default)
+    public override async Task<TranscriptionResult> TranscribeAudioAsync(Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default)
     {
         var requestedSecret = await RUST_SERVICE.GetAPIKey(this, SecretStoreType.TRANSCRIPTION_PROVIDER);
         return await this.PerformStandardTranscriptionRequest(requestedSecret, transcriptionModel, audioFilePath, token: token);
@@ -63,33 +76,32 @@ public class ProviderFireworks() : BaseProvider(LLMProviders.FIREWORKS, "https:/
     }
 
     /// <inheritdoc />
-    public override Task<IEnumerable<Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override Task<ModelLoadResult> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return Task.FromResult(Enumerable.Empty<Model>());
+        return Task.FromResult(ModelLoadResult.FromModels([]));
     }
 
     /// <inheritdoc />
-    public override Task<IEnumerable<Model>> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override Task<ModelLoadResult> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return Task.FromResult(Enumerable.Empty<Model>());
+        return Task.FromResult(ModelLoadResult.FromModels([]));
     }
     
     /// <inheritdoc />
-    public override Task<IEnumerable<Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override Task<ModelLoadResult> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return Task.FromResult(Enumerable.Empty<Model>());
+        return Task.FromResult(ModelLoadResult.FromModels([]));
     }
     
     /// <inheritdoc />
-    public override Task<IEnumerable<Model>> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override Task<ModelLoadResult> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
         // Source: https://docs.fireworks.ai/api-reference/audio-transcriptions#param-model
-        return Task.FromResult<IEnumerable<Model>>(
-            new List<Model>
-            {
-                new("whisper-v3", "Whisper v3"),
-                // new("whisper-v3-turbo", "Whisper v3 Turbo"), // does not work
-            });
+        return Task.FromResult(ModelLoadResult.FromModels(
+        [
+            new Model("whisper-v3", "Whisper v3"),
+            // new("whisper-v3-turbo", "Whisper v3 Turbo"), // does not work
+        ]));
     }
     
     #endregion

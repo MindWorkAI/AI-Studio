@@ -133,7 +133,7 @@ public partial class ChatTemplateDialog : MSGComponentBase
         SystemPrompt = this.DataSystemPrompt,
         PredefinedUserPrompt = this.PredefinedUserPrompt,
         ExampleConversation = this.dataExampleConversation,
-        FileAttachments = [..this.fileAttachments],
+        FileAttachments = this.fileAttachments.Select(attachment => attachment.Normalize()).ToList(),
         AllowProfileUsage = this.AllowProfileUsage,
         
         EnterpriseConfigurationPluginId = Guid.Empty,

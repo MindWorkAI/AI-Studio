@@ -85,7 +85,7 @@ else if (!this.isLoading && string.IsNullOrWhiteSpace(this.loadingIssue))
     }
     else
     {
-        <ProviderSelection @bind-ProviderSettings="@this.providerSettings" ValidateProvider="@this.ValidatingProvider"/>
+        <ProviderSelection @bind-ProviderSettings="@this.ProviderSettings" ValidateProvider="@this.ValidatingProvider"/>
     }
     
     @if (this.localizedContent.Count > 0)

@@ -1,22 +1,24 @@
 ﻿use std::cmp::min;
+use std::convert::Infallible;
 use crate::api_token::APIToken;
 use crate::pandoc::PandocProcessBuilder;
 use crate::pdfium::PdfiumInit;
 use async_stream::stream;
+use axum::extract::Query;
+use axum::extract::rejection::QueryRejection;
+use axum::response::sse::{Event, Sse};
 use base64::{engine::general_purpose, Engine as _};
 use calamine::{open_workbook_auto, Reader};
 use file_format::{FileFormat, Kind};
 use futures::{Stream, StreamExt};
 use pdfium_render::prelude::Pdfium;
 use pptx_to_md::{ImageHandlingMode, ParserConfig, PptxContainer};
-use rocket::get;
-use rocket::response::stream::{Event, EventStream};
-use rocket::serde::Serialize;
-use rocket::tokio::select;
-use rocket::Shutdown;
+use serde::{Deserialize, Deserializer, Serialize};
+use serde::de::{Error as SerdeError, Visitor};
 use std::path::Path;
 use std::pin::Pin;
-use log::{debug, error};
+use std::fmt;
+use log::{debug, error, warn};
 use tokio::io::AsyncBufReadExt;
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::ReceiverStream;
@@ -82,39 +84,95 @@ const IMAGE_SEGMENT_SIZE_IN_CHARS: usize = 8_192; // equivalent to ~ 5500 token
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 type ChunkStream = Pin<Box<dyn Stream<Item = Result<Chunk>> + Send>>;
 
-#[get("/retrieval/fs/extract?<path>&<stream_id>&<extract_images>")]
-pub async fn extract_data(_token: APIToken, path: String, stream_id: String, extract_images: bool, mut end: Shutdown) -> EventStream![] {
-    EventStream! {
-        let stream_result = stream_data(&path, extract_images).await;
-        let id_ref = &stream_id;
-        
-        match stream_result {
-            Ok(mut stream) => {
-                loop {
-                    let chunk = select! {
-                        chunk = stream.next() => match chunk {
-                            Some(Ok(mut chunk)) => {
-                                chunk.set_stream_id(id_ref);
-                                chunk
-                            },
-                            Some(Err(e)) => {
-                                yield Event::json(&format!("Error: {e}"));
-                                break;
-                            },
-                            None => break,
-                        },
-                        _ = &mut end => break,
-                    };
-                    
-                    yield Event::json(&chunk);
-                }
-            },
+#[derive(Deserialize)]
+pub struct ExtractDataQuery {
+    path: String,
+    stream_id: String,
+    #[serde(deserialize_with = "deserialize_bool_case_insensitive")]
+    extract_images: bool,
+}
 
-            Err(e) => {
-                yield Event::json(&format!("Error starting stream: {e}"));
+fn deserialize_bool_case_insensitive<'de, D>(deserializer: D) -> std::result::Result<bool, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    struct BoolVisitor;
+
+    impl<'de> Visitor<'de> for BoolVisitor {
+        type Value = bool;
+
+        fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+            formatter.write_str("a boolean value")
+        }
+
+        fn visit_bool<E>(self, value: bool) -> std::result::Result<Self::Value, E> {
+            Ok(value)
+        }
+
+        fn visit_str<E>(self, value: &str) -> std::result::Result<Self::Value, E>
+        where
+            E: SerdeError,
+        {
+            match value.to_ascii_lowercase().as_str() {
+                "true" | "1" => Ok(true),
+                "false" | "0" => Ok(false),
+                _ => Err(E::invalid_value(serde::de::Unexpected::Str(value), &self)),
             }
         }
     }
+
+    deserializer.deserialize_any(BoolVisitor)
+}
+
+pub async fn extract_data(
+    _token: APIToken,
+    query: std::result::Result<Query<ExtractDataQuery>, QueryRejection>,
+) -> Sse<impl Stream<Item = std::result::Result<Event, Infallible>>> {
+    let query = match query {
+        Ok(Query(query)) => Ok(query),
+        Err(e) => {
+            let message = format!("Invalid query for '/retrieval/fs/extract': {e}");
+            warn!("{message}");
+            Err(message)
+        },
+    };
+
+    let stream = stream! {
+        match query {
+            Ok(query) => {
+                let stream_result = stream_data(&query.path, query.extract_images).await;
+                let id_ref = &query.stream_id;
+
+                match stream_result {
+                    Ok(mut stream) => {
+                        while let Some(chunk) = stream.next().await {
+                            match chunk {
+                                Ok(mut chunk) => {
+                                    chunk.set_stream_id(id_ref);
+                                    yield Ok(Event::default().json_data(&chunk).unwrap_or_else(|e| Event::default().data(format!("Error: {e}"))));
+                                },
+
+                                Err(e) => {
+                                    yield Ok(Event::default().json_data(format!("Error: {e}")).unwrap_or_else(|_| Event::default().data(format!("Error: {e}"))));
+                                    break;
+                                },
+                            }
+                        }
+                    },
+
+                    Err(e) => {
+                        yield Ok(Event::default().json_data(format!("Error starting stream: {e}")).unwrap_or_else(|_| Event::default().data(format!("Error starting stream: {e}"))));
+                    }
+                };
+            },
+
+            Err(e) => {
+                yield Ok(Event::default().json_data(format!("Error starting stream: {e}")).unwrap_or_else(|_| Event::default().data(format!("Error starting stream: {e}"))));
+            },
+        }
+    };
+
+    Sse::new(stream)
 }
 
 async fn stream_data(file_path: &str, extract_images: bool) -> Result<ChunkStream> {

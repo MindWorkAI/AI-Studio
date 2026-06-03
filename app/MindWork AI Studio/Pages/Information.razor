@@ -21,11 +21,11 @@
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.Build" Text="@this.VersionRust"/>
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.Storage">
                         <MudText Typo="Typo.body1">
-                            @this.VersionDatabase
+                            @this.VersionVectorStore
                         </MudText>
-                        <MudCollapse Expanded="@this.showDatabaseDetails">
+                        <MudCollapse Expanded="@this.showVectorStoreDetails">
                             <MudText Typo="Typo.body1" Class="mt-2 mb-2">
-                                @foreach (var item in this.databaseDisplayInfo)
+                                @foreach (var item in this.vectorStoreDisplayInfo)
                                 {
                                     <div style="display: flex; align-items: center; gap: 8px;">
                                         <MudIcon Icon="@Icons.Material.Filled.ArrowRightAlt"/>
@@ -35,11 +35,11 @@
                                 }
                             </MudText>
                         </MudCollapse>
-                        <MudButton StartIcon="@(this.showDatabaseDetails ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)"
+                        <MudButton StartIcon="@(this.showVectorStoreDetails ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)"
                                    Size="Size.Small"
                                    Variant="Variant.Text"
-                                   OnClick="@this.ToggleDatabaseDetails">
-                            @(this.showDatabaseDetails ? T("Hide Details") : T("Show Details"))
+                                   OnClick="@this.ToggleVectorStoreDetails">
+                            @(this.showVectorStoreDetails ? T("Hide Details") : T("Show Details"))
                         </MudButton>
                     </MudListItem>
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.DocumentScanner" Text="@this.VersionPdfium"/>
@@ -47,6 +47,27 @@
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.Widgets" Text="@MudBlazorVersion"/>
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.Memory" Text="@TauriVersion"/>
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.Translate" Text="@this.OSLanguage"/>
+                    <MudListItem T="string" Icon="@Icons.Material.Outlined.AccountCircle" Text="@this.OSUserName"/>
+                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Folder">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <MudText Typo="Typo.body1">
+                                @this.WorkingDirectory
+                            </MudText>
+                            <MudCopyClipboardButton TooltipMessage="@(T("Copies the working directory to the clipboard"))" StringContent="@this.runtimeInfo.WorkingDirectory"/>
+                        </div>
+                    </MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.InsertDriveFile">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <MudText Typo="Typo.body1">
+                                @this.ExecutablePath
+                            </MudText>
+                            <MudCopyClipboardButton TooltipMessage="@(T("Copies the executable path to the clipboard"))" StringContent="@this.runtimeInfo.ExecutablePath"/>
+                        </div>
+                    </MudListItem>
+                    @if (OperatingSystem.IsLinux())
+                    {
+                        <MudListItem T="string" Icon="@Icons.Material.Outlined.Storage" Text="@this.LinuxPackageType"/>
+                    }
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.Business">
                         @switch (HasAnyActiveEnvironment)
                         {
@@ -88,18 +109,7 @@
                                     {
                                         <ConfigPluginInfoCard HeaderIcon="@Icons.Material.Filled.HourglassBottom"
                                                               HeaderText="@T("Waiting for the configuration plugin...")"
-                                                              Items="@([
-                                                                         new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
-                                                                             $"{T("Enterprise configuration ID:")} {env.ConfigurationId}",
-                                                                             env.ConfigurationId.ToString(),
-                                                                             T("Copies the config ID to the clipboard")),
-                                                                         
-                                                                         new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
-                                                                             $"{T("Configuration server:")} {env.ConfigurationServerUrl}",
-                                                                             env.ConfigurationServerUrl,
-                                                                             T("Copies the server URL to the clipboard"),
-                                                                             "margin-top: 4px;")
-                                                                     ])"/>
+                                                              Items="@this.BuildEnterpriseConfigurationItems(env)"/>
                                     }
                                     
                                     <EncryptionSecretInfo IsConfigured="@(PluginFactory.EnterpriseEncryption?.IsAvailable is true)"
@@ -129,41 +139,13 @@
                                         {
                                             <ConfigPluginInfoCard HeaderIcon="@Icons.Material.Filled.HourglassBottom"
                                                                   HeaderText="@T("Waiting for the configuration plugin...")"
-                                                                  Items="@([
-                                                                             new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
-                                                                                 $"{T("Enterprise configuration ID:")} {env.ConfigurationId}",
-                                                                                 env.ConfigurationId.ToString(),
-                                                                                 T("Copies the config ID to the clipboard")),
-                                                                             
-                                                                             new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
-                                                                                 $"{T("Configuration server:")} {env.ConfigurationServerUrl}",
-                                                                                 env.ConfigurationServerUrl,
-                                                                                 T("Copies the server URL to the clipboard"),
-                                                                                 "margin-top: 4px;")
-                                                                         ])"/>
+                                                                  Items="@this.BuildEnterpriseConfigurationItems(env)"/>
                                             continue;
                                         }
                                         
                                         <ConfigPluginInfoCard HeaderIcon="@Icons.Material.Filled.Extension"
                                                               HeaderText="@matchingPlugin.Name"
-                                                              Items="@([
-                                                                         new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
-                                                                             $"{T("Enterprise configuration ID:")} {env.ConfigurationId}",
-                                                                             env.ConfigurationId.ToString(),
-                                                                             T("Copies the config ID to the clipboard")),
-                                                                         
-                                                                         new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
-                                                                             $"{T("Configuration server:")} {env.ConfigurationServerUrl}",
-                                                                             env.ConfigurationServerUrl,
-                                                                             T("Copies the server URL to the clipboard"),
-                                                                             "margin-top: 4px;"),
-                                                                         
-                                                                         new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
-                                                                             $"{T("Configuration plugin ID:")} {matchingPlugin.Id}",
-                                                                             matchingPlugin.Id.ToString(),
-                                                                             T("Copies the configuration plugin ID to the clipboard"),
-                                                                             "margin-top: 4px;")
-                                                                     ])"
+                                                              Items="@this.BuildEnterpriseConfigurationItems(env, matchingPlugin)"
                                                               ShowWarning="@this.IsManagedConfigurationIdMismatch(matchingPlugin, env.ConfigurationId)"
                                                               WarningText="@T("ID mismatch: the plugin ID differs from the enterprise configuration ID.")"/>
                                     }
@@ -185,9 +167,32 @@
                             </MudButton>
                         }
                     </MudListItem>
+                    @if (ExternalHttpClientTimeout.CustomRootCertificateState.IsEnabled)
+                    {
+                        <MudListItem T="string" Icon="@Icons.Material.Outlined.Security">
+                            <MudText Typo="Typo.body1">
+                                @(ExternalHttpClientTimeout.CustomRootCertificateState.IsUsable
+                                    ? T("External HTTPS custom root certificates are active.")
+                                    : T("External HTTPS custom root certificates are configured but not active."))
+                            </MudText>
+                            <MudCollapse Expanded="@this.showExternalHttpCustomRootCertificateDetails">
+                                <ConfigPluginInfoCard HeaderIcon="@Icons.Material.Filled.Security"
+                                                      HeaderText="@T("External HTTPS custom root certificates")"
+                                                      Items="@this.BuildExternalHttpCustomRootCertificateItems()"
+                                                      ShowWarning="@(!ExternalHttpClientTimeout.CustomRootCertificateState.IsUsable)"
+                                                      WarningText="@this.ExternalHttpCustomRootCertificateWarningText"/>
+                            </MudCollapse>
+                            <MudButton StartIcon="@(this.showExternalHttpCustomRootCertificateDetails ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)"
+                                       Size="Size.Small"
+                                       Variant="Variant.Text"
+                                       OnClick="@this.ToggleExternalHttpCustomRootCertificateDetails">
+                                @(this.showExternalHttpCustomRootCertificateDetails ? T("Hide Details") : T("Show Details"))
+                            </MudButton>
+                        </MudListItem>
+                    }
                 </MudList>
                 <MudStack Row="true">
-                    <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Update" OnClick="@(() => this.CheckForUpdate())">
+                    <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Update" OnClick="@this.CheckForUpdate">
                         @T("Check for updates")
                     </MudButton>
                     <MudButton Variant="Variant.Filled" Color="Color.Default" StartIcon="@Icons.Material.Filled.Download" OnClick="@(async () => await this.ShowPandocDialog())">
@@ -222,6 +227,18 @@
             <ExpansionPanel HeaderIcon="@Icons.Material.Filled.EventNote" HeaderText="@T("Changelog")">
                 <Changelog/>
             </ExpansionPanel>
+
+            @foreach (var mandatoryInfoPanel in this.mandatoryInfoPanels)
+            {
+                <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Gavel" HeaderText="@mandatoryInfoPanel.HeaderText">
+                    <MudText Typo="Typo.body2" Class="mb-3">
+                        @string.Format(T("Provided by configuration plugin: {0}"), mandatoryInfoPanel.PluginName)
+                    </MudText>
+                    <MandatoryInfoDisplay Info="@mandatoryInfoPanel.Info"
+                                          Acceptance="@mandatoryInfoPanel.Acceptance"
+                                          ShowAcceptanceMetadata="@true"/>
+                </ExpansionPanel>
+            }
             
             <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Book" HeaderText="@T("Logbook")">
                 <MudText Typo="Typo.h4">
@@ -266,11 +283,19 @@
                     <ThirdPartyComponent Name="CodeBeam.MudBlazor.Extensions" Developer="Mehmet Can Karagöz & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/CodeBeamOrg/CodeBeam.MudBlazor.Extensions/blob/dev/LICENSE" RepositoryUrl="https://github.com/CodeBeamOrg/CodeBeam.MudBlazor.Extensions" UseCase="@T("This library is used to extend the MudBlazor library. It provides additional components that are not part of the MudBlazor library.")"/>
                     <ThirdPartyComponent Name="Rust" Developer="Graydon Hoare, Rust Foundation, Rust developers & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/rust-lang/rust/blob/master/LICENSE-MIT" RepositoryUrl="https://github.com/rust-lang/rust" UseCase="@T("The .NET backend cannot be started as a desktop app. Therefore, I use a second backend in Rust, which I call runtime. With Rust as the runtime, Tauri can be used to realize a typical desktop app. Thanks to Rust, this app can be offered for Windows, macOS, and Linux desktops. Rust is a great language for developing safe and high-performance software.")"/>
                     <ThirdPartyComponent Name="Tauri" Developer="Daniel Thompson-Yvetot, Lucas Nogueira, Tensor, Boscop, Serge Zaitsev, George Burton & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/tauri-apps/tauri/blob/dev/LICENSE_MIT" RepositoryUrl="https://github.com/tauri-apps/tauri" UseCase="@T("Tauri is used to host the Blazor user interface. It is a great project that allows the creation of desktop applications using web technologies. I love Tauri!")"/>
-                    <ThirdPartyComponent Name="Qdrant" Developer="Andrey Vasnetsov, Tim Visée, Arnaud Gourlay, Luis Cossío, Ivan Pleshkov, Roman Titov, xzfc, JojiiOfficial & Open Source Community" LicenseName="Apache-2.0" LicenseUrl="https://github.com/qdrant/qdrant/blob/master/LICENSE" RepositoryUrl="https://github.com/qdrant/qdrant" UseCase="@T("Qdrant is a vector database and vector similarity search engine. We use it to realize local RAG—retrieval-augmented generation—within AI Studio. Thanks for the effort and great work that has been and is being put into Qdrant.")"/>
-                    <ThirdPartyComponent Name="Rocket" Developer="Sergio Benitez & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/rwf2/Rocket/blob/master/LICENSE-MIT" RepositoryUrl="https://github.com/rwf2/Rocket" UseCase="@T("We use Rocket to implement the runtime API. This is necessary because the runtime must be able to communicate with the user interface (IPC). Rocket is a great framework for implementing web APIs in Rust.")"/>
+                    
+                    @if (OperatingSystem.IsLinux())
+                    {
+                        <ThirdPartyComponent Name="GStreamer" Developer="GStreamer contributors & Open Source Community" LicenseName="LGPL-2.1" LicenseUrl="https://gstreamer.freedesktop.org/documentation/frequently-asked-questions/licensing.html" RepositoryUrl="https://gitlab.freedesktop.org/gstreamer/gstreamer" UseCase="@T("Linux AppImages bundle GStreamer components to support microphone access and WebM audio recording in the embedded WebKitGTK web view.")"/>
+                    }
+                    
+                    <ThirdPartyComponent Name="Qdrant Edge" Developer="Andrey Vasnetsov, Tim Visée, Arnaud Gourlay, Luis Cossío, Ivan Pleshkov, Roman Titov, xzfc, JojiiOfficial & Open Source Community" LicenseName="Apache-2.0" LicenseUrl="https://github.com/qdrant/qdrant/blob/master/LICENSE" RepositoryUrl="https://github.com/qdrant/qdrant" UseCase="@T("Qdrant Edge is an embedded vector database and vector similarity search engine. We use it to realize local RAG—retrieval-augmented generation—within AI Studio. Thanks for the effort and great work that has been and is being put into Qdrant.")"/>
+                    <ThirdPartyComponent Name="axum" Developer="David Pedersen, Jonas Platte, tottoto, David Mládek, Yann Simon, Tobias Bieniek, Open Source Community & Tokio Project" LicenseName="MIT" LicenseUrl="https://github.com/tokio-rs/axum/blob/main/LICENSE" RepositoryUrl="https://github.com/tokio-rs/axum" UseCase="@T("Axum is used to provide the small internal service that connects the Rust runtime with the app's user interface. This lets both parts of AI Studio exchange information while the app is running.")"/>
+                    <ThirdPartyComponent Name="axum-server" Developer="Eray Karatay, Adi Salimgereyev, daxpedda & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/programatik29/axum-server/blob/master/LICENSE" RepositoryUrl="https://github.com/programatik29/axum-server" UseCase="@T("Axum server runs the internal axum service over a secure local connection. This helps AI Studio protect the communication between the Rust runtime and the user interface.")"/>
+                    <ThirdPartyComponent Name="Rustls" Developer="Joe Birr-Pixton, Dirkjan Ochtman, Daniel McCarney, Brian Smith, Jacob Hoffman-Andrews, Jorge Aparicio & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/rustls/rustls/blob/main/LICENSE-MIT" RepositoryUrl="https://github.com/rustls/rustls" UseCase="@T("Rustls helps secure the internal connection between the app's user interface and the Rust runtime. This protects the local communication that AI Studio needs while it is running.")"/>
                     <ThirdPartyComponent Name="serde" Developer="Erick Tryzelaar, David Tolnay & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/serde-rs/serde/blob/master/LICENSE-MIT" RepositoryUrl="https://github.com/serde-rs/serde" UseCase="@T("Now we have multiple systems, some developed in .NET and others in Rust. The data format JSON is responsible for translating data between both worlds (called data serialization and deserialization). Serde takes on this task in the Rust world. The counterpart in the .NET world is an integral part of .NET and is located in System.Text.Json.")"/>
                     <ThirdPartyComponent Name="strum_macros" Developer="Peter Glotfelty & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/Peternator7/strum/blob/master/LICENSE" RepositoryUrl="https://github.com/Peternator7/strum" UseCase="@T("This crate provides derive macros for Rust enums, which we use to reduce boilerplate when implementing string conversions and metadata for runtime types. This is helpful for the communication between our Rust and .NET systems.")"/>
-                    <ThirdPartyComponent Name="keyring" Developer="Walther Chen, Daniel Brotsky & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/hwchen/keyring-rs/blob/master/LICENSE-MIT" RepositoryUrl="https://github.com/hwchen/keyring-rs" UseCase="@T("In order to use any LLM, each user must store their so-called API key for each LLM provider. This key must be kept secure, similar to a password. The safest way to do this is offered by operating systems like macOS, Windows, and Linux: They have mechanisms to store such data, if available, on special security hardware. Since this is currently not possible in .NET, we use this Rust library.")"/>
+                    <ThirdPartyComponent Name="keyring-core" Developer="Daniel Brotsky & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/open-source-cooperative/keyring-core/blob/main/LICENSE-MIT" RepositoryUrl="https://github.com/open-source-cooperative/keyring-core" UseCase="@T("AI Studio stores secrets like API keys in your operating system’s secure credential store. The keyring-core library handles this by connecting to macOS Keychain, Windows Credential Manager, and Linux Secret Service.")"/>
                     <ThirdPartyComponent Name="arboard" Developer="Artur Kovacs, Avi Weinstock, 1Password & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/1Password/arboard/blob/master/LICENSE-MIT.txt" RepositoryUrl="https://github.com/1Password/arboard" UseCase="@T("To be able to use the responses of the LLM in other apps, we often use the clipboard of the respective operating system. Unfortunately, in .NET there is no solution that works with all operating systems. Therefore, I have opted for this library in Rust. This way, data transfer to other apps works on every system.")"/>
                     <ThirdPartyComponent Name="tokio" Developer="Alex Crichton, Carl Lerche, Alice Ryhl, Taiki Endo, Ivan Petkov, Eliza Weisman, Lucio Franco & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/tokio-rs/tokio/blob/master/LICENSE" RepositoryUrl="https://github.com/tokio-rs/tokio" UseCase="@T("Code in the Rust language can be specified as synchronous or asynchronous. Unlike .NET and the C# language, Rust cannot execute asynchronous code by itself. Rust requires support in the form of an executor for this. Tokio is one such executor.")"/>
                     <ThirdPartyComponent Name="futures" Developer="Alex Crichton, Taiki Endo, Taylor Cramer, Nemo157, Josef Brandl, Aaron Turon & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/rust-lang/futures-rs/blob/master/LICENSE-MIT" RepositoryUrl="https://github.com/rust-lang/futures-rs" UseCase="@T("This is a library providing the foundations for asynchronous programming in Rust. It includes key trait definitions like Stream, as well as utilities like join!, select!, and various futures combinator methods which enable expressive asynchronous control flow.")"/>
@@ -287,8 +312,9 @@
                     <ThirdPartyComponent Name="PDFium" Developer="Lei Zhang, Tom Sepez, Dan Sinclair, and Foxit, Google, Chromium, Collabora, Ada, DocsCorp, Dropbox, Microsoft, and PSPDFKit Teams & Open Source Community" LicenseName="Apache-2.0" LicenseUrl="https://pdfium.googlesource.com/pdfium/+/refs/heads/main/LICENSE" RepositoryUrl="https://pdfium.googlesource.com/pdfium" UseCase="@T("This library is used to read PDF files. This is necessary, e.g., for using PDFs as a data source for a chat.")"/>
                     <ThirdPartyComponent Name="pdfium-render" Developer="Alastair Carey, Dorian Rudolph & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/ajrcarey/pdfium-render/blob/master/LICENSE.md" RepositoryUrl="https://github.com/ajrcarey/pdfium-render" UseCase="@T("This library is used to read PDF files. This is necessary, e.g., for using PDFs as a data source for a chat.")"/>
                     <ThirdPartyComponent Name="sys-locale" Developer="1Password Team, ComplexSpaces & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/1Password/sys-locale/blob/main/LICENSE-MIT" RepositoryUrl="https://github.com/1Password/sys-locale" UseCase="@T("This library is used to determine the language of the operating system. This is necessary to set the language of the user interface.")"/>
+                    <ThirdPartyComponent Name="whoami" Developer="Ardaku Systems, Jeryn Aldaron Lau, Chase Johnson & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/ardaku/whoami/blob/stable/LICENSE_MIT" RepositoryUrl="https://github.com/ardaku/whoami" UseCase="@T("This library is used by the Rust runtime to read the current user's username, e.g. when an organization-managed ERI server uses the OS username for authentication.")"/>
                     <ThirdPartyComponent Name="sysinfo" Developer="Guillaume Gomez & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/GuillaumeGomez/sysinfo/blob/main/LICENSE" RepositoryUrl="https://github.com/GuillaumeGomez/sysinfo" UseCase="@T("This library is used to manage sidecar processes and to ensure that stale or zombie sidecars are detected and terminated.")"/>
-                    <ThirdPartyComponent Name="tempfile" Developer="Steven Allen, Ashley Mannix & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/Stebalien/tempfile/blob/master/LICENSE-MIT" RepositoryUrl="https://github.com/Stebalien/tempfile" UseCase="@T("This library is used to create temporary folders for saving the certificate and private key for communication with Qdrant.")"/>
+                    <ThirdPartyComponent Name="tempfile" Developer="Steven Allen, Ashley Mannix & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/Stebalien/tempfile/blob/master/LICENSE-MIT" RepositoryUrl="https://github.com/Stebalien/tempfile" UseCase="@T("This library is used to create temporary folders in runtime tests and supporting filesystem operations.")"/>
                     <ThirdPartyComponent Name="Lua-CSharp" Developer="Yusuke Nakada & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/nuskey8/Lua-CSharp/blob/main/LICENSE" RepositoryUrl="https://github.com/nuskey8/Lua-CSharp" UseCase="@T("We use Lua as the language for plugins. Lua-CSharp lets Lua scripts communicate with AI Studio and vice versa. Thank you, Yusuke Nakada, for this great library.")" />
                     <ThirdPartyComponent Name="HtmlAgilityPack" Developer="ZZZ Projects & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/zzzprojects/html-agility-pack/blob/master/LICENSE" RepositoryUrl="https://github.com/zzzprojects/html-agility-pack" UseCase="@T("We use the HtmlAgilityPack to extract content from the web. This is necessary, e.g., when you provide a URL as input for an assistant.")"/>
                     <ThirdPartyComponent Name="ReverseMarkdown" Developer="Babu Annamalai & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/mysticmind/reversemarkdown-net/blob/master/LICENSE" RepositoryUrl="https://github.com/mysticmind/reversemarkdown-net" UseCase="@T("This library is used to convert HTML to Markdown. This is necessary, e.g., when you provide a URL as input for an assistant.")"/>

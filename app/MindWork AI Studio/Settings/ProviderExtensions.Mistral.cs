@@ -19,12 +19,40 @@ public static partial class ProviderExtensions
                 Capability.CHAT_COMPLETION_API,
             ];
         
+        // Mistral large latest:
+        if (modelName.IndexOf("mistral-large-latest") is not -1)                 
+            return
+            [
+                Capability.TEXT_INPUT, 
+                Capability.MULTIPLE_IMAGE_INPUT,
+                Capability.TEXT_OUTPUT,
+                
+                Capability.OPTIONAL_REASONING,
+                
+                Capability.FUNCTION_CALLING,
+                Capability.CHAT_COMPLETION_API,
+            ];
+        
         // Mistral large:
         if (modelName.IndexOf("mistral-large-") is not -1)
             return
             [
-                Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                Capability.TEXT_INPUT, 
                 Capability.TEXT_OUTPUT,
+                
+                Capability.FUNCTION_CALLING,
+                Capability.CHAT_COMPLETION_API,
+            ];
+        
+        // Mistral medium latest:
+        if (modelName.IndexOf("mistral-medium-latest") is not -1)           
+            return
+            [
+                Capability.TEXT_INPUT, 
+                Capability.MULTIPLE_IMAGE_INPUT,
+                Capability.TEXT_OUTPUT,
+                
+                Capability.OPTIONAL_REASONING,
                 
                 Capability.FUNCTION_CALLING,
                 Capability.CHAT_COMPLETION_API,
@@ -34,8 +62,24 @@ public static partial class ProviderExtensions
         if (modelName.IndexOf("mistral-medium-") is not -1)
             return
             [
-                Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                Capability.TEXT_INPUT, 
                 Capability.TEXT_OUTPUT,
+                
+                Capability.OPTIONAL_REASONING,
+                
+                Capability.FUNCTION_CALLING,
+                Capability.CHAT_COMPLETION_API,
+            ];
+        
+        // Mistral small latest:
+        if (modelName.IndexOf("mistral-small-latest") is not -1)        
+            return
+            [
+                Capability.TEXT_INPUT, 
+                Capability.MULTIPLE_IMAGE_INPUT,
+                Capability.TEXT_OUTPUT,
+
+                Capability.OPTIONAL_REASONING,
                 
                 Capability.FUNCTION_CALLING,
                 Capability.CHAT_COMPLETION_API,
@@ -45,8 +89,10 @@ public static partial class ProviderExtensions
         if (modelName.IndexOf("mistral-small-") is not -1)
             return
             [
-                Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                Capability.TEXT_INPUT, 
                 Capability.TEXT_OUTPUT,
+
+                Capability.OPTIONAL_REASONING,
                 
                 Capability.FUNCTION_CALLING,
                 Capability.CHAT_COMPLETION_API,

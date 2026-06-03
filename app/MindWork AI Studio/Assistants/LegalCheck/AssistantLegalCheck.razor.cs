@@ -1,4 +1,3 @@
-using AIStudio.Chat;
 using AIStudio.Dialogs.Settings;
 
 namespace AIStudio.Assistants.LegalCheck;
@@ -27,11 +26,10 @@ public partial class AssistantLegalCheck : AssistantBaseCore<SettingsDialogLegal
     protected override Func<Task> SubmitAction => this.AksQuestions;
 
     protected override bool SubmitDisabled => this.isAgentRunning;
-    
-    protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
-    {
-        SystemPrompt = SystemPrompts.DEFAULT,
-    };
+
+    protected override string SendToChatVisibleUserPromptPrefix => T("Answer the following questions about a legal document:");
+
+    protected override string SendToChatVisibleUserPromptContent => this.inputQuestions;
     
     protected override void ResetForm()
     {
@@ -93,8 +91,8 @@ public partial class AssistantLegalCheck : AssistantBaseCore<SettingsDialogLegal
     
     private async Task AksQuestions()
     {
-        await this.form!.Validate();
-        if (!this.inputIsValid)
+        await this.Form!.Validate();
+        if (!this.InputIsValid)
             return;
         
         this.CreateChatThread();

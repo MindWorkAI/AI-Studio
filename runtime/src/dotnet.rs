@@ -5,9 +5,9 @@ use base64::Engine;
 use base64::prelude::BASE64_STANDARD;
 use log::{error, info, warn};
 use once_cell::sync::Lazy;
-use rocket::get;
-use tauri::api::process::{Command, CommandChild, CommandEvent};
 use tauri::Url;
+use tauri_plugin_shell::process::{CommandChild, CommandEvent};
+use tauri_plugin_shell::ShellExt;
 use crate::api_token::APIToken;
 use crate::runtime_api_token::API_TOKEN;
 use crate::app_window::change_location_to;
@@ -88,8 +88,7 @@ fn sanitize_stdout_line(line: &str) -> String {
 
 /// Returns the desired port of the .NET server. Our .NET app calls this endpoint to get
 /// the port where the .NET server should listen to.
-#[get("/system/dotnet/port")]
-pub fn dotnet_port(_token: APIToken) -> String {
+pub async fn dotnet_port(_token: APIToken) -> String {
     let dotnet_server_port = *DOTNET_SERVER_PORT;
     format!("{dotnet_server_port}")
 }
@@ -130,14 +129,14 @@ pub fn create_startup_env_file() {
 }
 
 /// Starts the .NET server in a separate process.
-pub fn start_dotnet_server() {
+pub fn start_dotnet_server<R: tauri::Runtime>(app_handle: tauri::AppHandle<R>) {
 
     // Get the secret password & salt and convert it to a base64 string:
     let secret_password = BASE64_STANDARD.encode(ENCRYPTION.secret_password);
     let secret_key_salt = BASE64_STANDARD.encode(ENCRYPTION.secret_key_salt);
     let api_port = *API_SERVER_PORT;
 
-    let dotnet_server_environment = HashMap::from_iter([
+    let dotnet_server_environment: HashMap<String, String> = HashMap::from_iter([
         (String::from("AI_STUDIO_SECRET_PASSWORD"), secret_password),
         (String::from("AI_STUDIO_SECRET_KEY_SALT"), secret_key_salt),
         (String::from("AI_STUDIO_CERTIFICATE_FINGERPRINT"), CERTIFICATE_FINGERPRINT.get().unwrap().to_string()),
@@ -148,11 +147,13 @@ pub fn start_dotnet_server() {
     info!("Try to start the .NET server...");
     let server_spawn_clone = DOTNET_SERVER.clone();
     tauri::async_runtime::spawn(async move {
-        let (mut rx, child) = Command::new_sidecar("mindworkAIStudioServer")
-                .expect("Failed to create sidecar")
-                .envs(dotnet_server_environment)
-                .spawn()
-                .expect("Failed to spawn .NET server process.");
+        let shell = app_handle.shell();
+        let (mut rx, child) = shell
+            .sidecar("mindworkAIStudioServer")
+            .expect("Failed to create sidecar")
+            .envs(dotnet_server_environment)
+            .spawn()
+            .expect("Failed to spawn .NET server process.");
         let server_pid = child.pid();
         info!(Source = "Bootloader .NET"; "The .NET server process started with PID={server_pid}.");
         log_potential_stale_process(Path::new(DATA_DIRECTORY.get().unwrap()).join(PID_FILE_NAME), server_pid, SIDECAR_TYPE);
@@ -163,17 +164,19 @@ pub fn start_dotnet_server() {
         // Log the output of the .NET server:
         // NOTE: Log events are sent via structured HTTP API calls.
         // This loop serves for fundamental output (e.g., startup errors).
-        while let Some(CommandEvent::Stdout(line)) = rx.recv().await {
-            let line = sanitize_stdout_line(line.trim_end());
-            if !line.trim().is_empty() {
-                info!(Source = ".NET Server (stdout)"; "{line}");
+        while let Some(event) = rx.recv().await {
+            if let CommandEvent::Stdout(line) = event {
+                let line_utf8 = String::from_utf8_lossy(&line).to_string();
+                let line = sanitize_stdout_line(line_utf8.trim_end());
+                if !line.trim().is_empty() {
+                    info!(Source = ".NET Server (stdout)"; "{line}");
+                }
             }
         }
     });
 }
 
 /// This endpoint is called by the .NET server to signal that the server is ready.
-#[get("/system/dotnet/ready")]
 pub async fn dotnet_ready(_token: APIToken) {
 
     // We create a manual scope for the lock to be released as soon as possible.

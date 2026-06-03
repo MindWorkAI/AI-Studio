@@ -24,6 +24,7 @@ public static class ComponentsExtensions
         Components.AGENT_TEXT_CONTENT_CLEANER => false,
         Components.AGENT_DATA_SOURCE_SELECTION => false,
         Components.AGENT_RETRIEVAL_CONTEXT_VALIDATION => false,
+        Components.AGENT_ASSISTANT_PLUGIN_AUDIT => false,
         
         _ => true,
     };
@@ -35,6 +36,7 @@ public static class ComponentsExtensions
         Components.ICON_FINDER_ASSISTANT => TB("Icon Finder Assistant"),
         Components.TRANSLATION_ASSISTANT => TB("Translation Assistant"),
         Components.REWRITE_ASSISTANT => TB("Rewrite Assistant"),
+        Components.PROMPT_OPTIMIZER_ASSISTANT => TB("Prompt Optimizer Assistant"),
         Components.AGENDA_ASSISTANT => TB("Agenda Assistant"),
         Components.CODING_ASSISTANT => TB("Coding Assistant"),
         Components.EMAIL_ASSISTANT => TB("E-Mail Assistant"),
@@ -57,6 +59,7 @@ public static class ComponentsExtensions
         Components.AGENDA_ASSISTANT => new(Event.SEND_TO_AGENDA_ASSISTANT, Routes.ASSISTANT_AGENDA),
         Components.CODING_ASSISTANT => new(Event.SEND_TO_CODING_ASSISTANT, Routes.ASSISTANT_CODING),
         Components.REWRITE_ASSISTANT => new(Event.SEND_TO_REWRITE_ASSISTANT, Routes.ASSISTANT_REWRITE),
+        Components.PROMPT_OPTIMIZER_ASSISTANT => new(Event.SEND_TO_PROMPT_OPTIMIZER_ASSISTANT, Routes.ASSISTANT_PROMPT_OPTIMIZER),
         Components.EMAIL_ASSISTANT => new(Event.SEND_TO_EMAIL_ASSISTANT, Routes.ASSISTANT_EMAIL),
         Components.TRANSLATION_ASSISTANT => new(Event.SEND_TO_TRANSLATION_ASSISTANT, Routes.ASSISTANT_TRANSLATION),
         Components.ICON_FINDER_ASSISTANT => new(Event.SEND_TO_ICON_FINDER_ASSISTANT, Routes.ASSISTANT_ICON_FINDER),
@@ -79,6 +82,7 @@ public static class ComponentsExtensions
         Components.GRAMMAR_SPELLING_ASSISTANT => settingsManager.ConfigurationData.GrammarSpelling.PreselectOptions ? settingsManager.ConfigurationData.GrammarSpelling.MinimumProviderConfidence : default,
         Components.ICON_FINDER_ASSISTANT => settingsManager.ConfigurationData.IconFinder.PreselectOptions ? settingsManager.ConfigurationData.IconFinder.MinimumProviderConfidence : default,
         Components.REWRITE_ASSISTANT => settingsManager.ConfigurationData.RewriteImprove.PreselectOptions ? settingsManager.ConfigurationData.RewriteImprove.MinimumProviderConfidence : default,
+        Components.PROMPT_OPTIMIZER_ASSISTANT => settingsManager.ConfigurationData.PromptOptimizer.PreselectOptions ? settingsManager.ConfigurationData.PromptOptimizer.MinimumProviderConfidence : default,
         Components.TRANSLATION_ASSISTANT => settingsManager.ConfigurationData.Translation.PreselectOptions ? settingsManager.ConfigurationData.Translation.MinimumProviderConfidence : default,
         Components.AGENDA_ASSISTANT => settingsManager.ConfigurationData.Agenda.PreselectOptions ? settingsManager.ConfigurationData.Agenda.MinimumProviderConfidence : default,
         Components.CODING_ASSISTANT => settingsManager.ConfigurationData.Coding.PreselectOptions ? settingsManager.ConfigurationData.Coding.MinimumProviderConfidence : default,
@@ -107,6 +111,7 @@ public static class ComponentsExtensions
             Components.GRAMMAR_SPELLING_ASSISTANT => settingsManager.ConfigurationData.GrammarSpelling.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.GrammarSpelling.PreselectedProvider) : null,
             Components.ICON_FINDER_ASSISTANT => settingsManager.ConfigurationData.IconFinder.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.IconFinder.PreselectedProvider) : null,
             Components.REWRITE_ASSISTANT => settingsManager.ConfigurationData.RewriteImprove.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.RewriteImprove.PreselectedProvider) : null,
+            Components.PROMPT_OPTIMIZER_ASSISTANT => settingsManager.ConfigurationData.PromptOptimizer.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.PromptOptimizer.PreselectedProvider) : null,
             Components.TRANSLATION_ASSISTANT => settingsManager.ConfigurationData.Translation.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.Translation.PreselectedProvider) : null,
             Components.AGENDA_ASSISTANT => settingsManager.ConfigurationData.Agenda.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.Agenda.PreselectedProvider) : null,
             Components.CODING_ASSISTANT => settingsManager.ConfigurationData.Coding.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.Coding.PreselectedProvider) : null,
@@ -130,6 +135,7 @@ public static class ComponentsExtensions
             Components.AGENT_TEXT_CONTENT_CLEANER => settingsManager.ConfigurationData.TextContentCleaner.PreselectAgentOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.TextContentCleaner.PreselectedAgentProvider) : null,
             Components.AGENT_DATA_SOURCE_SELECTION => settingsManager.ConfigurationData.AgentDataSourceSelection.PreselectAgentOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.AgentDataSourceSelection.PreselectedAgentProvider) : null,
             Components.AGENT_RETRIEVAL_CONTEXT_VALIDATION => settingsManager.ConfigurationData.AgentRetrievalContextValidation.PreselectAgentOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.AgentRetrievalContextValidation.PreselectedAgentProvider) : null,
+            Components.AGENT_ASSISTANT_PLUGIN_AUDIT => settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.AssistantPluginAudit.PreselectedAgentProvider),
 
             _ => Settings.Provider.NONE,
         };

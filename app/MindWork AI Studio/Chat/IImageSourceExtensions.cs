@@ -89,8 +89,10 @@ public static class IImageSourceExtensions
             
             case ContentImageSource.URL:
             {
-                using var httpClient = new HttpClient();
-                using var response = await httpClient.GetAsync(image.Source, HttpCompletionOption.ResponseHeadersRead, token);
+                using var httpClient = ExternalHttpClientTimeout.CreateHttpClient(ExternalHttpTrustPolicy.ALLOW_CUSTOM_ROOTS_WHEN_HOST_WHITELISTED);
+                using var timeoutTokenSource = ExternalHttpClientTimeout.CreateTimeoutTokenSource(token);
+                var timeoutToken = timeoutTokenSource.Token;
+                using var response = await httpClient.GetAsync(image.Source, HttpCompletionOption.ResponseHeadersRead, timeoutToken);
                 if(response.IsSuccessStatusCode)
                 {
                     // Read the length of the content:
@@ -101,7 +103,7 @@ public static class IImageSourceExtensions
                         return (success: false, string.Empty);
                     }
 
-                    var bytes = await response.Content.ReadAsByteArrayAsync(token);
+                    var bytes = await response.Content.ReadAsByteArrayAsync(timeoutToken);
                     return (success: true, Convert.ToBase64String(bytes));
                 }
 

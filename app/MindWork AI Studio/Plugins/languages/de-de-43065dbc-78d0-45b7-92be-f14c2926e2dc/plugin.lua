@@ -48,6 +48,36 @@ LANG_NAME = "Deutsch (Deutschland)"
 
 UI_TEXT_CONTENT = {}
 
+-- No audit provider is configured.
+UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITAGENT::T2034826200"] = "Es ist kein Audit-Anbieter konfiguriert."
+
+-- The security check could not be completed because the LLM's response was unusable. The audit level remains Unknown, so please try again later.
+UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITAGENT::T2451573087"] = "Die Sicherheitsprüfung konnte nicht abgeschlossen werden, da die Antwort des LLM unbrauchbar war. Die Audit-Stufe bleibt „Unbekannt“, bitte versuchen Sie es später erneut."
+
+-- The audit agent did not return a usable response.
+UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITAGENT::T3310188890"] = "Der Audit-Agent hat keine verwendbare Antwort zurückgegeben."
+
+-- No provider is configured for the Security Audit Agent.
+UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITAGENT::T3605554201"] = "Für den Sicherheitsprüfungs-Agenten ist kein Anbieter konfiguriert."
+
+-- The audit result was empty.
+UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITAGENT::T432419958"] = "Das Prüfergebnis war leer."
+
+-- The audit agent returned invalid JSON.
+UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITAGENT::T917600186"] = "Der Audit-Agent hat ungültiges JSON zurückgegeben."
+
+-- Concerning
+UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITLEVELEXTENSIONS::T1500095429"] = "Bedenklich"
+
+-- Dangerous
+UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITLEVELEXTENSIONS::T3421510547"] = "Gefährlich"
+
+-- Unknown
+UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITLEVELEXTENSIONS::T3424652889"] = "Unbekannt"
+
+-- Safe
+UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITLEVELEXTENSIONS::T760494712"] = "Sicher"
+
 -- Objective
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T1121586136"] = "Zielsetzung"
 
@@ -228,6 +258,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T553265703"] = "
 -- Please provide a custom language.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T656744944"] = "Bitte wählen Sie eine benutzerdefinierte Sprache aus."
 
+-- Create an agenda for the meeting '{0}' with the following contents:
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T748352577"] = "Erstelle eine Tagesordnung für das Meeting „{0}“ mit den folgenden Inhalten:"
+
 -- Should the participants be involved passively or actively?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::ASSISTANTAGENDA::T749354834"] = "Sollten die Teilnehmer passiv oder aktiv eingebunden werden?"
 
@@ -323,6 +356,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T1082499335"] = 
 
 -- Yes, provide compiler messages
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T1267219550"] = "Ja, Kompilermeldungen bereitstellen"
+
+-- Help me with the following coding question:
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T1290190584"] = "Hilf mir bei der folgenden Programmierfrage:"
 
 -- Compiler messages
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T2339992872"] = "Kompilermeldungen"
@@ -543,6 +579,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTA
 -- Yes, hide the policy definition
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T940701960"] = "Ja, die Definition des Regelwerks ausblenden"
 
+-- No assistant plugin are currently installed.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DYNAMIC::ASSISTANTDYNAMIC::T1913566603"] = "Derzeit sind keine Assistant-Plugins installiert."
+
+-- Please select one of your profiles.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DYNAMIC::ASSISTANTDYNAMIC::T465395981"] = "Bitte wählen Sie eines Ihrer Profile aus."
+
 -- Provide a list of bullet points and some basic information for an e-mail. The assistant will generate an e-mail based on that input.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::EMAIL::ASSISTANTEMAIL::T1143222914"] = "Geben Sie eine Liste von Stichpunkten sowie einige Basisinformationen für eine E-Mail ein. Der Assistent erstellt anschließend eine E-Mail auf Grundlage ihrer Angaben."
 
@@ -551,6 +593,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::EMAIL::ASSISTANTEMAIL::T134060413"] = "Ih
 
 -- Please start each line of your content list with a dash (-) to create a bullet point list.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::EMAIL::ASSISTANTEMAIL::T1384718254"] = "Bitte beginnen Sie jede Zeile der Inhaltsliste mit einem Bindestrich (-), um eine Aufzählung zu erstellen."
+
+-- Create an email based on the following bullet points:
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::EMAIL::ASSISTANTEMAIL::T1477828979"] = "Erstelle eine E-Mail basierend auf den folgenden Stichpunkten:"
 
 -- Create email
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::EMAIL::ASSISTANTEMAIL::T1686330485"] = "E-Mail erstellen"
@@ -1062,6 +1107,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING
 -- Check the grammar and spelling of a text.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T3184716499"] = "Grammatik und Rechtschreibung eines Textes überprüfen."
 
+-- Check the following text for grammar and spelling mistakes:
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T3486937812"] = "Prüfe den folgenden Text auf Grammatik- und Rechtschreibfehler:"
+
 -- Please provide a custom language.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T656744944"] = "Bitte geben Sie eine benutzerdefinierte Sprache an."
 
@@ -1161,6 +1209,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ICONFINDER::ASSISTANTICONFINDER::T1302165
 -- Find Icon
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ICONFINDER::ASSISTANTICONFINDER::T1975161003"] = "Icon suchen"
 
+-- Find icon suggestions on {0} for the following context:
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ICONFINDER::ASSISTANTICONFINDER::T2525517053"] = "Finde Icon-Vorschläge auf {0} für den folgenden Kontext:"
+
 -- Finding the right icon for a context, such as for a piece of text, is not easy. The first challenge: You need to extract a concept from your context, such as from a text. Let's take an example where your text contains statements about multiple departments. The sought-after concept could be "departments." The next challenge is that we need to anticipate the bias of the icon designers: under the search term "departments," there may be no relevant icons or only unsuitable ones. Depending on the icon source, it might be more effective to search for "buildings," for instance. LLMs assist you with both steps.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ICONFINDER::ASSISTANTICONFINDER::T347756684"] = "Das richtige Icon für einen bestimmten Kontext zu finden, zum Beispiel für einen Text, ist nicht einfach. Die erste Herausforderung besteht darin, ein Konzept aus dem Kontext, wie etwa aus einem Text, herauszufiltern. Nehmen wir ein Beispiel: Ihr Text enthält Aussagen über verschiedene Abteilungen. Das gesuchte Konzept könnte also „Abteilungen“ sein. Die nächste Herausforderung ist, die Denkweise der Icon-Designer vorherzusehen: Unter dem Suchbegriff „Abteilungen“ gibt es möglicherweise keine passenden oder sogar völlig ungeeignete Icons. Je nach Icon-Quelle kann es daher effektiver sein, zum Beispiel nach „Gebäude“ zu suchen. LLMs unterstützen Sie bei beiden Schritten."
 
@@ -1197,6 +1248,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T133060
 -- Create the job posting
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T1348170275"] = "Stellenanzeige erstellen"
 
+-- Create a job posting.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T1575017511"] = "Erstelle eine Stellenanzeige."
+
 -- This is important to consider the legal framework of the country.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T1652348489"] = "Diese Angabe ist wichtig, um den rechtlichen Rahmen des jeweiligen Landes berücksichtigen zu können."
 
@@ -1215,6 +1269,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T222318
 -- Target language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T237828418"] = "Zielsprache"
 
+-- Create a job posting for {0} based on the following job description:
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T3001516791"] = "Erstelle eine Stellenanzeige für {0} basierend auf der folgenden Stellenbeschreibung:"
+
 -- Please provide a job description.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T3056799310"] = "Bitte beschreiben Sie die Stelle."
 
@@ -1226,6 +1283,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T341483
 
 -- (Optional) Provide the date until the job posting is valid
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T3471426808"] = "(Optional) Geben Sie das Ablaufdatum der Stellenausschreibung an"
+
+-- Create a job posting for {0}.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T3513993280"] = "Erstelle eine Stellenanzeige für {0}."
 
 -- Provide some key points about the job you want to post. The AI will then formulate a suggestion that you can finalize.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T3644893573"] = "Nennen Sie einige wichtige Punkte zu dem Job, den Sie ausschreiben möchten. Die KI wird daraus einen Vorschlag formulieren, den Sie anschließend anpassen können."
@@ -1241,6 +1301,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T393005
 
 -- (Optional) Provide the work location
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T3972042680"] = "(Optional) Geben Sie den Arbeitsort an"
+
+-- Create a job posting based on the following job description:
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T795506638"] = "Erstelle eine Stellenanzeige basierend auf der folgenden Stellenbeschreibung:"
 
 -- Please provide a legal document as input. You might copy the desired text from a document or a website.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LEGALCHECK::ASSISTANTLEGALCHECK::T1160217683"] = "Bitte geben Sie ein rechtliches Dokument ein. Sie können den gewünschten Text aus einem Dokument oder von einer Website kopieren."
@@ -1260,8 +1323,14 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LEGALCHECK::ASSISTANTLEGALCHECK::T4016275
 -- Please provide your questions as input.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LEGALCHECK::ASSISTANTLEGALCHECK::T4154383818"] = "Bitte geben Sie ihre Fragen ein."
 
+-- Answer the following questions about a legal document:
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LEGALCHECK::ASSISTANTLEGALCHECK::T4254597664"] = "Beantworte die folgenden Fragen zu einem rechtlichen Dokument:"
+
 -- Ask your questions
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LEGALCHECK::ASSISTANTLEGALCHECK::T467099852"] = "Stellen Sie ihre Fragen"
+
+-- Analyze the following text and extract my tasks:
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MYTASKS::ASSISTANTMYTASKS::T1349891364"] = "Analysiere den folgenden Text und extrahiere meine Aufgaben:"
 
 -- Please provide some text as input. For example, an email.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MYTASKS::ASSISTANTMYTASKS::T1962809521"] = "Bitte geben Sie einen Text ein. Zum Beispiel eine E-Mail."
@@ -1290,6 +1359,150 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MYTASKS::ASSISTANTMYTASKS::T534887559"] =
 -- Please provide a custom language.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MYTASKS::ASSISTANTMYTASKS::T656744944"] = "Bitte wählen Sie eine eigene Sprache aus."
 
+-- The custom prompt guide file is empty or could not be read.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T1173408044"] = "Der benutzerdefinierte Prompting Leitfaden ist leer oder konnte nicht gelesen werden."
+
+-- Use English for complex prompts and explicitly request response language if needed.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T119999744"] = "Verwenden Sie Englisch für komplexe Prompts und fordern Sie dann explizit die gewünschte Antwortsprache im Prompt an."
+
+-- The selected custom prompt guide file could not be found.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T1300996373"] = "Der ausgewählte benutzerdefinierte Prompting Leitfaden konnte nicht gefunden werden."
+
+-- Define a role for the model to focus output style and expertise.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T1316122151"] = "Definieren Sie eine Rolle für das Modell, um den Ausgabestil und die Expertise vorzugeben."
+
+-- Use headings or markers to separate context, task, and constraints.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T1435532298"] = "Verwenden Sie Überschriften oder Markierungen, um Kontext, Aufgabe und Einschränkungen zu trennen."
+
+-- Custom Prompt Guide Preview
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T1526658372"] = "Vorschau des benutzerdefinierten Prompting-Leitfadens."
+
+-- The model response was not in the expected JSON format. The raw response is shown as optimized prompt.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T1548376553"] = "Die Modellantwort war nicht im erwarteten JSON-Format. Die Rohantwort wird als optimierter Prompt angezeigt."
+
+-- View
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T1582017048"] = "Anzeigen"
+
+-- Separate context, task, constraints, and output format with headings or markers.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T1626024580"] = "Trennen Sie Kontext, Aufgabe, Einschränkungen und Ausgabeformat mit Überschriften oder Markierungen."
+
+-- Add short examples and background context for your specific use case.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T1666841672"] = "Fügen Sie kurze Beispiele und Kontext für Ihren spezifischen Anwendungsfall hinzu."
+
+-- Assign a role to shape tone, expertise, and focus.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T1679211785"] = "Weisen Sie eine Rolle zu, um Ton, Expertise und Fokus zu gestalten."
+
+-- Structure with markers
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T1695758233"] = "Mit Markierungen strukturieren"
+
+-- Please attach and load a valid custom prompt guide file.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T1760468309"] = "Bitte hängen Sie einen gültigen Prompting-Leitfaden an."
+
+-- Prompt Optimizer
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T1777666968"] = "Prompt-Optimierer"
+
+-- Add clearer goals and explicit quality expectations.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T1833795299"] = "Fügen Sie klarere Ziele und explizite Qualitätsanforderungen hinzu."
+
+-- Optimize prompt
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T1857716344"] = "Prompt optimieren"
+
+-- Break the task into numbered steps if order matters.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T2185953360"] = "Zerlegen Sie die Aufgabe in nummerierte Schritte, wenn die Reihenfolge wichtig ist."
+
+-- Please provide a prompt or prompt description.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T2228130444"] = "Bitte geben Sie einen Prompt oder eine Beschreibung des Prompts an."
+
+-- Add examples and context
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T2386806593"] = "Beispiele und Kontext hinzufügen"
+
+-- Custom prompt guide file
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T2458417590"] = "Benutzerdefinierter Prompting-Leitfaden"
+
+-- Use an LLM to optimize your prompt by following either the default or your individual prompt guidelines and get targeted recommendations for future versions of the prompt.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T2466607250"] = "Verwenden Sie ein LLM, um Ihren Prompt zu optimieren, indem Sie entweder den Standard- oder Ihren individuellen Prompting-Leitfaden verwenden, und erhalten Sie gezielte Empfehlungen für zukünftige Versionen des Prompts."
+
+-- Replaced the previously selected custom prompt guide file.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T2698103422"] = "Der zuvor ausgewählte benutzerdefinierte Prompting-Leitfaden wurde ersetzt."
+
+-- (Optional) Important Aspects for the prompt
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T2713431429"] = "(Optional) Wichtige Aspekte für die Eingabe"
+
+-- Use the prompt recommendations from the custom prompt guide.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T2830307837"] = "Verwenden Sie die Prompt-Empfehlungen aus dem benutzerdefinierten Prompting-Leitfaden."
+
+-- Be clear and direct
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T2880063041"] = "Sei klar und direkt"
+
+-- The prompting guideline file could not be loaded. Please verify 'prompting_guideline.md' in Assistants/PromptOptimizer.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T30321193"] = "Die Standarddatei mit den Anweisungen für das Prompting konnte nicht geladen werden. Bitte überprüfen Sie „prompting_guideline.md“ im Ordner Assistants/PromptOptimizer."
+
+-- Custom language
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T3032662264"] = "Benutzerdefinierte Sprache"
+
+-- Give the model a role
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T3420218291"] = "Geben Sie dem Modell eine Rolle"
+
+-- Failed to load custom prompt guide content.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T3488117809"] = "Fehler beim Laden des Inhalts des benutzerdefinierten Prompting-Leitfadens."
+
+-- No file selected
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T3522202289"] = "Keine Datei ausgewählt"
+
+-- Use custom prompt guide
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T3528575759"] = "Benutzerdefinierten Prompting-Leitfaden verwenden"
+
+-- Prefer numbered steps when task order matters.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T3558299393"] = "Bevorzugen Sie nummerierte Schritte, wenn die Reihenfolge der Aufgaben wichtig ist."
+
+-- Recommendations for your prompt
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T3577149599"] = "Empfehlungen für den Prompt"
+
+-- (Optional) Specify aspects the optimizer should emphasize in the resulting prompt, such as output structure, or constraints.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T3686962588"] = "(Optional) Geben Sie Aspekte an, auf die der Optimierer bei der Erstellung des Prompts achten soll, z. B. die Struktur der Ausgabe oder Einschränkungen."
+
+-- View default prompt guide
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T4017099405"] = "Standard-Prompting-Leitfaden anzeigen"
+
+-- Prompt or prompt description
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T4058791116"] = "Prompt oder Beschreibung des Prompts"
+
+-- Include short examples and context that explain the purpose behind your requirements.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T4143206140"] = "Fügen Sie kurze Beispiele und Kontext hinzu, die den Zweck Ihrer Anforderungen erläutern."
+
+-- Prompting Guideline
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T4250996615"] = "Prompting-Leitfaden"
+
+-- Use sequential steps
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T487578804"] = "Schrittweise vorgehen"
+
+-- Use clear, explicit instructions and directly state quality expectations.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T596557540"] = "Verwenden Sie klare, explizite Anweisungen und geben Sie direkt die Qualitätsmerkmale an."
+
+-- Choose prompt language deliberately
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T616613304"] = "Wählen Sie die Prompt-Sprache bewusst aus"
+
+-- Prompt recommendations were updated based on your latest optimization.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T633382478"] = "Die Prompt-Empfehlungen wurden basierend auf Ihrer letzten Optimierung aktualisiert."
+
+-- Please provide a custom language.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T656744944"] = "Bitte geben Sie eine benutzerdefinierte Sprache an."
+
+-- No further recommendation in this area.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T659636347"] = "Keine weiteren Empfehlungen in diesem Bereich."
+
+-- The prompting guideline file could not be loaded.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T666817418"] = "Die Anleitung für das Prompting konnte nicht geladen werden."
+
+-- Language for the optimized prompt
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T773621440"] = "Sprache für den optimierten Prompt"
+
+-- Use these recommendations, that are based on the default prompt guide, to improve your prompts. The suggestions are updated based on your latest prompt optimization.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T805885769"] = "Verwenden Sie diese Empfehlungen, die auf dem Standard-Prompting-Leitfaden basieren, um Ihre Prompts zu verbessern. Die Vorschläge werden basierend auf Ihrer letzten Prompt-Optimierung aktualisiert."
+
+-- For complex tasks, write prompts in English.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T85710437"] = "Schreiben Sie die Prompts für komplexe Aufgaben in Englisch."
+
 -- Please provide a text as input. You might copy the desired text from a document or a website.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T137304886"] = "Bitte geben Sie einen Text ein. Sie können den gewünschten Text aus einem Dokument oder einer Website kopieren."
 
@@ -1304,6 +1517,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::
 
 -- Language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T2591284123"] = "Sprache"
+
+-- Rewrite and improve the following text:
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T2875363001"] = "Bitte folgenden Text umschreiben und verbessern:"
 
 -- Custom language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T3032662264"] = "Benutzerdefinierte Sprache"
@@ -1545,6 +1761,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T617902505"
 -- Please provide a custom language.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T656744944"] = "Bitte geben Sie eine benutzerdefinierte Sprache an."
 
+-- Find synonyms for the following word or phrase:
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SYNONYM::ASSISTANTSYNONYMS::T1793532807"] = "Finde Synonyme für das folgende Wort oder die folgende Phrase:"
+
 -- Your word or phrase
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SYNONYM::ASSISTANTSYNONYMS::T1847246020"] = "Ihr Wort oder Phrase"
 
@@ -1569,6 +1788,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SYNONYM::ASSISTANTSYNONYMS::T3501110371"]
 -- Custom target language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SYNONYM::ASSISTANTSYNONYMS::T3848935911"] = "Benutzerdefinierte Zielsprache"
 
+-- Context:
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SYNONYM::ASSISTANTSYNONYMS::T4209715410"] = "Kontext:"
+
 -- Please provide a custom language.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SYNONYM::ASSISTANTSYNONYMS::T656744944"] = "Bitte geben Sie eine benutzerdefinierte Sprache an."
 
@@ -1583,6 +1805,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TEXTSUMMARIZER::ASSISTANTTEXTSUMMARIZER::
 
 -- Text Summarizer
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TEXTSUMMARIZER::ASSISTANTTEXTSUMMARIZER::T1907192403"] = "Texte zusammenfassen"
+
+-- Create a summary of my text.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TEXTSUMMARIZER::ASSISTANTTEXTSUMMARIZER::T2013275370"] = "Erstelle eine Zusammenfassung meines Textes."
 
 -- Target language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TEXTSUMMARIZER::ASSISTANTTEXTSUMMARIZER::T237828418"] = "Zielsprache"
@@ -1646,6 +1871,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T20282
 
 -- Target language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T237828418"] = "Zielsprache"
+
+-- Translate the following text to {0}:
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T2578812023"] = "Übersetze den folgenden Text in {0}:"
 
 -- Translate text from one language to another.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T3230457846"] = "Text aus einer Sprache in eine andere übersetzen."
@@ -1767,8 +1995,11 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T4224149521"] = "Verstan
 -- Export Chat to Microsoft Word
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T861873672"] = "Chat in Microsoft Word exportieren"
 
--- No arguments
-UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T931993614"] = "Keine Argumente"
+-- The selected model '{0}' is no longer available from '{1}' (provider={2}). Please adapt your provider settings.
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTTEXT::T3267850764"] = "Das ausgewählte Modell '{0}' ist bei '{1}' (Anbieter={2}) nicht mehr verfügbar. Bitte passen Sie Ihre Anbietereinstellungen an."
+
+-- We could load models from '{0}', but the provider did not return any usable text models.
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTTEXT::T3378120620"] = "Wir konnten Modelle von '{0}' laden, aber der Anbieter hat keine verwendbaren Textmodelle zurückgegeben."
 
 -- The local image file does not exist. Skipping the image.
 UI_TEXT_CONTENT["AISTUDIO::CHAT::IIMAGESOURCEEXTENSIONS::T255679918"] = "Die lokale Bilddatei existiert nicht. Das Bild wird übersprungen."
@@ -1784,6 +2015,63 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::IIMAGESOURCEEXTENSIONS::T349928509"] = "Das Bil
 
 -- Open Settings
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T1172211894"] = "Einstellungen öffnen"
+
+-- Show or hide the detailed security information.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T1045105126"] = "Detaillierte Sicherheitsinformationen anzeigen oder ausblenden."
+
+-- Assistant Audit
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T1506922856"] = "Assistentenprüfung"
+
+-- Plugin ID
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T1661076691"] = "Plugin-ID"
+
+-- Audit level
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T1681369326"] = "Audit-Stufe"
+
+-- Availability
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T1805629238"] = "Verfügbarkeit"
+
+-- Assistant Security
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T1841954939"] = "Sicherheit des Assistenten"
+
+-- Required minimum
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T2354026284"] = "Erforderliches Minimum"
+
+-- Audit provider
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T2757790517"] = "Audit-Anbieter"
+
+-- Technical Details
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T2769062110"] = "Technische Details"
+
+-- No audit yet
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T3138877447"] = "Noch keine Prüfung vorhanden"
+
+-- Confidence
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T3243388657"] = "Gewissheit"
+
+-- Unknown
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T3424652889"] = "Unbekannt"
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T3448155331"] = "Schließen"
+
+-- No stored audit details are available yet.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T3647137899"] = "Es sind noch keine gespeicherten Audit-Details verfügbar."
+
+-- Current hash
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T3896860082"] = "Aktueller Hash"
+
+-- Audited at
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T4103354206"] = "Geprüft am"
+
+-- No security findings were stored for this assistant plugin.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T4256679240"] = "Für dieses Assistenten-Plugin wurden keine Sicherheitsbefunde gespeichert."
+
+-- Audit hash
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T53507304"] = "Prüf-Hash"
+
+-- {0} Finding(s)
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T631393016"] = "{0} Fund(e)"
 
 -- Click the paperclip to attach files, or click the number to see your attached files.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T1358313858"] = "Klicken Sie auf die Büroklammer, um Dateien anzuhängen, oder klicken Sie auf die Zahl, um Ihre angehängten Dateien anzuzeigen."
@@ -1914,6 +2202,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIDENCEINFO::T847071819"] = "Zeigt ode
 -- This feature is managed by your organization and has therefore been disabled.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONBASE::T1416426626"] = "Diese Funktion wird von Ihrer Organisation verwaltet und wurde daher deaktiviert."
 
+-- Choose File
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONFILE::T4285779702"] = "Datei auswählen"
+
 -- Choose the minimum confidence level that all LLM providers must meet. This way, you can ensure that only trustworthy providers are used. You cannot use any provider that falls below this level.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONMINCONFIDENCESELECTION::T2526727283"] = "Wählen Sie das minimale Vertrauensniveau, das alle LLM-Anbieter erfüllen müssen. So stellen Sie sicher, dass nur vertrauenswürdige Anbieter verwendet werden. Anbieter, die dieses Niveau unterschreiten, können nicht verwendet werden."
 
@@ -2030,6 +2321,27 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEPANDOCDEPENDENCY::T527187983"] = "�
 
 -- Install Pandoc
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEPANDOCDEPENDENCY::T986578435"] = "Pandoc installieren"
+
+-- Version
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANDATORYINFODISPLAY::T1573770551"] = "Version"
+
+-- A new version of the terms is available. Please review it again.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANDATORYINFODISPLAY::T1711766303"] = "Eine neue Version der Bedingungen ist verfügbar. Bitte lesen Sie die Bedingungen erneut durch."
+
+-- This mandatory info has not been accepted yet.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANDATORYINFODISPLAY::T1870532312"] = "Diese Pflichtangabe wurde noch nicht akzeptiert."
+
+-- Accepted version
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANDATORYINFODISPLAY::T203086476"] = "Akzeptierte Version"
+
+-- Last accepted version
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANDATORYINFODISPLAY::T3407978086"] = "Zuletzt akzeptierte Version"
+
+-- Accepted at (UTC)
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANDATORYINFODISPLAY::T3511160492"] = "Akzeptiert am (UTC)"
+
+-- Please review this text again. The content was changed.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANDATORYINFODISPLAY::T941885055"] = "Bitte lesen Sie diesen Text erneut durch. Der Inhalt wurde geändert."
 
 -- Given that my employer's workplace uses both Windows and Linux, I wanted a cross-platform solution that would work seamlessly across all major operating systems, including macOS. Additionally, I wanted to demonstrate that it is possible to create modern, efficient, cross-platform applications without resorting to Electron bloatware. The combination of .NET and Rust with Tauri proved to be an excellent technology stack for building such robust applications.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MOTIVATION::T1057189794"] = "Da mein Arbeitgeber sowohl Windows als auch Linux am Arbeitsplatz nutzt, wollte ich eine plattformübergreifende Lösung, die nahtlos auf allen wichtigen Betriebssystemen, einschließlich macOS, funktioniert. Außerdem wollte ich zeigen, dass es möglich ist, moderne, effiziente und plattformübergreifende Anwendungen zu erstellen, ohne auf Software-Ballast, wie z.B. das Electron-Framework, zurückzugreifen. Die Kombination aus .NET und Rust mit Tauri hat sich dabei als hervorragender Technologie-Stack für den Bau solch robuster Anwendungen erwiesen."
@@ -2208,6 +2520,57 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SELECTDIRECTORY::T4256489763"] = "Verzeic
 -- Choose File
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SELECTFILE::T4285779702"] = "Datei auswählen"
 
+-- External Assistants rated below this audit level are treated as insufficiently reviewed.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T1162151451"] = "Externe Assistenten, die unter diesem Audit Level bewertet werden, gelten als nicht ausreichend sicher."
+
+-- The audit shows you all security risks and information, if you consider this rating false at your own discretion, you can decide to install it anyway (not recommended).
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T1701891173"] = "Die Überprüfung zeigt Ihnen alle Sicherheitsrisiken und Informationen. Wenn Sie diese Bewertung nach eigenem Ermessen für falsch halten, können Sie sich entscheiden, den Assistenten trotzdem zu installieren (nicht empfohlen)."
+
+-- Users may still activate plugins below the minimum Audit-Level
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T1840342259"] = "Nutzer können Assistenten unterhalb des Mindest-Audit-Levels weiterhin aktivieren."
+
+-- Automatically audit new or updated plugins in the background?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T1843401860"] = "Neue oder aktualisierte Plugins automatisch im Hintergrund prüfen?"
+
+-- Require a security audit before activating external Assistants?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T2010360320"] = "Vor dem Aktivieren externer Assistenten ein Security-Audit durchführen?"
+
+-- External Assistants must be audited before activation
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T2065972970"] = "Externe Assistenten müssen vor der Aktivierung geprüft werden."
+
+-- Block activation below the minimum Audit-Level?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T232834129"] = "Aktivierung unterhalb der Mindest-Audit-Stufe blockieren?"
+
+-- Disabling this setting turns off assistant plugin security audits. External assistants may then be activated and used even without a valid audit or after plugin changes. Do you really want to disable this protection?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T2516645821"] = "Wenn Sie diese Einstellung deaktivieren, werden die Sicherheitsprüfungen für Assistenten-Plugins ausgeschaltet. Externe Assistenten können dann auch ohne gültige Prüfung oder nach Änderungen an Plugins aktiviert und verwendet werden. Möchten Sie diesen Schutz wirklich deaktivieren?"
+
+-- Agent: Security Audit for external Assistants
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T2910364422"] = "Agent: Sicherheits-Audit für externe Assistenten"
+
+-- External Assistant can be activated without an audit
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T2915620630"] = "Externer Assistent kann ohne Prüfung aktiviert werden"
+
+-- Security audit is done manually by the user
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T3568079552"] = "Das Security-Audit wird manuell durchgeführt."
+
+-- Minimum required audit level
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T3599539909"] = "Minimales erforderliches Audit-Level"
+
+-- Security audit is automatically done in the background
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T3684348859"] = "Die Sicherheitsprüfung wird automatisch im Hintergrund durchgeführt."
+
+-- Disable Assistant Audit Protection
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T4019550023"] = "Assistenten-Audit-Schutz deaktivieren"
+
+-- Activation is blocked below the minimum Audit-Level
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T4041192469"] = "Die Aktivierung ist unterhalb des Mindest-Audit-Levels blockiert."
+
+-- Optionally choose a dedicated provider for assistant plugin audits. When left empty, AI Studio falls back to the app-wide default provider.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T4166969352"] = "Optional können Sie einen speziellen Provider für Audits auswählen. Wenn dieses Feld leer bleibt, verwendet AI Studio den appweiten Standardprovider."
+
+-- This Agent audits newly installed or updated external Plugin-Assistant for security risks before they are activated and stores the latest audit card until the plugin manifest changes.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTASSISTANTAUDIT::T893652865"] = "Dieser Agent überprüft neu installierte oder aktualisierte externe Plugin-Assistenten vor ihrer Aktivierung auf Sicherheitsrisiken und speichert die neueste Audit-Karte, bis sich das Plugin ändert."
+
 -- When enabled, you can preselect some agent options. This is might be useful when you prefer an LLM.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTCONTENTCLEANER::T1297967572"] = "Wenn diese Option aktiviert ist, können Sie einige Agenten-Optionen vorauswählen. Das kann nützlich sein, wenn Sie ein bestimmtes LLM bevorzugen."
 
@@ -2295,11 +2658,17 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1278320412"]
 -- How often should we check for app updates?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1364944735"] = "Wie oft sollen wir nach App-Updates suchen?"
 
+-- Additional root certificates are enabled
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1380446131"] = "Zusätzliche Stammzertifikate sind aktiviert"
+
 -- Select preview features
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1439783084"] = "Vorschaufunktionen auswählen"
 
 -- Your organization provided a default start page, but you can still change it.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1454730224"] = "Ihre Organisation hat eine Standard-Startseite festgelegt, die Sie jedoch ändern können."
+
+-- Root certificate bundle path
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1471315821"] = "Pfad zum Stammzertifikatsbundle"
 
 -- Select the desired behavior for the navigation bar.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1555038969"] = "Wählen Sie das gewünschte Verhalten für die Navigationsleiste aus."
@@ -2309,6 +2678,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1599198973"]
 
 -- Would you like to set one of your profiles as the default for the entire app? When you configure a different profile for an assistant, it will always take precedence.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1666052109"] = "Möchten Sie eines ihrer Profile als Standard für die gesamte App festlegen? Wenn Sie einem Assistenten ein anderes Profil zuweisen, hat dieses immer Vorrang."
+
+-- seconds
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1723256298"] = "Sekunden"
 
 -- Select a transcription provider for transcribing your voice. Without a selected provider, dictation and transcription features will be disabled.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1834486728"] = "Wählen Sie für die Transkription Ihrer Stimme einen Anbieter für Transkriptionen aus. Ohne einen ausgewählten Anbieter wird die Diktier- und Transkriptions-Funktion deaktiviert."
@@ -2352,11 +2724,26 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2591866808"]
 -- Choose which page AI Studio should open first when you start the app. Changes take effect the next time you launch AI Studio.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2655930524"] = "Wählen Sie aus, welche Seite AI Studio beim Start der App zuerst öffnen soll. Änderungen werden beim nächsten Start von AI Studio wirksam."
 
+-- Path to a PEM file containing one or more root CA certificates. For Flatpak deployments, this file must be placed in a location that is readable inside the sandbox.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2700836219"] = "Pfad zu einer PEM-Datei mit einem oder mehreren Root-CA-Zertifikaten. Bei Flatpak-Bereitstellungen muss diese Datei an einem Ort abgelegt werden, der innerhalb der Sandbox lesbar ist."
+
+-- Enter one host pattern per line. Exact hosts such as data.intra.example.org and one-label wildcards such as *.intra.example.org are supported. Cloud provider endpoints built into AI Studio, such as OpenAI, Google, etc., never use these additional root certificates.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2960110864"] = "Geben Sie pro Zeile ein Hostmuster ein. Exakte Hosts wie data.intra.example.org sowie Wildcards mit einem Label wie *.intra.example.org werden unterstützt. In AI Studio integrierte Endpunkte von Cloud-Anbietern wie OpenAI, Google usw. verwenden diese zusätzlichen Stammzertifikate nicht."
+
 -- Save energy?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3100928009"] = "Energie sparen?"
 
 -- Spellchecking is enabled
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3165555978"] = "Rechtschreibprüfung ist aktiviert"
+
+-- External HTTPS certificates
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T348936513"] = "Externe HTTPS-Zertifikate"
+
+-- Allowed hosts for additional root certificates
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3562495752"] = "Zugelassene Hosts für zusätzliche Stammzertifikate"
+
+-- Request timeout
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3569531009"] = "Zeitüberschreitung bei der Anfrage"
 
 -- App Options
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3577148634"] = "App-Einstellungen"
@@ -2373,8 +2760,14 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3694781396"]
 -- Read the Enterprise IT documentation for details.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3705451321"] = "Lesen Sie die Enterprise-IT-Dokumentation für die Details."
 
+-- When enabled, AI Studio can trust root certificates from a configured PEM bundle for external HTTPS requests, such as self-hosted AI providers, embeddings, transcription, ERI data sources, and enterprise configuration downloads. Normal hostname and certificate validity checks still apply. Integrated cloud providers, such as OpenAI, Google, and others, will never use these additional certificates. Please note that you usually do not need this setting on macOS or Windows. If you use Linux with the AppImage version of MindWork AI Studio, you also do not need this option. A valid use case is a Linux environment where AI Studio runs from a Flatpak.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3798070907"] = "Wenn diese Option aktiviert ist, kann AI Studio Stammzertifikate aus einem konfigurierten PEM-Bundle für externe HTTPS-Anfragen vertrauen, zum Beispiel für selbst gehostete KI-Anbieter, Embeddings, Transkription, ERI-Datenquellen und das Herunterladen von Unternehmenskonfigurationen. Die üblichen Prüfungen von Hostnamen und Zertifikatsgültigkeit gelten weiterhin. Integrierte Cloud-Anbieter wie OpenAI, Google und andere verwenden diese zusätzlichen Zertifikate niemals. Bitte beachten Sie, dass Sie diese Einstellung unter macOS oder Windows in der Regel nicht benötigen. Wenn Sie Linux mit der AppImage-Version von MindWork AI Studio verwenden, benötigen Sie diese Option ebenfalls nicht. Ein gültiger Anwendungsfall ist eine Linux-Umgebung, in der AI Studio aus einem Flatpak heraus ausgeführt wird."
+
 -- Enable spellchecking?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3914529369"] = "Rechtschreibprüfung aktivieren?"
+
+-- Additional root certificates are disabled
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3985928190"] = "Zusätzliche Stammzertifikate sind deaktiviert"
 
 -- Preselect one of your profiles?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T4004501229"] = "Möchten Sie eines ihrer Profile vorauswählen?"
@@ -2384,6 +2777,15 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T4067492921"]
 
 -- Select a transcription provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T4174666315"] = "Wählen Sie einen Transkriptionsanbieter aus"
+
+-- How long AI Studio waits for external HTTP requests, such as AI providers, embeddings, transcription, ERI data sources, and enterprise configuration downloads.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T4192032183"] = "Wie lange AI Studio auf externe HTTP-Anfragen wartet, z. B. an KI-Anbieter, Einbettungen, Transkription, ERI-Datenquellen und Downloads von Enterprise-Konfigurationen."
+
+-- Use additional root certificates for external HTTPS requests?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T4235562267"] = "Zusätzliche Stammzertifikate für externe HTTPS-Anfragen verwenden?"
+
+-- Select a root certificate bundle
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T436881267"] = "Wählen Sie ein Stammzertifikat-Bundle aus"
 
 -- Navigation bar behavior
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T602293588"] = "Verhalten der Navigationsleiste"
@@ -2877,6 +3279,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T2372624045"] = "Beginnen 
 -- Transcription in progress...
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T2851219233"] = "Transkription läuft …"
 
+-- Unfortunately, there was an error communicating with the AI system.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T3236134591"] = "Leider ist bei der Kommunikation mit dem KI-System ein Fehler aufgetreten."
+
 -- The configured transcription provider was not found.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T331613105"] = "Der konfigurierte Anbieter für die Transkription wurde nicht gefunden."
 
@@ -2987,6 +3392,150 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T474393241"] = "Bitte wählen
 
 -- Delete Workspace
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T701874671"] = "Arbeitsbereich löschen"
+
+-- Entries: {0}
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T1098127509"] = "Einträge: {0}"
+
+-- User Prompt Preview
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T1184162672"] = "Vorschau der Benutzereingabe"
+
+-- {0:0.##} GB
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T1224874808"] = "{0:0.##} GB"
+
+-- Potentially Dangerous Plugin
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T1229643769"] = "Potenziell gefährliches Plugin"
+
+-- Plugin root
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T1303883002"] = "Stammverzeichnis des Plugins"
+
+-- Last modified
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T1310524248"] = "Zuletzt geändert"
+
+-- Count: {0}
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T131135808"] = "Anzahl: {0}"
+
+-- {0:0.##} MB
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T1357418474"] = "{0:0.##} MB"
+
+-- No security issues were found during this check.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T1423034104"] = "Bei dieser Überprüfung wurden keine Sicherheitsprobleme gefunden."
+
+-- No provider configured
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T1476185409"] = "Kein Provider konfiguriert"
+
+-- {0:0.##} KB
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T14914764"] = "{0:0.##} KB"
+
+-- Prompt: empty
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T1533307170"] = "Prompt: leer"
+
+-- This plugin is below the required safety level. Your settings still allow activation, but enabling it requires an extra confirmation because it may be unsafe.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T1539381299"] = "Dieses Plugin unterschreitet das erforderliche Sicherheitsniveau. Ihre Einstellungen erlauben die Aktivierung zwar weiterhin, aber das Einschalten erfordert eine zusätzliche Bestätigung, da es möglicherweise unsicher ist."
+
+-- Components
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T1550582665"] = "Komponenten"
+
+-- Created
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T165548891"] = "Erstellt"
+
+-- Lua Manifest
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T165738710"] = "Lua-Manifest"
+
+-- Enable Assistant Plugin
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T1676241565"] = "Assistant-Plugin aktivieren"
+
+-- User Prompt
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T1700917692"] = "Benutzereingabe"
+
+-- Unknown plugin
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T1834795216"] = "Unbekanntes Plugin"
+
+-- This plugin cannot be activated because its audit result is below the required safety level and your settings block activation in this case.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T1839656215"] = "Dieses Plugin kann nicht aktiviert werden, weil sein Prüfergebnis unter dem erforderlichen Sicherheitsniveau liegt und Ihre Einstellungen die Aktivierung in diesem Fall blockieren."
+
+-- Children: {0}
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T193192210"] = "Untergeordnete: {0}"
+
+-- null
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T1996966820"] = "null"
+
+-- Properties
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T2177370620"] = "Eigenschaften"
+
+-- Items: {0}
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T2204150657"] = "Elemente: {0}"
+
+-- {0} B
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T2562655035"] = "{0} B"
+
+-- The assistant plugin could not be resolved for auditing.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T273798258"] = "Das Assistenten-Plugin konnte für die Überprüfung nicht aufgelöst werden."
+
+-- Audit provider
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T2757790517"] = "Provider prüfen"
+
+-- Size
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T2789707388"] = "Größe"
+
+-- Prompt: set
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T3156437951"] = "Prompt: festlegen"
+
+-- Findings
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T3224848879"] = "Ergebnisse"
+
+-- Advanced Prompt Building
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T3399544173"] = "Erweiterte Prompt-Erstellung"
+
+-- The assistant plugin \"{0}\" was audited with the level \"{1}\", which is below the required safety level \"{2}\". Your current settings still allow activation, but this may be unsafe. Do you really want to enable this plugin?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T3418077666"] = "Das Assistenten-Plugin „{0}“ wurde mit der Stufe „{1}“ geprüft, die unter der erforderlichen Sicherheitsstufe „{2}“ liegt. Ihre aktuellen Einstellungen erlauben die Aktivierung dennoch, aber dies kann unsicher sein. Möchten Sie dieses Plugin wirklich aktivieren?"
+
+-- Unknown
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T3424652889"] = "Unbekannt"
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T3448155331"] = "Schließen"
+
+-- Value
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T3511155050"] = "Wert"
+
+-- Last accessed
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T3579946376"] = "Zuletzt aufgerufen"
+
+-- Unknown key
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T3647690370"] = "Unbekannter Schlüssel"
+
+-- Minimum required safety level
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T3652671056"] = "Mindest erforderliches Sicherheitsniveau"
+
+-- Unavailable
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T3662391977"] = "Nicht verfügbar"
+
+-- Plugin Structure
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T371537943"] = "Plugin-Struktur"
+
+-- Audit Result
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T3844960449"] = "Prüfungsergebnis"
+
+-- empty
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T413646574"] = "leer"
+
+-- Fallback Prompt
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T4229995215"] = "Ersatz-Prompt"
+
+-- System Prompt
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T628396066"] = "System-Prompt"
+
+-- This security check uses a sample prompt preview. Empty or placeholder values in the preview are expected.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T737998363"] = "Diese Sicherheitsprüfung verwendet eine Beispielvorschau des Prompts. Leere oder Platzhalterwerte in der Vorschau sind zu erwarten."
+
+-- Safe
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T760494712"] = "Sicher"
+
+-- Start Security Check
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T811648299"] = "Sicherheitsprüfung starten"
+
+-- Cancel
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T900713019"] = "Abbrechen"
 
 -- Only text content is supported in the editing mode yet.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T1352914344"] = "Im Bearbeitungsmodus wird bisher nur Textinhalt unterstützt."
@@ -3246,6 +3795,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T2879113658"] = 
 -- Maximum matches per query
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T2889706179"] = "Maximale Treffer pro Abfrage"
 
+-- Failed to read the user's username from the operating system.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T2909734556"] = "Der Benutzername des Nutzers konnte nicht aus dem Betriebssystem gelesen werden."
+
 -- Open web link, show more information
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T2968752071"] = "Weblink öffnen & mehr Informationen anzeigen"
 
@@ -3296,6 +3848,27 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T742006305"] = "
 
 -- Embeddings
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERI_V1INFODIALOG::T951463987"] = "Einbettungen"
+
+-- Use the same username and password for all users
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1USERNAMEPASSWORDEXPORTDIALOG::T1769874785"] = "Für alle Benutzer denselben Benutzernamen und dasselbe Passwort verwenden"
+
+-- Username and password mode
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1USERNAMEPASSWORDEXPORTDIALOG::T1787063064"] = "Modus für den Benutzernamen und das Passwort"
+
+-- How should AI Studio export the username and password configuration for the ERI v1 data source '{0}'?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1USERNAMEPASSWORDEXPORTDIALOG::T3081234668"] = "Wie soll AI Studio die Konfiguration von Benutzername und Passwort für die ERI-v1-Datenquelle „{0}“ exportieren?"
+
+-- User-managed username and password
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1USERNAMEPASSWORDEXPORTDIALOG::T365340972"] = "Vom Benutzer verwaltete Anmeldedaten (Benutzername und Passwort)"
+
+-- Export
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1USERNAMEPASSWORDEXPORTDIALOG::T3898821075"] = "Exportieren"
+
+-- Read each user's username from the operating system and share one password
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1USERNAMEPASSWORDEXPORTDIALOG::T76405695"] = "Den Benutzernamen jedes Benutzers aus dem Betriebssystem auslesen und ein Passwort teilen."
+
+-- Cancel
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCEERIV1USERNAMEPASSWORDEXPORTDIALOG::T900713019"] = "Abbrechen"
 
 -- Describe what data this directory contains to help the AI select it.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T1136409150"] = "Beschreiben Sie, welche Daten dieses Verzeichnis enthält, um der KI bei der Auswahl zu helfen."
@@ -3843,6 +4416,15 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T900713019"] = "Abbrechen"
 -- The profile name must be unique; the chosen name is already in use.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T911748898"] = "Der Profilname muss eindeutig sein; der ausgewählte Name wird bereits verwendet."
 
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINGGUIDELINEDIALOG::T3448155331"] = "Schließen"
+
+-- The full prompting guideline used by the Prompt Optimizer.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINGGUIDELINEDIALOG::T384594633"] = "Der vollständige Prompting-Leitfaden, der standardmäßig vom Prompt-Optimierer verwendet wird."
+
+-- Prompting Guideline
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINGGUIDELINEDIALOG::T4250996615"] = "Prompting-Leitfaden"
+
 -- Please be aware: This section is for experts only. You are responsible for verifying the correctness of the additional parameters you provide to the API call. By default, AI Studio uses the OpenAI-compatible chat completions API, when that it is supported by the underlying service and model.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1017509792"] = "Bitte beachten Sie: Dieser Bereich ist nur für Expertinnen und Experten. Sie sind dafür verantwortlich, die Korrektheit der zusätzlichen Parameter zu überprüfen, die Sie beim API‑Aufruf angeben. Standardmäßig verwendet AI Studio die OpenAI‑kompatible Chat Completions-API, sofern diese vom zugrunde liegenden Dienst und Modell unterstützt wird."
 
@@ -4323,6 +4905,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T582516016"] =
 -- Customize your AI experience with chat templates. Whether you want to experiment with prompt engineering, simply use a custom system prompt in the standard chat interface, or create a specialized assistant, chat templates give you full control. Similar to common AI companies' playgrounds, you can define your own system prompts and leverage assistant prompts for providers that support them.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T1172171653"] = "Passen Sie ihre KI-Erfahrung mit Chat-Vorlagen an. Egal, ob Sie mit Prompt-Engineering experimentieren, einfach einen eigenen System-Prompt im normalen Chat verwenden oder einen spezialisierten Assistenten erstellen möchten – mit Chat-Vorlagen haben Sie die volle Kontrolle. Ähnlich wie in den Playgrounds gängiger KI-Anbieter können Sie eigene System-Prompts festlegen und bei unterstützenden Anbietern auch Assistenten-Prompts nutzen."
 
+-- Copy attachments into plugin
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T1345613295"] = "Anhänge in das Plugin kopieren"
+
 -- Delete
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T1469573738"] = "Löschen"
 
@@ -4331,6 +4916,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T15483
 
 -- Note: This advanced feature is designed for users familiar with prompt engineering concepts. Furthermore, you have to make sure yourself that your chosen provider supports the use of assistant prompts.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T1909110760"] = "Hinweis: Diese fortgeschrittene Funktion richtet sich an Nutzer, die mit den Grundlagen des Prompt Engineerings vertraut sind. Außerdem müssen Sie selbst sicherstellen, dass Ihr gewählter Anbieter die Verwendung von Assistenten-Prompts unterstützt."
+
+-- Use shared attachment paths
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T2054531878"] = "Gemeinsame Pfade für Anhänge verwenden"
 
 -- No chat templates configured yet.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T2319860307"] = "Noch keine Chat-Vorlagen konfiguriert."
@@ -4350,6 +4938,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T34481
 -- This template is managed by your organization.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T3576775249"] = "Diesee Vorlage wird von Ihrer Organisation verwaltet."
 
+-- Select configuration plugin folder
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T3576816894"] = "Konfigurationsordner für Plugins auswählen"
+
 -- Edit Chat Template
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T3596030597"] = "Chat-Vorlage bearbeiten"
 
@@ -4361,6 +4952,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T38650
 
 -- Delete Chat Template
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T4025180906"] = "Chat-Vorlage löschen"
+
+-- Export Chat Template
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T491504763"] = "Chat-Vorlage exportieren"
+
+-- Export configuration
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T975426229"] = "Konfiguration exportieren"
 
 -- Which programming language should be preselected for added contexts?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCODING::T1073540083"] = "Welche Programmiersprache soll für hinzugefügte Kontexte vorausgewählt werden?"
@@ -4416,6 +5013,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T145419
 -- Delete
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T1469573738"] = "Löschen"
 
+-- Kerberos/SSO ERI data sources cannot be exported yet. Please configure them manually in the configuration plugin.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T1577531115"] = "Kerberos-/SSO-ERI-Datenquellen können noch nicht exportiert werden. Bitte konfigurieren Sie diese manuell im Konfigurations-Plugin."
+
+-- Cannot export this ERI data source because the authentication secret could not be encrypted.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T1592527757"] = "Diese ERI-Datenquelle kann nicht exportiert werden, da das Authentifizierungsgeheimnis nicht verschlüsselt werden konnte."
+
 -- External (ERI)
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T1652430727"] = "Extern (ERI)"
 
@@ -4446,6 +5049,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T269820
 -- Embedding
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T2838542994"] = "Einbettung"
 
+-- This data source is managed by your organization.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T3031462878"] = "Diese Datenquelle wird von Ihrer Organisation verwaltet."
+
 -- Edit
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T3267849393"] = "Bearbeiten"
 
@@ -4470,8 +5076,17 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T352566
 -- No data sources configured yet.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T3549650120"] = "Noch keine Datenquellen konfiguriert."
 
+-- Export Access Token?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T3595669127"] = "Zugriffstoken exportieren?"
+
+-- Export ERI Data Source
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T3831281036"] = "ERI-Datenquelle exportieren"
+
 -- Actions
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T3865031940"] = "Aktionen"
+
+-- This ERI data source has an access token configured. Do you want to include the encrypted access token in the export? Note: The recipient will need the same encryption secret to use the access token.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T4027572258"] = "Für diese ERI-Datenquelle ist ein Zugriffstoken konfiguriert. Möchten Sie das verschlüsselte Zugriffstoken in den Export aufnehmen? Hinweis: Der Empfänger benötigt dasselbe Geheimnis für die Verschlüsselung, um das Zugriffstoken verwenden zu können."
 
 -- Configured Data Sources
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T543942217"] = "Konfigurierte Datenquellen"
@@ -4479,11 +5094,20 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T543942
 -- Add ERI v1 Data Source
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T590005498"] = "ERI v1 Datenquelle hinzufügen"
 
+-- Cannot export this ERI data source because no enterprise encryption secret is configured.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T750361472"] = "Diese ERI-Datenquelle kann nicht exportiert werden, da kein Geheimnis für die Verschlüsselung konfiguriert ist."
+
 -- External Data (ERI-Server v1)
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T774473996"] = "Externe Daten (ERI-Server v1)"
 
+-- Cannot export this ERI data source because no authentication secret is configured. The issue was: {0}
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T782820095"] = "Diese ERI-Datenquelle kann nicht exportiert werden, da kein Authentifizierungsgeheimnis konfiguriert ist. Das Problem war: {0}"
+
 -- Local Directory
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T926703547"] = "Lokaler Ordner"
+
+-- Export configuration
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T975426229"] = "Konfiguration exportieren"
 
 -- When enabled, you can preselect some ERI server options.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGERISERVER::T1280666275"] = "Wenn aktiviert, können Sie einige ERI-Serveroptionen vorauswählen."
@@ -4770,6 +5394,42 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROFILES::T55364659"
 -- Are you a project manager in a research facility? You might want to create a profile for your project management activities, one for your scientific work, and a profile for when you need to write program code. In these profiles, you can record how much experience you have or which methods you like or dislike using. Later, you can choose when and where you want to use each profile.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROFILES::T56359901"] = "Sind Sie Projektleiter in einer Forschungseinrichtung? Dann möchten Sie vielleicht ein Profil für ihre Projektmanagement-Aktivitäten anlegen, eines für ihre wissenschaftliche Arbeit und ein weiteres Profil, wenn Sie Programmcode schreiben müssen. In diesen Profilen können Sie festhalten, wie viel Erfahrung Sie haben oder welche Methoden Sie bevorzugen oder nicht gerne verwenden. Später können Sie dann auswählen, wann und wo Sie jedes Profil nutzen möchten."
 
+-- Export configuration
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROFILES::T975426229"] = "Konfiguration exportieren"
+
+-- Preselect the target language
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROMPTOPTIMIZER::T1417990312"] = "Zielsprache vorwählen"
+
+-- Preselect another target language
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROMPTOPTIMIZER::T1462295644"] = "Wählen Sie eine andere Zielsprache vor"
+
+-- Assistant: Prompt Optimizer Options
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROMPTOPTIMIZER::T2309650422"] = "Assistent: Optionen für die Prompt-Optimierung"
+
+-- Preselect aspects the optimizer should emphasize, such as role clarity, structure, or output constraints.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROMPTOPTIMIZER::T2365571378"] = "Wählen Sie im Voraus Aspekte aus, die der Optimierer betonen soll, wie z. B. Rollenklarheit, Struktur oder Ausgabebeschränkungen."
+
+-- No prompt optimizer options are preselected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROMPTOPTIMIZER::T2506620531"] = "Keine Prompt-Optimierer-Optionen sind vorausgewählt."
+
+-- Prompt optimizer options are preselected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROMPTOPTIMIZER::T2576287692"] = "Optionen für den Prompt-Optimizer sind vorausgewählt"
+
+-- Preselect prompt optimizer options?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROMPTOPTIMIZER::T3159686278"] = "Voreingestellte Optionen für den Prompt-Optimierer auswählen?"
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROMPTOPTIMIZER::T3448155331"] = "Schließen"
+
+-- Which target language should be preselected?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROMPTOPTIMIZER::T3547337928"] = "Welche Zielsprache soll standardmäßig ausgewählt werden?"
+
+-- When enabled, you can preselect target language, important aspects, and provider defaults for the prompt optimizer assistant.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROMPTOPTIMIZER::T3570338905"] = "Wenn aktiviert, können Sie die Zielsprache, wichtige Aspekte und Standardwerte des Anbieters für den Prompt-Optimierungs-Assistenten vorab auswählen."
+
+-- Preselect important aspects
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGPROMPTOPTIMIZER::T3705987833"] = "Wichtige Aspekte vorwählen"
+
 -- Which writing style should be preselected?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGREWRITE::T1173034744"] = "Welcher Schreibstil soll standardmäßig ausgewählt werden?"
 
@@ -4819,10 +5479,10 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T13933
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T1528169602"] = "Wählen Sie Aspekte vorab aus, auf die sich das LLM bei der Erstellung von Folien konzentrieren soll, z. B. Aufzählungspunkte oder bestimmte Themen, die hervorgehoben werden sollen."
 
 -- Slide Planner Assistant options are preselected
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T1549358578"] = "Die Optionen des Folienplaner-Assistenten sind vorausgewählt."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T1549358578"] = "Optionen des Folienplanungs-Assistenten sind vorausgewählt"
 
 -- No Slide Planner Assistant options are preselected
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T1694374279"] = "Es sind keine Optionen für den Slide-Planer-Assistenten vorausgewählt."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T1694374279"] = "Für den Slide-Planer-Assistenten sind keine Optionen vorausgewählt."
 
 -- Choose whether the assistant should use the app default profile, no profile, or a specific profile.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T1766361623"] = "Wählen Sie aus, ob der Assistent das Standardprofil der App, kein Profil oder ein bestimmtes Profil verwenden soll."
@@ -4849,13 +5509,13 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T25714
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T2645589441"] = "Altersgruppe der Zielgruppe vorauswählen"
 
 -- Assistant: Slide Planner Assistant Options
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3226042276"] = "Assistent: Optionen für den Folienplanungs-Assistenten"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3226042276"] = "Assistent: Optionen für den Folienplaner-Assistenten"
 
 -- Which audience expertise should be preselected?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3228597992"] = "Welche Expertise der Zielgruppe sollte vorausgewählt werden?"
 
 -- Preselect Slide Planner Assistant options?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T339924858"] = "Optionen des Assistenten „Folienplaner“ vorab auswählen?"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T339924858"] = "Optionen des Assistenten „Folienplaner“ vorauswählen?"
 
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T3448155331"] = "Schließen"
@@ -5319,8 +5979,14 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1614176092"] = "Assistenten"
 -- Coding
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1617786407"] = "Programmieren"
 
+-- Optimize your prompt using a structured guideline.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1709976267"] = "Optimieren Sie Ihren Prompt mithilfe eines strukturierten Leitfadens."
+
 -- Analyze a text or an email for tasks you need to complete.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1728590051"] = "Analysieren Sie einen Text oder eine E-Mail nach Aufgaben, die Sie erledigen müssen."
+
+-- Prompt Optimizer
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1777666968"] = "Prompt-Optimierer"
 
 -- Text Summarizer
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1907192403"] = "Texte zusammenfassen"
@@ -5358,11 +6024,17 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T2831103254"] = "Erstellen Sie ein
 -- Slide Planner Assistant
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T2924755246"] = "Folienplaner-Assistent"
 
+-- Installed Assistants
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T295232966"] = "Installierte Assistenten"
+
 -- My Tasks
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3011450657"] = "Meine Aufgaben"
 
 -- E-Mail
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3026443472"] = "E-Mail"
+
+-- The automatic security audit for the assistant plugin '{0}' failed. Please run it manually from the plugins page.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T311775455"] = "Die automatische Sicherheitsprüfung für das Assistenten-Plugin „{0}“ ist fehlgeschlagen. Bitte führen Sie sie manuell auf der Plugin-Seite aus."
 
 -- Develop slide content based on a given topic and content.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T311912219"] = "Folieninhalte basierend auf einem vorgegebenen Thema und Inhalt erstellen."
@@ -5529,8 +6201,17 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T91074375"] = "Die App ist sowohl für p
 -- Startup log file
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1019424746"] = "Startprotokolldatei"
 
+-- The configured root certificates could not be used.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T103551060"] = "Die konfigurierten Root-Zertifikate konnten nicht verwendet werden."
+
 -- Browse AI Studio's source code on GitHub — we welcome your contributions.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1107156991"] = "Sehen Sie sich den Quellcode von AI Studio auf GitHub an – wir freuen uns über ihre Beiträge."
+
+-- Vector store version
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1124039623"] = "Vektordatenbankversion"
+
+-- Qdrant Edge is an embedded vector database and vector similarity search engine. We use it to realize local RAG—retrieval-augmented generation—within AI Studio. Thanks for the effort and great work that has been and is being put into Qdrant.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1126023000"] = "Qdrant Edge ist eine eingebettete Vektordatenbank und ein Vektoraehnlichkeitssuchmaschine. Wir nutzen sie, um lokal RAG – retrieval-augmented generation – innerhalb von AI Studio zu realisieren. Vielen Dank für die Anstrengungen und die großartige Arbeit, die in Qdrant investiert wurde und weiterhin investiert wird."
 
 -- ID mismatch: the plugin ID differs from the enterprise configuration ID.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1137744461"] = "ID-Konflikt: Die Plugin-ID stimmt nicht mit der ID der Unternehmenskonfiguration überein."
@@ -5538,14 +6219,23 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1137744461"] = "ID-Konflikt: Die
 -- This is a private AI Studio installation. It runs without an enterprise configuration.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1209549230"] = "Dies ist eine private AI Studio-Installation. Sie läuft ohne Unternehmenskonfiguration."
 
+-- Copies the configuration origin to the clipboard
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T125850635"] = "Kopiert den Ursprung der Konfiguration in die Zwischenablage"
+
+-- Unknown configuration plugin
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1290340974"] = "Unbekanntes Konfigurations-Plugin"
+
+-- Copies the configuration slot to the clipboard
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1347508205"] = "Kopiert den Slot der Konfiguration in die Zwischenablage"
+
 -- This library is used to read PDF files. This is necessary, e.g., for using PDFs as a data source for a chat.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1388816916"] = "Diese Bibliothek wird verwendet, um PDF-Dateien zu lesen. Das ist zum Beispiel notwendig, um PDFs als Datenquelle für einen Chat zu nutzen."
 
--- Database version
-UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1420062548"] = "Datenbankversion"
-
 -- This library is used to extend the MudBlazor library. It provides additional components that are not part of the MudBlazor library.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1421513382"] = "Diese Bibliothek wird verwendet, um die MudBlazor-Bibliothek zu erweitern. Sie stellt zusätzliche Komponenten bereit, die nicht Teil der MudBlazor-Bibliothek sind."
+
+-- Copies the allowed host pattern to the clipboard
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1513592659"] = "Kopiert das zulässige Hostmuster in die Zwischenablage"
 
 -- Waiting for the configuration plugin...
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1533382393"] = "Warten auf das Konfigurations-Plugin …"
@@ -5556,9 +6246,6 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1560776885"] = "Geheimnis für d
 -- AI Studio runs with an enterprise configuration and configuration servers. The configuration plugins are active.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1596483935"] = "AI Studio wird mit Unternehmenskonfigurationen und Konfigurationsservern betrieben. Die Konfigurations-Plugins sind aktiv."
 
--- Qdrant is a vector database and vector similarity search engine. We use it to realize local RAG -— retrieval-augmented generation -— within AI Studio. Thanks for the effort and great work that has been and is being put into Qdrant.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1619832053"] = "Qdrant ist eine Vektordatenbank und Suchmaschine für Vektoren. Wir nutzen Qdrant, um lokales RAG (Retrieval-Augmented Generation) innerhalb von AI Studio zu realisieren. Vielen Dank für den Einsatz und die großartige Arbeit, die in Qdrant gesteckt wurde und weiterhin gesteckt wird."
-
 -- We use Lua as the language for plugins. Lua-CSharp lets Lua scripts communicate with AI Studio and vice versa. Thank you, Yusuke Nakada, for this great library.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T162898512"] = "Wir verwenden Lua als Sprache für Plugins. Lua-CSharp ermöglicht die Kommunikation zwischen Lua-Skripten und AI Studio in beide Richtungen. Vielen Dank an Yusuke Nakada für diese großartige Bibliothek."
 
@@ -5567,6 +6254,12 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1629800076"] = "Basierend auf .N
 
 -- AI Studio creates a log file at startup, in which events during startup are recorded. After startup, another log file is created that records all events that occur during the use of the app. This includes any errors that may occur. Depending on when an error occurs (at startup or during use), the contents of these log files can be helpful for troubleshooting. Sensitive information such as passwords is not included in the log files.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1630237140"] = "AI Studio erstellt beim Start eine Protokolldatei, in der Ereignisse während des Starts aufgezeichnet werden. Nach dem Start wird eine weitere Protokolldatei erstellt, die alle Ereignisse während der Nutzung der App dokumentiert. Dazu gehören auch eventuell auftretende Fehler. Je nachdem, wann ein Fehler auftritt (beim Start oder während der Nutzung), können die Inhalte dieser Protokolldateien bei der Fehlerbehebung hilfreich sein. Sensible Informationen wie Passwörter werden nicht in den Protokolldateien gespeichert."
+
+-- Consent:
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T171952677"] = "Zustimmung:"
+
+-- Copies the executable path to the clipboard
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1722690800"] = "Kopiert den Pfad der ausführbaren Datei in die Zwischenablage"
 
 -- This library is used to display the differences between two texts. This is necessary, e.g., for the grammar and spelling assistant.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1772678682"] = "Diese Bibliothek wird verwendet, um die Unterschiede zwischen zwei Texten anzuzeigen. Das ist zum Beispiel für den Grammatik- und Rechtschreibassistenten notwendig."
@@ -5586,23 +6279,23 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1890416390"] = "Nach Updates suc
 -- Vision
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1892426825"] = "Vision"
 
--- In order to use any LLM, each user must store their so-called API key for each LLM provider. This key must be kept secure, similar to a password. The safest way to do this is offered by operating systems like macOS, Windows, and Linux: They have mechanisms to store such data, if available, on special security hardware. Since this is currently not possible in .NET, we use this Rust library.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1915240766"] = "Um ein beliebiges LLM nutzen zu können, muss jeder User seinen sogenannten API-Schlüssel für jeden LLM-Anbieter speichern. Dieser Schlüssel muss sicher aufbewahrt werden – ähnlich wie ein Passwort. Die sicherste Methode hierfür bieten Betriebssysteme wie macOS, Windows und Linux: Sie verfügen über Mechanismen, solche Daten – sofern vorhanden – auf spezieller Sicherheits-Hardware zu speichern. Da dies derzeit in .NET nicht möglich ist, verwenden wir diese Rust-Bibliothek."
-
 -- This library is used to convert HTML to Markdown. This is necessary, e.g., when you provide a URL as input for an assistant.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1924365263"] = "Diese Bibliothek wird verwendet, um HTML in Markdown umzuwandeln. Das ist zum Beispiel notwendig, wenn Sie eine URL als Eingabe für einen Assistenten angeben."
 
 -- Encryption secret: is configured
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1931141322"] = "Geheimnis für die Verschlüsselung: ist konfiguriert"
 
--- We use Rocket to implement the runtime API. This is necessary because the runtime must be able to communicate with the user interface (IPC). Rocket is a great framework for implementing web APIs in Rust.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1943216839"] = "Wir verwenden Rocket zur Implementierung der Runtime-API. Dies ist notwendig, da die Runtime mit der Benutzeroberfläche (IPC) kommunizieren muss. Rocket ist ein ausgezeichnetes Framework zur Umsetzung von Web-APIs in Rust."
+-- Copies the number of loaded root certificates to the clipboard
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2015329654"] = "Kopiert die Anzahl der geladenen Stammzertifikate in die Zwischenablage"
 
 -- Copies the following to the clipboard
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2029659664"] = "Kopiert Folgendes in die Zwischenablage"
 
 -- Copies the server URL to the clipboard
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2037899437"] = "Kopiert die Server-URL in die Zwischenablage"
+
+-- This library is used to create temporary folders in runtime tests and supporting filesystem operations.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2160280545"] = "Diese Bibliothek wird verwendet, um temporäre Ordner bei Laufzeittests zu erstellen und Dateisystemoperationen zu unterstützen."
 
 -- This library is used to determine the file type of a file. This is necessary, e.g., when we want to stream a file.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2173617769"] = "Diese Bibliothek wird verwendet, um den Dateityp einer Datei zu bestimmen. Das ist zum Beispiel notwendig, wenn wir eine Datei streamen möchten."
@@ -5625,6 +6318,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2301484629"] = "Konfigurations-P
 -- The C# language is used for the implementation of the user interface and the backend. To implement the user interface with C#, the Blazor technology from ASP.NET Core is used. All these technologies are integrated into the .NET SDK.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2329884315"] = "Die Programmiersprache C# wird für die Umsetzung der Benutzeroberfläche und des Backends verwendet. Für die Entwicklung der Benutzeroberfläche mit C# kommt die Blazor-Technologie aus ASP.NET Core zum Einsatz. Alle diese Technologien sind im .NET SDK integriert."
 
+-- Linux AppImages bundle GStreamer components to support microphone access and WebM audio recording in the embedded WebKitGTK web view.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T234598990"] = "Linux-AppImages bündeln GStreamer-Komponenten, um den Mikrofonzugriff und WebM-Audioaufnahmen in der eingebetteten WebKitGTK-Webansicht zu unterstützen."
+
 -- Used PDFium version
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2368247719"] = "Verwendete PDFium-Version"
 
@@ -5633,6 +6329,12 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2371107659"] = "Installation vom
 
 -- Installed Pandoc version: Pandoc is not installed or not available.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2374031539"] = "Installierte Pandoc-Version: Pandoc ist nicht installiert oder nicht verfügbar."
+
+-- Configuration origin:
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2435772109"] = "Ursprung der Konfiguration:"
+
+-- Configuration slot:
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T254943559"] = "Slot der Konfiguration:"
 
 -- This library is used to determine the language of the operating system. This is necessary to set the language of the user interface.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2557014401"] = "Diese Bibliothek wird verwendet, um die Sprache des Betriebssystems zu erkennen. Dies ist notwendig, um die Sprache der Benutzeroberfläche einzustellen."
@@ -5643,8 +6345,8 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2557066213"] = "Verwendete Open-
 -- Build time
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T260228112"] = "Build-Zeit"
 
--- This library is used to create temporary folders for saving the certificate and private key for communication with Qdrant.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2619858133"] = "Diese Bibliothek wird verwendet, um temporäre Ordner zu erstellen, in denen das Zertifikat und der private Schlüssel für die Kommunikation mit Qdrant gespeichert werden."
+-- unknown
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2608177081"] = "unbekannt"
 
 -- This crate provides derive macros for Rust enums, which we use to reduce boilerplate when implementing string conversions and metadata for runtime types. This is helpful for the communication between our Rust and .NET systems.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2635482790"] = "Dieses Crate stellt Derive-Makros für Rust-Enums bereit, die wir verwenden, um Boilerplate zu reduzieren, wenn wir String-Konvertierungen und Metadaten für Laufzeittypen implementieren. Das ist hilfreich für die Kommunikation zwischen unseren Rust- und .NET-Systemen."
@@ -5679,14 +6381,29 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2840227993"] = "Verwendete .NET-
 -- Explanation
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2840582448"] = "Erklärung"
 
+-- checking availability
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2855535668"] = "Verfügbarkeit wird geprüft"
+
 -- The .NET backend cannot be started as a desktop app. Therefore, I use a second backend in Rust, which I call runtime. With Rust as the runtime, Tauri can be used to realize a typical desktop app. Thanks to Rust, this app can be offered for Windows, macOS, and Linux desktops. Rust is a great language for developing safe and high-performance software.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2868174483"] = "Das .NET-Backend kann nicht als Desktop-App gestartet werden. Deshalb verwende ich ein zweites Backend in Rust, das ich „Runtime“ nenne. Mit Rust als Runtime kann Tauri genutzt werden, um eine typische Desktop-App zu realisieren. Dank Rust kann diese App für Windows-, macOS- und Linux-Desktops angeboten werden. Rust ist eine großartige Sprache für die Entwicklung sicherer und leistungsstarker Software."
 
 -- AI Studio runs with an enterprise configuration and configuration servers. The configuration plugins are not yet available.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2924964415"] = "AI Studio wird mit Unternehmenskonfigurationen und Konfigurationsservern betrieben. Die Konfigurations-Plugins sind noch nicht verfügbar."
 
+-- Copies the configuration source to the clipboard
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2929232062"] = "Kopiert die Quelle der Konfiguration in die Zwischenablage"
+
+-- Copies the root certificate fingerprint to the clipboard
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2989678330"] = "Kopiert den Fingerabdruck des Stammzertifikats in die Zwischenablage"
+
 -- Changelog
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3017574265"] = "Änderungsprotokoll"
+
+-- Vector store
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3046399223"] = "Vektordatenbank"
+
+-- External HTTPS custom root certificates are configured but not active.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3021325354"] = "Externe benutzerdefinierte Stammzertifikate sind konfiguriert, aber nicht aktiv."
 
 -- Enterprise configuration ID:
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3092349641"] = "Unternehmenskonfigurations-ID:"
@@ -5700,14 +6417,32 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3178730036"] = "Haben Sie Ideen 
 -- Hide Details
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3183837919"] = "Details ausblenden"
 
+-- Linux package
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3196139293"] = "Linux-Paket"
+
+-- External HTTPS custom root certificates are active.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3208455732"] = "Externe Stammzertifikate sind aktiv."
+
+-- Axum server runs the internal axum service over a secure local connection. This helps AI Studio protect the communication between the Rust runtime and the user interface.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3208719461"] = "Der Axum-Server führt den internen Axum-Dienst über eine sichere lokale Verbindung aus. Dadurch kann AI Studio die Kommunikation zwischen der Rust-Laufzeitumgebung und der Benutzeroberfläche schützen."
+
+-- Rustls helps secure the internal connection between the app's user interface and the Rust runtime. This protects the local communication that AI Studio needs while it is running.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3239817808"] = "Rustls hilft dabei, die interne Verbindung zwischen der Benutzeroberfläche der App und der Rust-Laufzeitumgebung abzusichern. Dadurch wird die lokale Kommunikation geschützt, die AI Studio während der Ausführung benötigt."
+
 -- Update Pandoc
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3249965383"] = "Pandoc aktualisieren"
 
 -- Discover MindWork AI's mission and vision on our official homepage.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3294830584"] = "Entdecken Sie die Mission und Vision von MindWork AI auf unserer offiziellen Homepage."
 
+-- External HTTPS custom root certificates
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3315279770"] = "Externe HTTPS-Stammzertifikate für benutzerdefinierte Zertifizierungsstellen"
+
 -- User-language provided by the OS
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3334355246"] = "Vom Betriebssystem bereitgestellte Sprache"
+
+-- Status:
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3396815215"] = "Status:"
 
 -- The following list shows the versions of the MindWork AI Studio, the used compilers, build time, etc.:
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3405978777"] = "Die folgende Liste zeigt die Versionen von MindWork AI Studio und des verwendeten Compilers, den Build-Zeitpunkt und weitere Informationen:"
@@ -5724,14 +6459,32 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3449345633"] = "AI Studio wird m
 -- Tauri is used to host the Blazor user interface. It is a great project that allows the creation of desktop applications using web technologies. I love Tauri!
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3494984593"] = "Tauri wird verwendet, um die Blazor-Benutzeroberfläche bereitzustellen. Es ist ein großartiges Projekt, das die Erstellung von Desktop-Anwendungen mit Webtechnologien ermöglicht. Ich liebe Tauri!"
 
+-- AI Studio stores secrets like API keys in your operating system’s secure credential store. The keyring-core library handles this by connecting to macOS Keychain, Windows Credential Manager, and Linux Secret Service.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3527399572"] = "AI Studio speichert vertrauliche Daten wie API-Schlüssel im sicheren Speicher Ihres Betriebssystems. Die Bibliothek keyring-core übernimmt dies, indem sie eine Verbindung zum macOS-Schlüsselbund, zur Windows-Anmeldeinformationsverwaltung und zum Linux Secret Service herstellt."
+
+-- Copies the certificate bundle path to the clipboard
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3550115021"] = "Kopiert den Pfad des Zertifikat-Bundles in die Zwischenablage"
+
 -- Motivation
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3563271893"] = "Motivation"
 
 -- not available
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3574465749"] = "nicht verfügbar"
 
+-- active
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3648362799"] = "aktiv"
+
 -- This library is used to read Excel and OpenDocument spreadsheet files. This is necessary, e.g., for using spreadsheets as a data source for a chat.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3722989559"] = "Diese Bibliothek wird verwendet, um Excel- und OpenDocument-Tabellendateien zu lesen. Dies ist zum Beispiel notwendig, wenn Tabellen als Datenquelle für einen Chat verwendet werden sollen."
+
+-- Username provided by the OS
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3764549776"] = "Vom Betriebssystem bereitgestellter Benutzername"
+
+-- Allowed host:
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3774270763"] = "Zulässiger Host:"
+
+-- Configuration source:
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3801531724"] = "Quelle der Konfiguration:"
 
 -- this version does not met the requirements
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3813932670"] = "diese Version erfüllt die Anforderungen nicht"
@@ -5742,6 +6495,12 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3874337003"] = "Diese Bibliothek
 -- Now we have multiple systems, some developed in .NET and others in Rust. The data format JSON is responsible for translating data between both worlds (called data serialization and deserialization). Serde takes on this task in the Rust world. The counterpart in the .NET world is an integral part of .NET and is located in System.Text.Json.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3908558992"] = "Jetzt haben wir mehrere Systeme, einige entwickelt in .NET und andere in Rust. Das Datenformat JSON ist dafür zuständig, Daten zwischen beiden Welten zu übersetzen (dies nennt man Serialisierung und Deserialisierung von Daten). In der Rust-Welt übernimmt Serde diese Aufgabe. Das Pendant in der .NET-Welt ist ein fester Bestandteil von .NET und findet sich in System.Text.Json."
 
+-- not applicable
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T396609403"] = "nicht zutreffend"
+
+-- Copies the allowed host configuration to the clipboard
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3970230163"] = "Kopiert die zulässige Host-Konfiguration in die Zwischenablage"
+
 -- Installed Pandoc version
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3983971016"] = "Installierte Pandoc-Version"
 
@@ -5751,8 +6510,11 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3986423270"] = "Pandoc-Installat
 -- Versions
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4010195468"] = "Versionen"
 
--- Database
-UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4036243672"] = "Datenbank"
+-- Allowed hosts: none configured
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4058524336"] = "Zulässige Hosts: keine konfiguriert"
+
+-- This library is used by the Rust runtime to read the current user's username, e.g. when an organization-managed ERI server uses the OS username for authentication.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4060906280"] = "Diese Bibliothek wird von der Rust-Laufzeitumgebung verwendet, um den Benutzernamen des aktuellen Benutzers auszulesen, z. B. wenn ein von einer Organisation verwalteter ERI-Server den OS-Benutzernamen für die Authentifizierung verwendet."
 
 -- This library is used to create asynchronous streams in Rust. It allows us to work with streams of data that can be produced asynchronously, making it easier to handle events or data that arrive over time. We use this, e.g., to stream arbitrary data from the file system to the embedding system.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4079152443"] = "Diese Bibliothek wird verwendet, um asynchrone Datenströme in Rust zu erstellen. Sie ermöglicht es uns, mit Datenströmen zu arbeiten, die asynchron bereitgestellt werden, wodurch sich Ereignisse oder Daten, die nach und nach eintreffen, leichter verarbeiten lassen. Wir nutzen dies zum Beispiel, um beliebige Daten aus dem Dateisystem an das Einbettungssystem zu übertragen."
@@ -5760,17 +6522,35 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4079152443"] = "Diese Bibliothek
 -- Community & Code
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4158546761"] = "Community & Code"
 
+-- Executable path
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4164953312"] = "Pfad der ausführbaren Datei"
+
 -- We use the HtmlAgilityPack to extract content from the web. This is necessary, e.g., when you provide a URL as input for an assistant.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4184485147"] = "Wir verwenden das HtmlAgilityPack, um Inhalte aus dem Internet zu extrahieren. Das ist zum Beispiel notwendig, wenn Sie eine URL als Eingabe für einen Assistenten angeben."
 
+-- Copies the working directory to the clipboard
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4194302113"] = "Kopiert das Arbeitsverzeichnis in die Zwischenablage"
+
+-- Certificate bundle:
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4197142390"] = "Zertifikatsbündel:"
+
 -- When transferring sensitive data between Rust runtime and .NET app, we encrypt the data. We use some libraries from the Rust Crypto project for this purpose: cipher, aes, cbc, pbkdf2, hmac, and sha2. We are thankful for the great work of the Rust Crypto project.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4229014037"] = "Beim Übertragen sensibler Daten zwischen der Rust-Laufzeitumgebung und der .NET-Anwendung verschlüsseln wir die Daten. Dafür verwenden wir einige Bibliotheken aus dem Rust Crypto-Projekt: cipher, aes, cbc, pbkdf2, hmac und sha2. Wir sind dankbar für die großartige Arbeit des Rust Crypto-Projekts."
+
+-- Copies the status to the clipboard
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4291960437"] = "Kopiert den Status in die Zwischenablage"
 
 -- This is a library providing the foundations for asynchronous programming in Rust. It includes key trait definitions like Stream, as well as utilities like join!, select!, and various futures combinator methods which enable expressive asynchronous control flow.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T566998575"] = "Dies ist eine Bibliothek, die die Grundlagen für asynchrones Programmieren in Rust bereitstellt. Sie enthält zentrale Trait-Definitionen wie Stream sowie Hilfsfunktionen wie join!, select! und verschiedene Methoden zur Kombination von Futures, die einen ausdrucksstarken asynchronen Kontrollfluss ermöglichen."
 
 -- Used .NET SDK
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T585329785"] = "Verwendetes .NET SDK"
+
+-- starting
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T594602073"] = "wird gestartet"
+
+-- Root certificate fingerprint:
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T615041128"] = "Fingerabdruck des Stammzertifikats:"
 
 -- This library is used to manage sidecar processes and to ensure that stale or zombie sidecars are detected and terminated.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T633932150"] = "Diese Bibliothek wird verwendet, um Sidecar-Prozesse zu verwalten und sicherzustellen, dass veraltete oder Zombie-Sidecars erkannt und beendet werden."
@@ -5781,14 +6561,29 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T639371534"] = "Haben Sie einen F
 -- This Rust library is used to output the app's messages to the terminal. This is helpful during development and troubleshooting. This feature is initially invisible; when the app is started via the terminal, the messages become visible.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T64689067"] = "Diese Rust-Bibliothek wird verwendet, um die Nachrichten der App im Terminal auszugeben. Das ist während der Entwicklung und Fehlersuche hilfreich. Diese Funktion ist zunächst unsichtbar; werden App über das Terminal gestartet, werden die Nachrichten sichtbar."
 
+-- not active
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T70364248"] = "nicht aktiv"
+
+-- Loaded root certificates:
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T709525418"] = "Geladene Stammzertifikate:"
+
+-- Working directory
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T768480635"] = "Arbeitsverzeichnis"
+
 -- Copies the config ID to the clipboard
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T788846912"] = "Kopiert die Konfigurations-ID in die Zwischenablage"
 
 -- installed by AI Studio
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T833849470"] = "installiert von AI Studio"
 
+-- Provided by configuration plugin: {0}
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T836298648"] = "Bereitgestellt vom Konfigurations-Plugin: {0}"
+
 -- We use this library to be able to read PowerPoint files. This allows us to insert content from slides into prompts and take PowerPoint files into account in RAG processes. We thank Nils Kruthoff for his work on this Rust crate.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T855925638"] = "Wir verwenden diese Bibliothek, um PowerPoint-Dateien lesen zu können. So ist es möglich, Inhalte aus Folien in Prompts einzufügen und PowerPoint-Dateien in RAG-Prozessen zu berücksichtigen. Wir danken Nils Kruthoff für seine Arbeit an diesem Rust-Crate."
+
+-- Axum is used to provide the small internal service that connects the Rust runtime with the app's user interface. This lets both parts of AI Studio exchange information while the app is running.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T864851737"] = "Axum wird verwendet, um den kleinen internen Dienst bereitzustellen, der die Rust-Laufzeitumgebung mit der Benutzeroberfläche der App verbindet. So können beide Teile von AI Studio Informationen austauschen, während die App läuft."
 
 -- For some data transfers, we need to encode the data in base64. This Rust library is great for this purpose.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T870640199"] = "Für einige Datenübertragungen müssen wir die Daten in Base64 kodieren. Diese Rust-Bibliothek eignet sich dafür hervorragend."
@@ -5796,8 +6591,14 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T870640199"] = "Für einige Daten
 -- Install Pandoc
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T986578435"] = "Pandoc installieren"
 
+-- Potentially Dangerous Plugin
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T1229643769"] = "Potenziell gefährliches Plugin"
+
 -- Disable plugin
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T1430375822"] = "Plugin deaktivieren"
+
+-- Assistant Audit
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T1506922856"] = "Assistentenprüfung"
 
 -- Internal Plugins
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T158493184"] = "Interne Plugins"
@@ -5814,11 +6615,20 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2057806005"] = "Plugin aktivieren"
 -- Plugins
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2222816203"] = "Plugins"
 
+-- The assistant plugin \"{0}\" was audited with the level \"{1}\", which is below the required minimum level \"{2}\". Your current settings allow activation anyway, but this may be potentially dangerous. Do you really want to enable this plugin?
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2531356312"] = "Das Assistenten-Plugin „{0}“ wurde mit der Stufe „{1}“ geprüft, die unter der erforderlichen Mindeststufe „{2}“ liegt. Ihre aktuellen Einstellungen erlauben die Aktivierung trotzdem, aber das kann potenziell gefährlich sein. Möchten Sie dieses Plugin wirklich aktivieren?"
+
 -- Enabled Plugins
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2738444034"] = "Aktivierte Plugins"
 
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3448155331"] = "Schließen"
+
 -- Actions
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3865031940"] = "Aktionen"
+
+-- The automatic security audit for the assistant plugin '{0}' failed. Please run it manually.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T4066679817"] = "Die automatische Sicherheitsprüfung für das Assistenten-Plugin „{0}“ ist fehlgeschlagen. Bitte führen Sie sie manuell aus."
 
 -- Open website
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T4239378936"] = "Website öffnen"
@@ -5916,6 +6726,15 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::WRITER::T779923726"] = "Ihre Regieanweisungen"
 -- We tried to communicate with the LLM provider '{0}' (type={1}). The server might be down or having issues. The provider message is: '{2}'
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T1000247110"] = "Wir haben versucht, mit dem LLM-Anbieter „{0}“ (Typ={1}) zu kommunizieren. Der Server ist möglicherweise nicht erreichbar oder hat Probleme. Die Nachricht des Anbieters lautet: „{2}“"
 
+-- The provider '{0}' reported an error while streaming the response.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T1008706234"] = "Der Anbieter „{0}“ hat einen Fehler beim Streamen der Antwort gemeldet."
+
+-- The provider rejected the request because too many requests were sent. Please wait a moment and try again.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T1028424693"] = "Der Anbieter hat die Anfrage abgelehnt, weil zu viele Anfragen gesendet wurden. Bitte warten Sie einen Moment und versuchen Sie es erneut."
+
+-- The request to the LLM provider '{0}' (type={1}) timed out after {2} while {3}. Please try again or check whether the provider is still responding.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T1069211263"] = "Die Anfrage an den LLM-Anbieter „{0}“ (Typ={1}) hat nach {2} während „{3}“ das Zeitlimit überschritten. Bitte versuchen Sie es erneut oder prüfen Sie, ob der Anbieter noch antwortet."
+
 -- Tried to stream the LLM provider '{0}' answer. There were some problems with the stream. The message is: '{1}'
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T1487597412"] = "Beim Versuch, die Antwort des LLM-Anbieters '{0}' zu streamen, sind Probleme aufgetreten. Die Meldung lautet: '{1}'"
 
@@ -5948,6 +6767,9 @@ UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T3759732886"] = "Wir haben ve
 
 -- We tried to communicate with the LLM provider '{0}' (type={1}). The data of the chat, including all file attachments, is probably too large for the selected model and provider. The provider message is: '{2}'
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T4049517041"] = "Wir haben versucht, mit dem LLM-Anbieter „{0}“ (Typ={1}) zu kommunizieren. Die Daten des Chats, einschließlich aller Dateianhänge, sind vermutlich zu groß für das ausgewählte Modell und den Anbieter. Die Nachricht des Anbieters lautet: „{2}“"
+
+-- The provider '{0}' reported an error: {1}
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T700894460"] = "Der Anbieter „{0}“ hat einen Fehler gemeldet: {1}"
 
 -- The trust level of this provider **has not yet** been thoroughly **investigated and evaluated**. We do not know if your data is safe.
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T1014558951"] = "Das Vertrauensniveau dieses Anbieters wurde **noch nicht** gründlich **untersucht und bewertet**. Wir wissen nicht, ob ihre Daten sicher sind."
@@ -6009,11 +6831,53 @@ UI_TEXT_CONTENT["AISTUDIO::PROVIDER::MODEL::T2234274832"] = "Kein Modell ausgew�
 -- The tool calling request failed with status code {0}. See the logs for details.
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::OPENAI::PROVIDEROPENAI::T3117779001"] = "Die Anfrage zum Aufruf des Tools ist mit dem Statuscode {0} fehlgeschlagen. Details findest du in den Protokollen."
 
+-- We could not load models from '{0}'. The account or API key does not have the required permissions.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::MODELLOADFAILUREREASONEXTENSIONS::T1143085203"] = "Wir konnten keine Modelle von '{0}' laden. Das Konto oder der API-Schlüssel verfügt nicht über die erforderlichen Berechtigungen."
+
+-- We could not load models from '{0}' because too many requests were sent. Please wait a moment and try again.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::MODELLOADFAILUREREASONEXTENSIONS::T155481725"] = "Wir konnten keine Modelle von „{0}“ laden, da zu viele Anfragen gesendet wurden. Bitte warten Sie einen Moment und versuchen Sie es erneut."
+
+-- We could not load models from '{0}'. The API key is probably missing, invalid, or expired.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::MODELLOADFAILUREREASONEXTENSIONS::T2041046579"] = "Modelle aus '{0}' konnten nicht geladen werden. Wahrscheinlich fehlt der API-Schlüssel, ist ungültig oder abgelaufen."
+
+-- We could not load models from '{0}' because the provider is currently unavailable or could not be reached.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::MODELLOADFAILUREREASONEXTENSIONS::T2115688703"] = "Wir konnten keine Modelle von '{0}' laden, da der Anbieter derzeit nicht verfügbar oder nicht erreichbar ist."
+
+-- We could not load models from '{0}' because the provider returned an unexpected response.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::MODELLOADFAILUREREASONEXTENSIONS::T2186844789"] = "Wir konnten keine Modelle von '{0}' laden, da der Anbieter eine unerwartete Antwort zurückgegeben hat."
+
+-- We could not load models from '{0}' because the account appears to have no API credits left.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::MODELLOADFAILUREREASONEXTENSIONS::T373339048"] = "Modelle konnten nicht von „{0}“ geladen werden, da das Konto offenbar keine API-Guthaben mehr hat."
+
+-- We could not load models from '{0}' due to an unknown error.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::MODELLOADFAILUREREASONEXTENSIONS::T3907712809"] = "Wir konnten die Modelle aus '{0}' aufgrund eines unbekannten Fehlers nicht laden."
+
+-- It looks like you do not have any API credits left with OpenAI. Please add credits to your account and try again.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::OPENAI::PROVIDEROPENAI::T757371511"] = "Anscheinend haben Sie bei OpenAI kein API-Guthaben mehr. Bitte fügen Sie Ihrem Konto Guthaben hinzu und versuchen Sie es erneut."
+
 -- Model as configured by whisper.cpp
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::SELFHOSTED::PROVIDERSELFHOSTED::T3313940770"] = "Modell wie in whisper.cpp konfiguriert"
 
+-- Cannot export this chat template because example message {0} is not a text message.
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CHATTEMPLATE::T1861800849"] = "Diese Chatvorlage kann nicht exportiert werden, da die Beispielnachricht {0} keine Textnachricht ist."
+
+-- Cannot export this chat template because example message {0} uses a role that is not supported by configuration plugins.
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CHATTEMPLATE::T2407395493"] = "Diese Chat-Vorlage kann nicht exportiert werden, da die Beispielnachricht {0} eine Rolle verwendet, die von Konfigurations-Plugins nicht unterstützt wird."
+
+-- Please select a valid configuration plugin folder. The folder must contain a plugin.lua file.
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CHATTEMPLATE::T2542895569"] = "Bitte wählen Sie einen gültigen Konfigurations-Plug-in-Ordner aus. Der Ordner muss eine Datei „plugin.lua“ enthalten."
+
+-- Cannot package the chat template attachments. The issue was: {0}
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CHATTEMPLATE::T3635593138"] = "Die Anhänge der Chat-Vorlage können nicht verpackt werden. Das Problem war: {0}"
+
+-- Cannot package the attachment '{0}' because the file does not exist.
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CHATTEMPLATE::T4121340492"] = "Der Anhang „{0}“ kann nicht gepackt werden, da die Datei nicht existiert."
+
 -- Use no chat template
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CHATTEMPLATE::T4258819635"] = "Keine Chat-Vorlage verwenden"
+
+-- Cannot export this chat template because example message {0} is empty.
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CHATTEMPLATE::T477540958"] = "Diese Chatvorlage kann nicht exportiert werden, da die Beispielnachricht {0} leer ist."
 
 -- Navigation never expands, but there are tooltips
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1095779033"] = "Die Navigationsleiste wird nie ausgeklappt, aber es gibt Tooltips"
@@ -6210,8 +7074,8 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::PREVIEWFEATURESEXTENSIONS::T2708
 -- Unknown preview feature
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::PREVIEWFEATURESEXTENSIONS::T2722827307"] = "Unbekannte Vorschau-Funktion"
 
--- Transcription: Preview of our speech to text system where you can transcribe recordings and audio files into text
-UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::PREVIEWFEATURESEXTENSIONS::T714355911"] = "Transkription: Vorschau unseres Sprache-zu-Text-Systems, mit dem Sie Aufnahmen und Audiodateien in Text transkribieren können"
+-- Transcription: Convert recordings and audio files into text
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::PREVIEWFEATURESEXTENSIONS::T4247148645"] = "Transkription: Aufnahmen und Audiodateien in Text umwandeln"
 
 -- Use no data sources, when sending an assistant result to a chat
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::SENDTOCHATDATASOURCEBEHAVIOREXTENSIONS::T1223925477"] = "Keine Datenquellen vorauswählen, wenn ein Ergebnis von einem Assistenten an einen neuen Chat gesendet wird"
@@ -6236,6 +7100,21 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::THEMESEXTENSIONS::T534715610"] =
 
 -- Use no profile
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::PROFILE::T2205839602"] = "Kein Profil verwenden"
+
+-- The selected model is not available.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::AIJOBS::AIJOBSERVICE::T1578005752"] = "Das ausgewählte Modell ist nicht verfügbar."
+
+-- The selected provider is not allowed for this chat.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::AIJOBS::AIJOBSERVICE::T174545104"] = "Der ausgewählte Anbieter ist für diesen Chat nicht zulässig."
+
+-- The AI job failed. The message is: '{0}'
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::AIJOBS::AIJOBSERVICE::T237448388"] = "Der KI-Auftrag ist fehlgeschlagen. Die Meldung lautet: „{0}“"
+
+-- The selected model '{0}' is no longer available from '{1}' (provider={2}). Please adapt your provider settings.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::AIJOBS::AIJOBSERVICE::T3267850764"] = "Das ausgewählte Modell „{0}“ ist bei „{1}“ nicht mehr verfügbar (Anbieter={2}). Bitte passen Sie Ihre Anbietereinstellungen an."
+
+-- We could load models from '{0}', but the provider did not return any usable text models.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::AIJOBS::AIJOBSERVICE::T3378120620"] = "Wir konnten Modelle von „{0}“ laden, aber der Anbieter hat keine verwendbaren Textmodelle zurückgegeben."
 
 -- SSO (Kerberos)
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::AUTHMETHODSV1EXTENSIONS::T268552140"] = "SSO (Kerberos)"
@@ -6312,6 +7191,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T166453786"] = "Grammati
 -- Legal Check Assistant
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T1886447798"] = "Rechtlichen Prüfungs-Assistent"
 
+-- Prompt Optimizer Assistant
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T1993795352"] = "Prompt-Optimierungs-Assistent"
+
 -- Job Posting Assistant
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T2212811874"] = "Stellenanzeigen-Assistent"
 
@@ -6375,26 +7257,41 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::CONFIDENCESCHEMESEXTENSIONS::T4107860491"] = "
 -- Reason
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::NODATABASECLIENT::T1093747001"] = "Grund"
 
+-- Starting
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::NODATABASECLIENT::T1233211769"] = "Wird gestartet"
+
 -- Unavailable
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::NODATABASECLIENT::T3662391977"] = "Nicht verfügbar"
 
 -- Status
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::NODATABASECLIENT::T6222351"] = "Status"
 
--- Storage size
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::QDRANT::QDRANTCLIENTIMPLEMENTATION::T1230141403"] = "Speichergröße"
+-- Reason
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::VECTORSTORE::NOVECTORSTORECLIENT::T1093747001"] = "Grund"
 
--- HTTP port
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::QDRANT::QDRANTCLIENTIMPLEMENTATION::T1717573768"] = "HTTP-Port"
+-- Starting
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::VECTORSTORE::NOVECTORSTORECLIENT::T1233211769"] = "Starten"
+
+-- Unavailable
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::VECTORSTORE::NOVECTORSTORECLIENT::T3662391977"] = "Nicht verfügbar"
+
+-- Status
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::VECTORSTORE::NOVECTORSTORECLIENT::T6222351"] = "Status"
+
+-- Storage size
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::VECTORSTORE::QDRANTEDGECLIENTIMPLEMENTATION::T1230141403"] = "Speichergröße"
+
+-- Number of vector stores
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::VECTORSTORE::QDRANTEDGECLIENTIMPLEMENTATION::T2785004838"] = "Anzahl der Vektordatenbanken"
 
 -- Reported version
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::QDRANT::QDRANTCLIENTIMPLEMENTATION::T3556099842"] = "Gemeldete Version"
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::VECTORSTORE::QDRANTEDGECLIENTIMPLEMENTATION::T3556099842"] = "Gemeldete Version"
 
--- gRPC port
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::QDRANT::QDRANTCLIENTIMPLEMENTATION::T757840040"] = "gRPC-Port"
+-- Status
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::VECTORSTORE::QDRANTEDGECLIENTIMPLEMENTATION::T6222351"] = "Status"
 
--- Number of collections
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::QDRANT::QDRANTCLIENTIMPLEMENTATION::T842647336"] = "Anzahl der Collections"
+-- Qdrant Edge is not available.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::VECTORSTORE::QDRANTEDGECLIENTIMPLEMENTATION::T744445696"] = "Qdrant Edge ist nicht verfügbar."
 
 -- The related data is not allowed to be sent to any LLM provider. This means that this data source cannot be used at the moment.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::DATAMODEL::PROVIDERTYPEEXTENSIONS::T1555790630"] = "Die zugehörigen Daten dürfen an keinen LLM-Anbieter gesendet werden. Das bedeutet, dass diese Datenquelle momentan nicht verwendet werden kann."
@@ -6459,6 +7356,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T2858189239"] = "Authe
 -- Failed to retrieve the security requirements: the request was canceled either by the user or due to a timeout.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T286437836"] = "Die Sicherheitsanforderungen konnten nicht abgerufen werden: Die Anfrage wurde entweder vom Benutzer abgebrochen oder ist aufgrund eines Zeitüberschreitungsfehlers fehlgeschlagen."
 
+-- Failed to read the user's username from the operating system.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T2909734556"] = "Der Benutzername konnte nicht aus dem Betriebssystem ausgelesen werden."
+
 -- Failed to retrieve the security requirements due to an exception: {0}
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T3221004295"] = "Die Sicherheitsanforderungen konnten wegen eines Problems nicht abgerufen werden: {0}"
 
@@ -6504,6 +7404,30 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T816853779"] = "Fehler
 -- Failed to retrieve the authentication methods: the ERI server did not return a valid response.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::ERICLIENT::ERICLIENTV1::T984407320"] = "Fehler beim Abrufen der Authentifizierungsmethoden: Der ERI-Server hat keine gültige Antwort zurückgegeben."
 
+-- No certificate bundle path is configured.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::EXTERNALHTTPCLIENTTIMEOUT::T1033171304"] = "Es ist kein Pfad für das Zertifikats-Bundle konfiguriert."
+
+-- app settings
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::EXTERNALHTTPCLIENTTIMEOUT::T1736441001"] = "App-Einstellungen"
+
+-- environment variables
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::EXTERNALHTTPCLIENTTIMEOUT::T317663851"] = "Umgebungsvariablen"
+
+-- configuration plugin
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::EXTERNALHTTPCLIENTTIMEOUT::T3427095600"] = "Konfigurations-Plugin"
+
+-- The configured certificate bundle file does not exist.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::EXTERNALHTTPCLIENTTIMEOUT::T3928871850"] = "Die konfigurierte Zertifikats-Bundle-Datei existiert nicht."
+
+-- The configured certificate bundle does not contain usable root CA certificates.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::EXTERNALHTTPCLIENTTIMEOUT::T599774443"] = "Das konfigurierte Zertifikats-Bundle enthält keine verwendbaren Root-CA-Zertifikate."
+
+-- AI Studio couldn't install Pandoc because the archive was not found.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T1059477764"] = "AI Studio konnte Pandoc nicht installieren, da das Archiv nicht gefunden wurde."
+
+-- Pandoc doesn't seem to be installed.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T1090474732"] = "Pandoc scheint nicht installiert zu sein."
+
 -- Was not able to validate the Pandoc installation.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T1364844008"] = "Die Pandoc-Installation konnte nicht überprüft werden."
 
@@ -6525,20 +7449,20 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T2550598062"] = "Pandoc v{0} ist insta
 -- Pandoc v{0} is installed, but it does not match the required version (v{1}).
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T2555465873"] = "Pandoc v{0} ist installiert, entspricht aber nicht der benötigten Version (v{1})."
 
--- Pandoc was not installed successfully, because the archive was not found.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T34210248"] = "Pandoc wurde nicht erfolgreich installiert, da das Archiv nicht gefunden wurde."
+-- AI Studio couldn't install Pandoc because the archive type is unknown.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T3492710362"] = "AI Studio konnte Pandoc nicht installieren, da der Archivtyp unbekannt ist."
 
 -- Pandoc is not available on the system or the process had issues.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T3746116957"] = "Pandoc ist auf dem System nicht verfügbar oder der Vorgang ist auf Probleme gestoßen."
 
--- Pandoc was not installed successfully, because the archive type is unknown.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T3962211670"] = "Pandoc wurde nicht erfolgreich installiert, da der Archivtyp unbekannt ist."
+-- AI Studio couldn't install Pandoc because the executable was not found in the archive.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T403983772"] = "AI Studio konnte Pandoc nicht installieren, da die ausführbare Datei im Archiv nicht gefunden wurde."
 
--- It seems that Pandoc is not installed.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T567205144"] = "Es scheint, dass Pandoc nicht installiert ist."
+-- AI Studio couldn't find the latest Pandoc version and will install version {0} instead.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T695293525"] = "AI Studio konnte die neueste Pandoc-Version nicht finden und installiert stattdessen Version {0}."
 
--- The latest Pandoc version was not found, installing version {0} instead.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T726914939"] = "Die neueste Pandoc-Version wurde nicht gefunden, stattdessen wird Version {0} installiert."
+-- AI Studio couldn't install Pandoc.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T932858631"] = "AI Studio konnte Pandoc nicht installieren."
 
 -- Pandoc is required for Microsoft Word export.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOCEXPORT::T1473115556"] = "Pandoc wird für den Export nach Microsoft Word benötigt."
@@ -6551,6 +7475,183 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOCEXPORT::T3290596792"] = "Fehler beim Exp
 
 -- Microsoft Word export successful
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOCEXPORT::T4256043333"] = "Export nach Microsoft Word erfolgreich"
+
+-- Text
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T1041509726"] = "Text"
+
+-- Stack
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T135058847"] = "Stapel"
+
+-- Button group
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T1392576058"] = "Schaltflächengruppe"
+
+-- Image
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T1494001562"] = "Bild"
+
+-- Text Area
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T1593629311"] = "Textfeld"
+
+-- Grid Item
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T1991378436"] = "Rasterelement"
+
+-- List
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T2368288673"] = "Liste"
+
+-- File Content Reader
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T2395548053"] = "Datei-Inhaltsleser"
+
+-- Provider Selection
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T268262394"] = "Anbieterauswahl"
+
+-- Root
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T2703841893"] = "Stamm"
+
+-- Container
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T2990360344"] = "Container"
+
+-- Web Content Reader
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T3244127223"] = "Webinhaltsleser"
+
+-- Date Range Selection
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T3290584542"] = "Datumsbereichsauswahl"
+
+-- Accordion
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T3372988345"] = "Akkordeon"
+
+-- Switch
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T3656636817"] = "Schalter"
+
+-- Dropdown
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T3829804792"] = "Dropdown"
+
+-- Accordion Section
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T4180733902"] = "Akkordeon-Abschnitt"
+
+-- Profile Selection
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T4192015724"] = "Profilauswahl"
+
+-- Heading
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T4231005109"] = "Überschrift"
+
+-- Unknown Element
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T434854509"] = "Unbekanntes Element"
+
+-- Color Selection
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T477864646"] = "Farbauswahl"
+
+-- Time Selection
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T503858178"] = "Zeitauswahl"
+
+-- Date Selection
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T683784719"] = "Datumsauswahl"
+
+-- Grid
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T800286385"] = "Raster"
+
+-- Button
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T864557713"] = "Schaltfläche"
+
+-- Failed to parse the UI render tree from the ASSISTANT lua table.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T1318499252"] = "Der UI-Render-Baum konnte nicht aus der ASSISTANT-Lua-Tabelle geparst werden."
+
+-- The provided ASSISTANT lua table does not contain a valid UI table.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T1841068402"] = "Die bereitgestellte ASSISTANT-Lua-Tabelle enthält keine gültige UI-Tabelle."
+
+-- The provided ASSISTANT lua table does not contain a valid description.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T2514141654"] = "Die bereitgestellte ASSISTANT-Lua-Tabelle enthält keine gültige Beschreibung."
+
+-- The provided ASSISTANT lua table does not contain a valid title.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T2814605990"] = "Die bereitgestellte ASSISTANT-Lua-Tabelle enthält keinen gültigen Titel."
+
+-- The ASSISTANT lua table does not exist or is not a valid table.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T3017816936"] = "Die Lua-Tabelle **ASSISTANT** existiert nicht oder ist keine gültige Tabelle."
+
+-- The provided ASSISTANT lua table does not contain a valid system prompt.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T3402798667"] = "Die bereitgestellte ASSISTANT-Lua-Tabelle enthält keine gültige Systemaufforderung."
+
+-- The ASSISTANT table does not contain a valid system prompt.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T3723171842"] = "Die Tabelle **ASSISTANT** enthält keine gültige Systemanweisung."
+
+-- ASSISTANT.BuildPrompt exists but is not a Lua function or has invalid syntax.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T683382975"] = "`ASSISTANT.BuildPrompt` ist vorhanden, aber keine Lua-Funktion oder hat eine ungültige Syntax."
+
+-- The provided ASSISTANT lua table does not contain the boolean flag to control the allowance of profiles.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T781921072"] = "Die bereitgestellte ASSISTANT-Lua-Tabelle enthält kein boolesches Flag, mit dem sich die Zulassung von Profilen steuern lässt."
+
+-- This assistant changed after its last audit.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T1161057634"] = "Dieser Assistent wurde seit seinem letzten Audit geändert."
+
+-- This assistant is currently locked.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T123211529"] = "Dieser Assistent ist derzeit gesperrt."
+
+-- Audit Required
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T1669285905"] = "Prüfung erforderlich"
+
+-- Run Security Check Again
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T1737337972"] = "Sicherheitsprüfung erneut ausführen"
+
+-- The current audit result is '{0}', which is below your required minimum level '{1}'. Your settings still allow manual activation, but the assistant keeps this security status and should be reviewed carefully.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T1901245910"] = "Das aktuelle Audit-Ergebnis ist „{0}“ und liegt damit unter Ihrem erforderlichen Mindestniveau „{1}“. Ihre Einstellungen erlauben weiterhin eine manuelle Aktivierung, aber der Assistent behält diesen Sicherheitsstatus bei und sollte sorgfältig überprüft werden."
+
+-- This assistant can still be used because audit enforcement is disabled.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T1950430056"] = "Dieser Assistent kann weiterhin verwendet werden, da die Audit-Durchsetzung deaktiviert ist."
+
+-- Changed
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T2311397435"] = "Geändert"
+
+-- The stored audit matches the current plugin code and meets your required minimum level '{0}'.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T2619426408"] = "Die gespeicherte Prüfung entspricht dem aktuellen Plugin-Code und erfüllt Ihr erforderliches Mindestniveau „{0}“."
+
+-- No security audit exists yet, and your current security settings require one before this assistant plugin may be enabled or used.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T2687548907"] = "Es gibt noch kein Sicherheitsaudit, und Ihre aktuellen Sicherheitseinstellungen verlangen eines, bevor dieses Assistenten-Plugin aktiviert oder verwendet werden kann."
+
+-- This assistant can still be used because your settings allow it.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T2730893303"] = "Dieser Assistent kann weiterhin verwendet werden, weil Ihre Einstellungen dies zulassen."
+
+-- The current audit result '{0}' is below your required minimum level '{1}'. Your security settings therefore block this assistant plugin.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T274724689"] = "Das aktuelle Audit-Ergebnis „{0}“ liegt unter Ihrem erforderlichen Mindestniveau „{1}“. Daher blockieren Ihre Sicherheitseinstellungen dieses Assistenten-Plugin."
+
+-- The current audit result is '{0}', which is below your required minimum level '{1}'. Audit enforcement is currently disabled, so this assistant plugin can still be enabled or used.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T2774333862"] = "Das aktuelle Prüfergebnis ist „{0}“, was unter Ihrem erforderlichen Mindestniveau „{1}“ liegt. Die Prüfungsdurchsetzung ist derzeit deaktiviert, daher kann dieses Assistenten-Plugin trotzdem aktiviert oder verwendet werden."
+
+-- Not Audited
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T2828154864"] = "Nicht geprüft"
+
+-- This assistant is locked until it is audited again.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T2868721080"] = "Dieser Assistent ist gesperrt, bis er erneut geprüft wird."
+
+-- Open Security Check
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T290241209"] = "Sicherheitsprüfung öffnen"
+
+-- Restricted
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T3325062668"] = "Eingeschränkt"
+
+-- Unknown
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T3424652889"] = "Unbekannt"
+
+-- Unlocked
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T3606159420"] = "Entsperrt"
+
+-- The plugin code changed after the last security audit. Audit enforcement is currently disabled, so this assistant plugin can still be enabled or used.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T3619293572"] = "Der Plug-in-Code wurde nach dem letzten Sicherheitsaudit geändert. Die Audit-Durchsetzung ist derzeit deaktiviert, daher kann dieses Assistenten-Plug-in weiterhin aktiviert oder verwendet werden."
+
+-- Blocked
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T3816336467"] = "Blockiert"
+
+-- This assistant is currently unlocked.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T3824876012"] = "Dieser Assistent ist derzeit entsperrt."
+
+-- No security audit exists yet. Your current security settings do not require an audit before this assistant plugin may be used.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T3899951594"] = "Es gibt noch kein Sicherheitsaudit. Ihre aktuellen Sicherheitseinstellungen verlangen kein Audit, bevor dieses Assistenten-Plugin verwendet werden darf."
+
+-- Start Security Check
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T811648299"] = "Sicherheitsprüfung starten"
+
+-- This assistant currently has no stored audit.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T921972844"] = "Für diesen Assistenten ist derzeit kein gespeichertes Audit vorhanden."
+
+-- The plugin code changed after the last security audit. The stored result no longer matches the current code, so this assistant plugin must be audited again before it may be enabled or used.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T995107927"] = "Der Plugin-Code wurde nach der letzten Sicherheitsprüfung geändert. Das gespeicherte Ergebnis stimmt nicht mehr mit dem aktuellen Code überein, daher muss dieses Assistenten-Plugin erneut geprüft werden, bevor es aktiviert oder verwendet werden darf."
 
 -- The table AUTHORS does not exist or is using an invalid syntax.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::PLUGINBASE::T1068328139"] = "Die Tabelle AUTHORS existiert nicht oder verwendet eine ungültige Syntax."
@@ -6804,35 +7905,59 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::RAGPROCESSES::AISRCSELWITHRETCTXVAL::T304
 -- AI-based data source selection with AI retrieval context validation
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RAG::RAGPROCESSES::AISRCSELWITHRETCTXVAL::T3775725978"] = "KI-basierte Datenquellen-Auswahl mit Validierung des Abrufkontexts"
 
--- Executable Files
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPEFILTER::T2217313358"] = "Ausführbare Dateien"
+-- Text
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T1041509726"] = "Text"
 
--- All Source Code Files
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPEFILTER::T2460199369"] = "Alle Quellcodedateien"
+-- Office Files
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T1063218378"] = "Office-Dateien"
 
--- All Audio Files
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPEFILTER::T2575722901"] = "Alle Audiodateien"
+-- Executable
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T1364437037"] = "Ausführbare Dateien"
 
--- All Video Files
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPEFILTER::T2850789856"] = "Alle Videodateien"
+-- Mail
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T1399880782"] = "E-Mail"
 
--- PDF Files
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPEFILTER::T3108466742"] = "PDF-Dateien"
+-- Source like
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T1487238587"] = "Source Code ähnlich"
 
--- All Image Files
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPEFILTER::T4086723714"] = "Alle Bilddateien"
+-- Image
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T1494001562"] = "Bild"
 
--- Text Files
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPEFILTER::T639143005"] = "Textdateien"
+-- Video
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T1533528076"] = "Video"
 
--- All Office Files
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPEFILTER::T709668067"] = "Alle Office-Dateien"
+-- Source Code
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T1569048941"] = "Quellcode"
+
+-- Config
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T1779622119"] = "Konfiguration"
+
+-- Audio
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T2291602489"] = "Audio"
+
+-- Custom
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T2502277006"] = "Benutzerdefiniert"
+
+-- Media
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T3507473059"] = "Medien"
+
+-- Certificate bundle
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T3543954504"] = "Zertifikatsbündel"
+
+-- Source like prefix
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T378481461"] = "Source Code ähnlicher Prefix"
+
+-- Document
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T4165204724"] = "Dokument"
 
 -- Pandoc Installation
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PANDOCAVAILABILITYSERVICE::T185447014"] = "Pandoc-Installation"
 
 -- Pandoc may be required for importing files.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PANDOCAVAILABILITYSERVICE::T2596465560"] = "Zum Importieren von Dateien kann Pandoc erforderlich sein."
+
+-- Failed to store the secret data due to an API issue.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T1110203516"] = "Fehler beim Speichern der geheimen Daten aufgrund eines API-Problems."
 
 -- Failed to delete the secret data due to an API issue.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T2303057928"] = "Das Löschen der geheimen Daten ist aufgrund eines API-Problems fehlgeschlagen."
@@ -6854,6 +7979,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T4007657575"] = "Abrufe
 
 -- No update found.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::UPDATESERVICE::T1015418291"] = "Kein Update gefunden."
+
+-- Failed to check for updates. Please try again later.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::UPDATESERVICE::T1064148123"] = "Die Suche nach Updates ist fehlgeschlagen. Bitte versuchen Sie es später erneut."
 
 -- Failed to install update automatically. Please try again manually.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::UPDATESERVICE::T3709709946"] = "Fehler bei der automatischen Installation des Updates. Bitte versuchen Sie es manuell erneut."
@@ -7061,6 +8189,12 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::FILEEXTENSIONVALIDATION::T29806295
 
 -- Images are not supported at this place
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::FILEEXTENSIONVALIDATION::T305247150"] = "Bilder werden an dieser Stelle nicht unterstützt."
+
+-- This file format is not supported. Please convert the .doc file to .docx (e.g. with Microsoft Word).
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::FILEEXTENSIONVALIDATION::T3740637731"] = "Dieses Dateiformat wird nicht unterstützt. Bitte konvertieren Sie die .doc-Datei in eine .docx-Datei (z. B. mit Microsoft Word)."
+
+-- Unsupported file type
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::FILEEXTENSIONVALIDATION::T4041351522"] = "Nicht unterstützter Dateityp"
 
 -- Executables are not allowed
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::FILEEXTENSIONVALIDATION::T4167762413"] = "Ausführbare Dateien sind nicht erlaubt"

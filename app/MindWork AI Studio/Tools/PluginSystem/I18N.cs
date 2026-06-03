@@ -5,7 +5,7 @@ public class I18N : ILang
     public static readonly I18N I = new();
     private static readonly ILogger<I18N> LOG = Program.LOGGER_FACTORY.CreateLogger<I18N>();
     
-    private ILanguagePlugin? language = PluginFactory.BaseLanguage;
+    private ILanguagePlugin? language;
     
     private I18N()
     {

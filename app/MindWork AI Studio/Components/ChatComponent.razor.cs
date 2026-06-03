@@ -4,6 +4,7 @@ using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.ToolCallingSystem;
+using AIStudio.Tools.AIJobs;
 
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
@@ -38,6 +39,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     
     [Parameter]
     public Workspaces? Workspaces { get; set; }
+
+    [Parameter]
+    public ChatComposerState ComposerState { get; set; } = new();
     
     [Inject]
     private ILogger<ChatComponent> Logger { get; set; } = null!;
@@ -47,6 +51,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     
     [Inject]
     private IJSRuntime JsRuntime { get; init; } = null!;
+
+    [Inject]
+    private AIJobService AIJobService { get; init; } = null!;
 
     private const Placement TOOLBAR_TOOLTIP_PLACEMENT = Placement.Top;
     private static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
@@ -59,8 +66,6 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private bool mustScrollToBottomAfterRender;
     private InnerScrolling scrollingArea = null!;
     private byte scrollRenderCountdown;
-    private bool isStreaming;
-    private string userInput = string.Empty;
     private bool mustStoreChat;
     private bool mustLoadChat;
     private LoadChat loadChat;
@@ -69,19 +74,36 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private string currentWorkspaceName = string.Empty;
     private Guid currentWorkspaceId = Guid.Empty;
     private Guid currentChatThreadId = Guid.Empty;
-    private CancellationTokenSource? cancellationTokenSource;
-    private HashSet<FileAttachment> chatDocumentPaths = [];
+    private Guid loadedParameterChatId = Guid.Empty;
+    private Guid loadedParameterWorkspaceId = Guid.Empty;
+    private Guid foregroundChatId = Guid.Empty;
+    private int workspaceHeaderSyncVersion;
 
     // Unfortunately, we need the input field reference to blur the focus away. Without
     // this, we cannot clear the input field.
     private MudTextField<string> inputField = null!;
+
+    /// <summary>
+    /// Represents the user's input in the chat interface.
+    /// </summary>
+    /// <remarks>
+    /// This property serves as a bridge between the chat component and the
+    /// underlying composer state, allowing user input to be dynamically updated
+    /// and managed. The setter also triggers state changes within the composer
+    /// to track whether the user has drafted any input.
+    /// </remarks>
+    private string UserInput
+    {
+        get => this.ComposerState.UserInput;
+        set => this.ComposerState.SetUserInput(value);
+    }
 
     #region Overrides of ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
         // Apply the filters for the message bus:
-        this.ApplyFilters([], [ Event.HAS_CHAT_UNSAVED_CHANGES, Event.RESET_CHAT_STATE, Event.CHAT_STREAMING_DONE, Event.WORKSPACE_LOADED_CHAT_CHANGED, Event.CONFIGURATION_CHANGED ]);
+        this.ApplyFilters([], [ Event.HAS_CHAT_UNSAVED_CHANGES, Event.RESET_CHAT_STATE, Event.CHAT_STREAMING_DONE, Event.AI_JOB_CHANGED, Event.AI_JOB_FINISHED, Event.CHAT_GENERATION_CHANGED ]);
         
         // Configure the spellchecking for the user input:
         this.SettingsManager.InjectSpellchecking(USER_INPUT_ATTRIBUTES);
@@ -92,12 +114,13 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         
         // Get the preselected chat template:
         this.currentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(Tools.Components.CHAT);
-        this.userInput = this.currentChatTemplate.PredefinedUserPrompt;
+        if (!this.ComposerState.HasUserDraft && !this.ComposerState.HasComposerContent)
+            this.ComposerState.ApplyTemplate(this.currentChatTemplate);
         this.selectedToolIds = ToolSelectionRules.NormalizeSelection(this.SettingsManager.GetDefaultToolIds(Tools.Components.CHAT));
 
-        // Apply template's file attachments, if any:
-        foreach (var attachment in this.currentChatTemplate.FileAttachments)
-            this.chatDocumentPaths.Add(attachment);
+        var deferredInput = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_CHAT_INPUT).FirstOrDefault();
+        if (!string.IsNullOrWhiteSpace(deferredInput))
+            this.ComposerState.SetUserInput(deferredInput);
 
         //
         // Check for deferred messages of the kind 'SEND_TO_CHAT',
@@ -115,6 +138,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             this.ChatThread.IncludeDateTime = true;
             
             this.Logger.LogInformation($"The chat '{this.ChatThread.ChatId}' with {this.ChatThread.Blocks.Count} messages was deferred and will be rendered now.");
+            this.MarkCurrentChatAsLoadedParameter();
             await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
             
             // We know already that the chat thread is not null,
@@ -211,15 +235,11 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         // workspace name is loaded:
         //
         if (this.ChatThread is not null)
-        {
-            this.currentChatThreadId = this.ChatThread.ChatId;
-            this.currentWorkspaceId = this.ChatThread.WorkspaceId;
-            this.currentWorkspaceName = await WorkspaceBehaviour.LoadWorkspaceNameAsync(this.ChatThread.WorkspaceId);
-            this.WorkspaceName(this.currentWorkspaceName);
-        }
+            await this.SyncWorkspaceHeaderWithChatThreadAsync();
         
         // Select the correct provider:
         await this.SelectProviderWhenLoadingChat();
+        await this.SyncForegroundChatAsync();
         await base.OnInitializedAsync();
     }
 
@@ -233,10 +253,8 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 await this.Workspaces.StoreChatAsync(this.ChatThread);
             else
                 await WorkspaceBehaviour.StoreChatAsync(this.ChatThread);
-            
-            this.currentWorkspaceId = this.ChatThread.WorkspaceId;
-            this.currentWorkspaceName = await WorkspaceBehaviour.LoadWorkspaceNameAsync(this.ChatThread.WorkspaceId);
-            this.WorkspaceName(this.currentWorkspaceName);
+
+            await this.SyncWorkspaceHeaderWithChatThreadAsync();
         }
         
         if (firstRender && this.mustLoadChat)
@@ -247,11 +265,11 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             
             if(this.ChatThread is not null)
             {
+                this.MarkCurrentChatAsLoadedParameter();
                 await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
                 this.Logger.LogInformation($"The chat '{this.ChatThread!.ChatId}' with title '{this.ChatThread.Name}' ({this.ChatThread.Blocks.Count} messages) was loaded successfully.");
-                
-                this.currentWorkspaceName = await WorkspaceBehaviour.LoadWorkspaceNameAsync(this.ChatThread.WorkspaceId);
-                this.WorkspaceName(this.currentWorkspaceName);
+
+                await this.SyncWorkspaceHeaderWithChatThreadAsync();
                 await this.SelectProviderWhenLoadingChat();
             }
             else
@@ -278,49 +296,107 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 
     protected override async Task OnParametersSetAsync()
     {
-        await this.SyncWorkspaceHeaderWithChatThreadAsync();
+        await this.ApplyLoadedChatParameterAsync();
+        await this.SyncForegroundChatAsync();
         await base.OnParametersSetAsync();
     }
 
     #endregion
 
+    private async Task ApplyLoadedChatParameterAsync()
+    {
+        var chatId = this.ChatThread?.ChatId ?? Guid.Empty;
+        var workspaceId = this.ChatThread?.WorkspaceId ?? Guid.Empty;
+
+        if (this.loadedParameterChatId == chatId && this.loadedParameterWorkspaceId == workspaceId)
+        {
+            await this.SyncWorkspaceHeaderWithChatThreadAsync();
+            return;
+        }
+
+        this.loadedParameterChatId = chatId;
+        this.loadedParameterWorkspaceId = workspaceId;
+        await this.LoadedChatChanged(notifyParent: false);
+    }
+
+    private void MarkCurrentChatAsLoadedParameter()
+    {
+        this.loadedParameterChatId = this.ChatThread?.ChatId ?? Guid.Empty;
+        this.loadedParameterWorkspaceId = this.ChatThread?.WorkspaceId ?? Guid.Empty;
+    }
+
     private async Task SyncWorkspaceHeaderWithChatThreadAsync()
     {
-        if (this.ChatThread is null)
+        var syncVersion = Interlocked.Increment(ref this.workspaceHeaderSyncVersion);
+        var currentChatThread = this.ChatThread;
+        if (currentChatThread is null)
         {
-            if (this.currentChatThreadId != Guid.Empty || this.currentWorkspaceId != Guid.Empty || !string.IsNullOrWhiteSpace(this.currentWorkspaceName))
-            {
-                this.currentChatThreadId = Guid.Empty;
-                this.currentWorkspaceId = Guid.Empty;
-                this.currentWorkspaceName = string.Empty;
-                this.WorkspaceName(this.currentWorkspaceName);
-            }
-
+            this.ClearWorkspaceHeaderState();
             return;
         }
 
         // Guard: If ChatThread ID and WorkspaceId haven't changed, skip entirely.
         // Using ID-based comparison instead of name-based to correctly handle
         // temporary chats where the workspace name is always empty.
-        if (this.currentChatThreadId == this.ChatThread.ChatId
-            && this.currentWorkspaceId == this.ChatThread.WorkspaceId)
+        if (this.currentChatThreadId == currentChatThread.ChatId
+            && this.currentWorkspaceId == currentChatThread.WorkspaceId)
             return;
 
-        this.currentChatThreadId = this.ChatThread.ChatId;
-        this.currentWorkspaceId = this.ChatThread.WorkspaceId;
-        var loadedWorkspaceName = await WorkspaceBehaviour.LoadWorkspaceNameAsync(this.ChatThread.WorkspaceId);
+        var chatThreadId = currentChatThread.ChatId;
+        var workspaceId = currentChatThread.WorkspaceId;
+        var loadedWorkspaceName = await WorkspaceBehaviour.LoadWorkspaceNameAsync(workspaceId);
 
-        // Only notify the parent when the name actually changed to prevent
-        // an infinite render loop: WorkspaceName → UpdateWorkspaceName →
-        // StateHasChanged → re-render → OnParametersSetAsync → WorkspaceName → ...
-        if (this.currentWorkspaceName != loadedWorkspaceName)
-        {
-            this.currentWorkspaceName = loadedWorkspaceName;
-            this.WorkspaceName(this.currentWorkspaceName);
-        }
+        // A newer sync request was started while awaiting IO. Ignore stale results.
+        if (syncVersion != this.workspaceHeaderSyncVersion)
+            return;
+
+        // The active chat changed while loading the workspace name.
+        if (this.ChatThread is null
+            || this.ChatThread.ChatId != chatThreadId
+            || this.ChatThread.WorkspaceId != workspaceId)
+            return;
+
+        this.currentChatThreadId = chatThreadId;
+        this.currentWorkspaceId = workspaceId;
+        this.PublishWorkspaceNameIfChanged(loadedWorkspaceName);
     }
-    
+
+    private void ClearWorkspaceHeaderState()
+    {
+        this.currentChatThreadId = Guid.Empty;
+        this.currentWorkspaceId = Guid.Empty;
+        this.PublishWorkspaceNameIfChanged(string.Empty);
+    }
+
+    private void PublishWorkspaceNameIfChanged(string workspaceName)
+    {
+        // Only notify the parent when the name actually changed to prevent
+        // an infinite render loop: WorkspaceName -> UpdateWorkspaceName ->
+        // StateHasChanged -> re-render -> OnParametersSetAsync -> WorkspaceName -> ...
+        if (this.currentWorkspaceName == workspaceName)
+            return;
+
+        this.currentWorkspaceName = workspaceName;
+        this.WorkspaceName(this.currentWorkspaceName);
+    }
+
+    private async Task SyncForegroundChatAsync()
+    {
+        var nextForegroundChatId = this.ChatThread?.ChatId ?? Guid.Empty;
+        if (this.foregroundChatId == nextForegroundChatId)
+            return;
+
+        if (this.foregroundChatId != Guid.Empty)
+            await this.AIJobService.SetForegroundAsync(AIJobKind.CHAT_GENERATION, this.foregroundChatId, false);
+
+        this.foregroundChatId = nextForegroundChatId;
+        if (this.foregroundChatId != Guid.Empty)
+            await this.AIJobService.SetForegroundAsync(AIJobKind.CHAT_GENERATION, this.foregroundChatId, true);
+    }
+
     private bool IsProviderSelected => this.Provider.UsedLLMProvider != LLMProviders.NONE;
+
+    private bool IsCurrentChatStreaming => this.ChatThread is not null && this.AIJobService.IsChatGenerationActive(this.ChatThread.ChatId);
     
     private string ProviderPlaceholder => this.IsProviderSelected ? T("Type your input here...") : T("Select a provider first");
 
@@ -390,12 +466,10 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     {
         this.currentChatTemplate = chatTemplate;
         if(!string.IsNullOrWhiteSpace(this.currentChatTemplate.PredefinedUserPrompt))
-            this.userInput = this.currentChatTemplate.PredefinedUserPrompt;
+            this.ComposerState.SetSystemInput(this.currentChatTemplate.PredefinedUserPrompt);
 
         // Apply template's file attachments (replaces existing):
-        this.chatDocumentPaths.Clear();
-        foreach (var attachment in this.currentChatTemplate.FileAttachments)
-            this.chatDocumentPaths.Add(attachment);
+        this.ComposerState.ReplaceFileAttachments(this.currentChatTemplate.FileAttachments);
 
         if(this.ChatThread is null)
             return;
@@ -440,7 +514,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         if (!this.IsProviderSelected)
             return true;
         
-        if(this.isStreaming)
+        if(this.IsCurrentChatStreaming)
             return true;
         
         if(!this.ChatThread.IsLLMProviderAllowed(this.Provider))
@@ -455,6 +529,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             this.dataSourceSelectionComponent.Hide();
         
         this.hasUnsavedChanges = true;
+        this.ComposerState.MarkUserDraft();
         var key = keyEvent.Code.ToLowerInvariant();
         
         // Was the enter key (either enter or numpad enter) pressed?
@@ -486,7 +561,16 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         if(this.dataSourceSelectionComponent?.IsVisible ?? false)
             this.dataSourceSelectionComponent.Hide();
 
-        this.userInput = await this.JsRuntime.InvokeAsync<string>("formatChatInputMarkdown", CHAT_INPUT_ID, formatType);
+        this.ComposerState.SetUserInput(await this.JsRuntime.InvokeAsync<string>("formatChatInputMarkdown", CHAT_INPUT_ID, formatType));
+        this.hasUnsavedChanges = true;
+    }
+
+    private void ComposerAttachmentsChanged(HashSet<FileAttachment> attachments)
+    {
+        if (!ReferenceEquals(this.ComposerState.FileAttachments, attachments))
+            this.ComposerState.ReplaceFileAttachments(attachments);
+
+        this.ComposerState.MarkUserDraft();
         this.hasUnsavedChanges = true;
     }
     
@@ -514,17 +598,18 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 WorkspaceId = this.currentWorkspaceId,
                 ChatId = Guid.NewGuid(),
                 DataSourceOptions = this.earlyDataSourceOptions,
-                Name = this.ExtractThreadName(this.userInput),
+                Name = this.ExtractThreadName(this.ComposerState.UserInput),
                 Blocks = this.currentChatTemplate == ChatTemplate.NO_CHAT_TEMPLATE ? [] : this.currentChatTemplate.ExampleConversation.Select(x => x.DeepClone()).ToList(),
             };
             
+            this.MarkCurrentChatAsLoadedParameter();
             await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
         }
         else
         {
             // Set the thread name if it is empty:
             if (string.IsNullOrWhiteSpace(this.ChatThread.Name))
-                this.ChatThread.Name = this.ExtractThreadName(this.userInput);
+                this.ChatThread.Name = this.ExtractThreadName(this.ComposerState.UserInput);
             
             // Update provider, profile and chat template:
             this.ChatThread.SelectedProvider = this.Provider.Id;
@@ -541,10 +626,15 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         IContent? lastUserPrompt;
         if (!reuseLastUserPrompt)
         {
+            var normalizedAttachments = this.ComposerState.FileAttachments
+                .Select(attachment => attachment.Normalize())
+                .Where(attachment => attachment.IsValid)
+                .ToList();
+
             lastUserPrompt = new ContentText
             {
-                Text = this.userInput,
-                FileAttachments = [..this.chatDocumentPaths.Where(x => x.IsValid)],
+                Text = this.ComposerState.UserInput,
+                FileAttachments = normalizedAttachments,
             };
 
             //
@@ -590,13 +680,11 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         // Clear the input field:
         await this.inputField.FocusAsync();
 
-        this.userInput = string.Empty;
-        this.chatDocumentPaths.Clear();
+        this.ComposerState.Clear();
 
         await this.inputField.BlurAsync();
         
         // Enable the stream state for the chat component:
-        this.isStreaming = true;
         this.hasUnsavedChanges = true;
         
         if (this.SettingsManager.ConfigurationData.Chat.ShowLatestMessageAfterLoading)
@@ -606,7 +694,14 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         }
         
         this.Logger.LogDebug($"Start processing user input using provider '{this.Provider.InstanceName}' with model '{this.Provider.Model}'.");
-        
+        // TODO: await this.AIJobService.TryStartChatGenerationAsync(new ChatGenerationRequest
+        //{
+        //    ChatThread = this.ChatThread!,
+        //    AIText = aiText,
+        //    LastUserPrompt = lastUserPrompt,
+        //    ProviderSettings = this.Provider,
+        //    IsForeground = true,
+        //});
         using (this.cancellationTokenSource = new())
         {
             this.StateHasChanged();
@@ -624,22 +719,21 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         // Save the chat:
         if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
         {
-            await this.SaveThread();
-            this.hasUnsavedChanges = false;
-        }
+            ChatThread = this.ChatThread!,
+            AIText = aiText,
+            LastUserPrompt = lastUserPrompt,
+            ProviderSettings = this.Provider,
+            IsForeground = true,
+        });
 
-        // Disable the stream state:
-        this.isStreaming = false;
-        
-        // Update the UI:
+        await this.SyncForegroundChatAsync();
         this.StateHasChanged();
     }
     
     private async Task CancelStreaming()
     {
-        if (this.cancellationTokenSource is not null)
-            if(!this.cancellationTokenSource.IsCancellationRequested)
-                await this.cancellationTokenSource.CancelAsync();
+        if (this.ChatThread is not null)
+            await this.AIJobService.CancelChatGenerationAsync(this.ChatThread.ChatId);
     }
 
     private Task SelectedToolIdsChanged(HashSet<string> updatedToolIds)
@@ -675,7 +769,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         // Want the user to manage the chat storage manually? In that case, we have to ask the user
         // about possible data loss:
         //
-        if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_MANUALLY && this.hasUnsavedChanges)
+        if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_MANUALLY && this.hasUnsavedChanges && !this.IsCurrentChatStreaming)
         {
             var dialogParameters = new DialogParameters<ConfirmDialog>
             {
@@ -708,9 +802,8 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         //
         // Reset our state:
         //
-        this.isStreaming = false;
         this.hasUnsavedChanges = false;
-        this.userInput = string.Empty;
+        this.ComposerState.Clear();
         this.selectedToolIds = this.SettingsManager.GetDefaultToolIds(Tools.Components.CHAT);
         
         //
@@ -745,10 +838,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             // to reset the chat thread:
             //
             this.ChatThread = null;
-            this.currentChatThreadId = Guid.Empty;
-            this.currentWorkspaceId = Guid.Empty;
-            this.currentWorkspaceName = string.Empty;
-            this.WorkspaceName(this.currentWorkspaceName);
+            this.ClearWorkspaceHeaderState();
         }
         else
         {
@@ -771,17 +861,14 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             };
         }
 
-        this.userInput = this.currentChatTemplate.PredefinedUserPrompt;
-
-        // Apply template's file attachments:
-        this.chatDocumentPaths.Clear();
-        foreach (var attachment in this.currentChatTemplate.FileAttachments)
-            this.chatDocumentPaths.Add(attachment);
+        this.ComposerState.ApplyTemplate(this.currentChatTemplate);
 
         // Now, we have to reset the data source options as well:
         this.ApplyStandardDataSourceOptions();
         
         // Notify the parent component about the change:
+        await this.SyncForegroundChatAsync();
+        this.MarkCurrentChatAsLoadedParameter();
         await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
     }
     
@@ -790,7 +877,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         if(this.ChatThread is null)
             return;
         
-        if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_MANUALLY && this.hasUnsavedChanges)
+        if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_MANUALLY && this.hasUnsavedChanges && !this.IsCurrentChatStreaming)
         {
             var confirmationDialogParameters = new DialogParameters<ConfirmDialog>
             {
@@ -823,33 +910,35 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         await WorkspaceBehaviour.DeleteChatAsync(this.DialogService, this.ChatThread!.WorkspaceId, this.ChatThread.ChatId, askForConfirmation: false);
         
         this.ChatThread!.WorkspaceId = workspaceId;
+        this.MarkCurrentChatAsLoadedParameter();
         await this.SaveThread();
-        
-        this.currentWorkspaceId = this.ChatThread.WorkspaceId;
-        this.currentWorkspaceName = await WorkspaceBehaviour.LoadWorkspaceNameAsync(this.ChatThread.WorkspaceId);
-        this.WorkspaceName(this.currentWorkspaceName);
+
+        await this.SyncWorkspaceHeaderWithChatThreadAsync();
     }
     
-    private async Task LoadedChatChanged()
+    private async Task LoadedChatChanged(bool notifyParent = true)
     {
-        this.isStreaming = false;
         this.hasUnsavedChanges = false;
-        this.userInput = string.Empty;
+        this.ComposerState.Clear();
 
         if (this.ChatThread is not null)
         {
-            this.currentWorkspaceId = this.ChatThread.WorkspaceId;
-            this.currentWorkspaceName = await WorkspaceBehaviour.LoadWorkspaceNameAsync(this.ChatThread.WorkspaceId);
-            this.WorkspaceName(this.currentWorkspaceName);
-            this.currentChatThreadId = this.ChatThread.ChatId;
+            this.ChatThread = this.AIJobService.TryGetLiveChatThread(this.ChatThread.ChatId) ?? this.ChatThread;
+            this.loadedParameterChatId = this.ChatThread.ChatId;
+            this.loadedParameterWorkspaceId = this.ChatThread.WorkspaceId;
+            if (notifyParent)
+                await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
+
+            await this.SyncWorkspaceHeaderWithChatThreadAsync();
+            await this.SyncForegroundChatAsync();
             this.dataSourceSelectionComponent?.ChangeOptionWithoutSaving(this.ChatThread.DataSourceOptions, this.ChatThread.AISelectedDataSources);
         }
         else
         {
-            this.currentChatThreadId = Guid.Empty;
-            this.currentWorkspaceId = Guid.Empty;
-            this.currentWorkspaceName = string.Empty;
-            this.WorkspaceName(this.currentWorkspaceName);
+            this.loadedParameterChatId = Guid.Empty;
+            this.loadedParameterWorkspaceId = Guid.Empty;
+            this.ClearWorkspaceHeaderState();
+            await this.SyncForegroundChatAsync();
             this.ApplyStandardDataSourceOptions();
         }
         
@@ -865,16 +954,13 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     
     private async Task ResetState()
     {
-        this.isStreaming = false;
         this.hasUnsavedChanges = false;
-        this.userInput = string.Empty;
-        this.currentChatThreadId = Guid.Empty;
-        this.currentWorkspaceId = Guid.Empty;
-        
-        this.currentWorkspaceName = string.Empty;
-        this.WorkspaceName(this.currentWorkspaceName);
+        this.ComposerState.Clear();
+        this.ClearWorkspaceHeaderState();
         
         this.ChatThread = null;
+        this.MarkCurrentChatAsLoadedParameter();
+        await this.SyncForegroundChatAsync();
         this.ApplyStandardDataSourceOptions();
         await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
     }
@@ -885,22 +971,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         var chatProfile = this.ChatThread?.SelectedProfile;
         var chatChatTemplate = this.ChatThread?.SelectedChatTemplate;
 
-        switch (this.SettingsManager.ConfigurationData.Chat.LoadingProviderBehavior)
-        {
-            default:
-            case LoadingChatProviderBehavior.USE_CHAT_PROVIDER_IF_AVAILABLE:
-                this.Provider = this.SettingsManager.GetPreselectedProvider(Tools.Components.CHAT, chatProvider);
-                break;
-            
-            case LoadingChatProviderBehavior.ALWAYS_USE_DEFAULT_CHAT_PROVIDER:
-                this.Provider = this.SettingsManager.GetPreselectedProvider(Tools.Components.CHAT);
-                break;
-            
-            case LoadingChatProviderBehavior.ALWAYS_USE_LATEST_CHAT_PROVIDER:
-                if(this.Provider == AIStudio.Settings.Provider.NONE)
-                    this.Provider = this.SettingsManager.GetPreselectedProvider(Tools.Components.CHAT);
-                break;
-        }
+        this.Provider = this.SettingsManager.GetChatProviderForLoadedChat(chatProvider);
         
         await this.ProviderChanged.InvokeAsync(this.Provider);
 
@@ -960,7 +1031,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         if(lastBlockContent is null)
             return Task.CompletedTask;
         
-        this.userInput = textBlock.Text;
+        this.RestoreComposerFromTextBlock(textBlock);
         this.ChatThread.Remove(block);
         this.ChatThread.Remove(lastBlockContent);
         this.hasUnsavedChanges = true;
@@ -977,12 +1048,17 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         if (block is not ContentText textBlock)
             return Task.CompletedTask;
         
-        this.userInput = textBlock.Text;
+        this.RestoreComposerFromTextBlock(textBlock);
         this.ChatThread.Remove(block);
         this.hasUnsavedChanges = true;
         this.StateHasChanged();
         
         return Task.CompletedTask;
+    }
+
+    private void RestoreComposerFromTextBlock(ContentText textBlock)
+    {
+        this.ComposerState.RestoreFromTextBlock(textBlock);
     }
     
     #region Overrides of MSGComponentBase
@@ -1004,8 +1080,17 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                     await this.SaveThread();
                 break;
             
-            case Event.WORKSPACE_LOADED_CHAT_CHANGED:
-                await this.LoadedChatChanged();
+            case Event.AI_JOB_CHANGED:
+            case Event.AI_JOB_FINISHED:
+            case Event.CHAT_GENERATION_CHANGED:
+                if (data is AIJobSnapshot { Kind: AIJobKind.CHAT_GENERATION } snapshot && this.ChatThread?.ChatId == snapshot.SubjectId)
+                {
+                    this.ChatThread = this.AIJobService.TryGetLiveChatThread(snapshot.SubjectId) ?? this.ChatThread;
+                    if (!snapshot.IsActive)
+                        this.hasUnsavedChanges = false;
+
+                    this.StateHasChanged();
+                }
                 break;
 
             case Event.CONFIGURATION_CHANGED:
@@ -1021,8 +1106,11 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             case Event.HAS_CHAT_UNSAVED_CHANGES:
                 if(this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
                     return Task.FromResult((TResult?) (object) false);
+
+                if (this.IsCurrentChatStreaming)
+                    return Task.FromResult((TResult?) (object) false);
                 
-                return Task.FromResult((TResult?)(object)this.hasUnsavedChanges);
+                return Task.FromResult((TResult?)(object)(this.hasUnsavedChanges || this.ComposerState.HasVisibleUserDraft));
         }
         
         return Task.FromResult(default(TResult));
@@ -1040,20 +1128,8 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             this.hasUnsavedChanges = false;
         }
 
-        if (this.cancellationTokenSource is not null)
-        {
-            try
-            {
-                if(!this.cancellationTokenSource.IsCancellationRequested)
-                    await this.cancellationTokenSource.CancelAsync();
-            
-                this.cancellationTokenSource.Dispose();
-            }
-            catch
-            {
-                // ignored
-            }
-        }
+        await this.AIJobService.SetForegroundAsync(AIJobKind.CHAT_GENERATION, this.foregroundChatId, false);
+        this.Dispose();
     }
 
     #endregion

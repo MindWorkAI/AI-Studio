@@ -7,6 +7,8 @@ public readonly record struct SendToButton() : IButtonData
     public Func<string> GetText { get; init; } = () => string.Empty;
     
     public bool UseResultingContentBlockData { get; init; } = true;
+
+    public bool SendToChatAsInput { get; init; }
     
     public Components Self { get; init; } = Components.NONE;
 

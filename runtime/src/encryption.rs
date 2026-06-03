@@ -2,25 +2,19 @@ use std::fmt;
 use std::time::Instant;
 use base64::Engine;
 use base64::prelude::BASE64_STANDARD;
-use aes::cipher::{block_padding::Pkcs7, BlockDecryptMut, BlockEncryptMut, KeyIvInit};
+use aes::cipher::{block_padding::Pkcs7, BlockModeDecrypt, BlockModeEncrypt, KeyIvInit};
 use hmac::Hmac;
 use log::{error, info};
 use once_cell::sync::Lazy;
 use pbkdf2::pbkdf2;
 use rand::rngs::SysRng;
 use rand::{Rng, SeedableRng};
-use rocket::{data, Data, Request};
-use rocket::data::ToByteUnit;
-use rocket::http::Status;
-use rocket::serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 use sha2::Sha512;
-use tokio::io::AsyncReadExt;
 
 type Aes256CbcEnc = cbc::Encryptor<aes::Aes256>;
 
 type Aes256CbcDec = cbc::Decryptor<aes::Aes256>;
-
-type DataOutcome<'r, T> = data::Outcome<'r, T>;
 
 /// The encryption instance used for the IPC channel.
 pub static ENCRYPTION: Lazy<Encryption> = Lazy::new(|| {
@@ -113,7 +107,7 @@ impl Encryption {
         let mut buffer = vec![0u8; data.len() + 16];
         buffer[..data.len()].copy_from_slice(data);
         let encrypted = cipher
-            .encrypt_padded_mut::<Pkcs7>(&mut buffer, data.len())
+            .encrypt_padded::<Pkcs7>(&mut buffer, data.len())
             .map_err(|e| format!("Error encrypting data: {e}"))?;
         let mut result = BASE64_STANDARD.encode(self.secret_key_salt);
         result.push_str(&BASE64_STANDARD.encode(encrypted));
@@ -136,7 +130,7 @@ impl Encryption {
         let cipher = Aes256CbcDec::new(&self.key.into(), &self.iv.into());
         let mut buffer = encrypted.to_vec();
         let decrypted = cipher
-            .decrypt_padded_mut::<Pkcs7>(&mut buffer)
+            .decrypt_padded::<Pkcs7>(&mut buffer)
             .map_err(|e| format!("Error decrypting data: {e}"))?;
 
         String::from_utf8(decrypted.to_vec()).map_err(|e| format!("Error converting decrypted data to string: {}", e))
@@ -169,28 +163,5 @@ impl fmt::Debug for EncryptedText {
 impl fmt::Display for EncryptedText {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "**********")
-    }
-}
-
-/// Use Case: When we receive encrypted text from the client as body (e.g., in a POST request).
-/// We must interpret the body as EncryptedText.
-#[rocket::async_trait]
-impl<'r> data::FromData<'r> for EncryptedText {
-    type Error = String;
-    
-    /// Parses the data as EncryptedText.
-    async fn from_data(req: &'r Request<'_>, data: Data<'r>) -> DataOutcome<'r, Self> {
-        let content_type = req.content_type();
-        if content_type.map_or(true, |ct| !ct.is_text()) {
-            return DataOutcome::Forward((data, Status::Ok));
-        }
-
-        let mut stream = data.open(2.mebibytes());
-        let mut body = String::new();
-        if let Err(e) = stream.read_to_string(&mut body).await {
-            return DataOutcome::Error((Status::InternalServerError, format!("Failed to read data: {}", e)));
-        }
-
-        DataOutcome::Success(EncryptedText(body))
     }
 }

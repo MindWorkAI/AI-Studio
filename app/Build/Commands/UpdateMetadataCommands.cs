@@ -69,6 +69,7 @@ public sealed partial class UpdateMetadataCommands
         await this.UpdateRustVersion();
         await this.UpdateMudBlazorVersion();
         await this.UpdateTauriVersion();
+        await this.UpdateVectorStoreVersion();
     }
     
     [Command("prepare", Description = "Prepare the metadata for the next release")]
@@ -126,6 +127,7 @@ public sealed partial class UpdateMetadataCommands
             await this.UpdateRustVersion();
             await this.UpdateMudBlazorVersion();
             await this.UpdateTauriVersion();
+            await this.UpdateVectorStoreVersion();
             await this.UpdateProjectCommitHash();
             await this.UpdateLicenceYear(Path.GetFullPath(Path.Combine(Environment.GetAIStudioDirectory(), "..", "..", "LICENSE.md")));
             await this.UpdateLicenceYear(Path.GetFullPath(Path.Combine(Environment.GetAIStudioDirectory(), "Pages", "Information.razor.cs")));
@@ -147,12 +149,11 @@ public sealed partial class UpdateMetadataCommands
         
         Console.WriteLine("==============================");
         await this.UpdateArchitecture(rid);
+        await this.UpdateTauriVersion();
+        await this.UpdateVectorStoreVersion();
         
         var pdfiumVersion = await this.ReadPdfiumVersion();
         await Pdfium.InstallAsync(rid, pdfiumVersion);
-
-        var qdrantVersion = await this.ReadQdrantVersion();
-        await Qdrant.InstallAsync(rid, qdrantVersion);
         
         Console.Write($"- Start .NET build for {rid.ToUserFriendlyName()} ...");
         await this.ReadCommandOutput(pathApp, "dotnet", $"clean --configuration release --runtime {rid.AsMicrosoftRid()}");
@@ -245,7 +246,7 @@ public sealed partial class UpdateMetadataCommands
         Console.WriteLine("- Start building the Rust runtime ...");
         
         var pathRuntime = Environment.GetRustRuntimeDirectory();
-        var rustBuildOutput = await this.ReadCommandOutput(pathRuntime, "cargo", "tauri build --bundles none", true);
+        var rustBuildOutput = await this.ReadCommandOutput(pathRuntime, "cargo", "tauri build --no-bundle", true);
         var rustBuildOutputLines = rustBuildOutput.Split([global::System.Environment.NewLine], StringSplitOptions.RemoveEmptyEntries);
         var foundRustIssue = false;
         foreach (var buildOutputLine in rustBuildOutputLines)
@@ -365,16 +366,6 @@ public sealed partial class UpdateMetadataCommands
         var shortVersion = currentPdfiumVersion.Split('.')[2];
         
         return shortVersion;
-    }
-
-    private async Task<string> ReadQdrantVersion()
-    {
-        const int QDRANT_VERSION_INDEX = 11;
-        var pathMetadata = Environment.GetMetadataPath();
-        var lines = await File.ReadAllLinesAsync(pathMetadata, Encoding.UTF8);
-        var currentQdrantVersion = lines[QDRANT_VERSION_INDEX].Trim();
-        
-        return currentQdrantVersion;
     }
 
     private async Task UpdateArchitecture(RID rid)
@@ -529,7 +520,32 @@ public sealed partial class UpdateMetadataCommands
         
         await File.WriteAllLinesAsync(pathMetadata, lines, Environment.UTF8_NO_BOM);
     }
-    
+
+    private async Task UpdateVectorStoreVersion()
+    {
+        const int VECTOR_STORE_VERSION_INDEX = 11;
+
+        var pathMetadata = Environment.GetMetadataPath();
+        var lines = await File.ReadAllLinesAsync(pathMetadata, Encoding.UTF8);
+        var currentVectorStoreVersion = lines[VECTOR_STORE_VERSION_INDEX].Trim();
+
+        var matches = await this.DetermineVersion("Qdrant Edge", Environment.GetRustRuntimeDirectory(), QdrantEdgeVersionRegex(), "cargo", "tree --depth 1");
+        if (matches.Count == 0)
+            return;
+
+        var updatedVectorStoreVersion = matches[0].Groups["version"].Value;
+        if(currentVectorStoreVersion == updatedVectorStoreVersion)
+        {
+            Console.WriteLine("- The vector store version is already up to date.");
+            return;
+        }
+
+        Console.WriteLine($"- Updated vector store version from {currentVectorStoreVersion} to {updatedVectorStoreVersion}.");
+        lines[VECTOR_STORE_VERSION_INDEX] = updatedVectorStoreVersion;
+
+        await File.WriteAllLinesAsync(pathMetadata, lines, Environment.UTF8_NO_BOM);
+    }
+
     private async Task UpdateMudBlazorVersion()
     {
         const int MUD_BLAZOR_VERSION_INDEX = 6;
@@ -720,6 +736,9 @@ public sealed partial class UpdateMetadataCommands
     [GeneratedRegex("""MudBlazor\s+(?<version>[0-9.]+)""")]
     private static partial Regex MudBlazorVersionRegex();
     
+    [GeneratedRegex("""qdrant-edge\s+v(?<version>[0-9.]+)""")]
+    private static partial Regex QdrantEdgeVersionRegex();
+
     [GeneratedRegex("""tauri\s+v(?<version>[0-9.]+)""")]
     private static partial Regex TauriVersionRegex();
     

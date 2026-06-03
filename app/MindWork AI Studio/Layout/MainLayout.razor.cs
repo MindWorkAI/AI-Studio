@@ -1,6 +1,7 @@
 using AIStudio.Dialogs;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.AIJobs;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
@@ -26,6 +27,9 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     
     [Inject]
     private RustService RustService { get; init; } = null!;
+
+    [Inject]
+    private AIJobService AIJobService { get; init; } = null!;
     
     [Inject]
     private ISnackbar Snackbar { get; init; } = null!;
@@ -53,6 +57,8 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     private UpdateResponse? currentUpdateResponse;
     private MudThemeProvider themeProvider = null!;
     private bool useDarkMode;
+    private bool startupCompleted;
+    private readonly SemaphoreSlim mandatoryInfoDialogSemaphore = new(1, 1);
 
     private IReadOnlyCollection<NavBarItem> navItems = [];
     
@@ -81,7 +87,9 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         // Read the user language from Rust:
         //
         var userLanguage = await this.RustService.ReadUserLanguage();
+        var userName = await this.RustService.ReadUserName();
         this.Logger.LogInformation($"The OS says '{userLanguage}' is the user language.");
+        this.Logger.LogInformation($"The OS says '{userName}' is the username.");
         
         // Ensure that all settings are loaded:
         await this.SettingsManager.LoadSettings();
@@ -91,8 +99,9 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         this.MessageBus.ApplyFilters(this, [],
         [
             Event.UPDATE_AVAILABLE, Event.CONFIGURATION_CHANGED, Event.COLOR_THEME_CHANGED, Event.SHOW_ERROR,
-            Event.SHOW_ERROR, Event.SHOW_WARNING, Event.SHOW_SUCCESS, Event.STARTUP_PLUGIN_SYSTEM,
-            Event.PLUGINS_RELOADED, Event.INSTALL_UPDATE,
+            Event.SHOW_WARNING, Event.SHOW_SUCCESS, Event.STARTUP_PLUGIN_SYSTEM, Event.PLUGINS_RELOADED,
+            Event.INSTALL_UPDATE, Event.STARTUP_COMPLETED, Event.AI_JOB_CHANGED, Event.AI_JOB_FINISHED,
+            Event.CHAT_GENERATION_CHANGED,
         ]);
         
         // Set the snackbar for the update service:
@@ -174,9 +183,18 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
                     await this.UpdateThemeConfiguration();
                     this.LoadNavItems();
                     this.StateHasChanged();
+                    if (this.startupCompleted)
+                        _ = this.EnsureMandatoryInfosAcceptedAsync();
                     break;
 
                 case Event.COLOR_THEME_CHANGED:
+                    this.StateHasChanged();
+                    break;
+
+                case Event.AI_JOB_CHANGED:
+                case Event.AI_JOB_FINISHED:
+                case Event.CHAT_GENERATION_CHANGED:
+                    this.LoadNavItems();
                     this.StateHasChanged();
                     break;
 
@@ -261,6 +279,13 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
                     this.LoadNavItems();
 
                     await this.InvokeAsync(this.StateHasChanged);
+                    if (this.startupCompleted)
+                        _ = this.EnsureMandatoryInfosAcceptedAsync();
+                    break;
+
+                case Event.STARTUP_COMPLETED:
+                    this.startupCompleted = true;
+                    _ = this.EnsureMandatoryInfosAcceptedAsync();
                     break;
             }
         });
@@ -283,7 +308,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         var palette = this.ColorTheme.GetCurrentPalette(this.SettingsManager);
         
         yield return new(T("Home"), Icons.Material.Filled.Home, palette.DarkLighten, palette.GrayLight, Routes.HOME, true);
-        yield return new(T("Chat"), Icons.Material.Filled.Chat, palette.DarkLighten, palette.GrayLight, Routes.CHAT, false);
+        yield return new(T("Chat"), this.AIJobService.HasActiveJobs ? Icons.Material.Filled.Chat : Icons.Material.Outlined.Chat, palette.DarkLighten, palette.GrayLight, Routes.CHAT, false);
         yield return new(T("Assistants"), Icons.Material.Filled.Apps, palette.DarkLighten, palette.GrayLight, Routes.ASSISTANTS, false);
 
         if (PreviewFeatures.PRE_WRITER_MODE_2024.IsEnabled(this.SettingsManager))
@@ -368,12 +393,90 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         await this.MessageBus.SendMessage<bool>(this, Event.COLOR_THEME_CHANGED);
         this.StateHasChanged();
     }
+
+    private async Task EnsureMandatoryInfosAcceptedAsync()
+    {
+        if (!await this.mandatoryInfoDialogSemaphore.WaitAsync(0))
+            return;
+
+        try
+        {
+            while (true)
+            {
+                var pendingInfos = this.GetPendingMandatoryInfos().ToList();
+                if (pendingInfos.Count == 0)
+                    return;
+
+                foreach (var info in pendingInfos)
+                {
+                    var wasAccepted = await this.ShowMandatoryInfoDialog(info);
+                    if (!wasAccepted)
+                    {
+                        await this.RustService.ExitApplication();
+                        return;
+                    }
+
+                    await this.StoreMandatoryInfoAcceptance(info);
+                }
+            }
+        }
+        finally
+        {
+            this.mandatoryInfoDialogSemaphore.Release();
+        }
+    }
+
+    private IEnumerable<DataMandatoryInfo> GetPendingMandatoryInfos()
+    {
+        return PluginFactory.GetMandatoryInfos()
+            .Where(info =>
+            {
+                var acceptance = this.SettingsManager.ConfigurationData.MandatoryInformation.FindAcceptance(info.Id);
+                return acceptance is null || !string.Equals(acceptance.AcceptedHash, info.AcceptanceHash, StringComparison.Ordinal);
+            });
+    }
+
+    private async Task<bool> ShowMandatoryInfoDialog(DataMandatoryInfo info)
+    {
+        var acceptance = this.SettingsManager.ConfigurationData.MandatoryInformation.FindAcceptance(info.Id);
+        var dialogParameters = new DialogParameters<MandatoryInfoDialog>
+        {
+            { x => x.Info, info },
+            { x => x.Acceptance, acceptance },
+        };
+
+        var dialogReference = await this.DialogService.ShowAsync<MandatoryInfoDialog>(info.Title, dialogParameters, DialogOptions.BLOCKING_FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        return dialogResult is { Canceled: false, Data: true };
+    }
+
+    private async Task StoreMandatoryInfoAcceptance(DataMandatoryInfo info)
+    {
+        var acceptances = this.SettingsManager.ConfigurationData.MandatoryInformation.Acceptances;
+        var acceptance = new DataMandatoryInfoAcceptance
+        {
+            InfoId = info.Id,
+            AcceptedVersion = info.VersionText,
+            AcceptedHash = info.AcceptanceHash,
+            AcceptedAtUtc = DateTimeOffset.UtcNow,
+            EnterpriseConfigurationPluginId = info.EnterpriseConfigurationPluginId,
+        };
+
+        var existingIndex = acceptances.FindIndex(item => item.InfoId == info.Id);
+        if (existingIndex >= 0)
+            acceptances[existingIndex] = acceptance;
+        else
+            acceptances.Add(acceptance);
+
+        await this.SettingsManager.StoreSettings();
+    }
     
     #region Implementation of IDisposable
 
     public void Dispose()
     {
         this.MessageBus.Unregister(this);
+        this.mandatoryInfoDialogSemaphore.Dispose();
     }
 
     #endregion

@@ -21,7 +21,7 @@
 
         @if (this.DataSource.AuthMethod is AuthMethod.USERNAME_PASSWORD)
         {
-            <TextInfoLine Icon="@Icons.Material.Filled.Person2" Label="@T("Username")" Value="@this.DataSource.Username" ClipboardTooltipSubject="@T("the username")"/>
+            <TextInfoLine Icon="@Icons.Material.Filled.Person2" Label="@T("Username")" Value="@this.effectiveUsername" ClipboardTooltipSubject="@T("the username")"/>
         }
 
         <TextInfoLines Label="@T("Server description")" MaxLines="14" Value="@this.serverDescription" ClipboardTooltipSubject="@T("the server description")"/>

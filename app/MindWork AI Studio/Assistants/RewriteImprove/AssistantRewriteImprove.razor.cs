@@ -1,4 +1,3 @@
-using AIStudio.Chat;
 using AIStudio.Dialogs.Settings;
 
 namespace AIStudio.Assistants.RewriteImprove;
@@ -42,10 +41,9 @@ public partial class AssistantRewriteImprove : AssistantBaseCore<SettingsDialogR
 
     protected override Func<Task> SubmitAction => this.RewriteText;
 
-    protected override ChatThread ConvertToChatThread => (this.chatThread ?? new()) with
-    {
-        SystemPrompt = SystemPrompts.DEFAULT,
-    };
+    protected override string SendToChatVisibleUserPromptPrefix => T("Rewrite and improve the following text:");
+
+    protected override string SendToChatVisibleUserPromptContent => this.inputText;
 
     protected override void ResetForm()
     {
@@ -128,8 +126,8 @@ public partial class AssistantRewriteImprove : AssistantBaseCore<SettingsDialogR
     
     private async Task RewriteText()
     {
-        await this.form!.Validate();
-        if (!this.inputIsValid)
+        await this.Form!.Validate();
+        if (!this.InputIsValid)
             return;
         
         this.CreateChatThread();

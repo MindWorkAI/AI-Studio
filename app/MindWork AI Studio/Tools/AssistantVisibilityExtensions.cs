@@ -47,6 +47,7 @@ public static class AssistantVisibilityExtensions
             Components.GRAMMAR_SPELLING_ASSISTANT => ConfigurableAssistant.GRAMMAR_SPELLING_ASSISTANT,
             Components.ICON_FINDER_ASSISTANT => ConfigurableAssistant.ICON_FINDER_ASSISTANT,
             Components.REWRITE_ASSISTANT => ConfigurableAssistant.REWRITE_ASSISTANT,
+            Components.PROMPT_OPTIMIZER_ASSISTANT => ConfigurableAssistant.PROMPT_OPTIMIZER_ASSISTANT,
             Components.TRANSLATION_ASSISTANT => ConfigurableAssistant.TRANSLATION_ASSISTANT,
             Components.AGENDA_ASSISTANT => ConfigurableAssistant.AGENDA_ASSISTANT,
             Components.CODING_ASSISTANT => ConfigurableAssistant.CODING_ASSISTANT,

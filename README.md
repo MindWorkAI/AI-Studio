@@ -28,12 +28,11 @@ Since November 2024: Work on RAG (integration of your data and files) has begun.
 - [x] ~~App: Implement an [ERI](https://github.com/MindWorkAI/ERI) server coding assistant (PR [#231](https://github.com/MindWorkAI/AI-Studio/pull/231))~~
 - [x] ~~App: Management of data sources (local & external data via [ERI](https://github.com/MindWorkAI/ERI)) (PR [#259](https://github.com/MindWorkAI/AI-Studio/pull/259), [#273](https://github.com/MindWorkAI/AI-Studio/pull/273))~~
 - [x] ~~Runtime: Extract data from txt / md / pdf / docx / xlsx files (PR [#374](https://github.com/MindWorkAI/AI-Studio/pull/374))~~
-- [ ] (*Optional*) Runtime: Implement internal embedding provider through [fastembed-rs](https://github.com/Anush008/fastembed-rs)
 - [x] ~~App: Implement dialog for checking & handling [pandoc](https://pandoc.org/) installation ([PR #393](https://github.com/MindWorkAI/AI-Studio/pull/393), [PR #487](https://github.com/MindWorkAI/AI-Studio/pull/487))~~
 - [x] ~~App: Implement external embedding providers ([PR #654](https://github.com/MindWorkAI/AI-Studio/pull/654))~~
-- [ ] App: Implement the process to vectorize one local file using embeddings
+- [ ] App: Implement the process to vectorize one local file using embeddings (PR [#756](https://github.com/MindWorkAI/AI-Studio/pull/756))
 - [x] ~~Runtime: Integration of the vector database [Qdrant](https://github.com/qdrant/qdrant) ([PR #580](https://github.com/MindWorkAI/AI-Studio/pull/580))~~
-- [ ] App: Implement the continuous process of vectorizing data
+- [ ] App: Implement the continuous process of vectorizing data (PR [#756](https://github.com/MindWorkAI/AI-Studio/pull/756))
 - [x] ~~App: Define a common retrieval context interface for the integration of RAG processes in chats (PR [#281](https://github.com/MindWorkAI/AI-Studio/pull/281), [#284](https://github.com/MindWorkAI/AI-Studio/pull/284), [#286](https://github.com/MindWorkAI/AI-Studio/pull/286), [#287](https://github.com/MindWorkAI/AI-Studio/pull/287))~~
 - [x] ~~App: Define a common augmentation interface for the integration of RAG processes in chats (PR [#288](https://github.com/MindWorkAI/AI-Studio/pull/288), [#289](https://github.com/MindWorkAI/AI-Studio/pull/289))~~
 - [x] ~~App: Integrate data sources in chats (PR [#282](https://github.com/MindWorkAI/AI-Studio/pull/282))~~
@@ -67,7 +66,7 @@ Since March 2025: We have started developing the plugin system. There will be la
 - [x] ~~Provide MindWork AI Studio in German ([PR #430](https://github.com/MindWorkAI/AI-Studio/pull/430), [PR #446](https://github.com/MindWorkAI/AI-Studio/pull/446), [PR #451](https://github.com/MindWorkAI/AI-Studio/pull/451), [PR #455](https://github.com/MindWorkAI/AI-Studio/pull/455), [PR #458](https://github.com/MindWorkAI/AI-Studio/pull/458), [PR #462](https://github.com/MindWorkAI/AI-Studio/pull/462), [PR #469](https://github.com/MindWorkAI/AI-Studio/pull/469), [PR #486](https://github.com/MindWorkAI/AI-Studio/pull/486))~~
 - [x] ~~Add configuration plugins, which allow pre-defining some LLM providers in organizations ([PR #491](https://github.com/MindWorkAI/AI-Studio/pull/491), [PR #493](https://github.com/MindWorkAI/AI-Studio/pull/493), [PR #494](https://github.com/MindWorkAI/AI-Studio/pull/494), [PR #497](https://github.com/MindWorkAI/AI-Studio/pull/497))~~
 - [ ] Add an app store for plugins, showcasing community-contributed plugins from public GitHub and GitLab repositories. This will enable AI Studio users to discover, install, and update plugins directly within the platform.
-- [ ] Add assistant plugins ([PR #659](https://github.com/MindWorkAI/AI-Studio/pull/659))
+- [x] ~~Add assistant plugins ([PR #659](https://github.com/MindWorkAI/AI-Studio/pull/659))~~
 
 </details>
 </details>
@@ -79,6 +78,8 @@ Since March 2025: We have started developing the plugin system. There will be la
     </h3>
     </summary>
 
+- v26.5.5: Released voice recording and transcription for all users; added support for multiple chats running at the same time, export options for profiles, chat templates, and ERI data sources, organization-managed ERI servers, and configurable request timeouts; upgraded the native runtime to Tauri v2.
+- v26.4.1: Added support for the latest AI models, assistant plugins, a slide planner assistant, a prompt optimization assistant, math rendering in chats, and a configurable start page; released the document analysis assistant and improved enterprise deployment, chat performance, file attachments, and reliability across voice recording, logging, and provider validation.
 - v26.2.2: Added Qdrant as a building block for our local RAG preview, added an embedding test option to validate embedding providers, and improved enterprise and configuration plugins with preselected providers, additive preview features, support for multiple configurations, and more reliable synchronization.
 - v26.1.1: Added the option to attach files, including images, to chat templates; added support for source code file attachments in chats and document analysis; added a preview feature for recording your own voice for transcription; fixed various bugs in provider dialogs and profile selection.
 - v0.10.0: Added support for newer models like Mistral 3 & GPT 5.2, OpenRouter as LLM and embedding provider, the possibility to use file attachments in chats, and support for images as input.
@@ -89,8 +90,6 @@ Since March 2025: We have started developing the plugin system. There will be la
 - v0.9.44: Added PDF import to the text summarizer, translation, and legal check assistants, allowing you to import PDF files and use them as input for the assistants.
 - v0.9.40: Added support for the `o4` models from OpenAI. Also, we added Alibaba Cloud & Hugging Face as LLM providers.
 - v0.9.39: Added the plugin system as a preview feature.
-- v0.9.31: Added Helmholtz & GWDG as LLM providers. This is a huge improvement for many researchers out there who can use these providers for free. We added DeepSeek as a provider as well.
-- v0.9.29: Added agents to support the RAG process (selecting the best data sources & validating retrieved data as part of the augmentation process)
  
 </details>
 

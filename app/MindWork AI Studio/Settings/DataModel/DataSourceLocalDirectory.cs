@@ -35,6 +35,12 @@ public readonly record struct DataSourceLocalDirectory : IInternalDataSource
     
     /// <inheritdoc />
     public DataSourceSecurity SecurityPolicy { get; init; } = DataSourceSecurity.NOT_SPECIFIED;
+
+    /// <inheritdoc />
+    public bool IsEnterpriseConfiguration { get; init; }
+
+    /// <inheritdoc />
+    public Guid EnterpriseConfigurationPluginId { get; init; } = Guid.Empty;
     
     /// <inheritdoc />
     public ushort MaxMatches { get; init; } = 10;

@@ -1,5 +1,4 @@
-﻿using System.Net.Http.Headers;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 
 using AIStudio.Chat;
 using AIStudio.Provider.OpenAI;
@@ -7,7 +6,7 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.GWDG;
 
-public sealed class ProviderGWDG() : BaseProvider(LLMProviders.GWDG, "https://chat-ai.academiccloud.de/v1/", LOGGER)
+public sealed class ProviderGWDG() : BaseProvider(LLMProviders.GWDG, new Uri("https://chat-ai.academiccloud.de/v1/"), ExternalHttpTrustPolicy.SYSTEM_TRUST_ONLY, LOGGER)
 {
     private static readonly ILogger<ProviderGWDG> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderGWDG>();
 
@@ -18,26 +17,38 @@ public sealed class ProviderGWDG() : BaseProvider(LLMProviders.GWDG, "https://ch
 
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "GWDG SAIA";
+
+    /// <inheritdoc />
+    public override bool HasModelLoadingCapability => true;
     
     /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
-        await foreach (var content in this.StreamOpenAICompatibleChatCompletion<ChatCompletionDeltaStreamLine, ChatCompletionAnnotationStreamLine>(
+        await foreach (var content in this.StreamOpenAICompatibleChatCompletion<ChatCompletionAPIRequest, ChatCompletionDeltaStreamLine, ChatCompletionAnnotationStreamLine>(
                            "GWDG",
                            chatModel,
                            chatThread,
                            settingsManager,
-                           () => chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel),
-                           (systemPrompt, messages, apiParameters, stream, tools) =>
-                               Task.FromResult(new ChatCompletionAPIRequest
+                           async (systemPrompt, apiParameters, tools) =>
+                           {
+                               // Build the list of messages:
+                               var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel);
+
+                               return new ChatCompletionAPIRequest
                                {
                                    Model = chatModel.Id,
+
+                                   // Build the messages:
+                                   // - First of all the system prompt
+                                   // - Then none-empty user and AI messages
                                    Messages = [systemPrompt, ..messages],
-                                   Stream = stream,
+
+                                   Stream = true,
                                    Tools = tools,
                                    ParallelToolCalls = tools is null ? null : true,
                                    AdditionalApiParameters = apiParameters
-                               }),
+                               };
+                           },
                            token: token))
             yield return content;
     }
@@ -51,7 +62,7 @@ public sealed class ProviderGWDG() : BaseProvider(LLMProviders.GWDG, "https://ch
     #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
     
     /// <inheritdoc />
-    public override async Task<string> TranscribeAudioAsync(Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default)
+    public override async Task<TranscriptionResult> TranscribeAudioAsync(Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default)
     {
         var requestedSecret = await RUST_SERVICE.GetAPIKey(this, SecretStoreType.TRANSCRIPTION_PROVIDER);
         return await this.PerformStandardTranscriptionRequest(requestedSecret, transcriptionModel, audioFilePath, token: token);
@@ -64,61 +75,55 @@ public sealed class ProviderGWDG() : BaseProvider(LLMProviders.GWDG, "https://ch
     }
 
     /// <inheritdoc />
-    public override async Task<IEnumerable<Model>> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override async Task<ModelLoadResult> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        var models = await this.LoadModels(SecretStoreType.LLM_PROVIDER, token, apiKeyProvisional);
-        return models.Where(model => !model.Id.StartsWith("e5-mistral-7b-instruct", StringComparison.InvariantCultureIgnoreCase));
+        var result = await this.LoadModels(SecretStoreType.LLM_PROVIDER, token, apiKeyProvisional);
+        return result with
+        {
+            Models = [..result.Models.Where(model => !model.Id.StartsWith("e5-mistral-7b-instruct", StringComparison.InvariantCultureIgnoreCase))]
+        };
     }
 
     /// <inheritdoc />
-    public override Task<IEnumerable<Model>> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override Task<ModelLoadResult> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return Task.FromResult(Enumerable.Empty<Model>());
+        return Task.FromResult(ModelLoadResult.FromModels([]));
     }
     
     /// <inheritdoc />
-    public override async Task<IEnumerable<Model>> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override async Task<ModelLoadResult> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        var models = await this.LoadModels(SecretStoreType.EMBEDDING_PROVIDER, token, apiKeyProvisional);
-        return models.Where(model => model.Id.StartsWith("e5-", StringComparison.InvariantCultureIgnoreCase));
+        var result = await this.LoadModels(SecretStoreType.EMBEDDING_PROVIDER, token, apiKeyProvisional);
+        return result with
+        {
+            Models = [..result.Models.Where(model => model.Id.StartsWith("e5-", StringComparison.InvariantCultureIgnoreCase))]
+        };
     }
     
     /// <inheritdoc />
-    public override Task<IEnumerable<Model>> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override Task<ModelLoadResult> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
         // Source: https://docs.hpc.gwdg.de/services/saia/index.html#voice-to-text
-        return Task.FromResult<IEnumerable<Model>>(
-            new List<Model>
-            {
-                new("whisper-large-v2", "Whisper v2 Large"),
-            });
+        return Task.FromResult(ModelLoadResult.FromModels(
+        [
+            new Model("whisper-large-v2", "Whisper v2 Large"),
+        ]));
     }
     
     #endregion
 
-    private async Task<IEnumerable<Model>> LoadModels(SecretStoreType storeType, CancellationToken token, string? apiKeyProvisional = null)
+    private async Task<ModelLoadResult> LoadModels(SecretStoreType storeType, CancellationToken token, string? apiKeyProvisional = null)
     {
-        var secretKey = apiKeyProvisional switch
-        {
-            not null => apiKeyProvisional,
-            _ => await RUST_SERVICE.GetAPIKey(this, storeType) switch
-            {
-                { Success: true } result => await result.Secret.Decrypt(ENCRYPTION),
-                _ => null,
-            }
-        };
+        var result = await this.LoadModelsResponse<ModelsResponse>(
+            storeType,
+            "models",
+            modelResponse => modelResponse.Data,
+            token,
+            apiKeyProvisional);
 
-        if (secretKey is null)
-            return [];
-        
-        using var request = new HttpRequestMessage(HttpMethod.Get, "models");
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
+        if (!result.Success)
+            LOGGER.LogWarning("Failed to load models for provider {ProviderId}. FailureReason: {FailureReason}. TechnicalDetails: {TechnicalDetails}", this.Id, result.FailureReason, result.TechnicalDetails);
 
-        using var response = await this.httpClient.SendAsync(request, token);
-        if(!response.IsSuccessStatusCode)
-            return [];
-
-        var modelResponse = await response.Content.ReadFromJsonAsync<ModelsResponse>(token);
-        return modelResponse.Data;
+        return result;
     }
 }

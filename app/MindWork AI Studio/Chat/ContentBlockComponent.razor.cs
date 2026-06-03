@@ -436,8 +436,6 @@ public partial class ContentBlockComponent : MSGComponentBase, IAsyncDisposable
                     AddMarkdownSegment(markdownSegmentStart, lineStart);
                     mathContentStart = nextLineStart;
                     activeMathBlockFenceType = MathBlockFenceType.BRACKET;
-                    lineStart = nextLineStart;
-                    continue;
                 }
             }
             else if (activeMathBlockFenceType is MathBlockFenceType.DOLLAR && trimmedLine.SequenceEqual(MATH_BLOCK_MARKER_DOLLAR.AsSpan()))
@@ -447,8 +445,6 @@ public partial class ContentBlockComponent : MSGComponentBase, IAsyncDisposable
 
                 markdownSegmentStart = nextLineStart;
                 activeMathBlockFenceType = MathBlockFenceType.NONE;
-                lineStart = nextLineStart;
-                continue;
             }
             else if (activeMathBlockFenceType is MathBlockFenceType.BRACKET && trimmedLine.SequenceEqual(MATH_BLOCK_MARKER_BRACKET_CLOSE.AsSpan()))
             {
@@ -457,8 +453,6 @@ public partial class ContentBlockComponent : MSGComponentBase, IAsyncDisposable
 
                 markdownSegmentStart = nextLineStart;
                 activeMathBlockFenceType = MathBlockFenceType.NONE;
-                lineStart = nextLineStart;
-                continue;
             }
 
             lineStart = nextLineStart;

@@ -1,7 +1,6 @@
 using System.Text;
-
 using AIStudio.Settings;
-
+using AIStudio.Tools.PluginSystem.Assistants;
 using Lua;
 using Lua.Standard;
 
@@ -175,6 +174,10 @@ public static partial class PluginFactory
         if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.EMBEDDING_PROVIDER, x => x.EmbeddingProviders, AVAILABLE_PLUGINS, configObjectList, SecretStoreType.EMBEDDING_PROVIDER))
             wasConfigurationChanged = true;
 
+        // Check data sources:
+        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.DATA_SOURCE, x => x.DataSources, AVAILABLE_PLUGINS, configObjectList, SecretStoreType.DATA_SOURCE, deleteSecret: true))
+            wasConfigurationChanged = true;
+
         // Check chat templates:
         if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.CHAT_TEMPLATE, x => x.ChatTemplates, AVAILABLE_PLUGINS, configObjectList))
             wasConfigurationChanged = true;
@@ -185,6 +188,10 @@ public static partial class PluginFactory
 
         // Check document analysis policies:
         if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY, x => x.DocumentAnalysis.Policies, AVAILABLE_PLUGINS, configObjectList))
+            wasConfigurationChanged = true;
+
+        // Check left-over mandatory info acceptances:
+        if (SETTINGS_MANAGER.ConfigurationData.MandatoryInformation.RemoveLeftOverAcceptances(GetMandatoryInfos()))
             wasConfigurationChanged = true;
         
         // Check for a preselected provider:
@@ -245,6 +252,40 @@ public static partial class PluginFactory
         // Check for private hosts allowed for the read web page tool:
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Tools, x => x.ReadWebPageAllowedPrivateHosts, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;
+
+        // Check for the external HTTP client timeout:
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.HttpClientTimeoutSeconds, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        // Check for custom root certificates for external HTTP requests:
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.ExternalHttpCustomRootCertificatesEnabled, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.ExternalHttpCustomRootCertificateBundlePath, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.ExternalHttpCustomRootCertificateAllowedHosts, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        // Check if audit is required before it can be activated
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.AssistantPluginAudit, x => x.RequireAuditBeforeActivation, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        // Register new preselected provider for the security audit
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.AssistantPluginAudit, x => x.PreselectedAgentProvider, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        // Change the minimum required audit level that is required for the allowance of assistants
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.AssistantPluginAudit, x => x.MinimumLevel, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        // Check if external plugins are strictly forbidden, when the minimum audit level is fell below
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.AssistantPluginAudit, x => x.BlockActivationBelowMinimum, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+        
+        // Check if security audits are invoked automatically and transparent for the user
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.AssistantPluginAudit, x => x.AutomaticallyAuditAssistants, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
         
         if (wasConfigurationChanged)
         {
@@ -266,6 +307,7 @@ public static partial class PluginFactory
         }
 
         // Add some useful libraries:
+        state.OpenBasicLibrary();
         state.OpenModuleLibrary();
         state.OpenStringLibrary();
         state.OpenTableLibrary();
@@ -302,9 +344,18 @@ public static partial class PluginFactory
                 return new PluginLanguage(isInternal, state, type);
             
             case PluginType.CONFIGURATION:
-                var configPlug = new PluginConfiguration(isInternal, state, type);
+                var configPlug = new PluginConfiguration(isInternal, state, type)
+                {
+                    PluginPath = pluginPath ?? string.Empty
+                };
+                
                 await configPlug.InitializeAsync(true);
                 return configPlug;
+            
+            case PluginType.ASSISTANT:
+                var assistantPlugin = new PluginAssistants(isInternal, state, type);
+                assistantPlugin.TryLoad();
+                return assistantPlugin;
             
             default:
                 return new NoPlugin("This plugin type is not supported yet. Please try again with a future version of AI Studio.");

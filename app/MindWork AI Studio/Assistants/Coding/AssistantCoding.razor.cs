@@ -29,6 +29,10 @@ public partial class AssistantCoding : AssistantBaseCore<SettingsDialogCoding>
 
     protected override Func<Task> SubmitAction => this.GetSupport;
 
+    protected override string SendToChatVisibleUserPromptPrefix => T("Help me with the following coding question:");
+
+    protected override string SendToChatVisibleUserPromptContent => this.questions;
+
     protected override void ResetForm()
     {
         this.codingContexts.Clear();
@@ -104,7 +108,7 @@ public partial class AssistantCoding : AssistantBaseCore<SettingsDialogCoding>
             return ValueTask.CompletedTask;
 
         this.codingContexts.RemoveAt(index);
-        this.form?.ResetValidation();
+        this.Form?.ResetValidation();
 
         this.StateHasChanged();
         return ValueTask.CompletedTask;
@@ -112,8 +116,8 @@ public partial class AssistantCoding : AssistantBaseCore<SettingsDialogCoding>
 
     private async Task GetSupport()
     {
-        await this.form!.Validate();
-        if (!this.inputIsValid)
+        await this.Form!.Validate();
+        if (!this.InputIsValid)
             return;
 
         var sbContext = new StringBuilder();

@@ -22,15 +22,23 @@
             </MudStack>
         </MudCardContent>
         <MudCardActions>
-            <MudButtonGroup Variant="Variant.Outlined">
-                <MudButton Size="Size.Large" Variant="Variant.Filled" StartIcon="@this.Icon" Color="Color.Default" Href="@this.Link">
-                    @this.ButtonText
-                </MudButton>
-                @if (this.HasSettingsPanel)
+            <MudStack Row="@true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Style="width: 100%;">
+                <MudButtonGroup Variant="Variant.Outlined">
+                    <MudButton Size="Size.Large" Variant="Variant.Filled" StartIcon="@this.Icon" Color="Color.Default" Href="@this.Link" Disabled="@this.Disabled">
+                        @this.ButtonText
+                    </MudButton>
+                    @if (this.HasSettingsPanel)
+                    {
+                        <MudIconButton Variant="Variant.Text" Icon="@Icons.Material.Filled.Settings" Color="Color.Default" OnClick="@this.OpenSettingsDialog"/>
+                    }
+                </MudButtonGroup>
+                @if (this.SecurityBadge is not null)
                 {
-                    <MudIconButton Variant="Variant.Text" Icon="@Icons.Material.Filled.Settings" Color="Color.Default" OnClick="@this.OpenSettingsDialog"/>
+                    <MudElement>
+                        @this.SecurityBadge
+                    </MudElement>
                 }
-            </MudButtonGroup>
+            </MudStack>
         </MudCardActions>
     </MudCard>
 }
