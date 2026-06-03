@@ -12,7 +12,6 @@ using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.Services;
 
 using Microsoft.Extensions.DependencyInjection;
-using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Provider.OpenAI;
 
@@ -22,8 +21,6 @@ namespace AIStudio.Provider.OpenAI;
 public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Uri("https://api.openai.com/v1/"), ExternalHttpTrustPolicy.SYSTEM_TRUST_ONLY, LOGGER)
 {
     private static readonly ILogger<ProviderOpenAI> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderOpenAI>();
-    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ProviderOpenAI).Namespace, nameof(ProviderOpenAI));
-    
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ProviderOpenAI).Namespace, nameof(ProviderOpenAI));
     
     #region Implementation of IProvider
@@ -121,44 +118,48 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
 
         if (!usingResponsesAPI)
         {
-            await foreach (var content in this.StreamOpenAICompatibleChatCompletion<ChatCompletionDeltaStreamLine, ChatCompletionAnnotationStreamLine>(
+            await foreach (var content in this.StreamOpenAICompatibleChatCompletion<ChatCompletionAPIRequest, ChatCompletionDeltaStreamLine, ChatCompletionAnnotationStreamLine>(
                                "OpenAI",
                                chatModel,
                                chatThread,
                                settingsManager,
-                               () => chatThread.Blocks.BuildMessagesAsync(
-                                   this.Provider,
-                                   chatModel,
-                                   role => role switch
-                                   {
-                                       ChatRole.USER => "user",
-                                       ChatRole.AI => "assistant",
-                                       ChatRole.AGENT => "assistant",
-                                       ChatRole.SYSTEM => systemPromptRole,
-                                       _ => "user",
-                                   },
-                                   text => new SubContentText
-                                   {
-                                       Text = text,
-                                   },
-                                   async attachment => new SubContentImageUrlNested
-                                   {
-                                       ImageUrl = new SubContentImageUrlData
-                                       {
-                                           Url = await attachment.TryAsBase64(token: token) is (true, var base64Content)
-                                               ? $"data:{attachment.DetermineMimeType()};base64,{base64Content}"
-                                               : string.Empty,
-                                       },
-                                   }),
-                               (systemPrompt, messages, apiParameters, stream, tools) => Task.FromResult(new ChatCompletionAPIRequest
+                               async (systemPrompt, apiParameters, tools) =>
                                {
-                                   Model = chatModel.Id,
-                                   Messages = [systemPrompt, ..messages],
-                                   Stream = stream,
-                                   Tools = tools,
-                                   ParallelToolCalls = tools is null ? null : true,
-                                   AdditionalApiParameters = apiParameters,
-                               }),
+                                   var messages = await chatThread.Blocks.BuildMessagesAsync(
+                                       this.Provider,
+                                       chatModel,
+                                       role => role switch
+                                       {
+                                           ChatRole.USER => "user",
+                                           ChatRole.AI => "assistant",
+                                           ChatRole.AGENT => "assistant",
+                                           ChatRole.SYSTEM => systemPromptRole,
+                                           _ => "user",
+                                       },
+                                       text => new SubContentText
+                                       {
+                                           Text = text,
+                                       },
+                                       async attachment => new SubContentImageUrlNested
+                                       {
+                                           ImageUrl = new SubContentImageUrlData
+                                           {
+                                               Url = await attachment.TryAsBase64(token: token) is (true, var base64Content)
+                                                   ? $"data:{attachment.DetermineMimeType()};base64,{base64Content}"
+                                                   : string.Empty,
+                                           },
+                                       });
+
+                                   return new ChatCompletionAPIRequest
+                                   {
+                                       Model = chatModel.Id,
+                                       Messages = [systemPrompt, ..messages],
+                                       Stream = true,
+                                       Tools = tools,
+                                       ParallelToolCalls = tools is null ? null : true,
+                                       AdditionalApiParameters = apiParameters,
+                                   };
+                               },
                                systemPromptRole: systemPromptRole,
                                requestPath: "chat/completions",
                                token: token))
@@ -173,19 +174,6 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
             Role = systemPromptRole,
             Content = chatThread.PrepareSystemPrompt(settingsManager),
         };
-
-        //
-        // Prepare the tools we want to use:
-        //
-        IList<ProviderTool> providerTools = modelCapabilities.Contains(Capability.WEB_SEARCH) switch
-        {
-            true => [ ProviderTools.WEB_SEARCH ],
-            _ => []
-        };
-        
-        
-        // Parse the API parameters:
-        var apiParameters = this.ParseAdditionalApiParameters("input", "store", "tools");
 
         // Build the list of messages:
         var messages = await chatThread.Blocks.BuildMessagesAsync(
@@ -279,7 +267,6 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
                 Store = false,
                 
                 // Tools we want to use:
-                ProviderTools = providerTools,
                 Tools = providerTools,
                 
                 // Additional API parameters:
@@ -438,7 +425,7 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(ENCRYPTION));
         request.Content = new StringContent(JsonSerializer.Serialize(requestDto, JSON_SERIALIZER_OPTIONS), Encoding.UTF8, "application/json");
 
-        using var response = await this.httpClient.SendAsync(request, token);
+        using var response = await this.HttpClient.SendAsync(request, token);
         if (!response.IsSuccessStatusCode)
         {
             var responseBody = await response.Content.ReadAsStringAsync(token);

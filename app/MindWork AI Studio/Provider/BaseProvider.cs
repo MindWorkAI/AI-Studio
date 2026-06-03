@@ -957,7 +957,6 @@ public abstract class BaseProvider : IProvider, ISecretId
     /// <param name="chatModel">The selected chat model.</param>
     /// <param name="chatThread">The current chat thread.</param>
     /// <param name="settingsManager">The settings manager.</param>
-    /// <param name="messagesFactory">Builds the provider-specific base messages.</param>
     /// <param name="requestFactory">Builds the provider-specific request body.</param>
     /// <param name="storeType">The secret store type.</param>
     /// <param name="isTryingSecret">Whether the API key is optional.</param>
@@ -969,19 +968,19 @@ public abstract class BaseProvider : IProvider, ISecretId
     /// <typeparam name="TDelta">The delta stream line type.</typeparam>
     /// <typeparam name="TAnnotation">The annotation stream line type.</typeparam>
     /// <returns>The streamed content chunks.</returns>
-    protected async IAsyncEnumerable<ContentStreamChunk> StreamOpenAICompatibleChatCompletion<TDelta, TAnnotation>(
+    protected async IAsyncEnumerable<ContentStreamChunk> StreamOpenAICompatibleChatCompletion<TRequest, TDelta, TAnnotation>(
         string providerName,
         Model chatModel,
         ChatThread chatThread,
         SettingsManager settingsManager,
-        Func<Task<IList<IMessageBase>>> messagesFactory,
-        Func<TextMessage, IDictionary<string, object>, Task<TRequest>> requestFactory,
+        Func<TextMessage, IDictionary<string, object>, IList<object>?, Task<TRequest>> requestFactory,
         SecretStoreType storeType = SecretStoreType.LLM_PROVIDER,
         bool isTryingSecret = false,
         string systemPromptRole = "system",
         string requestPath = "chat/completions",
         Action<HttpRequestHeaders>? headersAction = null,
         [EnumeratorCancellation] CancellationToken token = default)
+        where TRequest : ChatCompletionAPIRequest
         where TDelta : IResponseStreamLine
         where TAnnotation : IAnnotationStreamLine
     {
@@ -1000,7 +999,6 @@ public abstract class BaseProvider : IProvider, ISecretId
         // Parse the API parameters:
         var apiParameters = this.ParseAdditionalApiParameters();
 
-        var baseMessages = await messagesFactory();
         var toolRegistry = Program.SERVICE_PROVIDER.GetService<ToolRegistry>();
         var toolExecutor = Program.SERVICE_PROVIDER.GetService<ToolExecutor>();
         var currentAssistantContent = chatThread.Blocks.LastOrDefault(x => x.Role is ChatRole.AI)?.Content as ContentText;
@@ -1023,7 +1021,12 @@ public abstract class BaseProvider : IProvider, ISecretId
                 var toolCallCount = 0;
                 while (true)
                 {
-                    var requestDto = await requestFactory(systemPrompt, [..baseMessages, ..internalMessages], apiParameters, false, providerTools);
+                    ChatCompletionAPIRequest requestDtoBase = await requestFactory(systemPrompt, apiParameters, providerTools);
+                    var requestDto = requestDtoBase with
+                    {
+                        Messages = [..requestDtoBase.Messages, ..internalMessages],
+                        Stream = false,
+                    };
                     var response = await this.ExecuteChatCompletionRequest(requestDto, requestPath, requestedSecret, headersAction, token);
                     var responseMessage = response?.Choices.FirstOrDefault()?.Message;
                     if (responseMessage is null)
@@ -1106,7 +1109,7 @@ public abstract class BaseProvider : IProvider, ISecretId
         }
 
         // Prepare the provider HTTP chat request:
-        var providerChatRequest = JsonSerializer.Serialize(await requestFactory(systemPrompt, baseMessages, apiParameters, true, null), JSON_SERIALIZER_OPTIONS);
+        var providerChatRequest = JsonSerializer.Serialize(await requestFactory(systemPrompt, apiParameters, null), JSON_SERIALIZER_OPTIONS);
 
         async Task<HttpRequestMessage> RequestBuilder()
         {
@@ -1143,7 +1146,7 @@ public abstract class BaseProvider : IProvider, ISecretId
         headersAction?.Invoke(request.Headers);
         request.Content = new StringContent(JsonSerializer.Serialize(requestDto, JSON_SERIALIZER_OPTIONS), Encoding.UTF8, "application/json");
 
-        using var response = await this.httpClient.SendAsync(request, token);
+        using var response = await this.HttpClient.SendAsync(request, token);
         if (!response.IsSuccessStatusCode)
         {
             var responseBody = await response.Content.ReadAsStringAsync(token);

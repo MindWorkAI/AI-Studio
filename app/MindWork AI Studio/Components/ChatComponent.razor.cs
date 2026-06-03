@@ -78,6 +78,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private Guid loadedParameterWorkspaceId = Guid.Empty;
     private Guid foregroundChatId = Guid.Empty;
     private int workspaceHeaderSyncVersion;
+    private CancellationTokenSource? cancellationTokenSource;
 
     // Unfortunately, we need the input field reference to blur the focus away. Without
     // this, we cannot clear the input field.
@@ -702,7 +703,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         //    ProviderSettings = this.Provider,
         //    IsForeground = true,
         //});
-        using (this.cancellationTokenSource = new())
+        using (this.cancellationTokenSource = new CancellationTokenSource())
         {
             this.StateHasChanged();
             this.ChatThread!.RuntimeComponent = Tools.Components.CHAT;
@@ -719,12 +720,8 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         // Save the chat:
         if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
         {
-            ChatThread = this.ChatThread!,
-            AIText = aiText,
-            LastUserPrompt = lastUserPrompt,
-            ProviderSettings = this.Provider,
-            IsForeground = true,
-        });
+            await this.SaveThread();
+        }
 
         await this.SyncForegroundChatAsync();
         this.StateHasChanged();

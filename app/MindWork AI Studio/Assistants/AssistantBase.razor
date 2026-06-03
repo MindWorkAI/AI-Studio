@@ -165,7 +165,7 @@
 
                 @if (this.SettingsManager.IsToolSelectionVisible(this.Component))
                 {
-                    <ToolSelection Component="@this.Component" LLMProvider="@this.providerSettings" SelectedToolIds="@this.selectedToolIds" SelectedToolIdsChanged="@this.SelectedToolIdsChanged" Disabled="@this.isProcessing" />
+                    <ToolSelection Component="@this.Component" LLMProvider="@this.ProviderSettings" SelectedToolIds="@this.selectedToolIds" SelectedToolIdsChanged="@this.SelectedToolIdsChanged" Disabled="@this.isProcessing" />
                 }
 
                 <MudSpacer />

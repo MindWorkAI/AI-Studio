@@ -10,13 +10,11 @@ namespace AIStudio.Provider.OpenAI;
 /// <param name="Stream">Whether to stream the response.</param>
 /// <param name="Store">Whether to store the response on the server (usually OpenAI's infrastructure).</param>
 /// <param name="Tools">The provider-side tools and local function tools to use for the request.</param>
-/// <param name="ProviderTools">The provider-side tools to use for the request.</param>
 public record ResponsesAPIRequest(
     string Model,
     IList<object> Input,
     bool Stream,
     bool Store,
-    [property: JsonPropertyName("tools")] IList<ProviderTool> ProviderTools)
     IList<object> Tools)
 {
     public ResponsesAPIRequest() : this(string.Empty, [], true, false, [])

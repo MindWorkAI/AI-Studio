@@ -23,7 +23,7 @@ public sealed class ToolSettingsService(SettingsManager settingsManager, RustSer
 
             if (fieldDefinition.Secret)
             {
-                var response = await rustService.GetSecret(new ToolSettingsSecretId(definition.Id, fieldName), isTrying: true);
+                var response = await rustService.GetSecret(new ToolSettingsSecretId(definition.Id, fieldName), SecretStoreType.TOOL_SETTINGS, isTrying: true);
                 if (response.Success)
                     values[fieldName] = await response.Secret.Decrypt(Program.ENCRYPTION);
 
@@ -99,9 +99,9 @@ public sealed class ToolSettingsService(SettingsManager settingsManager, RustSer
             {
                 var secretId = new ToolSettingsSecretId(definition.Id, fieldName);
                 if (string.IsNullOrWhiteSpace(value))
-                    await rustService.DeleteSecret(secretId);
+                    await rustService.DeleteSecret(secretId, SecretStoreType.TOOL_SETTINGS);
                 else
-                    await rustService.SetSecret(secretId, value);
+                    await rustService.SetSecret(secretId, value, SecretStoreType.TOOL_SETTINGS);
 
                 continue;
             }
