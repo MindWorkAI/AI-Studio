@@ -7998,9 +7998,6 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::ITOOLIMPLEMENTATION::T35170
 -- Tool description
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::ITOOLIMPLEMENTATION::T4056470505"] = "Werkzeugbeschreibung"
 
--- Load a single web page, extract its main HTML content, and return structured working material for the model. Use the result to synthesize a natural-language answer instead of exposing the raw payload to the user.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T1823236891"] = "Klar — ich kann eine einzelne Webseite laden, ihren Hauptinhalt extrahieren und daraus eine nutzbare, strukturierte Grundlage erstellen. Dem Nutzer gebe ich dann **eine natürlich formulierte Antwort**, nicht den rohen Extraktions-Output.  Bitte sende mir einfach **die URL** der Seite, die ich verarbeiten soll. Wenn du möchtest, kannst du auch kurz dazuschreiben, **was genau ich daraus beantworten oder zusammenfassen soll**."
-
 -- Optional global truncation limit for extracted Markdown returned to the model.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T2066580916"] = "Optionales globales Kürzungslimit für extrahiertes Markdown, das an das Modell zurückgegeben wird."
 

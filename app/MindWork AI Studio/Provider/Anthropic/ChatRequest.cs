@@ -18,6 +18,9 @@ public readonly record struct ChatRequest(
     string System
 )
 {
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public IList<object>? Tools { get; init; }
+
     // Attention: The "required" modifier is not supported for [JsonExtensionData].
     [JsonExtensionData]
     public IDictionary<string, object> AdditionalApiParameters { get; init; } = new Dictionary<string, object>();
