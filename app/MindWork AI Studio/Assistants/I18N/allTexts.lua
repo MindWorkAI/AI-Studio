@@ -5968,6 +5968,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T878695986"] = "Learn about one co
 -- Localization
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T897888480"] = "Localization"
 
+-- Hide search
+UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T1281128983"] = "Hide search"
+
 -- Reload your workspaces
 UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T194629703"] = "Reload your workspaces"
 

@@ -3198,14 +3198,23 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1469573738"] = "Löschen"
 -- Rename Workspace
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1474303418"] = "Arbeitsbereich umbenennen"
 
+-- Clear search
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1511254342"] = "Suche zurücksetzen"
+
 -- Rename Chat
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T156144855"] = "Chat umbenennen"
 
 -- Add workspace
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1586005241"] = "Arbeitsbereich hinzufügen"
 
+-- Search chats
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1615077202"] = "Chats durchsuchen"
+
 -- Add chat
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1874060138"] = "Chat hinzufügen"
+
+-- No chats found
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1886517101"] = "Keine Chats gefunden"
 
 -- Create Chat
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1939006681"] = "Chat erstellen"
@@ -3251,6 +3260,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3355849203"] = "Umbenennen"
 
 -- Please enter a new or edit the name for your chat '{0}':
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3419791373"] = "Bitte geben Sie einen neuen Namen für ihren Chat „{0}“ ein oder bearbeiten Sie ihn:"
+
+-- Search chat contents
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3436662033"] = "Chat-Inhalte durchsuchen"
 
 -- Load Chat
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3555709365"] = "Chat laden"
@@ -5958,6 +5970,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T878695986"] = "Lerne jeden Tag ei
 -- Localization
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T897888480"] = "Lokalisierung"
 
+-- Hide search
+UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T1281128983"] = "Suche ausblenden"
+
 -- Reload your workspaces
 UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T194629703"] = "Arbeitsbereiche neu laden"
 
@@ -5969,6 +5984,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T2813205227"] = "Chat-Optionen öffnen"
 
 -- Disappearing Chat
 UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T3046519404"] = "Selbstlöschender Chat"
+
+-- Search your workspaces
+UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T3059773282"] = "Arbeitsbereiche durchsuchen"
 
 -- Configure your workspaces
 UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T3586092784"] = "Konfigurieren Sie ihre Arbeitsbereiche"
@@ -6270,11 +6288,11 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2989678330"] = "Kopiert den Fing
 -- Changelog
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3017574265"] = "Änderungsprotokoll"
 
--- Vector store
-UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3046399223"] = "Vektordatenbank"
-
 -- External HTTPS custom root certificates are configured but not active.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3021325354"] = "Externe benutzerdefinierte Stammzertifikate sind konfiguriert, aber nicht aktiv."
+
+-- Vector store
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3046399223"] = "Vektordatenbank"
 
 -- Enterprise configuration ID:
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3092349641"] = "Unternehmenskonfigurations-ID:"
