@@ -48,7 +48,10 @@ tempfile = "3.27.0"
 strum_macros = "0.28.0"
 sysinfo = "0.39.3"
 bytes = "1.11.1"
-qdrant-edge = "0.6.1"
+qdrant-edge = "0.7.2"
+
+[patch.crates-io]
+qdrant-edge = { git = "https://github.com/SommerEngineering/qdrant.git", rev = "462c84d82ced126e4a2b7914544bfde16a509eb1" }
 
 [target.'cfg(target_os = "windows")'.dependencies]
 windows-registry = "0.6.1"

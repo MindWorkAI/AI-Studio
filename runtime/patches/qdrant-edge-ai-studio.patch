@@ -1,0 +1,26 @@
+diff --git a/lib/edge/Cargo.toml b/lib/edge/Cargo.toml
+index 7c2cf6037..d21e3c053 100644
+--- a/lib/edge/Cargo.toml
++++ b/lib/edge/Cargo.toml
+@@ -1,6 +1,6 @@
+ [package]
+-name = "edge"
+-version = "0.1.0"
++name = "qdrant-edge"
++version = "0.7.2"
+ authors = ["Qdrant Team <info@qdrant.tech>"]
+ license = "Apache-2.0"
+ edition = "2024"
+diff --git a/lib/segment/src/common/anonymize.rs b/lib/segment/src/common/anonymize.rs
+index 6b5d19b12..c73d24433 100644
+--- a/lib/segment/src/common/anonymize.rs
++++ b/lib/segment/src/common/anonymize.rs
+@@ -105,7 +105,7 @@ where
+ {
+     collection_opt
+         .as_ref()
+-        .map(|c| anonymize_collection_values(c))
++        .map(|c| anonymize_collection_values::<C, K, V>(c))
+ }
+ 
+ impl Anonymize for String {
