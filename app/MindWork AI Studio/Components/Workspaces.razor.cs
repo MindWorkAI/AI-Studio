@@ -99,6 +99,8 @@ public partial class Workspaces : MSGComponentBase
 
     private bool HasSearchQuery => this.SearchVisible && !string.IsNullOrWhiteSpace(this.searchText);
 
+    private string GetAddChatToWorkspaceTooltip(string workspaceName) => string.Format(T("Start a new chat in workspace '{0}'"), workspaceName);
+
     private void BuildTreeItems(WorkspaceTreeCacheSnapshot snapshot)
     {
         this.treeItems.Clear();
