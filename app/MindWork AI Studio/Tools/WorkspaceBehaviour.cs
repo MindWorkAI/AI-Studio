@@ -240,89 +240,16 @@ public static class WorkspaceBehaviour
         .Where(term => text.IndexOf(term, StringComparison.OrdinalIgnoreCase) < 0)
         .ToList();
 
-    private static bool TryGetProperty(JsonElement element, string propertyName, out JsonElement property)
+    private static bool ChatThreadContainsTerms(ChatThread thread, IReadOnlyList<string> terms)
     {
-        if (element.ValueKind is JsonValueKind.Object)
-        {
-            foreach (var candidate in element.EnumerateObject())
-            {
-                if (string.Equals(candidate.Name, propertyName, StringComparison.OrdinalIgnoreCase))
-                {
-                    property = candidate.Value;
-                    return true;
-                }
-            }
-        }
-
-        property = default;
-        return false;
-    }
-
-    private static bool TryGetAnyProperty(JsonElement element, out JsonElement property, params string[] propertyNames)
-    {
-        foreach (var propertyName in propertyNames)
-            if (TryGetProperty(element, propertyName, out property))
-                return true;
-
-        property = default;
-        return false;
-    }
-
-    private static bool IsHiddenFromUser(JsonElement block)
-    {
-        if (!TryGetAnyProperty(block, out var hideFromUser, "hide_from_user", "HideFromUser"))
-            return false;
-
-        return hideFromUser.ValueKind is JsonValueKind.True || (hideFromUser.ValueKind is JsonValueKind.String && bool.TryParse(hideFromUser.GetString(), out var parsed) && parsed);
-    }
-
-    private static bool TryReadTextContent(JsonElement block, out string text)
-    {
-        if (TryGetAnyProperty(block, out var contentType, "content_type", "ContentType")
-            && contentType.ValueKind is JsonValueKind.String
-            && !string.Equals(contentType.GetString(), "TEXT", StringComparison.OrdinalIgnoreCase))
-        {
-            text = string.Empty;
-            return false;
-        }
-
-        if (!TryGetAnyProperty(block, out var content, "content", "Content") || content.ValueKind is not JsonValueKind.Object)
-        {
-            text = string.Empty;
-            return false;
-        }
-
-        if (TryGetAnyProperty(content, out var typeDiscriminator, "$type")
-            && typeDiscriminator.ValueKind is JsonValueKind.String
-            && !string.Equals(typeDiscriminator.GetString(), "text", StringComparison.OrdinalIgnoreCase))
-        {
-            text = string.Empty;
-            return false;
-        }
-
-        if (!TryGetAnyProperty(content, out var textElement, "text", "Text") || textElement.ValueKind is not JsonValueKind.String)
-        {
-            text = string.Empty;
-            return false;
-        }
-
-        text = textElement.GetString() ?? string.Empty;
-        return !string.IsNullOrWhiteSpace(text);
-    }
-
-    private static bool VisibleThreadTextContainsTerms(JsonElement root, IReadOnlyList<string> terms)
-    {
-        if (!TryGetAnyProperty(root, out var blocks, "blocks", "Blocks") || blocks.ValueKind is not JsonValueKind.Array)
-            return false;
-
         var matchedTerms = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        foreach (var block in blocks.EnumerateArray())
+        foreach (var block in thread.Blocks)
         {
-            if (IsHiddenFromUser(block) || !TryReadTextContent(block, out var text))
+            if (block.HideFromUser || block.Content is not ContentText textContent || string.IsNullOrWhiteSpace(textContent.Text))
                 continue;
 
             foreach (var term in terms)
-                if (text.IndexOf(term, StringComparison.OrdinalIgnoreCase) >= 0)
+                if (textContent.Text.Contains(term, StringComparison.OrdinalIgnoreCase))
                     matchedTerms.Add(term);
 
             if (matchedTerms.Count == terms.Count)
@@ -344,9 +271,10 @@ public static class WorkspaceBehaviour
             if (!File.Exists(threadPath))
                 return false;
 
-            await using var stream = File.OpenRead(threadPath);
-            using var document = await JsonDocument.ParseAsync(stream, cancellationToken: token);
-            return VisibleThreadTextContainsTerms(document.RootElement, terms);
+            var chatData = await File.ReadAllTextAsync(threadPath, Encoding.UTF8, token);
+            token.ThrowIfCancellationRequested();
+            var thread = JsonSerializer.Deserialize<ChatThread>(chatData, JSON_OPTIONS);
+            return thread is not null && ChatThreadContainsTerms(thread, terms);
         }
         catch (OperationCanceledException)
         {
