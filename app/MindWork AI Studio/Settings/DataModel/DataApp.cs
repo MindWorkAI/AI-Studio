@@ -58,6 +58,11 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     public StartPage StartPage { get; set; } = ManagedConfiguration.Register(configSelection, n => n.StartPage, StartPage.HOME);
 
     /// <summary>
+    /// Should the quick start guide be visible on the home page?
+    /// </summary>
+    public bool ShowQuickStartGuide { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ShowQuickStartGuide, true);
+
+    /// <summary>
     /// The visibility setting for previews features.
     /// </summary>
     public PreviewVisibility PreviewVisibility { get; set; } = ManagedConfiguration.Register(configSelection, n => n.PreviewVisibility, PreviewVisibility.NONE);

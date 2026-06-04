@@ -204,12 +204,13 @@ CONFIG["SETTINGS"] = {}
 -- but users can still choose another start page in the app settings.
 -- CONFIG["SETTINGS"]["DataApp.StartPage.AllowUserOverride"] = true
 
+-- Configure whether the quick start guide is shown on the welcome page.
+-- CONFIG["SETTINGS"]["DataApp.ShowQuickStartGuide"] = false
+
 -- Configure the user permission to add providers:
--- Allowed values are: true, false
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToAddProvider"] = false
 
 -- Configure whether administration settings are visible in the UI:
--- Allowed values are: true, false
 -- CONFIG["SETTINGS"]["DataApp.ShowAdminSettings"] = true
 
 -- Configure the visibility of preview features:
