@@ -11,6 +11,36 @@
 }
 else
 {
+    @if (this.SearchVisible)
+    {
+        <MudStack Class="mx-3 mt-2 mb-1" Spacing="1" Style="position: sticky; top: 0; z-index: 2; background-color: var(--mud-palette-background);">
+            <MudStack Row="@true" AlignItems="AlignItems.Center" Wrap="Wrap.NoWrap" Spacing="1">
+                <MudTextField T="string"
+                              Text="@this.searchText"
+                              TextChanged="@this.OnSearchTextChanged"
+                              Placeholder="@T("Search chats")"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              Immediate="@true"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search"/>
+                <MudTooltip Text="@T("Clear search")" Placement="@WORKSPACE_ITEM_TOOLTIP_PLACEMENT">
+                    <MudIconButton Icon="@Icons.Material.Filled.Clear" Size="Size.Medium" Color="Color.Inherit" Disabled="@(string.IsNullOrWhiteSpace(this.searchText))" OnClick="@this.ClearSearchAsync"/>
+                </MudTooltip>
+            </MudStack>
+
+            <MudStack Row="@true" AlignItems="AlignItems.Center" Wrap="Wrap.NoWrap" Spacing="1">
+                <MudSwitch T="bool" Value="@this.includeThreadContents" ValueChanged="@this.IncludeThreadContentsChanged" Color="Color.Primary">
+                    @T("Search chat contents")
+                </MudSwitch>
+                @if (this.isSearchRunning)
+                {
+                    <MudProgressCircular Size="Size.Small" Indeterminate="@true"/>
+                }
+            </MudStack>
+        </MudStack>
+    }
+
     <MudTreeView T="ITreeItem" Items="@this.treeItems" SelectionMode="SelectionMode.SingleSelection" Hover="@true" ExpandOnClick="@true" Class="ma-3">
         <ItemTemplate Context="item">
             @switch (item.Value)
@@ -71,19 +101,22 @@ else
                                     <MudText Style="justify-self: start;">
                                         @treeItem.Text
                                     </MudText>
-                                    <div style="justify-self: end;">
-                                        <MudTooltip Text="@T("Add chat")" Placement="@WORKSPACE_ITEM_TOOLTIP_PLACEMENT">
-                                            <MudIconButton Icon="@Icons.Material.Filled.AddComment" Size="Size.Medium" Color="Color.Inherit" OnClick="@(() => this.AddChatAsync(treeItem.Path))"/>
-                                        </MudTooltip>
+                                    @if (!this.HasSearchQuery)
+                                    {
+                                        <div style="justify-self: end;">
+                                            <MudTooltip Text="@this.GetAddChatToWorkspaceTooltip(treeItem.Text)" Placement="@WORKSPACE_ITEM_TOOLTIP_PLACEMENT">
+                                                <MudIconButton Icon="@Icons.Material.Filled.AddComment" Size="Size.Medium" Color="Color.Inherit" OnClick="@(() => this.AddChatAsync(treeItem.Path))"/>
+                                            </MudTooltip>
 
-                                        <MudTooltip Text="@T("Rename")" Placement="@WORKSPACE_ITEM_TOOLTIP_PLACEMENT">
-                                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Medium" Color="Color.Inherit" OnClick="@(() => this.RenameWorkspaceAsync(treeItem.Path))"/>
-                                        </MudTooltip>
+                                            <MudTooltip Text="@T("Rename")" Placement="@WORKSPACE_ITEM_TOOLTIP_PLACEMENT">
+                                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Medium" Color="Color.Inherit" OnClick="@(() => this.RenameWorkspaceAsync(treeItem.Path))"/>
+                                            </MudTooltip>
 
-                                        <MudTooltip Text="@T("Delete")" Placement="@WORKSPACE_ITEM_TOOLTIP_PLACEMENT">
-                                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Medium" Color="Color.Error" OnClick="@(() => this.DeleteWorkspaceAsync(treeItem.Path))"/>
-                                        </MudTooltip>
-                                    </div>
+                                            <MudTooltip Text="@T("Delete")" Placement="@WORKSPACE_ITEM_TOOLTIP_PLACEMENT">
+                                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Medium" Color="Color.Error" OnClick="@(() => this.DeleteWorkspaceAsync(treeItem.Path))"/>
+                                            </MudTooltip>
+                                        </div>
+                                    }
                                 </div>
                             </BodyContent>
                         </MudTreeViewItem>
