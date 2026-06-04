@@ -32,6 +32,12 @@ public partial class Workspaces : MSGComponentBase
     [Parameter]
     public bool ExpandRootNodes { get; set; } = true;
 
+    [Parameter]
+    public bool SearchVisible { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> SearchVisibleChanged { get; set; }
+
     private const Placement WORKSPACE_ITEM_TOOLTIP_PLACEMENT = Placement.Bottom;
     private readonly SemaphoreSlim treeLoadingSemaphore = new(1, 1);
     private readonly List<TreeItemData<ITreeItem>> treeItems = [];
@@ -41,7 +47,6 @@ public partial class Workspaces : MSGComponentBase
     private CancellationTokenSource? searchCancellationTokenSource;
     private bool isInitialLoading = true;
     private bool isDisposed;
-    private bool isSearchVisible;
     private bool includeThreadContents;
     private bool isSearchRunning;
     private string searchText = string.Empty;
@@ -92,7 +97,7 @@ public partial class Workspaces : MSGComponentBase
             await this.StartPrefetchAsync();
     }
 
-    private bool HasSearchQuery => this.isSearchVisible && !string.IsNullOrWhiteSpace(this.searchText);
+    private bool HasSearchQuery => this.SearchVisible && !string.IsNullOrWhiteSpace(this.searchText);
 
     private void BuildTreeItems(WorkspaceTreeCacheSnapshot snapshot)
     {
@@ -410,8 +415,11 @@ public partial class Workspaces : MSGComponentBase
 
     public async Task ToggleSearchAsync()
     {
-        this.isSearchVisible = !this.isSearchVisible;
-        if (this.isSearchVisible)
+        var searchVisible = !this.SearchVisible;
+        this.SearchVisible = searchVisible;
+        await this.SearchVisibleChanged.InvokeAsync(searchVisible);
+
+        if (this.SearchVisible)
         {
             await this.SafeStateHasChanged();
             return;

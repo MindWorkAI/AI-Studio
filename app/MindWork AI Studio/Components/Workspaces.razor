@@ -11,9 +11,9 @@
 }
 else
 {
-    @if (this.isSearchVisible)
+    @if (this.SearchVisible)
     {
-        <MudStack Class="mx-3 mt-2 mb-1" Spacing="1">
+        <MudStack Class="mx-3 mt-2 mb-1" Spacing="1" Style="position: sticky; top: 0; z-index: 2; background-color: var(--mud-palette-background);">
             <MudStack Row="@true" AlignItems="AlignItems.Center" Wrap="Wrap.NoWrap" Spacing="1">
                 <MudTextField T="string"
                               Text="@this.searchText"
