@@ -401,7 +401,7 @@ fn remove_obsolete_qdrant_sidecar_files<R: tauri::Runtime>(app_handle: &tauri::A
     cfg_if::cfg_if! {
         if #[cfg(any(target_os = "windows", target_os = "macos"))]{
             if let Ok(current_exe) = std::env::current_exe() && let Some(exe_dir) = current_exe.parent() {
-                if (exe_dir.to_string_lossy().contains("MindWork AI Studio")) {
+                if exe_dir.to_string_lossy().contains("MindWork AI Studio") {
                     paths.push(exe_dir.join("target").join("databases").join("qdrant"));
                     paths.push(exe_dir.join("qdrant.exe"));
                     paths.push(exe_dir.join("qdrant"));
@@ -452,6 +452,7 @@ fn edge_config(vector_size: usize) -> EdgeConfig {
         hnsw_config: hnsw_config(),
         quantization_config: None,
         optimizers: edge_optimizers_config(),
+        wal_options: None,
     }
 }
 
