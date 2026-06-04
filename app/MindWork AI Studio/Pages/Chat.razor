@@ -51,8 +51,8 @@
                                 <MudTooltip Text="@T("Reload your workspaces")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                                     <MudIconButton Icon="@Icons.Material.Filled.Refresh" Size="Size.Medium" OnClick="@this.RefreshWorkspaces"/>
                                 </MudTooltip>
-                                <MudTooltip Text="@T("Search your workspaces")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
-                                    <MudIconButton Icon="@Icons.Material.Filled.Search" Size="Size.Medium" OnClick="@this.ToggleWorkspaceSearch"/>
+                                <MudTooltip Text="@this.WorkspaceSearchTooltip" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                                    <MudIconButton Icon="@this.WorkspaceSearchIcon" Size="Size.Medium" OnClick="@this.ToggleWorkspaceSearch"/>
                                 </MudTooltip>
                                 <MudTooltip Text="@T("Hide your workspaces")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                                     <MudIconButton Size="Size.Medium" Icon="@this.WorkspaceSidebarToggleIcon" Class="me-1" OnClick="@(() => this.ToggleWorkspaceSidebar())"/>
@@ -60,7 +60,7 @@
                             </MudStack>
                         </HeaderContent>
                         <ChildContent>
-                            <Workspaces @ref="this.workspaces" @bind-CurrentChatThread="@this.chatThread"/>
+                            <Workspaces @ref="this.workspaces" @bind-CurrentChatThread="@this.chatThread" @bind-SearchVisible="@this.workspaceSearchVisible"/>
                         </ChildContent>
                     </InnerScrolling>
                 }
@@ -80,13 +80,13 @@
                                 <MudTooltip Text="@T("Reload your workspaces")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                                     <MudIconButton Icon="@Icons.Material.Filled.Refresh" Size="Size.Medium" OnClick="@this.RefreshWorkspaces"/>
                                 </MudTooltip>
-                                <MudTooltip Text="@T("Search your workspaces")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
-                                    <MudIconButton Icon="@Icons.Material.Filled.Search" Size="Size.Medium" OnClick="@this.ToggleWorkspaceSearch"/>
+                                <MudTooltip Text="@this.WorkspaceSearchTooltip" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                                    <MudIconButton Icon="@this.WorkspaceSearchIcon" Size="Size.Medium" OnClick="@this.ToggleWorkspaceSearch"/>
                                 </MudTooltip>
                             </MudStack>
                         </HeaderContent>
                         <ChildContent>
-                            <Workspaces @ref="this.workspaces" @bind-CurrentChatThread="@this.chatThread"/>
+                            <Workspaces @ref="this.workspaces" @bind-CurrentChatThread="@this.chatThread" @bind-SearchVisible="@this.workspaceSearchVisible"/>
                         </ChildContent>
                     </InnerScrolling>
                 }
@@ -155,14 +155,14 @@
                     <MudTooltip Text="@T("Reload your workspaces")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                         <MudIconButton Icon="@Icons.Material.Filled.Refresh" Size="Size.Medium" OnClick="@this.RefreshWorkspaces"/>
                     </MudTooltip>
-                    <MudTooltip Text="@T("Search your workspaces")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
-                        <MudIconButton Icon="@Icons.Material.Filled.Search" Size="Size.Medium" OnClick="@this.ToggleWorkspaceSearch"/>
+                    <MudTooltip Text="@this.WorkspaceSearchTooltip" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                        <MudIconButton Icon="@this.WorkspaceSearchIcon" Size="Size.Medium" OnClick="@this.ToggleWorkspaceSearch"/>
                     </MudTooltip>
                     <MudIconButton Icon="@Icons.Material.Filled.Close" Color="Color.Error" Size="Size.Medium" OnClick="@(() => this.ToggleWorkspacesOverlay())"/>
                 </MudStack>
             </MudDrawerHeader>
             <MudDrawerContainer Class="ml-6">
-                <Workspaces @ref="this.workspaces" @bind-CurrentChatThread="@this.chatThread"/>
+                <Workspaces @ref="this.workspaces" @bind-CurrentChatThread="@this.chatThread" @bind-SearchVisible="@this.workspaceSearchVisible"/>
             </MudDrawerContainer>
         </MudDrawer>
     }
