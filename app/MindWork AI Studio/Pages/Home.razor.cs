@@ -71,6 +71,10 @@ public partial class Home : MSGComponentBase
                 this.InitializeAdvantagesItems();
                 await this.InvokeAsync(this.StateHasChanged);
                 break;
+
+            case Event.CONFIGURATION_CHANGED:
+                await this.InvokeAsync(this.StateHasChanged);
+                break;
         }
     }
 
