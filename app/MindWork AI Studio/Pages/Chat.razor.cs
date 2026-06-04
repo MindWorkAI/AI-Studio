@@ -107,6 +107,14 @@ public partial class Chat : MSGComponentBase
         await this.workspaces.ForceRefreshFromDiskAsync();
     }
 
+    private async Task ToggleWorkspaceSearch()
+    {
+        if (this.workspaces is null)
+            return;
+
+        await this.workspaces.ToggleSearchAsync();
+    }
+
     #region Overrides of MSGComponentBase
 
     protected override void DisposeResources()

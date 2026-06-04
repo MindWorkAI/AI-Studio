@@ -38,8 +38,14 @@ public partial class Workspaces : MSGComponentBase
     private readonly HashSet<Guid> loadingWorkspaceChatLists = [];
 
     private CancellationTokenSource? prefetchCancellationTokenSource;
+    private CancellationTokenSource? searchCancellationTokenSource;
     private bool isInitialLoading = true;
     private bool isDisposed;
+    private bool isSearchVisible;
+    private bool includeThreadContents;
+    private bool isSearchRunning;
+    private string searchText = string.Empty;
+    private long searchRevision;
     
     #region Overrides of ComponentBase
 
@@ -54,6 +60,7 @@ public partial class Workspaces : MSGComponentBase
 
     private async Task LoadTreeItemsAsync(bool startPrefetch = true, bool forceReload = false)
     {
+        var shouldRunSearch = false;
         await this.treeLoadingSemaphore.WaitAsync();
         try
         {
@@ -64,7 +71,11 @@ public partial class Workspaces : MSGComponentBase
                 await WorkspaceBehaviour.ForceReloadWorkspaceTreeAsync();
 
             var snapshot = await WorkspaceBehaviour.GetOrLoadWorkspaceTreeShellAsync();
-            this.BuildTreeItems(snapshot);
+            if (this.HasSearchQuery)
+                shouldRunSearch = true;
+            else
+                this.BuildTreeItems(snapshot);
+
             this.isInitialLoading = false;
         }
         finally
@@ -72,11 +83,16 @@ public partial class Workspaces : MSGComponentBase
             this.treeLoadingSemaphore.Release();
         }
 
-        await this.SafeStateHasChanged();
+        if (shouldRunSearch)
+            await this.SearchWorkspaceItemsAsync();
+        else
+            await this.SafeStateHasChanged();
 
         if (startPrefetch)
             await this.StartPrefetchAsync();
     }
+
+    private bool HasSearchQuery => this.isSearchVisible && !string.IsNullOrWhiteSpace(this.searchText);
 
     private void BuildTreeItems(WorkspaceTreeCacheSnapshot snapshot)
     {
@@ -219,6 +235,109 @@ public partial class Workspaces : MSGComponentBase
         };
     }
 
+    private void BuildSearchTreeItems(WorkspaceSearchSnapshot snapshot)
+    {
+        this.treeItems.Clear();
+
+        if (snapshot.Workspaces.Count == 0 && snapshot.TemporaryChats.Count == 0)
+        {
+            this.treeItems.Add(new TreeItemData<ITreeItem>
+            {
+                Expandable = false,
+                Value = new TreeItemData
+                {
+                    Depth = 0,
+                    Branch = WorkspaceBranch.NONE,
+                    Text = T("No chats found"),
+                    Icon = Icons.Material.Filled.Search,
+                    Expandable = false,
+                    Path = "search_empty",
+                },
+            });
+
+            return;
+        }
+
+        if (snapshot.Workspaces.Count > 0)
+        {
+            var workspaceChildren = new List<TreeItemData<ITreeItem>>();
+            foreach (var workspace in snapshot.Workspaces)
+                workspaceChildren.Add(this.CreateSearchWorkspaceTreeItem(workspace));
+
+            this.treeItems.Add(new TreeItemData<ITreeItem>
+            {
+                Expanded = true,
+                Expandable = true,
+                Value = new TreeItemData
+                {
+                    Depth = 0,
+                    Branch = WorkspaceBranch.WORKSPACES,
+                    Text = T("Workspaces"),
+                    Icon = Icons.Material.Filled.Folder,
+                    Expandable = true,
+                    Path = "search_workspaces",
+                    Children = workspaceChildren,
+                },
+            });
+        }
+
+        if (snapshot.Workspaces.Count > 0 && snapshot.TemporaryChats.Count > 0)
+        {
+            this.treeItems.Add(new TreeItemData<ITreeItem>
+            {
+                Expandable = false,
+                Value = new TreeDivider(),
+            });
+        }
+
+        if (snapshot.TemporaryChats.Count > 0)
+        {
+            var temporaryChatsChildren = new List<TreeItemData<ITreeItem>>();
+            foreach (var temporaryChat in snapshot.TemporaryChats)
+                temporaryChatsChildren.Add(this.CreateChatTreeItem(temporaryChat.Chat, WorkspaceBranch.TEMPORARY_CHATS, depth: 1, icon: Icons.Material.Filled.Timer));
+
+            this.treeItems.Add(new TreeItemData<ITreeItem>
+            {
+                Expanded = true,
+                Expandable = true,
+                Value = new TreeItemData
+                {
+                    Depth = 0,
+                    Branch = WorkspaceBranch.TEMPORARY_CHATS,
+                    Text = T("Disappearing Chats"),
+                    Icon = Icons.Material.Filled.Timer,
+                    Expandable = true,
+                    Path = "search_temp",
+                    Children = temporaryChatsChildren,
+                },
+            });
+        }
+    }
+
+    private TreeItemData<ITreeItem> CreateSearchWorkspaceTreeItem(WorkspaceSearchWorkspace workspace)
+    {
+        var children = new List<TreeItemData<ITreeItem>>();
+        foreach (var chat in workspace.Chats)
+            children.Add(this.CreateChatTreeItem(chat.Chat, WorkspaceBranch.WORKSPACES, depth: 2, icon: Icons.Material.Filled.Chat));
+
+        return new TreeItemData<ITreeItem>
+        {
+            Expanded = true,
+            Expandable = true,
+            Value = new TreeItemData
+            {
+                Type = TreeItemType.WORKSPACE,
+                Depth = 1,
+                Branch = WorkspaceBranch.WORKSPACES,
+                Text = workspace.Name,
+                Icon = Icons.Material.Filled.Description,
+                Expandable = true,
+                Path = workspace.WorkspacePath,
+                Children = children,
+            },
+        };
+    }
+
     private string GetTreeItemIcon(TreeItemData treeItem)
     {
         if (treeItem.Type is not TreeItemType.CHAT)
@@ -286,6 +405,103 @@ public partial class Workspaces : MSGComponentBase
         catch (Exception ex)
         {
             this.Logger.LogWarning(ex, "Failed while prefetching workspace chats.");
+        }
+    }
+
+    public async Task ToggleSearchAsync()
+    {
+        this.isSearchVisible = !this.isSearchVisible;
+        if (this.isSearchVisible)
+        {
+            await this.SafeStateHasChanged();
+            return;
+        }
+
+        await this.CancelSearchAsync();
+        this.searchText = string.Empty;
+        this.isSearchRunning = false;
+        await this.LoadTreeItemsAsync(startPrefetch: false);
+    }
+
+    private async Task CancelSearchAsync()
+    {
+        this.searchRevision++;
+        if (this.searchCancellationTokenSource is not null)
+        {
+            await this.searchCancellationTokenSource.CancelAsync();
+            this.searchCancellationTokenSource.Dispose();
+            this.searchCancellationTokenSource = null;
+        }
+    }
+
+    private async Task OnSearchTextChanged(string value)
+    {
+        this.searchText = value;
+        if (string.IsNullOrWhiteSpace(this.searchText))
+        {
+            await this.CancelSearchAsync();
+            this.isSearchRunning = false;
+            await this.LoadTreeItemsAsync(startPrefetch: false);
+            return;
+        }
+
+        await this.SearchWorkspaceItemsAsync();
+    }
+
+    private async Task IncludeThreadContentsChanged(bool value)
+    {
+        this.includeThreadContents = value;
+        if (this.HasSearchQuery)
+            await this.SearchWorkspaceItemsAsync();
+    }
+
+    private async Task ClearSearchAsync()
+    {
+        this.searchText = string.Empty;
+        await this.CancelSearchAsync();
+        this.isSearchRunning = false;
+        await this.LoadTreeItemsAsync(startPrefetch: false);
+    }
+
+    private async Task SearchWorkspaceItemsAsync()
+    {
+        await this.CancelSearchAsync();
+
+        var text = this.searchText;
+        if (string.IsNullOrWhiteSpace(text))
+            return;
+
+        this.searchCancellationTokenSource = new CancellationTokenSource();
+        var token = this.searchCancellationTokenSource.Token;
+        var revision = ++this.searchRevision;
+
+        this.isSearchRunning = true;
+        await this.SafeStateHasChanged();
+
+        try
+        {
+            var snapshot = await WorkspaceBehaviour.SearchWorkspaceChatsAsync(text, this.includeThreadContents, token);
+            if (this.isDisposed || token.IsCancellationRequested || revision != this.searchRevision)
+                return;
+
+            this.BuildSearchTreeItems(snapshot);
+        }
+        catch (OperationCanceledException)
+        {
+            // Expected when the user keeps typing or hides the search row.
+        }
+        catch (Exception ex)
+        {
+            this.Logger.LogWarning(ex, "Failed while searching workspace chats.");
+            this.BuildSearchTreeItems(new([], []));
+        }
+        finally
+        {
+            if (revision == this.searchRevision)
+            {
+                this.isSearchRunning = false;
+                await this.SafeStateHasChanged();
+            }
         }
     }
 
@@ -656,6 +872,9 @@ public partial class Workspaces : MSGComponentBase
         this.prefetchCancellationTokenSource?.Cancel();
         this.prefetchCancellationTokenSource?.Dispose();
         this.prefetchCancellationTokenSource = null;
+        this.searchCancellationTokenSource?.Cancel();
+        this.searchCancellationTokenSource?.Dispose();
+        this.searchCancellationTokenSource = null;
 
         base.DisposeResources();
     }

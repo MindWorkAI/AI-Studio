@@ -230,6 +230,164 @@ public static class WorkspaceBehaviour
             chats.RemoveAt(existingIndex);
     }
 
+    private static IReadOnlyList<string> ParseSearchTerms(string searchText) => searchText
+        .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+        .Where(term => !string.IsNullOrWhiteSpace(term))
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .ToList();
+
+    private static IReadOnlyList<string> GetMissingTerms(string text, IReadOnlyList<string> terms) => terms
+        .Where(term => text.IndexOf(term, StringComparison.OrdinalIgnoreCase) < 0)
+        .ToList();
+
+    private static bool TryGetProperty(JsonElement element, string propertyName, out JsonElement property)
+    {
+        if (element.ValueKind is JsonValueKind.Object)
+        {
+            foreach (var candidate in element.EnumerateObject())
+            {
+                if (string.Equals(candidate.Name, propertyName, StringComparison.OrdinalIgnoreCase))
+                {
+                    property = candidate.Value;
+                    return true;
+                }
+            }
+        }
+
+        property = default;
+        return false;
+    }
+
+    private static bool TryGetAnyProperty(JsonElement element, out JsonElement property, params string[] propertyNames)
+    {
+        foreach (var propertyName in propertyNames)
+            if (TryGetProperty(element, propertyName, out property))
+                return true;
+
+        property = default;
+        return false;
+    }
+
+    private static bool IsHiddenFromUser(JsonElement block)
+    {
+        if (!TryGetAnyProperty(block, out var hideFromUser, "hide_from_user", "HideFromUser"))
+            return false;
+
+        return hideFromUser.ValueKind is JsonValueKind.True || (hideFromUser.ValueKind is JsonValueKind.String && bool.TryParse(hideFromUser.GetString(), out var parsed) && parsed);
+    }
+
+    private static bool TryReadTextContent(JsonElement block, out string text)
+    {
+        if (TryGetAnyProperty(block, out var contentType, "content_type", "ContentType")
+            && contentType.ValueKind is JsonValueKind.String
+            && !string.Equals(contentType.GetString(), "TEXT", StringComparison.OrdinalIgnoreCase))
+        {
+            text = string.Empty;
+            return false;
+        }
+
+        if (!TryGetAnyProperty(block, out var content, "content", "Content") || content.ValueKind is not JsonValueKind.Object)
+        {
+            text = string.Empty;
+            return false;
+        }
+
+        if (TryGetAnyProperty(content, out var typeDiscriminator, "$type")
+            && typeDiscriminator.ValueKind is JsonValueKind.String
+            && !string.Equals(typeDiscriminator.GetString(), "text", StringComparison.OrdinalIgnoreCase))
+        {
+            text = string.Empty;
+            return false;
+        }
+
+        if (!TryGetAnyProperty(content, out var textElement, "text", "Text") || textElement.ValueKind is not JsonValueKind.String)
+        {
+            text = string.Empty;
+            return false;
+        }
+
+        text = textElement.GetString() ?? string.Empty;
+        return !string.IsNullOrWhiteSpace(text);
+    }
+
+    private static bool VisibleThreadTextContainsTerms(JsonElement root, IReadOnlyList<string> terms)
+    {
+        if (!TryGetAnyProperty(root, out var blocks, "blocks", "Blocks") || blocks.ValueKind is not JsonValueKind.Array)
+            return false;
+
+        var matchedTerms = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var block in blocks.EnumerateArray())
+        {
+            if (IsHiddenFromUser(block) || !TryReadTextContent(block, out var text))
+                continue;
+
+            foreach (var term in terms)
+                if (text.IndexOf(term, StringComparison.OrdinalIgnoreCase) >= 0)
+                    matchedTerms.Add(term);
+
+            if (matchedTerms.Count == terms.Count)
+                return true;
+        }
+
+        return false;
+    }
+
+    private static async Task<bool> ThreadContainsTermsAsync(WorkspaceTreeChat chat, IReadOnlyList<string> terms, CancellationToken token)
+    {
+        var (acquired, semaphore) = await TryAcquireChatSemaphoreAsync(chat.WorkspaceId, chat.ChatId, nameof(ThreadContainsTermsAsync));
+        if (!acquired)
+            return false;
+
+        try
+        {
+            var threadPath = Path.Join(chat.ChatPath, "thread.json");
+            if (!File.Exists(threadPath))
+                return false;
+
+            await using var stream = File.OpenRead(threadPath);
+            using var document = await JsonDocument.ParseAsync(stream, cancellationToken: token);
+            return VisibleThreadTextContainsTerms(document.RootElement, terms);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            LOG.LogWarning(ex, "Failed to search chat thread for workspace '{WorkspaceId}', chat '{ChatId}'.", chat.WorkspaceId, chat.ChatId);
+            return false;
+        }
+        finally
+        {
+            semaphore.Release();
+        }
+    }
+
+    private static async Task<List<WorkspaceSearchResult>> SearchChatsAsync(IReadOnlyList<WorkspaceTreeChat> chats, IReadOnlyList<string> terms, bool includeThreadContents, CancellationToken token)
+    {
+        var results = new List<WorkspaceSearchResult>();
+        foreach (var chat in chats)
+        {
+            token.ThrowIfCancellationRequested();
+
+            var missingTerms = GetMissingTerms(chat.Name, terms);
+            if (missingTerms.Count == 0)
+            {
+                results.Add(new(chat, NameMatched: true, ThreadMatched: false));
+                continue;
+            }
+
+            if (!includeThreadContents)
+                continue;
+
+            var threadMatched = await ThreadContainsTermsAsync(chat, missingTerms, token);
+            if (threadMatched)
+                results.Add(new(chat, NameMatched: false, ThreadMatched: true));
+        }
+
+        return results;
+    }
+
     private static async Task UpdateCacheAfterChatStored(Guid workspaceId, Guid chatId, string chatDirectory, string chatName, DateTimeOffset lastEditTime)
     {
         await WORKSPACE_TREE_CACHE_SEMAPHORE.WaitAsync();
@@ -346,6 +504,55 @@ public static class WorkspaceBehaviour
         {
             WORKSPACE_TREE_CACHE_SEMAPHORE.Release();
         }
+    }
+
+    public static async Task<WorkspaceSearchSnapshot> SearchWorkspaceChatsAsync(string searchText, bool includeThreadContents, CancellationToken token = default)
+    {
+        var terms = ParseSearchTerms(searchText);
+        if (terms.Count == 0)
+            return new([], []);
+
+        List<WorkspaceTreeWorkspace> workspaces;
+        List<WorkspaceTreeChat> temporaryChats;
+
+        await WORKSPACE_TREE_CACHE_SEMAPHORE.WaitAsync(token);
+        try
+        {
+            await EnsureTreeShellLoadedCoreAsync();
+            workspaces = [];
+            foreach (var workspaceId in WORKSPACE_TREE_CACHE.WorkspaceOrder)
+            {
+                token.ThrowIfCancellationRequested();
+                if (!WORKSPACE_TREE_CACHE.Workspaces.TryGetValue(workspaceId, out var workspace))
+                    continue;
+
+                if (!workspace.ChatsLoaded)
+                {
+                    workspace.Chats = await ReadWorkspaceChatsCoreAsync(workspaceId, workspace.WorkspacePath);
+                    workspace.ChatsLoaded = true;
+                }
+
+                workspaces.Add(ToPublicWorkspace(workspace));
+            }
+
+            temporaryChats = WORKSPACE_TREE_CACHE.TemporaryChats.Select(ToPublicChat).ToList();
+        }
+        finally
+        {
+            WORKSPACE_TREE_CACHE_SEMAPHORE.Release();
+        }
+
+        var matchingWorkspaces = new List<WorkspaceSearchWorkspace>();
+        foreach (var workspace in workspaces)
+        {
+            token.ThrowIfCancellationRequested();
+            var matchingChats = await SearchChatsAsync(workspace.Chats, terms, includeThreadContents, token);
+            if (matchingChats.Count > 0)
+                matchingWorkspaces.Add(new(workspace.WorkspaceId, workspace.WorkspacePath, workspace.Name, matchingChats));
+        }
+
+        var matchingTemporaryChats = await SearchChatsAsync(temporaryChats, terms, includeThreadContents, token);
+        return new(matchingWorkspaces, matchingTemporaryChats);
     }
 
     public static async Task TryPrefetchRemainingChatsAsync(Func<Guid, Task>? onWorkspaceUpdated = null, CancellationToken token = default)

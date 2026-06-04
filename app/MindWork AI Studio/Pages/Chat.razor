@@ -51,6 +51,9 @@
                                 <MudTooltip Text="@T("Reload your workspaces")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                                     <MudIconButton Icon="@Icons.Material.Filled.Refresh" Size="Size.Medium" OnClick="@this.RefreshWorkspaces"/>
                                 </MudTooltip>
+                                <MudTooltip Text="@T("Search your workspaces")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Search" Size="Size.Medium" OnClick="@this.ToggleWorkspaceSearch"/>
+                                </MudTooltip>
                                 <MudTooltip Text="@T("Hide your workspaces")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                                     <MudIconButton Size="Size.Medium" Icon="@this.WorkspaceSidebarToggleIcon" Class="me-1" OnClick="@(() => this.ToggleWorkspaceSidebar())"/>
                                 </MudTooltip>
@@ -76,6 +79,9 @@
                                 </MudTooltip>
                                 <MudTooltip Text="@T("Reload your workspaces")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                                     <MudIconButton Icon="@Icons.Material.Filled.Refresh" Size="Size.Medium" OnClick="@this.RefreshWorkspaces"/>
+                                </MudTooltip>
+                                <MudTooltip Text="@T("Search your workspaces")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Search" Size="Size.Medium" OnClick="@this.ToggleWorkspaceSearch"/>
                                 </MudTooltip>
                             </MudStack>
                         </HeaderContent>
@@ -148,6 +154,9 @@
                     </MudTooltip>
                     <MudTooltip Text="@T("Reload your workspaces")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                         <MudIconButton Icon="@Icons.Material.Filled.Refresh" Size="Size.Medium" OnClick="@this.RefreshWorkspaces"/>
+                    </MudTooltip>
+                    <MudTooltip Text="@T("Search your workspaces")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                        <MudIconButton Icon="@Icons.Material.Filled.Search" Size="Size.Medium" OnClick="@this.ToggleWorkspaceSearch"/>
                     </MudTooltip>
                     <MudIconButton Icon="@Icons.Material.Filled.Close" Color="Color.Error" Size="Size.Medium" OnClick="@(() => this.ToggleWorkspacesOverlay())"/>
                 </MudStack>
