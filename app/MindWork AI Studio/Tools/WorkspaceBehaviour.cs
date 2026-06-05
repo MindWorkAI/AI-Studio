@@ -12,6 +12,8 @@ namespace AIStudio.Tools;
 
 public static class WorkspaceBehaviour
 {
+    public readonly record struct TryCreateWorkspaceResult(bool Success, WorkspaceTreeWorkspace Workspace);
+
     private sealed class WorkspaceChatCacheEntry
     {
         public Guid WorkspaceId { get; init; }
@@ -615,18 +617,18 @@ public static class WorkspaceBehaviour
         }
     }
 
-    public static async Task<WorkspaceTreeWorkspace?> CreateWorkspaceAsync(string workspaceName)
+    public static async Task<TryCreateWorkspaceResult> TryCreateWorkspaceAsync(string workspaceName)
     {
         var normalizedWorkspaceName = NormalizeWorkspaceName(workspaceName);
         if (string.IsNullOrWhiteSpace(normalizedWorkspaceName))
-            return null;
+            return new(false, default);
 
         await WORKSPACE_TREE_CACHE_SEMAPHORE.WaitAsync();
         try
         {
             await EnsureTreeShellLoadedCoreAsync();
             if (WorkspaceNameExistsCore(normalizedWorkspaceName))
-                return null;
+                return new(false, default);
 
             var workspaceId = Guid.NewGuid();
             var workspacePath = Path.Join(WORKSPACE_ROOT_DIRECTORY, workspaceId.ToString());
@@ -646,7 +648,7 @@ public static class WorkspaceBehaviour
             WORKSPACE_TREE_CACHE.Workspaces[workspaceId] = workspace;
             WORKSPACE_TREE_CACHE.WorkspaceOrder.Add(workspaceId);
 
-            return ToPublicWorkspace(workspace);
+            return new(true, ToPublicWorkspace(workspace));
         }
         finally
         {

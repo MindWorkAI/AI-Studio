@@ -775,7 +775,8 @@ public partial class Workspaces : MSGComponentBase
             return;
         
         var workspaceName = (dialogResult.Data as string)!;
-        if (await WorkspaceBehaviour.CreateWorkspaceAsync(workspaceName) is null)
+        var result = await WorkspaceBehaviour.TryCreateWorkspaceAsync(workspaceName);
+        if (!result.Success)
             return;
         
         await this.LoadTreeItemsAsync(startPrefetch: false);

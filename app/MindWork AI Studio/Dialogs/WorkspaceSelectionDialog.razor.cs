@@ -26,6 +26,7 @@ public partial class WorkspaceSelectionDialog : MSGComponentBase
     private Guid selectedWorkspace;
     private string newWorkspaceName = string.Empty;
     private bool isCreatingWorkspace;
+    private bool showCreateWorkspaceForm;
     private string? createWorkspaceError;
     private string? createWorkspaceErrorName;
 
@@ -79,6 +80,14 @@ public partial class WorkspaceSelectionDialog : MSGComponentBase
         await this.CreateWorkspaceAsync();
     }
 
+    private void ShowCreateWorkspaceForm()
+    {
+        this.createWorkspaceError = null;
+        this.createWorkspaceErrorName = null;
+        this.newWorkspaceName = string.Empty;
+        this.showCreateWorkspaceForm = true;
+    }
+
     private async Task CreateWorkspaceAsync()
     {
         this.createWorkspaceError = null;
@@ -90,8 +99,8 @@ public partial class WorkspaceSelectionDialog : MSGComponentBase
         this.isCreatingWorkspace = true;
         try
         {
-            var workspace = await WorkspaceBehaviour.CreateWorkspaceAsync(this.newWorkspaceName);
-            if (workspace is null)
+            var result = await WorkspaceBehaviour.TryCreateWorkspaceAsync(this.newWorkspaceName);
+            if (!result.Success)
             {
                 this.createWorkspaceError = T("There is already a workspace with this name. Please choose a different name.");
                 this.createWorkspaceErrorName = WorkspaceBehaviour.NormalizeWorkspaceName(this.newWorkspaceName);
@@ -99,10 +108,11 @@ public partial class WorkspaceSelectionDialog : MSGComponentBase
                 return;
             }
 
-            this.workspaces.Add(new(workspace.Value.WorkspaceId, workspace.Value.Name));
-            this.selectedWorkspace = workspace.Value.WorkspaceId;
+            this.workspaces.Add(new(result.Workspace.WorkspaceId, result.Workspace.Name));
+            this.selectedWorkspace = result.Workspace.WorkspaceId;
             this.newWorkspaceName = string.Empty;
             this.createWorkspaceForm.ResetValidation();
+            this.showCreateWorkspaceForm = false;
         }
         finally
         {
