@@ -1,10 +1,12 @@
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 using AIStudio.Chat;
 using AIStudio.Provider.OpenAI;
 using AIStudio.Settings;
+using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.ToolCallingSystem;
 
@@ -164,7 +166,7 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, n
                 Name = x.Definition.Function.Name,
                 Description = x.Definition.Function.Description,
                 Strict = x.Definition.Function.Strict,
-                InputSchema = x.Definition.Function.Parameters,
+                InputSchema = NormalizeInputSchemaForAnthropic(x.Definition.Function.Parameters),
             })
             .ToList();
         var internalMessages = new List<IMessageBase>();
@@ -391,4 +393,72 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, n
             },
             jsonSerializerOptions: JSON_SERIALIZER_OPTIONS);
     }
+
+    private static JsonElement NormalizeInputSchemaForAnthropic(JsonElement schema)
+    {
+        JsonNode? root = JsonNode.Parse(schema.GetRawText());
+        if (root is JsonObject rootObject)
+            NormalizeSchemaNode(rootObject);
+
+        return JsonSerializer.SerializeToElement(root);
+    }
+
+    private static void NormalizeSchemaNode(JsonObject schemaObject)
+    {
+        var allowsNull = DeclaresNullType(schemaObject["type"]);
+        if (allowsNull && schemaObject["enum"] is JsonArray enumArray)
+        {
+            for (var i = enumArray.Count - 1; i >= 0; i--)
+            {
+                if (enumArray[i]?.GetValueKind() is JsonValueKind.Null)
+                    enumArray.RemoveAt(i);
+            }
+        }
+
+        if (schemaObject["properties"] is JsonObject propertiesObject)
+        {
+            foreach (var property in propertiesObject)
+            {
+                if (property.Value is JsonObject childObject)
+                    NormalizeSchemaNode(childObject);
+            }
+        }
+
+        if (schemaObject["items"] is JsonObject itemsObject)
+            NormalizeSchemaNode(itemsObject);
+
+        if (schemaObject["anyOf"] is JsonArray anyOfArray)
+        {
+            foreach (var entry in anyOfArray)
+            {
+                if (entry is JsonObject childObject)
+                    NormalizeSchemaNode(childObject);
+            }
+        }
+
+        if (schemaObject["oneOf"] is JsonArray oneOfArray)
+        {
+            foreach (var entry in oneOfArray)
+            {
+                if (entry is JsonObject childObject)
+                    NormalizeSchemaNode(childObject);
+            }
+        }
+
+        if (schemaObject["allOf"] is JsonArray allOfArray)
+        {
+            foreach (var entry in allOfArray)
+            {
+                if (entry is JsonObject childObject)
+                    NormalizeSchemaNode(childObject);
+            }
+        }
+    }
+
+    private static bool DeclaresNullType(JsonNode? typeNode) => typeNode switch
+    {
+        JsonValue value when value.TryGetValue<string>(out var typeName) => typeName.Equals("null", StringComparison.Ordinal),
+        JsonArray array => array.Any(entry => entry is JsonValue value && value.TryGetValue<string>(out var typeName) && typeName.Equals("null", StringComparison.Ordinal)),
+        _ => false,
+    };
 }

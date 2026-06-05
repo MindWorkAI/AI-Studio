@@ -47,7 +47,7 @@ public sealed record AnthropicResponse
         .Where(x => ReadString(x, "type").Equals("text", StringComparison.Ordinal))
         .Select(x => ReadString(x, "text")));
 
-    public bool HasFinalStopReason() => this.StopReason is "" or "end_turn" or "stop_sequence";
+    public bool HasFinalStopReason() => this.StopReason is $"" or "end_turn" or "stop_sequence";
 
     private static string ReadString(JsonElement item, string propertyName)
     {
