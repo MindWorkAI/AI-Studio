@@ -5,17 +5,38 @@
             @this.Message
         </MudText>
         <MudList T="Guid" @bind-SelectedValue="@this.selectedWorkspace">
-            @foreach (var (workspaceName, workspaceId) in this.workspaces)
+            @foreach (var workspace in this.workspaces)
             {
-                <MudListItem Text="@workspaceName" Icon="@Icons.Material.Filled.Description" Value="@workspaceId" />
+                <MudListItem Text="@workspace.Name" Icon="@Icons.Material.Filled.Description" Value="@workspace.WorkspaceId" />
             }
         </MudList>
+        <MudDivider Class="my-4"/>
+        <MudText Typo="Typo.body2">
+            @T("Create a new workspace")
+        </MudText>
+        <MudForm @ref="this.createWorkspaceForm" Class="mt-2">
+            <MudStack Row="@true" AlignItems="AlignItems.Start" Wrap="Wrap.NoWrap" Spacing="1">
+                <MudTextField T="string"
+                              @bind-Text="@this.newWorkspaceName"
+                              Variant="Variant.Outlined"
+                              AutoGrow="@false"
+                              Lines="1"
+                              Label="@T("Workspace name")"
+                              Immediate="@true"
+                              Disabled="@this.isCreatingWorkspace"
+                              OnKeyDown="@this.HandleNewWorkspaceNameKeyDown"
+                              Validation="@this.ValidateNewWorkspaceName" />
+                <MudTooltip Text="@T("Add workspace")">
+                    <MudIconButton Icon="@Icons.Material.Filled.LibraryAdd" Color="Color.Info" Disabled="@this.isCreatingWorkspace" OnClick="@this.CreateWorkspaceAsync"/>
+                </MudTooltip>
+            </MudStack>
+        </MudForm>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">
             @T("Cancel")
         </MudButton>
-        <MudButton OnClick="@this.Confirm" Variant="Variant.Filled" Color="Color.Info">
+        <MudButton OnClick="@this.Confirm" Variant="Variant.Filled" Color="Color.Info" Disabled="@(this.selectedWorkspace == Guid.Empty)">
             @this.ConfirmText
         </MudButton>
     </DialogActions>

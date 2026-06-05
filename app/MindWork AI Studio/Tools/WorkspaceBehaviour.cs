@@ -76,9 +76,9 @@ public static class WorkspaceBehaviour
 
     private static readonly TimeSpan PREFETCH_DELAY_DURATION = TimeSpan.FromMilliseconds(45);
 
-    private static string WorkspaceRootDirectory => Path.Join(SettingsManager.DataDirectory, "workspaces");
+    private static readonly string WORKSPACE_ROOT_DIRECTORY = Path.Join(SettingsManager.DataDirectory, "workspaces");
 
-    private static string TemporaryChatsRootDirectory => Path.Join(SettingsManager.DataDirectory, "tempChats");
+    private static readonly string TEMPORARY_CHATS_ROOT_DIRECTORY = Path.Join(SettingsManager.DataDirectory, "tempChats");
 
     private static SemaphoreSlim GetChatSemaphore(Guid workspaceId, Guid chatId)
     {
@@ -156,9 +156,9 @@ public static class WorkspaceBehaviour
     private static async Task<List<WorkspaceChatCacheEntry>> ReadTemporaryChatsCoreAsync()
     {
         var chats = new List<WorkspaceChatCacheEntry>();
-        Directory.CreateDirectory(TemporaryChatsRootDirectory);
+        Directory.CreateDirectory(TEMPORARY_CHATS_ROOT_DIRECTORY);
 
-        foreach (var tempChatPath in Directory.EnumerateDirectories(TemporaryChatsRootDirectory))
+        foreach (var tempChatPath in Directory.EnumerateDirectories(TEMPORARY_CHATS_ROOT_DIRECTORY))
         {
             if (!Guid.TryParse(Path.GetFileName(tempChatPath), out var chatId))
                 continue;
@@ -188,8 +188,8 @@ public static class WorkspaceBehaviour
         WORKSPACE_TREE_CACHE.Workspaces.Clear();
         WORKSPACE_TREE_CACHE.WorkspaceOrder.Clear();
 
-        Directory.CreateDirectory(WorkspaceRootDirectory);
-        foreach (var workspacePath in Directory.EnumerateDirectories(WorkspaceRootDirectory))
+        Directory.CreateDirectory(WORKSPACE_ROOT_DIRECTORY);
+        foreach (var workspacePath in Directory.EnumerateDirectories(WORKSPACE_ROOT_DIRECTORY))
         {
             if (!Guid.TryParse(Path.GetFileName(workspacePath), out var workspaceId))
                 continue;
@@ -257,6 +257,13 @@ public static class WorkspaceBehaviour
         }
 
         return false;
+    }
+
+    private static bool WorkspaceNameExistsCore(string workspaceName, Guid excludedWorkspaceId = default)
+    {
+        return WORKSPACE_TREE_CACHE.Workspaces.Values.Any(workspace =>
+            workspace.WorkspaceId != excludedWorkspaceId &&
+            string.Equals(workspace.WorkspaceName.Trim(), workspaceName, StringComparison.OrdinalIgnoreCase));
     }
 
     private static async Task<bool> ThreadContainsTermsAsync(WorkspaceTreeChat chat, IReadOnlyList<string> terms, CancellationToken token)
@@ -587,6 +594,100 @@ public static class WorkspaceBehaviour
             WORKSPACE_TREE_CACHE_SEMAPHORE.Release();
         }
     }
+
+    public static string NormalizeWorkspaceName(string workspaceName) => workspaceName.Trim();
+
+    public static async Task<bool> IsWorkspaceNameExistingAsync(string workspaceName, Guid excludedWorkspaceId = default)
+    {
+        var normalizedWorkspaceName = NormalizeWorkspaceName(workspaceName);
+        if (string.IsNullOrWhiteSpace(normalizedWorkspaceName))
+            return false;
+
+        await WORKSPACE_TREE_CACHE_SEMAPHORE.WaitAsync();
+        try
+        {
+            await EnsureTreeShellLoadedCoreAsync();
+            return WorkspaceNameExistsCore(normalizedWorkspaceName, excludedWorkspaceId);
+        }
+        finally
+        {
+            WORKSPACE_TREE_CACHE_SEMAPHORE.Release();
+        }
+    }
+
+    public static async Task<WorkspaceTreeWorkspace?> CreateWorkspaceAsync(string workspaceName)
+    {
+        var normalizedWorkspaceName = NormalizeWorkspaceName(workspaceName);
+        if (string.IsNullOrWhiteSpace(normalizedWorkspaceName))
+            return null;
+
+        await WORKSPACE_TREE_CACHE_SEMAPHORE.WaitAsync();
+        try
+        {
+            await EnsureTreeShellLoadedCoreAsync();
+            if (WorkspaceNameExistsCore(normalizedWorkspaceName))
+                return null;
+
+            var workspaceId = Guid.NewGuid();
+            var workspacePath = Path.Join(WORKSPACE_ROOT_DIRECTORY, workspaceId.ToString());
+            Directory.CreateDirectory(workspacePath);
+
+            var workspaceNamePath = Path.Join(workspacePath, "name");
+            await File.WriteAllTextAsync(workspaceNamePath, normalizedWorkspaceName, Encoding.UTF8);
+
+            var workspace = new WorkspaceCacheEntry
+            {
+                WorkspaceId = workspaceId,
+                WorkspacePath = workspacePath,
+                WorkspaceName = normalizedWorkspaceName,
+                Chats = [],
+                ChatsLoaded = false,
+            };
+            WORKSPACE_TREE_CACHE.Workspaces[workspaceId] = workspace;
+            WORKSPACE_TREE_CACHE.WorkspaceOrder.Add(workspaceId);
+
+            return ToPublicWorkspace(workspace);
+        }
+        finally
+        {
+            WORKSPACE_TREE_CACHE_SEMAPHORE.Release();
+        }
+    }
+
+    public static async Task<bool> RenameWorkspaceAsync(Guid workspaceId, string workspaceName)
+    {
+        var normalizedWorkspaceName = NormalizeWorkspaceName(workspaceName);
+        if (string.IsNullOrWhiteSpace(normalizedWorkspaceName))
+            return false;
+
+        await WORKSPACE_TREE_CACHE_SEMAPHORE.WaitAsync();
+        try
+        {
+            await EnsureTreeShellLoadedCoreAsync();
+            if (!WORKSPACE_TREE_CACHE.Workspaces.TryGetValue(workspaceId, out var workspace))
+                return false;
+
+            var workspaceNamePath = Path.Join(workspace.WorkspacePath, "name");
+            if (string.Equals(workspace.WorkspaceName.Trim(), normalizedWorkspaceName, StringComparison.OrdinalIgnoreCase))
+            {
+                await File.WriteAllTextAsync(workspaceNamePath, normalizedWorkspaceName, Encoding.UTF8);
+                workspace.WorkspaceName = normalizedWorkspaceName;
+                return true;
+            }
+
+            if (WorkspaceNameExistsCore(normalizedWorkspaceName, workspaceId))
+                return false;
+
+            await File.WriteAllTextAsync(workspaceNamePath, normalizedWorkspaceName, Encoding.UTF8);
+            workspace.WorkspaceName = normalizedWorkspaceName;
+
+            return true;
+        }
+        finally
+        {
+            WORKSPACE_TREE_CACHE_SEMAPHORE.Release();
+        }
+    }
     
     public static bool IsChatExisting(LoadChat loadChat)
     {
@@ -668,7 +769,7 @@ public static class WorkspaceBehaviour
 
             // Not in cache — read from disk and update cache in the same semaphore scope
             // to avoid a second semaphore acquisition via UpdateWorkspaceNameInCacheAsync:
-            var workspacePath = Path.Join(WorkspaceRootDirectory, workspaceId.ToString());
+            var workspacePath = Path.Join(WORKSPACE_ROOT_DIRECTORY, workspaceId.ToString());
             var workspaceNamePath = Path.Join(workspacePath, "name");
             string workspaceName;
 
@@ -756,7 +857,7 @@ public static class WorkspaceBehaviour
 
     private static async Task EnsureWorkspace(Guid workspaceId, string workspaceName)
     {
-        var workspacePath = Path.Join(WorkspaceRootDirectory, workspaceId.ToString());
+        var workspacePath = Path.Join(WORKSPACE_ROOT_DIRECTORY, workspaceId.ToString());
         var workspaceNamePath = Path.Join(workspacePath, "name");
         
         if (!Path.Exists(workspacePath))

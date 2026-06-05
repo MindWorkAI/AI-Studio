@@ -3,7 +3,6 @@ using System.Text.Json;
 
 using AIStudio.Chat;
 using AIStudio.Dialogs;
-using AIStudio.Settings;
 using AIStudio.Tools.AIJobs;
 
 using Microsoft.AspNetCore.Components;
@@ -100,6 +99,27 @@ public partial class Workspaces : MSGComponentBase
     private bool HasSearchQuery => this.SearchVisible && !string.IsNullOrWhiteSpace(this.searchText);
 
     private string GetAddChatToWorkspaceTooltip(string workspaceName) => string.Format(T("Start a new chat in workspace '{0}'"), workspaceName);
+
+    private async Task<Func<string?, string?>> CreateWorkspaceNameValidationAsync(Guid excludedWorkspaceId = default, string? originalWorkspaceName = null)
+    {
+        var snapshot = await WorkspaceBehaviour.GetOrLoadWorkspaceTreeShellAsync();
+        return workspaceName =>
+        {
+            var normalizedWorkspaceName = WorkspaceBehaviour.NormalizeWorkspaceName(workspaceName ?? string.Empty);
+            if (string.IsNullOrWhiteSpace(normalizedWorkspaceName))
+                return null;
+
+            if (!string.IsNullOrWhiteSpace(originalWorkspaceName) &&
+                string.Equals(WorkspaceBehaviour.NormalizeWorkspaceName(originalWorkspaceName), normalizedWorkspaceName, StringComparison.OrdinalIgnoreCase))
+                return null;
+
+            var nameExists = snapshot.Workspaces.Any(workspace =>
+                workspace.WorkspaceId != excludedWorkspaceId &&
+                string.Equals(WorkspaceBehaviour.NormalizeWorkspaceName(workspace.Name), normalizedWorkspaceName, StringComparison.OrdinalIgnoreCase));
+
+            return nameExists ? T("There is already a workspace with this name. Please choose a different name.") : null;
+        };
+    }
 
     private void BuildTreeItems(WorkspaceTreeCacheSnapshot snapshot)
     {
@@ -720,6 +740,7 @@ public partial class Workspaces : MSGComponentBase
             { x => x.ConfirmColor, Color.Info },
             { x => x.AllowEmptyInput, false },
             { x => x.EmptyInputErrorMessage, T("Please enter a workspace name.") },
+            { x => x.AdditionalValidation, await this.CreateWorkspaceNameValidationAsync(workspaceId, workspaceName) },
         };
         
         var dialogReference = await this.DialogService.ShowAsync<SingleInputDialog>(T("Rename Workspace"), dialogParameters, DialogOptions.FULLSCREEN);
@@ -728,9 +749,9 @@ public partial class Workspaces : MSGComponentBase
             return;
         
         var alteredWorkspaceName = (dialogResult.Data as string)!;
-        var workspaceNamePath = Path.Join(workspacePath, "name");
-        await File.WriteAllTextAsync(workspaceNamePath, alteredWorkspaceName, Encoding.UTF8);
-        await WorkspaceBehaviour.UpdateWorkspaceNameInCacheAsync(workspaceId, alteredWorkspaceName);
+        if (!await WorkspaceBehaviour.RenameWorkspaceAsync(workspaceId, alteredWorkspaceName))
+            return;
+
         await this.LoadTreeItemsAsync(startPrefetch: false);
     }
 
@@ -745,6 +766,7 @@ public partial class Workspaces : MSGComponentBase
             { x => x.ConfirmColor, Color.Info },
             { x => x.AllowEmptyInput, false },
             { x => x.EmptyInputErrorMessage, T("Please enter a workspace name.") },
+            { x => x.AdditionalValidation, await this.CreateWorkspaceNameValidationAsync() },
         };
         
         var dialogReference = await this.DialogService.ShowAsync<SingleInputDialog>(T("Add Workspace"), dialogParameters, DialogOptions.FULLSCREEN);
@@ -752,14 +774,9 @@ public partial class Workspaces : MSGComponentBase
         if (dialogResult is null || dialogResult.Canceled)
             return;
         
-        var workspaceId = Guid.NewGuid();
-        var workspacePath = Path.Join(SettingsManager.DataDirectory, "workspaces", workspaceId.ToString());
-        Directory.CreateDirectory(workspacePath);
-        
         var workspaceName = (dialogResult.Data as string)!;
-        var workspaceNamePath = Path.Join(workspacePath, "name");
-        await File.WriteAllTextAsync(workspaceNamePath, workspaceName, Encoding.UTF8);
-        await WorkspaceBehaviour.AddWorkspaceToCacheAsync(workspaceId, workspacePath, workspaceName);
+        if (await WorkspaceBehaviour.CreateWorkspaceAsync(workspaceName) is null)
+            return;
         
         await this.LoadTreeItemsAsync(startPrefetch: false);
     }
