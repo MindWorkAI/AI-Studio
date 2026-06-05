@@ -120,7 +120,20 @@ public partial class WorkspaceSelectionDialog : MSGComponentBase
         }
     }
 
-    private void Cancel() => this.MudDialog.Cancel();
+    private void Cancel()
+    {
+        if (!this.showCreateWorkspaceForm)
+        {
+            this.MudDialog.Cancel();
+            return;
+        }
+
+        this.createWorkspaceError = null;
+        this.createWorkspaceErrorName = null;
+        this.newWorkspaceName = string.Empty;
+        this.createWorkspaceForm.ResetValidation();
+        this.showCreateWorkspaceForm = false;
+    }
     
     private void Confirm() => this.MudDialog.Close(DialogResult.Ok(this.selectedWorkspace));
 }
