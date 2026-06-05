@@ -10,11 +10,14 @@
                 <MudListItem Text="@workspace.Name" Icon="@Icons.Material.Filled.Description" Value="@workspace.WorkspaceId" />
             }
         </MudList>
-        <MudDivider Class="my-4"/>
-        @if (this.showCreateWorkspaceForm)
-        {
-            <MudForm @ref="this.createWorkspaceForm">
-                <MudStack Row="@true" AlignItems="AlignItems.Start" Wrap="Wrap.NoWrap" Spacing="1">
+    </DialogContent>
+    <DialogActions>
+        <MudStack Style="width: 100%;" Spacing="2">
+            <MudDivider/>
+
+            @if (this.showCreateWorkspaceForm)
+            {
+                <MudForm @ref="this.createWorkspaceForm">
                     <MudTextField T="string"
                                   @bind-Text="@this.newWorkspaceName"
                                   Variant="Variant.Outlined"
@@ -25,25 +28,32 @@
                                   Disabled="@this.isCreatingWorkspace"
                                   OnKeyDown="@this.HandleNewWorkspaceNameKeyDown"
                                   Validation="@this.ValidateNewWorkspaceName" />
-                    <MudTooltip Text="@T("Add workspace")">
-                        <MudIconButton Icon="@Icons.Material.Filled.LibraryAdd" Color="Color.Info" Disabled="@this.isCreatingWorkspace" OnClick="@this.CreateWorkspaceAsync"/>
-                    </MudTooltip>
-                </MudStack>
-            </MudForm>
-        }
-        else
-        {
-            <MudButton StartIcon="@Icons.Material.Filled.LibraryAdd" Variant="Variant.Filled" OnClick="@this.ShowCreateWorkspaceForm">
-                @T("Create new workspace")
-            </MudButton>
-        }
-    </DialogContent>
-    <DialogActions>
-        <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">
-            @T("Cancel")
-        </MudButton>
-        <MudButton OnClick="@this.Confirm" Variant="Variant.Filled" Color="Color.Info" Disabled="@(this.selectedWorkspace == Guid.Empty)">
-            @this.ConfirmText
-        </MudButton>
+                </MudForm>
+            }
+            else
+            {
+                <MudButton StartIcon="@Icons.Material.Filled.LibraryAdd" Variant="Variant.Filled" OnClick="@this.ShowCreateWorkspaceForm">
+                    @T("Create new workspace")
+                </MudButton>
+            }
+
+            <MudStack Row="@true" Justify="Justify.FlexEnd" AlignItems="AlignItems.Center" Wrap="Wrap.NoWrap" Spacing="2">
+                <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">
+                    @T("Cancel")
+                </MudButton>
+                @if (this.showCreateWorkspaceForm)
+                {
+                    <MudButton OnClick="@this.CreateWorkspaceAsync" Variant="Variant.Filled" Color="Color.Info" Disabled="@this.isCreatingWorkspace">
+                        @T("Add workspace")
+                    </MudButton>
+                }
+                else
+                {
+                    <MudButton OnClick="@this.Confirm" Variant="Variant.Filled" Color="Color.Info" Disabled="@(this.selectedWorkspace == Guid.Empty)">
+                        @this.ConfirmText
+                    </MudButton>
+                }
+            </MudStack>
+        </MudStack>
     </DialogActions>
 </MudDialog>
