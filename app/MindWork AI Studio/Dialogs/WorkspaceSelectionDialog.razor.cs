@@ -80,6 +80,16 @@ public partial class WorkspaceSelectionDialog : MSGComponentBase
         await this.CreateWorkspaceAsync();
     }
 
+    private void HandleDialogKeyDown(KeyboardEventArgs keyEvent)
+    {
+        var key = keyEvent.Key.ToLowerInvariant();
+        var code = keyEvent.Code.ToLowerInvariant();
+        if (key is not "escape" && code is not "escape")
+            return;
+
+        this.Cancel();
+    }
+
     private void ShowCreateWorkspaceForm()
     {
         this.createWorkspaceError = null;

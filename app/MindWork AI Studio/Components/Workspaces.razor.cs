@@ -752,6 +752,7 @@ public partial class Workspaces : MSGComponentBase
         if (!await WorkspaceBehaviour.RenameWorkspaceAsync(workspaceId, alteredWorkspaceName))
             return;
 
+        await this.SendMessage(Event.WORKSPACE_RENAMED, workspaceId);
         await this.LoadTreeItemsAsync(startPrefetch: false);
     }
 
@@ -822,7 +823,7 @@ public partial class Workspaces : MSGComponentBase
             { x => x.ConfirmText, T("Move chat") },
         };
         
-        var dialogReference = await this.DialogService.ShowAsync<WorkspaceSelectionDialog>(T("Move Chat to Workspace"), dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogReference = await this.DialogService.ShowAsync<WorkspaceSelectionDialog>(T("Move Chat to Workspace"), dialogParameters, DialogOptions.FULLSCREEN_MANUAL_ESCAPE);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return;

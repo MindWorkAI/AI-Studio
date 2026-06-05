@@ -101,7 +101,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     protected override async Task OnInitializedAsync()
     {
         // Apply the filters for the message bus:
-        this.ApplyFilters([], [ Event.HAS_CHAT_UNSAVED_CHANGES, Event.RESET_CHAT_STATE, Event.CHAT_STREAMING_DONE, Event.AI_JOB_CHANGED, Event.AI_JOB_FINISHED, Event.CHAT_GENERATION_CHANGED ]);
+        this.ApplyFilters([], [ Event.HAS_CHAT_UNSAVED_CHANGES, Event.RESET_CHAT_STATE, Event.CHAT_STREAMING_DONE, Event.AI_JOB_CHANGED, Event.AI_JOB_FINISHED, Event.CHAT_GENERATION_CHANGED, Event.WORKSPACE_RENAMED ]);
         
         // Configure the spellchecking for the user input:
         this.SettingsManager.InjectSpellchecking(USER_INPUT_ATTRIBUTES);
@@ -375,6 +375,29 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 
         this.currentWorkspaceName = workspaceName;
         this.WorkspaceName(this.currentWorkspaceName);
+    }
+
+    private async Task RefreshRenamedWorkspaceHeaderAsync(Guid workspaceId)
+    {
+        var currentChatThread = this.ChatThread;
+        if (currentChatThread is null || currentChatThread.WorkspaceId != workspaceId)
+            return;
+
+        var syncVersion = Interlocked.Increment(ref this.workspaceHeaderSyncVersion);
+        var chatThreadId = currentChatThread.ChatId;
+        var loadedWorkspaceName = await WorkspaceBehaviour.LoadWorkspaceNameAsync(workspaceId);
+
+        if (syncVersion != this.workspaceHeaderSyncVersion)
+            return;
+
+        if (this.ChatThread is null
+            || this.ChatThread.ChatId != chatThreadId
+            || this.ChatThread.WorkspaceId != workspaceId)
+            return;
+
+        this.currentChatThreadId = chatThreadId;
+        this.currentWorkspaceId = workspaceId;
+        this.PublishWorkspaceNameIfChanged(loadedWorkspaceName);
     }
 
     private async Task SyncForegroundChatAsync()
@@ -864,7 +887,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             { x => x.ConfirmText, T("Move chat") },
         };
         
-        var dialogReference = await this.DialogService.ShowAsync<WorkspaceSelectionDialog>(T("Move Chat to Workspace"), dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogReference = await this.DialogService.ShowAsync<WorkspaceSelectionDialog>(T("Move Chat to Workspace"), dialogParameters, DialogOptions.FULLSCREEN_MANUAL_ESCAPE);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return;
@@ -1045,6 +1068,11 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 this.hasUnsavedChanges = true;
                 if(this.autoSaveEnabled)
                     await this.SaveThread();
+                break;
+
+            case Event.WORKSPACE_RENAMED:
+                if (data is Guid workspaceId)
+                    await this.RefreshRenamedWorkspaceHeaderAsync(workspaceId);
                 break;
             
             case Event.AI_JOB_CHANGED:
