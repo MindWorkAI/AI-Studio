@@ -155,6 +155,16 @@ public enum Event
     /// Requests the chat workspace overlay to be toggled.
     /// </summary>
     WORKSPACE_TOGGLE_OVERLAY,
+
+    /// <summary>
+    /// Notifies receivers that a workspace was renamed.
+    /// </summary>
+    WORKSPACE_RENAMED,
+
+    /// <summary>
+    /// Notifies receivers that a workspace was created.
+    /// </summary>
+    WORKSPACE_CREATED,
     
     
     

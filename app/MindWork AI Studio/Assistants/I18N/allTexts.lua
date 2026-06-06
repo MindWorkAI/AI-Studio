@@ -3253,6 +3253,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3045856778"] = "Move Chat to
 -- Please enter a new or edit the name for your workspace '{0}':
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T323280982"] = "Please enter a new or edit the name for your workspace '{0}':"
 
+-- There is already a workspace with this name. Please choose a different name.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3249036008"] = "There is already a workspace with this name. Please choose a different name."
+
 -- Please enter a workspace name.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T3288132732"] = "Please enter a workspace name."
 
@@ -5793,6 +5796,21 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::UPDATEDIALOG::T25417398"] = "Update from v{0
 
 -- Install later
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::UPDATEDIALOG::T2936430090"] = "Install later"
+
+-- Create new workspace
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::WORKSPACESELECTIONDIALOG::T1541251414"] = "Create new workspace"
+
+-- Add workspace
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::WORKSPACESELECTIONDIALOG::T1586005241"] = "Add workspace"
+
+-- Workspace name
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::WORKSPACESELECTIONDIALOG::T295876489"] = "Workspace name"
+
+-- There is already a workspace with this name. Please choose a different name.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::WORKSPACESELECTIONDIALOG::T3249036008"] = "There is already a workspace with this name. Please choose a different name."
+
+-- Please enter a workspace name.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::WORKSPACESELECTIONDIALOG::T3288132732"] = "Please enter a workspace name."
 
 -- Cancel
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::WORKSPACESELECTIONDIALOG::T900713019"] = "Cancel"
