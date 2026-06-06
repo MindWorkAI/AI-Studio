@@ -56,7 +56,7 @@ public partial class Workspaces : MSGComponentBase
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-        this.ApplyFilters([], [ Event.AI_JOB_CHANGED, Event.AI_JOB_FINISHED, Event.CHAT_GENERATION_CHANGED ]);
+        this.ApplyFilters([], [ Event.AI_JOB_CHANGED, Event.AI_JOB_FINISHED, Event.CHAT_GENERATION_CHANGED, Event.WORKSPACE_CREATED ]);
         _ = this.LoadTreeItemsAsync(startPrefetch: true);
     }
 
@@ -885,6 +885,10 @@ public partial class Workspaces : MSGComponentBase
         {
             case Event.PLUGINS_RELOADED:
                 await this.ForceRefreshFromDiskAsync();
+                break;
+
+            case Event.WORKSPACE_CREATED:
+                await this.LoadTreeItemsAsync(startPrefetch: false);
                 break;
 
             case Event.AI_JOB_CHANGED:

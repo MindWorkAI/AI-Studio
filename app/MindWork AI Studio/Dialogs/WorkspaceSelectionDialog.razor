@@ -19,11 +19,13 @@
             {
                 <MudForm @ref="this.createWorkspaceForm">
                     <MudTextField T="string"
+                                  @ref="@this.newWorkspaceNameField"
                                   @bind-Text="@this.newWorkspaceName"
                                   Variant="Variant.Outlined"
                                   AutoGrow="@false"
                                   Lines="1"
                                   Label="@T("Workspace name")"
+                                  AutoFocus="@true"
                                   Immediate="@true"
                                   Disabled="@this.isCreatingWorkspace"
                                   OnKeyDown="@this.HandleNewWorkspaceNameKeyDown"

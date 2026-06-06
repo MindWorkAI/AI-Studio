@@ -27,11 +27,13 @@ public partial class WorkspaceSelectionDialog : MSGComponentBase
     private readonly List<WorkspaceSelectionItem> workspaces = [];
     private readonly string escapeHandlerId = $"workspace-selection-dialog-{Guid.NewGuid():N}";
     private MudForm? createWorkspaceForm;
+    private MudTextField<string>? newWorkspaceNameField;
     private DotNetObjectReference<WorkspaceSelectionDialog>? dotNetReference;
     private Guid selectedWorkspace;
     private string newWorkspaceName = string.Empty;
     private bool isCreatingWorkspace;
     private bool showCreateWorkspaceForm;
+    private bool shouldFocusNewWorkspaceName;
     private string? createWorkspaceError;
     private string? createWorkspaceErrorName;
 
@@ -55,6 +57,12 @@ public partial class WorkspaceSelectionDialog : MSGComponentBase
         {
             this.dotNetReference = DotNetObjectReference.Create(this);
             await this.JsRuntime.InvokeVoidAsync("registerEscapeHandler", this.escapeHandlerId, this.dotNetReference);
+        }
+
+        if (this.shouldFocusNewWorkspaceName && this.newWorkspaceNameField is not null)
+        {
+            this.shouldFocusNewWorkspaceName = false;
+            await this.newWorkspaceNameField.FocusAsync();
         }
 
         await base.OnAfterRenderAsync(firstRender);
@@ -102,6 +110,7 @@ public partial class WorkspaceSelectionDialog : MSGComponentBase
         this.createWorkspaceErrorName = null;
         this.newWorkspaceName = string.Empty;
         this.showCreateWorkspaceForm = true;
+        this.shouldFocusNewWorkspaceName = true;
     }
 
     private async Task CreateWorkspaceAsync()
@@ -153,6 +162,7 @@ public partial class WorkspaceSelectionDialog : MSGComponentBase
         this.newWorkspaceName = string.Empty;
         this.createWorkspaceForm?.ResetValidation();
         this.showCreateWorkspaceForm = false;
+        this.shouldFocusNewWorkspaceName = false;
     }
 
     [JSInvokable]
