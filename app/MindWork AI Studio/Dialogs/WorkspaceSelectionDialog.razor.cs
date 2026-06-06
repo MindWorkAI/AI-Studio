@@ -12,6 +12,9 @@ public partial class WorkspaceSelectionDialog : MSGComponentBase
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = null!;
 
+    [Inject]
+    private IJSRuntime JsRuntime { get; init; } = null!;
+
     [Parameter]
     public string Message { get; set; } = string.Empty;
     
@@ -22,7 +25,9 @@ public partial class WorkspaceSelectionDialog : MSGComponentBase
     public string ConfirmText { get; set; } = "OK";
     
     private readonly List<WorkspaceSelectionItem> workspaces = [];
-    private MudForm createWorkspaceForm = null!;
+    private readonly string escapeHandlerId = $"workspace-selection-dialog-{Guid.NewGuid():N}";
+    private MudForm? createWorkspaceForm;
+    private DotNetObjectReference<WorkspaceSelectionDialog>? dotNetReference;
     private Guid selectedWorkspace;
     private string newWorkspaceName = string.Empty;
     private bool isCreatingWorkspace;
@@ -42,6 +47,17 @@ public partial class WorkspaceSelectionDialog : MSGComponentBase
 
         this.StateHasChanged();
         await base.OnInitializedAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            this.dotNetReference = DotNetObjectReference.Create(this);
+            await this.JsRuntime.InvokeVoidAsync("registerEscapeHandler", this.escapeHandlerId, this.dotNetReference);
+        }
+
+        await base.OnAfterRenderAsync(firstRender);
     }
 
     #endregion
@@ -80,16 +96,6 @@ public partial class WorkspaceSelectionDialog : MSGComponentBase
         await this.CreateWorkspaceAsync();
     }
 
-    private void HandleDialogKeyDown(KeyboardEventArgs keyEvent)
-    {
-        var key = keyEvent.Key.ToLowerInvariant();
-        var code = keyEvent.Code.ToLowerInvariant();
-        if (key is not "escape" && code is not "escape")
-            return;
-
-        this.Cancel();
-    }
-
     private void ShowCreateWorkspaceForm()
     {
         this.createWorkspaceError = null;
@@ -100,6 +106,9 @@ public partial class WorkspaceSelectionDialog : MSGComponentBase
 
     private async Task CreateWorkspaceAsync()
     {
+        if (this.createWorkspaceForm is null)
+            return;
+
         this.createWorkspaceError = null;
         this.createWorkspaceErrorName = null;
         await this.createWorkspaceForm.Validate();
@@ -141,9 +150,40 @@ public partial class WorkspaceSelectionDialog : MSGComponentBase
         this.createWorkspaceError = null;
         this.createWorkspaceErrorName = null;
         this.newWorkspaceName = string.Empty;
-        this.createWorkspaceForm.ResetValidation();
+        this.createWorkspaceForm?.ResetValidation();
         this.showCreateWorkspaceForm = false;
+    }
+
+    [JSInvokable]
+    public async Task HandleEscapeKeyAsync()
+    {
+        await this.InvokeAsync(() =>
+        {
+            this.Cancel();
+            this.StateHasChanged();
+        });
     }
     
     private void Confirm() => this.MudDialog.Close(DialogResult.Ok(this.selectedWorkspace));
+
+    #region Overrides of MSGComponentBase
+
+    protected override void DisposeResources()
+    {
+        try
+        {
+            _ = this.JsRuntime.InvokeVoidAsync("unregisterEscapeHandler", this.escapeHandlerId).AsTask();
+        }
+        catch
+        {
+            // Ignore JS cleanup errors while the dialog is being disposed.
+        }
+
+        this.dotNetReference?.Dispose();
+        this.dotNetReference = null;
+
+        base.DisposeResources();
+    }
+
+    #endregion
 }
