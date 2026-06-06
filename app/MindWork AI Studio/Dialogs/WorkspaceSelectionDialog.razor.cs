@@ -130,8 +130,9 @@ public partial class WorkspaceSelectionDialog : MSGComponentBase
             this.workspaces.Add(new(result.Workspace.WorkspaceId, result.Workspace.Name));
             this.selectedWorkspace = result.Workspace.WorkspaceId;
             this.newWorkspaceName = string.Empty;
-            this.createWorkspaceForm.ResetValidation();
+            this.createWorkspaceForm?.ResetValidation();
             this.showCreateWorkspaceForm = false;
+            await this.SendMessage(Event.WORKSPACE_CREATED, result.Workspace.WorkspaceId);
         }
         finally
         {
