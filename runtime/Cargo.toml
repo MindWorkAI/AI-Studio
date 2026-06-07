@@ -51,7 +51,13 @@ bytes = "1.11.1"
 qdrant-edge = "0.7.2"
 
 [patch.crates-io]
+# Issue: It was not possible to build qdrant-edge for macOS. See PR 9312: https://github.com/qdrant/qdrant/pull/9312
+# State: The PR was merged, but not yet released. We use the git version for now.
 qdrant-edge = { git = "https://github.com/SommerEngineering/qdrant.git", rev = "462c84d82ced126e4a2b7914544bfde16a509eb1" }
+
+# Issue: This repo was not updated since 2020. The rand crate was outdated. We patched it to use a newer version of rand.
+# State: There is a PR for a long time, but it was not merged. We use the git version for now.
+permutation_iterator = { git = "https://github.com/SommerEngineering/permutation-iterator-rs.git", rev = "76836ed316d18dfef530ba908f58481c343e80d7" }
 
 [target.'cfg(target_os = "windows")'.dependencies]
 windows-registry = "0.6.1"
