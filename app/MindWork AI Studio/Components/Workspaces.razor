@@ -65,7 +65,7 @@ else
                         <MudTreeViewItem T="ITreeItem" Icon="@this.GetTreeItemIcon(treeItem)" Value="@item.Value" Expanded="@item.Expanded" CanExpand="@treeItem.Expandable" Items="@(treeItem.Children!)" OnClick="@(() => this.LoadChatAsync(treeItem.Path, true))">
                             <BodyContent>
                                 <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
-                                    <MudText Style="justify-self: start;">
+                                    <MudText Style="@this.GetChatTreeItemTextStyle(treeItem)">
                                         @if (string.IsNullOrWhiteSpace(treeItem.Text))
                                         {
                                             @T("Empty chat")
