@@ -379,6 +379,19 @@ public partial class Workspaces : MSGComponentBase
         return treeItem.Type is TreeItemType.CHAT && this.AIJobService.IsChatGenerationActive(treeItem.ChatId);
     }
 
+    private string GetChatTreeItemTextStyle(TreeItemData treeItem)
+    {
+        return this.IsCurrentChatTreeItem(treeItem) ? "justify-self: start; font-weight: 700;" : "justify-self: start;";
+    }
+
+    private bool IsCurrentChatTreeItem(TreeItemData treeItem)
+    {
+        return treeItem.Type is TreeItemType.CHAT
+               && this.CurrentChatThread is not null
+               && treeItem.ChatId == this.CurrentChatThread.ChatId
+               && treeItem.WorkspaceId == this.CurrentChatThread.WorkspaceId;
+    }
+
     private string GetChatTreeIcon(Guid chatId, string defaultIcon)
     {
         var snapshot = this.AIJobService.TryGetChatSnapshot(chatId);
