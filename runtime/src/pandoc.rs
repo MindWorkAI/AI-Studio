@@ -12,6 +12,12 @@ use crate::metadata::META_DATA;
 static HAS_LOGGED_RID_MISMATCH: OnceLock<()> = OnceLock::new();
 static HAS_LOGGED_PANDOC_PATH: OnceLock<()> = OnceLock::new();
 
+/// Microsoft documents CREATE_NO_WINDOW as a process creation flag with value 0x08000000.
+/// It starts console applications without opening a console window:
+/// https://learn.microsoft.com/en-us/windows/win32/procthread/process-creation-flags
+#[cfg(windows)]
+const CREATE_NO_WINDOW: u32 = 0x08000000;
+
 pub struct PandocExecutable {
     pub executable: String,
     pub is_local_installation: bool,
@@ -99,6 +105,9 @@ impl PandocProcessBuilder {
 
         let pandoc_executable = Self::pandoc_executable_path();
         let mut command = Command::new(&pandoc_executable.executable);
+        
+        #[cfg(windows)]
+        command.creation_flags(CREATE_NO_WINDOW);
         command.args(&arguments);
 
         PandocPreparedProcess {
