@@ -100,6 +100,16 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     public string ShortcutVoiceRecording { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ShortcutVoiceRecording, string.Empty);
 
     /// <summary>
+    /// The user-facing label for the voice recording shortcut, based on the user's keyboard layout.
+    /// </summary>
+    public string ShortcutVoiceRecordingDisplayName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// The canonical voice recording shortcut value this display label belongs to.
+    /// </summary>
+    public string ShortcutVoiceRecordingDisplaySource { get; set; } = string.Empty;
+
+    /// <summary>
     /// The HTTP timeout in seconds for external HTTP clients.
     /// </summary>
     public int HttpClientTimeoutSeconds { get; set; } = ManagedConfiguration.Register(configSelection, n => n.HttpClientTimeoutSeconds, ExternalHttpClientTimeout.DEFAULT_HTTP_CLIENT_TIMEOUT_SECONDS);
