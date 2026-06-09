@@ -25,7 +25,7 @@ public partial class ConfigurationShortcut : ConfigurationBaseCore
     public Func<string> Shortcut { get; set; } = () => string.Empty;
 
     /// <summary>
-    /// An action which is called when the shortcut was changed.
+    /// An action that is called when the shortcut was changed.
     /// </summary>
     [Parameter]
     public Action<string> ShortcutUpdate { get; set; } = _ => { };
@@ -43,7 +43,7 @@ public partial class ConfigurationShortcut : ConfigurationBaseCore
     public Func<string> ShortcutDisplaySource { get; set; } = () => string.Empty;
 
     /// <summary>
-    /// An action which is called when the user-facing shortcut label was changed.
+    /// An action that is called when the user-facing shortcut label was changed.
     /// </summary>
     [Parameter]
     public Action<string, string> ShortcutDisplayUpdate { get; set; } = (_, _) => { };
