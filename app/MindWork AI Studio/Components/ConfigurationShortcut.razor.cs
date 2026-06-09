@@ -31,6 +31,24 @@ public partial class ConfigurationShortcut : ConfigurationBaseCore
     public Action<string> ShortcutUpdate { get; set; } = _ => { };
 
     /// <summary>
+    /// The optional user-facing shortcut label.
+    /// </summary>
+    [Parameter]
+    public Func<string> ShortcutDisplayName { get; set; } = () => string.Empty;
+
+    /// <summary>
+    /// The canonical shortcut value the optional user-facing label belongs to.
+    /// </summary>
+    [Parameter]
+    public Func<string> ShortcutDisplaySource { get; set; } = () => string.Empty;
+
+    /// <summary>
+    /// An action which is called when the user-facing shortcut label was changed.
+    /// </summary>
+    [Parameter]
+    public Action<string, string> ShortcutDisplayUpdate { get; set; } = (_, _) => { };
+
+    /// <summary>
     /// The name/identifier of the shortcut (used for conflict detection and registration).
     /// </summary>
     [Parameter]
@@ -64,6 +82,14 @@ public partial class ConfigurationShortcut : ConfigurationBaseCore
         if (string.IsNullOrWhiteSpace(shortcut))
             return string.Empty;
 
+        var shortcutDisplayName = this.ShortcutDisplayName();
+        var shortcutDisplaySource = this.ShortcutDisplaySource();
+        if (!string.IsNullOrWhiteSpace(shortcutDisplayName)
+            && string.Equals(shortcutDisplaySource, shortcut, StringComparison.Ordinal))
+        {
+            return shortcutDisplayName;
+        }
+
         // Convert internal format to display format:
         return shortcut
             .Replace("CmdOrControl", OperatingSystem.IsMacOS() ? "Cmd" : "Ctrl")
@@ -93,9 +119,17 @@ public partial class ConfigurationShortcut : ConfigurationBaseCore
             if (dialogResult is null || dialogResult.Canceled)
                 return;
 
-            if (dialogResult.Data is string newShortcut)
+            if (dialogResult.Data is ShortcutDialogResult shortcutResult)
+            {
+                this.ShortcutUpdate(shortcutResult.Shortcut);
+                this.ShortcutDisplayUpdate(shortcutResult.DisplayName, shortcutResult.DisplaySource);
+                await this.SettingsManager.StoreSettings();
+                await this.InformAboutChange();
+            }
+            else if (dialogResult.Data is string newShortcut)
             {
                 this.ShortcutUpdate(newShortcut);
+                this.ShortcutDisplayUpdate(string.Empty, string.Empty);
                 await this.SettingsManager.StoreSettings();
                 await this.InformAboutChange();
             }

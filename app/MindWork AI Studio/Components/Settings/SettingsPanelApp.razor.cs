@@ -93,6 +93,12 @@ public partial class SettingsPanelApp : SettingsPanelBase
         this.SettingsManager.ConfigurationData.App.EnabledPreviewFeatures = selectedFeatures;
     }
 
+    private void UpdateShortcutVoiceRecordingDisplay(string displayName, string displaySource)
+    {
+        this.SettingsManager.ConfigurationData.App.ShortcutVoiceRecordingDisplayName = displayName;
+        this.SettingsManager.ConfigurationData.App.ShortcutVoiceRecordingDisplaySource = displaySource;
+    }
+
     private async Task UpdateLangBehaviour(LangBehavior behavior)
     {
         this.SettingsManager.ConfigurationData.App.LanguageBehavior = behavior;
