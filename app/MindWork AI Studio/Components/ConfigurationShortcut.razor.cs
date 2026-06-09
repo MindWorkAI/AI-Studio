@@ -1,5 +1,4 @@
 using AIStudio.Dialogs;
-using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
@@ -19,40 +18,10 @@ public partial class ConfigurationShortcut : ConfigurationBaseCore
     private RustService RustService { get; init; } = null!;
 
     /// <summary>
-    /// The current shortcut value.
+    /// The shortcut binding data.
     /// </summary>
     [Parameter]
-    public Func<string> Shortcut { get; set; } = () => string.Empty;
-
-    /// <summary>
-    /// An action that is called when the shortcut was changed.
-    /// </summary>
-    [Parameter]
-    public Action<string> ShortcutUpdate { get; set; } = _ => { };
-
-    /// <summary>
-    /// The optional user-facing shortcut label.
-    /// </summary>
-    [Parameter]
-    public Func<string> ShortcutDisplayName { get; set; } = () => string.Empty;
-
-    /// <summary>
-    /// The canonical shortcut value the optional user-facing label belongs to.
-    /// </summary>
-    [Parameter]
-    public Func<string> ShortcutDisplaySource { get; set; } = () => string.Empty;
-
-    /// <summary>
-    /// An action that is called when the user-facing shortcut label was changed.
-    /// </summary>
-    [Parameter]
-    public Action<string, string> ShortcutDisplayUpdate { get; set; } = (_, _) => { };
-
-    /// <summary>
-    /// The name/identifier of the shortcut (used for conflict detection and registration).
-    /// </summary>
-    [Parameter]
-    public Shortcut ShortcutId { get; init; }
+    public ConfigurationShortcutData Data { get; set; } = ConfigurationShortcutData.Empty;
 
     /// <summary>
     /// The icon to display.
@@ -78,12 +47,12 @@ public partial class ConfigurationShortcut : ConfigurationBaseCore
 
     private string GetDisplayShortcut()
     {
-        var shortcut = this.Shortcut();
+        var shortcut = this.Data.Value();
         if (string.IsNullOrWhiteSpace(shortcut))
             return string.Empty;
 
-        var shortcutDisplayName = this.ShortcutDisplayName();
-        var shortcutDisplaySource = this.ShortcutDisplaySource();
+        var shortcutDisplayName = this.Data.DisplayName();
+        var shortcutDisplaySource = this.Data.DisplaySource();
         if (!string.IsNullOrWhiteSpace(shortcutDisplayName)
             && string.Equals(shortcutDisplaySource, shortcut, StringComparison.Ordinal))
         {
@@ -106,8 +75,8 @@ public partial class ConfigurationShortcut : ConfigurationBaseCore
         {
             var dialogParameters = new DialogParameters<ShortcutDialog>
             {
-                { x => x.InitialShortcut, this.Shortcut() },
-                { x => x.ShortcutId, this.ShortcutId },
+                { x => x.InitialShortcut, this.Data.Value() },
+                { x => x.ShortcutId, this.Data.Id },
             };
 
             var dialogReference = await this.DialogService.ShowAsync<ShortcutDialog>(
@@ -121,15 +90,15 @@ public partial class ConfigurationShortcut : ConfigurationBaseCore
 
             if (dialogResult.Data is ShortcutDialogResult shortcutResult)
             {
-                this.ShortcutUpdate(shortcutResult.Shortcut);
-                this.ShortcutDisplayUpdate(shortcutResult.DisplayName, shortcutResult.DisplaySource);
+                this.Data.ValueUpdate(shortcutResult.Shortcut);
+                this.Data.DisplayUpdate(shortcutResult.DisplayName, shortcutResult.DisplaySource);
                 await this.SettingsManager.StoreSettings();
                 await this.InformAboutChange();
             }
             else if (dialogResult.Data is string newShortcut)
             {
-                this.ShortcutUpdate(newShortcut);
-                this.ShortcutDisplayUpdate(string.Empty, string.Empty);
+                this.Data.ValueUpdate(newShortcut);
+                this.Data.DisplayUpdate(string.Empty, string.Empty);
                 await this.SettingsManager.StoreSettings();
                 await this.InformAboutChange();
             }

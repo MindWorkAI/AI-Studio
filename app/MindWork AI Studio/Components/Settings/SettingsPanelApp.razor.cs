@@ -1,11 +1,22 @@
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.Rust;
 
 namespace AIStudio.Components.Settings;
 
 public partial class SettingsPanelApp : SettingsPanelBase
 {
+    private ConfigurationShortcutData VoiceRecordingShortcut => new()
+    {
+        Id = Shortcut.VOICE_RECORDING_TOGGLE,
+        Value = () => this.SettingsManager.ConfigurationData.App.ShortcutVoiceRecording,
+        ValueUpdate = shortcut => this.SettingsManager.ConfigurationData.App.ShortcutVoiceRecording = shortcut,
+        DisplayName = () => this.SettingsManager.ConfigurationData.App.ShortcutVoiceRecordingDisplayName,
+        DisplaySource = () => this.SettingsManager.ConfigurationData.App.ShortcutVoiceRecordingDisplaySource,
+        DisplayUpdate = this.UpdateShortcutVoiceRecordingDisplay,
+    };
+
     private async Task GenerateEncryptionSecret()
     {
         var secret = EnterpriseEncryption.GenerateSecret();
