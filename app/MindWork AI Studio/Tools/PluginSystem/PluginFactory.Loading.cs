@@ -191,7 +191,7 @@ public static partial class PluginFactory
             wasConfigurationChanged = true;
 
         // Check left-over mandatory info acceptances:
-        if (SETTINGS_MANAGER.ConfigurationData.MandatoryInformation.RemoveLeftOverAcceptances(GetMandatoryInfos()))
+        if (SettingsManager.ConfigurationData.MandatoryInformation.RemoveLeftOverAcceptances(GetMandatoryInfos()))
             wasConfigurationChanged = true;
         
         // Check for a preselected provider:
@@ -285,7 +285,7 @@ public static partial class PluginFactory
         
         if (wasConfigurationChanged)
         {
-            await SETTINGS_MANAGER.StoreSettings();
+            await SettingsManager.StoreSettings();
             await MessageBus.INSTANCE.SendMessage<bool>(null, Event.CONFIGURATION_CHANGED);
         }
     }

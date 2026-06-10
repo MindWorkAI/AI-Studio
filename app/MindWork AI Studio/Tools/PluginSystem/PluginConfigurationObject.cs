@@ -15,7 +15,7 @@ namespace AIStudio.Tools.PluginSystem;
 public sealed record PluginConfigurationObject
 {
     private static readonly RustService RUST_SERVICE = Program.SERVICE_PROVIDER.GetRequiredService<RustService>();
-    private static readonly SettingsManager SETTINGS_MANAGER = Program.SERVICE_PROVIDER.GetRequiredService<SettingsManager>();
+    private static SettingsManager SettingsManager => Program.SERVICE_PROVIDER.GetRequiredService<SettingsManager>();
     private static readonly ILogger LOG = Program.LOGGER_FACTORY.CreateLogger<PluginConfigurationObject>();
     
     /// <summary>
@@ -91,7 +91,8 @@ public sealed record PluginConfigurationObject
             return false;
         }
 
-        var storedObjects = configObjectSelection.Compile()(SETTINGS_MANAGER.ConfigurationData);
+        var localSettingsManager = SettingsManager;
+        var storedObjects = configObjectSelection.Compile()(localSettingsManager.ConfigurationData);
         var numberObjects = luaTable.ArrayLength;
         ThreadSafeRandom? random = null;
         for (var i = 1; i <= numberObjects; i++)
@@ -141,7 +142,7 @@ public sealed record PluginConfigurationObject
                 // Case: The object does not exist, we have to add it
                 else
                 {
-                    if (nextConfigObjectNumSelection.TryIncrement(SETTINGS_MANAGER.ConfigurationData, IncrementType.POST) is { Success: true, UpdatedValue: var nextNum })
+                    if (nextConfigObjectNumSelection.TryIncrement(localSettingsManager.ConfigurationData, IncrementType.POST) is { Success: true, UpdatedValue: var nextNum })
                     {
                         // Case: Increment the next number was successful
                         configObject = configObject with { Num = nextNum };
@@ -185,7 +186,8 @@ public sealed record PluginConfigurationObject
             return false;
         }
 
-        var storedObjects = SETTINGS_MANAGER.ConfigurationData.DataSources;
+        var localSettingsManager = SettingsManager;
+        var storedObjects = localSettingsManager.ConfigurationData.DataSources;
         var numberObjects = luaTable.ArrayLength;
         ThreadSafeRandom? random = null;
         for (var i = 1; i <= numberObjects; i++)
@@ -222,7 +224,7 @@ public sealed record PluginConfigurationObject
             }
             else
             {
-                if (IncrementDataSourceNum() is { Success: true, UpdatedValue: var nextNum })
+                if (IncrementDataSourceNum(localSettingsManager.ConfigurationData) is { Success: true, UpdatedValue: var nextNum })
                 {
                     configObject = configObject with { Num = nextNum };
                     storedObjects.Add(configObject);
@@ -239,9 +241,9 @@ public sealed record PluginConfigurationObject
 
         return true;
 
-        static IncrementResult<uint> IncrementDataSourceNum()
+        static IncrementResult<uint> IncrementDataSourceNum(Data data)
         {
-            return ((Expression<Func<Data, uint>>)(x => x.NextDataSourceNum)).TryIncrement(SETTINGS_MANAGER.ConfigurationData, IncrementType.POST);
+            return ((Expression<Func<Data, uint>>)(x => x.NextDataSourceNum)).TryIncrement(data, IncrementType.POST);
         }
     }
 
@@ -264,7 +266,8 @@ public sealed record PluginConfigurationObject
         SecretStoreType? secretStoreType = null,
         bool deleteSecret = false) where TClass : IConfigurationObject
     {
-        var configuredObjects = configObjectSelection.Compile()(SETTINGS_MANAGER.ConfigurationData);
+        var localSettingsManager = SettingsManager;
+        var configuredObjects = configObjectSelection.Compile()(localSettingsManager.ConfigurationData);
         var leftOverObjects = new List<TClass>();
         foreach (var configuredObject in configuredObjects)
         {

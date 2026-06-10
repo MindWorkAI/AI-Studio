@@ -654,7 +654,7 @@ public static partial class ManagedConfiguration
 
         if (successful)
         {
-            var configInstance = configSelection.Compile().Invoke(SETTINGS_MANAGER.ConfigurationData);
+            var configInstance = configSelection.Compile().Invoke(SettingsManager.ConfigurationData);
             var currentValue = propertyExpression.Compile().Invoke(configInstance);
             var merged = new HashSet<TValue>(currentValue);
             merged.UnionWith(configuredValue);

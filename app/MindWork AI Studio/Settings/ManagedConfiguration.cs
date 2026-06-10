@@ -9,7 +9,7 @@ namespace AIStudio.Settings;
 public static partial class ManagedConfiguration
 {
     private static readonly ConcurrentDictionary<string, IConfig> METADATA = new();
-    private static readonly SettingsManager SETTINGS_MANAGER = Program.SERVICE_PROVIDER.GetRequiredService<SettingsManager>();
+    private static SettingsManager SettingsManager => Program.SERVICE_PROVIDER.GetRequiredService<SettingsManager>();
 
     /// <summary>
     /// Attempts to retrieve the configuration metadata for a given configuration selection and
@@ -418,19 +418,19 @@ public static partial class ManagedConfiguration
 
     private static bool TryGetEditableDefaultState(string settingName, out ManagedEditableDefaultState editableDefaultState)
     {
-        return SETTINGS_MANAGER.ConfigurationData.ManagedEditableDefaults.TryGetValue(settingName, out editableDefaultState!);
+        return SettingsManager.ConfigurationData.ManagedEditableDefaults.TryGetValue(settingName, out editableDefaultState!);
     }
 
     private static void SetEditableDefaultState(string settingName, Guid pluginId, string lastAppliedValue)
     {
-        SETTINGS_MANAGER.ConfigurationData.ManagedEditableDefaults[settingName] = new()
+        SettingsManager.ConfigurationData.ManagedEditableDefaults[settingName] = new()
         {
             ConfigPluginId = pluginId,
             LastAppliedValue = lastAppliedValue,
         };
     }
 
-    private static bool ClearEditableDefaultState(string settingName) => SETTINGS_MANAGER.ConfigurationData.ManagedEditableDefaults.Remove(settingName);
+    private static bool ClearEditableDefaultState(string settingName) => SettingsManager.ConfigurationData.ManagedEditableDefaults.Remove(settingName);
 
     private static bool CleanupEditableDefaultState<TClass, TValue>(
         ConfigMeta<TClass, TValue> configMeta,
