@@ -85,6 +85,26 @@ pub fn start_tauri() {
     });
 
     let app = tauri::Builder::default()
+        .plugin(tauri_plugin_single_instance::init(|app, args, cwd| {
+            info!(Source = "Tauri"; "Prevented second app instance from starting. cwd='{cwd}', args={args:?}");
+
+            let Some(window) = app.get_webview_window("main") else {
+                warn!(Source = "Tauri"; "Second app instance was blocked, but the main window was not available for activation.");
+                return;
+            };
+
+            if let Err(error) = window.show() {
+                warn!(Source = "Tauri"; "Failed to show main window after second app start: {error}");
+            }
+
+            if let Err(error) = window.unminimize() {
+                warn!(Source = "Tauri"; "Failed to unminimize main window after second app start: {error}");
+            }
+
+            if let Err(error) = window.set_focus() {
+                warn!(Source = "Tauri"; "Failed to focus main window after second app start: {error}");
+            }
+        }))
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_opener::init())
