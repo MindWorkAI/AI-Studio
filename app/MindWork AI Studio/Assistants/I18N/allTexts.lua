@@ -8005,8 +8005,8 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::ITOOLIMPLEMENTATION::T35170
 -- Tool description
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::ITOOLIMPLEMENTATION::T4056470505"] = "Tool description"
 
--- Load a single web page, extract its main HTML content, and return structured working material for the model. Use the result to synthesize a natural-language answer instead of exposing the raw payload to the user.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T1823236891"] = "Load a single web page, extract its main HTML content, and return structured working material for the model. Use the result to synthesize a natural-language answer instead of exposing the raw payload to the user."
+-- Load a single web page and extract its main HTML content.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T204256540"] = "Load a single web page and extract its main HTML content."
 
 -- Optional global truncation limit for extracted Markdown returned to the model.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T2066580916"] = "Optional global truncation limit for extracted Markdown returned to the model."
@@ -8014,11 +8014,11 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS:
 -- Allowed private hosts must be host names only, without scheme or path.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T2196457612"] = "Allowed private hosts must be host names only, without scheme or path."
 
--- Optional host allowlist for private or VPN web pages. Separate host patterns with commas, such as example.de, *.example.de. Allowed private hosts require a High-confidence provider.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T237631450"] = "Optional host allowlist for private or VPN web pages. Separate host patterns with commas, such as example.de, *.example.de. Allowed private hosts require a High-confidence provider."
-
 -- Maximum Content Characters
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T2801581200"] = "Maximum Content Characters"
+
+-- Optional host allowlist for private or VPN web pages. For security reasons, private or VPN web pages aren't allowed to be read by default. Separate host patterns with commas, such as example.de, example.com. Allowed private hosts require a high-confidence provider. For allowed internal hosts, AI Studio also tries the operating system's default sign-in automatically when the server responds with integrated authentication.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T2866833707"] = "Optional host allowlist for private or VPN web pages. For security reasons, private or VPN web pages aren't allowed to be read by default. Separate host patterns with commas, such as example.de, example.com. Allowed private hosts require a high-confidence provider. For allowed internal hosts, AI Studio also tries the operating system's default sign-in automatically when the server responds with integrated authentication."
 
 -- Optional HTTP timeout for loading a web page in seconds.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T2941521561"] = "Optional HTTP timeout for loading a web page in seconds."

@@ -57,7 +57,7 @@ public sealed class ReadWebPageTool(HTMLParser htmlParser, ILogger<ReadWebPageTo
     {
         "timeoutSeconds" => TB("Optional HTTP timeout for loading a web page in seconds."),
         "maxContentCharacters" => TB("Optional global truncation limit for extracted Markdown returned to the model."),
-        ALLOWED_PRIVATE_HOSTS_SETTING => TB("Optional host allowlist for private or VPN web pages. For security reasons, private or VPN web pages aren't allowed to be read by default. Separate host patterns with commas, such as example.de, example.com. Allowed private hosts require a high-confidence provider."),
+        ALLOWED_PRIVATE_HOSTS_SETTING => TB("Optional host allowlist for private or VPN web pages. For security reasons, private or VPN web pages aren't allowed to be read by default. Separate host patterns with commas, such as example.de, *.example.de. Allowed private hosts require a high-confidence provider. For allowed internal hosts, AI Studio also tries the operating system's default sign-in automatically when the server responds with integrated authentication."),
         _ => TB(fieldDefinition.Description),
     };
 
@@ -113,6 +113,7 @@ public sealed class ReadWebPageTool(HTMLParser htmlParser, ILogger<ReadWebPageTo
         var maxContentCharacters = Math.Min(ReadOptionalPositiveIntSetting(context.SettingsValues, "maxContentCharacters") ?? DEFAULT_MAX_CONTENT_CHARACTERS, MAX_CONTENT_CHARACTERS);
         if (!TryReadAllowedPrivateHostPatterns(context.SettingsValues.GetValueOrDefault(ALLOWED_PRIVATE_HOSTS_SETTING), out var allowedPrivateHosts, out var allowlistError))
             throw new InvalidOperationException(allowlistError);
+        var shouldTryOsSso = ShouldTryOsSso(url, allowedPrivateHosts, context.ProviderConfidence);
 
         HTMLParserWebPage page;
         try
@@ -122,7 +123,8 @@ public sealed class ReadWebPageTool(HTMLParser htmlParser, ILogger<ReadWebPageTo
                 token,
                 timeoutSeconds,
                 async (candidateUrl, validationToken) => await this.ResolveValidatedUrlAddressesAsync(candidateUrl, allowedPrivateHosts, context.ProviderConfidence, validationToken),
-                MAX_RESPONSE_BYTES);
+                MAX_RESPONSE_BYTES,
+                shouldTryOsSso ? ExternalWebAuthenticationMode.OS_DEFAULT_CREDENTIALS : ExternalWebAuthenticationMode.NONE);
         }
         catch (OperationCanceledException) when (!token.IsCancellationRequested)
         {
@@ -132,6 +134,13 @@ public sealed class ReadWebPageTool(HTMLParser htmlParser, ILogger<ReadWebPageTo
         {
             if (FindBlockedException(exception) is { } blockedException)
                 throw blockedException;
+
+            if (shouldTryOsSso && exception.StatusCode is HttpStatusCode.Unauthorized)
+            {
+                throw new InvalidOperationException(
+                    $"Loading the web page failed: The server returned HTTP 401 (Unauthorized) for '{url}'. The host is reachable and AI Studio already tried your operating system's default sign-in, but the server did not accept it or requires an additional browser session/cookies.",
+                    exception);
+            }
 
             throw new InvalidOperationException($"Loading the web page failed: {exception.Message}", exception);
         }
@@ -289,6 +298,14 @@ public sealed class ReadWebPageTool(HTMLParser htmlParser, ILogger<ReadWebPageTo
         var normalizedHost = NormalizeHost(host);
         return allowedPrivateHosts.Any(pattern => pattern.IsMatch(normalizedHost));
     }
+
+    private static bool ShouldTryOsSso(
+        Uri url,
+        IReadOnlyList<AllowedPrivateHostPattern> allowedPrivateHosts,
+        ConfidenceLevel providerConfidence) =>
+        providerConfidence >= ConfidenceLevel.HIGH &&
+        !IsBlockedHostName(url.Host) &&
+        IsAllowedPrivateHost(url.Host, allowedPrivateHosts);
 
     private static string NormalizeHost(string host) => host.Trim().TrimEnd('.').ToLowerInvariant();
 

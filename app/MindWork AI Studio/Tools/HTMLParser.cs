@@ -44,13 +44,22 @@ public sealed class HTMLParser
         return innerHtml;
     }
 
-    public async Task<HTMLParserWebPage> LoadWebPageAsync(Uri url, CancellationToken token = default, int timeoutSeconds = 30, Func<Uri, CancellationToken, Task<IReadOnlyList<IPAddress>>>? resolveUrlAddressesAsync = null, int maxResponseBytes = DEFAULT_MAX_RESPONSE_BYTES)
+    public async Task<HTMLParserWebPage> LoadWebPageAsync(
+        Uri url,
+        CancellationToken token = default,
+        int timeoutSeconds = 30,
+        Func<Uri, CancellationToken, Task<IReadOnlyList<IPAddress>>>? resolveUrlAddressesAsync = null,
+        int maxResponseBytes = DEFAULT_MAX_RESPONSE_BYTES,
+        ExternalWebAuthenticationMode authenticationMode = ExternalWebAuthenticationMode.NONE)
     {
         using var handler = new SocketsHttpHandler
         {
             AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli,
             AllowAutoRedirect = false,
         };
+        if (authenticationMode is ExternalWebAuthenticationMode.OS_DEFAULT_CREDENTIALS)
+            handler.Credentials = CreateDefaultCredentialCache(url);
+
         if (resolveUrlAddressesAsync is not null)
         {
             // The callback binds the request to a vetted target IP; a proxy would change the endpoint being connected to.
@@ -105,6 +114,16 @@ public sealed class HTMLParser
         }
 
         throw new HttpRequestException($"The server returned more than {MAX_REDIRECTS} redirects for '{url}'.");
+    }
+
+    private static CredentialCache CreateDefaultCredentialCache(Uri url)
+    {
+        var credentialCache = new CredentialCache();
+        var uriPrefix = new UriBuilder(url.Scheme, url.Host, url.Port).Uri;
+        credentialCache.Add(uriPrefix, "Negotiate", CredentialCache.DefaultNetworkCredentials);
+        credentialCache.Add(uriPrefix, "NTLM", CredentialCache.DefaultNetworkCredentials);
+        credentialCache.Add(uriPrefix, "Kerberos", CredentialCache.DefaultNetworkCredentials);
+        return credentialCache;
     }
 
     private static void ValidateHttpOrHttpsUrl(Uri url)
@@ -247,4 +266,10 @@ public sealed class HTMLParserWebPage
     public required string ContentType { get; init; }
 
     public required HtmlDocument Document { get; init; }
+}
+
+public enum ExternalWebAuthenticationMode
+{
+    NONE,
+    OS_DEFAULT_CREDENTIALS
 }
