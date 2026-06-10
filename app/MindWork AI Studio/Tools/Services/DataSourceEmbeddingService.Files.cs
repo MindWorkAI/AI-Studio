@@ -219,13 +219,21 @@ public sealed partial class DataSourceEmbeddingService
         return Convert.ToHexString(bytes);
     }
 
-    private string GetCollectionName(string dataSourceId)
+    private string GetCollectionName(string dataSourceName, string dataSourceId)
     {
         var safeId = dataSourceId
             .ToLowerInvariant()
             .Replace("-", string.Empty, StringComparison.Ordinal);
-
-        return $"rag_{safeId}";
+        
+        var safeName = new string(dataSourceName
+            .ToLowerInvariant()
+            .Where(c => c is >= 'a' and <= 'z' or >= '0' and <= '9')
+            .Take(32)
+            .ToArray());
+        
+        safeName = string.IsNullOrWhiteSpace(safeName) ? "datasource" : safeName;
+        
+        return $"rag_{safeName}_{safeId}";
     }
 
     private string CreatePointId(string dataSourceId, string fingerprint, int chunkIndex)

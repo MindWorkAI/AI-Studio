@@ -71,11 +71,11 @@ public sealed partial class DataSourceEmbeddingService
         await File.WriteAllTextAsync(statePath, json, token);
     }
 
-    private async Task ResetPersistedStateAsync(string dataSourceId, IVectorStoreClient? vectorStore, CancellationToken token)
+    private async Task ResetPersistedStateAsync(string dataSourcename, string dataSourceId, VectorStoreClient? vectorStore, CancellationToken token)
     {
         await this.EnsureStateLoadedAsync(token);
         this.manifests.Remove(dataSourceId);
-        await this.DeleteCollectionAsync(this.GetCollectionName(dataSourceId), vectorStore, token);
+        await this.DeleteCollectionAsync(this.GetCollectionName(dataSourcename, dataSourceId), vectorStore, token);
         await this.SaveStateAsync(token);
         logger.LogInformation("Reset persisted embedding state for data source '{DataSourceId}'.", dataSourceId);
     }

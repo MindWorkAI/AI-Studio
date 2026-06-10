@@ -9,7 +9,7 @@ public sealed class QdrantEdgeClientImplementation(
     string path,
     string version,
     int storesCount,
-    RustService rustService) : DatabaseClient(name, path), IVectorStoreClient
+    RustService rustService) : VectorStoreClient(name, path)
 {
     private const string DATABASE_NAME = "Qdrant Edge";
     private const string INFO_PATH = "/system/qdrant-edge/info";
@@ -80,16 +80,16 @@ public sealed class QdrantEdgeClientImplementation(
         yield return (TB("Number of vector stores"), displayStoresCount.ToString());
     }
 
-    public Task EnsureVectorStoreExists(string storeName, int vectorSize, CancellationToken token) =>
+    public override Task EnsureVectorStoreExists(string storeName, int vectorSize, CancellationToken token) =>
         rustService.ExecuteDatabaseOperation(DATABASE_NAME, ENSURE_PATH, new EnsureVectorStoreRequest(storeName, vectorSize), token);
 
-    public Task InsertEmbedding(string storeName, IReadOnlyList<VectorStoragePoint> points, CancellationToken token) =>
+    public override Task InsertEmbedding(string storeName, IReadOnlyList<VectorStoragePoint> points, CancellationToken token) =>
         rustService.ExecuteDatabaseOperation(DATABASE_NAME, INSERT_PATH, new InsertEmbeddingRequest(storeName, points), token);
 
-    public Task DeleteEmbeddingByFile(string storeName, string filePath, CancellationToken token) =>
+    public override Task DeleteEmbeddingByFile(string storeName, string filePath, CancellationToken token) =>
         rustService.ExecuteDatabaseOperation(DATABASE_NAME, DELETE_FILE_PATH, new DeleteEmbeddingByFileRequest(storeName, filePath), token);
 
-    public Task DeleteVectorStore(string storeName, CancellationToken token) =>
+    public override Task DeleteVectorStore(string storeName, CancellationToken token) =>
         rustService.ExecuteDatabaseOperation(DATABASE_NAME, DELETE_STORE_PATH, new DeleteVectorStoreRequest(storeName), token);
 
     public override void Dispose()

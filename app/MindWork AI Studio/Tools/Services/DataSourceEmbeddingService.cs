@@ -114,7 +114,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
 
         this.RemoveWatcher(dataSource.Id);
         this.statuses.TryRemove(dataSource.Id, out _);
-        await this.ResetPersistedStateAsync(dataSource.Id, null, CancellationToken.None);
+        await this.ResetPersistedStateAsync(dataSource.Name, dataSource.Id, null, CancellationToken.None);
         this.PublishStatusChanged();
     }
 
@@ -179,6 +179,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             this.UpsertStatus(this.GetFallbackStatus(dataSource, "The selected embedding provider is not available."));
             return;
         }
+        
 
         logger.LogInformation(
             "Using embedding provider '{EmbeddingProviderId}' with model '{EmbeddingModelId}' for data source '{DataSourceName}' ({DataSourceId}).",
@@ -187,7 +188,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             dataSource.Name,
             dataSource.Id);
 
-        var collectionName = this.GetCollectionName(dataSource.Id);
+        var collectionName = this.GetCollectionName(dataSource.Name, dataSource.Id);
         var manifest = await this.EnsureCompatibleManifestAsync(dataSource, embeddingProvider, collectionName, vectorStore, token);
         var inputFiles = this.GetInputFiles(dataSource);
         var indexedFiles = inputFiles.Files;
@@ -289,7 +290,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     }
 
     private async Task<int> IndexOneFileAsync(
-        IVectorStoreClient vectorStore,
+        VectorStoreClient vectorStore,
         IDataSource dataSource,
         FileInfo file,
         string fingerprint,
@@ -298,7 +299,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         DataSourceEmbeddingManifest manifest,
         CancellationToken token)
     {
-        var collectionName = this.GetCollectionName(dataSource.Id);
+        var collectionName = this.GetCollectionName(dataSource.Name, dataSource.Id);
         logger.LogDebug(
             "Resetting stored embeddings for file '{FilePath}' in collection '{CollectionName}' before re-indexing.",
             file.FullName,
@@ -334,7 +335,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     }
 
     private async Task FlushBatchAsync(
-        IVectorStoreClient vectorStore,
+        VectorStoreClient vectorStore,
         IDataSource dataSource,
         FileInfo file,
         string fingerprint,
@@ -397,13 +398,13 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         batch.Clear();
     }
 
-    private async Task EnsureCollectionExistsAsync(IVectorStoreClient vectorStore, string collectionName, int vectorSize, CancellationToken token)
+    private async Task EnsureCollectionExistsAsync(VectorStoreClient vectorStore, string collectionName, int vectorSize, CancellationToken token)
     {
         await vectorStore.EnsureVectorStoreExists(collectionName, vectorSize, token);
     }
 
     private async Task UpsertPointsAsync(
-        IVectorStoreClient vectorStore,
+        VectorStoreClient vectorStore,
         string collectionName,
         IDataSource dataSource,
         FileInfo file,
@@ -432,12 +433,12 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         await vectorStore.InsertEmbedding(collectionName, points, token);
     }
 
-    private async Task DeleteFilePointsAsync(IVectorStoreClient vectorStore, string collectionName, string filePath, CancellationToken token)
+    private async Task DeleteFilePointsAsync(VectorStoreClient vectorStore, string collectionName, string filePath, CancellationToken token)
     {
         await vectorStore.DeleteEmbeddingByFile(collectionName, filePath, token);
     }
 
-    private async Task DeleteCollectionAsync(string collectionName, IVectorStoreClient? vectorStore, CancellationToken token)
+    private async Task DeleteCollectionAsync(string collectionName, VectorStoreClient? vectorStore, CancellationToken token)
     {
         vectorStore ??= await databaseClientProvider.GetVectorStoreAsync(token);
         if (!vectorStore.IsAvailable)
@@ -483,7 +484,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         return embeddingProvider != default && embeddingProvider.UsedLLMProvider is not LLMProviders.NONE;
     }
 
-    private async Task<DataSourceEmbeddingManifest> EnsureCompatibleManifestAsync(IDataSource dataSource, EmbeddingProvider embeddingProvider, string collectionName, IVectorStoreClient vectorStore, CancellationToken token)
+    private async Task<DataSourceEmbeddingManifest> EnsureCompatibleManifestAsync(IDataSource dataSource, EmbeddingProvider embeddingProvider, string collectionName, VectorStoreClient vectorStore, CancellationToken token)
     {
         var embeddingSignature = this.BuildEmbeddingSignature(embeddingProvider);
         var manifest = await this.GetManifestAsync(dataSource.Id, token);
@@ -495,7 +496,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                 dataSource.Name,
                 dataSource.Id,
                 collectionName);
-            await this.ResetPersistedStateAsync(dataSource.Id, vectorStore, token);
+            await this.ResetPersistedStateAsync(dataSource.Name, dataSource.Id, vectorStore, token);
             manifest = await this.GetManifestAsync(dataSource.Id, token);
         }
 
@@ -511,7 +512,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     }
 
     private async Task RemoveMissingFileEmbeddingsAsync(
-        IVectorStoreClient vectorStore,
+        VectorStoreClient vectorStore,
         IDataSource dataSource,
         string collectionName,
         DataSourceEmbeddingManifest manifest,

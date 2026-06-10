@@ -44,10 +44,10 @@ public sealed partial class DatabaseClientProvider(RustService rustService, ILog
         }
     }
 
-    public async Task<IVectorStoreClient> GetVectorStoreAsync(CancellationToken cancellationToken = default)
+    public async Task<VectorStoreClient> GetVectorStoreAsync(CancellationToken cancellationToken = default)
     {
         var client = await this.GetClientAsync(DatabaseRole.VECTOR_STORE, cancellationToken);
-        if (client is IVectorStoreClient vectorStore)
+        if (client is VectorStoreClient vectorStore)
             return vectorStore;
 
         return new NoVectorStoreClient(

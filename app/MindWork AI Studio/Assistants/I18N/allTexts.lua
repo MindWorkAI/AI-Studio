@@ -6211,10 +6211,11 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1107156991"] = "Browse AI Studio
 -- Vector store version
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1124039623"] = "Vector store version"
 
--- The Tokenizer library serves as the base framework for integrating the DeepSeek tokenizer.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1132433749"] = "The Tokenizer library serves as the base framework for integrating the DeepSeek tokenizer."
 -- Qdrant Edge is an embedded vector database and vector similarity search engine. We use it to realize local RAG—retrieval-augmented generation—within AI Studio. Thanks for the effort and great work that has been and is being put into Qdrant.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1126023000"] = "Qdrant Edge is an embedded vector database and vector similarity search engine. We use it to realize local RAG—retrieval-augmented generation—within AI Studio. Thanks for the effort and great work that has been and is being put into Qdrant."
+
+-- The Tokenizer library serves as the base framework for integrating the DeepSeek tokenizer.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1132433749"] = "The Tokenizer library serves as the base framework for integrating the DeepSeek tokenizer."
 
 -- ID mismatch: the plugin ID differs from the enterprise configuration ID.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1137744461"] = "ID mismatch: the plugin ID differs from the enterprise configuration ID."
