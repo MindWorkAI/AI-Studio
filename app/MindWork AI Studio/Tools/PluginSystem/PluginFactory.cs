@@ -6,7 +6,7 @@ namespace AIStudio.Tools.PluginSystem;
 public static partial class PluginFactory
 {
     private static readonly ILogger LOG = Program.LOGGER_FACTORY.CreateLogger(nameof(PluginFactory));
-    private static SettingsManager SettingsManager => Program.SERVICE_PROVIDER.GetRequiredService<SettingsManager>();
+    private static SettingsManager SettingsManagerAccess => Program.SERVICE_PROVIDER.GetRequiredService<SettingsManager>();
 
     private static string DATA_DIR = string.Empty;
     private static string PLUGINS_ROOT = string.Empty;

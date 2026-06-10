@@ -9,7 +9,7 @@ namespace AIStudio.Tools.PluginSystem;
 public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginType type) : PluginBase(isInternal, state, type)
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(PluginConfiguration).Namespace, nameof(PluginConfiguration));
-    private static SettingsManager SettingsManager => Program.SERVICE_PROVIDER.GetRequiredService<SettingsManager>();
+    private static SettingsManager SettingsManagerAccess => Program.SERVICE_PROVIDER.GetRequiredService<SettingsManager>();
     private static readonly ILogger LOG = Program.LOGGER_FACTORY.CreateLogger(nameof(PluginConfiguration));
 
     private List<PluginConfigurationObject> configObjects = [];
@@ -41,7 +41,7 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
             await StoreEnterpriseApiKeysAsync();
             await StoreEnterpriseSecretsAsync();
 
-            await SettingsManager.StoreSettings();
+            await SettingsManagerAccess.StoreSettings();
             await MessageBus.INSTANCE.SendMessage<bool>(null, Event.CONFIGURATION_CHANGED);
         }
     }

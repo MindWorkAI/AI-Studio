@@ -14,8 +14,9 @@ namespace AIStudio.Tools.PluginSystem;
 /// </summary>
 public sealed record PluginConfigurationObject
 {
-    private static readonly RustService RUST_SERVICE = Program.SERVICE_PROVIDER.GetRequiredService<RustService>();
-    private static SettingsManager SettingsManager => Program.SERVICE_PROVIDER.GetRequiredService<SettingsManager>();
+    private static RustService RustService => Program.SERVICE_PROVIDER.GetRequiredService<RustService>();
+    private static SettingsManager SettingsManagerAccess => Program.SERVICE_PROVIDER.GetRequiredService<SettingsManager>();
+    private static ThreadSafeRandom Rng => Program.SERVICE_PROVIDER.GetRequiredService<ThreadSafeRandom>();
     private static readonly ILogger LOG = Program.LOGGER_FACTORY.CreateLogger<PluginConfigurationObject>();
     
     /// <summary>
@@ -91,7 +92,7 @@ public sealed record PluginConfigurationObject
             return false;
         }
 
-        var localSettingsManager = SettingsManager;
+        var localSettingsManager = SettingsManagerAccess;
         var storedObjects = configObjectSelection.Compile()(localSettingsManager.ConfigurationData);
         var numberObjects = luaTable.ArrayLength;
         ThreadSafeRandom? random = null;
@@ -151,7 +152,7 @@ public sealed record PluginConfigurationObject
                     else
                     {
                         // Case: The next number could not be incremented, we use a random number
-                        random ??= new ThreadSafeRandom();
+                        random ??= Rng;
                         configObject = configObject with { Num = (uint)random.Next(500_000, 1_000_000) };
                         storedObjects.Add((TClass)configObject);
                         LOG.LogWarning("The next number for the configuration object '{ConfigObjectName}' (id={ConfigObjectId}) could not be incremented. Using a random number instead (config plugin id: {ConfigPluginId}).", configObject.Name, configObject.Id, configPluginId);
@@ -186,7 +187,7 @@ public sealed record PluginConfigurationObject
             return false;
         }
 
-        var localSettingsManager = SettingsManager;
+        var localSettingsManager = SettingsManagerAccess;
         var storedObjects = localSettingsManager.ConfigurationData.DataSources;
         var numberObjects = luaTable.ArrayLength;
         ThreadSafeRandom? random = null;
@@ -231,7 +232,7 @@ public sealed record PluginConfigurationObject
                 }
                 else
                 {
-                    random ??= new ThreadSafeRandom();
+                    random ??= Rng;
                     configObject = configObject with { Num = (uint)random.Next(500_000, 1_000_000) };
                     storedObjects.Add(configObject);
                     LOG.LogWarning("The next number for the data source '{ConfigObjectName}' (id={ConfigObjectId}) could not be incremented. Using a random number instead (config plugin id: {ConfigPluginId}).", configObject.Name, configObject.Id, configPluginId);
@@ -266,7 +267,7 @@ public sealed record PluginConfigurationObject
         SecretStoreType? secretStoreType = null,
         bool deleteSecret = false) where TClass : IConfigurationObject
     {
-        var localSettingsManager = SettingsManager;
+        var localSettingsManager = SettingsManagerAccess;
         var configuredObjects = configObjectSelection.Compile()(localSettingsManager.ConfigurationData);
         var leftOverObjects = new List<TClass>();
         foreach (var configuredObject in configuredObjects)
@@ -310,7 +311,7 @@ public sealed record PluginConfigurationObject
             // Delete the API key from the OS keyring if the removed object has one:
             if(deleteSecret && item is ISecretId regularSecretId)
             {
-                var deleteResult = await RUST_SERVICE.DeleteSecret(regularSecretId, secretStoreType ?? SecretStoreType.DATA_SOURCE);
+                var deleteResult = await RustService.DeleteSecret(regularSecretId, secretStoreType ?? SecretStoreType.DATA_SOURCE);
                 if (deleteResult.Success)
                     LOG.LogInformation($"Successfully deleted secret for removed enterprise object '{item.Name}' from the OS keyring.");
                 else
@@ -318,7 +319,7 @@ public sealed record PluginConfigurationObject
             }
             else if(secretStoreType is not null && item is ISecretId secretId)
             {
-                var deleteResult = await RUST_SERVICE.DeleteAPIKey(secretId, secretStoreType.Value);
+                var deleteResult = await RustService.DeleteAPIKey(secretId, secretStoreType.Value);
                 if (deleteResult.Success)
                     LOG.LogInformation($"Successfully deleted API key for removed enterprise provider '{item.Name}' from the OS keyring.");
                 else

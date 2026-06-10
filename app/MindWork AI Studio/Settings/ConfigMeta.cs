@@ -151,7 +151,7 @@ public record ConfigMeta<TClass, TValue> : ConfigMetaBase
     /// </summary>
     private void Reset()
     {
-        var configInstance = this.ConfigSelection.Compile().Invoke(SettingsManager.ConfigurationData);
+        var configInstance = this.ConfigSelection.Compile().Invoke(SettingsManagerAccess.ConfigurationData);
         var memberExpression = this.PropertyExpression.GetMemberExpression();
         if (memberExpression.Member is System.Reflection.PropertyInfo propertyInfo)
             propertyInfo.SetValue(configInstance, this.Default);
@@ -163,7 +163,7 @@ public record ConfigMeta<TClass, TValue> : ConfigMetaBase
     /// <param name="value">The value to set for the configuration property.</param>
     public void SetValue(TValue value)
     {
-        var configInstance = this.ConfigSelection.Compile().Invoke(SettingsManager.ConfigurationData);
+        var configInstance = this.ConfigSelection.Compile().Invoke(SettingsManagerAccess.ConfigurationData);
         var memberExpression = this.PropertyExpression.GetMemberExpression();
         if (memberExpression.Member is System.Reflection.PropertyInfo propertyInfo)
             propertyInfo.SetValue(configInstance, value);
@@ -174,7 +174,7 @@ public record ConfigMeta<TClass, TValue> : ConfigMetaBase
     /// </summary>
     public TValue GetValue()
     {
-        var configInstance = this.ConfigSelection.Compile().Invoke(SettingsManager.ConfigurationData);
+        var configInstance = this.ConfigSelection.Compile().Invoke(SettingsManagerAccess.ConfigurationData);
         var memberExpression = this.PropertyExpression.GetMemberExpression();
         if (memberExpression.Member is System.Reflection.PropertyInfo propertyInfo && propertyInfo.GetValue(configInstance) is TValue value)
             return value;

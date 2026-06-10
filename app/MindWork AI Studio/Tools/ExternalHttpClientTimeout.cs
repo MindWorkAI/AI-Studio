@@ -26,7 +26,7 @@ public static class ExternalHttpClientTimeout
 
     private static string TB(string fallbackEN) => PluginSystem.I18N.I.T(fallbackEN, typeof(ExternalHttpClientTimeout).Namespace, nameof(ExternalHttpClientTimeout));
     private static readonly Lazy<ILogger> LOGGER = new(() => Program.LOGGER_FACTORY.CreateLogger(nameof(ExternalHttpClientTimeout)));
-    private static readonly Lazy<SettingsManager> SETTINGS_MANAGER = new(() => Program.SERVICE_PROVIDER.GetRequiredService<SettingsManager>());
+    private static SettingsManager SettingsManagerAccess => Program.SERVICE_PROVIDER.GetRequiredService<SettingsManager>();
     private static readonly Lock CUSTOM_ROOT_CERTIFICATE_LOCK = new();
     private static CustomRootCertificateCache? CUSTOM_ROOT_CERTIFICATE_CACHE;
 
@@ -91,7 +91,7 @@ public static class ExternalHttpClientTimeout
     
     private static TimeSpan GetTimeout()
     {
-        var seconds = SETTINGS_MANAGER.Value.ConfigurationData.App.HttpClientTimeoutSeconds;
+        var seconds = SettingsManagerAccess.ConfigurationData.App.HttpClientTimeoutSeconds;
         if (seconds <= 0)
             seconds = DEFAULT_HTTP_CLIENT_TIMEOUT_SECONDS;
 
@@ -129,11 +129,11 @@ public static class ExternalHttpClientTimeout
 
         var enabled = TryParseBooleanEnvironmentValue(envEnabled, out var parsedEnvEnabled)
             ? parsedEnvEnabled
-            : SETTINGS_MANAGER.Value.ConfigurationData.App.ExternalHttpCustomRootCertificatesEnabled;
+            : SettingsManagerAccess.ConfigurationData.App.ExternalHttpCustomRootCertificatesEnabled;
 
         var bundlePath = !string.IsNullOrWhiteSpace(envBundlePath)
             ? envBundlePath.Trim()
-            : SETTINGS_MANAGER.Value.ConfigurationData.App.ExternalHttpCustomRootCertificateBundlePath.Trim();
+            : SettingsManagerAccess.ConfigurationData.App.ExternalHttpCustomRootCertificateBundlePath.Trim();
 
         var allowedHostPatterns = ReadAllowedHostPatterns(envAllowedHosts);
         var source = ReadCustomRootCertificateConfigurationSource(envEnabled, envBundlePath, envAllowedHosts);
@@ -158,7 +158,7 @@ public static class ExternalHttpClientTimeout
     {
         IEnumerable<string> rawPatterns = !string.IsNullOrWhiteSpace(envAllowedHosts)
             ? envAllowedHosts.Split([';', ','], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            : SETTINGS_MANAGER.Value.ConfigurationData.App.ExternalHttpCustomRootCertificateAllowedHosts;
+            : SettingsManagerAccess.ConfigurationData.App.ExternalHttpCustomRootCertificateAllowedHosts;
 
         var patterns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var rawPattern in rawPatterns)

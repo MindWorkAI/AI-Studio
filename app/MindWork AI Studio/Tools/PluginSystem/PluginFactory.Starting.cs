@@ -64,7 +64,7 @@ public static partial class PluginFactory
 
             try
             {
-                if (availablePlugin.IsInternal || SettingsManager.IsPluginEnabled(availablePlugin) || availablePlugin.Type == PluginType.CONFIGURATION || availablePlugin.Type == PluginType.ASSISTANT)
+                if (availablePlugin.IsInternal || SettingsManagerAccess.IsPluginEnabled(availablePlugin) || availablePlugin.Type == PluginType.CONFIGURATION || availablePlugin.Type == PluginType.ASSISTANT)
                     if(await Start(availablePlugin, cancellationToken) is { IsValid: true } plugin)
                     {
                         if (plugin is PluginConfiguration configPlugin)
