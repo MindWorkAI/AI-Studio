@@ -26,7 +26,7 @@
                 var field = property.Value;
                 if (field.EnumValues.Count > 0)
                 {
-                    <MudSelect T="string" Label="@this.GetFieldLabel(fieldName, field)" Value="@this.GetValue(fieldName)" ValueChanged="@(value => this.UpdateValue(fieldName, value))" Variant="Variant.Outlined" Margin="Margin.Dense" HelperText="@this.GetFieldDescription(fieldName, field)" Class="mb-3" Disabled="@this.IsFieldDisabled(fieldName)">
+                    <MudSelect T="string" Label="@this.GetFieldLabel(fieldName, field)" Value="@this.GetValue(fieldName)" ValueChanged="@(value => this.UpdateValue(fieldName, value))" Variant="Variant.Outlined" Margin="Margin.Dense" HelperText="@this.GetFieldDescription(fieldName, field)" Placeholder="@this.GetFieldPlaceholder(fieldName, field)" Class="mb-3" Disabled="@this.IsFieldDisabled(fieldName)">
                         @foreach (var option in field.EnumValues)
                         {
                             <MudSelectItem T="string" Value="@option">@option</MudSelectItem>
@@ -35,7 +35,7 @@
                 }
                 else
                 {
-                    <MudTextField T="string" Label="@this.GetFieldLabel(fieldName, field)" Value="@this.GetValue(fieldName)" ValueChanged="@(value => this.UpdateValue(fieldName, value))" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3" HelperText="@this.GetFieldDescription(fieldName, field)" InputType="@(field.Secret ? InputType.Password : InputType.Text)" Disabled="@this.IsFieldDisabled(fieldName)" />
+                    <MudTextField T="string" Label="@this.GetFieldLabel(fieldName, field)" Value="@this.GetValue(fieldName)" ValueChanged="@(value => this.UpdateValue(fieldName, value))" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3" HelperText="@this.GetFieldDescription(fieldName, field)" Placeholder="@this.GetFieldPlaceholder(fieldName, field)" InputType="@(field.Secret ? InputType.Password : InputType.Text)" Disabled="@this.IsFieldDisabled(fieldName)" />
                 }
             }
             </MudPaper>

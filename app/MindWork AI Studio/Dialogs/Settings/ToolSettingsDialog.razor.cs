@@ -37,13 +37,29 @@ public partial class ToolSettingsDialog : SettingsDialogBase
         this.implementation?.GetSettingsFieldLabel(fieldName, fieldDefinition) ?? fieldDefinition.Title;
 
     private string GetFieldDescription(string fieldName, ToolSettingsFieldDefinition fieldDefinition) =>
-        this.implementation?.GetSettingsFieldDescription(fieldName, fieldDefinition) ?? fieldDefinition.Description;
+        this.GetFieldDescriptionWithDefault(fieldName, fieldDefinition);
+
+    private string GetFieldDefaultValue(string fieldName, ToolSettingsFieldDefinition fieldDefinition) =>
+        this.implementation?.GetSettingsFieldDefaultValue(fieldName, fieldDefinition) ?? string.Empty;
+
+    private string GetFieldDescriptionWithDefault(string fieldName, ToolSettingsFieldDefinition fieldDefinition)
+    {
+        var description = this.implementation?.GetSettingsFieldDescription(fieldName, fieldDefinition) ?? fieldDefinition.Description;
+        var defaultValue = this.GetFieldDefaultValue(fieldName, fieldDefinition);
+        if (string.IsNullOrWhiteSpace(defaultValue))
+            return description;
+
+        return string.Format(T("{0} Default: {1}"), description, defaultValue);
+    }
 
     private bool IsFieldDisabled(string fieldName) =>
         this.toolDefinition?.Id.Equals(ToolSelectionRules.READ_WEB_PAGE_TOOL_ID, StringComparison.Ordinal) is true &&
         fieldName.Equals("allowedPrivateHosts", StringComparison.Ordinal) &&
         ManagedConfiguration.TryGet(x => x.Tools, x => x.ReadWebPageAllowedPrivateHosts, out var meta) &&
         meta.IsLocked;
+
+    private string GetFieldPlaceholder(string fieldName, ToolSettingsFieldDefinition fieldDefinition) =>
+        string.IsNullOrWhiteSpace(this.GetValue(fieldName)) ? this.GetFieldDefaultValue(fieldName, fieldDefinition) : string.Empty;
 
     private void UpdateValue(string fieldName, string? value) => this.values[fieldName] = value ?? string.Empty;
 

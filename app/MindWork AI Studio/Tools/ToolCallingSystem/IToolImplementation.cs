@@ -22,6 +22,8 @@ public interface IToolImplementation
     public string GetSettingsFieldDescription(string fieldName, ToolSettingsFieldDefinition fieldDefinition) =>
         this.T(fieldDefinition.Description);
 
+    public string? GetSettingsFieldDefaultValue(string fieldName, ToolSettingsFieldDefinition fieldDefinition) => null;
+
     public Task<ToolConfigurationState?> ValidateConfigurationAsync(
         ToolDefinition definition,
         IReadOnlyDictionary<string, string> settingsValues,

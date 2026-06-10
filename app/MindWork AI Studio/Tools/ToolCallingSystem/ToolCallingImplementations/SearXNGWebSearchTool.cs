@@ -52,6 +52,13 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
         _ => TB(fieldDefinition.Description),
     };
 
+    public string? GetSettingsFieldDefaultValue(string fieldName, ToolSettingsFieldDefinition fieldDefinition) => fieldName switch
+    {
+        "maxResults" => DEFAULT_MAX_RESULTS.ToString(),
+        "timeoutSeconds" => DEFAULT_TIMEOUT_SECONDS.ToString(),
+        _ => null,
+    };
+
     public Task<ToolConfigurationState?> ValidateConfigurationAsync(
         ToolDefinition definition,
         IReadOnlyDictionary<string, string> settingsValues,

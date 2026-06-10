@@ -43,7 +43,7 @@ public sealed class ReadWebPageTool(HTMLParser htmlParser, ILogger<ReadWebPageTo
 
     public string GetDisplayName() => TB("Read Web Page");
 
-    public string GetDescription() => TB("Load a single web page, extract its main HTML content, and return structured working material for the model. Use the result to synthesize a natural-language answer instead of exposing the raw payload to the user.");
+    public string GetDescription() => TB("Load a single web page and extract its main HTML content.");
 
     public string GetSettingsFieldLabel(string fieldName, ToolSettingsFieldDefinition fieldDefinition) => fieldName switch
     {
@@ -57,8 +57,15 @@ public sealed class ReadWebPageTool(HTMLParser htmlParser, ILogger<ReadWebPageTo
     {
         "timeoutSeconds" => TB("Optional HTTP timeout for loading a web page in seconds."),
         "maxContentCharacters" => TB("Optional global truncation limit for extracted Markdown returned to the model."),
-        ALLOWED_PRIVATE_HOSTS_SETTING => TB("Optional host allowlist for private or VPN web pages. Separate host patterns with commas, such as example.de, *.example.de. Allowed private hosts require a High-confidence provider."),
+        ALLOWED_PRIVATE_HOSTS_SETTING => TB("Optional host allowlist for private or VPN web pages. For security reasons, private or VPN web pages aren't allowed to be read by default. Separate host patterns with commas, such as example.de, example.com. Allowed private hosts require a high-confidence provider."),
         _ => TB(fieldDefinition.Description),
+    };
+
+    public string? GetSettingsFieldDefaultValue(string fieldName, ToolSettingsFieldDefinition fieldDefinition) => fieldName switch
+    {
+        "timeoutSeconds" => DEFAULT_TIMEOUT_SECONDS.ToString(),
+        "maxContentCharacters" => DEFAULT_MAX_CONTENT_CHARACTERS.ToString(),
+        _ => null,
     };
 
     public Task<ToolConfigurationState?> ValidateConfigurationAsync(
