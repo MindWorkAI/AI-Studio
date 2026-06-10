@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 MindWork AI Studio is a cross-platform desktop application for interacting with Large Language Models (LLMs). The app uses a hybrid architecture combining a Rust Tauri runtime (for the native desktop shell) with a .NET Blazor Server web application (for the UI and business logic).
 
 **Key Architecture Points:**
-- **Runtime:** Rust-based Tauri v1.8 application providing the native window, system integration, and IPC layer
+- **Runtime:** Rust-based Tauri v2 application providing the native window, system integration, and IPC layer
 - **App:** .NET 9 Blazor Server application providing the UI and core functionality
 - **Communication:** The Rust runtime and .NET app communicate via HTTPS with TLS certificates generated at startup
 - **Providers:** Multi-provider architecture supporting OpenAI, Anthropic, Google, Mistral, Perplexity, self-hosted models, and others
@@ -18,7 +18,7 @@ MindWork AI Studio is a cross-platform desktop application for interacting with 
 ### Prerequisites
 - .NET 9 SDK
 - Rust toolchain (stable)
-- Tauri v1.6.2 CLI: `cargo install --version 1.6.2 tauri-cli`
+- Tauri v2 CLI
 - Tauri prerequisites (platform-specific dependencies)
 - **Note:** Development on Linux is discouraged due to complex Tauri dependencies that vary by distribution
 
@@ -151,7 +151,7 @@ Multi-level confidence scheme allows users to control which providers see which 
 ## Dependencies and Frameworks
 
 **Rust:**
-- Tauri 1.8 - Desktop application framework
+- Tauri 2 - Desktop application framework
 - Axum - HTTPS API server
 - tokio - Async runtime
 - keyring - OS keyring integration
