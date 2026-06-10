@@ -31,6 +31,9 @@ public partial class SingleInputDialog : MSGComponentBase
     [Parameter]
     public string EmptyInputErrorMessage { get; set; } = string.Empty;
 
+    [Parameter]
+    public Func<string?, string?>? AdditionalValidation { get; set; }
+
     private static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
 
     private MudForm form = null!;
@@ -52,8 +55,8 @@ public partial class SingleInputDialog : MSGComponentBase
     {
         if (!this.AllowEmptyInput && string.IsNullOrWhiteSpace(value))
             return string.IsNullOrWhiteSpace(this.EmptyInputErrorMessage) ? T("Please enter a value.") : this.EmptyInputErrorMessage;
-        
-        return null;
+
+        return this.AdditionalValidation?.Invoke(value);
     }
     
     private void Cancel() => this.MudDialog.Cancel();

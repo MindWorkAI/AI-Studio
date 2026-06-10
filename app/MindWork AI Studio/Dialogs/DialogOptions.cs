@@ -7,6 +7,12 @@ public static class DialogOptions
         CloseOnEscapeKey = true,
         FullWidth = true, MaxWidth = MaxWidth.Medium,
     };
+
+    public static readonly MudBlazor.DialogOptions FULLSCREEN_MANUAL_ESCAPE = new()
+    {
+        CloseOnEscapeKey = false,
+        FullWidth = true, MaxWidth = MaxWidth.Medium,
+    };
     
     public static readonly MudBlazor.DialogOptions FULLSCREEN_NO_HEADER = new()
     {

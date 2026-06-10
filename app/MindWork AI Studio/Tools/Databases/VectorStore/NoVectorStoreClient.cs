@@ -2,19 +2,19 @@ using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Tools.Databases.VectorStore;
 
-public sealed class NoVectorStoreClient(string name, string? unavailableReason, DatabaseClientStatus status = DatabaseClientStatus.UNAVAILABLE) : IVectorStoreClient
+public sealed class NoVectorStoreClient(string name, string? unavailableReason, DatabaseClientStatus status = DatabaseClientStatus.UNAVAILABLE) : DatabaseClient(name, string.Empty), IVectorStoreClient
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(NoVectorStoreClient).Namespace, nameof(NoVectorStoreClient));
 
-    public string Name => name;
+    public override DatabaseClientStatus Status => status;
 
-    public DatabaseClientStatus Status => status;
-
-    public bool IsAvailable => false;
-
-    public async IAsyncEnumerable<(string Label, string Value)> GetDisplayInfo()
+    public override async IAsyncEnumerable<(string Label, string Value)> GetDisplayInfo()
     {
-        yield return (TB("Status"), TB("Unavailable"));
+        yield return (TB("Status"), status switch
+        {
+            DatabaseClientStatus.STARTING => TB("Starting"),
+            _ => TB("Unavailable")
+        });
 
         if (!string.IsNullOrWhiteSpace(unavailableReason))
             yield return (TB("Reason"), unavailableReason);
@@ -36,4 +36,8 @@ public sealed class NoVectorStoreClient(string name, string? unavailableReason, 
 
     private InvalidOperationException CreateUnavailableException() =>
         new(unavailableReason ?? "The vector store is not available.");
+
+    public override void Dispose()
+    {
+    }
 }

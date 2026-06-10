@@ -1,11 +1,22 @@
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.Rust;
 
 namespace AIStudio.Components.Settings;
 
 public partial class SettingsPanelApp : SettingsPanelBase
 {
+    private ConfigurationShortcutData VoiceRecordingShortcut => new()
+    {
+        Id = Shortcut.VOICE_RECORDING_TOGGLE,
+        Value = () => this.SettingsManager.ConfigurationData.App.ShortcutVoiceRecording,
+        ValueUpdate = shortcut => this.SettingsManager.ConfigurationData.App.ShortcutVoiceRecording = shortcut,
+        DisplayName = () => this.SettingsManager.ConfigurationData.App.ShortcutVoiceRecordingDisplayName,
+        DisplaySource = () => this.SettingsManager.ConfigurationData.App.ShortcutVoiceRecordingDisplaySource,
+        DisplayUpdate = this.UpdateShortcutVoiceRecordingDisplay,
+    };
+
     private async Task GenerateEncryptionSecret()
     {
         var secret = EnterpriseEncryption.GenerateSecret();
@@ -67,10 +78,36 @@ public partial class SettingsPanelApp : SettingsPanelBase
         return enabled;
     }
 
+    private string GetExternalHttpCustomRootCertificateAllowedHostsText()
+    {
+        return string.Join(Environment.NewLine, this.SettingsManager.ConfigurationData.App.ExternalHttpCustomRootCertificateAllowedHosts.Order(StringComparer.OrdinalIgnoreCase));
+    }
+
+    private bool AreExternalHttpCustomRootCertificateDetailsDisabled()
+    {
+        return !this.SettingsManager.ConfigurationData.App.ExternalHttpCustomRootCertificatesEnabled;
+    }
+
+    private void UpdateExternalHttpCustomRootCertificateAllowedHosts(string updatedText)
+    {
+        var patterns = updatedText
+            .Split(['\r', '\n', ';', ','], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(pattern => !string.IsNullOrWhiteSpace(pattern))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        this.SettingsManager.ConfigurationData.App.ExternalHttpCustomRootCertificateAllowedHosts = patterns;
+    }
+
     private void UpdateEnabledPreviewFeatures(HashSet<PreviewFeatures> selectedFeatures)
     {
         selectedFeatures.UnionWith(this.GetPluginContributedPreviewFeatures());
         this.SettingsManager.ConfigurationData.App.EnabledPreviewFeatures = selectedFeatures;
+    }
+
+    private void UpdateShortcutVoiceRecordingDisplay(string displayName, string displaySource)
+    {
+        this.SettingsManager.ConfigurationData.App.ShortcutVoiceRecordingDisplayName = displayName;
+        this.SettingsManager.ConfigurationData.App.ShortcutVoiceRecordingDisplaySource = displaySource;
     }
 
     private async Task UpdateLangBehaviour(LangBehavior behavior)

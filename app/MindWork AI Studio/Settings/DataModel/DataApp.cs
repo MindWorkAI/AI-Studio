@@ -58,6 +58,11 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     public StartPage StartPage { get; set; } = ManagedConfiguration.Register(configSelection, n => n.StartPage, StartPage.HOME);
 
     /// <summary>
+    /// Should the quick start guide be visible on the home page?
+    /// </summary>
+    public bool ShowQuickStartGuide { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ShowQuickStartGuide, true);
+
+    /// <summary>
     /// The visibility setting for previews features.
     /// </summary>
     public PreviewVisibility PreviewVisibility { get; set; } = ManagedConfiguration.Register(configSelection, n => n.PreviewVisibility, PreviewVisibility.NONE);
@@ -95,9 +100,34 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     public string ShortcutVoiceRecording { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ShortcutVoiceRecording, string.Empty);
 
     /// <summary>
+    /// The user-facing label for the voice recording shortcut, based on the user's keyboard layout.
+    /// </summary>
+    public string ShortcutVoiceRecordingDisplayName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// The canonical voice recording shortcut value this display label belongs to.
+    /// </summary>
+    public string ShortcutVoiceRecordingDisplaySource { get; set; } = string.Empty;
+
+    /// <summary>
     /// The HTTP timeout in seconds for external HTTP clients.
     /// </summary>
     public int HttpClientTimeoutSeconds { get; set; } = ManagedConfiguration.Register(configSelection, n => n.HttpClientTimeoutSeconds, ExternalHttpClientTimeout.DEFAULT_HTTP_CLIENT_TIMEOUT_SECONDS);
+
+    /// <summary>
+    /// Should external HTTP clients trust additional root certificates from a configured PEM bundle?
+    /// </summary>
+    public bool ExternalHttpCustomRootCertificatesEnabled { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ExternalHttpCustomRootCertificatesEnabled, false);
+
+    /// <summary>
+    /// Path to a PEM bundle containing additional root certificates for external HTTP clients.
+    /// </summary>
+    public string ExternalHttpCustomRootCertificateBundlePath { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ExternalHttpCustomRootCertificateBundlePath, string.Empty);
+
+    /// <summary>
+    /// Hostnames for which external HTTP clients may use the additional root certificates.
+    /// </summary>
+    public HashSet<string> ExternalHttpCustomRootCertificateAllowedHosts { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ExternalHttpCustomRootCertificateAllowedHosts, []);
 
     /// <summary>
     /// Should the user be allowed to add providers?

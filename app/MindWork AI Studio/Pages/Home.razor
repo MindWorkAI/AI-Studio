@@ -34,9 +34,12 @@
                 <Vision/>
             </ExpansionPanel>
             
-            <ExpansionPanel HeaderIcon="@Icons.Material.Filled.RocketLaunch" HeaderText="@T("Quick Start Guide")">
-                <MudMarkdown Props="Markdown.DefaultConfig" Value="@QUICK_START_GUIDE" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE"/>
-            </ExpansionPanel>
+            @if (this.SettingsManager.ConfigurationData.App.ShowQuickStartGuide)
+            {
+                <ExpansionPanel HeaderIcon="@Icons.Material.Filled.RocketLaunch" HeaderText="@T("Quick Start Guide")">
+                    <MudMarkdown Props="Markdown.DefaultConfig" Value="@QUICK_START_GUIDE" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE"/>
+                </ExpansionPanel>
+            }
 
         </MudExpansionPanels>
     </InnerScrolling>

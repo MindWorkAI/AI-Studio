@@ -4,6 +4,7 @@ using AIStudio.Components;
 using AIStudio.Dialogs;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Databases;
+using AIStudio.Tools.Databases.VectorStore;
 using AIStudio.Tools.Metadata;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
@@ -41,6 +42,7 @@ public partial class Information : MSGComponentBase
 
     private string osLanguage = string.Empty;
     private string osUserName = string.Empty;
+    private RuntimeInfoResponse runtimeInfo;
     
     private static string VersionApp => $"MindWork AI Studio: v{META_DATA.Version} (commit {META_DATA.AppCommitHash}, build {META_DATA.BuildNum}, {META_DATA_ARCH.Architecture.ToRID().ToUserFriendlyName()})";
     
@@ -51,6 +53,20 @@ public partial class Information : MSGComponentBase
     private string OSLanguage => $"{T("User-language provided by the OS")}: '{this.osLanguage}'";
     
     private string OSUserName => $"{T("Username provided by the OS")}: '{this.osUserName}'";
+
+    private string WorkingDirectory => $"{T("Working directory")}: {this.runtimeInfo.WorkingDirectory}";
+
+    private string ExecutablePath => $"{T("Executable path")}: {this.runtimeInfo.ExecutablePath}";
+
+    private string LinuxPackageType => $"{T("Linux package")}: {this.LinuxPackageTypeDisplayName}";
+
+    private string LinuxPackageTypeDisplayName => this.runtimeInfo.LinuxPackageType switch
+    {
+        "appimage" => "AppImage",
+        "flatpak" => "Flatpak",
+        "unknown" => T("unknown"),
+        _ => T("not applicable")
+    };
 
     private string VersionRust => $"{T("Used Rust compiler")}: v{META_DATA.RustVersion}";
     
@@ -86,6 +102,7 @@ public partial class Information : MSGComponentBase
     private bool showEnterpriseConfigDetails;
 
     private bool showVectorStoreDetails;
+    private bool showExternalHttpCustomRootCertificateDetails;
 
     private List<IAvailablePlugin> configPlugins = PluginFactory.AvailablePlugins
         .Where(x => x.Type is PluginType.CONFIGURATION)
@@ -145,6 +162,7 @@ public partial class Information : MSGComponentBase
         
         this.osLanguage = await this.RustService.ReadUserLanguage();
         this.osUserName = await this.RustService.ReadUserName();
+        this.runtimeInfo = await this.RustService.GetRuntimeInfo();
         this.logPaths = await this.RustService.GetLogPaths();
         
         await this.RefreshVectorStoreInfo(CancellationToken.None);
@@ -247,6 +265,11 @@ public partial class Information : MSGComponentBase
     {
         this.showEnterpriseConfigDetails = !this.showEnterpriseConfigDetails;
     }
+
+    private void ToggleExternalHttpCustomRootCertificateDetails()
+    {
+        this.showExternalHttpCustomRootCertificateDetails = !this.showExternalHttpCustomRootCertificateDetails;
+    }
     
     private void ToggleVectorStoreDetails()
     {
@@ -272,7 +295,7 @@ public partial class Information : MSGComponentBase
         }
         catch (Exception e)
         {
-            this.vectorStore = new NoDatabaseClient(refreshedClient.Name, e.Message, DatabaseClientStatus.STARTING);
+            this.vectorStore = new NoVectorStoreClient(refreshedClient.Name, e.Message, DatabaseClientStatus.STARTING);
             await foreach (var (label, value) in this.vectorStore.GetDisplayInfo().WithCancellation(cancellationToken))
             {
                 this.vectorStoreDisplayInfo.Add(new VectorStoreDisplayInfo(label, value));
@@ -323,9 +346,130 @@ public partial class Information : MSGComponentBase
                ?? this.configPlugins.FirstOrDefault(plugin => plugin.ManagedConfigurationId is null && plugin.Id == configurationId);
     }
 
+    private IReadOnlyList<ConfigInfoRowItem> BuildEnterpriseConfigurationItems(EnterpriseEnvironment environment, IAvailablePlugin? plugin = null)
+    {
+        var items = new List<ConfigInfoRowItem>
+        {
+            new(Icons.Material.Filled.ArrowRightAlt,
+                $"{T("Enterprise configuration ID:")} {environment.ConfigurationId}",
+                environment.ConfigurationId.ToString(),
+                T("Copies the config ID to the clipboard")),
+
+            new(Icons.Material.Filled.ArrowRightAlt,
+                $"{T("Configuration server:")} {environment.ConfigurationServerUrl}",
+                environment.ConfigurationServerUrl,
+                T("Copies the server URL to the clipboard"),
+                "margin-top: 4px;"),
+
+            new(Icons.Material.Filled.ArrowRightAlt,
+                $"{T("Configuration source:")} {environment.Source}",
+                environment.Source,
+                T("Copies the configuration source to the clipboard"),
+                "margin-top: 4px;"),
+        };
+
+        if (!string.IsNullOrWhiteSpace(environment.SourceDetail))
+        {
+            items.Add(new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
+                $"{T("Configuration origin:")} {environment.SourceDetail}",
+                environment.SourceDetail,
+                T("Copies the configuration origin to the clipboard"),
+                "margin-top: 4px;"));
+        }
+
+        items.Add(new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
+            $"{T("Configuration slot:")} {environment.Slot}",
+            environment.Slot,
+            T("Copies the configuration slot to the clipboard"),
+            "margin-top: 4px;"));
+
+        if (plugin is not null)
+        {
+            items.Add(new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
+                $"{T("Configuration plugin ID:")} {plugin.Id}",
+                plugin.Id.ToString(),
+                T("Copies the configuration plugin ID to the clipboard"),
+                "margin-top: 4px;"));
+        }
+
+        return items;
+    }
+
     private bool IsManagedConfigurationIdMismatch(IAvailablePlugin plugin, Guid configurationId)
     {
         return plugin.ManagedConfigurationId == configurationId && plugin.Id != configurationId;
+    }
+
+    private string ExternalHttpCustomRootCertificateWarningText
+    {
+        get
+        {
+            var state = ExternalHttpClientTimeout.CustomRootCertificateState;
+            return string.IsNullOrWhiteSpace(state.Issue)
+                ? T("The configured root certificates could not be used.")
+                : state.Issue;
+        }
+    }
+
+    private IReadOnlyList<ConfigInfoRowItem> BuildExternalHttpCustomRootCertificateItems()
+    {
+        var state = ExternalHttpClientTimeout.CustomRootCertificateState;
+        var items = new List<ConfigInfoRowItem>
+        {
+            new(Icons.Material.Filled.ArrowRightAlt,
+                $"{T("Status:")} {(state.IsUsable ? T("active") : T("not active"))}",
+                state.IsUsable ? T("active") : T("not active"),
+                T("Copies the status to the clipboard")),
+
+            new(Icons.Material.Filled.ArrowRightAlt,
+                $"{T("Configuration source:")} {state.Source}",
+                state.Source,
+                T("Copies the configuration source to the clipboard"),
+                "margin-top: 4px;"),
+
+            new(Icons.Material.Filled.ArrowRightAlt,
+                $"{T("Certificate bundle:")} {state.BundlePath}",
+                state.BundlePath,
+                T("Copies the certificate bundle path to the clipboard"),
+                "margin-top: 4px;"),
+
+            new(Icons.Material.Filled.ArrowRightAlt,
+                $"{T("Loaded root certificates:")} {state.CertificateCount}",
+                state.CertificateCount.ToString(),
+                T("Copies the number of loaded root certificates to the clipboard"),
+                "margin-top: 4px;")
+        };
+
+        if (state.AllowedHostPatterns.Count == 0)
+        {
+            items.Add(new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
+                T("Allowed hosts: none configured"),
+                string.Empty,
+                T("Copies the allowed host configuration to the clipboard"),
+                "margin-top: 4px;"));
+        }
+        else
+        {
+            foreach (var allowedHostPattern in state.AllowedHostPatterns)
+            {
+                items.Add(new ConfigInfoRowItem(Icons.Material.Filled.Dns,
+                    $"{T("Allowed host:")} {allowedHostPattern}",
+                    allowedHostPattern,
+                    T("Copies the allowed host pattern to the clipboard"),
+                    "margin-top: 4px;"));
+            }
+        }
+
+        foreach (var fingerprint in state.CertificateFingerprints)
+        {
+            items.Add(new ConfigInfoRowItem(Icons.Material.Filled.Fingerprint,
+                $"{T("Root certificate fingerprint:")} {fingerprint}",
+                fingerprint,
+                T("Copies the root certificate fingerprint to the clipboard"),
+                "margin-top: 4px;"));
+        }
+
+        return items;
     }
 
     protected override void DisposeResources()

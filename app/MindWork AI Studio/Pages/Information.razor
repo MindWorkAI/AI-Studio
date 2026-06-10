@@ -48,6 +48,26 @@
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.Memory" Text="@TauriVersion"/>
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.Translate" Text="@this.OSLanguage"/>
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.AccountCircle" Text="@this.OSUserName"/>
+                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Folder">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <MudText Typo="Typo.body1">
+                                @this.WorkingDirectory
+                            </MudText>
+                            <MudCopyClipboardButton TooltipMessage="@(T("Copies the working directory to the clipboard"))" StringContent="@this.runtimeInfo.WorkingDirectory"/>
+                        </div>
+                    </MudListItem>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.InsertDriveFile">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <MudText Typo="Typo.body1">
+                                @this.ExecutablePath
+                            </MudText>
+                            <MudCopyClipboardButton TooltipMessage="@(T("Copies the executable path to the clipboard"))" StringContent="@this.runtimeInfo.ExecutablePath"/>
+                        </div>
+                    </MudListItem>
+                    @if (OperatingSystem.IsLinux())
+                    {
+                        <MudListItem T="string" Icon="@Icons.Material.Outlined.Storage" Text="@this.LinuxPackageType"/>
+                    }
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.Business">
                         @switch (HasAnyActiveEnvironment)
                         {
@@ -89,18 +109,7 @@
                                     {
                                         <ConfigPluginInfoCard HeaderIcon="@Icons.Material.Filled.HourglassBottom"
                                                               HeaderText="@T("Waiting for the configuration plugin...")"
-                                                              Items="@([
-                                                                         new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
-                                                                             $"{T("Enterprise configuration ID:")} {env.ConfigurationId}",
-                                                                             env.ConfigurationId.ToString(),
-                                                                             T("Copies the config ID to the clipboard")),
-                                                                         
-                                                                         new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
-                                                                             $"{T("Configuration server:")} {env.ConfigurationServerUrl}",
-                                                                             env.ConfigurationServerUrl,
-                                                                             T("Copies the server URL to the clipboard"),
-                                                                             "margin-top: 4px;")
-                                                                     ])"/>
+                                                              Items="@this.BuildEnterpriseConfigurationItems(env)"/>
                                     }
                                     
                                     <EncryptionSecretInfo IsConfigured="@(PluginFactory.EnterpriseEncryption?.IsAvailable is true)"
@@ -130,41 +139,13 @@
                                         {
                                             <ConfigPluginInfoCard HeaderIcon="@Icons.Material.Filled.HourglassBottom"
                                                                   HeaderText="@T("Waiting for the configuration plugin...")"
-                                                                  Items="@([
-                                                                             new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
-                                                                                 $"{T("Enterprise configuration ID:")} {env.ConfigurationId}",
-                                                                                 env.ConfigurationId.ToString(),
-                                                                                 T("Copies the config ID to the clipboard")),
-                                                                             
-                                                                             new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
-                                                                                 $"{T("Configuration server:")} {env.ConfigurationServerUrl}",
-                                                                                 env.ConfigurationServerUrl,
-                                                                                 T("Copies the server URL to the clipboard"),
-                                                                                 "margin-top: 4px;")
-                                                                         ])"/>
+                                                                  Items="@this.BuildEnterpriseConfigurationItems(env)"/>
                                             continue;
                                         }
                                         
                                         <ConfigPluginInfoCard HeaderIcon="@Icons.Material.Filled.Extension"
                                                               HeaderText="@matchingPlugin.Name"
-                                                              Items="@([
-                                                                         new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
-                                                                             $"{T("Enterprise configuration ID:")} {env.ConfigurationId}",
-                                                                             env.ConfigurationId.ToString(),
-                                                                             T("Copies the config ID to the clipboard")),
-                                                                         
-                                                                         new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
-                                                                             $"{T("Configuration server:")} {env.ConfigurationServerUrl}",
-                                                                             env.ConfigurationServerUrl,
-                                                                             T("Copies the server URL to the clipboard"),
-                                                                             "margin-top: 4px;"),
-                                                                         
-                                                                         new ConfigInfoRowItem(Icons.Material.Filled.ArrowRightAlt,
-                                                                             $"{T("Configuration plugin ID:")} {matchingPlugin.Id}",
-                                                                             matchingPlugin.Id.ToString(),
-                                                                             T("Copies the configuration plugin ID to the clipboard"),
-                                                                             "margin-top: 4px;")
-                                                                     ])"
+                                                              Items="@this.BuildEnterpriseConfigurationItems(env, matchingPlugin)"
                                                               ShowWarning="@this.IsManagedConfigurationIdMismatch(matchingPlugin, env.ConfigurationId)"
                                                               WarningText="@T("ID mismatch: the plugin ID differs from the enterprise configuration ID.")"/>
                                     }
@@ -186,9 +167,32 @@
                             </MudButton>
                         }
                     </MudListItem>
+                    @if (ExternalHttpClientTimeout.CustomRootCertificateState.IsEnabled)
+                    {
+                        <MudListItem T="string" Icon="@Icons.Material.Outlined.Security">
+                            <MudText Typo="Typo.body1">
+                                @(ExternalHttpClientTimeout.CustomRootCertificateState.IsUsable
+                                    ? T("External HTTPS custom root certificates are active.")
+                                    : T("External HTTPS custom root certificates are configured but not active."))
+                            </MudText>
+                            <MudCollapse Expanded="@this.showExternalHttpCustomRootCertificateDetails">
+                                <ConfigPluginInfoCard HeaderIcon="@Icons.Material.Filled.Security"
+                                                      HeaderText="@T("External HTTPS custom root certificates")"
+                                                      Items="@this.BuildExternalHttpCustomRootCertificateItems()"
+                                                      ShowWarning="@(!ExternalHttpClientTimeout.CustomRootCertificateState.IsUsable)"
+                                                      WarningText="@this.ExternalHttpCustomRootCertificateWarningText"/>
+                            </MudCollapse>
+                            <MudButton StartIcon="@(this.showExternalHttpCustomRootCertificateDetails ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)"
+                                       Size="Size.Small"
+                                       Variant="Variant.Text"
+                                       OnClick="@this.ToggleExternalHttpCustomRootCertificateDetails">
+                                @(this.showExternalHttpCustomRootCertificateDetails ? T("Hide Details") : T("Show Details"))
+                            </MudButton>
+                        </MudListItem>
+                    }
                 </MudList>
                 <MudStack Row="true">
-                    <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Update" OnClick="@(() => this.CheckForUpdate())">
+                    <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Update" OnClick="@this.CheckForUpdate">
                         @T("Check for updates")
                     </MudButton>
                     <MudButton Variant="Variant.Filled" Color="Color.Default" StartIcon="@Icons.Material.Filled.Download" OnClick="@(async () => await this.ShowPandocDialog())">
@@ -285,7 +289,7 @@
                         <ThirdPartyComponent Name="GStreamer" Developer="GStreamer contributors & Open Source Community" LicenseName="LGPL-2.1" LicenseUrl="https://gstreamer.freedesktop.org/documentation/frequently-asked-questions/licensing.html" RepositoryUrl="https://gitlab.freedesktop.org/gstreamer/gstreamer" UseCase="@T("Linux AppImages bundle GStreamer components to support microphone access and WebM audio recording in the embedded WebKitGTK web view.")"/>
                     }
                     
-                    <ThirdPartyComponent Name="Qdrant" Developer="Andrey Vasnetsov, Tim Visée, Arnaud Gourlay, Luis Cossío, Ivan Pleshkov, Roman Titov, xzfc, JojiiOfficial & Open Source Community" LicenseName="Apache-2.0" LicenseUrl="https://github.com/qdrant/qdrant/blob/master/LICENSE" RepositoryUrl="https://github.com/qdrant/qdrant" UseCase="@T("Qdrant is a vector database and vector similarity search engine. We use it to realize local RAG—retrieval-augmented generation—within AI Studio. Thanks for the effort and great work that has been and is being put into Qdrant.")"/>
+                    <ThirdPartyComponent Name="Qdrant Edge" Developer="Andrey Vasnetsov, Tim Visée, Arnaud Gourlay, Luis Cossío, Ivan Pleshkov, Roman Titov, xzfc, JojiiOfficial & Open Source Community" LicenseName="Apache-2.0" LicenseUrl="https://github.com/qdrant/qdrant/blob/master/LICENSE" RepositoryUrl="https://github.com/qdrant/qdrant" UseCase="@T("Qdrant Edge is an embedded vector database and vector similarity search engine. We use it to realize local RAG—retrieval-augmented generation—within AI Studio. Thanks for the effort and great work that has been and is being put into Qdrant.")"/>
                     <ThirdPartyComponent Name="axum" Developer="David Pedersen, Jonas Platte, tottoto, David Mládek, Yann Simon, Tobias Bieniek, Open Source Community & Tokio Project" LicenseName="MIT" LicenseUrl="https://github.com/tokio-rs/axum/blob/main/LICENSE" RepositoryUrl="https://github.com/tokio-rs/axum" UseCase="@T("Axum is used to provide the small internal service that connects the Rust runtime with the app's user interface. This lets both parts of AI Studio exchange information while the app is running.")"/>
                     <ThirdPartyComponent Name="axum-server" Developer="Eray Karatay, Adi Salimgereyev, daxpedda & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/programatik29/axum-server/blob/master/LICENSE" RepositoryUrl="https://github.com/programatik29/axum-server" UseCase="@T("Axum server runs the internal axum service over a secure local connection. This helps AI Studio protect the communication between the Rust runtime and the user interface.")"/>
                     <ThirdPartyComponent Name="Rustls" Developer="Joe Birr-Pixton, Dirkjan Ochtman, Daniel McCarney, Brian Smith, Jacob Hoffman-Andrews, Jorge Aparicio & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/rustls/rustls/blob/main/LICENSE-MIT" RepositoryUrl="https://github.com/rustls/rustls" UseCase="@T("Rustls helps secure the internal connection between the app's user interface and the Rust runtime. This protects the local communication that AI Studio needs while it is running.")"/>
@@ -310,7 +314,7 @@
                     <ThirdPartyComponent Name="sys-locale" Developer="1Password Team, ComplexSpaces & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/1Password/sys-locale/blob/main/LICENSE-MIT" RepositoryUrl="https://github.com/1Password/sys-locale" UseCase="@T("This library is used to determine the language of the operating system. This is necessary to set the language of the user interface.")"/>
                     <ThirdPartyComponent Name="whoami" Developer="Ardaku Systems, Jeryn Aldaron Lau, Chase Johnson & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/ardaku/whoami/blob/stable/LICENSE_MIT" RepositoryUrl="https://github.com/ardaku/whoami" UseCase="@T("This library is used by the Rust runtime to read the current user's username, e.g. when an organization-managed ERI server uses the OS username for authentication.")"/>
                     <ThirdPartyComponent Name="sysinfo" Developer="Guillaume Gomez & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/GuillaumeGomez/sysinfo/blob/main/LICENSE" RepositoryUrl="https://github.com/GuillaumeGomez/sysinfo" UseCase="@T("This library is used to manage sidecar processes and to ensure that stale or zombie sidecars are detected and terminated.")"/>
-                    <ThirdPartyComponent Name="tempfile" Developer="Steven Allen, Ashley Mannix & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/Stebalien/tempfile/blob/master/LICENSE-MIT" RepositoryUrl="https://github.com/Stebalien/tempfile" UseCase="@T("This library is used to create temporary folders for saving the certificate and private key for communication with Qdrant.")"/>
+                    <ThirdPartyComponent Name="tempfile" Developer="Steven Allen, Ashley Mannix & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/Stebalien/tempfile/blob/master/LICENSE-MIT" RepositoryUrl="https://github.com/Stebalien/tempfile" UseCase="@T("This library is used to create temporary folders in runtime tests and supporting filesystem operations.")"/>
                     <ThirdPartyComponent Name="Lua-CSharp" Developer="Yusuke Nakada & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/nuskey8/Lua-CSharp/blob/main/LICENSE" RepositoryUrl="https://github.com/nuskey8/Lua-CSharp" UseCase="@T("We use Lua as the language for plugins. Lua-CSharp lets Lua scripts communicate with AI Studio and vice versa. Thank you, Yusuke Nakada, for this great library.")" />
                     <ThirdPartyComponent Name="DeepSeek-V3.2 Tokenizer" Developer="DeepSeek-AI" LicenseName="MIT" LicenseUrl="https://huggingface.co/datasets/choosealicense/licenses/blob/main/markdown/mit.md" RepositoryUrl="https://huggingface.co/deepseek-ai/DeepSeek-V3.2/tree/main" UseCase="@T("We use the DeepSeek Tokenizer to estimate the number of tokens an input will generate.")" />
                     <ThirdPartyComponent Name="Tokenizer" Developer="Anthony Moi, Nicolas Patry, Pierric Cistac, Arthur Zucker & Open Source Community" LicenseName="Apache-2.0" LicenseUrl="https://github.com/huggingface/tokenizers/blob/main/LICENSE" RepositoryUrl="https://github.com/huggingface/tokenizers" UseCase="@T("The Tokenizer library serves as the base framework for integrating the DeepSeek tokenizer.")" />

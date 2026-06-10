@@ -23,6 +23,7 @@ public partial class Chat : MSGComponentBase
     private ChatThread? chatThread;
     private AIStudio.Settings.Provider providerSettings = AIStudio.Settings.Provider.NONE;
     private bool workspaceOverlayVisible;
+    private bool workspaceSearchVisible;
     private string currentWorkspaceName = string.Empty;
     private Workspaces? workspaces;
     private double splitterPosition = 30;
@@ -50,6 +51,10 @@ public partial class Chat : MSGComponentBase
     #endregion
     
     private string WorkspaceSidebarToggleIcon => this.SettingsManager.ConfigurationData.Workspace.IsSidebarVisible ? Icons.Material.Filled.ArrowCircleLeft : Icons.Material.Filled.ArrowCircleRight;
+
+    private string WorkspaceSearchIcon => this.workspaceSearchVisible ? Icons.Material.Filled.SearchOff : Icons.Material.Filled.Search;
+
+    private string WorkspaceSearchTooltip => this.workspaceSearchVisible ? T("Hide search") : T("Search your workspaces");
 
     private bool AreWorkspacesVisible => this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is not WorkspaceStorageBehavior.DISABLE_WORKSPACES
                                          && ((this.SettingsManager.ConfigurationData.Workspace.DisplayBehavior is WorkspaceDisplayBehavior.TOGGLE_SIDEBAR && this.SettingsManager.ConfigurationData.Workspace.IsSidebarVisible)
@@ -105,6 +110,14 @@ public partial class Chat : MSGComponentBase
             return;
 
         await this.workspaces.ForceRefreshFromDiskAsync();
+    }
+
+    private async Task ToggleWorkspaceSearch()
+    {
+        if (this.workspaces is null)
+            return;
+
+        await this.workspaces.ToggleSearchAsync();
     }
 
     #region Overrides of MSGComponentBase

@@ -213,6 +213,10 @@ public static partial class PluginFactory
         // Check for the start page:
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.StartPage, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;
+
+        // Check for the quick start guide visibility:
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.ShowQuickStartGuide, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
         
         // Check for users allowed to added providers:
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.AllowUserToAddProvider, AVAILABLE_PLUGINS))
@@ -247,6 +251,16 @@ public static partial class PluginFactory
 
         // Check for the external HTTP client timeout:
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.HttpClientTimeoutSeconds, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        // Check for custom root certificates for external HTTP requests:
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.ExternalHttpCustomRootCertificatesEnabled, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.ExternalHttpCustomRootCertificateBundlePath, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.ExternalHttpCustomRootCertificateAllowedHosts, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;
 
         // Check if audit is required before it can be activated

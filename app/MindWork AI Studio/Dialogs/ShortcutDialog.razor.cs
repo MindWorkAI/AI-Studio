@@ -34,6 +34,7 @@ public partial class ShortcutDialog : MSGComponentBase
 
     private string currentShortcut = string.Empty;
     private string originalShortcut = string.Empty;
+    private string currentDisplayName = string.Empty;
     private string validationMessage = string.Empty;
     private Severity validationSeverity = Severity.Info;
     private bool hasValidationError;
@@ -115,6 +116,7 @@ public partial class ShortcutDialog : MSGComponentBase
         {
             this.UpdateModifiers(e);
             this.currentKey = null;
+            this.currentDisplayName = string.Empty;
             this.UpdateShortcutString();
             return;
         }
@@ -123,10 +125,12 @@ public partial class ShortcutDialog : MSGComponentBase
 
         // Get the key:
         this.currentKey = TranslateKeyCode(e.Code);
+        this.currentDisplayName = this.BuildDisplayShortcut(e.Key);
 
         // Validate: must have at least one modifier + a key
         if (!this.hasCtrl && !this.hasShift && !this.hasAlt && !this.hasMeta)
         {
+            this.currentDisplayName = string.Empty;
             this.validationMessage = T("Please include at least one modifier key (Ctrl, Shift, Alt, or Cmd).");
             this.validationSeverity = Severity.Warning;
             this.hasValidationError = true;
@@ -216,6 +220,9 @@ public partial class ShortcutDialog : MSGComponentBase
 
     private string GetDisplayShortcut()
     {
+        if (!string.IsNullOrWhiteSpace(this.currentDisplayName))
+            return this.currentDisplayName;
+
         // Convert internal format to display format:
         return this.currentShortcut
             .Replace("CmdOrControl", OperatingSystem.IsMacOS() ? "Cmd" : "Ctrl")
@@ -225,6 +232,7 @@ public partial class ShortcutDialog : MSGComponentBase
     private void ClearShortcut()
     {
         this.currentShortcut = string.Empty;
+        this.currentDisplayName = string.Empty;
         this.currentKey = null;
         this.hasCtrl = false;
         this.hasShift = false;
@@ -237,7 +245,17 @@ public partial class ShortcutDialog : MSGComponentBase
 
     private void Cancel() => this.MudDialog.Cancel();
 
-    private void Confirm() => this.MudDialog.Close(DialogResult.Ok(this.currentShortcut));
+    private void Confirm()
+    {
+        var displaySource = string.IsNullOrWhiteSpace(this.currentDisplayName)
+            ? string.Empty
+            : this.currentShortcut;
+
+        this.MudDialog.Close(DialogResult.Ok(new ShortcutDialogResult(
+            this.currentShortcut,
+            this.currentDisplayName,
+            displaySource)));
+    }
 
     /// <summary>
     /// Checks if the key code represents a modifier key.
@@ -375,6 +393,36 @@ public partial class ShortcutDialog : MSGComponentBase
 
         // Default: return as-is
         _ => code,
+    };
+
+    private string BuildDisplayShortcut(string? key)
+    {
+        var displayKey = GetDisplayKey(key);
+        if (string.IsNullOrWhiteSpace(displayKey))
+            return string.Empty;
+
+        var parts = new List<string>();
+
+        if (this.hasCtrl)
+            parts.Add(OperatingSystem.IsMacOS() ? "Cmd" : "Ctrl");
+
+        if (this.hasShift)
+            parts.Add("Shift");
+
+        if (this.hasAlt)
+            parts.Add("Alt");
+
+        parts.Add(displayKey);
+        return string.Join("+", parts);
+    }
+
+    private static string GetDisplayKey(string? key) => key switch
+    {
+        null or "" => string.Empty,
+        " " => "Space",
+        "Control" or "Shift" or "Alt" or "Meta" => string.Empty,
+        _ when key.Length == 1 && key[0] >= 'a' && key[0] <= 'z' => key.ToUpperInvariant(),
+        _ => key,
     };
 
     private void HandleBlur()

@@ -131,3 +131,30 @@ window.formatChatInputMarkdown = function (inputId, formatType) {
 
     return nextValue
 }
+
+const escapeHandlers = new Map()
+
+window.registerEscapeHandler = function (id, dotNetReference) {
+    window.unregisterEscapeHandler(id)
+
+    const handler = function (event) {
+        if (event.key !== 'Escape')
+            return
+
+        event.preventDefault()
+        event.stopPropagation()
+        dotNetReference.invokeMethodAsync('HandleEscapeKeyAsync').catch(() => {})
+    }
+
+    document.addEventListener('keydown', handler, true)
+    escapeHandlers.set(id, handler)
+}
+
+window.unregisterEscapeHandler = function (id) {
+    const handler = escapeHandlers.get(id)
+    if (!handler)
+        return
+
+    document.removeEventListener('keydown', handler, true)
+    escapeHandlers.delete(id)
+}

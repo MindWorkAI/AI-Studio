@@ -6,7 +6,7 @@ using AIStudio.Settings;
 
 namespace AIStudio.Provider.AlibabaCloud;
 
-public sealed class ProviderAlibabaCloud() : BaseProvider(LLMProviders.ALIBABA_CLOUD, "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/", LOGGER)
+public sealed class ProviderAlibabaCloud() : BaseProvider(LLMProviders.ALIBABA_CLOUD, new Uri("https://dashscope-intl.aliyuncs.com/compatible-mode/v1/"), ExternalHttpTrustPolicy.SYSTEM_TRUST_ONLY, LOGGER)
 {
     private static readonly ILogger<ProviderAlibabaCloud> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderAlibabaCloud>();
 
