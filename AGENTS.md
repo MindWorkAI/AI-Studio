@@ -119,6 +119,19 @@ When adding configuration options, update:
 - `app/MindWork AI Studio/Tools/PluginSystem/PluginConfigurationObject.cs` for parsing logic of complex configuration objects.
 - `app/MindWork AI Studio/Plugins/configuration/plugin.lua` to document the new configuration option.
 
+## Tool Calling System
+
+**Documentation:** `documentation/Tools.md`
+
+When adding, changing, or removing model-driven tools, keep these parts in sync:
+- `app/MindWork AI Studio/wwwroot/tool_definitions/` for the tool JSON definition.
+- `app/MindWork AI Studio/Tools/ToolCallingSystem/ToolCallingImplementations/` for the `IToolImplementation` class.
+- `app/MindWork AI Studio/Program.cs` for DI registration of the implementation.
+- `app/MindWork AI Studio/Tools/ToolCallingSystem/ToolSelectionRules.cs` when default tool dependencies or minimum provider confidence rules change.
+- `app/MindWork AI Studio/Plugins/configuration/plugin.lua` when administrators can configure or manage the tool or its settings.
+
+Tool implementations must treat model-provided arguments as untrusted input. Validate settings and arguments, protect secrets with `SensitiveTraceArgumentNames`, use `ToolExecutionBlockedException` for intentional policy blocks, and check provider confidence before returning sensitive data to the model.
+
 ## RAG (Retrieval-Augmented Generation)
 
 RAG integration is currently in development (preview feature). Architecture:

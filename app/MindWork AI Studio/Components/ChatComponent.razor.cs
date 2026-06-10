@@ -3,6 +3,7 @@ using AIStudio.Dialogs;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.AIJobs;
 
 using Microsoft.AspNetCore.Components;
@@ -69,6 +70,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private bool mustLoadChat;
     private LoadChat loadChat;
     private bool autoSaveEnabled;
+    private HashSet<string> selectedToolIds = [];
     private string currentWorkspaceName = string.Empty;
     private Guid currentWorkspaceId = Guid.Empty;
     private Guid currentChatThreadId = Guid.Empty;
@@ -76,6 +78,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private Guid loadedParameterWorkspaceId = Guid.Empty;
     private Guid foregroundChatId = Guid.Empty;
     private int workspaceHeaderSyncVersion;
+    private CancellationTokenSource? cancellationTokenSource;
 
     // Unfortunately, we need the input field reference to blur the focus away. Without
     // this, we cannot clear the input field.
@@ -114,6 +117,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         this.currentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(Tools.Components.CHAT);
         if (!this.ComposerState.HasUserDraft && !this.ComposerState.HasComposerContent)
             this.ComposerState.ApplyTemplate(this.currentChatTemplate);
+        this.selectedToolIds = ToolSelectionRules.NormalizeSelection(this.SettingsManager.GetDefaultToolIds(Tools.Components.CHAT));
 
         var deferredInput = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_CHAT_INPUT).FirstOrDefault();
         if (!string.IsNullOrWhiteSpace(deferredInput))
@@ -714,14 +718,33 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         }
         
         this.Logger.LogDebug($"Start processing user input using provider '{this.Provider.InstanceName}' with model '{this.Provider.Model}'.");
-        await this.AIJobService.TryStartChatGenerationAsync(new ChatGenerationRequest
+        // TODO: await this.AIJobService.TryStartChatGenerationAsync(new ChatGenerationRequest
+        //{
+        //    ChatThread = this.ChatThread!,
+        //    AIText = aiText,
+        //    LastUserPrompt = lastUserPrompt,
+        //    ProviderSettings = this.Provider,
+        //    IsForeground = true,
+        //});
+        using (this.cancellationTokenSource = new CancellationTokenSource())
         {
-            ChatThread = this.ChatThread!,
-            AIText = aiText,
-            LastUserPrompt = lastUserPrompt,
-            ProviderSettings = this.Provider,
-            IsForeground = true,
-        });
+            this.StateHasChanged();
+            this.ChatThread!.RuntimeComponent = Tools.Components.CHAT;
+            this.ChatThread.RuntimeSelectedToolIds = ToolSelectionRules.NormalizeSelection(this.selectedToolIds);
+            
+            // Use the selected provider to get the AI response.
+            // By awaiting this line, we wait for the entire
+            // content to be streamed.
+            this.ChatThread = await aiText.CreateFromProviderAsync(this.Provider.CreateProvider(), this.Provider.Model, lastUserPrompt, this.ChatThread, this.cancellationTokenSource.Token);
+        }
+        
+        this.cancellationTokenSource = null;
+
+        // Save the chat:
+        if (this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
+        {
+            await this.SaveThread();
+        }
 
         await this.SyncForegroundChatAsync();
         this.StateHasChanged();
@@ -731,6 +754,12 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     {
         if (this.ChatThread is not null)
             await this.AIJobService.CancelChatGenerationAsync(this.ChatThread.ChatId);
+    }
+
+    private Task SelectedToolIdsChanged(HashSet<string> updatedToolIds)
+    {
+        this.selectedToolIds = ToolSelectionRules.NormalizeSelection(updatedToolIds);
+        return Task.CompletedTask;
     }
     
     private async Task SaveThread()
@@ -795,6 +824,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         //
         this.hasUnsavedChanges = false;
         this.ComposerState.Clear();
+        this.selectedToolIds = this.SettingsManager.GetDefaultToolIds(Tools.Components.CHAT);
         
         //
         // Reset the LLM provider considering the user's settings:
@@ -1086,6 +1116,10 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 
                     this.StateHasChanged();
                 }
+                break;
+
+            case Event.CONFIGURATION_CHANGED:
+                await this.InvokeAsync(this.StateHasChanged);
                 break;
         }
     }

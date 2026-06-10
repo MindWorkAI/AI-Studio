@@ -184,6 +184,8 @@ If you're interested in learning more about future plans, check out our [roadmap
 
 You want to know how to build MindWork AI Studio from source? [Check out the instructions here](documentation/Build.md).
 
+Do you want to add or maintain model-driven tools? [Read the tool development guide here](documentation/Tools.md).
+
 </details>
 
 <details>

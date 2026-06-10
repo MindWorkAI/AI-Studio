@@ -38,7 +38,7 @@ public sealed class ProviderPerplexity() : BaseProvider(LLMProviders.PERPLEXITY,
                            chatModel,
                            chatThread,
                            settingsManager,
-                           async (systemPrompt, apiParameters) =>
+                           async (systemPrompt, apiParameters, tools) =>
                            {
                                // Build the list of messages:
                                var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel);
@@ -52,6 +52,8 @@ public sealed class ProviderPerplexity() : BaseProvider(LLMProviders.PERPLEXITY,
                                    // - Then none-empty user and AI messages
                                    Messages = [systemPrompt, ..messages],
                                    Stream = true,
+                                   Tools = tools,
+                                   ParallelToolCalls = tools is null ? null : true,
                                    AdditionalApiParameters = apiParameters
                                };
                            },

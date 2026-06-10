@@ -261,6 +261,26 @@ CONFIG["SETTINGS"] = {}
 -- Examples are: "CmdOrControl+Shift+D", "Alt+F9", "F8"
 -- CONFIG["SETTINGS"]["DataApp.ShortcutVoiceRecording"] = "CmdOrControl+1"
 
+-- Configure the minimum provider confidence level required for individual tools.
+-- Tool IDs include: web_search, read_web_page
+-- Allowed values are: NONE, UNTRUSTED, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
+-- Defaults: web_search = MEDIUM, read_web_page = MEDIUM, but higher confidence is recommended
+-- CONFIG["SETTINGS"]["DataTools.MinimumProviderConfidenceByToolId"] = {
+--     ["web_search"] = "MEDIUM",
+--     ["read_web_page"] = "MEDIUM"
+-- }
+
+-- Configure private or VPN hosts that the Read Web Page tool may access.
+-- Public web pages do not need to be listed here.
+-- Private hosts listed here still require a provider with HIGH confidence before any page content is sent to the model.
+-- For hosts on this allowlist, AI Studio also tries the current user's operating-system sign-in
+-- automatically when the server requests integrated authentication (for example Kerberos or NTLM).
+-- This does not reuse Firefox cookies or an existing browser session.
+-- Separate host patterns with commas. Wildcards only match subdomains, so add the root domain separately if needed.
+-- Examples:
+-- CONFIG["SETTINGS"]["DataTools.ReadWebPageAllowedPrivateHosts"] = "dlr.de, *.dlr.de"
+-- CONFIG["SETTINGS"]["DataTools.ReadWebPageAllowedPrivateHosts.AllowUserOverride"] = false
+
 -- Configure the HTTP timeout for external requests, in seconds.
 -- The default is 3600 (1 hour).
 -- CONFIG["SETTINGS"]["DataApp.HttpClientTimeoutSeconds"] = 3600

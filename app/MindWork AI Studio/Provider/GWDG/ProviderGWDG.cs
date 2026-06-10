@@ -29,7 +29,7 @@ public sealed class ProviderGWDG() : BaseProvider(LLMProviders.GWDG, new Uri("ht
                            chatModel,
                            chatThread,
                            settingsManager,
-                           async (systemPrompt, apiParameters) =>
+                           async (systemPrompt, apiParameters, tools) =>
                            {
                                // Build the list of messages:
                                var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel);
@@ -44,6 +44,8 @@ public sealed class ProviderGWDG() : BaseProvider(LLMProviders.GWDG, new Uri("ht
                                    Messages = [systemPrompt, ..messages],
 
                                    Stream = true,
+                                   Tools = tools,
+                                   ParallelToolCalls = tools is null ? null : true,
                                    AdditionalApiParameters = apiParameters
                                };
                            },

@@ -1,0 +1,129 @@
+{
+  "schemaVersion": 1,
+  "id": "web_search",
+  "implementationKey": "web_search",
+  "visibleIn": {
+    "chat": true,
+    "assistants": true
+  },
+  "settingsSchema": {
+    "type": "object",
+    "properties": {
+      "baseUrl": {
+        "type": "string",
+        "secret": false
+      },
+      "defaultLanguage": {
+        "type": "string",
+        "secret": false
+      },
+      "defaultSafeSearch": {
+        "type": "string",
+        "enum": [
+          "0",
+          "1",
+          "2"
+        ],
+        "secret": false
+      },
+      "defaultCategories": {
+        "type": "string",
+        "secret": false
+      },
+      "defaultEngines": {
+        "type": "string",
+        "secret": false
+      },
+      "maxResults": {
+        "type": "string",
+        "secret": false
+      },
+      "timeoutSeconds": {
+        "type": "string",
+        "secret": false
+      }
+    },
+    "required": [
+      "baseUrl"
+    ]
+  },
+  "policyInstructions": "Use the `web_search` tool to discover relevant candidate URLs. Prefer categories for broad search intent. Use engines only when the user explicitly asks for specific search engines. Use the search only to gather interesting websites and not for information gathering. Information for answering questions should be gathered using the `read_web_page` tool to extract the information from the websites that the `web_search` tool found.",
+  "function": {
+    "name": "web_search",
+    "description": "Search the web via a configured SearXNG instance and return candidate result URLs to use with the `read_web_page` tool.",
+    "strict": true,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "description": "The search query."
+        },
+        "categories": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "description": "Optional list of SearXNG categories to use for the search.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "engines": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "description": "Optional list of specific SearXNG engines to use when the user requests them explicitly.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "language": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Optional language code for the search."
+        },
+        "time_range": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Optional time range filter for engines that support it.",
+          "enum": [
+            null,
+            "day",
+            "month",
+            "year"
+          ]
+        },
+        "page": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "description": "Optional search result page number starting at 1."
+        },
+        "limit": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "description": "Optional maximum number of results to return to the model after local truncation."
+        }
+      },
+      "required": [
+        "query",
+        "categories",
+        "engines",
+        "language",
+        "time_range",
+        "page",
+        "limit"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

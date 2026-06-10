@@ -1,12 +1,13 @@
 using AIStudio.Agents;
 using AIStudio.Agents.AssistantAudit;
 using AIStudio.Settings;
+using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.Databases;
 using AIStudio.Tools.AIJobs;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.PluginSystem.Assistants;
 using AIStudio.Tools.Services;
-
+using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Logging.Console;
 
@@ -128,6 +129,11 @@ internal sealed class Program
         builder.Services.AddSingleton(rust);
         builder.Services.AddMudMarkdownClipboardService<MarkdownClipboardService>();
         builder.Services.AddSingleton<SettingsManager>();
+        builder.Services.AddSingleton<ToolSettingsService>();
+        builder.Services.AddSingleton<IToolImplementation, ReadWebPageTool>();
+        builder.Services.AddSingleton<IToolImplementation, SearXNGWebSearchTool>();
+        builder.Services.AddSingleton<ToolRegistry>();
+        builder.Services.AddSingleton<ToolExecutor>();
         builder.Services.AddSingleton<ThreadSafeRandom>();
         builder.Services.AddSingleton<AIJobService>();
         builder.Services.AddSingleton<VoiceRecordingAvailabilityService>();

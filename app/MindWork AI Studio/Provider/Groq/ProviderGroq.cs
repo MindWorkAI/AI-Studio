@@ -29,7 +29,7 @@ public class ProviderGroq() : BaseProvider(LLMProviders.GROQ, new Uri("https://a
                            chatModel,
                            chatThread,
                            settingsManager,
-                           async (systemPrompt, apiParameters) =>
+                           async (systemPrompt, apiParameters, tools) =>
                            {
                                if (TryPopIntParameter(apiParameters, "seed", out var parsedSeed))
                                    apiParameters["seed"] = parsedSeed;
@@ -48,6 +48,8 @@ public class ProviderGroq() : BaseProvider(LLMProviders.GROQ, new Uri("https://a
 
                                    // Right now, we only support streaming completions:
                                    Stream = true,
+                                   Tools = tools,
+                                   ParallelToolCalls = tools is null ? null : true,
                                    AdditionalApiParameters = apiParameters
                                };
                            },

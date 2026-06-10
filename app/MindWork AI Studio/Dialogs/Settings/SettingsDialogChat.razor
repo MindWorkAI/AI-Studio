@@ -22,6 +22,8 @@
             <ConfigurationSelect OptionDescription="@T("Preselect one of your chat templates?")" Disabled="@(() => !this.SettingsManager.ConfigurationData.Chat.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.Chat.PreselectedChatTemplate)" Data="@ConfigurationSelectDataFactory.GetChatTemplatesData(this.SettingsManager.ConfigurationData.ChatTemplates)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.Chat.PreselectedChatTemplate = selectedValue)" OptionHelp="@T("Would you like to set one of your chat templates as the default for chats?")"/>
         </MudPaper>
 
+        <ToolDefaultsConfiguration Component="Components.CHAT" IncludeVisibilityToggle="@false" />
+
         @if (PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager))
         {
             <DataSourceSelection SelectionMode="DataSourceSelectionMode.CONFIGURATION_MODE" AutoSaveAppSettings="@true" @bind-DataSourceOptions="@this.SettingsManager.ConfigurationData.Chat.PreselectedDataSourceOptions" ConfigurationHeaderMessage="@T("You can set default data sources and options for new chats. You can change these settings later for each individual chat.")"/>

@@ -1,8 +1,11 @@
 using System.Globalization;
+using System.Text.Json.Serialization;
 
 using AIStudio.Components;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools;
+using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.ERIClient.DataModel;
 
 namespace AIStudio.Chat;
@@ -79,6 +82,12 @@ public sealed record ChatThread
     /// The content blocks of the chat thread.
     /// </summary>
     public List<ContentBlock> Blocks { get; init; } = [];
+
+    [JsonIgnore]
+    public AIStudio.Tools.Components RuntimeComponent { get; set; } = AIStudio.Tools.Components.CHAT;
+
+    [JsonIgnore]
+    public HashSet<string> RuntimeSelectedToolIds { get; set; } = [];
     
     private bool allowProfile = true;
 
@@ -92,7 +101,7 @@ public sealed record ChatThread
     /// </remarks>
     /// <param name="settingsManager">The settings manager instance to use.</param>
     /// <returns>The prepared system prompt.</returns>
-    public string PrepareSystemPrompt(SettingsManager settingsManager)
+    public string PrepareSystemPrompt(SettingsManager settingsManager, IEnumerable<ToolDefinition>? runnableToolDefinitions = null)
     {
         //
         // Use the information from the chat template, if provided. Otherwise, use the default system prompt
@@ -185,6 +194,17 @@ public sealed record ChatThread
         }
         
         LOGGER.LogInformation(logMessage);
+
+        var toolPolicy = ToolSelectionRules.BuildToolPolicyPrompt(runnableToolDefinitions ?? []);
+        if (!string.IsNullOrWhiteSpace(toolPolicy))
+        {
+            systemPromptText = $"""
+                                {systemPromptText}
+
+                                {toolPolicy}
+                                """;
+        }
+
         if(!this.IncludeDateTime)
             return systemPromptText;
         

@@ -33,7 +33,7 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
                            chatModel,
                            chatThread,
                            settingsManager,
-                           async (systemPrompt, apiParameters) =>
+                           async (systemPrompt, apiParameters, tools) =>
                            {
                                // Build the list of messages. The image format depends on the host:
                                // - Ollama uses the direct image URL format: { "type": "image_url", "image_url": "data:..." }
@@ -55,6 +55,8 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
 
                                    // Right now, we only support streaming completions:
                                    Stream = true,
+                                   Tools = tools,
+                                   ParallelToolCalls = tools is null ? null : true,
                                    AdditionalApiParameters = apiParameters
                                };
                            },

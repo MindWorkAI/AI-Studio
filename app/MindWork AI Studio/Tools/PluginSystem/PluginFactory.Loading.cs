@@ -249,6 +249,14 @@ public static partial class PluginFactory
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.ShortcutVoiceRecording, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;
 
+        // Check for minimum provider confidence per tool:
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Tools, x => x.MinimumProviderConfidenceByToolId, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        // Check for private hosts allowed for the read web page tool:
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Tools, x => x.ReadWebPageAllowedPrivateHosts, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
         // Check for the external HTTP client timeout:
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.HttpClientTimeoutSeconds, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;

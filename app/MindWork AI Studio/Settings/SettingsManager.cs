@@ -4,6 +4,8 @@ using System.Text.Json;
 
 using AIStudio.Provider;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools;
+using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Services;
 
@@ -379,6 +381,57 @@ public sealed class SettingsManager
         
         preselection = this.ConfigurationData.ChatTemplates.FirstOrDefault(x => x.Id.Equals(this.ConfigurationData.App.PreselectedChatTemplate, StringComparison.OrdinalIgnoreCase));
         return preselection ?? ChatTemplate.NO_CHAT_TEMPLATE;
+    }
+
+    public HashSet<string> GetDefaultToolIds(AIStudio.Tools.Components component)
+    {
+        var key = component.ToString();
+        if (this.ConfigurationData.Tools.DefaultToolIdsByComponent.TryGetValue(key, out var toolIds))
+            return ToolSelectionRules.NormalizeSelection(toolIds);
+
+        return [];
+    }
+
+    public bool IsToolSelectionVisible(AIStudio.Tools.Components component) => component switch
+    {
+        AIStudio.Tools.Components.CHAT => true,
+        _ => this.ConfigurationData.Tools.VisibleToolSelectionComponents.Contains(component.ToString()),
+    };
+
+    public void SetToolSelectionVisibility(AIStudio.Tools.Components component, bool isVisible)
+    {
+        if (component is AIStudio.Tools.Components.CHAT)
+            return;
+
+        var key = component.ToString();
+        if (isVisible)
+            this.ConfigurationData.Tools.VisibleToolSelectionComponents.Add(key);
+        else
+            this.ConfigurationData.Tools.VisibleToolSelectionComponents.Remove(key);
+    }
+
+    public ConfidenceLevel GetMinimumProviderConfidenceForTool(string toolId)
+    {
+        if (this.ConfigurationData.Tools.MinimumProviderConfidenceByToolId.TryGetValue(toolId, out var configuredLevel) &&
+            Enum.TryParse<ConfidenceLevel>(configuredLevel, true, out var confidenceLevel) &&
+            confidenceLevel is not ConfidenceLevel.UNKNOWN)
+        {
+            return confidenceLevel;
+        }
+
+        return ToolSelectionRules.GetDefaultMinimumProviderConfidence(toolId);
+    }
+
+    public void SetMinimumProviderConfidenceForTool(string toolId, ConfidenceLevel confidenceLevel)
+    {
+        var defaultLevel = ToolSelectionRules.GetDefaultMinimumProviderConfidence(toolId);
+        if (confidenceLevel == defaultLevel)
+        {
+            this.ConfigurationData.Tools.MinimumProviderConfidenceByToolId.Remove(toolId);
+            return;
+        }
+
+        this.ConfigurationData.Tools.MinimumProviderConfidenceByToolId[toolId] = confidenceLevel.ToString();
     }
 
     public ConfidenceLevel GetConfiguredConfidenceLevel(LLMProviders llmProvider)
