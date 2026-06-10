@@ -989,13 +989,6 @@ public abstract class BaseProvider : IProvider, ISecretId
         if(!requestedSecret.Success && !isTryingSecret)
             yield break;
 
-        // Prepare the system prompt:
-        var systemPrompt = new TextMessage
-        {
-            Role = systemPromptRole,
-            Content = chatThread.PrepareSystemPrompt(settingsManager),
-        };
-
         // Parse the API parameters:
         var apiParameters = this.ParseAdditionalApiParameters();
 
@@ -1004,6 +997,7 @@ public abstract class BaseProvider : IProvider, ISecretId
         var currentAssistantContent = chatThread.Blocks.LastOrDefault(x => x.Role is ChatRole.AI)?.Content as ContentText;
         currentAssistantContent?.ToolInvocations.Clear();
 
+        TextMessage systemPrompt;
         if (toolRegistry is not null && toolExecutor is not null)
         {
             var runnableTools = await toolRegistry.GetRunnableToolsAsync(
@@ -1012,6 +1006,12 @@ public abstract class BaseProvider : IProvider, ISecretId
                 this.Provider.GetModelCapabilities(chatModel),
                 this.Provider.GetConfidence(settingsManager).Level,
                 settingsManager.IsToolSelectionVisible(chatThread.RuntimeComponent));
+
+            systemPrompt = new TextMessage
+            {
+                Role = systemPromptRole,
+                Content = chatThread.PrepareSystemPrompt(settingsManager, runnableTools.Select(x => x.Definition)),
+            };
 
             if (runnableTools.Count > 0)
             {
@@ -1062,13 +1062,12 @@ public abstract class BaseProvider : IProvider, ISecretId
                         ToolCalls = responseMessage.ToolCalls,
                     });
                     
-                    var maxToolCalls = 30;
                     foreach (var toolCall in responseMessage.ToolCalls)
                     {
                         toolCallCount++;
-                        if (toolCallCount > maxToolCalls)
+                        if (toolCallCount > ToolSelectionRules.MAX_TOOL_CALLS)
                         {
-                            var limitMessage = $"Tool calling stopped because the maximum of {maxToolCalls} tool calls was reached.";
+                            var limitMessage = ToolSelectionRules.GetMaxToolCallsLimitMessage();
                             currentAssistantContent.ToolInvocations.Add(new ToolInvocationTrace
                             {
                                 Order = toolCallCount,
@@ -1106,6 +1105,15 @@ public abstract class BaseProvider : IProvider, ISecretId
                     await currentAssistantContent.StreamingEvent();
                 }
             }
+
+        }
+        else
+        {
+            systemPrompt = new TextMessage
+            {
+                Role = systemPromptRole,
+                Content = chatThread.PrepareSystemPrompt(settingsManager),
+            };
         }
 
         // Prepare the provider HTTP chat request:

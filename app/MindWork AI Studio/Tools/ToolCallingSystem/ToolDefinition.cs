@@ -19,6 +19,8 @@ public sealed class ToolDefinition
 
     public ToolSettingsSchema SettingsSchema { get; init; } = new();
 
+    public string PolicyInstructions { get; init; } = string.Empty;
+
     public ToolFunctionDefinition Function { get; init; } = new();
 }
 

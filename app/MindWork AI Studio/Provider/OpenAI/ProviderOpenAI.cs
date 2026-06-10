@@ -168,11 +168,27 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
             yield break;
         }
 
-        // Prepare the system prompt:
+        var toolRegistry = Program.SERVICE_PROVIDER.GetService<ToolRegistry>();
+        var toolExecutor = Program.SERVICE_PROVIDER.GetService<ToolExecutor>();
+        var currentAssistantContent = chatThread.Blocks.LastOrDefault(x => x.Role is ChatRole.AI)?.Content as ContentText;
+        currentAssistantContent?.ToolInvocations.Clear();
+
+        IReadOnlyList<(ToolDefinition Definition, IToolImplementation Implementation)> runnableTools = toolRegistry is null
+            ? []
+            : await toolRegistry.GetRunnableToolsAsync(
+                chatThread.RuntimeComponent,
+                chatThread.RuntimeSelectedToolIds,
+                modelCapabilities,
+                providerConfidence,
+                settingsManager.IsToolSelectionVisible(chatThread.RuntimeComponent));
+
+        var toolAwareDefinitions = toolExecutor is null
+            ? Enumerable.Empty<ToolDefinition>()
+            : runnableTools.Select(x => x.Definition);
         var systemPrompt = new TextMessage
         {
             Role = systemPromptRole,
-            Content = chatThread.PrepareSystemPrompt(settingsManager),
+            Content = chatThread.PrepareSystemPrompt(settingsManager, toolAwareDefinitions),
         };
 
         // Build the list of messages:
@@ -199,20 +215,6 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
 
         var baseInput = new List<object> { systemPrompt };
         baseInput.AddRange(messages.Cast<object>());
-
-        var toolRegistry = Program.SERVICE_PROVIDER.GetService<ToolRegistry>();
-        var toolExecutor = Program.SERVICE_PROVIDER.GetService<ToolExecutor>();
-        var currentAssistantContent = chatThread.Blocks.LastOrDefault(x => x.Role is ChatRole.AI)?.Content as ContentText;
-        currentAssistantContent?.ToolInvocations.Clear();
-
-        IReadOnlyList<(ToolDefinition Definition, IToolImplementation Implementation)> runnableTools = toolRegistry is null
-            ? []
-            : await toolRegistry.GetRunnableToolsAsync(
-                chatThread.RuntimeComponent,
-                chatThread.RuntimeSelectedToolIds,
-                modelCapabilities,
-                providerConfidence,
-                settingsManager.IsToolSelectionVisible(chatThread.RuntimeComponent));
 
         if (usingResponsesAPI && toolExecutor is not null && runnableTools.Count > 0)
         {
@@ -373,9 +375,9 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
             foreach (var functionCall in functionCalls)
             {
                 toolCallCount++;
-                if (toolCallCount > 10)
+                if (toolCallCount > ToolSelectionRules.MAX_TOOL_CALLS)
                 {
-                    var limitMessage = "Tool calling stopped because the maximum of 10 tool calls was reached.";
+                    var limitMessage = ToolSelectionRules.GetMaxToolCallsLimitMessage();
                     currentAssistantContent?.ToolInvocations.Add(new ToolInvocationTrace
                     {
                         Order = toolCallCount,

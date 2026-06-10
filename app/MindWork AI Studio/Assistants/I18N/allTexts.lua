@@ -6724,6 +6724,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::WRITER::T3948127789"] = "Suggestion"
 -- Your stage directions
 UI_TEXT_CONTENT["AISTUDIO::PAGES::WRITER::T779923726"] = "Your stage directions"
 
+-- The tool calling request failed with status code {0}. See the logs for details.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::ANTHROPIC::PROVIDERANTHROPIC::T3117779001"] = "The tool calling request failed with status code {0}. See the logs for details."
+
 -- We tried to communicate with the LLM provider '{0}' (type={1}). The server might be down or having issues. The provider message is: '{2}'
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T1000247110"] = "We tried to communicate with the LLM provider '{0}' (type={1}). The server might be down or having issues. The provider message is: '{2}'"
 

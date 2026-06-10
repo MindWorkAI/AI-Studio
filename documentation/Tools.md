@@ -13,7 +13,7 @@ A tool has two parts:
 
 At startup, `ToolRegistry` reads all JSON definitions and matches each definition to a registered implementation by `implementationKey`. `ToolExecutor` runs the implementation when a provider returns a matching function call.
 
-The provider only sees tools that are available for the current component, selected by the user or defaults, supported by the model, configured correctly, and allowed by the provider confidence rules.
+The provider only sees tools that are available for the current component, selected by the user or defaults, supported by the model, configured correctly, and allowed by the provider confidence rules. The shared tool-call loop limit is `ToolSelectionRules.MAX_TOOL_CALLS`, and all provider tool-call paths use that same limit.
 
 ## Provider API Shapes
 
@@ -49,9 +49,11 @@ Keep this difference contained in provider adapter code. `ProviderToolAdapters` 
 
 Tool result handling also differs by API. Chat Completions returns tool calls in `message.tool_calls` and receives results as `role: "tool"` messages. Responses returns `function_call` output items and receives results as `function_call_output` input items correlated by `call_id`. Both paths still execute local tools through `ToolExecutor`, so validation, provider confidence checks, trace formatting, and blocked-call behavior stay shared.
 
+If a tool throws `ToolExecutionBlockedException`, `ToolExecutor` returns the exception message as plain text to the model and records the trace as `BLOCKED`. Other exceptions are logged with details and returned to the model as plain text in the form `Tool execution failed: ...`, with the trace recorded as `ERROR`.
+
 ## Definition File
 
-Create one JSON file per tool under `wwwroot/tool_definitions`. The file describes the user-visible tool metadata, optional settings, and the function schema sent to the model.
+Create one JSON file per tool under `wwwroot/tool_definitions`. The file describes the user-visible tool metadata, optional settings, the function schema sent to the model, and optional per-tool policy guidance injected centrally into the system prompt.
 
 Example:
 
@@ -76,9 +78,10 @@ Example:
       "demoLabel"
     ]
   },
+  "policyInstructions": "Use this tool only when the user asks for current weather conditions.", // this is added to the system prompt as guide for the LLM on what to do and what not to do with this tool
   "function": {
     "name": "get_current_weather",
-    "description": "Get the current weather in a given location.",
+    "description": "Get the current weather in a given location.", // this description is used by the LLM to understand what the tool does and when to use it as the LLM
     "strict": true,
     "parameters": {
       "type": "object",
@@ -112,6 +115,8 @@ Example:
 ```
 
 Use stable lower-case IDs with underscores. Keep `id`, `implementationKey`, and `function.name` identical unless there is a clear compatibility reason not to.
+
+Keep `function.description` focused on what the tool does. Put sequencing rules, answer-format guidance, or other behavior instructions in `policyInstructions`. When runnable tools are selected, their non-empty policy text is combined centrally and appended to the effective system prompt.
 
 ## Implementation
 

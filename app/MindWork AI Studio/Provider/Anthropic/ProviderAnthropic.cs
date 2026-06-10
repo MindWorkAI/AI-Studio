@@ -94,10 +94,11 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, n
 
         if (toolExecutor is not null && runnableTools.Count > 0)
         {
+            var systemPrompt = chatThread.PrepareSystemPrompt(settingsManager, runnableTools.Select(x => x.Definition));
             await foreach (var content in this.StreamWithLocalTools(
                                chatModel,
                                messages,
-                               chatThread.PrepareSystemPrompt(settingsManager),
+                               systemPrompt,
                                maxTokens,
                                apiParameters,
                                runnableTools,
@@ -171,7 +172,6 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, n
             .ToList();
         var internalMessages = new List<IMessageBase>();
         var toolCallCount = 0;
-        const int MAX_TOOL_CALLS = 30;
 
         while (true)
         {
@@ -242,9 +242,9 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, n
             foreach (var toolUse in toolUses)
             {
                 toolCallCount++;
-                if (toolCallCount > MAX_TOOL_CALLS)
+                if (toolCallCount > ToolSelectionRules.MAX_TOOL_CALLS)
                 {
-                    var limitMessage = $"Tool calling stopped because the maximum of {MAX_TOOL_CALLS} tool calls was reached.";
+                    var limitMessage = ToolSelectionRules.GetMaxToolCallsLimitMessage();
                     currentAssistantContent?.ToolInvocations.Add(new ToolInvocationTrace
                     {
                         Order = toolCallCount,

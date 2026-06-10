@@ -7,6 +7,7 @@ namespace AIStudio.Tools.ToolCallingSystem;
 
 public static class ToolSelectionRules
 {
+    public const int MAX_TOOL_CALLS = 15;
     public const string WEB_SEARCH_TOOL_ID = "web_search";
     public const string READ_WEB_PAGE_TOOL_ID = "read_web_page";
 
@@ -31,6 +32,24 @@ public static class ToolSelectionRules
         READ_WEB_PAGE_TOOL_ID => ConfidenceLevel.MEDIUM,
         _ => ConfidenceLevel.NONE,
     };
+
+    public static string GetMaxToolCallsLimitMessage() => $"Tool calling stopped because the maximum of {MAX_TOOL_CALLS} tool calls was reached.";
+
+    public static string BuildToolPolicyPrompt(IEnumerable<ToolDefinition> definitions)
+    {
+        var policyLines = definitions
+            .Select(x => x.PolicyInstructions?.Trim())
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+        if (policyLines.Count == 0)
+            return string.Empty;
+
+        return $"""
+                Tool usage policy:
+                {policyLines}
+                """;
+    }
 
     public static bool IsProviderConfidenceAllowed(ConfidenceLevel providerConfidence, ConfidenceLevel minimumToolConfidence) =>
         minimumToolConfidence is ConfidenceLevel.NONE || providerConfidence >= minimumToolConfidence;
