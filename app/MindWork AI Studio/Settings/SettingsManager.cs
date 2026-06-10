@@ -348,17 +348,13 @@ public sealed class SettingsManager
             return Profile.NO_PROFILE;
 
         if (preselection.UseSpecificProfile)
-        {
-            var componentProfile = this.ConfigurationData.Profiles.FirstOrDefault(x => x.Id.Equals(preselection.SpecificProfileId, StringComparison.OrdinalIgnoreCase));
-            return componentProfile ?? Profile.NO_PROFILE;
-        }
+            return this.GetProfileById(preselection.SpecificProfileId);
 
         var appPreselection = ProfilePreselection.FromStoredValue(this.ConfigurationData.App.PreselectedProfile);
         if (appPreselection.DoNotPreselectProfile || !appPreselection.UseSpecificProfile)
             return Profile.NO_PROFILE;
 
-        var appProfile = this.ConfigurationData.Profiles.FirstOrDefault(x => x.Id.Equals(appPreselection.SpecificProfileId, StringComparison.OrdinalIgnoreCase));
-        return appProfile ?? Profile.NO_PROFILE;
+        return this.GetProfileById(appPreselection.SpecificProfileId);
     }
 
     public Profile GetAppPreselectedProfile()
@@ -367,8 +363,7 @@ public sealed class SettingsManager
         if (appPreselection.DoNotPreselectProfile || !appPreselection.UseSpecificProfile)
             return Profile.NO_PROFILE;
 
-        var appProfile = this.ConfigurationData.Profiles.FirstOrDefault(x => x.Id.Equals(appPreselection.SpecificProfileId, StringComparison.OrdinalIgnoreCase));
-        return appProfile ?? Profile.NO_PROFILE;
+        return this.GetProfileById(appPreselection.SpecificProfileId);
     }
     
     public ChatTemplate GetPreselectedChatTemplate(Tools.Components component)
@@ -377,8 +372,29 @@ public sealed class SettingsManager
         if (preselection != ChatTemplate.NO_CHAT_TEMPLATE)
             return preselection;
         
-        preselection = this.ConfigurationData.ChatTemplates.FirstOrDefault(x => x.Id.Equals(this.ConfigurationData.App.PreselectedChatTemplate, StringComparison.OrdinalIgnoreCase));
-        return preselection ?? ChatTemplate.NO_CHAT_TEMPLATE;
+        return this.GetChatTemplateById(this.ConfigurationData.App.PreselectedChatTemplate);
+    }
+
+    public Profile GetProfileById(string? profileId)
+    {
+        if (string.IsNullOrWhiteSpace(profileId))
+            return Profile.NO_PROFILE;
+
+        if (string.Equals(profileId, Profile.NO_PROFILE.Id, StringComparison.OrdinalIgnoreCase))
+            return Profile.NO_PROFILE;
+
+        return this.ConfigurationData.Profiles.FirstOrDefault(x => x.Id.Equals(profileId, StringComparison.OrdinalIgnoreCase)) ?? Profile.NO_PROFILE;
+    }
+
+    public ChatTemplate GetChatTemplateById(string? chatTemplateId)
+    {
+        if (string.IsNullOrWhiteSpace(chatTemplateId))
+            return ChatTemplate.NO_CHAT_TEMPLATE;
+
+        if (string.Equals(chatTemplateId, ChatTemplate.NO_CHAT_TEMPLATE.Id, StringComparison.OrdinalIgnoreCase))
+            return ChatTemplate.NO_CHAT_TEMPLATE;
+
+        return this.ConfigurationData.ChatTemplates.FirstOrDefault(x => x.Id.Equals(chatTemplateId, StringComparison.OrdinalIgnoreCase)) ?? ChatTemplate.NO_CHAT_TEMPLATE;
     }
 
     public ConfidenceLevel GetConfiguredConfidenceLevel(LLMProviders llmProvider)

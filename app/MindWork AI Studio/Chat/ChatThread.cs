@@ -94,6 +94,8 @@ public sealed record ChatThread
     /// <returns>The prepared system prompt.</returns>
     public string PrepareSystemPrompt(SettingsManager settingsManager)
     {
+        this.allowProfile = true;
+
         //
         // Use the information from the chat template, if provided. Otherwise, use the default system prompt
         //
@@ -111,8 +113,8 @@ public sealed record ChatThread
                     systemPromptTextWithChatTemplate = this.SystemPrompt;
                 else
                 {
-                    var chatTemplate = settingsManager.ConfigurationData.ChatTemplates.FirstOrDefault(x => x.Id == this.SelectedChatTemplate);
-                    if(chatTemplate == null)
+                    var chatTemplate = settingsManager.GetChatTemplateById(this.SelectedChatTemplate);
+                    if(chatTemplate == ChatTemplate.NO_CHAT_TEMPLATE)
                         systemPromptTextWithChatTemplate = this.SystemPrompt;
                     else
                     {
@@ -168,8 +170,8 @@ public sealed record ChatThread
                     systemPromptText = systemPromptWithAugmentedData;
                 else
                 {
-                    var profile = settingsManager.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == this.SelectedProfile);
-                    if(profile is null)
+                    var profile = settingsManager.GetProfileById(this.SelectedProfile);
+                    if(profile == Profile.NO_PROFILE)
                         systemPromptText = systemPromptWithAugmentedData;
                     else
                     {
