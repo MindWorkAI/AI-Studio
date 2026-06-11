@@ -5,6 +5,7 @@ namespace AIStudio.Tools.ToolCallingSystem;
 
 public sealed class ToolSettingsService(SettingsManager settingsManager, RustService rustService)
 {
+    private const string WEB_SEARCH_BASE_URL_FIELD = "baseUrl";
     private const string READ_WEB_PAGE_ALLOWED_PRIVATE_HOSTS_FIELD = "allowedPrivateHosts";
 
     public async Task<Dictionary<string, string>> GetSettingsAsync(ToolDefinition definition)
@@ -15,6 +16,12 @@ public sealed class ToolSettingsService(SettingsManager settingsManager, RustSer
         {
             var fieldName = property.Key;
             var fieldDefinition = property.Value;
+            if (IsWebSearchBaseUrlField(definition, fieldName))
+            {
+                values[fieldName] = settingsManager.ConfigurationData.Tools.WebSearchBaseUrl;
+                continue;
+            }
+
             if (IsReadWebPageAllowedPrivateHostsField(definition, fieldName))
             {
                 values[fieldName] = settingsManager.ConfigurationData.Tools.ReadWebPageAllowedPrivateHosts;
@@ -87,6 +94,14 @@ public sealed class ToolSettingsService(SettingsManager settingsManager, RustSer
             values.TryGetValue(fieldName, out var value);
             value ??= string.Empty;
 
+            if (IsWebSearchBaseUrlField(definition, fieldName))
+            {
+                if (!IsWebSearchBaseUrlLocked())
+                    settingsManager.ConfigurationData.Tools.WebSearchBaseUrl = value;
+
+                continue;
+            }
+
             if (IsReadWebPageAllowedPrivateHostsField(definition, fieldName))
             {
                 if (!IsReadWebPageAllowedPrivateHostsLocked())
@@ -112,6 +127,13 @@ public sealed class ToolSettingsService(SettingsManager settingsManager, RustSer
         await settingsManager.StoreSettings();
         await MessageBus.INSTANCE.SendMessage<object?>(null, Event.CONFIGURATION_CHANGED, null);
     }
+
+    private static bool IsWebSearchBaseUrlField(ToolDefinition definition, string fieldName) =>
+        definition.Id.Equals(ToolSelectionRules.WEB_SEARCH_TOOL_ID, StringComparison.Ordinal) &&
+        fieldName.Equals(WEB_SEARCH_BASE_URL_FIELD, StringComparison.Ordinal);
+
+    private static bool IsWebSearchBaseUrlLocked() =>
+        ManagedConfiguration.TryGet(x => x.Tools, x => x.WebSearchBaseUrl, out var meta) && meta.IsLocked;
 
     private static bool IsReadWebPageAllowedPrivateHostsField(ToolDefinition definition, string fieldName) =>
         definition.Id.Equals(ToolSelectionRules.READ_WEB_PAGE_TOOL_ID, StringComparison.Ordinal) &&

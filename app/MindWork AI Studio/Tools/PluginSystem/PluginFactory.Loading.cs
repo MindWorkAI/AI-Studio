@@ -249,6 +249,10 @@ public static partial class PluginFactory
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Tools, x => x.MinimumProviderConfidenceByToolId, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;
 
+        // Check for the SearXNG base URL for the web search tool:
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Tools, x => x.WebSearchBaseUrl, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
         // Check for private hosts allowed for the read web page tool:
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Tools, x => x.ReadWebPageAllowedPrivateHosts, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;

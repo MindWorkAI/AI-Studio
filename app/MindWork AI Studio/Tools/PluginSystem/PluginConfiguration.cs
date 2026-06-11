@@ -175,6 +175,9 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         // Config: minimum provider confidence per tool
         ManagedConfiguration.TryProcessConfiguration(x => x.Tools, x => x.MinimumProviderConfidenceByToolId, this.Id, settingsTable, dryRun);
 
+        // Config: SearXNG base URL for the web search tool
+        ManagedConfiguration.TryProcessConfiguration(x => x.Tools, x => x.WebSearchBaseUrl, this.Id, settingsTable, dryRun);
+
         // Config: private hosts allowed for the read web page tool
         ManagedConfiguration.TryProcessConfiguration(x => x.Tools, x => x.ReadWebPageAllowedPrivateHosts, this.Id, settingsTable, dryRun);
 

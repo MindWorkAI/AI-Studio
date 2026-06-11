@@ -269,6 +269,11 @@ CONFIG["SETTINGS"] = {}
 --     ["read_web_page"] = "MEDIUM"
 -- }
 
+-- Configure the SearXNG instance URL used by the Web Search tool.
+-- You can enter either the instance root URL or the /search endpoint.
+-- CONFIG["SETTINGS"]["DataTools.WebSearchBaseUrl"] = "https://searxng.website/"
+-- CONFIG["SETTINGS"]["DataTools.WebSearchBaseUrl.AllowUserOverride"] = false
+
 -- Configure private or VPN hosts that the Read Web Page tool may access.
 -- Public web pages do not need to be listed here.
 -- Private hosts listed here still require a provider with HIGH confidence before any page content is sent to the model.
