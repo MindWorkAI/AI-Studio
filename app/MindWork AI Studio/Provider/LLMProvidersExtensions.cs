@@ -329,14 +329,13 @@ public static class LLMProvidersExtensions
 
     /// <summary>
     /// Determines if the model selection should be completely hidden for LLM providers.
-    /// This is the case when the host does not support model selection (e.g., llama.cpp).
+    /// This is the case when the host does not support model selection.
     /// </summary>
     /// <param name="provider">The provider.</param>
     /// <param name="host">The host for self-hosted providers.</param>
     /// <returns>True if model selection should be hidden; otherwise, false.</returns>
     public static bool IsLLMModelSelectionHidden(this LLMProviders provider, Host host) => provider switch
     {
-        LLMProviders.SELF_HOSTED => host is Host.LLAMA_CPP,
         _ => false,
     };
 
@@ -416,11 +415,11 @@ public static class LLMProvidersExtensions
             switch (host)
             {
                 case Host.NONE:
-                case Host.LLAMA_CPP:
                 case Host.WHISPER_CPP:
                 default:
                     return false;
 
+                case Host.LLAMA_CPP:
                 case Host.OLLAMA:
                 case Host.LM_STUDIO:
                 case Host.VLLM:

@@ -71,7 +71,7 @@
                 @* ReSharper restore Asp.Entity *@
             }       
 
-            @if (!this.DataLLMProvider.IsLLMModelSelectionHidden(this.DataHost))
+            @if (!this.IsLLMModelSelectionHidden)
             {
                 <MudField FullWidth="true" Label="@T("Model selection")" Variant="Variant.Outlined" Class="mb-3">
                     <MudStack Row="@true" AlignItems="AlignItems.Center" StretchItems="StretchItems.End">

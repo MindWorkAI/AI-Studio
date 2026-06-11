@@ -22,6 +22,8 @@ public sealed class ProviderValidation
 
     public Func<bool> IsModelProvidedManually { get; init; } = () => false;
 
+    public Func<bool> IsModelSelectionHidden { get; init; } = () => false;
+
     public string? ValidatingHostname(string hostname)
     {
         if(this.GetProvider() != LLMProviders.SELF_HOSTED)
@@ -76,9 +78,13 @@ public sealed class ProviderValidation
         if (this.GetProvider() is LLMProviders.NONE)
             return null;
 
-        // For self-hosted llama.cpp or whisper.cpp, no model selection needed
+        // For self-hosted whisper.cpp, no model selection needed
         // (model is loaded at startup):
-        if (this.GetProvider() is LLMProviders.SELF_HOSTED && this.GetHost() is Host.LLAMA_CPP or Host.WHISPER_CPP)
+        if (this.GetProvider() is LLMProviders.SELF_HOSTED && this.GetHost() is Host.WHISPER_CPP)
+            return null;
+
+        // For legacy hosts without model selection, no selection validation is needed:
+        if (this.IsModelSelectionHidden())
             return null;
 
         // For manually entered models, this validation doesn't apply:

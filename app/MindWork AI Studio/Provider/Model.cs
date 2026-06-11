@@ -23,7 +23,7 @@ public readonly record struct Model(string Id, string? DisplayName)
     /// <summary>
     /// Checks if this model is the system-configured placeholder.
     /// </summary>
-    public bool IsSystemModel => this == SYSTEM_MODEL;
+    public bool IsSystemModel => string.Equals(this.Id, SYSTEM_MODEL_ID, StringComparison.Ordinal);
 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(Model).Namespace, nameof(Model));
     

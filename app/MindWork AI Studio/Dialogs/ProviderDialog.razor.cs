@@ -104,6 +104,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     private string dataAPIKeyStorageIssue = string.Empty;
     private string dataEditingPreviousInstanceName = string.Empty;
     private string dataLoadingModelsIssue = string.Empty;
+    private bool usesLegacySystemModelFallback;
     private bool showExpertSettings;
     
     // We get the form reference from Blazor code to validate it manually:
@@ -123,6 +124,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
             GetUsedInstanceNames = () => this.UsedInstanceNames,
             GetHost = () => this.DataHost,
             IsModelProvidedManually = () => this.DataLLMProvider.IsLLMModelProvidedManually(),
+            IsModelSelectionHidden = () => this.IsLLMModelSelectionHidden,
         };
     }
 
@@ -132,9 +134,9 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
 
         // Determine the model based on the provider and host configuration:
         Model model;
-        if (this.DataLLMProvider.IsLLMModelSelectionHidden(this.DataHost))
+        if (this.IsLLMModelSelectionHidden)
         {
-            // Use system model placeholder for hosts that don't support model selection (e.g., llama.cpp):
+            // Use system model placeholder for legacy hosts that don't support model selection:
             model = Model.SYSTEM_MODEL;
         }
         else if (this.DataLLMProvider is LLMProviders.FIREWORKS or LLMProviders.HUGGINGFACE)
@@ -300,6 +302,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         this.dataManuallyModel = string.Empty;
         this.availableModels.Clear();
         this.dataLoadingModelsIssue = string.Empty;
+        this.usesLegacySystemModelFallback = false;
     }
     
     private async Task ReloadModels()
@@ -321,6 +324,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
 
             this.availableModels.Clear();
             this.availableModels.AddRange(orderedModels);
+            this.UpdateModelSelectionAfterLoading();
         }
         catch (Exception e)
         {
@@ -334,6 +338,34 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         LLMProviders.SELF_HOSTED => T("(Optional) API Key"),
         _ => T("API Key"),
     };
+
+    private bool IsLLMModelSelectionHidden => this.DataLLMProvider.IsLLMModelSelectionHidden(this.DataHost) ||
+                                             this.DataLLMProvider is LLMProviders.SELF_HOSTED &&
+                                             this.DataHost is Host.LLAMA_CPP &&
+                                             this.usesLegacySystemModelFallback;
+
+    private void UpdateModelSelectionAfterLoading()
+    {
+        if (this.DataLLMProvider is not LLMProviders.SELF_HOSTED || this.DataHost is not Host.LLAMA_CPP)
+            return;
+
+        this.usesLegacySystemModelFallback = this.availableModels.Count is 1 && this.availableModels[0].IsSystemModel;
+        if (this.usesLegacySystemModelFallback)
+        {
+            this.DataModel = Model.SYSTEM_MODEL;
+            return;
+        }
+
+        var availableModel = this.availableModels.FirstOrDefault(model =>
+            string.Equals(model.Id, this.DataModel.Id, StringComparison.OrdinalIgnoreCase));
+        if (availableModel != default)
+        {
+            this.DataModel = availableModel;
+            return;
+        }
+
+        this.DataModel = this.availableModels.Count is 1 ? this.availableModels[0] : default;
+    }
     
     private void ToggleExpertSettings() => this.showExpertSettings = !this.showExpertSettings;
 

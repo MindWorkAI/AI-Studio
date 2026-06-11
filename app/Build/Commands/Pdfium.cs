@@ -7,6 +7,11 @@ namespace Build.Commands;
 
 public static class Pdfium
 {
+    private static readonly HttpClient CLIENT = new()
+    {
+        Timeout = TimeSpan.FromMinutes(5)
+    };
+
     public static async Task InstallAsync(RID rid, string version, bool offline)
     {
         Console.Write($"- Installing Pdfium {version} for {rid.ToUserFriendlyName()} ...");
@@ -42,8 +47,7 @@ public static class Pdfium
         // Download the file:
         //
         Console.Write(" downloading ...");
-        using var client = new HttpClient();
-        using var response = await client.GetAsync(pdfiumUrl, HttpCompletionOption.ResponseHeadersRead);
+        using var response = await CLIENT.GetAsync(pdfiumUrl, HttpCompletionOption.ResponseHeadersRead);
         if (!response.IsSuccessStatusCode)
         {
             Console.WriteLine($" failed to download Pdfium {version} for {rid.ToUserFriendlyName()} from {pdfiumUrl}");
@@ -61,9 +65,9 @@ public static class Pdfium
         {
             await using var downloadStream = await response.Content.ReadAsStreamAsync();
             await using var uncompressedStream = new GZipStream(downloadStream, CompressionMode.Decompress);
-            await using var tarReader = new TarReader(uncompressedStream, false);
+            await using var tarReader = new TarReader(uncompressedStream);
 
-            while (await tarReader.GetNextEntryAsync(false) is { } entry)
+            while (await tarReader.GetNextEntryAsync() is { } entry)
             {
                 if (!string.Equals(entry.Name.Replace('\\', '/'), pdfiumLibArchivePath, StringComparison.Ordinal))
                     continue;
