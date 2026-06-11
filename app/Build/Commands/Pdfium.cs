@@ -28,66 +28,70 @@ public static class Pdfium
             return;
         }
 
-        //
-        // Download the file:
-        //
-        var pdfiumTmpDownloadPath = Path.GetTempFileName();
-        var pdfiumTmpExtractPath = Directory.CreateTempSubdirectory();
-
-        Console.Write(" downloading ...");
-        using (var client = new HttpClient())
-        {
-            var response = await client.GetAsync(pdfiumUrl);
-            if (!response.IsSuccessStatusCode)
-            {
-                Console.WriteLine($" failed to download Pdfium {version} for {rid.ToUserFriendlyName()} from {pdfiumUrl}");
-                return;
-            }
-
-            await using var fileStream = File.Create(pdfiumTmpDownloadPath);
-            await response.Content.CopyToAsync(fileStream);
-        }
-        
-        //
-        // Extract the downloaded file:
-        //
-        Console.Write(" extracting ...");
-        await using(var tgzStream = File.Open(pdfiumTmpDownloadPath, FileMode.Open, FileAccess.Read, FileShare.Read))
-        {
-            await using var uncompressedStream = new GZipStream(tgzStream, CompressionMode.Decompress);
-            await TarFile.ExtractToDirectoryAsync(uncompressedStream, pdfiumTmpExtractPath.FullName, true);
-        }
-        
-        //
-        // Copy the library to the target directory:
-        //
-        Console.Write(" deploying ...");
         if (string.IsNullOrWhiteSpace(library.Path))
         {
             Console.WriteLine($" failed to find the library path for {rid.ToUserFriendlyName()}");
             return;
         }
-        
-        var pdfiumLibSourcePath = Path.Join(pdfiumTmpExtractPath.FullName, library.Path);
-        if (!File.Exists(pdfiumLibSourcePath))
+
+        var pdfiumLibTargetDirectory = Path.Join(cwd, "resources", "libraries");
+        var pdfiumLibTmpTargetPath = Path.Join(pdfiumLibTargetDirectory, $"{library.Filename}.{Guid.NewGuid():N}.tmp");
+        var pdfiumLibArchivePath = library.Path.Replace('\\', '/');
+
+        //
+        // Download the file:
+        //
+        Console.Write(" downloading ...");
+        using var client = new HttpClient();
+        using var response = await client.GetAsync(pdfiumUrl, HttpCompletionOption.ResponseHeadersRead);
+        if (!response.IsSuccessStatusCode)
         {
-            Console.WriteLine($" failed to find the library file '{pdfiumLibSourcePath}'");
+            Console.WriteLine($" failed to download Pdfium {version} for {rid.ToUserFriendlyName()} from {pdfiumUrl}");
             return;
         }
-        
-        Directory.CreateDirectory(Path.Join(cwd, "resources", "libraries"));
-        if (File.Exists(pdfiumLibTargetPath))
-            File.Delete(pdfiumLibTargetPath);
-        
-        File.Copy(pdfiumLibSourcePath, pdfiumLibTargetPath);
-        
+
         //
-        // Cleanup:
+        // Extract the library from the downloaded file:
         //
-        Console.Write(" cleaning up ...");
-        File.Delete(pdfiumTmpDownloadPath);
-        Directory.Delete(pdfiumTmpExtractPath.FullName, true);
-        
+        Console.Write(" extracting ...");
+        Directory.CreateDirectory(pdfiumLibTargetDirectory);
+
+        var foundLibrary = false;
+        try
+        {
+            await using var downloadStream = await response.Content.ReadAsStreamAsync();
+            await using var uncompressedStream = new GZipStream(downloadStream, CompressionMode.Decompress);
+            await using var tarReader = new TarReader(uncompressedStream, false);
+
+            while (await tarReader.GetNextEntryAsync(false) is { } entry)
+            {
+                if (!string.Equals(entry.Name.Replace('\\', '/'), pdfiumLibArchivePath, StringComparison.Ordinal))
+                    continue;
+
+                if (entry.DataStream == null)
+                    break;
+
+                await using var fileStream = File.Create(pdfiumLibTmpTargetPath);
+                await entry.DataStream.CopyToAsync(fileStream);
+                foundLibrary = true;
+                break;
+            }
+
+            if (!foundLibrary)
+            {
+                Console.WriteLine($" failed to find the library file '{pdfiumLibArchivePath}' in the Pdfium archive");
+                return;
+            }
+
+            Console.Write(" deploying ...");
+            File.Move(pdfiumLibTmpTargetPath, pdfiumLibTargetPath, true);
+        }
+        finally
+        {
+            if (File.Exists(pdfiumLibTmpTargetPath))
+                File.Delete(pdfiumLibTmpTargetPath);
+        }
+
         Console.WriteLine(" done.");
     }
     
