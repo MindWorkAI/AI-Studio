@@ -105,11 +105,16 @@ fn detect_linux_package_type() -> &'static str {
 }
 
 #[cfg(target_os = "linux")]
-fn is_flatpak() -> bool {
+pub(crate) fn is_flatpak() -> bool {
     env_var_has_value("FLATPAK_ID")
         || Path::new("/.flatpak-info").is_file()
         || env::var("container")
             .is_ok_and(|value| value.trim().eq_ignore_ascii_case("flatpak"))
+}
+
+#[cfg(not(target_os = "linux"))]
+pub(crate) fn is_flatpak() -> bool {
+    false
 }
 
 #[cfg(target_os = "linux")]

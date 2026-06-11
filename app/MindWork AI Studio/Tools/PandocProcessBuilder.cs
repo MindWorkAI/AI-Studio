@@ -17,6 +17,7 @@ public sealed class PandocProcessBuilder
     private static readonly RID CPU_ARCHITECTURE = RIDExtensions.GetCurrentRID();
     private static readonly RID METADATA_ARCHITECTURE = META_DATA_ARCH.Architecture.ToRID();
     private static readonly ILogger LOGGER = Program.LOGGER_FACTORY.CreateLogger(nameof(PandocProcessBuilder));
+    private const string FLATPAK_PANDOC_PLUGIN_BIN_DIRECTORY = "/app/plugins/pandoc/bin";
 
     // Tracks whether the first log has been written to avoid log spam on repeated calls:
     private static bool HAS_LOGGED_ONCE;
@@ -220,7 +221,8 @@ public sealed class PandocProcessBuilder
                 }
             }
 
-            foreach (var candidate in SystemPandocExecutableCandidates(PandocExecutableName))
+            var runtimeInfo = await rustService.GetRuntimeInfo();
+            foreach (var candidate in SystemPandocExecutableCandidates(PandocExecutableName, runtimeInfo.LinuxPackageType))
             {
                 if (!File.Exists(candidate))
                     continue;
@@ -250,7 +252,7 @@ public sealed class PandocProcessBuilder
     /// </summary>
     public static string PandocExecutableName => CPU_ARCHITECTURE is RID.WIN_ARM64 or RID.WIN_X64 ? "pandoc.exe" : "pandoc";
 
-    private static IEnumerable<string> SystemPandocExecutableCandidates(string executableName)
+    private static IEnumerable<string> SystemPandocExecutableCandidates(string executableName, string linuxPackageType)
     {
         var candidates = new List<string>();
 
@@ -269,6 +271,9 @@ public sealed class PandocProcessBuilder
                 break;
 
             case RID.LINUX_X64 or RID.LINUX_ARM64:
+                if (string.Equals(linuxPackageType, "flatpak", StringComparison.OrdinalIgnoreCase))
+                    AddCandidate(candidates, FLATPAK_PANDOC_PLUGIN_BIN_DIRECTORY, executableName);
+
                 AddCandidate(candidates, "/usr/local/bin", executableName);
                 AddCandidate(candidates, "/usr/bin", executableName);
                 AddCandidate(candidates, "/snap/bin", executableName);
