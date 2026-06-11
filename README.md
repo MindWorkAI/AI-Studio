@@ -78,6 +78,7 @@ Since March 2025: We have started developing the plugin system. There will be la
     </h3>
     </summary>
 
+- v26.6.1: Increased enterprise configuration capacity for large organizations, broader Flatpak deployment support, startup and Linux package diagnostics, chat search across all workspaces, improved workspace workflows, better model discovery for self-hosted llama.cpp providers, and fixes for profile and chat template updates, workspace naming, and startup behavior.
 - v26.5.5: Released voice recording and transcription for all users; added support for multiple chats running at the same time, export options for profiles, chat templates, and ERI data sources, organization-managed ERI servers, and configurable request timeouts; upgraded the native runtime to Tauri v2.
 - v26.4.1: Added support for the latest AI models, assistant plugins, a slide planner assistant, a prompt optimization assistant, math rendering in chats, and a configurable start page; released the document analysis assistant and improved enterprise deployment, chat performance, file attachments, and reliability across voice recording, logging, and provider validation.
 - v26.2.2: Added Qdrant as a building block for our local RAG preview, added an embedding test option to validate embedding providers, and improved enterprise and configuration plugins with preselected providers, additive preview features, support for multiple configurations, and more reliable synchronization.
@@ -89,7 +90,6 @@ Since March 2025: We have started developing the plugin system. There will be la
 - v0.9.45: Added chat templates to AI Studio, allowing you to create and use a library of system prompts for your chats.
 - v0.9.44: Added PDF import to the text summarizer, translation, and legal check assistants, allowing you to import PDF files and use them as input for the assistants.
 - v0.9.40: Added support for the `o4` models from OpenAI. Also, we added Alibaba Cloud & Hugging Face as LLM providers.
-- v0.9.39: Added the plugin system as a preview feature.
  
 </details>
 
