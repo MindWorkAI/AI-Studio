@@ -997,10 +997,33 @@ public abstract class BaseProvider : IProvider, ISecretId
         var currentAssistantContent = chatThread.Blocks.LastOrDefault(x => x.Role is ChatRole.AI)?.Content as ContentText;
         currentAssistantContent?.ToolInvocations.Clear();
 
+        async Task ResetToolRuntimeStatusAsync()
+        {
+            if (currentAssistantContent is null)
+                return;
+
+            currentAssistantContent.ToolRuntimeStatus = new();
+            await currentAssistantContent.StreamingEvent();
+        }
+
+        async Task ShowToolRuntimeStatusAsync(IEnumerable<string> toolNames)
+        {
+            if (currentAssistantContent is null)
+                return;
+
+            currentAssistantContent.ToolRuntimeStatus = new ToolRuntimeStatus
+            {
+                IsRunning = true,
+                ToolNames = toolNames.ToList(),
+            };
+            await currentAssistantContent.StreamingEvent();
+        }
+
         TextMessage systemPrompt;
         if (toolRegistry is not null && toolExecutor is not null)
         {
             var runnableTools = await toolRegistry.GetRunnableToolsAsync(
+                this.CreateSettingsProvider(chatModel),
                 chatThread.RuntimeComponent,
                 chatThread.RuntimeSelectedToolIds,
                 this.Provider.GetModelCapabilities(chatModel),
@@ -1031,14 +1054,13 @@ public abstract class BaseProvider : IProvider, ISecretId
                     var responseMessage = response?.Choices.FirstOrDefault()?.Message;
                     if (responseMessage is null)
                     {
-                        currentAssistantContent!.ToolRuntimeStatus = new();
-                        await currentAssistantContent.StreamingEvent();
+                        await ResetToolRuntimeStatusAsync();
                         yield break;
                     }
 
                     if (responseMessage.ToolCalls.Count == 0)
                     {
-                        currentAssistantContent!.ToolRuntimeStatus = new();
+                        await ResetToolRuntimeStatusAsync();
                         if (!string.IsNullOrWhiteSpace(responseMessage.Content))
                             yield return new ContentStreamChunk(responseMessage.Content, []);
                         else if (toolCallCount > 0)
@@ -1047,14 +1069,8 @@ public abstract class BaseProvider : IProvider, ISecretId
                         yield break;
                     }
 
-                    currentAssistantContent!.ToolRuntimeStatus = new ToolRuntimeStatus
-                    {
-                        IsRunning = true,
-                        ToolNames = responseMessage.ToolCalls
-                            .Select(x => runnableTools.FirstOrDefault(tool => tool.Definition.Function.Name.Equals(x.Function.Name, StringComparison.Ordinal)).Implementation?.GetDisplayName() ?? x.Function.Name)
-                            .ToList(),
-                    };
-                    await currentAssistantContent.StreamingEvent();
+                    await ShowToolRuntimeStatusAsync(responseMessage.ToolCalls
+                        .Select(x => runnableTools.FirstOrDefault(tool => tool.Definition.Function.Name.Equals(x.Function.Name, StringComparison.Ordinal)).Implementation?.GetDisplayName() ?? x.Function.Name));
 
                     internalMessages.Add(new AssistantToolCallMessage
                     {
@@ -1068,7 +1084,7 @@ public abstract class BaseProvider : IProvider, ISecretId
                         if (toolCallCount > ToolSelectionRules.MAX_TOOL_CALLS)
                         {
                             var limitMessage = ToolSelectionRules.GetMaxToolCallsLimitMessage();
-                            currentAssistantContent.ToolInvocations.Add(new ToolInvocationTrace
+                            currentAssistantContent?.ToolInvocations.Add(new ToolInvocationTrace
                             {
                                 Order = toolCallCount,
                                 ToolId = toolCall.Function.Name,
@@ -1078,8 +1094,7 @@ public abstract class BaseProvider : IProvider, ISecretId
                                 StatusMessage = limitMessage,
                                 Result = limitMessage,
                             });
-                            currentAssistantContent.ToolRuntimeStatus = new();
-                            await currentAssistantContent.StreamingEvent();
+                            await ResetToolRuntimeStatusAsync();
                             yield return new ContentStreamChunk(limitMessage, []);
                             yield break;
                         }
@@ -1093,7 +1108,7 @@ public abstract class BaseProvider : IProvider, ISecretId
                             toolCallCount,
                             token);
 
-                        currentAssistantContent.ToolInvocations.Add(trace);
+                        currentAssistantContent?.ToolInvocations.Add(trace);
                         internalMessages.Add(new ToolResultMessage
                         {
                             Content = toolContent,
@@ -1102,7 +1117,8 @@ public abstract class BaseProvider : IProvider, ISecretId
                         });
                     }
 
-                    await currentAssistantContent.StreamingEvent();
+                    if (currentAssistantContent is not null)
+                        await currentAssistantContent.StreamingEvent();
                 }
             }
 
@@ -1139,6 +1155,13 @@ public abstract class BaseProvider : IProvider, ISecretId
         await foreach (var content in this.StreamChatCompletionInternal<TDelta, TAnnotation>(providerName, RequestBuilder, token))
             yield return content;
     }
+
+    private AIStudio.Settings.Provider CreateSettingsProvider(Model chatModel) => new()
+    {
+        UsedLLMProvider = this.Provider,
+        Model = chatModel,
+        InstanceName = this.InstanceName,
+    };
 
     private async Task<ChatCompletionResponse?> ExecuteChatCompletionRequest(
         ChatCompletionAPIRequest requestDto,

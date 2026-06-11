@@ -4,7 +4,7 @@
 
 <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Build" HeaderText="@T("Tool Settings")">
     <MudText Typo="Typo.body1" Class="mb-4">
-        @T("Configure global settings for each tool. Tool defaults for chat and assistants are configured in the corresponding feature settings.")
+        @T("Configure global settings for each tool.")
     </MudText>
 
     <MudTable Items="@this.items" Hover="@true" Dense="@true">
@@ -13,7 +13,7 @@
             <MudTh>@T("Name")</MudTh>
             <MudTh>@T("Description")</MudTh>
             <MudTh>@T("Minimum provider confidence")</MudTh>
-            <MudTh>@T("State")</MudTh>
+            <MudTh>@T("Status")</MudTh>
             <MudTh>@T("Settings")</MudTh>
         </HeaderContent>
         <RowTemplate>

@@ -50,34 +50,22 @@ public sealed class HTMLParser
         int timeoutSeconds = 30,
         Func<Uri, CancellationToken, Task<IReadOnlyList<IPAddress>>>? resolveUrlAddressesAsync = null,
         int maxResponseBytes = DEFAULT_MAX_RESPONSE_BYTES,
-        ExternalWebAuthenticationMode authenticationMode = ExternalWebAuthenticationMode.NONE)
+        ExternalWebAuthenticationMode authenticationMode = ExternalWebAuthenticationMode.NONE,
+        ExternalHttpTrustPolicy trustPolicy = ExternalHttpTrustPolicy.ALLOW_CUSTOM_ROOTS_WHEN_HOST_WHITELISTED)
     {
-        using var handler = new SocketsHttpHandler
-        {
-            AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli,
-            AllowAutoRedirect = false,
-        };
-        if (authenticationMode is ExternalWebAuthenticationMode.OS_DEFAULT_CREDENTIALS)
-            handler.Credentials = CreateDefaultCredentialCache(url);
-
-        if (resolveUrlAddressesAsync is not null)
-        {
-            // The callback binds the request to a vetted target IP; a proxy would change the endpoint being connected to.
-            handler.UseProxy = false;
-            handler.ConnectCallback = async (context, connectionToken) => await ConnectToResolvedAddressAsync(context, resolveUrlAddressesAsync, connectionToken);
-        }
-
-        using var httpClient = new HttpClient(handler)
-        {
-            Timeout = Timeout.InfiniteTimeSpan,
-        };
         using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(token);
         timeoutCts.CancelAfter(TimeSpan.FromSeconds(timeoutSeconds));
+        var cookieContainer = new CookieContainer();
 
         var currentUrl = url;
         for (var redirectCount = 0; redirectCount <= MAX_REDIRECTS; redirectCount++)
         {
             ValidateHttpOrHttpsUrl(currentUrl);
+            using var handler = CreateHandler(currentUrl, resolveUrlAddressesAsync, authenticationMode, trustPolicy, cookieContainer);
+            using var httpClient = new HttpClient(handler)
+            {
+                Timeout = Timeout.InfiniteTimeSpan,
+            };
 
             using var request = CreateRequest(currentUrl);
             using var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, timeoutCts.Token);
@@ -114,6 +102,35 @@ public sealed class HTMLParser
         }
 
         throw new HttpRequestException($"The server returned more than {MAX_REDIRECTS} redirects for '{url}'.");
+    }
+
+    private static SocketsHttpHandler CreateHandler(
+        Uri url,
+        Func<Uri, CancellationToken, Task<IReadOnlyList<IPAddress>>>? resolveUrlAddressesAsync,
+        ExternalWebAuthenticationMode authenticationMode,
+        ExternalHttpTrustPolicy trustPolicy,
+        CookieContainer cookieContainer)
+    {
+        var handler = new SocketsHttpHandler
+        {
+            AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli,
+            AllowAutoRedirect = false,
+            UseCookies = true,
+            CookieContainer = cookieContainer,
+        };
+        ExternalHttpClientTimeout.ConfigureSocketsHttpHandler(handler, url.Host, trustPolicy);
+
+        if (authenticationMode is ExternalWebAuthenticationMode.OS_DEFAULT_CREDENTIALS)
+            handler.Credentials = CreateDefaultCredentialCache(url);
+
+        if (resolveUrlAddressesAsync is not null)
+        {
+            // The callback binds the request to a vetted target IP; a proxy would change the endpoint being connected to.
+            handler.UseProxy = false;
+            handler.ConnectCallback = async (context, connectionToken) => await ConnectToResolvedAddressAsync(context, resolveUrlAddressesAsync, connectionToken);
+        }
+
+        return handler;
     }
 
     private static CredentialCache CreateDefaultCredentialCache(Uri url)

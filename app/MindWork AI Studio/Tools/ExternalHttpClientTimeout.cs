@@ -46,6 +46,16 @@ public static class ExternalHttpClientTimeout
         return httpClient;
     }
 
+    public static void ConfigureSocketsHttpHandler(SocketsHttpHandler handler, string host, ExternalHttpTrustPolicy trustPolicy)
+    {
+        var customRootCertificateCache = GetCustomRootCertificateCache();
+        if (!customRootCertificateCache.State.IsUsable)
+            return;
+
+        handler.SslOptions.RemoteCertificateValidationCallback = (_, certificate, chain, sslPolicyErrors) =>
+            ValidateServerCertificateWithCustomRootCertificates(host, certificate, chain, sslPolicyErrors, customRootCertificateCache, trustPolicy);
+    }
+
     public static ExternalHttpCustomRootCertificateState CustomRootCertificateState => GetCustomRootCertificateCache().State;
 
     public static string GetTimeoutDescription()
@@ -337,13 +347,29 @@ public static class ExternalHttpClientTimeout
         CustomRootCertificateCache customRootCertificateCache,
         ExternalHttpTrustPolicy trustPolicy)
     {
+        return ValidateServerCertificateWithCustomRootCertificates(
+            ReadRequestHost(request),
+            certificate,
+            originalChain,
+            sslPolicyErrors,
+            customRootCertificateCache,
+            trustPolicy);
+    }
+
+    private static bool ValidateServerCertificateWithCustomRootCertificates(
+        string host,
+        X509Certificate? certificate,
+        X509Chain? originalChain,
+        SslPolicyErrors sslPolicyErrors,
+        CustomRootCertificateCache customRootCertificateCache,
+        ExternalHttpTrustPolicy trustPolicy)
+    {
         if (sslPolicyErrors is SslPolicyErrors.None)
             return true;
 
         if (sslPolicyErrors is not SslPolicyErrors.RemoteCertificateChainErrors || certificate is null)
             return false;
 
-        var host = ReadRequestHost(request);
         if (trustPolicy is ExternalHttpTrustPolicy.SYSTEM_TRUST_ONLY)
         {
             LOGGER.Value.LogError($"Rejected external HTTPS certificate for '{HostForLog(host)}' because this request requires system trust only. Configured custom root certificates are not allowed for this request.");
@@ -378,7 +404,7 @@ public static class ExternalHttpClientTimeout
 
             var isValid = customChain.Build(serverCertificate);
             if (isValid)
-                LogCustomRootCertificateAccepted(request);
+                LogCustomRootCertificateAccepted(host);
 
             return isValid;
         }
@@ -436,9 +462,10 @@ public static class ExternalHttpClientTimeout
 
     private static void LogCustomRootCertificateAccepted(HttpRequestMessage request)
     {
-        var host = ReadRequestHost(request);
-        LOGGER.Value.LogWarning($"Accepted an external HTTPS certificate for '{host}' using configured custom root certificates.");
+        LogCustomRootCertificateAccepted(ReadRequestHost(request));
     }
+
+    private static void LogCustomRootCertificateAccepted(string host) => LOGGER.Value.LogWarning($"Accepted an external HTTPS certificate for '{host}' using configured custom root certificates.");
 
     private static string ReadRequestHost(HttpRequestMessage request)
     {

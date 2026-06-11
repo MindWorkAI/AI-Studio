@@ -186,5 +186,6 @@ public partial class SettingsPanelProviders : SettingsPanelProviderBase
     {
         this.SettingsManager.ConfigurationData.LLMProviders.CustomConfidenceScheme[llmProvider] = level;
         await this.SettingsManager.StoreSettings();
+        await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
 }

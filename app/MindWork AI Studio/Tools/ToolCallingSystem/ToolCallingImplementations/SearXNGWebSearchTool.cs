@@ -2,6 +2,7 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using AIStudio.Tools;
 using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations;
@@ -167,16 +168,14 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
         if (!string.IsNullOrWhiteSpace(safeSearch))
             queryParameters.Add(new KeyValuePair<string, string>("safesearch", safeSearch));
 
-        using var httpClient = new HttpClient
-        {
-            Timeout = Timeout.InfiniteTimeSpan,
-        };
+        using var httpClient = ExternalHttpClientTimeout.CreateHttpClient(searchUri, ExternalHttpTrustPolicy.ALLOW_CUSTOM_ROOTS_WHEN_HOST_WHITELISTED);
+        httpClient.Timeout = Timeout.InfiniteTimeSpan;
         using var request = new HttpRequestMessage(HttpMethod.Get, BuildRequestUri(searchUri, queryParameters));
         using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(token);
         timeoutCts.CancelAfter(TimeSpan.FromSeconds(timeoutSeconds));
 
         using var response = await SendAsync(httpClient, request, timeoutCts.Token, timeoutSeconds, token);
-        var responseBody = await ReadContentAsStringWithLimitAsync(response.Content, MAX_RESPONSE_BYTES, token);
+        var responseBody = await ReadContentAsStringWithLimitAsync(response.Content, MAX_RESPONSE_BYTES, timeoutCts.Token);
         if (!response.IsSuccessStatusCode)
         {
             var responseDetails = string.IsNullOrWhiteSpace(responseBody) ? string.Empty : $" Response body: {responseBody[..Math.Min(responseBody.Length, 400)]}";

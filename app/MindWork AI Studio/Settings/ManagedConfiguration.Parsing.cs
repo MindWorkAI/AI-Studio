@@ -766,7 +766,7 @@ public static partial class ManagedConfiguration
             return false;
         
         var successful = false;
-        var configuredValue = configMeta.Default;
+        var configuredValue = CloneStringDictionary(configMeta.Default);
         
         // Step 1 -- try to read the Lua value (we expect a table) out of the Lua table:
         if (settings.TryGetValue(SettingsManager.ToSettingName(propertyExpression), out var configuredLuaList) &&
@@ -803,7 +803,9 @@ public static partial class ManagedConfiguration
         if(dryRun)
             return successful;
 
-        return HandleParsedValue(configPluginId, dryRun, successful, configMeta, configuredValue);
+        var settingName = SettingName(propertyExpression);
+        var managedMode = ReadManagedConfigurationMode(propertyExpression, settings);
+        return HandleParsedDictionaryValue(configPluginId, dryRun, successful, configMeta, configuredValue, managedMode, settingName);
     }
 
     /// <summary>
@@ -925,6 +927,67 @@ public static partial class ManagedConfiguration
         return successful;
     }
 
+    private static bool HandleParsedDictionaryValue<TClass>(
+        Guid configPluginId,
+        bool dryRun,
+        bool successful,
+        ConfigMeta<TClass, IDictionary<string, string>> configMeta,
+        IDictionary<string, string> configuredValue,
+        ManagedConfigurationMode managedMode,
+        string settingName)
+    {
+        if (dryRun)
+            return successful;
+
+        switch (successful)
+        {
+            case true when managedMode is ManagedConfigurationMode.LOCKED:
+                ClearEditableDefaultState(settingName);
+                configMeta.ClearEditableDefaultConfiguration();
+                configMeta.SetValue(CloneStringDictionary(configuredValue));
+                configMeta.LockConfiguration(configPluginId);
+                break;
+
+            case true when managedMode is ManagedConfigurationMode.EDITABLE_DEFAULT:
+                var currentValueSerialized = SerializeManagedStringDictionaryValue(configMeta.GetValue());
+                var configuredValueSerialized = SerializeManagedStringDictionaryValue(configuredValue);
+
+                string lastAppliedValue;
+                if (!TryGetEditableDefaultState(settingName, out var editableDefaultState))
+                {
+                    configMeta.SetValue(CloneStringDictionary(configuredValue));
+                    lastAppliedValue = configuredValueSerialized;
+                }
+                else
+                {
+                    lastAppliedValue = editableDefaultState.LastAppliedValue;
+                    if (string.Equals(currentValueSerialized, lastAppliedValue, StringComparison.Ordinal))
+                    {
+                        configMeta.SetValue(CloneStringDictionary(configuredValue));
+                        lastAppliedValue = configuredValueSerialized;
+                    }
+                }
+
+                SetEditableDefaultState(settingName, configPluginId, lastAppliedValue);
+                configMeta.UnlockConfiguration();
+                configMeta.SetEditableDefaultConfiguration(configPluginId);
+                break;
+
+            case false when configMeta.IsLocked && configMeta.LockedByConfigPluginId == configPluginId:
+                configMeta.ResetLockedConfiguration();
+                break;
+
+            case false when configMeta.ManagedMode is ManagedConfigurationMode.EDITABLE_DEFAULT
+                            && TryGetEditableDefaultState(settingName, out var editableDefaultStateToRemove)
+                            && editableDefaultStateToRemove.ConfigPluginId == configPluginId:
+                configMeta.ClearEditableDefaultConfiguration();
+                ClearEditableDefaultState(settingName);
+                break;
+        }
+
+        return successful;
+    }
+
     private static ManagedConfigurationMode ReadManagedConfigurationMode<TClass, TValue>(
         Expression<Func<TClass, TValue>> propertyExpression,
         LuaTable settings)
@@ -950,4 +1013,12 @@ public static partial class ManagedConfiguration
         
         _ => value.ToString() ?? string.Empty,
     };
+
+    private static Dictionary<string, string> CloneStringDictionary(IDictionary<string, string> values) => new(values, StringComparer.Ordinal);
+
+    private static string SerializeManagedStringDictionaryValue(IDictionary<string, string> values) => string.Join(
+        "\n",
+        values
+            .OrderBy(pair => pair.Key, StringComparer.Ordinal)
+            .Select(pair => $"{pair.Key}={pair.Value}"));
 }

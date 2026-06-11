@@ -194,6 +194,10 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     private async Task Start()
     {
+        await this.RefreshProviderSelectionFromConfigurationAsync();
+        if (this.ProviderSettings == Settings.Provider.NONE)
+            return;
+
         using (this.CancellationTokenSource = new())
         {
             await this.SubmitAction();
@@ -275,11 +279,18 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         return chatId;
     }
 
+    private Task RefreshProviderSelectionFromConfigurationAsync()
+    {
+        this.ProviderSettings = this.SettingsManager.GetPreselectedProvider(this.Component, this.ProviderSettings.Id);
+        return Task.CompletedTask;
+    }
+
     protected virtual void ResetProviderAndProfileSelection()
     {
         this.ProviderSettings = this.SettingsManager.GetPreselectedProvider(this.Component);
         this.CurrentProfile = this.SettingsManager.GetPreselectedProfile(this.Component);
         this.CurrentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(this.Component);
+        this.selectedToolIds = this.SettingsManager.GetDefaultToolIds(this.Component);
     }
 
     protected Task SelectedToolIdsChanged(HashSet<string> updatedToolIds)
@@ -336,7 +347,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             this.ChatThread.SelectedProvider = this.ProviderSettings.Id;
             this.ChatThread.RuntimeComponent = this.Component;
             this.ChatThread.RuntimeSelectedToolIds = this.SettingsManager.IsToolSelectionVisible(this.Component)
-                ? ToolSelectionRules.NormalizeSelection(this.selectedToolIds)
+                ? this.SettingsManager.FilterToolIdsForProvider(this.ProviderSettings, this.selectedToolIds)
                 : [];
         }
 

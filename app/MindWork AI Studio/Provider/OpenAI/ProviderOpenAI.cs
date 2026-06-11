@@ -176,6 +176,12 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
         IReadOnlyList<(ToolDefinition Definition, IToolImplementation Implementation)> runnableTools = toolRegistry is null
             ? []
             : await toolRegistry.GetRunnableToolsAsync(
+                new AIStudio.Settings.Provider
+                {
+                    UsedLLMProvider = this.Provider,
+                    Model = chatModel,
+                    InstanceName = this.InstanceName,
+                },
                 chatThread.RuntimeComponent,
                 chatThread.RuntimeSelectedToolIds,
                 modelCapabilities,
@@ -334,23 +340,14 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
             var response = await this.ExecuteResponsesRequest(requestDto, requestedSecret, token);
             if (response is null)
             {
-                if (currentAssistantContent is not null)
-                {
-                    currentAssistantContent.ToolRuntimeStatus = new();
-                    await currentAssistantContent.StreamingEvent();
-                }
-
+                await ResetToolRuntimeStatusAsync(currentAssistantContent);
                 yield break;
             }
 
             var functionCalls = response.GetFunctionCalls();
             if (functionCalls.Count == 0)
             {
-                if (currentAssistantContent is not null)
-                {
-                    currentAssistantContent.ToolRuntimeStatus = new();
-                    await currentAssistantContent.StreamingEvent();
-                }
+                await ResetToolRuntimeStatusAsync(currentAssistantContent);
 
                 var textOutput = response.GetTextOutput();
                 if (!string.IsNullOrWhiteSpace(textOutput))
@@ -361,17 +358,8 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
                 yield break;
             }
 
-            if (currentAssistantContent is not null)
-            {
-                currentAssistantContent.ToolRuntimeStatus = new ToolRuntimeStatus
-                {
-                    IsRunning = true,
-                    ToolNames = functionCalls
-                        .Select(x => runnableTools.FirstOrDefault(tool => tool.Definition.Function.Name.Equals(x.Name, StringComparison.Ordinal)).Implementation?.GetDisplayName() ?? x.Name)
-                        .ToList(),
-                };
-                await currentAssistantContent.StreamingEvent();
-            }
+            await ShowToolRuntimeStatusAsync(currentAssistantContent, functionCalls
+                .Select(x => runnableTools.FirstOrDefault(tool => tool.Definition.Function.Name.Equals(x.Name, StringComparison.Ordinal)).Implementation?.GetDisplayName() ?? x.Name));
 
             foreach (var functionCallItem in response.GetRawFunctionCallItems())
                 internalItems.Add(functionCallItem);
@@ -393,12 +381,7 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
                         Result = limitMessage,
                     });
 
-                    if (currentAssistantContent is not null)
-                    {
-                        currentAssistantContent.ToolRuntimeStatus = new();
-                        await currentAssistantContent.StreamingEvent();
-                    }
-
+                    await ResetToolRuntimeStatusAsync(currentAssistantContent);
                     yield return new ContentStreamChunk(limitMessage, []);
                     yield break;
                 }
@@ -423,6 +406,28 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
             if (currentAssistantContent is not null)
                 await currentAssistantContent.StreamingEvent();
         }
+    }
+
+    private static async Task ResetToolRuntimeStatusAsync(ContentText? currentAssistantContent)
+    {
+        if (currentAssistantContent is null)
+            return;
+
+        currentAssistantContent.ToolRuntimeStatus = new();
+        await currentAssistantContent.StreamingEvent();
+    }
+
+    private static async Task ShowToolRuntimeStatusAsync(ContentText? currentAssistantContent, IEnumerable<string> toolNames)
+    {
+        if (currentAssistantContent is null)
+            return;
+
+        currentAssistantContent.ToolRuntimeStatus = new ToolRuntimeStatus
+        {
+            IsRunning = true,
+            ToolNames = toolNames.ToList(),
+        };
+        await currentAssistantContent.StreamingEvent();
     }
 
     private async Task<ResponsesResponse?> ExecuteResponsesRequest(ResponsesAPIRequest requestDto, RequestedSecret requestedSecret, CancellationToken token)

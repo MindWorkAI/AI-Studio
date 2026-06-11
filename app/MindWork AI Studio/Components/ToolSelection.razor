@@ -18,6 +18,9 @@
                 </CardHeaderContent>
             </MudCardHeader>
             <MudCardContent Style="min-width: 28em; max-height: 60vh; max-width: 48vw; overflow: auto;">
+                <MudText Typo="Typo.body1" Class="mb-3">
+                    @T("Tools allow the LLM to perform targeted additional actions such as web searches or reading web pages.")
+                </MudText>
                 @if (!this.SupportsTools)
                 {
                     <MudText Typo="Typo.body1">@this.UnsupportedToolsMessage</MudText>

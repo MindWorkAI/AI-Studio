@@ -113,6 +113,7 @@ public sealed class ToolRegistry
     }
 
     public async Task<IReadOnlyList<(ToolDefinition Definition, IToolImplementation Implementation)>> GetRunnableToolsAsync(
+        AIStudio.Settings.Provider provider,
         AIStudio.Tools.Components component,
         IEnumerable<string> selectedToolIds,
         IReadOnlyCollection<Capability> modelCapabilities,
@@ -120,30 +121,60 @@ public sealed class ToolRegistry
         bool isToolSelectionVisible)
     {
         if (!isToolSelectionVisible)
+        {
+            this.logger.LogInformation("Tool calling is skipped for component '{Component}' because tool selection is not visible.", component);
             return [];
+        }
+
+        var toolCallingAvailability = provider.GetToolCallingAvailability();
+        if (!toolCallingAvailability.IsAvailable)
+        {
+            this.logger.LogInformation("Tool calling is unavailable for provider '{Provider}' with model '{ModelId}': {Reason}", provider.InstanceName, provider.Model.Id, toolCallingAvailability.Message);
+            return [];
+        }
 
         if (!modelCapabilities.Contains(Capability.FUNCTION_CALLING) ||
             (!modelCapabilities.Contains(Capability.CHAT_COMPLETION_API) && !modelCapabilities.Contains(Capability.RESPONSES_API)))
+        {
+            this.logger.LogInformation("Tool calling is unavailable for provider '{Provider}' with model '{ModelId}' because the model lacks the required API or function-calling capability.", provider.InstanceName, provider.Model.Id);
             return [];
+        }
 
         var selectedToolIdSet = ToolSelectionRules.NormalizeSelection(selectedToolIds);
+        this.logger.LogInformation("Resolving runnable tools for provider '{Provider}' with model '{ModelId}'. Selected tool IDs: [{ToolIds}].", provider.InstanceName, provider.Model.Id, string.Join(", ", selectedToolIdSet.OrderBy(x => x, StringComparer.Ordinal)));
+
         var definitions = this.GetDefinitionsForComponent(component).Where(x => selectedToolIdSet.Contains(x.Id)).ToList();
         var result = new List<(ToolDefinition, IToolImplementation)>(definitions.Count);
         foreach (var definition in definitions)
         {
             if (!this.implementationsByKey.TryGetValue(definition.ImplementationKey, out var implementation))
+            {
+                this.logger.LogInformation("Skipping tool '{ToolId}' because no implementation is registered.", definition.Id);
                 continue;
+            }
 
             var configurationState = await this.toolSettingsService.GetConfigurationStateAsync(definition, implementation);
             if (!configurationState.IsConfigured)
+            {
+                this.logger.LogInformation("Skipping tool '{ToolId}' because it is not configured.", definition.Id);
                 continue;
+            }
 
-            var minimumToolConfidence = this.settingsManager.GetMinimumProviderConfidenceForTool(definition.Id);
+            var resolution = this.settingsManager.GetMinimumProviderConfidenceResolutionForTool(definition.Id);
+            var minimumToolConfidence = resolution.ConfidenceLevel;
+            this.logger.LogInformation("Tool '{ToolId}' uses minimum provider confidence '{ConfidenceLevel}' from {Source}.", definition.Id, minimumToolConfidence, resolution.Source);
+
             if (!ToolSelectionRules.IsProviderConfidenceAllowed(providerConfidence, minimumToolConfidence))
+            {
+                this.logger.LogInformation("Skipping tool '{ToolId}' because provider confidence '{ProviderConfidence}' is below the required minimum '{MinimumConfidence}'.", definition.Id, providerConfidence, minimumToolConfidence);
                 continue;
+            }
 
             result.Add((definition, implementation));
         }
+
+        foreach (var selectedToolId in selectedToolIdSet.Where(selectedToolId => definitions.All(definition => !definition.Id.Equals(selectedToolId, StringComparison.Ordinal))))
+            this.logger.LogInformation("Skipping tool '{ToolId}' because it is not selected in this component or not available in this context.", selectedToolId);
 
         return result;
     }

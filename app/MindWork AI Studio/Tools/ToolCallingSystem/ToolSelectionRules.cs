@@ -47,7 +47,7 @@ public static class ToolSelectionRules
 
         return $"""
                 Tool usage policy:
-                {policyLines}
+                {string.Join(Environment.NewLine + Environment.NewLine, policyLines)}
                 """;
     }
 

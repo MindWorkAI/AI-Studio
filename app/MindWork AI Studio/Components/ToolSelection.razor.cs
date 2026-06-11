@@ -1,7 +1,6 @@
 using AIStudio.Dialogs.Settings;
 using AIStudio.Provider;
 using AIStudio.Settings;
-using AIStudio.Tools;
 using AIStudio.Tools.ToolCallingSystem;
 
 using Microsoft.AspNetCore.Components;
@@ -49,22 +48,15 @@ public partial class ToolSelection : MSGComponentBase
         await base.OnInitializedAsync();
     }
 
-    private bool SupportsTools =>
-        this.LLMProvider != AIStudio.Settings.Provider.NONE &&
-        (this.LLMProvider.GetModelCapabilities().Contains(Capability.CHAT_COMPLETION_API) ||
-         this.LLMProvider.GetModelCapabilities().Contains(Capability.RESPONSES_API)) &&
-        this.LLMProvider.GetModelCapabilities().Contains(Capability.FUNCTION_CALLING);
+    private ToolCallingAvailability ToolCallingAvailability => this.LLMProvider.GetToolCallingAvailability();
 
-    private bool IsAnthropicProvider => this.LLMProvider != AIStudio.Settings.Provider.NONE &&
-                                        this.LLMProvider.UsedLLMProvider is LLMProviders.ANTHROPIC;
+    private bool SupportsTools => this.ToolCallingAvailability.IsAvailable;
 
     private string ToolButtonTooltip => this.SupportsTools
         ? this.T("Select tools")
         : this.UnsupportedToolsMessage;
 
-    private string UnsupportedToolsMessage => this.IsAnthropicProvider
-        ? this.T("Tool calling for this provider is not implemented yet.")
-        : this.T("The selected model does not support tool calling.");
+    private string UnsupportedToolsMessage => this.ToolCallingAvailability.Message;
 
     private ConfidenceLevel ProviderConfidence => this.LLMProvider == AIStudio.Settings.Provider.NONE
         ? ConfidenceLevel.NONE
