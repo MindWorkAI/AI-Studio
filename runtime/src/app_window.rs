@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::convert::Infallible;
+use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 use std::time::Duration;
 use async_stream::stream;
@@ -10,6 +11,7 @@ use axum::Json;
 use bytes::Bytes;
 use log::{debug, error, info, trace, warn};
 use once_cell::sync::Lazy;
+use pdfium_render::prelude::Pdfium;
 use serde::{Deserialize, Serialize};
 use strum_macros::Display;
 use tauri::{DragDropEvent,RunEvent, Manager, WindowEvent, generate_context};
@@ -972,19 +974,9 @@ fn set_pdfium_path<R: tauri::Runtime>(path_resolver: &PathResolver<R>) {
         }
     };
 
-    let candidate_paths = [
-        resource_dir.join("resources").join("libraries"),
-        resource_dir.join("libraries"),
-    ];
-
-    let pdfium_source_path = candidate_paths
-        .iter()
-        .find(|path| path.exists())
-        .map(|path| path.to_string_lossy().to_string());
-
-    match pdfium_source_path {
+    match select_pdfium_library_directory(&resource_dir) {
         Some(path) => {
-            *PDFIUM_LIB_PATH.lock().unwrap() = Some(path);
+            *PDFIUM_LIB_PATH.lock().unwrap() = Some(path.to_string_lossy().to_string());
         }
         None => {
             error!(Source = "Bootloader Tauri"; "Failed to set the PDFium library path.");
@@ -992,9 +984,76 @@ fn set_pdfium_path<R: tauri::Runtime>(path_resolver: &PathResolver<R>) {
     }
 }
 
+fn select_pdfium_library_directory(resource_dir: &Path) -> Option<PathBuf> {
+    let candidate_paths = [
+        resource_dir.join("resources").join("libraries"),
+        resource_dir.join("libraries"),
+    ];
+
+    for path in candidate_paths {
+        let pdfium_library_path = Pdfium::pdfium_platform_library_name_at_path(&path);
+        if pdfium_library_path.exists() {
+            return Some(path);
+        }
+
+        if path.exists() {
+            warn!(
+                Source = "Bootloader Tauri";
+                "PDFium library directory exists, but the library file was not found at '{path}'.",
+                path = pdfium_library_path.to_string_lossy(),
+            );
+        }
+    }
+
+    None
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::fs;
+
+    #[test]
+    fn pdfium_library_directory_prefers_resources_libraries() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let resources_libraries = temp_dir.path().join("resources").join("libraries");
+        let libraries = temp_dir.path().join("libraries");
+        create_pdfium_library_in(&resources_libraries);
+        create_pdfium_library_in(&libraries);
+
+        assert_eq!(
+            select_pdfium_library_directory(temp_dir.path()),
+            Some(resources_libraries)
+        );
+    }
+
+    #[test]
+    fn pdfium_library_directory_falls_back_when_first_directory_has_no_library() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let resources_libraries = temp_dir.path().join("resources").join("libraries");
+        let libraries = temp_dir.path().join("libraries");
+        fs::create_dir_all(&resources_libraries).unwrap();
+        create_pdfium_library_in(&libraries);
+
+        assert_eq!(
+            select_pdfium_library_directory(temp_dir.path()),
+            Some(libraries)
+        );
+    }
+
+    #[test]
+    fn pdfium_library_directory_requires_library_file() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        fs::create_dir_all(temp_dir.path().join("resources").join("libraries")).unwrap();
+        fs::create_dir_all(temp_dir.path().join("libraries")).unwrap();
+
+        assert_eq!(select_pdfium_library_directory(temp_dir.path()), None);
+    }
+
+    fn create_pdfium_library_in(path: &Path) {
+        fs::create_dir_all(path).unwrap();
+        fs::File::create(Pdfium::pdfium_platform_library_name_at_path(path)).unwrap();
+    }
 
     #[test]
     fn tauri_localhost_is_tauri_asset_url() {
