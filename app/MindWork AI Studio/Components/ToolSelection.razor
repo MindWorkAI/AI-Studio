@@ -3,7 +3,7 @@
 @inherits MSGComponentBase
 
 <div class="d-flex">
-    <MudTooltip Text="@T("Select tools")" Placement="Placement.Top">
+    <MudTooltip Text="@this.ToolButtonTooltip" Placement="Placement.Top">
         <MudIconButton Icon="@Icons.Material.Filled.Build" Class="@this.PopoverButtonClasses" OnClick="@this.ToggleSelection"/>
     </MudTooltip>
 
@@ -20,7 +20,7 @@
             <MudCardContent Style="min-width: 28em; max-height: 60vh; max-width: 48vw; overflow: auto;">
                 @if (!this.SupportsTools)
                 {
-                    <MudText Typo="Typo.body1">@T("The selected provider or model does not support tool calling.")</MudText>
+                    <MudText Typo="Typo.body1">@this.UnsupportedToolsMessage</MudText>
                 }
                 else if (this.Disabled)
                 {

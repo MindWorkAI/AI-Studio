@@ -51,8 +51,20 @@ public partial class ToolSelection : MSGComponentBase
 
     private bool SupportsTools =>
         this.LLMProvider != AIStudio.Settings.Provider.NONE &&
-        this.LLMProvider.GetModelCapabilities().Contains(Capability.CHAT_COMPLETION_API) &&
+        (this.LLMProvider.GetModelCapabilities().Contains(Capability.CHAT_COMPLETION_API) ||
+         this.LLMProvider.GetModelCapabilities().Contains(Capability.RESPONSES_API)) &&
         this.LLMProvider.GetModelCapabilities().Contains(Capability.FUNCTION_CALLING);
+
+    private bool IsAnthropicProvider => this.LLMProvider != AIStudio.Settings.Provider.NONE &&
+                                        this.LLMProvider.UsedLLMProvider is LLMProviders.ANTHROPIC;
+
+    private string ToolButtonTooltip => this.SupportsTools
+        ? this.T("Select tools")
+        : this.UnsupportedToolsMessage;
+
+    private string UnsupportedToolsMessage => this.IsAnthropicProvider
+        ? this.T("Tool calling for this provider is not implemented yet.")
+        : this.T("The selected model does not support tool calling.");
 
     private ConfidenceLevel ProviderConfidence => this.LLMProvider == AIStudio.Settings.Provider.NONE
         ? ConfidenceLevel.NONE
