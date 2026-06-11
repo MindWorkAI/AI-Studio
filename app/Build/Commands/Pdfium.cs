@@ -7,18 +7,33 @@ namespace Build.Commands;
 
 public static class Pdfium
 {
-    public static async Task InstallAsync(RID rid, string version)
+    public static async Task InstallAsync(RID rid, string version, bool offline)
     {
         Console.Write($"- Installing Pdfium {version} for {rid.ToUserFriendlyName()} ...");
 
         var cwd = Environment.GetRustRuntimeDirectory();
-        var pdfiumTmpDownloadPath = Path.GetTempFileName();
-        var pdfiumTmpExtractPath = Directory.CreateTempSubdirectory();
         var pdfiumUrl = GetPdfiumDownloadUrl(rid, version);
+        var library = GetLibraryPath(rid);
+        var pdfiumLibTargetPath = Path.Join(cwd, "resources", "libraries", library.Filename);
+
+        if (offline)
+        {
+            if (File.Exists(pdfiumLibTargetPath))
+            {
+                Console.WriteLine(" offline mode enabled and library already exists, skipping download");
+                return;
+            }
+
+            Console.WriteLine($" failed because offline mode is enabled and '{pdfiumLibTargetPath}' does not exist");
+            return;
+        }
 
         //
         // Download the file:
         //
+        var pdfiumTmpDownloadPath = Path.GetTempFileName();
+        var pdfiumTmpExtractPath = Directory.CreateTempSubdirectory();
+
         Console.Write(" downloading ...");
         using (var client = new HttpClient())
         {
@@ -47,7 +62,6 @@ public static class Pdfium
         // Copy the library to the target directory:
         //
         Console.Write(" deploying ...");
-        var library = GetLibraryPath(rid);
         if (string.IsNullOrWhiteSpace(library.Path))
         {
             Console.WriteLine($" failed to find the library path for {rid.ToUserFriendlyName()}");
@@ -55,7 +69,6 @@ public static class Pdfium
         }
         
         var pdfiumLibSourcePath = Path.Join(pdfiumTmpExtractPath.FullName, library.Path);
-        var pdfiumLibTargetPath = Path.Join(cwd, "resources", "libraries", library.Filename);
         if (!File.Exists(pdfiumLibSourcePath))
         {
             Console.WriteLine($" failed to find the library file '{pdfiumLibSourcePath}'");
