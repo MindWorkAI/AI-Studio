@@ -27,6 +27,10 @@ public sealed record ResponsesResponse
         .Where(x => !string.IsNullOrWhiteSpace(x.CallId) && !string.IsNullOrWhiteSpace(x.Name))
         .ToList();
 
+    public IReadOnlyList<JsonElement> GetRawFunctionCallItems() => this.Output
+        .Where(x => ReadString(x, "type").Equals("function_call", StringComparison.Ordinal))
+        .ToList();
+
     public string GetTextOutput()
     {
         if (!string.IsNullOrWhiteSpace(this.OutputText))
