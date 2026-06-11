@@ -142,7 +142,7 @@ public sealed class GetCurrentWeatherTool : IToolImplementation
 
     public string GetDisplayName() => TB("Current Weather");
 
-    public string GetDescription() => TB("Use this demo tool to retrieve the current weather for a given city and state.");
+    public string GetDescription() => TB("Use this demo tool to retrieve the current weather for a given city and state."); // this Description is shown to the user
 
     public string GetSettingsFieldLabel(string fieldName, ToolSettingsFieldDefinition fieldDefinition) => fieldName switch
     {
