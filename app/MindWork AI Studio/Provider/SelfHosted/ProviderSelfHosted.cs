@@ -95,7 +95,7 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
             switch (host)
             {
                 case Host.LLAMA_CPP:
-                    return await this.LoadLlamaCppTextModels(token, apiKeyProvisional);
+                    return await this.LoadLlamaCppTextModels(["embed"], [], token, apiKeyProvisional);
             
                 case Host.LM_STUDIO:
                 case Host.OLLAMA:
@@ -208,7 +208,7 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
         if (host is not Host.LLAMA_CPP || !chatModel.IsSystemModel)
             return chatModel;
 
-        var modelLoadResult = await this.LoadLlamaCppTextModels(token);
+        var modelLoadResult = await this.LoadLlamaCppTextModels(["embed"], [], token);
         if (!modelLoadResult.Success)
             return chatModel;
 
@@ -216,20 +216,36 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
             .Where(model => !model.IsSystemModel && !string.IsNullOrWhiteSpace(model.Id))
             .ToList();
 
+        if (modelLoadResult.Models.All(model => !model.IsSystemModel) && availableModels.Count is 0)
+        {
+            LOGGER.LogError("The llama.cpp provider '{ProviderInstanceName}' does not offer a usable text model. Please check your provider settings.", this.InstanceName);
+            throw new ProviderRequestException(
+                ProviderRequestFailureReason.NONE,
+                string.Format(
+                    TB("The llama.cpp provider '{0}' does not offer a usable text model. Please check your provider settings."),
+                    this.InstanceName));
+        }
+
         if (availableModels.Count is 1)
             return availableModels[0];
 
         if (availableModels.Count > 1)
+        {
+            LOGGER.LogError(
+                "The llama.cpp provider '{ProviderInstanceName}' offers {ModelCount} models, but the configured model is the legacy system placeholder. The provider settings must be updated to select a specific model.",
+                this.InstanceName,
+                availableModels.Count);
             throw new ProviderRequestException(
                 ProviderRequestFailureReason.NONE,
                 string.Format(
                     TB("The llama.cpp provider '{0}' offers multiple models. Please open the provider settings and select the model to use."),
                     this.InstanceName));
+        }
 
         return chatModel;
     }
 
-    private async Task<ModelLoadResult> LoadLlamaCppTextModels(CancellationToken token, string? apiKeyProvisional = null)
+    private async Task<ModelLoadResult> LoadLlamaCppTextModels(string[] ignorePhrases, string[] filterPhrases, CancellationToken token, string? apiKeyProvisional = null)
     {
         var secretKey = await this.GetModelLoadingSecretKey(SecretStoreType.LLM_PROVIDER, apiKeyProvisional, true);
 
@@ -253,12 +269,19 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
             try
             {
                 var modelResponse = JsonSerializer.Deserialize<ModelsResponse>(responseBody, JSON_SERIALIZER_OPTIONS);
-                var models = modelResponse.Data?
+                var responseModels = modelResponse.Data?
                     .Where(model => !string.IsNullOrWhiteSpace(model.Id))
-                    .Select(model => new Provider.Model(model.Id, null))
                     .ToList() ?? [];
 
-                return models.Count is 0 ? LlamaCppLegacyModelResult() : SuccessfulModelLoadResult(models);
+                if (responseModels.Count is 0)
+                    return LlamaCppLegacyModelResult();
+
+                var models = responseModels
+                    .Where(model => IsMatchingLlamaCppTextModel(model, ignorePhrases, filterPhrases))
+                    .Select(model => new Provider.Model(model.Id, null))
+                    .ToList();
+
+                return SuccessfulModelLoadResult(models);
             }
             catch (JsonException e)
             {
@@ -277,6 +300,25 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
             LOGGER.LogError(e, "Failed to load models from llama.cpp provider '{ProviderInstanceName}'.", this.InstanceName);
             return FailedModelLoadResult(ModelLoadFailureReason.UNKNOWN, e.Message);
         }
+    }
+
+    private static bool IsMatchingLlamaCppTextModel(Model model, string[] ignorePhrases, string[] filterPhrases)
+    {
+        if (string.IsNullOrWhiteSpace(model.Id))
+            return false;
+
+        if (ignorePhrases.Any(ignorePhrase => model.Id.Contains(ignorePhrase, StringComparison.InvariantCultureIgnoreCase)))
+            return false;
+
+        if (!filterPhrases.All(filter => model.Id.Contains(filter, StringComparison.InvariantCultureIgnoreCase)))
+            return false;
+
+        var outputModalities = model.Architecture?.OutputModalities;
+        if (outputModalities is { Length: > 0 } &&
+            !outputModalities.Any(modality => string.Equals(modality, "text", StringComparison.OrdinalIgnoreCase)))
+            return false;
+
+        return true;
     }
 
     private static ModelLoadResult LlamaCppLegacyModelResult()
