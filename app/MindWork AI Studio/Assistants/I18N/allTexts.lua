@@ -6760,6 +6760,12 @@ UI_TEXT_CONTENT["AISTUDIO::PROVIDER::OPENAI::PROVIDEROPENAI::T757371511"] = "It 
 -- Model as configured by whisper.cpp
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::SELFHOSTED::PROVIDERSELFHOSTED::T3313940770"] = "Model as configured by whisper.cpp"
 
+-- The llama.cpp provider '{0}' does not offer a usable text model. Please check your provider settings.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::SELFHOSTED::PROVIDERSELFHOSTED::T3839908321"] = "The llama.cpp provider '{0}' does not offer a usable text model. Please check your provider settings."
+
+-- The llama.cpp provider '{0}' offers multiple models. Please open the provider settings and select the model to use.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::SELFHOSTED::PROVIDERSELFHOSTED::T4018006464"] = "The llama.cpp provider '{0}' offers multiple models. Please open the provider settings and select the model to use."
+
 -- Cannot export this chat template because example message {0} is not a text message.
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CHATTEMPLATE::T1861800849"] = "Cannot export this chat template because example message {0} is not a text message."
 
@@ -7323,6 +7329,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::EXTERNALHTTPCLIENTTIMEOUT::T3928871850"] = "Th
 
 -- The configured certificate bundle does not contain usable root CA certificates.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::EXTERNALHTTPCLIENTTIMEOUT::T599774443"] = "The configured certificate bundle does not contain usable root CA certificates."
+
+-- policy files
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::EXTERNALHTTPCLIENTTIMEOUT::T632340680"] = "policy files"
 
 -- AI Studio couldn't install Pandoc because the archive was not found.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T1059477764"] = "AI Studio couldn't install Pandoc because the archive was not found."
