@@ -1,5 +1,6 @@
 using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
+using System.Text.Json;
 
 using AIStudio.Chat;
 using AIStudio.Provider.OpenAI;
@@ -23,14 +24,15 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
     public override string InstanceName { get; set; } = "Self-hosted";
 
     /// <inheritdoc />
-    public override bool HasModelLoadingCapability => host is Host.OLLAMA or Host.LM_STUDIO or Host.VLLM;
+    public override bool HasModelLoadingCapability => host is Host.OLLAMA or Host.LM_STUDIO or Host.VLLM or Host.LLAMA_CPP;
     
     /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Provider.Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
+        var effectiveChatModel = await this.ResolveChatModelForRequest(chatModel, token);
         await foreach (var content in this.StreamOpenAICompatibleChatCompletion<ChatCompletionAPIRequest, ChatCompletionDeltaStreamLine, ChatCompletionAnnotationStreamLine>(
                            "self-hosted provider",
-                           chatModel,
+                           effectiveChatModel,
                            chatThread,
                            settingsManager,
                            async (systemPrompt, apiParameters) =>
@@ -40,13 +42,13 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
                                // - LM Studio, vLLM, and llama.cpp use the nested image URL format: { "type": "image_url", "image_url": { "url": "data:..." } }
                                var messages = host switch
                                {
-                                   Host.OLLAMA => await chatThread.Blocks.BuildMessagesUsingDirectImageUrlAsync(this.Provider, chatModel),
-                                   _ => await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel),
+                                   Host.OLLAMA => await chatThread.Blocks.BuildMessagesUsingDirectImageUrlAsync(this.Provider, effectiveChatModel),
+                                   _ => await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, effectiveChatModel),
                                };
 
                                return new ChatCompletionAPIRequest
                                {
-                                   Model = chatModel.Id,
+                                   Model = effectiveChatModel.Id,
 
                                    // Build the messages:
                                    // - First of all the system prompt
@@ -93,9 +95,7 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
             switch (host)
             {
                 case Host.LLAMA_CPP:
-                    // Right now, llama.cpp only supports one model.
-                    // There is no API to list the model(s).
-                    return ModelLoadResult.FromModels([ new Provider.Model("as configured by llama.cpp", null) ]);
+                    return await this.LoadLlamaCppTextModels(token, apiKeyProvisional);
             
                 case Host.LM_STUDIO:
                 case Host.OLLAMA:
@@ -188,8 +188,10 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
             }
 
             var lmStudioModelResponse = await lmStudioResponse.Content.ReadFromJsonAsync<ModelsResponse>(token);
-            return SuccessfulModelLoadResult(lmStudioModelResponse.Data.
-                Where(model => !ignorePhrases.Any(ignorePhrase => model.Id.Contains(ignorePhrase, StringComparison.InvariantCulture)) &&
+            var models = lmStudioModelResponse.Data ?? [];
+            return SuccessfulModelLoadResult(models.
+                Where(model => !string.IsNullOrWhiteSpace(model.Id) &&
+                               !ignorePhrases.Any(ignorePhrase => model.Id.Contains(ignorePhrase, StringComparison.InvariantCulture)) &&
                                filterPhrases.All( filter => model.Id.Contains(filter, StringComparison.InvariantCulture)))
                 .Select(n => new Provider.Model(n.Id, null)));
         }
@@ -199,5 +201,86 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
             LOGGER.LogError(e, "Timed out while loading models from self-hosted provider '{ProviderInstanceName}'.", this.InstanceName);
             return FailedModelLoadResult(ModelLoadFailureReason.PROVIDER_UNAVAILABLE, e.Message);
         }
+    }
+
+    private async Task<Provider.Model> ResolveChatModelForRequest(Provider.Model chatModel, CancellationToken token)
+    {
+        if (host is not Host.LLAMA_CPP || !chatModel.IsSystemModel)
+            return chatModel;
+
+        var modelLoadResult = await this.LoadLlamaCppTextModels(token);
+        if (!modelLoadResult.Success)
+            return chatModel;
+
+        var availableModels = modelLoadResult.Models
+            .Where(model => !model.IsSystemModel && !string.IsNullOrWhiteSpace(model.Id))
+            .ToList();
+
+        if (availableModels.Count is 1)
+            return availableModels[0];
+
+        if (availableModels.Count > 1)
+            throw new ProviderRequestException(
+                ProviderRequestFailureReason.NONE,
+                string.Format(
+                    TB("The llama.cpp provider '{0}' offers multiple models. Please open the provider settings and select the model to use."),
+                    this.InstanceName));
+
+        return chatModel;
+    }
+
+    private async Task<ModelLoadResult> LoadLlamaCppTextModels(CancellationToken token, string? apiKeyProvisional = null)
+    {
+        var secretKey = await this.GetModelLoadingSecretKey(SecretStoreType.LLM_PROVIDER, apiKeyProvisional, true);
+
+        try
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Get, "models");
+            if (!string.IsNullOrWhiteSpace(secretKey))
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
+
+            using var response = await this.HttpClient.SendAsync(request, token);
+            var responseBody = await response.Content.ReadAsStringAsync(token);
+            if (!response.IsSuccessStatusCode)
+            {
+                if (response.StatusCode is System.Net.HttpStatusCode.NotFound)
+                    return LlamaCppLegacyModelResult();
+
+                LOGGER.LogError("llama.cpp model loading request failed with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", response.StatusCode, response.ReasonPhrase, responseBody);
+                return FailedModelLoadResult(this.GetModelLoadFailureReason(response, responseBody), $"Status={(int)response.StatusCode} {response.ReasonPhrase}; Body='{responseBody}'");
+            }
+
+            try
+            {
+                var modelResponse = JsonSerializer.Deserialize<ModelsResponse>(responseBody, JSON_SERIALIZER_OPTIONS);
+                var models = modelResponse.Data?
+                    .Where(model => !string.IsNullOrWhiteSpace(model.Id))
+                    .Select(model => new Provider.Model(model.Id, null))
+                    .ToList() ?? [];
+
+                return models.Count is 0 ? LlamaCppLegacyModelResult() : SuccessfulModelLoadResult(models);
+            }
+            catch (JsonException e)
+            {
+                LOGGER.LogWarning(e, "The llama.cpp model loading response could not be parsed. Falling back to the legacy system-configured model.");
+                return LlamaCppLegacyModelResult();
+            }
+        }
+        catch (Exception e) when (this.IsTimeoutException(e, token))
+        {
+            await this.SendTimeoutError("loading the available models");
+            LOGGER.LogError(e, "Timed out while loading models from llama.cpp provider '{ProviderInstanceName}'.", this.InstanceName);
+            return FailedModelLoadResult(ModelLoadFailureReason.PROVIDER_UNAVAILABLE, e.Message);
+        }
+        catch (Exception e)
+        {
+            LOGGER.LogError(e, "Failed to load models from llama.cpp provider '{ProviderInstanceName}'.", this.InstanceName);
+            return FailedModelLoadResult(ModelLoadFailureReason.UNKNOWN, e.Message);
+        }
+    }
+
+    private static ModelLoadResult LlamaCppLegacyModelResult()
+    {
+        return ModelLoadResult.FromModels([ AIStudio.Provider.Model.SYSTEM_MODEL ]);
     }
 }
