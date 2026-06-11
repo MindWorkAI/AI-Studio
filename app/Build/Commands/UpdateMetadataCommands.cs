@@ -15,7 +15,8 @@ public sealed partial class UpdateMetadataCommands
     [Command("release", Description = "Prepare & build the next release")]
     public async Task Release(
         [Option("action", ['a'], Description = "The release action: patch, minor, or major")] PrepareAction action = PrepareAction.NONE,
-        [Option("version", ['v'], Description = "Set a specific version directly, e.g., 26.1.2")] string? version = null)
+        [Option("version", ['v'], Description = "Set a specific version directly, e.g., 26.1.2")] string? version = null,
+        [Option("offline", Description = "Skip downloads and use locally available build dependencies")] bool offline = false)
     {
         if(!Environment.IsWorkingDirectoryValid())
             return;
@@ -42,7 +43,7 @@ public sealed partial class UpdateMetadataCommands
         
         // Build once to allow the Rust compiler to read the changed metadata
         // and to update all .NET artifacts:
-        await this.Build();
+        await this.Build(offline);
         
         // Now, we update the web assets (which may were updated by the first build):
         new UpdateWebAssetsCommand().UpdateWebAssets();
@@ -53,7 +54,7 @@ public sealed partial class UpdateMetadataCommands
         
         // Build the final release, where Rust knows the updated metadata, the .NET
         // artifacts are already in place, and .NET knows the updated web assets, etc.:
-        await this.Build();
+        await this.Build(offline);
     }
 
     [Command("update-versions", Description = "The command will update the package versions in the metadata file")]
@@ -136,7 +137,8 @@ public sealed partial class UpdateMetadataCommands
     }
     
     [Command("build", Description = "Build MindWork AI Studio")]
-    public async Task Build()
+    public async Task Build(
+        [Option("offline", Description = "Skip downloads and use locally available build dependencies")] bool offline = false)
     {
         if(!Environment.IsWorkingDirectoryValid())
             return;
@@ -153,7 +155,7 @@ public sealed partial class UpdateMetadataCommands
         await this.UpdateVectorStoreVersion();
         
         var pdfiumVersion = await this.ReadPdfiumVersion();
-        await Pdfium.InstallAsync(rid, pdfiumVersion);
+        await Pdfium.InstallAsync(rid, pdfiumVersion, Environment.IsOfflineBuildRequested(offline));
         
         Console.Write($"- Start .NET build for {rid.ToUserFriendlyName()} ...");
         await this.ReadCommandOutput(pathApp, "dotnet", $"clean --configuration release --runtime {rid.AsMicrosoftRid()}");
