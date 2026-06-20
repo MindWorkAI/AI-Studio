@@ -22,6 +22,13 @@ public partial class Home : MSGComponentBase
 
     private List<DataIntroduction> introductions = [];
     
+    private string expandedPanelId = string.Empty;
+    private int expansionPanelsRenderKey;
+
+    private const string PANEL_ID_BUILT_IN_INTRODUCTION = "built-in-introduction";
+    private const string PANEL_ID_LAST_CHANGELOG = "last-changelog";
+    private const string PANEL_ID_VISION = "vision";
+    private const string PANEL_ID_QUICK_START_GUIDE = "quick-start-guide";
     #region Overrides of ComponentBase
 
     protected override async Task OnInitializedAsync()
@@ -30,6 +37,7 @@ public partial class Home : MSGComponentBase
         await base.OnInitializedAsync();
         this.InitializeAdvantagesItems();
         this.RefreshIntroductionPanels();
+        this.EnsureDefaultExpandedPanel();
         
         // Read the last change content asynchronously
         // without blocking the UI thread:
@@ -75,11 +83,13 @@ public partial class Home : MSGComponentBase
             case Event.PLUGINS_RELOADED:
                 this.InitializeAdvantagesItems();
                 this.RefreshIntroductionPanels();
+                this.EnsureDefaultExpandedPanel();
                 await this.InvokeAsync(this.StateHasChanged);
                 break;
 
             case Event.CONFIGURATION_CHANGED:
                 this.RefreshIntroductionPanels();
+                this.EnsureDefaultExpandedPanel();
                 await this.InvokeAsync(this.StateHasChanged);
                 break;
         }
@@ -92,15 +102,36 @@ public partial class Home : MSGComponentBase
         this.introductions = PluginFactory.GetIntroductions().ToList();
     }
 
-    private bool IsBuiltInIntroductionExpanded => this.SettingsManager.ConfigurationData.App.ShowIntroduction;
+    private string GetDefaultExpandedPanelId()
+    {
+        if (this.SettingsManager.ConfigurationData.App.ShowIntroduction)
+            return PANEL_ID_BUILT_IN_INTRODUCTION;
 
-    private bool IsIntroductionExpanded(DataIntroduction introduction) =>
-        !this.SettingsManager.ConfigurationData.App.ShowIntroduction &&
-        this.introductions.FirstOrDefault() == introduction;
+        var firstIntroduction = this.introductions.FirstOrDefault();
+        return firstIntroduction is not null
+            ? IntroductionPanelId(firstIntroduction)
+            : PANEL_ID_LAST_CHANGELOG;
+    }
 
-    private bool IsLastChangelogExpanded =>
-        !this.SettingsManager.ConfigurationData.App.ShowIntroduction &&
-        this.introductions.Count == 0;
+    private void EnsureDefaultExpandedPanel()
+    {
+        this.expandedPanelId = this.GetDefaultExpandedPanelId();
+        this.expansionPanelsRenderKey++;
+    }
+
+    private bool IsPanelExpanded(string panelId) => string.Equals(this.expandedPanelId, panelId, StringComparison.Ordinal);
+
+    private Task SetPanelExpanded(string panelId, bool isExpanded)
+    {
+        if (isExpanded)
+            this.expandedPanelId = panelId;
+        else if (this.IsPanelExpanded(panelId))
+            this.expandedPanelId = string.Empty;
+
+        return Task.CompletedTask;
+    }
+
+    private static string IntroductionPanelId(DataIntroduction introduction) => $"introduction:{introduction.Id}";
 
     private async Task ReadLastChangeAsync()
     {
