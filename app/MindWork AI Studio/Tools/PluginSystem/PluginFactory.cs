@@ -136,4 +136,13 @@ public static partial class PluginFactory
             .SelectMany(plugin => plugin.MandatoryInfos)
             .ToList();
     }
+
+    public static IReadOnlyList<DataIntroduction> GetIntroductions()
+    {
+        return RUNNING_PLUGINS
+            .OfType<PluginConfiguration>()
+            .SelectMany(plugin => plugin.Introductions)
+            .OrderBy(introduction => introduction.Index)
+            .ToList();
+    }
 }

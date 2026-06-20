@@ -14,6 +14,7 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
 
     private List<PluginConfigurationObject> configObjects = [];
     private List<DataMandatoryInfo> mandatoryInfos = [];
+    private List<DataIntroduction> introductions = [];
     
     /// <summary>
     /// The list of configuration objects. Configuration objects are, e.g., providers or chat templates. 
@@ -22,8 +23,15 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
 
     /// <summary>
     /// The list of mandatory infos provided by this configuration plugin.
+    /// Mandatory infos are live plugin content and are not persisted to ConfigurationData.
     /// </summary>
     public IReadOnlyList<DataMandatoryInfo> MandatoryInfos => this.mandatoryInfos;
+
+    /// <summary>
+    /// The list of introductions provided by this configuration plugin.
+    /// Introductions are live plugin content and are not persisted to ConfigurationData.
+    /// </summary>
+    public IReadOnlyList<DataIntroduction> Introductions => this.introductions;
 
     /// <summary>
     /// True/false when explicitly configured in the plugin, otherwise null.
@@ -130,6 +138,7 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
     {
         this.configObjects.Clear();
         this.mandatoryInfos.Clear();
+        this.introductions.Clear();
         
         // Ensure that the main CONFIG table exists and is a valid Lua table:
         if (!this.State.Environment["CONFIG"].TryRead<LuaTable>(out var mainTable))
@@ -153,6 +162,9 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
 
         // Config: what should be the start page?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.StartPage, this.Id, settingsTable, dryRun);
+
+        // Config: show built-in introduction on the home page?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.ShowIntroduction, this.Id, settingsTable, dryRun);
 
         // Config: show quick start guide on the home page?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.ShowQuickStartGuide, this.Id, settingsTable, dryRun);
@@ -206,6 +218,9 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
 
         // Handle configured mandatory infos:
         this.TryReadMandatoryInfos(mainTable);
+
+        // Handle configured introductions:
+        this.TryReadIntroductions(mainTable);
         
         // Config: preselected provider?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.PreselectedProvider, Guid.Empty, this.Id, settingsTable, dryRun);
@@ -238,6 +253,27 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
                 this.mandatoryInfos.Add(mandatoryInfo);
             else
                 LOG.LogWarning("The table 'MANDATORY_INFOS' entry at index {Index} does not contain a valid mandatory info (config plugin id: {ConfigPluginId}).", i, this.Id);
+        }
+    }
+
+    private void TryReadIntroductions(LuaTable mainTable)
+    {
+        if (!mainTable.TryGetValue("INTRODUCTIONS", out var introductionsValue) || !introductionsValue.TryRead<LuaTable>(out var introductionsTable))
+            return;
+
+        for (var i = 1; i <= introductionsTable.ArrayLength; i++)
+        {
+            var luaIntroductionValue = introductionsTable[i];
+            if (!luaIntroductionValue.TryRead<LuaTable>(out var luaIntroductionTable))
+            {
+                LOG.LogWarning("The table 'INTRODUCTIONS' entry at index {Index} is not a valid table (config plugin id: {ConfigPluginId}).", i, this.Id);
+                continue;
+            }
+
+            if (DataIntroduction.TryParseConfiguration(i, luaIntroductionTable, this.Id, out var introduction))
+                this.introductions.Add(introduction);
+            else
+                LOG.LogWarning("The table 'INTRODUCTIONS' entry at index {Index} does not contain a valid introduction (config plugin id: {ConfigPluginId}).", i, this.Id);
         }
     }
 }

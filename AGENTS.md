@@ -112,12 +112,16 @@ Plugins can configure:
 - Chat templates
 - etc.
 
-When adding configuration options, update:
-- `app/MindWork AI Studio/Tools/PluginSystem/PluginConfiguration.cs`: In method `TryProcessConfiguration` register new options.
-- `app/MindWork AI Studio/Tools/PluginSystem/PluginFactory.Loading.cs`: In method `LoadAll` check for leftover configuration.
-- The corresponding data class in `app/MindWork AI Studio/Settings/DataModel/` to call `ManagedConfiguration.Register(...)`, when adding config options (in contrast to complex config. objects)
-- `app/MindWork AI Studio/Tools/PluginSystem/PluginConfigurationObject.cs` for parsing logic of complex configuration objects.
-- `app/MindWork AI Studio/Plugins/configuration/plugin.lua` to document the new configuration option.
+Configuration plugins provide three kinds of values:
+- **Managed settings:** simple values such as booleans, numbers, strings, enums, lists, or sets handled through `ManagedConfiguration`. These values may be locked or used as organization defaults.
+- **Managed configuration objects:** complex Lua tables that are persisted into `SettingsManager.ConfigurationData`, implement `IConfigurationObject`, and are cleaned up through `PluginConfigurationObject.CleanLeftOverConfigurationObjects(...)`. Examples include providers, profiles, chat templates, data sources, and document analysis policies.
+- **Live plugin content:** complex Lua tables that implement `ILivePluginContent` and are read live from running plugins instead of being persisted to `ConfigurationData`. Examples include `MANDATORY_INFOS` and `INTRODUCTIONS`. If live plugin content creates persistent side data, add a dedicated cleanup path for that side data, like mandatory-info acceptances.
+
+When adding configuration plugin capabilities:
+- For managed settings, update the corresponding data class in `app/MindWork AI Studio/Settings/DataModel/` to call `ManagedConfiguration.Register(...)`, process the setting in `PluginConfiguration.TryProcessConfiguration`, and check for leftover managed configuration in `PluginFactory.Loading.LoadAll`.
+- For managed configuration objects, update `PluginConfigurationObject.cs` and `PluginConfigurationObjectType.cs`, persist them in the appropriate `ConfigurationData` collection, and add cleanup via `PluginConfigurationObject.CleanLeftOverConfigurationObjects(...)`.
+- For live plugin content, add a data type implementing `ILivePluginContent`, parse it in `PluginConfiguration`, expose it through `PluginFactory`, and add any required cleanup only for persistent side data.
+- Always document the new capability in `app/MindWork AI Studio/Plugins/configuration/plugin.lua`.
 
 ## RAG (Retrieval-Augmented Generation)
 
