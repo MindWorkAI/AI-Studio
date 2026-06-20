@@ -28,4 +28,3 @@ This applies to LLM provider, embedding provider, and transcription provider API
 - Remove legacy lookup, migration, and cleanup calls from API key read, write, and delete paths.
 - Keep `LLMProvidersExtensions.ToSecretId()` and the canonical `Self-hosted` namespace.
 - Update this document's status to `Removed`.
-- Add a changelog entry only if removal is user-visible.
