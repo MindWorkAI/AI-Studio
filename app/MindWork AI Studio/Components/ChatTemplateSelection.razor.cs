@@ -11,13 +11,13 @@ public partial class ChatTemplateSelection : MSGComponentBase
 {
     [Parameter]
     public ChatTemplate CurrentChatTemplate { get; set; } = ChatTemplate.NO_CHAT_TEMPLATE;
-    
+
     [Parameter]
     public bool CanChatThreadBeUsedForTemplate { get; set; }
-    
+
     [Parameter]
     public ChatThread? CurrentChatThread { get; set; }
-    
+
     [Parameter]
     public EventCallback<ChatTemplate> CurrentChatTemplateChanged { get; set; }
 
@@ -26,24 +26,32 @@ public partial class ChatTemplateSelection : MSGComponentBase
 
     [Parameter]
     public string MarginRight { get; set; } = string.Empty;
-    
+
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
-    
+
     private string MarginClass => $"{this.MarginLeft} {this.MarginRight}";
-    
+
+    private string ChatTemplateIcon(ChatTemplate chatTemplate)
+    {
+        if (chatTemplate.IsEnterpriseConfiguration)
+            return Icons.Material.Filled.Business;
+
+        return Icons.Material.Filled.RateReview;
+    }
+
     private async Task SelectionChanged(ChatTemplate chatTemplate)
     {
         this.CurrentChatTemplate = chatTemplate;
         await this.CurrentChatTemplateChanged.InvokeAsync(chatTemplate);
     }
-    
+
     private async Task OpenSettingsDialog()
     {
         var dialogParameters = new DialogParameters();
         await this.DialogService.ShowAsync<SettingsDialogChatTemplate>(T("Open Chat Template Options"), dialogParameters, DialogOptions.FULLSCREEN);
     }
-    
+
     private async Task CreateNewChatTemplateFromChat()
     {
         var dialogParameters = new DialogParameters<SettingsDialogChatTemplate>
