@@ -20,9 +20,7 @@ public partial class Home : MSGComponentBase
     
     private TextItem[] itemsAdvantages = [];
 
-    private List<HomeIntroductionPanelData> introductionPanels = [];
-
-    private sealed record HomeIntroductionPanelData(string HeaderText, DataIntroduction Introduction);
+    private List<DataIntroduction> introductions = [];
     
     #region Overrides of ComponentBase
 
@@ -91,14 +89,18 @@ public partial class Home : MSGComponentBase
 
     private void RefreshIntroductionPanels()
     {
-        this.introductionPanels = PluginFactory.GetIntroductions()
-            .Select(introduction =>
-            {
-                var headerText = $"{introduction.Title} ({T("Version")} {introduction.VersionText})";
-                return new HomeIntroductionPanelData(headerText, introduction);
-            })
-            .ToList();
+        this.introductions = PluginFactory.GetIntroductions().ToList();
     }
+
+    private bool IsBuiltInIntroductionExpanded => this.SettingsManager.ConfigurationData.App.ShowIntroduction;
+
+    private bool IsIntroductionExpanded(DataIntroduction introduction) =>
+        !this.SettingsManager.ConfigurationData.App.ShowIntroduction &&
+        this.introductions.FirstOrDefault() == introduction;
+
+    private bool IsLastChangelogExpanded =>
+        !this.SettingsManager.ConfigurationData.App.ShowIntroduction &&
+        this.introductions.Count == 0;
 
     private async Task ReadLastChangeAsync()
     {

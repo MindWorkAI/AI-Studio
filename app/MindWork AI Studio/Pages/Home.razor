@@ -12,7 +12,7 @@
 
             @if (this.SettingsManager.ConfigurationData.App.ShowIntroduction)
             {
-                <ExpansionPanel HeaderIcon="@Icons.Material.Filled.MenuBook" HeaderText="@T("Introduction")" IsExpanded="@true">
+                <ExpansionPanel HeaderIcon="@Icons.Material.Filled.MenuBook" HeaderText="@T("Introduction")" IsExpanded="@this.IsBuiltInIntroductionExpanded">
                     <MudText Typo="Typo.h5" Class="mb-3">
                         @T("Welcome to MindWork AI Studio!")
                     </MudText>
@@ -29,14 +29,17 @@
                 </ExpansionPanel>
             }
 
-            @foreach (var introductionPanel in this.introductionPanels)
+            @foreach (var introduction in this.introductions)
             {
-                <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Info" HeaderText="@introductionPanel.HeaderText">
-                    <MudJustifiedMarkdown Value="@introductionPanel.Introduction.Markdown" />
+                <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Info" HeaderText="@introduction.Title" IsExpanded="@this.IsIntroductionExpanded(introduction)">
+                    <MudText Typo="Typo.body2" Class="mb-3">
+                        @T("Version"): @introduction.VersionText
+                    </MudText>
+                    <MudJustifiedMarkdown Value="@introduction.Markdown" />
                 </ExpansionPanel>
             }
 
-            <ExpansionPanel HeaderIcon="@Icons.Material.Filled.EventNote" HeaderText="@T("Last Changelog")">
+            <ExpansionPanel HeaderIcon="@Icons.Material.Filled.EventNote" HeaderText="@T("Last Changelog")" IsExpanded="@this.IsLastChangelogExpanded">
                 <MudMarkdown Value="@this.LastChangeContent" Props="Markdown.DefaultConfig" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE"/>
             </ExpansionPanel>
 
