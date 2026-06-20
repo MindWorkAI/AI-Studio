@@ -15,7 +15,7 @@ public sealed class ProviderHelmholtz() : BaseProvider(LLMProviders.HELMHOLTZ, n
     #region Implementation of IProvider
 
     /// <inheritdoc />
-    public override string Id => LLMProviders.HELMHOLTZ.ToName();
+    public override string Id => LLMProviders.HELMHOLTZ.ToSecretId();
 
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "Helmholtz Blablador";

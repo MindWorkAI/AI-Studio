@@ -13,7 +13,7 @@ public sealed class ProviderGWDG() : BaseProvider(LLMProviders.GWDG, new Uri("ht
     #region Implementation of IProvider
 
     /// <inheritdoc />
-    public override string Id => LLMProviders.GWDG.ToName();
+    public override string Id => LLMProviders.GWDG.ToSecretId();
 
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "GWDG SAIA";

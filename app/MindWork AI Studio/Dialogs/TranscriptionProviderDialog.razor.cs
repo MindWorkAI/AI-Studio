@@ -218,7 +218,7 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
     
     #region Implementation of ISecretId
 
-    public string SecretId => this.DataLLMProvider.ToName();
+    public string SecretId => this.DataLLMProvider.ToSecretId();
     
     public string SecretName => this.DataName;
 

@@ -15,7 +15,7 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, n
     #region Implementation of IProvider
 
     /// <inheritdoc />
-    public override string Id => LLMProviders.ANTHROPIC.ToName();
+    public override string Id => LLMProviders.ANTHROPIC.ToSecretId();
 
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "Anthropic";
