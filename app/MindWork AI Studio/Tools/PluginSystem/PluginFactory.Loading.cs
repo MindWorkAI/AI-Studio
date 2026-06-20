@@ -214,6 +214,10 @@ public static partial class PluginFactory
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.StartPage, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;
 
+        // Check for the built-in introduction visibility:
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.ShowIntroduction, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
         // Check for the quick start guide visibility:
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.ShowQuickStartGuide, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;

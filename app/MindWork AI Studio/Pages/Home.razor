@@ -10,21 +10,31 @@
     <InnerScrolling>
         <MudExpansionPanels Class="mb-3" MultiExpansion="@false">
 
-            <ExpansionPanel HeaderIcon="@Icons.Material.Filled.MenuBook" HeaderText="@T("Introduction")" IsExpanded="@true">
-                <MudText Typo="Typo.h5" Class="mb-3">
-                    @T("Welcome to MindWork AI Studio!")
-                </MudText>
-                <MudText Typo="Typo.body1" Class="mb-3" Style="text-align: justify; hyphens: auto;">
-                    @T("Thank you for considering MindWork AI Studio for your AI needs. This app is designed to help you harness the power of Large Language Models (LLMs). Please note that this app doesn't come with an integrated LLM. Instead, you will need to bring an API key from a suitable provider.")
-                </MudText>
-                <MudText Typo="Typo.body1" Class="mb-3">
-                    @T("Here's what makes MindWork AI Studio stand out:")
-                </MudText>
-                <MudTextList Icon="@Icons.Material.Filled.CheckCircle" Clickable="@true" Items="@this.itemsAdvantages" Class="mb-3"/>
-                <MudText Typo="Typo.body1" Class="mb-3">
-                    @T("We hope you enjoy using MindWork AI Studio to bring your AI projects to life!")
-                </MudText>
-            </ExpansionPanel>
+            @if (this.SettingsManager.ConfigurationData.App.ShowIntroduction)
+            {
+                <ExpansionPanel HeaderIcon="@Icons.Material.Filled.MenuBook" HeaderText="@T("Introduction")" IsExpanded="@true">
+                    <MudText Typo="Typo.h5" Class="mb-3">
+                        @T("Welcome to MindWork AI Studio!")
+                    </MudText>
+                    <MudText Typo="Typo.body1" Class="mb-3" Style="text-align: justify; hyphens: auto;">
+                        @T("Thank you for considering MindWork AI Studio for your AI needs. This app is designed to help you harness the power of Large Language Models (LLMs). Please note that this app doesn't come with an integrated LLM. Instead, you will need to bring an API key from a suitable provider.")
+                    </MudText>
+                    <MudText Typo="Typo.body1" Class="mb-3">
+                        @T("Here's what makes MindWork AI Studio stand out:")
+                    </MudText>
+                    <MudTextList Icon="@Icons.Material.Filled.CheckCircle" Clickable="@true" Items="@this.itemsAdvantages" Class="mb-3"/>
+                    <MudText Typo="Typo.body1" Class="mb-3">
+                        @T("We hope you enjoy using MindWork AI Studio to bring your AI projects to life!")
+                    </MudText>
+                </ExpansionPanel>
+            }
+
+            @foreach (var introductionPanel in this.introductionPanels)
+            {
+                <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Info" HeaderText="@introductionPanel.HeaderText">
+                    <MudJustifiedMarkdown Value="@introductionPanel.Introduction.Markdown" />
+                </ExpansionPanel>
+            }
 
             <ExpansionPanel HeaderIcon="@Icons.Material.Filled.EventNote" HeaderText="@T("Last Changelog")">
                 <MudMarkdown Value="@this.LastChangeContent" Props="Markdown.DefaultConfig" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE"/>

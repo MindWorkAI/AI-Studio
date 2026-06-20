@@ -1,5 +1,6 @@
 using AIStudio.Components;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.PluginSystem;
 
 using Microsoft.AspNetCore.Components;
 
@@ -18,13 +19,19 @@ public partial class Home : MSGComponentBase
     private string LastChangeContent { get; set; } = string.Empty;
     
     private TextItem[] itemsAdvantages = [];
+
+    private List<HomeIntroductionPanelData> introductionPanels = [];
+
+    private sealed record HomeIntroductionPanelData(string HeaderText, DataIntroduction Introduction);
     
     #region Overrides of ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
+        this.ApplyFilters([], [ Event.CONFIGURATION_CHANGED ]);
         await base.OnInitializedAsync();
         this.InitializeAdvantagesItems();
+        this.RefreshIntroductionPanels();
         
         // Read the last change content asynchronously
         // without blocking the UI thread:
@@ -69,16 +76,29 @@ public partial class Home : MSGComponentBase
         {
             case Event.PLUGINS_RELOADED:
                 this.InitializeAdvantagesItems();
+                this.RefreshIntroductionPanels();
                 await this.InvokeAsync(this.StateHasChanged);
                 break;
 
             case Event.CONFIGURATION_CHANGED:
+                this.RefreshIntroductionPanels();
                 await this.InvokeAsync(this.StateHasChanged);
                 break;
         }
     }
 
     #endregion
+
+    private void RefreshIntroductionPanels()
+    {
+        this.introductionPanels = PluginFactory.GetIntroductions()
+            .Select(introduction =>
+            {
+                var headerText = $"{introduction.Title} ({T("Version")} {introduction.VersionText})";
+                return new HomeIntroductionPanelData(headerText, introduction);
+            })
+            .ToList();
+    }
 
     private async Task ReadLastChangeAsync()
     {

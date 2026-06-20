@@ -207,6 +207,9 @@ CONFIG["SETTINGS"] = {}
 -- Configure whether the quick start guide is shown on the welcome page.
 -- CONFIG["SETTINGS"]["DataApp.ShowQuickStartGuide"] = false
 
+-- Configure whether the built-in introduction is shown on the welcome page.
+-- CONFIG["SETTINGS"]["DataApp.ShowIntroduction"] = false
+
 -- Configure the user permission to add providers:
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToAddProvider"] = false
 
@@ -334,6 +337,26 @@ CONFIG["CHAT_TEMPLATES"] = {}
 --             ["Content"] = "Thank you. I'll analyze the documents and provide a comprehensive summary."
 --         }
 --     }
+-- }
+
+-- Introduction texts shown as expansion panels on the welcome page:
+CONFIG["INTRODUCTIONS"] = {}
+
+-- An example introduction:
+-- CONFIG["INTRODUCTIONS"][#CONFIG["INTRODUCTIONS"]+1] = {
+--     ["Id"] = "00000000-0000-0000-0000-000000000000",
+--     ["Title"] = "Welcome to Your Organization's AI Studio",
+--     ["Version"] = "1",
+--     ["Index"] = 1,
+--     ["Markdown"] = [===[
+--                         ## Getting Started
+--
+--                         This AI Studio installation is managed by your organization.
+--                         Please use the preconfigured providers and follow your internal
+--                         AI usage guidelines.
+--
+--                         Further information is available in the [internal wiki](https://example.org/wiki).
+--                         ]===]
 -- }
 
 -- Mandatory infos that users must explicitly accept before using AI Studio:
