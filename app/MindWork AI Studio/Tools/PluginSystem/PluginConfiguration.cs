@@ -23,11 +23,13 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
 
     /// <summary>
     /// The list of mandatory infos provided by this configuration plugin.
+    /// Mandatory infos are live plugin content and are not persisted to ConfigurationData.
     /// </summary>
     public IReadOnlyList<DataMandatoryInfo> MandatoryInfos => this.mandatoryInfos;
 
     /// <summary>
     /// The list of introductions provided by this configuration plugin.
+    /// Introductions are live plugin content and are not persisted to ConfigurationData.
     /// </summary>
     public IReadOnlyList<DataIntroduction> Introductions => this.introductions;
 

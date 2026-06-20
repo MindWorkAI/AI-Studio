@@ -1,11 +1,13 @@
 using System.Security.Cryptography;
 using System.Text;
 
+using AIStudio.Tools.PluginSystem;
+
 using Lua;
 
 namespace AIStudio.Settings.DataModel;
 
-public sealed record DataMandatoryInfo
+public sealed record DataMandatoryInfo : ILivePluginContent
 {
     private static readonly ILogger LOG = Program.LOGGER_FACTORY.CreateLogger<DataMandatoryInfo>();
 

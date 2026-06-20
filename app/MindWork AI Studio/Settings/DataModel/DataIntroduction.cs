@@ -1,8 +1,10 @@
+using AIStudio.Tools.PluginSystem;
+
 using Lua;
 
 namespace AIStudio.Settings.DataModel;
 
-public sealed record DataIntroduction
+public sealed record DataIntroduction : ILivePluginContent
 {
     private static readonly ILogger LOG = Program.LOGGER_FACTORY.CreateLogger<DataIntroduction>();
 
