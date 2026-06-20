@@ -13,7 +13,7 @@ public sealed class ProviderAlibabaCloud() : BaseProvider(LLMProviders.ALIBABA_C
     #region Implementation of IProvider
 
     /// <inheritdoc />
-    public override string Id => LLMProviders.ALIBABA_CLOUD.ToName();
+    public override string Id => LLMProviders.ALIBABA_CLOUD.ToSecretId();
 
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "AlibabaCloud";

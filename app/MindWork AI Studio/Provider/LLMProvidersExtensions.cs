@@ -29,6 +29,10 @@ public static class LLMProvidersExtensions
     /// <summary>
     /// Returns the human-readable name of the provider.
     /// </summary>
+    /// <remarks>
+    /// This value is UI text and may be localized. Do not use it for persisted IDs, secret namespaces,
+    /// or other stable identifiers.
+    /// </remarks>
     /// <param name="llmProvider">The provider.</param>
     /// <returns>The human-readable name of the provider.</returns>
     public static string ToName(this LLMProviders llmProvider) => llmProvider switch
@@ -55,6 +59,41 @@ public static class LLMProvidersExtensions
         LLMProviders.GWDG => "GWDG SAIA",
         
         _ => TB("Unknown"),
+    };
+
+    /// <summary>
+    /// Returns the stable secret namespace for the provider.
+    /// </summary>
+    /// <remarks>
+    /// These values are used for OS keyring namespaces. They must never be localized or changed without
+    /// an explicit migration for existing API keys.
+    /// </remarks>
+    /// <param name="llmProvider">The provider.</param>
+    /// <returns>The stable secret namespace for the provider.</returns>
+    public static string ToSecretId(this LLMProviders llmProvider) => llmProvider switch
+    {
+        LLMProviders.NONE => "No provider selected",
+
+        LLMProviders.OPEN_AI => "OpenAI",
+        LLMProviders.ANTHROPIC => "Anthropic",
+        LLMProviders.MISTRAL => "Mistral",
+        LLMProviders.GOOGLE => "Google",
+        LLMProviders.X => "xAI",
+        LLMProviders.DEEP_SEEK => "DeepSeek",
+        LLMProviders.ALIBABA_CLOUD => "Alibaba Cloud",
+        LLMProviders.PERPLEXITY => "Perplexity",
+        LLMProviders.OPEN_ROUTER => "OpenRouter",
+
+        LLMProviders.GROQ => "Groq",
+        LLMProviders.FIREWORKS => "Fireworks.ai",
+        LLMProviders.HUGGINGFACE => "Hugging Face",
+
+        LLMProviders.SELF_HOSTED => "Self-hosted",
+
+        LLMProviders.HELMHOLTZ => "Helmholtz Blablador",
+        LLMProviders.GWDG => "GWDG SAIA",
+
+        _ => "Unknown",
     };
     
     /// <summary>

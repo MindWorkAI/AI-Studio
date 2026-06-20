@@ -15,7 +15,7 @@ public class ProviderGoogle() : BaseProvider(LLMProviders.GOOGLE, new Uri("https
     #region Implementation of IProvider
 
     /// <inheritdoc />
-    public override string Id => LLMProviders.GOOGLE.ToName();
+    public override string Id => LLMProviders.GOOGLE.ToSecretId();
 
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "Google Gemini";

@@ -17,7 +17,7 @@ public sealed class ProviderOpenRouter() : BaseProvider(LLMProviders.OPEN_ROUTER
     #region Implementation of IProvider
 
     /// <inheritdoc />
-    public override string Id => LLMProviders.OPEN_ROUTER.ToName();
+    public override string Id => LLMProviders.OPEN_ROUTER.ToSecretId();
 
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "OpenRouter";

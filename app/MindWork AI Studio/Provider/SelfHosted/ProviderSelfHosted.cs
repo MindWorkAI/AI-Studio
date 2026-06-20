@@ -18,7 +18,7 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
     #region Implementation of IProvider
 
     /// <inheritdoc />
-    public override string Id => LLMProviders.SELF_HOSTED.ToName();
+    public override string Id => LLMProviders.SELF_HOSTED.ToSecretId();
     
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "Self-hosted";

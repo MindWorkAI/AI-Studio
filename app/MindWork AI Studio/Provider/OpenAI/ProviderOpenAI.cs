@@ -22,7 +22,7 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
     #region Implementation of IProvider
 
     /// <inheritdoc />
-    public override string Id => LLMProviders.OPEN_AI.ToName();
+    public override string Id => LLMProviders.OPEN_AI.ToSecretId();
 
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "OpenAI";
