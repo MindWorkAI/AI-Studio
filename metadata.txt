@@ -1,12 +1,12 @@
-26.6.1
-2026-06-11 13:49:24 UTC
-241
+26.6.2
+2026-06-21 14:07:27 UTC
+242
 9.0.118 (commit c8cbca4ed1)
 9.0.17 (commit f2c8152eed)
 1.96.0 (commit ac68faa20)
 8.15.0
 2.11.2
-aa040b75d70, release
+64e91ff4ffd, release
 osx-arm64
 148.0.7763.0
 0.7.2
