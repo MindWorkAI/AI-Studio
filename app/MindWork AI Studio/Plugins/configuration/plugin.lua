@@ -318,9 +318,21 @@ CONFIG["SETTINGS"] = {}
 --   PERPLEXITY, OPEN_ROUTER, FIREWORKS, GROQ, HUGGINGFACE, SELF_HOSTED, HELMHOLTZ, GWDG
 -- Allowed confidence values are: UNTRUSTED, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
 -- CONFIG["SETTINGS"]["DataConfidence.CustomConfidenceScheme"] = {
---     ["OPEN_AI"] = "MEDIUM",
+--     ["OPEN_AI"] = "MODERATE",
+--     ["ANTHROPIC"] = "MODERATE",
 --     ["MISTRAL"] = "HIGH",
+--     ["GOOGLE"] = "LOW",
+--     ["X"] = "LOW",
+--     ["DEEP_SEEK"] = "LOW",
+--     ["ALIBABA_CLOUD"] = "LOW",
+--     ["PERPLEXITY"] = "MODERATE",
+--     ["OPEN_ROUTER"] = "MODERATE",
+--     ["FIREWORKS"] = "MODERATE",
+--     ["GROQ"] = "MODERATE",
+--     ["HUGGINGFACE"] = "MODERATE",
 --     ["SELF_HOSTED"] = "HIGH",
+--     ["HELMHOLTZ"] = "HIGH",
+--     ["GWDG"] = "HIGH",
 -- }
 --
 -- Configure whether users can change the custom confidence scheme locally.
