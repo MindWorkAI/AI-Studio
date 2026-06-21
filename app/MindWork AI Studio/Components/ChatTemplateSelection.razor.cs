@@ -32,6 +32,16 @@ public partial class ChatTemplateSelection : MSGComponentBase
 
     private string MarginClass => $"{this.MarginLeft} {this.MarginRight}";
 
+    #region Overrides of ComponentBase
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.ApplyFilters([], [ Event.CONFIGURATION_CHANGED ]);
+        await base.OnInitializedAsync();
+    }
+
+    #endregion
+
     private string ChatTemplateIcon(ChatTemplate chatTemplate)
     {
         if (chatTemplate.IsEnterpriseConfiguration)
@@ -61,4 +71,16 @@ public partial class ChatTemplateSelection : MSGComponentBase
         };
         await this.DialogService.ShowAsync<SettingsDialogChatTemplate>(T("Open Chat Template Options"), dialogParameters, DialogOptions.FULLSCREEN);
     }
+
+    #region Overrides of MSGComponentBase
+
+    protected override Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
+    {
+        if (triggeredEvent is Event.CONFIGURATION_CHANGED or Event.PLUGINS_RELOADED)
+            this.StateHasChanged();
+
+        return Task.CompletedTask;
+    }
+
+    #endregion
 }

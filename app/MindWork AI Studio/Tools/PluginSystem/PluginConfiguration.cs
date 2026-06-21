@@ -238,6 +238,12 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         // Config: preselected profile?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.PreselectedProfile, Guid.Empty, this.Id, settingsTable, dryRun);
 
+        // Config: preselected chat options?
+        ManagedConfiguration.TryProcessConfiguration(x => x.Chat, x => x.PreselectOptions, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.Chat, x => x.PreselectedProvider, Guid.Empty, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.Chat, x => x.PreselectedProfile, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.Chat, x => x.PreselectedChatTemplate, this.Id, settingsTable, dryRun);
+
         // Config: transcription provider?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.UseTranscriptionProvider, Guid.Empty, this.Id, settingsTable, dryRun);
 

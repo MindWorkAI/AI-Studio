@@ -503,6 +503,36 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         this.currentChatTemplate = this.SettingsManager.GetChatTemplateById(this.currentChatTemplate.Id);
     }
 
+    private async Task RefreshChatSelectionsAfterConfigurationChange()
+    {
+        var previousProvider = this.Provider;
+        var previousChatTemplate = this.currentChatTemplate;
+        var chatProviderId = this.ChatThread?.SelectedProvider;
+
+        this.Provider = this.SettingsManager.GetChatProviderForLoadedChat(chatProviderId);
+        if (this.Provider != previousProvider)
+            await this.ProviderChanged.InvokeAsync(this.Provider);
+
+        if (this.ChatThread is null)
+        {
+            this.currentProfile = this.SettingsManager.GetPreselectedProfile(Tools.Components.CHAT);
+            this.currentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(Tools.Components.CHAT);
+        }
+        else
+        {
+            this.currentProfile = string.IsNullOrWhiteSpace(this.ChatThread.SelectedProfile)
+                ? this.SettingsManager.GetProfileById(this.currentProfile.Id)
+                : this.SettingsManager.GetProfileById(this.ChatThread.SelectedProfile);
+
+            this.currentChatTemplate = string.IsNullOrWhiteSpace(this.ChatThread.SelectedChatTemplate)
+                ? this.SettingsManager.GetChatTemplateById(this.currentChatTemplate.Id)
+                : this.SettingsManager.GetChatTemplateById(this.ChatThread.SelectedChatTemplate);
+        }
+
+        if (!this.ComposerState.HasUserDraft && previousChatTemplate != this.currentChatTemplate)
+            this.ComposerState.ApplyTemplate(this.currentChatTemplate);
+    }
+
     private IReadOnlyList<DataSourceAgentSelected> GetAgentSelectedDataSources()
     {
         if (this.ChatThread is null)
@@ -1082,11 +1112,8 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 break;
 
             case Event.CONFIGURATION_CHANGED:
-                var previousChatTemplate = this.currentChatTemplate;
-                this.RefreshCurrentProfileAndChatTemplate();
-                if (!this.ComposerState.HasUserDraft && previousChatTemplate != this.currentChatTemplate)
-                    this.ComposerState.ApplyTemplate(this.currentChatTemplate);
-
+            case Event.PLUGINS_RELOADED:
+                await this.RefreshChatSelectionsAfterConfigurationChange();
                 this.StateHasChanged();
                 break;
             
