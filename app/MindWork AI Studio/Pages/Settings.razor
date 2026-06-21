@@ -8,8 +8,8 @@
 
     <InnerScrolling>
         <MudExpansionPanels Class="mb-3" MultiExpansion="@false">
-            <SettingsPanelProviders @bind-AvailableLLMProviders="@this.availableLLMProviders"/>
             <SettingsPanelConfidence/>
+            <SettingsPanelProviders @bind-AvailableLLMProviders="@this.availableLLMProviders"/>
 
             @if (PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager))
             {
