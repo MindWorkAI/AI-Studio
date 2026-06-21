@@ -19,6 +19,11 @@ public interface IProvider
     public string Id { get; }
 
     /// <summary>
+    /// The ID of the configured provider instance.
+    /// </summary>
+    public string ConfiguredProviderId { get; }
+
+    /// <summary>
     /// The provider's instance name. Useful for multiple instances of the same provider,
     /// e.g., to distinguish between different OpenAI API keys.
     /// </summary>

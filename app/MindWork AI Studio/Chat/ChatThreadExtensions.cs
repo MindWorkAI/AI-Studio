@@ -1,4 +1,5 @@
-using AIStudio.Provider.SelfHosted;
+using AIStudio.Provider;
+using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 
 namespace AIStudio.Chat;
@@ -33,12 +34,13 @@ public static class ChatThreadExtensions
             return true;
 
         //
-        // Is the provider self-hosted?
+        // Is the provider trusted for data-source security checks?
         //
-        var isSelfHostedProvider = provider switch
+        var settingsManager = Program.SERVICE_PROVIDER.GetRequiredService<SettingsManager>();
+        var isTrustedProvider = provider switch
         {
-            ProviderSelfHosted => true,
-            AIStudio.Settings.Provider p => p.IsSelfHosted,
+            IProvider p => p.IsTrustedForDataSourceSecurityChecks(settingsManager),
+            AIStudio.Settings.Provider p => p.IsTrustedForDataSourceSecurityChecks(settingsManager),
             
             _ => false,
         };
@@ -46,12 +48,12 @@ public static class ChatThreadExtensions
         //
         // Check the chat data security against the selected provider:
         //
-        return isSelfHostedProvider switch
+        return isTrustedProvider switch
         {
-            // The provider is self-hosted -- we can use any data source:
+            // The provider is trusted -- we can use any data source:
             true => true,
             
-            // The provider is not self-hosted -- it depends on the data security of the chat thread:
+            // The provider is not trusted -- it depends on the data security of the chat thread:
             false => chatThread.DataSecurity is not DataSourceSecurity.SELF_HOSTED,
         };
     }

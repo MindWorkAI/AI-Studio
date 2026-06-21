@@ -337,6 +337,15 @@ CONFIG["SETTINGS"] = {}
 --
 -- Configure whether users can change the custom confidence scheme locally.
 -- CONFIG["SETTINGS"]["DataConfidence.CustomConfidenceScheme.AllowUserOverride"] = false
+--
+-- Configure provider instances trusted by your organization for data-source security checks.
+-- These IDs may refer to LLM providers, embedding providers, or transcription providers
+-- defined in this configuration. Trusted providers are treated like self-hosted providers
+-- only for data-source security checks and related local data warnings.
+-- CONFIG["SETTINGS"]["DataSourceSecurity.TrustedProviderIds"] = {
+--     "00000000-0000-0000-0000-000000000000",
+--     "00000000-0000-0000-0000-000000000001",
+-- }
 
 -- Example chat templates for this configuration:
 CONFIG["CHAT_TEMPLATES"] = {}
