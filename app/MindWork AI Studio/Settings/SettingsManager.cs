@@ -483,7 +483,6 @@ public sealed class SettingsManager
             throw new ArgumentException("Expression must be a property access", nameof(propertyExpression));
 
         // Return the full name of the property, including the class name:
-        var typeName = typeof(TIn) == typeof(DataSourceSecuritySettings) ? "DataSourceSecurity" : typeof(TIn).Name;
-        return $"{typeName}.{memberExpr.Member.Name}";
+        return $"{typeof(TIn).Name}.{memberExpr.Member.Name}";
     }
 }

@@ -342,7 +342,7 @@ CONFIG["SETTINGS"] = {}
 -- These IDs may refer to LLM providers, embedding providers, or transcription providers
 -- defined in this configuration. Trusted providers are treated like self-hosted providers
 -- only for data-source security checks and related local data warnings.
--- CONFIG["SETTINGS"]["DataSourceSecurity.TrustedProviderIds"] = {
+-- CONFIG["SETTINGS"]["DataSourceSecuritySettings.TrustedProviderIds"] = {
 --     "00000000-0000-0000-0000-000000000000",
 --     "00000000-0000-0000-0000-000000000001",
 -- }
