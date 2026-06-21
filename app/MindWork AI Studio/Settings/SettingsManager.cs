@@ -177,7 +177,7 @@ public sealed class SettingsManager
 
             if(versionElement.ValueKind is JsonValueKind.String && versionElement.GetString() is { } versionText)
             {
-                if(Enum.TryParse(versionText, out Version stringVersion) && Enum.IsDefined(typeof(Version), stringVersion) && stringVersion is not Version.UNKNOWN)
+                if(Enum.TryParse(versionText, out Version stringVersion) && Enum.IsDefined(stringVersion) && stringVersion is not Version.UNKNOWN)
                     return new(stringVersion, SettingsWriteBlockReason.NONE);
 
                 if(versionText.StartsWith('V') && int.TryParse(versionText[1..], out var futureVersion) && futureVersion > (int)CURRENT_SETTINGS_VERSION)
