@@ -17,6 +17,7 @@ namespace AIStudio.Settings;
 public sealed class SettingsManager
 {
     private const string SETTINGS_FILENAME = "settings.json";
+    private const Version CURRENT_SETTINGS_VERSION = Version.V6;
     
     private static readonly JsonSerializerOptions JSON_OPTIONS = new()
     {
@@ -26,6 +27,7 @@ public sealed class SettingsManager
 
     private readonly ILogger<SettingsManager> logger;
     private readonly RustService rustService;
+    private bool settingsWriteBlocked;
 
     /// <summary>
     /// The settings manager.
@@ -87,6 +89,7 @@ public sealed class SettingsManager
     /// <returns>A (migrated) settings snapshot, or null if it could not be read.</returns>
     public async Task<Data?> TryReadSettingsSnapshot()
     {
+        this.settingsWriteBlocked = false;
         if(!this.IsSetUp)
         {
             this.logger.LogWarning("Cannot load settings, because the configuration is not set up yet.");
@@ -100,38 +103,133 @@ public sealed class SettingsManager
             return null;
         }
 
-        // We read the `"Version": "V3"` line to determine the version of the settings file:
-        await foreach (var line in File.ReadLinesAsync(settingsPath))
+        var settingsVersion = await this.TryReadSettingsVersion(settingsPath);
+        if(settingsVersion is Version.UNKNOWN)
         {
-            if (!line.Contains("""
-                               "Version":
-                               """))
-                continue;
+            this.logger.LogError("Unknown version of the settings file found. Settings writes are blocked to avoid overwriting newer or unreadable settings.");
+            this.settingsWriteBlocked = true;
+            return null;
+        }
 
-            // Extract the version from the line:
-            var settingsVersionText = line.Split('"')[3];
+        if(settingsVersion > CURRENT_SETTINGS_VERSION)
+        {
+            this.logger.LogError($"The settings file uses the newer version '{settingsVersion}'. Settings writes are blocked to avoid overwriting newer settings.");
+            this.settingsWriteBlocked = true;
+            return null;
+        }
 
-            // Parse the version:
-            Enum.TryParse(settingsVersionText, out Version settingsVersion);
-            if(settingsVersion is Version.UNKNOWN)
+        Data? settingsData;
+        if(settingsVersion < CURRENT_SETTINGS_VERSION)
+        {
+            settingsData = await this.TryReadCurrentVersionBackupSnapshot();
+            if(settingsData is not null)
             {
-                this.logger.LogError("Unknown version of the settings file found.");
-                return new();
+                this.PrepareLoadedSettings(settingsData);
+                await this.StoreSettingsSnapshot(settingsData, settingsPath);
+                await this.StoreCurrentVersionBackup(settingsData);
+                this.logger.LogInformation($"Restored settings from the '{GetBackupSettingsFilename(CURRENT_SETTINGS_VERSION)}' backup file.");
+                return settingsData;
             }
 
-            var settingsData = SettingsMigrations.Migrate(this.logger, settingsVersion, await File.ReadAllTextAsync(settingsPath), JSON_OPTIONS);
-
-            //
-            // We filter the enabled preview features based on the preview visibility.
-            // This is necessary when the app starts up: some preview features may have
-            // been disabled or released from the last time the app was started.
-            //
-            settingsData.App.EnabledPreviewFeatures = settingsData.App.PreviewVisibility.FilterPreviewFeatures(settingsData.App.EnabledPreviewFeatures);
+            this.logger.LogInformation("No valid current-version settings backup was found. Migrating the settings file.");
+            settingsData = SettingsMigrations.Migrate(this.logger, settingsVersion, await File.ReadAllTextAsync(settingsPath), JSON_OPTIONS);
+            this.PrepareLoadedSettings(settingsData);
+            await this.StoreSettingsSnapshot(settingsData, settingsPath);
+            await this.StoreCurrentVersionBackup(settingsData);
             return settingsData;
         }
 
-        this.logger.LogError("Failed to read the version of the settings file.");
-        return new();
+        settingsData = await this.TryDeserializeCurrentSettings(settingsPath, "settings file");
+        if(settingsData is null)
+        {
+            this.settingsWriteBlocked = true;
+            return null;
+        }
+
+        this.PrepareLoadedSettings(settingsData);
+        await this.StoreCurrentVersionBackup(settingsData);
+        return settingsData;
+    }
+
+    private async Task<Version> TryReadSettingsVersion(string settingsPath)
+    {
+        try
+        {
+            await using var settingsStream = File.OpenRead(settingsPath);
+            using var settingsDocument = await JsonDocument.ParseAsync(settingsStream);
+            if(!settingsDocument.RootElement.TryGetProperty("Version", out var versionElement))
+            {
+                this.logger.LogError($"Failed to read the version of the settings file '{settingsPath}'.");
+                return Version.UNKNOWN;
+            }
+
+            if(versionElement.ValueKind is JsonValueKind.String && versionElement.GetString() is { } versionText && Enum.TryParse(versionText, out Version stringVersion))
+                return stringVersion;
+
+            if(versionElement.ValueKind is JsonValueKind.Number && versionElement.TryGetInt32(out var numericVersion) && Enum.IsDefined(typeof(Version), numericVersion))
+                return (Version)numericVersion;
+        }
+        catch(Exception e)
+        {
+            this.logger.LogError(e, $"Failed to read the version of the settings file '{settingsPath}'.");
+        }
+
+        return Version.UNKNOWN;
+    }
+
+    private async Task<Data?> TryReadCurrentVersionBackupSnapshot()
+    {
+        var backupSettingsPath = GetBackupSettingsPath(CURRENT_SETTINGS_VERSION);
+        if(!File.Exists(backupSettingsPath))
+        {
+            this.logger.LogInformation($"The settings backup file '{backupSettingsPath}' does not exist.");
+            return null;
+        }
+
+        var backupVersion = await this.TryReadSettingsVersion(backupSettingsPath);
+        if(backupVersion != CURRENT_SETTINGS_VERSION)
+        {
+            this.logger.LogWarning($"The settings backup file '{backupSettingsPath}' uses version '{backupVersion}' instead of '{CURRENT_SETTINGS_VERSION}'.");
+            return null;
+        }
+
+        return await this.TryDeserializeCurrentSettings(backupSettingsPath, "settings backup file");
+    }
+
+    private async Task<Data?> TryDeserializeCurrentSettings(string settingsPath, string sourceDescription)
+    {
+        try
+        {
+            var settingsData = JsonSerializer.Deserialize<Data>(await File.ReadAllTextAsync(settingsPath), JSON_OPTIONS);
+            if(settingsData is null)
+            {
+                this.logger.LogError($"Failed to parse the {sourceDescription} '{settingsPath}'.");
+                return null;
+            }
+
+            if(settingsData.Version != CURRENT_SETTINGS_VERSION)
+            {
+                this.logger.LogError($"The {sourceDescription} '{settingsPath}' uses version '{settingsData.Version}' instead of '{CURRENT_SETTINGS_VERSION}'.");
+                return null;
+            }
+
+            return settingsData;
+        }
+        catch(Exception e)
+        {
+            this.logger.LogError(e, $"Failed to parse the {sourceDescription} '{settingsPath}'.");
+            return null;
+        }
+    }
+
+    private void PrepareLoadedSettings(Data settingsData)
+    {
+        //
+        // We filter the enabled preview features based on the preview visibility.
+        // This is necessary when the app starts up: some preview features may have
+        // been disabled or released from the last time the app was started.
+        //
+        settingsData.App.EnabledPreviewFeatures = settingsData.App.PreviewVisibility.FilterPreviewFeatures(settingsData.App.EnabledPreviewFeatures);
     }
 
     /// <summary>
@@ -145,19 +243,48 @@ public sealed class SettingsManager
             return;
         }
 
+        if(this.settingsWriteBlocked)
+        {
+            this.logger.LogWarning("Cannot store settings, because the loaded settings file uses an unknown or unreadable version.");
+            return;
+        }
+
         var settingsPath = Path.Combine(ConfigDirectory!, SETTINGS_FILENAME);
+        await this.StoreSettingsSnapshot(this.ConfigurationData, settingsPath);
+        await this.StoreCurrentVersionBackup(this.ConfigurationData);
+    }
+
+    private static string GetBackupSettingsFilename(Version version) => $"settings.{version.ToString().ToLowerInvariant()}.json";
+
+    private static string GetBackupSettingsPath(Version version) => Path.Combine(ConfigDirectory!, GetBackupSettingsFilename(version));
+
+    private async Task StoreCurrentVersionBackup(Data settingsData)
+    {
+        if(settingsData.Version != CURRENT_SETTINGS_VERSION)
+        {
+            this.logger.LogWarning($"Skipping settings backup because the settings version '{settingsData.Version}' is not the current version '{CURRENT_SETTINGS_VERSION}'.");
+            return;
+        }
+
+        var backupSettingsPath = GetBackupSettingsPath(CURRENT_SETTINGS_VERSION);
+        await this.StoreSettingsSnapshot(settingsData, backupSettingsPath);
+        this.logger.LogInformation($"Stored the settings backup file '{backupSettingsPath}'.");
+    }
+
+    private async Task StoreSettingsSnapshot(Data settingsData, string settingsPath)
+    {
         if(!Directory.Exists(ConfigDirectory))
         {
             this.logger.LogInformation("Creating the configuration directory.");
             Directory.CreateDirectory(ConfigDirectory!);
         }
 
-        var settingsJson = JsonSerializer.Serialize(this.ConfigurationData, JSON_OPTIONS);
+        var settingsJson = JsonSerializer.Serialize(settingsData, JSON_OPTIONS);
         var tempFile = Path.GetTempFileName();
         await File.WriteAllTextAsync(tempFile, settingsJson);
         
         File.Move(tempFile, settingsPath, true);
-        this.logger.LogInformation("Stored the settings to the file system.");
+        this.logger.LogInformation($"Stored the settings to '{settingsPath}'.");
     }
     
     public void InjectSpellchecking(Dictionary<string, object?> attributes) => attributes["spellcheck"] = this.ConfigurationData.App.EnableSpellchecking ? "true" : "false";
