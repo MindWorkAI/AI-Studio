@@ -58,6 +58,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     private MudThemeProvider themeProvider = null!;
     private bool useDarkMode;
     private bool startupCompleted;
+    private bool settingsWriteProtectionWarningShown;
     private readonly SemaphoreSlim mandatoryInfoDialogSemaphore = new(1, 1);
 
     private IReadOnlyCollection<NavBarItem> navItems = [];
@@ -107,7 +108,6 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         // Set the snackbar for the update service:
         UpdateService.SetBlazorDependencies(this.Snackbar);
         TemporaryChatService.Initialize();
-        this.ShowSettingsWriteProtectionWarning();
         
         // Should the navigation bar be open by default?
         if(this.SettingsManager.ConfigurationData.App.NavigationBehavior is NavBehavior.ALWAYS_EXPAND)
@@ -130,9 +130,10 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
 
     private void ShowSettingsWriteProtectionWarning()
     {
-        if(!this.SettingsManager.SettingsWriteBlocked)
+        if(!this.SettingsManager.SettingsWriteBlocked || this.settingsWriteProtectionWarningShown)
             return;
 
+        this.settingsWriteProtectionWarningShown = true;
         var reason = this.SettingsManager.SettingsWriteBlockReason;
         var message = reason switch
         {
@@ -309,6 +310,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
                 case Event.PLUGINS_RELOADED:
                     this.Lang = await this.SettingsManager.GetActiveLanguagePlugin();
                     I18N.Init(this.Lang);
+                    this.ShowSettingsWriteProtectionWarning();
                     this.LoadNavItems();
 
                     await this.InvokeAsync(this.StateHasChanged);
