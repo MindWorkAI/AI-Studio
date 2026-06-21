@@ -120,13 +120,13 @@ public sealed class SettingsManager
         if(settingsVersion.FailureReason is not SettingsWriteBlockReason.NONE)
         {
             this.BlockSettingsWrites(settingsVersion.FailureReason, "The settings file version could not be identified. Settings writes are blocked to avoid overwriting newer or unreadable settings.");
-            return null;
+            return await this.TryReadCurrentVersionBackupSnapshotForBlockedSettings();
         }
 
         if(settingsVersion.Version > CURRENT_SETTINGS_VERSION)
         {
             this.BlockSettingsWrites(SettingsWriteBlockReason.VERSION_NEWER_THAN_APP, $"The settings file uses the newer version '{settingsVersion.Version}'. Settings writes are blocked to avoid overwriting newer settings.");
-            return null;
+            return await this.TryReadCurrentVersionBackupSnapshotForBlockedSettings();
         }
 
         Data? settingsData;
@@ -154,7 +154,7 @@ public sealed class SettingsManager
         if(currentSettings.FailureReason is not SettingsWriteBlockReason.NONE)
         {
             this.BlockSettingsWrites(currentSettings.FailureReason, "The current settings file could not be safely loaded. Settings writes are blocked to avoid overwriting recoverable settings.");
-            return null;
+            return await this.TryReadCurrentVersionBackupSnapshotForBlockedSettings();
         }
 
         settingsData = currentSettings.SettingsData!;
@@ -229,6 +229,20 @@ public sealed class SettingsManager
         }
 
         return backupSettings.SettingsData;
+    }
+
+    private async Task<Data?> TryReadCurrentVersionBackupSnapshotForBlockedSettings()
+    {
+        var settingsData = await this.TryReadCurrentVersionBackupSnapshot();
+        if(settingsData is null)
+        {
+            this.logger.LogWarning($"No valid current-version settings backup was found while settings writes are blocked. Reason: '{this.SettingsWriteBlockReason}'.");
+            return null;
+        }
+
+        this.PrepareLoadedSettings(settingsData);
+        this.logger.LogWarning($"Loaded settings from the '{GetBackupSettingsFilename(CURRENT_SETTINGS_VERSION)}' backup file while settings writes remain blocked. Reason: '{this.SettingsWriteBlockReason}'.");
+        return settingsData;
     }
 
     private async Task<CurrentSettingsReadResult> TryDeserializeCurrentSettings(string settingsPath, string sourceDescription)
