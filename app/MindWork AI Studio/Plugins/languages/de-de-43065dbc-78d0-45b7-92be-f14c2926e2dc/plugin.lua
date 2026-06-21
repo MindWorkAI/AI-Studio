@@ -2895,6 +2895,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T32678
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T3448155331"] = "Schließen"
 
+-- This embedding provider is trusted by your organization for data source security checks. Local data can be sent to it without security warnings.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T3459188215"] = "Ihre Organisation vertraut diesem Anbieter von Einbettungen bei der Sicherheitsprüfung von Datenquellen. Lokale Daten können ohne Sicherheitswarnungen an diesen gesendet werden."
+
 -- Actions
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T3865031940"] = "Aktionen"
 
@@ -2936,6 +2939,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERBASE::T336
 
 -- Export API Key?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERBASE::T4010580285"] = "API-Schlüssel exportieren?"
+
+-- This provider is trusted by your organization for data source security checks.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T1298650849"] = "Ihre Organisation vertraut diesem Anbieter bei der Sicherheitsprüfung von Datenquellen."
 
 -- Delete
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T1469573738"] = "Löschen"
@@ -3038,6 +3044,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T42
 
 -- With the support of transcription models, MindWork AI Studio can convert human speech into text. This is useful, for example, when you need to dictate text. You can choose from dedicated transcription models, but not multimodal LLMs (large language models) that can handle both speech and text. The configuration of multimodal models is done in the 'Configure LLM providers' section.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T584860404"] = "Mit Unterstützung von Modellen für Transkriptionen kann MindWork AI Studio menschliche Sprache in Text umwandeln. Das ist zum Beispiel hilfreich, wenn Sie Texte diktieren möchten. Sie können aus speziellen Modellen für Transkriptionen wählen, jedoch nicht aus multimodalen LLMs (Large Language Models), die sowohl Sprache als auch Text verarbeiten können. Die Einrichtung multimodaler Modelle erfolgt im Abschnitt „Anbieter für LLMs konfigurieren“."
+
+-- This transcription provider is trusted by your organization for data source security checks.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T601264181"] = "Ihre Organisation vertraut diesem Anbieter für Transkriptionen bei der Sicherheitsprüfung von Datenquellen."
 
 -- This transcription provider is managed by your organization.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T756131076"] = "Dieser Anbieter für Transkriptionen wird von Ihrer Organisation verwaltet."

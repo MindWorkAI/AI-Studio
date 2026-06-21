@@ -77,6 +77,9 @@ public abstract class BaseProvider : IProvider, ISecretId
     
     /// <inheritdoc />
     public abstract string Id { get; }
+
+    /// <inheritdoc />
+    public string ConfiguredProviderId { get; init; } = string.Empty;
     
     /// <inheritdoc />
     public abstract string InstanceName { get; set; }

@@ -283,6 +283,10 @@ public static partial class PluginFactory
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Confidence, x => x.CustomConfidenceScheme, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;
 
+        // Check data source security settings:
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.DataSourceSecurity, x => x.TrustedProviderIds, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
         // Check if audit is required before it can be activated
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.AssistantPluginAudit, x => x.RequireAuditBeforeActivation, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;

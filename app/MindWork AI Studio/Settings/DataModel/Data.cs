@@ -24,6 +24,11 @@ public sealed class Data
     public DataConfidence Confidence { get; init; } = new(x => x.Confidence);
 
     /// <summary>
+    /// Settings concerning data source security checks.
+    /// </summary>
+    public DataSourceSecuritySettings DataSourceSecurity { get; init; } = new(x => x.DataSourceSecurity);
+
+    /// <summary>
     /// A collection of embedding providers configured.
     /// </summary>
     public List<EmbeddingProvider> EmbeddingProviders { get; init; } = [];
