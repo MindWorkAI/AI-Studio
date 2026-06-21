@@ -53,6 +53,9 @@ public sealed partial class CollectI18NKeysCommand
         foreach (var filePath in allFiles)
         {
             counter++;
+            if(!this.IsSupportedSourceFile(filePath))
+                continue;
+
             if(filePath.StartsWith(binPath, StringComparison.OrdinalIgnoreCase))
                 continue;
             
@@ -68,6 +71,9 @@ public sealed partial class CollectI18NKeysCommand
                 continue;
             
             var ns = this.DetermineNamespace(filePath);
+            if(ns is null)
+                throw new InvalidOperationException($"Could not determine the namespace for I18N source file '{filePath}'.");
+
             var fileInfo = new FileInfo(filePath);
             
             var name = this.DetermineTypeName(filePath)
@@ -204,6 +210,10 @@ public sealed partial class CollectI18NKeysCommand
         
         return matches;
     }
+
+    private bool IsSupportedSourceFile(string filePath) =>
+        filePath.EndsWith(".cs", StringComparison.OrdinalIgnoreCase) ||
+        filePath.EndsWith(".razor", StringComparison.OrdinalIgnoreCase);
     
     private string? DetermineNamespace(string filePath)
     {
@@ -302,10 +312,10 @@ public sealed partial class CollectI18NKeysCommand
         return match.Groups[1].Value;
     }
 
-    [GeneratedRegex("""@namespace\s+([a-zA-Z0-9_.]+)""")]
+    [GeneratedRegex("""(?m)^\s*@namespace\s+([a-zA-Z0-9_.]+)""")]
     private static partial Regex BlazorNamespaceRegex();
     
-    [GeneratedRegex("""namespace\s+([a-zA-Z0-9_.]+)""")]
+    [GeneratedRegex("""(?m)^\s*namespace\s+([a-zA-Z0-9_.]+)\s*[;{]""")]
     private static partial Regex CSharpNamespaceRegex();
 
     [GeneratedRegex("""\bpartial\s+(?:class|struct|interface|record(?:\s+(?:class|struct))?)\s+([A-Za-z_][A-Za-z0-9_]*)""")]
