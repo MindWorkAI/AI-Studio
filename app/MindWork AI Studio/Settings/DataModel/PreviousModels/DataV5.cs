@@ -1,27 +1,24 @@
 using AIStudio.Tools.PluginSystem.Assistants;
 
-namespace AIStudio.Settings.DataModel;
+namespace AIStudio.Settings.DataModel.PreviousModels;
 
-/// <summary>
-/// The data model for the settings file.
-/// </summary>
-public sealed class Data
+public sealed class DataV5
 {
     /// <summary>
     /// The version of the settings file. Allows us to upgrade the settings
     /// when a new version is available.
     /// </summary>
-    public Version Version { get; init; } = Version.V6;
+    public Version Version { get; init; } = Version.V5;
 
     /// <summary>
     /// List of configured providers.
     /// </summary>
-    public List<Provider> Providers { get; init; } = [];
+    public List<AIStudio.Settings.Provider> Providers { get; init; } = [];
     
     /// <summary>
-    /// Settings concerning confidence levels.
+    /// Settings concerning the LLM providers.
     /// </summary>
-    public DataConfidence Confidence { get; init; } = new(x => x.Confidence);
+    public DataLLMProvidersV5 LLMProviders { get; init; } = new();
 
     /// <summary>
     /// A collection of embedding providers configured.

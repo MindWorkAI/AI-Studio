@@ -41,9 +41,9 @@ public partial class ConfigurationMinConfidenceSelection : MSGComponentBase
         if (this.SelectedValue() is ConfidenceLevel.NONE)
             return ConfidenceLevel.NONE;
         
-        if(this.RestrictToGlobalMinimumConfidence && this.SettingsManager.ConfigurationData.LLMProviders.EnforceGlobalMinimumConfidence)
+        if(this.RestrictToGlobalMinimumConfidence && this.SettingsManager.ConfigurationData.Confidence.EnforceGlobalMinimumConfidence)
         {
-            var minimumLevel = this.SettingsManager.ConfigurationData.LLMProviders.GlobalMinimumConfidence;
+            var minimumLevel = this.SettingsManager.ConfigurationData.Confidence.GlobalMinimumConfidence;
             if(this.SelectedValue() < minimumLevel)
                 return minimumLevel;
         }

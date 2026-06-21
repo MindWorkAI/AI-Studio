@@ -165,9 +165,9 @@ public sealed class SettingsManager
     public ConfidenceLevel GetMinimumConfidenceLevel(Tools.Components component)
     {
         var minimumLevel = ConfidenceLevel.NONE;
-        var enforceGlobalMinimumConfidence = this.ConfigurationData.LLMProviders is { EnforceGlobalMinimumConfidence: true, GlobalMinimumConfidence: not ConfidenceLevel.NONE and not ConfidenceLevel.UNKNOWN };
+        var enforceGlobalMinimumConfidence = this.ConfigurationData.Confidence is { EnforceGlobalMinimumConfidence: true, GlobalMinimumConfidence: not ConfidenceLevel.NONE and not ConfidenceLevel.UNKNOWN };
         if (enforceGlobalMinimumConfidence)
-            minimumLevel = this.ConfigurationData.LLMProviders.GlobalMinimumConfidence;
+            minimumLevel = this.ConfigurationData.Confidence.GlobalMinimumConfidence;
         
         var componentMinimumLevel = component.MinimumConfidence(this);
         if (componentMinimumLevel > minimumLevel)
@@ -402,7 +402,7 @@ public sealed class SettingsManager
         if(llmProvider is LLMProviders.NONE)
             return ConfidenceLevel.NONE;
         
-        switch (this.ConfigurationData.LLMProviders.ConfidenceScheme)
+        switch (this.ConfigurationData.Confidence.ConfidenceScheme)
         {
             case ConfidenceSchemes.TRUST_ALL:
                 return llmProvider switch
@@ -462,7 +462,7 @@ public sealed class SettingsManager
                 };
 
             case ConfidenceSchemes.CUSTOM:
-                return this.ConfigurationData.LLMProviders.CustomConfidenceScheme.GetValueOrDefault(llmProvider, ConfidenceLevel.UNKNOWN);
+                return this.ConfigurationData.Confidence.CustomConfidenceScheme.GetValueOrDefault(llmProvider, ConfidenceLevel.UNKNOWN);
 
             default:
                 return ConfidenceLevel.UNKNOWN;

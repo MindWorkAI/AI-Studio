@@ -232,6 +232,44 @@ public static partial class ManagedConfiguration
     }
 
     /// <summary>
+    /// Attempts to retrieve the configuration metadata for an enum dictionary-based setting.
+    /// </summary>
+    /// <remarks>
+    /// When no configuration metadata is found, it returns a NoConfig instance with the default
+    /// value set to an empty dictionary. This allows the caller to handle the absence of configuration
+    /// gracefully. In such cases, the return value of the method will be false.
+    /// </remarks>
+    /// <param name="configSelection">The expression to select the configuration class.</param>
+    /// <param name="propertyExpression">The expression to select the property within the
+    /// configuration class.</param>
+    /// <param name="configMeta">The output parameter that will hold the configuration metadata
+    /// if found.</param>
+    /// <typeparam name="TClass">The type of the configuration class.</typeparam>
+    /// <typeparam name="TKey">The enum type of the dictionary keys.</typeparam>
+    /// <typeparam name="TValue">The enum type of the dictionary values.</typeparam>
+    /// <returns>True if the configuration metadata was found, otherwise false.</returns>
+    public static bool TryGet<TClass, TKey, TValue>(
+        Expression<Func<Data, TClass>> configSelection,
+        Expression<Func<TClass, Dictionary<TKey, TValue>>> propertyExpression,
+        out ConfigMeta<TClass, Dictionary<TKey, TValue>> configMeta)
+        where TKey : struct, Enum
+        where TValue : struct, Enum
+    {
+        var configPath = Path(configSelection, propertyExpression);
+        if (METADATA.TryGetValue(configPath, out var value) && value is ConfigMeta<TClass, Dictionary<TKey, TValue>> meta)
+        {
+            configMeta = meta;
+            return true;
+        }
+
+        configMeta = new NoConfig<TClass, Dictionary<TKey, TValue>>(configSelection, propertyExpression)
+        {
+            Default = new Dictionary<TKey, TValue>(),
+        };
+        return false;
+    }
+
+    /// <summary>
     /// Checks if a configuration setting is left over from a configuration plugin that is no longer available.
     /// If the configuration setting is locked and managed by a configuration plugin that is not available,
     /// it resets the managed state of the configuration setting and returns true.
@@ -392,6 +430,42 @@ public static partial class ManagedConfiguration
 
         var plugin = availablePlugins.FirstOrDefault(x => x.Id == configMeta.LockedByConfigPluginId);
         if (plugin is null)
+        {
+            configMeta.ResetLockedConfiguration();
+            return true;
+        }
+
+        return false;
+    }
+
+    public static bool IsConfigurationLeftOver<TClass, TKey, TValue>(
+        Expression<Func<Data, TClass>> configSelection,
+        Expression<Func<TClass, Dictionary<TKey, TValue>>> propertyExpression,
+        IEnumerable<IAvailablePlugin> availablePlugins)
+        where TKey : struct, Enum
+        where TValue : struct, Enum
+    {
+        if (!TryGet(configSelection, propertyExpression, out var configMeta))
+            return false;
+
+        if (configMeta.ManagedMode is ManagedConfigurationMode.EDITABLE_DEFAULT)
+        {
+            var plugin = availablePlugins.FirstOrDefault(x => x.Id == configMeta.EditableDefaultByConfigPluginId);
+            if (plugin is null)
+            {
+                configMeta.ClearEditableDefaultConfiguration();
+                ClearEditableDefaultState(SettingName(propertyExpression));
+                return true;
+            }
+
+            return false;
+        }
+
+        if (configMeta.LockedByConfigPluginId == Guid.Empty || !configMeta.IsLocked)
+            return false;
+
+        var lockedPlugin = availablePlugins.FirstOrDefault(x => x.Id == configMeta.LockedByConfigPluginId);
+        if (lockedPlugin is null)
         {
             configMeta.ResetLockedConfiguration();
             return true;

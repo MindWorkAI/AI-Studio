@@ -1,8 +1,8 @@
 using AIStudio.Provider;
 
-namespace AIStudio.Settings.DataModel;
+namespace AIStudio.Settings.DataModel.PreviousModels;
 
-public sealed class DataLLMProviders
+public sealed class DataLLMProvidersV5
 {
     /// <summary>
     /// Should we enforce a global minimum confidence level?
@@ -25,7 +25,7 @@ public sealed class DataLLMProviders
     public ConfidenceSchemes ConfidenceScheme { get; set; } = ConfidenceSchemes.TRUST_ALL;
 
     /// <summary>
-    /// Provide custom confidence levels for each LLM provider.
+    /// Provide custom confidence levels for each provider family.
     /// </summary>
     public Dictionary<LLMProviders, ConfidenceLevel> CustomConfidenceScheme { get; set; } = new();
 }
