@@ -5844,11 +5844,20 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::WORKSPACESELECTIONDIALOG::T3288132732"] = "B
 -- Cancel
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::WORKSPACESELECTIONDIALOG::T900713019"] = "Abbrechen"
 
+-- Reason
+UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T1093747001"] = "Begründung"
+
 -- Settings
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T1258653480"] = "Einstellungen"
 
+-- Your settings file does not contain a settings-format version. Changes in this session will not be saved to avoid overwriting your settings. Please check for updates or contact support.
+UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T1378304679"] = "Ihre Einstellungsdatei enthält keine Versionsangabe des Einstellungsformats. Änderungen in dieser Sitzung werden nicht gespeichert, um ein Überschreiben Ihrer Einstellungen zu vermeiden. Bitte suchen Sie nach Updates oder wenden Sie sich an den Support."
+
 -- Home
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T1391791790"] = "Startseite"
+
+-- AI Studio found the current settings format but could not load it safely. Changes in this session will not be saved. Please check for updates or contact support.
+UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T1497084127"] = "AI Studio hat das aktuelle Einstellungsformat gefunden, konnte es jedoch nicht sicher laden. Änderungen in dieser Sitzung werden nicht gespeichert. Bitte suchen Sie nach Updates oder wenden Sie sich an den Support."
 
 -- Are you sure you want to leave the chat page? All unsaved changes will be lost.
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T1563130494"] = "Sind Sie sicher, dass Sie die Chat-Seite verlassen möchten? Alle nicht gespeicherten Änderungen gehen verloren."
@@ -5859,11 +5868,20 @@ UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T1614176092"] = "Assistenten"
 -- Update
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T1847791252"] = "Aktualisieren"
 
+-- Check for updates
+UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T1890416390"] = "Nach Updates suchen"
+
+-- Your settings were created by a newer AI Studio version. Changes in this session will not be saved. Please install or start the latest available update.
+UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T1988273622"] = "Ihre Einstellungen wurden mit einer neueren Version von AI Studio erstellt. Änderungen in dieser Sitzung werden nicht gespeichert. Bitte installieren oder starten Sie das neueste verfügbare Update."
+
 -- Leave Chat Page
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T2124749705"] = "Chat-Seite verlassen"
 
 -- Plugins
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T2222816203"] = "Plugins"
+
+-- AI Studio cannot safely save settings in this session. Please check for updates or contact support.
+UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T2382622618"] = "AI Studio kann die Einstellungen in dieser Sitzung nicht sicher speichern. Bitte suchen Sie nach Updates oder wenden Sie sich an den Support."
 
 -- An update to version {0} is available.
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T2800137365"] = "Ein Update auf Version {0} ist verfügbar."
@@ -5873,6 +5891,9 @@ UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T2864211629"] = "Bitte warten Sie
 
 -- Supporters
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T2929332068"] = "Unterstützer"
+
+-- AI Studio could not read your settings file. Changes in this session will not be saved to avoid overwriting recoverable settings. Please check for updates or contact support.
+UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T2936083926"] = "AI Studio konnte Ihre Einstellungsdatei nicht lesen. Änderungen in dieser Sitzung werden nicht gespeichert, um ein Überschreiben wiederherstellbarer Einstellungen zu vermeiden. Bitte suchen Sie nach Updates oder wenden Sie sich an den Support."
 
 -- Writing
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T2979224202"] = "Schreiben"
@@ -5885,6 +5906,9 @@ UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T4256323669"] = "Information"
 
 -- Chat
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T578410699"] = "Chat"
+
+-- AI Studio does not recognize your settings-format version. Changes in this session will not be saved to avoid overwriting your settings. Please check for updates or contact support.
+UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T915412625"] = "AI Studio erkennt die Version Ihres Einstellungsformats nicht. Änderungen in dieser Sitzung werden nicht gespeichert, um zu verhindern, dass Ihre Einstellungen überschrieben werden. Bitte suchen Sie nach Updates oder wenden Sie sich an den Support."
 
 -- Get coding and debugging support from an LLM.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1243850917"] = "Erhalten Sie Unterstützung beim Programmieren und Debuggen durch ein KI-Modell."

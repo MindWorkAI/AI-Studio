@@ -5842,11 +5842,20 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::WORKSPACESELECTIONDIALOG::T3288132732"] = "P
 -- Cancel
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::WORKSPACESELECTIONDIALOG::T900713019"] = "Cancel"
 
+-- Reason
+UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T1093747001"] = "Reason"
+
 -- Settings
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T1258653480"] = "Settings"
 
+-- Your settings file does not contain a settings-format version. Changes in this session will not be saved to avoid overwriting your settings. Please check for updates or contact support.
+UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T1378304679"] = "Your settings file does not contain a settings-format version. Changes in this session will not be saved to avoid overwriting your settings. Please check for updates or contact support."
+
 -- Home
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T1391791790"] = "Home"
+
+-- AI Studio found the current settings format but could not load it safely. Changes in this session will not be saved. Please check for updates or contact support.
+UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T1497084127"] = "AI Studio found the current settings format but could not load it safely. Changes in this session will not be saved. Please check for updates or contact support."
 
 -- Are you sure you want to leave the chat page? All unsaved changes will be lost.
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T1563130494"] = "Are you sure you want to leave the chat page? All unsaved changes will be lost."
@@ -5857,11 +5866,20 @@ UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T1614176092"] = "Assistants"
 -- Update
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T1847791252"] = "Update"
 
+-- Check for updates
+UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T1890416390"] = "Check for updates"
+
+-- Your settings were created by a newer AI Studio version. Changes in this session will not be saved. Please install or start the latest available update.
+UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T1988273622"] = "Your settings were created by a newer AI Studio version. Changes in this session will not be saved. Please install or start the latest available update."
+
 -- Leave Chat Page
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T2124749705"] = "Leave Chat Page"
 
 -- Plugins
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T2222816203"] = "Plugins"
+
+-- AI Studio cannot safely save settings in this session. Please check for updates or contact support.
+UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T2382622618"] = "AI Studio cannot safely save settings in this session. Please check for updates or contact support."
 
 -- An update to version {0} is available.
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T2800137365"] = "An update to version {0} is available."
@@ -5871,6 +5889,9 @@ UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T2864211629"] = "Please wait for 
 
 -- Supporters
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T2929332068"] = "Supporters"
+
+-- AI Studio could not read your settings file. Changes in this session will not be saved to avoid overwriting recoverable settings. Please check for updates or contact support.
+UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T2936083926"] = "AI Studio could not read your settings file. Changes in this session will not be saved to avoid overwriting recoverable settings. Please check for updates or contact support."
 
 -- Writer
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T2979224202"] = "Writer"
@@ -5883,6 +5904,9 @@ UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T4256323669"] = "Information"
 
 -- Chat
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T578410699"] = "Chat"
+
+-- AI Studio does not recognize your settings-format version. Changes in this session will not be saved to avoid overwriting your settings. Please check for updates or contact support.
+UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T915412625"] = "AI Studio does not recognize your settings-format version. Changes in this session will not be saved to avoid overwriting your settings. Please check for updates or contact support."
 
 -- Get coding and debugging support from an LLM.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1243850917"] = "Get coding and debugging support from an LLM."
