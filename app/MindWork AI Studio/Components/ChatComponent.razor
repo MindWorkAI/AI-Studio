@@ -129,7 +129,7 @@
                 <DataSourceSelection @ref="@this.dataSourceSelectionComponent" PopoverTriggerMode="PopoverTriggerMode.BUTTON" LLMProvider="@this.Provider" DataSourceOptions="@this.GetCurrentDataSourceOptions()" DataSourceOptionsChanged="@(async options => await this.SetCurrentDataSourceOptions(options))" DataSourcesAISelected="@this.GetAgentSelectedDataSources()"/>
             }
             
-            @if (this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence)
+            @if (this.SettingsManager.ConfigurationData.Confidence.ShowProviderConfidence)
             {
                 <ConfidenceInfo Mode="PopoverTriggerMode.ICON" LLMProvider="@this.Provider.UsedLLMProvider"/>
             }

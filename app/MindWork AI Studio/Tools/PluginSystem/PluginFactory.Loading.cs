@@ -267,6 +267,22 @@ public static partial class PluginFactory
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.ExternalHttpCustomRootCertificateAllowedHosts, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;
 
+        // Check provider confidence settings:
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Confidence, x => x.EnforceGlobalMinimumConfidence, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Confidence, x => x.GlobalMinimumConfidence, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Confidence, x => x.ShowProviderConfidence, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Confidence, x => x.ConfidenceScheme, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Confidence, x => x.CustomConfidenceScheme, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
         // Check if audit is required before it can be activated
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.AssistantPluginAudit, x => x.RequireAuditBeforeActivation, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;

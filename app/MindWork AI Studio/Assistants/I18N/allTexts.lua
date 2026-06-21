@@ -46,15 +46,6 @@ LANG_NAME = "English (United States)"
 
 UI_TEXT_CONTENT = {}
 
--- Self-hosted
-UI_TEXT_CONTENT["::LLMPROVIDERSEXTENSIONS::T146444217"] = "Self-hosted"
-
--- No provider selected
-UI_TEXT_CONTENT["::LLMPROVIDERSEXTENSIONS::T2897045472"] = "No provider selected"
-
--- Unknown
-UI_TEXT_CONTENT["::LLMPROVIDERSEXTENSIONS::T3424652889"] = "Unknown"
-
 -- No audit provider is configured.
 UI_TEXT_CONTENT["AISTUDIO::AGENTS::ASSISTANTAUDIT::ASSISTANTAUDITAGENT::T2034826200"] = "No audit provider is configured."
 
@@ -2800,6 +2791,54 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T922066419"] 
 -- Administration settings are not visible
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T929143445"] = "Administration settings are not visible"
 
+-- Show provider's confidence level?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCONFIDENCE::T1052533048"] = "Show provider's confidence level?"
+
+-- Choose the scheme that best suits you and your organization. Do you trust any western provider? Or only providers from the USA or exclusively European providers? Then choose the appropriate scheme. Alternatively, you can assign the confidence levels to each provider  yourself.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCONFIDENCE::T1081931329"] = "Choose the scheme that best suits you and your organization. Do you trust any western provider? Or only providers from the USA or exclusively European providers? Then choose the appropriate scheme. Alternatively, you can assign the confidence levels to each provider  yourself."
+
+-- Provider Confidence
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCONFIDENCE::T1453422580"] = "Provider Confidence"
+
+-- When enabled, you can enforce a minimum confidence level for all features in AI Studio. This way, you can make sure only trustworthy providers are used.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCONFIDENCE::T1499004705"] = "When enabled, you can enforce a minimum confidence level for all features in AI Studio. This way, you can make sure only trustworthy providers are used."
+
+-- When enabled, we show you the confidence level for the selected provider in the app. This helps you assess where you are sending your data at any time. Example: are you currently working with sensitive data? Then choose a particularly trustworthy provider, etc.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCONFIDENCE::T1505516304"] = "When enabled, we show you the confidence level for the selected provider in the app. This helps you assess where you are sending your data at any time. Example: are you currently working with sensitive data? Then choose a particularly trustworthy provider, etc."
+
+-- No, please hide the confidence level
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCONFIDENCE::T1628475119"] = "No, please hide the confidence level"
+
+-- Description
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCONFIDENCE::T1725856265"] = "Description"
+
+-- Confidence Level
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCONFIDENCE::T2492230131"] = "Confidence Level"
+
+-- No, do not enforce a minimum confidence level
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCONFIDENCE::T3642102079"] = "No, do not enforce a minimum confidence level"
+
+-- Select a confidence scheme
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCONFIDENCE::T4144206465"] = "Select a confidence scheme"
+
+-- Do you want to enforce an global minimum confidence level?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCONFIDENCE::T4211873175"] = "Do you want to enforce an global minimum confidence level?"
+
+-- Yes, enforce a minimum confidence level
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCONFIDENCE::T458854917"] = "Yes, enforce a minimum confidence level"
+
+-- Not yet configured
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCONFIDENCE::T48051324"] = "Not yet configured"
+
+-- Do you want to always see how trustworthy your providers are? This way, you stay in control of which provider you send your data to. You can choose a common schema or configure the trust levels for each provider yourself.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCONFIDENCE::T700839804"] = "Do you want to always see how trustworthy your providers are? This way, you stay in control of which provider you send your data to. You can choose a common schema or configure the trust levels for each provider yourself."
+
+-- Yes, show me the confidence level
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCONFIDENCE::T853225204"] = "Yes, show me the confidence level"
+
+-- Provider
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCONFIDENCE::T900237532"] = "Provider"
+
 -- Embedding Result
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T1387042335"] = "Embedding Result"
 
@@ -2896,20 +2935,8 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERBASE::T336
 -- Export API Key?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERBASE::T4010580285"] = "Export API Key?"
 
--- Show provider's confidence level?
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T1052533048"] = "Show provider's confidence level?"
-
 -- Delete
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T1469573738"] = "Delete"
-
--- When enabled, we show you the confidence level for the selected provider in the app. This helps you assess where you are sending your data at any time. Example: are you currently working with sensitive data? Then choose a particularly trustworthy provider, etc.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T1505516304"] = "When enabled, we show you the confidence level for the selected provider in the app. This helps you assess where you are sending your data at any time. Example: are you currently working with sensitive data? Then choose a particularly trustworthy provider, etc."
-
--- No, please hide the confidence level
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T1628475119"] = "No, please hide the confidence level"
-
--- Description
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T1725856265"] = "Description"
 
 -- Uses the provider-configured model
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T1760715963"] = "Uses the provider-configured model"
@@ -2926,26 +2953,11 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T186876
 -- Are you sure you want to delete the provider '{0}'?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T2031310917"] = "Are you sure you want to delete the provider '{0}'?"
 
--- Do you want to always be able to recognize how trustworthy your LLM providers are? This way, you keep control over which provider you send your data to. You have two options for this: Either you choose a common schema, or you configure the trust levels for each LLM provider yourself.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T2082904277"] = "Do you want to always be able to recognize how trustworthy your LLM providers are? This way, you keep control over which provider you send your data to. You have two options for this: Either you choose a common schema, or you configure the trust levels for each LLM provider yourself."
-
 -- Model
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T2189814010"] = "Model"
 
--- Choose the scheme that best suits you and your life. Do you trust any western provider? Or only providers from the USA or exclusively European providers? Then choose the appropriate scheme. Alternatively, you can assign the confidence levels to each provider yourself.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T2283885378"] = "Choose the scheme that best suits you and your life. Do you trust any western provider? Or only providers from the USA or exclusively European providers? Then choose the appropriate scheme. Alternatively, you can assign the confidence levels to each provider yourself."
-
--- LLM Provider Confidence
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T2349972795"] = "LLM Provider Confidence"
-
 -- What we call a provider is the combination of an LLM provider such as OpenAI and a model like GPT-4o. You can configure as many providers as you want. This way, you can use the appropriate model for each task. As an LLM provider, you can also choose local providers. However, to use this app, you must configure at least one provider.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T2460361126"] = "What we call a provider is the combination of an LLM provider such as OpenAI and a model like GPT-4o. You can configure as many providers as you want. This way, you can use the appropriate model for each task. As an LLM provider, you can also choose local providers. However, to use this app, you must configure at least one provider."
-
--- Confidence Level
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T2492230131"] = "Confidence Level"
-
--- When enabled, you can enforce a minimum confidence level for all LLM providers. This way, you can ensure that only trustworthy providers are used.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T281063702"] = "When enabled, you can enforce a minimum confidence level for all LLM providers. This way, you can ensure that only trustworthy providers are used."
 
 -- Instance Name
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T2842060373"] = "Instance Name"
@@ -2968,35 +2980,14 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T334643
 -- This provider is managed by your organization.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T3415927576"] = "This provider is managed by your organization."
 
--- LLM Provider
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T3612415205"] = "LLM Provider"
-
--- No, do not enforce a minimum confidence level
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T3642102079"] = "No, do not enforce a minimum confidence level"
-
 -- Actions
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T3865031940"] = "Actions"
-
--- Select a confidence scheme
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T4144206465"] = "Select a confidence scheme"
-
--- Do you want to enforce an app-wide minimum confidence level?
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T4258968041"] = "Do you want to enforce an app-wide minimum confidence level?"
 
 -- Delete LLM Provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T4269256234"] = "Delete LLM Provider"
 
--- Yes, enforce a minimum confidence level
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T458854917"] = "Yes, enforce a minimum confidence level"
-
--- Not yet configured
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T48051324"] = "Not yet configured"
-
 -- Open Dashboard
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T78223861"] = "Open Dashboard"
-
--- Yes, show me the confidence level
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T853225204"] = "Yes, show me the confidence level"
 
 -- Provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T900237532"] = "Provider"
@@ -6750,6 +6741,15 @@ UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCELEVELEXTENSIONS::T3188327965"] = 
 
 -- Very Low
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCELEVELEXTENSIONS::T786675843"] = "Very Low"
+
+-- Self-hosted
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::LLMPROVIDERSEXTENSIONS::T146444217"] = "Self-hosted"
+
+-- No provider selected
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::LLMPROVIDERSEXTENSIONS::T2897045472"] = "No provider selected"
+
+-- Unknown
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::LLMPROVIDERSEXTENSIONS::T3424652889"] = "Unknown"
 
 -- no model selected
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::MODEL::T2234274832"] = "no model selected"

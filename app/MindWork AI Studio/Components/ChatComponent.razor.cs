@@ -435,9 +435,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     
     private string TooltipAddChatToWorkspace => string.Format(T("Start new chat in workspace '{0}'"), this.currentWorkspaceName);
 
-    private string UserInputStyle => this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence ? this.Provider.UsedLLMProvider.GetConfidence(this.SettingsManager).SetColorStyle(this.SettingsManager) : string.Empty;
-    
-    private string UserInputClass => this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence ? "confidence-border" : string.Empty;
+    private string UserInputStyle => this.SettingsManager.ConfigurationData.Confidence.ShowProviderConfidence ? this.Provider.UsedLLMProvider.GetConfidence(this.SettingsManager).SetColorStyle(this.SettingsManager) : string.Empty;
+
+    private string UserInputClass => this.SettingsManager.ConfigurationData.Confidence.ShowProviderConfidence ? "confidence-border" : string.Empty;
     
     private void ApplyStandardDataSourceOptions()
     {

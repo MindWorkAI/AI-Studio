@@ -271,8 +271,8 @@ public static class ConfigurationSelectDataFactory
     public static IEnumerable<ConfigurationSelectData<ConfidenceLevel>> GetConfidenceLevelsData(SettingsManager settingsManager, bool restrictToGlobalMinimum = false)
     {
         var minimumLevel = ConfidenceLevel.NONE;
-        if(restrictToGlobalMinimum && settingsManager.ConfigurationData.LLMProviders is { EnforceGlobalMinimumConfidence: true, GlobalMinimumConfidence: not ConfidenceLevel.NONE and not ConfidenceLevel.UNKNOWN })
-            minimumLevel = settingsManager.ConfigurationData.LLMProviders.GlobalMinimumConfidence;
+        if(restrictToGlobalMinimum && settingsManager.ConfigurationData.Confidence is { EnforceGlobalMinimumConfidence: true, GlobalMinimumConfidence: not ConfidenceLevel.NONE and not ConfidenceLevel.UNKNOWN })
+            minimumLevel = settingsManager.ConfigurationData.Confidence.GlobalMinimumConfidence;
         
         foreach (var level in Enum.GetValues<ConfidenceLevel>())
         {

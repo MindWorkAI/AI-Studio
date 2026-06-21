@@ -38,14 +38,14 @@ public static partial class ManagedConfiguration
         //
         // Handle configured enum values
         //
-        
+
         // Check if that configuration was registered:
         if(!TryGet(configSelection, propertyExpression, out var configMeta))
             return false;
 
         var successful = false;
         var configuredValue = configMeta.Default;
-        
+
         // Step 1 -- try to read the Lua value out of the Lua table:
         if(settings.TryGetValue(SettingsManager.ToSettingName(propertyExpression), out var configuredEnumValue))
         {
@@ -60,7 +60,7 @@ public static partial class ManagedConfiguration
                 }
             }
         }
-        
+
         if(dryRun)
             return successful;
 
@@ -98,14 +98,14 @@ public static partial class ManagedConfiguration
         //
         // Handle configured ISpanParsable values
         //
-        
+
         // Check if that configuration was registered:
         if(!TryGet(configSelection, propertyExpression, out var configMeta))
             return false;
-        
+
         var successful = false;
         var configuredValue = configMeta.Default;
-        
+
         // Step 1 -- try to read the Lua value out of the Lua table:
         if (settings.TryGetValue(SettingsManager.ToSettingName(propertyExpression), out var configuredLuaValue))
         {
@@ -119,7 +119,7 @@ public static partial class ManagedConfiguration
                     successful = true;
                 }
             }
-            
+
             // Step 2b -- try to read the Lua value:
             if(configuredLuaValue.TryRead<TValue>(out var configuredLuaValueInstance))
             {
@@ -135,7 +135,7 @@ public static partial class ManagedConfiguration
         var managedMode = ReadManagedConfigurationMode(propertyExpression, settings);
         return HandleParsedScalarValue(configPluginId, dryRun, successful, configMeta, configuredValue, managedMode, settingName);
     }
-    
+
     /// <summary>
     /// Attempts to process the configuration settings from a Lua table for string values.
     /// </summary>
@@ -189,14 +189,14 @@ public static partial class ManagedConfiguration
         //
         // Handle configured string values
         //
-        
+
         // Check if that configuration was registered:
         if(!TryGet(configSelection, propertyExpression, out var configMeta))
             return false;
-        
+
         var successful = false;
         var configuredValue = configMeta.Default;
-        
+
         // Step 1 -- try to read the Lua value out of the Lua table:
         if(settings.TryGetValue(SettingsManager.ToSettingName(propertyExpression), out var configuredTextValue))
         {
@@ -210,7 +210,7 @@ public static partial class ManagedConfiguration
                         successful = Guid.TryParse(configuredText, out var id);
                         configuredValue = successful ? id.ToString().ToLowerInvariant() : configuredText;
                         break;
-                    
+
                     // Case: the read string is just a string:
                     case string:
                         configuredValue = configuredText;
@@ -219,7 +219,7 @@ public static partial class ManagedConfiguration
                 }
             }
         }
-        
+
         var settingName = SettingName(propertyExpression);
         var managedMode = ReadManagedConfigurationMode(propertyExpression, settings);
         return HandleParsedScalarValue(configPluginId, dryRun, successful, configMeta, configuredValue, managedMode, settingName);
@@ -273,13 +273,13 @@ public static partial class ManagedConfiguration
             // Determine the length of the Lua table and prepare a list to hold the parsed values:
             var len = valueTable.ArrayLength;
             var list = new List<TValue>(len);
-            
+
             // Iterate over each entry in the Lua table:
             for (var index = 1; index <= len; index++)
             {
                 // Retrieve the Lua value at the current index:
                 var value = valueTable[index];
-                
+
                 // Step 2a -- try to read the Lua value as a string:
                 if (value.Type is LuaValueType.String && value.TryRead<string>(out var configuredLuaValueText))
                 {
@@ -304,7 +304,7 @@ public static partial class ManagedConfiguration
     }
 
     // ReSharper restore MethodOverloadWithOptionalParameter
-    
+
     /// <summary>
     /// Attempts to process the configuration settings from a Lua table for enum list types.
     /// </summary>
@@ -333,14 +333,14 @@ public static partial class ManagedConfiguration
         //
         // Handle configured enum lists
         //
-        
+
         // Check if that configuration was registered:
         if(!TryGet(configSelection, propertyExpression, out var configMeta))
             return false;
-        
+
         var successful = false;
         var configuredValue = configMeta.Default;
-        
+
         // Step 1 -- try to read the Lua value (we expect a table) out of the Lua table:
         if (settings.TryGetValue(SettingsManager.ToSettingName(propertyExpression), out var configuredLuaList) &&
             configuredLuaList.Type is LuaValueType.Table &&
@@ -349,13 +349,13 @@ public static partial class ManagedConfiguration
             // Determine the length of the Lua table and prepare a list to hold the parsed values:
             var len = valueTable.ArrayLength;
             var list = new List<TValue>(len);
-            
+
             // Iterate over each entry in the Lua table:
             for (var index = 1; index <= len; index++)
             {
                 // Retrieve the Lua value at the current index:
                 var value = valueTable[index];
-                
+
                 // Step 2 -- try to read the Lua value as a string:
                 if (value.Type is LuaValueType.String && value.TryRead<string>(out var configuredLuaValueText))
                 {
@@ -364,17 +364,17 @@ public static partial class ManagedConfiguration
                         list.Add((TValue)configuredEnum);
                 }
             }
-		
+
             configuredValue = list;
             successful = true;
         }
-        
+
         if(dryRun)
             return successful;
-        
+
         return HandleParsedValue(configPluginId, dryRun, successful, configMeta, configuredValue);
     }
-    
+
     /// <summary>
     /// Attempts to process the configuration settings from a Lua table for string list types.
     /// </summary>
@@ -400,14 +400,14 @@ public static partial class ManagedConfiguration
         //
         // Handle configured string lists
         //
-        
+
         // Check if that configuration was registered:
         if(!TryGet(configSelection, propertyExpression, out var configMeta))
             return false;
-        
+
         var successful = false;
         var configuredValue = configMeta.Default;
-        
+
         // Step 1 -- try to read the Lua value (we expect a table) out of the Lua table:
         if (settings.TryGetValue(SettingsManager.ToSettingName(propertyExpression), out var configuredLuaList) &&
             configuredLuaList.Type is LuaValueType.Table &&
@@ -416,25 +416,25 @@ public static partial class ManagedConfiguration
             // Determine the length of the Lua table and prepare a list to hold the parsed values:
             var len = valueTable.ArrayLength;
             var list = new List<string>(len);
-            
+
             // Iterate over each entry in the Lua table:
             for (var index = 1; index <= len; index++)
             {
                 // Retrieve the Lua value at the current index:
                 var value = valueTable[index];
-                
+
                 // Step 2 -- try to read the Lua value as a string:
                 if (value.Type is LuaValueType.String && value.TryRead<string>(out var configuredLuaValueText))
                     list.Add(configuredLuaValueText);
             }
-		
+
             configuredValue = list;
             successful = true;
         }
-        
+
         if(dryRun)
             return successful;
-        
+
         return HandleParsedValue(configPluginId, dryRun, successful, configMeta, configuredValue);
     }
 
@@ -486,13 +486,13 @@ public static partial class ManagedConfiguration
             // Determine the length of the Lua table and prepare a set to hold the parsed values:
             var len = valueTable.ArrayLength;
             var set = new HashSet<TValue>(len);
-            
+
             // Iterate over each entry in the Lua table:
             for (var index = 1; index <= len; index++)
             {
                 // Retrieve the Lua value at the current index:
                 var value = valueTable[index];
-                
+
                 // Step 2a -- try to read the Lua value as a string:
                 if (value.Type is LuaValueType.String && value.TryRead<string>(out var configuredLuaValueText))
                 {
@@ -517,7 +517,7 @@ public static partial class ManagedConfiguration
     }
 
     // ReSharper restore MethodOverloadWithOptionalParameter
-    
+
     /// <summary>
     /// Attempts to process the configuration settings from a Lua table for enum set types.
     /// </summary>
@@ -546,14 +546,14 @@ public static partial class ManagedConfiguration
         //
         // Handle configured enum sets
         //
-        
+
         // Check if that configuration was registered:
         if(!TryGet(configSelection, propertyExpression, out var configMeta))
             return false;
-        
+
         var successful = false;
         var configuredValue = configMeta.Default;
-        
+
         // Step 1 -- try to read the Lua value (we expect a table) out of the Lua table:
         if (settings.TryGetValue(SettingsManager.ToSettingName(propertyExpression), out var configuredLuaList) &&
             configuredLuaList.Type is LuaValueType.Table &&
@@ -562,13 +562,13 @@ public static partial class ManagedConfiguration
             // Determine the length of the Lua table and prepare a set to hold the parsed values:
             var len = valueTable.ArrayLength;
             var set = new HashSet<TValue>(len);
-            
+
             // Iterate over each entry in the Lua table:
             for (var index = 1; index <= len; index++)
             {
                 // Retrieve the Lua value at the current index:
                 var value = valueTable[index];
-                
+
                 // Step 2 -- try to read the Lua value as a string:
                 if (value.Type is LuaValueType.String && value.TryRead<string>(out var configuredLuaValueText))
                 {
@@ -577,14 +577,14 @@ public static partial class ManagedConfiguration
                         set.Add((TValue)configuredEnum);
                 }
             }
-		
+
             configuredValue = set;
             successful = true;
         }
-        
+
         if(dryRun)
             return successful;
-        
+
         return HandleParsedValue(configPluginId, dryRun, successful, configMeta, configuredValue);
     }
 
@@ -629,13 +629,13 @@ public static partial class ManagedConfiguration
             // Determine the length of the Lua table and prepare a set to hold the parsed values:
             var len = valueTable.ArrayLength;
             var set = new HashSet<TValue>(len);
-            
+
             // Iterate over each entry in the Lua table:
             for (var index = 1; index <= len; index++)
             {
                 // Retrieve the Lua value at the current index:
                 var value = valueTable[index];
-                
+
                 // Step 2 -- try to read the Lua value as a string:
                 if (value.Type is LuaValueType.String && value.TryRead<string>(out var configuredLuaValueText))
                 {
@@ -671,7 +671,7 @@ public static partial class ManagedConfiguration
 
         return successful;
     }
-    
+
     /// <summary>
     /// Attempts to process the configuration settings from a Lua table for string set types.
     /// </summary>
@@ -697,14 +697,14 @@ public static partial class ManagedConfiguration
         //
         // Handle configured string sets
         //
-        
+
         // Check if that configuration was registered:
         if(!TryGet(configSelection, propertyExpression, out var configMeta))
             return false;
-        
+
         var successful = false;
         var configuredValue = configMeta.Default;
-        
+
         // Step 1 -- try to read the Lua value (we expect a table) out of the Lua table:
         if (settings.TryGetValue(SettingsManager.ToSettingName(propertyExpression), out var configuredLuaList) &&
             configuredLuaList.Type is LuaValueType.Table &&
@@ -713,28 +713,28 @@ public static partial class ManagedConfiguration
             // Determine the length of the Lua table and prepare a set to hold the parsed values:
             var len = valueTable.ArrayLength;
             var set = new HashSet<string>(len);
-            
+
             // Iterate over each entry in the Lua table:
             for (var index = 1; index <= len; index++)
             {
                 // Retrieve the Lua value at the current index:
                 var value = valueTable[index];
-                
+
                 // Step 2 -- try to read the Lua value as a string:
                 if (value.Type is LuaValueType.String && value.TryRead<string>(out var configuredLuaValueText))
                     set.Add(configuredLuaValueText);
             }
-		
+
             configuredValue = set;
             successful = true;
         }
-        
+
         if(dryRun)
             return successful;
-        
+
         return HandleParsedValue(configPluginId, dryRun, successful, configMeta, configuredValue);
     }
-    
+
     /// <summary>
     /// Attempts to process the configuration settings from a Lua table for string dictionary types.
     /// </summary>
@@ -760,14 +760,14 @@ public static partial class ManagedConfiguration
         //
         // Handle configured string dictionaries (both keys and values are strings)
         //
-        
+
         // Check if that configuration was registered:
         if(!TryGet(configSelection, propertyExpression, out var configMeta))
             return false;
-        
+
         var successful = false;
         var configuredValue = configMeta.Default;
-        
+
         // Step 1 -- try to read the Lua value (we expect a table) out of the Lua table:
         if (settings.TryGetValue(SettingsManager.ToSettingName(propertyExpression), out var configuredLuaList) &&
             configuredLuaList.Type is LuaValueType.Table &&
@@ -778,7 +778,7 @@ public static partial class ManagedConfiguration
             var len = valueTable.HashMapCount;
             if (len > 0)
                 configuredValue.Clear();
-            
+
             // In order to iterate over all key-value pairs in the Lua table, we have to use TryGetNext.
             // Thus, we initialize the previous key variable to Nil and keep calling TryGetNext until
             // there are no more pairs:
@@ -787,23 +787,99 @@ public static partial class ManagedConfiguration
             {
                 // Update the previous key for the next iteration:
                 previousKey = pair.Key;
-                
+
                 // Try to read both the key and the value as strings:
                 var hadKey = pair.Key.TryRead<string>(out var key);
                 var hadValue = pair.Value.TryRead<string>(out var value);
-                
+
                 // If both key and value were read successfully, add them to the dictionary:
                 if (hadKey && hadValue)
                     configuredValue[key] = value;
             }
-		
+
             successful = true;
         }
-        
+
         if(dryRun)
             return successful;
 
         return HandleParsedValue(configPluginId, dryRun, successful, configMeta, configuredValue);
+    }
+
+    /// <summary>
+    /// Attempts to process the configuration settings from a Lua table for enum dictionary types.
+    /// </summary>
+    /// <remarks>
+    /// When the configuration is successfully processed, it updates the configuration metadata with the configured value.
+    /// Furthermore, it applies the configured managed state to the provided configuration plugin ID.
+    /// The setting's value is set to the configured value when locked or when the editable default should apply.
+    /// </remarks>
+    /// <param name="configPluginId">The ID of the related configuration plugin.</param>
+    /// <param name="settings">The Lua table containing the settings to process.</param>
+    /// <param name="configSelection">The expression to select the configuration class.</param>
+    /// <param name="propertyExpression">The expression to select the property within the configuration class.</param>
+    /// <param name="dryRun">When true, the method will not apply any changes but only check if the configuration can be read.</param>
+    /// <typeparam name="TClass">The type of the configuration class.</typeparam>
+    /// <typeparam name="TKey">The enum type of the dictionary keys.</typeparam>
+    /// <typeparam name="TValue">The enum type of the dictionary values.</typeparam>
+    /// <returns>True when the configuration was successfully processed, otherwise false.</returns>
+    public static bool TryProcessConfiguration<TClass, TKey, TValue>(
+        Expression<Func<Data, TClass>> configSelection,
+        Expression<Func<TClass, Dictionary<TKey, TValue>>> propertyExpression,
+        Guid configPluginId,
+        LuaTable settings,
+        bool dryRun)
+        where TKey : struct, Enum
+        where TValue : struct, Enum
+    {
+        //
+        // Handle configured enum dictionaries (Lua keys and values are strings)
+        //
+
+        // Check if that configuration was registered:
+        if(!TryGet(configSelection, propertyExpression, out var configMeta))
+            return false;
+
+        var successful = false;
+        var configuredValue = new Dictionary<TKey, TValue>(configMeta.Default);
+
+        // Step 1 -- try to read the Lua value (we expect a table) out of the Lua table:
+        if (settings.TryGetValue(SettingsManager.ToSettingName(propertyExpression), out var configuredLuaList) &&
+            configuredLuaList.Type is LuaValueType.Table &&
+            configuredLuaList.TryRead<LuaTable>(out var valueTable))
+        {
+            configuredValue.Clear();
+
+            // In order to iterate over all key-value pairs in the Lua table, we have to use TryGetNext.
+            // Thus, we initialize the previous key variable to Nil and keep calling TryGetNext until
+            // there are no more pairs:
+            var previousKey = LuaValue.Nil;
+            while(valueTable.TryGetNext(previousKey, out var pair))
+            {
+                // Update the previous key for the next iteration:
+                previousKey = pair.Key;
+
+                // Try to read both the key and the value as strings:
+                var hadKey = pair.Key.TryRead<string>(out var keyText);
+                var hadValue = pair.Value.TryRead<string>(out var valueText);
+
+                // If both key and value were read successfully, parse and add them to the dictionary:
+                if (hadKey
+                    && hadValue
+                    && Enum.TryParse<TKey>(keyText, true, out var key)
+                    && Enum.TryParse<TValue>(valueText, true, out var value))
+                    configuredValue[key] = value;
+            }
+
+            successful = true;
+        }
+
+        if(dryRun)
+            return successful;
+
+        var settingName = SettingName(propertyExpression);
+        var managedMode = ReadManagedConfigurationMode(propertyExpression, settings);
+        return HandleParsedScalarValue(configPluginId, dryRun, successful, configMeta, configuredValue, managedMode, settingName);
     }
 
     /// <summary>
@@ -826,14 +902,14 @@ public static partial class ManagedConfiguration
     {
         if(dryRun)
             return successful;
-        
+
         switch (successful)
         {
             case true:
                 //
                 // Case: the setting was configured, and we could read the value successfully.
                 //
-                
+
                 // Set the configured value and lock the configuration:
                 configMeta.SetValue(configuredValue);
                 configMeta.LockConfiguration(configPluginId);
@@ -852,7 +928,7 @@ public static partial class ManagedConfiguration
                 //
                 configMeta.ResetLockedConfiguration();
                 break;
-            
+
             case false:
                 //
                 // Case: the setting was not configured, or we could not read the value successfully.
@@ -946,8 +1022,12 @@ public static partial class ManagedConfiguration
     {
         null => string.Empty,
         string text => text,
+        System.Collections.IDictionary dictionary => string.Join(";", dictionary.Keys
+            .Cast<object>()
+            .OrderBy(key => key.ToString(), StringComparer.Ordinal)
+            .Select(key => $"{key}:{dictionary[key]}")),
         IFormattable formattable => formattable.ToString(null, CultureInfo.InvariantCulture),
-        
+
         _ => value.ToString() ?? string.Empty,
     };
 }

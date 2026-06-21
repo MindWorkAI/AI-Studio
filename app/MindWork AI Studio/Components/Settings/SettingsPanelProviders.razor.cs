@@ -1,7 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 
 using AIStudio.Dialogs;
-using AIStudio.Provider;
 using AIStudio.Settings;
 
 using Microsoft.AspNetCore.Components;
@@ -166,25 +165,4 @@ public partial class SettingsPanelProviders : SettingsPanelProviderBase
         await this.AvailableLLMProvidersChanged.InvokeAsync(this.AvailableLLMProviders);
     }
 
-    private string GetCurrentConfidenceLevelName(LLMProviders llmProvider)
-    {
-        if (this.SettingsManager.ConfigurationData.LLMProviders.CustomConfidenceScheme.TryGetValue(llmProvider, out var level))
-            return level.GetName();
-
-        return T("Not yet configured");
-    }
-    
-    private string SetCurrentConfidenceLevelColorStyle(LLMProviders llmProvider)
-    {
-        if (this.SettingsManager.ConfigurationData.LLMProviders.CustomConfidenceScheme.TryGetValue(llmProvider, out var level))
-            return $"background-color: {level.GetColor(this.SettingsManager)};";
-
-        return $"background-color: {ConfidenceLevel.UNKNOWN.GetColor(this.SettingsManager)};";
-    }
-
-    private async Task ChangeCustomConfidenceLevel(LLMProviders llmProvider, ConfidenceLevel level)
-    {
-        this.SettingsManager.ConfigurationData.LLMProviders.CustomConfidenceScheme[llmProvider] = level;
-        await this.SettingsManager.StoreSettings();
-    }
 }

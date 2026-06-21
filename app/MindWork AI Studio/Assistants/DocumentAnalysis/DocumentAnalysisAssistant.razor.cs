@@ -439,10 +439,10 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
     private ConfidenceLevel GetPolicyMinimumConfidenceLevel()
     {
         var minimumLevel = ConfidenceLevel.NONE;
-        var llmSettings = this.SettingsManager.ConfigurationData.LLMProviders;
-        var enforceGlobalMinimumConfidence = llmSettings is { EnforceGlobalMinimumConfidence: true, GlobalMinimumConfidence: not ConfidenceLevel.NONE and not ConfidenceLevel.UNKNOWN };
+        var confidenceSettings = this.SettingsManager.ConfigurationData.Confidence;
+        var enforceGlobalMinimumConfidence = confidenceSettings is { EnforceGlobalMinimumConfidence: true, GlobalMinimumConfidence: not ConfidenceLevel.NONE and not ConfidenceLevel.UNKNOWN };
         if (enforceGlobalMinimumConfidence)
-            minimumLevel = llmSettings.GlobalMinimumConfidence;
+            minimumLevel = confidenceSettings.GlobalMinimumConfidence;
 
         if (this.selectedPolicy is not null && this.selectedPolicy.MinimumProviderConfidence > minimumLevel)
             minimumLevel = this.selectedPolicy.MinimumProviderConfidence;

@@ -66,13 +66,13 @@ public static partial class ManagedConfiguration
         // we ignore the register call and return the default value:
         if(configSelection is null)
             return defaultValue;
-		
+
         var configPath = Path(configSelection, propertyExpression);
 
         // If the metadata already exists for this configuration path, we return the default value:
         if (METADATA.ContainsKey(configPath))
             return defaultValue;
-        
+
         // Not registered yet, so we register it now:
         METADATA[configPath] = new ConfigMeta<TClass, string>(configSelection, propertyExpression)
         {
@@ -104,13 +104,13 @@ public static partial class ManagedConfiguration
         // we ignore the register call and return the default value:
         if(configSelection is null)
             return [defaultValue];
-		
+
         var configPath = Path(configSelection, propertyExpression);
 
         // If the metadata already exists for this configuration path, we return the default value:
         if (METADATA.ContainsKey(configPath))
             return [defaultValue];
-        
+
         // Not registered yet, so we register it now:
         METADATA[configPath] = new ConfigMeta<TClass, IList<TValue>>(configSelection, propertyExpression)
         {
@@ -142,13 +142,13 @@ public static partial class ManagedConfiguration
         // we ignore the register call and return the default value:
         if(configSelection is null)
             return [..defaultValues];
-		
+
         var configPath = Path(configSelection, propertyExpression);
 
         // If the metadata already exists for this configuration path, we return the default value:
         if (METADATA.ContainsKey(configPath))
             return [..defaultValues];
-        
+
         // Not registered yet, so we register it now:
         METADATA[configPath] = new ConfigMeta<TClass, IList<TValue>>(configSelection, propertyExpression)
         {
@@ -179,13 +179,13 @@ public static partial class ManagedConfiguration
         // we ignore the register call and return the default value:
         if (configSelection is null)
             return [defaultValue];
-		
+
         var configPath = Path(configSelection, propertyExpression);
 
         // If the metadata already exists for this configuration path, we return the default value:
         if (METADATA.ContainsKey(configPath))
             return [defaultValue];
-        
+
         // Not registered yet, so we register it now:
         METADATA[configPath] = new ConfigMeta<TClass, ISet<TValue>>(configSelection, propertyExpression)
         {
@@ -217,13 +217,13 @@ public static partial class ManagedConfiguration
         // we ignore the register call and return the default value:
         if (configSelection is null)
             return [..defaultValues];
-		
+
         var configPath = Path(configSelection, propertyExpression);
 
         // If the metadata already exists for this configuration path, we return the default value:
         if (METADATA.ContainsKey(configPath))
             return [..defaultValues];
-        
+
         // Not registered yet, so we register it now:
         METADATA[configPath] = new ConfigMeta<TClass, ISet<TValue>>(configSelection, propertyExpression)
         {
@@ -268,7 +268,48 @@ public static partial class ManagedConfiguration
         {
             Default = defaultValues,
         };
-        
+
+        return defaultValues;
+    }
+
+    /// <summary>
+    /// Registers a configuration setting with a default dictionary of enum key-value pairs.
+    /// </summary>
+    /// <remarks>
+    /// When the method is invoked with a null configSelection, the configuration path
+    /// is ignored, and the specified default values are returned without registration.
+    /// </remarks>
+    /// <param name="configSelection">The expression that selects the configuration class from the root Data model.</param>
+    /// <param name="propertyExpression">The expression to select the property within the configuration class.</param>
+    /// <param name="defaultValues">The default dictionary of values to use when the setting is not configured.</param>
+    /// <typeparam name="TClass">The type of the configuration class from which the property is selected.</typeparam>
+    /// <typeparam name="TKey">The enum type of the dictionary keys.</typeparam>
+    /// <typeparam name="TValue">The enum type of the dictionary values.</typeparam>
+    /// <returns>A dictionary containing the default values.</returns>
+    public static Dictionary<TKey, TValue> Register<TClass, TKey, TValue>(
+        Expression<Func<Data, TClass>>? configSelection,
+        Expression<Func<TClass, Dictionary<TKey, TValue>>> propertyExpression,
+        Dictionary<TKey, TValue> defaultValues)
+        where TKey : struct, Enum
+        where TValue : struct, Enum
+    {
+        // When called from the JSON deserializer by using the standard constructor,
+        // we ignore the register call and return the default value:
+        if (configSelection is null)
+            return new();
+
+        var configPath = Path(configSelection, propertyExpression);
+
+        // If the metadata already exists for this configuration path, we return the default value:
+        if (METADATA.ContainsKey(configPath))
+            return defaultValues;
+
+        // Not registered yet, so we register it now:
+        METADATA[configPath] = new ConfigMeta<TClass, Dictionary<TKey, TValue>>(configSelection, propertyExpression)
+        {
+            Default = defaultValues,
+        };
+
         return defaultValues;
     }
 }
