@@ -37,6 +37,16 @@ public partial class ProfileSelection : MSGComponentBase
     private string ToolTipText => this.Disabled ? this.DisabledText : this.defaultToolTipText;
     
     private string MarginClass => $"{this.MarginLeft} {this.MarginRight}";
+
+    #region Overrides of ComponentBase
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.ApplyFilters([], [ Event.CONFIGURATION_CHANGED ]);
+        await base.OnInitializedAsync();
+    }
+
+    #endregion
     
     private string ProfileIcon(Profile profile)
     {
@@ -57,4 +67,16 @@ public partial class ProfileSelection : MSGComponentBase
         var dialogParameters = new DialogParameters();
         await this.DialogService.ShowAsync<SettingsDialogProfiles>(T("Open Profile Options"), dialogParameters, DialogOptions.FULLSCREEN);
     }
+
+    #region Overrides of MSGComponentBase
+
+    protected override Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
+    {
+        if (triggeredEvent is Event.CONFIGURATION_CHANGED or Event.PLUGINS_RELOADED)
+            this.StateHasChanged();
+
+        return Task.CompletedTask;
+    }
+
+    #endregion
 }
