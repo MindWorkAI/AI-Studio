@@ -105,7 +105,7 @@ public sealed class Data
 
     public DataApp App { get; init; } = new(x => x.App);
 
-    public DataChat Chat { get; init; } = new();
+    public DataChat Chat { get; init; } = new(x => x.Chat);
 
     public DataWorkspace Workspace { get; init; } = new();
 

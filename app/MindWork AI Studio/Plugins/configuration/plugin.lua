@@ -238,6 +238,32 @@ CONFIG["SETTINGS"] = {}
 -- Please note: using an empty string ("") will lock the preselected profile selection, even though no valid preselected profile is found.
 -- CONFIG["SETTINGS"]["DataApp.PreselectedProfile"] = "00000000-0000-0000-0000-000000000000"
 
+-- Configure chat-specific preselected options.
+-- This must be enabled for the chat-specific provider, profile, and chat template to take effect.
+-- CONFIG["SETTINGS"]["DataChat.PreselectOptions"] = true
+--
+-- Configure the preselected provider for chats.
+-- It must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"].
+-- CONFIG["SETTINGS"]["DataChat.PreselectedProvider"] = "00000000-0000-0000-0000-000000000000"
+--
+-- Configure the preselected profile for chats.
+-- It must be one of the profile IDs defined in CONFIG["PROFILES"].
+-- Please note: using an empty string ("") means chats will use the app default profile.
+-- Please note: using "00000000-0000-0000-0000-000000000000" means chats will use no profile.
+-- CONFIG["SETTINGS"]["DataChat.PreselectedProfile"] = "00000000-0000-0000-0000-000000000000"
+--
+-- Configure the preselected chat template for chats.
+-- It must be one of the chat template IDs defined in CONFIG["CHAT_TEMPLATES"].
+-- Please note: using an empty string ("") or "00000000-0000-0000-0000-000000000000" means chats will use no chat template.
+-- CONFIG["SETTINGS"]["DataChat.PreselectedChatTemplate"] = "00000000-0000-0000-0000-000000000000"
+--
+-- Allow users to change any configured chat default locally.
+-- Allowed values are: true, false
+-- CONFIG["SETTINGS"]["DataChat.PreselectOptions.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataChat.PreselectedProvider.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataChat.PreselectedProfile.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataChat.PreselectedChatTemplate.AllowUserOverride"] = true
+
 -- Configure the transcription provider for voice-to-text functionality.
 -- It must be one of the transcription provider IDs defined in CONFIG["TRANSCRIPTION_PROVIDERS"].
 -- Without a selected transcription provider, dictation and transcription features will be disabled.

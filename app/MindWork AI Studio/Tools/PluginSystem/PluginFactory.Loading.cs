@@ -201,6 +201,19 @@ public static partial class PluginFactory
         // Check for a preselected profile:
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.PreselectedProfile, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;
+
+        // Check for preselected chat options:
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Chat, x => x.PreselectOptions, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Chat, x => x.PreselectedProvider, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Chat, x => x.PreselectedProfile, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Chat, x => x.PreselectedChatTemplate, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
         
         // Check for the update interval:
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.UpdateInterval, AVAILABLE_PLUGINS))
