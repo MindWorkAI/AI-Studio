@@ -107,6 +107,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         // Set the snackbar for the update service:
         UpdateService.SetBlazorDependencies(this.Snackbar);
         TemporaryChatService.Initialize();
+        this.ShowSettingsWriteProtectionWarning();
         
         // Should the navigation bar be open by default?
         if(this.SettingsManager.ConfigurationData.App.NavigationBehavior is NavBehavior.ALWAYS_EXPAND)
@@ -126,6 +127,38 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     }
 
     #endregion
+
+    private void ShowSettingsWriteProtectionWarning()
+    {
+        if(!this.SettingsManager.SettingsWriteBlocked)
+            return;
+
+        var reason = this.SettingsManager.SettingsWriteBlockReason;
+        var message = reason switch
+        {
+            SettingsWriteBlockReason.VERSION_NEWER_THAN_APP => T("Your settings were created by a newer AI Studio version. Changes in this session will not be saved. Please install or start the latest available update."),
+            SettingsWriteBlockReason.VERSION_MISSING => T("Your settings file does not contain a settings-format version. Changes in this session will not be saved to avoid overwriting your settings. Please check for updates or contact support."),
+            SettingsWriteBlockReason.VERSION_UNKNOWN => T("AI Studio does not recognize your settings-format version. Changes in this session will not be saved to avoid overwriting your settings. Please check for updates or contact support."),
+            SettingsWriteBlockReason.FILE_UNREADABLE => T("AI Studio could not read your settings file. Changes in this session will not be saved to avoid overwriting recoverable settings. Please check for updates or contact support."),
+            SettingsWriteBlockReason.CURRENT_VERSION_INVALID => T("AI Studio found the current settings format but could not load it safely. Changes in this session will not be saved. Please check for updates or contact support."),
+            _ => T("AI Studio cannot safely save settings in this session. Please check for updates or contact support."),
+        };
+        message = $"{message} {T("Reason")}: {reason}";
+
+        this.Snackbar.Add(message, Severity.Warning, config =>
+        {
+            config.Icon = Icons.Material.Filled.WarningAmber;
+            config.IconSize = Size.Large;
+            config.VisibleStateDuration = 32_000;
+            config.HideTransitionDuration = 600;
+            config.Action = T("Check for updates");
+            config.ActionVariant = Variant.Filled;
+            config.OnClick = async _ =>
+            {
+                await this.MessageBus.SendMessage<bool>(this, Event.USER_SEARCH_FOR_UPDATE);
+            };
+        });
+    }
 
     #region Implementation of ILang
 

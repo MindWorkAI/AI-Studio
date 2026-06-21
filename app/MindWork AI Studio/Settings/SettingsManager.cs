@@ -19,6 +19,10 @@ public sealed class SettingsManager
     private const string SETTINGS_FILENAME = "settings.json";
     private const Version CURRENT_SETTINGS_VERSION = Version.V6;
     
+    private readonly record struct SettingsVersionReadResult(Version Version, SettingsWriteBlockReason FailureReason);
+    
+    private readonly record struct CurrentSettingsReadResult(Data? SettingsData, SettingsWriteBlockReason FailureReason);
+    
     private static readonly JsonSerializerOptions JSON_OPTIONS = new()
     {
         WriteIndented = true,
@@ -27,7 +31,6 @@ public sealed class SettingsManager
 
     private readonly ILogger<SettingsManager> logger;
     private readonly RustService rustService;
-    private bool settingsWriteBlocked;
 
     /// <summary>
     /// The settings manager.
@@ -65,6 +68,16 @@ public sealed class SettingsManager
     public bool HasCompletedInitialSettingsLoad { get; private set; }
 
     /// <summary>
+    /// Indicates why settings writes are blocked for the current session.
+    /// </summary>
+    public SettingsWriteBlockReason SettingsWriteBlockReason { get; private set; } = SettingsWriteBlockReason.NONE;
+
+    /// <summary>
+    /// Indicates that settings writes are blocked for the current session.
+    /// </summary>
+    public bool SettingsWriteBlocked => this.SettingsWriteBlockReason is not SettingsWriteBlockReason.NONE;
+
+    /// <summary>
     /// The configuration data.
     /// </summary>
     public Data ConfigurationData { get; private set; } = new();
@@ -89,7 +102,7 @@ public sealed class SettingsManager
     /// <returns>A (migrated) settings snapshot, or null if it could not be read.</returns>
     public async Task<Data?> TryReadSettingsSnapshot()
     {
-        this.settingsWriteBlocked = false;
+        this.SettingsWriteBlockReason = SettingsWriteBlockReason.NONE;
         if(!this.IsSetUp)
         {
             this.logger.LogWarning("Cannot load settings, because the configuration is not set up yet.");
@@ -104,22 +117,20 @@ public sealed class SettingsManager
         }
 
         var settingsVersion = await this.TryReadSettingsVersion(settingsPath);
-        if(settingsVersion is Version.UNKNOWN)
+        if(settingsVersion.FailureReason is not SettingsWriteBlockReason.NONE)
         {
-            this.logger.LogError("Unknown version of the settings file found. Settings writes are blocked to avoid overwriting newer or unreadable settings.");
-            this.settingsWriteBlocked = true;
+            this.BlockSettingsWrites(settingsVersion.FailureReason, "The settings file version could not be identified. Settings writes are blocked to avoid overwriting newer or unreadable settings.");
             return null;
         }
 
-        if(settingsVersion > CURRENT_SETTINGS_VERSION)
+        if(settingsVersion.Version > CURRENT_SETTINGS_VERSION)
         {
-            this.logger.LogError($"The settings file uses the newer version '{settingsVersion}'. Settings writes are blocked to avoid overwriting newer settings.");
-            this.settingsWriteBlocked = true;
+            this.BlockSettingsWrites(SettingsWriteBlockReason.VERSION_NEWER_THAN_APP, $"The settings file uses the newer version '{settingsVersion.Version}'. Settings writes are blocked to avoid overwriting newer settings.");
             return null;
         }
 
         Data? settingsData;
-        if(settingsVersion < CURRENT_SETTINGS_VERSION)
+        if(settingsVersion.Version < CURRENT_SETTINGS_VERSION)
         {
             settingsData = await this.TryReadCurrentVersionBackupSnapshot();
             if(settingsData is not null)
@@ -132,26 +143,27 @@ public sealed class SettingsManager
             }
 
             this.logger.LogInformation("No valid current-version settings backup was found. Migrating the settings file.");
-            settingsData = SettingsMigrations.Migrate(this.logger, settingsVersion, await File.ReadAllTextAsync(settingsPath), JSON_OPTIONS);
+            settingsData = SettingsMigrations.Migrate(this.logger, settingsVersion.Version, await File.ReadAllTextAsync(settingsPath), JSON_OPTIONS);
             this.PrepareLoadedSettings(settingsData);
             await this.StoreSettingsSnapshot(settingsData, settingsPath);
             await this.StoreCurrentVersionBackup(settingsData);
             return settingsData;
         }
 
-        settingsData = await this.TryDeserializeCurrentSettings(settingsPath, "settings file");
-        if(settingsData is null)
+        var currentSettings = await this.TryDeserializeCurrentSettings(settingsPath, "settings file");
+        if(currentSettings.FailureReason is not SettingsWriteBlockReason.NONE)
         {
-            this.settingsWriteBlocked = true;
+            this.BlockSettingsWrites(currentSettings.FailureReason, "The current settings file could not be safely loaded. Settings writes are blocked to avoid overwriting recoverable settings.");
             return null;
         }
 
+        settingsData = currentSettings.SettingsData!;
         this.PrepareLoadedSettings(settingsData);
         await this.StoreCurrentVersionBackup(settingsData);
         return settingsData;
     }
 
-    private async Task<Version> TryReadSettingsVersion(string settingsPath)
+    private async Task<SettingsVersionReadResult> TryReadSettingsVersion(string settingsPath)
     {
         try
         {
@@ -160,21 +172,31 @@ public sealed class SettingsManager
             if(!settingsDocument.RootElement.TryGetProperty("Version", out var versionElement))
             {
                 this.logger.LogError($"Failed to read the version of the settings file '{settingsPath}'.");
-                return Version.UNKNOWN;
+                return new(Version.UNKNOWN, SettingsWriteBlockReason.VERSION_MISSING);
             }
 
-            if(versionElement.ValueKind is JsonValueKind.String && versionElement.GetString() is { } versionText && Enum.TryParse(versionText, out Version stringVersion))
-                return stringVersion;
+            if(versionElement.ValueKind is JsonValueKind.String && versionElement.GetString() is { } versionText)
+            {
+                if(Enum.TryParse(versionText, out Version stringVersion) && Enum.IsDefined(typeof(Version), stringVersion) && stringVersion is not Version.UNKNOWN)
+                    return new(stringVersion, SettingsWriteBlockReason.NONE);
 
-            if(versionElement.ValueKind is JsonValueKind.Number && versionElement.TryGetInt32(out var numericVersion) && Enum.IsDefined(typeof(Version), numericVersion))
-                return (Version)numericVersion;
+                if(versionText.StartsWith('V') && int.TryParse(versionText[1..], out var futureVersion) && futureVersion > (int)CURRENT_SETTINGS_VERSION)
+                    return new((Version)futureVersion, SettingsWriteBlockReason.NONE);
+
+                if(int.TryParse(versionText, out var numericStringVersion) && numericStringVersion > (int)CURRENT_SETTINGS_VERSION)
+                    return new((Version)numericStringVersion, SettingsWriteBlockReason.NONE);
+            }
+
+            if(versionElement.ValueKind is JsonValueKind.Number && versionElement.TryGetInt32(out var numericVersion) && numericVersion > (int)Version.UNKNOWN && (Enum.IsDefined(typeof(Version), numericVersion) || numericVersion > (int)CURRENT_SETTINGS_VERSION))
+                return new((Version)numericVersion, SettingsWriteBlockReason.NONE);
         }
         catch(Exception e)
         {
             this.logger.LogError(e, $"Failed to read the version of the settings file '{settingsPath}'.");
+            return new(Version.UNKNOWN, SettingsWriteBlockReason.FILE_UNREADABLE);
         }
 
-        return Version.UNKNOWN;
+        return new(Version.UNKNOWN, SettingsWriteBlockReason.VERSION_UNKNOWN);
     }
 
     private async Task<Data?> TryReadCurrentVersionBackupSnapshot()
@@ -187,16 +209,29 @@ public sealed class SettingsManager
         }
 
         var backupVersion = await this.TryReadSettingsVersion(backupSettingsPath);
-        if(backupVersion != CURRENT_SETTINGS_VERSION)
+        if(backupVersion.FailureReason is not SettingsWriteBlockReason.NONE)
         {
-            this.logger.LogWarning($"The settings backup file '{backupSettingsPath}' uses version '{backupVersion}' instead of '{CURRENT_SETTINGS_VERSION}'.");
+            this.logger.LogWarning($"The settings backup file '{backupSettingsPath}' could not be used because its version could not be identified. Reason: '{backupVersion.FailureReason}'.");
             return null;
         }
 
-        return await this.TryDeserializeCurrentSettings(backupSettingsPath, "settings backup file");
+        if(backupVersion.Version != CURRENT_SETTINGS_VERSION)
+        {
+            this.logger.LogWarning($"The settings backup file '{backupSettingsPath}' uses version '{backupVersion.Version}' instead of '{CURRENT_SETTINGS_VERSION}'.");
+            return null;
+        }
+
+        var backupSettings = await this.TryDeserializeCurrentSettings(backupSettingsPath, "settings backup file");
+        if(backupSettings.FailureReason is not SettingsWriteBlockReason.NONE)
+        {
+            this.logger.LogWarning($"The settings backup file '{backupSettingsPath}' could not be used. Reason: '{backupSettings.FailureReason}'.");
+            return null;
+        }
+
+        return backupSettings.SettingsData;
     }
 
-    private async Task<Data?> TryDeserializeCurrentSettings(string settingsPath, string sourceDescription)
+    private async Task<CurrentSettingsReadResult> TryDeserializeCurrentSettings(string settingsPath, string sourceDescription)
     {
         try
         {
@@ -204,22 +239,28 @@ public sealed class SettingsManager
             if(settingsData is null)
             {
                 this.logger.LogError($"Failed to parse the {sourceDescription} '{settingsPath}'.");
-                return null;
+                return new(null, SettingsWriteBlockReason.CURRENT_VERSION_INVALID);
             }
 
             if(settingsData.Version != CURRENT_SETTINGS_VERSION)
             {
                 this.logger.LogError($"The {sourceDescription} '{settingsPath}' uses version '{settingsData.Version}' instead of '{CURRENT_SETTINGS_VERSION}'.");
-                return null;
+                return new(null, SettingsWriteBlockReason.CURRENT_VERSION_INVALID);
             }
 
-            return settingsData;
+            return new(settingsData, SettingsWriteBlockReason.NONE);
         }
         catch(Exception e)
         {
             this.logger.LogError(e, $"Failed to parse the {sourceDescription} '{settingsPath}'.");
-            return null;
+            return new(null, SettingsWriteBlockReason.FILE_UNREADABLE);
         }
+    }
+
+    private void BlockSettingsWrites(SettingsWriteBlockReason reason, string message)
+    {
+        this.SettingsWriteBlockReason = reason;
+        this.logger.LogError($"{message} Reason: '{reason}'.");
     }
 
     private void PrepareLoadedSettings(Data settingsData)
@@ -243,9 +284,9 @@ public sealed class SettingsManager
             return;
         }
 
-        if(this.settingsWriteBlocked)
+        if(this.SettingsWriteBlocked)
         {
-            this.logger.LogWarning("Cannot store settings, because the loaded settings file uses an unknown or unreadable version.");
+            this.logger.LogWarning($"Cannot store settings, because settings writes are blocked. Reason: '{this.SettingsWriteBlockReason}'.");
             return;
         }
 
