@@ -23,7 +23,7 @@ public partial class AssistantLegalCheck : AssistantBaseCore<SettingsDialogLegal
     
     protected override string SubmitText => T("Ask your questions");
 
-    protected override Func<Task> SubmitAction => this.AksQuestions;
+    protected override Func<Task> SubmitAction => this.AskQuestions;
 
     protected override bool SubmitDisabled => this.isAgentRunning;
 
@@ -89,7 +89,7 @@ public partial class AssistantLegalCheck : AssistantBaseCore<SettingsDialogLegal
         return null;
     }
     
-    private async Task AksQuestions()
+    private async Task AskQuestions()
     {
         await this.Form!.Validate();
         if (!this.InputIsValid)
