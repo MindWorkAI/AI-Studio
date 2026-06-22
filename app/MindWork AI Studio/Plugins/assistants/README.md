@@ -81,6 +81,9 @@ Each assistant plugin lives in its own directory under the assistants plugin roo
 
 ## Structure
 - `ASSISTANT` is the root table. It must contain `Title`, `Description`, `SystemPrompt`, `SubmitText`, `AllowProfiles`, and the nested `UI` definition.
+- `ASSISTANT` may optionally define direct-launch metadata for assistant tiles:
+  - `LaunchBehavior = "OPEN_WORKSPACE_CHAT_BY_NAME"`
+  - `WorkspaceName = "<target workspace name>"`
 - `UI.Type` is always `"FORM"` and `UI.Children` is a list of component tables.
 - Each component table declares `Type`, an optional `Children` array, and a `Props` table that feeds the component’s parameters.
 
@@ -92,6 +95,8 @@ ASSISTANT = {
     ["SystemPrompt"] = "",
     ["SubmitText"] = "",
     ["AllowProfiles"] = true,
+    ["LaunchBehavior"] = "OPEN_WORKSPACE_CHAT_BY_NAME",
+    ["WorkspaceName"] = "",
     ["UI"] = {
         ["Type"] = "FORM",
         ["Children"] = {
@@ -100,6 +105,29 @@ ASSISTANT = {
     },
 }
 ```
+
+## Direct Launch to Workspace Chat
+Assistant plugins can optionally skip the normal assistant page and open a chat directly from the tile.
+
+```lua
+ASSISTANT = {
+    ["Title"] = "Open Chat",
+    ["Description"] = "Open a new chat in the XXX workspace.",
+    ["SystemPrompt"] = "",
+    ["SubmitText"] = "Start",
+    ["AllowProfiles"] = true,
+    ["LaunchBehavior"] = "OPEN_WORKSPACE_CHAT_BY_NAME",
+    ["WorkspaceName"] = "XXX",
+    ["UI"] = {
+        ["Type"] = "FORM",
+        ["Children"] = {}
+    }
+}
+```
+
+- `WorkspaceName` is resolved case-insensitively after trimming.
+- If the workspace does not exist yet, AI Studio creates it automatically.
+- The opened chat uses the normal default chat settings of AI Studio.
 
 
 #### Supported types (matching the Blazor UI components):

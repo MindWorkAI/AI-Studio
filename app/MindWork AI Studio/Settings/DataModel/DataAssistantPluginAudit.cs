@@ -39,5 +39,5 @@ public sealed class DataAssistantPluginAudit(Expression<Func<Data, DataAssistant
     /// <summary>
     /// If true, the security audit will be hidden from the user and done in the background
     /// </summary>
-    public bool AutomaticallyAuditAssistants { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AutomaticallyAuditAssistants, false);
+    public bool AutomaticallyAuditAssistants { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AutomaticallyAuditAssistants, true);
 }
