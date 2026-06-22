@@ -1,0 +1,4 @@
+@attribute [Route(Routes.ASSISTANT_META_ASSISTANT)]
+@inherits AssistantBaseCore<AIStudio.Dialogs.Settings.NoSettingsPanel>
+
+<ProviderSelection @bind-ProviderSettings="@this.ProviderSettings" ValidateProvider="@this.ValidatingProvider"/>
