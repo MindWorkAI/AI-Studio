@@ -1,4 +1,5 @@
 @attribute [Route(Routes.ASSISTANT_META_ASSISTANT)]
 @inherits AssistantBaseCore<AIStudio.Dialogs.Settings.NoSettingsPanel>
 
+<EnumSelection T="AssistantCategory" NameFunc="@(category => category.NameSelecting())" @bind-Value="@this.selectedCategory" ValidateSelection="@this.ValidatingCategory" Icon="@Icons.Material.Filled.Category" Label="@T("Assistant category")" AllowOther="@true" OtherValue="AssistantCategory.OTHER" @bind-OtherInput="@this.customCategory" ValidateOther="@this.ValidateCustomCategory" LabelOther="@T("Custom assistant category")" />
 <ProviderSelection @bind-ProviderSettings="@this.ProviderSettings" ValidateProvider="@this.ValidatingProvider"/>
