@@ -36,6 +36,9 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
     public bool AllowProfiles { get; private set; } = true;
     public bool HasEmbeddedProfileSelection { get; private set; }
     public bool HasCustomPromptBuilder => this.buildPromptFunction is not null;
+    public AssistantPluginLaunchBehavior LaunchBehavior { get; private set; }
+    public string LaunchWorkspaceName { get; private set; } = string.Empty;
+    public bool StartsChatDirectly => this.LaunchBehavior is AssistantPluginLaunchBehavior.OPEN_WORKSPACE_CHAT_BY_NAME;
     public const int TEXT_AREA_MAX_VALUE = 524288;
 
     private LuaFunction? buildPromptFunction;
@@ -61,6 +64,8 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
         message = string.Empty;
         this.HasEmbeddedProfileSelection = false;
         this.buildPromptFunction = null;
+        this.LaunchBehavior = AssistantPluginLaunchBehavior.NONE;
+        this.LaunchWorkspaceName = string.Empty;
 
         this.RegisterLuaHelpers();
         
@@ -123,6 +128,12 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
         this.SubmitText = assistantSubmitText;
         this.AllowProfiles = assistantAllowProfiles;
 
+        if (!this.TryReadLaunchConfiguration(assistantTable, out var launchConfigIssue))
+        {
+            message = launchConfigIssue;
+            return false;
+        }
+
         // Ensure that the UI table exists nested in the ASSISTANT table and is a valid Lua table:
         if (!assistantTable.TryGetValue("UI", out var uiVal) || !uiVal.TryRead<LuaTable>(out var uiTable))
         {
@@ -138,6 +149,51 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
 
         this.RootComponent = (AssistantForm)rootComponent;
         return true;
+    }
+
+    private bool TryReadLaunchConfiguration(LuaTable assistantTable, out string message)
+    {
+        message = string.Empty;
+
+        if (!assistantTable.TryGetValue("LaunchBehavior", out var launchBehaviorValue))
+            return true;
+
+        if (!launchBehaviorValue.TryRead<string>(out var launchBehaviorText) ||
+            !Enum.TryParse<AssistantPluginLaunchBehavior>(launchBehaviorText, true, out var launchBehavior))
+        {
+            message = TB("The ASSISTANT table contains an invalid LaunchBehavior value.");
+            return false;
+        }
+
+        this.LaunchBehavior = launchBehavior;
+        if (launchBehavior is AssistantPluginLaunchBehavior.NONE)
+            return true;
+
+        switch (launchBehavior)
+        {
+            case AssistantPluginLaunchBehavior.OPEN_WORKSPACE_CHAT_BY_NAME:
+                if (!assistantTable.TryGetValue("WorkspaceName", out var workspaceNameValue) ||
+                    !workspaceNameValue.TryRead<string>(out var workspaceName))
+                {
+                    message = TB("The ASSISTANT table contains the LaunchBehavior 'OPEN_WORKSPACE_CHAT_BY_NAME' but no valid WorkspaceName.");
+                    return false;
+                }
+
+                workspaceName = workspaceName.Trim();
+                if (string.IsNullOrWhiteSpace(workspaceName))
+                {
+                    message = TB("The ASSISTANT table contains an empty WorkspaceName for LaunchBehavior 'OPEN_WORKSPACE_CHAT_BY_NAME'.");
+                    return false;
+                }
+
+                this.LaunchWorkspaceName = workspaceName;
+
+                return true;
+
+            default:
+                message = TB("The ASSISTANT table contains an unsupported LaunchBehavior value.");
+                return false;
+        }
     }
 
     public async Task<string?> TryBuildPromptAsync(LuaTable input, CancellationToken cancellationToken = default)

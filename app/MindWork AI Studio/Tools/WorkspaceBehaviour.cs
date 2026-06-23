@@ -617,6 +617,46 @@ public static class WorkspaceBehaviour
         }
     }
 
+    public static async Task<Guid> ResolveOrCreateWorkspaceIdByNameAsync(string workspaceName)
+    {
+        var normalizedWorkspaceName = NormalizeWorkspaceName(workspaceName);
+        if (string.IsNullOrWhiteSpace(normalizedWorkspaceName))
+            return Guid.Empty;
+
+        await WORKSPACE_TREE_CACHE_SEMAPHORE.WaitAsync();
+        try
+        {
+            await EnsureTreeShellLoadedCoreAsync();
+
+            var existingWorkspace = WORKSPACE_TREE_CACHE.Workspaces.Values.FirstOrDefault(workspace =>
+                string.Equals(workspace.WorkspaceName.Trim(), normalizedWorkspaceName, StringComparison.OrdinalIgnoreCase));
+            if (existingWorkspace is not null)
+                return existingWorkspace.WorkspaceId;
+        }
+        finally
+        {
+            WORKSPACE_TREE_CACHE_SEMAPHORE.Release();
+        }
+
+        var result = await TryCreateWorkspaceAsync(normalizedWorkspaceName);
+        if (result.Success)
+            return result.Workspace.WorkspaceId;
+
+        await WORKSPACE_TREE_CACHE_SEMAPHORE.WaitAsync();
+        try
+        {
+            await EnsureTreeShellLoadedCoreAsync();
+
+            var existingWorkspace = WORKSPACE_TREE_CACHE.Workspaces.Values.FirstOrDefault(workspace =>
+                string.Equals(workspace.WorkspaceName.Trim(), normalizedWorkspaceName, StringComparison.OrdinalIgnoreCase));
+            return existingWorkspace?.WorkspaceId ?? Guid.Empty;
+        }
+        finally
+        {
+            WORKSPACE_TREE_CACHE_SEMAPHORE.Release();
+        }
+    }
+
     public static async Task<TryCreateWorkspaceResult> TryCreateWorkspaceAsync(string workspaceName)
     {
         var normalizedWorkspaceName = NormalizeWorkspaceName(workspaceName);

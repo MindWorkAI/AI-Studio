@@ -7518,6 +7518,12 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANT
 -- Button
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T864557713"] = "Schaltfläche"
 
+-- The ASSISTANT table contains an invalid LaunchBehavior value.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T109828905"] = "Die Tabelle ASSISTANT enthält einen ungültigen Wert für LaunchBehavior."
+
+-- The ASSISTANT table contains an unsupported LaunchBehavior value.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T1194373781"] = "Die ASSISTANT-Tabelle enthält einen nicht unterstützten LaunchBehavior-Wert."
+
 -- Failed to parse the UI render tree from the ASSISTANT lua table.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T1318499252"] = "Der UI-Render-Baum konnte nicht aus der ASSISTANT-Lua-Tabelle geparst werden."
 
@@ -7533,11 +7539,17 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T2
 -- The ASSISTANT lua table does not exist or is not a valid table.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T3017816936"] = "Die Lua-Tabelle **ASSISTANT** existiert nicht oder ist keine gültige Tabelle."
 
+-- The ASSISTANT table contains an empty WorkspaceName for LaunchBehavior 'OPEN_WORKSPACE_CHAT_BY_NAME'.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T3233001282"] = "Die ASSISTANT-Tabelle enthält einen leeren Arbeitsbereichsnamen für das LaunchBehavior 'OPEN_WORKSPACE_CHAT_BY_NAME'."
+
 -- The provided ASSISTANT lua table does not contain a valid system prompt.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T3402798667"] = "Die bereitgestellte ASSISTANT-Lua-Tabelle enthält keine gültige Systemaufforderung."
 
 -- The ASSISTANT table does not contain a valid system prompt.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T3723171842"] = "Die Tabelle **ASSISTANT** enthält keine gültige Systemanweisung."
+
+-- The ASSISTANT table contains the LaunchBehavior 'OPEN_WORKSPACE_CHAT_BY_NAME' but no valid WorkspaceName.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T4215554842"] = "Die ASSISTANT-Tabelle enthält das LaunchBehavior 'OPEN_WORKSPACE_CHAT_BY_NAME', aber keinen gültigen WorkspaceNamen."
 
 -- ASSISTANT.BuildPrompt exists but is not a Lua function or has invalid syntax.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T683382975"] = "`ASSISTANT.BuildPrompt` ist vorhanden, aber keine Lua-Funktion oder hat eine ungültige Syntax."
