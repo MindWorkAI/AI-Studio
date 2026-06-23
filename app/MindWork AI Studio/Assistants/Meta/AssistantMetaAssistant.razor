@@ -1,5 +1,68 @@
 @attribute [Route(Routes.ASSISTANT_META_ASSISTANT)]
+@using AIStudio.Tools.PluginSystem.Assistants.DataModel
 @inherits AssistantBaseCore<AIStudio.Dialogs.Settings.NoSettingsPanel>
 
-<EnumSelection T="AssistantCategory" NameFunc="@(category => category.NameSelecting())" @bind-Value="@this.selectedCategory" ValidateSelection="@this.ValidatingCategory" Icon="@Icons.Material.Filled.Category" Label="@T("Assistant category")" AllowOther="@true" OtherValue="AssistantCategory.OTHER" @bind-OtherInput="@this.customCategory" ValidateOther="@this.ValidateCustomCategory" LabelOther="@T("Custom assistant category")" />
-<ProviderSelection @bind-ProviderSettings="@this.ProviderSettings" ValidateProvider="@this.ValidatingProvider"/>
+@if (this.step is BuilderStep.DESCRIBE)
+{
+    <MudTextField T="string" @bind-Text="@this.assistantDescription" Validation="@this.ValidateAssistantDescription" AdornmentIcon="@Icons.Material.Filled.AutoAwesome" Adornment="Adornment.Start" Label="@T("Describe your assistant")" HelperText="@T("Describe the task, inputs, and desired output in your own words. The model will infer all the plugin details.")" Placeholder="@T("I need an assistant that turns meeting notes into clear tasks with owners and deadlines.")" Variant="Variant.Outlined" Lines="8" AutoGrow="@true" MaxLines="18" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+
+    <MudExpansionPanels Dense="@true" Elevation="0" Class="mb-3 rounded">
+        <MudExpansionPanel Dense="@true" Class="border-solid border rounded pt-n4" Style="border-color: #BDBDBD">
+            <TitleContent>
+                <div class="d-flex align-center">
+                    <MudIcon Icon="@Icons.Material.Filled.Tune" Class="mr-3"/>
+                    <MudText Typo="Typo.button">
+                        @T("Advanced Options")
+                    </MudText>
+                </div>
+            </TitleContent>
+            <ChildContent>
+                <MudTextField T="string" @bind-Text="@this.assistantName" AdornmentIcon="@Icons.Material.Filled.Assistant" Adornment="Adornment.Start" IconSize="Size.Small" Label="@T("(Optional) Assistant title")" Placeholder="@T("Meeting Task Extractor")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+                <EnumSelection T="AssistantCategory" NameFunc="@(category => category.NameSelecting())" @bind-Value="@this.selectedCategory" ValidateSelection="@this.ValidatingCategory" Icon="@Icons.Material.Filled.Category" IconSize="Size.Small" Label="@T("(Optional) Assistant category")" AllowOther="@true" OtherValue="AssistantCategory.OTHER" @bind-OtherInput="@this.customCategory" ValidateOther="@this.ValidateCustomCategory" LabelOther="@T("Custom assistant category")" />
+                <MudTextField T="string" @bind-Text="@this.typicalInput" AdornmentIcon="@Icons.Material.Filled.Login" Adornment="Adornment.Start" IconSize="Size.Small" Label="@T("(Optional) Typical input")" Placeholder="@T("What users provide, e.g. text, notes, files, or a URL")" Variant="Variant.Outlined" Margin="Margin.Dense" Lines="3" AutoGrow="@true" MaxLines="8" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+                <MudTextField T="string" @bind-Text="@this.expectedOutput" AdornmentIcon="@Icons.Material.Filled.Logout" Adornment="Adornment.Start" IconSize="Size.Small" Label="@T("(Optional) Expected output")" Placeholder="@T("What users should get, e.g. a summary or checklist")" Variant="Variant.Outlined" Margin="Margin.Dense" Lines="3" AutoGrow="@true" MaxLines="8" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+                <MudSelect T="AssistantComponentType" Label="@T("(Optional) UI and input components")" MultiSelection="@true" @bind-SelectedValues="@this.selectedAssistantComponents" MultiSelectionTextFunc="@this.GetSelectedAssistantComponentText" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3 rounded-lg" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.ViewDay" IconSize="Size.Small">
+                    @foreach (var component in ASSISTANT_COMPONENT_OPTIONS)
+                    {
+                        <MudSelectItem T="AssistantComponentType" Value="@component">
+                            @component.GetDisplayName()
+                        </MudSelectItem>
+                    }
+                </MudSelect>
+                <EnumSelection T="CommonLanguages" NameFunc="@(language => language.NameSelectingOptional())" @bind-Value="@this.selectedOutputLanguage" Icon="@Icons.Material.Filled.Translate" IconSize="Size.Small" Label="@T("(Optional) Output language")" AllowOther="@true" OtherValue="CommonLanguages.OTHER" @bind-OtherInput="@this.customOutputLanguage" ValidateOther="@this.ValidateCustomOutputLanguage" LabelOther="@T("Custom output language")" />
+                <MudSwitch T="bool" @bind-Value="@this.allowGeneratedAssistantProfiles" Label="@T("Allow AI Studio profiles")" LabelPlacement="Placement.End" Color="Color.Primary" Class="mb-3"/>
+                <MudTextField T="string" @bind-Text="@this.extraRules" AdornmentIcon="@Icons.Material.Filled.Rule" Adornment="Adornment.Start" IconSize="Size.Small" Label="@T("(Optional) Extra rules")" Placeholder="@T("What to avoid or consider, e.g. do not invent missing facts")" Variant="Variant.Outlined" Margin="Margin.Dense" Lines="3" AutoGrow="@true" MaxLines="10" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+                <MudTextField T="string" @bind-Text="@this.exampleRequest" AdornmentIcon="@Icons.Material.Filled.Lightbulb" Adornment="Adornment.Start" IconSize="Size.Small" Label="@T("(Optional) Example request")" Placeholder="@T("An expected user prompt, e.g. summarize this document")" Variant="Variant.Outlined" Margin="Margin.Dense" Lines="3" AutoGrow="@true" MaxLines="10" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+            </ChildContent>
+        </MudExpansionPanel>
+    </MudExpansionPanels>
+
+    <ProviderSelection @bind-ProviderSettings="@this.ProviderSettings" ValidateProvider="@this.ValidatingProvider"/>
+}
+else
+{
+    <MudStack Row="@true" AlignItems="AlignItems.Center" Class="mb-3">
+        <MudText Typo="Typo.h6">
+            @T("Assistant draft")
+        </MudText>
+        <MudSpacer/>
+        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Visibility" OnClick="@(async () => await this.OpenDraftDialog())">
+            @T("Review draft")
+        </MudButton>
+    </MudStack>
+    <MudTextField T="string" @bind-Text="@this.reviewNotes" AdornmentIcon="@Icons.Material.Filled.EditNote" Adornment="Adornment.Start" Label="@T("(Optional) Change requests for the Lua plugin")" Variant="Variant.Outlined" Margin="Margin.Dense" Lines="2" AutoGrow="@true" MaxLines="8" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+
+    <MudStack Row="@true" AlignItems="AlignItems.Center" Class="mb-3">
+        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.ArrowBack" OnClick="@(() => this.BackToDescription())">
+            @T("Back to description")
+        </MudButton>
+        @if (this.step is BuilderStep.DONE)
+        {
+            <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Edit" OnClick="@(() => this.BackToSpecReview())">
+                @T("Edit draft")
+            </MudButton>
+        }
+    </MudStack>
+
+    <ProviderSelection @bind-ProviderSettings="@this.ProviderSettings" ValidateProvider="@this.ValidatingProvider"/>
+}

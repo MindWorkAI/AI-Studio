@@ -8,7 +8,7 @@ public static class AssistantCategoryExtensions
     
     public static string Name(this AssistantCategory category) => category switch
     {
-        AssistantCategory.AS_IS => TB("Please select the assistant category"),
+        AssistantCategory.AS_IS => TB("Select the assistant category"),
         AssistantCategory.GENERAL => TB("General"),
         AssistantCategory.SCIENTIFIC => TB("Scientific"),
         AssistantCategory.BUSINESS => TB("Business"),
