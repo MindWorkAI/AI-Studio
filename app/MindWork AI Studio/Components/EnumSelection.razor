@@ -2,7 +2,7 @@
 @inherits EnumSelectionBase
 
 <MudStack Row="@true" Class="mb-3">
-    <MudSelect T="@T" Value="@this.Value" ValueChanged="@this.SelectionChanged" AdornmentIcon="@this.Icon" Adornment="Adornment.Start" Label="@this.Label" Variant="Variant.Outlined" Margin="Margin.Dense" Validation="@this.ValidateSelection">
+    <MudSelect T="@T" Value="@this.Value" ValueChanged="@this.SelectionChanged" AdornmentIcon="@this.Icon" Adornment="Adornment.Start" IconSize="@this.IconSize" Label="@this.Label" Variant="Variant.Outlined" Margin="Margin.Dense" Validation="@this.ValidateSelection">
         @foreach (var value in Enum.GetValues<T>())
         {
             <MudSelectItem Value="@value">
