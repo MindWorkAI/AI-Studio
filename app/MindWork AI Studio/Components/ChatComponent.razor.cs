@@ -69,6 +69,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private bool mustLoadChat;
     private LoadChat loadChat;
     private bool autoSaveEnabled;
+    private bool previousInputForbidden = true;
+    private Guid lastSeenChatId = Guid.Empty;
+    private AIStudio.Settings.Provider lastSeenProvider = AIStudio.Settings.Provider.NONE;
     private string currentWorkspaceName = string.Empty;
     private Guid currentWorkspaceId = Guid.Empty;
     private Guid currentChatThreadId = Guid.Empty;
@@ -287,12 +290,25 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 this.StateHasChanged();
             }
         }
-        
+
+        var inputForbidden = this.IsInputForbidden();
+        if (!inputForbidden && this.previousInputForbidden)
+            await this.inputField.FocusAsync();
+
+        this.previousInputForbidden = inputForbidden;
         await base.OnAfterRenderAsync(firstRender);
     }
 
     protected override async Task OnParametersSetAsync()
     {
+        var incomingChatId = this.ChatThread?.ChatId ?? Guid.Empty;
+        if (incomingChatId != this.lastSeenChatId || this.Provider != this.lastSeenProvider)
+        {
+            this.lastSeenChatId = incomingChatId;
+            this.lastSeenProvider = this.Provider;
+            this.previousInputForbidden = true;
+        }
+
         await this.ApplyLoadedChatParameterAsync();
         await this.SyncForegroundChatAsync();
         await base.OnParametersSetAsync();
@@ -1124,7 +1140,10 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 {
                     this.ChatThread = this.AIJobService.TryGetLiveChatThread(snapshot.SubjectId) ?? this.ChatThread;
                     if (!snapshot.IsActive)
+                    {
                         this.hasUnsavedChanges = false;
+                        this.previousInputForbidden = true;
+                    }
 
                     this.StateHasChanged();
                 }
