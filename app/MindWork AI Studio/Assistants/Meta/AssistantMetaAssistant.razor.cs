@@ -3,6 +3,7 @@ using System.Text.Json;
 using AIStudio.Dialogs;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Tools.PluginSystem.Assistants.DataModel;
+using AIStudio.Tools.Services;
 using Microsoft.AspNetCore.Components;
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
@@ -12,6 +13,9 @@ public partial class AssistantMetaAssistant : AssistantBaseCore<NoSettingsPanel>
 {
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
+
+    [Inject]
+    private AssistantPluginInstallService AssistantPluginInstallService { get; init; } = null!;
 
     private static readonly ILogger LOGGER = Program.LOGGER_FACTORY.CreateLogger(nameof(AssistantMetaAssistant));
     private static readonly JsonSerializerOptions UNTRUSTED_PROMPT_JSON_OPTIONS = new()
@@ -52,12 +56,14 @@ public partial class AssistantMetaAssistant : AssistantBaseCore<NoSettingsPanel>
         BuilderStep.DONE => this.GenerateLuaAssistant,
         _ => this.GenerateAssistantSpec,
     };
-    protected override bool SubmitDisabled => this.isAgentRunning;
+    protected override bool SubmitDisabled => this.isAgentRunning || this.isInstallingPlugin;
     protected override bool ShowResult => this.step is BuilderStep.DONE;
     protected override bool AllowProfiles { get; }
     protected override bool ShowProfileSelection { get; }
     protected override bool ShowCopyResult => this.step is BuilderStep.DONE;
-    protected override IReadOnlyList<IButtonData> FooterButtons => [];
+    protected override IReadOnlyList<IButtonData> FooterButtons => this.step is BuilderStep.DONE
+        ? [new ButtonData(T("Install assistant"), Icons.Material.Filled.Extension, Color.Primary, T("Install this generated assistant as a plugin."), this.InstallPluginAsync, () => this.isAgentRunning || this.isInstallingPlugin || string.IsNullOrWhiteSpace(this.generatedLuaAssistant))]
+        : [];
     protected override bool HasSettingsPanel { get; }
     protected override Func<string> Result2Copy => () => !string.IsNullOrWhiteSpace(this.generatedLuaAssistant)
         ? this.generatedLuaAssistant
@@ -65,6 +71,7 @@ public partial class AssistantMetaAssistant : AssistantBaseCore<NoSettingsPanel>
 
     private BuilderStep step = BuilderStep.DESCRIBE;
     private bool isAgentRunning;
+    private bool isInstallingPlugin;
     private string assistantDescription = string.Empty;
     private AssistantCategory selectedCategory;
     private string customCategory = string.Empty;
@@ -80,6 +87,7 @@ public partial class AssistantMetaAssistant : AssistantBaseCore<NoSettingsPanel>
     private string generatedAssistantSpec = string.Empty;
     private string reviewNotes = string.Empty;
     private string generatedLuaAssistant = string.Empty;
+    private readonly Guid pluginId = Guid.NewGuid();
     private static readonly AssistantContextFile[] ASSISTANT_CONTEXT_FILES =
     [
         new("Assistant plugin schema", "Plugins/assistants/README.md", IsRequired: true),
@@ -324,7 +332,7 @@ public partial class AssistantMetaAssistant : AssistantBaseCore<NoSettingsPanel>
           </untrusted_generation_request_json>
 
           <fixed_metadata_defaults>
-          ID = "{{Guid.NewGuid()}}"
+          ID = "{{this.pluginId}}"
           VERSION = "{{DEFAULT_VERSION}}"
           TYPE = "ASSISTANT"
           AUTHORS = {"MindWork AI - Assistant Builder"}
@@ -455,6 +463,36 @@ public partial class AssistantMetaAssistant : AssistantBaseCore<NoSettingsPanel>
         using var reader = new StreamReader(stream, Encoding.UTF8);
         return await reader.ReadToEndAsync();
 #endif
+    }
+
+    private async Task InstallPluginAsync()
+    {
+        if (string.IsNullOrWhiteSpace(this.generatedLuaAssistant))
+        {
+            this.Snackbar.Add(T("No assistant plugin was generated yet."), Severity.Warning);
+            return;
+        }
+
+        this.isInstallingPlugin = true;
+        try
+        {
+            var result = await this.AssistantPluginInstallService.InstallAsync(this.generatedLuaAssistant, CancellationToken.None);
+            if (!result.Success)
+            {
+                this.Snackbar.Add(result.Issue, Severity.Error);
+                return;
+            }
+
+            var message = result.ReplacedExisting
+                ? string.Format(T("The assistant plugin \"{0}\" was updated."), result.PluginName)
+                : string.Format(T("The assistant plugin \"{0}\" was installed."), result.PluginName);
+            this.Snackbar.Add(message, Severity.Success);
+        }
+        finally
+        {
+            this.isInstallingPlugin = false;
+            await this.InvokeAsync(this.StateHasChanged);
+        }
     }
 
     private async Task<string> LoadAssistantBuilderContextAsync()
