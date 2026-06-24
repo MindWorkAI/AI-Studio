@@ -1339,8 +1339,14 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T1644710572
 -- Back to description
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T1650324037"] = "Back to description"
 
+-- The assistant plugin \"{0}\" was installed.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T177739072"] = "The assistant plugin \\\"{0}\\\" was installed."
+
 -- (Optional) Output language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T1821434787"] = "(Optional) Output language"
+
+-- No assistant plugin was generated yet.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T1911729967"] = "No assistant plugin was generated yet."
 
 -- Review draft
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T2007680830"] = "Review draft"
@@ -1350,6 +1356,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T2063479946
 
 -- Typical input (Optional)
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T2172900154"] = "Typical input (Optional)"
+
+-- Install this generated assistant as a plugin.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T2250515799"] = "Install this generated assistant as a plugin."
 
 -- What users provide, e.g. text, notes, files, or a URL
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T2381710500"] = "What users provide, e.g. text, notes, files, or a URL"
@@ -1365,6 +1374,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T2750415283
 
 -- Custom output language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T2795779287"] = "Custom output language"
+
+-- The assistant plugin \"{0}\" was updated.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T2941454775"] = "The assistant plugin \\\"{0}\\\" was updated."
 
 -- Regenerate Lua plugin
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T3144371312"] = "Regenerate Lua plugin"
@@ -1398,6 +1410,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T3782909247
 
 -- What to avoid or consider, e.g. do not invent missing facts
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T3843866124"] = "What to avoid or consider, e.g. do not invent missing facts"
+
+-- Install assistant
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T3863433088"] = "Install assistant"
 
 -- Assistant draft
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T3957423852"] = "Assistant draft"
@@ -7173,6 +7188,9 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::PREVIEWFEATURESEXTENSIONS::T2722
 
 -- Transcription: Convert recordings and audio files into text
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::PREVIEWFEATURESEXTENSIONS::T4247148645"] = "Transcription: Convert recordings and audio files into text"
+
+-- Assistant Builder: Generate and install assistant plugins
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::PREVIEWFEATURESEXTENSIONS::T610184927"] = "Assistant Builder: Generate and install assistant plugins"
 
 -- Use no data sources, when sending an assistant result to a chat
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::SENDTOCHATDATASOURCEBEHAVIOREXTENSIONS::T1223925477"] = "Use no data sources, when sending an assistant result to a chat"
