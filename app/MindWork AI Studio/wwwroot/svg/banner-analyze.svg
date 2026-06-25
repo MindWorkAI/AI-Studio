@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" overflow="hidden" preserveAspectRatio="xMidYMid slice" viewBox="0 0 1920 335">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2e7858"/>
+      <stop offset="60%" stop-color="#1a4d38"/>
+      <stop offset="100%" stop-color="#0e2e1e"/>
+    </linearGradient>
+    <linearGradient id="h1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1e5c40"/>
+      <stop offset="100%" stop-color="#0f3020"/>
+    </linearGradient>
+    <linearGradient id="h2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2d7a52"/>
+      <stop offset="100%" stop-color="#1a4a32"/>
+    </linearGradient>
+    <linearGradient id="h3" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#4d9970"/>
+      <stop offset="100%" stop-color="#2d6448"/>
+    </linearGradient>
+    <radialGradient id="sg" cx="86%" cy="14%" r="24%">
+      <stop offset="0%" stop-color="#f5e060" stop-opacity="0.65"/>
+      <stop offset="55%" stop-color="#f0c840" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#f0c840" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="lg" cx="36%" cy="30%" r="68%">
+      <stop offset="0%" stop-color="#b8ead0" stop-opacity="0.58"/>
+      <stop offset="100%" stop-color="#2d7a52" stop-opacity="0.74"/>
+    </radialGradient>
+    <clipPath id="lc">
+      <circle cx="560" cy="155" r="104"/>
+    </clipPath>
+  </defs>
+
+  <!-- Sky -->
+  <rect width="1920" height="335" fill="url(#bg)"/>
+  <rect width="1920" height="335" fill="url(#sg)"/>
+
+  <!-- Sun -->
+  <circle cx="1655" cy="50" r="72" fill="#f5e060" opacity="0.16"/>
+  <circle cx="1655" cy="50" r="54" fill="#f5e060" opacity="0.32"/>
+  <circle cx="1655" cy="50" r="38" fill="#f5e060" opacity="0.96"/>
+
+  <!-- Hills — three layers -->
+  <path d="M0,232 Q480,145 960,185 Q1440,225 1920,168 L1920,335 L0,335 Z" fill="url(#h1)"/>
+  <path d="M0,266 Q310,205 625,246 Q940,287 1265,222 Q1590,157 1920,238 L1920,335 L0,335 Z" fill="url(#h2)"/>
+  <path d="M0,300 Q480,270 960,296 Q1440,322 1920,288 L1920,335 L0,335 Z" fill="url(#h3)"/>
+
+  <!-- Clouds -->
+  <g opacity="0.30">
+    <ellipse cx="245" cy="68" rx="64" ry="22" fill="#a8c8b8"/>
+    <ellipse cx="283" cy="57" rx="42" ry="23" fill="#c2deca"/>
+    <ellipse cx="208" cy="65" rx="33" ry="18" fill="#c2deca"/>
+  </g>
+  <g opacity="0.22">
+    <ellipse cx="1340" cy="94" rx="70" ry="25" fill="#a8c8b8"/>
+    <ellipse cx="1382" cy="82" rx="46" ry="23" fill="#c2deca"/>
+  </g>
+
+  <!-- Trees — left -->
+  <g fill="#071a0d">
+    <polygon points="35,310 66,222 97,310"/>
+    <polygon points="39,285 66,214 93,285" opacity="0.72"/>
+    <rect x="62" y="308" width="9" height="20"/>
+    <polygon points="105,314 133,238 161,314"/>
+    <rect x="129" y="312" width="8" height="16"/>
+    <polygon points="168,306 193,242 218,306" opacity="0.82"/>
+    <rect x="189" y="304" width="7" height="18" opacity="0.82"/>
+    <polygon points="12,318 37,265 62,318" opacity="0.60"/>
+  </g>
+
+  <!-- Trees — right -->
+  <g fill="#071a0d">
+    <polygon points="1755,304 1786,218 1817,304"/>
+    <polygon points="1759,280 1786,210 1813,280" opacity="0.72"/>
+    <rect x="1782" y="302" width="9" height="20"/>
+    <polygon points="1821,310 1849,234 1877,310"/>
+    <rect x="1845" y="308" width="9" height="18"/>
+    <polygon points="1725,314 1751,250 1777,314" opacity="0.78"/>
+    <rect x="1747" y="312" width="7" height="15" opacity="0.78"/>
+    <polygon points="1885,316 1906,264 1927,316" opacity="0.55"/>
+  </g>
+
+  <!-- Birds -->
+  <g fill="none" stroke="#98c8a8" stroke-width="2.5" stroke-linecap="round" opacity="0.48">
+    <path d="M1450,60 Q1459,53 1468,60"/>
+    <path d="M1476,46 Q1484,40 1492,46"/>
+    <path d="M1428,74 Q1437,68 1446,74"/>
+  </g>
+
+  <!-- Magnifying glass — shadow layer (like speech bubble shadow in icon) -->
+  <circle cx="568" cy="164" r="120" fill="#1a4a30" opacity="0.55"/>
+  <line x1="652" y1="238" x2="740" y2="314" stroke="#1a4a30" stroke-width="32" stroke-linecap="round" opacity="0.55"/>
+
+  <!-- Handle -->
+  <line x1="648" y1="232" x2="738" y2="310" stroke="#cce8da" stroke-width="30" stroke-linecap="round"/>
+  <line x1="648" y1="232" x2="738" y2="310" stroke="#e4f2ea" stroke-width="20" stroke-linecap="round"/>
+
+  <!-- Glass ring -->
+  <circle cx="560" cy="155" r="120" fill="none" stroke="#cce8da" stroke-width="30"/>
+  <circle cx="560" cy="155" r="120" fill="none" stroke="#e4f2ea" stroke-width="20"/>
+
+  <!-- Lens -->
+  <circle cx="560" cy="155" r="93" fill="url(#lg)"/>
+
+  <!-- Data chart inside lens -->
+  <g clip-path="url(#lc)" opacity="0.92">
+    <line x1="488" y1="216" x2="632" y2="216" stroke="#5dba82" stroke-width="1" opacity="0.38"/>
+    <line x1="488" y1="198" x2="632" y2="198" stroke="#5dba82" stroke-width="1" opacity="0.38"/>
+    <line x1="488" y1="180" x2="632" y2="180" stroke="#5dba82" stroke-width="1" opacity="0.38"/>
+    <line x1="488" y1="162" x2="632" y2="162" stroke="#5dba82" stroke-width="1" opacity="0.38"/>
+    <line x1="488" y1="144" x2="632" y2="144" stroke="#5dba82" stroke-width="1" opacity="0.38"/>
+    <line x1="488" y1="126" x2="632" y2="126" stroke="#5dba82" stroke-width="1" opacity="0.38"/>
+    <!-- Bars ascending -->
+    <rect x="496" y="200" width="16" height="16" rx="2" fill="#4d9970"/>
+    <rect x="518" y="182" width="16" height="34" rx="2" fill="#4d9970"/>
+    <rect x="540" y="160" width="16" height="56" rx="2" fill="#f5e060"/>
+    <rect x="562" y="170" width="16" height="46" rx="2" fill="#4d9970"/>
+    <rect x="584" y="140" width="16" height="76" rx="2" fill="#7bc49a"/>
+    <rect x="606" y="153" width="16" height="63" rx="2" fill="#4d9970"/>
+    <!-- Trend line -->
+    <polyline points="504,196 526,177 548,154 570,163 592,134 614,146"
+              fill="none" stroke="#f5e060" stroke-width="3.5"
+              stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="504" cy="196" r="5" fill="#f5e060"/>
+    <circle cx="526" cy="177" r="5" fill="#f5e060"/>
+    <circle cx="548" cy="154" r="5" fill="#f5e060"/>
+    <circle cx="570" cy="163" r="5" fill="#f5e060"/>
+    <circle cx="592" cy="134" r="5" fill="#f5e060"/>
+    <circle cx="614" cy="146" r="5" fill="#f5e060"/>
+    <!-- Baseline -->
+    <line x1="488" y1="216" x2="632" y2="216" stroke="#98c8a8" stroke-width="2.5"/>
+  </g>
+
+  <!-- Lens glare -->
+  <ellipse cx="520" cy="116" rx="26" ry="16" fill="white" opacity="0.17" transform="rotate(-22,520,116)"/>
+
+  <!-- Scattered data points in sky (between glass and text) -->
+  <g opacity="0.42">
+    <circle cx="840" cy="44" r="5.5" fill="#f5e060"/>
+    <circle cx="878" cy="26" r="4" fill="#98c8a8"/>
+    <circle cx="920" cy="50" r="5" fill="#f5e060"/>
+    <circle cx="962" cy="30" r="3.5" fill="#98c8a8"/>
+    <circle cx="1004" cy="18" r="5.5" fill="#f5e060"/>
+    <polyline points="840,44 878,26 920,50 962,30 1004,18"
+              fill="none" stroke="#f5e060" stroke-width="1.5"
+              stroke-dasharray="5,6" opacity="0.48"/>
+  </g>
+
+  <!-- AI Studio shadow -->
+  <text x="1254" y="183" font-family="Helvetica, 'Helvetica Neue', Arial, sans-serif"
+        font-size="128" font-weight="900" text-anchor="middle"
+        fill="#071a0d" opacity="0.42" letter-spacing="-3">AI Studio</text>
+  <!-- AI Studio main -->
+  <text x="1248" y="176" font-family="Helvetica, 'Helvetica Neue', Arial, sans-serif"
+        font-size="128" font-weight="900" text-anchor="middle"
+        fill="#dff2e8" letter-spacing="-3">AI Studio</text>
+</svg>

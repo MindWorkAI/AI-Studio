@@ -6162,6 +6162,33 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T873851215"] = "Das zeichnet MindWork AI
 -- The app is free to use, both for personal and commercial purposes.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T91074375"] = "Die App ist sowohl für private als auch für kommerzielle Zwecke kostenlos nutzbar."
 
+-- Analyze
+UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T1684119411"] = "Analysieren"
+
+-- Research
+UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T1554954732"] = "Recherchieren"
+
+-- Learn
+UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T623175861"] = "Lernen"
+
+-- Think
+UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T620705787"] = "Denken"
+
+-- Innovate
+UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T3957848315"] = "Innovieren"
+
+-- Develop
+UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T803454394"] = "Entwickeln"
+
+-- Plan
+UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T514547250"] = "Planen"
+
+-- Write
+UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T1717336572"] = "Schreiben"
+
+-- Chat
+UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T578410699"] = "Chat"
+
 -- Startup log file
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1019424746"] = "Startprotokolldatei"
 

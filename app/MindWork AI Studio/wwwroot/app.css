@@ -38,6 +38,52 @@
     margin-top: 4px;
 }
 
+/* Navbar modernization — rounded pill, centered icon, green active state */
+.mud-nav-link {
+    border-radius: 8px !important;
+    margin: 2px 4px 2px -2px !important;
+}
+
+.mud-navmenu.mud-navmenu-default .mud-nav-link.active:not(.mud-nav-link-disabled) {
+    border-inline-end: none !important;
+    background-color: var(--mud-palette-primary) !important;
+    color: white !important;
+}
+
+.mud-navmenu.mud-navmenu-default .mud-nav-link.active:not(.mud-nav-link-disabled):hover:not(.mud-nav-link-disabled) {
+    background-color: var(--mud-palette-primary-darken) !important;
+}
+
+.mud-nav-link.active:not(.mud-nav-link-disabled) .mud-icon-root {
+    color: white !important;
+}
+
+/* MUI-style elevation for expansion panels — replace border separators with shadows */
+.mud-expand-panel,
+.mud-expand-panel.mud-expand-panel-border,
+.mud-expand-panel:first-child,
+.mud-expand-panel:last-child {
+    border-bottom: none;
+    border-top: none;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    box-shadow: var(--mud-elevation-1);
+    transition: box-shadow 0.25s ease, margin 0.3s cubic-bezier(0.25, 0.8, 0.5, 1);
+}
+
+.mud-expand-panel.mud-panel-expanded {
+    box-shadow: var(--mud-elevation-4);
+    margin: 12px 0;
+}
+
+.mud-expand-panel.mud-panel-expanded:first-child {
+    margin-top: 0;
+}
+
+.mud-expand-panel.mud-panel-expanded:last-child {
+    margin-bottom: 0;
+}
+
 .plugin-icon-container {
     width: var(--mud-icon-size-large);
     height: var(--mud-icon-size-large);
@@ -54,6 +100,7 @@
 
 :root {
     --confidence-color: #000000;
+    --mud-default-borderradius: 10px;
 }
 
 .confidence-icon {
@@ -191,4 +238,128 @@
 .chat-mathjax-block mjx-container[display="true"] mjx-math {
     margin-left: 0 !important;
     margin-right: 0 !important;
+}
+
+.banner-wrapper {
+    display: grid;
+    width: calc(100% + 1em + 48px);
+    margin-left: calc(-1em - 24px);
+    margin-right: -24px;
+    position: relative;
+    background-color: #1a4d38;
+}
+
+.banner-img {
+    grid-area: 1 / 1;
+    width: 100%;
+    object-fit: cover;
+}
+
+.banner-img-top {
+    animation: banner-fadein 1.2s ease-in-out forwards;
+}
+
+.banner-indicators {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 0.25rem;
+    padding: 0.35rem 1rem;
+    background: rgba(0, 0, 0, 0.68);
+    border-radius: 0 0 6px 6px;
+    pointer-events: none;
+    white-space: nowrap;
+}
+
+@media (max-width: 820px) {
+    .banner-indicators {
+        display: none;
+    }
+}
+
+.banner-indicator {
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.45);
+    letter-spacing: 0.03em;
+    transition: color 0.4s ease;
+    padding: 0 0.4rem;
+}
+
+.banner-indicator-active {
+    color: rgba(255, 255, 255, 0.95);
+    font-weight: 700;
+}
+
+.banner-label {
+    position: absolute;
+    left: 65%;
+    bottom: 2.4vw;
+    transform: translateX(-50%);
+    font-family: Helvetica, 'Helvetica Neue', Arial, sans-serif;
+    font-size: clamp(16px, 3.23vw, 62px);
+    font-weight: 600;
+    color: #f5e060;
+    text-shadow: 3px 4px 0 rgba(7, 26, 13, 0.40);
+    letter-spacing: -0.03em;
+    pointer-events: none;
+    white-space: nowrap;
+    user-select: none;
+    animation: banner-fadein 1.2s ease-in-out forwards;
+}
+
+/* Page header bar — primary-colored full-width banner replacing plain h3 titles */
+.page-header-bar {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    background-color: var(--mud-palette-primary);
+    padding: 10px 24px 10px calc(1em + 24px);
+    margin-left: calc(-1em - 24px);
+    margin-right: -24px;
+    margin-bottom: 16px;
+    color: white;
+}
+
+.page-header-bar .mud-typography {
+    color: white !important;
+}
+
+.page-header-bar .mud-icon-button,
+.page-header-bar .mud-icon-button .mud-icon-root {
+    color: white !important;
+}
+
+/* Splitter: thin bar, muted at rest → primary on hover.
+   Use .inner-scrolling-context path (3 class selectors) to beat MudBlazor's own thumb specificity. */
+.inner-scrolling-context > .mud-splitter > .mud-slider ::-webkit-slider-thumb {
+    width: 4px !important;
+    height: 100% !important;
+    border-radius: 0 !important;
+    background-color: rgba(192, 192, 192, 0.35) !important;
+    box-shadow: none !important;
+    transition: background-color 0.2s ease !important;
+}
+
+.inner-scrolling-context > .mud-splitter > .mud-slider:hover ::-webkit-slider-thumb {
+    background-color: var(--mud-palette-primary) !important;
+}
+
+.inner-scrolling-context > .mud-splitter > .mud-slider ::-moz-range-thumb {
+    width: 4px !important;
+    height: 100% !important;
+    border-radius: 0 !important;
+    background-color: rgba(192, 192, 192, 0.35) !important;
+    box-shadow: none !important;
+    transition: background-color 0.2s ease !important;
+}
+
+.inner-scrolling-context > .mud-splitter > .mud-slider:hover ::-moz-range-thumb {
+    background-color: var(--mud-palette-primary) !important;
+}
+
+@keyframes banner-fadein {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }

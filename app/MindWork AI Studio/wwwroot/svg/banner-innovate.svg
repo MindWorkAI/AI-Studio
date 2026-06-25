@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" overflow="hidden" preserveAspectRatio="xMidYMid slice" viewBox="0 0 1920 335">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2e7858"/><stop offset="60%" stop-color="#1a4d38"/><stop offset="100%" stop-color="#0e2e1e"/>
+    </linearGradient>
+    <linearGradient id="h1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1e5c40"/><stop offset="100%" stop-color="#0f3020"/>
+    </linearGradient>
+    <linearGradient id="h2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2d7a52"/><stop offset="100%" stop-color="#1a4a32"/>
+    </linearGradient>
+    <linearGradient id="h3" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#4d9970"/><stop offset="100%" stop-color="#2d6448"/>
+    </linearGradient>
+    <radialGradient id="sg" cx="86%" cy="14%" r="24%">
+      <stop offset="0%" stop-color="#f5e060" stop-opacity="0.65"/>
+      <stop offset="55%" stop-color="#f0c840" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#f0c840" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="flame" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f5e060" stop-opacity="0.95"/>
+      <stop offset="50%" stop-color="#f0a020" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#f08020" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1920" height="335" fill="url(#bg)"/>
+  <rect width="1920" height="335" fill="url(#sg)"/>
+  <circle cx="1655" cy="50" r="72" fill="#f5e060" opacity="0.16"/>
+  <circle cx="1655" cy="50" r="54" fill="#f5e060" opacity="0.32"/>
+  <circle cx="1655" cy="50" r="38" fill="#f5e060" opacity="0.96"/>
+  <path d="M0,232 Q480,145 960,185 Q1440,225 1920,168 L1920,335 L0,335 Z" fill="url(#h1)"/>
+  <path d="M0,266 Q310,205 625,246 Q940,287 1265,222 Q1590,157 1920,238 L1920,335 L0,335 Z" fill="url(#h2)"/>
+  <path d="M0,300 Q480,270 960,296 Q1440,322 1920,288 L1920,335 L0,335 Z" fill="url(#h3)"/>
+  <g opacity="0.30"><ellipse cx="245" cy="68" rx="64" ry="22" fill="#a8c8b8"/><ellipse cx="283" cy="57" rx="42" ry="23" fill="#c2deca"/><ellipse cx="208" cy="65" rx="33" ry="18" fill="#c2deca"/></g>
+  <g opacity="0.22"><ellipse cx="1340" cy="94" rx="70" ry="25" fill="#a8c8b8"/><ellipse cx="1382" cy="82" rx="46" ry="23" fill="#c2deca"/></g>
+  <g fill="#071a0d">
+    <polygon points="35,310 66,222 97,310"/><polygon points="39,285 66,214 93,285" opacity="0.72"/>
+    <rect x="62" y="308" width="9" height="20"/>
+    <polygon points="105,314 133,238 161,314"/><rect x="129" y="312" width="8" height="16"/>
+    <polygon points="168,306 193,242 218,306" opacity="0.82"/><rect x="189" y="304" width="7" height="18" opacity="0.82"/>
+    <polygon points="12,318 37,265 62,318" opacity="0.60"/>
+  </g>
+  <g fill="#071a0d">
+    <polygon points="1755,304 1786,218 1817,304"/><polygon points="1759,280 1786,210 1813,280" opacity="0.72"/>
+    <rect x="1782" y="302" width="9" height="20"/>
+    <polygon points="1821,310 1849,234 1877,310"/><rect x="1845" y="308" width="9" height="18"/>
+    <polygon points="1725,314 1751,250 1777,314" opacity="0.78"/><rect x="1747" y="312" width="7" height="15" opacity="0.78"/>
+    <polygon points="1885,316 1906,264 1927,316" opacity="0.55"/>
+  </g>
+  <g fill="none" stroke="#98c8a8" stroke-width="2.5" stroke-linecap="round" opacity="0.48">
+    <path d="M1450,60 Q1459,53 1468,60"/><path d="M1476,46 Q1484,40 1492,46"/><path d="M1428,74 Q1437,68 1446,74"/>
+  </g>
+
+  <!-- Stars -->
+  <g fill="#f5e060" opacity="0.65">
+    <circle cx="340" cy="42" r="4.5"/>
+    <circle cx="378" cy="22" r="3"/>
+    <circle cx="418" cy="48" r="5"/>
+    <circle cx="458" cy="30" r="3.5"/>
+    <circle cx="498" cy="18" r="4"/>
+    <circle cx="538" cy="38" r="3"/>
+    <circle cx="430" cy="65" r="3"/>
+  </g>
+  <!-- Sparkle crosses -->
+  <g stroke="#f5e060" stroke-width="2" stroke-linecap="round" opacity="0.55">
+    <line x1="340" y1="38" x2="340" y2="46"/><line x1="336" y1="42" x2="344" y2="42"/>
+    <line x1="418" y1="43" x2="418" y2="53"/><line x1="413" y1="48" x2="423" y2="48"/>
+  </g>
+
+  <!-- Flame / exhaust — behind rocket, clipped to banner height -->
+  <ellipse cx="572" cy="290" rx="36" ry="45" fill="url(#flame)" opacity="0.82"/>
+  <ellipse cx="560" cy="290" rx="17" ry="28" fill="#f5e060" opacity="0.4"/>
+
+  <!-- Rocket — shadow (no nose cone, capsule shape) -->
+  <g transform="translate(8,10)" opacity="0.48">
+    <rect x="548" y="58" width="64" height="207" rx="32" fill="#1a4a30"/>
+    <path d="M548,232 L510,282 L548,267 Z" fill="#1a4a30"/>
+    <path d="M612,232 L650,282 L612,267 Z" fill="#1a4a30"/>
+  </g>
+  <!-- Rocket — capsule body -->
+  <rect x="540" y="50" width="64" height="215" rx="32" fill="#cce8da"/>
+  <!-- Upper cap (lighter shade) -->
+  <rect x="540" y="50" width="64" height="120" rx="32" fill="#ddf0e8"/>
+  <!-- Body sheen -->
+  <rect x="540" y="52" width="28" height="210" rx="26" fill="white" opacity="0.14"/>
+  <!-- Left fin -->
+  <path d="M540,230 L500,280 L540,265 Z" fill="#b8d8c8"/>
+  <!-- Right fin -->
+  <path d="M604,230 L644,280 L604,265 Z" fill="#b8d8c8"/>
+  <!-- Porthole window -->
+  <circle cx="572" cy="155" r="22" fill="#1a4d38"/>
+  <circle cx="572" cy="155" r="18" fill="#2d7a52"/>
+  <circle cx="572" cy="155" r="14" fill="#4d9970"/>
+  <ellipse cx="566" cy="149" rx="5" ry="4" fill="white" opacity="0.3"/>
+  <!-- Speed lines -->
+  <g stroke="#cce8da" stroke-width="3" stroke-linecap="round" opacity="0.35">
+    <line x1="520" y1="140" x2="470" y2="143"/>
+    <line x1="516" y1="160" x2="462" y2="163"/>
+    <line x1="520" y1="180" x2="468" y2="183"/>
+  </g>
+
+  <text x="1254" y="183" font-family="Helvetica, 'Helvetica Neue', Arial, sans-serif"
+        font-size="128" font-weight="900" text-anchor="middle"
+        fill="#071a0d" opacity="0.42" letter-spacing="-3">AI Studio</text>
+  <text x="1248" y="176" font-family="Helvetica, 'Helvetica Neue', Arial, sans-serif"
+        font-size="128" font-weight="900" text-anchor="middle"
+        fill="#dff2e8" letter-spacing="-3">AI Studio</text>
+</svg>

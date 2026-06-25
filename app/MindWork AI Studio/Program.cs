@@ -123,7 +123,23 @@ internal sealed class Program
 
         builder.Services.AddMemoryCache(); // Needed for the Markdown library
         builder.Services.AddMudMarkdownServices();
-        builder.Services.AddSingleton(new MudTheme());
+        builder.Services.AddSingleton(new MudTheme
+        {
+            PaletteLight = new PaletteLight
+            {
+                Background = "#F0F4F8",
+                Primary = "#4d9970",
+                PrimaryDarken = "#3d8960",
+                PrimaryLighten = "#6db990",
+            },
+            PaletteDark = new PaletteDark
+            {
+                Background = "#0c0c14",
+                Primary = "#4d9970",
+                PrimaryDarken = "#3d8960",
+                PrimaryLighten = "#6db990",
+            },
+        });
         builder.Services.AddSingleton(MessageBus.INSTANCE);
         builder.Services.AddSingleton(rust);
         builder.Services.AddMudMarkdownClipboardService<MarkdownClipboardService>();
