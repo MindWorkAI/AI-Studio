@@ -17,14 +17,37 @@
                 display: block;
             }
 
+            .container {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 0;
+            }
+
+            p {
+                margin: 0;
+                font-family: Helvetica, "Helvetica Neue", Arial, sans-serif;
+                font-size: 80px;
+                font-weight: 700;
+                letter-spacing: 0;
+                color: #333333;
+            }
+
             @media (prefers-color-scheme: dark) {
                 html, body {
                     background-color: #1a1a1a;
+                }
+
+                p {
+                    color: #cccccc;
                 }
             }
         </style>
     </head>
     <body>
-        <img src="icon.png" width="512" height="512" alt="The app logo">
+        <div class="container">
+            <img src="icon.png" width="512" height="512" alt="The app logo">
+            <p>MindWork AI Studio</p>
+        </div>
     </body>
 </html>

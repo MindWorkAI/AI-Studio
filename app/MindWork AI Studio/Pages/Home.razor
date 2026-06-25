@@ -2,10 +2,20 @@
 @inherits MSGComponentBase
 
 <div class="inner-scrolling-context">
-    <MudImage Src="svg/banner.svg" Style="max-height: 16em; width: 100%; object-fit: cover;" />
-    <MudText Typo="Typo.h3" Class="mt-2 mb-2">
-        @T("Let's get started")
-    </MudText>
+    <div class="banner-wrapper">
+        <img src="@this.BannerBottomSrc" alt="" class="banner-img" />
+        <img src="@this.BannerTopSrc" @key="@this.bannerIndex" alt="" class="banner-img banner-img-top" />
+        <div class="banner-label" @key="@($"label-{this.bannerIndex}")">@this.BannerLabel</div>
+        <div class="banner-indicators">
+            @for (var i = 0; i < this.BannerTabLabels.Length; i++)
+            {
+                <span class="@(i == this.ActiveTabIndex ? "banner-indicator banner-indicator-active" : "banner-indicator")">@this.BannerTabLabels[i]</span>
+            }
+        </div>
+    </div>
+    <div class="page-header-bar">
+        <MudText Typo="Typo.h3">@T("Let's get started")</MudText>
+    </div>
 
     <InnerScrolling>
         <MudExpansionPanels @key="@this.expansionPanelsRenderKey" Class="mb-3" MultiExpansion="@false">

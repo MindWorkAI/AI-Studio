@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" overflow="hidden" preserveAspectRatio="xMidYMid slice" viewBox="0 0 1920 335">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2e7858"/><stop offset="60%" stop-color="#1a4d38"/><stop offset="100%" stop-color="#0e2e1e"/>
+    </linearGradient>
+    <linearGradient id="h1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1e5c40"/><stop offset="100%" stop-color="#0f3020"/>
+    </linearGradient>
+    <linearGradient id="h2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2d7a52"/><stop offset="100%" stop-color="#1a4a32"/>
+    </linearGradient>
+    <linearGradient id="h3" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#4d9970"/><stop offset="100%" stop-color="#2d6448"/>
+    </linearGradient>
+    <radialGradient id="sg" cx="86%" cy="14%" r="24%">
+      <stop offset="0%" stop-color="#f5e060" stop-opacity="0.65"/>
+      <stop offset="55%" stop-color="#f0c840" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#f0c840" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1920" height="335" fill="url(#bg)"/>
+  <rect width="1920" height="335" fill="url(#sg)"/>
+  <circle cx="1655" cy="50" r="72" fill="#f5e060" opacity="0.16"/>
+  <circle cx="1655" cy="50" r="54" fill="#f5e060" opacity="0.32"/>
+  <circle cx="1655" cy="50" r="38" fill="#f5e060" opacity="0.96"/>
+  <path d="M0,232 Q480,145 960,185 Q1440,225 1920,168 L1920,335 L0,335 Z" fill="url(#h1)"/>
+  <path d="M0,266 Q310,205 625,246 Q940,287 1265,222 Q1590,157 1920,238 L1920,335 L0,335 Z" fill="url(#h2)"/>
+  <path d="M0,300 Q480,270 960,296 Q1440,322 1920,288 L1920,335 L0,335 Z" fill="url(#h3)"/>
+  <g opacity="0.30"><ellipse cx="245" cy="68" rx="64" ry="22" fill="#a8c8b8"/><ellipse cx="283" cy="57" rx="42" ry="23" fill="#c2deca"/><ellipse cx="208" cy="65" rx="33" ry="18" fill="#c2deca"/></g>
+  <g opacity="0.22"><ellipse cx="1340" cy="94" rx="70" ry="25" fill="#a8c8b8"/><ellipse cx="1382" cy="82" rx="46" ry="23" fill="#c2deca"/></g>
+  <g fill="#071a0d">
+    <polygon points="35,310 66,222 97,310"/><polygon points="39,285 66,214 93,285" opacity="0.72"/>
+    <rect x="62" y="308" width="9" height="20"/>
+    <polygon points="105,314 133,238 161,314"/><rect x="129" y="312" width="8" height="16"/>
+    <polygon points="168,306 193,242 218,306" opacity="0.82"/><rect x="189" y="304" width="7" height="18" opacity="0.82"/>
+    <polygon points="12,318 37,265 62,318" opacity="0.60"/>
+  </g>
+  <g fill="#071a0d">
+    <polygon points="1755,304 1786,218 1817,304"/><polygon points="1759,280 1786,210 1813,280" opacity="0.72"/>
+    <rect x="1782" y="302" width="9" height="20"/>
+    <polygon points="1821,310 1849,234 1877,310"/><rect x="1845" y="308" width="9" height="18"/>
+    <polygon points="1725,314 1751,250 1777,314" opacity="0.78"/><rect x="1747" y="312" width="7" height="15" opacity="0.78"/>
+    <polygon points="1885,316 1906,264 1927,316" opacity="0.55"/>
+  </g>
+  <g fill="none" stroke="#98c8a8" stroke-width="2.5" stroke-linecap="round" opacity="0.48">
+    <path d="M1450,60 Q1459,53 1468,60"/><path d="M1476,46 Q1484,40 1492,46"/><path d="M1428,74 Q1437,68 1446,74"/>
+  </g>
+
+  <!-- Lab equipment — shadows -->
+  <g transform="translate(9,11)" opacity="0.44" fill="#1a4a30">
+    <!-- Erlenmeyer flask shadow -->
+    <path d="M444,62 L444,150 C432,172 360,224 355,280 L569,280 C564,224 492,172 480,150 L480,62 Z"/>
+    <rect x="436" y="48" width="48" height="18" rx="8"/>
+    <!-- Test tube shadow -->
+    <path d="M630,70 L630,238 A26,26 0 0 0 682,238 L682,70 Z"/>
+    <rect x="634" y="58" width="40" height="14" rx="6"/>
+  </g>
+
+  <!-- Erlenmeyer flask — glass body -->
+  <path d="M444,62 L444,150 C432,172 360,224 355,280 L569,280 C564,224 492,172 480,150 L480,62 Z"
+        fill="#ddf0e8"/>
+
+  <!-- Flask — liquid (green, lower ~38% of body) -->
+  <path d="M 378,228 C 366,250 358,266 355,280 L569,280 C566,266 558,250 546,228 Z"
+        fill="#4d9970" opacity="0.80"/>
+  <!-- Flask — liquid surface wave -->
+  <path d="M 375,230 Q 420,221 462,227 Q 504,233 548,226"
+        fill="none" stroke="#7bc49a" stroke-width="3" stroke-linecap="round" opacity="0.65"/>
+
+  <!-- Flask — glass highlight (left inner wall) -->
+  <line x1="452" y1="68" x2="452" y2="147" stroke="white" stroke-width="3.5" stroke-linecap="round" opacity="0.28"/>
+  <path d="M 368,238 C 362,256 357,270 355,280" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" opacity="0.20"/>
+
+  <!-- Flask — graduation marks on neck -->
+  <g stroke="#8ab8a0" stroke-width="2" stroke-linecap="round" opacity="0.55">
+    <line x1="462" y1="90" x2="477" y2="90"/>
+    <line x1="462" y1="110" x2="477" y2="110"/>
+    <line x1="462" y1="130" x2="477" y2="130"/>
+  </g>
+
+  <!-- Flask — neck opening rim -->
+  <ellipse cx="462" cy="62" rx="22" ry="6" fill="#cce8da" opacity="0.85"/>
+
+  <!-- Flask — cork stopper -->
+  <rect x="436" y="48" width="48" height="18" rx="8" fill="#c8a060" opacity="0.90"/>
+  <rect x="440" y="52" width="20" height="5" rx="3" fill="white" opacity="0.22"/>
+
+  <!-- Flask — bubbles in liquid and neck -->
+  <g fill="#7bc49a" opacity="0.58">
+    <circle cx="452" cy="216" r="4.5"/>
+    <circle cx="474" cy="202" r="5.5"/>
+    <circle cx="458" cy="186" r="3.5"/>
+    <circle cx="468" cy="170" r="4"/>
+    <circle cx="454" cy="155" r="3"/>
+    <circle cx="464" cy="135" r="4.5"/>
+    <circle cx="456" cy="112" r="3.5"/>
+  </g>
+
+  <!-- Test tube — glass body (rounded bottom via arc) -->
+  <path d="M630,70 L630,236 A26,26 0 0 0 682,236 L682,70 Z" fill="#e8f7f0"/>
+
+  <!-- Test tube — liquid (yellow, lower 55%) -->
+  <path d="M630,152 L630,236 A26,26 0 0 0 682,236 L682,152 Z" fill="#f5e060" opacity="0.82"/>
+  <!-- Liquid surface ellipse (gives cylindrical depth) -->
+  <ellipse cx="656" cy="152" rx="26" ry="7" fill="#f5e060" opacity="0.78"/>
+  <ellipse cx="656" cy="152" rx="26" ry="7" fill="none" stroke="#c8a000" stroke-width="1.5" opacity="0.35"/>
+
+  <!-- Test tube — glass highlight -->
+  <line x1="638" y1="76" x2="638" y2="230" stroke="white" stroke-width="3" stroke-linecap="round" opacity="0.28"/>
+
+  <!-- Test tube — graduation marks -->
+  <g stroke="#a0c8b0" stroke-width="2" stroke-linecap="round" opacity="0.50">
+    <line x1="673" y1="108" x2="682" y2="108"/>
+    <line x1="673" y1="128" x2="682" y2="128"/>
+    <line x1="673" y1="148" x2="682" y2="148"/>
+  </g>
+
+  <!-- Test tube — opening rim -->
+  <ellipse cx="656" cy="70" rx="26" ry="7" fill="#cce8da" opacity="0.80"/>
+
+  <!-- Test tube — cork -->
+  <rect x="634" y="58" width="40" height="14" rx="6" fill="#c8a060" opacity="0.90"/>
+  <rect x="637" y="62" width="16" height="4" rx="2" fill="white" opacity="0.22"/>
+
+  <!-- Test tube — bubbles in yellow liquid -->
+  <g fill="#f5e060" opacity="0.52">
+    <circle cx="648" cy="138" r="4"/>
+    <circle cx="664" cy="120" r="3.5"/>
+    <circle cx="650" cy="104" r="4.5"/>
+    <circle cx="662" cy="88" r="3"/>
+  </g>
+
+  <!-- Floating sparkles (decorative, suggest chemical reaction) -->
+  <g fill="#f5e060" opacity="0.55">
+    <circle cx="510" cy="42" r="3.5"/>
+    <circle cx="540" cy="22" r="2.5"/>
+    <circle cx="575" cy="38" r="4"/>
+    <circle cx="610" cy="18" r="3"/>
+    <circle cx="600" cy="48" r="2.5"/>
+  </g>
+  <g stroke="#f5e060" stroke-width="2" stroke-linecap="round" opacity="0.45">
+    <line x1="510" y1="38" x2="510" y2="46"/><line x1="506" y1="42" x2="514" y2="42"/>
+    <line x1="575" y1="33" x2="575" y2="43"/><line x1="570" y1="38" x2="580" y2="38"/>
+  </g>
+
+  <text x="1254" y="183" font-family="Helvetica, 'Helvetica Neue', Arial, sans-serif"
+        font-size="128" font-weight="900" text-anchor="middle"
+        fill="#071a0d" opacity="0.42" letter-spacing="-3">AI Studio</text>
+  <text x="1248" y="176" font-family="Helvetica, 'Helvetica Neue', Arial, sans-serif"
+        font-size="128" font-weight="900" text-anchor="middle"
+        fill="#dff2e8" letter-spacing="-3">AI Studio</text>
+</svg>

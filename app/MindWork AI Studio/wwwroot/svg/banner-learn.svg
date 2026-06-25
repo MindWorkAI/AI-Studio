@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" overflow="hidden" preserveAspectRatio="xMidYMid slice" viewBox="0 0 1920 335">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2e7858"/><stop offset="60%" stop-color="#1a4d38"/><stop offset="100%" stop-color="#0e2e1e"/>
+    </linearGradient>
+    <linearGradient id="h1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1e5c40"/><stop offset="100%" stop-color="#0f3020"/>
+    </linearGradient>
+    <linearGradient id="h2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2d7a52"/><stop offset="100%" stop-color="#1a4a32"/>
+    </linearGradient>
+    <linearGradient id="h3" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#4d9970"/><stop offset="100%" stop-color="#2d6448"/>
+    </linearGradient>
+    <radialGradient id="sg" cx="86%" cy="14%" r="24%">
+      <stop offset="0%" stop-color="#f5e060" stop-opacity="0.65"/>
+      <stop offset="55%" stop-color="#f0c840" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#f0c840" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1920" height="335" fill="url(#bg)"/>
+  <rect width="1920" height="335" fill="url(#sg)"/>
+  <circle cx="1655" cy="50" r="72" fill="#f5e060" opacity="0.16"/>
+  <circle cx="1655" cy="50" r="54" fill="#f5e060" opacity="0.32"/>
+  <circle cx="1655" cy="50" r="38" fill="#f5e060" opacity="0.96"/>
+  <path d="M0,232 Q480,145 960,185 Q1440,225 1920,168 L1920,335 L0,335 Z" fill="url(#h1)"/>
+  <path d="M0,266 Q310,205 625,246 Q940,287 1265,222 Q1590,157 1920,238 L1920,335 L0,335 Z" fill="url(#h2)"/>
+  <path d="M0,300 Q480,270 960,296 Q1440,322 1920,288 L1920,335 L0,335 Z" fill="url(#h3)"/>
+  <g opacity="0.30"><ellipse cx="245" cy="68" rx="64" ry="22" fill="#a8c8b8"/><ellipse cx="283" cy="57" rx="42" ry="23" fill="#c2deca"/><ellipse cx="208" cy="65" rx="33" ry="18" fill="#c2deca"/></g>
+  <g opacity="0.22"><ellipse cx="1340" cy="94" rx="70" ry="25" fill="#a8c8b8"/><ellipse cx="1382" cy="82" rx="46" ry="23" fill="#c2deca"/></g>
+  <g fill="#071a0d">
+    <polygon points="35,310 66,222 97,310"/><polygon points="39,285 66,214 93,285" opacity="0.72"/>
+    <rect x="62" y="308" width="9" height="20"/>
+    <polygon points="105,314 133,238 161,314"/><rect x="129" y="312" width="8" height="16"/>
+    <polygon points="168,306 193,242 218,306" opacity="0.82"/><rect x="189" y="304" width="7" height="18" opacity="0.82"/>
+    <polygon points="12,318 37,265 62,318" opacity="0.60"/>
+  </g>
+  <g fill="#071a0d">
+    <polygon points="1755,304 1786,218 1817,304"/><polygon points="1759,280 1786,210 1813,280" opacity="0.72"/>
+    <rect x="1782" y="302" width="9" height="20"/>
+    <polygon points="1821,310 1849,234 1877,310"/><rect x="1845" y="308" width="9" height="18"/>
+    <polygon points="1725,314 1751,250 1777,314" opacity="0.78"/><rect x="1747" y="312" width="7" height="15" opacity="0.78"/>
+    <polygon points="1885,316 1906,264 1927,316" opacity="0.55"/>
+  </g>
+  <g fill="none" stroke="#98c8a8" stroke-width="2.5" stroke-linecap="round" opacity="0.48">
+    <path d="M1450,60 Q1459,53 1468,60"/><path d="M1476,46 Q1484,40 1492,46"/><path d="M1428,74 Q1437,68 1446,74"/>
+  </g>
+
+  <!-- Puzzle pieces — shadow -->
+  <g transform="translate(8,10)" opacity="0.45" fill="#1a4a30">
+    <path d="M458,58 L558,58 L558,94 C580,94 580,126 558,126 L558,163 L524,163 C524,185 492,185 492,163 L458,163 Z"/>
+    <path d="M558,58 L658,58 L658,163 L624,163 C624,185 592,185 592,163 L558,163 L558,126 C536,126 536,94 558,94 Z"/>
+    <path d="M458,163 L492,163 C492,141 524,141 524,163 L558,163 L558,199 C580,199 580,231 558,231 L558,268 L458,268 Z"/>
+    <path d="M558,163 L592,163 C592,141 624,141 624,163 L658,163 L658,268 L558,268 L558,231 C536,231 536,199 558,199 Z"/>
+  </g>
+
+  <!-- Top-left piece (cream) -->
+  <path d="M458,58 L558,58 L558,94 C580,94 580,126 558,126 L558,163 L524,163 C524,185 492,185 492,163 L458,163 Z" fill="#ddf0e8"/>
+  <!-- Top-right piece (golden) -->
+  <path d="M558,58 L658,58 L658,163 L624,163 C624,185 592,185 592,163 L558,163 L558,126 C536,126 536,94 558,94 Z" fill="#f5e060"/>
+  <!-- Bottom-left piece (primary green) -->
+  <path d="M458,163 L492,163 C492,141 524,141 524,163 L558,163 L558,199 C580,199 580,231 558,231 L558,268 L458,268 Z" fill="#4d9970"/>
+  <!-- Bottom-right piece (medium green) -->
+  <path d="M558,163 L592,163 C592,141 624,141 624,163 L658,163 L658,268 L558,268 L558,231 C536,231 536,199 558,199 Z" fill="#cce8da"/>
+
+  <!-- Subtle inner highlights on each piece -->
+  <path d="M464,64 L552,64 L552,92 C562,92 574,99 574,110" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" opacity="0.25"/>
+  <path d="M564,64 L652,64 L652,90" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" opacity="0.18"/>
+  <path d="M464,169 L490,169 C499,152 516,147 526,158" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.22"/>
+  <path d="M564,169 L590,169 C599,152 616,147 626,158" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.18"/>
+
+  <text x="1254" y="183" font-family="Helvetica, 'Helvetica Neue', Arial, sans-serif"
+        font-size="128" font-weight="900" text-anchor="middle"
+        fill="#071a0d" opacity="0.42" letter-spacing="-3">AI Studio</text>
+  <text x="1248" y="176" font-family="Helvetica, 'Helvetica Neue', Arial, sans-serif"
+        font-size="128" font-weight="900" text-anchor="middle"
+        fill="#dff2e8" letter-spacing="-3">AI Studio</text>
+</svg>

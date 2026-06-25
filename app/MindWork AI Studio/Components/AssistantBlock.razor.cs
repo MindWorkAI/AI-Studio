@@ -50,13 +50,7 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase where TSetting
         await this.DialogService.ShowAsync<TSettings>(T("Open Settings"), dialogParameters, DialogOptions.FULLSCREEN);
     }
 
-    private string BorderColor => this.SettingsManager.IsDarkMode switch
-    {
-        true => this.ColorTheme.GetCurrentPalette(this.SettingsManager).GrayLight,
-        false => this.ColorTheme.GetCurrentPalette(this.SettingsManager).Primary.Value,
-    };
-
-    private string BlockStyle => $"border-width: 2px; border-color: {this.BorderColor}; border-radius: 12px; border-style: solid; max-width: 20em;";
+    private string BlockStyle => "border-radius: 12px; max-width: 20em;";
 
     private bool IsVisible => this.SettingsManager.IsAssistantVisible(this.Component, assistantName: this.Name, requiredPreviewFeature: this.RequiredPreviewFeature);
 

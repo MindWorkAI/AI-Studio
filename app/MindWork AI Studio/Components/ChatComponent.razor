@@ -46,6 +46,7 @@
                 Placeholder="@this.ProviderPlaceholder"
                 Adornment="Adornment.End"
                 AdornmentIcon="@Icons.Material.Filled.Send"
+                AdornmentColor="Color.Primary"
                 OnAdornmentClick="() => this.SendMessage()"
                 Disabled="@this.IsInputForbidden()"
                 Immediate="@true"
@@ -54,7 +55,7 @@
                 Class="@this.UserInputClass"
                 Style="@this.UserInputStyle"/>
         </MudElement>
-        <MudToolBar WrapContent="true" Gutters="@false" Class="border border-solid rounded" Style="border-color: lightgrey; gap: 2px;">
+        <MudToolBar WrapContent="true" Gutters="@false" Style="gap: 2px;">
             
             @if (
                 this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is not WorkspaceStorageBehavior.DISABLE_WORKSPACES

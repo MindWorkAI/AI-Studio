@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" overflow="hidden" preserveAspectRatio="xMidYMid slice" viewBox="0 0 1920 335">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2e7858"/><stop offset="60%" stop-color="#1a4d38"/><stop offset="100%" stop-color="#0e2e1e"/>
+    </linearGradient>
+    <linearGradient id="h1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1e5c40"/><stop offset="100%" stop-color="#0f3020"/>
+    </linearGradient>
+    <linearGradient id="h2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2d7a52"/><stop offset="100%" stop-color="#1a4a32"/>
+    </linearGradient>
+    <linearGradient id="h3" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#4d9970"/><stop offset="100%" stop-color="#2d6448"/>
+    </linearGradient>
+    <radialGradient id="sg" cx="86%" cy="14%" r="24%">
+      <stop offset="0%" stop-color="#f5e060" stop-opacity="0.65"/>
+      <stop offset="55%" stop-color="#f0c840" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#f0c840" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1920" height="335" fill="url(#bg)"/>
+  <rect width="1920" height="335" fill="url(#sg)"/>
+  <circle cx="1655" cy="50" r="72" fill="#f5e060" opacity="0.16"/>
+  <circle cx="1655" cy="50" r="54" fill="#f5e060" opacity="0.32"/>
+  <circle cx="1655" cy="50" r="38" fill="#f5e060" opacity="0.96"/>
+  <path d="M0,232 Q480,145 960,185 Q1440,225 1920,168 L1920,335 L0,335 Z" fill="url(#h1)"/>
+  <path d="M0,266 Q310,205 625,246 Q940,287 1265,222 Q1590,157 1920,238 L1920,335 L0,335 Z" fill="url(#h2)"/>
+  <path d="M0,300 Q480,270 960,296 Q1440,322 1920,288 L1920,335 L0,335 Z" fill="url(#h3)"/>
+  <g opacity="0.30"><ellipse cx="245" cy="68" rx="64" ry="22" fill="#a8c8b8"/><ellipse cx="283" cy="57" rx="42" ry="23" fill="#c2deca"/><ellipse cx="208" cy="65" rx="33" ry="18" fill="#c2deca"/></g>
+  <g opacity="0.22"><ellipse cx="1340" cy="94" rx="70" ry="25" fill="#a8c8b8"/><ellipse cx="1382" cy="82" rx="46" ry="23" fill="#c2deca"/></g>
+  <g fill="#071a0d">
+    <polygon points="35,310 66,222 97,310"/><polygon points="39,285 66,214 93,285" opacity="0.72"/>
+    <rect x="62" y="308" width="9" height="20"/>
+    <polygon points="105,314 133,238 161,314"/><rect x="129" y="312" width="8" height="16"/>
+    <polygon points="168,306 193,242 218,306" opacity="0.82"/><rect x="189" y="304" width="7" height="18" opacity="0.82"/>
+    <polygon points="12,318 37,265 62,318" opacity="0.60"/>
+  </g>
+  <g fill="#071a0d">
+    <polygon points="1755,304 1786,218 1817,304"/><polygon points="1759,280 1786,210 1813,280" opacity="0.72"/>
+    <rect x="1782" y="302" width="9" height="20"/>
+    <polygon points="1821,310 1849,234 1877,310"/><rect x="1845" y="308" width="9" height="18"/>
+    <polygon points="1725,314 1751,250 1777,314" opacity="0.78"/><rect x="1747" y="312" width="7" height="15" opacity="0.78"/>
+    <polygon points="1885,316 1906,264 1927,316" opacity="0.55"/>
+  </g>
+  <g fill="none" stroke="#98c8a8" stroke-width="2.5" stroke-linecap="round" opacity="0.48">
+    <path d="M1450,60 Q1459,53 1468,60"/><path d="M1476,46 Q1484,40 1492,46"/><path d="M1428,74 Q1437,68 1446,74"/>
+  </g>
+
+  <!-- Clipboard / planner — shadow -->
+  <rect x="376" y="52" width="360" height="256" rx="18" fill="#1a4a30" opacity="0.50"/>
+
+  <!-- Clipboard body -->
+  <rect x="368" y="44" width="360" height="256" rx="18" fill="#ddf0e8"/>
+  <!-- Clip at top -->
+  <rect x="490" y="32" width="116" height="32" rx="10" fill="#cce8da"/>
+  <rect x="506" y="28" width="84" height="20" rx="8" fill="#b8d8c8"/>
+  <rect x="520" y="24" width="56" height="14" rx="6" fill="#a8c8b8"/>
+
+  <!-- Header bar -->
+  <rect x="368" y="44" width="360" height="44" rx="18" fill="#4d9970"/>
+  <rect x="368" y="64" width="360" height="24" fill="#4d9970"/>
+  <!-- Header title dots -->
+  <circle cx="394" cy="66" r="5" fill="white" opacity="0.6"/>
+  <rect x="412" y="58" width="120" height="16" rx="6" fill="white" opacity="0.3"/>
+
+  <!-- Calendar grid -->
+  <!-- Row labels -->
+  <g fill="#4d9970" font-family="Helvetica, Arial, sans-serif" font-size="11" opacity="0.7">
+    <text x="384" y="110">Mo</text><text x="432" y="110">Tu</text><text x="480" y="110">We</text>
+    <text x="528" y="110">Th</text><text x="576" y="110">Fr</text><text x="624" y="110">Sa</text><text x="672" y="110">Su</text>
+  </g>
+  <!-- Grid separator -->
+  <line x1="380" y1="116" x2="716" y2="116" stroke="#b0d8c2" stroke-width="1.5"/>
+
+  <!-- Calendar cells — 4 rows x 7 cols -->
+  <g fill="#e8f8f0">
+    <!-- Row 1 -->
+    <rect x="380" y="122" width="36" height="28" rx="5"/>
+    <rect x="428" y="122" width="36" height="28" rx="5"/>
+    <rect x="476" y="122" width="36" height="28" rx="5"/>
+    <rect x="524" y="122" width="36" height="28" rx="5"/>
+    <rect x="572" y="122" width="36" height="28" rx="5"/>
+    <rect x="620" y="122" width="36" height="28" rx="5" fill="#ddeee6"/>
+    <rect x="668" y="122" width="36" height="28" rx="5" fill="#ddeee6"/>
+    <!-- Row 2 -->
+    <rect x="380" y="158" width="36" height="28" rx="5"/>
+    <rect x="428" y="158" width="36" height="28" rx="5"/>
+    <rect x="476" y="158" width="36" height="28" rx="5"/>
+    <rect x="524" y="158" width="36" height="28" rx="5"/>
+    <rect x="572" y="158" width="36" height="28" rx="5"/>
+    <rect x="620" y="158" width="36" height="28" rx="5" fill="#ddeee6"/>
+    <rect x="668" y="158" width="36" height="28" rx="5" fill="#ddeee6"/>
+    <!-- Row 3 -->
+    <rect x="380" y="194" width="36" height="28" rx="5"/>
+    <rect x="428" y="194" width="36" height="28" rx="5"/>
+    <rect x="476" y="194" width="36" height="28" rx="5"/>
+    <rect x="524" y="194" width="36" height="28" rx="5"/>
+    <rect x="572" y="194" width="36" height="28" rx="5"/>
+    <rect x="620" y="194" width="36" height="28" rx="5" fill="#ddeee6"/>
+    <rect x="668" y="194" width="36" height="28" rx="5" fill="#ddeee6"/>
+    <!-- Row 4 -->
+    <rect x="380" y="230" width="36" height="28" rx="5"/>
+    <rect x="428" y="230" width="36" height="28" rx="5"/>
+    <rect x="476" y="230" width="36" height="28" rx="5"/>
+    <rect x="524" y="230" width="36" height="28" rx="5" fill="#4d9970" opacity="0.8"/>
+  </g>
+
+  <!-- Highlighted / marked days -->
+  <rect x="476" y="158" width="36" height="28" rx="5" fill="#f5e060" opacity="0.85"/>
+  <rect x="428" y="194" width="36" height="28" rx="5" fill="#4d9970" opacity="0.7"/>
+  <rect x="572" y="122" width="36" height="28" rx="5" fill="#f5e060" opacity="0.65"/>
+
+  <!-- Day numbers (partial) -->
+  <g fill="#2d6448" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="600">
+    <text x="393" y="141">1</text><text x="441" y="141">2</text><text x="489" y="141">3</text>
+    <text x="537" y="141">4</text><text x="582" y="141">5</text>
+    <text x="393" y="177">8</text><text x="441" y="177">9</text>
+    <text x="484" y="177" fill="#0e2218" font-weight="800">10</text>
+    <text x="535" y="177">11</text><text x="583" y="177">12</text>
+    <text x="393" y="213">15</text>
+    <text x="434" y="213" fill="white" font-weight="800">16</text>
+    <text x="489" y="213">17</text><text x="537" y="213">18</text><text x="585" y="213">19</text>
+    <text x="393" y="249">22</text><text x="441" y="249">23</text><text x="489" y="249">24</text>
+    <text x="534" y="249" fill="white" font-weight="800">25</text>
+  </g>
+
+  <!-- Checkmarks on selected days -->
+  <g stroke="#4d9970" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.8">
+    <polyline points="486,170 492,176 504,161"/>
+  </g>
+  <g stroke="#0e2218" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.8">
+    <polyline points="438,207 444,213 456,198"/>
+  </g>
+
+  <text x="1254" y="183" font-family="Helvetica, 'Helvetica Neue', Arial, sans-serif"
+        font-size="128" font-weight="900" text-anchor="middle"
+        fill="#071a0d" opacity="0.42" letter-spacing="-3">AI Studio</text>
+  <text x="1248" y="176" font-family="Helvetica, 'Helvetica Neue', Arial, sans-serif"
+        font-size="128" font-weight="900" text-anchor="middle"
+        fill="#dff2e8" letter-spacing="-3">AI Studio</text>
+</svg>

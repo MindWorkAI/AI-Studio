@@ -16,8 +16,36 @@ public partial class Home : MSGComponentBase
     [Inject]
     private NavigationManager NavigationManager { get; init; } = null!;
     
+    private static readonly string[] BANNER_IMAGES = [
+        "svg/banner-analyze.svg",
+        "svg/banner-research.svg",
+        "svg/banner-learn.svg",
+        "svg/banner-think.svg",
+        "svg/banner-innovate.svg",
+        "svg/banner-develop.svg",
+        "svg/banner-plan.svg",
+        "svg/banner-write.svg",
+        "svg/banner-chat.svg",
+    ];
+
+    private string[] BannerTabLabels =>
+    [
+        T("Analyze"), T("Research"), T("Learn"), T("Think"), T("Innovate"),
+        T("Develop"), T("Plan"), T("Write"), T("Chat"),
+    ];
+
+    private string BannerLabel => this.BannerTabLabels[this.ActiveTabIndex];
+
+    private int bannerIndex = BANNER_IMAGES.Length - 1;
+    private PeriodicTimer? bannerTimer;
+    private CancellationTokenSource? bannerCts;
+
+    private string BannerBottomSrc => BANNER_IMAGES[this.bannerIndex % BANNER_IMAGES.Length];
+    private string BannerTopSrc => BANNER_IMAGES[(this.bannerIndex + 1) % BANNER_IMAGES.Length];
+    private int ActiveTabIndex => (this.bannerIndex + 1) % BANNER_IMAGES.Length;
+
     private string LastChangeContent { get; set; } = string.Empty;
-    
+
     private TextItem[] itemsAdvantages = [];
 
     private List<DataIntroduction> introductions = [];
@@ -42,6 +70,7 @@ public partial class Home : MSGComponentBase
         // Read the last change content asynchronously
         // without blocking the UI thread:
         _ = this.ReadLastChangeAsync();
+        _ = this.StartBannerCycleAsync();
     }
 
     protected override Task OnAfterRenderAsync(bool firstRender)
@@ -131,7 +160,30 @@ public partial class Home : MSGComponentBase
         return Task.CompletedTask;
     }
 
+    protected override void DisposeResources()
+    {
+        this.bannerCts?.Cancel();
+        this.bannerTimer?.Dispose();
+    }
+
     private static string IntroductionPanelId(DataIntroduction introduction) => $"introduction:{introduction.Id}";
+
+    private async Task StartBannerCycleAsync()
+    {
+        this.bannerCts?.Cancel();
+        this.bannerCts = new CancellationTokenSource();
+        this.bannerTimer?.Dispose();
+        this.bannerTimer = new PeriodicTimer(TimeSpan.FromSeconds(10));
+        try
+        {
+            while (await this.bannerTimer.WaitForNextTickAsync(this.bannerCts.Token))
+            {
+                this.bannerIndex++;
+                await this.InvokeAsync(this.StateHasChanged);
+            }
+        }
+        catch (OperationCanceledException) { }
+    }
 
     private async Task ReadLastChangeAsync()
     {

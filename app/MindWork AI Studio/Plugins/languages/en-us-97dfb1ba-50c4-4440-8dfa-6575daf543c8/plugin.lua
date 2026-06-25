@@ -6162,6 +6162,33 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T873851215"] = "Here's what makes MindWo
 -- The app is free to use, both for personal and commercial purposes.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T91074375"] = "The app is free to use, both for personal and commercial purposes."
 
+-- Analyze
+UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T1684119411"] = "Analyze"
+
+-- Research
+UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T1554954732"] = "Research"
+
+-- Learn
+UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T623175861"] = "Learn"
+
+-- Think
+UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T620705787"] = "Think"
+
+-- Innovate
+UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T3957848315"] = "Innovate"
+
+-- Develop
+UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T803454394"] = "Develop"
+
+-- Plan
+UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T514547250"] = "Plan"
+
+-- Write
+UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T1717336572"] = "Write"
+
+-- Chat
+UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T578410699"] = "Chat"
+
 -- Startup log file
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1019424746"] = "Startup log file"
 

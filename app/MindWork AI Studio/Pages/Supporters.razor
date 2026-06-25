@@ -2,15 +2,15 @@
 @inherits MSGComponentBase
 
 <div class="inner-scrolling-context">
-    <MudText Typo="Typo.h3" Class="mb-2">
-        @T("Supporters")
-    </MudText>
+    <div class="page-header-bar">
+        <MudText Typo="Typo.h3">@T("Supporters")</MudText>
+    </div>
     <InnerScrolling>
 
         <MudExpansionPanels>
             
             <ExpansionPanel HeaderText="@T("Financial Support")" IsExpanded="@true" HeaderIcon="@Icons.Material.Filled.AttachMoney">
-                <div class="border-solid border-2 rounded-lg pa-3 mb-6">
+                <MudPaper Elevation="2" Class="pa-3 mb-6">
                     <MudText Typo="Typo.h4" Class="mb-2">
                         @T("Our Titans")
                     </MudText>
@@ -28,11 +28,11 @@
                     <MudButton Href="https://github.com/sponsors/MindWorkAI" StartIcon="@Icons.Material.Filled.Business" Variant="Variant.Filled" Target="_blank">
                         @T("Become one of our titans")
                     </MudButton>
-                </div>
+                </MudPaper>
 
                 <MudGrid Justify="Justify.Center" Spacing="2" Style="width: 100%;" Class="ma-0">
                     <MudItem Class="pa-0 pr-2" xs="6">
-                        <MudPaper Elevation="3" Class="border-solid border rounded-lg pa-3">
+                        <MudPaper Elevation="3" Class="pa-3">
                             <MudText Typo="Typo.h4" Class="mb-3 d-flex align-center">
                                 <MudIcon Icon="@Icons.Material.Filled.People" Size="Size.Large" class="mr-2"/>
                                 @T("Individual Contributors")
@@ -61,7 +61,7 @@
                     </MudItem>
 
                     <MudItem xs="6" Class="pa-0 pl-2">
-                        <MudPaper Elevation="3" Class="border-solid border rounded-lg pa-3">
+                        <MudPaper Elevation="3" Class="pa-3">
                             <MudText Typo="Typo.h4" Class="mb-3 d-flex align-center">
                                 <MudIcon Icon="@Icons.Material.Filled.Business" Size="Size.Large" class="mr-2"/>
                                 @T("Business Contributors")
@@ -79,7 +79,7 @@
 
                 <MudGrid Justify="Justify.Center" Spacing="2" Style="width: 100%;" Class="ma-0">
                     <MudItem Class="pa-0 pr-2" xs="6">
-                        <MudPaper Elevation="3" Class="border-solid border rounded-lg pa-3">
+                        <MudPaper Elevation="3" Class="pa-3">
                             <MudText Typo="Typo.h4" Class="mb-3 d-flex align-center">
                                 <MudIcon Icon="@Icons.Material.Filled.Code" Size="Size.Large" class="mr-2"/>
                                 @T("Code Contributions")
@@ -95,7 +95,7 @@
                     </MudItem>
 
                     <MudItem Class="pa-0 pr-2" xs="6">
-                        <MudPaper Elevation="3" Class="border-solid border rounded-lg pa-3">
+                        <MudPaper Elevation="3" Class="pa-3">
                             <MudText Typo="Typo.h4" Class="mb-3 d-flex align-start">
                                 <MudIcon Icon="@Icons.Material.Filled.Image" Size="Size.Large" class="mr-2"/>
                                 @T("Moderation, Design, Wiki, and Documentation")

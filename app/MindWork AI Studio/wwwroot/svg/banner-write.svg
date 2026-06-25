@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" overflow="hidden" preserveAspectRatio="xMidYMid slice" viewBox="0 0 1920 335">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2e7858"/><stop offset="60%" stop-color="#1a4d38"/><stop offset="100%" stop-color="#0e2e1e"/>
+    </linearGradient>
+    <linearGradient id="h1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1e5c40"/><stop offset="100%" stop-color="#0f3020"/>
+    </linearGradient>
+    <linearGradient id="h2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2d7a52"/><stop offset="100%" stop-color="#1a4a32"/>
+    </linearGradient>
+    <linearGradient id="h3" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#4d9970"/><stop offset="100%" stop-color="#2d6448"/>
+    </linearGradient>
+    <radialGradient id="sg" cx="86%" cy="14%" r="24%">
+      <stop offset="0%" stop-color="#f5e060" stop-opacity="0.65"/>
+      <stop offset="55%" stop-color="#f0c840" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#f0c840" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1920" height="335" fill="url(#bg)"/>
+  <rect width="1920" height="335" fill="url(#sg)"/>
+  <circle cx="1655" cy="50" r="72" fill="#f5e060" opacity="0.16"/>
+  <circle cx="1655" cy="50" r="54" fill="#f5e060" opacity="0.32"/>
+  <circle cx="1655" cy="50" r="38" fill="#f5e060" opacity="0.96"/>
+  <path d="M0,232 Q480,145 960,185 Q1440,225 1920,168 L1920,335 L0,335 Z" fill="url(#h1)"/>
+  <path d="M0,266 Q310,205 625,246 Q940,287 1265,222 Q1590,157 1920,238 L1920,335 L0,335 Z" fill="url(#h2)"/>
+  <path d="M0,300 Q480,270 960,296 Q1440,322 1920,288 L1920,335 L0,335 Z" fill="url(#h3)"/>
+  <g opacity="0.30"><ellipse cx="245" cy="68" rx="64" ry="22" fill="#a8c8b8"/><ellipse cx="283" cy="57" rx="42" ry="23" fill="#c2deca"/><ellipse cx="208" cy="65" rx="33" ry="18" fill="#c2deca"/></g>
+  <g opacity="0.22"><ellipse cx="1340" cy="94" rx="70" ry="25" fill="#a8c8b8"/><ellipse cx="1382" cy="82" rx="46" ry="23" fill="#c2deca"/></g>
+  <g fill="#071a0d">
+    <polygon points="35,310 66,222 97,310"/><polygon points="39,285 66,214 93,285" opacity="0.72"/>
+    <rect x="62" y="308" width="9" height="20"/>
+    <polygon points="105,314 133,238 161,314"/><rect x="129" y="312" width="8" height="16"/>
+    <polygon points="168,306 193,242 218,306" opacity="0.82"/><rect x="189" y="304" width="7" height="18" opacity="0.82"/>
+    <polygon points="12,318 37,265 62,318" opacity="0.60"/>
+  </g>
+  <g fill="#071a0d">
+    <polygon points="1755,304 1786,218 1817,304"/><polygon points="1759,280 1786,210 1813,280" opacity="0.72"/>
+    <rect x="1782" y="302" width="9" height="20"/>
+    <polygon points="1821,310 1849,234 1877,310"/><rect x="1845" y="308" width="9" height="18"/>
+    <polygon points="1725,314 1751,250 1777,314" opacity="0.78"/><rect x="1747" y="312" width="7" height="15" opacity="0.78"/>
+    <polygon points="1885,316 1906,264 1927,316" opacity="0.55"/>
+  </g>
+  <g fill="none" stroke="#98c8a8" stroke-width="2.5" stroke-linecap="round" opacity="0.48">
+    <path d="M1450,60 Q1459,53 1468,60"/><path d="M1476,46 Q1484,40 1492,46"/><path d="M1428,74 Q1437,68 1446,74"/>
+  </g>
+
+  <!-- Open book — shadow -->
+  <rect x="400" y="76" width="348" height="228" rx="10" fill="#1a4a30" opacity="0.46"/>
+
+  <!-- Left cover (hardcover, binding visible at top/bottom) -->
+  <rect x="386" y="58" width="176" height="238" rx="12" fill="#4d9970"/>
+  <!-- Right cover -->
+  <rect x="554" y="58" width="176" height="238" rx="12" fill="#4d9970"/>
+
+  <!-- Spine band -->
+  <rect x="548" y="54" width="16" height="246" fill="#2d6848"/>
+  <!-- Spine highlight -->
+  <rect x="550" y="54" width="4" height="246" fill="white" opacity="0.16"/>
+
+  <!-- Page stack at top — left side (shows book has many pages) -->
+  <rect x="394" y="62" width="158" height="2.5" rx="1" fill="#b4d4c4"/>
+  <rect x="394" y="64.5" width="158" height="2" rx="1" fill="#c0dcc8"/>
+  <rect x="394" y="66.5" width="158" height="2" rx="1" fill="#cce4d2"/>
+  <!-- Page stack at top — right side -->
+  <rect x="560" y="62" width="162" height="2.5" rx="1" fill="#b4d4c4"/>
+  <rect x="560" y="64.5" width="162" height="2" rx="1" fill="#c0dcc8"/>
+  <rect x="560" y="66.5" width="162" height="2" rx="1" fill="#cce4d2"/>
+
+  <!-- Page stack at bottom — left side -->
+  <rect x="394" y="288" width="158" height="2" rx="1" fill="#cce4d2"/>
+  <rect x="394" y="290" width="158" height="2" rx="1" fill="#b4d4c4"/>
+  <rect x="394" y="292" width="158" height="2" rx="1" fill="#a4c4b4"/>
+  <!-- Page stack at bottom — right side -->
+  <rect x="560" y="288" width="162" height="2" rx="1" fill="#cce4d2"/>
+  <rect x="560" y="290" width="162" height="2" rx="1" fill="#b4d4c4"/>
+  <rect x="560" y="292" width="162" height="2" rx="1" fill="#a4c4b4"/>
+
+  <!-- Left page (paper) -->
+  <rect x="394" y="69" width="158" height="219" fill="#ddf0e8"/>
+  <!-- Right page (paper) -->
+  <rect x="560" y="69" width="162" height="219" fill="#ecf7f0"/>
+
+  <!-- Gutter shadow — left page (darkest at spine edge) -->
+  <rect x="535" y="69" width="17" height="219" fill="#0e2e1e" opacity="0.16"/>
+  <rect x="545" y="69" width="7" height="219" fill="#0e2e1e" opacity="0.14"/>
+  <!-- Gutter shadow — right page (darkest at spine edge) -->
+  <rect x="560" y="69" width="9" height="219" fill="#0e2e1e" opacity="0.18"/>
+  <rect x="569" y="69" width="7" height="219" fill="#0e2e1e" opacity="0.10"/>
+
+  <!-- Left page text lines -->
+  <g fill="#4d9970" opacity="0.36">
+    <rect x="413" y="90" width="118" height="7" rx="3"/>
+    <rect x="413" y="107" width="104" height="7" rx="3"/>
+    <rect x="413" y="124" width="126" height="7" rx="3"/>
+    <rect x="413" y="141" width="92" height="7" rx="3"/>
+    <rect x="413" y="158" width="116" height="7" rx="3"/>
+    <rect x="413" y="175" width="106" height="7" rx="3"/>
+    <rect x="413" y="192" width="120" height="7" rx="3"/>
+    <rect x="413" y="209" width="86" height="7" rx="3"/>
+    <rect x="413" y="226" width="112" height="7" rx="3"/>
+    <rect x="413" y="243" width="98" height="7" rx="3"/>
+    <rect x="413" y="260" width="114" height="7" rx="3"/>
+  </g>
+  <!-- Golden title line on left page -->
+  <rect x="413" y="90" width="118" height="7" rx="3" fill="#f5e060" opacity="0.65"/>
+
+  <!-- Right page text lines (pen is partway through the page) -->
+  <g fill="#4d9970" opacity="0.36">
+    <rect x="578" y="90" width="118" height="7" rx="3"/>
+    <rect x="578" y="107" width="105" height="7" rx="3"/>
+    <rect x="578" y="124" width="122" height="7" rx="3"/>
+    <rect x="578" y="141" width="94" height="7" rx="3"/>
+    <rect x="578" y="158" width="116" height="7" rx="3"/>
+    <rect x="578" y="175" width="76" height="7" rx="3"/>
+    <rect x="578" y="192" width="103" height="7" rx="3"/>
+  </g>
+  <!-- Partial current line (being written right now) -->
+  <rect x="578" y="209" width="62" height="7" rx="3" fill="#4d9970" opacity="0.42"/>
+
+  <!-- Pen shadow on right page -->
+  <g opacity="0.38">
+    <rect x="0" y="-5" width="152" height="10" rx="5" fill="#1a4a30" transform="translate(657,204) rotate(-35)"/>
+    <polygon points="0,-4 0,4 -16,0" fill="#1a4a30" transform="translate(657,204) rotate(-35)"/>
+  </g>
+
+  <!-- Pen body at -35°, nib tip landing at ≈(635,209) on the right-page writing line -->
+  <g transform="translate(650,199) rotate(-35)">
+    <!-- Main barrel -->
+    <rect x="0" y="-6" width="140" height="12" rx="6" fill="#cce8da"/>
+    <!-- Cap section (rear) -->
+    <rect x="116" y="-6" width="30" height="12" rx="6" fill="#b0d8c2"/>
+    <!-- Gold join band -->
+    <rect x="114" y="-6" width="7" height="12" fill="#f5e060" opacity="0.78"/>
+    <!-- Clip on cap -->
+    <rect x="124" y="-8" width="4" height="58" rx="2" fill="#a0c8b0"/>
+    <!-- Barrel sheen -->
+    <rect x="2" y="-6" width="110" height="4" rx="4" fill="white" opacity="0.22"/>
+    <!-- Nib section (front) -->
+    <rect x="0" y="-6" width="22" height="12" rx="6" fill="#b8d8c8"/>
+    <!-- Gold nib collar -->
+    <rect x="18" y="-6" width="7" height="12" fill="#f5e060" opacity="0.68"/>
+    <!-- Nib tip -->
+    <polygon points="0,-5 0,5 -18,0" fill="#a8c8b0"/>
+    <!-- Nib slit -->
+    <line x1="-1" y1="0" x2="-16" y2="0" stroke="#6a9880" stroke-width="1.5"/>
+  </g>
+  <!-- Ink trail from nib onto the writing line -->
+  <path d="M 594,213 Q 612,211 635,209" stroke="#4d9970" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.62"/>
+
+  <text x="1254" y="183" font-family="Helvetica, 'Helvetica Neue', Arial, sans-serif"
+        font-size="128" font-weight="900" text-anchor="middle"
+        fill="#071a0d" opacity="0.42" letter-spacing="-3">AI Studio</text>
+  <text x="1248" y="176" font-family="Helvetica, 'Helvetica Neue', Arial, sans-serif"
+        font-size="128" font-weight="900" text-anchor="middle"
+        fill="#dff2e8" letter-spacing="-3">AI Studio</text>
+</svg>
