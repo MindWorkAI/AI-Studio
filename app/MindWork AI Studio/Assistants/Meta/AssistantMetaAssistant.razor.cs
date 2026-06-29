@@ -1,10 +1,13 @@
-﻿using System.Text;
+﻿using System.Reflection;
+using System.Text;
 using System.Text.Json;
 using AIStudio.Dialogs;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Tools.PluginSystem.Assistants.DataModel;
 using AIStudio.Tools.Services;
 using Microsoft.AspNetCore.Components;
+// ReSharper disable once RedundantUsingDirective
+using Microsoft.Extensions.FileProviders;
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Assistants.Meta;
@@ -87,7 +90,7 @@ public partial class AssistantMetaAssistant : AssistantBaseCore<NoSettingsPanel>
     private string generatedAssistantSpec = string.Empty;
     private string reviewNotes = string.Empty;
     private string generatedLuaAssistant = string.Empty;
-    private readonly Guid pluginId = Guid.NewGuid();
+    private Guid pluginId = Guid.NewGuid();
     private static readonly AssistantContextFile[] ASSISTANT_CONTEXT_FILES =
     [
         new("Assistant plugin schema", "Plugins/assistants/README.md", IsRequired: true),
@@ -117,6 +120,7 @@ public partial class AssistantMetaAssistant : AssistantBaseCore<NoSettingsPanel>
 
     protected override void ResetForm()
     {
+        this.pluginId = Guid.NewGuid();
         this.step = BuilderStep.DESCRIBE;
         this.assistantDescription = string.Empty;
         this.selectedCategory = AssistantCategory.AS_IS;
