@@ -391,6 +391,7 @@ public sealed class SettingsManager
             case ConfidenceSchemes.TRUST_ALL:
                 return llmProvider switch
                 {
+                    LLMProviders.TRANSPARENCY => ConfidenceLevel.HIGH,
                     LLMProviders.SELF_HOSTED => ConfidenceLevel.HIGH,
                     
                     _ => ConfidenceLevel.MEDIUM,   
@@ -399,6 +400,7 @@ public sealed class SettingsManager
             case ConfidenceSchemes.TRUST_USA_EUROPE:
                 return llmProvider switch
                 {
+                    LLMProviders.TRANSPARENCY => ConfidenceLevel.HIGH,
                     LLMProviders.SELF_HOSTED => ConfidenceLevel.HIGH,
                     LLMProviders.DEEP_SEEK => ConfidenceLevel.LOW,
                     
@@ -408,6 +410,7 @@ public sealed class SettingsManager
             case ConfidenceSchemes.TRUST_USA:
                 return llmProvider switch
                 {
+                    LLMProviders.TRANSPARENCY => ConfidenceLevel.HIGH,
                     LLMProviders.SELF_HOSTED => ConfidenceLevel.HIGH,
                     LLMProviders.MISTRAL => ConfidenceLevel.LOW,
                     LLMProviders.HELMHOLTZ => ConfidenceLevel.LOW,
@@ -420,6 +423,7 @@ public sealed class SettingsManager
             case ConfidenceSchemes.TRUST_EUROPE:
                 return llmProvider switch
                 {
+                    LLMProviders.TRANSPARENCY => ConfidenceLevel.HIGH,
                     LLMProviders.SELF_HOSTED => ConfidenceLevel.HIGH,
                     LLMProviders.MISTRAL => ConfidenceLevel.MEDIUM,
                     LLMProviders.HELMHOLTZ => ConfidenceLevel.MEDIUM,
@@ -431,6 +435,7 @@ public sealed class SettingsManager
             case ConfidenceSchemes.TRUST_ASIA:
                 return llmProvider switch
                 {
+                    LLMProviders.TRANSPARENCY => ConfidenceLevel.HIGH,
                     LLMProviders.SELF_HOSTED => ConfidenceLevel.HIGH,
                     LLMProviders.DEEP_SEEK => ConfidenceLevel.MEDIUM,
                     
@@ -440,6 +445,7 @@ public sealed class SettingsManager
             case ConfidenceSchemes.LOCAL_TRUST_ONLY:
                 return llmProvider switch
                 {
+                    LLMProviders.TRANSPARENCY => ConfidenceLevel.HIGH,
                     LLMProviders.SELF_HOSTED => ConfidenceLevel.HIGH,
                     
                     _ => ConfidenceLevel.VERY_LOW,   

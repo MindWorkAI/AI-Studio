@@ -22,6 +22,13 @@
                     @T("Create account")
                 </MudButton>
             </MudStack>
+
+            @if (!string.IsNullOrWhiteSpace(this.DataLLMProvider.Description()))
+            {
+                <MudAlert Severity="Severity.Info" Class="mb-3">
+                    @this.DataLLMProvider.Description()
+                </MudAlert>
+            }
             
             @if (this.DataLLMProvider.IsAPIKeyNeeded(this.DataHost))
             {
@@ -57,57 +64,68 @@
                 </MudSelect>
             }
 
-            <MudField FullWidth="true" Label="@T("Model selection")" Variant="Variant.Outlined" Class="mb-3">
-                <MudStack Row="@true" AlignItems="AlignItems.Center" StretchItems="StretchItems.End">
-                    @if (this.DataLLMProvider.IsEmbeddingModelProvidedManually(this.DataHost))
-                    {
-                        <MudTextField
-                            T="string"
-                            @bind-Text="@this.dataManuallyModel"
-                            Label="@T("Model")"
-                            Class="mb-3"
-                            Adornment="Adornment.Start"
-                            AdornmentIcon="@Icons.Material.Filled.Dns"
-                            AdornmentColor="Color.Info"
-                            Validation="@this.ValidateManuallyModel"
-                            UserAttributes="@SPELLCHECK_ATTRIBUTES"
-                            HelperText="@T("Currently, we cannot query the embedding models for the selected provider and/or host. Therefore, please enter the model name manually.")"
-                        />
-                    }
-                    else
-                    {
-                        <MudButton Disabled="@(!this.DataLLMProvider.CanLoadModels(this.DataHost, this.dataAPIKey))" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Refresh" OnClick="@this.ReloadModels">
-                            @T("Load")
-                        </MudButton>
-                        @if(this.availableModels.Count is 0)
+            @if (!this.DataLLMProvider.IsEmbeddingModelSelectionHidden(this.DataHost))
+            {
+                <MudField FullWidth="true" Label="@T("Model selection")" Variant="Variant.Outlined" Class="mb-3">
+                    <MudStack Row="@true" AlignItems="AlignItems.Center" StretchItems="StretchItems.End">
+                        @if (this.DataLLMProvider.IsEmbeddingModelProvidedManually(this.DataHost))
                         {
-                            <MudText Typo="Typo.body1">
-                                @T("No models loaded or available.")
-                            </MudText>
+                            <MudTextField
+                                T="string"
+                                @bind-Text="@this.dataManuallyModel"
+                                Label="@T("Model")"
+                                Class="mb-3"
+                                Adornment="Adornment.Start"
+                                AdornmentIcon="@Icons.Material.Filled.Dns"
+                                AdornmentColor="Color.Info"
+                                Validation="@this.ValidateManuallyModel"
+                                UserAttributes="@SPELLCHECK_ATTRIBUTES"
+                                HelperText="@T("Currently, we cannot query the embedding models for the selected provider and/or host. Therefore, please enter the model name manually.")"
+                            />
                         }
                         else
                         {
-                            <MudSelect Disabled="@this.IsNoneProvider" @bind-Value="@this.DataModel" Label="@T("Model")"
-                                       OpenIcon="@Icons.Material.Filled.FaceRetouchingNatural"
-                                       AdornmentColor="Color.Info" Adornment="Adornment.Start"
-                                       Validation="@this.providerValidation.ValidatingModel">
-                                @foreach (var model in this.availableModels)
-                                {
-                                    <MudSelectItem Value="@model">
-                                        @model
-                                    </MudSelectItem>
-                                }
-                            </MudSelect>
+                            <MudButton Disabled="@(!this.DataLLMProvider.CanLoadModels(this.DataHost, this.dataAPIKey))" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Refresh" OnClick="@this.ReloadModels">
+                                @T("Load")
+                            </MudButton>
+                            @if(this.availableModels.Count is 0)
+                            {
+                                <MudText Typo="Typo.body1">
+                                    @T("No models loaded or available.")
+                                </MudText>
+                            }
+                            else
+                            {
+                                <MudSelect Disabled="@this.IsNoneProvider" @bind-Value="@this.DataModel" Label="@T("Model")"
+                                           OpenIcon="@Icons.Material.Filled.FaceRetouchingNatural"
+                                           AdornmentColor="Color.Info" Adornment="Adornment.Start"
+                                           Validation="@this.providerValidation.ValidatingModel">
+                                    @foreach (var model in this.availableModels)
+                                    {
+                                        <MudSelectItem Value="@model">
+                                            @model
+                                        </MudSelectItem>
+                                    }
+                                </MudSelect>
+                            }
                         }
+                    </MudStack>
+                    @if (!string.IsNullOrWhiteSpace(this.dataLoadingModelsIssue))
+                    {
+                        <MudAlert Severity="Severity.Error" Class="mt-3">
+                            @this.dataLoadingModelsIssue
+                        </MudAlert>
                     }
-                </MudStack>
-                @if (!string.IsNullOrWhiteSpace(this.dataLoadingModelsIssue))
-                {
-                    <MudAlert Severity="Severity.Error" Class="mt-3">
-                        @this.dataLoadingModelsIssue
-                    </MudAlert>
-                }
-            </MudField>
+                </MudField>
+            }
+            else if (!(DataLLMProvider is LLMProviders.TRANSPARENCY))
+            {
+                <MudField FullWidth="true" Label="@T("Model selection")" Variant="Variant.Outlined" Class="mb-3">
+                    <MudText Typo="Typo.body1">
+                        @T("This host uses the model configured at the provider level. No model selection is available.")
+                    </MudText>
+                </MudField>
+            }
 
             @* ReSharper disable once CSharpWarnings::CS8974 *@
             <MudTextField

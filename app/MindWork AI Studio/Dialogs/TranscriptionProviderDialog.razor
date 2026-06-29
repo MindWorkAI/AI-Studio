@@ -22,6 +22,13 @@
                     @T("Create account")
                 </MudButton>
             </MudStack>
+
+            @if (!string.IsNullOrWhiteSpace(this.DataLLMProvider.Description()))
+            {
+                <MudAlert Severity="Severity.Info" Class="mb-3">
+                    @this.DataLLMProvider.Description()
+                </MudAlert>
+            }
             
             @if (this.DataLLMProvider.IsAPIKeyNeeded(this.DataHost))
             {
@@ -111,7 +118,7 @@
                     }
                 </MudField>
             }
-            else
+            else if (!(this.DataLLMProvider is LLMProviders.TRANSPARENCY))
             {
                 <MudField FullWidth="true" Label="@T("Model selection")" Variant="Variant.Outlined" Class="mb-3">
                     <MudText Typo="Typo.body1">

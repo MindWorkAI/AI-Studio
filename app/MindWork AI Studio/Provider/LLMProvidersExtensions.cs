@@ -12,6 +12,7 @@ using AIStudio.Provider.OpenAI;
 using AIStudio.Provider.OpenRouter;
 using AIStudio.Provider.Perplexity;
 using AIStudio.Provider.SelfHosted;
+using AIStudio.Provider.Transparency;
 using AIStudio.Provider.X;
 using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem;
@@ -44,6 +45,7 @@ public static class LLMProvidersExtensions
         LLMProviders.ALIBABA_CLOUD => "Alibaba Cloud",
         LLMProviders.PERPLEXITY => "Perplexity",
         LLMProviders.OPEN_ROUTER => "OpenRouter",
+        LLMProviders.TRANSPARENCY => TB("Transparency"),
 
         LLMProviders.GROQ => "Groq",
         LLMProviders.FIREWORKS => "Fireworks.ai",
@@ -97,6 +99,8 @@ public static class LLMProvidersExtensions
 
         LLMProviders.OPEN_ROUTER => Confidence.USA_HUB.WithRegion("America, U.S.").WithSources("https://openrouter.ai/privacy", "https://openrouter.ai/terms").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
 
+        LLMProviders.TRANSPARENCY => Confidence.SELF_HOSTED.WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
+
         LLMProviders.SELF_HOSTED => Confidence.SELF_HOSTED.WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
         
         LLMProviders.HELMHOLTZ => Confidence.GDPR_NO_TRAINING.WithRegion("Europe, Germany").WithSources("https://helmholtz.cloud/services/?serviceID=d7d5c597-a2f6-4bd1-b71e-4d6499d98570").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
@@ -120,6 +124,7 @@ public static class LLMProvidersExtensions
         LLMProviders.GOOGLE => true,
         LLMProviders.HELMHOLTZ => true,
         LLMProviders.ALIBABA_CLOUD => true,
+        LLMProviders.TRANSPARENCY => true,
         
         //
         // Providers that do not support embeddings:
@@ -151,6 +156,7 @@ public static class LLMProvidersExtensions
         LLMProviders.MISTRAL => true,
         LLMProviders.FIREWORKS => true,
         LLMProviders.GWDG => true,
+        LLMProviders.TRANSPARENCY => true,
         
         //
         // Providers that support transcription but provide no OpenAI-compatible API yet:
@@ -186,6 +192,16 @@ public static class LLMProvidersExtensions
     /// <returns>The provider instance.</returns>
     public static IProvider CreateProvider(this AIStudio.Settings.Provider providerSettings)
     {
+        if (providerSettings.UsedLLMProvider is LLMProviders.TRANSPARENCY)
+        {
+            return new ProviderTransparency
+            {
+                InstanceName = providerSettings.InstanceName,
+                AdditionalJsonApiParameters = providerSettings.AdditionalJsonApiParameters,
+                IsEnterpriseConfiguration = providerSettings.IsEnterpriseConfiguration,
+            };
+        }
+
         return providerSettings.UsedLLMProvider.CreateProvider(providerSettings.InstanceName, providerSettings.Host, providerSettings.Hostname, providerSettings.Model, providerSettings.HFInferenceProvider, providerSettings.AdditionalJsonApiParameters, providerSettings.IsEnterpriseConfiguration);
     }
     
@@ -196,6 +212,15 @@ public static class LLMProvidersExtensions
     /// <returns>The provider instance.</returns>
     public static IProvider CreateProvider(this EmbeddingProvider embeddingProviderSettings)
     {
+        if (embeddingProviderSettings.UsedLLMProvider is LLMProviders.TRANSPARENCY)
+        {
+            return new ProviderTransparencyEmbedding
+            {
+                InstanceName = embeddingProviderSettings.Name,
+                IsEnterpriseConfiguration = embeddingProviderSettings.IsEnterpriseConfiguration,
+            };
+        }
+
         return embeddingProviderSettings.UsedLLMProvider.CreateProvider(embeddingProviderSettings.Name, embeddingProviderSettings.Host, embeddingProviderSettings.Hostname, embeddingProviderSettings.Model, HFInferenceProvider.NONE, isEnterpriseConfiguration: embeddingProviderSettings.IsEnterpriseConfiguration);
     }
     
@@ -206,6 +231,15 @@ public static class LLMProvidersExtensions
     /// <returns>The provider instance.</returns>
     public static IProvider CreateProvider(this TranscriptionProvider transcriptionProviderSettings)
     {
+        if (transcriptionProviderSettings.UsedLLMProvider is LLMProviders.TRANSPARENCY)
+        {
+            return new ProviderTransparencyTranscription
+            {
+                InstanceName = transcriptionProviderSettings.Name,
+                IsEnterpriseConfiguration = transcriptionProviderSettings.IsEnterpriseConfiguration,
+            };
+        }
+
         return transcriptionProviderSettings.UsedLLMProvider.CreateProvider(transcriptionProviderSettings.Name, transcriptionProviderSettings.Host, transcriptionProviderSettings.Hostname, transcriptionProviderSettings.Model, HFInferenceProvider.NONE, isEnterpriseConfiguration: transcriptionProviderSettings.IsEnterpriseConfiguration);
     }
     
@@ -224,6 +258,7 @@ public static class LLMProvidersExtensions
                 LLMProviders.ALIBABA_CLOUD => new ProviderAlibabaCloud { InstanceName = instanceName, AdditionalJsonApiParameters = expertProviderApiParameter, IsEnterpriseConfiguration = isEnterpriseConfiguration },
                 LLMProviders.PERPLEXITY => new ProviderPerplexity { InstanceName = instanceName, AdditionalJsonApiParameters = expertProviderApiParameter, IsEnterpriseConfiguration = isEnterpriseConfiguration },
                 LLMProviders.OPEN_ROUTER => new ProviderOpenRouter { InstanceName = instanceName, AdditionalJsonApiParameters = expertProviderApiParameter, IsEnterpriseConfiguration = isEnterpriseConfiguration },
+                LLMProviders.TRANSPARENCY => new ProviderTransparency { InstanceName = instanceName, AdditionalJsonApiParameters = expertProviderApiParameter, IsEnterpriseConfiguration = isEnterpriseConfiguration },
 
                 LLMProviders.GROQ => new ProviderGroq { InstanceName = instanceName, AdditionalJsonApiParameters = expertProviderApiParameter, IsEnterpriseConfiguration = isEnterpriseConfiguration },
                 LLMProviders.FIREWORKS => new ProviderFireworks { InstanceName = instanceName, AdditionalJsonApiParameters = expertProviderApiParameter, IsEnterpriseConfiguration = isEnterpriseConfiguration },
@@ -336,7 +371,14 @@ public static class LLMProvidersExtensions
     /// <returns>True if model selection should be hidden; otherwise, false.</returns>
     public static bool IsLLMModelSelectionHidden(this LLMProviders provider, Host host) => provider switch
     {
+        LLMProviders.TRANSPARENCY => true,
         LLMProviders.SELF_HOSTED => host is Host.LLAMA_CPP,
+        _ => false,
+    };
+
+    public static bool IsEmbeddingModelSelectionHidden(this LLMProviders provider, Host host) => provider switch
+    {
+        LLMProviders.TRANSPARENCY => true,
         _ => false,
     };
 
@@ -349,6 +391,7 @@ public static class LLMProvidersExtensions
     /// <returns>True if model selection should be hidden; otherwise, false.</returns>
     public static bool IsTranscriptionModelSelectionHidden(this LLMProviders provider, Host host) => provider switch
     {
+        LLMProviders.TRANSPARENCY => true,
         LLMProviders.SELF_HOSTED => host is Host.WHISPER_CPP,
         _ => false,
     };
@@ -411,6 +454,9 @@ public static class LLMProvidersExtensions
 
     public static bool CanLoadModels(this LLMProviders provider, Host host, string? apiKey)
     {
+        if (provider is LLMProviders.TRANSPARENCY)
+            return false;
+
         if (provider is LLMProviders.SELF_HOSTED)
         {
             switch (host)
@@ -441,5 +487,17 @@ public static class LLMProvidersExtensions
     {
         LLMProviders.HUGGINGFACE => true,
         _ => false,
+    };
+
+    public static string Description(this LLMProviders provider) => provider switch
+    {
+        LLMProviders.TRANSPARENCY => TB("This provider never contacts an external service. It only shows the exact request AI Studio generated locally so you can inspect it for transparency and research. It is not intended to produce real model answers."),
+        _ => string.Empty,
+    };
+
+    public static bool CanConfigureAdditionalJsonApiParameters(this LLMProviders provider) => provider switch
+    {
+        LLMProviders.TRANSPARENCY => false,
+        _ => true,
     };
 }

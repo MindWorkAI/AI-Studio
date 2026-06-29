@@ -1,5 +1,6 @@
 using AIStudio.Components;
 using AIStudio.Provider;
+using AIStudio.Provider.Transparency;
 using AIStudio.Settings;
 using AIStudio.Tools.Services;
 using AIStudio.Tools.Validation;
@@ -114,7 +115,9 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
     {
         var cleanedHostname = this.DataHostname.Trim();
         Model model = default;
-        if(this.DataLLMProvider is LLMProviders.SELF_HOSTED)
+        if (this.DataLLMProvider is LLMProviders.TRANSPARENCY)
+            model = ProviderTransparencyBase.EMBEDDING_PREVIEW_MODEL;
+        else if(this.DataLLMProvider is LLMProviders.SELF_HOSTED)
         {
             if (this.DataHost is Host.OLLAMA)
                 model = new Model(this.dataManuallyModel, null);
@@ -156,6 +159,9 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
         if(this.IsEditing)
         {
             this.dataEditingPreviousInstanceName = this.DataName.ToLowerInvariant();
+
+            if (this.DataLLMProvider is LLMProviders.TRANSPARENCY)
+                return;
             
             // When using self-hosted embedding, we must copy the model name:
             if (this.DataLLMProvider is LLMProviders.SELF_HOSTED)

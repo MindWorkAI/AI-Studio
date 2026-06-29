@@ -93,6 +93,9 @@ public abstract class BaseProvider : IProvider, ISecretId
     public abstract string InstanceName { get; set; }
 
     /// <inheritdoc />
+    public string Description => this.Provider.Description();
+
+    /// <inheritdoc />
     public string AdditionalJsonApiParameters { get; init; } = string.Empty;
 
     /// <inheritdoc />

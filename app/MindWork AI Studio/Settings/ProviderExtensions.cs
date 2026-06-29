@@ -32,6 +32,13 @@ public static partial class ProviderExtensions
         LLMProviders.GROQ => GetModelCapabilitiesOpenSource(model),
         LLMProviders.FIREWORKS => GetModelCapabilitiesOpenSource(model),
         LLMProviders.HUGGINGFACE => GetModelCapabilitiesOpenSource(model),
+        LLMProviders.TRANSPARENCY =>
+        [
+            Capability.TEXT_INPUT,
+            Capability.MULTIPLE_IMAGE_INPUT,
+            Capability.TEXT_OUTPUT,
+            Capability.CHAT_COMPLETION_API,
+        ],
         
         LLMProviders.HELMHOLTZ => GetModelCapabilitiesOpenSource(model),
         LLMProviders.GWDG => GetModelCapabilitiesOpenSource(model),

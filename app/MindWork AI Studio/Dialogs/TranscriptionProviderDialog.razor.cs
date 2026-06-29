@@ -1,5 +1,6 @@
 using AIStudio.Components;
 using AIStudio.Provider;
+using AIStudio.Provider.Transparency;
 using AIStudio.Settings;
 using AIStudio.Tools.Services;
 using AIStudio.Tools.Validation;
@@ -116,7 +117,11 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
 
         // Determine the model based on the provider and host configuration:
         Model model;
-        if (this.DataLLMProvider.IsTranscriptionModelSelectionHidden(this.DataHost))
+        if (this.DataLLMProvider is LLMProviders.TRANSPARENCY)
+        {
+            model = ProviderTransparencyBase.TRANSCRIPTION_PREVIEW_MODEL;
+        }
+        else if (this.DataLLMProvider.IsTranscriptionModelSelectionHidden(this.DataHost))
         {
             // Use system model placeholder for hosts that don't support model selection (e.g., whisper.cpp):
             model = Model.SYSTEM_MODEL;
@@ -171,6 +176,9 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
         if(this.IsEditing)
         {
             this.dataEditingPreviousInstanceName = this.DataName.ToLowerInvariant();
+
+            if (this.DataLLMProvider is LLMProviders.TRANSPARENCY)
+                return;
             
             // When using self-hosted models, we must copy the model name:
             if (this.DataLLMProvider is LLMProviders.SELF_HOSTED)
@@ -312,7 +320,7 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
         }
         catch (Exception e)
         {
-            this.Logger.LogError($"Failed to load models from provider '{this.DataLLMProvider}' (host={this.DataHost}, hostname='{this.DataHostname}'): {e.Message}");;
+            this.Logger.LogError($"Failed to load models from provider '{this.DataLLMProvider}' (host={this.DataHost}, hostname='{this.DataHostname}'): {e.Message}");
             this.dataLoadingModelsIssue = T("We are currently unable to communicate with the provider to load models. Please try again later.");
         }
     }

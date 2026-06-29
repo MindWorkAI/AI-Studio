@@ -23,6 +23,11 @@ public interface IProvider
     /// e.g., to distinguish between different OpenAI API keys.
     /// </summary>
     public string InstanceName { get; }
+
+    /// <summary>
+    /// Optional provider description text shown in configuration UI.
+    /// </summary>
+    public string Description { get; }
     
     /// <summary>
     /// The additional API parameters.

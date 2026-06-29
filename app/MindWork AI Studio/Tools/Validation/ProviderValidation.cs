@@ -73,7 +73,7 @@ public sealed class ProviderValidation
     public string? ValidatingModel(Model model)
     {
         // For NONE providers, no validation is needed:
-        if (this.GetProvider() is LLMProviders.NONE)
+        if (this.GetProvider() is LLMProviders.NONE or LLMProviders.TRANSPARENCY)
             return null;
 
         // For self-hosted llama.cpp or whisper.cpp, no model selection needed

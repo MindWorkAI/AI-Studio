@@ -4,6 +4,7 @@ using System.Text.Json;
 using AIStudio.Components;
 using AIStudio.Provider;
 using AIStudio.Provider.HuggingFace;
+using AIStudio.Provider.Transparency;
 using AIStudio.Tools.Services;
 using AIStudio.Tools.Validation;
 
@@ -132,7 +133,11 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
 
         // Determine the model based on the provider and host configuration:
         Model model;
-        if (this.DataLLMProvider.IsLLMModelSelectionHidden(this.DataHost))
+        if (this.DataLLMProvider is LLMProviders.TRANSPARENCY)
+        {
+            model = ProviderTransparencyBase.CHAT_PREVIEW_MODEL;
+        }
+        else if (this.DataLLMProvider.IsLLMModelSelectionHidden(this.DataHost))
         {
             // Use system model placeholder for hosts that don't support model selection (e.g., llama.cpp):
             model = Model.SYSTEM_MODEL;
@@ -157,7 +162,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
             Hostname = cleanedHostname.EndsWith('/') ? cleanedHostname[..^1] : cleanedHostname,
             Host = this.DataHost,
             HFInferenceProvider = this.HFInferenceProviderId,
-            AdditionalJsonApiParameters = this.AdditionalJsonApiParameters,
+            AdditionalJsonApiParameters = this.DataLLMProvider.CanConfigureAdditionalJsonApiParameters() ? this.AdditionalJsonApiParameters : string.Empty,
         };
     }
 
@@ -182,6 +187,9 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         if(this.IsEditing)
         {
             this.dataEditingPreviousInstanceName = this.DataInstanceName.ToLowerInvariant();
+
+            if (this.DataLLMProvider is LLMProviders.TRANSPARENCY)
+                return;
             
             // When using Fireworks or Hugging Face, we must copy the model name:
             if (this.DataLLMProvider.IsLLMModelProvidedManually())
