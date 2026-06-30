@@ -48,6 +48,11 @@
                             </MudTooltip>
                         }
                     </MudStack>
+
+                    @if (this.AfterSubmitContent is not null && this.isProcessing)
+                    {
+                        @this.AfterSubmitContent
+                    }
                 }
             </MudForm>
             <Issues IssuesData="@(this.inputIssues)"/>
