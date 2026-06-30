@@ -38,6 +38,7 @@
     </MudExpansionPanels>
 
     <ProviderSelection @bind-ProviderSettings="@this.ProviderSettings" ValidateProvider="@this.ValidatingProvider"/>
+    <MudAlert Severity="Severity.Info" Square="true" Class="mb-2 mt-n1" Style="width: max-content">@this.highPerformanceLLMInfo</MudAlert>
 }
 else
 {
@@ -70,6 +71,7 @@ else
     </MudStack>
 
     <ProviderSelection @bind-ProviderSettings="@this.ProviderSettings" ValidateProvider="@this.ValidatingProvider"/>
+    <MudAlert Severity="Severity.Info" Square="true" Class="mb-2 mt-n1" Style="width: max-content">@this.highPerformanceLLMInfo</MudAlert>
 }
 
 @code {

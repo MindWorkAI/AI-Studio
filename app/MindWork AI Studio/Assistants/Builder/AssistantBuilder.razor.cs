@@ -97,6 +97,8 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
     private string reviewNotes = string.Empty;
     private string generatedLuaAssistant = string.Empty;
     private Guid pluginId = Guid.NewGuid();
+
+    private string highPerformanceLLMInfo => T("It is recommended to a powerful LLM.");
     private static readonly AssistantContextFile[] ASSISTANT_CONTEXT_FILES =
     [
         new("Assistant plugin schema", "Plugins/assistants/README.md", IsRequired: true),
