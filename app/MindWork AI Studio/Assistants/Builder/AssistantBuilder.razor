@@ -71,3 +71,13 @@ else
 
     <ProviderSelection @bind-ProviderSettings="@this.ProviderSettings" ValidateProvider="@this.ValidatingProvider"/>
 }
+
+@code {
+    private protected override RenderFragment? AfterSubmitContent => @<MudCard>
+        <MudCardContent>
+            <MudSkeleton />
+            <MudSkeleton Animation="Animation.False" />
+            <MudSkeleton Animation="Animation.Wave" />
+        </MudCardContent>
+    </MudCard>;
+}
