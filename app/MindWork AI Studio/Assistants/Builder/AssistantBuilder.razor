@@ -47,20 +47,25 @@ else
         </MudText>
         <MudSpacer/>
         <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Visibility" OnClick="@(async () => await this.OpenDraftDialog())">
-            @T("Review draft")
+            @T("View accepted draft")
         </MudButton>
     </MudStack>
-    <MudTextField T="string" @bind-Text="@this.reviewNotes" AdornmentIcon="@Icons.Material.Filled.EditNote" Adornment="Adornment.Start" Label="@T("(Optional) Change requests for the Lua plugin")" Variant="Variant.Outlined" Margin="Margin.Dense" Lines="2" AutoGrow="@true" MaxLines="8" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+    
+    <MudTextField T="string" @bind-Text="@this.reviewNotes" AdornmentIcon="@Icons.Material.Filled.EditNote" Adornment="Adornment.Start" Label="@T("Additional changes (Optional)")" HelperText="@T("These notes are applied on top of the accepted draft and can still change the generated assistant plugin. Leave empty to use the draft as-is.")" Variant="Variant.Outlined" Margin="Margin.Dense" Lines="2" AutoGrow="@true" MaxLines="8" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 
-    <MudStack Row="@true" AlignItems="AlignItems.Center" Class="mb-3">
-        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.ArrowBack" OnClick="@(() => this.BackToDescription())">
-            @T("Back to description")
-        </MudButton>
+    <MudStack Row="@true" AlignItems="AlignItems.Center" Class="mb-6">
+        <MudTooltip  Text="@T("Return to the original assistant description. The current draft and the plugin preview will be discarded.")">
+            <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ArrowBack" Size="Size.Small" OnClick="@this.BackToDescription">
+                @T("Change description")
+            </MudButton>
+        </MudTooltip>
         @if (this.step is BuilderStep.DONE)
         {
-            <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Edit" OnClick="@(() => this.BackToSpecReview())">
-                @T("Edit draft")
-            </MudButton>
+            <MudTooltip Text="@T("Discard the current plugin preview, edit the accepted draft, and generate the plugin again.")">
+                <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Edit" Size="Size.Small" IconSize="Size.Small" OnClick="@(async () => await this.EditDraftAndDiscardPluginPreview())">
+                    @T("Edit draft")
+                </MudButton>
+            </MudTooltip>
         }
     </MudStack>
 
