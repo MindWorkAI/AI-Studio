@@ -11,6 +11,7 @@ public sealed class AssistantPluginInstallService
 {
     private const string PLUGIN_FILE_NAME = "plugin.lua";
     private const string ASSISTANT_BUILDER_DIRECTORY_PREFIX = "assistant-builder";
+    private const int DIRECTORY_PREFIX_MAX_LEN = 80;
     
     private readonly ILogger<AssistantPluginInstallService> logger;
     private readonly SemaphoreSlim installSemaphore = new(1, 1);
@@ -151,7 +152,52 @@ public sealed class AssistantPluginInstallService
 
         return existingPlugin is not null
             ? existingPlugin.LocalPath
-            : Path.Join(assistantPluginsRoot, $"{ASSISTANT_BUILDER_DIRECTORY_PREFIX}-{assistantPlugin.Id:N}");
+            : Path.Join(assistantPluginsRoot, CreatePluginDirectoryName(assistantPlugin));
+    }
+
+    private static string CreatePluginDirectoryName(PluginAssistants assistantPlugin)
+    {
+        var safeName = CreateSafeDirectoryNamePart(assistantPlugin.Name);
+        return $"{safeName}-{assistantPlugin.Id:N}";
+    }
+
+    private static string CreateSafeDirectoryNamePart(string name)
+    {
+        var sb = new StringBuilder();
+        var invalidChars = Path.GetInvalidFileNameChars().ToHashSet();
+
+        foreach (var character in name.Trim())
+        {
+            if (char.IsLetterOrDigit(character))
+            {
+                sb.Append(char.ToLowerInvariant(character));
+                continue;
+            }
+
+            if (character is '-' or '_' or '.' && !invalidChars.Contains(character))
+            {
+                sb.Append(character);
+                continue;
+            }
+
+            AppendSeparator();
+        }
+
+        var safeName = sb.ToString().Trim('-', '.');
+        if (safeName.Length > DIRECTORY_PREFIX_MAX_LEN)
+            safeName = safeName[..DIRECTORY_PREFIX_MAX_LEN].Trim('-', '.');
+
+        return string.IsNullOrWhiteSpace(safeName)
+            ? ASSISTANT_BUILDER_DIRECTORY_PREFIX
+            : safeName;
+
+        void AppendSeparator()
+        {
+            if (sb.Length == 0 || sb[^1] == '-')
+                return;
+
+            sb.Append('-');
+        }
     }
 
     private static bool IsPathInsideDirectory(string parentDirectory, string path)
