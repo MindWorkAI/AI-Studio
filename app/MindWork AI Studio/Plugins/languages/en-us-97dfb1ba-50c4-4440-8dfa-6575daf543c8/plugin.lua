@@ -351,6 +351,213 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T65674494
 -- Bias of the Day
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T782102948"] = "Bias of the Day"
 
+-- Assistant Draft
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1176795724"] = "Assistant Draft"
+
+-- Generate Assistant
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1199074722"] = "Generate Assistant"
+
+-- Additional rules (Optional)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1239995078"] = "Additional rules (Optional)"
+
+-- User Goal
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1264526921"] = "User Goal"
+
+-- Additional changes (Optional)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1502888752"] = "Additional changes (Optional)"
+
+-- An expected user prompt, e.g. summarize this document
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1565792607"] = "An expected user prompt, e.g. summarize this document"
+
+-- Return to the original assistant description. The current draft and the plugin preview will be discarded.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1622920412"] = "Return to the original assistant description. The current draft and the plugin preview will be discarded."
+
+-- Category (Optional)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1644710572"] = "Category (Optional)"
+
+-- Description
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1725856265"] = "Description"
+
+-- The assistant plugin \"{0}\" was installed.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T177739072"] = "The assistant plugin \\\"{0}\\\" was installed."
+
+-- (Optional) Output language
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1821434787"] = "(Optional) Output language"
+
+-- No assistant plugin was generated yet.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1911729967"] = "No assistant plugin was generated yet."
+
+-- View accepted draft
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1985923838"] = "View accepted draft"
+
+-- Create assistant draft
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2063479946"] = "Create assistant draft"
+
+-- Typical input (Optional)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2172900154"] = "Typical input (Optional)"
+
+-- Install this generated assistant as a plugin.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2250515799"] = "Install this generated assistant as a plugin."
+
+-- These notes are applied on top of the accepted draft and can still change the generated assistant plugin. Leave empty to use the draft as-is.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2345545005"] = "These notes are applied on top of the accepted draft and can still change the generated assistant plugin. Leave empty to use the draft as-is."
+
+-- What users provide, e.g. text, notes, files, or a URL
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2381710500"] = "What users provide, e.g. text, notes, files, or a URL"
+
+-- Inputs
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2647381688"] = "Inputs"
+
+-- Name
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T266367750"] = "Name"
+
+-- I need an assistant that turns meeting notes into clear tasks with owners and deadlines.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2703350865"] = "I need an assistant that turns meeting notes into clear tasks with owners and deadlines."
+
+-- Custom assistant category
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2720431578"] = "Custom assistant category"
+
+-- Input and UI components (Optional)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2750415283"] = "Input and UI components (Optional)"
+
+-- Custom output language
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2795779287"] = "Custom output language"
+
+-- The assistant plugin \"{0}\" was updated.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2941454775"] = "The assistant plugin \\\"{0}\\\" was updated."
+
+-- Category
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2947802513"] = "Category"
+
+-- Assumptions
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T299451"] = "Assumptions"
+
+-- UI Components
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3053707933"] = "UI Components"
+
+-- The Assistant-Builder was not able to read the JSON response schema and therefore cannot safely generate your assistant right now.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3154764026"] = "The Assistant-Builder was not able to read the JSON response schema and therefore cannot safely generate your assistant right now."
+
+-- Edit draft
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3159409454"] = "Edit draft"
+
+-- Discard the current plugin preview, edit the accepted draft, and generate the plugin again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3163704605"] = "Discard the current plugin preview, edit the accepted draft, and generate the plugin again."
+
+-- Regenerate Assistant
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3171038735"] = "Regenerate Assistant"
+
+-- The Assistant-Builder was not able to read the plugin manifest and therefore cannot safely generate your assistant right now.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3278037634"] = "The Assistant-Builder was not able to read the plugin manifest and therefore cannot safely generate your assistant right now."
+
+-- Assistant Builder
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3303547904"] = "Assistant Builder"
+
+-- Advanced Options
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3393521529"] = "Advanced Options"
+
+-- Please provide a custom output language.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3507237849"] = "Please provide a custom output language."
+
+-- Model decides
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T358632395"] = "Model decides"
+
+-- Please provide a custom category.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3588686406"] = "Please provide a custom category."
+
+-- Safety Notes
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3633499050"] = "Safety Notes"
+
+-- Describe the task, inputs, and desired output in your own words. The model will infer all the plugin details.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3741657159"] = "Describe the task, inputs, and desired output in your own words. The model will infer all the plugin details."
+
+-- Meeting Task Extractor
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3782909247"] = "Meeting Task Extractor"
+
+-- What to avoid or consider, e.g. do not invent missing facts
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3843866124"] = "What to avoid or consider, e.g. do not invent missing facts"
+
+-- Install assistant
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3863433088"] = "Install assistant"
+
+-- Assistant draft
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3957423852"] = "Assistant draft"
+
+-- Output
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T4000727844"] = "Output"
+
+-- Please describe the assistant you want to create.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T4004589285"] = "Please describe the assistant you want to create."
+
+-- Prompt Strategy
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T410529216"] = "Prompt Strategy"
+
+-- Allow AI Studio profiles
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T4155351992"] = "Allow AI Studio profiles"
+
+-- Example prompt (Optional)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T4217647404"] = "Example prompt (Optional)"
+
+-- Please create an assistant draft first.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T4269176489"] = "Please create an assistant draft first."
+
+-- Describe the assistant you want to create. AI Studio will draft a readable assistant specification first and then generate an assistant plugin from it.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T463667108"] = "Describe the assistant you want to create. AI Studio will draft a readable assistant specification first and then generate an assistant plugin from it."
+
+-- Describe your assistant
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T507682539"] = "Describe your assistant"
+
+-- Display Name (Optional)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T517777955"] = "Display Name (Optional)"
+
+-- Change description
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T621770603"] = "Change description"
+
+-- It is recommended to a powerful LLM.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T767601000"] = "It is recommended to a powerful LLM."
+
+-- What users should get, e.g. a summary or checklist
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T889445968"] = "What users should get, e.g. a summary or checklist"
+
+-- Expected output (Optional)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T911303749"] = "Expected output (Optional)"
+
+-- The generated Lua plugin code does not contain a readable plugin ID.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::LUARESPONSEPARSEERROR::T1163279436"] = "The generated Lua plugin code does not contain a readable plugin ID."
+
+-- The model's answer is missing the assistant metadata.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::LUARESPONSEPARSEERROR::T1389066899"] = "The model's answer is missing the assistant metadata."
+
+-- The model's answer contains incomplete plugin metadata.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::LUARESPONSEPARSEERROR::T181258566"] = "The model's answer contains incomplete plugin metadata."
+
+-- The model's answer contains incomplete assistant metadata.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::LUARESPONSEPARSEERROR::T1863964049"] = "The model's answer contains incomplete assistant metadata."
+
+-- The model returned an empty JSON object.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::LUARESPONSEPARSEERROR::T2410202327"] = "The model returned an empty JSON object."
+
+-- The model returned an unusable JSON response.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::LUARESPONSEPARSEERROR::T2967613975"] = "The model returned an unusable JSON response."
+
+-- The model returned an invalid response.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::LUARESPONSEPARSEERROR::T3368485003"] = "The model returned an invalid response."
+
+-- The model response does not contain the generated Lua plugin code.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::LUARESPONSEPARSEERROR::T3523772974"] = "The model response does not contain the generated Lua plugin code."
+
+-- The model returned an invalid response: {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::LUARESPONSEPARSEERROR::T3546551801"] = "The model returned an invalid response: {0}"
+
+-- The model's answer is missing the plugin metadata.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::LUARESPONSEPARSEERROR::T3731646796"] = "The model's answer is missing the plugin metadata."
+
+-- The model response is missing or unreadable.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::LUARESPONSEPARSEERROR::T3865942038"] = "The model response is missing or unreadable."
+
+-- The model responded with an unsupported or deprecated JSON schema.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::LUARESPONSEPARSEERROR::T531597860"] = "The model responded with an unsupported or deprecated JSON schema."
+
 -- Coding Assistant
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T1082499335"] = "Coding Assistant"
 
@@ -1328,129 +1535,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LEGALCHECK::ASSISTANTLEGALCHECK::T4254597
 
 -- Ask your questions
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LEGALCHECK::ASSISTANTLEGALCHECK::T467099852"] = "Ask your questions"
-
--- Additional rules (Optional)
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T1239995078"] = "Additional rules (Optional)"
-
--- An expected user prompt, e.g. summarize this document
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T1565792607"] = "An expected user prompt, e.g. summarize this document"
-
--- Category (Optional)
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T1644710572"] = "Category (Optional)"
-
--- Back to description
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T1650324037"] = "Back to description"
-
--- The assistant plugin \"{0}\" was installed.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T177739072"] = "The assistant plugin \\\"{0}\\\" was installed."
-
--- (Optional) Output language
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T1821434787"] = "(Optional) Output language"
-
--- No assistant plugin was generated yet.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T1911729967"] = "No assistant plugin was generated yet."
-
--- Review draft
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T2007680830"] = "Review draft"
-
--- Create assistant draft
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T2063479946"] = "Create assistant draft"
-
--- Typical input (Optional)
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T2172900154"] = "Typical input (Optional)"
-
--- Install this generated assistant as a plugin.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T2250515799"] = "Install this generated assistant as a plugin."
-
--- What users provide, e.g. text, notes, files, or a URL
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T2381710500"] = "What users provide, e.g. text, notes, files, or a URL"
-
--- I need an assistant that turns meeting notes into clear tasks with owners and deadlines.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T2703350865"] = "I need an assistant that turns meeting notes into clear tasks with owners and deadlines."
-
--- Custom assistant category
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T2720431578"] = "Custom assistant category"
-
--- Input and UI components (Optional)
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T2750415283"] = "Input and UI components (Optional)"
-
--- Custom output language
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T2795779287"] = "Custom output language"
-
--- The assistant plugin \"{0}\" was updated.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T2941454775"] = "The assistant plugin \\\"{0}\\\" was updated."
-
--- Regenerate Lua plugin
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T3144371312"] = "Regenerate Lua plugin"
-
--- Edit draft
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T3159409454"] = "Edit draft"
-
--- The Assistant-Builder was not able to read the plugin manifest and therefore cannot safely generate your assistant right now.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T3278037634"] = "The Assistant-Builder was not able to read the plugin manifest and therefore cannot safely generate your assistant right now."
-
--- Assistant Builder
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T3303547904"] = "Assistant Builder"
-
--- Advanced Options
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T3393521529"] = "Advanced Options"
-
--- Please provide a custom output language.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T3507237849"] = "Please provide a custom output language."
-
--- Model decides
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T358632395"] = "Model decides"
-
--- Please provide a custom category.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T3588686406"] = "Please provide a custom category."
-
--- Describe the task, inputs, and desired output in your own words. The model will infer all the plugin details.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T3741657159"] = "Describe the task, inputs, and desired output in your own words. The model will infer all the plugin details."
-
--- Meeting Task Extractor
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T3782909247"] = "Meeting Task Extractor"
-
--- What to avoid or consider, e.g. do not invent missing facts
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T3843866124"] = "What to avoid or consider, e.g. do not invent missing facts"
-
--- Install assistant
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T3863433088"] = "Install assistant"
-
--- Assistant draft
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T3957423852"] = "Assistant draft"
-
--- Please describe the assistant you want to create.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T4004589285"] = "Please describe the assistant you want to create."
-
--- Allow AI Studio profiles
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T4155351992"] = "Allow AI Studio profiles"
-
--- Example prompt (Optional)
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T4217647404"] = "Example prompt (Optional)"
-
--- (Optional) Change requests for the Lua plugin
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T4268762001"] = "(Optional) Change requests for the Lua plugin"
-
--- Please create an assistant draft first.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T4269176489"] = "Please create an assistant draft first."
-
--- Describe the assistant you want to create. AI Studio will draft a readable assistant specification first and then generate an assistant plugin from it.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T463667108"] = "Describe the assistant you want to create. AI Studio will draft a readable assistant specification first and then generate an assistant plugin from it."
-
--- Describe your assistant
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T507682539"] = "Describe your assistant"
-
--- Display Name (Optional)
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T517777955"] = "Display Name (Optional)"
-
--- Generate Lua plugin
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T87353299"] = "Generate Lua plugin"
-
--- What users should get, e.g. a summary or checklist
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T889445968"] = "What users should get, e.g. a summary or checklist"
-
--- Expected output (Optional)
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::META::ASSISTANTMETAASSISTANT::T911303749"] = "Expected output (Optional)"
 
 -- Analyze the following text and extract my tasks:
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MYTASKS::ASSISTANTMYTASKS::T1349891364"] = "Analyze the following text and extract my tasks:"
