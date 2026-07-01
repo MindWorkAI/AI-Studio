@@ -27,6 +27,7 @@
                 AdornmentColor="Color.Info"
                 Validation="@this.ValidateName"
                 Variant="Variant.Outlined"
+                ReadOnly="@this.IsReadOnly"
                 UserAttributes="@SPELLCHECK_ATTRIBUTES"
             />
 
@@ -44,8 +45,9 @@
                 MaxLines="12"
                 UserAttributes="@SPELLCHECK_ATTRIBUTES"
                 HelperText="@T("Tell the AI something about yourself. What is your profession? How experienced are you in this profession? Which technologies do you like?")"
+                ReadOnly="@this.IsReadOnly"
             />
-            <ReadFileContent @bind-FileContent="@this.DataNeedToKnow"/>
+            <ReadFileContent @bind-FileContent="@this.DataNeedToKnow" Disabled="@this.IsReadOnly"/>
 
             <MudTextField
                 T="string"
@@ -62,8 +64,9 @@
                 Class="mt-10"
                 UserAttributes="@SPELLCHECK_ATTRIBUTES"
                 HelperText="@T("Tell the AI what you want it to do for you. What are your goals or are you trying to achieve? Like having the AI address you informally.")"
+                ReadOnly="@this.IsReadOnly"
             />
-            <ReadFileContent @bind-FileContent="@this.DataActions"/>
+            <ReadFileContent @bind-FileContent="@this.DataActions" Disabled="@this.IsReadOnly"/>
 
             <MudJustifiedText Typo="Typo.body2" Class="mb-3 mt-3">
                 @T("Please be aware that your profile info becomes part of the system prompt. This means it uses up context space — the “memory” the LLM uses to understand and respond to your request. If your profile is extremely long, the LLM may struggle to focus on your actual task.")
@@ -73,18 +76,27 @@
         <Issues IssuesData="@this.dataIssues"/>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">
-            @T("Cancel")
-        </MudButton>
-        <MudButton OnClick="@this.Store" Variant="Variant.Filled" Color="Color.Primary">
-            @if(this.IsEditing)
-            {
-                @T("Update")
-            }
-            else
-            {
-                @T("Add")
-            }
-        </MudButton>
+        @if (this.IsReadOnly)
+        {
+            <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">
+                @T("Close")
+            </MudButton>
+        }
+        else
+        {
+            <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">
+                @T("Cancel")
+            </MudButton>
+            <MudButton OnClick="@this.Store" Variant="Variant.Filled" Color="Color.Primary">
+                @if(this.IsEditing)
+                {
+                    @T("Update")
+                }
+                else
+                {
+                    @T("Add")
+                }
+            </MudButton>
+        }
     </DialogActions>
 </MudDialog>

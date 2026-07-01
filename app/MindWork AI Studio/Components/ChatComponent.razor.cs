@@ -71,6 +71,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private bool mustLoadChat;
     private LoadChat loadChat;
     private bool autoSaveEnabled;
+    private bool previousInputForbidden = true;
+    private Guid lastSeenChatId = Guid.Empty;
+    private AIStudio.Settings.Provider lastSeenProvider = AIStudio.Settings.Provider.NONE;
     private string currentWorkspaceName = string.Empty;
     private Guid currentWorkspaceId = Guid.Empty;
     private Guid currentChatThreadId = Guid.Empty;
@@ -107,7 +110,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     protected override async Task OnInitializedAsync()
     {
         // Apply the filters for the message bus:
-        this.ApplyFilters([], [ Event.HAS_CHAT_UNSAVED_CHANGES, Event.RESET_CHAT_STATE, Event.CHAT_STREAMING_DONE, Event.AI_JOB_CHANGED, Event.AI_JOB_FINISHED, Event.CHAT_GENERATION_CHANGED, Event.WORKSPACE_RENAMED ]);
+        this.ApplyFilters([], [ Event.HAS_CHAT_UNSAVED_CHANGES, Event.RESET_CHAT_STATE, Event.CHAT_STREAMING_DONE, Event.AI_JOB_CHANGED, Event.AI_JOB_FINISHED, Event.CHAT_GENERATION_CHANGED, Event.WORKSPACE_RENAMED, Event.CONFIGURATION_CHANGED ]);
         
         // Configure the spellchecking for the user input:
         this.SettingsManager.InjectSpellchecking(USER_INPUT_ATTRIBUTES);
@@ -293,12 +296,25 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 this.StateHasChanged();
             }
         }
-        
+
+        var inputForbidden = this.IsInputForbidden();
+        if (!inputForbidden && this.previousInputForbidden)
+            await this.inputField.FocusAsync();
+
+        this.previousInputForbidden = inputForbidden;
         await base.OnAfterRenderAsync(firstRender);
     }
 
     protected override async Task OnParametersSetAsync()
     {
+        var incomingChatId = this.ChatThread?.ChatId ?? Guid.Empty;
+        if (incomingChatId != this.lastSeenChatId || this.Provider != this.lastSeenProvider)
+        {
+            this.lastSeenChatId = incomingChatId;
+            this.lastSeenProvider = this.Provider;
+            this.previousInputForbidden = true;
+        }
+
         await this.ApplyLoadedChatParameterAsync();
         await this.SyncForegroundChatAsync();
         await base.OnParametersSetAsync();
@@ -441,9 +457,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     
     private string TooltipAddChatToWorkspace => string.Format(T("Start new chat in workspace '{0}'"), this.currentWorkspaceName);
 
-    private string UserInputStyle => this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence ? this.Provider.UsedLLMProvider.GetConfidence(this.SettingsManager).SetColorStyle(this.SettingsManager) : string.Empty;
-    
-    private string UserInputClass => this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence ? "confidence-border" : string.Empty;
+    private string UserInputStyle => this.SettingsManager.ConfigurationData.Confidence.ShowProviderConfidence ? this.Provider.UsedLLMProvider.GetConfidence(this.SettingsManager).SetColorStyle(this.SettingsManager) : string.Empty;
+
+    private string UserInputClass => this.SettingsManager.ConfigurationData.Confidence.ShowProviderConfidence ? "confidence-border" : string.Empty;
     
     private void ApplyStandardDataSourceOptions()
     {
@@ -476,7 +492,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     
     private async Task ProfileWasChanged(Profile profile)
     {
-        this.currentProfile = profile;
+        this.currentProfile = this.SettingsManager.GetProfileById(profile.Id);
         if(this.ChatThread is null)
             return;
 
@@ -490,7 +506,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     
     private async Task ChatTemplateWasChanged(ChatTemplate chatTemplate)
     {
-        this.currentChatTemplate = chatTemplate;
+        this.currentChatTemplate = this.SettingsManager.GetChatTemplateById(chatTemplate.Id);
         if(!string.IsNullOrWhiteSpace(this.currentChatTemplate.PredefinedUserPrompt))
             this.ComposerState.SetSystemInput(this.currentChatTemplate.PredefinedUserPrompt);
 
@@ -501,6 +517,42 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             return;
 
         await this.StartNewChat(true);
+    }
+
+    private void RefreshCurrentProfileAndChatTemplate()
+    {
+        this.currentProfile = this.SettingsManager.GetProfileById(this.currentProfile.Id);
+        this.currentChatTemplate = this.SettingsManager.GetChatTemplateById(this.currentChatTemplate.Id);
+    }
+
+    private async Task RefreshChatSelectionsAfterConfigurationChange()
+    {
+        var previousProvider = this.Provider;
+        var previousChatTemplate = this.currentChatTemplate;
+        var chatProviderId = this.ChatThread?.SelectedProvider;
+
+        this.Provider = this.SettingsManager.GetChatProviderForLoadedChat(chatProviderId);
+        if (this.Provider != previousProvider)
+            await this.ProviderChanged.InvokeAsync(this.Provider);
+
+        if (this.ChatThread is null)
+        {
+            this.currentProfile = this.SettingsManager.GetPreselectedProfile(Tools.Components.CHAT);
+            this.currentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(Tools.Components.CHAT);
+        }
+        else
+        {
+            this.currentProfile = string.IsNullOrWhiteSpace(this.ChatThread.SelectedProfile)
+                ? this.SettingsManager.GetProfileById(this.currentProfile.Id)
+                : this.SettingsManager.GetProfileById(this.ChatThread.SelectedProfile);
+
+            this.currentChatTemplate = string.IsNullOrWhiteSpace(this.ChatThread.SelectedChatTemplate)
+                ? this.SettingsManager.GetChatTemplateById(this.currentChatTemplate.Id)
+                : this.SettingsManager.GetChatTemplateById(this.ChatThread.SelectedChatTemplate);
+        }
+
+        if (!this.ComposerState.HasUserDraft && previousChatTemplate != this.currentChatTemplate)
+            this.ComposerState.ApplyTemplate(this.currentChatTemplate);
     }
 
     private IReadOnlyList<DataSourceAgentSelected> GetAgentSelectedDataSources()
@@ -610,7 +662,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         
         if(!this.ChatThread.IsLLMProviderAllowed(this.Provider))
             return;
-        
+
+        this.RefreshCurrentProfileAndChatTemplate();
+
         // Blur the focus away from the input field to be able to clear it:
         await this.inputField.BlurAsync();
         
@@ -805,6 +859,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         //
         this.hasUnsavedChanges = false;
         this.ComposerState.Clear();
+        this.RefreshCurrentProfileAndChatTemplate();
         
         //
         // Reset the LLM provider considering the user's settings:
@@ -977,14 +1032,11 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 
         // Try to select the profile:
         if (!string.IsNullOrWhiteSpace(chatProfile))
-            this.currentProfile = this.SettingsManager.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == chatProfile) ?? Profile.NO_PROFILE;
+            this.currentProfile = this.SettingsManager.GetProfileById(chatProfile);
         
         // Try to select the chat template:
         if (!string.IsNullOrWhiteSpace(chatChatTemplate))
-        {
-            var selectedTemplate = this.SettingsManager.ConfigurationData.ChatTemplates.FirstOrDefault(x => x.Id == chatChatTemplate);
-            this.currentChatTemplate = selectedTemplate ?? ChatTemplate.NO_CHAT_TEMPLATE;
-        }
+            this.currentChatTemplate = this.SettingsManager.GetChatTemplateById(chatChatTemplate);
     }
 
     private async Task ToggleWorkspaceOverlay()
@@ -1113,6 +1165,12 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 if (data is Guid workspaceId)
                     await this.RefreshRenamedWorkspaceHeaderAsync(workspaceId);
                 break;
+
+            case Event.CONFIGURATION_CHANGED:
+            case Event.PLUGINS_RELOADED:
+                await this.RefreshChatSelectionsAfterConfigurationChange();
+                this.StateHasChanged();
+                break;
             
             case Event.AI_JOB_CHANGED:
             case Event.AI_JOB_FINISHED:
@@ -1121,7 +1179,10 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 {
                     this.ChatThread = this.AIJobService.TryGetLiveChatThread(snapshot.SubjectId) ?? this.ChatThread;
                     if (!snapshot.IsActive)
+                    {
                         this.hasUnsavedChanges = false;
+                        this.previousInputForbidden = true;
+                    }
 
                     this.StateHasChanged();
                 }

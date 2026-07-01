@@ -56,7 +56,7 @@ public partial class DataSourceLocalDirectoryInfoDialog : MSGComponentBase, IAsy
     
     private bool IsOperationInProgress { get; set; } = true;
 
-    private bool IsCloudEmbedding => !this.embeddingProvider.IsSelfHosted;
+    private bool IsCloudEmbedding => !this.embeddingProvider.IsTrustedForDataSourceSecurityChecks(this.SettingsManager);
 
     private bool IsDirectoryAvailable => this.directoryInfo.Exists;
 

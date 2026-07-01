@@ -13,7 +13,6 @@ using AIStudio.Settings;
 using AIStudio.Tools.MIME;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
-using AIStudio.Tools.Services;
 
 using Host = AIStudio.Provider.SelfHosted.Host;
 
@@ -36,16 +35,6 @@ public abstract class BaseProvider : IProvider, ISecretId
     /// </summary>
     private readonly ILogger logger;
 
-    static BaseProvider()
-    {
-        RUST_SERVICE = Program.RUST_SERVICE;
-        ENCRYPTION = Program.ENCRYPTION;
-    }
-
-    protected static readonly RustService RUST_SERVICE;
-    
-    protected static readonly Encryption ENCRYPTION;
-    
     protected static readonly JsonSerializerOptions JSON_SERIALIZER_OPTIONS = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
@@ -88,6 +77,9 @@ public abstract class BaseProvider : IProvider, ISecretId
     
     /// <inheritdoc />
     public abstract string Id { get; }
+
+    /// <inheritdoc />
+    public string ConfiguredProviderId { get; init; } = string.Empty;
     
     /// <inheritdoc />
     public abstract string InstanceName { get; set; }
@@ -164,9 +156,9 @@ public abstract class BaseProvider : IProvider, ISecretId
     protected async Task<string?> GetModelLoadingSecretKey(SecretStoreType storeType, string? apiKeyProvisional = null, bool isTryingSecret = false) => apiKeyProvisional switch
     {
         not null => apiKeyProvisional,
-        _ => await RUST_SERVICE.GetAPIKey(this, storeType, isTrying: isTryingSecret) switch
+        _ => await Program.RUST_SERVICE.GetAPIKey(this, storeType, isTrying: isTryingSecret) switch
         {
-            { Success: true } result => await result.Secret.Decrypt(ENCRYPTION),
+            { Success: true } result => await result.Secret.Decrypt(Program.ENCRYPTION),
             _ => null,
         }
     };
@@ -984,7 +976,7 @@ public abstract class BaseProvider : IProvider, ISecretId
         where TAnnotation : IAnnotationStreamLine
     {
         // Get the API key:
-        var requestedSecret = await RUST_SERVICE.GetAPIKey(this, storeType, isTrying: isTryingSecret);
+        var requestedSecret = await Program.RUST_SERVICE.GetAPIKey(this, storeType, isTrying: isTryingSecret);
         if(!requestedSecret.Success && !isTryingSecret)
             yield break;
 
@@ -1008,7 +1000,7 @@ public abstract class BaseProvider : IProvider, ISecretId
 
             // Set the authorization header:
             if (requestedSecret.Success)
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(ENCRYPTION));
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
 
             // Set provider-specific headers:
             headersAction?.Invoke(request.Headers);
@@ -1056,7 +1048,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             {
                 case LLMProviders.SELF_HOSTED:
                     if(requestedSecret.Success)
-                        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(ENCRYPTION));
+                        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
                     
                     break;
                 
@@ -1067,7 +1059,7 @@ public abstract class BaseProvider : IProvider, ISecretId
                         return TranscriptionResult.Failure();
                     }
                     
-                    request.Headers.Add("Authorization", await requestedSecret.Secret.Decrypt(ENCRYPTION));
+                    request.Headers.Add("Authorization", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
                     break;
                 
                 default:
@@ -1077,7 +1069,7 @@ public abstract class BaseProvider : IProvider, ISecretId
                         return TranscriptionResult.Failure();
                     }
                     
-                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(ENCRYPTION));
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
                     break;
             }
             
@@ -1138,7 +1130,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             {
                 case LLMProviders.SELF_HOSTED:
                     if(requestedSecret.Success)
-                        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(ENCRYPTION));
+                        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
                     
                     break;
                 
@@ -1149,7 +1141,7 @@ public abstract class BaseProvider : IProvider, ISecretId
                         return [];
                     }
                     
-                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(ENCRYPTION));
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
                     break;
             }
             

@@ -1,7 +1,16 @@
+using System.Linq.Expressions;
+
 namespace AIStudio.Settings.DataModel;
 
-public sealed class DataChat
+public sealed class DataChat(Expression<Func<Data, DataChat>>? configSelection = null)
 {
+    /// <summary>
+    /// The default constructor for the JSON deserializer.
+    /// </summary>
+    public DataChat() : this(null)
+    {
+    }
+
     /// <summary>
     /// Shortcuts to send the input to the AI.
     /// </summary>
@@ -25,22 +34,22 @@ public sealed class DataChat
     /// <summary>
     /// Preselect any chat options?
     /// </summary>
-    public bool PreselectOptions { get; set; }
+    public bool PreselectOptions { get; set; } = ManagedConfiguration.Register(configSelection, n => n.PreselectOptions, false);
 
     /// <summary>
     /// Should we preselect a provider for the chat?
     /// </summary>
-    public string PreselectedProvider { get; set; } = string.Empty;
+    public string PreselectedProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.PreselectedProvider, string.Empty);
     
     /// <summary>
     /// Preselect a profile?
     /// </summary>
-    public string PreselectedProfile { get; set; } = string.Empty;
+    public string PreselectedProfile { get; set; } = ManagedConfiguration.Register(configSelection, n => n.PreselectedProfile, string.Empty);
     
     /// <summary>
     /// Preselect a chat template?
     /// </summary>
-    public string PreselectedChatTemplate { get; set; } = string.Empty;
+    public string PreselectedChatTemplate { get; set; } = ManagedConfiguration.Register(configSelection, n => n.PreselectedChatTemplate, string.Empty);
     
     /// <summary>
     /// Should we preselect data sources options for a created chat?

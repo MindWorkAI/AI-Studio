@@ -6,24 +6,24 @@ namespace AIStudio.Dialogs.Settings;
 
 public partial class SettingsDialogChatTemplate : SettingsDialogBase
 {
-    [Parameter] 
+    [Parameter]
     public bool CreateTemplateFromExistingChatThread { get; set; }
-    
+
     [Parameter]
     public ChatThread? ExistingChatThread { get; set; }
-    
+
     #region Overrides of ComponentBase
-    
+
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-        if (this.CreateTemplateFromExistingChatThread) 
+        if (this.CreateTemplateFromExistingChatThread)
             await this.AddChatTemplate();
     }
 
     #endregion
-    
+
     private async Task AddChatTemplate()
     {
         var dialogParameters = new DialogParameters<ChatTemplateDialog>
@@ -41,21 +41,21 @@ public partial class SettingsDialogChatTemplate : SettingsDialogBase
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return;
-        
+
         var addedChatTemplate = (ChatTemplate)dialogResult.Data!;
         addedChatTemplate = addedChatTemplate with { Num = this.SettingsManager.ConfigurationData.NextChatTemplateNum++ };
-        
+
         this.SettingsManager.ConfigurationData.ChatTemplates.Add(addedChatTemplate);
-        
+
         await this.SettingsManager.StoreSettings();
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
-    
+
     private async Task EditChatTemplate(ChatTemplate chatTemplate)
     {
         if (chatTemplate == ChatTemplate.NO_CHAT_TEMPLATE || chatTemplate.IsEnterpriseConfiguration)
             return;
-        
+
         var dialogParameters = new DialogParameters<ChatTemplateDialog>
         {
             { x => x.DataNum, chatTemplate.Num },
@@ -68,17 +68,36 @@ public partial class SettingsDialogChatTemplate : SettingsDialogBase
             { x => x.FileAttachments, chatTemplate.FileAttachments },
             { x => x.AllowProfileUsage, chatTemplate.AllowProfileUsage },
         };
-        
+
         var dialogReference = await this.DialogService.ShowAsync<ChatTemplateDialog>(T("Edit Chat Template"), dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return;
-        
+
         var editedChatTemplate = (ChatTemplate)dialogResult.Data!;
         this.SettingsManager.ConfigurationData.ChatTemplates[this.SettingsManager.ConfigurationData.ChatTemplates.IndexOf(chatTemplate)] = editedChatTemplate;
-        
+
         await this.SettingsManager.StoreSettings();
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+    }
+
+    private async Task ViewChatTemplate(ChatTemplate chatTemplate)
+    {
+        var dialogParameters = new DialogParameters<ChatTemplateDialog>
+        {
+            { x => x.DataNum, chatTemplate.Num },
+            { x => x.DataId, chatTemplate.Id },
+            { x => x.DataName, chatTemplate.Name },
+            { x => x.DataSystemPrompt, chatTemplate.SystemPrompt },
+            { x => x.PredefinedUserPrompt, chatTemplate.PredefinedUserPrompt },
+            { x => x.IsEditing, true },
+            { x => x.IsReadOnly, true },
+            { x => x.ExampleConversation, chatTemplate.ExampleConversation },
+            { x => x.FileAttachments, chatTemplate.FileAttachments },
+            { x => x.AllowProfileUsage, chatTemplate.AllowProfileUsage },
+        };
+
+        await this.DialogService.ShowAsync<ChatTemplateDialog>(T("View Chat Template"), dialogParameters, DialogOptions.FULLSCREEN);
     }
 
     private async Task DeleteChatTemplate(ChatTemplate chatTemplate)
@@ -87,15 +106,15 @@ public partial class SettingsDialogChatTemplate : SettingsDialogBase
         {
             { x => x.Message, string.Format(T("Are you sure you want to delete the chat template '{0}'?"), chatTemplate.Name) },
         };
-        
+
         var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete Chat Template"), dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return;
-        
+
         this.SettingsManager.ConfigurationData.ChatTemplates.Remove(chatTemplate);
         await this.SettingsManager.StoreSettings();
-        
+
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
 

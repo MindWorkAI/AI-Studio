@@ -10,7 +10,7 @@
         <MudJustifiedText Class="mb-3" Typo="Typo.body1">
             @T("The name of the chat template is mandatory. Each chat template must have a unique name.")
         </MudJustifiedText>
-        
+
         <MudForm @ref="@this.form" @bind-IsValid="@this.dataIsValid" @bind-Errors="@this.dataIssues">
             @* ReSharper disable once CSharpWarnings::CS8974 *@
             <MudTextField
@@ -26,9 +26,10 @@
                 AdornmentColor="Color.Info"
                 Validation="@this.ValidateName"
                 Variant="Variant.Outlined"
+                ReadOnly="@this.IsReadOnly"
                 UserAttributes="@SPELLCHECK_ATTRIBUTES"
             />
-            
+
             <MudText Typo="Typo.h6" Class="mb-3 mt-3">
                 @T("System Prompt")
             </MudText>
@@ -47,16 +48,17 @@
                 Class="mb-3"
                 UserAttributes="@SPELLCHECK_ATTRIBUTES"
                 HelperText="@T("Tell the AI your system prompt.")"
+                ReadOnly="@this.IsReadOnly"
             />
-            
+
             <MudJustifiedText Class="mb-3" Typo="Typo.body1">
                 @T("Are you unsure which system prompt to use? You might start with the default system prompt that AI Studio uses for all chats.")
             </MudJustifiedText>
-            <MudButton Class="mb-3" Color="Color.Default" OnClick="@this.UseDefaultSystemPrompt" StartIcon="@Icons.Material.Filled.ListAlt" Variant="Variant.Filled">
+            <MudButton Class="mb-3" Color="Color.Default" OnClick="@this.UseDefaultSystemPrompt" StartIcon="@Icons.Material.Filled.ListAlt" Variant="Variant.Filled" Disabled="@this.IsReadOnly">
                 @T("Use the default system prompt")
             </MudButton>
-            <ReadFileContent Text="@T("Load system prompt from file")" @bind-FileContent="@this.DataSystemPrompt"/>
-            
+            <ReadFileContent Text="@T("Load system prompt from file")" @bind-FileContent="@this.DataSystemPrompt" Disabled="@this.IsReadOnly"/>
+
             <MudText Typo="Typo.h6" Class="mb-3 mt-6">
                 @T("Predefined User Input")
             </MudText>
@@ -77,6 +79,7 @@
                 Class="mb-3"
                 UserAttributes="@SPELLCHECK_ATTRIBUTES"
                 HelperText="@T("Tell the AI your predefined user input.")"
+                ReadOnly="@this.IsReadOnly"
             />
 
             <MudText Typo="Typo.h6" Class="mb-3 mt-6">
@@ -92,6 +95,7 @@
                 UseSmallForm="false"
                 CatchAllDocuments="true"
                 ValidateMediaFileTypes="false"
+                Disabled="@this.IsReadOnly"
             />
 
             <MudText Typo="Typo.h6" Class="mb-3 mt-6">
@@ -100,8 +104,8 @@
             <MudJustifiedText Class="mb-3" Typo="Typo.body1">
                 @T("Using some chat templates in tandem with profiles might cause issues. Therefore, you might prohibit the usage of profiles here.")
             </MudJustifiedText>
-            <MudTextSwitch @bind-Value="@this.AllowProfileUsage" Color="Color.Primary" Label="@T("Allow the use of profiles together with this chat template?")" LabelOn="@T("Yes, allow profiles when using this template")" LabelOff="@T("No, prohibit profile use for this template")" />
-            
+            <MudTextSwitch @bind-Value="@this.AllowProfileUsage" Color="Color.Primary" Label="@T("Allow the use of profiles together with this chat template?")" LabelOn="@T("Yes, allow profiles when using this template")" LabelOff="@T("No, prohibit profile use for this template")" Disabled="@this.IsReadOnly" />
+
             <MudText Typo="Typo.h6" Class="mb-3 mt-6">
                 @T("Example Conversation")
             </MudText>
@@ -129,18 +133,18 @@
                             case ContentText textContent:
                                 <MudTextField AutoGrow="true" Value="@textContent.Text" Placeholder="@T("Enter a message")" ReadOnly="true" Variant="Variant.Text" Validation="@this.ValidateExampleTextMessage"/>
                                 break;
-                                
+
                             case ContentImage { SourceType: ContentImageSource.URL or ContentImageSource.LOCAL_PATH } imageContent:
                                 <MudImage Src="@imageContent.Source" Alt="@T("Image content")" Fluid="true" />
                                 break;
-                            
+
                             default:
                                 @T("Unsupported content type")
                                 break;
                         }
                     </MudTd>
                     <MudTd>
-                        @if (!this.isInlineEditOnGoing)
+                        @if (!this.isInlineEditOnGoing && !this.IsReadOnly)
                         {
                             <MudStack Row="true" Class="mb-2 mt-2" Wrap="Wrap.Wrap">
                                 <MudTooltip Text="@T("Add a new message below")">
@@ -153,22 +157,29 @@
                 </RowTemplate>
                 <RowEditingTemplate>
                     <MudTd>
-                        <MudSelect Label="@T("Role")" @bind-Value="@context.Role" Required="true">
-                            @foreach (var role in ChatRoles.ChatTemplateRoles())
-                            {
-                                <MudSelectItem Value="@role">
-                                    @role.ToChatTemplateName()
-                                </MudSelectItem>
-                            }
-                        </MudSelect>
+                        @if (this.IsReadOnly)
+                        {
+                            @context.Role.ToChatTemplateName()
+                        }
+                        else
+                        {
+                            <MudSelect Label="@T("Role")" @bind-Value="@context.Role" Required="true">
+                                @foreach (var role in ChatRoles.ChatTemplateRoles())
+                                {
+                                    <MudSelectItem Value="@role">
+                                        @role.ToChatTemplateName()
+                                    </MudSelectItem>
+                                }
+                            </MudSelect>
+                        }
                     </MudTd>
                     <MudTd>
                         @switch(context.Content)
                         {
                             case ContentText textContent:
-                                <MudTextField AutoGrow="true" @bind-Value="@textContent.Text" Label="@T("The message")" Required="true" Immediate="true" Placeholder="@T("Enter a message")"/>
+                                <MudTextField AutoGrow="true" @bind-Value="@textContent.Text" Label="@T("The message")" Required="true" Immediate="true" Placeholder="@T("Enter a message")" ReadOnly="@this.IsReadOnly"/>
                                 break;
-                                
+
                             default:
                                 <MudText Typo="Typo.body2">
                                     @T("Only text content is supported in the editing mode yet.")
@@ -182,8 +193,8 @@
                 </PagerContent>
             </MudTable>
         </MudForm>
-        
-        @if (!this.isInlineEditOnGoing)
+
+        @if (!this.isInlineEditOnGoing && !this.IsReadOnly)
         {
             <MudButton Class="mb-6" Color="Color.Primary" OnClick="@this.AddMessageToEnd" StartIcon="@Icons.Material.Filled.Add" Variant="Variant.Filled">
                 @T("Add a message")
@@ -193,22 +204,31 @@
         <Issues IssuesData="@this.dataIssues"/>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">
-            @T("Cancel")
-        </MudButton>
-        
-        @if (!this.isInlineEditOnGoing)
+        @if (this.IsReadOnly)
         {
-            <MudButton OnClick="@this.Store" Variant="Variant.Filled" Color="Color.Primary">
-                @if (this.IsEditing)
-                {
-                    @T("Update")
-                }
-                else
-                {
-                    @T("Add")
-                }
+            <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">
+                @T("Close")
             </MudButton>
+        }
+        else
+        {
+            <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">
+                @T("Cancel")
+            </MudButton>
+
+            @if (!this.isInlineEditOnGoing)
+            {
+                <MudButton OnClick="@this.Store" Variant="Variant.Filled" Color="Color.Primary">
+                    @if (this.IsEditing)
+                    {
+                        @T("Update")
+                    }
+                    else
+                    {
+                        @T("Add")
+                    }
+                </MudButton>
+            }
         }
     </DialogActions>
 </MudDialog>

@@ -13,7 +13,7 @@ public class ProviderGroq() : BaseProvider(LLMProviders.GROQ, new Uri("https://a
     #region Implementation of IProvider
 
     /// <inheritdoc />
-    public override string Id => LLMProviders.GROQ.ToName();
+    public override string Id => LLMProviders.GROQ.ToSecretId();
 
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "Groq";

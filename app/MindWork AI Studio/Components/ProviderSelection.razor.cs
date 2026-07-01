@@ -25,6 +25,16 @@ public partial class ProviderSelection : MSGComponentBase
     
     [Inject]
     private ILogger<ProviderSelection> Logger { get; init; } = null!;
+
+    #region Overrides of ComponentBase
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.ApplyFilters([], [ Event.CONFIGURATION_CHANGED ]);
+        await base.OnInitializedAsync();
+    }
+
+    #endregion
     
     private async Task SelectionChanged(AIStudio.Settings.Provider provider)
     {
@@ -62,4 +72,16 @@ public partial class ProviderSelection : MSGComponentBase
                 break;
         }
     }
+
+    #region Overrides of MSGComponentBase
+
+    protected override Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
+    {
+        if (triggeredEvent is Event.CONFIGURATION_CHANGED or Event.PLUGINS_RELOADED)
+            this.StateHasChanged();
+
+        return Task.CompletedTask;
+    }
+
+    #endregion
 }

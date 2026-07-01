@@ -13,6 +13,8 @@ public class NoProvider : IProvider
     
     public string Id => "none";
 
+    public string ConfiguredProviderId => string.Empty;
+
     public string InstanceName { get; set; } = "None";
 
     /// <inheritdoc />

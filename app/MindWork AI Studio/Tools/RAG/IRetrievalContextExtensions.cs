@@ -6,7 +6,7 @@ namespace AIStudio.Tools.RAG;
 
 public static class IRetrievalContextExtensions
 {
-    private static readonly ILogger<IRetrievalContext> LOGGER = Program.SERVICE_PROVIDER.GetService<ILogger<IRetrievalContext>>()!;
+    private static readonly ILogger<IRetrievalContext> LOGGER = Program.LOGGER_FACTORY.CreateLogger<IRetrievalContext>();
     
     public static async Task<string> AsMarkdown(this IReadOnlyList<IRetrievalContext> retrievalContexts, StringBuilder? sb = null, CancellationToken token = default)
     {

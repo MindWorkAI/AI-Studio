@@ -169,7 +169,7 @@ public static class ComponentsExtensions
     
     public static ChatTemplate PreselectedChatTemplate(this Components component, SettingsManager settingsManager) => component switch
     {
-        Components.CHAT => settingsManager.ConfigurationData.Chat.PreselectOptions ? settingsManager.ConfigurationData.ChatTemplates.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.Chat.PreselectedChatTemplate) ?? ChatTemplate.NO_CHAT_TEMPLATE : ChatTemplate.NO_CHAT_TEMPLATE,
+        Components.CHAT => settingsManager.ConfigurationData.Chat.PreselectOptions ? settingsManager.GetChatTemplateById(settingsManager.ConfigurationData.Chat.PreselectedChatTemplate) : ChatTemplate.NO_CHAT_TEMPLATE,
         
         _ => ChatTemplate.NO_CHAT_TEMPLATE,
     };

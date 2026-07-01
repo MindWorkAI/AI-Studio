@@ -17,7 +17,6 @@ public sealed class TemporaryChatService(ILogger<TemporaryChatService> logger, S
 
         logger.LogInformation("The temporary chat maintenance service was initialized.");
         
-        await settingsManager.LoadSettings();
         if(settingsManager.ConfigurationData.Workspace.StorageTemporaryMaintenancePolicy is WorkspaceStorageTemporaryMaintenancePolicy.NO_AUTOMATIC_MAINTENANCE)
         {
             logger.LogWarning("Automatic maintenance of temporary chat storage is disabled. Exiting maintenance service.");

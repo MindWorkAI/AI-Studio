@@ -153,7 +153,7 @@
                     </MudButton>
                 }
 
-                @if (this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence)
+                @if (this.SettingsManager.ConfigurationData.Confidence.ShowProviderConfidence)
                 {
                     <ConfidenceInfo Mode="PopoverTriggerMode.BUTTON" LLMProvider="@this.ProviderSettings.UsedLLMProvider"/>
                 }

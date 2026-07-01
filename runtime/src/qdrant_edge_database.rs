@@ -384,6 +384,8 @@ fn set_qdrant_edge_unavailable(reason: String) {
     status.unavailable_reason = Some(reason);
 }
 
+// Temporary compatibility shim until 2026-12-02:
+// documentation/compatibility-shims/2026-06-qdrant-edge-migration.md
 fn remove_obsolete_qdrant_sidecar_files<R: tauri::Runtime>(app_handle: &tauri::AppHandle<R>) {
     let mut paths = Vec::new();
 

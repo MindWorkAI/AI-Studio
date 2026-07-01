@@ -12,3 +12,4 @@
  MWAIS0006 | Style    | Error    | SwitchExpressionMethodAnalyzer 
  MWAIS0007 | Usage    | Error    | EmptyStringAnalyzer            
  MWAIS0008 | Naming   | Error    | LocalConstantsAnalyzer         
+ MWAIS0009 | Usage    | Error    | StaticServiceProviderCacheAnalyzer

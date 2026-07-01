@@ -7,6 +7,7 @@ namespace Build.Tools;
 public static class Environment
 {
     public const string DOTNET_VERSION = "net9.0";
+    public const string BUILD_OFFLINE_ENVIRONMENT_VARIABLE = "AI_STUDIO_BUILD_OFFLINE";
     public static readonly Encoding UTF8_NO_BOM = new UTF8Encoding(false);
     
     private static readonly Dictionary<RID, string> ALL_RIDS = Enum.GetValues<RID>().Select(rid => new KeyValuePair<RID, string>(rid, rid.AsMicrosoftRid())).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
@@ -45,6 +46,19 @@ public static class Environment
         var currentDirectory = Directory.GetCurrentDirectory();
         var directory = Path.Combine(currentDirectory, "..", "..", "metadata.txt");
         return Path.GetFullPath(directory);
+    }
+
+    public static bool IsOfflineBuildRequested(bool offlineOption)
+    {
+        if (offlineOption)
+            return true;
+
+        var environmentValue = global::System.Environment.GetEnvironmentVariable(BUILD_OFFLINE_ENVIRONMENT_VARIABLE);
+        return environmentValue?.Trim().ToLowerInvariant() switch
+        {
+            "1" or "true" or "yes" or "on" => true,
+            _ => false,
+        };
     }
 
     public static string? GetOS()

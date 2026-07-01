@@ -45,7 +45,7 @@ public sealed record EmbeddingProvider(
 
     /// <inheritdoc />
     [JsonIgnore]
-    public string SecretId => this.IsEnterpriseConfiguration ? $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{this.UsedLLMProvider.ToName()}" : this.UsedLLMProvider.ToName();
+    public string SecretId => this.IsEnterpriseConfiguration ? $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{this.UsedLLMProvider.ToSecretId()}" : this.UsedLLMProvider.ToSecretId();
 
     /// <inheritdoc />
     [JsonIgnore]
@@ -134,7 +134,7 @@ public sealed record EmbeddingProvider(
                     {
                         // Queue the API key for storage in the OS keyring:
                         PendingEnterpriseApiKeys.Add(new(
-                            $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{usedLLMProvider.ToName()}",
+                            $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{usedLLMProvider.ToSecretId()}",
                             name,
                             decryptedApiKey,
                             SecretStoreType.EMBEDDING_PROVIDER));

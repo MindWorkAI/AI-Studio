@@ -8,35 +8,48 @@
     </MudText>
 
     <InnerScrolling>
-        <MudExpansionPanels Class="mb-3" MultiExpansion="@false">
+        <MudExpansionPanels @key="@this.expansionPanelsRenderKey" Class="mb-3" MultiExpansion="@false">
 
-            <ExpansionPanel HeaderIcon="@Icons.Material.Filled.MenuBook" HeaderText="@T("Introduction")" IsExpanded="@true">
-                <MudText Typo="Typo.h5" Class="mb-3">
-                    @T("Welcome to MindWork AI Studio!")
-                </MudText>
-                <MudText Typo="Typo.body1" Class="mb-3" Style="text-align: justify; hyphens: auto;">
-                    @T("Thank you for considering MindWork AI Studio for your AI needs. This app is designed to help you harness the power of Large Language Models (LLMs). Please note that this app doesn't come with an integrated LLM. Instead, you will need to bring an API key from a suitable provider.")
-                </MudText>
-                <MudText Typo="Typo.body1" Class="mb-3">
-                    @T("Here's what makes MindWork AI Studio stand out:")
-                </MudText>
-                <MudTextList Icon="@Icons.Material.Filled.CheckCircle" Clickable="@true" Items="@this.itemsAdvantages" Class="mb-3"/>
-                <MudText Typo="Typo.body1" Class="mb-3">
-                    @T("We hope you enjoy using MindWork AI Studio to bring your AI projects to life!")
-                </MudText>
-            </ExpansionPanel>
+            @if (this.SettingsManager.ConfigurationData.App.ShowIntroduction)
+            {
+                <ExpansionPanel HeaderIcon="@Icons.Material.Filled.MenuBook" HeaderText="@T("Introduction")" IsExpanded="@this.IsPanelExpanded(PANEL_ID_BUILT_IN_INTRODUCTION)" ExpandedChanged="@(isExpanded => this.SetPanelExpanded(PANEL_ID_BUILT_IN_INTRODUCTION, isExpanded))">
+                    <MudText Typo="Typo.h5" Class="mb-3">
+                        @T("Welcome to MindWork AI Studio!")
+                    </MudText>
+                    <MudText Typo="Typo.body1" Class="mb-3" Style="text-align: justify; hyphens: auto;">
+                        @T("Thank you for considering MindWork AI Studio for your AI needs. This app is designed to help you harness the power of Large Language Models (LLMs). Please note that this app doesn't come with an integrated LLM. Instead, you will need to bring an API key from a suitable provider.")
+                    </MudText>
+                    <MudText Typo="Typo.body1" Class="mb-3">
+                        @T("Here's what makes MindWork AI Studio stand out:")
+                    </MudText>
+                    <MudTextList Icon="@Icons.Material.Filled.CheckCircle" Clickable="@true" Items="@this.itemsAdvantages" Class="mb-3"/>
+                    <MudText Typo="Typo.body1" Class="mb-3">
+                        @T("We hope you enjoy using MindWork AI Studio to bring your AI projects to life!")
+                    </MudText>
+                </ExpansionPanel>
+            }
 
-            <ExpansionPanel HeaderIcon="@Icons.Material.Filled.EventNote" HeaderText="@T("Last Changelog")">
+            @foreach (var introduction in this.introductions)
+            {
+                <ExpansionPanel @key="@introduction.Id" HeaderIcon="@Icons.Material.Filled.Info" HeaderText="@introduction.Title" IsExpanded="@this.IsPanelExpanded(IntroductionPanelId(introduction))" ExpandedChanged="@(isExpanded => this.SetPanelExpanded(IntroductionPanelId(introduction), isExpanded))">
+                    <MudText Typo="Typo.body2" Class="mb-3">
+                        @T("Version"): @introduction.VersionText
+                    </MudText>
+                    <MudJustifiedMarkdown Value="@introduction.Markdown" />
+                </ExpansionPanel>
+            }
+
+            <ExpansionPanel HeaderIcon="@Icons.Material.Filled.EventNote" HeaderText="@T("Last Changelog")" IsExpanded="@this.IsPanelExpanded(PANEL_ID_LAST_CHANGELOG)" ExpandedChanged="@(isExpanded => this.SetPanelExpanded(PANEL_ID_LAST_CHANGELOG, isExpanded))">
                 <MudMarkdown Value="@this.LastChangeContent" Props="Markdown.DefaultConfig" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE"/>
             </ExpansionPanel>
 
-            <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Lightbulb" HeaderText="@T("Vision")">
+            <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Lightbulb" HeaderText="@T("Vision")" IsExpanded="@this.IsPanelExpanded(PANEL_ID_VISION)" ExpandedChanged="@(isExpanded => this.SetPanelExpanded(PANEL_ID_VISION, isExpanded))">
                 <Vision/>
             </ExpansionPanel>
             
             @if (this.SettingsManager.ConfigurationData.App.ShowQuickStartGuide)
             {
-                <ExpansionPanel HeaderIcon="@Icons.Material.Filled.RocketLaunch" HeaderText="@T("Quick Start Guide")">
+                <ExpansionPanel HeaderIcon="@Icons.Material.Filled.RocketLaunch" HeaderText="@T("Quick Start Guide")" IsExpanded="@this.IsPanelExpanded(PANEL_ID_QUICK_START_GUIDE)" ExpandedChanged="@(isExpanded => this.SetPanelExpanded(PANEL_ID_QUICK_START_GUIDE, isExpanded))">
                     <MudMarkdown Props="Markdown.DefaultConfig" Value="@QUICK_START_GUIDE" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE"/>
                 </ExpansionPanel>
             }

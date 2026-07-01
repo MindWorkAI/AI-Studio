@@ -129,6 +129,18 @@ Optional encryption secret file:
 config_encryption_secret: "BASE64..."
 ```
 
+Optional custom root certificate policy file:
+
+- `external_http_custom_root_certificates.yaml`
+
+```yaml
+enabled: true
+bundle_path: "/app/etc/MindWorkAI/company-root-cas.pem"
+allowed_hosts: "*.intra.example.org;eri.example.org"
+```
+
+When this file exists and contains a valid `enabled` value, it takes precedence over the custom root certificate environment variables described below. This is useful for Flatpak deployments because a Flatpak provisioning extension can provide the policy file and the PEM bundle together. Set `enabled: false` to explicitly disable additional root certificates and ignore lower-priority environment variables.
+
 ### Environment variable example
 
 If you need the fallback environment-variable format, configure the values like this:
@@ -172,7 +184,18 @@ If your organization uses private root CAs, place a PEM bundle with the required
 -----END CERTIFICATE-----
 ```
 
-For the first enterprise configuration download, configure these environment variables before AI Studio starts:
+For Flatpak deployments, the recommended approach is to provide an enterprise policy file through the Flatpak provisioning extension:
+
+```yaml
+# /app/etc/MindWorkAI/external_http_custom_root_certificates.yaml
+enabled: true
+bundle_path: "/app/etc/MindWorkAI/company-root-cas.pem"
+allowed_hosts: "*.intra.example.org;eri.example.org"
+```
+
+Place the PEM bundle at the configured path inside the sandbox, for example, through the same provisioning extension. This allows AI Studio to use the additional root certificates during the first enterprise configuration download.
+
+As a fallback, you can configure these environment variables before AI Studio starts:
 
 ```bash
 MINDWORK_AI_STUDIO_EXTERNAL_HTTP_CUSTOM_ROOT_CERTIFICATES_ENABLED=true

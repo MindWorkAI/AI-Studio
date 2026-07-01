@@ -16,7 +16,7 @@ public sealed class DataV4
     /// <summary>
     /// Settings concerning the LLM providers.
     /// </summary>
-    public DataLLMProviders LLMProviders { get; init; } = new();
+    public DataLLMProvidersV5 LLMProviders { get; init; } = new();
     
     /// <summary>
     /// List of configured profiles.

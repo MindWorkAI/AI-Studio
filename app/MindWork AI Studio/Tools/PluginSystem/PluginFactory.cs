@@ -6,7 +6,7 @@ namespace AIStudio.Tools.PluginSystem;
 public static partial class PluginFactory
 {
     private static readonly ILogger LOG = Program.LOGGER_FACTORY.CreateLogger(nameof(PluginFactory));
-    private static readonly SettingsManager SETTINGS_MANAGER = Program.SERVICE_PROVIDER.GetRequiredService<SettingsManager>();
+    private static SettingsManager SettingsManagerAccess => Program.SERVICE_PROVIDER.GetRequiredService<SettingsManager>();
 
     private static string DATA_DIR = string.Empty;
     private static string PLUGINS_ROOT = string.Empty;
@@ -134,6 +134,15 @@ public static partial class PluginFactory
         return RUNNING_PLUGINS
             .OfType<PluginConfiguration>()
             .SelectMany(plugin => plugin.MandatoryInfos)
+            .ToList();
+    }
+
+    public static IReadOnlyList<DataIntroduction> GetIntroductions()
+    {
+        return RUNNING_PLUGINS
+            .OfType<PluginConfiguration>()
+            .SelectMany(plugin => plugin.Introductions)
+            .OrderBy(introduction => introduction.Index)
             .ToList();
     }
 }

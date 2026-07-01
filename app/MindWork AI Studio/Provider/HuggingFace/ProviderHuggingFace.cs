@@ -18,7 +18,7 @@ public sealed class ProviderHuggingFace : BaseProvider
     #region Implementation of IProvider
 
     /// <inheritdoc />
-    public override string Id => LLMProviders.HUGGINGFACE.ToName();
+    public override string Id => LLMProviders.HUGGINGFACE.ToSecretId();
 
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "HuggingFace";

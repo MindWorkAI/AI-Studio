@@ -13,7 +13,7 @@ public sealed class ProviderDeepSeek() : BaseProvider(LLMProviders.DEEP_SEEK, ne
     #region Implementation of IProvider
 
     /// <inheritdoc />
-    public override string Id => LLMProviders.DEEP_SEEK.ToName();
+    public override string Id => LLMProviders.DEEP_SEEK.ToSecretId();
 
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "DeepSeek";

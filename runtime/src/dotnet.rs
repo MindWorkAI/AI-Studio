@@ -13,7 +13,13 @@ use crate::runtime_api_token::API_TOKEN;
 use crate::app_window::change_location_to;
 use crate::runtime_certificate::CERTIFICATE_FINGERPRINT;
 use crate::encryption::ENCRYPTION;
-use crate::environment::{is_dev, DATA_DIRECTORY};
+use crate::environment::{
+    is_dev, resolve_external_http_custom_root_certificate_policy, DATA_DIRECTORY,
+    DOTNET_ENV_CUSTOM_ROOT_CERTIFICATE_ALLOWED_HOSTS,
+    DOTNET_ENV_CUSTOM_ROOT_CERTIFICATE_BUNDLE_PATH,
+    DOTNET_ENV_CUSTOM_ROOT_CERTIFICATE_POLICY_CONFIGURED,
+    DOTNET_ENV_CUSTOM_ROOT_CERTIFICATES_ENABLED,
+};
 use crate::network::get_available_port;
 use crate::runtime_api::API_SERVER_PORT;
 use crate::stale_process_cleanup::{kill_stale_process, log_potential_stale_process};
@@ -93,6 +99,20 @@ pub async fn dotnet_port(_token: APIToken) -> String {
     format!("{dotnet_server_port}")
 }
 
+fn external_http_custom_root_certificate_policy_environment() -> Vec<(String, String)> {
+    let policy = resolve_external_http_custom_root_certificate_policy();
+    if !policy.is_configured {
+        return Vec::new();
+    }
+
+    vec![
+        (String::from(DOTNET_ENV_CUSTOM_ROOT_CERTIFICATE_POLICY_CONFIGURED), String::from("true")),
+        (String::from(DOTNET_ENV_CUSTOM_ROOT_CERTIFICATES_ENABLED), policy.enabled.to_string()),
+        (String::from(DOTNET_ENV_CUSTOM_ROOT_CERTIFICATE_BUNDLE_PATH), policy.bundle_path),
+        (String::from(DOTNET_ENV_CUSTOM_ROOT_CERTIFICATE_ALLOWED_HOSTS), policy.allowed_hosts),
+    ]
+}
+
 /// Creates the startup environment file for the .NET server in the development
 /// environment. The file is created in the root directory of the repository.
 /// Creating that env file on a production environment would be a security
@@ -113,18 +133,18 @@ pub fn create_startup_env_file() {
     warn!(Source = "Bootloader .NET"; "Development environment detected; create the startup env file at '../startup.env'.");
     let env_file_path = std::path::PathBuf::from("..").join("startup.env");
     let mut env_file = std::fs::File::create(env_file_path).unwrap();
-    let env_file_content = format!(
-        "AI_STUDIO_SECRET_PASSWORD={secret_password}\n\
-        AI_STUDIO_SECRET_KEY_SALT={secret_key_salt}\n\
-        AI_STUDIO_CERTIFICATE_FINGERPRINT={cert_fingerprint}\n\
-        AI_STUDIO_API_PORT={api_port}\n\
-        AI_STUDIO_API_TOKEN={api_token}",
+    let mut env_file_lines = vec![
+        format!("AI_STUDIO_SECRET_PASSWORD={secret_password}"),
+        format!("AI_STUDIO_SECRET_KEY_SALT={secret_key_salt}"),
+        format!("AI_STUDIO_CERTIFICATE_FINGERPRINT={}", CERTIFICATE_FINGERPRINT.get().unwrap()),
+        format!("AI_STUDIO_API_PORT={api_port}"),
+        format!("AI_STUDIO_API_TOKEN={}", API_TOKEN.to_hex_text()),
+    ];
+    for (key, value) in external_http_custom_root_certificate_policy_environment() {
+        env_file_lines.push(format!("{key}={value}"));
+    }
 
-        cert_fingerprint = CERTIFICATE_FINGERPRINT.get().unwrap(),
-        api_token = API_TOKEN.to_hex_text()
-    );
-
-    std::io::Write::write_all(&mut env_file, env_file_content.as_bytes()).unwrap();
+    std::io::Write::write_all(&mut env_file, env_file_lines.join("\n").as_bytes()).unwrap();
     info!(Source = "Bootloader .NET"; "The startup env file was created successfully.");
 }
 
@@ -136,13 +156,14 @@ pub fn start_dotnet_server<R: tauri::Runtime>(app_handle: tauri::AppHandle<R>) {
     let secret_key_salt = BASE64_STANDARD.encode(ENCRYPTION.secret_key_salt);
     let api_port = *API_SERVER_PORT;
 
-    let dotnet_server_environment: HashMap<String, String> = HashMap::from_iter([
+    let mut dotnet_server_environment: HashMap<String, String> = HashMap::from_iter([
         (String::from("AI_STUDIO_SECRET_PASSWORD"), secret_password),
         (String::from("AI_STUDIO_SECRET_KEY_SALT"), secret_key_salt),
         (String::from("AI_STUDIO_CERTIFICATE_FINGERPRINT"), CERTIFICATE_FINGERPRINT.get().unwrap().to_string()),
         (String::from("AI_STUDIO_API_PORT"), format!("{api_port}")),
         (String::from("AI_STUDIO_API_TOKEN"), API_TOKEN.to_hex_text().to_string()),
     ]);
+    dotnet_server_environment.extend(external_http_custom_root_certificate_policy_environment());
 
     info!("Try to start the .NET server...");
     let server_spawn_clone = DOTNET_SERVER.clone();

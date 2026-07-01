@@ -16,37 +16,40 @@ public partial class ChatTemplateDialog : MSGComponentBase
     /// </summary>
     [Parameter]
     public uint DataNum { get; set; }
-    
+
     /// <summary>
     /// The chat template's ID.
     /// </summary>
     [Parameter]
     public string DataId { get; set; } = Guid.NewGuid().ToString();
-    
+
     /// <summary>
     /// The chat template name chosen by the user.
     /// </summary>
     [Parameter]
     public string DataName { get; set; } = string.Empty;
-    
+
     /// <summary>
     /// What is the system prompt?
     /// </summary>
     [Parameter]
     public string DataSystemPrompt { get; set; } = string.Empty;
-    
+
     /// <summary>
     /// What is the predefined user prompt?
     /// </summary>
     [Parameter]
     public string PredefinedUserPrompt { get; set; } = string.Empty;
-    
+
     /// <summary>
     /// Should the dialog be in editing mode?
     /// </summary>
     [Parameter]
     public bool IsEditing { get; init; }
-    
+
+    [Parameter]
+    public bool IsReadOnly { get; init; }
+
     [Parameter]
     public IReadOnlyCollection<ContentBlock> ExampleConversation { get; init; } = [];
 
@@ -55,23 +58,23 @@ public partial class ChatTemplateDialog : MSGComponentBase
 
     [Parameter]
     public bool AllowProfileUsage { get; set; } = true;
-    
-    [Parameter] 
+
+    [Parameter]
     public bool CreateFromExistingChatThread { get; set; }
-    
-    [Parameter] 
+
+    [Parameter]
     public ChatThread? ExistingChatThread { get; set; }
-    
+
     [Inject]
     private ILogger<ChatTemplateDialog> Logger { get; init; } = null!;
-    
+
     private static readonly Dictionary<string, object?> SPELLCHECK_ATTRIBUTES = new();
-    
+
     /// <summary>
     /// The list of used chat template names. We need this to check for uniqueness.
     /// </summary>
     private List<string> UsedNames { get; set; } = [];
-    
+
     private bool dataIsValid;
     private List<ContentBlock> dataExampleConversation = [];
     private HashSet<FileAttachment> fileAttachments = [];
@@ -80,20 +83,20 @@ public partial class ChatTemplateDialog : MSGComponentBase
     private bool isInlineEditOnGoing;
 
     private ContentBlock? messageEntryBeforeEdit;
-    
+
     // We get the form reference from Blazor code to validate it manually:
     private MudForm form = null!;
-    
+
     #region Overrides of ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
         // Configure the spellchecking for the instance name input:
         this.SettingsManager.InjectSpellchecking(SPELLCHECK_ATTRIBUTES);
-        
+
         // Load the used instance names:
         this.UsedNames = this.SettingsManager.ConfigurationData.ChatTemplates.Select(x => x.Name.ToLowerInvariant()).ToList();
-        
+
         // When editing, we need to load the data:
         if(this.IsEditing)
         {
@@ -108,7 +111,7 @@ public partial class ChatTemplateDialog : MSGComponentBase
             this.dataExampleConversation = this.ExistingChatThread.Blocks.Select(n => n.DeepClone(true)).ToList();
             this.DataName = this.ExistingChatThread.Name;
         }
-        
+
         await base.OnInitializedAsync();
     }
 
@@ -118,7 +121,7 @@ public partial class ChatTemplateDialog : MSGComponentBase
         // We don't want to show validation errors when the user opens the dialog.
         if(!this.IsEditing && firstRender)
             this.form.ResetValidation();
-        
+
         await base.OnAfterRenderAsync(firstRender);
     }
 
@@ -128,28 +131,34 @@ public partial class ChatTemplateDialog : MSGComponentBase
     {
         Num = this.DataNum,
         Id = this.DataId,
-        
+
         Name = this.DataName,
         SystemPrompt = this.DataSystemPrompt,
         PredefinedUserPrompt = this.PredefinedUserPrompt,
         ExampleConversation = this.dataExampleConversation,
         FileAttachments = this.fileAttachments.Select(attachment => attachment.Normalize()).ToList(),
         AllowProfileUsage = this.AllowProfileUsage,
-        
+
         EnterpriseConfigurationPluginId = Guid.Empty,
         IsEnterpriseConfiguration = false,
     };
 
     private void RemoveMessage(ContentBlock item)
     {
+        if (this.IsReadOnly)
+            return;
+
         this.dataExampleConversation.Remove(item);
     }
 
     private void AddMessageToEnd()
     {
+        if (this.IsReadOnly)
+            return;
+
         var newEntry = new ContentBlock
         {
-            Role = this.dataExampleConversation.Count is 0 ? ChatRole.USER : this.dataExampleConversation.Last().Role.SelectNextRoleForTemplate(), 
+            Role = this.dataExampleConversation.Count is 0 ? ChatRole.USER : this.dataExampleConversation.Last().Role.SelectNextRoleForTemplate(),
             Content = new ContentText(),
             ContentType = ContentType.TEXT,
             HideFromUser = true,
@@ -161,6 +170,9 @@ public partial class ChatTemplateDialog : MSGComponentBase
 
     private void AddMessageBelow(ContentBlock currentItem)
     {
+        if (this.IsReadOnly)
+            return;
+
         var insertedEntry = new ContentBlock
         {
             Role = this.dataExampleConversation.Count is 0 ? ChatRole.USER : this.dataExampleConversation.Last().Role.SelectNextRoleForTemplate(),
@@ -169,7 +181,7 @@ public partial class ChatTemplateDialog : MSGComponentBase
             HideFromUser = true,
             Time = DateTimeOffset.Now,
         };
-        
+
         // The rest of the method remains the same:
         var index = this.dataExampleConversation.IndexOf(currentItem);
         if (index >= 0)
@@ -177,71 +189,83 @@ public partial class ChatTemplateDialog : MSGComponentBase
         else
             this.dataExampleConversation.Add(insertedEntry);
     }
-    
+
     private void BackupItem(object? element)
     {
+        if (this.IsReadOnly)
+            return;
+
         this.isInlineEditOnGoing = true;
         this.messageEntryBeforeEdit = element switch
         {
             ContentBlock block => block.DeepClone(),
             _ => null,
         };
-        
+
         this.StateHasChanged();
     }
 
     private void ResetItem(object? element)
     {
+        if (this.IsReadOnly)
+            return;
+
         this.isInlineEditOnGoing = false;
         switch (element)
         {
             case ContentBlock block:
                 if (this.messageEntryBeforeEdit is null)
                     return; // No backup to restore from
-                
+
                 block.Content = this.messageEntryBeforeEdit.Content?.DeepClone();
                 block.Role = this.messageEntryBeforeEdit.Role;
                 break;
         }
-        
+
         this.StateHasChanged();
     }
 
     private void CommitInlineEdit(object? element)
     {
+        if (this.IsReadOnly)
+            return;
+
         this.isInlineEditOnGoing = false;
         this.StateHasChanged();
     }
-    
+
     private async Task Store()
     {
+        if (this.IsReadOnly)
+            return;
+
         await this.form.Validate();
-        
+
         // When the data is not valid, we don't store it:
         if (!this.dataIsValid)
             return;
-        
+
         // When an inline edit is ongoing, we cannot store the data:
         if (this.isInlineEditOnGoing)
             return;
-        
+
         // Use the data model to store the chat template.
         // We just return this data to the parent component:
         var addedChatTemplateSettings = this.CreateChatTemplateSettings();
-        
+
         if(this.IsEditing)
             this.Logger.LogInformation($"Edited chat template '{addedChatTemplateSettings.Name}'.");
         else
             this.Logger.LogInformation($"Created chat template '{addedChatTemplateSettings.Name}'.");
-        
+
         this.MudDialog.Close(DialogResult.Ok(addedChatTemplateSettings));
     }
-    
+
     private string? ValidateExampleTextMessage(string message)
     {
         if (string.IsNullOrWhiteSpace(message))
             return T("Please enter a message for the example conversation.");
-        
+
         return null;
     }
 
@@ -249,20 +273,23 @@ public partial class ChatTemplateDialog : MSGComponentBase
     {
         if (string.IsNullOrWhiteSpace(name))
             return T("Please enter a name for the chat template.");
-        
+
         if (name.Length > 40)
             return T("The chat template name must not exceed 40 characters.");
-        
+
         // The instance name must be unique:
         var lowerName = name.ToLowerInvariant();
         if (lowerName != this.dataEditingPreviousName && this.UsedNames.Contains(lowerName))
             return T("The chat template name must be unique; the chosen name is already in use.");
-        
+
         return null;
     }
 
     private void UseDefaultSystemPrompt()
     {
+        if (this.IsReadOnly)
+            return;
+
         this.DataSystemPrompt = SystemPrompts.DEFAULT;
     }
 

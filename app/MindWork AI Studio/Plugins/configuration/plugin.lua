@@ -213,6 +213,9 @@ CONFIG["SETTINGS"] = {}
 -- Configure whether the quick start guide is shown on the welcome page.
 -- CONFIG["SETTINGS"]["DataApp.ShowQuickStartGuide"] = false
 
+-- Configure whether the built-in introduction is shown on the welcome page.
+-- CONFIG["SETTINGS"]["DataApp.ShowIntroduction"] = false
+
 -- Configure the user permission to add providers:
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToAddProvider"] = false
 
@@ -240,6 +243,32 @@ CONFIG["SETTINGS"] = {}
 -- It must be one of the profile IDs defined in CONFIG["PROFILES"].
 -- Please note: using an empty string ("") will lock the preselected profile selection, even though no valid preselected profile is found.
 -- CONFIG["SETTINGS"]["DataApp.PreselectedProfile"] = "00000000-0000-0000-0000-000000000000"
+
+-- Configure chat-specific preselected options.
+-- This must be enabled for the chat-specific provider, profile, and chat template to take effect.
+-- CONFIG["SETTINGS"]["DataChat.PreselectOptions"] = true
+--
+-- Configure the preselected provider for chats.
+-- It must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"].
+-- CONFIG["SETTINGS"]["DataChat.PreselectedProvider"] = "00000000-0000-0000-0000-000000000000"
+--
+-- Configure the preselected profile for chats.
+-- It must be one of the profile IDs defined in CONFIG["PROFILES"].
+-- Please note: using an empty string ("") means chats will use the app default profile.
+-- Please note: using "00000000-0000-0000-0000-000000000000" means chats will use no profile.
+-- CONFIG["SETTINGS"]["DataChat.PreselectedProfile"] = "00000000-0000-0000-0000-000000000000"
+--
+-- Configure the preselected chat template for chats.
+-- It must be one of the chat template IDs defined in CONFIG["CHAT_TEMPLATES"].
+-- Please note: using an empty string ("") or "00000000-0000-0000-0000-000000000000" means chats will use no chat template.
+-- CONFIG["SETTINGS"]["DataChat.PreselectedChatTemplate"] = "00000000-0000-0000-0000-000000000000"
+--
+-- Allow users to change any configured chat default locally.
+-- Allowed values are: true, false
+-- CONFIG["SETTINGS"]["DataChat.PreselectOptions.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataChat.PreselectedProvider.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataChat.PreselectedProfile.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataChat.PreselectedChatTemplate.AllowUserOverride"] = true
 
 -- Configure the transcription provider for voice-to-text functionality.
 -- It must be one of the transcription provider IDs defined in CONFIG["TRANSCRIPTION_PROVIDERS"].
@@ -289,6 +318,66 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataApp.ExternalHttpCustomRootCertificatesEnabled"] = true
 -- CONFIG["SETTINGS"]["DataApp.ExternalHttpCustomRootCertificateBundlePath"] = "/path/in/sandbox/company-root-cas.pem"
 -- CONFIG["SETTINGS"]["DataApp.ExternalHttpCustomRootCertificateAllowedHosts"] = { "*.intra.example.org", "eri.example.org" }
+
+-- Configure provider confidence settings.
+-- These settings apply to LLM providers, embedding providers, and transcription providers.
+--
+-- Configure a predefined confidence scheme.
+-- Allowed values are: TRUST_ALL, TRUST_USA_EUROPE, TRUST_USA, TRUST_EUROPE, TRUST_ASIA, LOCAL_TRUST_ONLY, CUSTOM
+-- CONFIG["SETTINGS"]["DataConfidence.ConfidenceScheme"] = "TRUST_EUROPE"
+--
+-- Configure whether users can still change the confidence scheme locally.
+-- Allowed values are: true, false
+-- When set to true, the configured confidence scheme becomes the organization default,
+-- but users can still choose another scheme in the app settings.
+-- CONFIG["SETTINGS"]["DataConfidence.ConfidenceScheme.AllowUserOverride"] = true
+--
+-- Configure whether confidence levels are shown in the UI.
+-- CONFIG["SETTINGS"]["DataConfidence.ShowProviderConfidence"] = true
+--
+-- Configure an app-wide minimum confidence level.
+-- Allowed values are: NONE, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
+-- CONFIG["SETTINGS"]["DataConfidence.EnforceGlobalMinimumConfidence"] = true
+-- CONFIG["SETTINGS"]["DataConfidence.GlobalMinimumConfidence"] = "MEDIUM"
+--
+-- Configure whether users can change the app-wide minimum confidence level locally.
+-- CONFIG["SETTINGS"]["DataConfidence.EnforceGlobalMinimumConfidence.AllowUserOverride"] = false
+-- CONFIG["SETTINGS"]["DataConfidence.GlobalMinimumConfidence.AllowUserOverride"] = false
+--
+-- Configure a custom confidence scheme.
+-- This is used when DataConfidence.ConfidenceScheme is set to CUSTOM.
+-- Allowed provider keys are: OPEN_AI, ANTHROPIC, MISTRAL, GOOGLE, X, DEEP_SEEK, ALIBABA_CLOUD,
+--   PERPLEXITY, OPEN_ROUTER, FIREWORKS, GROQ, HUGGINGFACE, SELF_HOSTED, HELMHOLTZ, GWDG
+-- Allowed confidence values are: UNTRUSTED, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
+-- CONFIG["SETTINGS"]["DataConfidence.CustomConfidenceScheme"] = {
+--     ["OPEN_AI"] = "MODERATE",
+--     ["ANTHROPIC"] = "MODERATE",
+--     ["MISTRAL"] = "HIGH",
+--     ["GOOGLE"] = "LOW",
+--     ["X"] = "LOW",
+--     ["DEEP_SEEK"] = "LOW",
+--     ["ALIBABA_CLOUD"] = "LOW",
+--     ["PERPLEXITY"] = "MODERATE",
+--     ["OPEN_ROUTER"] = "MODERATE",
+--     ["FIREWORKS"] = "MODERATE",
+--     ["GROQ"] = "MODERATE",
+--     ["HUGGINGFACE"] = "MODERATE",
+--     ["SELF_HOSTED"] = "HIGH",
+--     ["HELMHOLTZ"] = "HIGH",
+--     ["GWDG"] = "HIGH",
+-- }
+--
+-- Configure whether users can change the custom confidence scheme locally.
+-- CONFIG["SETTINGS"]["DataConfidence.CustomConfidenceScheme.AllowUserOverride"] = false
+--
+-- Configure provider instances trusted by your organization for data-source security checks.
+-- These IDs may refer to LLM providers, embedding providers, or transcription providers
+-- defined in this configuration. Trusted providers are treated like self-hosted providers
+-- only for data-source security checks and related local data warnings.
+-- CONFIG["SETTINGS"]["DataSourceSecuritySettings.TrustedProviderIds"] = {
+--     "00000000-0000-0000-0000-000000000000",
+--     "00000000-0000-0000-0000-000000000001",
+-- }
 
 -- Example chat templates for this configuration:
 CONFIG["CHAT_TEMPLATES"] = {}
@@ -340,6 +429,26 @@ CONFIG["CHAT_TEMPLATES"] = {}
 --             ["Content"] = "Thank you. I'll analyze the documents and provide a comprehensive summary."
 --         }
 --     }
+-- }
+
+-- Introduction texts shown as expansion panels on the welcome page:
+CONFIG["INTRODUCTIONS"] = {}
+
+-- An example introduction:
+-- CONFIG["INTRODUCTIONS"][#CONFIG["INTRODUCTIONS"]+1] = {
+--     ["Id"] = "00000000-0000-0000-0000-000000000000",
+--     ["Title"] = "Welcome to Your Organization's AI Studio",
+--     ["Version"] = "1",
+--     ["Index"] = 1,
+--     ["Markdown"] = [===[
+--                         ## Getting Started
+--
+--                         This AI Studio installation is managed by your organization.
+--                         Please use the preconfigured providers and follow your internal
+--                         AI usage guidelines.
+--
+--                         Further information is available in the [internal wiki](https://example.org/wiki).
+--                         ]===]
 -- }
 
 -- Mandatory infos that users must explicitly accept before using AI Studio:

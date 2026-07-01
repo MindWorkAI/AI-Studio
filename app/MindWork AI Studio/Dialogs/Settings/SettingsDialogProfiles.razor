@@ -32,9 +32,14 @@
                 <MudTd>
                     @if (context.IsEnterpriseConfiguration)
                     {
-                        <MudTooltip Text="@T("This profile is managed by your organization.")">
-                            <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Business" Disabled="true"/>
-                        </MudTooltip>
+                        <MudStack Row="true" Class="mb-2 mt-2" Wrap="Wrap.Wrap">
+                            <MudTooltip Text="@T("This profile is managed by your organization.")">
+                                <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Business" Disabled="true"/>
+                            </MudTooltip>
+                            <MudTooltip Text="@T("View")">
+                                <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Visibility" OnClick="() => this.ViewProfile(context)"/>
+                            </MudTooltip>
+                        </MudStack>
                     }
                     else
                     {

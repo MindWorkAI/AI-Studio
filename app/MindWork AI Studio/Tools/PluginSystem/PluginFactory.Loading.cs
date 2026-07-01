@@ -191,7 +191,7 @@ public static partial class PluginFactory
             wasConfigurationChanged = true;
 
         // Check left-over mandatory info acceptances:
-        if (SETTINGS_MANAGER.ConfigurationData.MandatoryInformation.RemoveLeftOverAcceptances(GetMandatoryInfos()))
+        if (SettingsManagerAccess.ConfigurationData.MandatoryInformation.RemoveLeftOverAcceptances(GetMandatoryInfos()))
             wasConfigurationChanged = true;
         
         // Check for a preselected provider:
@@ -200,6 +200,19 @@ public static partial class PluginFactory
 
         // Check for a preselected profile:
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.PreselectedProfile, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        // Check for preselected chat options:
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Chat, x => x.PreselectOptions, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Chat, x => x.PreselectedProvider, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Chat, x => x.PreselectedProfile, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Chat, x => x.PreselectedChatTemplate, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;
         
         // Check for the update interval:
@@ -212,6 +225,10 @@ public static partial class PluginFactory
 
         // Check for the start page:
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.StartPage, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        // Check for the built-in introduction visibility:
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.ShowIntroduction, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;
 
         // Check for the quick start guide visibility:
@@ -263,6 +280,26 @@ public static partial class PluginFactory
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.ExternalHttpCustomRootCertificateAllowedHosts, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;
 
+        // Check provider confidence settings:
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Confidence, x => x.EnforceGlobalMinimumConfidence, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Confidence, x => x.GlobalMinimumConfidence, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Confidence, x => x.ShowProviderConfidence, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Confidence, x => x.ConfidenceScheme, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Confidence, x => x.CustomConfidenceScheme, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        // Check data source security settings:
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.DataSourceSecurity, x => x.TrustedProviderIds, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
         // Check if audit is required before it can be activated
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.AssistantPluginAudit, x => x.RequireAuditBeforeActivation, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;
@@ -285,7 +322,7 @@ public static partial class PluginFactory
         
         if (wasConfigurationChanged)
         {
-            await SETTINGS_MANAGER.StoreSettings();
+            await SettingsManagerAccess.StoreSettings();
             await MessageBus.INSTANCE.SendMessage<bool>(null, Event.CONFIGURATION_CHANGED);
         }
     }

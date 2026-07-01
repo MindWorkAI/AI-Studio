@@ -28,7 +28,7 @@ public partial class DataSourceLocalFileInfoDialog : MSGComponentBase
     private EmbeddingProvider embeddingProvider = EmbeddingProvider.NONE;
     private FileInfo fileInfo = null!;
     
-    private bool IsCloudEmbedding => !this.embeddingProvider.IsSelfHosted;
+    private bool IsCloudEmbedding => !this.embeddingProvider.IsTrustedForDataSourceSecurityChecks(this.SettingsManager);
 
     private bool IsFileAvailable => this.fileInfo.Exists;
     

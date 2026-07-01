@@ -65,6 +65,9 @@ public abstract class SettingsDialogBase : MSGComponentBase
         switch (triggeredEvent)
         {
             case Event.CONFIGURATION_CHANGED:
+            case Event.PLUGINS_RELOADED:
+                this.UpdateProviders();
+                this.UpdateEmbeddingProviders();
                 this.StateHasChanged();
                 break;
         }

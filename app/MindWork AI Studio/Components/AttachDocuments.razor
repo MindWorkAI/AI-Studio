@@ -52,29 +52,42 @@
 }
 else
 {
-    <MudStack Row="true" AlignItems="AlignItems.Center" StretchItems="StretchItems.None" Wrap="Wrap.Wrap">
-        <MudText Typo="Typo.body1" Inline="true">
-            @T("Drag and drop files into the marked area or click here to attach documents: ")
-        </MudText>
-        <MudButton
-            Variant="Variant.Filled"
-            StartIcon="@Icons.Material.Filled.Add"
-            Color="Color.Primary"
-            OnClick="@(() => this.AddFilesManually())"
-            Style="vertical-align: top; margin-top: -2px;"
-            Size="Size.Small">
-            @T("Add file")
-        </MudButton>
-    </MudStack>
+    @if (!this.Disabled)
+    {
+        <MudStack Row="true" AlignItems="AlignItems.Center" StretchItems="StretchItems.None" Wrap="Wrap.Wrap">
+            <MudText Typo="Typo.body1" Inline="true">
+                @T("Drag and drop files into the marked area or click here to attach documents: ")
+            </MudText>
+            <MudButton
+                Variant="Variant.Filled"
+                StartIcon="@Icons.Material.Filled.Add"
+                Color="Color.Primary"
+                OnClick="@(() => this.AddFilesManually())"
+                Style="vertical-align: top; margin-top: -2px;"
+                Size="Size.Small">
+                @T("Add file")
+            </MudButton>
+        </MudStack>
+    }
     <div @onmouseenter="@this.OnMouseEnter" @onmouseleave="@this.OnMouseLeave">
         <MudPaper Height="20em" Outlined="true" Class="@this.dragClass" Style="overflow-y: auto;">
             @foreach (var fileAttachment in this.DocumentPaths)
             {
-                <MudChip T="string" Color="Color.Dark" Text="@fileAttachment.FileName" tabindex="-1" Icon="@Icons.Material.Filled.Search" OnClick="@(() => this.InvestigateFile(fileAttachment))" OnClose="@(() => this.RemoveDocument(fileAttachment))"/>
+                @if (this.Disabled)
+                {
+                    <MudChip T="string" Color="Color.Dark" Text="@fileAttachment.FileName" tabindex="-1" Icon="@Icons.Material.Filled.Search" OnClick="@(() => this.InvestigateFile(fileAttachment))"/>
+                }
+                else
+                {
+                    <MudChip T="string" Color="Color.Dark" Text="@fileAttachment.FileName" tabindex="-1" Icon="@Icons.Material.Filled.Search" OnClick="@(() => this.InvestigateFile(fileAttachment))" OnClose="@(() => this.RemoveDocument(fileAttachment))"/>
+                }
             }
         </MudPaper>
     </div>
-    <MudButton OnClick="@(async () => await this.ClearAllFiles())" Variant="Variant.Filled" Color="Color.Info" Class="mt-2" StartIcon="@Icons.Material.Filled.Delete">
-        @T("Clear file list")
-    </MudButton>
+    @if (!this.Disabled)
+    {
+        <MudButton OnClick="@(async () => await this.ClearAllFiles())" Variant="Variant.Filled" Color="Color.Info" Class="mt-2" StartIcon="@Icons.Material.Filled.Delete">
+            @T("Clear file list")
+        </MudButton>
+    }
 }
