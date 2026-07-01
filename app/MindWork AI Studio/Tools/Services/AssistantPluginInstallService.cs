@@ -6,6 +6,7 @@ using AIStudio.Tools.PluginSystem.Assistants;
 namespace AIStudio.Tools.Services;
 
 public sealed record AssistantPluginInstallResult(bool Success, Guid PluginId, string PluginName, string PluginDirectory, bool ReplacedExisting, string Issue);
+public sealed record AssistantPluginCheckResult(bool Success, Guid PluginId, string PluginName, string Issue);
 
 public sealed class AssistantPluginInstallService
 {
@@ -17,11 +18,49 @@ public sealed class AssistantPluginInstallService
     private readonly SemaphoreSlim installSemaphore = new(1, 1);
     
     private static AssistantPluginInstallResult Error(string issue) => new(false, Guid.Empty, string.Empty, string.Empty, false, issue);
+    private static AssistantPluginCheckResult CheckError(string issue) => new(false, Guid.Empty, string.Empty, issue);
 
     public AssistantPluginInstallService(ILogger<AssistantPluginInstallService> logger)
     {
         this.logger = logger;
         this.logger.LogInformation("The assistant plugin install service has been initialized.");
+    }
+
+    /// <summary>
+    /// Checks whether generated Lua assistant plugin code can be loaded and installed.
+    /// The plugin is written to a temporary staging directory and validated through the
+    /// normal plugin loader, but it is not moved into the user plugin directory.
+    /// </summary>
+    /// <param name="lua">The full generated <c>plugin.lua</c> content.</param>
+    /// <param name="token">A cancellation token for file IO and Lua validation.</param>
+    /// <returns>
+    /// Check result that contains success state, plugin metadata, and a user-facing issue when validation failed.
+    /// </returns>
+    public async Task<AssistantPluginCheckResult> CheckInstallabilityAsync(string lua, CancellationToken token)
+    {
+        if (!TryGetAssistantPluginsRoot(out var assistantPluginsRoot, out var rootIssue))
+            return CheckError(rootIssue);
+
+        await this.installSemaphore.WaitAsync(token);
+        var stagingDirectory = string.Empty;
+        try
+        {
+            var validation = await this.ValidateIntoStagingAsync(lua, token);
+            if (!validation.Success || validation.AssistantPlugin is null)
+                return CheckError(validation.Issue);
+
+            stagingDirectory = validation.StagingDirectory;
+            var finalDirectory = DetermineFinalDirectory(assistantPluginsRoot, validation.AssistantPlugin);
+            if (!IsPathInsideDirectory(assistantPluginsRoot, finalDirectory))
+                return CheckError("The resolved plugin directory is outside the assistant plugin directory.");
+
+            return new(true, validation.AssistantPlugin.Id, validation.AssistantPlugin.Name, string.Empty);
+        }
+        finally
+        {
+            this.TryDeleteStagingDirectory(stagingDirectory);
+            this.installSemaphore.Release();
+        }
     }
 
     /// <summary>
@@ -39,44 +78,27 @@ public sealed class AssistantPluginInstallService
     /// </returns>
     public async Task<AssistantPluginInstallResult> InstallAsync(string lua, CancellationToken token)
     {
-        if (string.IsNullOrWhiteSpace(lua))
-            return Error("No Lua plugin code was generated.");
-
-        var pluginCode = lua.Trim();
-        if (!PluginFactory.IsInitialized)
-            return Error("The plugin system is not initialized yet.");
-
-        var dataDirectory = SettingsManager.DataDirectory;
-        if (string.IsNullOrWhiteSpace(dataDirectory))
-            return Error("The AI Studio data directory is not initialized yet.");
+        if (!TryGetAssistantPluginsRoot(out var assistantPluginsRoot, out var rootIssue))
+            return Error(rootIssue);
 
         await this.installSemaphore.WaitAsync(token);
+        AssistantPluginValidationResult validation;
         try
         {
-            var assistantPluginsRoot = Path.Join(dataDirectory, "plugins", PluginType.ASSISTANT.GetDirectory());
+            validation = await this.ValidateIntoStagingAsync(lua, token);
+            if (!validation.Success || validation.AssistantPlugin is null)
+                return Error(validation.Issue);
+
             Directory.CreateDirectory(assistantPluginsRoot);
 
-            var stagingDirectory = Path.Join(Path.GetTempPath(), $"{ASSISTANT_BUILDER_DIRECTORY_PREFIX}.staging-{Guid.NewGuid():N}");
+            var stagingDirectory = validation.StagingDirectory;
+            var assistantPlugin = validation.AssistantPlugin;
             string? backupDirectory = null;
             string? finalDirectory = null;
             var replacedExisting = false;
 
             try
             {
-                Directory.CreateDirectory(stagingDirectory);
-                var stagedPluginFile = Path.Join(stagingDirectory, PLUGIN_FILE_NAME);
-                await File.WriteAllTextAsync(stagedPluginFile, pluginCode, Encoding.UTF8, token);
-
-                var plugin = await PluginFactory.Load(stagingDirectory, pluginCode, token);
-                if (plugin is not PluginAssistants assistantPlugin)
-                    return Error($"The generated plugin is not an assistant plugin. Issue: {string.Join("; ", plugin.Issues)}");
-
-                if (!assistantPlugin.IsValid)
-                    return Error($"The generated assistant plugin is invalid. Issue: {string.Join("; ", assistantPlugin.Issues)}");
-
-                if (PluginFactory.AvailablePlugins.Any(plugin => plugin.Type is PluginType.ASSISTANT && plugin.Id == assistantPlugin.Id && plugin.IsInternal))
-                    return Error("The generated assistant plugin uses the ID of an internal AI Studio plugin.");
-
                 finalDirectory = DetermineFinalDirectory(assistantPluginsRoot, assistantPlugin);
                 if (!IsPathInsideDirectory(assistantPluginsRoot, finalDirectory))
                     return Error("The resolved plugin directory is outside the assistant plugin directory.");
@@ -125,22 +147,89 @@ public sealed class AssistantPluginInstallService
             }
             finally
             {
-                if (Directory.Exists(stagingDirectory))
-                {
-                    try
-                    {
-                        Directory.Delete(stagingDirectory, true);
-                    }
-                    catch (Exception e)
-                    {
-                        this.logger.LogError(e, "Failed to delete assistant plugin staging directory '{StagingDirectory}'.", stagingDirectory);
-                    }
-                }
+                this.TryDeleteStagingDirectory(stagingDirectory);
             }
         }
         finally
         {
             this.installSemaphore.Release();
+        }
+    }
+
+    private async Task<AssistantPluginValidationResult> ValidateIntoStagingAsync(string lua, CancellationToken token)
+    {
+        if (string.IsNullOrWhiteSpace(lua))
+            return AssistantPluginValidationResult.Error("No Lua plugin code was generated.");
+
+        if (!PluginFactory.IsInitialized)
+            return AssistantPluginValidationResult.Error("The plugin system is not initialized yet.");
+
+        var pluginCode = lua.Trim();
+        var stagingDirectory = Path.Join(Path.GetTempPath(), $"{ASSISTANT_BUILDER_DIRECTORY_PREFIX}.staging-{Guid.NewGuid():N}");
+
+        try
+        {
+            Directory.CreateDirectory(stagingDirectory);
+            var stagedPluginFile = Path.Join(stagingDirectory, PLUGIN_FILE_NAME);
+            await File.WriteAllTextAsync(stagedPluginFile, pluginCode, Encoding.UTF8, token);
+
+            var plugin = await PluginFactory.Load(stagingDirectory, pluginCode, token);
+            if (plugin is not PluginAssistants assistantPlugin)
+            {
+                this.TryDeleteStagingDirectory(stagingDirectory);
+                return AssistantPluginValidationResult.Error($"The generated plugin is not an assistant plugin. Issue: {string.Join("; ", plugin.Issues)}");
+            }
+
+            if (!assistantPlugin.IsValid)
+            {
+                this.TryDeleteStagingDirectory(stagingDirectory);
+                return AssistantPluginValidationResult.Error($"The generated assistant plugin is invalid. Issue: {string.Join("; ", assistantPlugin.Issues)}");
+            }
+
+            if (PluginFactory.AvailablePlugins.Any(plugin => plugin.Type is PluginType.ASSISTANT && plugin.Id == assistantPlugin.Id && plugin.IsInternal))
+            {
+                this.TryDeleteStagingDirectory(stagingDirectory);
+                return AssistantPluginValidationResult.Error("The generated assistant plugin uses the ID of an internal AI Studio plugin.");
+            }
+
+            return new(true, stagingDirectory, assistantPlugin, string.Empty);
+        }
+        catch (Exception e)
+        {
+            this.logger.LogError(e, "Failed to validate generated assistant plugin.");
+            this.TryDeleteStagingDirectory(stagingDirectory);
+            return AssistantPluginValidationResult.Error(e.Message);
+        }
+    }
+
+    private static bool TryGetAssistantPluginsRoot(out string assistantPluginsRoot, out string issue)
+    {
+        assistantPluginsRoot = string.Empty;
+        issue = string.Empty;
+
+        var dataDirectory = SettingsManager.DataDirectory;
+        if (string.IsNullOrWhiteSpace(dataDirectory))
+        {
+            issue = "The AI Studio data directory is not initialized yet.";
+            return false;
+        }
+
+        assistantPluginsRoot = Path.Join(dataDirectory, "plugins", PluginType.ASSISTANT.GetDirectory());
+        return true;
+    }
+
+    private void TryDeleteStagingDirectory(string stagingDirectory)
+    {
+        if (!Directory.Exists(stagingDirectory))
+            return;
+
+        try
+        {
+            Directory.Delete(stagingDirectory, true);
+        }
+        catch (Exception e)
+        {
+            this.logger.LogError(e, "Failed to delete assistant plugin staging directory '{StagingDirectory}'.", stagingDirectory);
         }
     }
     
@@ -205,5 +294,10 @@ public sealed class AssistantPluginInstallService
         var parentPath = Path.GetFullPath(parentDirectory).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
         var childPath = Path.GetFullPath(path).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
         return childPath.StartsWith(parentPath, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private sealed record AssistantPluginValidationResult(bool Success, string StagingDirectory, PluginAssistants? AssistantPlugin, string Issue)
+    {
+        public static AssistantPluginValidationResult Error(string issue) => new(false, string.Empty, null, issue);
     }
 }
