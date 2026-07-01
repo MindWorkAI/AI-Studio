@@ -65,6 +65,8 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     private protected virtual RenderFragment? AfterSubmitContent => null;
 
+    private protected virtual RenderFragment? BelowSubmitContent => null;
+
     protected virtual bool ShowResult => true;
     
     protected virtual bool ShowEntireChatThread => false;
