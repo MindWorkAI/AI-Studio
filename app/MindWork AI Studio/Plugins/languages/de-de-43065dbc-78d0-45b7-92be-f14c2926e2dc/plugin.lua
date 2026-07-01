@@ -351,6 +351,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T65674494
 -- Bias of the Day
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T782102948"] = "Vorurteil des Tages"
 
+-- The assistant \"{0}\" was checked with the level \"{1}\", which is below your required level \"{2}\". Your settings allow activation anyway, but this may be unsafe. Do you want to enable this assistant?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1017087366"] = "Der Assistent „{0}“ wurde mit der Stufe „{1}“ geprüft. Diese liegt unter Ihrer erforderlichen Stufe „{2}“. Ihre Einstellungen erlauben die Aktivierung trotzdem, dies kann jedoch unsicher sein. Möchten Sie diesen Assistenten aktivieren?"
+
+-- Validate generated assistant
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1135532230"] = "Generierten Assistenten prüfen"
+
 -- Assistant Draft
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1176795724"] = "Assistentenentwurf"
 
@@ -363,8 +369,20 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1239995078"] 
 -- User Goal
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1264526921"] = "Nutzerziel"
 
+-- The assistant is enabled.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1373471225"] = "Der Assistent ist aktiviert."
+
+-- Validating the generated assistant...
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1428868592"] = "Generierter Assistent wird überprüft..."
+
+-- The generated assistant \"{0}\" can be installed.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1478252150"] = "Der erstellte Assistent „{0}“ kann installiert werden."
+
 -- Additional changes (Optional)
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1502888752"] = "Zusätzliche Änderungen (optional)"
+
+-- Assistant enabled.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1508119920"] = "Assistent aktiviert."
 
 -- An expected user prompt, e.g. summarize this document
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1565792607"] = "Eine erwartete Nutzereingabe, z. B. „Fasse dieses Dokument zusammen“"
@@ -375,14 +393,17 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1622920412"] 
 -- Category (Optional)
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1644710572"] = "Kategorie (optional)"
 
+-- Security check completed with findings.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1696631610"] = "Sicherheitsprüfung mit Befunden abgeschlossen."
+
 -- Description
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1725856265"] = ""
 
--- The assistant plugin \"{0}\" was installed.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T177739072"] = "Das Assistenten-Plugin „{0}“ wurde installiert."
-
 -- (Optional) Output language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1821434787"] = "Ausgabesprache (optional)"
+
+-- The installed assistant could not be loaded.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1889523922"] = "Der installierte Assistent konnte nicht geladen werden."
 
 -- No assistant plugin was generated yet.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1911729967"] = "Es wurde noch kein Assistenten-Plugin erstellt."
@@ -390,20 +411,35 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1911729967"] 
 -- View accepted draft
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1985923838"] = "Akzeptierten Entwurf anzeigen"
 
+-- The generated assistant can be installed.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2000626264"] = "Der erstellte Assistent kann installiert werden."
+
 -- Create assistant draft
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2063479946"] = "Entwurf für Assistenten erstellen"
+
+-- Assistant installed.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2069785341"] = "Assistent installiert."
 
 -- Typical input (Optional)
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2172900154"] = "Typische Eingabe (optional)"
 
--- Install this generated assistant as a plugin.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2250515799"] = "Diesen generierten Assistenten als Plugin installieren."
+-- Start security check
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2234890987"] = "Sicherheitsprüfung starten"
+
+-- The assistant \"{0}\" was installed.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T232818957"] = "Der Assistent „{0}“ wurde installiert."
 
 -- These notes are applied on top of the accepted draft and can still change the generated assistant plugin. Leave empty to use the draft as-is.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2345545005"] = "Diese Hinweise werden zusätzlich auf den akzeptierten Entwurf angewendet und können das generierte Assistenten-Plugin noch verändern. Leer lassen, um den Entwurf unverändert zu verwenden."
 
 -- What users provide, e.g. text, notes, files, or a URL
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2381710500"] = "Was Nutzer bereitstellen, z. B. Text, Notizen, Dateien oder eine URL"
+
+-- The assistant could not be installed.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2432974339"] = "Der Assistent konnte nicht installiert werden."
+
+-- Security check completed. No security issues were found.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2521082424"] = "Sicherheitsprüfung abgeschlossen. Es wurden keine Sicherheitsprobleme gefunden."
 
 -- Inputs
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2647381688"] = "Eingaben"
@@ -417,14 +453,20 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2703350865"] 
 -- Custom assistant category
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2720431578"] = "Kategorie für benutzerdefinierte Assistenten"
 
+-- Generated Lua plugin
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2745057219"] = "Generiertes Lua-Plugin"
+
 -- Input and UI components (Optional)
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2750415283"] = "Eingabe- und UI-Komponenten (optional)"
 
 -- Custom output language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2795779287"] = "Benutzerdefinierte Ausgabesprache"
 
--- The assistant plugin \"{0}\" was updated.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2941454775"] = "Das Assistenten-Plugin „{0}“ wurde aktualisiert."
+-- Installing the assistant...
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2824185303"] = "Assistent wird installiert …"
+
+-- The generated assistant could not be checked.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2844109727"] = "Der erstellte Assistent konnte nicht überprüft werden."
 
 -- Category
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2947802513"] = "Kategorie"
@@ -434,6 +476,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T299451"] = "A
 
 -- UI Components
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3053707933"] = "UI-Komponenten"
+
+-- Enable assistant
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3055650774"] = "Assistent aktivieren"
+
+-- Validate plugin
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3111970038"] = "Plugin validieren"
 
 -- The Assistant-Builder was not able to read the JSON response schema and therefore cannot safely generate your assistant right now.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3154764026"] = "Der Assistenten-Builder konnte das JSON-Antwortschema nicht lesen und kann Ihren Assistenten daher derzeit nicht sicher erstellen."
@@ -447,8 +495,14 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3163704605"] 
 -- Regenerate Assistant
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3171038735"] = "Assistent neu erstellen"
 
+-- Security check
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T318745411"] = "Sicherheitsprüfung"
+
 -- The Assistant-Builder was not able to read the plugin manifest and therefore cannot safely generate your assistant right now.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3278037634"] = "Der Assistenten-Builder konnte das Plugin-Manifest nicht lesen und kann Ihren Assistenten daher aktuell nicht sicher erstellen."
+
+-- The security check could not determine a result.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3303290181"] = "Die Sicherheitsprüfung konnte kein Ergebnis ermitteln."
 
 -- Assistant Builder
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3303547904"] = "Assistenten erstellen"
@@ -456,8 +510,17 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3303547904"] 
 -- Advanced Options
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3393521529"] = "Erweiterte Optionen"
 
+-- Unknown
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3424652889"] = "Unbekannt"
+
 -- Please provide a custom output language.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3507237849"] = "Bitte geben Sie eine benutzerdefinierte Ausgabesprache an."
+
+-- Enabling the assistant...
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3523738500"] = "Assistent wird aktiviert …"
+
+-- The security check could not be completed.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3569251996"] = "Die Sicherheitsprüfung konnte nicht abgeschlossen werden."
 
 -- Model decides
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T358632395"] = "Modell entscheidet"
@@ -467,6 +530,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3588686406"] 
 
 -- Safety Notes
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3633499050"] = "Sicherheitshinweise"
+
+-- Enable the assistant before opening it.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3658628501"] = "Aktivieren Sie den Assistenten, bevor Sie ihn öffnen."
 
 -- Describe the task, inputs, and desired output in your own words. The model will infer all the plugin details.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3741657159"] = "Beschreiben Sie die Aufgabe, die Eingaben und die gewünschte Ausgabe in eigenen Worten. Das Modell leitet alle Plugin-Details ab."
@@ -489,11 +555,17 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T4000727844"] 
 -- Please describe the assistant you want to create.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T4004589285"] = "Bitte beschreiben Sie den Assistenten, den Sie erstellen möchten."
 
+-- Assistant updated.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T40397082"] = "Assistent aktualisiert."
+
 -- Prompt Strategy
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T410529216"] = "Prompt-Strategie"
 
 -- Allow AI Studio profiles
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T4155351992"] = "AI-Studio-Profile zulassen"
+
+-- Issue: {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T4185028924"] = "Problem: {0}"
 
 -- Example prompt (Optional)
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T4217647404"] = "Beispiel-Prompt (optional)"
@@ -501,8 +573,14 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T4217647404"] 
 -- Please create an assistant draft first.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T4269176489"] = "Bitte erstellen Sie zuerst einen Entwurf für einen Assistenten."
 
+-- The assistant cannot be enabled.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T451764889"] = "Der Assistent kann nicht aktiviert werden."
+
 -- Describe the assistant you want to create. AI Studio will draft a readable assistant specification first and then generate an assistant plugin from it.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T463667108"] = "Beschreiben Sie den Assistenten, den Sie erstellen möchten. AI Studio erstellt zuerst eine gut lesbare Assistentenspezifikation und generiert daraus anschließend ein Assistenten-Plugin."
+
+-- Unknown assistant
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T471171049"] = "Unbekannter Assistent"
 
 -- Describe your assistant
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T507682539"] = "Beschreiben Sie Ihren Assistenten"
@@ -513,14 +591,35 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T517777955"] =
 -- Change description
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T621770603"] = "Beschreibung ändern"
 
+-- The assistant cannot be enabled because it is below your required security level.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T661468377"] = "Der Assistent kann nicht aktiviert werden, da er unter Ihrer erforderlichen Sicherheitsstufe liegt."
+
+-- This assistant cannot be enabled because the security check is below your required level.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T695490996"] = "Dieser Assistent kann nicht aktiviert werden, da die Sicherheitsprüfung unter Ihrem erforderlichen Niveau liegt."
+
+-- The security check is below your required level. Your settings allow activation after confirmation.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T746714819"] = "Die Sicherheitsprüfung liegt unter der von Ihnen geforderten Stufe. Ihre Einstellungen erlauben die Aktivierung nach einer Bestätigung."
+
 -- It is recommended to a powerful LLM.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T767601000"] = "Ein leistungsstarkes LLM wird empfohlen."
+
+-- The assistant \"{0}\" was updated.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T838472906"] = "Der Assistent „{0}“ wurde aktualisiert."
 
 -- What users should get, e.g. a summary or checklist
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T889445968"] = "Was Nutzer erhalten sollen, z. B. eine Zusammenfassung oder eine Checkliste"
 
+-- Open assistant
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T894887001"] = "Assistenten öffnen"
+
+-- Checking assistant safety...
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T900581529"] = "Sicherheit des Assistenten wird geprüft..."
+
 -- Expected output (Optional)
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T911303749"] = "Erwartete Ausgabe (optional)"
+
+-- Potentially Unsafe Assistant
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T997013004"] = "Potenziell unsicherer Assistent"
 
 -- The generated Lua plugin code does not contain a readable plugin ID.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::LUARESPONSEPARSEERROR::T1163279436"] = "Der generierte Lua-Plugin-Code enthält keine lesbare Plugin-ID."
