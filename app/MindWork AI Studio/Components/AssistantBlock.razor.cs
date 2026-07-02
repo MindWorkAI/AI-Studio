@@ -1,5 +1,6 @@
 using AIStudio.Dialogs.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.AssistantSessions;
 using Microsoft.AspNetCore.Components;
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
@@ -31,6 +32,12 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase where TSetting
     [Parameter]
     public Tools.Components Component { get; set; } = Tools.Components.NONE;
 
+    /// <summary>
+    /// Gets or sets the optional assistant session instance ID represented by this block.
+    /// </summary>
+    [Parameter]
+    public string AssistantSessionInstanceId { get; set; } = string.Empty;
+
     [Parameter]
     public PreviewFeatures RequiredPreviewFeature { get; set; } = PreviewFeatures.NONE;
 
@@ -39,6 +46,9 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase where TSetting
 
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
+
+    [Inject]
+    private AssistantSessionService AssistantSessionService { get; init; } = null!;
     
     private async Task OpenSettingsDialog()
     {
@@ -50,7 +60,7 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase where TSetting
         await this.DialogService.ShowAsync<TSettings>(T("Open Settings"), dialogParameters, DialogOptions.FULLSCREEN);
     }
 
-    private string BorderColor => this.SettingsManager.IsDarkMode switch
+    private string BorderColor => this.HasActiveSession ? this.ColorTheme.GetCurrentPalette(this.SettingsManager).Warning.Value : this.SettingsManager.IsDarkMode switch
     {
         true => this.ColorTheme.GetCurrentPalette(this.SettingsManager).GrayLight,
         false => this.ColorTheme.GetCurrentPalette(this.SettingsManager).Primary.Value,
@@ -61,4 +71,27 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase where TSetting
     private bool IsVisible => this.SettingsManager.IsAssistantVisible(this.Component, assistantName: this.Name, requiredPreviewFeature: this.RequiredPreviewFeature);
 
     private bool HasSettingsPanel => typeof(TSettings) != typeof(NoSettingsPanel);
+
+    /// <summary>
+    /// Gets whether this block represents an active assistant session.
+    /// </summary>
+    private bool HasActiveSession => string.IsNullOrWhiteSpace(this.AssistantSessionInstanceId)
+        ? this.AssistantSessionService.GetSnapshots().Any(snapshot => snapshot.IsActive && snapshot.Key.Component == this.Component)
+        : this.AssistantSessionService.GetSnapshots().Any(snapshot => snapshot.IsActive && snapshot.Key.InstanceId == this.AssistantSessionInstanceId);
+
+    /// <summary>
+    /// Refreshes the block when assistant session activity changes.
+    /// </summary>
+    /// <typeparam name="T">The message payload type.</typeparam>
+    /// <param name="sendingComponent">The component that sent the message, if any.</param>
+    /// <param name="triggeredEvent">The event that was triggered.</param>
+    /// <param name="data">The message payload.</param>
+    /// <returns>A task that completes after the message was processed.</returns>
+    protected override Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
+    {
+        if (triggeredEvent is Event.ASSISTANT_SESSION_CHANGED or Event.ASSISTANT_SESSION_FINISHED)
+            this.StateHasChanged();
+
+        return base.ProcessIncomingMessage(sendingComponent, triggeredEvent, data);
+    }
 }

@@ -41,7 +41,7 @@
                         <MudButton Disabled="@(this.SubmitDisabled || this.isProcessing)" Variant="Variant.Filled" OnClick="@(async () => await this.Start())" Style="@this.SubmitButtonStyle">
                             @this.SubmitText
                         </MudButton>
-                        @if (this.isProcessing && this.CancellationTokenSource is not null)
+                        @if (this.isProcessing)
                         {
                             <MudTooltip Text="@TB("Stop generation")">
                                 <MudIconButton Variant="Variant.Filled" Icon="@Icons.Material.Filled.Stop" Color="Color.Error" OnClick="@(async () => await this.CancelStreaming())"/>

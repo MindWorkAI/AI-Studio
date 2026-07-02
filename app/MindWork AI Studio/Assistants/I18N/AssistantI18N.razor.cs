@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Text;
 
 using AIStudio.Dialogs.Settings;
+using AIStudio.Tools.AssistantSessions;
 using AIStudio.Tools.PluginSystem;
 
 using Microsoft.Extensions.FileProviders;
@@ -117,6 +118,52 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
     private Dictionary<string, string> removedContent = [];
     private Dictionary<string, string> localizedContent = [];
     private StringBuilder finalLuaCode = new();
+    private static readonly AssistantSessionStateKey<CommonLanguages> SELECTED_TARGET_LANGUAGE_STATE_KEY = new(nameof(selectedTargetLanguage));
+    private static readonly AssistantSessionStateKey<string> CUSTOM_TARGET_LANGUAGE_STATE_KEY = new(nameof(customTargetLanguage));
+    private static readonly AssistantSessionStateKey<bool> IS_LOADING_STATE_KEY = new(nameof(isLoading));
+    private static readonly AssistantSessionStateKey<string> LOADING_ISSUE_STATE_KEY = new(nameof(loadingIssue));
+    private static readonly AssistantSessionStateKey<bool> LOCALIZATION_POSSIBLE_STATE_KEY = new(nameof(localizationPossible));
+    private static readonly AssistantSessionStateKey<string> SEARCH_STRING_STATE_KEY = new(nameof(searchString));
+    private static readonly AssistantSessionStateKey<Guid> SELECTED_LANGUAGE_PLUGIN_ID_STATE_KEY = new(nameof(selectedLanguagePluginId));
+    private static readonly AssistantSessionStateKey<ILanguagePlugin?> SELECTED_LANGUAGE_PLUGIN_STATE_KEY = new(nameof(selectedLanguagePlugin));
+    private static readonly AssistantSessionStateKey<Dictionary<string, string>> ADDED_CONTENT_STATE_KEY = new(nameof(addedContent));
+    private static readonly AssistantSessionStateKey<Dictionary<string, string>> REMOVED_CONTENT_STATE_KEY = new(nameof(removedContent));
+    private static readonly AssistantSessionStateKey<Dictionary<string, string>> LOCALIZED_CONTENT_STATE_KEY = new(nameof(localizedContent));
+    private static readonly AssistantSessionStateKey<string> FINAL_LUA_CODE_STATE_KEY = new(nameof(finalLuaCode));
+
+    /// <inheritdoc />
+    protected override void CaptureCustomAssistantSessionState(AssistantSessionStateWriter state)
+    {
+        state.Set(SELECTED_TARGET_LANGUAGE_STATE_KEY, this.selectedTargetLanguage);
+        state.Set(CUSTOM_TARGET_LANGUAGE_STATE_KEY, this.customTargetLanguage);
+        state.Set(IS_LOADING_STATE_KEY, this.isLoading);
+        state.Set(LOADING_ISSUE_STATE_KEY, this.loadingIssue);
+        state.Set(LOCALIZATION_POSSIBLE_STATE_KEY, this.localizationPossible);
+        state.Set(SEARCH_STRING_STATE_KEY, this.searchString);
+        state.Set(SELECTED_LANGUAGE_PLUGIN_ID_STATE_KEY, this.selectedLanguagePluginId);
+        state.Set(SELECTED_LANGUAGE_PLUGIN_STATE_KEY, this.selectedLanguagePlugin);
+        state.SetDictionary(ADDED_CONTENT_STATE_KEY, this.addedContent);
+        state.SetDictionary(REMOVED_CONTENT_STATE_KEY, this.removedContent);
+        state.SetDictionary(LOCALIZED_CONTENT_STATE_KEY, this.localizedContent);
+        state.SetStringBuilder(FINAL_LUA_CODE_STATE_KEY, this.finalLuaCode);
+    }
+
+    /// <inheritdoc />
+    protected override void RestoreCustomAssistantSessionState(AssistantSessionStateReader state)
+    {
+        state.Restore(SELECTED_TARGET_LANGUAGE_STATE_KEY, value => this.selectedTargetLanguage = value);
+        state.Restore(CUSTOM_TARGET_LANGUAGE_STATE_KEY, value => this.customTargetLanguage = value);
+        state.Restore(IS_LOADING_STATE_KEY, value => this.isLoading = value);
+        state.Restore(LOADING_ISSUE_STATE_KEY, value => this.loadingIssue = value);
+        state.Restore(LOCALIZATION_POSSIBLE_STATE_KEY, value => this.localizationPossible = value);
+        state.Restore(SEARCH_STRING_STATE_KEY, value => this.searchString = value);
+        state.Restore(SELECTED_LANGUAGE_PLUGIN_ID_STATE_KEY, value => this.selectedLanguagePluginId = value);
+        state.Restore(SELECTED_LANGUAGE_PLUGIN_STATE_KEY, value => this.selectedLanguagePlugin = value);
+        state.RestoreDictionary(ADDED_CONTENT_STATE_KEY, this.addedContent);
+        state.RestoreDictionary(REMOVED_CONTENT_STATE_KEY, this.removedContent);
+        state.RestoreDictionary(LOCALIZED_CONTENT_STATE_KEY, this.localizedContent);
+        state.RestoreStringBuilder(FINAL_LUA_CODE_STATE_KEY, this.finalLuaCode);
+    }
 
     #region Overrides of AssistantBase<SettingsDialogI18N>
 

@@ -5,6 +5,7 @@ using AIStudio.Chat;
 using AIStudio.Dialogs;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.AssistantSessions;
 
 using Microsoft.AspNetCore.Components;
 
@@ -449,6 +450,88 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
     private bool writeToFilesystem;
     private string baseDirectory = string.Empty;
     private List<string> previouslyGeneratedFiles = new();
+    private static readonly AssistantSessionStateKey<DataERIServer?> SELECTED_ERI_SERVER_STATE_KEY = new(nameof(selectedERIServer));
+    private static readonly AssistantSessionStateKey<bool> AUTO_SAVE_STATE_KEY = new(nameof(autoSave));
+    private static readonly AssistantSessionStateKey<string> SERVER_NAME_STATE_KEY = new(nameof(serverName));
+    private static readonly AssistantSessionStateKey<string> SERVER_DESCRIPTION_STATE_KEY = new(nameof(serverDescription));
+    private static readonly AssistantSessionStateKey<ERIVersion> SELECTED_ERI_VERSION_STATE_KEY = new(nameof(selectedERIVersion));
+    private static readonly AssistantSessionStateKey<string?> ERI_SPECIFICATION_STATE_KEY = new(nameof(eriSpecification));
+    private static readonly AssistantSessionStateKey<ProgrammingLanguages> SELECTED_PROGRAMMING_LANGUAGE_STATE_KEY = new(nameof(selectedProgrammingLanguage));
+    private static readonly AssistantSessionStateKey<string> OTHER_PROGRAMMING_LANGUAGE_STATE_KEY = new(nameof(otherProgrammingLanguage));
+    private static readonly AssistantSessionStateKey<DataSources> SELECTED_DATA_SOURCE_STATE_KEY = new(nameof(selectedDataSource));
+    private static readonly AssistantSessionStateKey<string> OTHER_DATA_SOURCE_STATE_KEY = new(nameof(otherDataSource));
+    private static readonly AssistantSessionStateKey<string> DATA_SOURCE_PRODUCT_NAME_STATE_KEY = new(nameof(dataSourceProductName));
+    private static readonly AssistantSessionStateKey<string> DATA_SOURCE_HOSTNAME_STATE_KEY = new(nameof(dataSourceHostname));
+    private static readonly AssistantSessionStateKey<int?> DATA_SOURCE_PORT_STATE_KEY = new(nameof(dataSourcePort));
+    private static readonly AssistantSessionStateKey<bool> USER_TYPED_PORT_STATE_KEY = new(nameof(userTypedPort));
+    private static readonly AssistantSessionStateKey<HashSet<Auth>> SELECTED_AUTHENTICATION_METHODS_STATE_KEY = new(nameof(selectedAuthenticationMethods));
+    private static readonly AssistantSessionStateKey<string> AUTH_DESCRIPTION_STATE_KEY = new(nameof(authDescription));
+    private static readonly AssistantSessionStateKey<OperatingSystem> SELECTED_OPERATING_SYSTEM_STATE_KEY = new(nameof(selectedOperatingSystem));
+    private static readonly AssistantSessionStateKey<AllowedLLMProviders> ALLOWED_LLM_PROVIDERS_STATE_KEY = new(nameof(allowedLLMProviders));
+    private static readonly AssistantSessionStateKey<List<EmbeddingInfo>> EMBEDDINGS_STATE_KEY = new(nameof(embeddings));
+    private static readonly AssistantSessionStateKey<List<RetrievalInfo>> RETRIEVAL_PROCESSES_STATE_KEY = new(nameof(retrievalProcesses));
+    private static readonly AssistantSessionStateKey<string> ADDITIONAL_LIBRARIES_STATE_KEY = new(nameof(additionalLibraries));
+    private static readonly AssistantSessionStateKey<bool> WRITE_TO_FILESYSTEM_STATE_KEY = new(nameof(writeToFilesystem));
+    private static readonly AssistantSessionStateKey<string> BASE_DIRECTORY_STATE_KEY = new(nameof(baseDirectory));
+    private static readonly AssistantSessionStateKey<List<string>> PREVIOUSLY_GENERATED_FILES_STATE_KEY = new(nameof(previouslyGeneratedFiles));
+
+    /// <inheritdoc />
+    protected override void CaptureCustomAssistantSessionState(AssistantSessionStateWriter state)
+    {
+        state.Set(SELECTED_ERI_SERVER_STATE_KEY, this.selectedERIServer);
+        state.Set(AUTO_SAVE_STATE_KEY, this.autoSave);
+        state.Set(SERVER_NAME_STATE_KEY, this.serverName);
+        state.Set(SERVER_DESCRIPTION_STATE_KEY, this.serverDescription);
+        state.Set(SELECTED_ERI_VERSION_STATE_KEY, this.selectedERIVersion);
+        state.Set(ERI_SPECIFICATION_STATE_KEY, this.eriSpecification);
+        state.Set(SELECTED_PROGRAMMING_LANGUAGE_STATE_KEY, this.selectedProgrammingLanguage);
+        state.Set(OTHER_PROGRAMMING_LANGUAGE_STATE_KEY, this.otherProgrammingLanguage);
+        state.Set(SELECTED_DATA_SOURCE_STATE_KEY, this.selectedDataSource);
+        state.Set(OTHER_DATA_SOURCE_STATE_KEY, this.otherDataSource);
+        state.Set(DATA_SOURCE_PRODUCT_NAME_STATE_KEY, this.dataSourceProductName);
+        state.Set(DATA_SOURCE_HOSTNAME_STATE_KEY, this.dataSourceHostname);
+        state.Set(DATA_SOURCE_PORT_STATE_KEY, this.dataSourcePort);
+        state.Set(USER_TYPED_PORT_STATE_KEY, this.userTypedPort);
+        state.SetHashSet(SELECTED_AUTHENTICATION_METHODS_STATE_KEY, this.selectedAuthenticationMethods);
+        state.Set(AUTH_DESCRIPTION_STATE_KEY, this.authDescription);
+        state.Set(SELECTED_OPERATING_SYSTEM_STATE_KEY, this.selectedOperatingSystem);
+        state.Set(ALLOWED_LLM_PROVIDERS_STATE_KEY, this.allowedLLMProviders);
+        state.SetList(EMBEDDINGS_STATE_KEY, this.embeddings);
+        state.SetList(RETRIEVAL_PROCESSES_STATE_KEY, this.retrievalProcesses);
+        state.Set(ADDITIONAL_LIBRARIES_STATE_KEY, this.additionalLibraries);
+        state.Set(WRITE_TO_FILESYSTEM_STATE_KEY, this.writeToFilesystem);
+        state.Set(BASE_DIRECTORY_STATE_KEY, this.baseDirectory);
+        state.SetList(PREVIOUSLY_GENERATED_FILES_STATE_KEY, this.previouslyGeneratedFiles);
+    }
+
+    /// <inheritdoc />
+    protected override void RestoreCustomAssistantSessionState(AssistantSessionStateReader state)
+    {
+        state.Restore(SELECTED_ERI_SERVER_STATE_KEY, value => this.selectedERIServer = value);
+        state.Restore(AUTO_SAVE_STATE_KEY, value => this.autoSave = value);
+        state.Restore(SERVER_NAME_STATE_KEY, value => this.serverName = value);
+        state.Restore(SERVER_DESCRIPTION_STATE_KEY, value => this.serverDescription = value);
+        state.Restore(SELECTED_ERI_VERSION_STATE_KEY, value => this.selectedERIVersion = value);
+        state.Restore(ERI_SPECIFICATION_STATE_KEY, value => this.eriSpecification = value);
+        state.Restore(SELECTED_PROGRAMMING_LANGUAGE_STATE_KEY, value => this.selectedProgrammingLanguage = value);
+        state.Restore(OTHER_PROGRAMMING_LANGUAGE_STATE_KEY, value => this.otherProgrammingLanguage = value);
+        state.Restore(SELECTED_DATA_SOURCE_STATE_KEY, value => this.selectedDataSource = value);
+        state.Restore(OTHER_DATA_SOURCE_STATE_KEY, value => this.otherDataSource = value);
+        state.Restore(DATA_SOURCE_PRODUCT_NAME_STATE_KEY, value => this.dataSourceProductName = value);
+        state.Restore(DATA_SOURCE_HOSTNAME_STATE_KEY, value => this.dataSourceHostname = value);
+        state.Restore(DATA_SOURCE_PORT_STATE_KEY, value => this.dataSourcePort = value);
+        state.Restore(USER_TYPED_PORT_STATE_KEY, value => this.userTypedPort = value);
+        state.Restore(SELECTED_AUTHENTICATION_METHODS_STATE_KEY, value => this.selectedAuthenticationMethods = value);
+        state.Restore(AUTH_DESCRIPTION_STATE_KEY, value => this.authDescription = value);
+        state.Restore(SELECTED_OPERATING_SYSTEM_STATE_KEY, value => this.selectedOperatingSystem = value);
+        state.Restore(ALLOWED_LLM_PROVIDERS_STATE_KEY, value => this.allowedLLMProviders = value);
+        state.RestoreList(EMBEDDINGS_STATE_KEY, this.embeddings);
+        state.RestoreList(RETRIEVAL_PROCESSES_STATE_KEY, this.retrievalProcesses);
+        state.Restore(ADDITIONAL_LIBRARIES_STATE_KEY, value => this.additionalLibraries = value);
+        state.Restore(WRITE_TO_FILESYSTEM_STATE_KEY, value => this.writeToFilesystem = value);
+        state.Restore(BASE_DIRECTORY_STATE_KEY, value => this.baseDirectory = value);
+        state.RestoreList(PREVIOUSLY_GENERATED_FILES_STATE_KEY, this.previouslyGeneratedFiles);
+    }
 
     private bool AreServerPresetsBlocked => !this.SettingsManager.ConfigurationData.ERI.PreselectOptions;
     

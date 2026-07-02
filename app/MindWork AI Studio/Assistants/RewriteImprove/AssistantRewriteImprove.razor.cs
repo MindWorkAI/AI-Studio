@@ -1,4 +1,5 @@
 using AIStudio.Dialogs.Settings;
+using AIStudio.Tools.AssistantSessions;
 
 namespace AIStudio.Assistants.RewriteImprove;
 
@@ -91,6 +92,34 @@ public partial class AssistantRewriteImprove : AssistantBaseCore<SettingsDialogR
     private string rewrittenText = string.Empty;
     private WritingStyles selectedWritingStyle;
     private SentenceStructure selectedSentenceStructure;
+    private static readonly AssistantSessionStateKey<string> INPUT_TEXT_STATE_KEY = new(nameof(inputText));
+    private static readonly AssistantSessionStateKey<CommonLanguages> SELECTED_TARGET_LANGUAGE_STATE_KEY = new(nameof(selectedTargetLanguage));
+    private static readonly AssistantSessionStateKey<string> CUSTOM_TARGET_LANGUAGE_STATE_KEY = new(nameof(customTargetLanguage));
+    private static readonly AssistantSessionStateKey<string> REWRITTEN_TEXT_STATE_KEY = new(nameof(rewrittenText));
+    private static readonly AssistantSessionStateKey<WritingStyles> SELECTED_WRITING_STYLE_STATE_KEY = new(nameof(selectedWritingStyle));
+    private static readonly AssistantSessionStateKey<SentenceStructure> SELECTED_SENTENCE_STRUCTURE_STATE_KEY = new(nameof(selectedSentenceStructure));
+
+    /// <inheritdoc />
+    protected override void CaptureCustomAssistantSessionState(AssistantSessionStateWriter state)
+    {
+        state.Set(INPUT_TEXT_STATE_KEY, this.inputText);
+        state.Set(SELECTED_TARGET_LANGUAGE_STATE_KEY, this.selectedTargetLanguage);
+        state.Set(CUSTOM_TARGET_LANGUAGE_STATE_KEY, this.customTargetLanguage);
+        state.Set(REWRITTEN_TEXT_STATE_KEY, this.rewrittenText);
+        state.Set(SELECTED_WRITING_STYLE_STATE_KEY, this.selectedWritingStyle);
+        state.Set(SELECTED_SENTENCE_STRUCTURE_STATE_KEY, this.selectedSentenceStructure);
+    }
+
+    /// <inheritdoc />
+    protected override void RestoreCustomAssistantSessionState(AssistantSessionStateReader state)
+    {
+        state.Restore(INPUT_TEXT_STATE_KEY, value => this.inputText = value);
+        state.Restore(SELECTED_TARGET_LANGUAGE_STATE_KEY, value => this.selectedTargetLanguage = value);
+        state.Restore(CUSTOM_TARGET_LANGUAGE_STATE_KEY, value => this.customTargetLanguage = value);
+        state.Restore(REWRITTEN_TEXT_STATE_KEY, value => this.rewrittenText = value);
+        state.Restore(SELECTED_WRITING_STYLE_STATE_KEY, value => this.selectedWritingStyle = value);
+        state.Restore(SELECTED_SENTENCE_STRUCTURE_STATE_KEY, value => this.selectedSentenceStructure = value);
+    }
     
     private string? ValidateText(string text)
     {
@@ -134,6 +163,13 @@ public partial class AssistantRewriteImprove : AssistantBaseCore<SettingsDialogR
         var time = this.AddUserRequest(this.inputText);
         
         this.rewrittenText = await this.AddAIResponseAsync(time);
-        await this.JsRuntime.GenerateAndShowDiff(this.inputText, this.rewrittenText);
+        if (!this.IsAssistantComponentDisposed)
+            await this.JsRuntime.GenerateAndShowDiff(this.inputText, this.rewrittenText);
+    }
+
+    protected override async Task OnAssistantSessionAttachedAsync(AssistantSessionSnapshot snapshot)
+    {
+        if (!snapshot.IsActive && !string.IsNullOrWhiteSpace(this.inputText) && !string.IsNullOrWhiteSpace(this.rewrittenText))
+            await this.JsRuntime.GenerateAndShowDiff(this.inputText, this.rewrittenText);
     }
 }

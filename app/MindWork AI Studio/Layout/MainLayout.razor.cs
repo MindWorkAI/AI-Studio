@@ -2,6 +2,7 @@ using AIStudio.Dialogs;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.AIJobs;
+using AIStudio.Tools.AssistantSessions;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
@@ -30,6 +31,9 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
 
     [Inject]
     private AIJobService AIJobService { get; init; } = null!;
+
+    [Inject]
+    private AssistantSessionService AssistantSessionService { get; init; } = null!;
     
     [Inject]
     private ISnackbar Snackbar { get; init; } = null!;
@@ -102,7 +106,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
             Event.UPDATE_AVAILABLE, Event.CONFIGURATION_CHANGED, Event.COLOR_THEME_CHANGED, Event.SHOW_ERROR,
             Event.SHOW_WARNING, Event.SHOW_SUCCESS, Event.STARTUP_PLUGIN_SYSTEM, Event.PLUGINS_RELOADED,
             Event.INSTALL_UPDATE, Event.STARTUP_COMPLETED, Event.AI_JOB_CHANGED, Event.AI_JOB_FINISHED,
-            Event.CHAT_GENERATION_CHANGED,
+            Event.CHAT_GENERATION_CHANGED, Event.ASSISTANT_SESSION_CHANGED, Event.ASSISTANT_SESSION_FINISHED,
         ]);
         
         // Set the snackbar for the update service:
@@ -228,6 +232,8 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
                 case Event.AI_JOB_CHANGED:
                 case Event.AI_JOB_FINISHED:
                 case Event.CHAT_GENERATION_CHANGED:
+                case Event.ASSISTANT_SESSION_CHANGED:
+                case Event.ASSISTANT_SESSION_FINISHED:
                     this.LoadNavItems();
                     this.StateHasChanged();
                     break;
@@ -344,7 +350,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         
         yield return new(T("Home"), Icons.Material.Filled.Home, palette.DarkLighten, palette.GrayLight, Routes.HOME, true);
         yield return new(T("Chat"), this.AIJobService.HasActiveJobs ? Icons.Material.Filled.Chat : Icons.Material.Outlined.Chat, palette.DarkLighten, palette.GrayLight, Routes.CHAT, false);
-        yield return new(T("Assistants"), Icons.Material.Filled.Apps, palette.DarkLighten, palette.GrayLight, Routes.ASSISTANTS, false);
+        yield return new(T("Assistants"), this.AssistantSessionService.HasActiveSessions ? Icons.Material.Filled.Apps : Icons.Material.Outlined.Apps, palette.DarkLighten, palette.GrayLight, Routes.ASSISTANTS, false);
 
         if (PreviewFeatures.PRE_WRITER_MODE_2024.IsEnabled(this.SettingsManager))
             yield return new(T("Writer"), Icons.Material.Filled.Create, palette.DarkLighten, palette.GrayLight, Routes.WRITER, false);

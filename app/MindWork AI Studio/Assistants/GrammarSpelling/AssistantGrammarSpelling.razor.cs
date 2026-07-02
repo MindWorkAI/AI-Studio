@@ -1,4 +1,5 @@
 using AIStudio.Dialogs.Settings;
+using AIStudio.Tools.AssistantSessions;
 
 namespace AIStudio.Assistants.GrammarSpelling;
 
@@ -84,6 +85,28 @@ public partial class AssistantGrammarSpelling : AssistantBaseCore<SettingsDialog
     private CommonLanguages selectedTargetLanguage;
     private string customTargetLanguage = string.Empty;
     private string correctedText = string.Empty;
+    private static readonly AssistantSessionStateKey<string> INPUT_TEXT_STATE_KEY = new(nameof(inputText));
+    private static readonly AssistantSessionStateKey<CommonLanguages> SELECTED_TARGET_LANGUAGE_STATE_KEY = new(nameof(selectedTargetLanguage));
+    private static readonly AssistantSessionStateKey<string> CUSTOM_TARGET_LANGUAGE_STATE_KEY = new(nameof(customTargetLanguage));
+    private static readonly AssistantSessionStateKey<string> CORRECTED_TEXT_STATE_KEY = new(nameof(correctedText));
+
+    /// <inheritdoc />
+    protected override void CaptureCustomAssistantSessionState(AssistantSessionStateWriter state)
+    {
+        state.Set(INPUT_TEXT_STATE_KEY, this.inputText);
+        state.Set(SELECTED_TARGET_LANGUAGE_STATE_KEY, this.selectedTargetLanguage);
+        state.Set(CUSTOM_TARGET_LANGUAGE_STATE_KEY, this.customTargetLanguage);
+        state.Set(CORRECTED_TEXT_STATE_KEY, this.correctedText);
+    }
+
+    /// <inheritdoc />
+    protected override void RestoreCustomAssistantSessionState(AssistantSessionStateReader state)
+    {
+        state.Restore(INPUT_TEXT_STATE_KEY, value => this.inputText = value);
+        state.Restore(SELECTED_TARGET_LANGUAGE_STATE_KEY, value => this.selectedTargetLanguage = value);
+        state.Restore(CUSTOM_TARGET_LANGUAGE_STATE_KEY, value => this.customTargetLanguage = value);
+        state.Restore(CORRECTED_TEXT_STATE_KEY, value => this.correctedText = value);
+    }
 
     private string? ValidateText(string text)
     {
@@ -127,6 +150,13 @@ public partial class AssistantGrammarSpelling : AssistantBaseCore<SettingsDialog
         var time = this.AddUserRequest(this.inputText);
         
         this.correctedText = await this.AddAIResponseAsync(time);
-        await this.JsRuntime.GenerateAndShowDiff(this.inputText, this.correctedText);
+        if (!this.IsAssistantComponentDisposed)
+            await this.JsRuntime.GenerateAndShowDiff(this.inputText, this.correctedText);
+    }
+
+    protected override async Task OnAssistantSessionAttachedAsync(AssistantSessionSnapshot snapshot)
+    {
+        if (!snapshot.IsActive && !string.IsNullOrWhiteSpace(this.inputText) && !string.IsNullOrWhiteSpace(this.correctedText))
+            await this.JsRuntime.GenerateAndShowDiff(this.inputText, this.correctedText);
     }
 }
