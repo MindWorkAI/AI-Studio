@@ -33,6 +33,12 @@
                             <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="@state.AuditColor">
                                 @state.AuditLabel
                             </MudChip>
+                            @if (!string.IsNullOrWhiteSpace(state.SourceLabel))
+                            {
+                                <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="@state.SourceColor" Icon="@state.SourceIcon">
+                                    @state.SourceLabel
+                                </MudChip>
+                            }
                             @if (!string.IsNullOrWhiteSpace(state.AvailabilityLabel))
                             {
                                 <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="@state.AvailabilityColor" Icon="@state.AvailabilityIcon">
@@ -53,18 +59,28 @@
 
                 <MudCardContent Class="pt-0 pb-2">
                     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="4" Class="flex-wrap">
-                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                            <MudIcon Icon="@Icons.Material.Filled.Speed" Size="Size.Small" />
-                            <MudText Typo="Typo.body2">@T("Confidence"):</MudText>
-                            <MudProgressLinear Color="@state.AuditColor"
-                                               Value="@this.GetConfidencePercentage()"
-                                               Rounded="@true"
-                                               Size="Size.Medium"
-                                               Style="width: 80px; min-width: 80px;" />
-                            <MudText Typo="Typo.caption" Class="mud-text-secondary">
-                                @this.GetConfidenceLabel()
-                            </MudText>
-                        </MudStack>
+                        @if (state.IsEnterpriseApproved)
+                        {
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                                <MudIcon Icon="@Icons.Material.Filled.Business" Size="Size.Small" Color="@state.SourceColor" />
+                                <MudText Typo="Typo.body2">@T("Enterprise approval is active")</MudText>
+                            </MudStack>
+                        }
+                        else
+                        {
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                                <MudIcon Icon="@Icons.Material.Filled.Speed" Size="Size.Small" />
+                                <MudText Typo="Typo.body2">@T("Confidence"):</MudText>
+                                <MudProgressLinear Color="@state.AuditColor"
+                                                   Value="@this.GetConfidencePercentage()"
+                                                   Rounded="@true"
+                                                   Size="Size.Medium"
+                                                   Style="width: 80px; min-width: 80px;" />
+                                <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                    @this.GetConfidenceLabel()
+                                </MudText>
+                            </MudStack>
+                        }
                         <MudDivider Vertical="@true" FlexItem="@true" />
                         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
                             <MudIcon Icon="@Icons.Material.Filled.BugReport" Size="Size.Small" Color="@state.AuditColor" />
@@ -106,10 +122,61 @@
                                             </tr>
                                             <tr>
                                                 <td>
+                                                    <MudText Typo="Typo.body2"><b>@T("Status source")</b></MudText>
+                                                </td>
+                                                <td><MudText Typo="Typo.body2">@state.SourceLabel</MudText></td>
+                                            </tr>
+                                            <tr>
+                                                <td>
                                                     <MudText Typo="Typo.body2"><b>@T("Current hash")</b></MudText>
                                                 </td>
                                                 <td><code style="font-size: 0.8rem;">@GetShortHash(state.CurrentHash)</code></td>
                                             </tr>
+                                            @if (state.EnterpriseApproval is not null)
+                                            {
+                                                <tr>
+                                                    <td>
+                                                        <MudText Typo="Typo.body2"><b>@T("Approved hash")</b></MudText>
+                                                    </td>
+                                                    <td><code style="font-size: 0.8rem;">@GetShortHash(state.EnterpriseApproval.PluginHash)</code></td>
+                                                </tr>
+                                                @if (!string.IsNullOrWhiteSpace(state.EnterpriseApproval.DisplayName))
+                                                {
+                                                    <tr>
+                                                        <td>
+                                                            <MudText Typo="Typo.body2"><b>@T("Approval name")</b></MudText>
+                                                        </td>
+                                                        <td><MudText Typo="Typo.body2">@state.EnterpriseApproval.DisplayName</MudText></td>
+                                                    </tr>
+                                                }
+                                                @if (!string.IsNullOrWhiteSpace(state.EnterpriseApproval.ApprovedBy))
+                                                {
+                                                    <tr>
+                                                        <td>
+                                                            <MudText Typo="Typo.body2"><b>@T("Approved by")</b></MudText>
+                                                        </td>
+                                                        <td><MudText Typo="Typo.body2">@state.EnterpriseApproval.ApprovedBy</MudText></td>
+                                                    </tr>
+                                                }
+                                                @if (state.EnterpriseApproval.ApprovedAtUtc is not null)
+                                                {
+                                                    <tr>
+                                                        <td>
+                                                            <MudText Typo="Typo.body2"><b>@T("Approved at")</b></MudText>
+                                                        </td>
+                                                        <td><MudText Typo="Typo.body2">@this.FormatFileTimestamp(state.EnterpriseApproval.ApprovedAtUtc.Value.ToLocalTime().DateTime)</MudText></td>
+                                                    </tr>
+                                                }
+                                                @if (!string.IsNullOrWhiteSpace(state.EnterpriseApproval.Comment))
+                                                {
+                                                    <tr>
+                                                        <td>
+                                                            <MudText Typo="Typo.body2"><b>@T("Approval comment")</b></MudText>
+                                                        </td>
+                                                        <td><MudText Typo="Typo.body2">@state.EnterpriseApproval.Comment</MudText></td>
+                                                    </tr>
+                                                }
+                                            }
                                             @if (state.Audit is not null)
                                             {
                                                 <tr>
@@ -156,9 +223,18 @@
 
                             @if (state.Audit is null)
                             {
-                                <MudAlert Severity="Severity.Info" Variant="Variant.Text" Dense="@true">
-                                    @T("No stored audit details are available yet.")
-                                </MudAlert>
+                                @if (state.IsEnterpriseApproved)
+                                {
+                                    <MudAlert Severity="Severity.Success" Variant="Variant.Text" Dense="@true">
+                                        @T("This plugin is approved by your organization. A manual security audit is not required.")
+                                    </MudAlert>
+                                }
+                                else
+                                {
+                                    <MudAlert Severity="Severity.Info" Variant="Variant.Text" Dense="@true">
+                                        @T("No stored audit details are available yet.")
+                                    </MudAlert>
+                                }
                             }
                             else if (state.Audit.Findings.Count == 0)
                             {

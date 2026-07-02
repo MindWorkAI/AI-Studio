@@ -319,6 +319,10 @@ public static partial class PluginFactory
         // Check if security audits are invoked automatically and transparent for the user
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.AssistantPluginAudit, x => x.AutomaticallyAuditAssistants, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;
+
+        // Check enterprise-managed assistant plugin approvals
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.AssistantPluginAudit, x => x.EnterpriseApprovedPlugins, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
         
         if (wasConfigurationChanged)
         {

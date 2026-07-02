@@ -280,6 +280,23 @@ CONFIG["SETTINGS"] = {}
 --   DOCUMENT_ANALYSIS_ASSISTANT, SLIDE_BUILDER_ASSISTANT, I18N_ASSISTANT
 -- CONFIG["SETTINGS"]["DataApp.HiddenAssistants"] = { "ERI_ASSISTANT", "I18N_ASSISTANT" }
 
+-- Configure enterprise approvals for assistant plugins.
+-- Each approval is matched only by the current SHA-256 hash over all Lua files
+-- in the assistant plugin folder, in canonical sorted order.
+-- When the hash matches, the assistant plugin is treated as SAFE immediately and
+-- no user-run security audit is required.
+-- You can generate the exact hash with the build-script command:
+--   dotnet run --project app/Build -- assistant-plugin-hash "<plugin-dir>" --lua-snippet
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.EnterpriseApprovedPlugins"] = {
+--     {
+--         ["PluginHash"] = "0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF",
+--         ["DisplayName"] = "Name of Plugin",
+--         ["Comment"] = "Optional comment",
+--         ["ApprovedBy"] = "Optional Approver",
+--         ["ApprovedAtUtc"] = "2026-07-02T09:30:00Z",
+--     }
+-- }
+
 -- Configure a global shortcut for starting and stopping dictation.
 -- 
 -- The format follows the Rust and Tauri conventions. Especially,

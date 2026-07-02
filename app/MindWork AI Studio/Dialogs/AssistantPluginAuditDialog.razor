@@ -12,9 +12,18 @@
         else
         {
                 <MudStack Spacing="2">
-                    <MudAlert Severity="Severity.Info" Dense="true">
-                        @T("This security check uses a sample prompt preview. Empty or placeholder values in the preview are expected.")
-                    </MudAlert>
+                    @if (this.securityState.IsEnterpriseApproved)
+                    {
+                        <MudAlert Severity="Severity.Success" Dense="true">
+                            @T("This assistant plugin is approved by your organization. A manual security audit is not required.")
+                        </MudAlert>
+                    }
+                    else
+                    {
+                        <MudAlert Severity="Severity.Info" Dense="true">
+                            @T("This security check uses a sample prompt preview. Empty or placeholder values in the preview are expected.")
+                        </MudAlert>
+                    }
 
                 <MudPaper Class="pa-3 border-dashed border rounded-lg">
                     <MudText Typo="Typo.h6">@this.plugin.Name</MudText>
@@ -298,9 +307,12 @@
         <MudButton OnClick="@this.CloseWithoutActivation" Variant="Variant.Filled">
             @(this.audit is null ? T("Cancel") : T("Close"))
         </MudButton>
-        <MudButton OnClick="@this.RunAudit" Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!this.CanRunAudit || this.justAudited)">
-            @T("Start Security Check")
-        </MudButton>
+        @if (!this.securityState.IsEnterpriseApproved)
+        {
+            <MudButton OnClick="@this.RunAudit" Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!this.CanRunAudit || this.justAudited)">
+                @T("Start Security Check")
+            </MudButton>
+        }
         @if (this.CanEnablePlugin)
         {
             <MudButton OnClick="@this.EnablePlugin" Variant="Variant.Filled" Color="@this.EnableButtonColor">

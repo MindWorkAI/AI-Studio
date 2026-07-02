@@ -39,5 +39,10 @@ public sealed class DataAssistantPluginAudit(Expression<Func<Data, DataAssistant
     /// <summary>
     /// If true, the security audit will be hidden from the user and done in the background
     /// </summary>
-    public bool AutomaticallyAuditAssistants { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AutomaticallyAuditAssistants, true);
+    public bool AutomaticallyAuditAssistants { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AutomaticallyAuditAssistants, false);
+
+    /// <summary>
+    /// Enterprise-managed assistant plugin hashes that are approved without requiring a user audit.
+    /// </summary>
+    public IList<DataAssistantPluginEnterpriseApproval> EnterpriseApprovedPlugins { get; set; } = ManagedConfiguration.Register(configSelection, n => n.EnterpriseApprovedPlugins, []);
 }

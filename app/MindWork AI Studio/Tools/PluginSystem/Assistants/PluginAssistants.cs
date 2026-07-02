@@ -2,8 +2,8 @@ using System.Collections.Immutable;
 using AIStudio.Tools.PluginSystem.Assistants.DataModel;
 using AIStudio.Tools.PluginSystem.Assistants.DataModel.Layout;
 using Lua;
-using System.Security.Cryptography;
 using System.Text;
+using AssistantPluginHash = SharedTools.AssistantPluginHash;
 
 namespace AIStudio.Tools.PluginSystem.Assistants;
 
@@ -280,33 +280,7 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
     /// sequence of relative path length, relative path, content length, and content
     /// for each file in ordinal path order.
     /// </summary>
-    public string ComputeAuditHash()
-    {
-        var luaFiles = this.ReadAllLuaFiles();
-
-        if (luaFiles.Count == 0)
-            return string.Empty;
-
-        using var stream = new MemoryStream();
-        using var writer = new BinaryWriter(stream, Encoding.UTF8, leaveOpen: true);
-
-        foreach (var (relativePath, content) in luaFiles.OrderBy(pair => pair.Key, StringComparer.Ordinal))
-        {
-            var normalizedPath = relativePath.Replace('\\', '/');
-            var pathBytes = Encoding.UTF8.GetBytes(normalizedPath);
-            var contentBytes = Encoding.UTF8.GetBytes(content);
-
-            writer.Write(pathBytes.Length);
-            writer.Write(pathBytes);
-            writer.Write(contentBytes.Length);
-            writer.Write(contentBytes);
-        }
-
-        writer.Flush();
-
-        var bytes = SHA256.HashData(stream.ToArray());
-        return Convert.ToHexString(bytes);
-    }
+    public string ComputeAuditHash() => AssistantPluginHash.Compute(this.PluginPath);
 
     private static string BuildSecureSystemPrompt(string pluginSystemPrompt)
     {
