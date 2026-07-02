@@ -111,7 +111,7 @@ public static class PluginAssistantSecurityResolver
                 AvailabilityColor = GetAvailabilityColor(requiresAudit: false, hasAudit: true, hasHashMismatch: false, isBlocked: false, canOverride: false),
                 AvailabilityIcon = GetAvailabilityIcon(requiresAudit: false, hasAudit: true, hasHashMismatch: false, isBlocked: false, canOverride: false),
                 StatusLabel = TB("Unlocked"),
-                SourceLabel = TB("Company Approved"),
+                SourceLabel = TB("Approved by your organization"),
                 SourceColor = Color.Success,
                 SourceIcon = MudBlazor.Icons.Material.Filled.Business,
                 BadgeIcon = MudBlazor.Icons.Material.Filled.Business,
