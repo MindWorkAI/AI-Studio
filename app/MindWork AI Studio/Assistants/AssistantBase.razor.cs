@@ -221,7 +221,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
         this.CancellationTokenSource = new();
         this.IsProcessing = true;
-        var startedSession = await this.AssistantSessionService.TryBeginAsync(this.assistantSessionKey, this.Title, this.CancellationTokenSource, this.ChatThread, this.CaptureAssistantSessionState());
+        var startedSession = await this.AssistantSessionService.TryBeginAsync(this.assistantSessionKey, this.Title, this.CancellationTokenSource, this.ChatThread, this.CaptureAssistantSessionState(), this);
         if (startedSession.IsActive is not true || startedSession.Key != this.assistantSessionKey)
         {
             this.CancellationTokenSource.Dispose();
@@ -265,7 +265,11 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             var sessionCancellationTokenSource = this.CancellationTokenSource;
             this.CancellationTokenSource = null;
             if (this.assistantSessionId is { } sessionId)
-                await this.AssistantSessionService.CompleteAsync(this.assistantSessionKey, sessionId, sessionStatus, errorMessage, this.ChatThread, this.CaptureAssistantSessionState());
+            {
+                await this.AssistantSessionService.CompleteAsync(this.assistantSessionKey, sessionId, sessionStatus, errorMessage, this.ChatThread, this.CaptureAssistantSessionState(), this);
+                if (!this.isDisposed)
+                    _ = this.AssistantSessionService.TryTakeInactiveSnapshot(this.assistantSessionKey);
+            }
             sessionCancellationTokenSource?.Dispose();
             await this.RefreshAssistantUIAsync();
         }
@@ -452,7 +456,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     
     private async Task CancelStreaming()
     {
-        await this.AssistantSessionService.CancelAsync(this.assistantSessionKey);
+        await this.AssistantSessionService.CancelAsync(this.assistantSessionKey, this);
     }
     
     protected async Task CopyToClipboard()
@@ -640,7 +644,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         if (this.assistantSessionId is null)
             return Task.CompletedTask;
 
-        return this.AssistantSessionService.CheckpointAsync(this.assistantSessionKey, this.assistantSessionId.Value, this.Title, this.ChatThread, this.CaptureAssistantSessionState());
+        return this.AssistantSessionService.CheckpointAsync(this.assistantSessionKey, this.assistantSessionId.Value, this.Title, this.ChatThread, this.CaptureAssistantSessionState(), this);
     }
 
     /// <summary>
@@ -667,6 +671,9 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     /// <returns>A task that completes after the message was processed.</returns>
     protected override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
     {
+        if (ReferenceEquals(sendingComponent, this))
+            return;
+
         switch (triggeredEvent)
         {
             case Event.ASSISTANT_SESSION_CHANGED:

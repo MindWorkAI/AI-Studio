@@ -2,6 +2,8 @@ using System.Collections.Concurrent;
 
 using AIStudio.Chat;
 
+using Microsoft.AspNetCore.Components;
+
 namespace AIStudio.Tools.AssistantSessions;
 
 /// <summary>
@@ -148,8 +150,9 @@ public sealed class AssistantSessionService(MessageBus messageBus)
     /// <param name="cancellationTokenSource">The cancellation token source owned by the new runtime session.</param>
     /// <param name="chatThread">The current assistant chat thread, if one already exists.</param>
     /// <param name="state">The initial assistant component state.</param>
+    /// <param name="sendingComponent">The component that initiated the session start.</param>
     /// <returns>The new session snapshot, or the existing active session snapshot.</returns>
-    public async Task<AssistantSessionSnapshot> TryBeginAsync(AssistantSessionKey key, string title, CancellationTokenSource cancellationTokenSource, ChatThread? chatThread, Dictionary<string, IAssistantSessionSnapshotField> state)
+    public async Task<AssistantSessionSnapshot> TryBeginAsync(AssistantSessionKey key, string title, CancellationTokenSource cancellationTokenSource, ChatThread? chatThread, Dictionary<string, IAssistantSessionSnapshotField> state, ComponentBase? sendingComponent = null)
     {
         if (this.sessions.TryGetValue(key, out var existing) && existing.Status is AssistantSessionStatus.RUNNING or AssistantSessionStatus.CANCELING)
             return CreateSnapshot(existing);
@@ -170,7 +173,7 @@ public sealed class AssistantSessionService(MessageBus messageBus)
 
         this.sessions[key] = session;
         var snapshot = CreateSnapshot(session);
-        await this.NotifyChangedAsync(session);
+        await this.NotifyChangedAsync(session, sendingComponent);
         return snapshot;
     }
 
@@ -182,7 +185,8 @@ public sealed class AssistantSessionService(MessageBus messageBus)
     /// <param name="title">The current user-visible assistant title.</param>
     /// <param name="chatThread">The current assistant chat thread.</param>
     /// <param name="state">The current assistant component state.</param>
-    public async Task CheckpointAsync(AssistantSessionKey key, Guid sessionId, string title, ChatThread? chatThread, Dictionary<string, IAssistantSessionSnapshotField> state)
+    /// <param name="sendingComponent">The component that initiated the checkpoint.</param>
+    public async Task CheckpointAsync(AssistantSessionKey key, Guid sessionId, string title, ChatThread? chatThread, Dictionary<string, IAssistantSessionSnapshotField> state, ComponentBase? sendingComponent = null)
     {
         if (!this.sessions.TryGetValue(key, out var session))
             return;
@@ -198,14 +202,15 @@ public sealed class AssistantSessionService(MessageBus messageBus)
             session.UpdatedAt = DateTimeOffset.Now;
         }
 
-        await this.NotifyChangedAsync(session);
+        await this.NotifyChangedAsync(session, sendingComponent);
     }
 
     /// <summary>
     /// Requests cancellation for an active assistant session.
     /// </summary>
     /// <param name="key">The assistant session key to cancel.</param>
-    public async Task CancelAsync(AssistantSessionKey key)
+    /// <param name="sendingComponent">The component that initiated the cancellation.</param>
+    public async Task CancelAsync(AssistantSessionKey key, ComponentBase? sendingComponent = null)
     {
         if (!this.sessions.TryGetValue(key, out var session))
             return;
@@ -229,7 +234,7 @@ public sealed class AssistantSessionService(MessageBus messageBus)
             return;
         }
 
-        await this.NotifyChangedAsync(session);
+        await this.NotifyChangedAsync(session, sendingComponent);
     }
 
     /// <summary>
@@ -241,7 +246,8 @@ public sealed class AssistantSessionService(MessageBus messageBus)
     /// <param name="errorMessage">The user-visible error message for failed sessions.</param>
     /// <param name="chatThread">The final assistant chat thread.</param>
     /// <param name="state">The final assistant component state.</param>
-    public async Task CompleteAsync(AssistantSessionKey key, Guid sessionId, AssistantSessionStatus status, string errorMessage, ChatThread? chatThread, Dictionary<string, IAssistantSessionSnapshotField> state)
+    /// <param name="sendingComponent">The component that initiated the completion.</param>
+    public async Task CompleteAsync(AssistantSessionKey key, Guid sessionId, AssistantSessionStatus status, string errorMessage, ChatThread? chatThread, Dictionary<string, IAssistantSessionSnapshotField> state, ComponentBase? sendingComponent = null)
     {
         if (!this.sessions.TryGetValue(key, out var session))
             return;
@@ -259,8 +265,8 @@ public sealed class AssistantSessionService(MessageBus messageBus)
             session.FinishedAt = session.UpdatedAt;
         }
 
-        await this.NotifyChangedAsync(session);
-        await messageBus.SendMessage(null, Event.ASSISTANT_SESSION_FINISHED, CreateSnapshot(session));
+        await this.NotifyChangedAsync(session, sendingComponent);
+        await messageBus.SendMessage(sendingComponent, Event.ASSISTANT_SESSION_FINISHED, CreateSnapshot(session));
 
         try
         {
@@ -316,9 +322,10 @@ public sealed class AssistantSessionService(MessageBus messageBus)
     /// Publishes an assistant session change event.
     /// </summary>
     /// <param name="session">The runtime session whose copied snapshot should be published.</param>
-    private async Task NotifyChangedAsync(AssistantSessionState session)
+    /// <param name="sendingComponent">The component that initiated the session change.</param>
+    private async Task NotifyChangedAsync(AssistantSessionState session, ComponentBase? sendingComponent = null)
     {
-        await messageBus.SendMessage(null, Event.ASSISTANT_SESSION_CHANGED, CreateSnapshot(session));
+        await messageBus.SendMessage(sendingComponent, Event.ASSISTANT_SESSION_CHANGED, CreateSnapshot(session));
     }
 
     /// <summary>
