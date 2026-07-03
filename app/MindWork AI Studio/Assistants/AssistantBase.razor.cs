@@ -2,6 +2,7 @@ using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Dialogs.Settings;
+using AIStudio.Tools.AIJobs;
 using AIStudio.Tools.AssistantSessions;
 using AIStudio.Tools.Services;
 
@@ -40,6 +41,12 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     [Inject]
     protected AssistantSessionService AssistantSessionService { get; init; } = null!;
+
+    /// <summary>
+    /// Gets the job service used to run assistant-created chats independently from the assistant UI.
+    /// </summary>
+    [Inject]
+    protected AIJobService AIJobService { get; init; } = null!;
     
     protected abstract string Title { get; }
     
@@ -452,6 +459,50 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
                 this.CancellationTokenSource = null;
             }
         }
+    }
+
+    /// <summary>
+    /// Starts the current assistant chat thread as a regular background-capable chat generation job.
+    /// </summary>
+    /// <remarks>
+    /// Use this when an assistant creates a chat and hands it over to the chat page instead of
+    /// rendering the answer inside the assistant UI.
+    /// </remarks>
+    /// <param name="time">The timestamp to use for the AI response block.</param>
+    /// <param name="hideContentFromUser">Whether the AI response block should be hidden from the user.</param>
+    /// <param name="isForeground">Whether the chat job should start as the current foreground job.</param>
+    /// <returns>A task that completes after the chat job was registered.</returns>
+    protected async Task StartChatGenerationJobAsync(DateTimeOffset time, bool hideContentFromUser = false, bool isForeground = true)
+    {
+        if (this.ChatThread is null)
+            return;
+
+        var aiText = new ContentText
+        {
+            InitialRemoteWait = true,
+        };
+
+        this.ResultingContentBlock = new ContentBlock
+        {
+            Time = time,
+            ContentType = ContentType.TEXT,
+            Role = ChatRole.AI,
+            Content = aiText,
+            HideFromUser = hideContentFromUser,
+        };
+
+        this.ChatThread.Blocks.Add(this.ResultingContentBlock);
+        this.ChatThread.SelectedProvider = this.ProviderSettings.Id;
+
+        await this.CheckpointAssistantSession();
+        await this.AIJobService.TryStartChatGenerationAsync(new ChatGenerationRequest
+        {
+            ChatThread = this.ChatThread,
+            AIText = aiText,
+            LastUserPrompt = this.LastUserPrompt,
+            ProviderSettings = this.ProviderSettings,
+            IsForeground = isForeground,
+        });
     }
     
     private async Task CancelStreaming()
