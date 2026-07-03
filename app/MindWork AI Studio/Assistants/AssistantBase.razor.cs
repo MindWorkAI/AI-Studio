@@ -130,6 +130,11 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     protected bool IsAssistantComponentDisposed => this.isDisposed;
 
     /// <summary>
+    /// Gets whether this component has attached an assistant session snapshot.
+    /// </summary>
+    protected bool HasAssistantSession => this.assistantSessionId is not null;
+
+    /// <summary>
     /// Gets the assistant-specific identifier used to distinguish session slots.
     /// </summary>
     protected virtual string AssistantSessionInstanceId => this.GetType().FullName ?? this.Component.ToString();

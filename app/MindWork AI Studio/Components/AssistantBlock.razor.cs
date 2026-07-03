@@ -93,7 +93,7 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase where TSetting
     private AssistantSessionIndicatorData? AssistantSessionIndicator => this.AssistantSessionSnapshot?.Status switch
     {
         AssistantSessionStatus.RUNNING or AssistantSessionStatus.CANCELING => new(Icons.Material.Filled.ChangeCircle, Color.Info, this.T("Assistant is still running.")),
-        AssistantSessionStatus.COMPLETED => new(Icons.Material.Filled.TaskAlt, Color.Success, this.T("Result is ready.")),
+        AssistantSessionStatus.COMPLETED => new(Icons.Material.Filled.TaskAlt, Color.Success, this.T("The result is ready.")),
         AssistantSessionStatus.FAILED => new(Icons.Material.Filled.Error, Color.Error, this.T("Assistant failed. Open it to review the result.")),
         AssistantSessionStatus.CANCELED => new(Icons.Material.Filled.Cancel, Color.Warning, this.T("Assistant was canceled. Open it to review the result.")),
         _ => null,
