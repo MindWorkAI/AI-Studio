@@ -8,6 +8,14 @@ namespace AIStudio.Components;
 
 public partial class AssistantBlock<TSettings> : MSGComponentBase where TSettings : IComponent
 {
+    /// <summary>
+    /// Describes the assistant session indicator shown on top of the assistant icon.
+    /// </summary>
+    /// <param name="Icon">The icon that communicates the session status.</param>
+    /// <param name="Color">The color that communicates the session status.</param>
+    /// <param name="Tooltip">The tooltip text that explains the session status.</param>
+    private sealed record AssistantSessionIndicatorData(string Icon, Color Color, string Tooltip);
+
     [Parameter]
     public string Name { get; set; } = string.Empty;
 
@@ -60,7 +68,7 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase where TSetting
         await this.DialogService.ShowAsync<TSettings>(T("Open Settings"), dialogParameters, DialogOptions.FULLSCREEN);
     }
 
-    private string BorderColor => this.HasActiveSession ? this.ColorTheme.GetActivityIndicatorColor(this.SettingsManager) : this.SettingsManager.IsDarkMode switch
+    private string BorderColor => this.AssistantSessionSnapshot?.IsActive is true ? this.ColorTheme.GetActivityIndicatorColor(this.SettingsManager) : this.SettingsManager.IsDarkMode switch
     {
         true => this.ColorTheme.GetCurrentPalette(this.SettingsManager).GrayDefault,
         false => this.ColorTheme.GetCurrentPalette(this.SettingsManager).GrayDefault,
@@ -73,11 +81,23 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase where TSetting
     private bool HasSettingsPanel => typeof(TSettings) != typeof(NoSettingsPanel);
 
     /// <summary>
-    /// Gets whether this block represents an active assistant session.
+    /// Gets the newest assistant session snapshot represented by this block.
     /// </summary>
-    private bool HasActiveSession => string.IsNullOrWhiteSpace(this.AssistantSessionInstanceId)
-        ? this.AssistantSessionService.GetSnapshots().Any(snapshot => snapshot.IsActive && snapshot.Key.Component == this.Component)
-        : this.AssistantSessionService.GetSnapshots().Any(snapshot => snapshot.IsActive && snapshot.Key.InstanceId == this.AssistantSessionInstanceId);
+    private AssistantSessionSnapshot? AssistantSessionSnapshot => string.IsNullOrWhiteSpace(this.AssistantSessionInstanceId)
+        ? this.AssistantSessionService.GetSnapshots().FirstOrDefault(snapshot => snapshot.Key.Component == this.Component)
+        : this.AssistantSessionService.GetSnapshots().FirstOrDefault(snapshot => snapshot.Key.InstanceId == this.AssistantSessionInstanceId);
+
+    /// <summary>
+    /// Gets the assistant session indicator shown on top of the assistant icon.
+    /// </summary>
+    private AssistantSessionIndicatorData? AssistantSessionIndicator => this.AssistantSessionSnapshot?.Status switch
+    {
+        AssistantSessionStatus.RUNNING or AssistantSessionStatus.CANCELING => new(Icons.Material.Filled.ChangeCircle, Color.Info, this.T("Assistant is still running.")),
+        AssistantSessionStatus.COMPLETED => new(Icons.Material.Filled.TaskAlt, Color.Success, this.T("Result is ready.")),
+        AssistantSessionStatus.FAILED => new(Icons.Material.Filled.Error, Color.Error, this.T("Assistant failed. Open it to review the result.")),
+        AssistantSessionStatus.CANCELED => new(Icons.Material.Filled.Cancel, Color.Warning, this.T("Assistant was canceled. Open it to review the result.")),
+        _ => null,
+    };
 
     /// <summary>
     /// Refreshes the block when assistant session activity changes.
