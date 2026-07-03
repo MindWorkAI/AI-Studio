@@ -1987,6 +1987,18 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::IIMAGESOURCEEXTENSIONS::T349928509"] = "The ima
 -- Open Settings
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T1172211894"] = "Open Settings"
 
+-- Assistant is still running.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T2719896610"] = "Assistant is still running."
+
+-- Assistant was canceled. Open it to review the result.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T3390934621"] = "Assistant was canceled. Open it to review the result."
+
+-- Assistant failed. Open it to review the result.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T3571008422"] = "Assistant failed. Open it to review the result."
+
+-- The result is ready.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T661906146"] = "The result is ready."
+
 -- Show or hide the detailed security information.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T1045105126"] = "Show or hide the detailed security information."
 
