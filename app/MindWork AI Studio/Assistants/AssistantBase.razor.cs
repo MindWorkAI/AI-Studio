@@ -49,7 +49,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     protected abstract Tools.Components Component { get; }
     
-    protected virtual Func<string> Result2Copy => () => this.resultingContentBlock is null ? string.Empty : this.resultingContentBlock.Content switch
+    protected virtual Func<string> Result2Copy => () => this.ResultingContentBlock is null ? string.Empty : this.ResultingContentBlock.Content switch
     {
         ContentText textBlock => textBlock.Text,
         _ => string.Empty,
@@ -115,30 +115,10 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     protected virtual bool HasSettingsPanel => typeof(TSettings) != typeof(NoSettingsPanel);
     
-    protected AIStudio.Settings.Provider ProviderSettings = Settings.Provider.NONE;
-    protected MudForm? Form;
-    protected bool InputIsValid;
-    protected Profile CurrentProfile = Profile.NO_PROFILE;
-    protected ChatTemplate CurrentChatTemplate = ChatTemplate.NO_CHAT_TEMPLATE;
-    protected ChatThread? ChatThread;
-    protected IContent? LastUserPrompt;
-    protected CancellationTokenSource? CancellationTokenSource;
-
-    private static readonly AssistantSessionStateKey<AIStudio.Settings.Provider> PROVIDER_SETTINGS_STATE_KEY = new(nameof(ProviderSettings));
-    private static readonly AssistantSessionStateKey<bool> INPUT_IS_VALID_STATE_KEY = new(nameof(InputIsValid));
-    private static readonly AssistantSessionStateKey<Profile> CURRENT_PROFILE_STATE_KEY = new(nameof(CurrentProfile));
-    private static readonly AssistantSessionStateKey<ChatTemplate> CURRENT_CHAT_TEMPLATE_STATE_KEY = new(nameof(CurrentChatTemplate));
-    private static readonly AssistantSessionStateKey<ChatThread?> CHAT_THREAD_STATE_KEY = new(nameof(ChatThread));
-    private static readonly AssistantSessionStateKey<IContent?> LAST_USER_PROMPT_STATE_KEY = new(nameof(LastUserPrompt));
-    private static readonly AssistantSessionStateKey<ContentBlock?> RESULTING_CONTENT_BLOCK_STATE_KEY = new(nameof(resultingContentBlock));
-    private static readonly AssistantSessionStateKey<string[]> INPUT_ISSUES_STATE_KEY = new(nameof(inputIssues));
-    private static readonly AssistantSessionStateKey<bool> IS_PROCESSING_STATE_KEY = new(nameof(isProcessing));
-    
     private readonly Timer formChangeTimer = new(TimeSpan.FromSeconds(1.6));
-
-    private ContentBlock? resultingContentBlock;
-    private string[] inputIssues = [];
-    private bool isProcessing;
+    
+    protected MudForm? Form;
+    protected CancellationTokenSource? CancellationTokenSource;
     private bool isDisposed;
     private AssistantSessionKey assistantSessionKey;
     private Guid? assistantSessionId;
@@ -235,7 +215,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         }
 
         this.CancellationTokenSource = new();
-        this.isProcessing = true;
+        this.IsProcessing = true;
         var startedSession = await this.AssistantSessionService.TryBeginAsync(this.assistantSessionKey, this.Title, this.CancellationTokenSource, this.ChatThread, this.CaptureAssistantSessionState());
         if (startedSession.IsActive is not true || startedSession.Key != this.assistantSessionKey)
         {
@@ -276,7 +256,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         }
         finally
         {
-            this.isProcessing = false;
+            this.IsProcessing = false;
             var sessionCancellationTokenSource = this.CancellationTokenSource;
             this.CancellationTokenSource = null;
             if (this.assistantSessionId is { } sessionId)
@@ -308,8 +288,8 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     /// <param name="issue">The issue to add.</param>
     protected void AddInputIssue(string issue)
     {
-        Array.Resize(ref this.inputIssues, this.inputIssues.Length + 1);
-        this.inputIssues[^1] = issue;
+        Array.Resize(ref this.InputIssues, this.InputIssues.Length + 1);
+        this.InputIssues[^1] = issue;
         this.InputIsValid = false;
         _ = this.RefreshAssistantUIAsync();
     }
@@ -319,7 +299,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     /// </summary>
     protected void ClearInputIssues()
     {
-        this.inputIssues = [];
+        this.InputIssues = [];
         this.InputIsValid = true;
         _ = this.RefreshAssistantUIAsync();
     }
@@ -409,7 +389,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             await this.RefreshAssistantUIAsync();
         };
 
-        this.resultingContentBlock = new ContentBlock
+        this.ResultingContentBlock = new ContentBlock
         {
             Time = time,
             ContentType = ContentType.TEXT,
@@ -420,11 +400,11 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
         if (this.ChatThread is not null)
         {
-            this.ChatThread.Blocks.Add(this.resultingContentBlock);
+            this.ChatThread.Blocks.Add(this.ResultingContentBlock);
             this.ChatThread.SelectedProvider = this.ProviderSettings.Id;
         }
 
-        this.isProcessing = true;
+        this.IsProcessing = true;
         await this.CheckpointAssistantSession();
         await this.RefreshAssistantUIAsync();
         
@@ -443,17 +423,17 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             this.Logger.LogError(e, "The provider request failed for assistant '{AssistantTitle}'. Status={StatusCode}, Reason='{ReasonPhrase}', Body='{ResponseBody}'", this.Title, e.StatusCode, e.ReasonPhrase, e.ResponseBody);
             await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, e.UserMessage));
 
-            if (this.resultingContentBlock is not null && string.IsNullOrWhiteSpace(aiText.Text))
+            if (this.ResultingContentBlock is not null && string.IsNullOrWhiteSpace(aiText.Text))
             {
-                this.ChatThread?.Blocks.Remove(this.resultingContentBlock);
-                this.resultingContentBlock = null;
+                this.ChatThread?.Blocks.Remove(this.ResultingContentBlock);
+                this.ResultingContentBlock = null;
             }
 
             return string.Empty;
         }
         finally
         {
-            this.isProcessing = this.assistantSessionId is not null && (this.AssistantSessionService.TryGetSnapshot(this.assistantSessionKey)?.IsActive ?? false);
+            this.IsProcessing = this.assistantSessionId is not null && (this.AssistantSessionService.TryGetSnapshot(this.assistantSessionKey)?.IsActive ?? false);
             await this.CheckpointAssistantSession();
             await this.RefreshAssistantUIAsync();
         
@@ -541,7 +521,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         var contentToSend = sendToButton == default ? string.Empty : sendToButton.UseResultingContentBlockData switch
         {
             false => sendToButton.GetText(),
-            true => this.resultingContentBlock?.Content switch
+            true => this.ResultingContentBlock?.Content switch
             {
                 ContentText textBlock => textBlock.Text,
                 _ => string.Empty,
@@ -595,7 +575,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
         await this.AssistantSessionService.ClearAsync(this.assistantSessionKey);
         this.assistantSessionId = null;
-        this.resultingContentBlock = null;
+        this.ResultingContentBlock = null;
         this.ProviderSettings = Settings.Provider.NONE;
         
         await this.JsRuntime.ClearDiv(RESULT_DIV_ID);
@@ -605,7 +585,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         this.ResetProviderAndProfileSelection();
         
         this.InputIsValid = false;
-        this.inputIssues = [];
+        this.InputIssues = [];
         
         this.Form?.ResetValidation();
         await this.RefreshAssistantUIAsync();
@@ -727,7 +707,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         this.assistantSessionId = snapshot.SessionId;
         this.ImportAssistantSessionState(snapshot.State);
         this.ChatThread = snapshot.ChatThread ?? this.ChatThread;
-        this.isProcessing = snapshot.IsActive;
+        this.IsProcessing = snapshot.IsActive;
 
         if (!snapshot.IsActive)
             this.CancellationTokenSource = null;
@@ -773,9 +753,9 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         state.Set(CURRENT_CHAT_TEMPLATE_STATE_KEY, this.CurrentChatTemplate);
         state.Set(CHAT_THREAD_STATE_KEY, this.ChatThread);
         state.Set(LAST_USER_PROMPT_STATE_KEY, this.LastUserPrompt);
-        state.Set(RESULTING_CONTENT_BLOCK_STATE_KEY, this.resultingContentBlock);
-        state.Set(INPUT_ISSUES_STATE_KEY, this.inputIssues);
-        state.Set(IS_PROCESSING_STATE_KEY, this.isProcessing);
+        state.Set(RESULTING_CONTENT_BLOCK_STATE_KEY, this.ResultingContentBlock);
+        state.Set(INPUT_ISSUES_STATE_KEY, this.InputIssues);
+        state.Set(IS_PROCESSING_STATE_KEY, this.IsProcessing);
         this.CaptureCustomAssistantSessionState(state);
 
         return state.ToDictionary();
@@ -800,9 +780,9 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         reader.Restore(CURRENT_CHAT_TEMPLATE_STATE_KEY, value => this.CurrentChatTemplate = value);
         reader.Restore(CHAT_THREAD_STATE_KEY, value => this.ChatThread = value);
         reader.Restore(LAST_USER_PROMPT_STATE_KEY, value => this.LastUserPrompt = value);
-        reader.Restore(RESULTING_CONTENT_BLOCK_STATE_KEY, value => this.resultingContentBlock = value);
-        reader.Restore(INPUT_ISSUES_STATE_KEY, value => this.inputIssues = value);
-        reader.Restore(IS_PROCESSING_STATE_KEY, value => this.isProcessing = value);
+        reader.Restore(RESULTING_CONTENT_BLOCK_STATE_KEY, value => this.ResultingContentBlock = value);
+        reader.Restore(INPUT_ISSUES_STATE_KEY, value => this.InputIssues = value);
+        reader.Restore(IS_PROCESSING_STATE_KEY, value => this.IsProcessing = value);
         this.RestoreCustomAssistantSessionState(reader);
     }
 
