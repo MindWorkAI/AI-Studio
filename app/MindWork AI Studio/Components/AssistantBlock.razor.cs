@@ -60,7 +60,7 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase where TSetting
         await this.DialogService.ShowAsync<TSettings>(T("Open Settings"), dialogParameters, DialogOptions.FULLSCREEN);
     }
 
-    private string BorderColor => this.HasActiveSession ? this.ColorTheme.GetCurrentPalette(this.SettingsManager).Warning.Value : this.SettingsManager.IsDarkMode switch
+    private string BorderColor => this.HasActiveSession ? this.ColorTheme.GetActivityIndicatorColor(this.SettingsManager) : this.SettingsManager.IsDarkMode switch
     {
         true => this.ColorTheme.GetCurrentPalette(this.SettingsManager).GrayLight,
         false => this.ColorTheme.GetCurrentPalette(this.SettingsManager).Primary.Value,

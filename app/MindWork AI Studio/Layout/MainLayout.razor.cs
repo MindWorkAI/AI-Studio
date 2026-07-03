@@ -347,18 +347,26 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     private IEnumerable<NavBarItem> GetNavItems()
     {
         var palette = this.ColorTheme.GetCurrentPalette(this.SettingsManager);
+        var activityIndicatorLightColor = this.ColorTheme.GetActivityIndicatorLightColor();
+        var activityIndicatorDarkColor = this.ColorTheme.GetActivityIndicatorDarkColor();
+        var defaultLightColor = palette.DarkLighten;
+        var defaultDarkColor = palette.GrayLight;
+        var chatLightColor = this.AIJobService.HasActiveJobs ? activityIndicatorLightColor : defaultLightColor;
+        var chatDarkColor = this.AIJobService.HasActiveJobs ? activityIndicatorDarkColor : defaultDarkColor;
+        var assistantsLightColor = this.AssistantSessionService.HasActiveSessions ? activityIndicatorLightColor : defaultLightColor;
+        var assistantsDarkColor = this.AssistantSessionService.HasActiveSessions ? activityIndicatorDarkColor : defaultDarkColor;
         
-        yield return new(T("Home"), Icons.Material.Filled.Home, palette.DarkLighten, palette.GrayLight, Routes.HOME, true);
-        yield return new(T("Chat"), this.AIJobService.HasActiveJobs ? Icons.Material.Filled.Chat : Icons.Material.Outlined.Chat, palette.DarkLighten, palette.GrayLight, Routes.CHAT, false);
-        yield return new(T("Assistants"), this.AssistantSessionService.HasActiveSessions ? Icons.Material.Filled.Apps : Icons.Material.Outlined.Apps, palette.DarkLighten, palette.GrayLight, Routes.ASSISTANTS, false);
+        yield return new(T("Home"), Icons.Material.Filled.Home, defaultLightColor, defaultDarkColor, Routes.HOME, true);
+        yield return new(T("Chat"), Icons.Material.Filled.Chat, chatLightColor, chatDarkColor, Routes.CHAT, false);
+        yield return new(T("Assistants"), Icons.Material.Filled.Apps, assistantsLightColor, assistantsDarkColor, Routes.ASSISTANTS, false);
 
         if (PreviewFeatures.PRE_WRITER_MODE_2024.IsEnabled(this.SettingsManager))
-            yield return new(T("Writer"), Icons.Material.Filled.Create, palette.DarkLighten, palette.GrayLight, Routes.WRITER, false);
+            yield return new(T("Writer"), Icons.Material.Filled.Create, defaultLightColor, defaultDarkColor, Routes.WRITER, false);
 
-        yield return new(T("Plugins"), Icons.Material.TwoTone.Extension, palette.DarkLighten, palette.GrayLight, Routes.PLUGINS, false);
+        yield return new(T("Plugins"), Icons.Material.TwoTone.Extension, defaultLightColor, defaultDarkColor, Routes.PLUGINS, false);
         yield return new(T("Supporters"), Icons.Material.Filled.Favorite, palette.Error.Value, "#801a00", Routes.SUPPORTERS, false);
-        yield return new(T("Information"), Icons.Material.Filled.Info, palette.DarkLighten, palette.GrayLight, Routes.ABOUT, false);
-        yield return new(T("Settings"), Icons.Material.Filled.Settings, palette.DarkLighten, palette.GrayLight, Routes.SETTINGS, false);
+        yield return new(T("Information"), Icons.Material.Filled.Info, defaultLightColor, defaultDarkColor, Routes.ABOUT, false);
+        yield return new(T("Settings"), Icons.Material.Filled.Settings, defaultLightColor, defaultDarkColor, Routes.SETTINGS, false);
     }
 
     private async Task ShowUpdateDialog()
