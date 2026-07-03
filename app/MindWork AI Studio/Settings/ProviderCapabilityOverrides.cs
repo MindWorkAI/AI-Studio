@@ -19,17 +19,12 @@ public sealed record ProviderCapabilityOverrides
 {
     public static readonly IReadOnlyList<Capability> SUPPORTED_CAPABILITIES =
     [
-        Capability.TEXT_INPUT,
         Capability.AUDIO_INPUT,
         Capability.MULTIPLE_IMAGE_INPUT,
         Capability.SPEECH_INPUT,
         Capability.VIDEO_INPUT,
         Capability.ALWAYS_REASONING
     ];
-
-    [JsonPropertyName("TEXT_INPUT")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public bool? TextInput { get; init; }
 
     [JsonPropertyName("AUDIO_INPUT")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
@@ -53,7 +48,6 @@ public sealed record ProviderCapabilityOverrides
 
     [JsonIgnore]
     public bool HasOverrides =>
-        this.TextInput is not null ||
         this.AudioInput is not null ||
         this.MultipleImageInput is not null ||
         this.SpeechInput is not null ||
@@ -62,7 +56,6 @@ public sealed record ProviderCapabilityOverrides
 
     public bool? GetOverride(Capability capability) => capability switch
     {
-        Capability.TEXT_INPUT => this.TextInput,
         Capability.AUDIO_INPUT => this.AudioInput,
         Capability.MULTIPLE_IMAGE_INPUT => this.MultipleImageInput,
         Capability.SPEECH_INPUT => this.SpeechInput,
@@ -73,7 +66,6 @@ public sealed record ProviderCapabilityOverrides
 
     public ProviderCapabilityOverrides SetOverride(Capability capability, bool? value) => capability switch
     {
-        Capability.TEXT_INPUT => this with { TextInput = value },
         Capability.AUDIO_INPUT => this with { AudioInput = value },
         Capability.MULTIPLE_IMAGE_INPUT => this with { MultipleImageInput = value },
         Capability.SPEECH_INPUT => this with { SpeechInput = value },

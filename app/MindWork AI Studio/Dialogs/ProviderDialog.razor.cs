@@ -307,9 +307,17 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         this.DataHost = selectedHost;
         this.DataModel = default;
         this.dataManuallyModel = string.Empty;
+        this.capabilityOverrides = new();
         this.availableModels.Clear();
         this.dataLoadingModelsIssue = string.Empty;
         this.usesLegacySystemModelFallback = false;
+    }
+
+    private Task OnModelChanged(Model selectedModel)
+    {
+        this.DataModel = selectedModel;
+        this.capabilityOverrides = new();
+        return Task.CompletedTask;
     }
     
     private async Task ReloadModels()
@@ -376,22 +384,53 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     
     private void ToggleExpertSettings() => this.showExpertSettings = !this.showExpertSettings;
 
-    private CapabilityOverrideMode GetCapabilityOverrideMode(Capability capability) => this.capabilityOverrides.GetOverride(capability) switch
+    private void SetCapabilityOverride(Capability capability, bool value)
     {
-        true => CapabilityOverrideMode.Enabled,
-        false => CapabilityOverrideMode.Disabled,
-        null => CapabilityOverrideMode.Automatic
-    };
+        this.capabilityOverrides = this.capabilityOverrides.SetOverride(capability, value);
+    }
 
-    private void SetCapabilityOverrideMode(Capability capability, CapabilityOverrideMode mode)
+    private Task OnCapabilitySwitchChanged(Capability capability, bool value)
     {
-        bool? overrideValue = mode switch
-        {
-            CapabilityOverrideMode.Enabled => true,
-            CapabilityOverrideMode.Disabled => false,
-            _ => null
-        };
-        this.capabilityOverrides = this.capabilityOverrides.SetOverride(capability, overrideValue);
+        this.SetCapabilityOverride(capability, value);
+        return Task.CompletedTask;
+    }
+
+    private void ResetCapabilityOverride(Capability capability) =>
+        this.capabilityOverrides = this.capabilityOverrides.SetOverride(capability, null);
+
+    private bool HasCapabilityOverride(Capability capability) => this.capabilityOverrides.GetOverride(capability) is not null;
+
+    private bool IsCapabilityEnabled(Capability capability)
+    {
+        var capabilities = this.GetCurrentModelCapabilities();
+        return capabilities.Contains(capability);
+    }
+
+    private string GetCapabilityEffectiveLabel(Capability capability)
+    {
+        var isEnabled = this.IsCapabilityEnabled(capability);
+        if (this.HasCapabilityOverride(capability))
+            return isEnabled ? T("Enabled") : T("Disabled");
+
+        return isEnabled ? T("Enabled (Auto)") : T("Disabled (Auto)");
+    }
+
+    private List<Capability> GetCurrentModelCapabilities()
+    {
+        var currentProviderSettings = this.CreateProviderSettings();
+        return currentProviderSettings.GetModelCapabilities();
+    }
+
+    private string GetCurrentModelApiLabel()
+    {
+        var capabilities = this.GetCurrentModelCapabilities();
+        if (capabilities.Contains(Capability.RESPONSES_API))
+            return "Responses API";
+
+        if (capabilities.Contains(Capability.CHAT_COMPLETION_API))
+            return "Chat Completions API";
+
+        return "Unknown";
     }
 
     private string GetCapabilityOverrideLabel(Capability capability) => capability switch
@@ -582,10 +621,4 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
       "frequency_penalty": 0.0
       """;
 
-    private enum CapabilityOverrideMode
-    {
-        Automatic,
-        Enabled,
-        Disabled
-    }
 }
