@@ -75,11 +75,10 @@ CONFIG["LLM_PROVIDERS"] = {}
 --
 --     -- Optional: expert capability overrides.
 --     -- Allowed keys are exactly:
---     -- TEXT_INPUT, AUDIO_INPUT, MULTIPLE_IMAGE_INPUT, SPEECH_INPUT, VIDEO_INPUT, ALWAYS_REASONING
+--     -- AUDIO_INPUT, MULTIPLE_IMAGE_INPUT, SPEECH_INPUT, VIDEO_INPUT, ALWAYS_REASONING
 --     -- Allowed values are booleans only.
 --     -- Missing keys keep the automatic capability detection result.
 --     -- ["CapabilityOverrides"] = {
---     --     ["TEXT_INPUT"] = true,
 --     --     ["VIDEO_INPUT"] = false,
 --     -- },
 --

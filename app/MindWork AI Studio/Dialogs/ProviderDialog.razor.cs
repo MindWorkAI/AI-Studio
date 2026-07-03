@@ -435,7 +435,6 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
 
     private string GetCapabilityOverrideLabel(Capability capability) => capability switch
     {
-        Capability.TEXT_INPUT => T("Text input"),
         Capability.AUDIO_INPUT => T("Audio input"),
         Capability.MULTIPLE_IMAGE_INPUT => T("Multiple image input"),
         Capability.SPEECH_INPUT => T("Speech input"),
