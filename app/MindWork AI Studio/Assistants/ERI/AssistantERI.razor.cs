@@ -292,7 +292,17 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
         }
     }
 
-    protected override IReadOnlyList<IButtonData> FooterButtons => [];
+    protected override IReadOnlyList<IButtonData> FooterButtons =>
+    [
+        new ButtonData
+        {
+            Text = T("Open in chat"),
+            Icon = Icons.Material.Filled.Chat,
+            Color = Color.Default,
+            AsyncAction = this.OpenInChat,
+            DisabledActionParam = () => !this.CanOpenInChat,
+        },
+    ];
     
     protected override bool ShowEntireChatThread => true;
     
@@ -308,6 +318,22 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
     {
         SystemPrompt = this.SystemPrompt,
     };
+
+    /// <summary>
+    /// Indicates whether the generated ERI conversation can be opened in the chat view.
+    /// </summary>
+    private bool CanOpenInChat => !this.IsProcessing && this.ChatThread is { Blocks.Count: > 0 };
+
+    /// <summary>
+    /// Opens the generated ERI conversation in the chat view when a finished conversation is available.
+    /// </summary>
+    private async Task OpenInChat()
+    {
+        if (!this.CanOpenInChat)
+            return;
+
+        await this.SendToAssistant(Tools.Components.CHAT, default);
+    }
     
     protected override void ResetForm()
     {
@@ -1241,6 +1267,5 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
                                    like Docker.
                                    """, true);
         await this.AddAIResponseAsync(time);
-        await this.SendToAssistant(Tools.Components.CHAT, default);
     }
 }
