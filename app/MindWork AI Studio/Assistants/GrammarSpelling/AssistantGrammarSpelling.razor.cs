@@ -154,7 +154,7 @@ public partial class AssistantGrammarSpelling : AssistantBaseCore<SettingsDialog
             await this.JsRuntime.GenerateAndShowDiff(this.inputText, this.correctedText);
     }
 
-    protected override async Task OnAssistantSessionAttachedAsync(AssistantSessionSnapshot snapshot)
+    protected override async Task OnAssistantSessionRenderedAsync(AssistantSessionSnapshot snapshot)
     {
         if (!snapshot.IsActive && !string.IsNullOrWhiteSpace(this.inputText) && !string.IsNullOrWhiteSpace(this.correctedText))
             await this.JsRuntime.GenerateAndShowDiff(this.inputText, this.correctedText);

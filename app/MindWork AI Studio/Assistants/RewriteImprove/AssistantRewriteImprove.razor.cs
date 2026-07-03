@@ -167,7 +167,7 @@ public partial class AssistantRewriteImprove : AssistantBaseCore<SettingsDialogR
             await this.JsRuntime.GenerateAndShowDiff(this.inputText, this.rewrittenText);
     }
 
-    protected override async Task OnAssistantSessionAttachedAsync(AssistantSessionSnapshot snapshot)
+    protected override async Task OnAssistantSessionRenderedAsync(AssistantSessionSnapshot snapshot)
     {
         if (!snapshot.IsActive && !string.IsNullOrWhiteSpace(this.inputText) && !string.IsNullOrWhiteSpace(this.rewrittenText))
             await this.JsRuntime.GenerateAndShowDiff(this.inputText, this.rewrittenText);

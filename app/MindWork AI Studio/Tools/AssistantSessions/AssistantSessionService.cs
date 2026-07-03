@@ -122,7 +122,7 @@ public sealed class AssistantSessionService(MessageBus messageBus)
     /// <param name="chatThread">The current assistant chat thread, if one already exists.</param>
     /// <param name="state">The initial assistant component state.</param>
     /// <returns>The new session snapshot, or the existing active session snapshot.</returns>
-    public AssistantSessionSnapshot TryBegin(AssistantSessionKey key, string title, CancellationTokenSource cancellationTokenSource, ChatThread? chatThread, Dictionary<string, IAssistantSessionSnapshotField> state)
+    public async Task<AssistantSessionSnapshot> TryBeginAsync(AssistantSessionKey key, string title, CancellationTokenSource cancellationTokenSource, ChatThread? chatThread, Dictionary<string, IAssistantSessionSnapshotField> state)
     {
         if (this.sessions.TryGetValue(key, out var existing) && existing.Status is AssistantSessionStatus.RUNNING or AssistantSessionStatus.CANCELING)
             return CreateSnapshot(existing);
@@ -142,8 +142,9 @@ public sealed class AssistantSessionService(MessageBus messageBus)
         };
 
         this.sessions[key] = session;
-        _ = this.NotifyChangedAsync(session);
-        return CreateSnapshot(session);
+        var snapshot = CreateSnapshot(session);
+        await this.NotifyChangedAsync(session);
+        return snapshot;
     }
 
     /// <summary>

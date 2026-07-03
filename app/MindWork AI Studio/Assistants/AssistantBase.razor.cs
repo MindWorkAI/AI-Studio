@@ -142,6 +142,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     private bool isDisposed;
     private AssistantSessionKey assistantSessionKey;
     private Guid? assistantSessionId;
+    private AssistantSessionSnapshot? pendingRenderedAssistantSessionSnapshot;
 
     /// <summary>
     /// Gets whether the Blazor component instance has already been disposed.
@@ -195,6 +196,12 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         // We don't want to show validation errors when the user opens the dialog.
         if(firstRender)
             this.Form?.ResetValidation();
+
+        if (this.pendingRenderedAssistantSessionSnapshot is { } snapshot)
+        {
+            this.pendingRenderedAssistantSessionSnapshot = null;
+            await this.OnAssistantSessionRenderedAsync(snapshot);
+        }
         
         await base.OnAfterRenderAsync(firstRender);
     }
@@ -229,7 +236,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
         this.CancellationTokenSource = new();
         this.isProcessing = true;
-        var startedSession = this.AssistantSessionService.TryBegin(this.assistantSessionKey, this.Title, this.CancellationTokenSource, this.ChatThread, this.CaptureAssistantSessionState());
+        var startedSession = await this.AssistantSessionService.TryBeginAsync(this.assistantSessionKey, this.Title, this.CancellationTokenSource, this.ChatThread, this.CaptureAssistantSessionState());
         if (startedSession.IsActive is not true || startedSession.Key != this.assistantSessionKey)
         {
             this.CancellationTokenSource.Dispose();
@@ -659,6 +666,13 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     protected virtual Task OnAssistantSessionAttachedAsync(AssistantSessionSnapshot snapshot) => Task.CompletedTask;
 
     /// <summary>
+    /// Allows derived assistants to restore DOM-dependent client-only UI after an attached session was rendered.
+    /// </summary>
+    /// <param name="snapshot">The assistant session snapshot that was rendered.</param>
+    /// <returns>A task that completes after derived UI restore work has finished.</returns>
+    protected virtual Task OnAssistantSessionRenderedAsync(AssistantSessionSnapshot snapshot) => Task.CompletedTask;
+
+    /// <summary>
     /// Handles assistant session change events for the current assistant instance.
     /// </summary>
     /// <typeparam name="T">The message payload type.</typeparam>
@@ -709,6 +723,9 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
         if (restoreClientOnlyContent)
             await this.OnAssistantSessionAttachedAsync(snapshot);
+
+        if (restoreClientOnlyContent)
+            this.pendingRenderedAssistantSessionSnapshot = snapshot;
 
         await this.RefreshAssistantUIAsync();
     }
