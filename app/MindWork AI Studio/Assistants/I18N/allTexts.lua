@@ -754,6 +754,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1565111217"] = "Relat
 -- Please select an ERI specification version for the ERI server.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1612890554"] = "Please select an ERI specification version for the ERI server."
 
+-- Open in chat
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1664804142"] = "Open in chat"
+
 -- Ports below 1024 are reserved for system services. Your ERI server need to run with elevated permissions (root user).
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T168780641"] = "Ports below 1024 are reserved for system services. Your ERI server need to run with elevated permissions (root user)."
 
