@@ -534,15 +534,26 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
     }
 
     private bool AreServerPresetsBlocked => !this.SettingsManager.ConfigurationData.ERI.PreselectOptions;
+
+    /// <summary>
+    /// Gets whether ERI server preset controls should be disabled.
+    /// </summary>
+    private bool AreServerPresetControlsDisabled => this.AreServerPresetsBlocked || this.IsProcessing;
     
     private void SelectedERIServerChanged(DataERIServer? server)
     {
+        if (this.IsProcessing)
+            return;
+
         this.selectedERIServer = server;
         this.ResetForm();
     }
     
     private async Task AddERIServer()
     {
+        if (this.IsProcessing)
+            return;
+
         this.SettingsManager.ConfigurationData.ERI.ERIServers.Add(new ()
         {
             ServerName = string.Format(T("ERI Server {0}"), DateTimeOffset.UtcNow),
@@ -553,6 +564,9 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
 
     private async Task RemoveERIServer()
     {
+        if (this.IsProcessing)
+            return;
+
         if(this.selectedERIServer is null)
             return;
         
@@ -575,6 +589,31 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
     }
     
     private bool IsNoneERIServerSelected => this.selectedERIServer is null;
+
+    /// <summary>
+    /// Gets whether ERI configuration input controls should be disabled.
+    /// </summary>
+    private bool IsERIInputDisabled => this.IsNoneERIServerSelected || this.IsProcessing;
+
+    /// <summary>
+    /// Gets whether the selected ERI specification cannot be downloaded.
+    /// </summary>
+    private bool IsSpecificationDownloadDisabled => !this.selectedERIVersion.WasSpecificationSelected() || this.IsERIInputDisabled;
+
+    /// <summary>
+    /// Gets whether the generated-code target directory selection should be disabled.
+    /// </summary>
+    private bool IsBaseDirectorySelectionDisabled => this.IsERIInputDisabled || !this.writeToFilesystem;
+
+    /// <summary>
+    /// Gets a stable row snapshot for the embedding-method table.
+    /// </summary>
+    private EmbeddingInfo[] EmbeddingRows => this.embeddings.ToArray();
+
+    /// <summary>
+    /// Gets a stable row snapshot for the retrieval-process table.
+    /// </summary>
+    private RetrievalInfo[] RetrievalProcessRows => this.retrievalProcesses.ToArray();
 
     /// <summary>
     /// Gets called when the server name was changed by typing.
@@ -863,6 +902,9 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
     
     private async Task AddEmbedding()
     {
+        if (this.IsProcessing)
+            return;
+
         var dialogParameters = new DialogParameters<EmbeddingMethodDialog>
         {
             { x => x.IsEditing, false },
@@ -881,6 +923,9 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
     
     private async Task EditEmbedding(EmbeddingInfo embeddingInfo)
     {
+        if (this.IsProcessing)
+            return;
+
         var dialogParameters = new DialogParameters<EmbeddingMethodDialog>
         {
             { x => x.DataEmbeddingName, embeddingInfo.EmbeddingName },
@@ -906,6 +951,9 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
     
     private async Task DeleteEmbedding(EmbeddingInfo embeddingInfo)
     {
+        if (this.IsProcessing)
+            return;
+
         var message = this.retrievalProcesses.Any(n => n.Embeddings?.Contains(embeddingInfo) is true)
             ? string.Format(T("The embedding '{0}' is used in one or more retrieval processes. Are you sure you want to delete it?"), embeddingInfo.EmbeddingName)
             : string.Format(T("Are you sure you want to delete the embedding '{0}'?"), embeddingInfo.EmbeddingName);
@@ -928,6 +976,9 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
     
     private async Task AddRetrievalProcess()
     {
+        if (this.IsProcessing)
+            return;
+
         var dialogParameters = new DialogParameters<RetrievalProcessDialog>
         {
             { x => x.IsEditing, false },
@@ -947,6 +998,9 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
     
     private async Task EditRetrievalProcess(RetrievalInfo retrievalInfo)
     {
+        if (this.IsProcessing)
+            return;
+
         var dialogParameters = new DialogParameters<RetrievalProcessDialog>
         {
             { x => x.DataName, retrievalInfo.Name },
@@ -973,6 +1027,9 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
     
     private async Task DeleteRetrievalProcess(RetrievalInfo retrievalInfo)
     {
+        if (this.IsProcessing)
+            return;
+
         var dialogParameters = new DialogParameters<ConfirmDialog>
         {
             { x => x.Message, string.Format(T("Are you sure you want to delete the retrieval process '{0}'?"), retrievalInfo.Name) },
@@ -1032,6 +1089,10 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
             this.AddInputIssue(T("Please describe at least one retrieval process."));
             return;
         }
+
+        var writeToFilesystemSnapshot = this.writeToFilesystem;
+        var baseDirectorySnapshot = this.baseDirectory;
+        var previouslyGeneratedFilesSnapshot = this.previouslyGeneratedFiles.ToArray();
         
         this.eriSpecification = await this.selectedERIVersion.ReadSpecification(this.HttpClient);
         if (string.IsNullOrWhiteSpace(this.eriSpecification))
@@ -1073,9 +1134,9 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
         var fileListAnswer = await this.AddAIResponseAsync(time, true);
 
         // Is this an update of the ERI server? If so, we need to delete the previously generated files:
-        if (this.writeToFilesystem && this.previouslyGeneratedFiles.Count > 0 && !string.IsNullOrWhiteSpace(fileListAnswer))
+        if (writeToFilesystemSnapshot && previouslyGeneratedFilesSnapshot.Length > 0 && !string.IsNullOrWhiteSpace(fileListAnswer))
         {
-            foreach (var file in this.previouslyGeneratedFiles)
+            foreach (var file in previouslyGeneratedFilesSnapshot)
             {
                 try
                 {
@@ -1097,7 +1158,8 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
         }
         
         var generatedFiles = new List<string>();
-        foreach (var file in this.ExtractFiles(fileListAnswer))
+        var filesToGenerate = this.ExtractFiles(fileListAnswer).ToArray();
+        foreach (var file in filesToGenerate)
         {
             this.Logger.LogInformation($"The LLM want to create the file: '{file}'");
 
@@ -1117,15 +1179,15 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
                                         ```
                                         """, true);
             var generatedCodeMarkdown = await this.AddAIResponseAsync(time);
-            if (this.writeToFilesystem)
+            if (writeToFilesystemSnapshot)
             {
-                var desiredFilePath = Path.Join(this.baseDirectory, file);
+                var desiredFilePath = Path.Join(baseDirectorySnapshot, file);
                 
                 // Security check: ensure that the desired file path is inside the base directory.
                 // We cannot trust the beginning of the file path because it would be possible
                 // to escape by using `..` in the file path.
-                if (!desiredFilePath.StartsWith(this.baseDirectory, StringComparison.InvariantCultureIgnoreCase) || desiredFilePath.Contains(".."))
-                    this.Logger.LogWarning($"The file path '{desiredFilePath}' is may not inside the base directory '{this.baseDirectory}'.");
+                if (!desiredFilePath.StartsWith(baseDirectorySnapshot, StringComparison.InvariantCultureIgnoreCase) || desiredFilePath.Contains(".."))
+                    this.Logger.LogWarning($"The file path '{desiredFilePath}' is may not inside the base directory '{baseDirectorySnapshot}'.");
                 
                 else
                 {
@@ -1160,7 +1222,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
             }
         }
         
-        if(this.writeToFilesystem)
+        if(writeToFilesystemSnapshot)
         {
             this.previouslyGeneratedFiles = generatedFiles;
             this.selectedERIServer!.PreviouslyGeneratedFiles = generatedFiles;
