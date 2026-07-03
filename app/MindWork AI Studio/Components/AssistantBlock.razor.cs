@@ -62,11 +62,11 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase where TSetting
 
     private string BorderColor => this.HasActiveSession ? this.ColorTheme.GetActivityIndicatorColor(this.SettingsManager) : this.SettingsManager.IsDarkMode switch
     {
-        true => this.ColorTheme.GetCurrentPalette(this.SettingsManager).GrayLight,
-        false => this.ColorTheme.GetCurrentPalette(this.SettingsManager).Primary.Value,
+        true => this.ColorTheme.GetCurrentPalette(this.SettingsManager).GrayDefault,
+        false => this.ColorTheme.GetCurrentPalette(this.SettingsManager).GrayDefault,
     };
 
-    private string BlockStyle => $"border-width: 2px; border-color: {this.BorderColor}; border-radius: 12px; border-style: solid; max-width: 20em;";
+    private string BlockStyle => $"border-width: 3px; border-color: {this.BorderColor}; border-radius: 12px; border-style: solid; max-width: 20em;";
 
     private bool IsVisible => this.SettingsManager.IsAssistantVisible(this.Component, assistantName: this.Name, requiredPreviewFeature: this.RequiredPreviewFeature);
 
