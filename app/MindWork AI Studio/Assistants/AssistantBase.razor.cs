@@ -687,7 +687,11 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             case Event.ASSISTANT_SESSION_CHANGED:
             case Event.ASSISTANT_SESSION_FINISHED:
                 if (data is AssistantSessionSnapshot snapshot && snapshot.Key == this.assistantSessionKey)
+                {
                     await this.AttachAssistantSession(snapshot, restoreClientOnlyContent: triggeredEvent is Event.ASSISTANT_SESSION_FINISHED);
+                    if (triggeredEvent is Event.ASSISTANT_SESSION_FINISHED)
+                        _ = this.AssistantSessionService.TryTakeInactiveSnapshot(this.assistantSessionKey);
+                }
                 break;
         }
     }
@@ -699,6 +703,13 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     private async Task AttachAssistantSessionIfAvailable()
     {
         var snapshot = this.AssistantSessionService.TryGetSnapshot(this.assistantSessionKey);
+        if (snapshot?.IsActive ?? false)
+        {
+            await this.AttachAssistantSession(snapshot, restoreClientOnlyContent: true);
+            return;
+        }
+
+        snapshot = this.AssistantSessionService.TryTakeInactiveSnapshot(this.assistantSessionKey);
         if (snapshot is null)
             return;
 

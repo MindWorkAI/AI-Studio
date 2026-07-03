@@ -114,6 +114,33 @@ public sealed class AssistantSessionService(MessageBus messageBus)
     }
 
     /// <summary>
+    /// Tries to get and remove an inactive assistant session snapshot.
+    /// </summary>
+    /// <remarks>
+    /// This method intentionally does not publish a change event. It is used when
+    /// a UI instance consumes a finished session exactly once and should keep the
+    /// restored result locally until the user leaves or resets the assistant.
+    /// </remarks>
+    /// <param name="key">The assistant session key to look up and remove.</param>
+    /// <returns>The removed inactive snapshot, or <c>null</c> when no inactive session exists.</returns>
+    public AssistantSessionSnapshot? TryTakeInactiveSnapshot(AssistantSessionKey key)
+    {
+        if (!this.sessions.TryGetValue(key, out var session))
+            return null;
+
+        AssistantSessionSnapshot snapshot;
+        lock (session.SyncRoot)
+        {
+            if (session.Status is AssistantSessionStatus.RUNNING or AssistantSessionStatus.CANCELING)
+                return null;
+
+            snapshot = CreateSnapshotWithoutLock(session);
+        }
+
+        return ((ICollection<KeyValuePair<AssistantSessionKey, AssistantSessionState>>)this.sessions).Remove(new(key, session)) ? snapshot : null;
+    }
+
+    /// <summary>
     /// Starts a new assistant session when no active session exists for the key.
     /// </summary>
     /// <param name="key">The assistant session key.</param>
@@ -303,19 +330,29 @@ public sealed class AssistantSessionService(MessageBus messageBus)
     {
         lock (session.SyncRoot)
         {
-            return new()
-            {
-                SessionId = session.SessionId,
-                Key = session.Key,
-                Title = session.Title,
-                Status = session.Status,
-                StartedAt = session.StartedAt,
-                UpdatedAt = session.UpdatedAt,
-                FinishedAt = session.FinishedAt,
-                ErrorMessage = session.ErrorMessage,
-                ChatThread = session.ChatThread,
-                State = new Dictionary<string, IAssistantSessionSnapshotField>(session.State, StringComparer.Ordinal),
-            };
+            return CreateSnapshotWithoutLock(session);
         }
+    }
+
+    /// <summary>
+    /// Creates a copied, external snapshot while the caller already holds the session lock.
+    /// </summary>
+    /// <param name="session">The runtime session to copy.</param>
+    /// <returns>A snapshot safe to send to UI components.</returns>
+    private static AssistantSessionSnapshot CreateSnapshotWithoutLock(AssistantSessionState session)
+    {
+        return new()
+        {
+            SessionId = session.SessionId,
+            Key = session.Key,
+            Title = session.Title,
+            Status = session.Status,
+            StartedAt = session.StartedAt,
+            UpdatedAt = session.UpdatedAt,
+            FinishedAt = session.FinishedAt,
+            ErrorMessage = session.ErrorMessage,
+            ChatThread = session.ChatThread,
+            State = new Dictionary<string, IAssistantSessionSnapshotField>(session.State, StringComparer.Ordinal),
+        };
     }
 }
