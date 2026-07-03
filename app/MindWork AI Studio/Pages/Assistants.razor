@@ -47,6 +47,7 @@
                                     Description="@T(assistantPlugin.Description)"
                                     Icon="@Icons.Material.Filled.FindInPage"
                                     Disabled="@(!securityState.CanStartAssistant)"
+                                    AssistantSessionInstanceId="@assistantPlugin.Id.ToString()"
                                     Link="@($"{Routes.ASSISTANT_DYNAMIC}?assistantId={assistantPlugin.Id}")">
                         <SecurityBadge>
                             <AssistantPluginSecurityCard Plugin="@assistantPlugin" Compact="@true" />
