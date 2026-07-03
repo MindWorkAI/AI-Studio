@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 
 using AIStudio.Provider;
+using AIStudio.Settings;
 
 using Microsoft.AspNetCore.Components;
 
@@ -40,6 +41,26 @@ public partial class ProviderSelection : MSGComponentBase
     {
         this.ProviderSettings = provider;
         await this.ProviderSettingsChanged.InvokeAsync(provider);
+    }
+
+    private IReadOnlyList<CapabilityIcon> GetCapabilityIcons(AIStudio.Settings.Provider provider)
+    {
+        var capabilities = provider.GetModelCapabilities();
+        List<CapabilityIcon> capabilityIcons = [];
+
+        if (capabilities.Contains(Capability.AUDIO_INPUT))
+            capabilityIcons.Add(new(Icons.Material.Filled.GraphicEq, this.T("Audio input possible")));
+
+        if (capabilities.Contains(Capability.SINGLE_IMAGE_INPUT) || capabilities.Contains(Capability.MULTIPLE_IMAGE_INPUT))
+            capabilityIcons.Add(new(Icons.Material.Filled.Image, this.T("Image input possible")));
+
+        if (capabilities.Contains(Capability.SPEECH_INPUT))
+            capabilityIcons.Add(new(Icons.Material.Filled.Mic, this.T("Speech input possible")));
+
+        if (capabilities.Contains(Capability.ALWAYS_REASONING))
+            capabilityIcons.Add(new(Icons.Material.Filled.Psychology, this.T("Reasoning")));
+
+        return capabilityIcons;
     }
     
     [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
@@ -84,4 +105,6 @@ public partial class ProviderSelection : MSGComponentBase
     }
 
     #endregion
+
+    private readonly record struct CapabilityIcon(string Icon, string Tooltip);
 }
