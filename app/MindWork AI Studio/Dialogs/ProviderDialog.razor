@@ -163,8 +163,11 @@
                         @T("Please be careful: wrong expert settings can break model usage, disable supported features, or make unsupported features appear available.")
                     </MudAlert>
                     <MudText Typo="Typo.subtitle2" Class="mb-2">
-                        @T("Capability overrides")
+                        @T("Override Model Capabilities")
                     </MudText>
+                    <MudJustifiedText Typo="Typo.body2" Class="mb-4">
+                        @T("Stored default model capabilities may not reflect its full range. Override them here if needed.")
+                    </MudJustifiedText>
                     <MudStack Class="mb-4" Spacing="2">
                         @foreach (var capability in this.ExpertCapabilityOverrides)
                         {
