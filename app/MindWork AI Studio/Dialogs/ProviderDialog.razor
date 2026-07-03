@@ -157,9 +157,29 @@
                 </MudButton>
                 <MudDivider />
                 <MudCollapse Expanded="@this.showExpertSettings" Class="@this.GetExpertStyles">
-                    <MudJustifiedText Class="mb-5">
+                    <MudAlert Severity="Severity.Warning" Class="mb-4">
+                        @T("Please be careful: wrong expert settings can break model usage, disable supported features, or make unsupported features appear available.")
+                    </MudAlert>
+                    <MudJustifiedText Class="mb-4">
                         @T("Please be aware: This section is for experts only. You are responsible for verifying the correctness of the additional parameters you provide to the API call. By default, AI Studio uses the OpenAI-compatible chat completions API, when that it is supported by the underlying service and model.")
                     </MudJustifiedText>
+                    <MudText Typo="Typo.subtitle2" Class="mb-2">
+                        @T("Capability overrides")
+                    </MudText>
+                    <MudStack Class="mb-4">
+                        @foreach (var capability in this.ExpertCapabilityOverrides)
+                        {
+                            <MudSelect T="CapabilityOverrideMode"
+                                       Value="@this.GetCapabilityOverrideMode(capability)"
+                                       ValueChanged="@(value => this.SetCapabilityOverrideMode(capability, value))"
+                                       Label="@this.GetCapabilityOverrideLabel(capability)"
+                                       Variant="Variant.Outlined">
+                                <MudSelectItem Value="@CapabilityOverrideMode.Automatic">@T("Automatic")</MudSelectItem>
+                                <MudSelectItem Value="@CapabilityOverrideMode.Enabled">@T("Enabled")</MudSelectItem>
+                                <MudSelectItem Value="@CapabilityOverrideMode.Disabled">@T("Disabled")</MudSelectItem>
+                            </MudSelect>
+                        }
+                    </MudStack>
                     <MudTextField T="string" Label=@T("Additional API parameters") Variant="Variant.Outlined" Lines="4" AutoGrow="true" MaxLines="10" HelperText=@T("""Add the parameters in proper JSON formatting, e.g., "temperature": 0.5. Remove trailing commas. The usual surrounding curly brackets {} must not be used, though.""") Placeholder="@GetPlaceholderExpertSettings" @bind-Value="@this.AdditionalJsonApiParameters" Immediate="true" Validation="@this.ValidateAdditionalJsonApiParameters" OnBlur="@this.OnInputChangeExpertSettings"/>
                 </MudCollapse>
             </MudStack>

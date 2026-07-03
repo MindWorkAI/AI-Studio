@@ -4,6 +4,7 @@ using System.Text.Json;
 using AIStudio.Components;
 using AIStudio.Provider;
 using AIStudio.Provider.HuggingFace;
+using AIStudio.Settings;
 using AIStudio.Tools.Services;
 using AIStudio.Tools.Validation;
 
@@ -83,6 +84,9 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     
     [Parameter]
     public string AdditionalJsonApiParameters { get; set; } = string.Empty;
+
+    [Parameter]
+    public ProviderCapabilityOverrides? DataCapabilityOverrides { get; set; }
     
     [Inject]
     private RustService RustService { get; init; } = null!;
@@ -106,6 +110,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     private string dataLoadingModelsIssue = string.Empty;
     private bool usesLegacySystemModelFallback;
     private bool showExpertSettings;
+    private ProviderCapabilityOverrides capabilityOverrides = new();
     
     // We get the form reference from Blazor code to validate it manually:
     private MudForm form = null!;
@@ -160,6 +165,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
             Host = this.DataHost,
             HFInferenceProvider = this.HFInferenceProviderId,
             AdditionalJsonApiParameters = this.AdditionalJsonApiParameters,
+            CapabilityOverrides = this.capabilityOverrides.HasOverrides ? this.capabilityOverrides : null,
         };
     }
 
@@ -178,7 +184,8 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         this.UsedInstanceNames = this.SettingsManager.ConfigurationData.Providers.Select(x => x.InstanceName.ToLowerInvariant()).ToList();
         #pragma warning restore MWAIS0001
 
-        this.showExpertSettings = !string.IsNullOrWhiteSpace(this.AdditionalJsonApiParameters);
+        this.capabilityOverrides = this.DataCapabilityOverrides ?? new();
+        this.showExpertSettings = !string.IsNullOrWhiteSpace(this.AdditionalJsonApiParameters) || this.capabilityOverrides.HasOverrides;
         
         // When editing, we need to load the data:
         if(this.IsEditing)
@@ -369,6 +376,35 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     
     private void ToggleExpertSettings() => this.showExpertSettings = !this.showExpertSettings;
 
+    private CapabilityOverrideMode GetCapabilityOverrideMode(Capability capability) => this.capabilityOverrides.GetOverride(capability) switch
+    {
+        true => CapabilityOverrideMode.Enabled,
+        false => CapabilityOverrideMode.Disabled,
+        null => CapabilityOverrideMode.Automatic
+    };
+
+    private void SetCapabilityOverrideMode(Capability capability, CapabilityOverrideMode mode)
+    {
+        bool? overrideValue = mode switch
+        {
+            CapabilityOverrideMode.Enabled => true,
+            CapabilityOverrideMode.Disabled => false,
+            _ => null
+        };
+        this.capabilityOverrides = this.capabilityOverrides.SetOverride(capability, overrideValue);
+    }
+
+    private string GetCapabilityOverrideLabel(Capability capability) => capability switch
+    {
+        Capability.TEXT_INPUT => T("Text input"),
+        Capability.AUDIO_INPUT => T("Audio input"),
+        Capability.MULTIPLE_IMAGE_INPUT => T("Multiple image input"),
+        Capability.SPEECH_INPUT => T("Speech input"),
+        Capability.VIDEO_INPUT => T("Video input"),
+        Capability.ALWAYS_REASONING => T("Always reasoning"),
+        _ => capability.ToString()
+    };
+
     private void OnInputChangeExpertSettings()
     {
         this.AdditionalJsonApiParameters = NormalizeAdditionalJsonApiParameters(this.AdditionalJsonApiParameters)
@@ -537,10 +573,19 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     
     private string GetExpertStyles => this.showExpertSettings ? "border-2 border-dashed rounded pa-2" : string.Empty;
 
+    private IReadOnlyList<Capability> ExpertCapabilityOverrides => ProviderCapabilityOverrides.SUPPORTED_CAPABILITIES;
+
     private static string GetPlaceholderExpertSettings => 
       """
       "temperature": 0.5,
       "top_p": 0.9,
       "frequency_penalty": 0.0
       """;
+
+    private enum CapabilityOverrideMode
+    {
+        Automatic,
+        Enabled,
+        Disabled
+    }
 }
