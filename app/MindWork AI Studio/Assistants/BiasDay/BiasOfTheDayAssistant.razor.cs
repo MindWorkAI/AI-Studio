@@ -169,8 +169,7 @@ public partial class BiasOfTheDayAssistant : AssistantBaseCore<SettingsDialogAss
              Please tell me about the bias of the day.
              """, true);
 
-        // Start the AI response without waiting for it to finish:
-        _ = this.AddAIResponseAsync(time);
+        await this.StartChatGenerationJobAsync(time);
         await this.SendToAssistant(Tools.Components.CHAT, default);
     }
 }
