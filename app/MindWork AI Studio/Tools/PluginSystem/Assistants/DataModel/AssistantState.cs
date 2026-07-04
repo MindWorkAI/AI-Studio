@@ -30,6 +30,49 @@ public sealed class AssistantState
         this.Times.Clear();
     }
 
+    /// <summary>
+    /// Copies all dynamic assistant state values from another state instance.
+    /// </summary>
+    /// <param name="other">The state instance to copy from.</param>
+    public void CopyFrom(AssistantState other)
+    {
+        this.Clear();
+        CopyDictionary(other.Text, this.Text);
+        CopyDictionary(other.SingleSelect, this.SingleSelect);
+        CopyDictionary(other.MultiSelect, this.MultiSelect);
+        CopyDictionary(other.Booleans, this.Booleans);
+        CopyDictionary(other.WebContent, this.WebContent);
+        CopyDictionary(other.FileContent, this.FileContent);
+        CopyDictionary(other.Colors, this.Colors);
+        CopyDictionary(other.Dates, this.Dates);
+        CopyDictionary(other.DateRanges, this.DateRanges);
+        CopyDictionary(other.Times, this.Times);
+    }
+
+    /// <summary>
+    /// Creates a copy of the dynamic assistant state.
+    /// </summary>
+    /// <returns>A copied assistant state instance.</returns>
+    public AssistantState Clone()
+    {
+        var clone = new AssistantState();
+        clone.CopyFrom(this);
+        return clone;
+    }
+
+    /// <summary>
+    /// Copies all entries from one dictionary into another dictionary.
+    /// </summary>
+    /// <typeparam name="TKey">The dictionary key type.</typeparam>
+    /// <typeparam name="TValue">The dictionary value type.</typeparam>
+    /// <param name="source">The source dictionary.</param>
+    /// <param name="target">The target dictionary.</param>
+    private static void CopyDictionary<TKey, TValue>(Dictionary<TKey, TValue> source, Dictionary<TKey, TValue> target) where TKey : notnull
+    {
+        foreach (var (key, value) in source)
+            target[key] = value;
+    }
+
     public bool TryApplyValue(string fieldName, LuaValue value, out string expectedType)
     {
         expectedType = string.Empty;

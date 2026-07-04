@@ -2,8 +2,8 @@
 @using AIStudio.Settings
 @inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogI18N>
 
-<EnumSelection T="CommonLanguages" NameFunc="@(language => language.NameSelecting())" @bind-Value="@this.selectedTargetLanguage" ValidateSelection="@this.ValidatingTargetLanguage" Icon="@Icons.Material.Filled.Translate" Label="@T("Target language")" AllowOther="@true" OtherValue="CommonLanguages.OTHER" @bind-OtherInput="@this.customTargetLanguage" ValidateOther="@this.ValidateCustomLanguage" LabelOther="@T("Custom target language")" SelectionUpdated="_ => this.OnChangedLanguage()" />
-<ConfigurationSelect OptionDescription="@T("Language plugin used for comparision")" SelectedValue="@(() => this.selectedLanguagePluginId)" Data="@ConfigurationSelectDataFactory.GetLanguagesData()" SelectionUpdate="@(async void (id) => await this.OnLanguagePluginChanged(id))" OptionHelp="@T("Select the language plugin used for comparision.")"/>
+<EnumSelection T="CommonLanguages" NameFunc="@(language => language.NameSelecting())" @bind-Value="@this.selectedTargetLanguage" ValidateSelection="@this.ValidatingTargetLanguage" Icon="@Icons.Material.Filled.Translate" Label="@T("Target language")" AllowOther="@true" OtherValue="CommonLanguages.OTHER" @bind-OtherInput="@this.customTargetLanguage" ValidateOther="@this.ValidateCustomLanguage" LabelOther="@T("Custom target language")" SelectionUpdated="_ => this.OnChangedLanguage()" Disabled="@this.IsProcessing" />
+<ConfigurationSelect OptionDescription="@T("Language plugin used for comparision")" SelectedValue="@(() => this.selectedLanguagePluginId)" Data="@ConfigurationSelectDataFactory.GetLanguagesData()" SelectionUpdate="@(async void (id) => await this.OnLanguagePluginChanged(id))" OptionHelp="@T("Select the language plugin used for comparision.")" Disabled="@(() => this.IsProcessing)"/>
 @if (this.isLoading)
 {
     <MudText Typo="Typo.body1" Class="mb-6">
@@ -20,7 +20,7 @@ else if (!this.isLoading && string.IsNullOrWhiteSpace(this.loadingIssue))
     <MudText Typo="Typo.h6">
         @this.AddedContentText
     </MudText>
-    <MudTable Items="@this.addedContent" Hover="@true" Filter="@this.FilterFunc" Class="border-dashed border rounded-lg mb-6">
+    <MudTable Items="@this.AddedContentRows" Hover="@true" Filter="@this.FilterFunc" Class="border-dashed border rounded-lg mb-6">
         <ToolBarContent>
             <MudTextField @bind-Value="@this.searchString" Immediate="true" Placeholder="@T("Search")" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"/>
         </ToolBarContent>
@@ -50,7 +50,7 @@ else if (!this.isLoading && string.IsNullOrWhiteSpace(this.loadingIssue))
     <MudText Typo="Typo.h6">
         @this.RemovedContentText
     </MudText>
-    <MudTable Items="@this.removedContent" Hover="@true" Filter="@this.FilterFunc" Class="border-dashed border rounded-lg mb-6">
+    <MudTable Items="@this.RemovedContentRows" Hover="@true" Filter="@this.FilterFunc" Class="border-dashed border rounded-lg mb-6">
         <ToolBarContent>
             <MudTextField @bind-Value="@this.searchString" Immediate="true" Placeholder="@T("Search")" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"/>
         </ToolBarContent>
@@ -94,7 +94,7 @@ else if (!this.isLoading && string.IsNullOrWhiteSpace(this.loadingIssue))
         <MudText Typo="Typo.h6">
             @this.LocalizedContentText
         </MudText>
-        <MudTable Items="@this.localizedContent" Hover="@true" Filter="@this.FilterFunc" Class="border-dashed border rounded-lg mb-6">
+        <MudTable Items="@this.LocalizedContentRows" Hover="@true" Filter="@this.FilterFunc" Class="border-dashed border rounded-lg mb-6">
             <ToolBarContent>
                 <MudTextField @bind-Value="@this.searchString" Immediate="true" Placeholder="@T("Search")" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"/>
             </ToolBarContent>

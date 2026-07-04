@@ -21,6 +21,12 @@ public partial class ProviderSelection : MSGComponentBase
     [Parameter]
     public Func<AIStudio.Settings.Provider, string?> ValidateProvider { get; set; } = _ => null;
 
+    /// <summary>
+    /// Gets or sets whether provider selection is disabled.
+    /// </summary>
+    [Parameter]
+    public bool Disabled { get; set; }
+
     [Parameter]
     public ConfidenceLevel ExplicitMinimumConfidence { get; set; } = ConfidenceLevel.UNKNOWN;
     
