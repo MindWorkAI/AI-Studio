@@ -1,8 +1,23 @@
 @using AIStudio.Settings
 @inherits MSGComponentBase
 <MudSelect T="Provider" Value="@this.ProviderSettings" ValueChanged="@this.SelectionChanged" Validation="@this.ValidateProvider" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Apps" Margin="Margin.Dense" Label="@T("Provider")" Class="mb-3 rounded-lg" OuterClass="flex-grow-0" Variant="Variant.Outlined" Disabled="@this.Disabled">
-    @foreach (var provider in this.GetAvailableProviders())
+    @foreach (var providerItem in this.GetAvailableProviderSelectionItems())
     {
-        <MudSelectItem Value="@provider"/>
+        <MudSelectItem Value="@providerItem.Provider">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="w-100" Wrap="Wrap.NoWrap">
+                <MudText Class="me-2">@providerItem.Provider</MudText>
+                @if (providerItem.CapabilityIcons.Count > 0)
+                {
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Wrap="Wrap.NoWrap" Class="flex-grow-0">
+                        @foreach (var capabilityIcon in providerItem.CapabilityIcons)
+                        {
+                            <MudTooltip Text="@capabilityIcon.Tooltip">
+                                <MudIcon Icon="@capabilityIcon.Icon" Size="Size.Small" Color="Color.Default" />
+                            </MudTooltip>
+                        }
+                    </MudStack>
+                }
+            </MudStack>
+        </MudSelectItem>
     }
 </MudSelect>

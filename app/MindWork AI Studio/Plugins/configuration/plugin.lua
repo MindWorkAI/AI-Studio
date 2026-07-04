@@ -70,6 +70,7 @@ CONFIG["LLM_PROVIDERS"] = {}
 --     -- Please refer to the documentation of the selected host for details.
 --     -- Might be something like ... \"temperature\": 0.5 ... for one parameter.
 --     -- Could be something like ... \"temperature\": 0.5, \"max_tokens\": 1000 ... for multiple parameters.
+--     -- Recognized reasoning parameters, such as reasoning_effort, thinking, think, and chat_template_kwargs.enable_thinking, may affect whether AI Studio shows the reasoning icon for this provider.
 --     -- Please do not add the enclosing curly braces {} here. Also, no trailing comma is allowed.
 --     ["AdditionalJsonApiParameters"] = "",
 --
