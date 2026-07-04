@@ -312,6 +312,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T180921696"] = "Reset"
 -- Please select a provider.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T1809312323"] = "Please select a provider."
 
+-- The assistant failed. The message is: '{0}'
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T1833836281"] = "The assistant failed. The message is: '{0}'"
+
+-- This assistant is already running. AI Studio opens the running session instead.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T2575715765"] = "This assistant is already running. AI Studio opens the running session instead."
+
 -- Assistant - {0}
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T3043922"] = "Assistant - {0}"
 
@@ -749,6 +755,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1565111217"] = "Relat
 
 -- Please select an ERI specification version for the ERI server.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1612890554"] = "Please select an ERI specification version for the ERI server."
+
+-- Open in chat
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1664804142"] = "Open in chat"
 
 -- Ports below 1024 are reserved for system services. Your ERI server need to run with elevated permissions (root user).
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T168780641"] = "Ports below 1024 are reserved for system services. Your ERI server need to run with elevated permissions (root user)."
@@ -1983,6 +1992,18 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::IIMAGESOURCEEXTENSIONS::T349928509"] = "The ima
 -- Open Settings
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T1172211894"] = "Open Settings"
 
+-- Assistant is still running.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T2719896610"] = "Assistant is still running."
+
+-- Assistant was canceled. Open it to review the result.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T3390934621"] = "Assistant was canceled. Open it to review the result."
+
+-- Assistant failed. Open it to review the result.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T3571008422"] = "Assistant failed. Open it to review the result."
+
+-- The result is ready.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T661906146"] = "The result is ready."
+
 -- Show or hide the detailed security information.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T1045105126"] = "Show or hide the detailed security information."
 
@@ -2415,17 +2436,23 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROFILESELECTION::T3654011106"] = "Open P
 -- You can switch between your profiles here
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROFILESELECTION::T918741365"] = "You can switch between your profiles here"
 
+-- Uses reasoning
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T163305901"] = "Uses reasoning"
+
+-- Uses reasoning from provider settings
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T1646870133"] = "Uses reasoning from provider settings"
+
 -- Audio input possible
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T1742581112"] = "Audio input possible"
-
--- Reasoning
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T2385384423"] = "Reasoning"
 
 -- Image input possible
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T2685487365"] = "Image input possible"
 
 -- Speech input possible
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T3005724142"] = "Speech input possible"
+
+-- Uses reasoning by default
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T3202628203"] = "Uses reasoning by default"
 
 -- Provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T900237532"] = "Provider"

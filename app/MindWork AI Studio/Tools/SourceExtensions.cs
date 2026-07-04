@@ -1,12 +1,83 @@
 using System.Text;
+using System.Text.RegularExpressions;
 
 using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Tools;
 
-public static class SourceExtensions
+public static partial class SourceExtensions
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(SourceExtensions).Namespace, nameof(SourceExtensions));
+
+    private static void AppendMarkdownLink(StringBuilder sb, string title, string url)
+    {
+        sb.Append('[');
+        sb.Append(EscapeMarkdownLinkText(title));
+        sb.Append("](<");
+        sb.Append(NormalizeLinkDestination(url));
+        sb.Append(">)");
+    }
+
+    private static string EscapeMarkdownLinkText(string text)
+    {
+        return text
+            .Replace(@"\", @"\\")
+            .Replace("[", @"\[")
+            .Replace("]", @"\]")
+            .Replace("\r", " ")
+            .Replace("\n", " ");
+    }
+
+    private static string NormalizeLinkDestination(string url)
+    {
+        var normalized = url.Trim().Replace("\r", string.Empty).Replace("\n", string.Empty);
+        normalized = TryUnwrapMarkdownLink(normalized);
+
+        if (Uri.TryCreate(normalized, UriKind.Absolute, out var absoluteUri))
+            return absoluteUri.GetComponents(UriComponents.AbsoluteUri, UriFormat.UriEscaped);
+
+        var sb = new StringBuilder(normalized.Length);
+        foreach (var c in normalized)
+        {
+            if (IsSafeUrlCharacter(c))
+            {
+                sb.Append(c);
+                continue;
+            }
+
+            sb.Append(Uri.EscapeDataString(c.ToString()));
+        }
+
+        return sb.ToString();
+    }
+
+    private static string TryUnwrapMarkdownLink(string value)
+    {
+        var match = MarkdownLinkWithOptionalSuffix().Match(value);
+        if (!match.Success)
+            return value;
+
+        var label = match.Groups["label"].Value;
+        var url = match.Groups["url"].Value;
+        var suffix = match.Groups["suffix"].Value;
+        if (string.IsNullOrEmpty(suffix))
+            return url;
+
+        if (Uri.TryCreate(label, UriKind.Absolute, out var labelUri) &&
+            Uri.TryCreate(url, UriKind.Absolute, out var urlUri) &&
+            Uri.Compare(labelUri, urlUri, UriComponents.AbsoluteUri, UriFormat.SafeUnescaped, StringComparison.OrdinalIgnoreCase) == 0)
+            return url + suffix;
+
+        return value;
+    }
+
+    private static bool IsSafeUrlCharacter(char c)
+    {
+        if (char.IsAsciiLetterOrDigit(c))
+            return true;
+
+        return c is '-' or '.' or '_' or '~' or ':' or '/' or '?' or '#' or '[' or ']' or '@' or '!' or '$' or '&' or '\'' or '(' or ')' or '*' or '+' or ',' or ';' or '=';
+    }
     
     /// <summary>
     /// Converts a list of sources to a markdown-formatted string.
@@ -36,11 +107,8 @@ public static class SourceExtensions
                     }
                     
                     sb.Append($"- [{++sourceNum}] ");
-                    sb.Append('[');
-                    sb.Append(source.Title);
-                    sb.Append("](");
-                    sb.Append(source.URL);
-                    sb.AppendLine(")");
+                    AppendMarkdownLink(sb, source.Title, source.URL);
+                    sb.AppendLine();
                     break;
             }
         }
@@ -55,11 +123,8 @@ public static class SourceExtensions
         foreach (var source in ragSources)
         {
             sb.Append($"- [{++sourceNum}] ");
-            sb.Append('[');
-            sb.Append(source.Title);
-            sb.Append("](");
-            sb.Append(source.URL);
-            sb.AppendLine(")");
+            AppendMarkdownLink(sb, source.Title, source.URL);
+            sb.AppendLine();
         }
         
         return sb.ToString();
@@ -76,4 +141,7 @@ public static class SourceExtensions
             if (sources.All(s => s.URL != addedSource.URL && s.Title != addedSource.Title))
                 sources.Add((Source)addedSource);
     }
+
+    [GeneratedRegex(@"^\[(?<label>[^\]]+)\]\((?<url>[^)\r\n]+)\)(?<suffix>.*)$")]
+    private static partial Regex MarkdownLinkWithOptionalSuffix();
 }

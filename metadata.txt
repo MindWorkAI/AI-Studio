@@ -3,7 +3,7 @@
 242
 9.0.118 (commit c8cbca4ed1)
 9.0.17 (commit f2c8152eed)
-1.96.0 (commit ac68faa20)
+1.96.1 (commit 31fca3adb)
 8.15.0
 2.11.2
 64e91ff4ffd, release

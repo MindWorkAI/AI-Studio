@@ -1,4 +1,5 @@
 using AIStudio.Dialogs.Settings;
+using AIStudio.Tools.AssistantSessions;
 
 namespace AIStudio.Assistants.JobPosting;
 
@@ -128,6 +129,49 @@ public partial class AssistantJobPostings : AssistantBaseCore<SettingsDialogJobP
     private string inputCountryLegalFramework = string.Empty;
     private CommonLanguages selectedTargetLanguage = CommonLanguages.AS_IS;
     private string customTargetLanguage = string.Empty;
+    private static readonly AssistantSessionStateKey<string> INPUT_MANDATORY_INFORMATION_STATE_KEY = new(nameof(inputMandatoryInformation));
+    private static readonly AssistantSessionStateKey<string> INPUT_JOB_DESCRIPTION_STATE_KEY = new(nameof(inputJobDescription));
+    private static readonly AssistantSessionStateKey<string> INPUT_QUALIFICATIONS_STATE_KEY = new(nameof(inputQualifications));
+    private static readonly AssistantSessionStateKey<string> INPUT_RESPONSIBILITIES_STATE_KEY = new(nameof(inputResponsibilities));
+    private static readonly AssistantSessionStateKey<string> INPUT_COMPANY_NAME_STATE_KEY = new(nameof(inputCompanyName));
+    private static readonly AssistantSessionStateKey<string> INPUT_ENTRY_DATE_STATE_KEY = new(nameof(inputEntryDate));
+    private static readonly AssistantSessionStateKey<string> INPUT_VALID_UNTIL_STATE_KEY = new(nameof(inputValidUntil));
+    private static readonly AssistantSessionStateKey<string> INPUT_WORK_LOCATION_STATE_KEY = new(nameof(inputWorkLocation));
+    private static readonly AssistantSessionStateKey<string> INPUT_COUNTRY_LEGAL_FRAMEWORK_STATE_KEY = new(nameof(inputCountryLegalFramework));
+    private static readonly AssistantSessionStateKey<CommonLanguages> SELECTED_TARGET_LANGUAGE_STATE_KEY = new(nameof(selectedTargetLanguage));
+    private static readonly AssistantSessionStateKey<string> CUSTOM_TARGET_LANGUAGE_STATE_KEY = new(nameof(customTargetLanguage));
+
+    /// <inheritdoc />
+    protected override void CaptureCustomAssistantSessionState(AssistantSessionStateWriter state)
+    {
+        state.Set(INPUT_MANDATORY_INFORMATION_STATE_KEY, this.inputMandatoryInformation);
+        state.Set(INPUT_JOB_DESCRIPTION_STATE_KEY, this.inputJobDescription);
+        state.Set(INPUT_QUALIFICATIONS_STATE_KEY, this.inputQualifications);
+        state.Set(INPUT_RESPONSIBILITIES_STATE_KEY, this.inputResponsibilities);
+        state.Set(INPUT_COMPANY_NAME_STATE_KEY, this.inputCompanyName);
+        state.Set(INPUT_ENTRY_DATE_STATE_KEY, this.inputEntryDate);
+        state.Set(INPUT_VALID_UNTIL_STATE_KEY, this.inputValidUntil);
+        state.Set(INPUT_WORK_LOCATION_STATE_KEY, this.inputWorkLocation);
+        state.Set(INPUT_COUNTRY_LEGAL_FRAMEWORK_STATE_KEY, this.inputCountryLegalFramework);
+        state.Set(SELECTED_TARGET_LANGUAGE_STATE_KEY, this.selectedTargetLanguage);
+        state.Set(CUSTOM_TARGET_LANGUAGE_STATE_KEY, this.customTargetLanguage);
+    }
+
+    /// <inheritdoc />
+    protected override void RestoreCustomAssistantSessionState(AssistantSessionStateReader state)
+    {
+        state.Restore(INPUT_MANDATORY_INFORMATION_STATE_KEY, value => this.inputMandatoryInformation = value);
+        state.Restore(INPUT_JOB_DESCRIPTION_STATE_KEY, value => this.inputJobDescription = value);
+        state.Restore(INPUT_QUALIFICATIONS_STATE_KEY, value => this.inputQualifications = value);
+        state.Restore(INPUT_RESPONSIBILITIES_STATE_KEY, value => this.inputResponsibilities = value);
+        state.Restore(INPUT_COMPANY_NAME_STATE_KEY, value => this.inputCompanyName = value);
+        state.Restore(INPUT_ENTRY_DATE_STATE_KEY, value => this.inputEntryDate = value);
+        state.Restore(INPUT_VALID_UNTIL_STATE_KEY, value => this.inputValidUntil = value);
+        state.Restore(INPUT_WORK_LOCATION_STATE_KEY, value => this.inputWorkLocation = value);
+        state.Restore(INPUT_COUNTRY_LEGAL_FRAMEWORK_STATE_KEY, value => this.inputCountryLegalFramework = value);
+        state.Restore(SELECTED_TARGET_LANGUAGE_STATE_KEY, value => this.selectedTargetLanguage = value);
+        state.Restore(CUSTOM_TARGET_LANGUAGE_STATE_KEY, value => this.customTargetLanguage = value);
+    }
     
     #region Overrides of ComponentBase
 

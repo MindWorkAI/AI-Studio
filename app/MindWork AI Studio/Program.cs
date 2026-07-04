@@ -3,6 +3,7 @@ using AIStudio.Agents.AssistantAudit;
 using AIStudio.Settings;
 using AIStudio.Tools.Databases;
 using AIStudio.Tools.AIJobs;
+using AIStudio.Tools.AssistantSessions;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.PluginSystem.Assistants;
 using AIStudio.Tools.Services;
@@ -130,6 +131,7 @@ internal sealed class Program
         builder.Services.AddSingleton<SettingsManager>();
         builder.Services.AddSingleton<ThreadSafeRandom>();
         builder.Services.AddSingleton<AIJobService>();
+        builder.Services.AddSingleton<AssistantSessionService>();
         builder.Services.AddSingleton<VoiceRecordingAvailabilityService>();
         builder.Services.AddSingleton<DataSourceService>();
         builder.Services.AddScoped<PandocAvailabilityService>();
