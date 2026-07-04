@@ -49,6 +49,12 @@ public partial class ProviderSelection : MSGComponentBase
         await this.ProviderSettingsChanged.InvokeAsync(provider);
     }
 
+    private IEnumerable<ProviderSelectionItem> GetAvailableProviderSelectionItems()
+    {
+        foreach (var provider in this.GetAvailableProviders())
+            yield return new(provider, this.GetCapabilityIcons(provider));
+    }
+
     private IReadOnlyList<CapabilityIcon> GetCapabilityIcons(AIStudio.Settings.Provider provider)
     {
         var capabilities = provider.GetModelCapabilities();
@@ -113,4 +119,6 @@ public partial class ProviderSelection : MSGComponentBase
     #endregion
 
     private readonly record struct CapabilityIcon(string Icon, string Tooltip);
+
+    private readonly record struct ProviderSelectionItem(AIStudio.Settings.Provider Provider, IReadOnlyList<CapabilityIcon> CapabilityIcons);
 }
