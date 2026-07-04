@@ -144,6 +144,16 @@ public enum Event
     /// Notifies receivers that chat generation state changed.
     /// </summary>
     CHAT_GENERATION_CHANGED,
+
+    /// <summary>
+    /// Notifies receivers that an assistant session changed.
+    /// </summary>
+    ASSISTANT_SESSION_CHANGED,
+
+    /// <summary>
+    /// Notifies receivers that an assistant session finished.
+    /// </summary>
+    ASSISTANT_SESSION_FINISHED,
     
     // Workspace events:
     /// <summary>

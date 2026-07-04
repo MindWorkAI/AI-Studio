@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using AIStudio.Chat;
 using AIStudio.Dialogs;
 using AIStudio.Dialogs.Settings;
+using AIStudio.Tools.AssistantSessions;
 using Microsoft.AspNetCore.Components;
 
 #if !DEBUG
@@ -176,6 +177,67 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
     private string recStructureMarkers = string.Empty;
     private string recRoleDefinition = string.Empty;
     private string recLanguageChoice = string.Empty;
+    private static readonly AssistantSessionStateKey<string> INPUT_PROMPT_STATE_KEY = new(nameof(inputPrompt));
+    private static readonly AssistantSessionStateKey<CommonLanguages> SELECTED_TARGET_LANGUAGE_STATE_KEY = new(nameof(selectedTargetLanguage));
+    private static readonly AssistantSessionStateKey<string> CUSTOM_TARGET_LANGUAGE_STATE_KEY = new(nameof(customTargetLanguage));
+    private static readonly AssistantSessionStateKey<string> IMPORTANT_ASPECTS_STATE_KEY = new(nameof(importantAspects));
+    private static readonly AssistantSessionStateKey<bool> USE_CUSTOM_PROMPT_GUIDE_STATE_KEY = new(nameof(useCustomPromptGuide));
+    private static readonly AssistantSessionStateKey<HashSet<FileAttachment>> CUSTOM_PROMPT_GUIDE_FILES_STATE_KEY = new(nameof(customPromptGuideFiles));
+    private static readonly AssistantSessionStateKey<string> CURRENT_CUSTOM_PROMPT_GUIDE_PATH_STATE_KEY = new(nameof(currentCustomPromptGuidePath));
+    private static readonly AssistantSessionStateKey<string> CUSTOM_PROMPTING_GUIDELINE_CONTENT_STATE_KEY = new(nameof(customPromptingGuidelineContent));
+    private static readonly AssistantSessionStateKey<bool> IS_LOADING_CUSTOM_PROMPT_GUIDE_STATE_KEY = new(nameof(isLoadingCustomPromptGuide));
+    private static readonly AssistantSessionStateKey<bool> HAS_UPDATED_DEFAULT_RECOMMENDATIONS_STATE_KEY = new(nameof(hasUpdatedDefaultRecommendations));
+    private static readonly AssistantSessionStateKey<string> OPTIMIZED_PROMPT_STATE_KEY = new(nameof(optimizedPrompt));
+    private static readonly AssistantSessionStateKey<string> REC_CLARITY_DIRECTNESS_STATE_KEY = new(nameof(recClarityDirectness));
+    private static readonly AssistantSessionStateKey<string> REC_EXAMPLES_CONTEXT_STATE_KEY = new(nameof(recExamplesContext));
+    private static readonly AssistantSessionStateKey<string> REC_SEQUENTIAL_STEPS_STATE_KEY = new(nameof(recSequentialSteps));
+    private static readonly AssistantSessionStateKey<string> REC_STRUCTURE_MARKERS_STATE_KEY = new(nameof(recStructureMarkers));
+    private static readonly AssistantSessionStateKey<string> REC_ROLE_DEFINITION_STATE_KEY = new(nameof(recRoleDefinition));
+    private static readonly AssistantSessionStateKey<string> REC_LANGUAGE_CHOICE_STATE_KEY = new(nameof(recLanguageChoice));
+
+    /// <inheritdoc />
+    protected override void CaptureCustomAssistantSessionState(AssistantSessionStateWriter state)
+    {
+        state.Set(INPUT_PROMPT_STATE_KEY, this.inputPrompt);
+        state.Set(SELECTED_TARGET_LANGUAGE_STATE_KEY, this.selectedTargetLanguage);
+        state.Set(CUSTOM_TARGET_LANGUAGE_STATE_KEY, this.customTargetLanguage);
+        state.Set(IMPORTANT_ASPECTS_STATE_KEY, this.importantAspects);
+        state.Set(USE_CUSTOM_PROMPT_GUIDE_STATE_KEY, this.useCustomPromptGuide);
+        state.SetHashSet(CUSTOM_PROMPT_GUIDE_FILES_STATE_KEY, this.customPromptGuideFiles);
+        state.Set(CURRENT_CUSTOM_PROMPT_GUIDE_PATH_STATE_KEY, this.currentCustomPromptGuidePath);
+        state.Set(CUSTOM_PROMPTING_GUIDELINE_CONTENT_STATE_KEY, this.customPromptingGuidelineContent);
+        state.Set(IS_LOADING_CUSTOM_PROMPT_GUIDE_STATE_KEY, this.isLoadingCustomPromptGuide);
+        state.Set(HAS_UPDATED_DEFAULT_RECOMMENDATIONS_STATE_KEY, this.hasUpdatedDefaultRecommendations);
+        state.Set(OPTIMIZED_PROMPT_STATE_KEY, this.optimizedPrompt);
+        state.Set(REC_CLARITY_DIRECTNESS_STATE_KEY, this.recClarityDirectness);
+        state.Set(REC_EXAMPLES_CONTEXT_STATE_KEY, this.recExamplesContext);
+        state.Set(REC_SEQUENTIAL_STEPS_STATE_KEY, this.recSequentialSteps);
+        state.Set(REC_STRUCTURE_MARKERS_STATE_KEY, this.recStructureMarkers);
+        state.Set(REC_ROLE_DEFINITION_STATE_KEY, this.recRoleDefinition);
+        state.Set(REC_LANGUAGE_CHOICE_STATE_KEY, this.recLanguageChoice);
+    }
+
+    /// <inheritdoc />
+    protected override void RestoreCustomAssistantSessionState(AssistantSessionStateReader state)
+    {
+        state.Restore(INPUT_PROMPT_STATE_KEY, value => this.inputPrompt = value);
+        state.Restore(SELECTED_TARGET_LANGUAGE_STATE_KEY, value => this.selectedTargetLanguage = value);
+        state.Restore(CUSTOM_TARGET_LANGUAGE_STATE_KEY, value => this.customTargetLanguage = value);
+        state.Restore(IMPORTANT_ASPECTS_STATE_KEY, value => this.importantAspects = value);
+        state.Restore(USE_CUSTOM_PROMPT_GUIDE_STATE_KEY, value => this.useCustomPromptGuide = value);
+        state.RestoreHashSet(CUSTOM_PROMPT_GUIDE_FILES_STATE_KEY, this.customPromptGuideFiles);
+        state.Restore(CURRENT_CUSTOM_PROMPT_GUIDE_PATH_STATE_KEY, value => this.currentCustomPromptGuidePath = value);
+        state.Restore(CUSTOM_PROMPTING_GUIDELINE_CONTENT_STATE_KEY, value => this.customPromptingGuidelineContent = value);
+        state.Restore(IS_LOADING_CUSTOM_PROMPT_GUIDE_STATE_KEY, value => this.isLoadingCustomPromptGuide = value);
+        state.Restore(HAS_UPDATED_DEFAULT_RECOMMENDATIONS_STATE_KEY, value => this.hasUpdatedDefaultRecommendations = value);
+        state.Restore(OPTIMIZED_PROMPT_STATE_KEY, value => this.optimizedPrompt = value);
+        state.Restore(REC_CLARITY_DIRECTNESS_STATE_KEY, value => this.recClarityDirectness = value);
+        state.Restore(REC_EXAMPLES_CONTEXT_STATE_KEY, value => this.recExamplesContext = value);
+        state.Restore(REC_SEQUENTIAL_STEPS_STATE_KEY, value => this.recSequentialSteps = value);
+        state.Restore(REC_STRUCTURE_MARKERS_STATE_KEY, value => this.recStructureMarkers = value);
+        state.Restore(REC_ROLE_DEFINITION_STATE_KEY, value => this.recRoleDefinition = value);
+        state.Restore(REC_LANGUAGE_CHOICE_STATE_KEY, value => this.recLanguageChoice = value);
+    }
 
     private bool ShowUpdatedPromptGuidelinesIndicator => !this.useCustomPromptGuide && this.hasUpdatedDefaultRecommendations;
     private bool CanPreviewCustomPromptGuide => this.useCustomPromptGuide && this.customPromptGuideFiles.Count > 0;

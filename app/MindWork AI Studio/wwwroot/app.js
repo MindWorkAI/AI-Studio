@@ -1,10 +1,18 @@
 window.generateDiff = function (text1, text2, divDiff, divLegend) {
     let wikEdDiff = new WikEdDiff();
     let targetDiv = document.getElementById(divDiff)
+    if (!targetDiv) {
+        return;
+    }
+
     targetDiv.innerHTML = wikEdDiff.diff(text1, text2);
     targetDiv.classList.add('mud-typography-body1', 'improvedDiff');
     
     let legend = document.getElementById(divLegend);
+    if (!legend) {
+        return;
+    }
+
     legend.innerHTML = `
     <div class="legend mt-2">
         <h3>Legend</h3>
@@ -20,6 +28,10 @@ window.generateDiff = function (text1, text2, divDiff, divLegend) {
 
 window.clearDiv = function (divName) {
     let targetDiv = document.getElementById(divName);
+    if (!targetDiv) {
+        return;
+    }
+
     targetDiv.innerHTML = '';
 }
 
