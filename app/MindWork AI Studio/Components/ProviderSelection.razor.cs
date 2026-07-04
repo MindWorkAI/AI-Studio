@@ -64,7 +64,7 @@ public partial class ProviderSelection : MSGComponentBase
             capabilityIcons.Add(new(Icons.Material.Filled.Mic, this.T("Speech input possible")));
 
         if (capabilities.Contains(Capability.ALWAYS_REASONING))
-            capabilityIcons.Add(new(Icons.Material.Filled.Psychology, this.T("Reasoning")));
+            capabilityIcons.Add(new(Icons.Material.Filled.Psychology, this.T("Supports reasoning")));
 
         return capabilityIcons;
     }
