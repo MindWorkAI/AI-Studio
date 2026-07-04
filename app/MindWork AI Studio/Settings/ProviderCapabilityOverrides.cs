@@ -5,8 +5,6 @@ using AIStudio.Provider;
 
 using Lua;
 
-using Microsoft.Extensions.Logging;
-
 using LuaTable = Lua.LuaTable;
 
 namespace AIStudio.Settings;

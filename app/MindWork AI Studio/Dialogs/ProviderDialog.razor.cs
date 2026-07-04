@@ -610,14 +610,11 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     }
     
     private string GetExpertStyles => this.showExpertSettings ? "border-2 border-dashed rounded pa-2" : string.Empty;
-
-    private IReadOnlyList<Capability> ExpertCapabilityOverrides => ProviderCapabilityOverrides.SUPPORTED_CAPABILITIES;
-
+    
     private static string GetPlaceholderExpertSettings => 
       """
       "temperature": 0.5,
       "top_p": 0.9,
       "frequency_penalty": 0.0
       """;
-
 }

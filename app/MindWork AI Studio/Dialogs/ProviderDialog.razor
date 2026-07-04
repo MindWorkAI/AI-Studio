@@ -1,6 +1,7 @@
 @using AIStudio.Provider
 @using AIStudio.Provider.HuggingFace
 @using AIStudio.Provider.SelfHosted
+@using AIStudio.Settings
 @inherits MSGComponentBase
 <MudDialog>
     <DialogContent>
@@ -107,7 +108,7 @@
                             {
                                 <MudSelect T="AIStudio.Provider.Model"
                                            Value="@this.DataModel"
-                                           ValueChanged="@(async (AIStudio.Provider.Model model) => await this.OnModelChanged(model))"
+                                           ValueChanged="@(async model => await this.OnModelChanged(model))"
                                            OpenIcon="@Icons.Material.Filled.FaceRetouchingNatural" AdornmentColor="Color.Info"
                                            Adornment="Adornment.Start" Validation="@this.providerValidation.ValidatingModel">
                                     @foreach (var model in this.availableModels)
@@ -169,7 +170,7 @@
                         @T("Stored default model capabilities may not reflect its full range. Override them here if needed.")
                     </MudJustifiedText>
                     <MudStack Class="mb-4" Spacing="2">
-                        @foreach (var capability in this.ExpertCapabilityOverrides)
+                        @foreach (var capability in ProviderCapabilityOverrides.SUPPORTED_CAPABILITIES)
                         {
                             <MudPaper Outlined="@true" Class="pa-3">
                                 <MudStack Row="@true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Wrap="Wrap.Wrap">
