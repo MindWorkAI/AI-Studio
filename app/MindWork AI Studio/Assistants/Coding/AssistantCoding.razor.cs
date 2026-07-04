@@ -1,6 +1,7 @@
 ﻿using System.Text;
 
 using AIStudio.Dialogs.Settings;
+using AIStudio.Tools.AssistantSessions;
 
 namespace AIStudio.Assistants.Coding;
 
@@ -59,6 +60,28 @@ public partial class AssistantCoding : AssistantBaseCore<SettingsDialogCoding>
     private bool provideCompilerMessages;
     private string compilerMessages = string.Empty;
     private string questions = string.Empty;
+    private static readonly AssistantSessionStateKey<List<CodingContext>> CODING_CONTEXTS_STATE_KEY = new(nameof(codingContexts));
+    private static readonly AssistantSessionStateKey<bool> PROVIDE_COMPILER_MESSAGES_STATE_KEY = new(nameof(provideCompilerMessages));
+    private static readonly AssistantSessionStateKey<string> COMPILER_MESSAGES_STATE_KEY = new(nameof(compilerMessages));
+    private static readonly AssistantSessionStateKey<string> QUESTIONS_STATE_KEY = new(nameof(questions));
+
+    /// <inheritdoc />
+    protected override void CaptureCustomAssistantSessionState(AssistantSessionStateWriter state)
+    {
+        state.SetList(CODING_CONTEXTS_STATE_KEY, this.codingContexts);
+        state.Set(PROVIDE_COMPILER_MESSAGES_STATE_KEY, this.provideCompilerMessages);
+        state.Set(COMPILER_MESSAGES_STATE_KEY, this.compilerMessages);
+        state.Set(QUESTIONS_STATE_KEY, this.questions);
+    }
+
+    /// <inheritdoc />
+    protected override void RestoreCustomAssistantSessionState(AssistantSessionStateReader state)
+    {
+        state.RestoreList(CODING_CONTEXTS_STATE_KEY, this.codingContexts);
+        state.Restore(PROVIDE_COMPILER_MESSAGES_STATE_KEY, value => this.provideCompilerMessages = value);
+        state.Restore(COMPILER_MESSAGES_STATE_KEY, value => this.compilerMessages = value);
+        state.Restore(QUESTIONS_STATE_KEY, value => this.questions = value);
+    }
 
     #region Overrides of ComponentBase
 
