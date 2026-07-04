@@ -10,6 +10,19 @@ public static partial class ProviderExtensions
 
         if (modelName.IndexOf("gemini-") is not -1)
         {
+            // Gemini 2.5 Flash Lite supports thinking, but the default is off:
+            if (modelName.IndexOf("gemini-2.5-flash-lite") is not -1)
+                return
+                [
+                    Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT, Capability.AUDIO_INPUT,
+                    Capability.SPEECH_INPUT, Capability.VIDEO_INPUT,
+
+                    Capability.TEXT_OUTPUT,
+
+                    Capability.OPTIONAL_REASONING, Capability.FUNCTION_CALLING,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+
             // Reasoning models:
             if (modelName.IndexOf("gemini-2.5") is not -1)
                 return

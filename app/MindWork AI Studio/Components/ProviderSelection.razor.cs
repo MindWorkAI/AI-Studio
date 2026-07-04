@@ -69,11 +69,19 @@ public partial class ProviderSelection : MSGComponentBase
         if (capabilities.Contains(Capability.SPEECH_INPUT))
             capabilityIcons.Add(new(Icons.Material.Filled.Mic, this.T("Speech input possible")));
 
-        if (capabilities.Contains(Capability.ALWAYS_REASONING))
-            capabilityIcons.Add(new(Icons.Material.Filled.Psychology, this.T("Supports reasoning")));
+        var reasoningIndicatorState = provider.GetReasoningIndicatorState();
+        if (reasoningIndicatorState is not ReasoningIndicatorState.NONE)
+            capabilityIcons.Add(new(Icons.Material.Filled.Psychology, this.GetReasoningTooltip(reasoningIndicatorState)));
 
         return capabilityIcons;
     }
+
+    private string GetReasoningTooltip(ReasoningIndicatorState reasoningIndicatorState) => reasoningIndicatorState switch
+    {
+        ReasoningIndicatorState.DEFAULT_ON => this.T("Uses reasoning by default"),
+        ReasoningIndicatorState.CONFIGURED => this.T("Uses reasoning from provider settings"),
+        _ => this.T("Uses reasoning"),
+    };
     
     [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
     private IEnumerable<AIStudio.Settings.Provider> GetAvailableProviders()

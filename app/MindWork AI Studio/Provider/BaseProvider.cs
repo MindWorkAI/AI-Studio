@@ -1191,42 +1191,15 @@ public abstract class BaseProvider : IProvider, ISecretId
     protected IDictionary<string, object> ParseAdditionalApiParameters(
         params string[] keysToRemove)
     {
-        if(string.IsNullOrWhiteSpace(this.AdditionalJsonApiParameters))
-            return new Dictionary<string, object>();
-        
-        try
+        if (!AdditionalApiParametersParser.TryParse(this.AdditionalJsonApiParameters, out var apiParameters, out var errorMessage))
         {
-            // Wrap the user-provided parameters in curly brackets to form a valid JSON object:
-            var json = $"{{{this.AdditionalJsonApiParameters}}}";
-            var jsonDoc = JsonSerializer.Deserialize<JsonElement>(json, JSON_SERIALIZER_OPTIONS);
-            var dict = ConvertToDictionary(jsonDoc);
-
-            // Some keys are always removed because we set them:
-            var removeSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            if (keysToRemove.Length > 0)
-                removeSet.UnionWith(keysToRemove);
-            
-            removeSet.Add("stream");
-            removeSet.Add("model");
-            removeSet.Add("messages");
-
-            // Remove the specified keys (case-insensitive):
-            if (removeSet.Count > 0)
-            {
-                foreach (var key in dict.Keys.ToList())
-                {
-                    if (removeSet.Contains(key))
-                        dict.Remove(key);
-                }
-            }
-
-            return dict;
-        }
-        catch (JsonException ex)
-        {
-            this.logger.LogError("Failed to parse additional API parameters: {ExceptionMessage}", ex.Message);
+            this.logger.LogError("Failed to parse additional API parameters: {ExceptionMessage}", errorMessage);
             return new Dictionary<string, object>();
         }
+
+        // Some keys are always removed because AI Studio sets them itself.
+        var reservedKeys = keysToRemove.Concat(["stream", "model", "messages"]);
+        return AdditionalApiParametersParser.RemoveKeys(apiParameters, reservedKeys);
     }
     
     protected static bool TryPopIntParameter(IDictionary<string, object> parameters, string key, out int value)
@@ -1308,27 +1281,4 @@ public abstract class BaseProvider : IProvider, ISecretId
         return true;
     }
 
-    private static IDictionary<string, object> ConvertToDictionary(JsonElement element)
-    {
-        return element.EnumerateObject()
-            .ToDictionary<JsonProperty, string, object>(
-                p => p.Name,
-                p => ConvertJsonValue(p.Value) ?? string.Empty
-            );
-    }
-
-    private static object? ConvertJsonValue(JsonElement element) => element.ValueKind switch
-    {
-        JsonValueKind.String => element.GetString(),
-        JsonValueKind.Number => element.TryGetInt32(out var i) ? i :
-            element.TryGetInt64(out var l) ? l :
-            element.TryGetDouble(out var d) ? d :
-            element.GetDecimal(),
-        JsonValueKind.True or JsonValueKind.False => element.GetBoolean(),
-        JsonValueKind.Null => string.Empty,
-        JsonValueKind.Object => ConvertToDictionary(element),
-        JsonValueKind.Array => element.EnumerateArray().Select(ConvertJsonValue).ToList(),
-        
-        _ => string.Empty,
-    };
 }
