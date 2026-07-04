@@ -2436,6 +2436,12 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROFILESELECTION::T3654011106"] = "Open P
 -- You can switch between your profiles here
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROFILESELECTION::T918741365"] = "You can switch between your profiles here"
 
+-- Uses reasoning
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T163305901"] = "Uses reasoning"
+
+-- Uses reasoning from provider settings
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T1646870133"] = "Uses reasoning from provider settings"
+
 -- Audio input possible
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T1742581112"] = "Audio input possible"
 
@@ -2445,11 +2451,11 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T2685487365"] = "Image
 -- Speech input possible
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T3005724142"] = "Speech input possible"
 
+-- Uses reasoning by default
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T3202628203"] = "Uses reasoning by default"
+
 -- Provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T900237532"] = "Provider"
-
--- Supports reasoning
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T978453025"] = "Supports reasoning"
 
 -- Failed to load file content
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T1989554334"] = "Failed to load file content"

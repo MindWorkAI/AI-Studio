@@ -2437,17 +2437,23 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROFILESELECTION::T918741365"] = "You can
 -- Audio input possible
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T1742581112"] = "Audio input possible"
 
+-- Uses reasoning (thinking)
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T2196970948"] = "Uses reasoning (thinking)"
+
 -- Image input possible
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T2685487365"] = "Image input possible"
 
 -- Speech input possible
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T3005724142"] = "Speech input possible"
 
+-- Uses reasoning (thinking) by default
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T3891860124"] = "Uses reasoning (thinking) by default"
+
+-- Uses reasoning (thinking) configured by settings
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T4279448758"] = "Uses reasoning (thinking) configured by settings"
+
 -- Provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T900237532"] = "Provider"
-
--- Supports reasoning
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T978453025"] = "Supports reasoning"
 
 -- Failed to load file content
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T1989554334"] = "Failed to load file content"

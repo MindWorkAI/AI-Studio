@@ -78,9 +78,9 @@ public partial class ProviderSelection : MSGComponentBase
 
     private string GetReasoningTooltip(ReasoningIndicatorState reasoningIndicatorState) => reasoningIndicatorState switch
     {
-        ReasoningIndicatorState.DEFAULT_ON => this.T("Uses reasoning by default"),
-        ReasoningIndicatorState.CONFIGURED => this.T("Uses reasoning from provider settings"),
-        _ => this.T("Uses reasoning"),
+        ReasoningIndicatorState.DEFAULT_ON => this.T("Uses reasoning (thinking) by default"),
+        ReasoningIndicatorState.CONFIGURED => this.T("Uses reasoning (thinking) configured by settings"),
+        _ => this.T("Uses reasoning (thinking)"),
     };
     
     [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]

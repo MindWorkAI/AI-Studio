@@ -2439,17 +2439,23 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROFILESELECTION::T918741365"] = "Hier k�
 -- Audio input possible
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T1742581112"] = "Audioeingabe möglich"
 
+-- Uses reasoning (thinking)
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T2196970948"] = "Nutzt Schlussfolgerungen (Denken)"
+
 -- Image input possible
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T2685487365"] = "Bildeingabe möglich"
 
 -- Speech input possible
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T3005724142"] = "Spracheingabe möglich"
 
+-- Uses reasoning (thinking) by default
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T3891860124"] = "Nutzt standardmäßig Schlussfolgerungen (Denken)"
+
+-- Uses reasoning (thinking) configured by settings
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T4279448758"] = "Nutzt Schlussfolgerungen (Denken) gemäß den Einstellungen"
+
 -- Provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T900237532"] = "Anbieter"
-
--- Supports reasoning
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T978453025"] = "Unterstützt Schlussfolgerungen"
 
 -- Failed to load file content
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T1989554334"] = "Laden des Dateiinhalts fehlgeschlagen"
