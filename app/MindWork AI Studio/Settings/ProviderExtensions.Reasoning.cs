@@ -262,7 +262,9 @@ public static partial class ProviderExtensions
     {
         string text when text.Equals("auto", StringComparison.OrdinalIgnoreCase) ||
         text.Equals("on", StringComparison.OrdinalIgnoreCase) ||
-        text.Equals("summarized", StringComparison.OrdinalIgnoreCase) => ReasoningConfigurationState.EXPLICITLY_ENABLED,
+        text.Equals("summarized", StringComparison.OrdinalIgnoreCase)
+            => ReasoningConfigurationState.EXPLICITLY_ENABLED,
+        
         true => ReasoningConfigurationState.EXPLICITLY_ENABLED,
         _ => ReasoningConfigurationState.NOT_CONFIGURED,
     };
@@ -365,7 +367,9 @@ public static partial class ProviderExtensions
     private static ReasoningConfigurationState GetAnthropicThinkingTypeState(object? value) => value switch
     {
         string text when text.Equals("enabled", StringComparison.OrdinalIgnoreCase) ||
-        text.Equals("adaptive", StringComparison.OrdinalIgnoreCase) => ReasoningConfigurationState.EXPLICITLY_ENABLED,
+        text.Equals("adaptive", StringComparison.OrdinalIgnoreCase)
+            => ReasoningConfigurationState.EXPLICITLY_ENABLED,
+        
         string text when IsDisabledText(text) => ReasoningConfigurationState.EXPLICITLY_DISABLED,
         _ => GetLevelState(value),
     };
