@@ -121,9 +121,9 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     protected virtual IReadOnlyList<IButtonData> FooterButtons => [];
 
     protected virtual bool HasSettingsPanel => typeof(TSettings) != typeof(NoSettingsPanel);
-
+    
     private readonly Timer formChangeTimer = new(TimeSpan.FromSeconds(1.6));
-
+    
     protected MudForm? Form;
     protected CancellationTokenSource? CancellationTokenSource;
     private bool isDisposed;
