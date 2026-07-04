@@ -5,10 +5,8 @@ using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Tools;
 
-public static class SourceExtensions
+public static partial class SourceExtensions
 {
-    private static readonly Regex MARKDOWN_LINK_WITH_OPTIONAL_SUFFIX = new(@"^\[(?<label>[^\]]+)\]\((?<url>[^)\r\n]+)\)(?<suffix>.*)$", RegexOptions.Compiled);
-
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(SourceExtensions).Namespace, nameof(SourceExtensions));
 
     private static void AppendMarkdownLink(StringBuilder sb, string title, string url)
@@ -55,7 +53,7 @@ public static class SourceExtensions
 
     private static string TryUnwrapMarkdownLink(string value)
     {
-        var match = MARKDOWN_LINK_WITH_OPTIONAL_SUFFIX.Match(value);
+        var match = MarkdownLinkWithOptionalSuffix().Match(value);
         if (!match.Success)
             return value;
 
@@ -143,4 +141,7 @@ public static class SourceExtensions
             if (sources.All(s => s.URL != addedSource.URL && s.Title != addedSource.Title))
                 sources.Add((Source)addedSource);
     }
+
+    [GeneratedRegex(@"^\[(?<label>[^\]]+)\]\((?<url>[^)\r\n]+)\)(?<suffix>.*)$")]
+    private static partial Regex MarkdownLinkWithOptionalSuffix();
 }
