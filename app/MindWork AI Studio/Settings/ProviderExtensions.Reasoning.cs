@@ -44,7 +44,7 @@ public static partial class ProviderExtensions
             return ReasoningIndicatorState.ALWAYS_ON;
         
         var reasoningConfigurationState = GetReasoningConfigurationState(provider);
-        if (capabilities.Contains(Capability.REASONING_BY_DEFAULT) || UsesReasoningByDefault(provider, capabilities))
+        if (capabilities.Contains(Capability.REASONING_BY_DEFAULT))
         {
             return reasoningConfigurationState switch
             {
@@ -59,18 +59,6 @@ public static partial class ProviderExtensions
             return ReasoningIndicatorState.CONFIGURED;
 
         return ReasoningIndicatorState.NONE;
-    }
-
-    /// <summary>
-    /// Determine provider/host defaults that are not expressible by a model-name capability alone.
-    /// </summary>
-    /// <param name="provider">The configured provider instance.</param>
-    /// <param name="capabilities">The static capabilities detected for the selected model.</param>
-    /// <returns><see langword="true"/> if reasoning should be treated as enabled by default.</returns>
-    private static bool UsesReasoningByDefault(Provider provider, List<Capability> capabilities)
-    {
-        return provider is { UsedLLMProvider: LLMProviders.SELF_HOSTED, Host: Host.OLLAMA } &&
-               capabilities.Contains(Capability.OPTIONAL_REASONING);
     }
 
     /// <summary>
