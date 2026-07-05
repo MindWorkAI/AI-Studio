@@ -24,7 +24,9 @@ use tokio::sync::broadcast;
 use tokio::time;
 use crate::api_token::APIToken;
 use crate::dotnet::{cleanup_dotnet_server, start_dotnet_server, stop_dotnet_server};
-use crate::environment::{is_prod, is_dev, CONFIG_DIRECTORY, DATA_DIRECTORY};
+use crate::environment::{
+    is_prod, is_dev, is_flatpak, CONFIG_DIRECTORY, DATA_DIRECTORY, FLATPAK_LIBRARY_DIRECTORY,
+};
 use crate::log::switch_to_file_logging;
 use crate::pdfium::PDFIUM_LIB_PATH;
 use crate::qdrant_edge_database::{start_qdrant_edge_database, stop_qdrant_edge_database};
@@ -974,7 +976,7 @@ fn set_pdfium_path<R: tauri::Runtime>(path_resolver: &PathResolver<R>) {
         }
     };
 
-    match select_pdfium_library_directory(&resource_dir) {
+    match select_pdfium_library_directory(&resource_dir, is_flatpak()) {
         Some(path) => {
             *PDFIUM_LIB_PATH.lock().unwrap() = Some(path.to_string_lossy().to_string());
         }
@@ -984,11 +986,23 @@ fn set_pdfium_path<R: tauri::Runtime>(path_resolver: &PathResolver<R>) {
     }
 }
 
-fn select_pdfium_library_directory(resource_dir: &Path) -> Option<PathBuf> {
-    let candidate_paths = [
-        resource_dir.join("resources").join("libraries"),
-        resource_dir.join("libraries"),
-    ];
+fn select_pdfium_library_directory(resource_dir: &Path, include_flatpak_library_directory: bool) -> Option<PathBuf> {
+    select_pdfium_library_directory_for(resource_dir, include_flatpak_library_directory, Path::new(FLATPAK_LIBRARY_DIRECTORY))
+}
+
+fn select_pdfium_library_directory_for(
+    resource_dir: &Path,
+    include_flatpak_library_directory: bool,
+    flatpak_library_directory: &Path,
+) -> Option<PathBuf> {
+    let mut candidate_paths = Vec::new();
+
+    if include_flatpak_library_directory {
+        candidate_paths.push(flatpak_library_directory.to_path_buf());
+    }
+
+    candidate_paths.push(resource_dir.join("resources").join("libraries"));
+    candidate_paths.push(resource_dir.join("libraries"));
 
     for path in candidate_paths {
         let pdfium_library_path = Pdfium::pdfium_platform_library_name_at_path(&path);
@@ -1022,7 +1036,7 @@ mod tests {
         create_pdfium_library_in(&libraries);
 
         assert_eq!(
-            select_pdfium_library_directory(temp_dir.path()),
+            select_pdfium_library_directory(temp_dir.path(), false),
             Some(resources_libraries)
         );
     }
@@ -1036,7 +1050,7 @@ mod tests {
         create_pdfium_library_in(&libraries);
 
         assert_eq!(
-            select_pdfium_library_directory(temp_dir.path()),
+            select_pdfium_library_directory(temp_dir.path(), false),
             Some(libraries)
         );
     }
@@ -1047,7 +1061,33 @@ mod tests {
         fs::create_dir_all(temp_dir.path().join("resources").join("libraries")).unwrap();
         fs::create_dir_all(temp_dir.path().join("libraries")).unwrap();
 
-        assert_eq!(select_pdfium_library_directory(temp_dir.path()), None);
+        assert_eq!(select_pdfium_library_directory(temp_dir.path(), false), None);
+    }
+
+    #[test]
+    fn pdfium_library_directory_prefers_flatpak_library_directory_when_flatpak() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let flatpak_library_directory = temp_dir.path().join("app").join("lib");
+        let resources_libraries = temp_dir.path().join("resources").join("libraries");
+        create_pdfium_library_in(&flatpak_library_directory);
+        create_pdfium_library_in(&resources_libraries);
+
+        assert_eq!(
+            select_pdfium_library_directory_for(temp_dir.path(), true, &flatpak_library_directory),
+            Some(flatpak_library_directory)
+        );
+    }
+
+    #[test]
+    fn pdfium_library_directory_skips_flatpak_library_directory_when_not_flatpak() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let flatpak_library_directory = temp_dir.path().join("app").join("lib");
+        create_pdfium_library_in(&flatpak_library_directory);
+
+        assert_eq!(
+            select_pdfium_library_directory_for(temp_dir.path(), false, &flatpak_library_directory),
+            None
+        );
     }
 
     fn create_pdfium_library_in(path: &Path) {
