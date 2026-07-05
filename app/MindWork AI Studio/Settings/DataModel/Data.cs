@@ -125,9 +125,9 @@ public sealed class Data
 
     public DataTextContentCleaner TextContentCleaner { get; init; } = new();
     
-    public DataAgentDataSourceSelection AgentDataSourceSelection { get; init; } = new();
+    public DataAgentDataSourceSelection AgentDataSourceSelection { get; init; } = new(x => x.AgentDataSourceSelection);
     
-    public DataAgentRetrievalContextValidation AgentRetrievalContextValidation { get; init; } = new();
+    public DataAgentRetrievalContextValidation AgentRetrievalContextValidation { get; init; } = new(x => x.AgentRetrievalContextValidation);
 
     public DataAssistantPluginAudit AssistantPluginAudit { get; init; } = new(x => x.AssistantPluginAudit);
     

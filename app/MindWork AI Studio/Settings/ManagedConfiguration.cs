@@ -358,17 +358,18 @@ public static partial class ManagedConfiguration
         if (!TryGet(configSelection, propertyExpression, out var configMeta))
             return false;
 
+        if (configMeta.ManagedMode is ManagedConfigurationMode.EDITABLE_DEFAULT)
+            return CleanupEditableDefaultState(configMeta, SettingName(propertyExpression), availablePlugins.ToList());
+
         if (configMeta.LockedByConfigPluginId == Guid.Empty || !configMeta.IsLocked)
             return false;
 
         var plugin = availablePlugins.FirstOrDefault(x => x.Id == configMeta.LockedByConfigPluginId);
-        if (plugin is null)
-        {
-            configMeta.ResetLockedConfiguration();
-            return true;
-        }
+        if (plugin is not null)
+            return false;
 
-        return false;
+        configMeta.ResetLockedConfiguration();
+        return true;
     }
 
     public static bool IsConfigurationLeftOver<TClass, TValue>(

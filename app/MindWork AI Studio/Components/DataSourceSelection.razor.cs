@@ -231,6 +231,34 @@ public partial class DataSourceSelection : MSGComponentBase
         await this.OptionsChanged();
     }
 
+    private bool IsPreselectedDataSourcesDisabledLocked()
+    {
+        return this.SelectionMode is DataSourceSelectionMode.CONFIGURATION_MODE
+               && ManagedConfiguration.TryGet(x => x.Chat, x => x.PreselectedDataSourcesDisabled, out var meta)
+               && meta.IsLocked;
+    }
+
+    private bool IsPreselectedDataSourcesAutomaticSelectionLocked()
+    {
+        return this.SelectionMode is DataSourceSelectionMode.CONFIGURATION_MODE
+               && ManagedConfiguration.TryGet(x => x.Chat, x => x.PreselectedDataSourcesAutomaticSelection, out var meta)
+               && meta.IsLocked;
+    }
+
+    private bool IsPreselectedDataSourcesAutomaticValidationLocked()
+    {
+        return this.SelectionMode is DataSourceSelectionMode.CONFIGURATION_MODE
+               && ManagedConfiguration.TryGet(x => x.Chat, x => x.PreselectedDataSourcesAutomaticValidation, out var meta)
+               && meta.IsLocked;
+    }
+
+    private bool IsPreselectedDataSourceIdsLocked()
+    {
+        return this.SelectionMode is DataSourceSelectionMode.CONFIGURATION_MODE
+               && ManagedConfiguration.TryGet(x => x.Chat, x => x.PreselectedDataSourceIds, out var meta)
+               && meta.IsLocked;
+    }
+
     private async Task OptionsChanged()
     {
         this.internalChange = true;

@@ -270,12 +270,38 @@ CONFIG["SETTINGS"] = {}
 -- Please note: using an empty string ("") or "00000000-0000-0000-0000-000000000000" means chats will use no chat template.
 -- CONFIG["SETTINGS"]["DataChat.PreselectedChatTemplate"] = "00000000-0000-0000-0000-000000000000"
 --
+--
+-- Configure default data source options for new chats.
+--
+-- Controls whether data sources are off by default:
+-- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesDisabled"] = false
+
+-- Controls whether AI Studio asks an agent to choose data sources:
+-- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesAutomaticSelection"] = true
+
+-- Controls whether retrieved data is validated by an agent:
+-- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesAutomaticValidation"] = true
+
+-- Must contain IDs from CONFIG["DATA_SOURCES"] or user-configured data sources.
+-- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourceIds"] = {
+--     "00000000-0000-0000-0000-000000000000",
+-- }
+--
+-- Configure whether default chat data source options are applied when assistant results are sent to chat.
+-- Allowed values are: NO_DATA_SOURCES, APPLY_STANDARD_CHAT_DATA_SOURCE_OPTIONS
+-- CONFIG["SETTINGS"]["DataChat.SendToChatDataSourceBehavior"] = "APPLY_STANDARD_CHAT_DATA_SOURCE_OPTIONS"
+--
 -- Allow users to change any configured chat default locally.
 -- Allowed values are: true, false
 -- CONFIG["SETTINGS"]["DataChat.PreselectOptions.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataChat.PreselectedProvider.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataChat.PreselectedProfile.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataChat.PreselectedChatTemplate.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesDisabled.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesAutomaticSelection.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesAutomaticValidation.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourceIds.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataChat.SendToChatDataSourceBehavior.AllowUserOverride"] = true
 
 -- Configure the transcription provider for voice-to-text functionality.
 -- It must be one of the transcription provider IDs defined in CONFIG["TRANSCRIPTION_PROVIDERS"].
@@ -385,6 +411,26 @@ CONFIG["SETTINGS"] = {}
 --     "00000000-0000-0000-0000-000000000000",
 --     "00000000-0000-0000-0000-000000000001",
 -- }
+
+-- Configure the data source selection agent.
+-- This agent is used when chat data source options enable AI-based data source selection.
+-- The provider must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"].
+-- CONFIG["SETTINGS"]["DataAgentDataSourceSelection.PreselectAgentOptions"] = true
+-- CONFIG["SETTINGS"]["DataAgentDataSourceSelection.PreselectedAgentProvider"] = "00000000-0000-0000-0000-000000000000"
+-- CONFIG["SETTINGS"]["DataAgentDataSourceSelection.PreselectAgentOptions.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataAgentDataSourceSelection.PreselectedAgentProvider.AllowUserOverride"] = true
+
+-- Configure the retrieval context validation agent.
+-- This agent is used when retrieval context validation is enabled globally and chat data source options enable AI-based validation.
+-- The provider must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"].
+-- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.EnableRetrievalContextValidation"] = true
+-- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.PreselectAgentOptions"] = true
+-- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.PreselectedAgentProvider"] = "00000000-0000-0000-0000-000000000000"
+-- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.NumParallelValidations"] = 3
+-- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.EnableRetrievalContextValidation.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.PreselectAgentOptions.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.PreselectedAgentProvider.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.NumParallelValidations.AllowUserOverride"] = true
 
 -- Configure assistant plugin security audits.
 --
