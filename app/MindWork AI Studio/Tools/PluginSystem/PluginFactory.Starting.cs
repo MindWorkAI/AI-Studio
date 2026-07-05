@@ -91,7 +91,7 @@ public static partial class PluginFactory
 
     private static void LogAssistantPluginStartupState()
     {
-        ManagedConfiguration.TryGet(x => x.AssistantPluginAudit, x => x.EnterpriseApprovedPlugins, out ConfigMeta<DataAssistantPluginAudit, IList<DataAssistantPluginEnterpriseApproval>>? configMeta);
+        ManagedConfiguration.TryGet(x => x.AssistantPluginAudit, x => x.EnterpriseApprovedPlugins, out ConfigMeta<DataAssistantPluginAudit, IList<DataAssistantPluginEnterpriseApproval>> configMeta);
         var approvedByConfigPluginId = configMeta is { IsLocked: true } ? configMeta.LockedByConfigPluginId : Guid.Empty;
         var approvedByConfigPluginName = approvedByConfigPluginId == Guid.Empty
             ? string.Empty
