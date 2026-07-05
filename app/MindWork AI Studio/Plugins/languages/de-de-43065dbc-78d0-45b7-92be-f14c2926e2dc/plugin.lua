@@ -4399,7 +4399,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1356621346"] = "Konto erste
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T15352225"] = "Modelle laden"
 
 -- Disabled (Auto)
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1671157437"] = "Deaktiviert (Automatisch)"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1671157437"] = "Deaktiviert (automatisch)"
 
 -- Add the parameters in proper JSON formatting, e.g., "temperature": 0.5. Remove trailing commas. The usual surrounding curly brackets {} must not be used, though.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1689135032"] = "Fügen Sie die Parameter in korrekter JSON-Formatierung hinzu, z. B. \"temperature\": 0.5. Entfernen Sie abschließende Kommas. Die üblichen äußeren geschweiften Klammern {} dürfen dabei jedoch nicht verwendet werden."
@@ -4423,7 +4423,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1874348907"] = "Spracheinga
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1936099896"] = "Bitte geben Sie einen Modellnamen ein."
 
 -- Enabled (Auto)
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2001330464"] = "Aktiviert (Automatisch)"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2001330464"] = "Aktiviert (automatisch)"
 
 -- The current model uses the {0}.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2029870721"] = "Das aktuelle Modell nutzt die {0}."
@@ -4495,7 +4495,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T4289835208"] = "Videoeingab
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T504465522"] = "Wir können derzeit nicht mit dem Anbieter kommunizieren, um Modelle zu laden. Bitte versuchen Sie es später erneut."
 
 -- Always reasoning
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T641757736"] = "Nachdenkend"
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T641757736"] = "Immer schlussfolgernd (Denken)"
 
 -- Host
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T808120719"] = "Host"

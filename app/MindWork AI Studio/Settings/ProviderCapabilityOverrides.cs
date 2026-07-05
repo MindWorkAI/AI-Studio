@@ -15,13 +15,15 @@ namespace AIStudio.Settings;
 /// </summary>
 public sealed record ProviderCapabilityOverrides
 {
-    public static readonly IReadOnlyList<Capability> SUPPORTED_CAPABILITIES =
+    private static readonly IReadOnlyList<Capability> SUPPORTED_CAPABILITIES =
     [
         Capability.AUDIO_INPUT,
         Capability.MULTIPLE_IMAGE_INPUT,
         Capability.SPEECH_INPUT,
         Capability.VIDEO_INPUT,
-        Capability.ALWAYS_REASONING
+        Capability.OPTIONAL_REASONING,
+        Capability.ALWAYS_REASONING,
+        Capability.REASONING_BY_DEFAULT
     ];
 
     [JsonPropertyName("AUDIO_INPUT")]
@@ -40,9 +42,17 @@ public sealed record ProviderCapabilityOverrides
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public bool? VideoInput { get; init; }
 
+    [JsonPropertyName("OPTIONAL_REASONING")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public bool? OptionalReasoning { get; init; }
+
     [JsonPropertyName("ALWAYS_REASONING")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public bool? AlwaysReasoning { get; init; }
+
+    [JsonPropertyName("REASONING_BY_DEFAULT")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public bool? ReasoningByDefault { get; init; }
 
     [JsonIgnore]
     public bool HasOverrides =>
@@ -50,7 +60,9 @@ public sealed record ProviderCapabilityOverrides
         this.MultipleImageInput is not null ||
         this.SpeechInput is not null ||
         this.VideoInput is not null ||
-        this.AlwaysReasoning is not null;
+        this.OptionalReasoning is not null ||
+        this.AlwaysReasoning is not null ||
+        this.ReasoningByDefault is not null;
 
     public bool? GetOverride(Capability capability) => capability switch
     {
@@ -58,7 +70,9 @@ public sealed record ProviderCapabilityOverrides
         Capability.MULTIPLE_IMAGE_INPUT => this.MultipleImageInput,
         Capability.SPEECH_INPUT => this.SpeechInput,
         Capability.VIDEO_INPUT => this.VideoInput,
+        Capability.OPTIONAL_REASONING => this.OptionalReasoning,
         Capability.ALWAYS_REASONING => this.AlwaysReasoning,
+        Capability.REASONING_BY_DEFAULT => this.ReasoningByDefault,
         _ => null
     };
 
@@ -68,7 +82,9 @@ public sealed record ProviderCapabilityOverrides
         Capability.MULTIPLE_IMAGE_INPUT => this with { MultipleImageInput = value },
         Capability.SPEECH_INPUT => this with { SpeechInput = value },
         Capability.VIDEO_INPUT => this with { VideoInput = value },
+        Capability.OPTIONAL_REASONING => this with { OptionalReasoning = value },
         Capability.ALWAYS_REASONING => this with { AlwaysReasoning = value },
+        Capability.REASONING_BY_DEFAULT => this with { ReasoningByDefault = value },
         _ => this
     };
 
@@ -84,7 +100,39 @@ public sealed record ProviderCapabilityOverrides
                 mergedCapabilities.Remove(capability);
         }
 
+        this.NormalizeReasoningCapabilities(mergedCapabilities);
         return mergedCapabilities;
+    }
+
+    private void NormalizeReasoningCapabilities(List<Capability> capabilities)
+    {
+        if (this.AlwaysReasoning == true ||
+            this.AlwaysReasoning is not false &&
+            this.OptionalReasoning is not true &&
+            this.ReasoningByDefault is not true &&
+            capabilities.Contains(Capability.ALWAYS_REASONING))
+        {
+            capabilities.Remove(Capability.OPTIONAL_REASONING);
+            capabilities.Remove(Capability.REASONING_BY_DEFAULT);
+            return;
+        }
+
+        if (this.AlwaysReasoning == false ||
+            this.OptionalReasoning == true ||
+            this.ReasoningByDefault == true)
+            capabilities.Remove(Capability.ALWAYS_REASONING);
+
+        if (this.OptionalReasoning == false)
+        {
+            capabilities.Remove(Capability.REASONING_BY_DEFAULT);
+            return;
+        }
+
+        if (this.ReasoningByDefault == true && !capabilities.Contains(Capability.OPTIONAL_REASONING))
+            capabilities.Add(Capability.OPTIONAL_REASONING);
+
+        if (!capabilities.Contains(Capability.OPTIONAL_REASONING))
+            capabilities.Remove(Capability.REASONING_BY_DEFAULT);
     }
 
     public string ExportAsLuaTable(string indentation)

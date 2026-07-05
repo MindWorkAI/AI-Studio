@@ -170,7 +170,7 @@
                         @T("Stored default model capabilities may not reflect its full range. Override them here if needed.")
                     </MudJustifiedText>
                     <MudStack Class="mb-4" Spacing="2">
-                        @foreach (var capability in ProviderCapabilityOverrides.SUPPORTED_CAPABILITIES)
+                        @foreach (var capability in SWITCH_CAPABILITY_OVERRIDES)
                         {
                             <MudPaper Outlined="@true" Class="pa-3">
                                 <MudStack Row="@true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Wrap="Wrap.Wrap">
@@ -199,6 +199,25 @@
                                 </MudStack>
                             </MudPaper>
                         }
+                        <MudPaper Outlined="@true" Class="pa-3">
+                            <MudSelect T="ReasoningOverrideMode"
+                                       Value="@this.GetReasoningOverrideMode()"
+                                       ValueChanged="@this.SetReasoningOverrideMode"
+                                       Label="@T("Reasoning (thinking) behavior")"
+                                       HelperText="@this.GetReasoningOverrideModeDescription(this.GetReasoningOverrideMode())"
+                                       Variant="Variant.Outlined"
+                                       Margin="Margin.Dense"
+                                       OpenIcon="@Icons.Material.Filled.Psychology"
+                                       AdornmentColor="Color.Info"
+                                       Adornment="Adornment.Start">
+                                @foreach (var mode in REASONING_OVERRIDE_MODES)
+                                {
+                                    <MudSelectItem Value="@mode">
+                                        @this.GetReasoningOverrideModeLabel(mode)
+                                    </MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudPaper>
                     </MudStack>
                     <MudJustifiedText Typo="Typo.body2" Class="mb-4">
                         @string.Format(T("The current model uses the {0}."), this.GetCurrentModelApiLabel())
