@@ -52,6 +52,7 @@ public partial class DataSourceSelection : MSGComponentBase
     private bool aiBasedSourceSelection;
     private bool aiBasedValidation;
     private bool areDataSourcesEnabled;
+    private uint loadAndApplyFiltersGeneration;
     
     #region Overrides of ComponentBase
 
@@ -75,15 +76,7 @@ public partial class DataSourceSelection : MSGComponentBase
         // Right before the preselection would be used to kick off the
         // RAG process, we will filter the data sources as well.
         //
-        var preselectedSources = new List<IDataSource>(this.DataSourceOptions.PreselectedDataSourceIds.Count);
-        foreach (var preselectedDataSourceId in this.DataSourceOptions.PreselectedDataSourceIds)
-        {
-            var dataSource = this.SettingsManager.ConfigurationData.DataSources.FirstOrDefault(ds => ds.Id == preselectedDataSourceId);
-            if (dataSource is not null)
-                preselectedSources.Add(dataSource);
-        }
-        
-        this.selectedDataSources = preselectedSources;
+        this.selectedDataSources = this.GetDataSourcesFromConfiguredIds();
         await base.OnInitializedAsync();
     }
 
@@ -94,7 +87,7 @@ public partial class DataSourceSelection : MSGComponentBase
             this.aiBasedSourceSelection = this.DataSourceOptions.AutomaticDataSourceSelection;
             this.aiBasedValidation = this.DataSourceOptions.AutomaticValidation;
             this.areDataSourcesEnabled = !this.DataSourceOptions.DisableDataSources;
-            this.selectedDataSources = this.SettingsManager.ConfigurationData.DataSources.Where(ds => this.DataSourceOptions.PreselectedDataSourceIds.Contains(ds.Id)).ToList();
+            this.selectedDataSources = this.GetDataSourcesFromConfiguredIds();
         }
 
         switch (this.SelectionMode)
@@ -120,7 +113,7 @@ public partial class DataSourceSelection : MSGComponentBase
             // In configuration mode, we have to load all data sources:
             //
             case DataSourceSelectionMode.CONFIGURATION_MODE:
-                this.availableDataSources = this.SettingsManager.ConfigurationData.DataSources;
+                this.availableDataSources = this.GetConfiguredDataSourcesSnapshot();
                 break;
         }
         
@@ -157,7 +150,7 @@ public partial class DataSourceSelection : MSGComponentBase
         this.aiBasedSourceSelection = this.DataSourceOptions.AutomaticDataSourceSelection;
         this.aiBasedValidation = this.DataSourceOptions.AutomaticValidation;
         this.areDataSourcesEnabled = !this.DataSourceOptions.DisableDataSources;
-        this.selectedDataSources = this.SettingsManager.ConfigurationData.DataSources.Where(ds => this.DataSourceOptions.PreselectedDataSourceIds.Contains(ds.Id)).ToList();
+        this.selectedDataSources = this.GetDataSourcesFromConfiguredIds();
         this.waitingForDataSources = false;
 
         //
@@ -177,20 +170,38 @@ public partial class DataSourceSelection : MSGComponentBase
         this.showDataSourceSelection = false;
         this.StateHasChanged();
     }
+
+    private IReadOnlyList<IDataSource> GetConfiguredDataSourcesSnapshot() => this.SettingsManager.ConfigurationData.DataSources.ToList();
+
+    private IReadOnlyCollection<IDataSource> GetDataSourcesFromConfiguredIds()
+    {
+        var preselectedDataSourceIds = this.DataSourceOptions.PreselectedDataSourceIds.ToHashSet(StringComparer.Ordinal);
+        return this.GetConfiguredDataSourcesSnapshot().Where(ds => preselectedDataSourceIds.Contains(ds.Id)).ToList();
+    }
     
     private async Task LoadAndApplyFilters()
     {
         if(this.DataSourceOptions.DisableDataSources)
+        {
+            this.loadAndApplyFiltersGeneration++;
             return;
+        }
 
         if(this.SelectionMode is DataSourceSelectionMode.CONFIGURATION_MODE)
+        {
+            this.loadAndApplyFiltersGeneration++;
             return;
+        }
 
+        var generation = ++this.loadAndApplyFiltersGeneration;
         this.waitingForDataSources = true;
         this.StateHasChanged();
             
         // Load the data sources:
         var sources = await this.DataSourceService.GetDataSources(this.LLMProvider, this.selectedDataSources);
+        if (generation != this.loadAndApplyFiltersGeneration)
+            return;
+
         this.availableDataSources = sources.AllowedDataSources;
         this.selectedDataSources = sources.SelectedDataSources;
         this.waitingForDataSources = false;
@@ -262,6 +273,7 @@ public partial class DataSourceSelection : MSGComponentBase
     private async Task OptionsChanged()
     {
         this.internalChange = true;
+        this.loadAndApplyFiltersGeneration++;
         
         await this.DataSourceOptionsChanged.InvokeAsync(this.DataSourceOptions);
         

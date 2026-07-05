@@ -59,6 +59,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 
     private DataSourceSelection? dataSourceSelectionComponent;
     private DataSourceOptions earlyDataSourceOptions = new();
+    private DataSourceOptions lastAppliedStandardDataSourceOptions = new();
     private Profile currentProfile = Profile.NO_PROFILE;
     private ChatTemplate currentChatTemplate = ChatTemplate.NO_CHAT_TEMPLATE;
     private bool hasUnsavedChanges;
@@ -117,6 +118,8 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         this.currentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(Tools.Components.CHAT);
         if (!this.ComposerState.HasUserDraft && !this.ComposerState.HasComposerContent)
             this.ComposerState.ApplyTemplate(this.currentChatTemplate);
+
+        this.lastAppliedStandardDataSourceOptions = this.SettingsManager.ConfigurationData.Chat.PreselectedDataSourceOptions.CreateCopy();
 
         var deferredInput = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_CHAT_INPUT).FirstOrDefault();
         if (!string.IsNullOrWhiteSpace(deferredInput))
@@ -458,11 +461,41 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private void ApplyStandardDataSourceOptions()
     {
         var chatDefaultOptions = this.SettingsManager.ConfigurationData.Chat.PreselectedDataSourceOptions.CreateCopy();
+        this.lastAppliedStandardDataSourceOptions = chatDefaultOptions.CreateCopy();
         this.earlyDataSourceOptions = chatDefaultOptions;
         if(this.ChatThread is not null)
             this.ChatThread.DataSourceOptions = chatDefaultOptions;
         
         this.dataSourceSelectionComponent?.ChangeOptionWithoutSaving(chatDefaultOptions);
+    }
+
+    private async Task ApplyUpdatedStandardDataSourceOptionsAfterConfigurationChange()
+    {
+        var updatedStandardOptions = this.SettingsManager.ConfigurationData.Chat.PreselectedDataSourceOptions.CreateCopy();
+        var previousStandardOptions = this.lastAppliedStandardDataSourceOptions;
+        this.lastAppliedStandardDataSourceOptions = updatedStandardOptions.CreateCopy();
+
+        if (this.ChatThread is null)
+        {
+            this.earlyDataSourceOptions = updatedStandardOptions;
+            this.dataSourceSelectionComponent?.ChangeOptionWithoutSaving(updatedStandardOptions);
+            return;
+        }
+
+        if (!DataSourceOptionsAreEqual(this.ChatThread.DataSourceOptions, previousStandardOptions))
+            return;
+
+        await this.SetCurrentDataSourceOptions(updatedStandardOptions);
+        this.dataSourceSelectionComponent?.ChangeOptionWithoutSaving(updatedStandardOptions, this.ChatThread.AISelectedDataSources);
+        await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
+    }
+
+    private static bool DataSourceOptionsAreEqual(DataSourceOptions left, DataSourceOptions right)
+    {
+        return left.DisableDataSources == right.DisableDataSources
+               && left.AutomaticDataSourceSelection == right.AutomaticDataSourceSelection
+               && left.AutomaticValidation == right.AutomaticValidation
+               && left.PreselectedDataSourceIds.ToHashSet(StringComparer.Ordinal).SetEquals(right.PreselectedDataSourceIds);
     }
     
     private string ExtractThreadName(string firstUserInput)
@@ -547,6 +580,8 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 
         if (!this.ComposerState.HasUserDraft && previousChatTemplate != this.currentChatTemplate)
             this.ComposerState.ApplyTemplate(this.currentChatTemplate);
+
+        await this.ApplyUpdatedStandardDataSourceOptionsAfterConfigurationChange();
     }
 
     private IReadOnlyList<DataSourceAgentSelected> GetAgentSelectedDataSources()
