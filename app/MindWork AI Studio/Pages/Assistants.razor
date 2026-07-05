@@ -17,7 +17,8 @@
             (Components.GRAMMAR_SPELLING_ASSISTANT, PreviewFeatures.NONE),
             (Components.REWRITE_ASSISTANT, PreviewFeatures.NONE),
             (Components.PROMPT_OPTIMIZER_ASSISTANT, PreviewFeatures.NONE),
-            (Components.SYNONYMS_ASSISTANT, PreviewFeatures.NONE)
+            (Components.SYNONYMS_ASSISTANT, PreviewFeatures.NONE),
+            (Components.META_ASSISTANT, PreviewFeatures.PRE_META_ASSISTANT_V1)
             ))
         {
             <MudText Typo="Typo.h4" Class="mb-2 mr-3">
@@ -30,6 +31,7 @@
                 <AssistantBlock TSettings="SettingsDialogRewrite" Component="Components.REWRITE_ASSISTANT" Name="@T("Rewrite & Improve")" Description="@T("Rewrite and improve a given text for a chosen style.")" Icon="@Icons.Material.Filled.Edit" Link="@Routes.ASSISTANT_REWRITE"/>
                 <AssistantBlock TSettings="SettingsDialogPromptOptimizer" Component="Components.PROMPT_OPTIMIZER_ASSISTANT" Name="@T("Prompt Optimizer")" Description="@T("Optimize your prompt using a structured guideline.")" Icon="@Icons.Material.Filled.AutoFixHigh" Link="@Routes.ASSISTANT_PROMPT_OPTIMIZER"/>
                 <AssistantBlock TSettings="SettingsDialogSynonyms" Component="Components.SYNONYMS_ASSISTANT" Name="@T("Synonyms")" Description="@T("Find synonyms for a given word or phrase.")" Icon="@Icons.Material.Filled.Spellcheck" Link="@Routes.ASSISTANT_SYNONYMS"/>
+                <AssistantBlock TSettings="NoSettingsPanel" Component="Components.META_ASSISTANT" RequiredPreviewFeature="PreviewFeatures.PRE_META_ASSISTANT_V1" Name="@T("Assistant Builder")" Description="@T("Generate your own assistants.")" Icon="@Icons.Material.Filled.AutoMode" Link="@Routes.ASSISTANT_META_ASSISTANT"/>
             </MudStack>
         }
 

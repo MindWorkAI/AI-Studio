@@ -25,6 +25,7 @@ public static class ComponentsExtensions
         Components.AGENT_DATA_SOURCE_SELECTION => false,
         Components.AGENT_RETRIEVAL_CONTEXT_VALIDATION => false,
         Components.AGENT_ASSISTANT_PLUGIN_AUDIT => false,
+        Components.META_ASSISTANT => false,
         
         _ => true,
     };
@@ -48,6 +49,7 @@ public static class ComponentsExtensions
         Components.I18N_ASSISTANT => TB("Localization Assistant"),
         Components.DOCUMENT_ANALYSIS_ASSISTANT => TB("Document Analysis Assistant"),
         Components.SLIDE_BUILDER_ASSISTANT => TB("Slide Planner Assistant"),
+        Components.META_ASSISTANT => TB("Assistant Builder"),
         
         Components.CHAT => TB("New Chat"),
         

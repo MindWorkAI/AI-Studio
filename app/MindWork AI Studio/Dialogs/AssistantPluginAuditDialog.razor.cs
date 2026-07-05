@@ -55,11 +55,11 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
 
     private bool IsAuditBelowMinimum => this.audit is not null && this.audit.Level < this.MinimumLevel;
 
-    private bool IsActivationBlockedBySettings => this.audit is null || this.IsAuditBelowMinimum && this.AuditSettings.BlockActivationBelowMinimum;
+    private bool IsActivationBlockedBySettings => this.AuditSettings.RequireAuditBeforeActivation && (this.audit is null || this.IsAuditBelowMinimum && this.AuditSettings.BlockActivationBelowMinimum);
 
-    private bool RequiresActivationConfirmation => this.audit is not null && this.IsAuditBelowMinimum && !this.AuditSettings.BlockActivationBelowMinimum;
+    private bool RequiresActivationConfirmation => this.audit is not null && this.IsAuditBelowMinimum && !this.IsActivationBlockedBySettings;
 
-    private bool CanEnablePlugin => this.audit is not null && !this.isAuditing && !this.IsActivationBlockedBySettings;
+    private bool CanEnablePlugin => this.plugin is not null && !this.isAuditing && !this.IsActivationBlockedBySettings;
 
     private Color EnableButtonColor => this.RequiresActivationConfirmation ? Color.Warning : Color.Success;
     private bool justAudited;
@@ -121,7 +121,7 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
 
     private async Task EnablePlugin()
     {
-        if (this.audit is null)
+        if (this.plugin is null)
             return;
 
         if (this.IsActivationBlockedBySettings)
