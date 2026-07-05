@@ -4378,9 +4378,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINGGUIDELINEDIALOG::T384594633"] = "Th
 -- Prompting Guideline
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINGGUIDELINEDIALOG::T4250996615"] = "Prompting Guideline"
 
--- Please be aware: This section is for experts only. You are responsible for verifying the correctness of the additional parameters you provide to the API call. By default, AI Studio uses the OpenAI-compatible chat completions API, when that it is supported by the underlying service and model.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1017509792"] = "Please be aware: This section is for experts only. You are responsible for verifying the correctness of the additional parameters you provide to the API call. By default, AI Studio uses the OpenAI-compatible chat completions API, when that it is supported by the underlying service and model."
-
 -- Hugging Face Inference Provider
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1085481431"] = "Hugging Face Inference Provider"
 
@@ -4399,11 +4396,23 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1356621346"] = "Create acco
 -- Load models
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T15352225"] = "Load models"
 
+-- Automatic
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1634363268"] = "Automatic"
+
+-- Disabled (Auto)
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1671157437"] = "Disabled (Auto)"
+
 -- Add the parameters in proper JSON formatting, e.g., "temperature": 0.5. Remove trailing commas. The usual surrounding curly brackets {} must not be used, though.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1689135032"] = "Add the parameters in proper JSON formatting, e.g., \"temperature\": 0.5. Remove trailing commas. The usual surrounding curly brackets {} must not be used, though."
 
 -- Hostname
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1727440780"] = "Hostname"
+
+-- Always on
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1761671861"] = "Always on"
+
+-- Reset
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T180921696"] = "Reset"
 
 -- Update
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1847791252"] = "Update"
@@ -4411,17 +4420,32 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1847791252"] = "Update"
 -- Failed to load the API key from the operating system. The message was: {0}. You might ignore this message and provide the API key again.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1870831108"] = "Failed to load the API key from the operating system. The message was: {0}. You might ignore this message and provide the API key again."
 
+-- Speech input
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1874348907"] = "Speech input"
+
 -- Please enter a model name.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1936099896"] = "Please enter a model name."
 
+-- Enabled (Auto)
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2001330464"] = "Enabled (Auto)"
+
+-- The current model uses the {0}.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2029870721"] = "The current model uses the {0}."
+
 -- Additional API parameters must form a JSON object.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2051143391"] = "Additional API parameters must form a JSON object."
+
+-- Use detected model behavior: {0}.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2141072961"] = "Use detected model behavior: {0}."
 
 -- Model
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2189814010"] = "Model"
 
 -- (Optional) API Key
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2331453405"] = "(Optional) API Key"
+
+-- Enabled
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2626085950"] = "Enabled"
 
 -- Add
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2646845972"] = "Add"
@@ -4435,11 +4459,41 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2810182573"] = "No models l
 -- Instance Name
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2842060373"] = "Instance Name"
 
+-- On by default
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2843289040"] = "On by default"
+
+-- No reasoning (thinking) capability.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T301695429"] = "No reasoning (thinking) capability."
+
+-- Please be careful: wrong expert settings can break model usage, disable supported features, or make unsupported features appear available.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3079061205"] = "Please be careful: wrong expert settings can break model usage, disable supported features, or make unsupported features appear available."
+
+-- Reasoning (thinking) is available and on unless additional API parameters disable it.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T310420667"] = "Reasoning (thinking) is available and on unless additional API parameters disable it."
+
+-- Disabled
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3217987877"] = "Disabled"
+
+-- The model always uses reasoning (thinking); it cannot be disabled.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3294757333"] = "The model always uses reasoning (thinking); it cannot be disabled."
+
+-- Can be enabled
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3299454847"] = "Can be enabled"
+
 -- Show Expert Settings
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3361153305"] = "Show Expert Settings"
 
+-- Audio input
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3404621481"] = "Audio input"
+
 -- Invalid JSON: Add the parameters in proper JSON formatting, e.g., \"temperature\": 0.5. Remove trailing commas. The usual surrounding curly brackets {} must not be used, though.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3502745319"] = "Invalid JSON: Add the parameters in proper JSON formatting, e.g., \\\"temperature\\\": 0.5. Remove trailing commas. The usual surrounding curly brackets {} must not be used, though."
+
+-- Reasoning (thinking) behavior
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3546126752"] = "Reasoning (thinking) behavior"
+
+-- Reasoning (thinking) is available, but off unless additional API parameters enable it.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3548835672"] = "Reasoning (thinking) is available, but off unless additional API parameters enable it."
 
 -- Show available models
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3763891899"] = "Show available models"
@@ -4450,17 +4504,35 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3783329915"] = "This host u
 -- Duplicate key '{0}' found.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3804472591"] = "Duplicate key '{0}' found."
 
+-- Override Model Capabilities
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3904244586"] = "Override Model Capabilities"
+
 -- Currently, we cannot query the models for the selected provider and/or host. Therefore, please enter the model name manually.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T4116737656"] = "Currently, we cannot query the models for the selected provider and/or host. Therefore, please enter the model name manually."
 
 -- Model selection
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T416738168"] = "Model selection"
 
+-- Stored default model capabilities may not reflect its full range. Override them here if needed.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T4217532151"] = "Stored default model capabilities may not reflect its full range. Override them here if needed."
+
+-- Video input
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T4289835208"] = "Video input"
+
 -- We are currently unable to communicate with the provider to load models. Please try again later.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T504465522"] = "We are currently unable to communicate with the provider to load models. Please try again later."
 
+-- Always reasoning
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T641757736"] = "Always reasoning"
+
 -- Host
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T808120719"] = "Host"
+
+-- Multiple image input
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T858529900"] = "Multiple image input"
+
+-- No reasoning (thinking)
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T87434533"] = "No reasoning (thinking)"
 
 -- Provider
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T900237532"] = "Provider"

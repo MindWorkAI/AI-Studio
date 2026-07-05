@@ -74,6 +74,18 @@ CONFIG["LLM_PROVIDERS"] = {}
 --     -- Please do not add the enclosing curly braces {} here. Also, no trailing comma is allowed.
 --     ["AdditionalJsonApiParameters"] = "",
 --
+--     -- Optional: expert capability overrides.
+--     -- Allowed keys are exactly:
+--     -- AUDIO_INPUT, MULTIPLE_IMAGE_INPUT, SPEECH_INPUT, VIDEO_INPUT,
+--     -- OPTIONAL_REASONING, ALWAYS_REASONING, REASONING_BY_DEFAULT
+--     -- Allowed values are booleans only.
+--     -- For default-on reasoning (rhinking), set OPTIONAL_REASONING and REASONING_BY_DEFAULT to true.
+--     -- ALWAYS_REASONING means the model cannot disable reasoning (thinking).
+--     -- Missing keys keep the automatic capability detection result.
+--     -- ["CapabilityOverrides"] = {
+--     --     ["VIDEO_INPUT"] = false,
+--     -- },
+--
 --     -- Optional: Hugging Face inference provider. Only relevant for UsedLLMProvider = HUGGINGFACE.
 --     -- Allowed values are: CEREBRAS, NEBIUS_AI_STUDIO, SAMBANOVA, NOVITA, HYPERBOLIC, TOGETHER_AI, FIREWORKS, HF_INFERENCE_API
 --     -- ["HFInferenceProvider"] = "NOVITA",
