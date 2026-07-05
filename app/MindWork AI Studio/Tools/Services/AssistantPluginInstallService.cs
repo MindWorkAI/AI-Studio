@@ -6,6 +6,7 @@ using AIStudio.Tools.PluginSystem.Assistants;
 namespace AIStudio.Tools.Services;
 
 public sealed record AssistantPluginInstallResult(bool Success, Guid PluginId, string PluginName, string PluginDirectory, bool ReplacedExisting, string Issue);
+
 public sealed record AssistantPluginCheckResult(bool Success, Guid PluginId, string PluginName, string Issue);
 
 public sealed class AssistantPluginInstallService
@@ -18,6 +19,7 @@ public sealed class AssistantPluginInstallService
     private readonly SemaphoreSlim installSemaphore = new(1, 1);
     
     private static AssistantPluginInstallResult Error(string issue) => new(false, Guid.Empty, string.Empty, string.Empty, false, issue);
+    
     private static AssistantPluginCheckResult CheckError(string issue) => new(false, Guid.Empty, string.Empty, issue);
 
     public AssistantPluginInstallService(ILogger<AssistantPluginInstallService> logger)
