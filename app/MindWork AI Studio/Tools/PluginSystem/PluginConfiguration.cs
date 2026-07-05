@@ -204,6 +204,13 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
 
         // Config: data source security settings
         ManagedConfiguration.TryProcessConfiguration(x => x.DataSourceSecurity, x => x.TrustedProviderIds, this.Id, settingsTable, dryRun);
+
+        // Config: assistant plugin audit settings
+        ManagedConfiguration.TryProcessConfiguration(x => x.AssistantPluginAudit, x => x.RequireAuditBeforeActivation, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.AssistantPluginAudit, x => x.PreselectedAgentProvider, Guid.Empty, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.AssistantPluginAudit, x => x.MinimumLevel, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.AssistantPluginAudit, x => x.BlockActivationBelowMinimum, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.AssistantPluginAudit, x => x.AutomaticallyAuditAssistants, this.Id, settingsTable, dryRun);
         
         // Handle configured LLM providers:
         PluginConfigurationObject.TryParse(PluginConfigurationObjectType.LLM_PROVIDER, x => x.Providers, x => x.NextProviderNum, mainTable, this.Id, ref this.configObjects, dryRun);
