@@ -78,6 +78,7 @@ Since March 2025: We have started developing the plugin system. There will be la
     </h3>
     </summary>
 
+- v26.7.1: Added the assistant builder as a beta preview for creating assistant plugins without coding; assistants can now keep running in the background; improved provider capability visibility and expert overrides, expanded enterprise controls for data source behavior and trusted assistant plugins, and made chats, assistants, and source links more reliable.
 - v26.6.2: Expanded enterprise configuration options with chat defaults, custom introduction panels, trust settings for data security, and managed confidence levels; added auto-backups for app settings & the possibility to view managed profiles and chat templates.
 - v26.6.1: Increased enterprise configuration capacity for large organizations, broader Flatpak deployment support, startup and Linux package diagnostics, chat search across all workspaces, improved workspace workflows, better model discovery for self-hosted llama.cpp providers, and fixes for profile and chat template updates, workspace naming, and startup behavior.
 - v26.5.5: Released voice recording and transcription for all users; added support for multiple chats running at the same time, export options for profiles, chat templates, and ERI data sources, organization-managed ERI servers, and configurable request timeouts; upgraded the native runtime to Tauri v2.
@@ -89,7 +90,6 @@ Since March 2025: We have started developing the plugin system. There will be la
 - v0.9.50: Added support for self-hosted LLMs using [vLLM](https://blog.vllm.ai/2023/06/20/vllm.html).
 - v0.9.46: Released our plugin system, a German language plugin, early support for enterprise environments, and configuration plugins. Additionally, we added the Pandoc integration for future data processing and file generation.
 - v0.9.45: Added chat templates to AI Studio, allowing you to create and use a library of system prompts for your chats.
-- v0.9.44: Added PDF import to the text summarizer, translation, and legal check assistants, allowing you to import PDF files and use them as input for the assistants.
  
 </details>
 
