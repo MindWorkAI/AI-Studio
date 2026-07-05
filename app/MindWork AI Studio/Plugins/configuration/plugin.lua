@@ -386,6 +386,33 @@ CONFIG["SETTINGS"] = {}
 --     "00000000-0000-0000-0000-000000000001",
 -- }
 
+-- Configure assistant plugin security audits.
+--
+-- Configure whether assistant plugins must be audited before users can activate them.
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.RequireAuditBeforeActivation"] = true
+--
+-- Configure a dedicated provider for assistant plugin audits.
+-- It must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"].
+-- Without a selected audit provider, AI Studio uses the app-wide default provider.
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.PreselectedAgentProvider"] = "00000000-0000-0000-0000-000000000000"
+--
+-- Configure the minimum audit level assistant plugins must meet.
+-- Allowed values are: UNKNOWN, DANGEROUS, CAUTION, SAFE
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.MinimumLevel"] = "CAUTION"
+--
+-- Configure whether activation is blocked when the audit result is below the minimum level.
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.BlockActivationBelowMinimum"] = true
+--
+-- Configure whether new or changed assistant plugins are audited automatically in the background.
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.AutomaticallyAuditAssistants"] = false
+--
+-- Configure whether users can change assistant plugin audit settings locally.
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.RequireAuditBeforeActivation.AllowUserOverride"] = false
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.PreselectedAgentProvider.AllowUserOverride"] = false
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.MinimumLevel.AllowUserOverride"] = false
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.BlockActivationBelowMinimum.AllowUserOverride"] = false
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.AutomaticallyAuditAssistants.AllowUserOverride"] = false
+
 -- Example chat templates for this configuration:
 CONFIG["CHAT_TEMPLATES"] = {}
 
