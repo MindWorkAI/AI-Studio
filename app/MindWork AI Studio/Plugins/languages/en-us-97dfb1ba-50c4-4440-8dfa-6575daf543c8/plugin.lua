@@ -312,6 +312,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T180921696"] = "Reset"
 -- Please select a provider.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T1809312323"] = "Please select a provider."
 
+-- The assistant failed. The message is: '{0}'
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T1833836281"] = "The assistant failed. The message is: '{0}'"
+
+-- This assistant is already running. AI Studio opens the running session instead.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T2575715765"] = "This assistant is already running. AI Studio opens the running session instead."
+
 -- Assistant - {0}
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T3043922"] = "Assistant - {0}"
 
@@ -1055,6 +1061,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1565111217"] = "Relat
 
 -- Please select an ERI specification version for the ERI server.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1612890554"] = "Please select an ERI specification version for the ERI server."
+
+-- Open in chat
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T1664804142"] = "Open in chat"
 
 -- Ports below 1024 are reserved for system services. Your ERI server need to run with elevated permissions (root user).
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::ASSISTANTERI::T168780641"] = "Ports below 1024 are reserved for system services. Your ERI server need to run with elevated permissions (root user)."
@@ -2289,8 +2298,23 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::IIMAGESOURCEEXTENSIONS::T349928509"] = "The ima
 -- Open Settings
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T1172211894"] = "Open Settings"
 
+-- Assistant is still running.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T2719896610"] = "Assistant is still running."
+
+-- Assistant was canceled. Open it to review the result.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T3390934621"] = "Assistant was canceled. Open it to review the result."
+
+-- Assistant failed. Open it to review the result.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T3571008422"] = "Assistant failed. Open it to review the result."
+
+-- The result is ready.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T661906146"] = "The result is ready."
+
 -- Show or hide the detailed security information.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T1045105126"] = "Show or hide the detailed security information."
+
+-- This plugin is approved by your organization. A manual security audit is not required.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T1213338416"] = "This plugin is approved by your organization. A manual security audit is not required."
 
 -- Assistant Audit
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T1506922856"] = "Assistant Audit"
@@ -2307,6 +2331,12 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T1805629238"
 -- Assistant Security
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T1841954939"] = "Assistant Security"
 
+-- Company approved
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T2036497459"] = "Company approved"
+
+-- Approved name
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T2282386733"] = "Approved name"
+
 -- Required minimum
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T2354026284"] = "Required minimum"
 
@@ -2315,6 +2345,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T2757790517"
 
 -- Technical Details
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T2769062110"] = "Technical Details"
+
+-- Approval comment
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T2906887599"] = "Approval comment"
 
 -- No audit yet
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T3138877447"] = "No audit yet"
@@ -2331,20 +2364,38 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T3448155331"
 -- No stored audit details are available yet.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T3647137899"] = "No stored audit details are available yet."
 
+-- Enterprise approval is active
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T3816183955"] = "Enterprise approval is active"
+
 -- Current hash
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T3896860082"] = "Current hash"
+
+-- No user audit required
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T3916957031"] = "No user audit required"
 
 -- Audited at
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T4103354206"] = "Audited at"
 
+-- Approved hash
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T4170340306"] = "Approved hash"
+
 -- No security findings were stored for this assistant plugin.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T4256679240"] = "No security findings were stored for this assistant plugin."
+
+-- Status source
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T4289123040"] = "Status source"
 
 -- Audit hash
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T53507304"] = "Audit hash"
 
 -- {0} Finding(s)
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T631393016"] = "{0} Finding(s)"
+
+-- Approved by
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T894543751"] = "Approved by"
+
+-- Approved at
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T978873131"] = "Approved at"
 
 -- Click the paperclip to attach files, or click the number to see your attached files.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T1358313858"] = "Click the paperclip to attach files, or click the number to see your attached files."
@@ -2720,6 +2771,24 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROFILESELECTION::T3654011106"] = "Open P
 
 -- You can switch between your profiles here
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROFILESELECTION::T918741365"] = "You can switch between your profiles here"
+
+-- Audio input possible
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T1742581112"] = "Audio input possible"
+
+-- Uses reasoning (thinking)
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T2196970948"] = "Uses reasoning (thinking)"
+
+-- Image input possible
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T2685487365"] = "Image input possible"
+
+-- Speech input possible
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T3005724142"] = "Speech input possible"
+
+-- Uses reasoning (thinking) by default
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T3891860124"] = "Uses reasoning (thinking) by default"
+
+-- Uses reasoning (thinking) configured by settings
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T4279448758"] = "Uses reasoning (thinking) configured by settings"
 
 -- Provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T900237532"] = "Provider"
@@ -3747,6 +3816,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T3652671056"] = 
 -- Unavailable
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T3662391977"] = "Unavailable"
 
+-- This assistant plugin is approved by your organization. A manual security audit is not required.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T3680374624"] = "This assistant plugin is approved by your organization. A manual security audit is not required."
+
 -- Plugin Structure
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T371537943"] = "Plugin Structure"
 
@@ -4668,9 +4740,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINGGUIDELINEDIALOG::T384594633"] = "Th
 -- Prompting Guideline
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINGGUIDELINEDIALOG::T4250996615"] = "Prompting Guideline"
 
--- Please be aware: This section is for experts only. You are responsible for verifying the correctness of the additional parameters you provide to the API call. By default, AI Studio uses the OpenAI-compatible chat completions API, when that it is supported by the underlying service and model.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1017509792"] = "Please be aware: This section is for experts only. You are responsible for verifying the correctness of the additional parameters you provide to the API call. By default, AI Studio uses the OpenAI-compatible chat completions API, when that it is supported by the underlying service and model."
-
 -- Hugging Face Inference Provider
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1085481431"] = "Hugging Face Inference Provider"
 
@@ -4689,11 +4758,23 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1356621346"] = "Create acco
 -- Load models
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T15352225"] = "Load models"
 
+-- Automatic
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1634363268"] = "Automatic"
+
+-- Disabled (Auto)
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1671157437"] = "Disabled (Auto)"
+
 -- Add the parameters in proper JSON formatting, e.g., "temperature": 0.5. Remove trailing commas. The usual surrounding curly brackets {} must not be used, though.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1689135032"] = "Add the parameters in proper JSON formatting, e.g., \"temperature\": 0.5. Remove trailing commas. The usual surrounding curly brackets {} must not be used, though."
 
 -- Hostname
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1727440780"] = "Hostname"
+
+-- Always on
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1761671861"] = "Always on"
+
+-- Reset
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T180921696"] = "Reset"
 
 -- Update
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1847791252"] = "Update"
@@ -4701,17 +4782,32 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1847791252"] = "Update"
 -- Failed to load the API key from the operating system. The message was: {0}. You might ignore this message and provide the API key again.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1870831108"] = "Failed to load the API key from the operating system. The message was: {0}. You might ignore this message and provide the API key again."
 
+-- Speech input
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1874348907"] = "Speech input"
+
 -- Please enter a model name.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1936099896"] = "Please enter a model name."
 
+-- Enabled (Auto)
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2001330464"] = "Enabled (Auto)"
+
+-- The current model uses the {0}.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2029870721"] = "The current model uses the {0}."
+
 -- Additional API parameters must form a JSON object.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2051143391"] = "Additional API parameters must form a JSON object."
+
+-- Use detected model behavior: {0}.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2141072961"] = "Use detected model behavior: {0}."
 
 -- Model
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2189814010"] = "Model"
 
 -- (Optional) API Key
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2331453405"] = "(Optional) API Key"
+
+-- Enabled
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2626085950"] = "Enabled"
 
 -- Add
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2646845972"] = "Add"
@@ -4725,11 +4821,41 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2810182573"] = "No models l
 -- Instance Name
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2842060373"] = "Instance Name"
 
+-- On by default
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2843289040"] = "On by default"
+
+-- No reasoning (thinking) capability.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T301695429"] = "No reasoning (thinking) capability."
+
+-- Please be careful: wrong expert settings can break model usage, disable supported features, or make unsupported features appear available.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3079061205"] = "Please be careful: wrong expert settings can break model usage, disable supported features, or make unsupported features appear available."
+
+-- Reasoning (thinking) is available and on unless additional API parameters disable it.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T310420667"] = "Reasoning (thinking) is available and on unless additional API parameters disable it."
+
+-- Disabled
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3217987877"] = "Disabled"
+
+-- The model always uses reasoning (thinking); it cannot be disabled.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3294757333"] = "The model always uses reasoning (thinking); it cannot be disabled."
+
+-- Can be enabled
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3299454847"] = "Can be enabled"
+
 -- Show Expert Settings
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3361153305"] = "Show Expert Settings"
 
+-- Audio input
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3404621481"] = "Audio input"
+
 -- Invalid JSON: Add the parameters in proper JSON formatting, e.g., \"temperature\": 0.5. Remove trailing commas. The usual surrounding curly brackets {} must not be used, though.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3502745319"] = "Invalid JSON: Add the parameters in proper JSON formatting, e.g., \\\"temperature\\\": 0.5. Remove trailing commas. The usual surrounding curly brackets {} must not be used, though."
+
+-- Reasoning (thinking) behavior
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3546126752"] = "Reasoning (thinking) behavior"
+
+-- Reasoning (thinking) is available, but off unless additional API parameters enable it.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3548835672"] = "Reasoning (thinking) is available, but off unless additional API parameters enable it."
 
 -- Show available models
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3763891899"] = "Show available models"
@@ -4740,17 +4866,35 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3783329915"] = "This host u
 -- Duplicate key '{0}' found.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3804472591"] = "Duplicate key '{0}' found."
 
+-- Override Model Capabilities
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T3904244586"] = "Override Model Capabilities"
+
 -- Currently, we cannot query the models for the selected provider and/or host. Therefore, please enter the model name manually.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T4116737656"] = "Currently, we cannot query the models for the selected provider and/or host. Therefore, please enter the model name manually."
 
 -- Model selection
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T416738168"] = "Model selection"
 
+-- Stored default model capabilities may not reflect its full range. Override them here if needed.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T4217532151"] = "Stored default model capabilities may not reflect its full range. Override them here if needed."
+
+-- Video input
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T4289835208"] = "Video input"
+
 -- We are currently unable to communicate with the provider to load models. Please try again later.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T504465522"] = "We are currently unable to communicate with the provider to load models. Please try again later."
 
+-- Always reasoning
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T641757736"] = "Always reasoning"
+
 -- Host
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T808120719"] = "Host"
+
+-- Multiple image input
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T858529900"] = "Multiple image input"
+
+-- No reasoning (thinking)
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T87434533"] = "No reasoning (thinking)"
 
 -- Provider
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T900237532"] = "Provider"
@@ -7887,6 +8031,12 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANT
 -- Button
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T864557713"] = "Button"
 
+-- The ASSISTANT table contains an invalid LaunchBehavior value.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T109828905"] = "The ASSISTANT table contains an invalid LaunchBehavior value."
+
+-- The ASSISTANT table contains an unsupported LaunchBehavior value.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T1194373781"] = "The ASSISTANT table contains an unsupported LaunchBehavior value."
+
 -- Failed to parse the UI render tree from the ASSISTANT lua table.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T1318499252"] = "Failed to parse the UI render tree from the ASSISTANT lua table."
 
@@ -7902,11 +8052,17 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T2
 -- The ASSISTANT lua table does not exist or is not a valid table.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T3017816936"] = "The ASSISTANT lua table does not exist or is not a valid table."
 
+-- The ASSISTANT table contains an empty WorkspaceName for LaunchBehavior 'OPEN_WORKSPACE_CHAT_BY_NAME'.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T3233001282"] = "The ASSISTANT table contains an empty WorkspaceName for LaunchBehavior 'OPEN_WORKSPACE_CHAT_BY_NAME'."
+
 -- The provided ASSISTANT lua table does not contain a valid system prompt.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T3402798667"] = "The provided ASSISTANT lua table does not contain a valid system prompt."
 
 -- The ASSISTANT table does not contain a valid system prompt.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T3723171842"] = "The ASSISTANT table does not contain a valid system prompt."
+
+-- The ASSISTANT table contains the LaunchBehavior 'OPEN_WORKSPACE_CHAT_BY_NAME' but no valid WorkspaceName.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T4215554842"] = "The ASSISTANT table contains the LaunchBehavior 'OPEN_WORKSPACE_CHAT_BY_NAME' but no valid WorkspaceName."
 
 -- ASSISTANT.BuildPrompt exists but is not a Lua function or has invalid syntax.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T683382975"] = "ASSISTANT.BuildPrompt exists but is not a Lua function or has invalid syntax."
@@ -7950,6 +8106,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECUR
 -- The current audit result is '{0}', which is below your required minimum level '{1}'. Audit enforcement is currently disabled, so this assistant plugin can still be enabled or used.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T2774333862"] = "The current audit result is '{0}', which is below your required minimum level '{1}'. Audit enforcement is currently disabled, so this assistant plugin can still be enabled or used."
 
+-- The current plugin hash matches an enterprise-managed approval. No manual security audit is required for activation or usage.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T2824524534"] = "The current plugin hash matches an enterprise-managed approval. No manual security audit is required for activation or usage."
+
 -- Not Audited
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T2828154864"] = "Not Audited"
 
@@ -7959,11 +8118,17 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECUR
 -- Open Security Check
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T290241209"] = "Open Security Check"
 
+-- User Audit
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T3293963409"] = "User Audit"
+
 -- Restricted
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T3325062668"] = "Restricted"
 
 -- Unknown
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T3424652889"] = "Unknown"
+
+-- Approved by your organization
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T3508214481"] = "Approved by your organization"
 
 -- Unlocked
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T3606159420"] = "Unlocked"
@@ -7980,8 +8145,23 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECUR
 -- No security audit exists yet. Your current security settings do not require an audit before this assistant plugin may be used.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T3899951594"] = "No security audit exists yet. Your current security settings do not require an audit before this assistant plugin may be used."
 
+-- No Approval
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T515592229"] = "No Approval"
+
+-- This assistant was approved by your organization.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T538196816"] = "This assistant was approved by your organization."
+
+-- Safe
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T760494712"] = "Safe"
+
+-- Open Security Details
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T803119455"] = "Open Security Details"
+
 -- Start Security Check
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T811648299"] = "Start Security Check"
+
+-- This assistant was approved by your organization as '{0}'.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T834246718"] = "This assistant was approved by your organization as '{0}'."
 
 -- This assistant currently has no stored audit.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTSECURITYRESOLVER::T921972844"] = "This assistant currently has no stored audit."

@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Text;
 
 using AIStudio.Dialogs.Settings;
+using AIStudio.Tools.AssistantSessions;
 using AIStudio.Tools.PluginSystem;
 
 using Microsoft.Extensions.FileProviders;
@@ -117,32 +118,87 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
     private Dictionary<string, string> removedContent = [];
     private Dictionary<string, string> localizedContent = [];
     private StringBuilder finalLuaCode = new();
+    private string? activeSystemPromptLanguage;
+    private static readonly AssistantSessionStateKey<CommonLanguages> SELECTED_TARGET_LANGUAGE_STATE_KEY = new(nameof(selectedTargetLanguage));
+    private static readonly AssistantSessionStateKey<string> CUSTOM_TARGET_LANGUAGE_STATE_KEY = new(nameof(customTargetLanguage));
+    private static readonly AssistantSessionStateKey<bool> IS_LOADING_STATE_KEY = new(nameof(isLoading));
+    private static readonly AssistantSessionStateKey<string> LOADING_ISSUE_STATE_KEY = new(nameof(loadingIssue));
+    private static readonly AssistantSessionStateKey<bool> LOCALIZATION_POSSIBLE_STATE_KEY = new(nameof(localizationPossible));
+    private static readonly AssistantSessionStateKey<string> SEARCH_STRING_STATE_KEY = new(nameof(searchString));
+    private static readonly AssistantSessionStateKey<Guid> SELECTED_LANGUAGE_PLUGIN_ID_STATE_KEY = new(nameof(selectedLanguagePluginId));
+    private static readonly AssistantSessionStateKey<ILanguagePlugin?> SELECTED_LANGUAGE_PLUGIN_STATE_KEY = new(nameof(selectedLanguagePlugin));
+    private static readonly AssistantSessionStateKey<Dictionary<string, string>> ADDED_CONTENT_STATE_KEY = new(nameof(addedContent));
+    private static readonly AssistantSessionStateKey<Dictionary<string, string>> REMOVED_CONTENT_STATE_KEY = new(nameof(removedContent));
+    private static readonly AssistantSessionStateKey<Dictionary<string, string>> LOCALIZED_CONTENT_STATE_KEY = new(nameof(localizedContent));
+    private static readonly AssistantSessionStateKey<string> FINAL_LUA_CODE_STATE_KEY = new(nameof(finalLuaCode));
+
+    /// <inheritdoc />
+    protected override void CaptureCustomAssistantSessionState(AssistantSessionStateWriter state)
+    {
+        state.Set(SELECTED_TARGET_LANGUAGE_STATE_KEY, this.selectedTargetLanguage);
+        state.Set(CUSTOM_TARGET_LANGUAGE_STATE_KEY, this.customTargetLanguage);
+        state.Set(IS_LOADING_STATE_KEY, this.isLoading);
+        state.Set(LOADING_ISSUE_STATE_KEY, this.loadingIssue);
+        state.Set(LOCALIZATION_POSSIBLE_STATE_KEY, this.localizationPossible);
+        state.Set(SEARCH_STRING_STATE_KEY, this.searchString);
+        state.Set(SELECTED_LANGUAGE_PLUGIN_ID_STATE_KEY, this.selectedLanguagePluginId);
+        state.Set(SELECTED_LANGUAGE_PLUGIN_STATE_KEY, this.selectedLanguagePlugin);
+        state.SetDictionary(ADDED_CONTENT_STATE_KEY, this.addedContent);
+        state.SetDictionary(REMOVED_CONTENT_STATE_KEY, this.removedContent);
+        state.SetDictionary(LOCALIZED_CONTENT_STATE_KEY, this.localizedContent);
+        state.SetStringBuilder(FINAL_LUA_CODE_STATE_KEY, this.finalLuaCode);
+    }
+
+    /// <inheritdoc />
+    protected override void RestoreCustomAssistantSessionState(AssistantSessionStateReader state)
+    {
+        state.Restore(SELECTED_TARGET_LANGUAGE_STATE_KEY, value => this.selectedTargetLanguage = value);
+        state.Restore(CUSTOM_TARGET_LANGUAGE_STATE_KEY, value => this.customTargetLanguage = value);
+        state.Restore(IS_LOADING_STATE_KEY, value => this.isLoading = value);
+        state.Restore(LOADING_ISSUE_STATE_KEY, value => this.loadingIssue = value);
+        state.Restore(LOCALIZATION_POSSIBLE_STATE_KEY, value => this.localizationPossible = value);
+        state.Restore(SEARCH_STRING_STATE_KEY, value => this.searchString = value);
+        state.Restore(SELECTED_LANGUAGE_PLUGIN_ID_STATE_KEY, value => this.selectedLanguagePluginId = value);
+        state.Restore(SELECTED_LANGUAGE_PLUGIN_STATE_KEY, value => this.selectedLanguagePlugin = value);
+        state.RestoreDictionary(ADDED_CONTENT_STATE_KEY, this.addedContent);
+        state.RestoreDictionary(REMOVED_CONTENT_STATE_KEY, this.removedContent);
+        state.RestoreDictionary(LOCALIZED_CONTENT_STATE_KEY, this.localizedContent);
+        state.RestoreStringBuilder(FINAL_LUA_CODE_STATE_KEY, this.finalLuaCode);
+    }
 
     #region Overrides of AssistantBase<SettingsDialogI18N>
 
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
+        if (this.HasAssistantSession)
+            return;
+
         await this.OnLanguagePluginChanged(this.selectedLanguagePluginId);
-        await this.LoadData();
     }
 
     #endregion
     
-    private string SystemPromptLanguage() => this.selectedTargetLanguage switch
+    private string SystemPromptLanguage() => this.activeSystemPromptLanguage ?? (this.selectedTargetLanguage switch
     {
         CommonLanguages.OTHER => this.customTargetLanguage,
         _ => $"{this.selectedTargetLanguage.Name()}",
-    };
+    });
 
     private async Task OnLanguagePluginChanged(Guid pluginId)
     {
+        if (this.IsProcessing)
+            return;
+
         this.selectedLanguagePluginId = pluginId;
         await this.OnChangedLanguage();
     }
 
     private async Task OnChangedLanguage()
     {
+        if (this.IsProcessing)
+            return;
+
         this.finalLuaCode.Clear();
         this.localizedContent.Clear();
         this.localizationPossible = false;
@@ -261,6 +317,21 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
 
     private int NumTotalItems => (this.selectedLanguagePlugin?.Content.Count ?? 0) + this.addedContent.Count - this.removedContent.Count;
 
+    /// <summary>
+    /// Gets a stable row snapshot for the added-content table.
+    /// </summary>
+    private KeyValuePair<string, string>[] AddedContentRows => this.addedContent.ToArray();
+
+    /// <summary>
+    /// Gets a stable row snapshot for the removed-content table.
+    /// </summary>
+    private KeyValuePair<string, string>[] RemovedContentRows => this.removedContent.ToArray();
+
+    /// <summary>
+    /// Gets a stable row snapshot for the localized-content table.
+    /// </summary>
+    private KeyValuePair<string, string>[] LocalizedContentRows => this.localizedContent.ToArray();
+
     private string AddedContentText => string.Format(T("Added Content ({0} entries)"), this.addedContent.Count);
     
     private string RemovedContentText => string.Format(T("Removed Content ({0} entries)"), this.removedContent.Count);
@@ -279,68 +350,87 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
         if (this.selectedLanguagePlugin.IETFTag != this.selectedTargetLanguage.ToIETFTag())
             return;
         
-        this.localizedContent.Clear();
-        if (this.selectedTargetLanguage is not CommonLanguages.EN_US)
-        {
-            // Phase 1: Translate added content
-            await this.Phase1TranslateAddedContent();
-        }
-        else
-        {
-            // Case: no translation needed
-            this.localizedContent = this.addedContent.ToDictionary();
-        }
+        var addedContentSnapshot = this.addedContent.ToArray();
+        var removedContentSnapshot = this.removedContent.ToArray();
+        var removedContentKeys = removedContentSnapshot.Select(keyValuePair => keyValuePair.Key).ToHashSet(StringComparer.Ordinal);
+        var selectedLanguageContentSnapshot = this.selectedLanguagePlugin.Content.ToArray();
+        var baseLanguageContentSnapshot = PluginFactory.BaseLanguage.Content.ToArray();
 
-        if(this.CancellationTokenSource!.IsCancellationRequested)
-            return;
-        
-        //
-        // Now, we have localized the added content. Next, we must merge
-        // the localized content with the existing content. However, we
-        // must skip the removed content. We use the localizedContent
-        // dictionary for the final result:
-        //
-        foreach (var keyValuePair in this.selectedLanguagePlugin.Content)
+        this.localizedContent.Clear();
+        this.activeSystemPromptLanguage = this.SystemPromptLanguage();
+        try
         {
-            if (this.CancellationTokenSource!.IsCancellationRequested)
-                break;
+            if (this.selectedTargetLanguage is not CommonLanguages.EN_US)
+            {
+                // Phase 1: Translate added content
+                await this.Phase1TranslateAddedContent(addedContentSnapshot);
+            }
+            else
+            {
+                // Case: no translation needed
+                this.localizedContent = addedContentSnapshot.ToDictionary(keyValuePair => keyValuePair.Key, keyValuePair => keyValuePair.Value, StringComparer.Ordinal);
+            }
+
+            if(this.CancellationTokenSource!.IsCancellationRequested)
+                return;
             
-            if (this.localizedContent.ContainsKey(keyValuePair.Key))
-                continue;
+            //
+            // Now, we have localized the added content. Next, we must merge
+            // the localized content with the existing content. However, we
+            // must skip the removed content. We use the localizedContent
+            // dictionary for the final result:
+            //
+            foreach (var keyValuePair in selectedLanguageContentSnapshot)
+            {
+                if (this.CancellationTokenSource!.IsCancellationRequested)
+                    break;
+
+                if (this.localizedContent.ContainsKey(keyValuePair.Key))
+                    continue;
+
+                if (removedContentKeys.Contains(keyValuePair.Key))
+                    continue;
+
+                this.localizedContent.Add(keyValuePair.Key, keyValuePair.Value);
+            }
+
+            if(this.CancellationTokenSource!.IsCancellationRequested)
+                return;
             
-            if (this.removedContent.ContainsKey(keyValuePair.Key))
-                continue;
+            //
+            // Phase 2: Create the Lua code. We want to use the base language
+            // for the comments, though:
+            //
+            var commentContent = addedContentSnapshot.ToDictionary(keyValuePair => keyValuePair.Key, keyValuePair => keyValuePair.Value, StringComparer.Ordinal);
+            foreach (var keyValuePair in baseLanguageContentSnapshot)
+            {
+                if (this.CancellationTokenSource!.IsCancellationRequested)
+                    break;
+
+                if (removedContentKeys.Contains(keyValuePair.Key))
+                    continue;
+
+                commentContent.TryAdd(keyValuePair.Key, keyValuePair.Value);
+            }
             
-            this.localizedContent.Add(keyValuePair.Key, keyValuePair.Value);
+            this.Phase2CreateLuaCode(commentContent);
         }
-        
-        if(this.CancellationTokenSource!.IsCancellationRequested)
-            return;
-        
-        //
-        // Phase 2: Create the Lua code. We want to use the base language
-        // for the comments, though:
-        //
-        var commentContent = new Dictionary<string, string>(this.addedContent);
-        foreach (var keyValuePair in PluginFactory.BaseLanguage.Content)
+        finally
         {
-            if  (this.CancellationTokenSource!.IsCancellationRequested)  
-                break;
-            
-            if (this.removedContent.ContainsKey(keyValuePair.Key))
-                continue;
-            
-            commentContent.TryAdd(keyValuePair.Key, keyValuePair.Value);
+            this.activeSystemPromptLanguage = null;
         }
-        
-        this.Phase2CreateLuaCode(commentContent);
     }
 
-    private async Task Phase1TranslateAddedContent()
+    /// <summary>
+    /// Translates the added text content from a stable snapshot.
+    /// </summary>
+    /// <param name="addedContentSnapshot">The added text entries captured when the job started.</param>
+    /// <returns>A task that completes when all added text entries were translated or cancellation was requested.</returns>
+    private async Task Phase1TranslateAddedContent(KeyValuePair<string, string>[] addedContentSnapshot)
     {
         var stopwatch = new Stopwatch();
         var minimumTime = TimeSpan.FromMilliseconds(500);
-        foreach (var keyValuePair in this.addedContent)
+        foreach (var keyValuePair in addedContentSnapshot)
         {
             if(this.CancellationTokenSource!.IsCancellationRequested)
                 break;

@@ -1,3 +1,4 @@
+using System.Globalization;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Services;
@@ -204,6 +205,26 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
 
         // Config: data source security settings
         ManagedConfiguration.TryProcessConfiguration(x => x.DataSourceSecurity, x => x.TrustedProviderIds, this.Id, settingsTable, dryRun);
+
+        // Config: data source selection agent settings
+        ManagedConfiguration.TryProcessConfiguration(x => x.AgentDataSourceSelection, x => x.PreselectAgentOptions, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.AgentDataSourceSelection, x => x.PreselectedAgentProvider, Guid.Empty, this.Id, settingsTable, dryRun);
+
+        // Config: retrieval context validation agent settings
+        ManagedConfiguration.TryProcessConfiguration(x => x.AgentRetrievalContextValidation, x => x.EnableRetrievalContextValidation, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.AgentRetrievalContextValidation, x => x.PreselectAgentOptions, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.AgentRetrievalContextValidation, x => x.PreselectedAgentProvider, Guid.Empty, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.AgentRetrievalContextValidation, x => x.NumParallelValidations, this.Id, settingsTable, dryRun);
+
+        // Config: assistant plugin audit settings
+        ManagedConfiguration.TryProcessConfiguration(x => x.AssistantPluginAudit, x => x.RequireAuditBeforeActivation, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.AssistantPluginAudit, x => x.PreselectedAgentProvider, Guid.Empty, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.AssistantPluginAudit, x => x.MinimumLevel, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.AssistantPluginAudit, x => x.BlockActivationBelowMinimum, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.AssistantPluginAudit, x => x.AutomaticallyAuditAssistants, this.Id, settingsTable, dryRun);
+
+        // Config: enterprise-managed approvals for assistant plugins
+        this.TryProcessEnterpriseApprovedAssistantPlugins(settingsTable, dryRun);
         
         // Handle configured LLM providers:
         PluginConfigurationObject.TryParse(PluginConfigurationObjectType.LLM_PROVIDER, x => x.Providers, x => x.NextProviderNum, mainTable, this.Id, ref this.configObjects, dryRun);
@@ -243,6 +264,11 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         ManagedConfiguration.TryProcessConfiguration(x => x.Chat, x => x.PreselectedProvider, Guid.Empty, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.Chat, x => x.PreselectedProfile, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.Chat, x => x.PreselectedChatTemplate, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.Chat, x => x.PreselectedDataSourcesDisabled, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.Chat, x => x.PreselectedDataSourcesAutomaticSelection, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.Chat, x => x.PreselectedDataSourcesAutomaticValidation, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.Chat, x => x.PreselectedDataSourceIds, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.Chat, x => x.SendToChatDataSourceBehavior, this.Id, settingsTable, dryRun);
 
         // Config: transcription provider?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.UseTranscriptionProvider, Guid.Empty, this.Id, settingsTable, dryRun);
@@ -250,6 +276,120 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         message = string.Empty;
         return true;
     }
+
+    private void TryProcessEnterpriseApprovedAssistantPlugins(LuaTable settingsTable, bool dryRun)
+    {
+        if (!ManagedConfiguration.TryGet(x => x.AssistantPluginAudit, x => x.EnterpriseApprovedPlugins, out ConfigMeta<DataAssistantPluginAudit, IList<DataAssistantPluginEnterpriseApproval>> configMeta))
+            return;
+
+        var settingName = SettingsManager.ToSettingName<DataAssistantPluginAudit, IList<DataAssistantPluginEnterpriseApproval>>(x => x.EnterpriseApprovedPlugins);
+        var successful = false;
+        IList<DataAssistantPluginEnterpriseApproval> configuredApprovals = [];
+
+        if (settingsTable.TryGetValue(settingName, out var configuredLuaValue)
+            && configuredLuaValue.Type is LuaValueType.Table
+            && configuredLuaValue.TryRead<LuaTable>(out var approvalsTable))
+        {
+            var approvals = new List<DataAssistantPluginEnterpriseApproval>(approvalsTable.ArrayLength);
+            for (var index = 1; index <= approvalsTable.ArrayLength; index++)
+            {
+                var entryValue = approvalsTable[index];
+                if (entryValue.TryRead<string>(out var hashText))
+                {
+                    var normalizedHash = NormalizeApprovalHash(hashText);
+                    if (!string.IsNullOrWhiteSpace(normalizedHash))
+                        approvals.Add(new() { PluginHash = normalizedHash });
+                    else
+                        LOG.LogWarning("The enterprise assistant approval entry at index {Index} contains an empty hash (config plugin id: {ConfigPluginId}).", index, this.Id);
+
+                    continue;
+                }
+
+                if (!entryValue.TryRead<LuaTable>(out var entryTable))
+                {
+                    LOG.LogWarning("The enterprise assistant approval entry at index {Index} is neither a string nor a table (config plugin id: {ConfigPluginId}).", index, this.Id);
+                    continue;
+                }
+
+                if (!TryParseEnterpriseApprovedAssistantPlugin(index, entryTable, this.Id, out var approval))
+                    continue;
+
+                approvals.Add(approval);
+            }
+
+            configuredApprovals = approvals;
+            successful = true;
+        }
+
+        if (dryRun)
+            return;
+
+        switch (successful)
+        {
+            case true:
+                configMeta.SetValue(configuredApprovals);
+                configMeta.LockConfiguration(this.Id);
+                break;
+
+            case false when configMeta.IsLocked && configMeta.LockedByConfigPluginId == this.Id:
+                configMeta.ResetLockedConfiguration();
+                break;
+        }
+    }
+
+    private static bool TryParseEnterpriseApprovedAssistantPlugin(int index, LuaTable table, Guid configPluginId, out DataAssistantPluginEnterpriseApproval approval)
+    {
+        approval = new();
+
+        if (!table.TryGetValue("PluginHash", out var pluginHashValue) || !pluginHashValue.TryRead<string>(out var pluginHash))
+        {
+            LOG.LogWarning("The enterprise assistant approval entry at index {Index} is missing a valid PluginHash (config plugin id: {ConfigPluginId}).", index, configPluginId);
+            return false;
+        }
+
+        var normalizedHash = NormalizeApprovalHash(pluginHash);
+        if (string.IsNullOrWhiteSpace(normalizedHash))
+        {
+            LOG.LogWarning("The enterprise assistant approval entry at index {Index} contains an empty PluginHash (config plugin id: {ConfigPluginId}).", index, configPluginId);
+            return false;
+        }
+
+        var displayName = TryReadOptionalString(table, "DisplayName");
+        var comment = TryReadOptionalString(table, "Comment");
+        var approvedBy = TryReadOptionalString(table, "ApprovedBy");
+        var approvedAtUtc = TryReadOptionalDateTimeOffset(table, "ApprovedAtUtc", index, configPluginId);
+
+        approval = new()
+        {
+            PluginHash = normalizedHash,
+            DisplayName = displayName,
+            Comment = comment,
+            ApprovedBy = approvedBy,
+            ApprovedAtUtc = approvedAtUtc,
+        };
+        return true;
+    }
+
+    private static string TryReadOptionalString(LuaTable table, string key)
+    {
+        return table.TryGetValue(key, out var value) && value.TryRead<string>(out var text)
+            ? text
+            : string.Empty;
+    }
+
+    private static DateTimeOffset? TryReadOptionalDateTimeOffset(LuaTable table, string key, int index, Guid configPluginId)
+    {
+        if (!table.TryGetValue(key, out var value))
+            return null;
+
+        if (value.TryRead<string>(out var text) && DateTimeOffset.TryParse(text, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out var parsed))
+            return parsed.ToUniversalTime();
+
+        LOG.LogWarning("The enterprise assistant approval entry at index {Index} contains an invalid {Key} value (config plugin id: {ConfigPluginId}).", index, key, configPluginId);
+        return null;
+    }
+
+    private static string NormalizeApprovalHash(string hash) => string.IsNullOrWhiteSpace(hash) ? string.Empty : hash.Trim().ToUpperInvariant();
 
     private void TryReadMandatoryInfos(LuaTable mainTable)
     {

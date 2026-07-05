@@ -1,5 +1,6 @@
 using AIStudio.Dialogs.Settings;
 using AIStudio.Settings;
+using AIStudio.Tools.AssistantSessions;
 
 namespace AIStudio.Assistants.MyTasks;
 
@@ -59,6 +60,25 @@ public partial class AssistantMyTasks : AssistantBaseCore<SettingsDialogMyTasks>
     private string inputText = string.Empty;
     private CommonLanguages selectedTargetLanguage = CommonLanguages.AS_IS;
     private string customTargetLanguage = string.Empty;
+    private static readonly AssistantSessionStateKey<string> INPUT_TEXT_STATE_KEY = new(nameof(inputText));
+    private static readonly AssistantSessionStateKey<CommonLanguages> SELECTED_TARGET_LANGUAGE_STATE_KEY = new(nameof(selectedTargetLanguage));
+    private static readonly AssistantSessionStateKey<string> CUSTOM_TARGET_LANGUAGE_STATE_KEY = new(nameof(customTargetLanguage));
+
+    /// <inheritdoc />
+    protected override void CaptureCustomAssistantSessionState(AssistantSessionStateWriter state)
+    {
+        state.Set(INPUT_TEXT_STATE_KEY, this.inputText);
+        state.Set(SELECTED_TARGET_LANGUAGE_STATE_KEY, this.selectedTargetLanguage);
+        state.Set(CUSTOM_TARGET_LANGUAGE_STATE_KEY, this.customTargetLanguage);
+    }
+
+    /// <inheritdoc />
+    protected override void RestoreCustomAssistantSessionState(AssistantSessionStateReader state)
+    {
+        state.Restore(INPUT_TEXT_STATE_KEY, value => this.inputText = value);
+        state.Restore(SELECTED_TARGET_LANGUAGE_STATE_KEY, value => this.selectedTargetLanguage = value);
+        state.Restore(CUSTOM_TARGET_LANGUAGE_STATE_KEY, value => this.customTargetLanguage = value);
+    }
     
     #region Overrides of ComponentBase
 

@@ -37,6 +37,7 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
     private IReadOnlyCollection<TreeItemData<ITreeItem>> fileSystemTreeItems = [];
     private CultureInfo currentCultureInfo = CultureInfo.InvariantCulture;
     private bool isAuditing;
+    private PluginAssistantSecurityState securityState = new();
 
     private AIStudio.Settings.Provider CurrentProvider => this.SettingsManager.GetPreselectedProvider(Tools.Components.AGENT_ASSISTANT_PLUGIN_AUDIT, null, true);
 
@@ -50,7 +51,7 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
 
     private string MinimumLevelLabel => this.MinimumLevel.GetName();
 
-    private bool CanRunAudit => this.plugin is not null && this.CurrentProvider != AIStudio.Settings.Provider.NONE && !this.isAuditing;
+    private bool CanRunAudit => this.plugin is not null && this.CurrentProvider != AIStudio.Settings.Provider.NONE && !this.isAuditing && !this.securityState.IsEnterpriseApproved;
 
     private bool IsAuditBelowMinimum => this.audit is not null && this.audit.Level < this.MinimumLevel;
 
@@ -74,6 +75,7 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
             .FirstOrDefault(x => x.Id == this.PluginId);
         if (this.plugin is not null)
         {
+            this.securityState = PluginAssistantSecurityResolver.Resolve(this.SettingsManager, this.plugin);
             this.promptPreview = await this.plugin.BuildAuditPromptPreviewAsync();
             this.promptFallbackPreview = this.plugin.BuildAuditPromptFallbackPreview();
             this.plugin.CreateAuditComponentSummary();
@@ -96,6 +98,7 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
         try
         {
             this.audit = await this.AssistantPluginAuditService.RunAuditAsync(this.plugin);
+            this.securityState = PluginAssistantSecurityResolver.Resolve(this.SettingsManager, this.plugin);
         }
         finally
         {

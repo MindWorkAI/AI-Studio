@@ -287,10 +287,52 @@ Currently, you can configure the following things:
 - Any number of LLM providers (self-hosted or cloud providers with encrypted API keys)
 - Any number of transcription providers for voice-to-text functionality
 - Any number of embedding providers for RAG
+- Enterprise hash approvals for assistant plugins
 - The update behavior of AI Studio
 - Various UI and feature settings (see the example configuration for details)
 
 All other settings can be made by the user themselves. If you need additional settings, feel free to create an issue in our planning repository: https://github.com/MindWorkAI/Planning/issues
+
+## Enterprise approval for assistant plugins
+
+Enterprise configurations can approve assistant plugins by hash so that users do not need to run a local assistant audit before activation. The approval is based only on the current plugin content, not on the plugin GUID.
+
+AI Studio computes the approval hash as a SHA-256 digest over all `.lua` files in the assistant plugin directory:
+
+- recursively
+- sorted by relative path in ordinal order
+- using canonical `/` path separators
+- hashing relative-path length, relative path, content length, and file content for each Lua file
+
+If any Lua file changes, the hash changes automatically and the enterprise approval no longer applies.
+
+### Configuration example
+
+Add the approval list to `CONFIG["SETTINGS"]` in your configuration plugin:
+
+```lua
+CONFIG["SETTINGS"]["DataAssistantPluginAudit.EnterpriseApprovedPlugins"] = {
+    {
+        ["PluginHash"] = "0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF",
+        ["DisplayName"] = "Corporate Translation Assistant",
+        ["Comment"] = "Approved for internal rollout",
+        ["ApprovedBy"] = "AI Governance Board",
+        ["ApprovedAtUtc"] = "2026-07-02T09:30:00Z",
+    }
+}
+```
+
+`PluginHash` is required. All other fields are optional and are shown in the UI as approval metadata.
+
+### Generating the hash
+
+Use the build-script command from the repository root:
+
+```bash
+dotnet run --project app/Build -- assistant-plugin-hash "<plugin-dir>" --lua-snippet
+```
+
+This prints the canonical hash and, with `--lua-snippet`, also prints a ready-to-paste Lua snippet for `CONFIG["SETTINGS"]`.
 
 ## Encrypted API Keys
 

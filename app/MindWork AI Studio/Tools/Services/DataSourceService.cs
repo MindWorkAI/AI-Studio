@@ -70,9 +70,10 @@ public sealed class DataSourceService
     
     private async Task<AllowedSelectedDataSources> GetDataSources(bool usingTrustedProvider, IReadOnlyCollection<IDataSource>? previousSelectedDataSources = null)
     {
-        var allDataSources = this.settingsManager.ConfigurationData.DataSources;
+        var allDataSources = this.settingsManager.ConfigurationData.DataSources.ToList();
+        var previousSelectedDataSourceIds = previousSelectedDataSources?.Select(source => source.Id).ToHashSet(StringComparer.Ordinal) ?? [];
         var filteredDataSources = new List<IDataSource>(allDataSources.Count);
-        var filteredSelectedDataSources = new List<IDataSource>(previousSelectedDataSources?.Count ?? 0);
+        var filteredSelectedDataSources = new List<IDataSource>(previousSelectedDataSourceIds.Count);
         var tasks = new List<Task<IDataSource?>>(allDataSources.Count);
         
         // Start all checks in parallel:
@@ -86,7 +87,7 @@ public sealed class DataSourceService
             if (source is not null)
             {
                 filteredDataSources.Add(source);
-                if (previousSelectedDataSources is not null && previousSelectedDataSources.Contains(source))
+                if (previousSelectedDataSourceIds.Contains(source.Id))
                     filteredSelectedDataSources.Add(source);
             }
         }

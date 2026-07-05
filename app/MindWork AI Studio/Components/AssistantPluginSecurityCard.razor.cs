@@ -103,12 +103,23 @@ public partial class AssistantPluginSecurityCard : MSGComponentBase
 
     private string GetFindingSummary()
     {
+        if (this.SecurityState.IsEnterpriseApproved)
+            return this.T("No user audit required");
+
         var count = this.SecurityState.Audit?.Findings.Count ?? 0;
         return string.Format(this.T("{0} Finding(s)"), count);
     }
 
     private string GetAuditTimestampLabel()
     {
+        if (this.SecurityState.IsEnterpriseApproved)
+        {
+            var approvedAt = this.SecurityState.EnterpriseApproval?.ApprovedAtUtc;
+            return approvedAt is null
+                ? this.T("Company approved")
+                : this.FormatFileTimestamp(approvedAt.Value.ToLocalTime().DateTime);
+        }
+
         var auditedAt = this.SecurityState.Audit?.AuditedAtUtc;
         return auditedAt is null
             ? this.T("No audit yet")
