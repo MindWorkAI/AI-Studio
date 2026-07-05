@@ -10,7 +10,7 @@ namespace AIStudio.Tools.AssistantSessions;
 public sealed class AssistantSessionStateReader(IReadOnlyDictionary<string, IAssistantSessionSnapshotField> fields, string assistantTitle)
 {
     private static readonly ILogger<AssistantSessionStateReader> LOG = Program.LOGGER_FACTORY.CreateLogger<AssistantSessionStateReader>();
-
+    
     /// <summary>
     /// Restores a typed value when it exists in the snapshot.
     /// </summary>

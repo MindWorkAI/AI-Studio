@@ -111,7 +111,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         Capability.SPEECH_INPUT,
         Capability.VIDEO_INPUT
     ];
-
+    
     private static readonly IReadOnlyList<ReasoningOverrideMode> REASONING_OVERRIDE_MODES =
     [
         ReasoningOverrideMode.AUTOMATIC,
@@ -724,10 +724,10 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
 
         return true;
     }
-
+    
     private string GetExpertStyles => this.showExpertSettings ? "border-2 border-dashed rounded pa-2" : string.Empty;
-
-    private static string GetPlaceholderExpertSettings =>
+    
+    private static string GetPlaceholderExpertSettings => 
       """
       "temperature": 0.5,
       "top_p": 0.9,

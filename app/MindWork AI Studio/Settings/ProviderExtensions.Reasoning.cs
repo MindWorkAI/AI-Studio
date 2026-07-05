@@ -42,7 +42,7 @@ public static partial class ProviderExtensions
         var capabilities = provider.GetModelCapabilities();
         if (capabilities.Contains(Capability.ALWAYS_REASONING))
             return ReasoningIndicatorState.ALWAYS_ON;
-
+    
         var reasoningConfigurationState = GetReasoningConfigurationState(provider);
         if (capabilities.Contains(Capability.REASONING_BY_DEFAULT))
         {
@@ -264,7 +264,7 @@ public static partial class ProviderExtensions
         text.Equals("on", StringComparison.OrdinalIgnoreCase) ||
         text.Equals("summarized", StringComparison.OrdinalIgnoreCase)
             => ReasoningConfigurationState.EXPLICITLY_ENABLED,
-
+    
         true => ReasoningConfigurationState.EXPLICITLY_ENABLED,
         _ => ReasoningConfigurationState.NOT_CONFIGURED,
     };
@@ -369,7 +369,7 @@ public static partial class ProviderExtensions
         string text when text.Equals("enabled", StringComparison.OrdinalIgnoreCase) ||
         text.Equals("adaptive", StringComparison.OrdinalIgnoreCase)
             => ReasoningConfigurationState.EXPLICITLY_ENABLED,
-
+    
         string text when IsDisabledText(text) => ReasoningConfigurationState.EXPLICITLY_DISABLED,
         _ => GetLevelState(value),
     };
