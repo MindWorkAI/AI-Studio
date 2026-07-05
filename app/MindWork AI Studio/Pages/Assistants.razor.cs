@@ -1,3 +1,4 @@
+using AIStudio.Chat;
 using AIStudio.Components;
 using AIStudio.Agents.AssistantAudit;
 using AIStudio.Tools.PluginSystem;
@@ -12,6 +13,12 @@ public partial class Assistants : MSGComponentBase
 
     [Inject]
     private AssistantPluginAuditService AssistantPluginAuditService { get; init; } = null!;
+
+    [Inject]
+    private NavigationManager NavigationManager { get; init; } = null!;
+
+    [Inject]
+    private ILogger<Assistants> Logger { get; init; } = null!;
     
     protected override async Task OnInitializedAsync()
     {
@@ -79,6 +86,50 @@ public partial class Assistants : MSGComponentBase
             audits[existingIndex] = audit;
         else
             audits.Add(audit);
+    }
+
+    private async Task StartAssistantPluginAsync(PluginAssistants assistantPlugin)
+    {
+        var securityState = PluginAssistantSecurityResolver.Resolve(this.SettingsManager, assistantPlugin);
+        if (!securityState.CanStartAssistant)
+            return;
+
+        if (!assistantPlugin.StartsChatDirectly)
+        {
+            this.NavigationManager.NavigateTo($"{Routes.ASSISTANT_DYNAMIC}?assistantId={assistantPlugin.Id}");
+            return;
+        }
+
+        var chatThread = await this.TryCreateDirectChatThreadAsync(assistantPlugin);
+        if (chatThread is null)
+            return;
+
+        MessageBus.INSTANCE.DeferMessage(this, Event.SEND_TO_CHAT, chatThread);
+        this.NavigationManager.NavigateTo(Routes.CHAT);
+    }
+
+    private async Task<ChatThread?> TryCreateDirectChatThreadAsync(PluginAssistants assistantPlugin)
+    {
+        var workspaceId = await WorkspaceBehaviour.ResolveOrCreateWorkspaceIdByNameAsync(assistantPlugin.LaunchWorkspaceName);
+        if (workspaceId == Guid.Empty)
+        {
+            this.Logger.LogWarning("Assistant plugin '{PluginName}' could not resolve or create workspace '{WorkspaceName}'.", assistantPlugin.Name, assistantPlugin.LaunchWorkspaceName);
+            return null;
+        }
+
+        return new ChatThread
+        {
+            IncludeDateTime = true,
+            SelectedProvider = string.Empty,
+            SelectedProfile = string.Empty,
+            SelectedChatTemplate = string.Empty,
+            SystemPrompt = SystemPrompts.DEFAULT,
+            WorkspaceId = workspaceId,
+            ChatId = Guid.NewGuid(),
+            Name = assistantPlugin.AssistantTitle,
+            DataSourceOptions = this.SettingsManager.ConfigurationData.Chat.PreselectedDataSourceOptions.CreateCopy(),
+            Blocks = [],
+        };
     }
 
     protected override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default

@@ -31,12 +31,27 @@ public static class CommonTools
         if (string.IsNullOrWhiteSpace(ietfTag))
             return CultureInfo.InvariantCulture;
 
+        var normalizedTag = ietfTag.Trim().Replace('_', '-');
+
         try
         {
-            return CultureInfo.GetCultureInfo(ietfTag);
+            return CultureInfo.GetCultureInfo(normalizedTag);
         }
         catch (CultureNotFoundException)
         {
+            var separatorIndex = normalizedTag.IndexOf('-');
+            if (separatorIndex > 0)
+            {
+                var neutralLanguageTag = normalizedTag[..separatorIndex];
+                try
+                {
+                    return CultureInfo.GetCultureInfo(neutralLanguageTag);
+                }
+                catch (CultureNotFoundException)
+                {
+                }
+            }
+
             return CultureInfo.InvariantCulture;
         }
     }

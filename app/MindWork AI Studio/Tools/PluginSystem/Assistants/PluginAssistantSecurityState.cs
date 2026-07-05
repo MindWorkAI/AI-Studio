@@ -13,9 +13,12 @@ public sealed class PluginAssistantSecurityState
 {
     public PluginAssistants Plugin { get; init; } = null!;
     public PluginAssistantAudit? Audit { get; init; }
+    public DataAssistantPluginEnterpriseApproval? EnterpriseApproval { get; init; }
     public DataAssistantPluginAudit Settings { get; init; } = new();
+    public PluginAssistantSecurityStatusSource Source { get; init; } = PluginAssistantSecurityStatusSource.NONE;
     public string CurrentHash { get; init; } = string.Empty;
     public bool HasAudit => this.Audit is not null;
+    public bool IsEnterpriseApproved => this.Source is PluginAssistantSecurityStatusSource.ENTERPRISE_APPROVAL;
     public bool HashMatches { get; init; }
     public bool HasHashMismatch { get; init; }
     public bool IsBelowMinimum { get; init; }
@@ -32,6 +35,9 @@ public sealed class PluginAssistantSecurityState
     public Color AvailabilityColor { get; init; } = Color.Info;
     public string AvailabilityIcon { get; init; } = MudBlazor.Icons.Material.Filled.Lock;
     public string StatusLabel { get; init; } = string.Empty;
+    public string SourceLabel { get; init; } = string.Empty;
+    public Color SourceColor { get; init; } = Color.Info;
+    public string SourceIcon { get; init; } = MudBlazor.Icons.Material.Filled.Info;
     public string Headline { get; init; } = string.Empty;
     public string Description { get; init; } = string.Empty;
     public Color StatusColor { get; init; } = Color.Info;

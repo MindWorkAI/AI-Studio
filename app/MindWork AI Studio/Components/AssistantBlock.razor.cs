@@ -32,6 +32,9 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase where TSetting
     public string Link { get; set; } = string.Empty;
 
     [Parameter]
+    public EventCallback OnClick { get; set; }
+
+    [Parameter]
     public bool Disabled { get; set; }
 
     [Parameter]
@@ -79,6 +82,8 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase where TSetting
     private bool IsVisible => this.SettingsManager.IsAssistantVisible(this.Component, assistantName: this.Name, requiredPreviewFeature: this.RequiredPreviewFeature);
 
     private bool HasSettingsPanel => typeof(TSettings) != typeof(NoSettingsPanel);
+
+    private bool HasStartAction => this.OnClick.HasDelegate;
 
     /// <summary>
     /// Gets the newest assistant session snapshot represented by this block.
