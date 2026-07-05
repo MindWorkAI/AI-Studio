@@ -74,7 +74,6 @@ internal sealed partial class LuaResponse
 
         if (string.IsNullOrWhiteSpace(this.Plugin.Name) ||
             string.IsNullOrWhiteSpace(this.Plugin.Description) ||
-            this.Plugin.Categories is null ||
             this.Plugin.Categories.Length == 0 ||
             this.Plugin.Categories.Any(string.IsNullOrWhiteSpace))
         {

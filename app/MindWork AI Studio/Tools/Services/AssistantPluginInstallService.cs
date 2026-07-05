@@ -186,7 +186,7 @@ public sealed class AssistantPluginInstallService
                 return AssistantPluginValidationResult.Error($"The generated assistant plugin is invalid. Issue: {string.Join("; ", assistantPlugin.Issues)}");
             }
 
-            if (PluginFactory.AvailablePlugins.Any(plugin => plugin.Type is PluginType.ASSISTANT && plugin.Id == assistantPlugin.Id && plugin.IsInternal))
+            if (PluginFactory.AvailablePlugins.Any(availablePlugin => availablePlugin.Type is PluginType.ASSISTANT && availablePlugin.Id == assistantPlugin.Id && availablePlugin.IsInternal))
             {
                 this.TryDeleteStagingDirectory(stagingDirectory);
                 return AssistantPluginValidationResult.Error("The generated assistant plugin uses the ID of an internal AI Studio plugin.");
