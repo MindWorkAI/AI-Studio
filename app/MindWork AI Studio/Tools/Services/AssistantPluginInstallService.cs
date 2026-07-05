@@ -159,10 +159,10 @@ public sealed class AssistantPluginInstallService
     private async Task<AssistantPluginValidationResult> ValidateIntoStagingAsync(string lua, CancellationToken token)
     {
         if (string.IsNullOrWhiteSpace(lua))
-            return AssistantPluginValidationResult.Error("No Lua plugin code was generated.");
+            return AssistantPluginValidationResult.Failure("No Lua plugin code was generated.");
 
         if (!PluginFactory.IsInitialized)
-            return AssistantPluginValidationResult.Error("The plugin system is not initialized yet.");
+            return AssistantPluginValidationResult.Failure("The plugin system is not initialized yet.");
 
         var pluginCode = lua.Trim();
         var stagingDirectory = Path.Join(Path.GetTempPath(), $"{ASSISTANT_BUILDER_DIRECTORY_PREFIX}.staging-{Guid.NewGuid():N}");
@@ -177,19 +177,19 @@ public sealed class AssistantPluginInstallService
             if (plugin is not PluginAssistants assistantPlugin)
             {
                 this.TryDeleteStagingDirectory(stagingDirectory);
-                return AssistantPluginValidationResult.Error($"The generated plugin is not an assistant plugin. Issue: {string.Join("; ", plugin.Issues)}");
+                return AssistantPluginValidationResult.Failure($"The generated plugin is not an assistant plugin. Issue: {string.Join("; ", plugin.Issues)}");
             }
 
             if (!assistantPlugin.IsValid)
             {
                 this.TryDeleteStagingDirectory(stagingDirectory);
-                return AssistantPluginValidationResult.Error($"The generated assistant plugin is invalid. Issue: {string.Join("; ", assistantPlugin.Issues)}");
+                return AssistantPluginValidationResult.Failure($"The generated assistant plugin is invalid. Issue: {string.Join("; ", assistantPlugin.Issues)}");
             }
 
             if (PluginFactory.AvailablePlugins.Any(availablePlugin => availablePlugin.Type is PluginType.ASSISTANT && availablePlugin.Id == assistantPlugin.Id && availablePlugin.IsInternal))
             {
                 this.TryDeleteStagingDirectory(stagingDirectory);
-                return AssistantPluginValidationResult.Error("The generated assistant plugin uses the ID of an internal AI Studio plugin.");
+                return AssistantPluginValidationResult.Failure("The generated assistant plugin uses the ID of an internal AI Studio plugin.");
             }
 
             return new(true, stagingDirectory, assistantPlugin, string.Empty);
@@ -198,7 +198,7 @@ public sealed class AssistantPluginInstallService
         {
             this.logger.LogError(e, "Failed to validate generated assistant plugin.");
             this.TryDeleteStagingDirectory(stagingDirectory);
-            return AssistantPluginValidationResult.Error(e.Message);
+            return AssistantPluginValidationResult.Failure(e.Message);
         }
     }
 
@@ -298,6 +298,6 @@ public sealed class AssistantPluginInstallService
 
     private sealed record AssistantPluginValidationResult(bool Success, string StagingDirectory, PluginAssistants? AssistantPlugin, string Issue)
     {
-        public static AssistantPluginValidationResult Error(string issue) => new(false, string.Empty, null, issue);
+        public static AssistantPluginValidationResult Failure(string issue) => new(false, string.Empty, null, issue);
     }
 }
