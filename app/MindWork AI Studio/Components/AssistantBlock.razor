@@ -7,7 +7,17 @@
         <MudCardHeader>
             <CardHeaderContent>
                 <MudStack AlignItems="AlignItems.Center" Row="@true">
-                    <MudIcon Icon="@this.Icon" Size="Size.Large" Color="Color.Primary"/>
+                    <MudElement HtmlTag="span" Style="position: relative; display: inline-flex; line-height: 1;">
+                        <MudIcon Icon="@this.Icon" Size="Size.Large" Color="Color.Primary"/>
+                        @if (this.AssistantSessionIndicator is { } indicator)
+                        {
+                            <MudTooltip Text="@indicator.Tooltip">
+                                <MudElement HtmlTag="span" Style="position: absolute; right: -0.45rem; bottom: -0.3rem; display: inline-flex; background-color: var(--mud-palette-surface); border-radius: 50%; padding: 1px;">
+                                    <MudIcon Icon="@indicator.Icon" Size="Size.Small" Color="@indicator.Color"/>
+                                </MudElement>
+                            </MudTooltip>
+                        }
+                    </MudElement>
                     <MudText Typo="Typo.h6">
                         @this.Name
                     </MudText>

@@ -214,6 +214,21 @@ public static partial class PluginFactory
 
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Chat, x => x.PreselectedChatTemplate, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;
+
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Chat, x => x.PreselectedDataSourcesDisabled, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Chat, x => x.PreselectedDataSourcesAutomaticSelection, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Chat, x => x.PreselectedDataSourcesAutomaticValidation, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Chat, x => x.PreselectedDataSourceIds, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Chat, x => x.SendToChatDataSourceBehavior, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
         
         // Check for the update interval:
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.UpdateInterval, AVAILABLE_PLUGINS))
@@ -298,6 +313,26 @@ public static partial class PluginFactory
 
         // Check data source security settings:
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.DataSourceSecurity, x => x.TrustedProviderIds, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        // Check data source selection agent settings:
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.AgentDataSourceSelection, x => x.PreselectAgentOptions, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.AgentDataSourceSelection, x => x.PreselectedAgentProvider, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        // Check retrieval context validation agent settings:
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.AgentRetrievalContextValidation, x => x.EnableRetrievalContextValidation, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.AgentRetrievalContextValidation, x => x.PreselectAgentOptions, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.AgentRetrievalContextValidation, x => x.PreselectedAgentProvider, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.AgentRetrievalContextValidation, x => x.NumParallelValidations, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;
 
         // Check if audit is required before it can be activated

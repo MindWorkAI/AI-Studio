@@ -109,7 +109,7 @@ public static partial class ProviderExtensions
                     Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
                     Capability.TEXT_OUTPUT,
                     
-                    Capability.ALWAYS_REASONING, Capability.FUNCTION_CALLING,
+                    Capability.OPTIONAL_REASONING, Capability.FUNCTION_CALLING,
                     Capability.CHAT_COMPLETION_API,
                 ];
             
@@ -121,7 +121,7 @@ public static partial class ProviderExtensions
                     Capability.MULTIPLE_IMAGE_INPUT,
                     Capability.TEXT_OUTPUT,
                     
-                    Capability.ALWAYS_REASONING, Capability.FUNCTION_CALLING,
+                    Capability.OPTIONAL_REASONING, Capability.FUNCTION_CALLING,
                     Capability.CHAT_COMPLETION_API,
                 ];
             
@@ -153,11 +153,27 @@ public static partial class ProviderExtensions
                     [
                         Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
                         Capability.TEXT_OUTPUT,
-                        
+
                         Capability.FUNCTION_CALLING,
                         Capability.CHAT_COMPLETION_API,
                     ];
-            
+
+
+            // Mistral medium 3.5:
+            if (modelName.IndexOf("mistral-medium-3.5") is not -1)
+                return
+                [
+                    Capability.TEXT_INPUT,
+                    Capability.MULTIPLE_IMAGE_INPUT,
+                    Capability.TEXT_OUTPUT,
+
+                    Capability.OPTIONAL_REASONING,
+
+                    Capability.FUNCTION_CALLING,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+
+
             if (modelName.IndexOf("mistral-3") is not -1 ||
                 modelName.IndexOf("mistral-large-3") is not -1)
                 return

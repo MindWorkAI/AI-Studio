@@ -206,6 +206,23 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         // Config: data source security settings
         ManagedConfiguration.TryProcessConfiguration(x => x.DataSourceSecurity, x => x.TrustedProviderIds, this.Id, settingsTable, dryRun);
 
+        // Config: data source selection agent settings
+        ManagedConfiguration.TryProcessConfiguration(x => x.AgentDataSourceSelection, x => x.PreselectAgentOptions, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.AgentDataSourceSelection, x => x.PreselectedAgentProvider, Guid.Empty, this.Id, settingsTable, dryRun);
+
+        // Config: retrieval context validation agent settings
+        ManagedConfiguration.TryProcessConfiguration(x => x.AgentRetrievalContextValidation, x => x.EnableRetrievalContextValidation, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.AgentRetrievalContextValidation, x => x.PreselectAgentOptions, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.AgentRetrievalContextValidation, x => x.PreselectedAgentProvider, Guid.Empty, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.AgentRetrievalContextValidation, x => x.NumParallelValidations, this.Id, settingsTable, dryRun);
+
+        // Config: assistant plugin audit settings
+        ManagedConfiguration.TryProcessConfiguration(x => x.AssistantPluginAudit, x => x.RequireAuditBeforeActivation, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.AssistantPluginAudit, x => x.PreselectedAgentProvider, Guid.Empty, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.AssistantPluginAudit, x => x.MinimumLevel, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.AssistantPluginAudit, x => x.BlockActivationBelowMinimum, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.AssistantPluginAudit, x => x.AutomaticallyAuditAssistants, this.Id, settingsTable, dryRun);
+
         // Config: enterprise-managed approvals for assistant plugins
         this.TryProcessEnterpriseApprovedAssistantPlugins(settingsTable, dryRun);
         
@@ -247,6 +264,11 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         ManagedConfiguration.TryProcessConfiguration(x => x.Chat, x => x.PreselectedProvider, Guid.Empty, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.Chat, x => x.PreselectedProfile, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.Chat, x => x.PreselectedChatTemplate, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.Chat, x => x.PreselectedDataSourcesDisabled, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.Chat, x => x.PreselectedDataSourcesAutomaticSelection, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.Chat, x => x.PreselectedDataSourcesAutomaticValidation, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.Chat, x => x.PreselectedDataSourceIds, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.Chat, x => x.SendToChatDataSourceBehavior, this.Id, settingsTable, dryRun);
 
         // Config: transcription provider?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.UseTranscriptionProvider, Guid.Empty, this.Id, settingsTable, dryRun);

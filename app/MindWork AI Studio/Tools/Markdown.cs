@@ -10,6 +10,12 @@ public static class Markdown
         .DisableHtml()
         .Build();
 
+    public static readonly MarkdownPipeline CHAT_MARKDOWN_PIPELINE = new MarkdownPipelineBuilder()
+        .UseAdvancedExtensions()
+        .UseSoftlineBreakAsHardlineBreak()
+        .DisableHtml()
+        .Build();
+
     public static MudMarkdownProps DefaultConfig => new()
     {
         Heading =

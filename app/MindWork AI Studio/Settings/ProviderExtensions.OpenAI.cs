@@ -175,6 +175,17 @@ public static partial class ProviderExtensions
                 Capability.WEB_SEARCH,
                 Capability.RESPONSES_API, Capability.CHAT_COMPLETION_API,
             ];
+
+        if(modelName is "gpt-5.5" || modelName.StartsWith("gpt-5.5-"))
+            return
+            [
+                Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                Capability.TEXT_OUTPUT, Capability.IMAGE_OUTPUT,
+
+                Capability.FUNCTION_CALLING, Capability.OPTIONAL_REASONING, Capability.REASONING_BY_DEFAULT,
+                Capability.WEB_SEARCH,
+                Capability.RESPONSES_API, Capability.CHAT_COMPLETION_API,
+            ];
         
         return
             [

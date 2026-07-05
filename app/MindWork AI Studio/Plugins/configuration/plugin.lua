@@ -70,8 +70,21 @@ CONFIG["LLM_PROVIDERS"] = {}
 --     -- Please refer to the documentation of the selected host for details.
 --     -- Might be something like ... \"temperature\": 0.5 ... for one parameter.
 --     -- Could be something like ... \"temperature\": 0.5, \"max_tokens\": 1000 ... for multiple parameters.
+--     -- Recognized reasoning parameters, such as reasoning_effort, thinking, think, and chat_template_kwargs.enable_thinking, may affect whether AI Studio shows the reasoning icon for this provider.
 --     -- Please do not add the enclosing curly braces {} here. Also, no trailing comma is allowed.
 --     ["AdditionalJsonApiParameters"] = "",
+--
+--     -- Optional: expert capability overrides.
+--     -- Allowed keys are exactly:
+--     -- AUDIO_INPUT, MULTIPLE_IMAGE_INPUT, SPEECH_INPUT, VIDEO_INPUT,
+--     -- OPTIONAL_REASONING, ALWAYS_REASONING, REASONING_BY_DEFAULT
+--     -- Allowed values are booleans only.
+--     -- For default-on reasoning (rhinking), set OPTIONAL_REASONING and REASONING_BY_DEFAULT to true.
+--     -- ALWAYS_REASONING means the model cannot disable reasoning (thinking).
+--     -- Missing keys keep the automatic capability detection result.
+--     -- ["CapabilityOverrides"] = {
+--     --     ["VIDEO_INPUT"] = false,
+--     -- },
 --
 --     -- Optional: Hugging Face inference provider. Only relevant for UsedLLMProvider = HUGGINGFACE.
 --     -- Allowed values are: CEREBRAS, NEBIUS_AI_STUDIO, SAMBANOVA, NOVITA, HYPERBOLIC, TOGETHER_AI, FIREWORKS, HF_INFERENCE_API
@@ -257,12 +270,38 @@ CONFIG["SETTINGS"] = {}
 -- Please note: using an empty string ("") or "00000000-0000-0000-0000-000000000000" means chats will use no chat template.
 -- CONFIG["SETTINGS"]["DataChat.PreselectedChatTemplate"] = "00000000-0000-0000-0000-000000000000"
 --
+--
+-- Configure default data source options for new chats.
+--
+-- Controls whether data sources are off by default:
+-- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesDisabled"] = false
+
+-- Controls whether AI Studio asks an agent to choose data sources:
+-- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesAutomaticSelection"] = true
+
+-- Controls whether retrieved data is validated by an agent:
+-- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesAutomaticValidation"] = true
+
+-- Must contain IDs from CONFIG["DATA_SOURCES"] or user-configured data sources.
+-- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourceIds"] = {
+--     "00000000-0000-0000-0000-000000000000",
+-- }
+--
+-- Configure whether default chat data source options are applied when assistant results are sent to chat.
+-- Allowed values are: NO_DATA_SOURCES, APPLY_STANDARD_CHAT_DATA_SOURCE_OPTIONS
+-- CONFIG["SETTINGS"]["DataChat.SendToChatDataSourceBehavior"] = "APPLY_STANDARD_CHAT_DATA_SOURCE_OPTIONS"
+--
 -- Allow users to change any configured chat default locally.
 -- Allowed values are: true, false
 -- CONFIG["SETTINGS"]["DataChat.PreselectOptions.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataChat.PreselectedProvider.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataChat.PreselectedProfile.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataChat.PreselectedChatTemplate.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesDisabled.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesAutomaticSelection.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesAutomaticValidation.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourceIds.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataChat.SendToChatDataSourceBehavior.AllowUserOverride"] = true
 
 -- Configure the transcription provider for voice-to-text functionality.
 -- It must be one of the transcription provider IDs defined in CONFIG["TRANSCRIPTION_PROVIDERS"].
@@ -389,6 +428,53 @@ CONFIG["SETTINGS"] = {}
 --     "00000000-0000-0000-0000-000000000000",
 --     "00000000-0000-0000-0000-000000000001",
 -- }
+
+-- Configure the data source selection agent.
+-- This agent is used when chat data source options enable AI-based data source selection.
+-- The provider must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"].
+-- CONFIG["SETTINGS"]["DataAgentDataSourceSelection.PreselectAgentOptions"] = true
+-- CONFIG["SETTINGS"]["DataAgentDataSourceSelection.PreselectedAgentProvider"] = "00000000-0000-0000-0000-000000000000"
+-- CONFIG["SETTINGS"]["DataAgentDataSourceSelection.PreselectAgentOptions.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataAgentDataSourceSelection.PreselectedAgentProvider.AllowUserOverride"] = true
+
+-- Configure the retrieval context validation agent.
+-- This agent is used when retrieval context validation is enabled globally and chat data source options enable AI-based validation.
+-- The provider must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"].
+-- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.EnableRetrievalContextValidation"] = true
+-- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.PreselectAgentOptions"] = true
+-- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.PreselectedAgentProvider"] = "00000000-0000-0000-0000-000000000000"
+-- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.NumParallelValidations"] = 3
+-- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.EnableRetrievalContextValidation.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.PreselectAgentOptions.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.PreselectedAgentProvider.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.NumParallelValidations.AllowUserOverride"] = true
+
+-- Configure assistant plugin security audits.
+--
+-- Configure whether assistant plugins must be audited before users can activate them.
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.RequireAuditBeforeActivation"] = true
+--
+-- Configure a dedicated provider for assistant plugin audits.
+-- It must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"].
+-- Without a selected audit provider, AI Studio uses the app-wide default provider.
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.PreselectedAgentProvider"] = "00000000-0000-0000-0000-000000000000"
+--
+-- Configure the minimum audit level assistant plugins must meet.
+-- Allowed values are: UNKNOWN, DANGEROUS, CAUTION, SAFE
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.MinimumLevel"] = "CAUTION"
+--
+-- Configure whether activation is blocked when the audit result is below the minimum level.
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.BlockActivationBelowMinimum"] = true
+--
+-- Configure whether new or changed assistant plugins are audited automatically in the background.
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.AutomaticallyAuditAssistants"] = false
+--
+-- Configure whether users can change assistant plugin audit settings locally.
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.RequireAuditBeforeActivation.AllowUserOverride"] = false
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.PreselectedAgentProvider.AllowUserOverride"] = false
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.MinimumLevel.AllowUserOverride"] = false
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.BlockActivationBelowMinimum.AllowUserOverride"] = false
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.AutomaticallyAuditAssistants.AllowUserOverride"] = false
 
 -- Example chat templates for this configuration:
 CONFIG["CHAT_TEMPLATES"] = {}

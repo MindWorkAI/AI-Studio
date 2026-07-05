@@ -48,6 +48,7 @@
                                     Description="@T(assistantPlugin.Description)"
                                     Icon="@Icons.Material.Filled.FindInPage"
                                     Disabled="@(!securityState.CanStartAssistant)"
+                                    AssistantSessionInstanceId="@assistantPlugin.Id.ToString()"
                                     Link="@launchLink"
                                     OnClick="@(() => this.StartAssistantPluginAsync(assistantPlugin))">
                         <SecurityBadge>

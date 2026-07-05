@@ -9,7 +9,11 @@ public static partial class ProviderExtensions
     /// </summary>
     /// <param name="provider">The configured provider.</param>
     /// <returns>The capabilities of the configured model.</returns>
-    public static List<Capability> GetModelCapabilities(this Provider provider) => provider.UsedLLMProvider.GetModelCapabilities(provider.Model);
+    public static List<Capability> GetModelCapabilities(this Provider provider)
+    {
+        var automaticCapabilities = provider.UsedLLMProvider.GetModelCapabilities(provider.Model);
+        return provider.CapabilityOverrides?.ApplyTo(automaticCapabilities) ?? automaticCapabilities;
+    }
     
     /// <summary>
     /// Get the capabilities of a model for a specific provider.

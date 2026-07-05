@@ -4,6 +4,7 @@ using System.Text.Json;
 using AIStudio.Components;
 using AIStudio.Provider;
 using AIStudio.Provider.HuggingFace;
+using AIStudio.Settings;
 using AIStudio.Tools.Services;
 using AIStudio.Tools.Validation;
 
@@ -18,6 +19,15 @@ namespace AIStudio.Dialogs;
 /// </summary>
 public partial class ProviderDialog : MSGComponentBase, ISecretId
 {
+    private enum ReasoningOverrideMode
+    {
+        AUTOMATIC,
+        NO_REASONING,
+        CAN_BE_ENABLED,
+        ON_BY_DEFAULT,
+        ALWAYS_ON
+    }
+
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = null!;
 
@@ -83,6 +93,9 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     
     [Parameter]
     public string AdditionalJsonApiParameters { get; set; } = string.Empty;
+
+    [Parameter]
+    public ProviderCapabilityOverrides? DataCapabilityOverrides { get; set; }
     
     [Inject]
     private RustService RustService { get; init; } = null!;
@@ -91,6 +104,22 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     private ILogger<ProviderDialog> Logger { get; init; } = null!;
 
     private static readonly Dictionary<string, object?> SPELLCHECK_ATTRIBUTES = new();
+    private static readonly IReadOnlyList<Capability> SWITCH_CAPABILITY_OVERRIDES =
+    [
+        Capability.AUDIO_INPUT,
+        Capability.MULTIPLE_IMAGE_INPUT,
+        Capability.SPEECH_INPUT,
+        Capability.VIDEO_INPUT
+    ];
+
+    private static readonly IReadOnlyList<ReasoningOverrideMode> REASONING_OVERRIDE_MODES =
+    [
+        ReasoningOverrideMode.AUTOMATIC,
+        ReasoningOverrideMode.NO_REASONING,
+        ReasoningOverrideMode.CAN_BE_ENABLED,
+        ReasoningOverrideMode.ON_BY_DEFAULT,
+        ReasoningOverrideMode.ALWAYS_ON
+    ];
     
     /// <summary>
     /// The list of used instance names. We need this to check for uniqueness.
@@ -106,6 +135,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     private string dataLoadingModelsIssue = string.Empty;
     private bool usesLegacySystemModelFallback;
     private bool showExpertSettings;
+    private ProviderCapabilityOverrides capabilityOverrides = new();
     
     // We get the form reference from Blazor code to validate it manually:
     private MudForm form = null!;
@@ -160,6 +190,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
             Host = this.DataHost,
             HFInferenceProvider = this.HFInferenceProviderId,
             AdditionalJsonApiParameters = this.AdditionalJsonApiParameters,
+            CapabilityOverrides = this.capabilityOverrides.HasOverrides ? this.capabilityOverrides : null,
         };
     }
 
@@ -178,7 +209,8 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         this.UsedInstanceNames = this.SettingsManager.ConfigurationData.Providers.Select(x => x.InstanceName.ToLowerInvariant()).ToList();
         #pragma warning restore MWAIS0001
 
-        this.showExpertSettings = !string.IsNullOrWhiteSpace(this.AdditionalJsonApiParameters);
+        this.capabilityOverrides = this.DataCapabilityOverrides ?? new();
+        this.showExpertSettings = !string.IsNullOrWhiteSpace(this.AdditionalJsonApiParameters) || this.capabilityOverrides.HasOverrides;
         
         // When editing, we need to load the data:
         if(this.IsEditing)
@@ -300,9 +332,17 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         this.DataHost = selectedHost;
         this.DataModel = default;
         this.dataManuallyModel = string.Empty;
+        this.capabilityOverrides = new();
         this.availableModels.Clear();
         this.dataLoadingModelsIssue = string.Empty;
         this.usesLegacySystemModelFallback = false;
+    }
+
+    private Task OnModelChanged(Model selectedModel)
+    {
+        this.DataModel = selectedModel;
+        this.capabilityOverrides = new();
+        return Task.CompletedTask;
     }
     
     private async Task ReloadModels()
@@ -368,6 +408,156 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     }
     
     private void ToggleExpertSettings() => this.showExpertSettings = !this.showExpertSettings;
+
+    private void SetCapabilityOverride(Capability capability, bool value)
+    {
+        this.capabilityOverrides = this.capabilityOverrides.SetOverride(capability, value);
+    }
+
+    private Task OnCapabilitySwitchChanged(Capability capability, bool value)
+    {
+        this.SetCapabilityOverride(capability, value);
+        return Task.CompletedTask;
+    }
+
+    private void ResetCapabilityOverride(Capability capability) =>
+        this.capabilityOverrides = this.capabilityOverrides.SetOverride(capability, null);
+
+    private ReasoningOverrideMode GetReasoningOverrideMode()
+    {
+        var alwaysReasoning = this.capabilityOverrides.GetOverride(Capability.ALWAYS_REASONING);
+        var optionalReasoning = this.capabilityOverrides.GetOverride(Capability.OPTIONAL_REASONING);
+        var reasoningByDefault = this.capabilityOverrides.GetOverride(Capability.REASONING_BY_DEFAULT);
+        if (alwaysReasoning is null && optionalReasoning is null && reasoningByDefault is null)
+            return ReasoningOverrideMode.AUTOMATIC;
+
+        var capabilities = this.GetCurrentModelCapabilities();
+        if (capabilities.Contains(Capability.ALWAYS_REASONING))
+            return ReasoningOverrideMode.ALWAYS_ON;
+
+        if (capabilities.Contains(Capability.REASONING_BY_DEFAULT))
+            return ReasoningOverrideMode.ON_BY_DEFAULT;
+
+        if (capabilities.Contains(Capability.OPTIONAL_REASONING))
+            return ReasoningOverrideMode.CAN_BE_ENABLED;
+
+        return ReasoningOverrideMode.NO_REASONING;
+    }
+
+    private ReasoningOverrideMode GetAutomaticReasoningOverrideMode()
+    {
+        var capabilities = this.GetAutomaticModelCapabilities();
+        if (capabilities.Contains(Capability.ALWAYS_REASONING))
+            return ReasoningOverrideMode.ALWAYS_ON;
+
+        if (capabilities.Contains(Capability.REASONING_BY_DEFAULT))
+            return ReasoningOverrideMode.ON_BY_DEFAULT;
+
+        if (capabilities.Contains(Capability.OPTIONAL_REASONING))
+            return ReasoningOverrideMode.CAN_BE_ENABLED;
+
+        return ReasoningOverrideMode.NO_REASONING;
+    }
+
+    private void SetReasoningOverrideMode(ReasoningOverrideMode mode)
+    {
+        this.capabilityOverrides = mode switch
+        {
+            ReasoningOverrideMode.AUTOMATIC => this.capabilityOverrides
+                .SetOverride(Capability.ALWAYS_REASONING, null)
+                .SetOverride(Capability.OPTIONAL_REASONING, null)
+                .SetOverride(Capability.REASONING_BY_DEFAULT, null),
+
+            ReasoningOverrideMode.NO_REASONING => this.capabilityOverrides
+                .SetOverride(Capability.ALWAYS_REASONING, false)
+                .SetOverride(Capability.OPTIONAL_REASONING, false)
+                .SetOverride(Capability.REASONING_BY_DEFAULT, false),
+
+            ReasoningOverrideMode.CAN_BE_ENABLED => this.capabilityOverrides
+                .SetOverride(Capability.ALWAYS_REASONING, false)
+                .SetOverride(Capability.OPTIONAL_REASONING, true)
+                .SetOverride(Capability.REASONING_BY_DEFAULT, false),
+
+            ReasoningOverrideMode.ON_BY_DEFAULT => this.capabilityOverrides
+                .SetOverride(Capability.ALWAYS_REASONING, false)
+                .SetOverride(Capability.OPTIONAL_REASONING, true)
+                .SetOverride(Capability.REASONING_BY_DEFAULT, true),
+
+            ReasoningOverrideMode.ALWAYS_ON => this.capabilityOverrides
+                .SetOverride(Capability.ALWAYS_REASONING, true)
+                .SetOverride(Capability.OPTIONAL_REASONING, false)
+                .SetOverride(Capability.REASONING_BY_DEFAULT, false),
+
+            _ => this.capabilityOverrides
+        };
+    }
+
+    private string GetReasoningOverrideModeLabel(ReasoningOverrideMode mode) => mode switch
+    {
+        ReasoningOverrideMode.AUTOMATIC => T("Automatic"),
+        ReasoningOverrideMode.NO_REASONING => T("No reasoning (thinking)"),
+        ReasoningOverrideMode.CAN_BE_ENABLED => T("Can be enabled"),
+        ReasoningOverrideMode.ON_BY_DEFAULT => T("On by default"),
+        ReasoningOverrideMode.ALWAYS_ON => T("Always on"),
+        _ => mode.ToString()
+    };
+
+    private string GetReasoningOverrideModeDescription(ReasoningOverrideMode mode) => mode switch
+    {
+        ReasoningOverrideMode.AUTOMATIC => string.Format(T("Use detected model behavior: {0}."), this.GetReasoningOverrideModeLabel(this.GetAutomaticReasoningOverrideMode())),
+        ReasoningOverrideMode.NO_REASONING => T("No reasoning (thinking) capability."),
+        ReasoningOverrideMode.CAN_BE_ENABLED => T("Reasoning (thinking) is available, but off unless additional API parameters enable it."),
+        ReasoningOverrideMode.ON_BY_DEFAULT => T("Reasoning (thinking) is available and on unless additional API parameters disable it."),
+        ReasoningOverrideMode.ALWAYS_ON => T("The model always uses reasoning (thinking); it cannot be disabled."),
+        _ => string.Empty
+    };
+
+    private bool HasCapabilityOverride(Capability capability) => this.capabilityOverrides.GetOverride(capability) is not null;
+
+    private bool IsCapabilityEnabled(Capability capability)
+    {
+        var capabilities = this.GetCurrentModelCapabilities();
+        return capabilities.Contains(capability);
+    }
+
+    private string GetCapabilityEffectiveLabel(Capability capability)
+    {
+        var isEnabled = this.IsCapabilityEnabled(capability);
+        if (this.HasCapabilityOverride(capability))
+            return isEnabled ? T("Enabled") : T("Disabled");
+
+        return isEnabled ? T("Enabled (Auto)") : T("Disabled (Auto)");
+    }
+
+    private List<Capability> GetCurrentModelCapabilities()
+    {
+        var currentProviderSettings = this.CreateProviderSettings();
+        return currentProviderSettings.GetModelCapabilities();
+    }
+
+    private List<Capability> GetAutomaticModelCapabilities() => this.DataLLMProvider.GetModelCapabilities(this.DataModel);
+
+    private string GetCurrentModelApiLabel()
+    {
+        var capabilities = this.GetCurrentModelCapabilities();
+        if (capabilities.Contains(Capability.RESPONSES_API))
+            return "Responses API";
+
+        if (capabilities.Contains(Capability.CHAT_COMPLETION_API))
+            return "Chat Completions API";
+
+        return "Unknown";
+    }
+
+    private string GetCapabilityOverrideLabel(Capability capability) => capability switch
+    {
+        Capability.AUDIO_INPUT => T("Audio input"),
+        Capability.MULTIPLE_IMAGE_INPUT => T("Multiple image input"),
+        Capability.SPEECH_INPUT => T("Speech input"),
+        Capability.VIDEO_INPUT => T("Video input"),
+        Capability.ALWAYS_REASONING => T("Always reasoning"),
+        _ => capability.ToString()
+    };
 
     private void OnInputChangeExpertSettings()
     {
@@ -534,10 +724,10 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
 
         return true;
     }
-    
+
     private string GetExpertStyles => this.showExpertSettings ? "border-2 border-dashed rounded pa-2" : string.Empty;
 
-    private static string GetPlaceholderExpertSettings => 
+    private static string GetPlaceholderExpertSettings =>
       """
       "temperature": 0.5,
       "top_p": 0.9,
