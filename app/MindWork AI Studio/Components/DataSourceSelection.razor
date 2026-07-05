@@ -160,13 +160,13 @@ else if (this.SelectionMode is DataSourceSelectionMode.CONFIGURATION_MODE)
             </MudText>
         }
 
-        <MudTextSwitch Label="@T("Are data sources enabled?")" Value="@this.areDataSourcesEnabled" LabelOn="@T("Yes, I want to use data sources.")" LabelOff="@T("No, I don't want to use data sources.")" ValueChanged="@this.EnabledChanged"/>
+        <MudTextSwitch Label="@T("Are data sources enabled?")" Value="@this.areDataSourcesEnabled" LabelOn="@T("Yes, I want to use data sources.")" LabelOff="@T("No, I don't want to use data sources.")" ValueChanged="@this.EnabledChanged" Disabled="@this.IsPreselectedDataSourcesDisabledLocked()"/>
         @if (this.areDataSourcesEnabled)
         {
-            <MudTextSwitch Label="@T("AI-based data source selection")" Value="@this.aiBasedSourceSelection" LabelOn="@T("Yes, let the AI decide which data sources are needed.")" LabelOff="@T("No, I manually decide which data source to use.")" ValueChanged="@this.AutoModeChanged"/>
-            <MudTextSwitch Label="@T("AI-based data validation")" Value="@this.aiBasedValidation" LabelOn="@T("Yes, let the AI validate & filter the retrieved data.")" LabelOff="@T("No, use all data retrieved from the data sources.")" ValueChanged="@this.ValidationModeChanged"/>
-            <MudField Label="@T("Available Data Sources")" Variant="Variant.Outlined" Class="mb-3" Disabled="@this.aiBasedSourceSelection">
-                <MudList T="IDataSource" SelectionMode="@this.GetListSelectionMode()" @bind-SelectedValues:get="@this.selectedDataSources" @bind-SelectedValues:set="@(x => this.SelectionChanged(x))">
+            <MudTextSwitch Label="@T("AI-based data source selection")" Value="@this.aiBasedSourceSelection" LabelOn="@T("Yes, let the AI decide which data sources are needed.")" LabelOff="@T("No, I manually decide which data source to use.")" ValueChanged="@this.AutoModeChanged" Disabled="@this.IsPreselectedDataSourcesAutomaticSelectionLocked()"/>
+            <MudTextSwitch Label="@T("AI-based data validation")" Value="@this.aiBasedValidation" LabelOn="@T("Yes, let the AI validate & filter the retrieved data.")" LabelOff="@T("No, use all data retrieved from the data sources.")" ValueChanged="@this.ValidationModeChanged" Disabled="@this.IsPreselectedDataSourcesAutomaticValidationLocked()"/>
+            <MudField Label="@T("Available Data Sources")" Variant="Variant.Outlined" Class="mb-3" Disabled="@(this.aiBasedSourceSelection || this.IsPreselectedDataSourceIdsLocked())">
+                <MudList T="IDataSource" SelectionMode="@this.GetListSelectionMode()" @bind-SelectedValues:get="@this.selectedDataSources" @bind-SelectedValues:set="@(x => this.SelectionChanged(x))" ReadOnly="@this.IsPreselectedDataSourceIdsLocked()">
                     @foreach (var source in this.availableDataSources)
                     {
                         <MudListItem Value="@source">
