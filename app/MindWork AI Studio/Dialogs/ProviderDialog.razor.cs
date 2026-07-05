@@ -444,6 +444,21 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         return ReasoningOverrideMode.NO_REASONING;
     }
 
+    private ReasoningOverrideMode GetAutomaticReasoningOverrideMode()
+    {
+        var capabilities = this.GetAutomaticModelCapabilities();
+        if (capabilities.Contains(Capability.ALWAYS_REASONING))
+            return ReasoningOverrideMode.ALWAYS_ON;
+
+        if (capabilities.Contains(Capability.REASONING_BY_DEFAULT))
+            return ReasoningOverrideMode.ON_BY_DEFAULT;
+
+        if (capabilities.Contains(Capability.OPTIONAL_REASONING))
+            return ReasoningOverrideMode.CAN_BE_ENABLED;
+
+        return ReasoningOverrideMode.NO_REASONING;
+    }
+
     private void SetReasoningOverrideMode(ReasoningOverrideMode mode)
     {
         this.capabilityOverrides = mode switch
@@ -489,7 +504,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
 
     private string GetReasoningOverrideModeDescription(ReasoningOverrideMode mode) => mode switch
     {
-        ReasoningOverrideMode.AUTOMATIC => T("Use detected model behavior."),
+        ReasoningOverrideMode.AUTOMATIC => string.Format(T("Use detected model behavior: {0}."), this.GetReasoningOverrideModeLabel(this.GetAutomaticReasoningOverrideMode())),
         ReasoningOverrideMode.NO_REASONING => T("No reasoning (thinking) capability."),
         ReasoningOverrideMode.CAN_BE_ENABLED => T("Reasoning (thinking) is available, but off unless additional API parameters enable it."),
         ReasoningOverrideMode.ON_BY_DEFAULT => T("Reasoning (thinking) is available and on unless additional API parameters disable it."),
@@ -519,6 +534,8 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         var currentProviderSettings = this.CreateProviderSettings();
         return currentProviderSettings.GetModelCapabilities();
     }
+
+    private List<Capability> GetAutomaticModelCapabilities() => this.DataLLMProvider.GetModelCapabilities(this.DataModel);
 
     private string GetCurrentModelApiLabel()
     {
