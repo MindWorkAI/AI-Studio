@@ -94,6 +94,7 @@ public partial class DataSourceSelection : MSGComponentBase
             this.aiBasedSourceSelection = this.DataSourceOptions.AutomaticDataSourceSelection;
             this.aiBasedValidation = this.DataSourceOptions.AutomaticValidation;
             this.areDataSourcesEnabled = !this.DataSourceOptions.DisableDataSources;
+            this.selectedDataSources = this.SettingsManager.ConfigurationData.DataSources.Where(ds => this.DataSourceOptions.PreselectedDataSourceIds.Contains(ds.Id)).ToList();
         }
 
         switch (this.SelectionMode)
