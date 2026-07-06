@@ -684,14 +684,14 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T2479378307"] = 
 -- Get Support
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T2694436440"] = "Support erhalten"
 
--- Context {0}
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T3205224990"] = "Kontext {0}"
-
--- Delete context
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T3491455017"] = "Kontext löschen"
+-- Context
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T3174137628"] = "Kontext"
 
 -- Your question(s)
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T3576319998"] = "Ihre Frage(n)"
+
+-- Coding Assistant Session
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T358051959"] = "Sitzung des Coding-Assistenten"
 
 -- Please provide your questions.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T4120171174"] = "Bitte stellen Sie Ihre Fragen."
@@ -702,29 +702,11 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T412437274"] = "
 -- Please provide the compiler messages.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T4225294332"] = "Bitte geben Sie die Kompilermeldungen an."
 
--- This coding assistant supports you in writing code. Provide some coding context by pasting your code into the input fields. You might assign an ID to your code snippet to easily reference it later. When you have compiler messages, you can paste them into the input fields to get help with debugging as well.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T566604388"] = "Dieser Assistent zum Programmieren unterstützt Sie beim Schreiben von Code. Geben Sie den Programmierkontext an, indem Sie Ihren Code in die Eingabefelder einfügen. Sie können Ihrem Code eine ID zuweisen, um später leichter auf diesen verweisen zu können. Wenn Sie Kompilermeldungen erhalten haben, können Sie diese ebenfalls einfügen, um Unterstützung beim Debuggen zu erhalten."
+-- This coding assistant supports you in writing code. Ask your coding question and optionally attach source files as context. When you have compiler messages, you can paste them into the input fields to get help with debugging as well.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T464918582"] = "Dieser Coding-Assistent unterstützt Sie beim Schreiben von Code. Stellen Sie Ihre Programmierfrage und hängen Sie optional Quelldateien als Kontext an. Wenn Sie Compiler-Meldungen haben, können Sie sie ebenfalls in die Eingabefelder einfügen, um Hilfe beim Debugging zu erhalten."
 
--- Add context
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T882607103"] = "Kontext hinzufügen"
-
--- Language
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::CODINGCONTEXTITEM::T2591284123"] = "Sprache"
-
--- Your code
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::CODINGCONTEXTITEM::T3144719651"] = "Ihr Code"
-
--- {0}: Please provide your input.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::CODINGCONTEXTITEM::T3160504659"] = "{0}: Bitte geben Sie Ihren Inhalt ein."
-
--- (Optional) Identifier
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::CODINGCONTEXTITEM::T3208138853"] = "(Optional) Kennung bzw. ID"
-
--- Other language
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::CODINGCONTEXTITEM::T3374524465"] = "Andere Sprache"
-
--- Please specify the language.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::CODINGCONTEXTITEM::T3406207295"] = "Bitte geben Sie die Sprache an."
+-- You can attach source files as optional context for your coding question.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T702937106"] = "Sie können Quelldateien als optionalen Kontext für Ihre Programmierfrage anhängen."
 
 -- Other
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::COMMONCODINGLANGUAGEEXTENSIONS::T1849229205"] = "Andere"
@@ -5361,23 +5343,14 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T49150
 -- Export configuration
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T975426229"] = "Konfiguration exportieren"
 
--- Which programming language should be preselected for added contexts?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCODING::T1073540083"] = "Welche Programmiersprache soll für hinzugefügte Kontexte vorausgewählt werden?"
-
 -- Compiler messages are preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCODING::T1110902070"] = "Compiler-Nachrichten sind vorausgewählt"
 
 -- Choose whether the assistant should use the app default profile, no profile, or a specific profile.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCODING::T1766361623"] = "Wählen Sie aus, ob der Assistent das Standardprofil der App, kein Profil oder ein bestimmtes Profil verwenden soll."
 
--- Preselect a programming language
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCODING::T2181567002"] = "Programmiersprache vorauswählen"
-
 -- Preselect a profile
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCODING::T2322771068"] = "Profil vorauswählen"
-
--- When enabled, you can preselect the coding options. This is might be useful when you prefer a specific programming language or LLM model.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCODING::T2619641701"] = "Wenn aktiviert, können Sie die Code-Optionen im Voraus auswählen. Das kann nützlich sein, wenn Sie eine bestimmte Programmiersprache oder ein bestimmtes LLM-Modell bevorzugen."
 
 -- Preselect coding options?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCODING::T2790579667"] = "Codierungsoptionen vorauswählen?"
@@ -5391,8 +5364,8 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCODING::T3015105896"
 -- Coding options are preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCODING::T3567850751"] = "Codierungsoptionen sind vorausgewählt"
 
--- Preselect another programming language
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCODING::T4230412334"] = "Eine andere Programmiersprache vorauswählen"
+-- When enabled, you can preselect coding assistant options such as compiler message input, provider, and profile.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCODING::T403451006"] = "Wenn aktiviert, können Sie Optionen für den Coding-Assistenten vorab auswählen, z. B. Compiler-Nachrichteneingabe, Anbieter und Profil."
 
 -- Compiler messages are not preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCODING::T516498299"] = "Compiler-Meldungen sind nicht vorausgewählt"
