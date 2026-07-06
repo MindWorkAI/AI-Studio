@@ -202,7 +202,7 @@ public partial class ReadFileContent : MSGComponentBase
 
     private bool CanCatchDroppedFile() => this.numDropAreasAboveThis is 0 && (this.isComponentHovered || this.CatchAllDocuments);
 
-    private void SetDragClass() => this.dragClass = $"{DEFAULT_DRAG_CLASS} mud-border-primary border-4";
+    private void SetDragClass() => this.dragClass = $"{DEFAULT_DRAG_CLASS} mud-border-primary border-2";
 
     private void ClearDragClass() => this.dragClass = DEFAULT_DRAG_CLASS;
 
