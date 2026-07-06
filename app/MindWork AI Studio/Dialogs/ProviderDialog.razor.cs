@@ -162,28 +162,13 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     {
         var cleanedHostname = this.DataHostname.Trim();
 
-        // Determine the model based on the provider and host configuration:
-        Model model;
-        if (this.IsLLMModelSelectionHidden)
-        {
-            // Use system model placeholder for legacy hosts that don't support model selection:
-            model = Model.SYSTEM_MODEL;
-        }
-        else if (this.DataLLMProvider is LLMProviders.FIREWORKS or LLMProviders.HUGGINGFACE)
-        {
-            // These providers require manual model entry:
-            model = new Model(this.dataManuallyModel, null);
-        }
-        else
-            model = this.DataModel;
-
         return new()
         {
             Num = this.DataNum,
             Id = this.DataId,
             InstanceName = this.DataInstanceName,
             UsedLLMProvider = this.DataLLMProvider,
-            Model = model,
+            Model = this.GetSelectedModel(),
             IsSelfHosted = this.DataLLMProvider is LLMProviders.SELF_HOSTED,
             IsEnterpriseConfiguration = false,
             Hostname = cleanedHostname.EndsWith('/') ? cleanedHostname[..^1] : cleanedHostname,
@@ -192,6 +177,17 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
             AdditionalJsonApiParameters = this.AdditionalJsonApiParameters,
             CapabilityOverrides = this.capabilityOverrides.HasOverrides ? this.capabilityOverrides : null,
         };
+    }
+
+    private Model GetSelectedModel()
+    {
+        if (this.IsLLMModelSelectionHidden)
+            return Model.SYSTEM_MODEL;
+
+        if (this.DataLLMProvider.IsLLMModelProvidedManually())
+            return new Model(this.dataManuallyModel, null);
+
+        return this.DataModel;
     }
 
     #region Overrides of ComponentBase
@@ -324,6 +320,17 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
             this.dataAPIKeyStorageIssue = string.Empty;
             await this.form.Validate();
         }
+    }
+
+    private void OnProviderChanged(LLMProviders selectedProvider)
+    {
+        this.DataLLMProvider = selectedProvider;
+        this.DataModel = default;
+        this.dataManuallyModel = string.Empty;
+        this.capabilityOverrides = new();
+        this.availableModels.Clear();
+        this.dataLoadingModelsIssue = string.Empty;
+        this.usesLegacySystemModelFallback = false;
     }
 
     private void OnHostChanged(Host selectedHost)
@@ -535,7 +542,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         return currentProviderSettings.GetModelCapabilities();
     }
 
-    private List<Capability> GetAutomaticModelCapabilities() => this.DataLLMProvider.GetModelCapabilities(this.DataModel);
+    private List<Capability> GetAutomaticModelCapabilities() => this.DataLLMProvider.GetModelCapabilities(this.GetSelectedModel());
 
     private string GetCurrentModelApiLabel()
     {
