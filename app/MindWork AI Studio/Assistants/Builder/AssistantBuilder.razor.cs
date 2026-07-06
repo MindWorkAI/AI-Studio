@@ -7,6 +7,7 @@ using System.Text.Json;
 using AIStudio.Agents.AssistantAudit;
 using AIStudio.Dialogs;
 using AIStudio.Dialogs.Settings;
+using AIStudio.Tools.AssistantSessions;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.PluginSystem.Assistants;
 using AIStudio.Tools.PluginSystem.Assistants.DataModel;
@@ -110,6 +111,35 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
     private PluginAssistants? installedAssistantPlugin;
     private BuilderInstallStep? failedInstallStep;
     private string installFlowIssue = string.Empty;
+    private static readonly AssistantSessionStateKey<BuilderStep> STEP_STATE_KEY = new(nameof(step));
+    private static readonly AssistantSessionStateKey<bool> IS_AGENT_RUNNING_STATE_KEY = new(nameof(isAgentRunning));
+    private static readonly AssistantSessionStateKey<bool> IS_CHECKING_PLUGIN_STATE_KEY = new(nameof(isCheckingPlugin));
+    private static readonly AssistantSessionStateKey<bool> IS_INSTALLING_PLUGIN_STATE_KEY = new(nameof(isInstallingPlugin));
+    private static readonly AssistantSessionStateKey<bool> IS_AUDITING_PLUGIN_STATE_KEY = new(nameof(isAuditingPlugin));
+    private static readonly AssistantSessionStateKey<bool> IS_ENABLING_PLUGIN_STATE_KEY = new(nameof(isEnablingPlugin));
+    private static readonly AssistantSessionStateKey<string> ASSISTANT_DESCRIPTION_STATE_KEY = new(nameof(assistantDescription));
+    private static readonly AssistantSessionStateKey<AssistantCategory> SELECTED_CATEGORY_STATE_KEY = new(nameof(selectedCategory));
+    private static readonly AssistantSessionStateKey<string> CUSTOM_CATEGORY_STATE_KEY = new(nameof(customCategory));
+    private static readonly AssistantSessionStateKey<string> ASSISTANT_NAME_STATE_KEY = new(nameof(assistantName));
+    private static readonly AssistantSessionStateKey<string> TYPICAL_INPUT_STATE_KEY = new(nameof(typicalInput));
+    private static readonly AssistantSessionStateKey<string> EXPECTED_OUTPUT_STATE_KEY = new(nameof(expectedOutput));
+    private static readonly AssistantSessionStateKey<List<AssistantComponentType>> SELECTED_ASSISTANT_COMPONENTS_STATE_KEY = new(nameof(selectedAssistantComponents));
+    private static readonly AssistantSessionStateKey<CommonLanguages> SELECTED_OUTPUT_LANGUAGE_STATE_KEY = new(nameof(selectedOutputLanguage));
+    private static readonly AssistantSessionStateKey<string> CUSTOM_OUTPUT_LANGUAGE_STATE_KEY = new(nameof(customOutputLanguage));
+    private static readonly AssistantSessionStateKey<bool> ALLOW_GENERATED_ASSISTANT_PROFILES_STATE_KEY = new(nameof(allowGeneratedAssistantProfiles));
+    private static readonly AssistantSessionStateKey<string> EXTRA_RULES_STATE_KEY = new(nameof(extraRules));
+    private static readonly AssistantSessionStateKey<string> EXAMPLE_REQUEST_STATE_KEY = new(nameof(exampleRequest));
+    private static readonly AssistantSessionStateKey<string> GENERATED_ASSISTANT_SPEC_STATE_KEY = new(nameof(generatedAssistantSpec));
+    private static readonly AssistantSessionStateKey<string> REVIEW_NOTES_STATE_KEY = new(nameof(reviewNotes));
+    private static readonly AssistantSessionStateKey<string> GENERATED_LUA_ASSISTANT_STATE_KEY = new(nameof(generatedLuaAssistant));
+    private static readonly AssistantSessionStateKey<Guid> PLUGIN_ID_STATE_KEY = new(nameof(pluginId));
+    private static readonly AssistantSessionStateKey<int> STEPPER_INDEX_STATE_KEY = new(nameof(stepperIndex));
+    private static readonly AssistantSessionStateKey<AssistantPluginCheckResult?> PLUGIN_CHECK_RESULT_STATE_KEY = new(nameof(pluginCheckResult));
+    private static readonly AssistantSessionStateKey<AssistantPluginInstallResult?> PLUGIN_INSTALL_RESULT_STATE_KEY = new(nameof(pluginInstallResult));
+    private static readonly AssistantSessionStateKey<PluginAssistantAudit?> PLUGIN_AUDIT_STATE_KEY = new(nameof(pluginAudit));
+    private static readonly AssistantSessionStateKey<PluginAssistants?> INSTALLED_ASSISTANT_PLUGIN_STATE_KEY = new(nameof(installedAssistantPlugin));
+    private static readonly AssistantSessionStateKey<BuilderInstallStep?> FAILED_INSTALL_STEP_STATE_KEY = new(nameof(failedInstallStep));
+    private static readonly AssistantSessionStateKey<string> INSTALL_FLOW_ISSUE_STATE_KEY = new(nameof(installFlowIssue));
     private static readonly AssistantContextFile[] ASSISTANT_CONTEXT_FILES =
     [
         new("Assistant plugin schema", "Plugins/assistants/README.md", IsRequired: true),
@@ -211,6 +241,74 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
 
     protected override bool MightPreselectValues() => false;
 
+    /// <inheritdoc />
+    protected override void CaptureCustomAssistantSessionState(AssistantSessionStateWriter state)
+    {
+        state.Set(STEP_STATE_KEY, this.step);
+        state.Set(IS_AGENT_RUNNING_STATE_KEY, this.isAgentRunning);
+        state.Set(IS_CHECKING_PLUGIN_STATE_KEY, this.isCheckingPlugin);
+        state.Set(IS_INSTALLING_PLUGIN_STATE_KEY, this.isInstallingPlugin);
+        state.Set(IS_AUDITING_PLUGIN_STATE_KEY, this.isAuditingPlugin);
+        state.Set(IS_ENABLING_PLUGIN_STATE_KEY, this.isEnablingPlugin);
+        state.Set(ASSISTANT_DESCRIPTION_STATE_KEY, this.assistantDescription);
+        state.Set(SELECTED_CATEGORY_STATE_KEY, this.selectedCategory);
+        state.Set(CUSTOM_CATEGORY_STATE_KEY, this.customCategory);
+        state.Set(ASSISTANT_NAME_STATE_KEY, this.assistantName);
+        state.Set(TYPICAL_INPUT_STATE_KEY, this.typicalInput);
+        state.Set(EXPECTED_OUTPUT_STATE_KEY, this.expectedOutput);
+        state.SetList(SELECTED_ASSISTANT_COMPONENTS_STATE_KEY, this.selectedAssistantComponents);
+        state.Set(SELECTED_OUTPUT_LANGUAGE_STATE_KEY, this.selectedOutputLanguage);
+        state.Set(CUSTOM_OUTPUT_LANGUAGE_STATE_KEY, this.customOutputLanguage);
+        state.Set(ALLOW_GENERATED_ASSISTANT_PROFILES_STATE_KEY, this.allowGeneratedAssistantProfiles);
+        state.Set(EXTRA_RULES_STATE_KEY, this.extraRules);
+        state.Set(EXAMPLE_REQUEST_STATE_KEY, this.exampleRequest);
+        state.Set(GENERATED_ASSISTANT_SPEC_STATE_KEY, this.generatedAssistantSpec);
+        state.Set(REVIEW_NOTES_STATE_KEY, this.reviewNotes);
+        state.Set(GENERATED_LUA_ASSISTANT_STATE_KEY, this.generatedLuaAssistant);
+        state.Set(PLUGIN_ID_STATE_KEY, this.pluginId);
+        state.Set(STEPPER_INDEX_STATE_KEY, this.stepperIndex);
+        state.Set(PLUGIN_CHECK_RESULT_STATE_KEY, this.pluginCheckResult);
+        state.Set(PLUGIN_INSTALL_RESULT_STATE_KEY, this.pluginInstallResult);
+        state.Set(PLUGIN_AUDIT_STATE_KEY, this.pluginAudit);
+        state.Set(INSTALLED_ASSISTANT_PLUGIN_STATE_KEY, this.installedAssistantPlugin);
+        state.Set(FAILED_INSTALL_STEP_STATE_KEY, this.failedInstallStep);
+        state.Set(INSTALL_FLOW_ISSUE_STATE_KEY, this.installFlowIssue);
+    }
+
+    /// <inheritdoc />
+    protected override void RestoreCustomAssistantSessionState(AssistantSessionStateReader state)
+    {
+        state.Restore(STEP_STATE_KEY, value => this.step = value);
+        state.Restore(IS_AGENT_RUNNING_STATE_KEY, value => this.isAgentRunning = value);
+        state.Restore(IS_CHECKING_PLUGIN_STATE_KEY, value => this.isCheckingPlugin = value);
+        state.Restore(IS_INSTALLING_PLUGIN_STATE_KEY, value => this.isInstallingPlugin = value);
+        state.Restore(IS_AUDITING_PLUGIN_STATE_KEY, value => this.isAuditingPlugin = value);
+        state.Restore(IS_ENABLING_PLUGIN_STATE_KEY, value => this.isEnablingPlugin = value);
+        state.Restore(ASSISTANT_DESCRIPTION_STATE_KEY, value => this.assistantDescription = value);
+        state.Restore(SELECTED_CATEGORY_STATE_KEY, value => this.selectedCategory = value);
+        state.Restore(CUSTOM_CATEGORY_STATE_KEY, value => this.customCategory = value);
+        state.Restore(ASSISTANT_NAME_STATE_KEY, value => this.assistantName = value);
+        state.Restore(TYPICAL_INPUT_STATE_KEY, value => this.typicalInput = value);
+        state.Restore(EXPECTED_OUTPUT_STATE_KEY, value => this.expectedOutput = value);
+        state.Restore(SELECTED_ASSISTANT_COMPONENTS_STATE_KEY, value => this.selectedAssistantComponents = value);
+        state.Restore(SELECTED_OUTPUT_LANGUAGE_STATE_KEY, value => this.selectedOutputLanguage = value);
+        state.Restore(CUSTOM_OUTPUT_LANGUAGE_STATE_KEY, value => this.customOutputLanguage = value);
+        state.Restore(ALLOW_GENERATED_ASSISTANT_PROFILES_STATE_KEY, value => this.allowGeneratedAssistantProfiles = value);
+        state.Restore(EXTRA_RULES_STATE_KEY, value => this.extraRules = value);
+        state.Restore(EXAMPLE_REQUEST_STATE_KEY, value => this.exampleRequest = value);
+        state.Restore(GENERATED_ASSISTANT_SPEC_STATE_KEY, value => this.generatedAssistantSpec = value);
+        state.Restore(REVIEW_NOTES_STATE_KEY, value => this.reviewNotes = value);
+        state.Restore(GENERATED_LUA_ASSISTANT_STATE_KEY, value => this.generatedLuaAssistant = value);
+        state.Restore(PLUGIN_ID_STATE_KEY, value => this.pluginId = value);
+        state.Restore(STEPPER_INDEX_STATE_KEY, value => this.stepperIndex = value);
+        state.Restore(PLUGIN_CHECK_RESULT_STATE_KEY, value => this.pluginCheckResult = value);
+        state.Restore(PLUGIN_INSTALL_RESULT_STATE_KEY, value => this.pluginInstallResult = value);
+        state.Restore(PLUGIN_AUDIT_STATE_KEY, value => this.pluginAudit = value);
+        state.Restore(INSTALLED_ASSISTANT_PLUGIN_STATE_KEY, value => this.installedAssistantPlugin = value);
+        state.Restore(FAILED_INSTALL_STEP_STATE_KEY, value => this.failedInstallStep = value);
+        state.Restore(INSTALL_FLOW_ISSUE_STATE_KEY, value => this.installFlowIssue = value);
+    }
+
     private string? ValidateAssistantDescription(string description)
     {
         if (string.IsNullOrWhiteSpace(description))
@@ -260,7 +358,8 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
                 return;
 
             this.step = BuilderStep.REVIEW_SPEC;
-            await this.OpenDraftDialog();
+            if (!this.IsAssistantComponentDisposed)
+                await this.OpenDraftDialog();
         }
         finally
         {
