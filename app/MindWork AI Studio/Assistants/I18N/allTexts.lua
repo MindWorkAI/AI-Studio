@@ -682,14 +682,14 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T2479378307"] = 
 -- Get Support
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T2694436440"] = "Get Support"
 
--- Context {0}
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T3205224990"] = "Context {0}"
-
--- Delete context
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T3491455017"] = "Delete context"
+-- Context
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T3174137628"] = "Context"
 
 -- Your question(s)
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T3576319998"] = "Your question(s)"
+
+-- Coding Assistant Session
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T358051959"] = "Coding Assistant Session"
 
 -- Please provide your questions.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T4120171174"] = "Please provide your questions."
@@ -700,29 +700,11 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T412437274"] = "
 -- Please provide the compiler messages.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T4225294332"] = "Please provide the compiler messages."
 
--- This coding assistant supports you in writing code. Provide some coding context by copying and pasting your code into the input fields. You might assign an ID to your code snippet to easily reference it later. When you have compiler messages, you can paste them into the input fields to get help with debugging as well.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T566604388"] = "This coding assistant supports you in writing code. Provide some coding context by copying and pasting your code into the input fields. You might assign an ID to your code snippet to easily reference it later. When you have compiler messages, you can paste them into the input fields to get help with debugging as well."
+-- This coding assistant supports you in writing code. Ask your coding question and optionally attach source files as context. When you have compiler messages, you can paste them into the input fields to get help with debugging as well.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T464918582"] = "This coding assistant supports you in writing code. Ask your coding question and optionally attach source files as context. When you have compiler messages, you can paste them into the input fields to get help with debugging as well."
 
--- Add context
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T882607103"] = "Add context"
-
--- Language
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::CODINGCONTEXTITEM::T2591284123"] = "Language"
-
--- Your code
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::CODINGCONTEXTITEM::T3144719651"] = "Your code"
-
--- {0}: Please provide your input.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::CODINGCONTEXTITEM::T3160504659"] = "{0}: Please provide your input."
-
--- (Optional) Identifier
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::CODINGCONTEXTITEM::T3208138853"] = "(Optional) Identifier"
-
--- Other language
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::CODINGCONTEXTITEM::T3374524465"] = "Other language"
-
--- Please specify the language.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::CODINGCONTEXTITEM::T3406207295"] = "Please specify the language."
+-- You can attach source files as optional context for your coding question.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T702937106"] = "You can attach source files as optional context for your coding question."
 
 -- Other
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::COMMONCODINGLANGUAGEEXTENSIONS::T1849229205"] = "Other"
@@ -1405,6 +1387,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ERI::PROGRAMMINGLANGUAGESEXTENSIONS::T342
 -- Please provide a text as input. You might copy the desired text from a document or a website.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T137304886"] = "Please provide a text as input. You might copy the desired text from a document or a website."
 
+-- Load text from file
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T2210807298"] = "Load text from file"
+
 -- Proofread
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::GRAMMARSPELLING::ASSISTANTGRAMMARSPELLING::T2325568297"] = "Proofread"
 
@@ -1830,6 +1815,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::
 
 -- Improve your text
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T2163831433"] = "Improve your text"
+
+-- Load text from file
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T2210807298"] = "Load text from file"
 
 -- Language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::REWRITEIMPROVE::ASSISTANTREWRITEIMPROVE::T2591284123"] = "Language"
@@ -2796,6 +2784,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T900237532"] = "Provid
 
 -- Failed to load file content
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T1989554334"] = "Failed to load file content"
+
+-- Drop one file here to load its content.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T2274562398"] = "Drop one file here to load its content."
 
 -- Use file content as input
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T3499386973"] = "Use file content as input"
@@ -5353,23 +5344,14 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T49150
 -- Export configuration
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T975426229"] = "Export configuration"
 
--- Which programming language should be preselected for added contexts?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCODING::T1073540083"] = "Which programming language should be preselected for added contexts?"
-
 -- Compiler messages are preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCODING::T1110902070"] = "Compiler messages are preselected"
 
 -- Choose whether the assistant should use the app default profile, no profile, or a specific profile.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCODING::T1766361623"] = "Choose whether the assistant should use the app default profile, no profile, or a specific profile."
 
--- Preselect a programming language
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCODING::T2181567002"] = "Preselect a programming language"
-
 -- Preselect a profile
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCODING::T2322771068"] = "Preselect a profile"
-
--- When enabled, you can preselect the coding options. This is might be useful when you prefer a specific programming language or LLM model.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCODING::T2619641701"] = "When enabled, you can preselect the coding options. This is might be useful when you prefer a specific programming language or LLM model."
 
 -- Preselect coding options?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCODING::T2790579667"] = "Preselect coding options?"
@@ -5383,8 +5365,8 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCODING::T3015105896"
 -- Coding options are preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCODING::T3567850751"] = "Coding options are preselected"
 
--- Preselect another programming language
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCODING::T4230412334"] = "Preselect another programming language"
+-- When enabled, you can preselect coding assistant options such as compiler message input, provider, and profile.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCODING::T403451006"] = "When enabled, you can preselect coding assistant options such as compiler message input, provider, and profile."
 
 -- Compiler messages are not preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCODING::T516498299"] = "Compiler messages are not preselected"
