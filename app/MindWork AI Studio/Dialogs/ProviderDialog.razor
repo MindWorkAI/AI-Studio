@@ -7,7 +7,15 @@
         <MudForm @ref="@this.form" @bind-IsValid="@this.dataIsValid" @bind-Errors="@this.dataIssues">
             <MudStack Row="@true" AlignItems="AlignItems.Center">
                 @* ReSharper disable once CSharpWarnings::CS8974 *@
-                <MudSelect @bind-Value="@this.DataLLMProvider" Label="@T("Provider")" Class="mb-3" OpenIcon="@Icons.Material.Filled.AccountBalance" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.providerValidation.ValidatingProvider">
+                <MudSelect T="LLMProviders"
+                           Value="@this.DataLLMProvider"
+                           ValueChanged="@this.OnProviderChanged"
+                           Label="@T("Provider")"
+                           Class="mb-3"
+                           OpenIcon="@Icons.Material.Filled.AccountBalance"
+                           AdornmentColor="Color.Info"
+                           Adornment="Adornment.Start"
+                           Validation="@this.providerValidation.ValidatingProvider">
                     @foreach (LLMProviders provider in Enum.GetValues(typeof(LLMProviders)))
                     {
                         <MudSelectItem Value="@provider">
