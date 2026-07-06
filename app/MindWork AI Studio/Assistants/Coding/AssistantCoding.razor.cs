@@ -1,5 +1,6 @@
 ﻿using System.Text;
 
+using AIStudio.Chat;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Tools.AssistantSessions;
 
@@ -11,7 +12,7 @@ public partial class AssistantCoding : AssistantBaseCore<SettingsDialogCoding>
     
     protected override string Title => T("Coding Assistant");
     
-    protected override string Description => T("This coding assistant supports you in writing code. Provide some coding context by copying and pasting your code into the input fields. You might assign an ID to your code snippet to easily reference it later. When you have compiler messages, you can paste them into the input fields to get help with debugging as well.");
+    protected override string Description => T("This coding assistant supports you in writing code. Ask your coding question and optionally attach source files as context. When you have compiler messages, you can paste them into the input fields to get help with debugging as well.");
     
     protected override string SystemPrompt => 
         """
@@ -20,6 +21,12 @@ public partial class AssistantCoding : AssistantBaseCore<SettingsDialogCoding>
         You know object-oriented programming, as well as functional programming and procedural programming. You are also
         familiar with design patterns and can explain them. You are an expert of debugging and can help with compiler
         messages. You can also help with code refactoring and optimization.
+
+        The user may attach source files, project files, configuration files, logs, or other documents as coding context.
+        Treat attached files as source context for the user's question. Use the file paths and file contents provided in
+        the message to reason about the code. Do not invent files or APIs that are not present in the user's question or
+        attached context. If the question conflicts with attached context, prioritize the user's explicit question and
+        explain any relevant mismatch.
         
         When the user asks in a different language than English, you answer in the same language!
         """;
@@ -36,7 +43,7 @@ public partial class AssistantCoding : AssistantBaseCore<SettingsDialogCoding>
 
     protected override void ResetForm()
     {
-        this.codingContexts.Clear();
+        this.loadedDocumentPaths.Clear();
         this.compilerMessages = string.Empty;
         this.questions = string.Empty;
         if (!this.MightPreselectValues())
@@ -56,11 +63,11 @@ public partial class AssistantCoding : AssistantBaseCore<SettingsDialogCoding>
         return false;
     }
     
-    private readonly List<CodingContext> codingContexts = new();
+    private HashSet<FileAttachment> loadedDocumentPaths = [];
     private bool provideCompilerMessages;
     private string compilerMessages = string.Empty;
     private string questions = string.Empty;
-    private static readonly AssistantSessionStateKey<List<CodingContext>> CODING_CONTEXTS_STATE_KEY = new(nameof(codingContexts));
+    private static readonly AssistantSessionStateKey<HashSet<FileAttachment>> LOADED_DOCUMENT_PATHS_STATE_KEY = new(nameof(loadedDocumentPaths));
     private static readonly AssistantSessionStateKey<bool> PROVIDE_COMPILER_MESSAGES_STATE_KEY = new(nameof(provideCompilerMessages));
     private static readonly AssistantSessionStateKey<string> COMPILER_MESSAGES_STATE_KEY = new(nameof(compilerMessages));
     private static readonly AssistantSessionStateKey<string> QUESTIONS_STATE_KEY = new(nameof(questions));
@@ -68,7 +75,7 @@ public partial class AssistantCoding : AssistantBaseCore<SettingsDialogCoding>
     /// <inheritdoc />
     protected override void CaptureCustomAssistantSessionState(AssistantSessionStateWriter state)
     {
-        state.SetList(CODING_CONTEXTS_STATE_KEY, this.codingContexts);
+        state.SetHashSet(LOADED_DOCUMENT_PATHS_STATE_KEY, this.loadedDocumentPaths);
         state.Set(PROVIDE_COMPILER_MESSAGES_STATE_KEY, this.provideCompilerMessages);
         state.Set(COMPILER_MESSAGES_STATE_KEY, this.compilerMessages);
         state.Set(QUESTIONS_STATE_KEY, this.questions);
@@ -77,7 +84,7 @@ public partial class AssistantCoding : AssistantBaseCore<SettingsDialogCoding>
     /// <inheritdoc />
     protected override void RestoreCustomAssistantSessionState(AssistantSessionStateReader state)
     {
-        state.RestoreList(CODING_CONTEXTS_STATE_KEY, this.codingContexts);
+        state.RestoreHashSet(LOADED_DOCUMENT_PATHS_STATE_KEY, this.loadedDocumentPaths);
         state.Restore(PROVIDE_COMPILER_MESSAGES_STATE_KEY, value => this.provideCompilerMessages = value);
         state.Restore(COMPILER_MESSAGES_STATE_KEY, value => this.compilerMessages = value);
         state.Restore(QUESTIONS_STATE_KEY, value => this.questions = value);
@@ -115,55 +122,11 @@ public partial class AssistantCoding : AssistantBaseCore<SettingsDialogCoding>
         return null;
     }
 
-    private void AddCodingContext()
-    {
-        this.codingContexts.Add(new()
-        {
-            Id = string.Format(T("Context {0}"), this.codingContexts.Count + 1),
-            Language = this.SettingsManager.ConfigurationData.Coding.PreselectOptions ? this.SettingsManager.ConfigurationData.Coding.PreselectedProgrammingLanguage : default,
-            OtherLanguage = this.SettingsManager.ConfigurationData.Coding.PreselectOptions ? this.SettingsManager.ConfigurationData.Coding.PreselectedOtherProgrammingLanguage : string.Empty,
-        });
-    }
-
-    private ValueTask DeleteContext(int index)
-    {
-        if(this.codingContexts.Count < index + 1)
-            return ValueTask.CompletedTask;
-
-        this.codingContexts.RemoveAt(index);
-        this.Form?.ResetValidation();
-
-        this.StateHasChanged();
-        return ValueTask.CompletedTask;
-    }
-
     private async Task GetSupport()
     {
         await this.Form!.Validate();
         if (!this.InputIsValid)
             return;
-
-        var sbContext = new StringBuilder();
-        if (this.codingContexts.Count > 0)
-        {
-            sbContext.AppendLine("I have the following coding context:");
-            sbContext.AppendLine();
-            foreach (var codingContext in this.codingContexts)
-            {
-                sbContext.AppendLine($"ID: {codingContext.Id}");
-                
-                if(codingContext.Language is not CommonCodingLanguages.OTHER)
-                    sbContext.AppendLine($"Language: {codingContext.Language.Name()}");
-                else
-                    sbContext.AppendLine($"Language: {codingContext.OtherLanguage}");
-                
-                sbContext.AppendLine("Content:");
-                sbContext.AppendLine("```");
-                sbContext.AppendLine(codingContext.Code);
-                sbContext.AppendLine("```");
-                sbContext.AppendLine();
-            }
-        }
 
         var sbCompilerMessages = new StringBuilder();
         if (this.provideCompilerMessages)
@@ -179,12 +142,13 @@ public partial class AssistantCoding : AssistantBaseCore<SettingsDialogCoding>
         this.CreateChatThread();
         var time = this.AddUserRequest(
             $"""
-                {sbContext}
                 {sbCompilerMessages}
                 
                 My questions are:
                 {this.questions}
-             """);
+             """,
+            false,
+            this.loadedDocumentPaths.ToList());
 
         await this.AddAIResponseAsync(time);
     }
