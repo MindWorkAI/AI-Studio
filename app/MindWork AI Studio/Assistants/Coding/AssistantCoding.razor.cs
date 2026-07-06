@@ -41,6 +41,55 @@ public partial class AssistantCoding : AssistantBaseCore<SettingsDialogCoding>
 
     protected override string SendToChatVisibleUserPromptContent => this.questions;
 
+    protected override ChatThread ConvertToChatThread
+    {
+        get
+        {
+            var originalChatThread = this.ChatThread ?? new ChatThread();
+            if (string.IsNullOrWhiteSpace(this.SendToChatVisibleUserPromptText))
+            {
+                return originalChatThread with
+                {
+                    SystemPrompt = SystemPrompts.DEFAULT,
+                };
+            }
+
+            var earliestBlock = originalChatThread.Blocks.MinBy(x => x.Time);
+            var visiblePromptTime = earliestBlock is null
+                ? DateTimeOffset.Now
+                : earliestBlock.Time == DateTimeOffset.MinValue
+                    ? earliestBlock.Time
+                    : earliestBlock.Time.AddTicks(-1);
+
+            var transferredBlocks = originalChatThread.Blocks
+                .Select(block => block.Role is ChatRole.USER
+                    ? this.CloneHiddenUserBlockWithoutAttachments(block)
+                    : block.DeepClone())
+                .ToList();
+
+            transferredBlocks.Insert(0, new ContentBlock
+            {
+                Time = visiblePromptTime,
+                ContentType = ContentType.TEXT,
+                HideFromUser = false,
+                Role = ChatRole.USER,
+                Content = new ContentText
+                {
+                    Text = this.BuildVisibleChatPrompt(),
+                    FileAttachments = this.loadedDocumentPaths.ToList(),
+                },
+            });
+
+            return originalChatThread with
+            {
+                ChatId = Guid.NewGuid(),
+                Name = T("Coding Assistant Session"),
+                SystemPrompt = SystemPrompts.DEFAULT,
+                Blocks = transferredBlocks,
+            };
+        }
+    }
+
     protected override void ResetForm()
     {
         this.loadedDocumentPaths.Clear();
@@ -120,6 +169,32 @@ public partial class AssistantCoding : AssistantBaseCore<SettingsDialogCoding>
             return T("Please provide your questions.");
         
         return null;
+    }
+
+    private ContentBlock CloneHiddenUserBlockWithoutAttachments(ContentBlock block)
+    {
+        var clone = block.DeepClone(changeHideState: true);
+        if (clone.Content is ContentText text)
+            text.FileAttachments = [];
+
+        return clone;
+    }
+
+    private string BuildVisibleChatPrompt()
+    {
+        if (!this.provideCompilerMessages)
+            return this.SendToChatVisibleUserPromptText ?? string.Empty;
+
+        return $"""
+                I have the following compiler messages:
+
+                ```
+                {this.compilerMessages}
+                ```
+
+                My questions are:
+                {this.questions}
+                """;
     }
 
     private async Task GetSupport()
