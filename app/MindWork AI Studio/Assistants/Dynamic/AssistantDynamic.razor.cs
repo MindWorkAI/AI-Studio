@@ -50,6 +50,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
     private string securityMessage = string.Empty;
     private bool isSecurityBlocked;
     private const string ASSISTANT_QUERY_KEY = "assistantId";
+    private static readonly Dictionary<string, object?> SPELLCHECK_ATTRIBUTES = new();
     private static readonly AssistantSessionStateKey<string> TITLE_STATE_KEY = new(nameof(title));
     private static readonly AssistantSessionStateKey<string> DESCRIPTION_STATE_KEY = new(nameof(description));
     private static readonly AssistantSessionStateKey<string> SYSTEM_PROMPT_STATE_KEY = new(nameof(systemPrompt));
@@ -110,6 +111,9 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
 
     protected override void OnInitialized()
     {
+        // Configure the spellchecking for the instance name input:
+        this.SettingsManager.InjectSpellchecking(SPELLCHECK_ATTRIBUTES);
+        
         var pluginAssistant = this.ResolveAssistantPlugin();
         if (pluginAssistant is null)
         {

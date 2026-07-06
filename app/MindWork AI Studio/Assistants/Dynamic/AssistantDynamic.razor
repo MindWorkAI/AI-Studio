@@ -74,6 +74,7 @@ else
                     var autoGrow = !textArea.IsSingleLine;
 
                     <MudTextField T="string"
+                                  UserAttributes="@SPELLCHECK_ATTRIBUTES"
                                   Text="@this.assistantState.Text[textArea.Name]"
                                   TextChanged="@(value => this.assistantState.Text[textArea.Name] = value)"
                                   Label="@textArea.Label"
