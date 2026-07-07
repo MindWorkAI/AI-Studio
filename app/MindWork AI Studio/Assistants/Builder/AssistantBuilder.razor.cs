@@ -824,7 +824,7 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
             {
                 x => x.Message,
                 string.Format(
-                    T("The assistant \"{0}\" was checked with the level \"{1}\", which is below your required level \"{2}\". Your settings allow activation anyway, but this may be unsafe. Do you want to enable this assistant?"),
+                    T("The assistant '{0}' was checked with the level '{1}', which is below your required level '{2}'. Your settings allow activation anyway, but this may be unsafe. Do you want to enable this assistant?"),
                     this.pluginInstallResult?.PluginName ?? T("Unknown assistant"),
                     this.pluginAudit?.Level.GetName() ?? T("Unknown"),
                     this.SettingsManager.ConfigurationData.AssistantPluginAudit.MinimumLevel.GetName())

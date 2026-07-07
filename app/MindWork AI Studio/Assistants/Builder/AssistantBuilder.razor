@@ -118,7 +118,7 @@ else
                               else if (this.PluginCheckCompleted)
                               {
                                   <MudAlert Severity="Severity.Info" Dense="@true" Icon="@Icons.Material.Filled.CheckCircle">
-                                      @string.Format(T("The generated assistant \"{0}\" is valid and runnable."), this.pluginCheckResult?.PluginName ?? T("Unknown assistant"))
+                                      @string.Format(T("The generated assistant '{0}' is valid and runnable."), this.pluginCheckResult?.PluginName ?? T("Unknown assistant"))
                                   </MudAlert>
                               }
                               else
@@ -151,8 +151,8 @@ else
                               {
                                   <MudAlert Severity="Severity.Info" Dense="@true" Icon="@Icons.Material.Filled.Extension">
                                       @(this.pluginInstallResult?.ReplacedExisting is true
-                                          ? string.Format(T("The assistant \"{0}\" was updated."), this.pluginInstallResult?.PluginName ?? T("Unknown assistant"))
-                                          : string.Format(T("The assistant \"{0}\" was installed."), this.pluginInstallResult?.PluginName ?? T("Unknown assistant")))
+                                          ? string.Format(T("The assistant '{0}' was updated."), this.pluginInstallResult?.PluginName ?? T("Unknown assistant"))
+                                          : string.Format(T("The assistant '{0}' was installed."), this.pluginInstallResult?.PluginName ?? T("Unknown assistant")))
                                   </MudAlert>
                               }
                               else
