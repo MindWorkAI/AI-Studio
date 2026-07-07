@@ -64,7 +64,7 @@
                     </MudStack>
                 </MudTd>
                 <MudTd>
-                    <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
+                    <MudStack Row="true" Spacing="0"  AlignItems="AlignItems.Center">
                         @if (context.Type is PluginType.ASSISTANT)
                         {
                             var assistantPlugin = PluginFactory.RunningPlugins.OfType<PluginAssistants>().FirstOrDefault(x => x.Id == context.Id);
@@ -95,6 +95,13 @@
                                     <MudIconButton Icon="@Icons.Material.Filled.OpenInBrowser" Href="@sourceUrl" Target="_blank" Size="Size.Medium"/>
                                 </MudTooltip>
                             }
+                        }
+                        
+                        @if (context is IAvailablePlugin availablePlugin && CanDeleteAssistantPlugin(availablePlugin))
+                        {
+                            <MudTooltip Text="@T("Delete assistant plugin")">
+                                <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline" Size="Size.Medium" OnClick="@(() => this.DeleteAssistantPluginAsync(availablePlugin))"/>
+                            </MudTooltip>
                         }
                     </MudStack>
                 </MudTd>

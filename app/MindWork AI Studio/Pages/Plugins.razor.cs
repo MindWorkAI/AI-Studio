@@ -4,6 +4,7 @@ using AIStudio.Dialogs;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.PluginSystem.Assistants;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
@@ -26,6 +27,11 @@ public partial class Plugins : MSGComponentBase
 
     [Inject]
     private AssistantPluginAuditService AssistantPluginAuditService { get; init; } = null!;
+
+    [Inject]
+    private AssistantPluginInstallService AssistantPluginInstallService { get; init; } = null!;
+    
+    private static readonly ILogger LOG = Program.LOGGER_FACTORY.CreateLogger(nameof(Plugins));
 
     #region Overrides of ComponentBase
 
@@ -135,7 +141,7 @@ public partial class Plugins : MSGComponentBase
             {
                 x => x.Message,
                 string.Format(
-                    this.T("The assistant plugin \"{0}\" was audited with the level \"{1}\", which is below the required minimum level \"{2}\". Your current settings allow activation anyway, but this may be potentially dangerous. Do you really want to enable this plugin?"),
+                    this.T("The assistant plugin '{0}' was audited with the level '{1}', which is below the required minimum level \"{2}\". Your current settings allow activation anyway, but this may be potentially dangerous. Do you really want to enable this plugin?"),
                     pluginName,
                     actualLevel.GetName(),
                     this.AssistantPluginAuditSettings.MinimumLevel.GetName())
@@ -180,6 +186,35 @@ public partial class Plugins : MSGComponentBase
         return securityState.IsBlocked
             ? securityState.Description
             : this.T("Enable plugin");
+    }
+
+    private static bool CanDeleteAssistantPlugin(IAvailablePlugin plugin) => plugin is { IsInternal: false, Type: PluginType.ASSISTANT } && !string.IsNullOrWhiteSpace(plugin.LocalPath);
+
+    private async Task DeleteAssistantPluginAsync(IAvailablePlugin plugin)
+    {
+        var dialogParameters = new DialogParameters<ConfirmDialog>
+        {
+            {
+                x => x.Message,
+                string.Format(this.T("Do you really want to delete the assistant plugin '{0}'? This will permanently delete the local plugin files."), plugin.Name)
+            },
+        };
+
+        var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(this.T("Delete Assistant Plugin"), dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        if (dialogResult is null || dialogResult.Canceled)
+            return;
+
+        var result = await this.AssistantPluginInstallService.DeleteInstalledAssistantAsync(plugin, CancellationToken.None);
+        if (!result.Success)
+        {
+            LOG.LogError($"Failed to delete assistant plugin '{result.PluginName}' ({result.PluginId}) from '{result.PluginDirectory}' with issue '{result.Issue}'.");
+            await this.MessageBus.SendError(new(Icons.Material.Filled.DeleteForever, string.Format(this.T("The assistant plugin '{0}' could not be deleted: {1}"), plugin.Name, result.Issue)));
+            return;
+        }
+
+        await this.MessageBus.SendSuccess(new(Icons.Material.Filled.Check, string.Format(this.T("The '{0}' assistant plugin has been successfully removed."), result.PluginName)));
+        await this.InvokeAsync(this.StateHasChanged);
     }
 
     private static bool IsSendingMail(string sourceUrl) => sourceUrl.TrimStart().StartsWith("mailto:", StringComparison.OrdinalIgnoreCase);
