@@ -686,6 +686,7 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
             this.pluginCheckResult = result;
             if (!result.Success)
             {
+                LOGGER.LogError($"The assistant plugin '{result.PluginName}' ({result.PluginId}) is not installable, because '{result.Issue}'");
                 this.FailInstallStep(BuilderInstallStep.CHECK_PLUGIN, result.Issue);
                 await this.MessageBus.SendError(new(Icons.Material.Filled.ReportProblem, T("The generated assistant could not be checked.")));
                 return;
@@ -715,6 +716,7 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
             this.pluginInstallResult = result;
             if (!result.Success)
             {
+                LOGGER.LogError($"The assistant plugin {result.PluginName} ({result.PluginId}) could not be installed in the directory '{result.PluginDirectory}' with Issue: '{result.Issue}'.");
                 this.FailInstallStep(BuilderInstallStep.INSTALL_ASSISTANT, result.Issue);
                 await this.MessageBus.SendError(new(Icons.Material.Filled.ReportProblem, T("The assistant could not be installed.")));
                 return;
