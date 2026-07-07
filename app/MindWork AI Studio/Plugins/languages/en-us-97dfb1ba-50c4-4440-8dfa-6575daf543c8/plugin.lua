@@ -357,9 +357,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T65674494
 -- Bias of the Day
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T782102948"] = "Bias of the Day"
 
--- The assistant \"{0}\" was checked with the level \"{1}\", which is below your required level \"{2}\". Your settings allow activation anyway, but this may be unsafe. Do you want to enable this assistant?
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1017087366"] = "The assistant \\\"{0}\\\" was checked with the level \\\"{1}\\\", which is below your required level \\\"{2}\\\". Your settings allow activation anyway, but this may be unsafe. Do you want to enable this assistant?"
-
 -- Security audit
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1078888788"] = "Security audit"
 
@@ -417,9 +414,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1889523922"] 
 -- No assistant plugin was generated yet.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1911729967"] = "No assistant plugin was generated yet."
 
--- The generated assistant \"{0}\" is valid and runnable.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1912722439"] = "The generated assistant \\\"{0}\\\" is valid and runnable."
-
 -- View accepted draft
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1985923838"] = "View accepted draft"
 
@@ -432,11 +426,11 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2063479946"] 
 -- Assistant installed.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2069785341"] = "Assistant installed."
 
+-- The assistant '{0}' was updated.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2078723318"] = "The assistant '{0}' was updated."
+
 -- Typical input (Optional)
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2172900154"] = "Typical input (Optional)"
-
--- The assistant \"{0}\" was installed.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T232818957"] = "The assistant \\\"{0}\\\" was installed."
 
 -- These notes are applied on top of the accepted draft and can still change the generated assistant plugin. Leave empty to use the draft as-is.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2345545005"] = "These notes are applied on top of the accepted draft and can still change the generated assistant plugin. Leave empty to use the draft as-is."
@@ -444,11 +438,17 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2345545005"] 
 -- What users provide, e.g. text, notes, files, or a URL
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2381710500"] = "What users provide, e.g. text, notes, files, or a URL"
 
+-- The assistant '{0}' was checked with the level '{1}', which is below your required level '{2}'. Your settings allow activation anyway, but this may be unsafe. Do you want to enable this assistant?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T239354512"] = "The assistant '{0}' was checked with the level '{1}', which is below your required level '{2}'. Your settings allow activation anyway, but this may be unsafe. Do you want to enable this assistant?"
+
 -- The assistant could not be installed.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2432974339"] = "The assistant could not be installed."
 
 -- Security check completed. No security issues were found.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2521082424"] = "Security check completed. No security issues were found."
+
+-- The assistant '{0}' was installed.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T254606977"] = "The assistant '{0}' was installed."
 
 -- Inputs
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2647381688"] = "Inputs"
@@ -476,6 +476,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2795779287"] 
 
 -- Installing the assistant...
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2824185303"] = "Installing the assistant..."
+
+-- The generated assistant '{0}' is valid and runnable.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T283315403"] = "The generated assistant '{0}' is valid and runnable."
 
 -- The generated assistant could not be checked.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2844109727"] = "The generated assistant could not be checked."
@@ -614,9 +617,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T746714819"] =
 
 -- It is recommended to a powerful LLM.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T767601000"] = "It is recommended to a powerful LLM."
-
--- The assistant \"{0}\" was updated.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T838472906"] = "The assistant \\\"{0}\\\" was updated."
 
 -- What users should get, e.g. a summary or checklist
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T889445968"] = "What users should get, e.g. a summary or checklist"
@@ -3786,9 +3786,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T3224848879"] = 
 -- Advanced Prompt Building
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T3399544173"] = "Advanced Prompt Building"
 
--- The assistant plugin \"{0}\" was audited with the level \"{1}\", which is below the required safety level \"{2}\". Your current settings still allow activation, but this may be unsafe. Do you really want to enable this plugin?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T3418077666"] = "The assistant plugin \\\"{0}\\\" was audited with the level \\\"{1}\\\", which is below the required safety level \\\"{2}\\\". Your current settings still allow activation, but this may be unsafe. Do you really want to enable this plugin?"
-
 -- Unknown
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T3424652889"] = "Unknown"
 
@@ -3824,6 +3821,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T413646574"] = "
 
 -- Fallback Prompt
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T4229995215"] = "Fallback Prompt"
+
+-- The assistant plugin '{0}' was audited with the level '{1}', which is below the required safety level '{2}'. Your current settings still allow activation, but this may be unsafe. Do you really want to enable this plugin?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T521056824"] = "The assistant plugin '{0}' was audited with the level '{1}', which is below the required safety level '{2}'. Your current settings still allow activation, but this may be unsafe. Do you really want to enable this plugin?"
 
 -- System Prompt
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T628396066"] = "System Prompt"
@@ -7029,6 +7029,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T1506922856"] = "Assistant Audit"
 -- Internal Plugins
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T158493184"] = "Internal Plugins"
 
+-- Delete assistant plugin
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T1692493145"] = "Delete assistant plugin"
+
 -- Disabled Plugins
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T1724138133"] = "Disabled Plugins"
 
@@ -7041,23 +7044,35 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2057806005"] = "Enable plugin"
 -- Plugins
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2222816203"] = "Plugins"
 
--- The assistant plugin \"{0}\" was audited with the level \"{1}\", which is below the required minimum level \"{2}\". Your current settings allow activation anyway, but this may be potentially dangerous. Do you really want to enable this plugin?
-UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2531356312"] = "The assistant plugin \\\"{0}\\\" was audited with the level \\\"{1}\\\", which is below the required minimum level \\\"{2}\\\". Your current settings allow activation anyway, but this may be potentially dangerous. Do you really want to enable this plugin?"
-
 -- Enabled Plugins
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2738444034"] = "Enabled Plugins"
 
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3448155331"] = "Close"
 
+-- Delete Assistant Plugin
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3637071001"] = "Delete Assistant Plugin"
+
+-- The '{0}' assistant plugin has been successfully removed.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3815023384"] = "The '{0}' assistant plugin has been successfully removed."
+
 -- Actions
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3865031940"] = "Actions"
+
+-- The assistant plugin '{0}' could not be deleted: {1}
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3985264168"] = "The assistant plugin '{0}' could not be deleted: {1}"
+
+-- Do you really want to delete the assistant plugin '{0}'? This will permanently delete the local plugin files.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T4033722845"] = "Do you really want to delete the assistant plugin '{0}'? This will permanently delete the local plugin files."
 
 -- The automatic security audit for the assistant plugin '{0}' failed. Please run it manually.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T4066679817"] = "The automatic security audit for the assistant plugin '{0}' failed. Please run it manually."
 
 -- Open website
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T4239378936"] = "Open website"
+
+-- The assistant plugin '{0}' was audited with the level '{1}', which is below the required minimum level '{2}'. Your current settings allow activation anyway, but this may be potentially dangerous. Do you really want to enable this plugin?
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T448946658"] = "The assistant plugin '{0}' was audited with the level '{1}', which is below the required minimum level '{2}'. Your current settings allow activation anyway, but this may be potentially dangerous. Do you really want to enable this plugin?"
 
 -- Settings
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SETTINGS::T1258653480"] = "Settings"
@@ -8450,6 +8465,45 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T378481461"] = "Source like p
 
 -- Document
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T4165204724"] = "Document"
+
+-- Internal assistant plugins cannot be deleted.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T1084244321"] = "Internal assistant plugins cannot be deleted."
+
+-- The assistant plugin directory is outside the local assistant plugin directory.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T1211881977"] = "The assistant plugin directory is outside the local assistant plugin directory."
+
+-- No Lua plugin code was generated.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T1839013358"] = "No Lua plugin code was generated."
+
+-- The assistant plugin directory does not exist.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T2148384567"] = "The assistant plugin directory does not exist."
+
+-- The resolved plugin directory is outside the assistant plugin directory.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T2223071618"] = "The resolved plugin directory is outside the assistant plugin directory."
+
+-- Unexpected error: {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T2350673880"] = "Unexpected error: {0}"
+
+-- The assistant plugin has no local directory.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T2682912892"] = "The assistant plugin has no local directory."
+
+-- The AI Studio data directory is not initialized yet.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T2712481762"] = "The AI Studio data directory is not initialized yet."
+
+-- Only assistant plugins can be deleted.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T2864597027"] = "Only assistant plugins can be deleted."
+
+-- The generated plugin is not an assistant plugin. Issue: {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T2955055168"] = "The generated plugin is not an assistant plugin. Issue: {0}"
+
+-- The generated assistant plugin uses the ID of an internal AI Studio plugin.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T3162363526"] = "The generated assistant plugin uses the ID of an internal AI Studio plugin."
+
+-- The plugin system is not initialized yet.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T3984839613"] = "The plugin system is not initialized yet."
+
+-- The generated assistant plugin is invalid. Issue: {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T939708112"] = "The generated assistant plugin is invalid. Issue: {0}"
 
 -- Pandoc Installation
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PANDOCAVAILABILITYSERVICE::T185447014"] = "Pandoc Installation"
