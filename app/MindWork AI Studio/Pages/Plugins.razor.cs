@@ -188,7 +188,28 @@ public partial class Plugins : MSGComponentBase
             : this.T("Enable plugin");
     }
 
+    private static bool CanEditAssistantPlugin(IAvailablePlugin plugin) => plugin is { IsInternal: false, Type: PluginType.ASSISTANT } && !string.IsNullOrWhiteSpace(plugin.LocalPath);
+
     private static bool CanDeleteAssistantPlugin(IAvailablePlugin plugin) => plugin is { IsInternal: false, Type: PluginType.ASSISTANT } && !string.IsNullOrWhiteSpace(plugin.LocalPath);
+
+    private async Task OpenAssistantPluginEditorDialogAsync(IAvailablePlugin plugin)
+    {
+        var parameters = new DialogParameters<AssistantPluginEditorDialog>
+        {
+            { x => x.PluginId, plugin.Id },
+            { x => x.PluginLocalPath, plugin.LocalPath },
+        };
+        
+        var dialogReference = await this.DialogService.ShowAsync<AssistantPluginEditorDialog>(this.T("Edit Assistant Plugin"), parameters, DialogOptions.BLOCKING_FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        if (dialogResult is null || dialogResult.Canceled || dialogResult.Data is not AssistantPluginEditorDialogResult result)
+            return;
+
+        await this.MessageBus.SendSuccess(new(Icons.Material.Filled.Save, string.Format(this.T("The assistant plugin '{0}' has been successfully saved."), result.PluginName)));
+        LOG.LogInformation($"The assistant plugin '{result.PluginName}' ({result.PluginId}) has been successfully updated.");
+        await this.MessageBus.SendMessage<bool>(this, Event.PLUGINS_RELOADED);
+        await this.InvokeAsync(this.StateHasChanged);
+    }
 
     private async Task DeleteAssistantPluginAsync(IAvailablePlugin plugin)
     {

@@ -97,6 +97,13 @@
                             }
                         }
                         
+                        @if (context is IAvailablePlugin editablePlugin && CanEditAssistantPlugin(editablePlugin))
+                        {
+                            <MudTooltip Text="@T("Edit assistant plugin")">
+                                <MudIconButton Icon="@Icons.Material.Filled.EditNote" Size="Size.Medium" OnClick="@(() => this.OpenAssistantPluginEditorDialogAsync(editablePlugin))"/>
+                            </MudTooltip>
+                        }
+
                         @if (context is IAvailablePlugin availablePlugin && CanDeleteAssistantPlugin(availablePlugin))
                         {
                             <MudTooltip Text="@T("Delete assistant plugin")">
