@@ -204,21 +204,45 @@
 }
 
 .code-editor {
+    display: grid;
+    grid-template-columns: minmax(2.8rem, auto) minmax(0, 1fr);
     min-height: 32rem;
     height: 62vh;
     width: 100%;
-    overflow: auto;
-    padding: 0.8rem;
+    overflow: hidden;
     border: 1px solid var(--mw-code-editor-border, rgba(0,0,0,0.11764705882352941));
     border-radius: 4px;
     background: var(--mw-code-editor-background, rgba(255,255,255,1));
     color: var(--mw-code-editor-foreground, rgba(66,66,66,1));
-    caret-color: var(--mw-code-editor-foreground, rgba(66,66,66,1));
     font-family: "JetBrains Mono", monospace;
     font-size: 0.65rem;
     line-height: 1.45;
-    white-space: pre;
     tab-size: 4;
+}
+
+.code-editor-line-numbers {
+    overflow: hidden;
+    padding: 0.8rem 0.65rem 0.8rem 0.5rem;
+    border-right: 1px solid var(--mw-code-editor-border, rgba(0,0,0,0.11764705882352941));
+    color: var(--mw-code-editor-foreground, rgba(66,66,66,1));
+    opacity: 0.55;
+    text-align: right;
+    white-space: pre;
+    user-select: none;
+    font: inherit;
+    font-variant-numeric: tabular-nums;
+}
+
+.code-editor-input {
+    min-width: 0;
+    height: 100%;
+    overflow: auto;
+    padding: 0.8rem;
+    color: var(--mw-code-editor-foreground, rgba(66,66,66,1));
+    caret-color: var(--mw-code-editor-foreground, rgba(66,66,66,1));
+    font: inherit;
+    line-height: inherit;
+    tab-size: inherit;
     outline: none;
 }
 

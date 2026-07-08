@@ -23,8 +23,9 @@ public partial class CodeEditor : ComponentBase, IAsyncDisposable
     public string Class { get; set; } = string.Empty;
 
     private readonly string editorId = $"code-editor-{Guid.NewGuid():N}";
-    private const string CODE_EDITOR_MODULE = "./system/CodeEditor/code-editor.js?v=20260707-3";
+    private const string CODE_EDITOR_MODULE = "./system/CodeEditor/code-editor.js?v=20260708-1";
     private ElementReference editorElement;
+    private ElementReference lineNumbersElement;
     private IJSObjectReference? module;
     private string CodeEditorThemeStyle => this.GetCodeEditorThemeStyle();
 
@@ -34,7 +35,7 @@ public partial class CodeEditor : ComponentBase, IAsyncDisposable
             return;
         
         this.module = await this.JsRuntime.InvokeAsync<IJSObjectReference>("import", CODE_EDITOR_MODULE);
-        await this.module.InvokeVoidAsync("init", this.editorId, this.editorElement, this.Value, this.Language.ToString());
+        await this.module.InvokeVoidAsync("init", this.editorId, this.editorElement, this.lineNumbersElement, this.Value, this.Language.ToString());
     }
 
     public async ValueTask<string> GetCodeAsync()

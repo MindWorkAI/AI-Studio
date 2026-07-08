@@ -27,21 +27,25 @@ const LUA_BUILT_INS = new Set([
  * The highlighter callback receives the editor DOM node. It must write highlighted
  * HTML back into that node, so every token emitted by our highlighter is HTML-escaped.
  */
-export function init(id, element, code, language) {
+export function init(id, element, lineNumbersElement, code, language) {
     const codeJar = CodeJar(element, getHighlighter(language), {
         tab: '    ',
         spellcheck: false
     });
+    const scrollHandler = () => syncLineNumbersScroll(element, lineNumbersElement);
     
     codeJar.updateCode(code ?? '');
-    editors.set(id, codeJar);
+    updateLineNumbers(lineNumbersElement, codeJar.toString());
+    codeJar.onUpdate(updatedCode => updateLineNumbers(lineNumbersElement, updatedCode));
+    element.addEventListener('scroll', scrollHandler);
+    editors.set(id, { codeJar, element, scrollHandler });
 }
 
 /**
  * Returns the current plain text from a CodeJar instance.
  */
 export function getCode(id) {
-    return editors.get(id)?.toString() ?? '';
+    return editors.get(id)?.codeJar.toString() ?? '';
 }
 
 /**
@@ -49,15 +53,41 @@ export function getCode(id) {
  * state stays consistent with CodeJar's internal model.
  */
 export function setCode(id, code) {
-    editors.get(id)?.updateCode(code ?? '');
+    const editor = editors.get(id);
+    if (!editor)
+        return;
+
+    editor.codeJar.updateCode(code ?? '');
 }
 
 /**
  * Disposes one editor instance and removes it from the JS-side registry.
  */
 export function destroy(id) {
-    editors.get(id)?.destroy();
+    const editor = editors.get(id);
+    if (!editor)
+        return;
+
+    editor.element.removeEventListener('scroll', editor.scrollHandler);
+    editor.codeJar.destroy();
     editors.delete(id);
+}
+
+function updateLineNumbers(lineNumbersElement, code) {
+    const lineCount = (code.match(/\n/g)?.length ?? 0) + 1;
+    let lineNumbers = '';
+    for (let lineNumber = 1; lineNumber <= lineCount; lineNumber++) {
+        if (lineNumber > 1)
+            lineNumbers += '\n';
+
+        lineNumbers += lineNumber;
+    }
+
+    lineNumbersElement.textContent = lineNumbers;
+}
+
+function syncLineNumbersScroll(editorElement, lineNumbersElement) {
+    lineNumbersElement.scrollTop = editorElement.scrollTop;
 }
 
 function highlightLua(editor) {
