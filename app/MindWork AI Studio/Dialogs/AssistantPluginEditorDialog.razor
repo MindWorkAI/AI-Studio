@@ -1,0 +1,59 @@
+@using AIStudio.Components
+@using AIStudio.Tools.PluginSystem
+@inherits MSGComponentBase
+
+<MudDialog DefaultFocus="DefaultFocus.None">
+    <DialogContent>
+        <MudStack Spacing="2">
+            @if (!string.IsNullOrWhiteSpace(this.issue))
+            {
+                <MudAlert Severity="Severity.Error" Dense="true">
+                    @this.issue
+                </MudAlert>
+            }
+
+            @if (this.isLoading)
+            {
+                <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+            }
+            else if (this.plugin is not null)
+            {
+                <MudText Typo="Typo.h6">@this.plugin.Name</MudText>
+                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="1">
+                    <MudLink OnClick="@(async () => await this.CopyToClipboard())">
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                            @this.pluginFile
+                        </MudText>
+                    </MudLink>
+                    <MudTooltip Text="@this.FullscreenLabel">
+                        <MudIconButton Icon="@this.FullscreenIcon"
+                                       OnClick="@this.ToggleFullscreenAsync"
+                                       Size="Size.Medium"/>
+                    </MudTooltip>
+                </MudStack>
+
+                <CodeEditor @ref="this.codeEditor" Value="@this.luaCode" Language="CodeEditorLanguage.LUA" Class="mt-n3"/>
+            }
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Cancel" Disabled="@this.isSaving" Size="Size.Small">
+            @T("Cancel")
+        </MudButton>
+        <MudButton OnClick="@this.SaveAsync"
+                   Disabled="@(!this.CanSave)"
+                   Color="Color.Primary"
+                   Variant="Variant.Filled"
+                   StartIcon="@Icons.Material.Filled.Save"
+                   Size="Size.Small">
+            @if (this.isSaving)
+            {
+                @T("Saving...")
+            }
+            else
+            {
+                @T("Save")
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>
