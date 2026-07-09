@@ -148,6 +148,8 @@ internal sealed class Program
         builder.Services.AddSingleton<DatabaseClientProvider>();
         builder.Services.AddHostedService<GlobalShortcutService>();
         builder.Services.AddHostedService<RustAvailabilityMonitorService>();
+        builder.Services.AddSingleton<ReconnectRecoveryService>();
+        builder.Services.AddSingleton<ChatPageSessionService>();
         
         // ReSharper disable AccessToDisposedClosure
         builder.Services.AddHostedService<RustService>(_ => rust);
@@ -158,7 +160,7 @@ internal sealed class Program
             .AddHubOptions(options =>
             {
                 options.MaximumReceiveMessageSize = null;
-                options.ClientTimeoutInterval = TimeSpan.FromDays(14);
+                options.ClientTimeoutInterval = TimeSpan.FromSeconds(120);
                 options.HandshakeTimeout = TimeSpan.FromSeconds(30);
             });
 

@@ -40,12 +40,18 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     
     [Inject]
     private NavigationManager NavigationManager { get; init; } = null!;
+
+    [Inject]
+    private IJSRuntime JsRuntime { get; init; } = null!;
     
     [Inject]
     private ILogger<MainLayout> Logger { get; init; } = null!;
     
     [Inject]
     private MudTheme ColorTheme { get; init; } = null!;
+
+    [Inject]
+    private ReconnectRecoveryService ReconnectRecoveryService { get; init; } = null!;
     
     private ILanguagePlugin Lang { get; set; } = PluginFactory.BaseLanguage;
     
@@ -64,6 +70,8 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     private bool startupCompleted;
     private bool settingsWriteProtectionWarningShown;
     private readonly SemaphoreSlim mandatoryInfoDialogSemaphore = new(1, 1);
+    private readonly string reconnectRecoveryHandlerId = $"reconnect-recovery-{Guid.NewGuid()}";
+    private DotNetObjectReference<MainLayout>? dotNetReference;
 
     private IReadOnlyCollection<NavBarItem> navItems = [];
     
@@ -128,6 +136,17 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         this.LoadNavItems();
 
         await base.OnInitializedAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            this.dotNetReference = DotNetObjectReference.Create(this);
+            await this.JsRuntime.InvokeVoidAsync("registerReconnectRecovery", this.reconnectRecoveryHandlerId, this.dotNetReference);
+        }
+
+        await base.OnAfterRenderAsync(firstRender);
     }
 
     #endregion
@@ -519,12 +538,30 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
 
         await this.SettingsManager.StoreSettings();
     }
+
+    [JSInvokable]
+    public Task HandleReconnectRecoveryAsync()
+    {
+        this.Logger.LogInformation("The Blazor circuit reconnected. Requesting route subtree recovery.");
+        this.ReconnectRecoveryService.NotifyRecovered();
+        return Task.CompletedTask;
+    }
     
     #region Implementation of IDisposable
 
     public void Dispose()
     {
         this.MessageBus.Unregister(this);
+        try
+        {
+            _ = this.JsRuntime.InvokeVoidAsync("unregisterReconnectRecovery", this.reconnectRecoveryHandlerId).AsTask();
+        }
+        catch
+        {
+            // ignore
+        }
+
+        this.dotNetReference?.Dispose();
         this.mandatoryInfoDialogSemaphore.Dispose();
     }
 

@@ -4,6 +4,7 @@ using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.AIJobs;
+using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
@@ -54,6 +55,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     [Inject]
     private AIJobService AIJobService { get; init; } = null!;
 
+    [Inject]
+    private ChatPageSessionService ChatPageSessionService { get; init; } = null!;
+
     private const Placement TOOLBAR_TOOLTIP_PLACEMENT = Placement.Top;
     private static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
 
@@ -97,7 +101,11 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private string UserInput
     {
         get => this.ComposerState.UserInput;
-        set => this.ComposerState.SetUserInput(value);
+        set
+        {
+            this.ComposerState.SetUserInput(value);
+            this.CheckpointChatPageState();
+        }
     }
 
     #region Overrides of ComponentBase
@@ -232,6 +240,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             this.Logger.LogInformation($"The loading of the chat '{this.loadChat.ChatId}' was deferred and will be loaded now.");
         }
 
+        if (deferredContent is null && string.IsNullOrWhiteSpace(deferredInput) && deferredLoading == default)
+            this.RestoreChatPageStateIfAvailable();
+
         //
         // When for whatever reason we have a chat thread, we have to
         // ensure that the corresponding workspace id is set and the
@@ -244,6 +255,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         await this.SelectProviderWhenLoadingChat();
         await this.SyncForegroundChatAsync();
         await base.OnInitializedAsync();
+        this.CheckpointChatPageState();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -300,6 +312,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 
         this.previousInputForbidden = inputForbidden;
         await base.OnAfterRenderAsync(firstRender);
+        this.CheckpointChatPageState();
     }
 
     protected override async Task OnParametersSetAsync()
@@ -315,6 +328,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         await this.ApplyLoadedChatParameterAsync();
         await this.SyncForegroundChatAsync();
         await base.OnParametersSetAsync();
+        this.CheckpointChatPageState();
     }
 
     #endregion
@@ -375,6 +389,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         this.currentChatThreadId = chatThreadId;
         this.currentWorkspaceId = workspaceId;
         this.PublishWorkspaceNameIfChanged(loadedWorkspaceName);
+        this.CheckpointChatPageState();
     }
 
     private void ClearWorkspaceHeaderState()
@@ -382,6 +397,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         this.currentChatThreadId = Guid.Empty;
         this.currentWorkspaceId = Guid.Empty;
         this.PublishWorkspaceNameIfChanged(string.Empty);
+        this.CheckpointChatPageState();
     }
 
     private void PublishWorkspaceNameIfChanged(string workspaceName)
@@ -394,6 +410,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 
         this.currentWorkspaceName = workspaceName;
         this.WorkspaceName(this.currentWorkspaceName);
+        this.CheckpointChatPageState();
     }
 
     private async Task RefreshRenamedWorkspaceHeaderAsync(Guid workspaceId)
@@ -417,6 +434,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         this.currentChatThreadId = chatThreadId;
         this.currentWorkspaceId = workspaceId;
         this.PublishWorkspaceNameIfChanged(loadedWorkspaceName);
+        this.CheckpointChatPageState();
     }
 
     private async Task SyncForegroundChatAsync()
@@ -467,6 +485,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             this.ChatThread.DataSourceOptions = chatDefaultOptions;
         
         this.dataSourceSelectionComponent?.ChangeOptionWithoutSaving(chatDefaultOptions);
+        this.CheckpointChatPageState();
     }
 
     private async Task ApplyUpdatedStandardDataSourceOptionsAfterConfigurationChange()
@@ -479,6 +498,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         {
             this.earlyDataSourceOptions = updatedStandardOptions;
             this.dataSourceSelectionComponent?.ChangeOptionWithoutSaving(updatedStandardOptions);
+            this.CheckpointChatPageState();
             return;
         }
 
@@ -488,6 +508,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         await this.SetCurrentDataSourceOptions(updatedStandardOptions);
         this.dataSourceSelectionComponent?.ChangeOptionWithoutSaving(updatedStandardOptions, this.ChatThread.AISelectedDataSources);
         await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
+        this.CheckpointChatPageState();
     }
 
     private static bool DataSourceOptionsAreEqual(DataSourceOptions left, DataSourceOptions right)
@@ -521,7 +542,10 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     {
         this.currentProfile = this.SettingsManager.GetProfileById(profile.Id);
         if(this.ChatThread is null)
+        {
+            this.CheckpointChatPageState();
             return;
+        }
 
         this.ChatThread = this.ChatThread with
         {
@@ -529,6 +553,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         };
         
         await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
+        this.CheckpointChatPageState();
     }
     
     private async Task ChatTemplateWasChanged(ChatTemplate chatTemplate)
@@ -541,7 +566,10 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         this.ComposerState.ReplaceFileAttachments(this.currentChatTemplate.FileAttachments);
 
         if(this.ChatThread is null)
+        {
+            this.CheckpointChatPageState();
             return;
+        }
 
         await this.StartNewChat(true);
     }
@@ -582,6 +610,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             this.ComposerState.ApplyTemplate(this.currentChatTemplate);
 
         await this.ApplyUpdatedStandardDataSourceOptionsAfterConfigurationChange();
+        this.CheckpointChatPageState();
     }
 
     private IReadOnlyList<DataSourceAgentSelected> GetAgentSelectedDataSources()
@@ -614,6 +643,8 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         }
         else
             this.earlyDataSourceOptions = updatedOptions;
+
+        this.CheckpointChatPageState();
     }
 
     private bool IsInputForbidden()
@@ -637,6 +668,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         
         this.hasUnsavedChanges = true;
         this.ComposerState.MarkUserDraft();
+        this.CheckpointChatPageState();
         var key = keyEvent.Code.ToLowerInvariant();
         
         // Was the enter key (either enter or numpad enter) pressed?
@@ -670,6 +702,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 
         this.ComposerState.SetUserInput(await this.JsRuntime.InvokeAsync<string>("formatChatInputMarkdown", CHAT_INPUT_ID, formatType));
         this.hasUnsavedChanges = true;
+        this.CheckpointChatPageState();
     }
 
     private void ComposerAttachmentsChanged(HashSet<FileAttachment> attachments)
@@ -679,6 +712,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 
         this.ComposerState.MarkUserDraft();
         this.hasUnsavedChanges = true;
+        this.CheckpointChatPageState();
     }
     
     private async Task SendMessage(bool reuseLastUserPrompt = false)
@@ -813,6 +847,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         });
 
         await this.SyncForegroundChatAsync();
+        this.CheckpointChatPageState();
         this.StateHasChanged();
     }
     
@@ -841,6 +876,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             await WorkspaceBehaviour.StoreChatAsync(this.ChatThread);
         
         this.hasUnsavedChanges = false;
+        this.CheckpointChatPageState();
     }
     
     private async Task StartNewChat(bool useSameWorkspace = false, bool deletePreviousChat = false)
@@ -950,6 +986,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         await this.SyncForegroundChatAsync();
         this.MarkCurrentChatAsLoadedParameter();
         await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
+        this.CheckpointChatPageState();
     }
     
     private async Task MoveChatToWorkspace()
@@ -994,6 +1031,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         await this.SaveThread();
 
         await this.SyncWorkspaceHeaderWithChatThreadAsync();
+        this.CheckpointChatPageState();
     }
     
     private async Task LoadedChatChanged(bool notifyParent = true)
@@ -1029,6 +1067,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             this.scrollRenderCountdown = 2;
         }
         
+        this.CheckpointChatPageState();
         this.StateHasChanged();
     }
     
@@ -1043,11 +1082,15 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         await this.SyncForegroundChatAsync();
         this.ApplyStandardDataSourceOptions();
         await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
+        this.CheckpointChatPageState();
     }
     
     private async Task SelectProviderWhenLoadingChat()
     {
         var chatProvider = this.ChatThread?.SelectedProvider;
+        if (string.IsNullOrWhiteSpace(chatProvider) && this.Provider != AIStudio.Settings.Provider.NONE)
+            chatProvider = this.Provider.Id;
+
         var chatProfile = this.ChatThread?.SelectedProfile;
         var chatChatTemplate = this.ChatThread?.SelectedChatTemplate;
 
@@ -1062,6 +1105,8 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         // Try to select the chat template:
         if (!string.IsNullOrWhiteSpace(chatChatTemplate))
             this.currentChatTemplate = this.SettingsManager.GetChatTemplateById(chatChatTemplate);
+
+        this.CheckpointChatPageState();
     }
 
     private async Task ToggleWorkspaceOverlay()
@@ -1077,6 +1122,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         this.ChatThread.Remove(block);
         this.hasUnsavedChanges = true;
         await this.SaveThread();
+        this.CheckpointChatPageState();
         this.StateHasChanged();
     }
 
@@ -1090,6 +1136,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         
         this.ChatThread.Remove(aiBlock, removeForRegenerate: true);
         this.hasUnsavedChanges = true;
+        this.CheckpointChatPageState();
         this.StateHasChanged();
         
         await this.SendMessage(reuseLastUserPrompt: true);
@@ -1112,6 +1159,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         this.ChatThread.Remove(block);
         this.ChatThread.Remove(lastBlockContent);
         this.hasUnsavedChanges = true;
+        this.CheckpointChatPageState();
         this.StateHasChanged();
         
         return Task.CompletedTask;
@@ -1128,6 +1176,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         this.RestoreComposerFromTextBlock(textBlock);
         this.ChatThread.Remove(block);
         this.hasUnsavedChanges = true;
+        this.CheckpointChatPageState();
         this.StateHasChanged();
         
         return Task.CompletedTask;
@@ -1136,6 +1185,50 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private void RestoreComposerFromTextBlock(ContentText textBlock)
     {
         this.ComposerState.RestoreFromTextBlock(textBlock);
+        this.CheckpointChatPageState();
+    }
+
+    private void RestoreChatPageStateIfAvailable()
+    {
+        var snapshot = this.ChatPageSessionService.GetComponentSnapshot();
+        if (snapshot is null)
+            return;
+
+        this.ChatThread = snapshot.ChatThread;
+        if (this.ChatThread is not null)
+            this.ChatThread = this.AIJobService.TryGetLiveChatThread(this.ChatThread.ChatId) ?? this.ChatThread;
+
+        this.Provider = this.SettingsManager.GetChatProviderForLoadedChat(snapshot.ProviderId);
+        this.currentProfile = this.SettingsManager.GetProfileById(snapshot.CurrentProfileId);
+        this.currentChatTemplate = this.SettingsManager.GetChatTemplateById(snapshot.CurrentChatTemplateId);
+        this.ComposerState.Restore(snapshot.UserInput, snapshot.FileAttachments, snapshot.HasUserDraft);
+        this.hasUnsavedChanges = snapshot.HasUnsavedChanges;
+        this.autoSaveEnabled = snapshot.AutoSaveEnabled;
+        this.earlyDataSourceOptions = snapshot.EarlyDataSourceOptions.CreateCopy();
+        this.lastAppliedStandardDataSourceOptions = snapshot.LastAppliedStandardDataSourceOptions.CreateCopy();
+        this.currentWorkspaceName = snapshot.CurrentWorkspaceName;
+        this.currentWorkspaceId = snapshot.CurrentWorkspaceId;
+        this.currentChatThreadId = snapshot.CurrentChatThreadId;
+        this.MarkCurrentChatAsLoadedParameter();
+    }
+
+    private void CheckpointChatPageState()
+    {
+        this.ChatPageSessionService.StoreComponentSnapshot(new ChatPageComponentSnapshot(
+            this.ChatThread,
+            this.Provider.Id,
+            this.currentProfile.Id,
+            this.currentChatTemplate.Id,
+            this.ComposerState.UserInput,
+            this.ComposerState.HasUserDraft,
+            this.ComposerState.FileAttachments.ToArray(),
+            this.hasUnsavedChanges,
+            this.autoSaveEnabled,
+            this.earlyDataSourceOptions,
+            this.lastAppliedStandardDataSourceOptions,
+            this.currentWorkspaceName,
+            this.currentWorkspaceId,
+            this.currentChatThreadId));
     }
     
     #region Overrides of MSGComponentBase
@@ -1155,6 +1248,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 this.hasUnsavedChanges = true;
                 if(this.autoSaveEnabled)
                     await this.SaveThread();
+                this.CheckpointChatPageState();
                 break;
 
             case Event.WORKSPACE_RENAMED:
@@ -1165,6 +1259,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             case Event.CONFIGURATION_CHANGED:
             case Event.PLUGINS_RELOADED:
                 await this.RefreshChatSelectionsAfterConfigurationChange();
+                this.CheckpointChatPageState();
                 this.StateHasChanged();
                 break;
             
@@ -1180,6 +1275,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                         this.previousInputForbidden = true;
                     }
 
+                    this.CheckpointChatPageState();
                     this.StateHasChanged();
                 }
                 break;
@@ -1216,6 +1312,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         }
 
         await this.AIJobService.SetForegroundAsync(AIJobKind.CHAT_GENERATION, this.foregroundChatId, false);
+        this.CheckpointChatPageState();
         this.Dispose();
     }
 

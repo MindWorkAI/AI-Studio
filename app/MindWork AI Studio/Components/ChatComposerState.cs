@@ -62,4 +62,11 @@ public sealed class ChatComposerState
         this.ReplaceFileAttachments(textBlock.FileAttachments);
         this.HasUserDraft = true;
     }
+
+    public void Restore(string? userInput, IEnumerable<FileAttachment> fileAttachments, bool hasUserDraft)
+    {
+        this.UserInput = userInput ?? string.Empty;
+        this.ReplaceFileAttachments(fileAttachments);
+        this.HasUserDraft = hasUserDraft;
+    }
 }

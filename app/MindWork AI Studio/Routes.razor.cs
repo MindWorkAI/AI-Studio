@@ -1,7 +1,30 @@
+using Microsoft.AspNetCore.Components;
+
 namespace AIStudio;
 
-public sealed partial class Routes
+public sealed partial class Routes : IDisposable
 {
+    [Inject]
+    private Tools.Services.ReconnectRecoveryService ReconnectRecoveryService { get; init; } = null!;
+
+    private int recoveryGeneration;
+
+    protected override void OnInitialized()
+    {
+        this.recoveryGeneration = this.ReconnectRecoveryService.Generation;
+        this.ReconnectRecoveryService.Changed += this.OnReconnectRecoveryChanged;
+        base.OnInitialized();
+    }
+
+    private void OnReconnectRecoveryChanged()
+    {
+        _ = this.InvokeAsync(() =>
+        {
+            this.recoveryGeneration = this.ReconnectRecoveryService.Generation;
+            this.StateHasChanged();
+        });
+    }
+
     public const string HOME = "/";
     public const string CHAT = "/chat";
     public const string ABOUT = "/about";
@@ -33,4 +56,9 @@ public sealed partial class Routes
     public const string ASSISTANT_DYNAMIC = "/assistant/dynamic";
     public const string ASSISTANT_META_ASSISTANT = "/assistant/builder";
     // ReSharper restore InconsistentNaming
+
+    public void Dispose()
+    {
+        this.ReconnectRecoveryService.Changed -= this.OnReconnectRecoveryChanged;
+    }
 }

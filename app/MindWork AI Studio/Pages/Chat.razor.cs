@@ -2,6 +2,7 @@ using AIStudio.Chat;
 using AIStudio.Components;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
@@ -19,6 +20,9 @@ public partial class Chat : MSGComponentBase
     
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
+
+    [Inject]
+    private ChatPageSessionService ChatPageSessionService { get; init; } = null!;
     
     private ChatThread? chatThread;
     private AIStudio.Settings.Provider providerSettings = AIStudio.Settings.Provider.NONE;
@@ -38,6 +42,7 @@ public partial class Chat : MSGComponentBase
         this.ApplyFilters([], [ Event.WORKSPACE_TOGGLE_OVERLAY ]);
         
         this.splitterPosition = this.SettingsManager.ConfigurationData.Workspace.SplitterPosition;
+        this.RestoreLayoutSnapshotIfAvailable();
         this.splitterSaveTimer.AutoReset = false;
         this.splitterSaveTimer.Elapsed += async (_, _) =>
         {
@@ -46,6 +51,7 @@ public partial class Chat : MSGComponentBase
         };
         
         await base.OnInitializedAsync();
+        this.CheckpointLayoutState();
     }
     
     #endregion
@@ -68,6 +74,7 @@ public partial class Chat : MSGComponentBase
     {
         this.SettingsManager.ConfigurationData.Workspace.IsSidebarVisible = !this.SettingsManager.ConfigurationData.Workspace.IsSidebarVisible;
         await this.SettingsManager.StoreSettings();
+        this.CheckpointLayoutState();
     }
 
     private void SplitterChanged(double position)
@@ -75,11 +82,13 @@ public partial class Chat : MSGComponentBase
         this.splitterPosition = position;
         this.splitterSaveTimer.Stop();
         this.splitterSaveTimer.Start();
+        this.CheckpointLayoutState();
     }
     
     private void ToggleWorkspacesOverlay()
     {
         this.workspaceOverlayVisible = !this.workspaceOverlayVisible;
+        this.CheckpointLayoutState();
         this.StateHasChanged();
     }
     
@@ -88,6 +97,7 @@ public partial class Chat : MSGComponentBase
     private void UpdateWorkspaceName(string workspaceName)
     {
         this.currentWorkspaceName = workspaceName;
+        this.CheckpointLayoutState();
         this.StateHasChanged();
     }
 
@@ -118,6 +128,28 @@ public partial class Chat : MSGComponentBase
             return;
 
         await this.workspaces.ToggleSearchAsync();
+        this.CheckpointLayoutState();
+    }
+
+    private void RestoreLayoutSnapshotIfAvailable()
+    {
+        var snapshot = this.ChatPageSessionService.GetLayoutSnapshot();
+        if (snapshot is null)
+            return;
+
+        this.workspaceOverlayVisible = snapshot.WorkspaceOverlayVisible;
+        this.workspaceSearchVisible = snapshot.WorkspaceSearchVisible;
+        this.currentWorkspaceName = snapshot.CurrentWorkspaceName;
+        this.splitterPosition = snapshot.SplitterPosition;
+    }
+
+    private void CheckpointLayoutState()
+    {
+        this.ChatPageSessionService.StoreLayoutSnapshot(new ChatPageLayoutSnapshot(
+            this.workspaceOverlayVisible,
+            this.workspaceSearchVisible,
+            this.currentWorkspaceName,
+            this.splitterPosition));
     }
 
     #region Overrides of MSGComponentBase
