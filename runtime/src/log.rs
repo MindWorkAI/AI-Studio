@@ -223,7 +223,7 @@ fn file_logger_format(
     write_kv_pairs(w, record)?;
 
     // Write the log message:
-    write!(w, "{}", &record.args())
+    write!(w, "{}", record.args())
 }
 
 pub async fn get_log_paths(_token: APIToken) -> Json<LogPathsResponse> {
