@@ -40,7 +40,7 @@ sha2 = "0.11.0"
 rcgen = { version = "0.14.8", features = ["pem"] }
 file-format = "0.29.0"
 calamine = "0.36.0"
-pdfium-render = "0.9.2"
+pdfium-render = "0.9.1"
 sys-locale = "0.3.2"
 whoami = "2.1.2"
 cfg-if = "1.0.4"
