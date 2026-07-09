@@ -1630,23 +1630,29 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LEGALCHECK::ASSISTANTLEGALCHECK::T4254597
 -- Ask your questions
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LEGALCHECK::ASSISTANTLEGALCHECK::T467099852"] = "Ask your questions"
 
--- Analyze the following text and extract my tasks:
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MYTASKS::ASSISTANTMYTASKS::T1349891364"] = "Analyze the following text and extract my tasks:"
+-- You can enter text, attach one or more documents, or use both. At least one input is required.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MYTASKS::ASSISTANTMYTASKS::T1442535450"] = "You can enter text, attach one or more documents, or use both. At least one input is required."
 
--- Please provide some text as input. For example, an email.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MYTASKS::ASSISTANTMYTASKS::T1962809521"] = "Please provide some text as input. For example, an email."
+-- Please provide some text or at least one valid document as input. For example, an email.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MYTASKS::ASSISTANTMYTASKS::T1635845349"] = "Please provide some text or at least one valid document as input. For example, an email."
 
--- Analyze text
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MYTASKS::ASSISTANTMYTASKS::T2268303626"] = "Analyze text"
+-- You received a cryptic email or document that was sent to many recipients and you are now wondering if you need to do something? Copy the text into the input field, attach one or more documents, or use both. You also need to select a personal profile. In this profile, you should describe your role in the organization. The AI will then try to give you hints on what your tasks might be.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MYTASKS::ASSISTANTMYTASKS::T1918551346"] = "You received a cryptic email or document that was sent to many recipients and you are now wondering if you need to do something? Copy the text into the input field, attach one or more documents, or use both. You also need to select a personal profile. In this profile, you should describe your role in the organization. The AI will then try to give you hints on what your tasks might be."
 
 -- Target language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MYTASKS::ASSISTANTMYTASKS::T237828418"] = "Target language"
 
+-- Analyze the following text and/or attached documents and extract my tasks:
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MYTASKS::ASSISTANTMYTASKS::T2535924263"] = "Analyze the following text and/or attached documents and extract my tasks:"
+
 -- My Tasks
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MYTASKS::ASSISTANTMYTASKS::T3011450657"] = "My Tasks"
 
--- You received a cryptic email that was sent to many recipients and you are now wondering if you need to do something? Copy the email into the input field. You also need to select a personal profile. In this profile, you should describe your role in the organization. The AI will then try to give you hints on what your tasks might be.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MYTASKS::ASSISTANTMYTASKS::T3646084045"] = "You received a cryptic email that was sent to many recipients and you are now wondering if you need to do something? Copy the email into the input field. You also need to select a personal profile. In this profile, you should describe your role in the organization. The AI will then try to give you hints on what your tasks might be."
+-- Analyze content
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MYTASKS::ASSISTANTMYTASKS::T3334965934"] = "Analyze content"
+
+-- Attach documents
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MYTASKS::ASSISTANTMYTASKS::T3666048746"] = "Attach documents"
 
 -- Custom target language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MYTASKS::ASSISTANTMYTASKS::T3848935911"] = "Custom target language"

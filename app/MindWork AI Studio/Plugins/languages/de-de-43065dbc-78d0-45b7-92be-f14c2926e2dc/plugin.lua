@@ -1632,23 +1632,29 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LEGALCHECK::ASSISTANTLEGALCHECK::T4254597
 -- Ask your questions
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LEGALCHECK::ASSISTANTLEGALCHECK::T467099852"] = "Stellen Sie ihre Fragen"
 
--- Analyze the following text and extract my tasks:
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MYTASKS::ASSISTANTMYTASKS::T1349891364"] = "Analysiere den folgenden Text und extrahiere meine Aufgaben:"
+-- You can enter text, attach one or more documents, or use both. At least one input is required.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MYTASKS::ASSISTANTMYTASKS::T1442535450"] = "Sie können Text eingeben, ein oder mehrere Dokumente anhängen oder beides verwenden. Mindestens eine Eingabe ist erforderlich."
 
--- Please provide some text as input. For example, an email.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MYTASKS::ASSISTANTMYTASKS::T1962809521"] = "Bitte geben Sie einen Text ein. Zum Beispiel eine E-Mail."
+-- Please provide some text or at least one valid document as input. For example, an email.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MYTASKS::ASSISTANTMYTASKS::T1635845349"] = "Bitte geben Sie einen Text oder mindestens ein gültiges Dokument als Eingabe an. Zum Beispiel eine E-Mail."
 
--- Analyze text
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MYTASKS::ASSISTANTMYTASKS::T2268303626"] = "Text analysieren"
+-- You received a cryptic email or document that was sent to many recipients and you are now wondering if you need to do something? Copy the text into the input field, attach one or more documents, or use both. You also need to select a personal profile. In this profile, you should describe your role in the organization. The AI will then try to give you hints on what your tasks might be.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MYTASKS::ASSISTANTMYTASKS::T1918551346"] = "Sie haben eine kryptische E-Mail oder ein Dokument erhalten, das an viele Empfänger gesendet wurde, und fragen sich nun, ob Sie etwas tun müssen? Kopieren Sie den Text in das Eingabefeld, fügen Sie ein oder mehrere Dokumente an oder nutzen Sie beides. Außerdem müssen Sie ein persönliches Profil auswählen. In diesem Profil sollten Sie Ihre Rolle in der Organisation beschreiben. Die KI wird dann versuchen, Ihnen Hinweise darauf zu geben, welche Aufgaben Sie möglicherweise haben."
 
 -- Target language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MYTASKS::ASSISTANTMYTASKS::T237828418"] = "Zielsprache"
 
+-- Analyze the following text and/or attached documents and extract my tasks:
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MYTASKS::ASSISTANTMYTASKS::T2535924263"] = "Analysiere den folgenden Text und/oder die angehängten Dokumente und extrahiere meine Aufgaben:"
+
 -- My Tasks
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MYTASKS::ASSISTANTMYTASKS::T3011450657"] = "Meine Aufgaben"
 
--- You received a cryptic email that was sent to many recipients and you are now wondering if you need to do something? Copy the email into the input field. You also need to select a personal profile. In this profile, you should describe your role in the organization. The AI will then try to give you hints on what your tasks might be.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MYTASKS::ASSISTANTMYTASKS::T3646084045"] = "Sie haben eine rätselhafte E-Mail erhalten, die an viele Empfänger verschickt wurde, und fragen sich nun, ob Sie etwas unternehmen müssen? Kopieren Sie die E-Mail in das Eingabefeld. Außerdem müssen Sie ein persönliches Profil auswählen. In diesem Profil sollten Sie ihre Rolle in der Organisation beschreiben. Die KI wird Ihnen dann Hinweise geben, welche Aufgaben für Sie daraus entstehen könnten."
+-- Analyze content
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MYTASKS::ASSISTANTMYTASKS::T3334965934"] = "Inhalt analysieren"
+
+-- Attach documents
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MYTASKS::ASSISTANTMYTASKS::T3666048746"] = "Dokumente anhängen"
 
 -- Custom target language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MYTASKS::ASSISTANTMYTASKS::T3848935911"] = "Benutzerdefinierte Zielsprache"
