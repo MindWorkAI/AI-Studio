@@ -305,9 +305,9 @@ public sealed class AssistantPluginInstallService
             await File.WriteAllTextAsync(tempFile, pluginCode, Encoding.UTF8, token);
 
             if (File.Exists(pluginFile))
-                File.Move(pluginFile, backupFile);
-
-            File.Move(tempFile, pluginFile);
+                File.Replace(tempFile, pluginFile, backupFile);
+            else
+                File.Move(tempFile, pluginFile);
 
             try
             {
