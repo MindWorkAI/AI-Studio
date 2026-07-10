@@ -207,10 +207,10 @@
     display: grid;
     grid-template-columns: minmax(2.8rem, auto) minmax(0, 1fr);
     min-height: 32rem;
-    height: 62vh;
+    height: auto;
     width: 100%;
     overflow: hidden;
-    border: 1px solid var(--mw-code-editor-border, rgba(0,0,0,0.11764705882352941));
+    border: 3px solid var(--mw-code-editor-border, rgba(0,0,0,0.11764705882352941));
     border-radius: 4px;
     background: var(--mw-code-editor-background, rgba(255,255,255,1));
     color: var(--mw-code-editor-foreground, rgba(66,66,66,1));
