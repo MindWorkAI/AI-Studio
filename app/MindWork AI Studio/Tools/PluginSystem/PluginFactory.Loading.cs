@@ -35,8 +35,9 @@ public static partial class PluginFactory
             return;
         }
         
-        if (!await PLUGIN_LOAD_SEMAPHORE.WaitAsync(0, cancellationToken))
-            return;
+        // Wait for ongoing reloads instead of silently skipping this request.
+        // This caller must return only after its reload has run.
+        await PLUGIN_LOAD_SEMAPHORE.WaitAsync(cancellationToken);
 
         var configObjectList = new List<PluginConfigurationObject>();
         
