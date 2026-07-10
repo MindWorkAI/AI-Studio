@@ -21,6 +21,9 @@
 
     <body style="overflow: hidden;">
         <Routes @rendermode="new InteractiveServerRenderMode(prerender: false)"/>
+        <div id="reconnect-modal" style="display: none; position: fixed; inset: 0; z-index: 20000; align-items: center; justify-content: center; padding: 2rem; background: rgba(15, 23, 42, 0.82); color: white; font-size: 1.1rem; text-align: center;">
+            Reconnecting to AI Studio...
+        </div>
         <script src="_framework/blazor.web.js" autostart="false"></script>
         <script src="boot.js"></script>
         <script src="system/MudBlazor/MudBlazor.min.js"></script>
