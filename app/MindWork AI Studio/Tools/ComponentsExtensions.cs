@@ -49,6 +49,7 @@ public static class ComponentsExtensions
         Components.I18N_ASSISTANT => TB("Localization Assistant"),
         Components.DOCUMENT_ANALYSIS_ASSISTANT => TB("Document Analysis Assistant"),
         Components.SLIDE_BUILDER_ASSISTANT => TB("Slide Planner Assistant"),
+        Components.IMAGE_GENERATION_ASSISTANT => TB("Image Generation Assistant"),
         Components.META_ASSISTANT => TB("Assistant Builder"),
         
         Components.CHAT => TB("New Chat"),
@@ -73,7 +74,8 @@ public static class ComponentsExtensions
         Components.JOB_POSTING_ASSISTANT => new(Event.SEND_TO_JOB_POSTING_ASSISTANT, Routes.ASSISTANT_JOB_POSTING),
         Components.DOCUMENT_ANALYSIS_ASSISTANT => new(Event.SEND_TO_DOCUMENT_ANALYSIS_ASSISTANT, Routes.ASSISTANT_DOCUMENT_ANALYSIS),
         Components.SLIDE_BUILDER_ASSISTANT => new(Event.SEND_TO_SLIDE_BUILDER_ASSISTANT, Routes.ASSISTANT_SLIDE_BUILDER),
-        
+        Components.IMAGE_GENERATION_ASSISTANT => new(Event.SEND_TO_IMAGE_GENERATION_ASSISTANT, Routes.ASSISTANT_IMAGE_GENERATION),
+
         Components.CHAT => new(Event.SEND_TO_CHAT, Routes.CHAT),
         
         _ => new(Event.NONE, Routes.ASSISTANTS),
@@ -97,7 +99,8 @@ public static class ComponentsExtensions
         Components.BIAS_DAY_ASSISTANT => settingsManager.ConfigurationData.BiasOfTheDay.PreselectOptions ? settingsManager.ConfigurationData.BiasOfTheDay.MinimumProviderConfidence : default,
         Components.ERI_ASSISTANT => settingsManager.ConfigurationData.ERI.PreselectOptions ? settingsManager.ConfigurationData.ERI.MinimumProviderConfidence : default,
         Components.SLIDE_BUILDER_ASSISTANT => settingsManager.ConfigurationData.SlideBuilder.PreselectOptions ? settingsManager.ConfigurationData.SlideBuilder.MinimumProviderConfidence : default,
-        
+        Components.IMAGE_GENERATION_ASSISTANT => settingsManager.ConfigurationData.ImageGeneration.PreselectOptions ? settingsManager.ConfigurationData.ImageGeneration.MinimumProviderConfidence : default,
+
         // The minimum confidence for the Document Analysis Assistant is set per policy.
         // We do this inside the Document Analysis Assistant component:
         Components.DOCUMENT_ANALYSIS_ASSISTANT => ConfidenceLevel.NONE,
@@ -127,7 +130,8 @@ public static class ComponentsExtensions
             Components.ERI_ASSISTANT => settingsManager.ConfigurationData.ERI.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.ERI.PreselectedProvider) : null,
             Components.I18N_ASSISTANT => settingsManager.ConfigurationData.I18N.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.I18N.PreselectedProvider) : null,
             Components.SLIDE_BUILDER_ASSISTANT => settingsManager.ConfigurationData.SlideBuilder.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.SlideBuilder.PreselectedProvider) : null,
-            
+            Components.IMAGE_GENERATION_ASSISTANT => settingsManager.ConfigurationData.ImageGeneration.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.ImageGeneration.PreselectedProvider) : null,
+
             // The Document Analysis Assistant does not have a preselected provider at the component level.
             // The provider is selected per policy instead. We do this inside the Document Analysis Assistant component.
             Components.DOCUMENT_ANALYSIS_ASSISTANT => Settings.Provider.NONE,

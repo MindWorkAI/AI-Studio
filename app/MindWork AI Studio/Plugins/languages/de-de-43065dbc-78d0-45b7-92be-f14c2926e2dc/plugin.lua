@@ -1530,6 +1530,39 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ICONFINDER::ASSISTANTICONFINDER::T5968021
 -- Please provide a context. This will help the AI to find the right icon. You might type just a keyword or copy a sentence from your text, e.g., from a slide where you want to use the icon.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ICONFINDER::ASSISTANTICONFINDER::T653229070"] = "Bitte geben Sie einen Kontext an. Das hilft der KI, das passende Icon zu finden. Sie können einfach ein Stichwort eingeben oder einen Satz aus ihrem Text kopieren, zum Beispiel von einer Folie, auf der Sie das Icon verwenden möchten."
 
+-- Please specify whether the configured MCP server is trustworthy in the assistant settings first.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::IMAGEGENERATION::ASSISTANTIMAGEGENERATION::T1099297581"] = "Geben Sie bitte zuerst in den Assistenten-Einstellungen an, ob der konfigurierte MCP-Server vertrauenswürdig ist."
+
+-- Image Generation
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::IMAGEGENERATION::ASSISTANTIMAGEGENERATION::T1513635952"] = "Bildgenerierung"
+
+-- Save generated image
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::IMAGEGENERATION::ASSISTANTIMAGEGENERATION::T1618464000"] = "Erstelltes Bild speichern"
+
+-- Describe the image you want. An LLM refines your description into a detailed prompt, which is then sent to your configured local MCP image generation tool.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::IMAGEGENERATION::ASSISTANTIMAGEGENERATION::T1660625257"] = "Beschreiben Sie das Bild, das Sie erzeugen möchten. Ein LLM verfeinert Ihre Beschreibung in einen detaillierten Prompt, der dann an Ihr eingerichtetes lokales MCP-Bildgenerierungstool gesendet wird."
+
+-- Failed to save the image: {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::IMAGEGENERATION::ASSISTANTIMAGEGENERATION::T1711016832"] = "Das Speichern des Bildes ist fehlgeschlagen: {0}"
+
+-- Download image
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::IMAGEGENERATION::ASSISTANTIMAGEGENERATION::T1991807104"] = "Bild herunterladen"
+
+-- MCP Server Trust
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::IMAGEGENERATION::ASSISTANTIMAGEGENERATION::T261997848"] = "Server-Vertrauen"
+
+-- Please configure the MCP server URL and select an image generation tool in the assistant settings first.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::IMAGEGENERATION::ASSISTANTIMAGEGENERATION::T2797934832"] = "Bitte konfigurieren Sie zuerst die MCP Server-URL und wählen Sie ein Bildgenerierungstool in den Assistenteneinstellungen."
+
+-- Please describe the image you want to generate.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::IMAGEGENERATION::ASSISTANTIMAGEGENERATION::T3116989981"] = "Beschreiben Sie das Bild, das Sie erzeugen möchten."
+
+-- Describe the image you want
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::IMAGEGENERATION::ASSISTANTIMAGEGENERATION::T719637345"] = "Beschreiben Sie das Bild, das Sie erzeugen möchten."
+
+-- Generate image
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::IMAGEGENERATION::ASSISTANTIMAGEGENERATION::T889666267"] = "Bild generieren"
+
 -- (Optional) The company name
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::JOBPOSTING::ASSISTANTJOBPOSTINGS::T1134022609"] = "(Optional) Unternehmensname"
 
@@ -5598,6 +5631,72 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGICONFINDER::T3448155
 -- Preselect icon options?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGICONFINDER::T725252382"] = "Iconoptionen vorauswählen?"
 
+-- Preselect image generation options?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGIMAGEGENERATION::T1018186902"] = "Bildgenerierungsoptionen vorauswählen?"
+
+-- An optional bearer token to authenticate against the MCP server. Leave empty when your server does not require authentication.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGIMAGEGENERATION::T1397454090"] = "Ein optionaler Bearer-Token zur Authentifizierung gegen den MCP-Server. Lassen Sie es leer, falls Ihr Server keine Authentifizierung erfordert."
+
+-- No image generation options are preselected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGIMAGEGENERATION::T1593579371"] = "Keine Bildgenerierungsoptionen sind voreingestellt."
+
+-- When enabled, you can preselect the LLM that refines your image description into a detailed prompt.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGIMAGEGENERATION::T1654742538"] = "Wenn aktiviert, können Sie ein LLM vorab auswählen, das Ihre Bildbeschreibung in ein detailliertes Prompt verfeinert."
+
+-- Please provide the URL of the MCP server first.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGIMAGEGENERATION::T1667519527"] = "Bitte geben Sie zunächst die URL des MCP-Servers an."
+
+-- Image generation tool
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGIMAGEGENERATION::T1696835274"] = "Bildgenerierungswerkzeug"
+
+-- Successfully connected to the MCP server.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGIMAGEGENERATION::T2034701108"] = "Erfolgreich verbunden mit dem MCP-Server."
+
+-- Assistant: Image Generation Options
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGIMAGEGENERATION::T2478006990"] = "Assistent: Bildgenerierungsoptionen"
+
+-- Is this MCP server trustworthy?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGIMAGEGENERATION::T2564661252"] = "Ist dieser MCP-Server vertrauenswürdig?"
+
+-- MCP Image Server
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGIMAGEGENERATION::T2642251821"] = "MCP Bildserver"
+
+-- your security policy
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGIMAGEGENERATION::T2879113658"] = "Ihre Sicherheitsrichtlinie"
+
+-- MCP server URL
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGIMAGEGENERATION::T2883842467"] = "MCP-Server-URL"
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGIMAGEGENERATION::T3448155331"] = "Schließen"
+
+-- The URL of your local MCP server that offers an image generation tool, e.g., http://localhost:3001/mcp.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGIMAGEGENERATION::T3583271855"] = "Die URL Ihres lokalen MCP-Servers, der ein Bildgenerierungstool bereitstellt, z. B. http://localhost:3001/mcp."
+
+-- Your prompts (and, depending on your server, possibly the generated images) are sent to this MCP server. Only self-hosted servers or servers within your trusted network should be considered trustworthy.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGIMAGEGENERATION::T3688716816"] = "Ihre Prompt-Befehle (und, je nach Ihrem Server, möglicherweise die generierten Bilder) werden an diesen MCP-Server gesendet. Nur selbsthostete Server oder Server innerhalb Ihres vertrauten Netzwerks sollten als vertrauenswürdig angesehen werden."
+
+-- Which tool, offered by the MCP server, should be used to generate images? Use the button above to discover the available tools.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGIMAGEGENERATION::T3820451252"] = "Welches Tool, das vom MCP-Server angeboten wird, sollte verwendet werden, um Bilder zu erstellen? Verwenden Sie den Button oben, um die verfügbaren Tools zu laden."
+
+-- Test connection & load tools
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGIMAGEGENERATION::T3903663296"] = "Verbindung testen & Tools laden"
+
+-- Your security policy
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGIMAGEGENERATION::T4081226330"] = "Ihre Sicherheitsrichtlinie"
+
+-- Image generation options are preselected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGIMAGEGENERATION::T4121552916"] = "Bildgenerierungsoptionen sind vorausgewählt"
+
+-- Prompt Refinement
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGIMAGEGENERATION::T559115912"] = "Prompt Feinabstimmung"
+
+-- Bearer token (optional)
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGIMAGEGENERATION::T641155904"] = "Bearer-Token (optional)"
+
+-- The MCP server did not report any tools.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGIMAGEGENERATION::T714600832"] = "Der MCP-Server berichtete keine Tools."
+
 -- No job posting options are preselected
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGJOBPOSTINGS::T1257718691"] = "Keine Joboptionen sind vorausgewählt"
 
@@ -6387,6 +6486,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1348190638"] = "Rechtliche Prüfu
 -- General
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1432485131"] = "Allgemein"
 
+-- Image Generation
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1513635952"] = "Bildgenerierung"
+
 -- Grammar & Spelling
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1514925962"] = "Grammatik & Rechtschreibung"
 
@@ -6509,6 +6611,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T878695986"] = "Lerne jeden Tag ei
 
 -- Localization
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T897888480"] = "Lokalisierung"
+
+-- Generate images via your local MCP image generation tool.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T972656517"] = "Bildgenerierung über Ihr lokales MCP-Bildgenerations-Tool."
 
 -- Hide search
 UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T1281128983"] = "Suche ausblenden"
@@ -7344,6 +7449,9 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1485461907
 -- Assistants
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1614176092"] = "Assistenten"
 
+-- Could be an external / third-party server
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1628312007"] = "Kann ein externer / dritter Anbieter Server sein"
+
 -- Store chats automatically
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T1664293672"] = "Chats automatisch speichern"
 
@@ -7413,6 +7521,9 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T3137986690
 -- Disappearing chats: delete chats older than 180 days
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T3491430707"] = "Selbstlöschende Chats: lösche Chats die älter als 180 Tage sind"
 
+-- Please select a security policy
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T3511915070"] = "Bitte wählen Sie eine Sicherheitsrichtlinie"
+
 -- Install updates automatically
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T3569059463"] = "Updates automatisch installieren"
 
@@ -7434,6 +7545,9 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T4256323669
 -- All preview features are hidden
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T4289410063"] = "Alle Vorschaufunktionen sind ausgeblendet"
 
+-- Self-hosted / within my trusted network
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T462152594"] = "Selbsthosted / in meinem vertrauten Netzwerk"
+
 -- Chat
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T578410699"] = "Chat"
 
@@ -7452,6 +7566,9 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T870850829"
 -- Disappearing chats: delete chats older than 30 days
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T937754037"] = "Selbstlöschende Chats: lösche Chats die älter als 30 Tage sind"
 
+-- This MCP server is self-hosted or runs within your trusted network. Your prompts stay under your control.
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::DATASOURCESECURITYEXTENSIONS::T1250066937"] = "Dieser MCP-Server ist selbsthosted oder läuft innerhalb Ihres vertrauenswürdigen Netzwerks. Ihre Prompts bleiben unter Ihrer Kontrolle."
+
 -- This data source can be used with any LLM provider. Your data may be sent to a cloud-based provider.
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::DATASOURCESECURITYEXTENSIONS::T1531417967"] = "Diese Datenquelle kann mit jedem LLM-Anbieter verwendet werden. Ihre Daten können an einen cloudbasierten Anbieter gesendet werden."
 
@@ -7464,8 +7581,14 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::DATASOURCESECURITYEXTENSIONS::T3
 -- The security of the data source is not specified yet. You cannot use this data source until you specify a security policy.
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::DATASOURCESECURITYEXTENSIONS::T4056804813"] = "Die Sicherheit der Datenquelle ist noch nicht festgelegt. Sie können diese Datenquelle erst verwenden, wenn Sie eine Sicherheitsrichtlinie angeben."
 
+-- This MCP server could be an external or third-party service. Your prompts may leave your trusted network and reach systems you do not control.
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::DATASOURCESECURITYEXTENSIONS::T4180412982"] = "Dieser MCP-Server könnte ein externes oder von Drittparteien bereitgestelltes Dienst sein. Ihre Prompts könnten Ihr vertrauenswürdiges Netzwerk verlassen und Systeme erreichen, die Sie nicht kontrollieren."
+
 -- Unknown security policy
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::DATASOURCESECURITYEXTENSIONS::T4277536697"] = "Unbekannte Sicherheitsrichtlinie"
+
+-- The trustworthiness of this MCP server is not specified yet. You cannot use this assistant until you specify a security policy.
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::DATASOURCESECURITYEXTENSIONS::T577047497"] = "Die Vertrauenswürdigkeit dieses MCP-Servers ist derzeit nicht festgelegt. Sie können diesen Assistenten nicht verwenden, bis Sie eine Sicherheitsrichtlinie festlegen."
 
 -- Local File
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::DATASOURCETYPEEXTENSION::T1687345358"] = "Lokale Datei"
@@ -7673,6 +7796,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T2921123194"] = "Synonym
 
 -- Slide Planner Assistant
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T2924755246"] = "Folienplaner-Assistent"
+
+-- Image Generation Assistant
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T3253873200"] = "Bildgenerierender Assistent"
 
 -- Assistant Builder
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T3303547904"] = "Assistenten-Builder"
@@ -7892,6 +8018,24 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::EXTERNALHTTPCLIENTTIMEOUT::T599774443"] = "Das
 
 -- policy files
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::EXTERNALHTTPCLIENTTIMEOUT::T632340680"] = "Richtliniendateien"
+
+-- Failed to connect to the MCP server: the request was canceled either by the user or due to a timeout.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::MCPCLIENT::MCPIMAGETOOLCLIENT::T2008844688"] = "Verbindung zum MCP-Server fehlgeschlagen: Die Anfrage wurde entweder durch den Benutzer abgebrochen oder aufgrund eines Timeout."
+
+-- Failed to generate the image due to an exception: {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::MCPCLIENT::MCPIMAGETOOLCLIENT::T2722621255"] = "Fehler bei der Bildgenerierung aufgrund einer Ausnahme: {0}"
+
+-- Failed to connect to the MCP server due to an exception: {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::MCPCLIENT::MCPIMAGETOOLCLIENT::T2875094707"] = "Fehler beim Verbindungsaufbau zum MCP-Server aufgrund einer Ausnahme: {0}"
+
+-- Failed to generate the image: the request was canceled either by the user or due to a timeout.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::MCPCLIENT::MCPIMAGETOOLCLIENT::T400554764"] = "Das Bild konnte nicht generiert werden: Die Anfrage wurde entweder durch den Benutzer abgebrochen oder aufgrund eines Timeout."
+
+-- The MCP tool reported an error without further details.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::MCPCLIENT::MCPIMAGETOOLCLIENT::T409185996"] = "Das MCP-Tool meldete einen Fehler ohne weitere Details."
+
+-- The MCP tool did not return an image.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::MCPCLIENT::MCPIMAGETOOLCLIENT::T4241777760"] = "Das MCP-Tool hat kein Bild zurückgegeben."
 
 -- AI Studio couldn't install Pandoc because the archive was not found.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T1059477764"] = "AI Studio konnte Pandoc nicht installieren, da das Archiv nicht gefunden wurde."

@@ -25,6 +25,7 @@ public enum ConfigurableAssistant
     ERI_ASSISTANT,
     DOCUMENT_ANALYSIS_ASSISTANT,
     SLIDE_BUILDER_ASSISTANT,
+    IMAGE_GENERATION_ASSISTANT,
 
     // ReSharper disable InconsistentNaming
     I18N_ASSISTANT,

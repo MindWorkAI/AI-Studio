@@ -61,6 +61,7 @@ public static class AssistantVisibilityExtensions
             Components.ERI_ASSISTANT => ConfigurableAssistant.ERI_ASSISTANT,
             Components.DOCUMENT_ANALYSIS_ASSISTANT => ConfigurableAssistant.DOCUMENT_ANALYSIS_ASSISTANT,
             Components.SLIDE_BUILDER_ASSISTANT => ConfigurableAssistant.SLIDE_BUILDER_ASSISTANT,
+            Components.IMAGE_GENERATION_ASSISTANT => ConfigurableAssistant.IMAGE_GENERATION_ASSISTANT,
             Components.I18N_ASSISTANT => ConfigurableAssistant.I18N_ASSISTANT,
 
             _ => ConfigurableAssistant.UNKNOWN,
