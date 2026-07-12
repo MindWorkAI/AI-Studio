@@ -2,11 +2,48 @@ using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Rust;
+using AIStudio.Tools.Services;
+
+using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Components.Settings;
 
 public partial class SettingsPanelApp : SettingsPanelBase
 {
+    [Inject]
+    private UpdatePolicy UpdatePolicy { get; init; } = null!;
+
+    private UpdatePolicyMode updatePolicyMode;
+
+    private string UpdateIntervalHelp => this.updatePolicyMode is UpdatePolicyMode.ENTERPRISE_DISABLED
+        ? T("Your organization has disabled update checks and installations.")
+        : T("How often should we check for app updates?");
+
+    private string UpdateInstallationHelp => this.updatePolicyMode is UpdatePolicyMode.ENTERPRISE_DISABLED
+        ? T("This setting has no effect while updates are disabled by your organization.")
+        : T("Should updates be installed automatically or manually?");
+
+    private bool IsUpdateIntervalLocked() => this.updatePolicyMode is UpdatePolicyMode.ENTERPRISE_DISABLED ||
+        ManagedConfiguration.TryGet(x => x.App, x => x.UpdateInterval, out var meta) && meta.IsLocked;
+
+    private bool IsUpdateInstallationLocked() => this.updatePolicyMode is UpdatePolicyMode.ENTERPRISE_DISABLED ||
+        ManagedConfiguration.TryGet(x => x.App, x => x.UpdateInstallation, out var meta) && meta.IsLocked;
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.ApplyFilters([], [ Event.CONFIGURATION_CHANGED ]);
+        await base.OnInitializedAsync();
+        this.updatePolicyMode = this.UpdatePolicy.CurrentMode;
+    }
+
+    protected override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
+    {
+        if (triggeredEvent is Event.CONFIGURATION_CHANGED)
+            this.updatePolicyMode = this.UpdatePolicy.CurrentMode;
+
+        await base.ProcessIncomingMessage(sendingComponent, triggeredEvent, data);
+    }
+
     private ConfigurationShortcutData VoiceRecordingShortcut => new()
     {
         Id = Shortcut.VOICE_RECORDING_TOGGLE,

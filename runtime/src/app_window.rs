@@ -451,8 +451,9 @@ pub async fn change_location_to(url: &str) {
 
 /// Checks for updates.
 pub async fn check_for_update(_token: APIToken) -> Json<CheckUpdateResponse> {
-    if is_dev() {
-        warn!(Source = "Updater"; "The app is running in development mode; skipping update check.");
+    if !self_update_allowed(is_dev(), is_flatpak()) {
+        let reason = if is_flatpak() { "Flatpak installations are updated externally" } else { "the app is running in development mode" };
+        warn!(Source = "Updater"; "Skipping update check because {reason}.");
         return Json(CheckUpdateResponse {
             update_is_available: false,
             error: false,
@@ -536,8 +537,9 @@ pub struct CheckUpdateResponse {
 
 /// Installs the update.
 pub async fn install_update(_token: APIToken) {
-    if is_dev() {
-        warn!(Source = "Updater"; "The app is running in development mode; skipping update installation.");
+    if !self_update_allowed(is_dev(), is_flatpak()) {
+        let reason = if is_flatpak() { "Flatpak installations are updated externally" } else { "the app is running in development mode" };
+        warn!(Source = "Updater"; "Skipping update installation because {reason}.");
         return;
     }
 
@@ -593,6 +595,10 @@ pub async fn install_update(_token: APIToken) {
             error!(Source = "Updater"; "No update available to install. Did you check for updates first?");
         },
     }
+}
+
+fn self_update_allowed(development: bool, flatpak: bool) -> bool {
+    !development && !flatpak
 }
 
 /// Request payload for registering a global shortcut.
@@ -1027,6 +1033,20 @@ mod tests {
     use super::*;
     use std::fs;
 
+    #[test]
+    fn self_update_is_disabled_in_development() {
+        assert!(!self_update_allowed(true, false));
+    }
+
+    #[test]
+    fn self_update_is_disabled_for_flatpak() {
+        assert!(!self_update_allowed(false, true));
+    }
+
+    #[test]
+    fn self_update_is_enabled_for_normal_production_installations() {
+        assert!(self_update_allowed(false, false));
+    }
     #[test]
     fn pdfium_library_directory_prefers_resources_libraries() {
         let temp_dir = tempfile::tempdir().unwrap();
