@@ -81,6 +81,7 @@ Each assistant plugin lives in its own directory under the assistants plugin roo
 
 ## Structure
 - `ASSISTANT` is the root table. It must contain `Title`, `Description`, `SystemPrompt`, `SubmitText`, `AllowProfiles`, and the nested `UI` definition.
+- `DEPLOYED_USING_CONFIG_SERVER` identifies who manages the assistant plugin. Set it to `false` for locally managed plugins. A missing field is also treated as local for compatibility with existing plugins. Enterprise-distributed plugins must set it to `true` and cannot be revised with AI in AI Studio.
 - `ASSISTANT` may optionally define direct-launch metadata for assistant tiles:
   - `LaunchBehavior = "OPEN_WORKSPACE_CHAT_BY_NAME"`
   - `WorkspaceName = "<target workspace name>"`
@@ -89,6 +90,8 @@ Each assistant plugin lives in its own directory under the assistants plugin roo
 
 ### Example: Minimal Requirements Assistant Table
 ```lua
+DEPLOYED_USING_CONFIG_SERVER = false
+
 ASSISTANT = {
     ["Title"] = "",
     ["Description"] = "",

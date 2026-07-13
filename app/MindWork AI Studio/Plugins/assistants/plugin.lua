@@ -46,6 +46,9 @@ IS_MAINTAINED = true
 -- When the plugin is deprecated, this message will be shown to users:
 DEPRECATION_MESSAGE = ""
 
+-- Enterprise-managed assistants cannot be revised with AI. Keep false for locally managed plugins:
+DEPLOYED_USING_CONFIG_SERVER = false
+
 ASSISTANT = {
     ["Title"] = "<Title of your assistant>",
     ["Description"] = "<Description presented to the users, explaining your assistant>",
