@@ -7,6 +7,16 @@ public static partial class ProviderExtensions
     private static List<Capability> GetModelCapabilitiesAnthropic(Model model)
     {
         var modelName = model.Id.ToLowerInvariant().AsSpan();
+
+        // Claude Fable 5 and Mythos 5 always use adaptive thinking:
+        if(modelName.StartsWith("claude-fable-5") || modelName.StartsWith("claude-mythos-5"))
+            return [
+                Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                Capability.TEXT_OUTPUT,
+
+                Capability.ALWAYS_REASONING, Capability.FUNCTION_CALLING,
+                Capability.CHAT_COMPLETION_API,
+            ];
         
         // Claude 4.x models:
         if(modelName.StartsWith("claude-opus-4") || modelName.StartsWith("claude-sonnet-4"))
