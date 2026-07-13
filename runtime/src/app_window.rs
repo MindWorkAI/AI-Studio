@@ -22,8 +22,6 @@ use tauri_plugin_global_shortcut::GlobalShortcutExt;
 use tauri_plugin_opener::OpenerExt;
 use tokio::sync::broadcast;
 use tokio::time;
-use webkit2gtk::glib::Cast;
-use webkit2gtk::{PermissionRequestExt, UserMediaPermissionRequestExt};
 use crate::api_token::APIToken;
 use crate::dotnet::{cleanup_dotnet_server, start_dotnet_server, stop_dotnet_server};
 use crate::environment::{
@@ -32,8 +30,15 @@ use crate::environment::{
 use crate::log::switch_to_file_logging;
 use crate::pdfium::PDFIUM_LIB_PATH;
 use crate::qdrant_edge_database::{start_qdrant_edge_database, stop_qdrant_edge_database};
+
 #[cfg(debug_assertions)]
 use crate::dotnet::create_startup_env_file;
+
+#[cfg(target_os = "linux")]
+use webkit2gtk::glib::Cast;
+
+#[cfg(target_os = "linux")]
+use webkit2gtk::{PermissionRequestExt, UserMediaPermissionRequestExt};
 
 /// The Tauri main window.
 pub static MAIN_WINDOW: Lazy<Mutex<Option<WebviewWindow>>> = Lazy::new(|| Mutex::new(None));
