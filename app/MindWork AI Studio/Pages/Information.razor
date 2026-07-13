@@ -1,5 +1,6 @@
 @attribute [Route(Routes.ABOUT)]
 @using AIStudio.Tools.PluginSystem
+@using AIStudio.Tools.Services
 @inherits MSGComponentBase
 
 <div class="inner-scrolling-context">
@@ -53,7 +54,7 @@
                             <MudText Typo="Typo.body1">
                                 @this.WorkingDirectory
                             </MudText>
-                            <MudCopyClipboardButton TooltipMessage="@(T("Copies the working directory to the clipboard"))" StringContent="@this.runtimeInfo.WorkingDirectory"/>
+                            <MudCopyClipboardButton TooltipMessage="@(T("Copies the working directory to the clipboard"))" StringContent="@this.RuntimeInfo.WorkingDirectory"/>
                         </div>
                     </MudListItem>
                     <MudListItem T="string" Icon="@Icons.Material.Filled.InsertDriveFile">
@@ -61,7 +62,7 @@
                             <MudText Typo="Typo.body1">
                                 @this.ExecutablePath
                             </MudText>
-                            <MudCopyClipboardButton TooltipMessage="@(T("Copies the executable path to the clipboard"))" StringContent="@this.runtimeInfo.ExecutablePath"/>
+                            <MudCopyClipboardButton TooltipMessage="@(T("Copies the executable path to the clipboard"))" StringContent="@this.RuntimeInfo.ExecutablePath"/>
                         </div>
                     </MudListItem>
                     @if (OperatingSystem.IsLinux())
@@ -193,7 +194,7 @@
                 </MudList>
                 <MudStack Row="true">
                     <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Update" OnClick="@this.CheckForUpdate">
-                        @T("Check for updates")
+                        @(this.updatePolicyMode is UpdatePolicyMode.SELF_UPDATE ? T("Check for updates") : T("How to update"))
                     </MudButton>
                     <MudButton Variant="Variant.Filled" Color="Color.Default" StartIcon="@Icons.Material.Filled.Download" OnClick="@(async () => await this.ShowPandocDialog())">
                         @this.PandocButtonText

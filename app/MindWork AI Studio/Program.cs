@@ -6,6 +6,7 @@ using AIStudio.Tools.AIJobs;
 using AIStudio.Tools.AssistantSessions;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.PluginSystem.Assistants;
+using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Server.Kestrel.Core;
@@ -88,6 +89,7 @@ internal sealed class Program
             return;
         }
         
+        var runtimeInfo = await rust.GetRuntimeInfo();
         var builder = WebApplication.CreateBuilder();
         builder.WebHost.ConfigureKestrel(kestrelServerOptions =>
         {
@@ -127,6 +129,7 @@ internal sealed class Program
         builder.Services.AddSingleton(new MudTheme());
         builder.Services.AddSingleton(MessageBus.INSTANCE);
         builder.Services.AddSingleton(rust);
+        builder.Services.AddSingleton(typeof(RuntimeInfoResponse), runtimeInfo);
         builder.Services.AddMudMarkdownClipboardService<MarkdownClipboardService>();
         builder.Services.AddSingleton<SettingsManager>();
         builder.Services.AddSingleton<ThreadSafeRandom>();
@@ -134,6 +137,7 @@ internal sealed class Program
         builder.Services.AddSingleton<AssistantSessionService>();
         builder.Services.AddSingleton<VoiceRecordingAvailabilityService>();
         builder.Services.AddSingleton<AssistantPluginInstallService>();
+        builder.Services.AddSingleton<UpdatePolicy>();
         builder.Services.AddSingleton<DataSourceService>();
         builder.Services.AddScoped<PandocAvailabilityService>();
         builder.Services.AddTransient<HTMLParser>();

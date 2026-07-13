@@ -30,6 +30,9 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     private RustService RustService { get; init; } = null!;
 
     [Inject]
+    private UpdatePolicy UpdatePolicy { get; init; } = null!;
+
+    [Inject]
     private AIJobService AIJobService { get; init; } = null!;
 
     [Inject]
@@ -186,6 +189,8 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
             switch (triggeredEvent)
             {
                 case Event.INSTALL_UPDATE:
+                    if (!this.UpdatePolicy.AllowsInstallations)
+                        break;
                     this.performingUpdate = true;
                     this.StateHasChanged();
                     break;
@@ -371,6 +376,9 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
 
     private async Task ShowUpdateDialog()
     {
+        if (!this.UpdatePolicy.AllowsInstallations)
+            return;
+
         if(this.currentUpdateResponse is null)
             return;
         
@@ -396,6 +404,9 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         var dialogReference = await this.DialogService.ShowAsync<UpdateDialog>(T("Update"), dialogParameters, DialogOptions.FULLSCREEN_NO_HEADER);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
+            return;
+
+        if (!this.UpdatePolicy.AllowsInstallations)
             return;
         
         this.performingUpdate = true;

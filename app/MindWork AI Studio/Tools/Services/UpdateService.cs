@@ -16,15 +16,15 @@ public sealed class UpdateService : BackgroundService, IMessageBusReceiver
     private readonly SettingsManager settingsManager;
     private readonly MessageBus messageBus;
     private readonly RustService rust;
+    private readonly UpdatePolicy updatePolicy;
     private readonly ILogger<UpdateService> logger;
     
-    private TimeSpan updateInterval;
-    
-    public UpdateService(MessageBus messageBus, SettingsManager settingsManager, RustService rust, ILogger<UpdateService> logger)
+    public UpdateService(MessageBus messageBus, SettingsManager settingsManager, RustService rust, UpdatePolicy updatePolicy, ILogger<UpdateService> logger)
     {
         this.settingsManager = settingsManager;
         this.messageBus = messageBus;
         this.rust = rust;
+        this.updatePolicy = updatePolicy;
         this.logger = logger;
 
         this.messageBus.RegisterComponent(this);
@@ -41,42 +41,21 @@ public sealed class UpdateService : BackgroundService, IMessageBusReceiver
         while (!stoppingToken.IsCancellationRequested && !IS_INITIALIZED)
             await Task.Delay(TimeSpan.FromSeconds(3), stoppingToken);
 
-        //
-        // Set the update interval based on the user's settings.
-        //
-        this.updateInterval = this.settingsManager.ConfigurationData.App.UpdateInterval switch
-        {
-            UpdateInterval.NO_CHECK => Timeout.InfiniteTimeSpan,
-            UpdateInterval.ONCE_STARTUP => Timeout.InfiniteTimeSpan,
-            
-            UpdateInterval.HOURLY => TimeSpan.FromHours(1),
-            UpdateInterval.DAILY => TimeSpan.FromDays(1),
-            UpdateInterval.WEEKLY => TimeSpan.FromDays(7),
-            
-            _ => TimeSpan.FromHours(1)
-        };
-        
-        //
-        // When the user doesn't want to check for updates, we can
-        // return early.
-        //
-        if(this.settingsManager.ConfigurationData.App.UpdateInterval is UpdateInterval.NO_CHECK)
-            return;
-        
-        //
-        // Check for updates at the beginning. The user aspects this when the app
-        // is started.
-        //
-        await this.CheckForUpdate();
-        
-        //
-        // Start the update loop. This will check for updates based on the
-        // user's settings.
-        //
+        DateTimeOffset? lastAutomaticCheck = null;
         while (!stoppingToken.IsCancellationRequested)
         {
-            await Task.Delay(this.updateInterval, stoppingToken);
-            await this.CheckForUpdate();
+            var interval = this.GetCurrentUpdateInterval();
+            if (this.updatePolicy.AllowsAutomaticChecks &&
+                (
+                    lastAutomaticCheck is null ||
+                    interval != Timeout.InfiniteTimeSpan && DateTimeOffset.UtcNow - lastAutomaticCheck >= interval)
+                )
+            {
+                await this.CheckForUpdate();
+                lastAutomaticCheck = DateTimeOffset.UtcNow;
+            }
+
+            await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
         }
     }
     
@@ -97,7 +76,8 @@ public sealed class UpdateService : BackgroundService, IMessageBusReceiver
         switch (triggeredEvent)
         {
             case Event.USER_SEARCH_FOR_UPDATE:
-                await this.CheckForUpdate(notifyUserWhenNoUpdate: true);
+                if (this.updatePolicy.AllowsManualChecks)
+                    await this.CheckForUpdate(notifyUserWhenNoUpdate: true);
                 break;
         }
     }
@@ -143,6 +123,9 @@ public sealed class UpdateService : BackgroundService, IMessageBusReceiver
             
             if (!isDevEnvironment && this.settingsManager.ConfigurationData.App.UpdateInstallation is UpdateInstallation.AUTOMATIC)
             {
+                if (!this.updatePolicy.AllowsInstallations)
+                    return;
+
                 try
                 {
                     await this.messageBus.SendMessage<bool>(null, Event.INSTALL_UPDATE);
@@ -174,6 +157,16 @@ public sealed class UpdateService : BackgroundService, IMessageBusReceiver
             }
         }
     }
+
+    private TimeSpan GetCurrentUpdateInterval() => this.settingsManager.ConfigurationData.App.UpdateInterval switch
+    {
+        UpdateInterval.ONCE_STARTUP => Timeout.InfiniteTimeSpan,
+        UpdateInterval.HOURLY => TimeSpan.FromHours(1),
+        UpdateInterval.DAILY => TimeSpan.FromDays(1),
+        UpdateInterval.WEEKLY => TimeSpan.FromDays(7),
+        
+        _ => Timeout.InfiniteTimeSpan
+    };
     
     public static void SetBlazorDependencies(ISnackbar snackbar)
     {

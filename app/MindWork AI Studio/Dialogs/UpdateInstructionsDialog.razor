@@ -1,0 +1,19 @@
+@inherits MSGComponentBase
+<MudDialog>
+    <DialogContent>
+        <MudJustifiedText Typo="Typo.body1">
+            @this.Message
+        </MudJustifiedText>
+    </DialogContent>
+    <DialogActions>
+        @if (!string.IsNullOrWhiteSpace(this.ReleaseUrl))
+        {
+            <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.OpenInBrowser" Href="@this.ReleaseUrl" Target="_blank">
+                @T("Show me the latest release page")
+            </MudButton>
+        }
+        <MudButton OnClick="@this.Close" Variant="Variant.Filled">
+            @T("Close")
+        </MudButton>
+    </DialogActions>
+</MudDialog>

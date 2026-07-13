@@ -3003,6 +3003,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1059411425"]
 -- Do you want to show preview features in the app?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1118505044"] = "Möchten Sie Vorschaufunktionen in der App anzeigen lassen?"
 
+-- AI Studio cannot check for updates when running as a Flatpak. Updates are managed outside the app.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1190632518"] = "AI Studio kann bei Ausführung als Flatpak nicht nach Updates suchen. Updates werden außerhalb der App verwaltet."
+
 -- Voice recording shortcut
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1278320412"] = "Tastaturkurzbefehl für Sprachaufnahme"
 
@@ -3045,8 +3048,14 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1890416390"]
 -- Which preview features would you like to enable?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1898060643"] = "Welche Vorschaufunktionen möchten Sie aktivieren?"
 
+-- This setting has no effect while updates are disabled by your organization.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1898114759"] = "Diese Einstellung hat keine Auswirkungen, solange Updates von Ihrer Organisation deaktiviert sind."
+
 -- Select the language for the app.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1907446663"] = "Wählen Sie die Sprache für die App aus."
+
+-- Your organization has disabled update checks and installations.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1909339369"] = "Ihre Organisation hat die Suche nach Updates und deren Installation deaktiviert."
 
 -- When enabled, additional administration options become visible. These options are intended for IT staff to manage organization-wide configuration, e.g. configuring and exporting providers for an entire organization.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2013281167"] = "Wenn diese Option aktiviert ist, werden zusätzliche Optionen für die Administration angezeigt. Diese Optionen sind für IT-Mitarbeitende vorgesehen, um organisationsweite Einstellungen zu verwalten, z. B. Anbieter für eine gesamte Organisation zu konfigurieren und zu exportieren."
@@ -3065,6 +3074,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2341504363"]
 
 -- Update installation method
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T237706157"] = "Installationsmethode für Updates"
+
+-- AI Studio cannot install updates when running as a Flatpak. Use the update method provided by your Flatpak distribution.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T244540698"] = "AI Studio kann keine Updates installieren, wenn es als Flatpak ausgeführt wird. Verwenden Sie die von Ihrer Flatpak-Distribution bereitgestellte Methode zur Aktualisierung."
 
 -- Language
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2591284123"] = "Sprache"
@@ -6288,6 +6300,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::UPDATEDIALOG::T25417398"] = "Aktualisieren v
 -- Install later
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::UPDATEDIALOG::T2936430090"] = "Später installieren"
 
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::UPDATEINSTRUCTIONSDIALOG::T3448155331"] = "Schließen"
+
+-- Show me the latest release page
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::UPDATEINSTRUCTIONSDIALOG::T59688848"] = "Zeig mir die Seite mit der neuesten Version"
+
 -- Create new workspace
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::WORKSPACESELECTIONDIALOG::T1541251414"] = "Neuen Arbeitsbereich erstellen"
 
@@ -6663,6 +6681,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1347508205"] = "Kopiert den Slot
 -- This library is used to read PDF files. This is necessary, e.g., for using PDFs as a data source for a chat.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1388816916"] = "Diese Bibliothek wird verwendet, um PDF-Dateien zu lesen. Das ist zum Beispiel notwendig, um PDFs als Datenquelle für einen Chat zu nutzen."
 
+-- Updates are managed by your organization. Contact your IT department if you have questions about updating AI Studio.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1402243995"] = "Updates werden von Ihrer Organisation verwaltet. Wenn Sie Fragen zur Aktualisierung von AI Studio haben, wenden Sie sich an Ihre IT-Abteilung."
+
 -- This library is used to extend the MudBlazor library. It provides additional components that are not part of the MudBlazor library.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1421513382"] = "Diese Bibliothek wird verwendet, um die MudBlazor-Bibliothek zu erweitern. Sie stellt zusätzliche Komponenten bereit, die nicht Teil der MudBlazor-Bibliothek sind."
 
@@ -6767,6 +6788,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2435772109"] = "Ursprung der Kon
 
 -- Configuration slot:
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T254943559"] = "Slot der Konfiguration:"
+
+-- AI Studio cannot update itself when installed as a Flatpak. A Flathub listing is planned. Until then, you can find the latest release on GitHub.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T254976975"] = "AI Studio kann sich nicht selbst aktualisieren, wenn es als Flatpak installiert ist. Ein Eintrag auf Flathub ist geplant. Bis dahin finden Sie die neueste Version auf GitHub."
 
 -- This library is used to determine the language of the operating system. This is necessary to set the language of the user interface.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2557014401"] = "Diese Bibliothek wird verwendet, um die Sprache des Betriebssystems zu erkennen. Dies ist notwendig, um die Sprache der Benutzeroberfläche einzustellen."
@@ -7019,6 +7043,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T864851737"] = "Axum wird verwend
 
 -- For some data transfers, we need to encode the data in base64. This Rust library is great for this purpose.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T870640199"] = "Für einige Datenübertragungen müssen wir die Daten in Base64 kodieren. Diese Rust-Bibliothek eignet sich dafür hervorragend."
+
+-- How to update
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T906183311"] = "Update-Anleitung "
 
 -- Install Pandoc
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T986578435"] = "Pandoc installieren"
@@ -7424,6 +7451,9 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T3612390107
 
 -- Toggle the sidebar: show the workspaces on demand next to the chat
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T3711207137"] = "Seitenleiste umschalten: Arbeitsbereiche bei Bedarf neben dem Chat anzeigen"
+
+-- Updates disabled by your organization
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T4048970098"] = "Updates wurden von Ihrer Organisation deaktiviert"
 
 -- Also show features in alpha: these are in development; expect bugs and missing features
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T4146964761"] = "Zeige auch Funktionen im Alpha-Stadium an: Diese befinden sich in der Entwicklung; es werden Fehler und fehlende Funktionen auftreten."

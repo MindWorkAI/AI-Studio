@@ -200,7 +200,10 @@ CONFIG["DATA_SOURCES"] = {}
 CONFIG["SETTINGS"] = {}
 
 -- Configure the update check interval:
--- Allowed values are: NO_CHECK, ONCE_STARTUP, HOURLY, DAILY, WEEKLY
+-- Allowed values are: NO_CHECK, DISABLE_UPDATES, ONCE_STARTUP, HOURLY, DAILY, WEEKLY
+-- NO_CHECK disables automatic checks, but users can still check and install updates manually.
+-- DISABLE_UPDATES is intended for enterprise configurations and disables all update checks
+-- and installations. It is not offered as a selectable option in the normal app settings.
 -- CONFIG["SETTINGS"]["DataApp.UpdateInterval"] = "NO_CHECK"
 
 -- Configure how updates are installed:
