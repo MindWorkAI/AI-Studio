@@ -32,9 +32,7 @@
                               Disabled="@(this.isGenerating || this.isApplying)" />
 
                 <CascadingValue Value="Components.META_ASSISTANT">
-                    <ProviderSelection @bind-ProviderSettings="@this.providerSettings"
-                                       ValidateProvider="@this.ValidatingProvider"
-                                       Disabled="@(this.isGenerating || this.isApplying)" />
+                    <ProviderSelection @bind-ProviderSettings="@this.providerSettings"ValidateProvider="@this.ValidatingProvider"Disabled="@(this.isGenerating || this.isApplying)" />
                 </CascadingValue>
 
                 <MudButton Variant="Variant.Filled"

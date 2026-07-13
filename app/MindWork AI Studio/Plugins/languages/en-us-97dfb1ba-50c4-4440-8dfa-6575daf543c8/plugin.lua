@@ -363,17 +363,11 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1078888788"] 
 -- Validate generated assistant
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1135532230"] = "Validate generated assistant"
 
--- Assistant Draft
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1176795724"] = "Assistant Draft"
-
 -- Generate Assistant
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1199074722"] = "Generate Assistant"
 
 -- Additional rules (Optional)
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1239995078"] = "Additional rules (Optional)"
-
--- User Goal
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1264526921"] = "User Goal"
 
 -- Auditing assistants safety...
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1322393857"] = "Auditing assistants safety..."
@@ -401,9 +395,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1644710572"] 
 
 -- Security check completed with findings.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1696631610"] = "Security check completed with findings."
-
--- Description
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1725856265"] = "Description"
 
 -- (Optional) Output language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1821434787"] = "(Optional) Output language"
@@ -450,12 +441,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2521082424"] 
 -- The assistant '{0}' was installed.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T254606977"] = "The assistant '{0}' was installed."
 
--- Inputs
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2647381688"] = "Inputs"
-
--- Name
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T266367750"] = "Name"
-
 -- I need an assistant that turns meeting notes into clear tasks with owners and deadlines.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2703350865"] = "I need an assistant that turns meeting notes into clear tasks with owners and deadlines."
 
@@ -483,23 +468,11 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T283315403"] =
 -- The generated assistant could not be checked.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2844109727"] = "The generated assistant could not be checked."
 
--- Category
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2947802513"] = "Category"
-
--- Assumptions
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T299451"] = "Assumptions"
-
--- UI Components
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3053707933"] = "UI Components"
-
 -- Enable assistant
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3055650774"] = "Enable assistant"
 
 -- Validate plugin
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3111970038"] = "Validate plugin"
-
--- The Assistant-Builder was not able to read the JSON response schema and therefore cannot safely generate your assistant right now.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3154764026"] = "The Assistant-Builder was not able to read the JSON response schema and therefore cannot safely generate your assistant right now."
 
 -- Edit draft
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3159409454"] = "Edit draft"
@@ -509,9 +482,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3163704605"] 
 
 -- Regenerate Assistant
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3171038735"] = "Regenerate Assistant"
-
--- The Assistant-Builder was not able to read the plugin manifest and therefore cannot safely generate your assistant right now.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3278037634"] = "The Assistant-Builder was not able to read the plugin manifest and therefore cannot safely generate your assistant right now."
 
 -- The security check could not determine a result.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3303290181"] = "The security check could not determine a result."
@@ -540,9 +510,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T358632395"] =
 -- Please provide a custom category.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3588686406"] = "Please provide a custom category."
 
--- Safety Notes
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3633499050"] = "Safety Notes"
-
 -- Enable the assistant before opening it.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3658628501"] = "Enable the assistant before opening it."
 
@@ -564,17 +531,11 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3863433088"] 
 -- Assistant draft
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3957423852"] = "Assistant draft"
 
--- Output
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T4000727844"] = "Output"
-
 -- Please describe the assistant you want to create.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T4004589285"] = "Please describe the assistant you want to create."
 
 -- Assistant updated.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T40397082"] = "Assistant updated."
-
--- Prompt Strategy
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T410529216"] = "Prompt Strategy"
 
 -- Allow AI Studio profiles
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T4155351992"] = "Allow AI Studio profiles"
@@ -876,8 +837,20 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTA
 -- Yes, hide the policy definition
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T940701960"] = "Yes, hide the policy definition"
 
+-- Revise Assistant
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DYNAMIC::ASSISTANTDYNAMIC::T1070696505"] = "Revise Assistant"
+
+-- Revise
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DYNAMIC::ASSISTANTDYNAMIC::T1829235561"] = "Revise"
+
 -- No assistant plugin are currently installed.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DYNAMIC::ASSISTANTDYNAMIC::T1913566603"] = "No assistant plugin are currently installed."
+
+-- The assistant '{0}' has been updated.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DYNAMIC::ASSISTANTDYNAMIC::T2466742351"] = "The assistant '{0}' has been updated."
+
+-- Revise assistant
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DYNAMIC::ASSISTANTDYNAMIC::T3167933145"] = "Revise assistant"
 
 -- Please select one of your profiles.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DYNAMIC::ASSISTANTDYNAMIC::T465395981"] = "Please select one of your profiles."
@@ -3866,6 +3839,54 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINEDITORDIALOG::T518047887"] = 
 
 -- Cancel
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINEDITORDIALOG::T900713019"] = "Cancel"
+
+-- Add a field for the target audience and make the final answer shorter.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINREVISIONDIALOG::T1383965111"] = "Add a field for the target audience and make the final answer shorter."
+
+-- Only local assistants generated by the Assistant Builder can be revised with AI.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINREVISIONDIALOG::T1493305516"] = "Only local assistants generated by the Assistant Builder can be revised with AI."
+
+-- Running security audit...
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINREVISIONDIALOG::T1731066725"] = "Running security audit..."
+
+-- Please select a provider.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINREVISIONDIALOG::T1809312323"] = "Please select a provider."
+
+-- The assistant plugin could not be resolved.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINREVISIONDIALOG::T1823819434"] = "The assistant plugin could not be resolved."
+
+-- Creating revision...
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINREVISIONDIALOG::T2337749895"] = "Creating revision..."
+
+-- The assistant plugin could not be loaded: {0}
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINREVISIONDIALOG::T2486953475"] = "The assistant plugin could not be loaded: {0}"
+
+-- The plugin.lua file could not be found.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINREVISIONDIALOG::T2530869782"] = "The plugin.lua file could not be found."
+
+-- Revised Lua plugin
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINREVISIONDIALOG::T2551052936"] = "Revised Lua plugin"
+
+-- Updating assistant...
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINREVISIONDIALOG::T3193127843"] = "Updating assistant..."
+
+-- Describe what should change after trying the assistant. AI Studio will revise the installed plugin while keeping the same assistant ID.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINREVISIONDIALOG::T3229664631"] = "Describe what should change after trying the assistant. AI Studio will revise the installed plugin while keeping the same assistant ID."
+
+-- Update assistant
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINREVISIONDIALOG::T3242039532"] = "Update assistant"
+
+-- Requested changes
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINREVISIONDIALOG::T3561753822"] = "Requested changes"
+
+-- Create revision
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINREVISIONDIALOG::T413917014"] = "Create revision"
+
+-- The revised assistant '{0}' is valid and ready to update.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINREVISIONDIALOG::T68761554"] = "The revised assistant '{0}' is valid and ready to update."
+
+-- Cancel
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINREVISIONDIALOG::T900713019"] = "Cancel"
 
 -- Only text content is supported in the editing mode yet.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T1352914344"] = "Only text content is supported in the editing mode yet."
@@ -7074,6 +7095,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T1999487139"] = "Send a mail"
 -- Enable plugin
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2057806005"] = "Enable plugin"
 
+-- No source url available
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2058912565"] = "No source url available"
+
 -- Plugins
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2222816203"] = "Plugins"
 
@@ -7083,6 +7107,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2477579768"] = "Edit Assistant Plugi
 -- Enabled Plugins
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2738444034"] = "Enabled Plugins"
 
+-- Revise Assistant Plugin
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T284393424"] = "Revise Assistant Plugin"
+
 -- The assistant plugin '{0}' has been successfully saved.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3143506997"] = "The assistant plugin '{0}' has been successfully saved."
 
@@ -7091,6 +7118,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3448155331"] = "Close"
 
 -- Delete Assistant Plugin
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3637071001"] = "Delete Assistant Plugin"
+
+-- Revise assistant plugin with AI
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3801095542"] = "Revise assistant plugin with AI"
 
 -- The '{0}' assistant plugin has been successfully removed.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3815023384"] = "The '{0}' assistant plugin has been successfully removed."
@@ -7106,6 +7136,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T4033722845"] = "Do you really want t
 
 -- The automatic security audit for the assistant plugin '{0}' failed. Please run it manually.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T4066679817"] = "The automatic security audit for the assistant plugin '{0}' failed. Please run it manually."
+
+-- The assistant plugin '{0}' has been successfully revised.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T4157246824"] = "The assistant plugin '{0}' has been successfully revised."
 
 -- Open website
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T4239378936"] = "Open website"
@@ -8504,6 +8537,96 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T378481461"] = "Source like p
 
 -- Document
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T4165204724"] = "Document"
+
+-- The Assistant Builder context could not be loaded.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T108292972"] = "The Assistant Builder context could not be loaded."
+
+-- Assistant Draft
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T1176795724"] = "Assistant Draft"
+
+-- User Goal
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T1264526921"] = "User Goal"
+
+-- The revision model did not return a usable answer.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T1411545143"] = "The revision model did not return a usable answer."
+
+-- Description
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T1725856265"] = "Description"
+
+-- Please select a provider.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T1809312323"] = "Please select a provider."
+
+-- The generation model did not return a usable answer.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T1992169096"] = "The generation model did not return a usable answer."
+
+-- The generated assistant plugin must use the assigned plugin ID.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T2177405163"] = "The generated assistant plugin must use the assigned plugin ID."
+
+-- Please describe what should be changed.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T2377842064"] = "Please describe what should be changed."
+
+-- The revised assistant plugin must keep the Assistant Builder metadata.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T2462041384"] = "The revised assistant plugin must keep the Assistant Builder metadata."
+
+-- The current plugin.lua content is empty.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T2491968008"] = "The current plugin.lua content is empty."
+
+-- Inputs
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T2647381688"] = "Inputs"
+
+-- Name
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T266367750"] = "Name"
+
+-- Only assistants generated by the Assistant Builder can be revised with AI.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T2920825307"] = "Only assistants generated by the Assistant Builder can be revised with AI."
+
+-- Category
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T2947802513"] = "Category"
+
+-- Assumptions
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T299451"] = "Assumptions"
+
+-- UI Components
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3053707933"] = "UI Components"
+
+-- Assistant Plugin Revision
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3245954919"] = "Assistant Plugin Revision"
+
+-- The Assistant-Builder was not able to read the plugin manifest and therefore cannot safely generate your assistant right now.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3278037634"] = "The Assistant-Builder was not able to read the plugin manifest and therefore cannot safely generate your assistant right now."
+
+-- The revised assistant plugin must keep the same plugin ID.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3493590294"] = "The revised assistant plugin must keep the same plugin ID."
+
+-- Assistant Plugin Generation
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T355580240"] = "Assistant Plugin Generation"
+
+-- Model decides
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T358632395"] = "Model decides"
+
+-- Safety Notes
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3633499050"] = "Safety Notes"
+
+-- The generated assistant plugin must include the Assistant Builder metadata.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3985906496"] = "The generated assistant plugin must include the Assistant Builder metadata."
+
+-- Output
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T4000727844"] = "Output"
+
+-- Please describe the assistant you want to create.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T4004589285"] = "Please describe the assistant you want to create."
+
+-- Prompt Strategy
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T410529216"] = "Prompt Strategy"
+
+-- The draft model did not return a usable answer.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T4183375977"] = "The draft model did not return a usable answer."
+
+-- The Assistant Builder response schema could not be loaded.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T4235833611"] = "The Assistant Builder response schema could not be loaded."
+
+-- Please create an assistant draft first.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T4269176489"] = "Please create an assistant draft first."
 
 -- Internal assistant plugins cannot be deleted.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T1084244321"] = "Internal assistant plugins cannot be deleted."

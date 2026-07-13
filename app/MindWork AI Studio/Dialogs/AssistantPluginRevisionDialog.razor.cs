@@ -171,7 +171,7 @@ public partial class AssistantPluginRevisionDialog : MSGComponentBase
             var result = await this.AssistantPluginInstallService.UpdateInstalledAssistantAsync(this.availablePlugin, this.revisedLua, CancellationToken.None);
             if (!result.Success)
             {
-                LOGGER.LogError("Failed to revise assistant plugin '{PluginName}' ({PluginId}) in '{PluginDirectory}' with issue '{Issue}'.", result.PluginName, result.PluginId, result.PluginDirectory, result.Issue);
+                LOGGER.LogError($"Failed to revise assistant plugin '{result.PluginName}' ({result.PluginId}) in '{result.PluginDirectory}' with issue '{result.Issue}'.");
                 this.issue = result.Issue;
                 return;
             }
