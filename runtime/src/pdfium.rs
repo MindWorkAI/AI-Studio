@@ -1,31 +1,23 @@
 use std::error::Error;
 use std::sync::Mutex;
-use once_cell::sync::Lazy;
+use once_cell::sync::{Lazy, OnceCell};
 use pdfium_render::prelude::Pdfium;
 use log::{error, info, warn};
 
 pub static PDFIUM_LIB_PATH: Lazy<Mutex<Option<String>>> = Lazy::new(|| Mutex::new(None));
-static PDFIUM: Lazy<Mutex<Option<Pdfium>>> = Lazy::new(|| Mutex::new(None));
+static PDFIUM: OnceCell<Pdfium> = OnceCell::new();
 
 pub trait PdfiumInit {
-    fn ai_studio_init() -> Result<Pdfium, Box<dyn Error + Send + Sync>>;
+    fn ai_studio_init() -> Result<&'static Pdfium, Box<dyn Error + Send + Sync>>;
 }
 
 impl PdfiumInit for Pdfium {
 
     /// Initializes the PDFium library for AI Studio.
-    fn ai_studio_init() -> Result<Pdfium, Box<dyn Error + Send + Sync>> {
-        let mut pdfium = PDFIUM.lock().unwrap();
-        if let Some(pdfium) = pdfium.as_ref() {
-            return Ok(pdfium.clone());
-        }
-
-        let loaded_pdfium = load_pdfium().map_err(|error| {
+    fn ai_studio_init() -> Result<&'static Pdfium, Box<dyn Error + Send + Sync>> {
+        PDFIUM.get_or_try_init(|| load_pdfium().map_err(|error| {
             Box::new(std::io::Error::other(error)) as Box<dyn Error + Send + Sync>
-        })?;
-        *pdfium = Some(loaded_pdfium.clone());
-
-        Ok(loaded_pdfium)
+        }))
     }
 }
 

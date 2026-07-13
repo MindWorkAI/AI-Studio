@@ -155,12 +155,17 @@ internal sealed class Program
         // ReSharper restore AccessToDisposedClosure
         
         builder.Services.AddRazorComponents()
-            .AddInteractiveServerComponents()
+            .AddInteractiveServerComponents(options =>
+            {
+                options.DisconnectedCircuitRetentionPeriod = TimeSpan.FromDays(30);
+                options.DisconnectedCircuitMaxRetained = 2;
+            })
             .AddHubOptions(options =>
             {
                 options.MaximumReceiveMessageSize = null;
-                options.ClientTimeoutInterval = TimeSpan.FromDays(14);
+                options.ClientTimeoutInterval = TimeSpan.FromSeconds(120);
                 options.HandshakeTimeout = TimeSpan.FromSeconds(30);
+                options.KeepAliveInterval = TimeSpan.FromSeconds(30);
             });
 
         builder.Services.AddSingleton(new HttpClient
