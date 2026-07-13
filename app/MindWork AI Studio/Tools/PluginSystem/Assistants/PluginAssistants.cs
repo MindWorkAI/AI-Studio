@@ -37,6 +37,7 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
     public bool HasEmbeddedProfileSelection { get; private set; }
     public bool HasCustomPromptBuilder => this.buildPromptFunction is not null;
     public bool IsAssistantBuilderGenerated { get; private set; }
+    public bool IsManagedByConfigServer { get; private set; }
     public AssistantPluginLaunchBehavior LaunchBehavior { get; private set; }
     public string LaunchWorkspaceName { get; private set; } = string.Empty;
     public bool StartsChatDirectly => this.LaunchBehavior is AssistantPluginLaunchBehavior.OPEN_WORKSPACE_CHAT_BY_NAME;
@@ -65,12 +66,14 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
         message = string.Empty;
         this.HasEmbeddedProfileSelection = false;
         this.IsAssistantBuilderGenerated = false;
+        this.IsManagedByConfigServer = false;
         this.buildPromptFunction = null;
         this.LaunchBehavior = AssistantPluginLaunchBehavior.NONE;
         this.LaunchWorkspaceName = string.Empty;
 
         this.RegisterLuaHelpers();
         this.TryReadAssistantBuilderMetadata();
+        this.TryReadDeploymentMetadata();
         
         // Ensure that the main ASSISTANT table exists and is a valid Lua table:
         if (!this.State.Environment["ASSISTANT"].TryRead<LuaTable>(out var assistantTable))
@@ -161,6 +164,12 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
 
         if (builderTable.TryGetValue("Generated", out var generatedValue) && generatedValue.TryRead<bool>(out var generated))
             this.IsAssistantBuilderGenerated = generated;
+    }
+
+    private void TryReadDeploymentMetadata()
+    {
+        if (this.State.Environment["DEPLOYED_USING_CONFIG_SERVER"].TryRead<bool>(out var deployedUsingConfigServer))
+            this.IsManagedByConfigServer = deployedUsingConfigServer;
     }
 
     private bool TryReadLaunchConfiguration(LuaTable assistantTable, out string message)

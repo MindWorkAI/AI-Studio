@@ -121,6 +121,8 @@ public static partial class PluginFactory
                             LOG.LogWarning($"The configuration plugin '{plugin.Id}' does not define 'DEPLOYED_USING_CONFIG_SERVER'. Falling back to the plugin path and treating it as managed because it is stored under '{CONFIGURATION_PLUGINS_ROOT}'.");
                         }
                     }
+                    else if (plugin is PluginAssistants assistantPlugin)
+                        isManagedByConfigServer = assistantPlugin.IsManagedByConfigServer;
 
                     // For configuration plugins, validate that the plugin ID matches the enterprise config ID
                     // (the directory name under which the plugin was downloaded):
