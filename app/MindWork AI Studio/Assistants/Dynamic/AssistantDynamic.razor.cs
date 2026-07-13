@@ -74,7 +74,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
     private static readonly AssistantSessionStateKey<string> SECURITY_MESSAGE_STATE_KEY = new(nameof(securityMessage));
     private static readonly AssistantSessionStateKey<bool> IS_SECURITY_BLOCKED_STATE_KEY = new(nameof(isSecurityBlocked));
 
-    private bool CanReviseCurrentAssistant => this.assistantPlugin is { IsInternal: false, IsAssistantBuilderGenerated: true } && !string.IsNullOrWhiteSpace(this.assistantPlugin.PluginPath);
+    private bool CanReviseCurrentAssistant => this.assistantPlugin is { IsInternal: false, IsManagedByConfigServer: false } && !string.IsNullOrWhiteSpace(this.assistantPlugin.PluginPath);
 
     /// <inheritdoc />
     protected override void CaptureCustomAssistantSessionState(AssistantSessionStateWriter state)

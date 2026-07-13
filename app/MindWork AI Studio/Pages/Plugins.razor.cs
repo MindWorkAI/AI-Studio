@@ -195,9 +195,9 @@ public partial class Plugins : MSGComponentBase
     private static bool CanReviseAssistantPlugin(IAvailablePlugin plugin)
     {
         var assistantPlugin = PluginFactory.RunningPlugins.OfType<PluginAssistants>().FirstOrDefault(x => x.Id == plugin.Id);
-        return plugin is { IsInternal: false, Type: PluginType.ASSISTANT } &&
+        return plugin is { IsInternal: false, IsManagedByConfigServer: false, Type: PluginType.ASSISTANT } &&
                !string.IsNullOrWhiteSpace(plugin.LocalPath) &&
-               assistantPlugin?.IsAssistantBuilderGenerated is true;
+               assistantPlugin?.IsManagedByConfigServer is false;
     }
 
     private async Task OpenAssistantPluginEditorDialogAsync(IAvailablePlugin plugin)
