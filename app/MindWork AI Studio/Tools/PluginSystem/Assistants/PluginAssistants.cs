@@ -36,6 +36,7 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
     public bool AllowProfiles { get; private set; } = true;
     public bool HasEmbeddedProfileSelection { get; private set; }
     public bool HasCustomPromptBuilder => this.buildPromptFunction is not null;
+    public bool IsAssistantBuilderGenerated { get; private set; }
     public AssistantPluginLaunchBehavior LaunchBehavior { get; private set; }
     public string LaunchWorkspaceName { get; private set; } = string.Empty;
     public bool StartsChatDirectly => this.LaunchBehavior is AssistantPluginLaunchBehavior.OPEN_WORKSPACE_CHAT_BY_NAME;
@@ -63,11 +64,13 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
     {
         message = string.Empty;
         this.HasEmbeddedProfileSelection = false;
+        this.IsAssistantBuilderGenerated = false;
         this.buildPromptFunction = null;
         this.LaunchBehavior = AssistantPluginLaunchBehavior.NONE;
         this.LaunchWorkspaceName = string.Empty;
 
         this.RegisterLuaHelpers();
+        this.TryReadAssistantBuilderMetadata();
         
         // Ensure that the main ASSISTANT table exists and is a valid Lua table:
         if (!this.State.Environment["ASSISTANT"].TryRead<LuaTable>(out var assistantTable))
@@ -149,6 +152,15 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
 
         this.RootComponent = (AssistantForm)rootComponent;
         return true;
+    }
+
+    private void TryReadAssistantBuilderMetadata()
+    {
+        if (!this.State.Environment["AI_STUDIO_ASSISTANT_BUILDER"].TryRead<LuaTable>(out var builderTable))
+            return;
+
+        if (builderTable.TryGetValue("Generated", out var generatedValue) && generatedValue.TryRead<bool>(out var generated))
+            this.IsAssistantBuilderGenerated = generated;
     }
 
     private bool TryReadLaunchConfiguration(LuaTable assistantTable, out string message)
