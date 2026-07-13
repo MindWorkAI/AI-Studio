@@ -33,6 +33,7 @@
         }
     </ChildContent>
     <FooterContent>
+        <MediaTranscriptionStatus/>
         <MudElement Style="flex: 0 0 auto;">
             <MudTextField
                 T="string"
@@ -100,7 +101,7 @@
                 </MudTooltip>
             }
             
-            <AttachDocuments Name="File Attachments" Layer="@DropLayers.PAGES" DocumentPaths="@this.ComposerState.FileAttachments" DocumentPathsChanged="@this.ComposerAttachmentsChanged" CatchAllDocuments="true" UseSmallForm="true" Provider="@this.Provider"/>
+            <AttachDocuments Name="File Attachments" Layer="@DropLayers.PAGES" DocumentPaths="@this.ComposerState.FileAttachments" DocumentPathsChanged="@this.ComposerAttachmentsChanged" CatchAllDocuments="true" UseSmallForm="true" Provider="@this.Provider" Disabled="@this.MediaTranscriptionService.IsBusy"/>
             
             <MudDivider Vertical="true" Style="height: 24px; align-self: center;"/>
             

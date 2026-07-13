@@ -1,0 +1,19 @@
+@inherits MSGComponentBase
+@inject MediaTranscriptionService MediaTranscriptionService
+@using AIStudio.Tools.Services
+
+@if (this.MediaTranscriptionService.IsBusy)
+{
+    <MudPaper Outlined="true" Class="pa-2 mb-2">
+        <MudStack Row="true" AlignItems="AlignItems.Center">
+            <MudProgressCircular Size="Size.Small" Indeterminate="@(this.MediaTranscriptionService.Progress is null)" Value="@((this.MediaTranscriptionService.Progress ?? 0) * 100)"/>
+            <MudText Typo="Typo.body2">
+                @this.StatusText
+            </MudText>
+            <MudSpacer/>
+            <MudTooltip Text="@T("Stop media transcription")">
+                <MudIconButton Icon="@Icons.Material.Filled.Stop" Color="Color.Error" OnClick="@this.MediaTranscriptionService.StopAsync"/>
+            </MudTooltip>
+        </MudStack>
+    </MudPaper>
+}

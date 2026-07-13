@@ -52,7 +52,7 @@
 }
 else
 {
-    @if (!this.Disabled)
+    @if (!this.IsUnavailable)
     {
         <MudStack Row="true" AlignItems="AlignItems.Center" StretchItems="StretchItems.None" Wrap="Wrap.Wrap">
             <MudText Typo="Typo.body1" Inline="true">
@@ -73,7 +73,7 @@ else
         <MudPaper Height="20em" Outlined="true" Class="@this.dragClass" Style="overflow-y: auto;">
             @foreach (var fileAttachment in this.DocumentPaths)
             {
-                @if (this.Disabled)
+                @if (this.IsUnavailable)
                 {
                     <MudChip T="string" Color="Color.Dark" Text="@fileAttachment.FileName" tabindex="-1" Icon="@Icons.Material.Filled.Search" OnClick="@(() => this.InvestigateFile(fileAttachment))"/>
                 }
@@ -84,7 +84,7 @@ else
             }
         </MudPaper>
     </div>
-    @if (!this.Disabled)
+    @if (!this.IsUnavailable)
     {
         <MudButton OnClick="@(async () => await this.ClearAllFiles())" Variant="Variant.Filled" Color="Color.Info" Class="mt-2" StartIcon="@Icons.Material.Filled.Delete">
             @T("Clear file list")

@@ -31,6 +31,7 @@
 
                 @if (this.Body is not null)
                 {
+                    <MediaTranscriptionStatus/>
                     <CascadingValue Value="@this">
                         <CascadingValue Value="@this.Component">
                             @this.Body
@@ -38,7 +39,7 @@
                     </CascadingValue>
                     
                     <MudStack Row="true" AlignItems="AlignItems.Center" StretchItems="StretchItems.Start" Class="mb-3">
-                        <MudButton Disabled="@(this.SubmitDisabled || this.IsProcessing)" Variant="Variant.Filled" OnClick="@(async () => await this.Start())" Style="@this.SubmitButtonStyle">
+                        <MudButton Disabled="@(this.SubmitDisabled || this.IsProcessing || this.MediaTranscriptionService.IsBusy)" Variant="Variant.Filled" OnClick="@(async () => await this.Start())" Style="@this.SubmitButtonStyle">
                             @this.SubmitText
                         </MudButton>
                         @if (this.IsProcessing)

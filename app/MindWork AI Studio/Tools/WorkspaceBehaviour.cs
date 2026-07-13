@@ -754,6 +754,7 @@ public static class WorkspaceBehaviour
 
             Directory.CreateDirectory(chatDirectory);
 
+            await FinalizeStagedTranscriptsAsync(chat, chatDirectory);
             var chatNamePath = Path.Join(chatDirectory, "name");
             await File.WriteAllTextAsync(chatNamePath, chat.Name);
 
@@ -767,6 +768,99 @@ public static class WorkspaceBehaviour
         {
             semaphore.Release();
         }
+    }
+
+    public static async Task MoveChatAsync(ChatThread chat, Guid targetWorkspaceId)
+    {
+        if (chat.WorkspaceId == targetWorkspaceId)
+            return;
+
+        var sourceDirectory = chat.WorkspaceId == Guid.Empty
+            ? Path.Join(SettingsManager.DataDirectory, "tempChats", chat.ChatId.ToString())
+            : Path.Join(SettingsManager.DataDirectory, "workspaces", chat.WorkspaceId.ToString(), chat.ChatId.ToString());
+        
+        var targetDirectory = targetWorkspaceId == Guid.Empty
+            ? Path.Join(SettingsManager.DataDirectory, "tempChats", chat.ChatId.ToString())
+            : Path.Join(SettingsManager.DataDirectory, "workspaces", targetWorkspaceId.ToString(), chat.ChatId.ToString());
+
+        if (Directory.Exists(sourceDirectory))
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(targetDirectory)!);
+            if (Directory.Exists(targetDirectory))
+                throw new IOException($"The target chat directory already exists: '{targetDirectory}'.");
+            
+            Directory.Move(sourceDirectory, targetDirectory);
+            UpdateAttachmentPathsAfterMove(chat, sourceDirectory, targetDirectory);
+        }
+
+        chat.WorkspaceId = targetWorkspaceId;
+        await StoreChatAsync(chat);
+        InvalidateWorkspaceTreeCache();
+    }
+
+    private static void UpdateAttachmentPathsAfterMove(ChatThread chat, string sourceDirectory, string targetDirectory)
+    {
+        var sourcePrefix = sourceDirectory.EndsWith(Path.DirectorySeparatorChar)
+            ? sourceDirectory
+            : sourceDirectory + Path.DirectorySeparatorChar;
+        
+        var pathComparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+        foreach (var content in chat.Blocks.Select(block => block.Content).OfType<ContentText>())
+        {
+            for (var index = 0; index < content.FileAttachments.Count; index++)
+            {
+                var attachment = content.FileAttachments[index];
+                if (!Path.GetFullPath(attachment.FilePath).StartsWith(sourcePrefix, pathComparison))
+                    continue;
+                
+                var relativePath = Path.GetRelativePath(sourceDirectory, attachment.FilePath);
+                var movedPath = Path.Combine(targetDirectory, relativePath);
+                
+                content.FileAttachments[index] = attachment switch
+                {
+                    ManagedTranscriptAttachment managed => managed with { FilePath = movedPath },
+                    FileAttachmentImage image => image with { FilePath = movedPath },
+                    _ => attachment with { FilePath = movedPath },
+                };
+            }
+        }
+    }
+
+    private static async Task FinalizeStagedTranscriptsAsync(ChatThread chat, string chatDirectory)
+    {
+        var transcriptDirectory = Path.Combine(chatDirectory, "attachments", "transcripts");
+        foreach (var content in chat.Blocks.Select(block => block.Content).OfType<ContentText>())
+        {
+            for (var index = 0; index < content.FileAttachments.Count; index++)
+            {
+                if (content.FileAttachments[index] is not ManagedTranscriptAttachment { IsStaged: true } staged
+                    || !File.Exists(staged.FilePath))
+                    continue;
+
+                Directory.CreateDirectory(transcriptDirectory);
+                string targetPath;
+                do
+                {
+                    chat.LastMediaTranscriptNumber++;
+                    var stem = ManagedTranscriptAttachment.NormalizeOriginalStem(staged.OriginalFileName);
+                    targetPath = Path.Combine(transcriptDirectory, $"{stem}-transcript-{chat.LastMediaTranscriptNumber:D4}.md");
+                } while (File.Exists(targetPath));
+
+                File.Move(staged.FilePath, targetPath);
+                var sourceDirectory = Path.GetDirectoryName(staged.FilePath);
+                if (sourceDirectory is not null && Directory.Exists(sourceDirectory) && !Directory.EnumerateFileSystemEntries(sourceDirectory).Any())
+                    Directory.Delete(sourceDirectory);
+                
+                content.FileAttachments[index] = new ManagedTranscriptAttachment(
+                    Path.GetFileName(targetPath),
+                    targetPath,
+                    new FileInfo(targetPath).Length,
+                    staged.OriginalFileName,
+                    false);
+            }
+        }
+        
+        await Task.CompletedTask;
     }
 
     public static async Task<ChatThread?> LoadChatAsync(LoadChat loadChat)

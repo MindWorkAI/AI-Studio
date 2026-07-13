@@ -20,7 +20,7 @@ serde_json = "1.0.150"
 keyring-core = "1.0.0"
 arboard = "3.6.1"
 tokio = { version = "1.52.3", features = ["rt", "rt-multi-thread", "macros", "process"] }
-tokio-stream = "0.1.18"
+tokio-stream = { version = "0.1.18", features = ["sync"] }
 futures = "0.3.32"
 async-stream = "0.3.6"
 flexi_logger = "0.31.9"
@@ -39,6 +39,10 @@ hmac = "0.13.0"
 sha2 = "0.11.0"
 rcgen = { version = "0.14.8", features = ["pem"] }
 file-format = "0.29.0"
+symphonia = { version = "0.6", default-features = false, features = ["aac", "aiff", "alac", "caf", "flac", "isomp4", "mkv", "mp1", "mp2", "mp3", "ogg", "pcm", "vorbis", "wav"] }
+ropus = "=0.12.18"
+rubato = { version = "4", default-features = false, features = ["fft_resampler"] }
+webm-iterable = "0.6.4"
 calamine = "0.36.0"
 pdfium-render = "0.9.1"
 sys-locale = "0.3.2"

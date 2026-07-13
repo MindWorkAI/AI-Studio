@@ -1,6 +1,7 @@
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 using AIStudio.Tools.Validation;
+using AIStudio.Dialogs;
 
 using Microsoft.AspNetCore.Components;
 
@@ -47,12 +48,16 @@ public partial class ReadFileContent : MSGComponentBase
     [Inject]
     private PandocAvailabilityService PandocAvailabilityService { get; init; } = null!;
 
+    [Inject]
+    private MediaTranscriptionService MediaTranscriptionService { get; init; } = null!;
+
     private const string DEFAULT_DRAG_CLASS = "relative rounded-lg border-2 border-dashed pa-3 mb-3 mud-width-full";
 
     private string ButtonText => string.IsNullOrWhiteSpace(this.Text) ? T("Use file content as input") : this.Text;
     private string dragClass = DEFAULT_DRAG_CLASS;
     private uint numDropAreasAboveThis;
     private bool isComponentHovered;
+    private bool IsUnavailable => this.Disabled || this.MediaTranscriptionService.IsBusy;
 
     #region Overrides of MSGComponentBase
 
@@ -72,7 +77,7 @@ public partial class ReadFileContent : MSGComponentBase
         if (!this.EnableDragDrop)
             return;
 
-        if (this.Disabled && triggeredEvent == Event.TAURI_EVENT_RECEIVED)
+        if (this.IsUnavailable && triggeredEvent == Event.TAURI_EVENT_RECEIVED)
             return;
 
         switch (triggeredEvent)
@@ -126,10 +131,7 @@ public partial class ReadFileContent : MSGComponentBase
     
     private async Task SelectFile()
     {
-        if (this.Disabled)
-            return;
-
-        if (!await this.EnsurePandocAvailability())
+        if (this.IsUnavailable)
             return;
 
         var selectedFile = await this.RustService.SelectFile(T("Select file to read its content"));
@@ -161,9 +163,6 @@ public partial class ReadFileContent : MSGComponentBase
 
     private async Task LoadFirstValidFile(List<string> paths)
     {
-        if (!await this.EnsurePandocAvailability())
-            return;
-
         foreach (var path in paths)
         {
             if (await this.LoadFileIfValid(path))
@@ -178,6 +177,12 @@ public partial class ReadFileContent : MSGComponentBase
             this.Logger.LogWarning("Selected file does not exist: '{FilePath}'", filePath);
             return false;
         }
+
+        if (FileTypes.IsAllowedPath(filePath, FileTypes.AUDIO) || FileTypes.IsAllowedPath(filePath, FileTypes.VIDEO))
+            return await this.LoadMediaTranscriptAsync(filePath);
+
+        if (!await this.EnsurePandocAvailability())
+            return false;
 
         if (!await FileExtensionValidation.IsExtensionValidWithNotifyAsync(FileExtensionValidation.UseCase.DIRECTLY_LOADING_CONTENT, filePath))
         {
@@ -200,6 +205,43 @@ public partial class ReadFileContent : MSGComponentBase
         }
     }
 
+    private async Task<bool> LoadMediaTranscriptAsync(string filePath)
+    {
+        if (string.IsNullOrWhiteSpace(this.SettingsManager.ConfigurationData.App.UseTranscriptionProvider))
+        {
+            await this.MessageBus.SendWarning(new(
+                Icons.Material.Filled.VoiceChat,
+                this.T("Media files require a configured transcription provider. Configure one in the transcription settings.")));
+            return false;
+        }
+
+        var dialogParameters = new DialogParameters<ConfirmDialog>
+        {
+            {
+                x => x.Message,
+                $"{this.T("The selected media file will be prepared locally. Its audio will then be uploaded to the configured transcription provider.")}{Environment.NewLine}{Environment.NewLine}{Path.GetFileName(filePath)}"
+            },
+        };
+        var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(
+            this.T("Transcribe media file"),
+            dialogParameters,
+            Dialogs.DialogOptions.FULLSCREEN);
+        
+        var dialogResult = await dialogReference.Result;
+        if (dialogResult is null || dialogResult.Canceled)
+            return false;
+
+        var result = await this.MediaTranscriptionService.TranscribeAsync(filePath);
+        if (!result.Success)
+        {
+            await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, result.ErrorMessage));
+            return false;
+        }
+        
+        await this.FileContentChanged.InvokeAsync(result.Text);
+        return true;
+    }
+
     private bool CanCatchDroppedFile() => this.numDropAreasAboveThis is 0 && (this.isComponentHovered || this.CatchAllDocuments);
 
     private void SetDragClass() => this.dragClass = $"{DEFAULT_DRAG_CLASS} mud-border-primary border-2";
@@ -208,7 +250,7 @@ public partial class ReadFileContent : MSGComponentBase
 
     private void OnMouseEnter(EventArgs _)
     {
-        if(this.Disabled || this.numDropAreasAboveThis > 0)
+        if(this.IsUnavailable || this.numDropAreasAboveThis > 0)
             return;
 
         this.Logger.LogDebug("Read file content component is hovered.");
@@ -219,7 +261,7 @@ public partial class ReadFileContent : MSGComponentBase
 
     private void OnMouseLeave(EventArgs _)
     {
-        if(this.Disabled)
+        if(this.IsUnavailable)
             return;
 
         this.Logger.LogDebug("Read file content component is no longer hovered.");

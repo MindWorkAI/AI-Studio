@@ -25,6 +25,11 @@ public sealed record ChatThread
     public Guid WorkspaceId { get; set; }
 
     /// <summary>
+    /// The monotonically increasing number used for managed media transcript filenames.
+    /// </summary>
+    public ulong LastMediaTranscriptNumber { get; set; }
+
+    /// <summary>
     /// Specifies the provider selected for the chat thread.
     /// </summary>
     public string SelectedProvider { get; set; } = string.Empty;
@@ -240,12 +245,26 @@ public sealed record ChatThread
             {
                 var previousBlock = sortedBlocks[index - 1];
                 if (previousBlock.Role is ChatRole.USER && previousBlock.HideFromUser)
+                {
+                    DeleteManagedAttachments(previousBlock);
                     this.Blocks.Remove(previousBlock);
+                }
             }
         }
 
+        DeleteManagedAttachments(block);
+
         // Remove the block from the chat thread:
         this.Blocks.Remove(block);
+    }
+
+    private static void DeleteManagedAttachments(ContentBlock block)
+    {
+        if (block.Content is not ContentText textContent)
+            return;
+            
+        foreach (var attachment in textContent.FileAttachments)
+            ManagedTranscriptAttachment.TryDeleteOwnedFile(attachment);
     }
 
     /// <summary>

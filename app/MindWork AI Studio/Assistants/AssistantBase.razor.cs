@@ -47,6 +47,9 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     /// </summary>
     [Inject]
     protected AIJobService AIJobService { get; init; } = null!;
+
+    [Inject]
+    protected MediaTranscriptionService MediaTranscriptionService { get; init; } = null!;
     
     protected abstract string Title { get; }
     

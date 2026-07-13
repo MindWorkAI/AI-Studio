@@ -4,6 +4,7 @@ using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.AIJobs;
+using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
@@ -53,6 +54,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 
     [Inject]
     private AIJobService AIJobService { get; init; } = null!;
+
+    [Inject]
+    private MediaTranscriptionService MediaTranscriptionService { get; init; } = null!;
 
     private const Placement TOOLBAR_TOOLTIP_PLACEMENT = Placement.Top;
     private static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
@@ -683,6 +687,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     
     private async Task SendMessage(bool reuseLastUserPrompt = false)
     {
+        if (this.MediaTranscriptionService.IsBusy)
+            return;
+
         if (!this.IsProviderSelected)
             return;
         
@@ -986,12 +993,8 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         if (workspaceId == Guid.Empty)
             return;
         
-        // Delete the chat from the current workspace or the temporary storage:
-        await WorkspaceBehaviour.DeleteChatAsync(this.DialogService, this.ChatThread!.WorkspaceId, this.ChatThread.ChatId, askForConfirmation: false);
-        
-        this.ChatThread!.WorkspaceId = workspaceId;
+        await WorkspaceBehaviour.MoveChatAsync(this.ChatThread!, workspaceId);
         this.MarkCurrentChatAsLoadedParameter();
-        await this.SaveThread();
 
         await this.SyncWorkspaceHeaderWithChatThreadAsync();
     }

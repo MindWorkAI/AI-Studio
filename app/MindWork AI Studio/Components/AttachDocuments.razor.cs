@@ -75,12 +75,16 @@ public partial class AttachDocuments : MSGComponentBase
     [Inject]
     private PandocAvailabilityService PandocAvailabilityService { get; init; } = null!;
 
+    [Inject]
+    private MediaTranscriptionService MediaTranscriptionService { get; init; } = null!;
+
     private const Placement TOOLBAR_TOOLTIP_PLACEMENT = Placement.Top;
     private static readonly string DROP_FILES_HERE_TEXT = TB("Drop files here to attach them.");
 
     private uint numDropAreasAboveThis;
     private bool isComponentHovered;
     private bool isDraggingOver;
+    private bool IsUnavailable => this.Disabled || this.MediaTranscriptionService.IsBusy;
 
     #region Overrides of MSGComponentBase
 
@@ -95,7 +99,7 @@ public partial class AttachDocuments : MSGComponentBase
 
     protected override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
     {
-        if (this.Disabled && triggeredEvent == Event.TAURI_EVENT_RECEIVED)
+        if (this.IsUnavailable && triggeredEvent == Event.TAURI_EVENT_RECEIVED)
             return;
 
         switch (triggeredEvent)
@@ -168,29 +172,7 @@ public partial class AttachDocuments : MSGComponentBase
                     return;
                 }
 
-                // Ensure that Pandoc is installed and ready:
-                var pandocState = await this.PandocAvailabilityService.EnsureAvailabilityAsync(
-                    showSuccessMessage: false,
-                    showDialog: true);
-
-                // If Pandoc is not available (user cancelled installation), abort file drop:
-                if (!pandocState.IsAvailable)
-                {
-                    this.Logger.LogWarning("The user cancelled the Pandoc installation or Pandoc is not available. Aborting file drop.");
-                    this.isDraggingOver = false;
-                    this.ClearDragClass();
-                    this.StateHasChanged();
-                    return;
-                }
-
-                foreach (var path in paths)
-                {
-                    if(!await FileExtensionValidation.IsExtensionValidWithNotifyAsync(FileExtensionValidation.UseCase.ATTACHING_CONTENT, path, this.ValidateMediaFileTypes, this.Provider))
-                        continue;
-
-                    this.DocumentPaths.Add(FileAttachment.FromPath(path));
-                }
-
+                await this.AddFileBatchAsync(paths);
                 await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
                 await this.OnChange(this.DocumentPaths);
                 this.isDraggingOver = false;
@@ -208,53 +190,36 @@ public partial class AttachDocuments : MSGComponentBase
 
     private async Task AddFilesManually()
     {
-        if (this.Disabled)
+        if (this.IsUnavailable)
             return;
-
-        // Ensure that Pandoc is installed and ready:
-        var pandocState = await this.PandocAvailabilityService.EnsureAvailabilityAsync(
-            showSuccessMessage: false,
-            showDialog: true);
-
-        // If Pandoc is not available (user cancelled installation), abort file selection:
-        if (!pandocState.IsAvailable)
-        {
-            this.Logger.LogWarning("The user cancelled the Pandoc installation or Pandoc is not available. Aborting file selection.");
-            return;
-        }
 
         var selectFiles = await this.RustService.SelectFiles(T("Select files to attach"));
         if (selectFiles.UserCancelled)
             return;
 
-        foreach (var selectedFilePath in selectFiles.SelectedFilePaths)
-        {
-            if (!File.Exists(selectedFilePath))
-                continue;
-
-            if (!await FileExtensionValidation.IsExtensionValidWithNotifyAsync(FileExtensionValidation.UseCase.ATTACHING_CONTENT, selectedFilePath, this.ValidateMediaFileTypes, this.Provider))
-                continue;
-
-            this.DocumentPaths.Add(FileAttachment.FromPath(selectedFilePath));
-        }
-
+        await this.AddFileBatchAsync(selectFiles.SelectedFilePaths);
         await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
         await this.OnChange(this.DocumentPaths);
     }
 
     private async Task OpenAttachmentsDialog()
     {
-        if (this.Disabled)
+        if (this.IsUnavailable)
             return;
 
+        var previousAttachments = this.DocumentPaths.ToHashSet();
         this.DocumentPaths = await ReviewAttachmentsDialog.OpenDialogAsync(this.DialogService, this.DocumentPaths);
+        foreach (var removedAttachment in previousAttachments.Except(this.DocumentPaths))
+            ManagedTranscriptAttachment.TryDeleteOwnedFile(removedAttachment);
     }
 
     private async Task ClearAllFiles()
     {
-        if (this.Disabled)
+        if (this.IsUnavailable)
             return;
 
+        foreach (var attachment in this.DocumentPaths)
+            ManagedTranscriptAttachment.TryDeleteOwnedFile(attachment);
         this.DocumentPaths.Clear();
         await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
         await this.OnChange(this.DocumentPaths);
@@ -266,7 +231,7 @@ public partial class AttachDocuments : MSGComponentBase
 
     private void OnMouseEnter(EventArgs _)
     {
-        if(this.Disabled || this.PauseCatchingDrops)
+        if(this.IsUnavailable || this.PauseCatchingDrops)
             return;
 
         this.Logger.LogDebug("Attach documents component '{Name}' is hovered.", this.Name);
@@ -277,7 +242,7 @@ public partial class AttachDocuments : MSGComponentBase
 
     private void OnMouseLeave(EventArgs _)
     {
-        if(this.Disabled || this.PauseCatchingDrops)
+        if(this.IsUnavailable || this.PauseCatchingDrops)
             return;
 
         this.Logger.LogDebug("Attach documents component '{Name}' is no longer hovered.", this.Name);
@@ -288,14 +253,96 @@ public partial class AttachDocuments : MSGComponentBase
 
     private async Task RemoveDocument(FileAttachment fileAttachment)
     {
-        if (this.Disabled)
+        if (this.IsUnavailable)
             return;
 
         this.DocumentPaths.Remove(fileAttachment);
+        ManagedTranscriptAttachment.TryDeleteOwnedFile(fileAttachment);
 
         await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
         await this.OnChange(this.DocumentPaths);
     }
+
+    private async Task AddFileBatchAsync(IEnumerable<string> paths)
+    {
+        var existingPaths = paths.Where(File.Exists).ToList();
+        var mediaPaths = existingPaths.Where(IsTranscribableMedia).ToList();
+        var regularPaths = existingPaths.Except(mediaPaths).ToList();
+
+        var canAddRegularFiles = true;
+        if (regularPaths.Count > 0)
+        {
+            var pandocState = await this.PandocAvailabilityService.EnsureAvailabilityAsync(
+                showSuccessMessage: false,
+                showDialog: true);
+            canAddRegularFiles = pandocState.IsAvailable;
+        }
+        
+        foreach (var path in regularPaths)
+        {
+            if (!canAddRegularFiles)
+                break;
+            
+            if (!await FileExtensionValidation.IsExtensionValidWithNotifyAsync(
+                    FileExtensionValidation.UseCase.ATTACHING_CONTENT,
+                    path,
+                    this.ValidateMediaFileTypes,
+                    this.Provider))
+                continue;
+            this.DocumentPaths.Add(FileAttachment.FromPath(path));
+        }
+
+        if (mediaPaths.Count is 0)
+            return;
+
+        if (string.IsNullOrWhiteSpace(this.SettingsManager.ConfigurationData.App.UseTranscriptionProvider))
+        {
+            await this.MessageBus.SendWarning(new(
+                Icons.Material.Filled.VoiceChat,
+                this.T("Media files require a configured transcription provider. Configure one in the transcription settings.")));
+            return;
+        }
+
+        var names = string.Join(Environment.NewLine, mediaPaths.Select(path => $"• {Path.GetFileName(path)}"));
+        var dialogParameters = new DialogParameters<ConfirmDialog>
+        {
+            {
+                x => x.Message,
+                $"{this.T("The selected audio and video files will be prepared locally. Their audio will then be uploaded to the configured transcription provider.")}{Environment.NewLine}{Environment.NewLine}{names}"
+            },
+        };
+        
+        var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(
+            this.T("Transcribe media files"),
+            dialogParameters,
+            DialogOptions.FULLSCREEN);
+        
+        var dialogResult = await dialogReference.Result;
+        if (dialogResult is null || dialogResult.Canceled)
+            return;
+
+        var failures = new List<string>();
+        foreach (var mediaPath in mediaPaths)
+        {
+            var result = await this.MediaTranscriptionService.TranscribeAsync(mediaPath);
+            if (!result.Success)
+            {
+                if (result.ErrorMessage == "The media transcription was cancelled.")
+                    break;
+                
+                failures.Add($"{Path.GetFileName(mediaPath)}: {result.ErrorMessage}");
+                continue;
+            }
+            
+            var attachment = await ManagedTranscriptAttachment.CreateStagedAsync(mediaPath, result.Text);
+            this.DocumentPaths.Add(attachment);
+        }
+
+        if (failures.Count > 0)
+            await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, string.Join(Environment.NewLine, failures)));
+    }
+
+    private static bool IsTranscribableMedia(string path) => FileTypes.IsAllowedPath(path, FileTypes.AUDIO) || FileTypes.IsAllowedPath(path, FileTypes.VIDEO);
 
     /// <summary>
     /// The user might want to check what we actually extract from his file and therefore give the LLM as an input.

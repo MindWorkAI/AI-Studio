@@ -1,4 +1,3 @@
-using AIStudio.Provider;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.MIME;
 using AIStudio.Tools.Rust;
@@ -24,6 +23,9 @@ public partial class VoiceRecorder : MSGComponentBase
 
     [Inject]
     private VoiceRecordingAvailabilityService VoiceRecordingAvailabilityService { get; init; } = null!;
+
+    [Inject]
+    private MediaTranscriptionService MediaTranscriptionService { get; init; } = null!;
 
     #region Overrides of MSGComponentBase
 
@@ -101,7 +103,8 @@ public partial class VoiceRecorder : MSGComponentBase
                                                && !string.IsNullOrWhiteSpace(this.SettingsManager.ConfigurationData.App.UseTranscriptionProvider);
 
     private bool IsVoiceRecordingAvailable => this.ShouldRenderVoiceRecording
-                                              && this.VoiceRecordingAvailabilityService.IsAvailable;
+                                              && this.VoiceRecordingAvailabilityService.IsAvailable
+                                              && !this.MediaTranscriptionService.IsBusy;
 
     private string Tooltip => !this.VoiceRecordingAvailabilityService.IsAvailable
         ? T("Voice recording is unavailable because the client could not initialize audio playback.")
@@ -151,7 +154,7 @@ public partial class VoiceRecorder : MSGComponentBase
 
             try
             {
-                var mimeTypeStrings = mimeTypes.ToStringArray();
+                string[] mimeTypeStrings = ["audio/webm;codecs=opus", .. mimeTypes.ToStringArray()];
                 var actualMimeType = await this.JsRuntime.InvokeAsync<string>("audioRecorder.start", this.dotNetReference, mimeTypeStrings);
 
                 // Store the MIME type for later use:
@@ -317,52 +320,7 @@ public partial class VoiceRecorder : MSGComponentBase
 
         try
         {
-            // Get the configured transcription provider ID:
-            var transcriptionProviderId = this.SettingsManager.ConfigurationData.App.UseTranscriptionProvider;
-            if (string.IsNullOrWhiteSpace(transcriptionProviderId))
-            {
-                this.Logger.LogWarning("No transcription provider is configured.");
-                await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, this.T("No transcription provider is configured.")));
-                return;
-            }
-
-            // Find the transcription provider in the list of configured providers:
-            var transcriptionProviderSettings = this.SettingsManager.ConfigurationData.TranscriptionProviders
-                .FirstOrDefault(x => x.Id == transcriptionProviderId);
-
-            if (transcriptionProviderSettings is null)
-            {
-                this.Logger.LogWarning("The configured transcription provider with ID '{ProviderId}' was not found.", transcriptionProviderId);
-                await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, this.T("The configured transcription provider was not found.")));
-                return;
-            }
-
-            // Check the confidence level:
-            var minimumLevel = this.SettingsManager.GetMinimumConfidenceLevel(Tools.Components.NONE);
-            var providerConfidence = transcriptionProviderSettings.UsedLLMProvider.GetConfidence(this.SettingsManager);
-            if (providerConfidence.Level < minimumLevel)
-            {
-                this.Logger.LogWarning(
-                    "The configured transcription provider '{ProviderName}' has a confidence level of '{ProviderLevel}', which is below the minimum required level of '{MinimumLevel}'.",
-                    transcriptionProviderSettings.UsedLLMProvider,
-                    providerConfidence.Level,
-                    minimumLevel);
-                await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, this.T("The configured transcription provider does not meet the minimum confidence level.")));
-                return;
-            }
-
-            // Create the provider instance:
-            var provider = transcriptionProviderSettings.CreateProvider();
-            if (provider.Provider is LLMProviders.NONE)
-            {
-                this.Logger.LogError("Failed to create the transcription provider instance.");
-                await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, this.T("Failed to create the transcription provider.")));
-                return;
-            }
-
-            // Call the transcription API:
-            this.Logger.LogInformation("Starting transcription with provider '{ProviderName}' and model '{ModelName}'.", transcriptionProviderSettings.UsedLLMProvider, transcriptionProviderSettings.Model.ToString());
-            var transcriptionResult = await provider.TranscribeAudioAsync(transcriptionProviderSettings.Model, this.finalRecordingPath, this.SettingsManager);
+            var transcriptionResult = await this.MediaTranscriptionService.TranscribeAsync(this.finalRecordingPath);
             if (!transcriptionResult.Success)
             {
                 this.Logger.LogWarning("The transcription request failed.");
@@ -406,19 +364,6 @@ public partial class VoiceRecorder : MSGComponentBase
             // Copy the transcribed text to the clipboard:
             await this.RustService.CopyText2Clipboard(this.Snackbar, transcribedText);
 
-            // Delete the recording file:
-            try
-            {
-                if (File.Exists(this.finalRecordingPath))
-                {
-                    File.Delete(this.finalRecordingPath);
-                    this.Logger.LogInformation("Deleted the recording file '{RecordingPath}'.", this.finalRecordingPath);
-                }
-            }
-            catch (Exception ex)
-            {
-                this.Logger.LogError(ex, "Failed to delete the recording file '{RecordingPath}'.", this.finalRecordingPath);
-            }
         }
         catch (Exception ex)
         {
@@ -429,6 +374,15 @@ public partial class VoiceRecorder : MSGComponentBase
         {
             await this.ReleaseMicrophoneAsync();
 
+            try
+            {
+                if (File.Exists(this.finalRecordingPath))
+                    File.Delete(this.finalRecordingPath);
+            }
+            catch (Exception ex)
+            {
+                this.Logger.LogError(ex, "Failed to delete the recording file '{RecordingPath}'.", this.finalRecordingPath);
+            }
             this.finalRecordingPath = null;
             this.isTranscribing = false;
             this.StateHasChanged();
