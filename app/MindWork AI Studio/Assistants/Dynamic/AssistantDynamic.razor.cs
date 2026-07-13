@@ -39,18 +39,6 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
     /// Gets the plugin ID as the assistant session instance ID.
     /// </summary>
     protected override string AssistantSessionInstanceId => this.assistantPlugin is null ? base.AssistantSessionInstanceId : this.assistantPlugin.Id.ToString();
-
-    protected override IReadOnlyList<IButtonData> FooterButtons =>
-    [
-        new ButtonData
-        {
-            Text = T("Revise"),
-            Icon = Icons.Material.Filled.AutoMode,
-            Color = Color.Default,
-            AsyncAction = this.OpenRevisionDialogAsync,
-            DisabledActionParam = () => !this.CanReviseCurrentAssistant,
-        },
-    ];
     
     private string title = string.Empty;
     private string description = string.Empty;
@@ -86,8 +74,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
     private static readonly AssistantSessionStateKey<string> SECURITY_MESSAGE_STATE_KEY = new(nameof(securityMessage));
     private static readonly AssistantSessionStateKey<bool> IS_SECURITY_BLOCKED_STATE_KEY = new(nameof(isSecurityBlocked));
 
-    private bool CanReviseCurrentAssistant => this.assistantPlugin is { IsInternal: false, IsAssistantBuilderGenerated: true } &&
-                                              !string.IsNullOrWhiteSpace(this.assistantPlugin.PluginPath);
+    private bool CanReviseCurrentAssistant => this.assistantPlugin is { IsInternal: false, IsAssistantBuilderGenerated: true } && !string.IsNullOrWhiteSpace(this.assistantPlugin.PluginPath);
 
     /// <inheritdoc />
     protected override void CaptureCustomAssistantSessionState(AssistantSessionStateWriter state)
