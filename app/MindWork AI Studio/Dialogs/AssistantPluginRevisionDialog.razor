@@ -1,0 +1,109 @@
+@using AIStudio.Components
+@using AIStudio.Tools
+@inherits MSGComponentBase
+
+<MudDialog DefaultFocus="DefaultFocus.None">
+    <DialogContent>
+        <MudStack Spacing="3">
+            @if (!string.IsNullOrWhiteSpace(this.issue))
+            {
+                <MudAlert Severity="Severity.Error" Dense="true">
+                    @this.issue
+                </MudAlert>
+            }
+
+            @if (this.isLoading)
+            {
+                <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+            }
+            else if (this.assistantPlugin is not null)
+            {
+                <MudText Typo="Typo.h6">@this.assistantPlugin.AssistantTitle</MudText>
+                <MudText Typo="Typo.body2" Class="mud-text-secondary">@T("Describe what should change after trying the assistant. AI Studio will revise the installed plugin while keeping the same assistant ID.")</MudText>
+
+                <MudTextField T="string"
+                              @bind-Text="@this.changeRequest"
+                              Label="@T("Requested changes")"
+                              Placeholder="@T("Add a field for the target audience and make the final answer shorter.")"
+                              Variant="Variant.Outlined"
+                              Lines="5"
+                              AutoGrow="true"
+                              MaxLines="12"
+                              Disabled="@(this.isGenerating || this.isApplying)" />
+
+                <CascadingValue Value="Components.META_ASSISTANT">
+                    <ProviderSelection @bind-ProviderSettings="@this.providerSettings"
+                                       ValidateProvider="@this.ValidatingProvider"
+                                       Disabled="@(this.isGenerating || this.isApplying)" />
+                </CascadingValue>
+
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.AutoFixHigh"
+                           Disabled="@(!this.CanGenerate)"
+                           OnClick="@(async () => await this.GenerateRevisionAsync())">
+                    @if (this.isGenerating)
+                    {
+                        @T("Creating revision...")
+                    }
+                    else
+                    {
+                        @T("Create revision")
+                    }
+                </MudButton>
+
+                @if (this.isGenerating)
+                {
+                    <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+                }
+
+                @if (this.revisionCheckResult?.Success is true)
+                {
+                    <MudAlert Severity="Severity.Success" Dense="true" Icon="@Icons.Material.Filled.CheckCircle">
+                        @string.Format(T("The revised assistant '{0}' is valid and ready to update."), string.IsNullOrWhiteSpace(this.revisedPluginName) ? this.revisionCheckResult.PluginName : this.revisedPluginName)
+                    </MudAlert>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(this.revisedLua))
+                {
+                    <MudExpansionPanels Dense="true" Elevation="0">
+                        <MudExpansionPanel Dense="true" Class="border-solid border rounded pt-n4" Style="border-color: #BDBDBD">
+                            <TitleContent>
+                                <div class="d-flex align-center">
+                                    <MudIcon Icon="@Icons.Material.Filled.Code" Class="mr-3" Color="Color.Primary" />
+                                    <MudText Typo="Typo.button">
+                                        @T("Revised Lua plugin")
+                                    </MudText>
+                                </div>
+                            </TitleContent>
+                            <ChildContent>
+                                <MudTextField T="string" Text="@this.revisedLua" ReadOnly="true" Variant="Variant.Outlined" Lines="18" Class="mt-2" Style="font-family: monospace" />
+                            </ChildContent>
+                        </MudExpansionPanel>
+                    </MudExpansionPanels>
+                }
+
+                @if (this.isApplying || this.isAuditing)
+                {
+                    <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+                    <MudText Typo="Typo.body2">
+                        @(this.isAuditing ? T("Running security audit...") : T("Updating assistant..."))
+                    </MudText>
+                }
+            }
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Cancel" Disabled="@(this.isGenerating || this.isApplying || this.isAuditing)" Size="Size.Small">
+            @T("Cancel")
+        </MudButton>
+        <MudButton OnClick="@(async () => await this.ApplyRevisionAsync())"
+                   Disabled="@(!this.CanApply)"
+                   Color="Color.Primary"
+                   Variant="Variant.Filled"
+                   StartIcon="@Icons.Material.Filled.Save"
+                   Size="Size.Small">
+            @T("Update assistant")
+        </MudButton>
+    </DialogActions>
+</MudDialog>

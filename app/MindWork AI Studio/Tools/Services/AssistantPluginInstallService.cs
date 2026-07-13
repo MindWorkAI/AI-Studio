@@ -172,6 +172,53 @@ public sealed class AssistantPluginInstallService
     }
 
     /// <summary>
+    /// Checks whether edited assistant plugin code can replace an installed local assistant plugin
+    /// without writing the file.
+    /// </summary>
+    /// <param name="plugin">The installed local assistant plugin to validate against.</param>
+    /// <param name="lua">The edited <c>plugin.lua</c> content.</param>
+    /// <param name="token">Cancellation token for Lua validation.</param>
+    /// <returns>Check result that contains success state, plugin metadata, and a user-facing issue when validation failed.</returns>
+    public async Task<AssistantPluginCheckResult> CheckInstalledAssistantUpdateAsync(IAvailablePlugin plugin, string lua, CancellationToken token)
+    {
+        if (plugin.Type is not PluginType.ASSISTANT)
+            return CheckError(TB("Only assistant plugins can be edited."));
+
+        if (plugin.IsInternal)
+            return CheckError(TB("Internal assistant plugins cannot be edited."));
+
+        if (string.IsNullOrWhiteSpace(plugin.LocalPath))
+            return CheckError(TB("The assistant plugin has no local directory."));
+
+        if (!TryGetAssistantPluginsRoot(out var assistantPluginsRoot, out var rootIssue))
+            return CheckError(rootIssue);
+
+        var pluginDirectory = plugin.LocalPath;
+        if (!IsPathInsideDirectory(assistantPluginsRoot, pluginDirectory) || IsSameDirectory(assistantPluginsRoot, pluginDirectory))
+            return CheckError(TB("The assistant plugin directory is outside the local assistant plugin directory."));
+
+        if (!Directory.Exists(pluginDirectory))
+            return CheckError(TB("The assistant plugin directory does not exist."));
+
+        await this.installSemaphore.WaitAsync(token);
+        try
+        {
+            var validation = await this.ValidateInPluginDirectoryAsync(lua, pluginDirectory, token);
+            if (!validation.Success || validation.AssistantPlugin is null)
+                return CheckError(validation.Issue);
+
+            var assistantPlugin = validation.AssistantPlugin;
+            return assistantPlugin.Id != plugin.Id
+                ? CheckError(TB("The edited assistant plugin must keep the same plugin ID."))
+                : new(true, assistantPlugin.Id, assistantPlugin.Name, string.Empty);
+        }
+        finally
+        {
+            this.installSemaphore.Release();
+        }
+    }
+
+    /// <summary>
     /// Deletes installed local assistant plugin directories.
     /// The directory gets moved to a backup dir outside the plugin root so the
     /// plugin loader cannot discover it during reload. On failure, the directory
