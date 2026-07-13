@@ -22,6 +22,8 @@ use tauri_plugin_global_shortcut::GlobalShortcutExt;
 use tauri_plugin_opener::OpenerExt;
 use tokio::sync::broadcast;
 use tokio::time;
+use webkit2gtk::glib::Cast;
+use webkit2gtk::{PermissionRequestExt, UserMediaPermissionRequestExt};
 use crate::api_token::APIToken;
 use crate::dotnet::{cleanup_dotnet_server, start_dotnet_server, stop_dotnet_server};
 use crate::environment::{
@@ -268,7 +270,7 @@ fn should_allow_audio_capture(
 #[cfg(target_os = "linux")]
 fn register_linux_permission_request_handler(window: &WebviewWindow) {
     if let Err(error) = window.with_webview(|platform_webview| {
-        use webkit2gtk::prelude::*;
+        use webkit2gtk::WebViewExt;
         use webkit2gtk::UserMediaPermissionRequest;
 
         let webview = platform_webview.inner();
