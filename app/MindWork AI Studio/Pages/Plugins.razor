@@ -1,5 +1,6 @@
 @using AIStudio.Tools.PluginSystem
 @using AIStudio.Tools.PluginSystem.Assistants
+@using AIStudio.Tools.Services
 @inherits MSGComponentBase
 @attribute [Route(Routes.PLUGINS)]
 
@@ -64,11 +65,11 @@
                     </MudStack>
                 </MudTd>
                 <MudTd>
-                    <MudStack Row="true" Spacing="0"  AlignItems="AlignItems.Center">
+                    <MudStack Row="true" Spacing="0" AlignItems="AlignItems.Center">
                         @if (context.Type is PluginType.ASSISTANT)
                         {
                             var assistantPlugin = PluginFactory.RunningPlugins.OfType<PluginAssistants>().FirstOrDefault(x => x.Id == context.Id);
-                            <AssistantPluginSecurityCard Plugin="@assistantPlugin" Compact="@true" />
+                            <AssistantPluginSecurityCard Plugin="@assistantPlugin" Compact="@true"/>
                         }
                         @if (context is { IsInternal: false, Type: not PluginType.CONFIGURATION })
                         {
@@ -79,37 +80,48 @@
                             </MudTooltip>
                         }
 
-                        @if (context is { IsInternal: false } && !string.IsNullOrWhiteSpace(context.SourceURL))
-                        {
-                            var sourceUrl = context.SourceURL;
-                            var isSendingMail = IsSendingMail(sourceUrl);
-                            if (isSendingMail)
+                        <MudButtonGroup Class="ms-3">
+                            @if (context is { IsInternal: false } && !string.IsNullOrWhiteSpace(context.SourceURL))
                             {
-                                <MudTooltip Text="@T("Send a mail")">
-                                    <MudIconButton Icon="@Icons.Material.Filled.Email" Href="@sourceUrl" Target="_blank" Size="Size.Medium"/>
+                                var sourceUrl = context.SourceURL;
+                                var isSendingMail = IsSendingMail(sourceUrl);
+                                if (isSendingMail)
+                                {
+                                    var isDefaultSupportContact = string.Equals(sourceUrl, AssistantPluginGenerationService.DEFAULT_SUPPORT_CONTACT, StringComparison.Ordinal);
+                                    <MudTooltip Text="@(isDefaultSupportContact ? string.Empty : T("Send a mail"))">
+                                                                                                                 <MudIconButton Icon="@Icons.Material.Filled.Email" Href="@sourceUrl" Target="_blank" Size="Size.Medium" Disabled="@isDefaultSupportContact"/>
+                                    </MudTooltip>
+                                }
+                                else
+                                {
+                                    var isDefaultSourceUrl = string.Equals(sourceUrl, AssistantPluginGenerationService.DEFAULT_SOURCE_URL, StringComparison.Ordinal);
+                                    <MudTooltip Text="@(isDefaultSourceUrl ? T("No source url available") : T("Open website"))">
+                                        <MudIconButton Icon="@Icons.Material.Filled.OpenInBrowser" Href="@sourceUrl" Target="_blank" Size="Size.Medium" Disabled="@isDefaultSourceUrl"/>
+                                    </MudTooltip>
+                                }
+                            }
+                            
+                            @if (context is IAvailablePlugin editablePlugin && CanEditAssistantPlugin(editablePlugin))
+                            {
+                                <MudTooltip Text="@T("Edit assistant plugin")">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Code" Size="Size.Medium" OnClick="@(() => this.OpenAssistantPluginEditorDialogAsync(editablePlugin))"/>
                                 </MudTooltip>
                             }
-                            else
-                            {
-                                <MudTooltip Text="@T("Open website")">
-                                    <MudIconButton Icon="@Icons.Material.Filled.OpenInBrowser" Href="@sourceUrl" Target="_blank" Size="Size.Medium"/>
-                                </MudTooltip>
-                            }
-                        }
-                        
-                        @if (context is IAvailablePlugin editablePlugin && CanEditAssistantPlugin(editablePlugin))
-                        {
-                            <MudTooltip Text="@T("Edit assistant plugin")">
-                                <MudIconButton Icon="@Icons.Material.Filled.EditNote" Size="Size.Medium" OnClick="@(() => this.OpenAssistantPluginEditorDialogAsync(editablePlugin))"/>
-                            </MudTooltip>
-                        }
 
-                        @if (context is IAvailablePlugin availablePlugin && CanDeleteAssistantPlugin(availablePlugin))
-                        {
-                            <MudTooltip Text="@T("Delete assistant plugin")">
-                                <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline" Size="Size.Medium" OnClick="@(() => this.DeleteAssistantPluginAsync(availablePlugin))"/>
-                            </MudTooltip>
-                        }
+                            @if (context is IAvailablePlugin revisionPlugin && CanReviseAssistantPlugin(revisionPlugin))
+                            {
+                                <MudTooltip Text="@T("Revise assistant plugin with AI")">
+                                    <MudIconButton Icon="@Icons.Material.Filled.AutoMode" Size="Size.Medium" OnClick="@(() => this.OpenAssistantPluginRevisionDialogAsync(revisionPlugin))"/>
+                                </MudTooltip>
+                            }
+
+                            @if (context is IAvailablePlugin availablePlugin && CanDeleteAssistantPlugin(availablePlugin))
+                            {
+                                <MudTooltip Text="@T("Delete assistant plugin")">
+                                    <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline" Size="Size.Medium" OnClick="@(() => this.DeleteAssistantPluginAsync(availablePlugin))"/>
+                                </MudTooltip>
+                            }
+                        </MudButtonGroup>
                     </MudStack>
                 </MudTd>
             </RowTemplate>
