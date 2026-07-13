@@ -23,7 +23,7 @@ public partial class CodeEditor : ComponentBase, IAsyncDisposable
     public string Class { get; set; } = string.Empty;
 
     private readonly string editorId = $"code-editor-{Guid.NewGuid():N}";
-    private const string CODE_EDITOR_MODULE = "./system/CodeEditor/code-editor.js?v=20260708-1";
+    private const string CODE_EDITOR_MODULE = "./system/CodeEditor/code-editor.js?v=20260713-1";
     private ElementReference editorElement;
     private ElementReference lineNumbersElement;
     private IJSObjectReference? module;

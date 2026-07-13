@@ -32,6 +32,9 @@ export function init(id, element, lineNumbersElement, code, language) {
         tab: '    ',
         spellcheck: false
     });
+    // CodeJar enables soft wrapping by default, which cannot stay aligned with a newline-based gutter.
+    element.style.whiteSpace = 'pre';
+    element.style.overflowWrap = 'normal';
     const scrollHandler = () => syncLineNumbersScroll(element, lineNumbersElement);
     
     codeJar.updateCode(code ?? '');
