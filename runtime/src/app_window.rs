@@ -138,6 +138,9 @@ pub fn start_tauri() {
             // Get the main window:
             let window = app.get_webview_window("main").expect("Failed to get main window.");
 
+            #[cfg(target_os = "linux")]
+            register_linux_permission_request_handler(&window);
+
             // Register a callback for window events, such as file drops. We have to use
             // this handler in addition to the app event handler, because file drop events
             // are only available in the window event handler (is a bug, cf. https://github.com/tauri-apps/tauri/issues/14338):
@@ -245,6 +248,69 @@ fn same_origin(left: &tauri::Url, right: &tauri::Url) -> bool {
     left.scheme() == right.scheme()
         && left.host_str() == right.host_str()
         && left.port_or_known_default() == right.port_or_known_default()
+}
+
+#[cfg(any(target_os = "linux", test))]
+fn should_allow_audio_capture(
+    approved_app_url: Option<&tauri::Url>,
+    current_webview_url: Option<&tauri::Url>,
+    requests_audio: bool,
+    requests_video: bool,
+) -> bool {
+    requests_audio
+        && !requests_video
+        && approved_app_url.is_some_and(is_local_http_url)
+        && approved_app_url
+            .zip(current_webview_url)
+            .is_some_and(|(approved, current)| same_origin(approved, current))
+}
+
+#[cfg(target_os = "linux")]
+fn register_linux_permission_request_handler(window: &WebviewWindow) {
+    if let Err(error) = window.with_webview(|platform_webview| {
+        use webkit2gtk::prelude::*;
+        use webkit2gtk::UserMediaPermissionRequest;
+
+        let webview = platform_webview.inner();
+        webview.connect_permission_request(|webview, request| {
+            let Some(user_media_request) = request.downcast_ref::<UserMediaPermissionRequest>() else {
+                request.deny();
+                info!(Source = "Tauri"; "Denied a non-user-media WebKit permission request.");
+                return true;
+            };
+
+            let current_webview_url = webview
+                .uri()
+                .and_then(|uri| tauri::Url::parse(uri.as_str()).ok());
+            let approved_app_url = APPROVED_APP_URL.lock().unwrap().clone();
+            let origin_matches = approved_app_url
+                .as_ref()
+                .zip(current_webview_url.as_ref())
+                .is_some_and(|(approved, current)| same_origin(approved, current));
+            let requests_audio = user_media_request.is_for_audio_device();
+            let requests_video = user_media_request.is_for_video_device();
+            let allow = should_allow_audio_capture(
+                approved_app_url.as_ref(),
+                current_webview_url.as_ref(),
+                requests_audio,
+                requests_video,
+            );
+
+            if allow {
+                request.allow();
+            } else {
+                request.deny();
+            }
+
+            info!(
+                Source = "Tauri";
+                "Handled WebKit user-media permission request: allowed={allow}, origin_matches={origin_matches}, audio={requests_audio}, video={requests_video}."
+            );
+            true
+        });
+    }) {
+        error!(Source = "Tauri"; "Failed to register the Linux WebKit permission request handler: {error}");
+    }
 }
 
 fn should_open_in_system_browser<R: tauri::Runtime>(webview: &tauri::Webview<R>, url: &tauri::Url) -> bool {
@@ -1138,5 +1204,43 @@ mod tests {
 
         assert!(!is_tauri_asset_url(&url));
         assert!(!is_local_http_url(&url));
+    }
+
+    #[test]
+    fn audio_capture_is_allowed_for_exact_approved_app_origin() {
+        let approved = tauri::Url::parse("http://localhost:12345/").unwrap();
+        let current = tauri::Url::parse("http://localhost:12345/voice-recorder").unwrap();
+
+        assert!(should_allow_audio_capture(Some(&approved), Some(&current), true, false));
+    }
+
+    #[test]
+    fn audio_capture_is_denied_for_wrong_port() {
+        let approved = tauri::Url::parse("http://localhost:12345/").unwrap();
+        let current = tauri::Url::parse("http://localhost:54321/").unwrap();
+
+        assert!(!should_allow_audio_capture(Some(&approved), Some(&current), true, false));
+    }
+
+    #[test]
+    fn audio_capture_is_denied_for_external_origin() {
+        let approved = tauri::Url::parse("http://localhost:12345/").unwrap();
+        let current = tauri::Url::parse("https://example.com/").unwrap();
+
+        assert!(!should_allow_audio_capture(Some(&approved), Some(&current), true, false));
+    }
+
+    #[test]
+    fn video_capture_is_denied() {
+        let approved = tauri::Url::parse("http://localhost:12345/").unwrap();
+
+        assert!(!should_allow_audio_capture(Some(&approved), Some(&approved), false, true));
+    }
+
+    #[test]
+    fn combined_audio_and_video_capture_is_denied() {
+        let approved = tauri::Url::parse("http://localhost:12345/").unwrap();
+
+        assert!(!should_allow_audio_capture(Some(&approved), Some(&approved), true, true));
     }
 }

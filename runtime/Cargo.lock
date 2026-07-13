@@ -4042,6 +4042,7 @@ dependencies = [
  "tempfile",
  "tokio",
  "tokio-stream",
+ "webkit2gtk",
  "whoami",
  "windows-native-keyring-store",
  "windows-registry",
