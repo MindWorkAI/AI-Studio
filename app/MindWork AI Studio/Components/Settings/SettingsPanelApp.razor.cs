@@ -15,18 +15,32 @@ public partial class SettingsPanelApp : SettingsPanelBase
 
     private UpdatePolicyMode updatePolicyMode;
 
-    private string UpdateIntervalHelp => this.updatePolicyMode is UpdatePolicyMode.ENTERPRISE_DISABLED
-        ? T("Your organization has disabled update checks and installations.")
-        : T("How often should we check for app updates?");
+    private UpdateInterval DisplayedUpdateInterval => this.updatePolicyMode is UpdatePolicyMode.FLATPAK
+        ? UpdateInterval.NO_CHECK
+        : this.SettingsManager.ConfigurationData.App.UpdateInterval;
 
-    private string UpdateInstallationHelp => this.updatePolicyMode is UpdatePolicyMode.ENTERPRISE_DISABLED
-        ? T("This setting has no effect while updates are disabled by your organization.")
-        : T("Should updates be installed automatically or manually?");
+    private UpdateInstallation DisplayedUpdateInstallation => this.updatePolicyMode is UpdatePolicyMode.FLATPAK
+        ? UpdateInstallation.MANUAL
+        : this.SettingsManager.ConfigurationData.App.UpdateInstallation;
 
-    private bool IsUpdateIntervalLocked() => this.updatePolicyMode is UpdatePolicyMode.ENTERPRISE_DISABLED ||
+    private string UpdateIntervalHelp => this.updatePolicyMode switch
+    {
+        UpdatePolicyMode.ENTERPRISE_DISABLED => T("Your organization has disabled update checks and installations."),
+        UpdatePolicyMode.FLATPAK => T("AI Studio cannot check for updates when running as a Flatpak. Updates are managed outside the app."),
+        _ => T("How often should we check for app updates?")
+    };
+
+    private string UpdateInstallationHelp => this.updatePolicyMode switch
+    {
+        UpdatePolicyMode.ENTERPRISE_DISABLED => T("This setting has no effect while updates are disabled by your organization."),
+        UpdatePolicyMode.FLATPAK => T("AI Studio cannot install updates when running as a Flatpak. Use the update method provided by your Flatpak distribution."),
+        _ => T("Should updates be installed automatically or manually?")
+    };
+
+    private bool IsUpdateIntervalLocked() => this.updatePolicyMode is UpdatePolicyMode.ENTERPRISE_DISABLED or UpdatePolicyMode.FLATPAK ||
         ManagedConfiguration.TryGet(x => x.App, x => x.UpdateInterval, out var meta) && meta.IsLocked;
 
-    private bool IsUpdateInstallationLocked() => this.updatePolicyMode is UpdatePolicyMode.ENTERPRISE_DISABLED ||
+    private bool IsUpdateInstallationLocked() => this.updatePolicyMode is UpdatePolicyMode.ENTERPRISE_DISABLED or UpdatePolicyMode.FLATPAK ||
         ManagedConfiguration.TryGet(x => x.App, x => x.UpdateInstallation, out var meta) && meta.IsLocked;
 
     protected override async Task OnInitializedAsync()
