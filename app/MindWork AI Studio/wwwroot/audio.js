@@ -184,6 +184,9 @@ let mediaRecorder;
 let actualRecordingMimeType;
 let changedMimeType = false;
 let pendingChunkUploads = 0;
+let chunkUploadPromise = Promise.resolve();
+let chunkUploadError = null;
+let recordingError = null;
 
 // Store the media stream so we can close the microphone later:
 let activeMediaStream = null;
@@ -246,48 +249,65 @@ window.audioRecorder = {
         actualRecordingMimeType = mediaRecorder.mimeType;
         console.log('Audio recording - actual mime type used by the browser: ', actualRecordingMimeType);
 
+        const actualBaseMimeType = actualRecordingMimeType.split(';')[0].trim().toLowerCase();
+
         // Check the list of desired mime types against the actual one:
-        if (!desiredMimeTypes.includes(actualRecordingMimeType)) {
+        if (!desiredMimeTypes.some(type => type.split(';')[0].trim().toLowerCase() === actualBaseMimeType)) {
             changedMimeType = true;
             console.warn(`Audio recording - requested mime types ('${desiredMimeTypes.join(', ')}') do not include the actual mime type used by the browser ('${actualRecordingMimeType}').`);
         } else {
             changedMimeType = false;
         }
 
-        // Reset the pending uploads counter:
+        // Reset the upload and recorder state:
         pendingChunkUploads = 0;
+        chunkUploadPromise = Promise.resolve();
+        chunkUploadError = null;
+        recordingError = null;
 
-        // Stream each chunk directly to .NET as it becomes available:
-        mediaRecorder.ondataavailable = async (event) => {
+        // Stream each chunk directly to .NET in recording order as it becomes available:
+        mediaRecorder.ondataavailable = (event) => {
             if (event.data.size > 0) {
                 pendingChunkUploads++;
-                try {
-                    const arrayBuffer = await event.data.arrayBuffer();
-                    const uint8Array = new Uint8Array(arrayBuffer);
-                    await dotnetRef.invokeMethodAsync('OnAudioChunkReceived', uint8Array);
-                } catch (error) {
-                    console.error('Error sending audio chunk to .NET:', error);
-                } finally {
-                    pendingChunkUploads--;
-                }
+                chunkUploadPromise = chunkUploadPromise
+                    .then(async () => {
+                        const arrayBuffer = await event.data.arrayBuffer();
+                        const uint8Array = new Uint8Array(arrayBuffer);
+                        await dotnetRef.invokeMethodAsync('OnAudioChunkReceived', uint8Array);
+                    })
+                    .catch(error => {
+                        chunkUploadError ??= error;
+                        console.error('Error sending audio chunk to .NET:', error);
+                    })
+                    .finally(() => pendingChunkUploads--);
             }
         };
 
-        mediaRecorder.start(3000); // read the recorded data in 3-second chunks
+        mediaRecorder.onerror = event => {
+            recordingError ??= event.error || new Error('The media recorder failed.');
+            console.error('Audio recording - MediaRecorder error:', recordingError);
+        };
+
+        if (actualBaseMimeType === 'audio/mp4') {
+            // WebKitGTK does not reliably produce MP4 data when a timeslice is used. Let it
+            // finalize one complete M4A blob when stop() is called instead.
+            mediaRecorder.start();
+        } else {
+            mediaRecorder.start(3000); // read the recorded data in 3-second chunks
+        }
+
         return actualRecordingMimeType;
     },
 
     stop: async function () {
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
 
             // Add an event listener to handle the stop event:
             mediaRecorder.onstop = async () => {
 
                 // Wait for all pending chunk uploads to complete before finalizing:
                 console.log(`Audio recording - waiting for ${pendingChunkUploads} pending uploads.`);
-                while (pendingChunkUploads > 0) {
-                    await new Promise(r => setTimeout(r, 10)); // wait 10 ms before checking again
-                }
+                await chunkUploadPromise;
 
                 console.log('Audio recording - all chunks uploaded, finalizing.');
 
@@ -302,6 +322,12 @@ window.audioRecorder = {
                 //
                 // Call window.audioRecorder.releaseMicrophone() after the last sound has played.
                 //
+
+                const error = recordingError || chunkUploadError;
+                if (error) {
+                    reject(error);
+                    return;
+                }
 
                 // No need to process data here anymore, just signal completion:
                 resolve({

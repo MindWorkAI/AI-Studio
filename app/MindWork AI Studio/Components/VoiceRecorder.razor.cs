@@ -137,6 +137,7 @@ public partial class VoiceRecorder : MSGComponentBase
             var mimeTypes = GetPreferredMimeTypes(
                 Builder.Create().UseAudio().UseSubtype(AudioSubtype.WEBM).Build(),
                 Builder.Create().UseAudio().UseSubtype(AudioSubtype.OGG).Build(),
+                Builder.Create().UseAudio().UseSubtype(AudioSubtype.MP4).Build(),
                 Builder.Create().UseAudio().UseSubtype(AudioSubtype.AAC).Build(),
                 Builder.Create().UseAudio().UseSubtype(AudioSubtype.MP3).Build(),
                 Builder.Create().UseAudio().UseSubtype(AudioSubtype.AIFF).Build(),
@@ -171,6 +172,7 @@ public partial class VoiceRecorder : MSGComponentBase
 
                 // Clean up the recording stream if starting failed:
                 await this.FinalizeRecordingStream();
+                await this.ReleaseMicrophoneAsync();
             }
             finally
             {
@@ -179,11 +181,13 @@ public partial class VoiceRecorder : MSGComponentBase
         }
         else
         {
+            var recordingStoppedSuccessfully = false;
             try
             {
                 var result = await this.JsRuntime.InvokeAsync<AudioRecordingResult>("audioRecorder.stop");
                 if (result.ChangedMimeType)
                     this.Logger.LogWarning("The recorded audio MIME type was changed to '{ResultMimeType}'.", result.MimeType);
+                recordingStoppedSuccessfully = true;
             }
             catch (Exception e)
             {
@@ -197,9 +201,20 @@ public partial class VoiceRecorder : MSGComponentBase
             this.isRecording = false;
             this.StateHasChanged();
 
-            // Start transcription if we have a recording and a configured provider:
-            if (this.finalRecordingPath is not null)
-                await this.TranscribeRecordingAsync();
+            if (!recordingStoppedSuccessfully || this.finalRecordingPath is null)
+            {
+                if (recordingStoppedSuccessfully)
+                {
+                    this.Logger.LogWarning("The audio recorder did not produce any data.");
+                    await this.MessageBus.SendError(new(Icons.Material.Filled.MicOff, this.T("Failed to stop audio recording.")));
+                }
+
+                this.DeleteFinalRecording();
+                await this.ReleaseMicrophoneAsync();
+                return;
+            }
+
+            await this.TranscribeRecordingAsync();
         }
     }
 
@@ -256,6 +271,7 @@ public partial class VoiceRecorder : MSGComponentBase
         catch (Exception ex)
         {
             this.Logger.LogError(ex, "Error writing audio chunk to stream.");
+            throw;
         }
     }
 
@@ -268,17 +284,23 @@ public partial class VoiceRecorder : MSGComponentBase
             await this.currentRecordingStream.DisposeAsync();
             this.currentRecordingStream = null;
 
-            // Rename the file with the correct extension based on MIME type:
-            if (this.currentRecordingPath is not null && this.currentRecordingMimeType is not null)
+            if (this.currentRecordingPath is not null && File.Exists(this.currentRecordingPath))
             {
-                var extension = GetFileExtension(this.currentRecordingMimeType);
-                var newPath = Path.ChangeExtension(this.currentRecordingPath, extension);
+                var fileSize = new FileInfo(this.currentRecordingPath).Length;
 
-                if (File.Exists(this.currentRecordingPath))
+                // Rename non-empty recordings with the correct extension based on MIME type:
+                if (fileSize > 0 && this.currentRecordingMimeType is not null)
                 {
+                    var extension = GetFileExtension(this.currentRecordingMimeType);
+                    var newPath = Path.ChangeExtension(this.currentRecordingPath, extension);
                     File.Move(this.currentRecordingPath, newPath, overwrite: true);
                     this.finalRecordingPath = newPath;
-                    this.Logger.LogInformation("Finalized audio recording over {NumChunks} streamed audio chunks to the file '{RecordingPath}'.", this.numReceivedChunks, newPath);
+                    this.Logger.LogInformation("Finalized audio recording over {NumChunks} streamed audio chunks to the file '{RecordingPath}' with {FileSize} bytes.", this.numReceivedChunks, newPath, fileSize);
+                }
+                else
+                {
+                    this.Logger.LogWarning("Discarding an audio recording with {FileSize} bytes and MIME type '{MimeType}'.", fileSize, this.currentRecordingMimeType);
+                    File.Delete(this.currentRecordingPath);
                 }
             }
         }
@@ -375,19 +397,28 @@ public partial class VoiceRecorder : MSGComponentBase
         finally
         {
             await this.ReleaseMicrophoneAsync();
-
-            try
-            {
-                if (File.Exists(this.finalRecordingPath))
-                    File.Delete(this.finalRecordingPath);
-            }
-            catch (Exception ex)
-            {
-                this.Logger.LogError(ex, "Failed to delete the recording file '{RecordingPath}'.", this.finalRecordingPath);
-            }
-            this.finalRecordingPath = null;
+            this.DeleteFinalRecording();
             this.isTranscribing = false;
             this.StateHasChanged();
+        }
+    }
+
+    private void DeleteFinalRecording()
+    {
+        var recordingPath = this.finalRecordingPath;
+        this.finalRecordingPath = null;
+
+        if (recordingPath is null)
+            return;
+
+        try
+        {
+            if (File.Exists(recordingPath))
+                File.Delete(recordingPath);
+        }
+        catch (Exception ex)
+        {
+            this.Logger.LogError(ex, "Failed to delete the recording file '{RecordingPath}'.", recordingPath);
         }
     }
 
