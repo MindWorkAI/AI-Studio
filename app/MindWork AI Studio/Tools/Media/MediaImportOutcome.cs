@@ -8,4 +8,6 @@ public sealed record MediaImportOutcome
     public required MediaImportStatus Status { get; init; }
 
     public IReadOnlyList<MediaImportFailure> Failures { get; init; } = [];
+
+    public IReadOnlyList<MediaImportWarning> Warnings { get; init; } = [];
 }

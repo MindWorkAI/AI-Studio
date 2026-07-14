@@ -2305,6 +2305,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T1233815302"] = "Media tr
 -- Media transcription failed. Open the assistant to review it.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T2177964639"] = "Media transcription failed. Open the assistant to review it."
 
+-- Media transcription completed with a warning. Open the assistant to review it.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T2217674098"] = "Media transcription completed with a warning. Open the assistant to review it."
+
 -- Media is still being prepared.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T2600900617"] = "Media is still being prepared."
 
@@ -8571,6 +8574,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T15439746
 
 -- The selected file cannot be processed as media.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T1707342767"] = "The selected file cannot be processed as media."
+
+-- The audio track contains no audible signal, so there is nothing to transcribe.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T1988190152"] = "The audio track contains no audible signal, so there is nothing to transcribe."
 
 -- The media file is damaged or its format could not be identified.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T2004316549"] = "The media file is damaged or its format could not be identified."

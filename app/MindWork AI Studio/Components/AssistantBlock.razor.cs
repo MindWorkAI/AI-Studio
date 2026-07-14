@@ -113,6 +113,7 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase where TSetting
     {
         MediaImportStatus.QUEUED or MediaImportStatus.RUNNING or MediaImportStatus.CANCELING => new(Icons.Material.Filled.ChangeCircle, Color.Info, this.T("Media is still being prepared.")),
         MediaImportStatus.SUCCEEDED => new(Icons.Material.Filled.TaskAlt, Color.Success, this.T("The media transcript is ready.")),
+        MediaImportStatus.WARNING => new(Icons.Material.Filled.WarningAmber, Color.Warning, this.T("Media transcription completed with a warning. Open the assistant to review it.")),
         MediaImportStatus.FAILED => new(Icons.Material.Filled.Error, Color.Error, this.T("Media transcription failed. Open the assistant to review it.")),
         MediaImportStatus.CANCELLED => new(Icons.Material.Filled.Cancel, Color.Warning, this.T("Media transcription was canceled. Open the assistant to review it.")),
         

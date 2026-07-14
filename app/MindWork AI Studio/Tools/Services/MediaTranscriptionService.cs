@@ -192,6 +192,7 @@ public sealed class MediaTranscriptionService(RustService rustService, SettingsM
 
         var status = MediaImportStatus.SUCCEEDED;
         List<MediaImportFailure> failures = [];
+        List<MediaImportWarning> warnings = [];
         try
         {
             var result = await this.TranscribeImportAsync(mediaPath, target, cancellation.Token);
@@ -199,6 +200,11 @@ public sealed class MediaTranscriptionService(RustService rustService, SettingsM
                 this.AddCompletedText(target, result.Text);
             else if (result.Status is MediaTranscriptionResultStatus.CANCELLED)
                 status = MediaImportStatus.CANCELLED;
+            else if (result.Status is MediaTranscriptionResultStatus.NO_AUDIBLE_SIGNAL)
+            {
+                status = MediaImportStatus.WARNING;
+                warnings.Add(new(Path.GetFileName(mediaPath), result.UserMessage));
+            }
             else
             {
                 status = MediaImportStatus.FAILED;
@@ -224,7 +230,7 @@ public sealed class MediaTranscriptionService(RustService rustService, SettingsM
                     ownedCancellation.Dispose();
             }
 
-            this.CompleteImport(target, Path.GetFileName(mediaPath), status, failures);
+            this.CompleteImport(target, Path.GetFileName(mediaPath), status, failures, warnings);
         }
     }
 
@@ -252,6 +258,7 @@ public sealed class MediaTranscriptionService(RustService rustService, SettingsM
         var status = MediaImportStatus.SUCCEEDED;
         var currentFileName = Path.GetFileName(mediaPaths[0]);
         List<MediaImportFailure> failures = [];
+        List<MediaImportWarning> warnings = [];
         
         try
         {
@@ -264,6 +271,15 @@ public sealed class MediaTranscriptionService(RustService rustService, SettingsM
                 {
                     status = MediaImportStatus.CANCELLED;
                     break;
+                }
+
+                if (result.Status is MediaTranscriptionResultStatus.NO_AUDIBLE_SIGNAL)
+                {
+                    if (status is MediaImportStatus.SUCCEEDED)
+                        status = MediaImportStatus.WARNING;
+
+                    warnings.Add(new(currentFileName, result.UserMessage));
+                    continue;
                 }
 
                 if (result.Status is not MediaTranscriptionResultStatus.SUCCEEDED)
@@ -307,7 +323,7 @@ public sealed class MediaTranscriptionService(RustService rustService, SettingsM
                     cancellation.Dispose();
             }
 
-            this.CompleteImport(target, currentFileName, status, failures);
+            this.CompleteImport(target, currentFileName, status, failures, warnings);
         }
     }
 
@@ -429,6 +445,12 @@ public sealed class MediaTranscriptionService(RustService rustService, SettingsM
                 return normalized.Error is null
                     ? MediaTranscriptionResult.Failed(TB("The media pipeline ended without an output file."))
                     : MediaTranscriptionResult.Failed(UserMessageFor(normalized.Error.Code), normalized.Error.Code);
+
+            if (!normalized.Result.HasAudibleSignal)
+            {
+                logger.LogInformation("Skipping transcription for '{MediaPath}' because its maximum audio peak does not exceed the practical-silence threshold.", mediaPath);
+                return MediaTranscriptionResult.NoAudibleSignal(TB("The audio track contains no audible signal, so there is nothing to transcribe."));
+            }
 
             var providerSettings = this.ResolveProvider();
             if (providerSettings is null)
@@ -602,7 +624,12 @@ public sealed class MediaTranscriptionService(RustService rustService, SettingsM
     }
 
     /// <summary>Publishes one retained terminal result after an entire target batch ended.</summary>
-    private void CompleteImport(MediaImportTarget target, string fileName, MediaImportStatus status, IReadOnlyList<MediaImportFailure> failures)
+    private void CompleteImport(
+        MediaImportTarget target,
+        string fileName,
+        MediaImportStatus status,
+        IReadOnlyList<MediaImportFailure> failures,
+        IReadOnlyList<MediaImportWarning> warnings)
     {
         lock (this.stateLock)
         {
@@ -621,6 +648,7 @@ public sealed class MediaTranscriptionService(RustService rustService, SettingsM
                 Owner = target.Owner,
                 Status = status,
                 Failures = [.. failures],
+                Warnings = [.. warnings],
             };
         }
 

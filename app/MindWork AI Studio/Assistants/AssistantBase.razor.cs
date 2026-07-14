@@ -730,6 +730,12 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, this.TB("The media file could not be transcribed.")));
         }
 
+        if (outcome.Warnings.Count > 0)
+        {
+            var message = string.Join(Environment.NewLine, outcome.Warnings.Select(warning => $"{warning.FileName}: {warning.UserMessage}"));
+            await this.MessageBus.SendWarning(new(Icons.Material.Filled.VoiceChat, message));
+        }
+
         if (outcome.Status is MediaImportStatus.CANCELLED)
         {
             await this.MessageBus.SendWarning(new(Icons.Material.Filled.VoiceChat, this.TB("The media transcription was canceled.")));

@@ -7,6 +7,7 @@ public enum MediaImportStatus
     RUNNING,
     CANCELING,
     SUCCEEDED,
+    WARNING,
     FAILED,
     CANCELLED,
 }

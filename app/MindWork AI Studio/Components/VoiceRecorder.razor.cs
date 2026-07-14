@@ -345,9 +345,16 @@ public partial class VoiceRecorder : MSGComponentBase
             var transcriptionResult = await this.MediaTranscriptionService.TranscribeVoiceAsync(this.finalRecordingPath);
             if (transcriptionResult.Status is not MediaTranscriptionResultStatus.SUCCEEDED)
             {
-                this.Logger.LogWarning("The transcription request failed.");
                 if (transcriptionResult.Status is MediaTranscriptionResultStatus.CANCELLED)
                     return;
+
+                if (transcriptionResult.Status is MediaTranscriptionResultStatus.NO_AUDIBLE_SIGNAL)
+                {
+                    await this.MessageBus.SendWarning(new(Icons.Material.Filled.VoiceChat, transcriptionResult.UserMessage));
+                    return;
+                }
+
+                this.Logger.LogWarning("The transcription request failed.");
                 var userMessage = string.IsNullOrWhiteSpace(transcriptionResult.UserMessage)
                     ? this.T("Unfortunately, there was an error communicating with the AI system.")
                     : transcriptionResult.UserMessage;

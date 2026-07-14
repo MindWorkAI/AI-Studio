@@ -68,6 +68,9 @@ const PROGRESS_EVENT_INTERVAL: StdDuration = StdDuration::from_secs(6);
 /// Timestamp differences above this threshold are recorded as discontinuities.
 const LARGE_DISCONTINUITY_MS: i64 = 1_000;
 
+/// Maximum full-scale peak still treated as practical silence.
+const SILENCE_MAX_PEAK_DBFS: f32 = -60.0;
+
 /// Time a terminal job remains available for late SSE subscribers.
 const TERMINAL_JOB_RETENTION: std::time::Duration = std::time::Duration::from_secs(10 * 60);
 
@@ -227,6 +230,9 @@ pub struct MediaJobResult {
 
     /// Whether the input was copied unchanged.
     pub pass_through: bool,
+
+    /// Whether the normalized audio exceeds the practical-silence threshold.
+    pub has_audible_signal: bool,
 }
 
 /// Stable error code plus an English diagnostic intended for logs.
@@ -570,6 +576,9 @@ fn normalize_media(input_path: &FilePath, output_path: &FilePath, max_pass_throu
         .ok_or_else(|| MediaError::new(MediaErrorCode::UnsupportedCodec, "None of the audio tracks uses a supported codec."))?;
 
     let track_id = selected.id;
+    let track_delay = selected.delay.unwrap_or(0);
+    let track_padding = selected.padding.unwrap_or(0);
+    let track_time_base = selected.time_base;
     let params = selected.codec_params.as_ref().and_then(CodecParameters::audio).unwrap().clone();
     let detected_codec = if params.codec == CODEC_ID_OPUS { "opus".to_string() } else { format!("{}", params.codec) };
     let track_duration_ms = selected.num_frames.zip(params.sample_rate)
@@ -610,6 +619,18 @@ fn normalize_media(input_path: &FilePath, output_path: &FilePath, max_pass_throu
     }
 
     let result = if pass_through {
+        job.publish_progress(MediaJobPhase::Transcoding, Some(0.0));
+        let analysis_context = SignalAnalysisContext {
+            track_id,
+            params: &params,
+            track_delay,
+            track_padding,
+            expected_duration_ms: duration_ms,
+            time_base: track_time_base,
+            source_progress: &source_progress,
+            job,
+        };
+        let signal = analyze_audio_signal(&mut *format, analysis_context)?;
         copy_with_cancellation(input_path, &partial_path, job)?;
         Ok(MediaJobResult {
             output_path: output_path.to_string_lossy().into_owned(),
@@ -617,21 +638,22 @@ fn normalize_media(input_path: &FilePath, output_path: &FilePath, max_pass_throu
             detected_codec,
             duration_ms,
             pass_through: true,
+            has_audible_signal: signal.has_audible_signal(),
         })
     } else {
         job.publish_progress(MediaJobPhase::Transcoding, Some(0.0));
 
         let context = TranscodeContext {
             track_id,
-            track_delay: selected.delay.unwrap_or(0),
-            track_padding: selected.padding.unwrap_or(0),
+            track_delay,
+            track_padding,
             params,
             partial_path: &partial_path,
             output_path,
             detected_format,
             detected_codec,
             expected_duration_ms: duration_ms,
-            time_base: selected.time_base,
+            time_base: track_time_base,
             source_progress,
             job,
         };
@@ -683,6 +705,140 @@ fn select_audio_track(tracks: &[Track]) -> Option<&Track> {
 fn is_decodable(track: &Track) -> bool {
     let Some(params) = track.codec_params.as_ref().and_then(CodecParameters::audio) else { return false; };
     params.codec == CODEC_ID_OPUS || symphonia::default::get_codecs().make_audio_decoder(params, &AudioDecoderOptions::default()).is_ok()
+}
+
+/// Streaming peak measurement over normalized full-scale floating-point samples.
+#[derive(Default)]
+struct AudioPeakDetector {
+    /// Highest absolute sample observed so far.
+    max_amplitude: f32,
+}
+
+impl AudioPeakDetector {
+    /// Includes one bounded sample block in the maximum-peak measurement.
+    fn observe(&mut self, samples: &[f32]) {
+        for sample in samples {
+            let amplitude = sample.abs();
+            self.max_amplitude = if amplitude.is_finite() {
+                self.max_amplitude.max(amplitude)
+            } else {
+                f32::INFINITY
+            };
+        }
+    }
+
+    /// Returns whether any retained sample exceeds the configured silence ceiling.
+    fn has_audible_signal(&self) -> bool {
+        self.max_amplitude > 10.0_f32.powf(SILENCE_MAX_PEAK_DBFS / 20.0)
+    }
+
+    /// Returns the measured full-scale peak for diagnostics.
+    fn max_peak_dbfs(&self) -> f32 {
+        if self.max_amplitude == 0.0 {
+            f32::NEG_INFINITY
+        } else {
+            20.0 * self.max_amplitude.log10()
+        }
+    }
+}
+
+/// Inputs required to scan an otherwise pass-through-compatible audio track.
+struct SignalAnalysisContext<'a> {
+    /// Selected track identifier.
+    track_id: u32,
+
+    /// Selected track codec parameters.
+    params: &'a symphonia::core::codecs::audio::AudioCodecParameters,
+
+    /// Leading decoded frames to discard.
+    track_delay: u32,
+
+    /// Trailing decoded frames to discard.
+    track_padding: u32,
+
+    /// Container duration used for progress reporting.
+    expected_duration_ms: u64,
+
+    /// Selected track timebase used for progress reporting.
+    time_base: Option<TimeBase>,
+
+    /// Sequential byte progress fallback when the track has no duration.
+    source_progress: &'a SourceProgress,
+
+    /// Cancellation and progress state for the job.
+    job: &'a MediaJob,
+}
+
+/// Decodes an otherwise pass-through-compatible track solely to classify practical silence.
+fn analyze_audio_signal(
+    format: &mut dyn symphonia::core::formats::FormatReader,
+    context: SignalAnalysisContext<'_>,
+) -> Result<AudioPeakDetector, MediaError> {
+    let mut decoder = StreamDecoder::new(context.params, context.track_delay)?;
+    let mut detector = AudioPeakDetector::default();
+    let mut decoded_tail = Vec::<f32>::new();
+    let mut first_packet_pts = None::<i64>;
+    let mut decoded_packets = 0u64;
+    let mut last_progress = 0.0f64;
+
+    loop {
+        check_cancelled(context.job)?;
+        let packet = match format.next_packet() {
+            Ok(Some(packet)) => packet,
+            Ok(None) => break,
+
+            Err(SymphoniaError::ResetRequired) => return Err(MediaError::new(MediaErrorCode::StreamReset, "The media stream changed unexpectedly.")),
+            Err(SymphoniaError::IoError(error)) if error.kind() == std::io::ErrorKind::Interrupted && context.job.is_cancelled() => {
+                return Err(MediaError::new(MediaErrorCode::Cancelled, "The media job was cancelled."));
+            }
+
+            Err(SymphoniaError::IoError(error)) if error.kind() == std::io::ErrorKind::UnexpectedEof => break,
+            Err(error) => return Err(MediaError::new(MediaErrorCode::DamagedContainer, format!("The media container is damaged: {error}"))),
+        };
+
+        if packet.track_id != context.track_id {
+            continue;
+        }
+
+        let packet_pts = packet.pts.get();
+        first_packet_pts.get_or_insert(packet_pts);
+        let Some((mono, _)) = decoder.decode(&packet)? else { continue; };
+        decoded_packets += 1;
+
+        decoded_tail.extend_from_slice(&mono);
+        let emit_len = decoded_tail.len().saturating_sub(context.track_padding as usize);
+        if emit_len > 0 {
+            detector.observe(&decoded_tail[..emit_len]);
+            drop(decoded_tail.drain(..emit_len));
+        }
+
+        let timestamp_ms = packet_timestamp_ms(packet_pts, first_packet_pts, context.time_base);
+        let progress = if context.expected_duration_ms > 0 {
+            timestamp_ms.map(|current_ms| (current_ms as f64 / context.expected_duration_ms as f64).clamp(0.0, 0.99))
+        } else {
+            context.source_progress.fraction()
+        };
+
+        if let Some(progress) = progress {
+            last_progress = last_progress.max(progress);
+        }
+
+        context.job.publish_progress(MediaJobPhase::Transcoding, progress.map(|_| last_progress));
+    }
+
+    if decoded_packets == 0 {
+        return Err(MediaError::new(MediaErrorCode::InvalidAudioParameters, "The selected audio track did not yield decoded audio samples."));
+    }
+
+    log::info!(
+        "media signal analysis completed: track_id={}, max_peak_dbfs={}, silence_threshold_dbfs={}, has_audible_signal={}",
+        context.track_id,
+        detector.max_peak_dbfs(),
+        SILENCE_MAX_PEAK_DBFS,
+        detector.has_audible_signal(),
+    );
+
+    Ok(detector)
 }
 
 /// Immutable inputs shared across a single transcoding operation.
@@ -739,6 +895,7 @@ fn transcode(
     let file = File::create(context.partial_path).map_err(|error| MediaError::new(MediaErrorCode::OutputCreateFailed, error.to_string()))?;
     let mut writer = WebmOpusWriter::new(file)?;
     let mut pending = Vec::<f32>::with_capacity(OPUS_FRAME_SAMPLES * 3);
+    let mut signal = AudioPeakDetector::default();
     let mut resampler: Option<StreamResampler> = None;
     let mut decoded_tail = Vec::<f32>::new();
     let mut encoded = [0u8; 4_000];
@@ -805,6 +962,7 @@ fn transcode(
                 .flatten();
 
             let current_start = produced_samples.saturating_add(pending.len() as u64);
+            let previous_pending_len = pending.len();
             append_timestamp_aligned(
                 &mut pending,
                 &resampled,
@@ -814,6 +972,8 @@ fn transcode(
                 packet_pts,
                 &mut discontinuities,
             );
+
+            signal.observe(&pending[previous_pending_len..]);
         }
 
         encode_complete_frames(&mut pending, &mut opus_encoder, &mut writer, &mut encoded, &mut produced_samples, context.job)?;
@@ -834,7 +994,9 @@ fn transcode(
 
     if let Some(stream_resampler) = resampler.as_mut() {
         // Discard the retained decoded tail (container padding), then flush the filter delay.
-        pending.extend_from_slice(&stream_resampler.finish()?);
+        let flushed = stream_resampler.finish()?;
+        signal.observe(&flushed);
+        pending.extend_from_slice(&flushed);
     } else {
         return Err(MediaError::new(MediaErrorCode::InvalidAudioParameters, "The selected audio track did not yield decoded audio parameters."));
     }
@@ -864,7 +1026,7 @@ fn transcode(
     }
 
     log::info!(
-        "media transcode completed: track_id={}, decoded_packets={}, discarded_packets={}, recoverable_decode_errors={}, first_pts={:?}, last_pts={:?}, discontinuities={}, output_bytes={}, duration_ms={}",
+        "media transcode completed: track_id={}, decoded_packets={}, discarded_packets={}, recoverable_decode_errors={}, first_pts={:?}, last_pts={:?}, discontinuities={}, output_bytes={}, duration_ms={}, max_peak_dbfs={}, silence_threshold_dbfs={}, has_audible_signal={}",
         context.track_id,
         decoded_packets,
         discarded_packets,
@@ -874,6 +1036,9 @@ fn transcode(
         discontinuities,
         output_size,
         output_duration_ms,
+        signal.max_peak_dbfs(),
+        SILENCE_MAX_PEAK_DBFS,
+        signal.has_audible_signal(),
     );
 
     Ok(MediaJobResult {
@@ -882,6 +1047,7 @@ fn transcode(
         detected_codec: context.detected_codec,
         duration_ms: output_duration_ms,
         pass_through: false,
+        has_audible_signal: signal.has_audible_signal(),
     })
 }
 
@@ -1550,6 +1716,18 @@ mod tests {
         assert_eq!(downmix_to_mono(&[1.0, -1.0, 0.5, 0.5], 2), vec![0.0, 0.5]);
     }
 
+    /// Verifies the configured dBFS ceiling is inclusive and a higher peak is audible.
+    #[test]
+    fn practical_silence_uses_the_configured_maximum_peak() {
+        let threshold = 10.0_f32.powf(SILENCE_MAX_PEAK_DBFS / 20.0);
+        let mut detector = AudioPeakDetector::default();
+        detector.observe(&[-threshold, threshold]);
+        assert!(!detector.has_audible_signal());
+
+        detector.observe(&[threshold * 1.01]);
+        assert!(detector.has_audible_signal());
+    }
+
     /// Verifies timestamp gaps become silence and overlaps do not duplicate decoded samples.
     #[test]
     fn timestamp_alignment_inserts_gaps_and_trims_overlaps() {
@@ -1612,6 +1790,7 @@ mod tests {
         let job = MediaJob::new();
         let result = normalize_media(&input, &output, DEFAULT_MAX_PASS_THROUGH_BYTES, &job).unwrap();
         assert!(!result.pass_through);
+        assert!(!result.has_audible_signal);
         assert!(result.duration_ms.abs_diff(100) <= 20);
 
         let file = File::open(&output).unwrap();
@@ -1656,6 +1835,20 @@ mod tests {
         let result = normalize_media(&input, &output, DEFAULT_MAX_PASS_THROUGH_BYTES, &job).unwrap();
         assert!(result.pass_through);
         assert_eq!(fs::read(input).unwrap(), fs::read(output).unwrap());
+        assert!(!result.has_audible_signal);
+        let _ = fs::remove_dir_all(directory);
+    }
+
+    /// Verifies an above-threshold PCM peak survives normalization classification.
+    #[test]
+    fn audible_wav_is_not_classified_as_silence() {
+        let directory = std::env::temp_dir().join(format!("ai-studio-media-audible-{}", rand::random::<u64>()));
+        fs::create_dir_all(&directory).unwrap();
+        let input = directory.join("input.wav");
+        let output = directory.join("output.webm");
+        fs::write(&input, wav_constant(48_000, 960, 1_000)).unwrap();
+        let result = normalize_media(&input, &output, DEFAULT_MAX_PASS_THROUGH_BYTES, &MediaJob::new()).unwrap();
+        assert!(result.has_audible_signal);
         let _ = fs::remove_dir_all(directory);
     }
 
@@ -1731,6 +1924,11 @@ mod tests {
 
     /// Constructs a minimal mono 16-bit PCM WAV fixture in memory.
     fn wav_silence(sample_rate: u32, samples: u32) -> Vec<u8> {
+        wav_constant(sample_rate, samples, 0)
+    }
+
+    /// Constructs a minimal mono 16-bit PCM WAV containing one constant sample value.
+    fn wav_constant(sample_rate: u32, samples: u32, sample: i16) -> Vec<u8> {
         let data_size = samples * 2;
         let mut wav = Vec::with_capacity(44 + data_size as usize);
         wav.extend_from_slice(b"RIFF");
@@ -1745,7 +1943,9 @@ mod tests {
         wav.extend_from_slice(&16u16.to_le_bytes());
         wav.extend_from_slice(b"data");
         wav.extend_from_slice(&data_size.to_le_bytes());
-        wav.resize(44 + data_size as usize, 0);
+        for _ in 0..samples {
+            wav.extend_from_slice(&sample.to_le_bytes());
+        }
         wav
     }
 }

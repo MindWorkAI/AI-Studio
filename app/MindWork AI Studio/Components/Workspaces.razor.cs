@@ -394,6 +394,7 @@ public partial class Workspaces : MSGComponentBase
         {
             MediaImportStatus.QUEUED or MediaImportStatus.RUNNING or MediaImportStatus.CANCELING => " color: var(--mud-palette-info);",
             MediaImportStatus.SUCCEEDED => " color: var(--mud-palette-success);",
+            MediaImportStatus.WARNING => " color: var(--mud-palette-warning);",
             MediaImportStatus.FAILED => " color: var(--mud-palette-error);",
             MediaImportStatus.CANCELLED => " color: var(--mud-palette-warning);",
             _ => string.Empty,
@@ -421,6 +422,7 @@ public partial class Workspaces : MSGComponentBase
                 MediaImportStatus.QUEUED => Icons.Material.Filled.HourglassTop,
                 MediaImportStatus.RUNNING or MediaImportStatus.CANCELING => Icons.Material.Filled.ChangeCircle,
                 MediaImportStatus.SUCCEEDED => Icons.Material.Filled.TaskAlt,
+                MediaImportStatus.WARNING => Icons.Material.Filled.WarningAmber,
                 MediaImportStatus.FAILED => Icons.Material.Filled.Error,
                 MediaImportStatus.CANCELLED => Icons.Material.Filled.Cancel,
                 
