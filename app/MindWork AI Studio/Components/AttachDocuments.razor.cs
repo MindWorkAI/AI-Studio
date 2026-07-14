@@ -13,6 +13,11 @@ using DialogOptions = Dialogs.DialogOptions;
 
 public partial class AttachDocuments : MSGComponentBase
 {
+    private readonly MediaImportOwner fallbackMediaImportOwner = new(MediaImportOwnerKind.CHAT, $"attachments:{Guid.NewGuid():N}");
+
+    [CascadingParameter]
+    private MediaImportOwner? ImportOwner { get; set; }
+
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(AttachDocuments).Namespace, nameof(AttachDocuments));
 
     [Parameter]
@@ -67,6 +72,10 @@ public partial class AttachDocuments : MSGComponentBase
     [Parameter]
     public ChatThread? OwnerChat { get; set; }
 
+    /// <summary>Creates and persists a draft owner after media import confirmation.</summary>
+    [Parameter]
+    public Func<string, Task<ChatThread?>> EnsureOwnerChatAsync { get; set; } = _ => Task.FromResult<ChatThread?>(null);
+
     [Inject]
     private ILogger<AttachDocuments> Logger { get; set; } = null!;
 
@@ -88,7 +97,11 @@ public partial class AttachDocuments : MSGComponentBase
     private uint numDropAreasAboveThis;
     private bool isComponentHovered;
     private bool isDraggingOver;
-    private bool IsUnavailable => this.Disabled || this.MediaTranscriptionService.IsBusy;
+    private MediaImportOwner EffectiveImportOwner => this.OwnerChat is not null
+        ? MediaImportOwner.ForChat(this.OwnerChat.ChatId)
+        : this.ImportOwner ?? this.fallbackMediaImportOwner;
+
+    private bool IsUnavailable => this.Disabled || this.MediaTranscriptionService.IsBusy(this.EffectiveImportOwner);
 
     #region Overrides of MSGComponentBase
 
@@ -100,10 +113,36 @@ public partial class AttachDocuments : MSGComponentBase
         // Register this drop area:
         await this.MessageBus.SendMessage(this, Event.REGISTER_FILE_DROP_AREA, this.Layer);
         await base.OnInitializedAsync();
+        await this.SyncCompletedMediaAttachmentsAsync();
     }
 
     /// <summary>Refreshes disabled controls when the shared import lane changes.</summary>
-    private void OnMediaImportStateChanged() => _ = this.InvokeAsync(this.StateHasChanged);
+    private void OnMediaImportStateChanged(MediaImportOwner owner)
+    {
+        if (owner == this.EffectiveImportOwner)
+            _ = this.InvokeAsync(async () =>
+            {
+                await this.SyncCompletedMediaAttachmentsAsync();
+                this.StateHasChanged();
+            });
+    }
+
+    /// <summary>Reattaches completed owner results after progress updates or navigation.</summary>
+    private async Task SyncCompletedMediaAttachmentsAsync()
+    {
+        var completed = this.MediaTranscriptionService.GetSnapshot(this.EffectiveImportOwner)?.CompletedAttachments ?? [];
+        var pending = this.OwnerChat?.PendingMediaTranscripts ?? [];
+        var changed = false;
+        
+        foreach (var attachment in completed.Concat<FileAttachment>(pending))
+            changed |= this.DocumentPaths.Add(attachment);
+
+        if (changed)
+        {
+            await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
+            await this.OnChange(this.DocumentPaths);
+        }
+    }
 
     /// <summary>Unsubscribes from the singleton media service.</summary>
     protected override void DisposeResources()
@@ -226,6 +265,8 @@ public partial class AttachDocuments : MSGComponentBase
         this.DocumentPaths = await ReviewAttachmentsDialog.OpenDialogAsync(this.DialogService, this.DocumentPaths);
         foreach (var removedAttachment in previousAttachments.Except(this.DocumentPaths))
             ManagedTranscriptAttachment.TryDeleteOwnedFile(removedAttachment);
+        
+        this.ReconcileOwnerPendingTranscripts();
     }
 
     private async Task ClearAllFiles()
@@ -235,7 +276,9 @@ public partial class AttachDocuments : MSGComponentBase
 
         foreach (var attachment in this.DocumentPaths)
             ManagedTranscriptAttachment.TryDeleteOwnedFile(attachment);
+        
         this.DocumentPaths.Clear();
+        this.ReconcileOwnerPendingTranscripts();
         await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
         await this.OnChange(this.DocumentPaths);
     }
@@ -273,9 +316,20 @@ public partial class AttachDocuments : MSGComponentBase
 
         this.DocumentPaths.Remove(fileAttachment);
         ManagedTranscriptAttachment.TryDeleteOwnedFile(fileAttachment);
+        this.ReconcileOwnerPendingTranscripts();
 
         await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
         await this.OnChange(this.DocumentPaths);
+    }
+
+    /// <summary>Keeps persisted chat-draft transcript references aligned with the composer.</summary>
+    private void ReconcileOwnerPendingTranscripts()
+    {
+        if (this.OwnerChat is null)
+            return;
+
+        var retainedPaths = this.DocumentPaths.Select(attachment => attachment.FilePath).ToHashSet(StringComparer.Ordinal);
+        this.OwnerChat.PendingMediaTranscripts.RemoveAll(attachment => !retainedPaths.Contains(attachment.FilePath));
     }
 
     private async Task AddFileBatchAsync(IEnumerable<string> paths)
@@ -336,29 +390,10 @@ public partial class AttachDocuments : MSGComponentBase
         if (dialogResult is null || dialogResult.Canceled)
             return;
 
-        var failures = new List<string>();
-        foreach (var mediaPath in mediaPaths)
-        {
-            var result = await this.MediaTranscriptionService.TranscribeImportAsync(mediaPath);
-            if (result.Status is MediaTranscriptionResultStatus.CANCELLED)
-                break;
+        if (this.OwnerChat is null)
+            this.OwnerChat = await this.EnsureOwnerChatAsync(mediaPaths[0]);
 
-            if (result.Status is MediaTranscriptionResultStatus.FAILED)
-            {
-                failures.Add($"{Path.GetFileName(mediaPath)}: {result.UserMessage}");
-                continue;
-            }
-
-            var attachment = this.OwnerChat is not null
-                             && WorkspaceBehaviour.IsChatExisting(new LoadChat(this.OwnerChat.WorkspaceId, this.OwnerChat.ChatId))
-                ? await WorkspaceBehaviour.CreateManagedTranscriptAsync(this.OwnerChat, mediaPath, result.Text)
-                : await ManagedTranscriptAttachment.CreateStagedAsync(mediaPath, result.Text);
-            
-            this.DocumentPaths.Add(attachment);
-        }
-
-        if (failures.Count > 0)
-            await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, string.Join(Environment.NewLine, failures)));
+        this.MediaTranscriptionService.TryStartAttachmentBatch(mediaPaths, this.EffectiveImportOwner, this.OwnerChat);
     }
 
     private static bool IsTranscribableMedia(string path) => FileTypes.IsAllowedPath(path, FileTypes.AUDIO) || FileTypes.IsAllowedPath(path, FileTypes.VIDEO);

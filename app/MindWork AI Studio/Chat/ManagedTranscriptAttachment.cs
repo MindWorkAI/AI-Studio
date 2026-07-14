@@ -1,7 +1,6 @@
 using System.Text;
 
 using AIStudio.Settings;
-using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Chat;
 

@@ -33,7 +33,7 @@
         }
     </ChildContent>
     <FooterContent>
-        <MediaTranscriptionStatus/>
+        <MediaTranscriptionStatus Owner="@this.CurrentMediaImportOwner"/>
         <MudElement Style="flex: 0 0 auto;">
             <MudTextField
                 T="string"
@@ -46,7 +46,7 @@
                 Label="@this.InputLabel"
                 Placeholder="@this.ProviderPlaceholder"
                 Adornment="Adornment.End"
-                AdornmentIcon="@(this.MediaTranscriptionService.IsBusy ? Icons.Material.Filled.HourglassTop : Icons.Material.Filled.Send)"
+                AdornmentIcon="@(this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner) ? Icons.Material.Filled.HourglassTop : Icons.Material.Filled.Send)"
                 OnAdornmentClick="() => this.SendMessage()"
                 Disabled="@this.IsInputForbidden()"
                 Immediate="@true"
@@ -101,7 +101,7 @@
                 </MudTooltip>
             }
             
-            <AttachDocuments Name="File Attachments" Layer="@DropLayers.PAGES" DocumentPaths="@this.ComposerState.FileAttachments" DocumentPathsChanged="@this.ComposerAttachmentsChanged" CatchAllDocuments="true" UseSmallForm="true" Provider="@this.Provider" OwnerChat="@this.ChatThread" Disabled="@this.MediaTranscriptionService.IsBusy"/>
+            <AttachDocuments Name="File Attachments" Layer="@DropLayers.PAGES" DocumentPaths="@this.ComposerState.FileAttachments" DocumentPathsChanged="@this.ComposerAttachmentsChanged" CatchAllDocuments="true" UseSmallForm="true" Provider="@this.Provider" OwnerChat="@this.ChatThread" EnsureOwnerChatAsync="@this.EnsureMediaImportChatAsync" Disabled="@this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner)"/>
             
             <MudDivider Vertical="true" Style="height: 24px; align-self: center;"/>
             

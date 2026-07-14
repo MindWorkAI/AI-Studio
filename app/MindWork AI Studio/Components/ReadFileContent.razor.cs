@@ -9,6 +9,21 @@ namespace AIStudio.Components;
 
 public partial class ReadFileContent : MSGComponentBase
 {
+    private readonly MediaImportOwner fallbackMediaImportOwner = new(MediaImportOwnerKind.ASSISTANT, $"read-file-content:{Guid.NewGuid():N}");
+
+    [CascadingParameter]
+    private MediaImportOwner? ImportOwner { get; set; }
+
+    private MediaImportOwner EffectiveImportOwner => this.ImportOwner ?? this.fallbackMediaImportOwner;
+
+    [Parameter]
+    public string MediaImportTargetId { get; set; } = string.Empty;
+
+    private string EffectiveMediaImportTargetId => string.IsNullOrWhiteSpace(this.MediaImportTargetId)
+        ? string.IsNullOrWhiteSpace(this.Text) ? "primary" : this.Text
+        : this.MediaImportTargetId;
+
+    private string lastAppliedMediaTranscript = string.Empty;
     [Parameter]
     public string Text { get; set; } = string.Empty;
     
@@ -57,7 +72,7 @@ public partial class ReadFileContent : MSGComponentBase
     private string dragClass = DEFAULT_DRAG_CLASS;
     private uint numDropAreasAboveThis;
     private bool isComponentHovered;
-    private bool IsUnavailable => this.Disabled || this.MediaTranscriptionService.IsBusy;
+    private bool IsUnavailable => this.Disabled || this.MediaTranscriptionService.IsBusy(this.EffectiveImportOwner);
 
     #region Overrides of MSGComponentBase
 
@@ -71,10 +86,31 @@ public partial class ReadFileContent : MSGComponentBase
         }
 
         await base.OnInitializedAsync();
+        await this.SyncCompletedMediaTextAsync();
     }
 
     /// <summary>Refreshes disabled controls when the shared import lane changes.</summary>
-    private void OnMediaImportStateChanged() => _ = this.InvokeAsync(this.StateHasChanged);
+    private void OnMediaImportStateChanged(MediaImportOwner owner)
+    {
+        if (owner == this.EffectiveImportOwner)
+            _ = this.InvokeAsync(async () =>
+            {
+                await this.SyncCompletedMediaTextAsync();
+                this.StateHasChanged();
+            });
+    }
+
+    /// <summary>Applies a completed target transcript after progress or navigation.</summary>
+    private async Task SyncCompletedMediaTextAsync()
+    {
+        var completed = this.MediaTranscriptionService.GetSnapshot(this.EffectiveImportOwner)?.CompletedTextTargets;
+        if (completed is null || !completed.TryGetValue(this.EffectiveMediaImportTargetId, out var text)
+            || text == this.lastAppliedMediaTranscript)
+            return;
+
+        this.lastAppliedMediaTranscript = text;
+        await this.FileContentChanged.InvokeAsync(text);
+    }
 
     /// <summary>Unsubscribes from the singleton media service.</summary>
     protected override void DisposeResources()
@@ -242,17 +278,9 @@ public partial class ReadFileContent : MSGComponentBase
         if (dialogResult is null || dialogResult.Canceled)
             return false;
 
-        var result = await this.MediaTranscriptionService.TranscribeImportAsync(filePath);
-        if (result.Status is not MediaTranscriptionResultStatus.SUCCEEDED)
-        {
-            if (result.Status is MediaTranscriptionResultStatus.FAILED)
-                await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, result.UserMessage));
-            
-            return false;
-        }
-
-        await this.FileContentChanged.InvokeAsync(result.Text);
-        return true;
+        return this.MediaTranscriptionService.TryStartTextImport(
+            filePath,
+            new MediaImportTarget(this.EffectiveImportOwner, this.EffectiveMediaImportTargetId));
     }
 
     private bool CanCatchDroppedFile() => this.numDropAreasAboveThis is 0 && (this.isComponentHovered || this.CatchAllDocuments);

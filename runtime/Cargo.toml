@@ -81,3 +81,20 @@ tauri-plugin-updater = "2.10.1"
 
 [features]
 custom-protocol = ["tauri/custom-protocol"]
+
+# Media normalization is CPU-heavy even when the application itself is built for development.
+# Keep release settings untouched while optimizing the hot decoder/resampler/container crates.
+[profile.dev.package.symphonia-core]
+opt-level = 3
+
+[profile.dev.package.symphonia-format-mkv]
+opt-level = 3
+
+[profile.dev.package.ropus]
+opt-level = 3
+
+[profile.dev.package.rubato]
+opt-level = 3
+
+[profile.dev.package.webm-iterable]
+opt-level = 3

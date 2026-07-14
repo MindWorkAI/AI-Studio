@@ -810,6 +810,8 @@ public static class WorkspaceBehaviour
         var targetDirectory = GetChatDirectory(targetWorkspaceId, chat.ChatId);
         var sourceSemaphore = GetChatSemaphore(sourceWorkspaceId, chat.ChatId);
         var targetSemaphore = GetChatSemaphore(targetWorkspaceId, chat.ChatId);
+        // Always acquire both workspace/chat locks in canonical workspace-ID order. This prevents
+        // opposing moves of the same chat from waiting on one another with reversed lock order.
         var orderedSemaphores = string.CompareOrdinal(sourceWorkspaceId.ToString("N"), targetWorkspaceId.ToString("N")) <= 0
             ? new[] { sourceSemaphore, targetSemaphore }
             : new[] { targetSemaphore, sourceSemaphore };
@@ -823,7 +825,10 @@ public static class WorkspaceBehaviour
             if (!Directory.Exists(sourceDirectory))
                 throw new DirectoryNotFoundException($"The source chat directory does not exist: '{sourceDirectory}'.");
             
-            Directory.CreateDirectory(Path.GetDirectoryName(targetDirectory)!);
+            // Only the workspace parent is created here. Directory.Move requires the chat target
+            // directory itself not to exist so an existing destination is never merged silently.
+            var targetWorkspaceDirectory = Path.GetDirectoryName(targetDirectory)!;
+            Directory.CreateDirectory(targetWorkspaceDirectory);
             if (Directory.Exists(targetDirectory))
                 throw new IOException($"The target chat directory already exists: '{targetDirectory}'.");
 

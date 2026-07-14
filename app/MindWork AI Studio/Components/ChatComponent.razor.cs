@@ -15,6 +15,7 @@ namespace AIStudio.Components;
 
 public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 {
+    private readonly Guid draftMediaOwnerId = Guid.NewGuid();
     private const string CHAT_INPUT_ID = "chat-user-input";
     private const string MARKDOWN_CODE = "code";
     private const string MARKDOWN_BOLD = "bold";
@@ -84,6 +85,8 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private Guid loadedParameterWorkspaceId = Guid.Empty;
     private Guid foregroundChatId = Guid.Empty;
     private int workspaceHeaderSyncVersion;
+
+    private MediaImportOwner CurrentMediaImportOwner => MediaImportOwner.ForChat(this.ChatThread?.ChatId ?? this.draftMediaOwnerId);
 
     // Unfortunately, we need the input field reference to blur the focus away. Without
     // this, we cannot clear the input field.
@@ -253,7 +256,11 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     }
 
     /// <summary>Refreshes send and attachment controls when the media import lane changes.</summary>
-    private void OnMediaImportStateChanged() => _ = this.InvokeAsync(this.StateHasChanged);
+    private void OnMediaImportStateChanged(MediaImportOwner owner)
+    {
+        if (owner == this.CurrentMediaImportOwner)
+            _ = this.InvokeAsync(this.StateHasChanged);
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -689,10 +696,41 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         this.ComposerState.MarkUserDraft();
         this.hasUnsavedChanges = true;
     }
+
+    /// <summary>Creates and stores a stable draft immediately after media import confirmation.</summary>
+    private async Task<ChatThread?> EnsureMediaImportChatAsync(string firstMediaPath)
+    {
+        if (this.ChatThread is not null)
+            return this.ChatThread;
+
+        this.RefreshCurrentProfileAndChatTemplate();
+        var promptName = this.ExtractThreadName(this.ComposerState.UserInput);
+        this.ChatThread = new()
+        {
+            IncludeDateTime = true,
+            SelectedProvider = this.Provider.Id,
+            SelectedProfile = this.currentProfile.Id,
+            SelectedChatTemplate = this.currentChatTemplate.Id,
+            SystemPrompt = SystemPrompts.DEFAULT,
+            WorkspaceId = this.currentWorkspaceId,
+            ChatId = Guid.NewGuid(),
+            DataSourceOptions = this.earlyDataSourceOptions,
+            Name = string.IsNullOrWhiteSpace(this.ComposerState.UserInput)
+                ? $"Transkription: {Path.GetFileName(firstMediaPath)}"
+                : promptName,
+            Blocks = this.currentChatTemplate == ChatTemplate.NO_CHAT_TEMPLATE ? [] : this.currentChatTemplate.ExampleConversation.Select(block => block.DeepClone()).ToList(),
+        };
+
+        await WorkspaceBehaviour.StoreChatAsync(this.ChatThread);
+        this.MarkCurrentChatAsLoadedParameter();
+        await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
+        await this.SyncForegroundChatAsync();
+        return this.ChatThread;
+    }
     
     private async Task SendMessage(bool reuseLastUserPrompt = false)
     {
-        if (this.MediaTranscriptionService.IsBusy)
+        if (this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner))
             return;
 
         if (!this.IsProviderSelected)
@@ -757,6 +795,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 Text = this.ComposerState.UserInput,
                 FileAttachments = normalizedAttachments,
             };
+            this.ChatThread.PendingMediaTranscripts.Clear();
 
             //
             // Add the user message to the thread:

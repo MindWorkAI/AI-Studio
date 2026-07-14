@@ -31,15 +31,17 @@
 
                 @if (this.Body is not null)
                 {
-                    <MediaTranscriptionStatus/>
-                    <CascadingValue Value="@this">
-                        <CascadingValue Value="@this.Component">
-                            @this.Body
+                    <MediaTranscriptionStatus Owner="@this.CurrentMediaImportOwner"/>
+                    <CascadingValue Value="@this.CurrentMediaImportOwner">
+                        <CascadingValue Value="@this">
+                            <CascadingValue Value="@this.Component">
+                                @this.Body
+                            </CascadingValue>
                         </CascadingValue>
                     </CascadingValue>
                     
                     <MudStack Row="true" AlignItems="AlignItems.Center" StretchItems="StretchItems.Start" Class="mb-3">
-                        <MudButton Disabled="@(this.SubmitDisabled || this.IsProcessing || this.MediaTranscriptionService.IsBusy)" Variant="Variant.Filled" OnClick="@(async () => await this.Start())" Style="@this.SubmitButtonStyle">
+                        <MudButton Disabled="@(this.SubmitDisabled || this.IsProcessing || this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner))" Variant="Variant.Filled" OnClick="@(async () => await this.Start())" Style="@this.SubmitButtonStyle">
                             @this.SubmitText
                         </MudButton>
                         @if (this.IsProcessing)

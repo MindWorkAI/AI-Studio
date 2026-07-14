@@ -30,6 +30,12 @@ public sealed record ChatThread
     public ulong LastMediaTranscriptNumber { get; set; }
 
     /// <summary>
+    /// Managed transcript attachments prepared for the composer but not sent yet.
+    /// Empty by default so older serialized threads require no migration.
+    /// </summary>
+    public List<ManagedTranscriptAttachment> PendingMediaTranscripts { get; set; } = [];
+
+    /// <summary>
     /// Specifies the provider selected for the chat thread.
     /// </summary>
     public string SelectedProvider { get; set; } = string.Empty;

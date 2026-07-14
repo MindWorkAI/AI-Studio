@@ -5,6 +5,9 @@ public enum MediaTranscriptionPhase
 {
     /// <summary>No import is active.</summary>
     IDLE,
+
+    /// <summary>The operation is waiting for the serialized runtime lane.</summary>
+    QUEUED,
     
     /// <summary>The runtime is inspecting the input.</summary>
     PROBING,
@@ -14,4 +17,7 @@ public enum MediaTranscriptionPhase
     
     /// <summary>The normalized audio is being transcribed by the provider.</summary>
     UPLOADING,
+
+    /// <summary>Cancellation was requested and runtime cleanup is in progress.</summary>
+    CANCELING,
 }

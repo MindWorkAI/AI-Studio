@@ -1,13 +1,11 @@
 @inherits MSGComponentBase
 
-<MediaTranscriptionStatus/>
-
 @if (this.EnableDragDrop)
 {
     <div @onmouseenter="@this.OnMouseEnter" @onmouseleave="@this.OnMouseLeave">
         <MudPaper Outlined="true" Class="@this.dragClass">
             <MudStack Row="true" AlignItems="AlignItems.Center" StretchItems="StretchItems.None" Wrap="Wrap.Wrap">
-                <MudButton StartIcon="@Icons.Material.Filled.Description" OnClick="@(async () => await this.SelectFile())" Variant="Variant.Filled" Disabled="@(this.Disabled || this.MediaTranscriptionService.IsBusy)">
+                <MudButton StartIcon="@Icons.Material.Filled.Description" OnClick="@(async () => await this.SelectFile())" Variant="Variant.Filled" Disabled="@this.IsUnavailable">
                     @this.ButtonText
                 </MudButton>
                 <MudText Typo="Typo.body2">
@@ -19,7 +17,7 @@
 }
 else
 {
-    <MudButton StartIcon="@Icons.Material.Filled.Description" OnClick="@(async () => await this.SelectFile())" Variant="Variant.Filled" Class="mb-3" Disabled="@(this.Disabled || this.MediaTranscriptionService.IsBusy)">
+    <MudButton StartIcon="@Icons.Material.Filled.Description" OnClick="@(async () => await this.SelectFile())" Variant="Variant.Filled" Class="mb-3" Disabled="@this.IsUnavailable">
         @this.ButtonText
     </MudButton>
 }

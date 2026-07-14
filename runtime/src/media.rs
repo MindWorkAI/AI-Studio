@@ -3,10 +3,11 @@
 use std::collections::HashMap;
 use std::convert::Infallible;
 use std::fs::{self, File};
-use std::io::{Read, Write};
+use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::{Path as FilePath, PathBuf};
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, RwLock};
+use std::time::{Duration as StdDuration, Instant};
 
 use axum::extract::Path;
 use axum::http::StatusCode;
@@ -25,10 +26,10 @@ use symphonia::core::codecs::audio::{well_known::CODEC_ID_OPUS, AudioDecoder, Au
 use symphonia::core::codecs::CodecParameters;
 use symphonia::core::errors::Error as SymphoniaError;
 use symphonia::core::formats::{FormatOptions, Track, TrackFlags, TrackType};
-use symphonia::core::io::MediaSourceStream;
+use symphonia::core::io::{MediaSource, MediaSourceStream};
 use symphonia::core::meta::MetadataOptions;
 use symphonia::core::formats::probe::Hint;
-use symphonia::core::units::Timestamp;
+use symphonia::core::units::{TimeBase, Timestamp};
 use tokio::sync::broadcast;
 use tokio_stream::wrappers::BroadcastStream;
 use tokio_stream::StreamExt;
@@ -60,6 +61,12 @@ const RESAMPLE_INPUT_BLOCK_SAMPLES: usize = 2_048;
 
 /// Bounded block used by the cancellation-aware pass-through copy.
 const COPY_BLOCK_BYTES: usize = 64 * 1024;
+
+/// Minimum interval between non-terminal progress events in one phase.
+const PROGRESS_EVENT_INTERVAL: StdDuration = StdDuration::from_secs(6);
+
+/// Timestamp differences above this threshold are recorded as discontinuities.
+const LARGE_DISCONTINUITY_MS: i64 = 1_000;
 
 /// Time a terminal job remains available for late SSE subscribers.
 const TERMINAL_JOB_RETENTION: std::time::Duration = std::time::Duration::from_secs(10 * 60);
@@ -242,13 +249,16 @@ impl MediaError {
 /// Mutable state shared by the request routes and blocking worker.
 struct MediaJob {
     /// Cooperative cancellation flag checked at bounded intervals.
-    cancelled: AtomicBool,
+    cancelled: Arc<AtomicBool>,
 
-    /// Latest snapshot replayed to a newly connected SSE subscriber.
+    /// The latest snapshot replayed to a newly connected SSE subscriber.
     current: Mutex<MediaJobEvent>,
 
     /// Fan-out channel for live state changes.
     events: broadcast::Sender<MediaJobEvent>,
+
+    /// Last running progress publication, used to protect Blazor from render storms.
+    last_progress: Mutex<Option<(MediaJobPhase, Instant)>>,
 }
 
 impl MediaJob {
@@ -262,13 +272,31 @@ impl MediaJob {
         };
 
         let (events, _) = broadcast::channel(32);
-        Self { cancelled: AtomicBool::new(false), current: Mutex::new(initial), events }
+        Self {
+            cancelled: Arc::new(AtomicBool::new(false)),
+            current: Mutex::new(initial),
+            events,
+            last_progress: Mutex::new(None),
+        }
     }
 
     /// Replaces the replay snapshot and notifies all live subscribers.
     fn publish(&self, event: MediaJobEvent) {
         *self.current.lock().unwrap() = event.clone();
         let _ = self.events.send(event);
+    }
+
+    /// Publishes running progress no more than once per interval and always on a phase change.
+    fn publish_progress(&self, phase: MediaJobPhase, progress: Option<f64>) {
+        let now = Instant::now();
+        let mut last = self.last_progress.lock().unwrap();
+        if last.is_some_and(|(last_phase, last_at)| last_phase == phase && now.duration_since(last_at) < PROGRESS_EVENT_INTERVAL) {
+            return;
+        }
+
+        *last = Some((phase, now));
+        drop(last);
+        self.publish(MediaJobEvent { phase, progress, result: None, error: None });
     }
 
     /// Returns whether cooperative cancellation was requested.
@@ -299,30 +327,41 @@ pub async fn create_job(
     let completed_job_id = job_id.clone();
 
     tauri::async_runtime::spawn(async move {
+        let started_at = Instant::now();
+        log::info!("media job registered: job_id={completed_job_id}");
         let max_pass_through_bytes = request.max_pass_through_bytes.unwrap_or(DEFAULT_MAX_PASS_THROUGH_BYTES);
         let task_job = Arc::clone(&job);
         let result = tokio::task::spawn_blocking(move || normalize_media(&input_path, &output_path, max_pass_through_bytes, &task_job)).await;
         match result {
-            Ok(Ok(result)) => job.publish(MediaJobEvent {
-                phase: MediaJobPhase::Completed,
-                progress: Some(1.0),
-                result: Some(result),
-                error: None,
-            }),
+            Ok(Ok(result)) => {
+                log::info!("media job completed: job_id={completed_job_id}, elapsed_ms={}", started_at.elapsed().as_millis());
+                job.publish(MediaJobEvent {
+                    phase: MediaJobPhase::Completed,
+                    progress: Some(1.0),
+                    result: Some(result),
+                    error: None,
+                });
+            }
 
-            Ok(Err(error)) if error.code == MediaErrorCode::Cancelled => job.publish(MediaJobEvent {
-                phase: MediaJobPhase::Cancelled,
-                progress: None,
-                result: None,
-                error: None,
-            }),
+            Ok(Err(error)) if error.code == MediaErrorCode::Cancelled => {
+                log::info!("media job cancelled: job_id={completed_job_id}, elapsed_ms={}", started_at.elapsed().as_millis());
+                job.publish(MediaJobEvent {
+                    phase: MediaJobPhase::Cancelled,
+                    progress: None,
+                    result: None,
+                    error: None,
+                });
+            }
 
-            Ok(Err(error)) => job.publish(MediaJobEvent {
-                phase: MediaJobPhase::Failed,
-                progress: None,
-                result: None,
-                error: Some(error),
-            }),
+            Ok(Err(error)) => {
+                log::error!("media job failed: job_id={completed_job_id}, code={:?}, diagnostic={}, elapsed_ms={}", error.code, error.message, started_at.elapsed().as_millis());
+                job.publish(MediaJobEvent {
+                    phase: MediaJobPhase::Failed,
+                    progress: None,
+                    result: None,
+                    error: Some(error),
+                });
+            }
 
             Err(error) => job.publish(MediaJobEvent {
                 phase: MediaJobPhase::Failed,
@@ -387,6 +426,76 @@ fn phase_name(phase: &MediaJobPhase) -> &'static str {
     }
 }
 
+/// Shared byte position retained after the source is moved into Symphonia.
+#[derive(Clone)]
+struct SourceProgress {
+    bytes_read: Arc<AtomicU64>,
+    length: u64,
+}
+
+impl SourceProgress {
+    /// Returns monotonically clamped sequential read progress.
+    fn fraction(&self) -> Option<f64> {
+        (self.length > 0).then(|| (self.bytes_read.load(Ordering::Relaxed) as f64 / self.length as f64).clamp(0.0, 0.99))
+    }
+}
+
+/// File source that checks cancellation inside every read and seek operation.
+struct CancellationMediaSource {
+    file: File,
+    cancelled: Arc<AtomicBool>,
+    bytes_read: Arc<AtomicU64>,
+    length: u64,
+}
+
+impl CancellationMediaSource {
+    /// Wraps a regular file and exposes a progress handle to the transcoder.
+    fn new(file: File, cancelled: Arc<AtomicBool>) -> std::io::Result<(Self, SourceProgress)> {
+        let length = file.metadata()?.len();
+        let bytes_read = Arc::new(AtomicU64::new(0));
+        let progress = SourceProgress { bytes_read: Arc::clone(&bytes_read), length };
+        Ok((Self { file, cancelled, bytes_read, length }, progress))
+    }
+
+    /// Converts cancellation into an interrupted I/O operation understood by the reader.
+    fn check_cancelled(&self) -> std::io::Result<()> {
+        if self.cancelled.load(Ordering::Relaxed) {
+            Err(std::io::Error::new(std::io::ErrorKind::Interrupted, "media job cancelled"))
+        } else {
+            Ok(())
+        }
+    }
+}
+
+impl Read for CancellationMediaSource {
+    fn read(&mut self, buffer: &mut [u8]) -> std::io::Result<usize> {
+        self.check_cancelled()?;
+        let count = self.file.read(buffer)?;
+        self.bytes_read.fetch_add(count as u64, Ordering::Relaxed);
+        self.check_cancelled()?;
+        Ok(count)
+    }
+}
+
+impl Seek for CancellationMediaSource {
+    fn seek(&mut self, position: SeekFrom) -> std::io::Result<u64> {
+        self.check_cancelled()?;
+        let position = self.file.seek(position)?;
+        self.check_cancelled()?;
+        Ok(position)
+    }
+}
+
+impl MediaSource for CancellationMediaSource {
+    fn is_seekable(&self) -> bool {
+        true
+    }
+
+    fn byte_len(&self) -> Option<u64> {
+        Some(self.length)
+    }
+}
+
 /// Probes, normalizes, and atomically commits one media file.
 fn normalize_media(input_path: &FilePath, output_path: &FilePath, max_pass_through_bytes: u64, job: &MediaJob) -> Result<MediaJobResult, MediaError> {
     check_cancelled(job)?;
@@ -412,21 +521,47 @@ fn normalize_media(input_path: &FilePath, output_path: &FilePath, max_pass_throu
         return Err(MediaError::new(MediaErrorCode::NotMedia, format!("The selected file is not supported media (detected as {detected:?}).")));
     }
 
+    let file_size = input_path.metadata().map(|metadata| metadata.len()).unwrap_or(0);
+    log::info!("media job started: input='{}', output='{}', size_bytes={}, detected_file_format={detected:?}", input_path.display(), output_path.display(), file_size);
+
     let file = File::open(input_path).map_err(|error| MediaError::new(MediaErrorCode::FileOpenFailed, error.to_string()))?;
-    let mss = MediaSourceStream::new(Box::new(file), Default::default());
+    let (source, source_progress) = CancellationMediaSource::new(file, Arc::clone(&job.cancelled))
+        .map_err(|error| MediaError::new(MediaErrorCode::FileOpenFailed, error.to_string()))?;
+    let mss = MediaSourceStream::new(Box::new(source), Default::default());
 
     let mut hint = Hint::new();
     if let Some(extension) = input_path.extension().and_then(|value| value.to_str()) {
         hint.with_extension(extension);
     }
 
-    let mut format = symphonia::default::get_probe()
+    let mut format = match symphonia::default::get_probe()
         .probe(&hint, mss, FormatOptions::default(), MetadataOptions::default())
-        .map_err(map_probe_error)?;
+    {
+        Ok(format) => format,
+        Err(_) if job.is_cancelled() => return Err(MediaError::new(MediaErrorCode::Cancelled, "The media job was cancelled.")),
+        Err(error) => return Err(map_probe_error(error)),
+    };
 
     let detected_format = format!("{detected:?} / {}", format.format_info().long_name);
 
     let tracks = format.tracks();
+    for track in tracks {
+        if let Some(params) = track.codec_params.as_ref().and_then(CodecParameters::audio) {
+            log::info!(
+                "media track: id={}, type={:?}, default={}, codec={}, sample_rate={:?}, channels={:?}, duration={:?}, time_base={:?}",
+                track.id,
+                track.track_type(),
+                track.flags.contains(TrackFlags::DEFAULT),
+                params.codec,
+                params.sample_rate,
+                params.channels.as_ref().map(|channels| channels.count()),
+                track.duration,
+                track.time_base,
+            );
+        } else {
+            log::info!("media track: id={}, type={:?}, default={}, non_audio=true", track.id, track.track_type(), track.flags.contains(TrackFlags::DEFAULT));
+        }
+    }
     if !tracks.iter().any(is_audio_track) {
         return Err(MediaError::new(MediaErrorCode::NoAudioTrack, "The selected media file does not contain an audio track."));
     }
@@ -437,14 +572,27 @@ fn normalize_media(input_path: &FilePath, output_path: &FilePath, max_pass_throu
     let track_id = selected.id;
     let params = selected.codec_params.as_ref().and_then(CodecParameters::audio).unwrap().clone();
     let detected_codec = if params.codec == CODEC_ID_OPUS { "opus".to_string() } else { format!("{}", params.codec) };
-    let duration_ms = selected.num_frames.zip(params.sample_rate)
+    let track_duration_ms = selected.num_frames.zip(params.sample_rate)
         .map(|(frames, rate)| frames.saturating_mul(1_000) / u64::from(rate))
         .or_else(|| selected.time_base.zip(selected.duration).and_then(|(time_base, duration)| {
             let timestamp = Timestamp::new(i64::try_from(duration.get()).ok()?);
             let time = time_base.calc_time(timestamp)?;
             Some((time.as_secs_f64() * 1000.0).max(0.0).round() as u64)
-        }))
-        .unwrap_or(0);
+        }));
+    let container_duration_ms = format.media_info().time_base.zip(format.media_info().duration).and_then(|(time_base, duration)| {
+        let timestamp = Timestamp::new(i64::try_from(duration.get()).ok()?);
+        let time = time_base.calc_time(timestamp)?;
+        Some((time.as_secs_f64() * 1000.0).max(0.0).round() as u64)
+    });
+    let duration_ms = track_duration_ms.or(container_duration_ms).unwrap_or(0);
+    log::info!(
+        "media audio selection: track_id={}, default={}, track_duration_ms={:?}, container_duration_ms={:?}, progress_duration_ms={}",
+        track_id,
+        selected.flags.contains(TrackFlags::DEFAULT),
+        track_duration_ms,
+        container_duration_ms,
+        duration_ms,
+    );
 
     let channels = params.channels.as_ref().map(|value| value.count()).unwrap_or(0);
     let pass_through = is_webm_container(input_path)
@@ -454,6 +602,7 @@ fn normalize_media(input_path: &FilePath, output_path: &FilePath, max_pass_throu
         && params.sample_rate == Some(OUTPUT_SAMPLE_RATE)
         && channels == 1
         && input_path.metadata().map(|metadata| metadata.len() <= max_pass_through_bytes).unwrap_or(false);
+    log::info!("media normalization decision: track_id={track_id}, pass_through={pass_through}, codec={detected_codec}, channels={channels}");
 
     let partial_path = partial_path(output_path);
     if let Some(parent) = partial_path.parent() {
@@ -470,12 +619,7 @@ fn normalize_media(input_path: &FilePath, output_path: &FilePath, max_pass_throu
             pass_through: true,
         })
     } else {
-        job.publish(MediaJobEvent {
-            phase: MediaJobPhase::Transcoding,
-            progress: Some(0.0),
-            result: None,
-            error: None,
-        });
+        job.publish_progress(MediaJobPhase::Transcoding, Some(0.0));
 
         let context = TranscodeContext {
             track_id,
@@ -487,6 +631,8 @@ fn normalize_media(input_path: &FilePath, output_path: &FilePath, max_pass_throu
             detected_format,
             detected_codec,
             expected_duration_ms: duration_ms,
+            time_base: selected.time_base,
+            source_progress,
             job,
         };
         transcode(&mut *format, context)
@@ -568,11 +714,17 @@ struct TranscodeContext<'a> {
     /// Container duration used for progress reporting.
     expected_duration_ms: u64,
 
+    /// Selected track timebase used to align packet presentation timestamps.
+    time_base: Option<TimeBase>,
+
+    /// Sequential byte progress fallback when the selected track has no duration.
+    source_progress: SourceProgress,
+
     /// Cancellation and progress state for the job.
     job: &'a MediaJob,
 }
 
-/// Decodes a selected track and writes bounded 20 ms mono Opus frames.
+/// Decodes a selected track and writes timestamp-aligned 20 ms mono Opus frames.
 fn transcode(
     format: &mut dyn symphonia::core::formats::FormatReader,
     context: TranscodeContext<'_>,
@@ -591,6 +743,13 @@ fn transcode(
     let mut decoded_tail = Vec::<f32>::new();
     let mut encoded = [0u8; 4_000];
     let mut produced_samples = 0u64;
+    let mut first_packet_pts = None::<i64>;
+    let mut last_packet_pts = None::<i64>;
+    let mut decoded_packets = 0u64;
+    let mut discarded_packets = 0u64;
+    let mut decode_errors = 0u64;
+    let mut discontinuities = 0u64;
+    let mut last_progress = 0.0f64;
 
     loop {
         check_cancelled(context.job)?;
@@ -599,22 +758,36 @@ fn transcode(
             Ok(None) => break,
 
             Err(SymphoniaError::ResetRequired) => return Err(MediaError::new(MediaErrorCode::StreamReset, "The media stream changed unexpectedly.")),
+            Err(SymphoniaError::IoError(error)) if error.kind() == std::io::ErrorKind::Interrupted && context.job.is_cancelled() => {
+                return Err(MediaError::new(MediaErrorCode::Cancelled, "The media job was cancelled."));
+            }
+
             Err(SymphoniaError::IoError(error)) if error.kind() == std::io::ErrorKind::UnexpectedEof => break,
             Err(error) => return Err(MediaError::new(MediaErrorCode::DamagedContainer, format!("The media container is damaged: {error}"))),
         };
 
         if packet.track_id != context.track_id {
+            discarded_packets += 1;
             continue;
         }
 
+        let packet_pts = packet.pts.get();
+        first_packet_pts.get_or_insert(packet_pts);
+        last_packet_pts = Some(packet_pts);
         let Some((mono, sample_rate)) = decoder.decode(&packet)? else {
+            decode_errors += 1;
             continue;
         };
 
+        decoded_packets += 1;
         let stream_resampler = match resampler.as_mut() {
             Some(existing) if existing.input_rate() == sample_rate => existing,
             Some(_) => return Err(MediaError::new(MediaErrorCode::InvalidAudioParameters, "The decoded audio sample rate changed during the stream.")),
-            None => resampler.insert(StreamResampler::new(sample_rate)?),
+
+            None => {
+                log::info!("media resampling: input_rate={sample_rate}, output_rate={OUTPUT_SAMPLE_RATE}, enabled={}", sample_rate != OUTPUT_SAMPLE_RATE);
+                resampler.insert(StreamResampler::new(sample_rate)?)
+            }
         };
 
         // Retain only the possible end padding so it can never be emitted prematurely.
@@ -623,35 +796,45 @@ fn transcode(
         let emit_len = decoded_tail.len().saturating_sub(padding);
         if emit_len > 0 {
             let emit: Vec<_> = decoded_tail.drain(..emit_len).collect();
-            append_duration_bounded(
+            let resampled = stream_resampler.push(&emit)?;
+
+            // FFT resamplers buffer across packet boundaries, so their returned samples no longer
+            // begin at the current packet PTS. Native 48-kHz streams retain exact packet alignment.
+            let desired_start = (sample_rate == OUTPUT_SAMPLE_RATE)
+                .then(|| packet_output_start(packet_pts, first_packet_pts, context.time_base))
+                .flatten();
+
+            let current_start = produced_samples.saturating_add(pending.len() as u64);
+            append_timestamp_aligned(
                 &mut pending,
-                &stream_resampler.push(&emit)?,
-                produced_samples,
-                context.expected_duration_ms,
+                &resampled,
+                current_start,
+                desired_start,
+                context.track_id,
+                packet_pts,
+                &mut discontinuities,
             );
         }
 
         encode_complete_frames(&mut pending, &mut opus_encoder, &mut writer, &mut encoded, &mut produced_samples, context.job)?;
 
-        if context.expected_duration_ms > 0 {
-            let current_ms = produced_samples.saturating_mul(1000) / u64::from(OUTPUT_SAMPLE_RATE);
-            context.job.publish(MediaJobEvent {
-                phase: MediaJobPhase::Transcoding,
-                progress: Some((current_ms as f64 / context.expected_duration_ms as f64).clamp(0.0, 0.99)),
-                result: None,
-                error: None,
-            });
+        let timestamp_ms = packet_timestamp_ms(packet_pts, first_packet_pts, context.time_base);
+        let progress = if context.expected_duration_ms > 0 {
+            timestamp_ms.map(|current_ms| (current_ms as f64 / context.expected_duration_ms as f64).clamp(0.0, 0.99))
+        } else {
+            context.source_progress.fraction()
+        };
+
+        if let Some(progress) = progress {
+            last_progress = last_progress.max(progress);
         }
+
+        context.job.publish_progress(MediaJobPhase::Transcoding, progress.map(|_| last_progress));
     }
 
     if let Some(stream_resampler) = resampler.as_mut() {
         // Discard the retained decoded tail (container padding), then flush the filter delay.
-        append_duration_bounded(
-            &mut pending,
-            &stream_resampler.finish()?,
-            produced_samples,
-            context.expected_duration_ms,
-        );
+        pending.extend_from_slice(&stream_resampler.finish()?);
     } else {
         return Err(MediaError::new(MediaErrorCode::InvalidAudioParameters, "The selected audio track did not yield decoded audio parameters."));
     }
@@ -669,26 +852,86 @@ fn transcode(
     writer.finish()?;
     check_cancelled(context.job)?;
 
+    let output_size = fs::metadata(context.partial_path).map(|metadata| metadata.len()).unwrap_or(0);
+    let output_duration_ms = produced_samples.saturating_mul(1000) / u64::from(OUTPUT_SAMPLE_RATE);
+    if context.expected_duration_ms > 0 && output_duration_ms.abs_diff(context.expected_duration_ms) > 2_000 {
+        log::warn!(
+            "media duration mismatch: track_id={}, expected_duration_ms={}, decoded_duration_ms={}",
+            context.track_id,
+            context.expected_duration_ms,
+            output_duration_ms,
+        );
+    }
+
+    log::info!(
+        "media transcode completed: track_id={}, decoded_packets={}, discarded_packets={}, recoverable_decode_errors={}, first_pts={:?}, last_pts={:?}, discontinuities={}, output_bytes={}, duration_ms={}",
+        context.track_id,
+        decoded_packets,
+        discarded_packets,
+        decode_errors,
+        first_packet_pts,
+        last_packet_pts,
+        discontinuities,
+        output_size,
+        output_duration_ms,
+    );
+
     Ok(MediaJobResult {
         output_path: context.output_path.to_string_lossy().into_owned(),
         detected_format: context.detected_format,
         detected_codec: context.detected_codec,
-        duration_ms: produced_samples.saturating_mul(1000) / u64::from(OUTPUT_SAMPLE_RATE),
+        duration_ms: output_duration_ms,
         pass_through: false,
     })
 }
 
-/// Appends resampled PCM without exceeding a reliable container duration.
-fn append_duration_bounded(pending: &mut Vec<f32>, samples: &[f32], produced_samples: u64, expected_duration_ms: u64) {
-    if expected_duration_ms == 0 {
-        pending.extend_from_slice(samples);
-        return;
+/// Converts a packet PTS to its output sample offset relative to the first audio packet.
+fn packet_output_start(packet_pts: i64, first_packet_pts: Option<i64>, time_base: Option<TimeBase>) -> Option<u64> {
+    packet_timestamp_ms(packet_pts, first_packet_pts, time_base)
+        .map(|milliseconds| milliseconds.saturating_mul(u64::from(OUTPUT_SAMPLE_RATE)) / 1_000)
+}
+
+/// Converts a packet PTS to milliseconds relative to the first selected-track packet.
+fn packet_timestamp_ms(packet_pts: i64, first_packet_pts: Option<i64>, time_base: Option<TimeBase>) -> Option<u64> {
+    let delta = packet_pts.checked_sub(first_packet_pts?)?;
+    if delta < 0 {
+        return Some(0);
     }
 
-    let target_samples = expected_duration_ms.saturating_mul(u64::from(OUTPUT_SAMPLE_RATE)).div_ceil(1_000);
-    let accepted = produced_samples.saturating_add(pending.len() as u64);
-    let remaining = target_samples.saturating_sub(accepted) as usize;
-    pending.extend_from_slice(&samples[..samples.len().min(remaining)]);
+    let time = time_base?.calc_time(Timestamp::new(delta))?;
+    Some((time.as_secs_f64() * 1_000.0).max(0.0).round() as u64)
+}
+
+/// Inserts silence for forward timestamp gaps and trims overlapping decoded samples.
+fn append_timestamp_aligned(
+    pending: &mut Vec<f32>,
+    samples: &[f32],
+    current_start: u64,
+    desired_start: Option<u64>,
+    track_id: u32,
+    packet_pts: i64,
+    discontinuities: &mut u64,
+) {
+    let Some(desired_start) = desired_start else {
+        pending.extend_from_slice(samples);
+        return;
+    };
+
+    let delta = i128::from(desired_start) - i128::from(current_start);
+    let delta_ms = delta.saturating_mul(1_000) / i128::from(OUTPUT_SAMPLE_RATE);
+    if delta_ms.unsigned_abs() >= LARGE_DISCONTINUITY_MS as u128 {
+        *discontinuities += 1;
+        log::warn!("audio timestamp discontinuity: track_id={track_id}, pts={packet_pts}, delta_ms={delta_ms}");
+    }
+
+    if delta > 0 {
+        let silence = usize::try_from(delta).unwrap_or(usize::MAX);
+        pending.resize(pending.len().saturating_add(silence), 0.0);
+        pending.extend_from_slice(samples);
+    } else {
+        let overlap = usize::try_from(delta.unsigned_abs()).unwrap_or(usize::MAX).min(samples.len());
+        pending.extend_from_slice(&samples[overlap..]);
+    }
 }
 
 /// Downmixes interleaved PCM to mono using a deterministic arithmetic mean.
@@ -1208,6 +1451,8 @@ fn webm_error(error: impl std::fmt::Display) -> MediaError {
 mod tests {
     use super::*;
     use std::io::Cursor;
+    use std::num::NonZeroU32;
+    use tokio::sync::broadcast::error::TryRecvError;
     use symphonia::core::audio::{Channels, Position};
     use symphonia::core::codecs::audio::well_known::{CODEC_ID_AC3, CODEC_ID_PCM_S16LE};
     use symphonia::core::codecs::audio::AudioCodecParameters;
@@ -1303,6 +1548,57 @@ mod tests {
     #[test]
     fn downmix_is_bounded_and_balanced() {
         assert_eq!(downmix_to_mono(&[1.0, -1.0, 0.5, 0.5], 2), vec![0.0, 0.5]);
+    }
+
+    /// Verifies timestamp gaps become silence and overlaps do not duplicate decoded samples.
+    #[test]
+    fn timestamp_alignment_inserts_gaps_and_trims_overlaps() {
+        let mut discontinuities = 0;
+        let mut gap = vec![1.0; 960];
+        append_timestamp_aligned(&mut gap, &vec![2.0; 960], 960, Some(1_920), 7, 40, &mut discontinuities);
+        assert_eq!(gap.len(), 2_880);
+        assert!(gap[960..1_920].iter().all(|sample| *sample == 0.0));
+        assert!(gap[1_920..].iter().all(|sample| *sample == 2.0));
+
+        let mut overlap = vec![1.0; 960];
+        append_timestamp_aligned(&mut overlap, &vec![2.0; 960], 960, Some(480), 7, 10, &mut discontinuities);
+        assert_eq!(overlap.len(), 1_440);
+        assert!(overlap[960..].iter().all(|sample| *sample == 2.0));
+    }
+
+    /// Verifies packet progress uses a selected-track-relative time axis.
+    #[test]
+    fn packet_timestamps_are_relative_to_the_first_audio_packet() {
+        let time_base = TimeBase::new(NonZeroU32::new(1).unwrap(), NonZeroU32::new(1_000).unwrap());
+        assert_eq!(packet_timestamp_ms(5_250, Some(5_000), Some(time_base)), Some(250));
+        assert_eq!(packet_output_start(5_250, Some(5_000), Some(time_base)), Some(12_000));
+    }
+
+    /// Verifies running updates are throttled while a phase transition remains immediate.
+    #[test]
+    fn running_progress_is_throttled_but_phase_changes_are_immediate() {
+        let job = MediaJob::new();
+        let mut events = job.events.subscribe();
+        job.publish_progress(MediaJobPhase::Transcoding, Some(0.1));
+        job.publish_progress(MediaJobPhase::Transcoding, Some(0.2));
+        job.publish_progress(MediaJobPhase::Probing, Some(0.0));
+
+        assert_eq!(events.try_recv().unwrap().progress, Some(0.1));
+        assert_eq!(events.try_recv().unwrap().phase, MediaJobPhase::Probing);
+        assert!(matches!(events.try_recv(), Err(TryRecvError::Empty)));
+    }
+
+    /// Verifies cancellation interrupts source reads rather than waiting for another packet.
+    #[test]
+    fn cancellation_aware_source_interrupts_reads() {
+        let path = std::env::temp_dir().join(format!("ai-studio-source-cancel-{}", rand::random::<u64>()));
+        fs::write(&path, vec![0u8; COPY_BLOCK_BYTES * 2]).unwrap();
+        let cancelled = Arc::new(AtomicBool::new(false));
+        let (mut source, _) = CancellationMediaSource::new(File::open(&path).unwrap(), Arc::clone(&cancelled)).unwrap();
+        cancelled.store(true, Ordering::Relaxed);
+        let error = source.read(&mut [0u8; 16]).unwrap_err();
+        let _ = fs::remove_file(path);
+        assert_eq!(error.kind(), std::io::ErrorKind::Interrupted);
     }
 
     /// Verifies output shape and at-most-one-frame duration rounding.

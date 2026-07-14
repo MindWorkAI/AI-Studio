@@ -135,6 +135,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     protected CancellationTokenSource? CancellationTokenSource;
     private bool isDisposed;
     private AssistantSessionKey assistantSessionKey;
+    private MediaImportOwner CurrentMediaImportOwner => MediaImportOwner.ForAssistant(this.assistantSessionKey);
     private Guid? assistantSessionId;
     private AssistantSessionSnapshot? pendingRenderedAssistantSessionSnapshot;
 
@@ -227,7 +228,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     private async Task Start()
     {
-        if (this.MediaTranscriptionService.IsBusy)
+        if (this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner))
             return;
 
         var activeSession = this.AssistantSessionService.TryGetSnapshot(this.assistantSessionKey);
@@ -695,7 +696,11 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     }
 
     /// <summary>Refreshes assistant actions when the shared import lane changes.</summary>
-    private void OnMediaImportStateChanged() => _ = this.InvokeAsync(this.StateHasChanged);
+    private void OnMediaImportStateChanged(MediaImportOwner owner)
+    {
+        if (owner == this.CurrentMediaImportOwner)
+            _ = this.InvokeAsync(this.StateHasChanged);
+    }
 
     #endregion
 
