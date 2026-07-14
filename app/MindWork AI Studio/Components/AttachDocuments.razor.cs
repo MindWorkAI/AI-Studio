@@ -120,6 +120,12 @@ public partial class AttachDocuments : MSGComponentBase
         // Register this drop area:
         await this.MessageBus.SendMessage(this, Event.REGISTER_FILE_DROP_AREA, this.Layer);
         await base.OnInitializedAsync();
+    }
+
+    /// <summary>Rehydrates results after the component is assigned another chat or target.</summary>
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
         await this.SyncCompletedMediaAttachmentsAsync();
     }
 
@@ -168,11 +174,24 @@ public partial class AttachDocuments : MSGComponentBase
         var completed = delivery?.Attachments ?? [];
         var pending = this.OwnerChat?.PendingMediaTranscripts ?? [];
         var changed = false;
+        var ownerPendingChanged = false;
         
         foreach (var attachment in completed.Concat(pending))
             changed |= this.DocumentPaths.Add(attachment);
 
-        if (changed)
+        if (this.OwnerChat is not null)
+        {
+            foreach (var attachment in completed.OfType<ManagedTranscriptAttachment>())
+            {
+                if (this.OwnerChat.PendingMediaTranscripts.All(existing => existing.FilePath != attachment.FilePath))
+                {
+                    this.OwnerChat.PendingMediaTranscripts.Add(attachment);
+                    ownerPendingChanged = true;
+                }
+            }
+        }
+
+        if (changed || ownerPendingChanged)
         {
             await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
             await this.OnChange(this.DocumentPaths);
@@ -410,12 +429,17 @@ public partial class AttachDocuments : MSGComponentBase
             return;
         }
 
-        var names = string.Join(Environment.NewLine, mediaPaths.Select(path => $"• {Path.GetFileName(path)}"));
+        var names = string.Join('\n', mediaPaths.Select(path => $"- {Markdown.EscapeInlineText(Path.GetFileName(path))}"));
+        var message = this.T("The selected audio and video files will be prepared locally. Their audio will then be uploaded to the configured transcription provider.");
         var dialogParameters = new DialogParameters<ConfirmDialog>
         {
             {
-                x => x.Message,
-                $"{this.T("The selected audio and video files will be prepared locally. Their audio will then be uploaded to the configured transcription provider.")}{Environment.NewLine}{Environment.NewLine}{names}"
+                x => x.MarkdownBody,
+                $"""
+                 {message}
+
+                 {names}
+                 """
             },
         };
 

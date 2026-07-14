@@ -290,11 +290,16 @@ public partial class ReadFileContent : MSGComponentBase
             return false;
         }
 
+        var message = this.T("The selected media file will be prepared locally. Its audio will then be uploaded to the configured transcription provider.");
         var dialogParameters = new DialogParameters<ConfirmDialog>
         {
             {
-                x => x.Message,
-                $"{this.T("The selected media file will be prepared locally. Its audio will then be uploaded to the configured transcription provider.")}{Environment.NewLine}{Environment.NewLine}{Path.GetFileName(filePath)}"
+                x => x.MarkdownBody,
+                $"""
+                 {message}
+
+                 - {Markdown.EscapeInlineText(Path.GetFileName(filePath))}
+                 """
             },
         };
         var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(

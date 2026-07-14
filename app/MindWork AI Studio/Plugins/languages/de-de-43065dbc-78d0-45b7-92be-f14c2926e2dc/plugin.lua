@@ -306,6 +306,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::NUMBERPARTICIPANTSEXTENSIONS::T81
 -- Stop generation
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T1317408357"] = "Generierung stoppen"
 
+-- The media file could not be transcribed.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T1543974632"] = "Die Mediendatei konnte nicht transkribiert werden."
+
 -- Reset
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T180921696"] = "Zurücksetzen"
 
@@ -314,6 +317,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T1809312323"] = "Bitte wä
 
 -- The assistant failed. The message is: '{0}'
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T1833836281"] = "Der Assistent ist fehlgeschlagen. Die Meldung lautet: „{0}“"
+
+-- The media transcription was canceled.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T241403726"] = "Die Transkription des Mediums wurde abgebrochen."
 
 -- This assistant is already running. AI Studio opens the running session instead.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T2575715765"] = "Dieser Assistent läuft bereits. AI Studio öffnet stattdessen die laufende Sitzung."
@@ -2412,6 +2418,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T1358313858"] = "Klicken
 -- Drop files here to attach them.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T143112277"] = "Dateien hier ablegen, um sie anzuhängen."
 
+-- The media file could not be transcribed.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T1543974632"] = "Die Mediendatei konnte nicht transkribiert werden."
+
 -- Click here to attach files.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T1875575968"] = "Klicken Sie hier, um Dateien anzuhängen."
 
@@ -2420,6 +2429,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T2178031033"] = "Mediend
 
 -- Drag and drop files into the marked area or click here to attach documents:
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T230755331"] = "Ziehen Sie Dateien in den markierten Bereich oder klicken Sie hier, um Dokumente anzuhängen:"
+
+-- The media transcription was canceled.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T241403726"] = "Die Transkription des Mediums wurde abgebrochen."
 
 -- Select files to attach
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T2495931372"] = "Dateien zum Anhängen auswählen"
@@ -2457,6 +2469,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1317408357"] = "Generieru
 -- Save chat
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1516264254"] = "Chat speichern"
 
+-- The media file could not be transcribed.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1543974632"] = "Die Mediendatei konnte nicht transkribiert werden."
+
 -- Type your input here...
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1849313532"] = "Geben Sie hier Ihre Eingabe ein..."
 
@@ -2468,6 +2483,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2036185364"] = "Code"
 
 -- Italic
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2377171085"] = "Kursiv"
+
+-- The media transcription was canceled.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T241403726"] = "Die Transkription der Mediendatei wurde abgebrochen."
 
 -- Profile usage is disabled according to your chat template settings.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2670286472"] = "Die Profilnutzung ist gemäß den Einstellungen ihrer Chat-Vorlage deaktiviert."
@@ -2829,11 +2847,17 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T4279448758"] = "Nutzt
 -- Provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T900237532"] = "Anbieter"
 
+-- The media file could not be transcribed.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T1543974632"] = "Die Mediendatei konnte nicht transkribiert werden."
+
 -- Failed to load file content
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T1989554334"] = "Laden des Dateiinhalts fehlgeschlagen"
 
 -- Drop one file here to load its content.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T2274562398"] = "Datei hier ablegen, um ihren Inhalt zu laden."
+
+-- The media transcription was canceled.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T241403726"] = "Die Transkription des Mediums wurde abgebrochen."
 
 -- The selected media file will be prepared locally. Its audio will then be uploaded to the configured transcription provider.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T2839709466"] = "Die ausgewählte Mediendatei wird lokal vorbereitet. Anschließend wird die Audiospur an den konfigurierten Transkriptionsanbieter hochgeladen."

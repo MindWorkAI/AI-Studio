@@ -150,6 +150,9 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     /// </summary>
     protected bool HasAssistantSession => this.assistantSessionId is not null;
 
+    /// <summary>Gets whether this assistant currently owns active media work.</summary>
+    protected bool IsMediaImportBusy => this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner);
+
     /// <summary>
     /// Gets the assistant-specific identifier used to distinguish session slots.
     /// </summary>
