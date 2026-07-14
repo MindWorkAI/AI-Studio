@@ -1,0 +1,109 @@
+@attribute [Route(Routes.ASSISTANT_LOG_VIEWER)]
+@using AIStudio.Tools.Services
+@inherits MSGComponentBase
+
+<div class="inner-scrolling-context">
+    <MudText Typo="Typo.h3" Class="mb-2 mr-3">
+        @T("Log Viewer")
+    </MudText>
+
+    <InnerScrolling FillEntireHorizontalSpace="@true" Class="log-viewer-shell">
+        <HeaderContent>
+            <MudStack Row="@true" Wrap="@Wrap.Wrap" AlignItems="@AlignItems.Center" Spacing="2" Class="mb-2">
+                <MudSelect T="LogFileKind" Value="@this.selectedLogFile" ValueChanged="@this.SelectedLogFileChanged" Label="@T("Log file")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="log-viewer-select">
+                    <MudSelectItem T="LogFileKind" Value="@LogFileKind.APP">@T("Usage log")</MudSelectItem>
+                    <MudSelectItem T="LogFileKind" Value="@LogFileKind.STARTUP">@T("Startup log")</MudSelectItem>
+                </MudSelect>
+                <MudCheckBox T="bool" Value="@this.autoRefresh" ValueChanged="@this.AutoRefreshChanged" Label="@T("Auto-refresh")" Color="Color.Primary" />
+                @if (!this.autoRefresh)
+                {
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="@this.RefreshLogAsync" Disabled="@this.isLoading">
+                        @T("Refresh")
+                    </MudButton>
+                }
+                <MudNumericField T="int" Value="@this.maxLines" ValueChanged="@this.MaxLinesChanged" Label="@T("Max lines")" Variant="Variant.Outlined" Margin="Margin.Dense" Min="@MIN_MAX_LINES" Max="@MAX_MAX_LINES" Step="500" Class="log-viewer-number" />
+            </MudStack>
+
+            <MudStack Row="@true" Wrap="@Wrap.Wrap" AlignItems="@AlignItems.Center" Spacing="2" Class="mb-1">
+                <MudSelect T="string" Label="@T("Log type")" MultiSelection="@true" SelectedValues="@this.selectedLogLevels" SelectedValuesChanged="@this.SelectedLogLevelsChanged" MultiSelectionTextFunc="@this.GetMultiSelectionText" Variant="Variant.Outlined" Margin="Margin.Dense" Class="log-viewer-multiselect" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Label">
+                    @foreach (var option in this.logLevelOptions)
+                    {
+                        <MudSelectItem T="string" Value="@option">
+                            @this.GetFilterOptionDisplay(option)
+                        </MudSelectItem>
+                    }
+                </MudSelect>
+                <MudSelect T="string" Label="@T("Logger")" MultiSelection="@true" SelectedValues="@this.selectedLoggers" SelectedValuesChanged="@this.SelectedLoggersChanged" MultiSelectionTextFunc="@this.GetMultiSelectionText" Variant="Variant.Outlined" Margin="Margin.Dense" Class="log-viewer-multiselect" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Source">
+                    @foreach (var option in this.loggerOptions)
+                    {
+                        <MudSelectItem T="string" Value="@option">
+                            @this.GetFilterOptionDisplay(option)
+                        </MudSelectItem>
+                    }
+                </MudSelect>
+                <MudSelect T="string" Label="@T("Source details")" MultiSelection="@true" SelectedValues="@this.selectedSourceDetails" SelectedValuesChanged="@this.SelectedSourceDetailsChanged" MultiSelectionTextFunc="@this.GetMultiSelectionText" Variant="Variant.Outlined" Margin="Margin.Dense" Class="log-viewer-multiselect" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Settings">
+                    @foreach (var option in this.sourceDetailOptions)
+                    {
+                        <MudSelectItem T="string" Value="@option">
+                            @this.GetFilterOptionDisplay(option)
+                        </MudSelectItem>
+                    }
+                </MudSelect>
+                <MudCheckBox T="bool" @bind-Value="@this.ShowTimestamps" Label="@T("Show timestamps")" Color="Color.Primary" />
+            </MudStack>
+
+            <MudStack Row="@true" Wrap="@Wrap.Wrap" AlignItems="@AlignItems.Center" Spacing="2" Class="mb-1">
+                <MudTextField T="string" @bind-Text="@this.FilterText" Immediate="@true" Label="@T("Find")" Variant="Variant.Outlined" Margin="Margin.Dense" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Class="log-viewer-filter" />
+                <MudButton Variant="Variant.Text" Color="Color.Default" StartIcon="@Icons.Material.Filled.Clear" Disabled="@(!this.HasActiveFilter)" OnClick="@this.ClearFilters">
+                    @T("Clear")
+                </MudButton>
+                <MudCheckBox T="bool" @bind-Value="@this.FilterOnly" Label="@T("Filter only")" Color="Color.Primary" />
+            </MudStack>
+
+            <MudText Typo="Typo.body2" Class="log-viewer-path mb-1">
+                @this.CurrentLogPath
+            </MudText>
+            <MudText Typo="Typo.caption" Class="mb-2">
+                @this.StatusText
+            </MudText>
+        </HeaderContent>
+
+        <ChildContent>
+            @if (!string.IsNullOrWhiteSpace(this.loadError))
+            {
+                <MudAlert Severity="Severity.Error" Dense="@true" Variant="Variant.Outlined" Class="mb-2">
+                    @this.loadError
+                </MudAlert>
+            }
+
+            <div class="log-viewer-pane">
+                @if (this.isLoading && this.loadedLines.Count == 0)
+                {
+                    <div class="log-viewer-empty">
+                        <MudProgressCircular Size="Size.Small" Indeterminate="@true" />
+                        <MudText Typo="Typo.body2">@T("Loading log file...")</MudText>
+                    </div>
+                }
+                else if (this.displayLines.Count == 0)
+                {
+                    <div class="log-viewer-empty">
+                        <MudIcon Icon="@Icons.Material.Filled.SearchOff" />
+                        <MudText Typo="Typo.body2">@T("No matching log lines.")</MudText>
+                    </div>
+                }
+                else
+                {
+                    <div class="log-viewer-lines" role="textbox" aria-readonly="true">
+                        @foreach (var line in this.displayLines)
+                        {
+                            <div class="@this.GetLineClass(line)">
+                                <span class="log-viewer-line-number">@line.Number</span>
+                                <span class="log-viewer-line-text">@((MarkupString)this.RenderLine(line))</span>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </ChildContent>
+    </InnerScrolling>
+</div>
