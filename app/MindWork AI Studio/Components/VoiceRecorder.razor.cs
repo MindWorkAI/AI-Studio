@@ -103,8 +103,7 @@ public partial class VoiceRecorder : MSGComponentBase
                                                && !string.IsNullOrWhiteSpace(this.SettingsManager.ConfigurationData.App.UseTranscriptionProvider);
 
     private bool IsVoiceRecordingAvailable => this.ShouldRenderVoiceRecording
-                                              && this.VoiceRecordingAvailabilityService.IsAvailable
-                                              && !this.MediaTranscriptionService.IsBusy;
+                                              && this.VoiceRecordingAvailabilityService.IsAvailable;
 
     private string Tooltip => !this.VoiceRecordingAvailabilityService.IsAvailable
         ? T("Voice recording is unavailable because the client could not initialize audio playback.")
@@ -320,13 +319,15 @@ public partial class VoiceRecorder : MSGComponentBase
 
         try
         {
-            var transcriptionResult = await this.MediaTranscriptionService.TranscribeAsync(this.finalRecordingPath);
-            if (!transcriptionResult.Success)
+            var transcriptionResult = await this.MediaTranscriptionService.TranscribeVoiceAsync(this.finalRecordingPath);
+            if (transcriptionResult.Status is not MediaTranscriptionResultStatus.SUCCEEDED)
             {
                 this.Logger.LogWarning("The transcription request failed.");
-                var userMessage = string.IsNullOrWhiteSpace(transcriptionResult.ErrorMessage)
+                if (transcriptionResult.Status is MediaTranscriptionResultStatus.CANCELLED)
+                    return;
+                var userMessage = string.IsNullOrWhiteSpace(transcriptionResult.UserMessage)
                     ? this.T("Unfortunately, there was an error communicating with the AI system.")
-                    : transcriptionResult.ErrorMessage;
+                    : transcriptionResult.UserMessage;
                 await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, userMessage));
                 return;
             }

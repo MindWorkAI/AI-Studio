@@ -157,6 +157,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     protected override async Task OnInitializedAsync()
     {
+        this.MediaTranscriptionService.StateChanged += this.OnMediaImportStateChanged;
         await base.OnInitializedAsync();
 
         if (!this.SettingsManager.IsAssistantVisible(this.Component, assistantName: this.Title))
@@ -226,6 +227,9 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     private async Task Start()
     {
+        if (this.MediaTranscriptionService.IsBusy)
+            return;
+
         var activeSession = this.AssistantSessionService.TryGetSnapshot(this.assistantSessionKey);
         if (activeSession?.IsActive ?? false)
         {
@@ -675,6 +679,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     protected override void DisposeResources()
     {
+        this.MediaTranscriptionService.StateChanged -= this.OnMediaImportStateChanged;
         this.isDisposed = true;
         try
         {
@@ -688,6 +693,9 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         
         base.DisposeResources();
     }
+
+    /// <summary>Refreshes assistant actions when the shared import lane changes.</summary>
+    private void OnMediaImportStateChanged() => _ = this.InvokeAsync(this.StateHasChanged);
 
     #endregion
 

@@ -108,6 +108,8 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 
     protected override async Task OnInitializedAsync()
     {
+        this.MediaTranscriptionService.StateChanged += this.OnMediaImportStateChanged;
+        
         // Apply the filters for the message bus:
         this.ApplyFilters([], [ Event.HAS_CHAT_UNSAVED_CHANGES, Event.RESET_CHAT_STATE, Event.CHAT_STREAMING_DONE, Event.AI_JOB_CHANGED, Event.AI_JOB_FINISHED, Event.CHAT_GENERATION_CHANGED, Event.WORKSPACE_RENAMED, Event.CONFIGURATION_CHANGED ]);
         
@@ -249,6 +251,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         await this.SyncForegroundChatAsync();
         await base.OnInitializedAsync();
     }
+
+    /// <summary>Refreshes send and attachment controls when the media import lane changes.</summary>
+    private void OnMediaImportStateChanged() => _ = this.InvokeAsync(this.StateHasChanged);
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -1212,6 +1217,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
+        this.MediaTranscriptionService.StateChanged -= this.OnMediaImportStateChanged;
         if(this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
         {
             await this.SaveThread();

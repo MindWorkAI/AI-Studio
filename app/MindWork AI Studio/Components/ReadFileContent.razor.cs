@@ -63,6 +63,7 @@ public partial class ReadFileContent : MSGComponentBase
 
     protected override async Task OnInitializedAsync()
     {
+        this.MediaTranscriptionService.StateChanged += this.OnMediaImportStateChanged;
         if (this.EnableDragDrop)
         {
             this.ApplyFilters([], [ Event.TAURI_EVENT_RECEIVED, Event.REGISTER_FILE_DROP_AREA, Event.UNREGISTER_FILE_DROP_AREA ]);
@@ -70,6 +71,16 @@ public partial class ReadFileContent : MSGComponentBase
         }
 
         await base.OnInitializedAsync();
+    }
+
+    /// <summary>Refreshes disabled controls when the shared import lane changes.</summary>
+    private void OnMediaImportStateChanged() => _ = this.InvokeAsync(this.StateHasChanged);
+
+    /// <summary>Unsubscribes from the singleton media service.</summary>
+    protected override void DisposeResources()
+    {
+        this.MediaTranscriptionService.StateChanged -= this.OnMediaImportStateChanged;
+        base.DisposeResources();
     }
 
     protected override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
@@ -226,18 +237,20 @@ public partial class ReadFileContent : MSGComponentBase
             this.T("Transcribe media file"),
             dialogParameters,
             Dialogs.DialogOptions.FULLSCREEN);
-        
+
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return false;
 
-        var result = await this.MediaTranscriptionService.TranscribeAsync(filePath);
-        if (!result.Success)
+        var result = await this.MediaTranscriptionService.TranscribeImportAsync(filePath);
+        if (result.Status is not MediaTranscriptionResultStatus.SUCCEEDED)
         {
-            await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, result.ErrorMessage));
+            if (result.Status is MediaTranscriptionResultStatus.FAILED)
+                await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, result.UserMessage));
+            
             return false;
         }
-        
+
         await this.FileContentChanged.InvokeAsync(result.Text);
         return true;
     }

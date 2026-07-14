@@ -63,6 +63,10 @@ public partial class AttachDocuments : MSGComponentBase
     [Parameter]
     public AIStudio.Settings.Provider? Provider { get; set; }
 
+    /// <summary>Optional persisted chat that can own transcript files immediately.</summary>
+    [Parameter]
+    public ChatThread? OwnerChat { get; set; }
+
     [Inject]
     private ILogger<AttachDocuments> Logger { get; set; } = null!;
 
@@ -90,11 +94,22 @@ public partial class AttachDocuments : MSGComponentBase
 
     protected override async Task OnInitializedAsync()
     {
+        this.MediaTranscriptionService.StateChanged += this.OnMediaImportStateChanged;
         this.ApplyFilters([], [ Event.TAURI_EVENT_RECEIVED, Event.REGISTER_FILE_DROP_AREA, Event.UNREGISTER_FILE_DROP_AREA ]);
 
         // Register this drop area:
         await this.MessageBus.SendMessage(this, Event.REGISTER_FILE_DROP_AREA, this.Layer);
         await base.OnInitializedAsync();
+    }
+
+    /// <summary>Refreshes disabled controls when the shared import lane changes.</summary>
+    private void OnMediaImportStateChanged() => _ = this.InvokeAsync(this.StateHasChanged);
+
+    /// <summary>Unsubscribes from the singleton media service.</summary>
+    protected override void DisposeResources()
+    {
+        this.MediaTranscriptionService.StateChanged -= this.OnMediaImportStateChanged;
+        base.DisposeResources();
     }
 
     protected override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
@@ -277,12 +292,12 @@ public partial class AttachDocuments : MSGComponentBase
                 showDialog: true);
             canAddRegularFiles = pandocState.IsAvailable;
         }
-        
+
         foreach (var path in regularPaths)
         {
             if (!canAddRegularFiles)
                 break;
-            
+
             if (!await FileExtensionValidation.IsExtensionValidWithNotifyAsync(
                     FileExtensionValidation.UseCase.ATTACHING_CONTENT,
                     path,
@@ -311,12 +326,12 @@ public partial class AttachDocuments : MSGComponentBase
                 $"{this.T("The selected audio and video files will be prepared locally. Their audio will then be uploaded to the configured transcription provider.")}{Environment.NewLine}{Environment.NewLine}{names}"
             },
         };
-        
+
         var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(
             this.T("Transcribe media files"),
             dialogParameters,
             DialogOptions.FULLSCREEN);
-        
+
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return;
@@ -324,17 +339,21 @@ public partial class AttachDocuments : MSGComponentBase
         var failures = new List<string>();
         foreach (var mediaPath in mediaPaths)
         {
-            var result = await this.MediaTranscriptionService.TranscribeAsync(mediaPath);
-            if (!result.Success)
+            var result = await this.MediaTranscriptionService.TranscribeImportAsync(mediaPath);
+            if (result.Status is MediaTranscriptionResultStatus.CANCELLED)
+                break;
+
+            if (result.Status is MediaTranscriptionResultStatus.FAILED)
             {
-                if (result.ErrorMessage == "The media transcription was cancelled.")
-                    break;
-                
-                failures.Add($"{Path.GetFileName(mediaPath)}: {result.ErrorMessage}");
+                failures.Add($"{Path.GetFileName(mediaPath)}: {result.UserMessage}");
                 continue;
             }
+
+            var attachment = this.OwnerChat is not null
+                             && WorkspaceBehaviour.IsChatExisting(new LoadChat(this.OwnerChat.WorkspaceId, this.OwnerChat.ChatId))
+                ? await WorkspaceBehaviour.CreateManagedTranscriptAsync(this.OwnerChat, mediaPath, result.Text)
+                : await ManagedTranscriptAttachment.CreateStagedAsync(mediaPath, result.Text);
             
-            var attachment = await ManagedTranscriptAttachment.CreateStagedAsync(mediaPath, result.Text);
             this.DocumentPaths.Add(attachment);
         }
 

@@ -845,16 +845,13 @@ public partial class Workspaces : MSGComponentBase
         if (workspaceId == Guid.Empty)
             return;
         
-        await WorkspaceBehaviour.DeleteChatAsync(this.DialogService, chat.WorkspaceId, chat.ChatId, askForConfirmation: false);
-        
-        chat.WorkspaceId = workspaceId;
+        await WorkspaceBehaviour.MoveChatAsync(chat, workspaceId);
         if (this.CurrentChatThread?.ChatId == chat.ChatId)
         {
             this.CurrentChatThread = chat;
             await this.CurrentChatThreadChanged.InvokeAsync(this.CurrentChatThread);
         }
-        
-        await WorkspaceBehaviour.StoreChatAsync(chat);
+
         await this.LoadTreeItemsAsync(startPrefetch: false);
     }
     
