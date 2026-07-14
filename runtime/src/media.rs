@@ -47,6 +47,12 @@ const OPUS_FRAME_SAMPLES: usize = 960;
 /// Target bitrate for mono speech-oriented Opus output.
 const OPUS_BITRATE: u32 = 32_000;
 
+/// Stable normalized container name returned to upload clients.
+const OUTPUT_FORMAT: &str = "webm";
+
+/// Stable normalized codec name returned to upload clients.
+const OUTPUT_CODEC: &str = "opus";
+
 /// Maximum duration of a WebM cluster before rotating it.
 const CLUSTER_DURATION_MS: u64 = 30_000;
 
@@ -218,6 +224,12 @@ pub struct MediaJobEvent {
 pub struct MediaJobResult {
     /// Path at which the normalized output was committed.
     pub output_path: String,
+
+    /// Stable container produced for provider uploads.
+    pub output_format: String,
+
+    /// Stable audio codec produced for provider uploads.
+    pub output_codec: String,
 
     /// Human-readable detected container description for diagnostics.
     pub detected_format: String,
@@ -634,6 +646,8 @@ fn normalize_media(input_path: &FilePath, output_path: &FilePath, max_pass_throu
         copy_with_cancellation(input_path, &partial_path, job)?;
         Ok(MediaJobResult {
             output_path: output_path.to_string_lossy().into_owned(),
+            output_format: OUTPUT_FORMAT.to_string(),
+            output_codec: OUTPUT_CODEC.to_string(),
             detected_format: detected_format.clone(),
             detected_codec,
             duration_ms,
@@ -1043,6 +1057,8 @@ fn transcode(
 
     Ok(MediaJobResult {
         output_path: context.output_path.to_string_lossy().into_owned(),
+        output_format: OUTPUT_FORMAT.to_string(),
+        output_codec: OUTPUT_CODEC.to_string(),
         detected_format: context.detected_format,
         detected_codec: context.detected_codec,
         duration_ms: output_duration_ms,
@@ -1790,6 +1806,8 @@ mod tests {
         let job = MediaJob::new();
         let result = normalize_media(&input, &output, DEFAULT_MAX_PASS_THROUGH_BYTES, &job).unwrap();
         assert!(!result.pass_through);
+        assert_eq!(result.output_format, OUTPUT_FORMAT);
+        assert_eq!(result.output_codec, OUTPUT_CODEC);
         assert!(!result.has_audible_signal);
         assert!(result.duration_ms.abs_diff(100) <= 20);
 
@@ -1834,6 +1852,8 @@ mod tests {
         let job = MediaJob::new();
         let result = normalize_media(&input, &output, DEFAULT_MAX_PASS_THROUGH_BYTES, &job).unwrap();
         assert!(result.pass_through);
+        assert_eq!(result.output_format, OUTPUT_FORMAT);
+        assert_eq!(result.output_codec, OUTPUT_CODEC);
         assert_eq!(fs::read(input).unwrap(), fs::read(output).unwrap());
         assert!(!result.has_audible_signal);
         let _ = fs::remove_dir_all(directory);

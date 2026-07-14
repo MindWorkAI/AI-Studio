@@ -1,6 +1,7 @@
+using System.Buffers.Binary;
+
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Media;
-using AIStudio.Tools.MIME;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 
@@ -10,6 +11,8 @@ namespace AIStudio.Components;
 
 public partial class VoiceRecorder : MSGComponentBase
 {
+    private const int PCM_WAV_HEADER_SIZE = 44;
+
     [Inject]
     private ILogger<VoiceRecorder> Logger { get; init; } = null!;
 
@@ -96,7 +99,6 @@ public partial class VoiceRecorder : MSGComponentBase
     private bool isTranscribing;
     private FileStream? currentRecordingStream;
     private string? currentRecordingPath;
-    private string? currentRecordingMimeType;
     private string? finalRecordingPath;
     private DotNetObjectReference<VoiceRecorder>? dotNetReference;
 
@@ -134,18 +136,7 @@ public partial class VoiceRecorder : MSGComponentBase
                 return;
             }
 
-            var mimeTypes = GetPreferredMimeTypes(
-                Builder.Create().UseAudio().UseSubtype(AudioSubtype.WEBM).Build(),
-                Builder.Create().UseAudio().UseSubtype(AudioSubtype.OGG).Build(),
-                Builder.Create().UseAudio().UseSubtype(AudioSubtype.MP4).Build(),
-                Builder.Create().UseAudio().UseSubtype(AudioSubtype.AAC).Build(),
-                Builder.Create().UseAudio().UseSubtype(AudioSubtype.MP3).Build(),
-                Builder.Create().UseAudio().UseSubtype(AudioSubtype.AIFF).Build(),
-                Builder.Create().UseAudio().UseSubtype(AudioSubtype.WAV).Build(),
-                Builder.Create().UseAudio().UseSubtype(AudioSubtype.FLAC).Build()
-            );
-
-            this.Logger.LogInformation("Starting audio recording with preferred MIME types: '{PreferredMimeTypes}'.", string.Join<MIMEType>(", ", mimeTypes));
+            this.Logger.LogInformation("Starting PCM/WAV audio recording.");
 
             // Create a DotNetObjectReference to pass to JavaScript:
             this.dotNetReference = DotNetObjectReference.Create(this);
@@ -155,13 +146,8 @@ public partial class VoiceRecorder : MSGComponentBase
 
             try
             {
-                string[] mimeTypeStrings = ["audio/webm;codecs=opus", .. mimeTypes.ToStringArray()];
-                var actualMimeType = await this.JsRuntime.InvokeAsync<string>("audioRecorder.start", this.dotNetReference, mimeTypeStrings);
-
-                // Store the MIME type for later use:
-                this.currentRecordingMimeType = actualMimeType;
-
-                this.Logger.LogInformation("Audio recording started with MIME type: '{ActualMimeType}'.", actualMimeType);
+                await this.JsRuntime.InvokeVoidAsync("audioRecorder.start", this.dotNetReference);
+                this.Logger.LogInformation("PCM/WAV audio recording started.");
                 this.isPreparing = false;
                 this.isRecording = true;
             }
@@ -184,9 +170,7 @@ public partial class VoiceRecorder : MSGComponentBase
             var recordingStoppedSuccessfully = false;
             try
             {
-                var result = await this.JsRuntime.InvokeAsync<AudioRecordingResult>("audioRecorder.stop");
-                if (result.ChangedMimeType)
-                    this.Logger.LogWarning("The recorded audio MIME type was changed to '{ResultMimeType}'.", result.MimeType);
+                await this.JsRuntime.InvokeVoidAsync("audioRecorder.stop");
                 recordingStoppedSuccessfully = true;
             }
             catch (Exception e)
@@ -218,24 +202,6 @@ public partial class VoiceRecorder : MSGComponentBase
         }
     }
 
-    private static MIMEType[] GetPreferredMimeTypes(params MIMEType[] mimeTypes)
-    {
-        // Default list if no parameters provided:
-        if (mimeTypes.Length is 0)
-        {
-            var audioBuilder = Builder.Create().UseAudio();
-            return
-            [
-                audioBuilder.UseSubtype(AudioSubtype.WEBM).Build(),
-                audioBuilder.UseSubtype(AudioSubtype.OGG).Build(),
-                audioBuilder.UseSubtype(AudioSubtype.MP4).Build(),
-                audioBuilder.UseSubtype(AudioSubtype.MPEG).Build(),
-            ];
-        }
-
-        return mimeTypes;
-    }
-
     private async Task InitializeRecordingStream()
     {
         this.numReceivedChunks = 0;
@@ -244,7 +210,7 @@ public partial class VoiceRecorder : MSGComponentBase
         if (!Directory.Exists(recordingDirectory))
             Directory.CreateDirectory(recordingDirectory);
 
-        var fileName = $"recording_{DateTime.UtcNow:yyyyMMdd_HHmmss}.audio";
+        var fileName = $"recording_{DateTime.UtcNow:yyyyMMdd_HHmmss}.wav";
         this.currentRecordingPath = Path.Combine(recordingDirectory, fileName);
         this.currentRecordingStream = new FileStream(this.currentRecordingPath, FileMode.Create, FileAccess.Write, FileShare.None, bufferSize: 8192, useAsync: true);
 
@@ -281,6 +247,7 @@ public partial class VoiceRecorder : MSGComponentBase
         if (this.currentRecordingStream is not null)
         {
             await this.currentRecordingStream.FlushAsync();
+            var hasPcmAudioData = await this.FinalizePcmWavHeaderAsync(this.currentRecordingStream);
             await this.currentRecordingStream.DisposeAsync();
             this.currentRecordingStream = null;
 
@@ -288,44 +255,48 @@ public partial class VoiceRecorder : MSGComponentBase
             {
                 var fileSize = new FileInfo(this.currentRecordingPath).Length;
 
-                // Rename non-empty recordings with the correct extension based on MIME type:
-                if (fileSize > 0 && this.currentRecordingMimeType is not null)
+                if (hasPcmAudioData)
                 {
-                    var extension = GetFileExtension(this.currentRecordingMimeType);
-                    var newPath = Path.ChangeExtension(this.currentRecordingPath, extension);
-                    File.Move(this.currentRecordingPath, newPath, overwrite: true);
-                    this.finalRecordingPath = newPath;
-                    this.Logger.LogInformation("Finalized audio recording over {NumChunks} streamed audio chunks to the file '{RecordingPath}' with {FileSize} bytes.", this.numReceivedChunks, newPath, fileSize);
+                    this.finalRecordingPath = this.currentRecordingPath;
+                    this.Logger.LogInformation("Finalized audio recording over {NumChunks} streamed audio chunks to the file '{RecordingPath}' with {FileSize} bytes.", this.numReceivedChunks, this.currentRecordingPath, fileSize);
                 }
                 else
                 {
-                    this.Logger.LogWarning("Discarding an audio recording with {FileSize} bytes and MIME type '{MimeType}'.", fileSize, this.currentRecordingMimeType);
+                    this.Logger.LogWarning("Discarding a PCM/WAV audio recording without audio data ({FileSize} bytes).", fileSize);
                     File.Delete(this.currentRecordingPath);
                 }
             }
         }
 
         this.currentRecordingPath = null;
-        this.currentRecordingMimeType = null;
 
         // Dispose the .NET reference:
         this.dotNetReference?.Dispose();
         this.dotNetReference = null;
     }
 
-    private static string GetFileExtension(string mimeType)
+    private async Task<bool> FinalizePcmWavHeaderAsync(FileStream recordingStream)
     {
-        var baseMimeType = mimeType.Split(';')[0].Trim().ToLowerInvariant();
-        return baseMimeType switch
-        {
-            "audio/webm" => ".webm",
-            "audio/ogg" => ".ogg",
-            "audio/mp4" => ".m4a",
-            "audio/mpeg" => ".mp3",
-            "audio/wav" => ".wav",
-            "audio/x-wav" => ".wav",
-            _ => ".audio" // Fallback
-        };
+        if (recordingStream.Length <= PCM_WAV_HEADER_SIZE)
+            return false;
+
+        var pcmDataSize = recordingStream.Length - PCM_WAV_HEADER_SIZE;
+        if (pcmDataSize > uint.MaxValue - 36)
+            throw new InvalidDataException("The streamed PCM recording exceeds the WAV size limit.");
+
+        var valueBuffer = new byte[sizeof(uint)];
+        BinaryPrimitives.WriteUInt32LittleEndian(valueBuffer, checked((uint)(36 + pcmDataSize)));
+        recordingStream.Seek(4, SeekOrigin.Begin);
+        await recordingStream.WriteAsync(valueBuffer);
+
+        BinaryPrimitives.WriteUInt32LittleEndian(valueBuffer, checked((uint)pcmDataSize));
+        recordingStream.Seek(40, SeekOrigin.Begin);
+        await recordingStream.WriteAsync(valueBuffer);
+        recordingStream.Seek(0, SeekOrigin.End);
+        await recordingStream.FlushAsync();
+
+        this.Logger.LogInformation("Finalized a streamed PCM/WAV header for {PcmDataSize} bytes of audio data.", pcmDataSize);
+        return true;
     }
 
     private async Task TranscribeRecordingAsync()

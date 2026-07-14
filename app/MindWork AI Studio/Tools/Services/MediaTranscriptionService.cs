@@ -12,6 +12,11 @@ namespace AIStudio.Tools.Services;
 /// </summary>
 public sealed class MediaTranscriptionService(RustService rustService, SettingsManager settingsManager, ILogger<MediaTranscriptionService> logger) : IDisposable
 {
+    private const string NORMALIZED_OUTPUT_EXTENSION = ".webm";
+    private const string NORMALIZED_OUTPUT_FORMAT = "webm";
+    private const string NORMALIZED_OUTPUT_CODEC = "opus";
+    private static readonly byte[] WEBM_EBML_SIGNATURE = [0x1A, 0x45, 0xDF, 0xA3];
+
     /// <summary>Serializes attachment and file-content imports.</summary>
     private readonly SemaphoreSlim importQueue = new(1, 1);
 
@@ -446,6 +451,13 @@ public sealed class MediaTranscriptionService(RustService rustService, SettingsM
                     ? MediaTranscriptionResult.Failed(TB("The media pipeline ended without an output file."))
                     : MediaTranscriptionResult.Failed(UserMessageFor(normalized.Error.Code), normalized.Error.Code);
 
+            var uploadContractError = await ValidateNormalizedProviderUploadAsync(normalized.Result, normalizedPath, operation.Cancellation.Token);
+            if (uploadContractError is not null)
+            {
+                logger.LogError("Refusing the transcription provider upload because the normalized media contract validation failed: {Diagnostic}", uploadContractError);
+                return MediaTranscriptionResult.Failed(TB("The media pipeline ended without an output file."));
+            }
+
             if (!normalized.Result.HasAudibleSignal)
             {
                 logger.LogInformation("Skipping transcription for '{MediaPath}' because its maximum audio peak does not exceed the practical-silence threshold.", mediaPath);
@@ -463,12 +475,21 @@ public sealed class MediaTranscriptionService(RustService rustService, SettingsM
             if (provider.Provider is LLMProviders.NONE)
                 return MediaTranscriptionResult.Failed(TB("The configured transcription provider could not be created."));
 
-            logger.LogInformation("Transcribing normalized media '{MediaPath}' with provider '{Provider}' and model '{Model}'.",
+            var sourceSize = File.Exists(mediaPath) ? new FileInfo(mediaPath).Length : 0;
+            var normalizedSize = new FileInfo(normalizedPath).Length;
+            var reductionPercent = sourceSize > 0
+                ? (1.0 - (double)normalizedSize / sourceSize) * 100.0
+                : 0.0;
+            logger.LogInformation("Transcribing normalized WebM/Opus media '{NormalizedPath}' ({NormalizedSize} bytes; source '{SourcePath}' {SourceSize} bytes; size reduction {ReductionPercent:F1}%) with provider '{Provider}' and model '{Model}'.",
+                normalizedPath,
+                normalizedSize,
                 mediaPath,
+                sourceSize,
+                reductionPercent,
                 providerSettings.UsedLLMProvider,
                 providerSettings.Model);
 
-            var providerResult = await provider.TranscribeAudioAsync(providerSettings.Model, normalized.Result.OutputPath, settingsManager, operation.Cancellation.Token);
+            var providerResult = await provider.TranscribeAudioAsync(providerSettings.Model, normalizedPath, settingsManager, operation.Cancellation.Token);
             operation.Cancellation.Token.ThrowIfCancellationRequested();
             if (!providerResult.Success)
             {
@@ -496,6 +517,72 @@ public sealed class MediaTranscriptionService(RustService rustService, SettingsM
             
             this.DeleteTemporaryFile(normalizedPath + ".partial");
         }
+    }
+
+    /// <summary>Validates the fail-closed WebM/Opus contract before provider upload.</summary>
+    private static async Task<string?> ValidateNormalizedProviderUploadAsync(MediaJobResult result, string expectedOutputPath, CancellationToken token)
+    {
+        if (string.IsNullOrWhiteSpace(result.OutputPath))
+            return "Rust returned an empty normalized output path.";
+
+        string actualFullPath;
+        string expectedFullPath;
+        try
+        {
+            actualFullPath = Path.GetFullPath(result.OutputPath);
+            expectedFullPath = Path.GetFullPath(expectedOutputPath);
+        }
+        catch (Exception exception)
+        {
+            return $"The normalized output path is invalid: {exception.Message}";
+        }
+
+        var pathComparison = OperatingSystem.IsWindows()
+            ? StringComparison.OrdinalIgnoreCase
+            : StringComparison.Ordinal;
+            
+        if (!string.Equals(actualFullPath, expectedFullPath, pathComparison))
+            return $"Rust returned the unexpected output path '{result.OutputPath}' instead of '{expectedOutputPath}'.";
+
+        if (!string.Equals(Path.GetExtension(actualFullPath), NORMALIZED_OUTPUT_EXTENSION, StringComparison.OrdinalIgnoreCase))
+            return $"The normalized output path '{actualFullPath}' does not use the required '{NORMALIZED_OUTPUT_EXTENSION}' extension.";
+
+        if (!string.Equals(result.OutputFormat, NORMALIZED_OUTPUT_FORMAT, StringComparison.Ordinal))
+            return $"Rust returned output format '{result.OutputFormat}' instead of '{NORMALIZED_OUTPUT_FORMAT}'.";
+
+        if (!string.Equals(result.OutputCodec, NORMALIZED_OUTPUT_CODEC, StringComparison.Ordinal))
+            return $"Rust returned output codec '{result.OutputCodec}' instead of '{NORMALIZED_OUTPUT_CODEC}'.";
+
+        if (!File.Exists(actualFullPath))
+            return $"The normalized output file '{actualFullPath}' does not exist.";
+
+        var header = new byte[WEBM_EBML_SIGNATURE.Length];
+        var bytesRead = 0;
+        try
+        {
+            await using var stream = File.OpenRead(actualFullPath);
+            while (bytesRead < header.Length)
+            {
+                var count = await stream.ReadAsync(header.AsMemory(bytesRead), token);
+                if (count is 0)
+                    break;
+
+                bytesRead += count;
+            }
+        }
+        catch (IOException exception)
+        {
+            return $"The normalized output file '{actualFullPath}' could not be read: {exception.Message}";
+        }
+        catch (UnauthorizedAccessException exception)
+        {
+            return $"The normalized output file '{actualFullPath}' could not be read: {exception.Message}";
+        }
+
+        if (bytesRead != header.Length || !header.AsSpan().SequenceEqual(WEBM_EBML_SIGNATURE))
+            return $"The normalized output file '{actualFullPath}' does not begin with the WebM/Matroska EBML signature.";
+
+        return null;
     }
 
     /// <summary>Runs the Rust normalization job and drains cancellation to a terminal event.</summary>

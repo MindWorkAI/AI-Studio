@@ -1069,7 +1069,11 @@ public abstract class BaseProvider : IProvider, ISecretId
                     request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
                     break;
             }
-            
+
+            this.logger.LogInformation("Uploading transcription media '{FileName}' with content type '{ContentType}' and {FileSize} bytes.",
+                Path.GetFileName(audioFilePath),
+                mimeType.TextRepresentation,
+                fileStream.Length);
             using var response = await this.HttpClient.SendAsync(request, token);
             var responseBody = await response.Content.ReadAsStringAsync(token);
         

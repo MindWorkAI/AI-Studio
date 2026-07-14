@@ -2,6 +2,8 @@ namespace AIStudio.Tools.Rust;
 
 /// <summary>Successful terminal result returned by Rust media normalization.</summary>
 /// <param name="OutputPath">Committed normalized output path.</param>
+/// <param name="OutputFormat">Stable normalized container used for provider uploads.</param>
+/// <param name="OutputCodec">Stable normalized audio codec used for provider uploads.</param>
 /// <param name="DetectedFormat">Detected container diagnostic.</param>
 /// <param name="DetectedCodec">Selected codec diagnostic.</param>
 /// <param name="DurationMs">Normalized duration in milliseconds.</param>
@@ -9,6 +11,8 @@ namespace AIStudio.Tools.Rust;
 /// <param name="HasAudibleSignal">Whether the normalized audio exceeds the practical-silence threshold.</param>
 public sealed record MediaJobResult(
     string OutputPath,
+    string OutputFormat,
+    string OutputCodec,
     string DetectedFormat,
     string DetectedCodec,
     ulong DurationMs,

@@ -180,24 +180,207 @@ window.playSound = async function(soundPath) {
     }
 };
 
-let mediaRecorder;
-let actualRecordingMimeType;
-let changedMimeType = false;
 let pendingChunkUploads = 0;
 let chunkUploadPromise = Promise.resolve();
 let chunkUploadError = null;
 let recordingError = null;
+let captureAudioContext = null;
+let captureSourceNode = null;
+let captureWorkletNode = null;
+let captureSilentGainNode = null;
+let pcmFlushResolve = null;
+let pcmSamplesReceived = 0;
 
 // Store the media stream so we can close the microphone later:
 let activeMediaStream = null;
 
 // Delay in milliseconds to wait after getUserMedia() for Bluetooth profile switch (A2DP → HFP):
 const BLUETOOTH_PROFILE_SWITCH_DELAY_MS = 1_600;
+const PCM_SAMPLE_RATE = 48_000;
+const PCM_CHUNK_DURATION_SECONDS = 3;
+const PCM_FLUSH_TIMEOUT_MS = 5_000;
+
+function queueAudioChunkUpload(upload) {
+    pendingChunkUploads++;
+    chunkUploadPromise = chunkUploadPromise
+        .then(upload)
+        .catch(error => {
+            chunkUploadError ??= error;
+            console.error('Error sending audio chunk to .NET:', error);
+        })
+        .finally(() => pendingChunkUploads--);
+}
+
+async function waitForAudioChunkUploads() {
+    let observedUploadPromise;
+    do {
+        observedUploadPromise = chunkUploadPromise;
+        await observedUploadPromise;
+    } while (pendingChunkUploads > 0 || observedUploadPromise !== chunkUploadPromise);
+}
+
+function createPcmWavHeader(sampleRate) {
+    const buffer = new ArrayBuffer(44);
+    const view = new DataView(buffer);
+
+    const writeAscii = (offset, value) => {
+        for (let index = 0; index < value.length; index++) {
+            view.setUint8(offset + index, value.charCodeAt(index));
+        }
+    };
+
+    writeAscii(0, 'RIFF');
+    view.setUint32(4, 0, true); // Finalized by .NET after all PCM data was written.
+    writeAscii(8, 'WAVE');
+    writeAscii(12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true); // PCM
+    view.setUint16(22, 1, true); // Mono
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * 2, true);
+    view.setUint16(32, 2, true);
+    view.setUint16(34, 16, true);
+    writeAscii(36, 'data');
+    view.setUint32(40, 0, true); // Finalized by .NET after all PCM data was written.
+
+    return new Uint8Array(buffer);
+}
+
+function observeAudioTrack(track) {
+    console.log('Audio recording - microphone track state:', {
+        label: track.label,
+        enabled: track.enabled,
+        muted: track.muted,
+        readyState: track.readyState,
+        settings: typeof track.getSettings === 'function' ? track.getSettings() : null,
+    });
+
+    track.addEventListener('mute', () => console.warn('Audio recording - microphone track was muted.'));
+    track.addEventListener('unmute', () => console.log('Audio recording - microphone track was unmuted.'));
+    track.addEventListener('ended', () => console.warn('Audio recording - microphone track ended.'));
+}
+
+async function startPcmRecording(stream, dotnetRef) {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass || typeof AudioWorkletNode === 'undefined') {
+        throw new Error('PCM audio capture is unavailable because AudioWorklet is not supported.');
+    }
+
+    try {
+        captureAudioContext = new AudioContextClass({
+            latencyHint: 'interactive',
+            sampleRate: PCM_SAMPLE_RATE,
+        });
+
+        if (!captureAudioContext.audioWorklet) {
+            throw new Error('PCM audio capture is unavailable because AudioWorklet is not supported.');
+        }
+
+        await captureAudioContext.audioWorklet.addModule('/audio-recorder-worklet.js');
+
+        const actualSampleRate = captureAudioContext.sampleRate;
+        console.log(`Audio recording - starting PCM/WAV capture at ${actualSampleRate} Hz mono.`);
+
+        if (captureAudioContext.state === 'suspended') {
+            await captureAudioContext.resume();
+        }
+
+        captureSourceNode = captureAudioContext.createMediaStreamSource(stream);
+        captureWorkletNode = new AudioWorkletNode(captureAudioContext, 'pcm-recorder-processor', {
+            numberOfInputs: 1,
+            numberOfOutputs: 1,
+            outputChannelCount: [1],
+            processorOptions: {
+                chunkDurationSeconds: PCM_CHUNK_DURATION_SECONDS,
+            },
+        });
+
+        captureSilentGainNode = captureAudioContext.createGain();
+        captureSilentGainNode.gain.value = 0;
+
+        captureWorkletNode.port.onmessage = event => {
+            if (event.data?.type === 'chunk') {
+                const chunkBytes = new Uint8Array(event.data.buffer);
+                pcmSamplesReceived += event.data.sampleCount;
+                console.debug(`Audio recording - received ${event.data.sampleCount} PCM samples from AudioWorklet.`);
+                queueAudioChunkUpload(() => dotnetRef.invokeMethodAsync('OnAudioChunkReceived', chunkBytes));
+            } else if (event.data?.type === 'flushed') {
+                pcmFlushResolve?.();
+                pcmFlushResolve = null;
+            }
+        };
+
+        captureWorkletNode.onprocessorerror = event => {
+            recordingError ??= event.error || new Error('The PCM audio processor failed.');
+            console.error('Audio recording - AudioWorklet error:', recordingError);
+        };
+
+        captureSourceNode.connect(captureWorkletNode);
+        captureWorkletNode.connect(captureSilentGainNode);
+        captureSilentGainNode.connect(captureAudioContext.destination);
+        queueAudioChunkUpload(() => dotnetRef.invokeMethodAsync('OnAudioChunkReceived', createPcmWavHeader(actualSampleRate)));
+    } catch (error) {
+        await cleanupPcmCapture();
+        throw error;
+    }
+}
+
+async function flushPcmRecording() {
+    if (!captureWorkletNode) {
+        throw new Error('The PCM audio processor is unavailable.');
+    }
+
+    await new Promise((resolve, reject) => {
+        const timeoutId = setTimeout(() => {
+            pcmFlushResolve = null;
+            reject(new Error('Timed out while flushing PCM audio data.'));
+        }, PCM_FLUSH_TIMEOUT_MS);
+
+        pcmFlushResolve = () => {
+            clearTimeout(timeoutId);
+            resolve();
+        };
+        captureWorkletNode.port.postMessage({ type: 'flush' });
+    });
+}
+
+async function cleanupPcmCapture() {
+    captureSourceNode?.disconnect();
+    captureWorkletNode?.disconnect();
+    captureSilentGainNode?.disconnect();
+    captureSourceNode = null;
+    captureWorkletNode = null;
+    captureSilentGainNode = null;
+    pcmFlushResolve = null;
+
+    if (captureAudioContext && captureAudioContext.state !== 'closed') {
+        await captureAudioContext.close();
+    }
+    captureAudioContext = null;
+}
 
 window.audioRecorder = {
-    start: async function (dotnetRef, desiredMimeTypes = []) {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    start: async function (dotnetRef) {
+        // Reset the upload and recorder state:
+        pendingChunkUploads = 0;
+        chunkUploadPromise = Promise.resolve();
+        chunkUploadError = null;
+        recordingError = null;
+        pcmSamplesReceived = 0;
+
+        const stream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+                sampleRate: { ideal: PCM_SAMPLE_RATE },
+                channelCount: { ideal: 1 },
+            },
+        });
         activeMediaStream = stream;
+
+        const audioTracks = stream.getAudioTracks();
+        if (audioTracks.length === 0) {
+            throw new Error('The microphone stream does not contain an audio track.');
+        }
+        observeAudioTrack(audioTracks[0]);
 
         // Wait for Bluetooth headsets to complete the profile switch from A2DP to HFP.
         // This prevents the first sound from being cut off during the switch:
@@ -207,144 +390,55 @@ window.audioRecorder = {
         // Play start recording sound effect:
         await window.playSound('/sounds/start_recording.ogg');
 
-        // When only one mime type is provided as a string, convert it to an array:
-        if (typeof desiredMimeTypes === 'string') {
-            desiredMimeTypes = [desiredMimeTypes];
-        }
-
-        // Log sent mime types for debugging:
-        console.log('Audio recording - requested mime types: ', desiredMimeTypes);
-
-        let mimeTypes = desiredMimeTypes.filter(type => typeof type === 'string' && type.trim() !== '');
-
-        // Next, we have to ensure that we have some default mime types to check as well.
-        // In case the provided list does not contain these, we append them:
-        // Use provided mime types or fallback to a default list:
-        const defaultMimeTypes = [
-            'audio/webm',
-            'audio/ogg',
-            'audio/mp4',
-            'audio/mpeg',
-            ''// Fallback to browser default
-        ];
-
-        defaultMimeTypes.forEach(type => {
-            if (!mimeTypes.includes(type)) {
-                mimeTypes.push(type);
-            }
-        });
-
-        console.log('Audio recording - final mime types to check (included defaults): ', mimeTypes);
-
-        // Find the first supported mime type:
-        actualRecordingMimeType = mimeTypes.find(type =>
-            type === '' || MediaRecorder.isTypeSupported(type)
-        ) || '';
-
-        console.log('Audio recording - the browser selected the following mime type for recording: ', actualRecordingMimeType);
-        const options = actualRecordingMimeType ? { mimeType: actualRecordingMimeType } : {};
-        mediaRecorder = new MediaRecorder(stream, options);
-
-        // In case the browser changed the mime type:
-        actualRecordingMimeType = mediaRecorder.mimeType;
-        console.log('Audio recording - actual mime type used by the browser: ', actualRecordingMimeType);
-
-        const actualBaseMimeType = actualRecordingMimeType.split(';')[0].trim().toLowerCase();
-
-        // Check the list of desired mime types against the actual one:
-        if (!desiredMimeTypes.some(type => type.split(';')[0].trim().toLowerCase() === actualBaseMimeType)) {
-            changedMimeType = true;
-            console.warn(`Audio recording - requested mime types ('${desiredMimeTypes.join(', ')}') do not include the actual mime type used by the browser ('${actualRecordingMimeType}').`);
-        } else {
-            changedMimeType = false;
-        }
-
-        // Reset the upload and recorder state:
-        pendingChunkUploads = 0;
-        chunkUploadPromise = Promise.resolve();
-        chunkUploadError = null;
-        recordingError = null;
-
-        // Stream each chunk directly to .NET in recording order as it becomes available:
-        mediaRecorder.ondataavailable = (event) => {
-            if (event.data.size > 0) {
-                pendingChunkUploads++;
-                chunkUploadPromise = chunkUploadPromise
-                    .then(async () => {
-                        const arrayBuffer = await event.data.arrayBuffer();
-                        const uint8Array = new Uint8Array(arrayBuffer);
-                        await dotnetRef.invokeMethodAsync('OnAudioChunkReceived', uint8Array);
-                    })
-                    .catch(error => {
-                        chunkUploadError ??= error;
-                        console.error('Error sending audio chunk to .NET:', error);
-                    })
-                    .finally(() => pendingChunkUploads--);
-            }
-        };
-
-        mediaRecorder.onerror = event => {
-            recordingError ??= event.error || new Error('The media recorder failed.');
-            console.error('Audio recording - MediaRecorder error:', recordingError);
-        };
-
-        if (actualBaseMimeType === 'audio/mp4') {
-            // WebKitGTK does not reliably produce MP4 data when a timeslice is used. Let it
-            // finalize one complete M4A blob when stop() is called instead.
-            mediaRecorder.start();
-        } else {
-            mediaRecorder.start(3000); // read the recorded data in 3-second chunks
-        }
-
-        return actualRecordingMimeType;
+        await startPcmRecording(stream, dotnetRef);
     },
 
     stop: async function () {
-        return new Promise((resolve, reject) => {
+        let stopError = null;
 
-            // Add an event listener to handle the stop event:
-            mediaRecorder.onstop = async () => {
+        try {
+            try {
+                await flushPcmRecording();
+            } finally {
+                await cleanupPcmCapture();
+            }
 
-                // Wait for all pending chunk uploads to complete before finalizing:
-                console.log(`Audio recording - waiting for ${pendingChunkUploads} pending uploads.`);
-                await chunkUploadPromise;
+            console.log(`Audio recording - PCM/WAV capture produced ${pcmSamplesReceived} samples.`);
+            if (pcmSamplesReceived === 0) {
+                throw new Error('The microphone did not produce any PCM audio samples.');
+            }
+        } catch (error) {
+            stopError = error;
+        }
 
-                console.log('Audio recording - all chunks uploaded, finalizing.');
+        console.log(`Audio recording - waiting for ${pendingChunkUploads} pending uploads.`);
+        await waitForAudioChunkUploads();
+        console.log('Audio recording - all chunks uploaded, finalizing.');
 
-                // Play stop recording sound effect:
-                await window.playSound('/sounds/stop_recording.ogg');
+        // Play stop recording sound effect:
+        await window.playSound('/sounds/stop_recording.ogg');
 
-                //
-                // IMPORTANT: Do NOT release the microphone here!
-                // Bluetooth headsets switch profiles (HFP → A2DP) when the microphone is released,
-                // which causes audio to be interrupted. We keep the microphone open so that the
-                // stop_recording and transcription_done sounds can play without interruption.
-                //
-                // Call window.audioRecorder.releaseMicrophone() after the last sound has played.
-                //
+        //
+        // IMPORTANT: Do NOT release the microphone here!
+        // Bluetooth headsets switch profiles (HFP → A2DP) when the microphone is released,
+        // which causes audio to be interrupted. We keep the microphone open so that the
+        // stop_recording and transcription_done sounds can play without interruption.
+        //
+        // Call window.audioRecorder.releaseMicrophone() after the last sound has played.
+        //
 
-                const error = recordingError || chunkUploadError;
-                if (error) {
-                    reject(error);
-                    return;
-                }
-
-                // No need to process data here anymore, just signal completion:
-                resolve({
-                    mimeType: actualRecordingMimeType,
-                    changedMimeType: changedMimeType,
-                });
-            };
-
-            // Finally, stop the recording (which will actually trigger the onstop event):
-            mediaRecorder.stop();
-        });
+        const error = stopError || recordingError || chunkUploadError;
+        if (error) {
+            throw error;
+        }
     },
 
     // Release the microphone after all sounds have been played.
     // This should be called after the transcription_done sound to allow
     // Bluetooth headsets to switch back to A2DP profile without interrupting audio:
-    releaseMicrophone: function () {
+    releaseMicrophone: async function () {
+        await cleanupPcmCapture();
+
         if (activeMediaStream) {
             console.log('Audio recording - releasing microphone (Bluetooth will switch back to A2DP)');
             activeMediaStream.getTracks().forEach(track => track.stop());
