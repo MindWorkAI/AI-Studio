@@ -8,10 +8,16 @@
                 <MudButton StartIcon="@Icons.Material.Filled.Description" OnClick="@(async () => await this.SelectFile())" Variant="Variant.Filled" Disabled="@this.IsUnavailable">
                     @this.ButtonText
                 </MudButton>
-                <MudText Typo="Typo.body2">
-                    @T("Drop one file here to load its content.")
-                </MudText>
-                <MediaTranscriptionStatus Owner="@this.EffectiveImportOwner" TargetId="@this.EffectiveMediaImportTarget.TargetId" Compact="true"/>
+                @if (this.IsCurrentTargetBusy)
+                {
+                    <MediaTranscriptionStatus Owner="@this.EffectiveImportOwner" TargetId="@this.EffectiveMediaImportTarget.TargetId" Compact="true"/>
+                }
+                else
+                {
+                    <MudText Typo="Typo.body2">
+                        @T("Drop one file here to load its content.")
+                    </MudText>
+                }
             </MudStack>
         </MudPaper>
     </div>

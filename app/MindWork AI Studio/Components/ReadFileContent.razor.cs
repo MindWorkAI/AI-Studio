@@ -74,6 +74,8 @@ public partial class ReadFileContent : MSGComponentBase
     private string dragClass = DEFAULT_DRAG_CLASS;
     private uint numDropAreasAboveThis;
     private bool isComponentHovered;
+    private bool IsCurrentTargetBusy => this.MediaTranscriptionService.GetSnapshot(this.EffectiveImportOwner) is { IsBusy: true } snapshot
+                                        && snapshot.Target == this.EffectiveMediaImportTarget;
     private bool IsUnavailable => this.Disabled || this.MediaTranscriptionService.IsBusy(this.EffectiveImportOwner);
 
     #region Overrides of MSGComponentBase
