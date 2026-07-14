@@ -108,9 +108,19 @@ public partial class Home : MSGComponentBase
             return PANEL_ID_BUILT_IN_INTRODUCTION;
 
         var firstIntroduction = this.introductions.FirstOrDefault();
-        return firstIntroduction is not null
-            ? IntroductionPanelId(firstIntroduction)
-            : PANEL_ID_LAST_CHANGELOG;
+        if (firstIntroduction is not null)
+            return IntroductionPanelId(firstIntroduction);
+
+        if (this.SettingsManager.ConfigurationData.App.ShowLastChangelog)
+            return PANEL_ID_LAST_CHANGELOG;
+
+        if (this.SettingsManager.ConfigurationData.App.ShowVision)
+            return PANEL_ID_VISION;
+
+        if (this.SettingsManager.ConfigurationData.App.ShowQuickStartGuide)
+            return PANEL_ID_QUICK_START_GUIDE;
+
+        return string.Empty;
     }
 
     private void EnsureDefaultExpandedPanel()

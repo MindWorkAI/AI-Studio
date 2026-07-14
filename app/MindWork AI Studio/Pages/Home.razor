@@ -39,14 +39,20 @@
                 </ExpansionPanel>
             }
 
-            <ExpansionPanel HeaderIcon="@Icons.Material.Filled.EventNote" HeaderText="@T("Last Changelog")" IsExpanded="@this.IsPanelExpanded(PANEL_ID_LAST_CHANGELOG)" ExpandedChanged="@(isExpanded => this.SetPanelExpanded(PANEL_ID_LAST_CHANGELOG, isExpanded))">
-                <MudMarkdown Value="@this.LastChangeContent" Props="Markdown.DefaultConfig" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE"/>
-            </ExpansionPanel>
+            @if (this.SettingsManager.ConfigurationData.App.ShowLastChangelog)
+            {
+                <ExpansionPanel HeaderIcon="@Icons.Material.Filled.EventNote" HeaderText="@T("Last Changelog")" IsExpanded="@this.IsPanelExpanded(PANEL_ID_LAST_CHANGELOG)" ExpandedChanged="@(isExpanded => this.SetPanelExpanded(PANEL_ID_LAST_CHANGELOG, isExpanded))">
+                    <MudMarkdown Value="@this.LastChangeContent" Props="Markdown.DefaultConfig" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE"/>
+                </ExpansionPanel>
+            }
 
-            <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Lightbulb" HeaderText="@T("Vision")" IsExpanded="@this.IsPanelExpanded(PANEL_ID_VISION)" ExpandedChanged="@(isExpanded => this.SetPanelExpanded(PANEL_ID_VISION, isExpanded))">
-                <Vision/>
-            </ExpansionPanel>
-            
+            @if (this.SettingsManager.ConfigurationData.App.ShowVision)
+            {
+                <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Lightbulb" HeaderText="@T("Vision")" IsExpanded="@this.IsPanelExpanded(PANEL_ID_VISION)" ExpandedChanged="@(isExpanded => this.SetPanelExpanded(PANEL_ID_VISION, isExpanded))">
+                    <Vision/>
+                </ExpansionPanel>
+            }
+
             @if (this.SettingsManager.ConfigurationData.App.ShowQuickStartGuide)
             {
                 <ExpansionPanel HeaderIcon="@Icons.Material.Filled.RocketLaunch" HeaderText="@T("Quick Start Guide")" IsExpanded="@this.IsPanelExpanded(PANEL_ID_QUICK_START_GUIDE)" ExpandedChanged="@(isExpanded => this.SetPanelExpanded(PANEL_ID_QUICK_START_GUIDE, isExpanded))">
