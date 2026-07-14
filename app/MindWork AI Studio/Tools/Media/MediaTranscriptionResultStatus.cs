@@ -1,4 +1,4 @@
-namespace AIStudio.Tools.Services;
+namespace AIStudio.Tools.Media;
 
 /// <summary>
 /// Terminal outcome of a media transcription operation.

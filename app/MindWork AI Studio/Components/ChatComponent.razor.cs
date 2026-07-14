@@ -4,6 +4,7 @@ using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.AIJobs;
+using AIStudio.Tools.Media;
 using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
@@ -252,6 +253,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         // Select the correct provider:
         await this.SelectProviderWhenLoadingChat();
         await this.SyncForegroundChatAsync();
+        await this.ConsumeMediaOutcomeAsync();
         await base.OnInitializedAsync();
     }
 
@@ -259,7 +261,34 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private void OnMediaImportStateChanged(MediaImportOwner owner)
     {
         if (owner == this.CurrentMediaImportOwner)
-            _ = this.InvokeAsync(this.StateHasChanged);
+            _ = this.InvokeAsync(async () =>
+            {
+                await this.ConsumeMediaOutcomeAsync();
+                this.StateHasChanged();
+            });
+    }
+
+    /// <summary>Consumes a terminal media notification when its chat is visible.</summary>
+    private async Task ConsumeMediaOutcomeAsync()
+    {
+        var outcome = this.MediaTranscriptionService.TryConsumeOutcome(this.CurrentMediaImportOwner);
+        if (outcome is null)
+            return;
+
+        if (outcome.Failures.Count > 0)
+        {
+            var message = string.Join(Environment.NewLine, outcome.Failures.Select(failure => $"{failure.FileName}: {failure.UserMessage}"));
+            await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, message));
+        }
+        else if (outcome.Status is MediaImportStatus.FAILED)
+        {
+            await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, this.T("The media file could not be transcribed.")));
+        }
+
+        if (outcome.Status is MediaImportStatus.CANCELLED)
+        {
+            await this.MessageBus.SendWarning(new(Icons.Material.Filled.VoiceChat, this.T("The media transcription was canceled.")));
+        }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -330,6 +359,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 
         await this.ApplyLoadedChatParameterAsync();
         await this.SyncForegroundChatAsync();
+        await this.ConsumeMediaOutcomeAsync();
         await base.OnParametersSetAsync();
     }
 

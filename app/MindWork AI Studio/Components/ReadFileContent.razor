@@ -11,13 +11,17 @@
                 <MudText Typo="Typo.body2">
                     @T("Drop one file here to load its content.")
                 </MudText>
+                <MediaTranscriptionStatus Owner="@this.EffectiveImportOwner" TargetId="@this.EffectiveMediaImportTarget.TargetId" Compact="true"/>
             </MudStack>
         </MudPaper>
     </div>
 }
 else
 {
-    <MudButton StartIcon="@Icons.Material.Filled.Description" OnClick="@(async () => await this.SelectFile())" Variant="Variant.Filled" Class="mb-3" Disabled="@this.IsUnavailable">
-        @this.ButtonText
-    </MudButton>
+    <MudStack Row="true" AlignItems="AlignItems.Center" StretchItems="StretchItems.None" Wrap="Wrap.Wrap" Class="mb-3">
+        <MudButton StartIcon="@Icons.Material.Filled.Description" OnClick="@(async () => await this.SelectFile())" Variant="Variant.Filled" Disabled="@this.IsUnavailable">
+            @this.ButtonText
+        </MudButton>
+        <MediaTranscriptionStatus Owner="@this.EffectiveImportOwner" TargetId="@this.EffectiveMediaImportTarget.TargetId" Compact="true"/>
+    </MudStack>
 }

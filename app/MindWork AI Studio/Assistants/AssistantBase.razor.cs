@@ -4,6 +4,7 @@ using AIStudio.Settings;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Tools.AIJobs;
 using AIStudio.Tools.AssistantSessions;
+using AIStudio.Tools.Media;
 using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
@@ -181,6 +182,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         this.CurrentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(this.Component);
         this.assistantSessionKey = new(this.Component, this.AssistantSessionInstanceId);
         await this.AttachAssistantSessionIfAvailable();
+        await this.ConsumeMediaOutcomeAsync();
     }
 
     protected override async Task OnParametersSetAsync()
@@ -642,10 +644,12 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     
     private async Task InnerResetForm()
     {
-        if (this.AssistantSessionService.TryGetSnapshot(this.assistantSessionKey)?.IsActive ?? false)
+        if ((this.AssistantSessionService.TryGetSnapshot(this.assistantSessionKey)?.IsActive ?? false)
+            || this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner))
             return;
 
         await this.AssistantSessionService.ClearAsync(this.assistantSessionKey);
+        this.MediaTranscriptionService.ClearOwnerState(this.CurrentMediaImportOwner);
         this.assistantSessionId = null;
         this.ResultingContentBlock = null;
         this.ProviderSettings = Settings.Provider.NONE;
@@ -699,7 +703,34 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     private void OnMediaImportStateChanged(MediaImportOwner owner)
     {
         if (owner == this.CurrentMediaImportOwner)
-            _ = this.InvokeAsync(this.StateHasChanged);
+            _ = this.InvokeAsync(async () =>
+            {
+                await this.ConsumeMediaOutcomeAsync();
+                this.StateHasChanged();
+            });
+    }
+
+    /// <summary>Consumes a terminal media notification when this assistant is visible.</summary>
+    private async Task ConsumeMediaOutcomeAsync()
+    {
+        var outcome = this.MediaTranscriptionService.TryConsumeOutcome(this.CurrentMediaImportOwner);
+        if (outcome is null)
+            return;
+
+        if (outcome.Failures.Count > 0)
+        {
+            var message = string.Join(Environment.NewLine, outcome.Failures.Select(failure => $"{failure.FileName}: {failure.UserMessage}"));
+            await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, message));
+        }
+        else if (outcome.Status is MediaImportStatus.FAILED)
+        {
+            await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, this.TB("The media file could not be transcribed.")));
+        }
+
+        if (outcome.Status is MediaImportStatus.CANCELLED)
+        {
+            await this.MessageBus.SendWarning(new(Icons.Material.Filled.VoiceChat, this.TB("The media transcription was canceled.")));
+        }
     }
 
     #endregion

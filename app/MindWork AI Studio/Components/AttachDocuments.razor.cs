@@ -1,5 +1,6 @@
 using AIStudio.Chat;
 using AIStudio.Dialogs;
+using AIStudio.Tools.Media;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
@@ -53,6 +54,10 @@ public partial class AttachDocuments : MSGComponentBase
     [Parameter]
     public bool UseSmallForm { get; set; }
 
+    /// <summary>Whether this control renders its own media status.</summary>
+    [Parameter]
+    public bool ShowMediaStatus { get; set; } = true;
+
     [Parameter]
     public bool Disabled { get; set; }
 
@@ -101,6 +106,8 @@ public partial class AttachDocuments : MSGComponentBase
         ? MediaImportOwner.ForChat(this.OwnerChat.ChatId)
         : this.ImportOwner ?? this.fallbackMediaImportOwner;
 
+    private MediaImportTarget EffectiveMediaImportTarget => new(this.EffectiveImportOwner, string.IsNullOrWhiteSpace(this.Name) ? "attachments" : this.Name);
+
     private bool IsUnavailable => this.Disabled || this.MediaTranscriptionService.IsBusy(this.EffectiveImportOwner);
 
     #region Overrides of MSGComponentBase
@@ -123,14 +130,42 @@ public partial class AttachDocuments : MSGComponentBase
             _ = this.InvokeAsync(async () =>
             {
                 await this.SyncCompletedMediaAttachmentsAsync();
+                await this.ConsumeStandaloneMediaOutcomeAsync();
                 this.StateHasChanged();
             });
+    }
+
+    /// <summary>Consumes outcomes for dialog-local controls that have no chat or assistant owner surface.</summary>
+    private async Task ConsumeStandaloneMediaOutcomeAsync()
+    {
+        if (this.ImportOwner is not null || this.OwnerChat is not null)
+            return;
+
+        var outcome = this.MediaTranscriptionService.TryConsumeOutcome(this.EffectiveImportOwner);
+        if (outcome is null)
+            return;
+
+        if (outcome.Failures.Count > 0)
+        {
+            var message = string.Join(Environment.NewLine, outcome.Failures.Select(failure => $"{failure.FileName}: {failure.UserMessage}"));
+            await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, message));
+        }
+        else if (outcome.Status is MediaImportStatus.FAILED)
+        {
+            await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, this.T("The media file could not be transcribed.")));
+        }
+
+        if (outcome.Status is MediaImportStatus.CANCELLED)
+        {
+            await this.MessageBus.SendWarning(new(Icons.Material.Filled.VoiceChat, this.T("The media transcription was canceled.")));
+        }
     }
 
     /// <summary>Reattaches completed owner results after progress updates or navigation.</summary>
     private async Task SyncCompletedMediaAttachmentsAsync()
     {
-        var completed = this.MediaTranscriptionService.GetSnapshot(this.EffectiveImportOwner)?.CompletedAttachments ?? [];
+        var delivery = this.MediaTranscriptionService.GetPendingDelivery(this.EffectiveMediaImportTarget);
+        var completed = delivery?.Attachments ?? [];
         var pending = this.OwnerChat?.PendingMediaTranscripts ?? [];
         var changed = false;
         
@@ -142,6 +177,9 @@ public partial class AttachDocuments : MSGComponentBase
             await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
             await this.OnChange(this.DocumentPaths);
         }
+
+        if (delivery is not null)
+            this.MediaTranscriptionService.AcknowledgeDelivery(delivery);
     }
 
     /// <summary>Unsubscribes from the singleton media service.</summary>
@@ -393,7 +431,7 @@ public partial class AttachDocuments : MSGComponentBase
         if (this.OwnerChat is null)
             this.OwnerChat = await this.EnsureOwnerChatAsync(mediaPaths[0]);
 
-        this.MediaTranscriptionService.TryStartAttachmentBatch(mediaPaths, this.EffectiveImportOwner, this.OwnerChat);
+        this.MediaTranscriptionService.TryStartAttachmentBatch(mediaPaths, this.EffectiveMediaImportTarget, this.OwnerChat);
     }
 
     private static bool IsTranscribableMedia(string path) => FileTypes.IsAllowedPath(path, FileTypes.AUDIO) || FileTypes.IsAllowedPath(path, FileTypes.VIDEO);

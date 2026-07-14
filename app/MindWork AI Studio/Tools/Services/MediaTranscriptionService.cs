@@ -1,6 +1,7 @@
 using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Tools.Media;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
 
@@ -23,8 +24,14 @@ public sealed class MediaTranscriptionService(RustService rustService, SettingsM
     /// <summary>The active or queued import operation for each owner.</summary>
     private readonly Dictionary<MediaImportOwner, MediaOperation> currentImports = [];
 
-    /// <summary>The latest copied state retained for each owner across navigation.</summary>
+    /// <summary>The latest active or unacknowledged terminal state for each owner.</summary>
     private readonly Dictionary<MediaImportOwner, MediaImportSnapshot> snapshots = [];
+
+    /// <summary>Successful results waiting for their concrete UI target.</summary>
+    private readonly Dictionary<MediaImportTarget, PendingDelivery> pendingDeliveries = [];
+
+    /// <summary>Terminal notifications waiting for their owner surface to be displayed.</summary>
+    private readonly Dictionary<MediaImportOwner, MediaImportOutcome> outcomes = [];
 
     /// <summary>Owners whose complete file batches are managed by this service.</summary>
     private readonly HashSet<MediaImportOwner> activeBatches = [];
@@ -39,7 +46,11 @@ public sealed class MediaTranscriptionService(RustService rustService, SettingsM
     public event Action<MediaImportOwner>? StateChanged;
 
     /// <summary>Gets whether one owner has queued, running, or canceling media work.</summary>
-    public bool IsBusy(MediaImportOwner owner) => this.GetSnapshot(owner)?.IsBusy ?? false;
+    public bool IsBusy(MediaImportOwner owner)
+    {
+        lock (this.stateLock)
+            return this.activeBatches.Contains(owner);
+    }
 
     /// <summary>Gets the last retained state for one owner.</summary>
     public MediaImportSnapshot? GetSnapshot(MediaImportOwner owner)
@@ -55,19 +66,102 @@ public sealed class MediaTranscriptionService(RustService rustService, SettingsM
             return [.. this.snapshots.Values];
     }
 
-    /// <summary>Starts an owner-managed attachment batch and returns without holding the UI event handler.</summary>
-    public bool TryStartAttachmentBatch(IReadOnlyList<string> mediaPaths, MediaImportOwner owner, ChatThread? ownerChat = null)
+    /// <summary>Gets copied results that have not yet been applied by one target.</summary>
+    public MediaImportDelivery? GetPendingDelivery(MediaImportTarget target)
     {
-        this.ThrowIfDisposed();
         lock (this.stateLock)
         {
-            if (!this.activeBatches.Add(owner))
-                return false;
+            if (!this.pendingDeliveries.TryGetValue(target, out var pending))
+                return null;
 
-            this.batchCancellations[owner] = new();
+            return new()
+            {
+                Target = target,
+                Attachments = [.. pending.Attachments],
+                Text = pending.Text,
+            };
+        }
+    }
+
+    /// <summary>Removes exactly the results that one target applied successfully.</summary>
+    public void AcknowledgeDelivery(MediaImportDelivery delivery)
+    {
+        lock (this.stateLock)
+        {
+            if (!this.pendingDeliveries.TryGetValue(delivery.Target, out var pending))
+                return;
+
+            var acknowledgedPaths = delivery.Attachments.Select(attachment => attachment.FilePath).ToHashSet(StringComparer.Ordinal);
+            pending.Attachments.RemoveAll(attachment => acknowledgedPaths.Contains(attachment.FilePath));
+            
+            if (delivery.Text is not null && string.Equals(pending.Text, delivery.Text, StringComparison.Ordinal))
+                pending.Text = null;
+
+            if (pending.Attachments.Count is 0 && pending.Text is null)
+                this.pendingDeliveries.Remove(delivery.Target);
+        }
+    }
+
+    /// <summary>Consumes one terminal notification when its owner surface is displayed.</summary>
+    public MediaImportOutcome? TryConsumeOutcome(MediaImportOwner owner)
+    {
+        MediaImportOutcome? outcome;
+        lock (this.stateLock)
+        {
+            if (!this.outcomes.Remove(owner, out outcome))
+                return null;
+
+            if (this.snapshots.GetValueOrDefault(owner) is { IsBusy: false })
+                this.snapshots.Remove(owner);
         }
 
-        _ = this.RunAttachmentBatchAsync(mediaPaths, owner, ownerChat);
+        this.NotifyStateChanged(owner);
+        return outcome;
+    }
+
+    /// <summary>Discards retained inactive state and deletes unclaimed managed transcript files.</summary>
+    public void ClearOwnerState(MediaImportOwner owner)
+    {
+        List<FileAttachment> discardedAttachments = [];
+        lock (this.stateLock)
+        {
+            if (this.activeBatches.Contains(owner))
+                return;
+
+            this.snapshots.Remove(owner);
+            this.outcomes.Remove(owner);
+            
+            foreach (var target in this.pendingDeliveries.Keys.Where(target => target.Owner == owner).ToList())
+            {
+                discardedAttachments.AddRange(this.pendingDeliveries[target].Attachments);
+                this.pendingDeliveries.Remove(target);
+            }
+        }
+
+        foreach (var attachment in discardedAttachments)
+            ManagedTranscriptAttachment.TryDeleteOwnedFile(attachment);
+
+        this.NotifyStateChanged(owner);
+    }
+
+    /// <summary>Starts an owner-managed attachment batch and returns without holding the UI event handler.</summary>
+    public bool TryStartAttachmentBatch(IReadOnlyList<string> mediaPaths, MediaImportTarget target, ChatThread? ownerChat = null)
+    {
+        this.ThrowIfDisposed();
+        if (mediaPaths.Count is 0)
+            return false;
+
+        lock (this.stateLock)
+        {
+            if (!this.activeBatches.Add(target.Owner))
+                return false;
+
+            this.batchCancellations[target.Owner] = new();
+            this.outcomes.Remove(target.Owner);
+        }
+
+        this.UpdateImportState(target, Path.GetFileName(mediaPaths[0]), MediaTranscriptionPhase.QUEUED, null, MediaImportStatus.QUEUED);
+        _ = Task.Run(() => this.RunAttachmentBatchAsync(mediaPaths, target, ownerChat));
         return true;
     }
 
@@ -81,9 +175,11 @@ public sealed class MediaTranscriptionService(RustService rustService, SettingsM
                 return false;
 
             this.batchCancellations[target.Owner] = new();
+            this.outcomes.Remove(target.Owner);
         }
 
-        _ = this.RunTextImportAsync(mediaPath, target);
+        this.UpdateImportState(target, Path.GetFileName(mediaPath), MediaTranscriptionPhase.QUEUED, null, MediaImportStatus.QUEUED);
+        _ = Task.Run(() => this.RunTextImportAsync(mediaPath, target));
         return true;
     }
 
@@ -94,20 +190,30 @@ public sealed class MediaTranscriptionService(RustService rustService, SettingsM
         lock (this.stateLock)
             cancellation = this.batchCancellations[target.Owner];
 
+        var status = MediaImportStatus.SUCCEEDED;
+        List<MediaImportFailure> failures = [];
         try
         {
-            var result = await this.TranscribeImportAsync(mediaPath, target.Owner, cancellation.Token);
+            var result = await this.TranscribeImportAsync(mediaPath, target, cancellation.Token);
             if (result.Status is MediaTranscriptionResultStatus.SUCCEEDED)
                 this.AddCompletedText(target, result.Text);
+            else if (result.Status is MediaTranscriptionResultStatus.CANCELLED)
+                status = MediaImportStatus.CANCELLED;
+            else
+            {
+                status = MediaImportStatus.FAILED;
+                failures.Add(new(Path.GetFileName(mediaPath), result.UserMessage, result.ErrorCode));
+            }
         }
         catch (OperationCanceledException)
         {
-            var current = this.GetSnapshot(target.Owner);
-            this.UpdateImportState(target.Owner, current?.CurrentFileName ?? string.Empty, MediaTranscriptionPhase.IDLE, null, MediaImportStatus.CANCELLED);
+            status = MediaImportStatus.CANCELLED;
         }
         catch (Exception exception)
         {
             logger.LogError(exception, "Owner media text import failed for '{Owner}' and target '{TargetId}'.", target.Owner, target.TargetId);
+            status = MediaImportStatus.FAILED;
+            failures.Add(new(Path.GetFileName(mediaPath), TB("The media file could not be transcribed.")));
         }
         finally
         {
@@ -117,6 +223,8 @@ public sealed class MediaTranscriptionService(RustService rustService, SettingsM
                 if (this.batchCancellations.Remove(target.Owner, out var ownedCancellation))
                     ownedCancellation.Dispose();
             }
+
+            this.CompleteImport(target, Path.GetFileName(mediaPath), status, failures);
         }
     }
 
@@ -125,41 +233,47 @@ public sealed class MediaTranscriptionService(RustService rustService, SettingsM
     {
         lock (this.stateLock)
         {
-            var current = this.snapshots.GetValueOrDefault(target.Owner);
-            if (current is null)
-                return;
+            if (!this.pendingDeliveries.TryGetValue(target, out var pending))
+                this.pendingDeliveries[target] = pending = new();
 
-            var completed = new Dictionary<string, string>(current.CompletedTextTargets, StringComparer.Ordinal)
-            {
-                [target.TargetId] = text,
-            };
-            this.snapshots[target.Owner] = current with { CompletedTextTargets = completed };
+            pending.Text = text;
         }
 
-        this.StateChanged?.Invoke(target.Owner);
+        this.NotifyStateChanged(target.Owner);
     }
 
     /// <summary>Serially transcribes a complete owner batch while retaining every successful result.</summary>
-    private async Task RunAttachmentBatchAsync(IReadOnlyList<string> mediaPaths, MediaImportOwner owner, ChatThread? ownerChat)
+    private async Task RunAttachmentBatchAsync(IReadOnlyList<string> mediaPaths, MediaImportTarget target, ChatThread? ownerChat)
     {
         CancellationToken batchToken;
         lock (this.stateLock)
-            batchToken = this.batchCancellations[owner].Token;
+            batchToken = this.batchCancellations[target.Owner].Token;
 
+        var status = MediaImportStatus.SUCCEEDED;
+        var currentFileName = Path.GetFileName(mediaPaths[0]);
+        List<MediaImportFailure> failures = [];
+        
         try
         {
             foreach (var mediaPath in mediaPaths)
             {
+                currentFileName = Path.GetFileName(mediaPath);
                 batchToken.ThrowIfCancellationRequested();
-                var result = await this.TranscribeImportAsync(mediaPath, owner, batchToken);
+                var result = await this.TranscribeImportAsync(mediaPath, target, batchToken);
                 if (result.Status is MediaTranscriptionResultStatus.CANCELLED)
+                {
+                    status = MediaImportStatus.CANCELLED;
                     break;
+                }
 
                 if (result.Status is not MediaTranscriptionResultStatus.SUCCEEDED)
+                {
+                    status = MediaImportStatus.FAILED;
+                    failures.Add(new(currentFileName, result.UserMessage, result.ErrorCode));
                     continue;
+                }
 
-                var isPersistedChat = ownerChat is not null
-                                      && WorkspaceBehaviour.IsChatExisting(new LoadChat(ownerChat.WorkspaceId, ownerChat.ChatId));
+                var isPersistedChat = ownerChat is not null && WorkspaceBehaviour.IsChatExisting(new LoadChat(ownerChat.WorkspaceId, ownerChat.ChatId));
                 var attachment = isPersistedChat
                     ? await WorkspaceBehaviour.CreateManagedTranscriptAsync(ownerChat!, mediaPath, result.Text)
                     : await ManagedTranscriptAttachment.CreateStagedAsync(mediaPath, result.Text);
@@ -171,90 +285,84 @@ public sealed class MediaTranscriptionService(RustService rustService, SettingsM
                 if (isPersistedChat)
                     await WorkspaceBehaviour.StoreChatAsync(ownerChat!);
 
-                this.AddCompletedAttachment(owner, attachment);
+                this.AddCompletedAttachment(target, attachment);
             }
         }
         catch (OperationCanceledException)
         {
-            var current = this.GetSnapshot(owner);
-            this.UpdateImportState(owner, current?.CurrentFileName ?? string.Empty, MediaTranscriptionPhase.IDLE, null, MediaImportStatus.CANCELLED);
+            status = MediaImportStatus.CANCELLED;
         }
         catch (Exception exception)
         {
-            logger.LogError(exception, "Owner media batch failed for '{Owner}'.", owner);
+            logger.LogError(exception, "Owner media batch failed for '{Owner}'.", target.Owner);
+            status = MediaImportStatus.FAILED;
+            failures.Add(new(currentFileName, TB("The media file could not be transcribed.")));
         }
         finally
         {
             lock (this.stateLock)
             {
-                this.activeBatches.Remove(owner);
-                if (this.batchCancellations.Remove(owner, out var cancellation))
+                this.activeBatches.Remove(target.Owner);
+                if (this.batchCancellations.Remove(target.Owner, out var cancellation))
                     cancellation.Dispose();
             }
+
+            this.CompleteImport(target, currentFileName, status, failures);
         }
     }
 
     /// <summary>Adds a successful partial result to the retained owner snapshot.</summary>
-    private void AddCompletedAttachment(MediaImportOwner owner, FileAttachment attachment)
+    private void AddCompletedAttachment(MediaImportTarget target, FileAttachment attachment)
     {
         lock (this.stateLock)
         {
-            var current = this.snapshots.GetValueOrDefault(owner);
-            if (current is null)
-                return;
+            if (!this.pendingDeliveries.TryGetValue(target, out var pending))
+                this.pendingDeliveries[target] = pending = new();
 
-            this.snapshots[owner] = current with { CompletedAttachments = [..current.CompletedAttachments, attachment] };
+            if (pending.Attachments.All(existing => existing.FilePath != attachment.FilePath))
+                pending.Attachments.Add(attachment);
         }
 
-        this.StateChanged?.Invoke(owner);
+        this.NotifyStateChanged(target.Owner);
     }
 
     /// <summary>
     /// Transcribes an attachment or file-content import on the serialized visible lane.
     /// </summary>
     /// <param name="mediaPath">Source media path.</param>
-    /// <param name="owner">Media import owner.</param>
+    /// <param name="target">Media import target.</param>
     /// <param name="token">Caller cancellation token.</param>
     /// <returns>A typed terminal result.</returns>
-    private async Task<MediaTranscriptionResult> TranscribeImportAsync(string mediaPath, MediaImportOwner owner, CancellationToken token = default)
+    private async Task<MediaTranscriptionResult> TranscribeImportAsync(string mediaPath, MediaImportTarget target, CancellationToken token = default)
     {
         this.ThrowIfDisposed();
-        var operation = this.CreateOperation(owner, token);
+        var operation = this.CreateOperation(target, token);
         lock (this.stateLock)
         {
-            if (!this.currentImports.TryAdd(owner, operation))
-                throw new InvalidOperationException($"Media owner '{owner}' already has an active operation.");
+            if (!this.currentImports.TryAdd(target.Owner, operation))
+                throw new InvalidOperationException($"Media owner '{target.Owner}' already has an active operation.");
         }
-        this.UpdateImportState(owner, Path.GetFileName(mediaPath), MediaTranscriptionPhase.QUEUED, null, MediaImportStatus.QUEUED);
+        
+        this.UpdateImportState(target, Path.GetFileName(mediaPath), MediaTranscriptionPhase.QUEUED, null, MediaImportStatus.QUEUED);
 
         try
         {
             await this.importQueue.WaitAsync(operation.Cancellation.Token);
             operation.HasQueueLease = true;
-            this.UpdateImportState(owner, Path.GetFileName(mediaPath), MediaTranscriptionPhase.PROBING, 0.0, MediaImportStatus.RUNNING);
-            var result = await this.TranscribeCoreAsync(mediaPath, operation, updateImportState: true);
             
-            var status = result.Status switch
-            {
-                MediaTranscriptionResultStatus.SUCCEEDED => MediaImportStatus.SUCCEEDED,
-                MediaTranscriptionResultStatus.CANCELLED => MediaImportStatus.CANCELLED,
-                _ => MediaImportStatus.FAILED,
-            };
-            
-            this.UpdateImportState(owner, Path.GetFileName(mediaPath), MediaTranscriptionPhase.IDLE, null, status);
-            return result;
+            this.UpdateImportState(target, Path.GetFileName(mediaPath), MediaTranscriptionPhase.PROBING, 0.0, MediaImportStatus.RUNNING);
+            return await this.TranscribeCoreAsync(mediaPath, operation, updateImportState: true);
         }
         catch (OperationCanceledException)
         {
-            this.UpdateImportState(owner, Path.GetFileName(mediaPath), MediaTranscriptionPhase.IDLE, null, MediaImportStatus.CANCELLED);
             return MediaTranscriptionResult.Cancelled();
         }
         finally
         {
             lock (this.stateLock)
             {
-                if (this.currentImports.GetValueOrDefault(owner) == operation)
-                    this.currentImports.Remove(owner);
+                if (this.currentImports.GetValueOrDefault(target.Owner) == operation)
+                    this.currentImports.Remove(target.Owner);
             }
 
             this.ReleaseOperation(operation);
@@ -288,15 +396,17 @@ public sealed class MediaTranscriptionService(RustService rustService, SettingsM
     public async Task StopAsync(MediaImportOwner owner)
     {
         MediaOperation? operation;
+        MediaImportSnapshot? snapshot;
         lock (this.stateLock)
         {
             operation = this.currentImports.GetValueOrDefault(owner);
             this.batchCancellations.GetValueOrDefault(owner)?.Cancel();
             operation?.Cancellation.Cancel();
+            snapshot = this.snapshots.GetValueOrDefault(owner);
         }
 
-        if (operation is not null)
-            this.UpdateImportState(owner, this.GetSnapshot(owner)?.CurrentFileName ?? string.Empty, MediaTranscriptionPhase.CANCELING, null, MediaImportStatus.CANCELING);
+        if (snapshot is not null && this.IsBusy(owner))
+            this.UpdateImportState(snapshot.Target, snapshot.CurrentFileName, MediaTranscriptionPhase.CANCELING, null, MediaImportStatus.CANCELING);
 
         if (!string.IsNullOrWhiteSpace(operation?.JobId))
             await rustService.CancelMediaJobAsync(operation.JobId);
@@ -325,7 +435,7 @@ public sealed class MediaTranscriptionService(RustService rustService, SettingsM
                 return MediaTranscriptionResult.Failed(TB("No usable transcription provider is configured."));
 
             if (updateImportState)
-                this.UpdateImportState(operation.Owner!.Value, Path.GetFileName(mediaPath), MediaTranscriptionPhase.UPLOADING, null, MediaImportStatus.RUNNING);
+                this.UpdateImportState(operation.Target!.Value, Path.GetFileName(mediaPath), MediaTranscriptionPhase.UPLOADING, null, MediaImportStatus.RUNNING);
 
             var provider = providerSettings.CreateProvider();
             if (provider.Provider is LLMProviders.NONE)
@@ -360,6 +470,7 @@ public sealed class MediaTranscriptionService(RustService rustService, SettingsM
             // phase, so deleting both paths here cannot race a still-writing worker.
             if (!this.RetainNormalizedMediaIfRequested(normalizedPath, operation.Id))
                 this.DeleteTemporaryFile(normalizedPath);
+            
             this.DeleteTemporaryFile(normalizedPath + ".partial");
         }
     }
@@ -391,7 +502,7 @@ public sealed class MediaTranscriptionService(RustService rustService, SettingsM
                     var phase = mediaEvent.Phase is MediaJobPhase.PROBING
                         ? MediaTranscriptionPhase.PROBING
                         : MediaTranscriptionPhase.TRANSCODING;
-                    this.UpdateImportState(operation.Owner!.Value, Path.GetFileName(mediaPath), phase, mediaEvent.Progress, MediaImportStatus.RUNNING);
+                    this.UpdateImportState(operation.Target!.Value, Path.GetFileName(mediaPath), phase, mediaEvent.Progress, MediaImportStatus.RUNNING);
                 }
 
                 switch (mediaEvent.Phase)
@@ -448,12 +559,12 @@ public sealed class MediaTranscriptionService(RustService rustService, SettingsM
     }
 
     /// <summary>Creates and registers operation-owned cancellation state.</summary>
-    /// <param name="owner">Media import owner.</param>
+    /// <param name="target">Optional visible media import target.</param>
     /// <param name="token">Caller token linked to the operation.</param>
     /// <returns>The registered operation.</returns>
-    private MediaOperation CreateOperation(MediaImportOwner? owner, CancellationToken token)
+    private MediaOperation CreateOperation(MediaImportTarget? target, CancellationToken token)
     {
-        var operation = new MediaOperation(owner, token);
+        var operation = new MediaOperation(target, token);
         lock (this.stateLock)
             this.operations.Add(operation);
         
@@ -471,23 +582,69 @@ public sealed class MediaTranscriptionService(RustService rustService, SettingsM
     }
 
     /// <summary>Updates and publishes copied state for exactly one owner.</summary>
-    private void UpdateImportState(MediaImportOwner owner, string fileName, MediaTranscriptionPhase phase, double? progress, MediaImportStatus status)
+    private void UpdateImportState(MediaImportTarget target, string fileName, MediaTranscriptionPhase phase, double? progress, MediaImportStatus status)
     {
         var snapshot = new MediaImportSnapshot
         {
-            Owner = owner,
+            Owner = target.Owner,
+            Target = target,
             CurrentFileName = fileName,
             Phase = phase,
             Progress = progress,
             Status = status,
-            CompletedAttachments = this.GetSnapshot(owner)?.CompletedAttachments ?? [],
-            CompletedTextTargets = this.GetSnapshot(owner)?.CompletedTextTargets ?? new Dictionary<string, string>(),
         };
         
         lock (this.stateLock)
-            this.snapshots[owner] = snapshot;
+            this.snapshots[target.Owner] = snapshot;
 
-        this.StateChanged?.Invoke(owner);
+        this.NotifyStateChanged(target.Owner);
+    }
+
+    /// <summary>Publishes one retained terminal result after an entire target batch ended.</summary>
+    private void CompleteImport(MediaImportTarget target, string fileName, MediaImportStatus status, IReadOnlyList<MediaImportFailure> failures)
+    {
+        lock (this.stateLock)
+        {
+            this.snapshots[target.Owner] = new()
+            {
+                Owner = target.Owner,
+                Target = target,
+                CurrentFileName = fileName,
+                Phase = MediaTranscriptionPhase.IDLE,
+                Progress = null,
+                Status = status,
+            };
+            
+            this.outcomes[target.Owner] = new()
+            {
+                Owner = target.Owner,
+                Status = status,
+                Failures = [.. failures],
+            };
+        }
+
+        this.NotifyStateChanged(target.Owner);
+    }
+
+    /// <summary>Publishes state changes without allowing one stale UI subscriber to fault a worker.</summary>
+    private void NotifyStateChanged(MediaImportOwner owner)
+    {
+        if (this.StateChanged is not { } stateChanged)
+            return;
+
+        foreach (var @delegate in stateChanged.GetInvocationList())
+        {
+            var handler = (Action<MediaImportOwner>)@delegate;
+            
+            try
+            {
+                handler(owner);
+            }
+            catch (Exception exception)
+            {
+                logger.LogWarning(exception, "A media state subscriber failed for owner '{Owner}'.", owner);
+            }
+        }
     }
 
     /// <summary>Maps runtime codes to localized user-facing fallback text.</summary>
@@ -578,16 +735,16 @@ public sealed class MediaTranscriptionService(RustService rustService, SettingsM
     private sealed class MediaOperation : IDisposable
     {
         /// <summary>Creates operation state linked to a caller token.</summary>
-        /// <param name="owner">Media import owner.</param>
+        /// <param name="target">Optional visible media import target.</param>
         /// <param name="token">Caller cancellation token.</param>
-        public MediaOperation(MediaImportOwner? owner, CancellationToken token)
+        public MediaOperation(MediaImportTarget? target, CancellationToken token)
         {
-            this.Owner = owner;
+            this.Target = target;
             this.Cancellation = CancellationTokenSource.CreateLinkedTokenSource(token);
         }
 
-        /// <summary>Gets the optional visible import owner; voice operations have none.</summary>
-        public MediaImportOwner? Owner { get; }
+        /// <summary>Gets the optional visible import target; voice operations have none.</summary>
+        public MediaImportTarget? Target { get; }
 
         /// <summary>Gets the unique temporary-path identifier.</summary>
         public Guid Id { get; } = Guid.NewGuid();
@@ -603,5 +760,13 @@ public sealed class MediaTranscriptionService(RustService rustService, SettingsM
 
         /// <summary>Disposes operation-owned cancellation state.</summary>
         public void Dispose() => this.Cancellation.Dispose();
+    }
+
+    /// <summary>Mutable successful results waiting for acknowledgement by one target.</summary>
+    private sealed class PendingDelivery
+    {
+        public List<FileAttachment> Attachments { get; } = [];
+
+        public string? Text { get; set; }
     }
 }

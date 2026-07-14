@@ -1,7 +1,8 @@
+using AIStudio.Dialogs;
+using AIStudio.Tools.Media;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 using AIStudio.Tools.Validation;
-using AIStudio.Dialogs;
 
 using Microsoft.AspNetCore.Components;
 
@@ -23,7 +24,8 @@ public partial class ReadFileContent : MSGComponentBase
         ? string.IsNullOrWhiteSpace(this.Text) ? "primary" : this.Text
         : this.MediaImportTargetId;
 
-    private string lastAppliedMediaTranscript = string.Empty;
+    private MediaImportTarget EffectiveMediaImportTarget => new(this.EffectiveImportOwner, this.EffectiveMediaImportTargetId);
+
     [Parameter]
     public string Text { get; set; } = string.Empty;
     
@@ -96,20 +98,46 @@ public partial class ReadFileContent : MSGComponentBase
             _ = this.InvokeAsync(async () =>
             {
                 await this.SyncCompletedMediaTextAsync();
+                await this.ConsumeStandaloneMediaOutcomeAsync();
                 this.StateHasChanged();
             });
+    }
+
+    /// <summary>Consumes outcomes for dialog-local controls that have no assistant owner surface.</summary>
+    private async Task ConsumeStandaloneMediaOutcomeAsync()
+    {
+        if (this.ImportOwner is not null)
+            return;
+
+        var outcome = this.MediaTranscriptionService.TryConsumeOutcome(this.EffectiveImportOwner);
+        if (outcome is null)
+            return;
+
+        if (outcome.Failures.Count > 0)
+        {
+            var message = string.Join(Environment.NewLine, outcome.Failures.Select(failure => $"{failure.FileName}: {failure.UserMessage}"));
+            await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, message));
+        }
+        else if (outcome.Status is MediaImportStatus.FAILED)
+        {
+            await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, this.T("The media file could not be transcribed.")));
+        }
+
+        if (outcome.Status is MediaImportStatus.CANCELLED)
+        {
+            await this.MessageBus.SendWarning(new(Icons.Material.Filled.VoiceChat, this.T("The media transcription was canceled.")));
+        }
     }
 
     /// <summary>Applies a completed target transcript after progress or navigation.</summary>
     private async Task SyncCompletedMediaTextAsync()
     {
-        var completed = this.MediaTranscriptionService.GetSnapshot(this.EffectiveImportOwner)?.CompletedTextTargets;
-        if (completed is null || !completed.TryGetValue(this.EffectiveMediaImportTargetId, out var text)
-            || text == this.lastAppliedMediaTranscript)
+        var delivery = this.MediaTranscriptionService.GetPendingDelivery(this.EffectiveMediaImportTarget);
+        if (delivery is null || delivery.Text is not { } text)
             return;
 
-        this.lastAppliedMediaTranscript = text;
         await this.FileContentChanged.InvokeAsync(text);
+        this.MediaTranscriptionService.AcknowledgeDelivery(delivery);
     }
 
     /// <summary>Unsubscribes from the singleton media service.</summary>
@@ -280,7 +308,7 @@ public partial class ReadFileContent : MSGComponentBase
 
         return this.MediaTranscriptionService.TryStartTextImport(
             filePath,
-            new MediaImportTarget(this.EffectiveImportOwner, this.EffectiveMediaImportTargetId));
+            this.EffectiveMediaImportTarget);
     }
 
     private bool CanCatchDroppedFile() => this.numDropAreasAboveThis is 0 && (this.isComponentHovered || this.CatchAllDocuments);

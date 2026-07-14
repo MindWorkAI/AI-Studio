@@ -1,6 +1,6 @@
 using AIStudio.Tools.AssistantSessions;
 
-namespace AIStudio.Tools.Services;
+namespace AIStudio.Tools.Media;
 
 /// <summary>Identifies the chat or assistant that owns a media import.</summary>
 public readonly record struct MediaImportOwner(MediaImportOwnerKind Kind, string Id)

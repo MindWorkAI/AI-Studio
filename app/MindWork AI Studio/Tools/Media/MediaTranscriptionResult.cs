@@ -1,6 +1,6 @@
 using AIStudio.Tools.Rust;
 
-namespace AIStudio.Tools.Services;
+namespace AIStudio.Tools.Media;
 
 /// <summary>
 /// Typed terminal result returned by media import and voice operations.

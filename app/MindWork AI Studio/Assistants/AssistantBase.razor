@@ -31,7 +31,6 @@
 
                 @if (this.Body is not null)
                 {
-                    <MediaTranscriptionStatus Owner="@this.CurrentMediaImportOwner"/>
                     <CascadingValue Value="@this.CurrentMediaImportOwner">
                         <CascadingValue Value="@this">
                             <CascadingValue Value="@this.Component">
@@ -161,7 +160,7 @@
 
                 @if (this.ShowReset)
                 {
-                    <MudButton Variant="Variant.Filled" Style="@this.GetResetColor()" StartIcon="@Icons.Material.Filled.Refresh" OnClick="@(async () => await this.InnerResetForm())">
+                    <MudButton Variant="Variant.Filled" Style="@this.GetResetColor()" StartIcon="@Icons.Material.Filled.Refresh" Disabled="@this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner)" OnClick="@(async () => await this.InnerResetForm())">
                         @TB("Reset")
                     </MudButton>
                 }

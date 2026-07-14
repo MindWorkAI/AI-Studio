@@ -1,4 +1,4 @@
-namespace AIStudio.Tools.Services;
+namespace AIStudio.Tools.Media;
 
 /// <summary>Visible phases of the serialized media import lane.</summary>
 public enum MediaTranscriptionPhase

@@ -1,7 +1,9 @@
 using AIStudio.Dialogs.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.AssistantSessions;
+using AIStudio.Tools.Media;
 using AIStudio.Tools.Services;
+
 using Microsoft.AspNetCore.Components;
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
 

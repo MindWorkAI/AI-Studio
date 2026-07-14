@@ -38,10 +38,13 @@ public partial class RustService
         await using var stream = await response.Content.ReadAsStreamAsync(token);
         using var reader = new StreamReader(stream);
 
-        while (!reader.EndOfStream && !token.IsCancellationRequested)
+        while (!token.IsCancellationRequested)
         {
             var line = await reader.ReadLineAsync(token);
-            if (line is null || !line.StartsWith("data:", StringComparison.Ordinal))
+            if (line is null)
+                yield break;
+
+            if (!line.StartsWith("data:", StringComparison.Ordinal))
                 continue;
 
             var json = line["data:".Length..].Trim();

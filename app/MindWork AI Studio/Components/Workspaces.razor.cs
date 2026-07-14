@@ -4,6 +4,7 @@ using System.Text.Json;
 using AIStudio.Chat;
 using AIStudio.Dialogs;
 using AIStudio.Tools.AIJobs;
+using AIStudio.Tools.Media;
 using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
@@ -707,7 +708,8 @@ public partial class Workspaces : MSGComponentBase
         if (chat is null)
             return;
 
-        if (this.AIJobService.IsChatGenerationActive(chat.ChatId))
+        var mediaOwner = MediaImportOwner.ForChat(chat.ChatId);
+        if (this.AIJobService.IsChatGenerationActive(chat.ChatId) || this.MediaTranscriptionService.IsBusy(mediaOwner))
             return;
 
         if (askForConfirmation)
@@ -731,6 +733,7 @@ public partial class Workspaces : MSGComponentBase
         }
 
         await WorkspaceBehaviour.DeleteChatAsync(this.DialogService, chat.WorkspaceId, chat.ChatId, askForConfirmation: false);
+        this.MediaTranscriptionService.ClearOwnerState(mediaOwner);
         await this.LoadTreeItemsAsync(startPrefetch: false);
         
         if (unloadChat && this.CurrentChatThread?.ChatId == chat.ChatId)

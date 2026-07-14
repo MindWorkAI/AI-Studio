@@ -1,4 +1,5 @@
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.Media;
 using AIStudio.Tools.MIME;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;

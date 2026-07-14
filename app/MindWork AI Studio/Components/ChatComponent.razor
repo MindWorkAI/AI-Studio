@@ -101,7 +101,7 @@
                 </MudTooltip>
             }
             
-            <AttachDocuments Name="File Attachments" Layer="@DropLayers.PAGES" DocumentPaths="@this.ComposerState.FileAttachments" DocumentPathsChanged="@this.ComposerAttachmentsChanged" CatchAllDocuments="true" UseSmallForm="true" Provider="@this.Provider" OwnerChat="@this.ChatThread" EnsureOwnerChatAsync="@this.EnsureMediaImportChatAsync" Disabled="@this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner)"/>
+            <AttachDocuments Name="File Attachments" Layer="@DropLayers.PAGES" DocumentPaths="@this.ComposerState.FileAttachments" DocumentPathsChanged="@this.ComposerAttachmentsChanged" CatchAllDocuments="true" UseSmallForm="true" ShowMediaStatus="false" Provider="@this.Provider" OwnerChat="@this.ChatThread" EnsureOwnerChatAsync="@this.EnsureMediaImportChatAsync" Disabled="@this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner)"/>
             
             <MudDivider Vertical="true" Style="height: 24px; align-self: center;"/>
             
