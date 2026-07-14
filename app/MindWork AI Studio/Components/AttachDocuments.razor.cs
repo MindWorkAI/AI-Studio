@@ -169,7 +169,7 @@ public partial class AttachDocuments : MSGComponentBase
         var pending = this.OwnerChat?.PendingMediaTranscripts ?? [];
         var changed = false;
         
-        foreach (var attachment in completed.Concat<FileAttachment>(pending))
+        foreach (var attachment in completed.Concat(pending))
             changed |= this.DocumentPaths.Add(attachment);
 
         if (changed)
