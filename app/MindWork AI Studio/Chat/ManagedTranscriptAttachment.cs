@@ -167,7 +167,4 @@ public sealed record ManagedTranscriptAttachment(string FileName, string FilePat
 
     /// <summary>Gets the platform path comparison used for canonical containment checks.</summary>
     private static StringComparison PathComparison => OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
-
-    /// <summary>Returns localized text while registering the US-English fallback with I18N.</summary>
-    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ManagedTranscriptAttachment).Namespace, nameof(ManagedTranscriptAttachment));
 }
