@@ -1,0 +1,50 @@
+@using AIStudio.Tools.Security
+@inherits MSGComponentBase
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6" Class="d-flex align-center">
+            <MudIcon Icon="@Icons.Material.Filled.GppMaybe" Class="mr-2" Color="Color.Warning" />
+            @T("Prompt Injection Detected")
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        @if (this.Result is not null)
+        {
+            <MudAlert Severity="Severity.Warning" Variant="Variant.Filled" Dense="true" Class="mb-4">
+                @T("AI Studio blocked this content before it reached a model or agent.")
+            </MudAlert>
+
+            <MudText Typo="Typo.body1" Class="mb-2">
+                @T("Source kind"): @this.Result.Source.Kind
+            </MudText>
+            <MudText Typo="Typo.body2" Class="mb-4">
+                @T("Source"): @this.Result.Source.Label
+            </MudText>
+
+            <MudText Typo="Typo.subtitle1" Class="mb-2">
+                @T("Detected signals")
+            </MudText>
+            <MudList T="string" Dense="true" Class="mb-4">
+                @foreach (var finding in this.Result.Findings)
+                {
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.ReportProblem">
+                        @($"{finding.Category} / {finding.DetectionStage}: {finding.Snippet}")
+                    </MudListItem>
+                }
+            </MudList>
+
+            <MudText Typo="Typo.body2">
+                @T("More information"):
+                <MudLink Href="@PromptInjectionGuardService.WIKI_URL" Target="_blank">
+                    @PromptInjectionGuardService.WIKI_URL
+                </MudLink>
+            </MudText>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Close" Variant="Variant.Filled">
+            @T("Close")
+        </MudButton>
+    </DialogActions>
+</MudDialog>

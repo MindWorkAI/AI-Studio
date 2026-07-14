@@ -4,6 +4,7 @@ using AIStudio.Settings;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Tools.AIJobs;
 using AIStudio.Tools.AssistantSessions;
+using AIStudio.Tools.Security;
 using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
@@ -263,6 +264,12 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             this.Logger.LogError(e, "The provider request failed for assistant '{AssistantTitle}'. Status={StatusCode}, Reason='{ReasonPhrase}', Body='{ResponseBody}'", this.Title, e.StatusCode, e.ReasonPhrase, e.ResponseBody);
             await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, e.UserMessage));
         }
+        catch (PromptInjectionBlockedException e)
+        {
+            sessionStatus = AssistantSessionStatus.FAILED;
+            errorMessage = e.Message;
+            this.Logger.LogWarning(e, "Blocked prompt-injection content during assistant session '{AssistantTitle}'.", this.Title);
+        }
         catch (Exception e)
         {
             sessionStatus = AssistantSessionStatus.FAILED;
@@ -442,6 +449,18 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         {
             this.Logger.LogError(e, "The provider request failed for assistant '{AssistantTitle}'. Status={StatusCode}, Reason='{ReasonPhrase}', Body='{ResponseBody}'", this.Title, e.StatusCode, e.ReasonPhrase, e.ResponseBody);
             await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, e.UserMessage));
+
+            if (this.ResultingContentBlock is not null && string.IsNullOrWhiteSpace(aiText.Text))
+            {
+                this.ChatThread?.Blocks.Remove(this.ResultingContentBlock);
+                this.ResultingContentBlock = null;
+            }
+
+            return string.Empty;
+        }
+        catch (PromptInjectionBlockedException e)
+        {
+            this.Logger.LogWarning(e, "Blocked prompt-injection content before sending assistant request for '{AssistantTitle}'.", this.Title);
 
             if (this.ResultingContentBlock is not null && string.IsNullOrWhiteSpace(aiText.Text))
             {

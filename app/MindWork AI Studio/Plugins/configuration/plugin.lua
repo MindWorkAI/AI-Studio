@@ -255,6 +255,14 @@ CONFIG["SETTINGS"] = {}
 -- This must be enabled for the chat-specific provider, profile, and chat template to take effect.
 -- CONFIG["SETTINGS"]["DataChat.PreselectOptions"] = true
 --
+-- Configure prompt-injection protection for external content such as webpages,
+-- retrieved context, and file attachments before it is sent to an LLM.
+-- CONFIG["SETTINGS"]["DataChat.EnablePromptInjectionProtection"] = true
+--
+-- Configure whether AI Studio shows a blocking explanation dialog when
+-- suspicious content is detected and blocked.
+-- CONFIG["SETTINGS"]["DataChat.ShowPromptInjectionAlert"] = true
+--
 -- Configure the preselected provider for chats.
 -- It must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"].
 -- CONFIG["SETTINGS"]["DataChat.PreselectedProvider"] = "00000000-0000-0000-0000-000000000000"

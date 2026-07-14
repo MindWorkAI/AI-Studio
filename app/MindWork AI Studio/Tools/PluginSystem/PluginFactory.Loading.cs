@@ -229,6 +229,12 @@ public static partial class PluginFactory
 
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Chat, x => x.SendToChatDataSourceBehavior, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;
+
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Chat, x => x.EnablePromptInjectionProtection, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Chat, x => x.ShowPromptInjectionAlert, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
         
         // Check for the update interval:
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.UpdateInterval, AVAILABLE_PLUGINS))

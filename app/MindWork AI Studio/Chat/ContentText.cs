@@ -5,6 +5,7 @@ using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.RAG.RAGProcesses;
+using AIStudio.Tools.Security;
 
 namespace AIStudio.Chat;
 
@@ -293,13 +294,18 @@ public sealed class ContentText : IContent
                             LOGGER.LogWarning("File attachment '{FilePath}' has a forbidden file type and will be skipped.", document.FilePath);
                             continue;
                         }
+
+                        var guardService = Program.SERVICE_PROVIDER.GetRequiredService<PromptInjectionGuardService>();
+                        var safeFileContent = await guardService.EnsureSafeForLlmAsync(
+                            await Program.RUST_SERVICE.ReadArbitraryFileData(document.FilePath, int.MaxValue),
+                            PromptInjectionSource.ChatAttachment(document.FilePath));
                         
                         sb.AppendLine();
                         sb.AppendLine("---------------------------------------");
                         sb.AppendLine($"File path: {document.FilePath}");
                         sb.AppendLine("File content:");
                         sb.AppendLine("````");
-                        sb.AppendLine(await Program.RUST_SERVICE.ReadArbitraryFileData(document.FilePath, int.MaxValue));
+                        sb.AppendLine(safeFileContent);
                         sb.AppendLine("````");
                     }
                     

@@ -74,6 +74,11 @@ public enum Event
     SHOW_SUCCESS,
 
     /// <summary>
+    /// Requests display of a prompt-injection alert dialog.
+    /// </summary>
+    SHOW_PROMPT_INJECTION_ALERT,
+
+    /// <summary>
     /// Carries an event received from the Tauri runtime.
     /// </summary>
     TAURI_EVENT_RECEIVED,

@@ -94,6 +94,16 @@ public sealed class DataChat(Expression<Func<Data, DataChat>>? configSelection =
     }
 
     /// <summary>
+    /// Whether prompt-injection protection is enabled for external and attached content.
+    /// </summary>
+    public bool EnablePromptInjectionProtection { get; set; } = ManagedConfiguration.Register(configSelection, n => n.EnablePromptInjectionProtection, true);
+
+    /// <summary>
+    /// Whether an alert dialog should be shown when prompt-injection content is blocked.
+    /// </summary>
+    public bool ShowPromptInjectionAlert { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ShowPromptInjectionAlert, true);
+
+    /// <summary>
     /// Should we show the latest message after loading? When false, we show the first (aka oldest) message.
     /// </summary>
     public bool ShowLatestMessageAfterLoading { get; set; } = true;

@@ -3,10 +3,15 @@ using AIStudio.Chat;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Tools.AssistantSessions;
 
+using Microsoft.AspNetCore.Components;
+
 namespace AIStudio.Assistants.SlideBuilder;
 
 public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuilder>
 {
+    [Inject]
+    private IDialogService DialogService { get; init; } = null!;
+
     protected override Tools.Components Component => Tools.Components.SLIDE_BUILDER_ASSISTANT;
     
     protected override string Title => T("Slide Planner Assistant");
@@ -382,7 +387,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
                 continue;
             }
 
-            var fileContent = await this.RustService.ReadArbitraryFileData(document.FilePath, int.MaxValue);
+            var fileContent = await UserFile.LoadFileData(document.FilePath, this.RustService, this.DialogService);
             sb.AppendLine($"""
                            
                            ## DOCUMENT {numDocuments}:

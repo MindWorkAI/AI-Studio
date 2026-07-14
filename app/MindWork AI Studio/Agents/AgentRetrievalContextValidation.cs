@@ -4,6 +4,7 @@ using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Tools.RAG;
+using AIStudio.Tools.Security;
 using AIStudio.Tools.Services;
 
 namespace AIStudio.Agents;
@@ -237,7 +238,20 @@ public sealed class AgentRetrievalContextValidation (ILogger<AgentRetrievalConte
             // 2. Prepare the retrieval context for the agent:
             //
             var additionalData = new Dictionary<string, string>();
-            var markdownRetrievalContext = await retrievalContext.AsMarkdown(token: token);
+            string markdownRetrievalContext;
+            try
+            {
+                markdownRetrievalContext = await retrievalContext.AsMarkdown(token: token);
+            }
+            catch (PromptInjectionBlockedException exception)
+            {
+                logger.LogWarning(
+                    exception,
+                    "Blocked retrieval context '{DataSourceName}' at '{Path}' before validation.",
+                    retrievalContext.DataSourceName,
+                    retrievalContext.Path);
+                return new(false, "The retrieval context was blocked due to suspected prompt injection.", 1.0f, retrievalContext);
+            }
             additionalData.Add("retrievalContext", markdownRetrievalContext);
 
             //

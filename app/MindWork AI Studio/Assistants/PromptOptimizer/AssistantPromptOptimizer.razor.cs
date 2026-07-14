@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using AIStudio.Chat;
 using AIStudio.Dialogs;
 using AIStudio.Dialogs.Settings;
+using AIStudio.Tools.Security;
 using AIStudio.Tools.AssistantSessions;
 using Microsoft.AspNetCore.Components;
 
@@ -582,6 +583,10 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
             this.customPromptingGuidelineContent = await UserFile.LoadFileData(fileAttachment.FilePath, this.RustService, this.DialogService);
             if (string.IsNullOrWhiteSpace(this.customPromptingGuidelineContent))
                 this.Snackbar.Add(T("The custom prompt guide file is empty or could not be read."), Severity.Warning);
+        }
+        catch (PromptInjectionBlockedException)
+        {
+            this.customPromptingGuidelineContent = string.Empty;
         }
         catch
         {

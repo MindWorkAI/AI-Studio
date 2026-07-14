@@ -5,6 +5,7 @@ using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.RAG.RAGProcesses;
+using AIStudio.Tools.Security;
 
 namespace AIStudio.Tools.AIJobs;
 
@@ -265,6 +266,12 @@ public sealed class AIJobService(
             RemoveEmptyAIResponse(state);
             await this.CompleteChatGenerationAsync(state, AIJobStatus.FAILED, e.UserMessage);
             await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, e.UserMessage));
+        }
+        catch (PromptInjectionBlockedException e)
+        {
+            logger.LogWarning(e, "Blocked prompt-injection content during chat generation job '{JobId}'.", state.Snapshot.JobId);
+            RemoveEmptyAIResponse(state);
+            await this.CompleteChatGenerationAsync(state, AIJobStatus.FAILED, e.Message);
         }
         catch (Exception e)
         {
