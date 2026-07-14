@@ -12,7 +12,7 @@ use calamine::{open_workbook_auto, Reader};
 use file_format::{FileFormat, Kind};
 use futures::{Stream, StreamExt};
 use pdfium_render::prelude::Pdfium;
-use pptx_to_md::{ImageHandlingMode, ParserConfig, PptxContainer};
+use pptx_to_md::{ImageHandlingMode, ParserConfig, PresentationContainer, PresentationFormat, PresentationMetadata };
 use serde::{Deserialize, Deserializer, Serialize};
 use serde::de::{Error as SerdeError, Visitor};
 use std::path::Path;
@@ -203,7 +203,8 @@ async fn stream_data(file_path: &str, extract_images: bool) -> Result<ChunkStrea
             stream_text_file(file_path, true, Some("csv".to_string())).await?
         },
 
-        "pptx" => stream_pptx(file_path, extract_images).await?,
+        "pptx" => stream_presentation(file_path, extract_images, PresentationFormat::Pptx).await?,
+        "odp" => stream_presentation(file_path, extract_images, PresentationFormat::Odp).await?,
         
         "xlsx" | "ods" | "xls" | "xlsm" | "xlsb" | "xla" | "xlam" => {
             stream_spreadsheet_as_csv(file_path).await?
@@ -244,8 +245,11 @@ async fn stream_data(file_path: &str, extract_images: bool) -> Result<ChunkStrea
             
             Kind::Presentation => match fmt {
                 FileFormat::OfficeOpenXmlPresentation => {
-                    stream_pptx(file_path, extract_images).await?
+                    stream_presentation(file_path, extract_images, PresentationFormat::Pptx).await?
                 },
+                FileFormat::OpendocumentPresentation => {
+                    stream_presentation(file_path, extract_images, PresentationFormat::Odp).await?
+                }
 
                 _ => stream_text_file(file_path, false, None).await?,
             },
@@ -448,7 +452,7 @@ async fn chunk_image(file_path: &str) -> Result<ChunkStream> {
     Ok(Box::pin(stream))
 }
 
-async fn stream_pptx(file_path: &str, extract_images: bool) -> Result<ChunkStream> {
+async fn stream_presentation(file_path: &str, extract_images: bool, format: PresentationFormat) -> Result<ChunkStream> {
     let path = Path::new(file_path).to_owned();
 
     let parser_config = ParserConfig::builder()
@@ -456,21 +460,30 @@ async fn stream_pptx(file_path: &str, extract_images: bool) -> Result<ChunkStrea
         .compress_images(true)
         .quality(75)
         .image_handling_mode(ImageHandlingMode::Manually)
+        .include_slide_number_as_comment(true)
+        .include_speaker_notes(true)
+        .include_comments(true)
         .build();
 
     let mut streamer = tokio::task::spawn_blocking(move || {
-        PptxContainer::open(&path, parser_config).map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)
+        PresentationContainer::open_as(&path, parser_config, format).map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)
     }).await??;
 
     let (tx, rx) = mpsc::channel(32);
 
     tokio::spawn(async move {
+        let metadata_md = presentation_metadata_to_markdown(streamer.metadata());
+
         for slide_result in streamer.iter_slides() {
             match slide_result {
                 Ok(slide) => {
-                    if let Some(md_content) = slide.convert_to_md() {
+                    if let Some(mut content) = slide.convert_to_md() {
+                        if slide.slide_number == 1 && let Some(metadata) = metadata_md.as_deref() {
+                            content = format!("{metadata}\n\n{content}");
+                        }
+
                         let chunk = Chunk::new(
-                            md_content,
+                            content,
                             Metadata::Presentation {
                                 slide_number: slide.slide_number,
                                 image: None,
@@ -528,4 +541,47 @@ async fn stream_pptx(file_path: &str, extract_images: bool) -> Result<ChunkStrea
     });
 
     Ok(Box::pin(ReceiverStream::new(rx)))
+}
+
+fn presentation_metadata_to_markdown(metadata: &PresentationMetadata) -> Option<String> {
+    let mut fields = Vec::new();
+    push_presentation_metadata_field(&mut fields, "Title", metadata.title.as_deref());
+    push_presentation_metadata_field(&mut fields, "Author", metadata.author.as_deref());
+    push_presentation_metadata_field(&mut fields, "Last Modified By", metadata.last_modified_by.as_deref());
+    push_presentation_metadata_field(&mut fields, "Subject", metadata.subject.as_deref());
+    push_presentation_metadata_field(&mut fields, "Description", metadata.description.as_deref());
+    if !metadata.keywords.is_empty() {
+        fields.push(format!(
+            "Keywords: {}",
+            sanitize_presentation_metadata_value(&metadata.keywords.join("; "))
+        ));
+    }
+    push_presentation_metadata_field(&mut fields, "Created", metadata.created_at.as_deref());
+    push_presentation_metadata_field(&mut fields, "Modified", metadata.modified_at.as_deref());
+
+    if fields.is_empty() {
+        None
+    } else {
+        Some(format!(
+            "<!-- Presentation Metadata\n{}\n-->",
+            fields.join("\n")
+        ))
+    }
+}
+
+fn push_presentation_metadata_field(fields: &mut Vec<String>, label: &str, value: Option<&str>) {
+    if let Some(value) = value {
+        fields.push(format!(
+            "{label}: {}",
+            sanitize_presentation_metadata_value(value)
+        ));
+    }
+}
+
+fn sanitize_presentation_metadata_value(value: &str) -> String {
+    value
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ")
+        .replace("--", "&#45;&#45;")
 }
