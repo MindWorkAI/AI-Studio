@@ -447,6 +447,7 @@ public sealed class MediaTranscriptionService(RustService rustService, SettingsM
                 providerSettings.Model);
 
             var providerResult = await provider.TranscribeAudioAsync(providerSettings.Model, normalized.Result.OutputPath, settingsManager, operation.Cancellation.Token);
+            operation.Cancellation.Token.ThrowIfCancellationRequested();
             if (!providerResult.Success)
             {
                 logger.LogWarning("The transcription provider failed for '{MediaPath}': {Diagnostic}", mediaPath, providerResult.ErrorMessage);

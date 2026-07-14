@@ -1089,6 +1089,10 @@ public abstract class BaseProvider : IProvider, ISecretId
 
             return TranscriptionResult.FromText(transcriptionResponse.Text);
         }
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
+        {
+            throw;
+        }
         catch (Exception e)
         {
             if (this.IsTimeoutException(e, token))
