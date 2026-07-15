@@ -87,28 +87,26 @@ public sealed partial class RustService
         return await result.Content.ReadFromJsonAsync<FileSaveResponse>(this.jsonRustSerializerOptions);
     }
 
-    public async Task<OpenPathResponse> OpenPathInFileManager(string path)
+    public async Task<OpenPathResponse> TryOpenPathInRuntimeFileManager(string path)
     {
-        var runtimeResponse = await this.TryOpenPathInRuntimeFileManager(path);
-        if (runtimeResponse.Success)
-            return runtimeResponse;
-
-        var localResponse = this.TryOpenPathInLocalFileManager(path);
-        if (localResponse.Success)
-            return localResponse;
-
-        var issue = string.IsNullOrWhiteSpace(runtimeResponse.Issue)
-            ? localResponse.Issue
-            : $"{runtimeResponse.Issue} {localResponse.Issue}";
-
-        return new OpenPathResponse(false, issue.Trim());
-    }
-
-    private async Task<OpenPathResponse> TryOpenPathInRuntimeFileManager(string path)
-    {
+        HttpResponseMessage result;
         try
         {
-            var result = await this.http.PostAsJsonAsync("/open/path", new OpenPathRequest(path), this.jsonRustSerializerOptions);
+            result = await this.http.PostAsJsonAsync("/open/path", new OpenPathRequest(path), this.jsonRustSerializerOptions);
+        }
+        catch (HttpRequestException e)
+        {
+            this.logger!.LogWarning(e, "Failed to reach the Rust runtime file manager endpoint.");
+            return new OpenPathResponse(false, TB("The runtime file manager endpoint is not available."));
+        }
+        catch (TaskCanceledException e)
+        {
+            this.logger!.LogWarning(e, "Timed out while reaching the Rust runtime file manager endpoint.");
+            return new OpenPathResponse(false, TB("The runtime file manager endpoint is not available."));
+        }
+
+        try
+        {
             if (!result.IsSuccessStatusCode)
             {
                 this.logger!.LogWarning("Failed to open a path in the file manager through the Rust runtime: '{StatusCode}'", result.StatusCode);
@@ -116,79 +114,20 @@ public sealed partial class RustService
             }
 
             var response = await result.Content.ReadFromJsonAsync<OpenPathResponse>(this.jsonRustSerializerOptions);
-            return response.Success
+            var normalizedResponse = response.Success
                 ? response
                 : new OpenPathResponse(false, string.IsNullOrWhiteSpace(response.Issue) ? TB("The runtime file manager endpoint failed without details.") : response.Issue);
+
+            return normalizedResponse;
         }
         catch (Exception e)
         {
-            this.logger!.LogWarning(e, "Failed to open a path in the file manager through the Rust runtime.");
-            return new OpenPathResponse(false, TB("The runtime file manager endpoint is not available."));
+            this.logger!.LogWarning(e, "Failed to process the Rust runtime file manager endpoint response.");
+            return new OpenPathResponse(false, TB("The runtime file manager endpoint failed without details."));
+        }
+        finally
+        {
+            result.Dispose();
         }
     }
-
-    private OpenPathResponse TryOpenPathInLocalFileManager(string path)
-    {
-        try
-        {
-            var target = ResolveFileManagerTarget(path);
-            if (target is null)
-                return new OpenPathResponse(false, TB("The path does not exist and its parent folder could not be found."));
-
-            using var process = Process.Start(CreateFileManagerStartInfo(target.Value));
-            return process is null
-                ? new OpenPathResponse(false, TB("The local file manager command did not start."))
-                : new OpenPathResponse(true, string.Empty);
-        }
-        catch (Exception e)
-        {
-            this.logger!.LogWarning(e, "Failed to open a path in the local file manager.");
-            return new OpenPathResponse(false, string.Format(TB("The local file manager command failed: {0}"), e.Message));
-        }
-    }
-
-    private static FileManagerTarget? ResolveFileManagerTarget(string path)
-    {
-        if (string.IsNullOrWhiteSpace(path))
-            return null;
-
-        var requestedPath = path.Trim();
-        if (File.Exists(requestedPath))
-            return new FileManagerTarget(requestedPath, true);
-
-        if (Directory.Exists(requestedPath))
-            return new FileManagerTarget(requestedPath, false);
-
-        var parent = Directory.GetParent(requestedPath)?.FullName;
-        return !string.IsNullOrWhiteSpace(parent) && Directory.Exists(parent)
-            ? new FileManagerTarget(parent, false)
-            : null;
-    }
-
-    private static ProcessStartInfo CreateFileManagerStartInfo(FileManagerTarget target)
-    {
-        if (OperatingSystem.IsWindows())
-        {
-            var windowsInfo = new ProcessStartInfo("explorer.exe") { UseShellExecute = false };
-            windowsInfo.ArgumentList.Add(target.RevealFile ? $"/select,{target.Path}" : target.Path);
-            return windowsInfo;
-        }
-
-        if (OperatingSystem.IsMacOS())
-        {
-            var macOsInfo = new ProcessStartInfo("open") { UseShellExecute = false };
-            if (target.RevealFile)
-                macOsInfo.ArgumentList.Add("-R");
-
-            macOsInfo.ArgumentList.Add(target.Path);
-            return macOsInfo;
-        }
-
-        var linuxInfo = new ProcessStartInfo("xdg-open") { UseShellExecute = false };
-        var directory = target.RevealFile ? Path.GetDirectoryName(target.Path) ?? target.Path : target.Path;
-        linuxInfo.ArgumentList.Add(directory);
-        return linuxInfo;
-    }
-
-    private readonly record struct FileManagerTarget(string Path, bool RevealFile);
 }

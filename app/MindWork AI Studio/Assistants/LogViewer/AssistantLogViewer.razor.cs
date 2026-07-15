@@ -226,7 +226,7 @@ public partial class AssistantLogViewer : MSGComponentBase
         OpenPathResponse response;
         try
         {
-            response = await this.RustService.OpenPathInFileManager(path);
+            response = await this.RustService.TryOpenPathInRuntimeFileManager(path);
         }
         catch (Exception e)
         {
