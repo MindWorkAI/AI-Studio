@@ -249,7 +249,15 @@ public static partial class PluginFactory
         // Check for the quick start guide visibility:
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.ShowQuickStartGuide, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;
-        
+
+        // Check for the last changelog visibility:
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.ShowLastChangelog, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        // Check for the vision panel visibility:
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.ShowVision, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
         // Check for users allowed to added providers:
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.AllowUserToAddProvider, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;

@@ -226,6 +226,12 @@ CONFIG["SETTINGS"] = {}
 -- Configure whether the built-in introduction is shown on the welcome page.
 -- CONFIG["SETTINGS"]["DataApp.ShowIntroduction"] = false
 
+-- Configure whether the last changelog is shown on the welcome page.
+-- CONFIG["SETTINGS"]["DataApp.ShowLastChangelog"] = false
+
+-- Configure whether the vision panel is shown on the welcome page.
+-- CONFIG["SETTINGS"]["DataApp.ShowVision"] = false
+
 -- Configure the user permission to add providers:
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToAddProvider"] = false
 

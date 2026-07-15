@@ -68,6 +68,16 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     public bool ShowQuickStartGuide { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ShowQuickStartGuide, true);
 
     /// <summary>
+    /// Should the last changelog be visible on the home page?
+    /// </summary>
+    public bool ShowLastChangelog { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ShowLastChangelog, true);
+
+    /// <summary>
+    /// Should the vision panel be visible on the home page?
+    /// </summary>
+    public bool ShowVision { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ShowVision, true);
+
+    /// <summary>
     /// The visibility setting for previews features.
     /// </summary>
     public PreviewVisibility PreviewVisibility { get; set; } = ManagedConfiguration.Register(configSelection, n => n.PreviewVisibility, PreviewVisibility.NONE);
