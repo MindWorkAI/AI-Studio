@@ -50,13 +50,18 @@
                     {
                         <MudIconButton Variant="Variant.Text" Icon="@Icons.Material.Filled.Settings" Color="Color.Default" OnClick="@this.OpenSettingsDialog"/>
                     }
-                    @this.AdditionalActions
                 </MudButtonGroup>
-                @if (this.SecurityBadge is not null)
+                @if (this.SecurityBadge is not null || this.AdditionalActions is not null)
                 {
-                    <MudElement>
-                        @this.SecurityBadge
-                    </MudElement>
+                    <MudStack Row="@true" AlignItems="AlignItems.Center" Spacing="1">
+                        @if (this.SecurityBadge is not null)
+                        {
+                            <MudElement>
+                                @this.SecurityBadge
+                            </MudElement>
+                        }
+                        @this.AdditionalActions
+                    </MudStack>
                 }
             </MudStack>
         </MudCardActions>
