@@ -140,7 +140,7 @@ else
                 {
                     var fileState = this.assistantState.FileContent[fileContent.Name];
                     <div class="@fileContent.Class" style="@GetOptionalStyle(fileContent.Style)">
-                        <ReadFileContent @bind-FileContent="@fileState.Content" EnableDragDrop="true" Layer="@DropLayers.ASSISTANTS" CatchAllDocuments="true" />
+                        <ReadFileContent @bind-FileContent="@fileState.Content" MediaImportTargetId="@fileContent.Name" EnableDragDrop="true" Layer="@DropLayers.ASSISTANTS" CatchAllDocuments="true" />
                     </div>
                 }
                 break;

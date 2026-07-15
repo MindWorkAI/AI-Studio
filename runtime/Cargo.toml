@@ -20,7 +20,7 @@ serde_json = "1.0.150"
 keyring-core = "1.0.0"
 arboard = "3.6.1"
 tokio = { version = "1.52.3", features = ["rt", "rt-multi-thread", "macros", "process"] }
-tokio-stream = "0.1.18"
+tokio-stream = { version = "0.1.18", features = ["sync"] }
 futures = "0.3.32"
 async-stream = "0.3.6"
 flexi_logger = "0.31.9"
@@ -39,6 +39,10 @@ hmac = "0.13.0"
 sha2 = "0.11.0"
 rcgen = { version = "0.14.8", features = ["pem"] }
 file-format = "0.29.0"
+symphonia = { version = "0.6", default-features = false, features = ["aac", "aiff", "alac", "caf", "flac", "isomp4", "mkv", "mp1", "mp2", "mp3", "ogg", "pcm", "vorbis", "wav"] }
+ropus = "=0.12.18"
+rubato = { version = "4", default-features = false, features = ["fft_resampler"] }
+webm-iterable = "0.6.4"
 calamine = "0.36.0"
 pdfium-render = "0.9.1"
 sys-locale = "0.3.2"
@@ -68,7 +72,9 @@ windows-native-keyring-store = "1.1.0"
 apple-native-keyring-store = { version = "1.0.0", features = ["keychain"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
+ashpd = { version = "0.13.12", default-features = false, features = ["tokio", "open_uri"] }
 dbus-secret-service-keyring-store = { version = "1.0.0", features = ["crypto-rust"] }
+webkit2gtk = { version = "2.0.2", features = ["v2_8"] }
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-global-shortcut = "2"
@@ -76,3 +82,20 @@ tauri-plugin-updater = "2.10.1"
 
 [features]
 custom-protocol = ["tauri/custom-protocol"]
+
+# Media normalization is CPU-heavy even when the application itself is built for development.
+# Keep release settings untouched while optimizing the hot decoder/resampler/container crates.
+[profile.dev.package.symphonia-core]
+opt-level = 3
+
+[profile.dev.package.symphonia-format-mkv]
+opt-level = 3
+
+[profile.dev.package.ropus]
+opt-level = 3
+
+[profile.dev.package.rubato]
+opt-level = 3
+
+[profile.dev.package.webm-iterable]
+opt-level = 3

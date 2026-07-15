@@ -4,13 +4,22 @@
 Do you want to manage MindWork AI Studio in a corporate environment or within an organization? This documentation explains what you need to do and how it works. First, here's an overview of the entire process:
 
 - You can distribute MindWork AI Studio to employees' devices using tools like Microsoft System Center Configuration Manager (SCCM).
-- Employees can get updates through the built-in update feature. If you want, you can disable automatic updates and control which version gets distributed.
+- Employees can get updates through the built-in update feature. Enterprise configuration can disable automatic checks or the entire built-in update feature so that the IT department controls which version gets distributed.
 - AI Studio checks about every 16 minutes to see where and which configuration it should load. This information is loaded from the local system. On Windows, you might use the registry, for example.
 - If it finds the necessary metadata, AI Studio downloads the configuration as a ZIP file from the specified server.
 - The configuration is an AI Studio plugin written in Lua.
 - Any changes to the configuration apply live while the software is running, so employees don’t need to restart it.
 
 AI Studio checks about every 16 minutes to see if the configuration ID, the server for the configuration, or the configuration itself has changed. If it finds any changes, it loads the updated configuration from the server and applies it right away.
+
+### Manage app updates
+
+Set `CONFIG["SETTINGS"]["DataApp.UpdateInterval"]` in the configuration plugin to control update checks:
+
+- `NO_CHECK` disables automatic update checks. Users can still check for and install updates manually.
+- `DISABLE_UPDATES` disables automatic and manual update checks and installations. AI Studio tells users that updates are managed by their organization and directs questions to their IT department. This policy takes effect immediately when the enterprise configuration changes.
+
+Use `DISABLE_UPDATES` when your organization distributes approved versions through its own software-management process.
 
 ## Configure the devices
 So that MindWork AI Studio knows where to load which configuration, this information must be provided as metadata on employees' devices. Currently, the following options are available:

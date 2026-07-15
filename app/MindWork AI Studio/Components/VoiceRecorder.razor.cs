@@ -1,6 +1,7 @@
-using AIStudio.Provider;
+using System.Buffers.Binary;
+
 using AIStudio.Settings.DataModel;
-using AIStudio.Tools.MIME;
+using AIStudio.Tools.Media;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 
@@ -10,6 +11,8 @@ namespace AIStudio.Components;
 
 public partial class VoiceRecorder : MSGComponentBase
 {
+    private const int PCM_WAV_HEADER_SIZE = 44;
+
     [Inject]
     private ILogger<VoiceRecorder> Logger { get; init; } = null!;
 
@@ -24,6 +27,9 @@ public partial class VoiceRecorder : MSGComponentBase
 
     [Inject]
     private VoiceRecordingAvailabilityService VoiceRecordingAvailabilityService { get; init; } = null!;
+
+    [Inject]
+    private MediaTranscriptionService MediaTranscriptionService { get; init; } = null!;
 
     #region Overrides of MSGComponentBase
 
@@ -93,7 +99,6 @@ public partial class VoiceRecorder : MSGComponentBase
     private bool isTranscribing;
     private FileStream? currentRecordingStream;
     private string? currentRecordingPath;
-    private string? currentRecordingMimeType;
     private string? finalRecordingPath;
     private DotNetObjectReference<VoiceRecorder>? dotNetReference;
 
@@ -131,17 +136,7 @@ public partial class VoiceRecorder : MSGComponentBase
                 return;
             }
 
-            var mimeTypes = GetPreferredMimeTypes(
-                Builder.Create().UseAudio().UseSubtype(AudioSubtype.WEBM).Build(),
-                Builder.Create().UseAudio().UseSubtype(AudioSubtype.OGG).Build(),
-                Builder.Create().UseAudio().UseSubtype(AudioSubtype.AAC).Build(),
-                Builder.Create().UseAudio().UseSubtype(AudioSubtype.MP3).Build(),
-                Builder.Create().UseAudio().UseSubtype(AudioSubtype.AIFF).Build(),
-                Builder.Create().UseAudio().UseSubtype(AudioSubtype.WAV).Build(),
-                Builder.Create().UseAudio().UseSubtype(AudioSubtype.FLAC).Build()
-            );
-
-            this.Logger.LogInformation("Starting audio recording with preferred MIME types: '{PreferredMimeTypes}'.", string.Join<MIMEType>(", ", mimeTypes));
+            this.Logger.LogInformation("Starting PCM/WAV audio recording.");
 
             // Create a DotNetObjectReference to pass to JavaScript:
             this.dotNetReference = DotNetObjectReference.Create(this);
@@ -151,13 +146,8 @@ public partial class VoiceRecorder : MSGComponentBase
 
             try
             {
-                var mimeTypeStrings = mimeTypes.ToStringArray();
-                var actualMimeType = await this.JsRuntime.InvokeAsync<string>("audioRecorder.start", this.dotNetReference, mimeTypeStrings);
-
-                // Store the MIME type for later use:
-                this.currentRecordingMimeType = actualMimeType;
-
-                this.Logger.LogInformation("Audio recording started with MIME type: '{ActualMimeType}'.", actualMimeType);
+                await this.JsRuntime.InvokeVoidAsync("audioRecorder.start", this.dotNetReference);
+                this.Logger.LogInformation("PCM/WAV audio recording started.");
                 this.isPreparing = false;
                 this.isRecording = true;
             }
@@ -168,6 +158,7 @@ public partial class VoiceRecorder : MSGComponentBase
 
                 // Clean up the recording stream if starting failed:
                 await this.FinalizeRecordingStream();
+                await this.ReleaseMicrophoneAsync();
             }
             finally
             {
@@ -176,11 +167,11 @@ public partial class VoiceRecorder : MSGComponentBase
         }
         else
         {
+            var recordingStoppedSuccessfully = false;
             try
             {
-                var result = await this.JsRuntime.InvokeAsync<AudioRecordingResult>("audioRecorder.stop");
-                if (result.ChangedMimeType)
-                    this.Logger.LogWarning("The recorded audio MIME type was changed to '{ResultMimeType}'.", result.MimeType);
+                await this.JsRuntime.InvokeVoidAsync("audioRecorder.stop");
+                recordingStoppedSuccessfully = true;
             }
             catch (Exception e)
             {
@@ -194,28 +185,21 @@ public partial class VoiceRecorder : MSGComponentBase
             this.isRecording = false;
             this.StateHasChanged();
 
-            // Start transcription if we have a recording and a configured provider:
-            if (this.finalRecordingPath is not null)
-                await this.TranscribeRecordingAsync();
-        }
-    }
+            if (!recordingStoppedSuccessfully || this.finalRecordingPath is null)
+            {
+                if (recordingStoppedSuccessfully)
+                {
+                    this.Logger.LogWarning("The audio recorder did not produce any data.");
+                    await this.MessageBus.SendError(new(Icons.Material.Filled.MicOff, this.T("Failed to stop audio recording.")));
+                }
 
-    private static MIMEType[] GetPreferredMimeTypes(params MIMEType[] mimeTypes)
-    {
-        // Default list if no parameters provided:
-        if (mimeTypes.Length is 0)
-        {
-            var audioBuilder = Builder.Create().UseAudio();
-            return
-            [
-                audioBuilder.UseSubtype(AudioSubtype.WEBM).Build(),
-                audioBuilder.UseSubtype(AudioSubtype.OGG).Build(),
-                audioBuilder.UseSubtype(AudioSubtype.MP4).Build(),
-                audioBuilder.UseSubtype(AudioSubtype.MPEG).Build(),
-            ];
-        }
+                this.DeleteFinalRecording();
+                await this.ReleaseMicrophoneAsync();
+                return;
+            }
 
-        return mimeTypes;
+            await this.TranscribeRecordingAsync();
+        }
     }
 
     private async Task InitializeRecordingStream()
@@ -226,7 +210,7 @@ public partial class VoiceRecorder : MSGComponentBase
         if (!Directory.Exists(recordingDirectory))
             Directory.CreateDirectory(recordingDirectory);
 
-        var fileName = $"recording_{DateTime.UtcNow:yyyyMMdd_HHmmss}.audio";
+        var fileName = $"recording_{DateTime.UtcNow:yyyyMMdd_HHmmss}.wav";
         this.currentRecordingPath = Path.Combine(recordingDirectory, fileName);
         this.currentRecordingStream = new FileStream(this.currentRecordingPath, FileMode.Create, FileAccess.Write, FileShare.None, bufferSize: 8192, useAsync: true);
 
@@ -253,6 +237,7 @@ public partial class VoiceRecorder : MSGComponentBase
         catch (Exception ex)
         {
             this.Logger.LogError(ex, "Error writing audio chunk to stream.");
+            throw;
         }
     }
 
@@ -262,45 +247,56 @@ public partial class VoiceRecorder : MSGComponentBase
         if (this.currentRecordingStream is not null)
         {
             await this.currentRecordingStream.FlushAsync();
+            var hasPcmAudioData = await this.FinalizePcmWavHeaderAsync(this.currentRecordingStream);
             await this.currentRecordingStream.DisposeAsync();
             this.currentRecordingStream = null;
 
-            // Rename the file with the correct extension based on MIME type:
-            if (this.currentRecordingPath is not null && this.currentRecordingMimeType is not null)
+            if (this.currentRecordingPath is not null && File.Exists(this.currentRecordingPath))
             {
-                var extension = GetFileExtension(this.currentRecordingMimeType);
-                var newPath = Path.ChangeExtension(this.currentRecordingPath, extension);
+                var fileSize = new FileInfo(this.currentRecordingPath).Length;
 
-                if (File.Exists(this.currentRecordingPath))
+                if (hasPcmAudioData)
                 {
-                    File.Move(this.currentRecordingPath, newPath, overwrite: true);
-                    this.finalRecordingPath = newPath;
-                    this.Logger.LogInformation("Finalized audio recording over {NumChunks} streamed audio chunks to the file '{RecordingPath}'.", this.numReceivedChunks, newPath);
+                    this.finalRecordingPath = this.currentRecordingPath;
+                    this.Logger.LogInformation("Finalized audio recording over {NumChunks} streamed audio chunks to the file '{RecordingPath}' with {FileSize} bytes.", this.numReceivedChunks, this.currentRecordingPath, fileSize);
+                }
+                else
+                {
+                    this.Logger.LogWarning("Discarding a PCM/WAV audio recording without audio data ({FileSize} bytes).", fileSize);
+                    File.Delete(this.currentRecordingPath);
                 }
             }
         }
 
         this.currentRecordingPath = null;
-        this.currentRecordingMimeType = null;
 
         // Dispose the .NET reference:
         this.dotNetReference?.Dispose();
         this.dotNetReference = null;
     }
 
-    private static string GetFileExtension(string mimeType)
+    private async Task<bool> FinalizePcmWavHeaderAsync(FileStream recordingStream)
     {
-        var baseMimeType = mimeType.Split(';')[0].Trim().ToLowerInvariant();
-        return baseMimeType switch
-        {
-            "audio/webm" => ".webm",
-            "audio/ogg" => ".ogg",
-            "audio/mp4" => ".m4a",
-            "audio/mpeg" => ".mp3",
-            "audio/wav" => ".wav",
-            "audio/x-wav" => ".wav",
-            _ => ".audio" // Fallback
-        };
+        if (recordingStream.Length <= PCM_WAV_HEADER_SIZE)
+            return false;
+
+        var pcmDataSize = recordingStream.Length - PCM_WAV_HEADER_SIZE;
+        if (pcmDataSize > uint.MaxValue - 36)
+            throw new InvalidDataException("The streamed PCM recording exceeds the WAV size limit.");
+
+        var valueBuffer = new byte[sizeof(uint)];
+        BinaryPrimitives.WriteUInt32LittleEndian(valueBuffer, checked((uint)(36 + pcmDataSize)));
+        recordingStream.Seek(4, SeekOrigin.Begin);
+        await recordingStream.WriteAsync(valueBuffer);
+
+        BinaryPrimitives.WriteUInt32LittleEndian(valueBuffer, checked((uint)pcmDataSize));
+        recordingStream.Seek(40, SeekOrigin.Begin);
+        await recordingStream.WriteAsync(valueBuffer);
+        recordingStream.Seek(0, SeekOrigin.End);
+        await recordingStream.FlushAsync();
+
+        this.Logger.LogInformation("Finalized a streamed PCM/WAV header for {PcmDataSize} bytes of audio data.", pcmDataSize);
+        return true;
     }
 
     private async Task TranscribeRecordingAsync()
@@ -317,58 +313,22 @@ public partial class VoiceRecorder : MSGComponentBase
 
         try
         {
-            // Get the configured transcription provider ID:
-            var transcriptionProviderId = this.SettingsManager.ConfigurationData.App.UseTranscriptionProvider;
-            if (string.IsNullOrWhiteSpace(transcriptionProviderId))
+            var transcriptionResult = await this.MediaTranscriptionService.TranscribeVoiceAsync(this.finalRecordingPath);
+            if (transcriptionResult.Status is not MediaTranscriptionResultStatus.SUCCEEDED)
             {
-                this.Logger.LogWarning("No transcription provider is configured.");
-                await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, this.T("No transcription provider is configured.")));
-                return;
-            }
+                if (transcriptionResult.Status is MediaTranscriptionResultStatus.CANCELLED)
+                    return;
 
-            // Find the transcription provider in the list of configured providers:
-            var transcriptionProviderSettings = this.SettingsManager.ConfigurationData.TranscriptionProviders
-                .FirstOrDefault(x => x.Id == transcriptionProviderId);
+                if (transcriptionResult.Status is MediaTranscriptionResultStatus.NO_AUDIBLE_SIGNAL)
+                {
+                    await this.MessageBus.SendWarning(new(Icons.Material.Filled.VoiceChat, transcriptionResult.UserMessage));
+                    return;
+                }
 
-            if (transcriptionProviderSettings is null)
-            {
-                this.Logger.LogWarning("The configured transcription provider with ID '{ProviderId}' was not found.", transcriptionProviderId);
-                await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, this.T("The configured transcription provider was not found.")));
-                return;
-            }
-
-            // Check the confidence level:
-            var minimumLevel = this.SettingsManager.GetMinimumConfidenceLevel(Tools.Components.NONE);
-            var providerConfidence = transcriptionProviderSettings.UsedLLMProvider.GetConfidence(this.SettingsManager);
-            if (providerConfidence.Level < minimumLevel)
-            {
-                this.Logger.LogWarning(
-                    "The configured transcription provider '{ProviderName}' has a confidence level of '{ProviderLevel}', which is below the minimum required level of '{MinimumLevel}'.",
-                    transcriptionProviderSettings.UsedLLMProvider,
-                    providerConfidence.Level,
-                    minimumLevel);
-                await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, this.T("The configured transcription provider does not meet the minimum confidence level.")));
-                return;
-            }
-
-            // Create the provider instance:
-            var provider = transcriptionProviderSettings.CreateProvider();
-            if (provider.Provider is LLMProviders.NONE)
-            {
-                this.Logger.LogError("Failed to create the transcription provider instance.");
-                await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, this.T("Failed to create the transcription provider.")));
-                return;
-            }
-
-            // Call the transcription API:
-            this.Logger.LogInformation("Starting transcription with provider '{ProviderName}' and model '{ModelName}'.", transcriptionProviderSettings.UsedLLMProvider, transcriptionProviderSettings.Model.ToString());
-            var transcriptionResult = await provider.TranscribeAudioAsync(transcriptionProviderSettings.Model, this.finalRecordingPath, this.SettingsManager);
-            if (!transcriptionResult.Success)
-            {
                 this.Logger.LogWarning("The transcription request failed.");
-                var userMessage = string.IsNullOrWhiteSpace(transcriptionResult.ErrorMessage)
+                var userMessage = string.IsNullOrWhiteSpace(transcriptionResult.UserMessage)
                     ? this.T("Unfortunately, there was an error communicating with the AI system.")
-                    : transcriptionResult.ErrorMessage;
+                    : transcriptionResult.UserMessage;
                 await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, userMessage));
                 return;
             }
@@ -406,19 +366,6 @@ public partial class VoiceRecorder : MSGComponentBase
             // Copy the transcribed text to the clipboard:
             await this.RustService.CopyText2Clipboard(this.Snackbar, transcribedText);
 
-            // Delete the recording file:
-            try
-            {
-                if (File.Exists(this.finalRecordingPath))
-                {
-                    File.Delete(this.finalRecordingPath);
-                    this.Logger.LogInformation("Deleted the recording file '{RecordingPath}'.", this.finalRecordingPath);
-                }
-            }
-            catch (Exception ex)
-            {
-                this.Logger.LogError(ex, "Failed to delete the recording file '{RecordingPath}'.", this.finalRecordingPath);
-            }
         }
         catch (Exception ex)
         {
@@ -428,10 +375,28 @@ public partial class VoiceRecorder : MSGComponentBase
         finally
         {
             await this.ReleaseMicrophoneAsync();
-
-            this.finalRecordingPath = null;
+            this.DeleteFinalRecording();
             this.isTranscribing = false;
             this.StateHasChanged();
+        }
+    }
+
+    private void DeleteFinalRecording()
+    {
+        var recordingPath = this.finalRecordingPath;
+        this.finalRecordingPath = null;
+
+        if (recordingPath is null)
+            return;
+
+        try
+        {
+            if (File.Exists(recordingPath))
+                File.Delete(recordingPath);
+        }
+        catch (Exception ex)
+        {
+            this.Logger.LogError(ex, "Failed to delete the recording file '{RecordingPath}'.", recordingPath);
         }
     }
 

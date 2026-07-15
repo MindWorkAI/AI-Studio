@@ -6,6 +6,7 @@ using AIStudio.Tools.AIJobs;
 using AIStudio.Tools.AssistantSessions;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.PluginSystem.Assistants;
+using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Server.Kestrel.Core;
@@ -88,6 +89,7 @@ internal sealed class Program
             return;
         }
         
+        var runtimeInfo = await rust.GetRuntimeInfo();
         var builder = WebApplication.CreateBuilder();
         builder.WebHost.ConfigureKestrel(kestrelServerOptions =>
         {
@@ -127,13 +129,16 @@ internal sealed class Program
         builder.Services.AddSingleton(new MudTheme());
         builder.Services.AddSingleton(MessageBus.INSTANCE);
         builder.Services.AddSingleton(rust);
+        builder.Services.AddSingleton(typeof(RuntimeInfoResponse), runtimeInfo);
         builder.Services.AddMudMarkdownClipboardService<MarkdownClipboardService>();
         builder.Services.AddSingleton<SettingsManager>();
         builder.Services.AddSingleton<ThreadSafeRandom>();
         builder.Services.AddSingleton<AIJobService>();
         builder.Services.AddSingleton<AssistantSessionService>();
         builder.Services.AddSingleton<VoiceRecordingAvailabilityService>();
+        builder.Services.AddSingleton<MediaTranscriptionService>();
         builder.Services.AddSingleton<AssistantPluginInstallService>();
+        builder.Services.AddSingleton<UpdatePolicy>();
         builder.Services.AddSingleton<AssistantPluginGenerationService>();
         builder.Services.AddSingleton<DataSourceService>();
         builder.Services.AddScoped<PandocAvailabilityService>();
@@ -145,6 +150,7 @@ internal sealed class Program
         builder.Services.AddTransient<AssistantPluginAuditService>();
         builder.Services.AddHostedService<UpdateService>();
         builder.Services.AddHostedService<TemporaryChatService>();
+        builder.Services.AddHostedService<TranscriptStagingCleanupService>();
         builder.Services.AddHostedService<EnterpriseEnvironmentService>();
         builder.Services.AddSingleton<DatabaseClientProvider>();
         builder.Services.AddHostedService<GlobalShortcutService>();

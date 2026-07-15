@@ -15,6 +15,12 @@ public partial class ConfirmDialog : MSGComponentBase
     [Parameter]
     public string Message { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Optional Markdown content rendered instead of using the message property.
+    /// </summary>
+    [Parameter]
+    public string MarkdownBody { get; set; } = string.Empty;
+
     private void Cancel() => this.MudDialog.Cancel();
     
     private void Confirm() => this.MudDialog.Close(DialogResult.Ok(true));

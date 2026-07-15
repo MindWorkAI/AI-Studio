@@ -203,6 +203,105 @@
     margin-right: 0 !important;
 }
 
+.log-viewer-shell {
+    min-width: 0;
+}
+
+.log-viewer-select {
+    min-width: 12rem;
+}
+
+.log-viewer-number {
+    max-width: 9rem;
+}
+
+.log-viewer-filter {
+    min-width: 18rem;
+    max-width: 32rem;
+}
+
+.log-viewer-multiselect {
+    min-width: 16rem;
+    max-width: 34rem;
+}
+
+.log-viewer-path {
+    color: var(--mud-palette-text-secondary);
+    word-break: break-all;
+}
+
+.log-viewer-pane {
+    min-height: 28rem;
+    border: 1px solid var(--mud-palette-lines-default);
+    border-radius: 6px;
+    background-color: var(--mud-palette-background-grey);
+}
+
+.log-viewer-lines {
+    margin: 0;
+    padding: 0.5rem 0;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 0.875rem;
+    line-height: 1.45;
+}
+
+.log-viewer-line {
+    display: grid;
+    grid-template-columns: 5.5rem minmax(0, 1fr);
+    min-height: 1.25rem;
+}
+
+.log-viewer-line:hover {
+    background-color: var(--mud-palette-action-default-hover);
+}
+
+.log-viewer-line-number {
+    padding-right: 0.75rem;
+    color: var(--mud-palette-text-secondary);
+    text-align: right;
+    user-select: none;
+    border-right: 1px solid var(--mud-palette-lines-default);
+}
+
+.log-viewer-line-text {
+    padding-left: 0.75rem;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.log-viewer-line-error {
+    color: var(--mud-palette-error);
+}
+
+.log-viewer-line-warn {
+    color: var(--mud-palette-warning-darken);
+}
+
+.log-viewer-line-info {
+    color: var(--mud-palette-info);
+}
+
+.log-viewer-line-debug,
+.log-viewer-line-trace {
+    color: var(--mud-palette-text-secondary);
+}
+
+.log-viewer-highlight {
+    padding: 0 2px;
+    border-radius: 2px;
+    background-color: var(--mud-palette-warning);
+    color: var(--mud-palette-warning-text);
+}
+
+.log-viewer-empty {
+    display: flex;
+    min-height: 20rem;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    color: var(--mud-palette-text-secondary);
+}
+
 .code-editor {
     display: grid;
     grid-template-columns: minmax(2.8rem, auto) minmax(0, 1fr);

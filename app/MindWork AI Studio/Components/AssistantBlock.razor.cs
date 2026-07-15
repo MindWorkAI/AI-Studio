@@ -1,6 +1,9 @@
 using AIStudio.Dialogs.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.AssistantSessions;
+using AIStudio.Tools.Media;
+using AIStudio.Tools.Services;
+
 using Microsoft.AspNetCore.Components;
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
@@ -60,6 +63,9 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase where TSetting
 
     [Inject]
     private AssistantSessionService AssistantSessionService { get; init; } = null!;
+
+    [Inject]
+    private MediaTranscriptionService MediaTranscriptionService { get; init; } = null!;
     
     private async Task OpenSettingsDialog()
     {
@@ -71,7 +77,7 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase where TSetting
         await this.DialogService.ShowAsync<TSettings>(T("Open Settings"), dialogParameters, DialogOptions.FULLSCREEN);
     }
 
-    private string BorderColor => this.AssistantSessionSnapshot?.IsActive is true ? this.ColorTheme.GetActivityIndicatorColor(this.SettingsManager) : this.SettingsManager.IsDarkMode switch
+    private string BorderColor => this.AssistantSessionSnapshot?.IsActive is true || this.MediaImportSnapshot?.IsBusy is true ? this.ColorTheme.GetActivityIndicatorColor(this.SettingsManager) : this.SettingsManager.IsDarkMode switch
     {
         true => this.ColorTheme.GetCurrentPalette(this.SettingsManager).GrayDefault,
         false => this.ColorTheme.GetCurrentPalette(this.SettingsManager).GrayDefault,
@@ -92,10 +98,29 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase where TSetting
         ? this.AssistantSessionService.GetSnapshots().FirstOrDefault(snapshot => snapshot.Key.Component == this.Component)
         : this.AssistantSessionService.GetSnapshots().FirstOrDefault(snapshot => snapshot.Key.InstanceId == this.AssistantSessionInstanceId);
 
+    private MediaImportOwner CurrentMediaImportOwner => MediaImportOwner.ForAssistant(new AssistantSessionKey(this.Component, this.AssistantSessionInstanceId));
+
+    private MediaImportSnapshot? MediaImportSnapshot => string.IsNullOrWhiteSpace(this.AssistantSessionInstanceId)
+        ? this.MediaTranscriptionService.GetSnapshots().FirstOrDefault(snapshot =>
+            snapshot.Owner.Kind is MediaImportOwnerKind.ASSISTANT
+            && snapshot.Owner.Id.StartsWith($"{this.Component}:", StringComparison.Ordinal))
+        : this.MediaTranscriptionService.GetSnapshot(this.CurrentMediaImportOwner);
+
     /// <summary>
     /// Gets the assistant session indicator shown on top of the assistant icon.
     /// </summary>
-    private AssistantSessionIndicatorData? AssistantSessionIndicator => this.AssistantSessionSnapshot?.Status switch
+    private AssistantSessionIndicatorData? AssistantSessionIndicator => this.MediaImportSnapshot?.Status switch
+    {
+        MediaImportStatus.QUEUED or MediaImportStatus.RUNNING or MediaImportStatus.CANCELING => new(Icons.Material.Filled.ChangeCircle, Color.Info, this.T("Media is still being prepared.")),
+        MediaImportStatus.SUCCEEDED => new(Icons.Material.Filled.TaskAlt, Color.Success, this.T("The media transcript is ready.")),
+        MediaImportStatus.WARNING => new(Icons.Material.Filled.WarningAmber, Color.Warning, this.T("Media transcription completed with a warning. Open the assistant to review it.")),
+        MediaImportStatus.FAILED => new(Icons.Material.Filled.Error, Color.Error, this.T("Media transcription failed. Open the assistant to review it.")),
+        MediaImportStatus.CANCELLED => new(Icons.Material.Filled.Cancel, Color.Warning, this.T("Media transcription was canceled. Open the assistant to review it.")),
+        
+        _ => this.AssistantSessionIndicatorWithoutMedia,
+    };
+
+    private AssistantSessionIndicatorData? AssistantSessionIndicatorWithoutMedia => this.AssistantSessionSnapshot?.Status switch
     {
         AssistantSessionStatus.RUNNING or AssistantSessionStatus.CANCELING => new(Icons.Material.Filled.ChangeCircle, Color.Info, this.T("Assistant is still running.")),
         AssistantSessionStatus.COMPLETED => new(Icons.Material.Filled.TaskAlt, Color.Success, this.T("The result is ready.")),
@@ -103,6 +128,28 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase where TSetting
         AssistantSessionStatus.CANCELED => new(Icons.Material.Filled.Cancel, Color.Warning, this.T("Assistant was canceled. Open it to review the result.")),
         _ => null,
     };
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.MediaTranscriptionService.StateChanged += this.OnMediaImportStateChanged;
+        await base.OnInitializedAsync();
+    }
+
+    private void OnMediaImportStateChanged(MediaImportOwner owner)
+    {
+        var matches = string.IsNullOrWhiteSpace(this.AssistantSessionInstanceId)
+            ? owner.Kind is MediaImportOwnerKind.ASSISTANT && owner.Id.StartsWith($"{this.Component}:", StringComparison.Ordinal)
+            : owner == this.CurrentMediaImportOwner;
+        
+        if (matches)
+            _ = this.InvokeAsync(this.StateHasChanged);
+    }
+
+    protected override void DisposeResources()
+    {
+        this.MediaTranscriptionService.StateChanged -= this.OnMediaImportStateChanged;
+        base.DisposeResources();
+    }
 
     /// <summary>
     /// Refreshes the block when assistant session activity changes.

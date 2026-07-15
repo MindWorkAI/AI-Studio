@@ -333,9 +333,14 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
     private bool IsNoPolicySelectedOrProtected => this.selectedPolicy is null || this.selectedPolicy.IsProtected;
     
     private bool IsNoPolicySelected => this.selectedPolicy is null;
+
+    private bool ArePolicyControlsDisabled => this.IsProcessing || this.IsMediaImportBusy;
     
     private void SelectedPolicyChanged(DataDocumentAnalysisPolicy? policy)
     {
+        if (this.ArePolicyControlsDisabled)
+            return;
+
         this.selectedPolicy = policy;
         this.ResetForm();
         this.policyDefinitionExpanded = !this.selectedPolicy?.IsProtected ?? true;
@@ -353,6 +358,9 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
     
     private async Task AddPolicy()
     {
+        if (this.ArePolicyControlsDisabled)
+            return;
+
         this.SettingsManager.ConfigurationData.DocumentAnalysis.Policies.Add(new ()
         {
             Id = Guid.NewGuid().ToString(),
@@ -373,6 +381,9 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
 
     private async Task RemovePolicy()
     {
+        if (this.ArePolicyControlsDisabled)
+            return;
+
         if(this.selectedPolicy is null)
             return;
         

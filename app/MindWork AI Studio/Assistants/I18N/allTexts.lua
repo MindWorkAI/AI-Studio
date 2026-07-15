@@ -304,6 +304,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::NUMBERPARTICIPANTSEXTENSIONS::T81
 -- Stop generation
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T1317408357"] = "Stop generation"
 
+-- The media file could not be transcribed.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T1543974632"] = "The media file could not be transcribed."
+
 -- Reset
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T180921696"] = "Reset"
 
@@ -312,6 +315,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T1809312323"] = "Please se
 
 -- The assistant failed. The message is: '{0}'
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T1833836281"] = "The assistant failed. The message is: '{0}'"
+
+-- The media transcription was canceled.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T241403726"] = "The media transcription was canceled."
 
 -- This assistant is already running. AI Studio opens the running session instead.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T2575715765"] = "This assistant is already running. AI Studio opens the running session instead."
@@ -1600,6 +1606,99 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LEGALCHECK::ASSISTANTLEGALCHECK::T4254597
 -- Ask your questions
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LEGALCHECK::ASSISTANTLEGALCHECK::T467099852"] = "Ask your questions"
 
+-- Find
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T1042076026"] = "Find"
+
+-- The log file could not be read: {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T1147062477"] = "The log file could not be read: {0}"
+
+-- Select a log file
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T1231773010"] = "Select a log file"
+
+-- Log level
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T1318706515"] = "Log level"
+
+-- Refresh
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T135637716"] = "Refresh"
+
+-- Showing {0} of {1} loaded lines. {2} older lines were skipped. Last refresh: {3}.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T1747827400"] = "Showing {0} of {1} loaded lines. {2} older lines were skipped. Last refresh: {3}."
+
+-- The log file does not exist: {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T1807514273"] = "The log file does not exist: {0}"
+
+-- Could not open the log file location.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T1828231197"] = "Could not open the log file location."
+
+-- Other
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T1849229205"] = "Other"
+
+-- Max lines
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T1904230854"] = "Max lines"
+
+-- All
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T1974461284"] = "All"
+
+-- Startup log
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T2288538420"] = "Startup log"
+
+-- Showing {0} of {1} lines. Last refresh: {2}.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T2378353570"] = "Showing {0} of {1} lines. Last refresh: {2}."
+
+-- No matching log lines.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T2511997530"] = "No matching log lines."
+
+-- Could not open the log file location: {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T2533784927"] = "Could not open the log file location: {0}"
+
+-- Source details
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T2686813966"] = "Source details"
+
+-- Loaded {0} lines. Last refresh: {1}.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T2920304709"] = "Loaded {0} lines. Last refresh: {1}."
+
+-- Filter only
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T3152625639"] = "Filter only"
+
+-- Loading log file...
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T333036481"] = "Loading log file..."
+
+-- Unknown error
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T3461425987"] = "Unknown error"
+
+-- The log file path is not available yet.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T3686775689"] = "The log file path is not available yet."
+
+-- Logger
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T376222229"] = "Logger"
+
+-- Auto-refresh
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T3837203600"] = "Auto-refresh"
+
+-- not loaded yet
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T3863250749"] = "not loaded yet"
+
+-- Loading...
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T397479987"] = "Loading..."
+
+-- Usage log
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T4031747274"] = "Usage log"
+
+-- Open in folder
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T4048746540"] = "Open in folder"
+
+-- Log Viewer
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T4130241777"] = "Log Viewer"
+
+-- Opened the log file location.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T4162897654"] = "Opened the log file location."
+
+-- Show timestamps
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T469116133"] = "Show timestamps"
+
+-- Clear
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T77955010"] = "Clear"
+
 -- You can enter text, attach one or more documents, or use both. At least one input is required.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MYTASKS::ASSISTANTMYTASKS::T1442535450"] = "You can enter text, attach one or more documents, or use both. At least one input is required."
 
@@ -2263,8 +2362,23 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::IIMAGESOURCEEXTENSIONS::T349928509"] = "The ima
 -- Open Settings
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T1172211894"] = "Open Settings"
 
+-- Media transcription was canceled. Open the assistant to review it.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T1233815302"] = "Media transcription was canceled. Open the assistant to review it."
+
+-- Media transcription failed. Open the assistant to review it.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T2177964639"] = "Media transcription failed. Open the assistant to review it."
+
+-- Media transcription completed with a warning. Open the assistant to review it.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T2217674098"] = "Media transcription completed with a warning. Open the assistant to review it."
+
+-- Media is still being prepared.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T2600900617"] = "Media is still being prepared."
+
 -- Assistant is still running.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T2719896610"] = "Assistant is still running."
+
+-- The media transcript is ready.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T3248321953"] = "The media transcript is ready."
 
 -- Assistant was canceled. Open it to review the result.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T3390934621"] = "Assistant was canceled. Open it to review the result."
@@ -2368,17 +2482,32 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T1358313858"] = "Click t
 -- Drop files here to attach them.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T143112277"] = "Drop files here to attach them."
 
+-- The media file could not be transcribed.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T1543974632"] = "The media file could not be transcribed."
+
 -- Click here to attach files.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T1875575968"] = "Click here to attach files."
 
+-- Transcribe media files
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T2178031033"] = "Transcribe media files"
+
 -- Drag and drop files into the marked area or click here to attach documents:
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T230755331"] = "Drag and drop files into the marked area or click here to attach documents:"
+
+-- The media transcription was canceled.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T241403726"] = "The media transcription was canceled."
 
 -- Select files to attach
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T2495931372"] = "Select files to attach"
 
 -- Document Preview
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T285154968"] = "Document Preview"
+
+-- Media files require a configured transcription provider. Configure one in the transcription settings.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T3172443094"] = "Media files require a configured transcription provider. Configure one in the transcription settings."
+
+-- The selected audio and video files will be prepared locally. Their audio will then be uploaded to the configured transcription provider.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T322693339"] = "The selected audio and video files will be prepared locally. Their audio will then be uploaded to the configured transcription provider."
 
 -- Clear file list
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T3759696136"] = "Clear file list"
@@ -2404,6 +2533,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1317408357"] = "Stop gene
 -- Save chat
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1516264254"] = "Save chat"
 
+-- The media file could not be transcribed.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1543974632"] = "The media file could not be transcribed."
+
 -- Type your input here...
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1849313532"] = "Type your input here..."
 
@@ -2415,6 +2547,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2036185364"] = "Code"
 
 -- Italic
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2377171085"] = "Italic"
+
+-- The media transcription was canceled.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T241403726"] = "The media transcription was canceled."
 
 -- Profile usage is disabled according to your chat template settings.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2670286472"] = "Profile usage is disabled according to your chat template settings."
@@ -2641,6 +2776,24 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANDATORYINFODISPLAY::T3511160492"] = "Ac
 -- Please review this text again. The content was changed.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANDATORYINFODISPLAY::T941885055"] = "Please review this text again. The content was changed."
 
+-- Waiting to prepare media
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MEDIATRANSCRIPTIONSTATUS::T1167267986"] = "Waiting to prepare media"
+
+-- Stop media transcription
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MEDIATRANSCRIPTIONSTATUS::T1868377405"] = "Stop media transcription"
+
+-- Stopping media transcription
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MEDIATRANSCRIPTIONSTATUS::T1878101489"] = "Stopping media transcription"
+
+-- Inspecting media
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MEDIATRANSCRIPTIONSTATUS::T2431421733"] = "Inspecting media"
+
+-- Transcribing
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MEDIATRANSCRIPTIONSTATUS::T2938661425"] = "Transcribing"
+
+-- Preparing audio
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MEDIATRANSCRIPTIONSTATUS::T3200155905"] = "Preparing audio"
+
 -- Given that my employer's workplace uses both Windows and Linux, I wanted a cross-platform solution that would work seamlessly across all major operating systems, including macOS. Additionally, I wanted to demonstrate that it is possible to create modern, efficient, cross-platform applications without resorting to Electron bloatware. The combination of .NET and Rust with Tauri proved to be an excellent technology stack for building such robust applications.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MOTIVATION::T1057189794"] = "Given that my employer's workplace uses both Windows and Linux, I wanted a cross-platform solution that would work seamlessly across all major operating systems, including macOS. Additionally, I wanted to demonstrate that it is possible to create modern, efficient, cross-platform applications without resorting to Electron bloatware. The combination of .NET and Rust with Tauri proved to be an excellent technology stack for building such robust applications."
 
@@ -2758,17 +2911,32 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T4279448758"] = "Uses 
 -- Provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T900237532"] = "Provider"
 
+-- The media file could not be transcribed.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T1543974632"] = "The media file could not be transcribed."
+
 -- Failed to load file content
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T1989554334"] = "Failed to load file content"
 
 -- Drop one file here to load its content.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T2274562398"] = "Drop one file here to load its content."
 
+-- The media transcription was canceled.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T241403726"] = "The media transcription was canceled."
+
+-- The selected media file will be prepared locally. Its audio will then be uploaded to the configured transcription provider.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T2839709466"] = "The selected media file will be prepared locally. Its audio will then be uploaded to the configured transcription provider."
+
+-- Media files require a configured transcription provider. Configure one in the transcription settings.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T3172443094"] = "Media files require a configured transcription provider. Configure one in the transcription settings."
+
 -- Use file content as input
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T3499386973"] = "Use file content as input"
 
 -- Select file to read its content
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T354817589"] = "Select file to read its content"
+
+-- Transcribe media file
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T3554222960"] = "Transcribe media file"
 
 -- The content is cleaned using an LLM agent: the main content is extracted, advertisements and other irrelevant things are attempted to be removed; relative links are attempted to be converted into absolute links so that they can be used.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T1164201762"] = "The content is cleaned using an LLM agent: the main content is extracted, advertisements and other irrelevant things are attempted to be removed; relative links are attempted to be converted into absolute links so that they can be used."
@@ -2971,6 +3139,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1059411425"]
 -- Do you want to show preview features in the app?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1118505044"] = "Do you want to show preview features in the app?"
 
+-- AI Studio cannot check for updates when running as a Flatpak. Updates are managed outside the app.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1190632518"] = "AI Studio cannot check for updates when running as a Flatpak. Updates are managed outside the app."
+
 -- Voice recording shortcut
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1278320412"] = "Voice recording shortcut"
 
@@ -3013,8 +3184,14 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1890416390"]
 -- Which preview features would you like to enable?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1898060643"] = "Which preview features would you like to enable?"
 
+-- This setting has no effect while updates are disabled by your organization.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1898114759"] = "This setting has no effect while updates are disabled by your organization."
+
 -- Select the language for the app.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1907446663"] = "Select the language for the app."
+
+-- Your organization has disabled update checks and installations.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1909339369"] = "Your organization has disabled update checks and installations."
 
 -- When enabled, additional administration options become visible. These options are intended for IT staff to manage organization-wide configuration, e.g. configuring and exporting providers for an entire organization.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2013281167"] = "When enabled, additional administration options become visible. These options are intended for IT staff to manage organization-wide configuration, e.g. configuring and exporting providers for an entire organization."
@@ -3033,6 +3210,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2341504363"]
 
 -- Update installation method
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T237706157"] = "Update installation method"
+
+-- AI Studio cannot install updates when running as a Flatpak. Use the update method provided by your Flatpak distribution.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T244540698"] = "AI Studio cannot install updates when running as a Flatpak. Use the update method provided by your Flatpak distribution."
 
 -- Language
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2591284123"] = "Language"
@@ -3496,9 +3676,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T586430036"] = "Useful assistants
 -- Voice recording has been disabled for this session because audio playback could not be initialized on the client.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T1123032432"] = "Voice recording has been disabled for this session because audio playback could not be initialized on the client."
 
--- Failed to create the transcription provider.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T1689988905"] = "Failed to create the transcription provider."
-
 -- Failed to start audio recording.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T2144994226"] = "Failed to start audio recording."
 
@@ -3517,20 +3694,11 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T2851219233"] = "Transcrip
 -- Unfortunately, there was an error communicating with the AI system.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T3236134591"] = "Unfortunately, there was an error communicating with the AI system."
 
--- The configured transcription provider was not found.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T331613105"] = "The configured transcription provider was not found."
-
 -- Failed to stop audio recording.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T3462568264"] = "Failed to stop audio recording."
 
--- The configured transcription provider does not meet the minimum confidence level.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T3834149033"] = "The configured transcription provider does not meet the minimum confidence level."
-
 -- An error occurred during transcription.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T588743762"] = "An error occurred during transcription."
-
--- No transcription provider is configured.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T663630295"] = "No transcription provider is configured."
 
 -- The transcription result is empty.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T974954792"] = "The transcription result is empty."
@@ -6331,6 +6499,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::UPDATEDIALOG::T25417398"] = "Update from v{0
 -- Install later
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::UPDATEDIALOG::T2936430090"] = "Install later"
 
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::UPDATEINSTRUCTIONSDIALOG::T3448155331"] = "Close"
+
+-- Show me the latest release page
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::UPDATEINSTRUCTIONSDIALOG::T59688848"] = "Show me the latest release page"
+
 -- Create new workspace
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::WORKSPACESELECTIONDIALOG::T1541251414"] = "Create new workspace"
 
@@ -6529,6 +6703,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3930052338"] = "Job Posting"
 -- Ask a question about a legal document.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3970214537"] = "Ask a question about a legal document."
 
+-- Log Viewer
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T4130241777"] = "Log Viewer"
+
 -- ERI Server
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T4204533420"] = "ERI Server"
 
@@ -6549,6 +6726,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T782102948"] = "Bias of the Day"
 
 -- Learn about one cognitive bias every day.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T878695986"] = "Learn about one cognitive bias every day."
+
+-- View and filter AI Studio log files.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T892147062"] = "View and filter AI Studio log files."
 
 -- Localization
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T897888480"] = "Localization"
@@ -6706,6 +6886,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1347508205"] = "Copies the confi
 -- This library is used to read PDF files. This is necessary, e.g., for using PDFs as a data source for a chat.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1388816916"] = "This library is used to read PDF files. This is necessary, e.g., for using PDFs as a data source for a chat."
 
+-- Updates are managed by your organization. Contact your IT department if you have questions about updating AI Studio.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1402243995"] = "Updates are managed by your organization. Contact your IT department if you have questions about updating AI Studio."
+
 -- This library is used to extend the MudBlazor library. It provides additional components that are not part of the MudBlazor library.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1421513382"] = "This library is used to extend the MudBlazor library. It provides additional components that are not part of the MudBlazor library."
 
@@ -6772,9 +6955,6 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2037899437"] = "Copies the serve
 -- This library is used to create temporary folders in runtime tests and supporting filesystem operations.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2160280545"] = "This library is used to create temporary folders in runtime tests and supporting filesystem operations."
 
--- This library is used to determine the file type of a file. This is necessary, e.g., when we want to stream a file.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2173617769"] = "This library is used to determine the file type of a file. This is necessary, e.g., when we want to stream a file."
-
 -- For the secure communication between the user interface and the runtime, we need to create certificates. This Rust library is great for this purpose.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2174764529"] = "For the secure communication between the user interface and the runtime, we need to create certificates. This Rust library is great for this purpose."
 
@@ -6793,6 +6973,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2301484629"] = "Configuration pl
 -- The C# language is used for the implementation of the user interface and the backend. To implement the user interface with C#, the Blazor technology from ASP.NET Core is used. All these technologies are integrated into the .NET SDK.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2329884315"] = "The C# language is used for the implementation of the user interface and the backend. To implement the user interface with C#, the Blazor technology from ASP.NET Core is used. All these technologies are integrated into the .NET SDK."
 
+-- We use Rubato to resample the decoded audio to 48 kHz before the Opus encoding.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2345444286"] = "We use Rubato to resample the decoded audio to 48 kHz before the Opus encoding."
+
 -- Linux AppImages bundle GStreamer components to support microphone access and WebM audio recording in the embedded WebKitGTK web view.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T234598990"] = "Linux AppImages bundle GStreamer components to support microphone access and WebM audio recording in the embedded WebKitGTK web view."
 
@@ -6810,6 +6993,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2435772109"] = "Configuration or
 
 -- Configuration slot:
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T254943559"] = "Configuration slot:"
+
+-- AI Studio cannot update itself when installed as a Flatpak. A Flathub listing is planned. Until then, you can find the latest release on GitHub.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T254976975"] = "AI Studio cannot update itself when installed as a Flatpak. A Flathub listing is planned. Until then, you can find the latest release on GitHub."
 
 -- This library is used to determine the language of the operating system. This is necessary to set the language of the user interface.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2557014401"] = "This library is used to determine the language of the operating system. This is necessary to set the language of the user interface."
@@ -6871,6 +7057,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2929232062"] = "Copies the confi
 -- Copies the root certificate fingerprint to the clipboard
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2989678330"] = "Copies the root certificate fingerprint to the clipboard"
 
+-- This library identifies files by their content. It is used for document streaming and as the first safety and media classification step before local audio processing.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3002755581"] = "This library identifies files by their content. It is used for document streaming and as the first safety and media classification step before local audio processing."
+
 -- Changelog
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3017574265"] = "Changelog"
 
@@ -6915,6 +7104,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3315279770"] = "External HTTPS c
 
 -- User-language provided by the OS
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3334355246"] = "User-language provided by the OS"
+
+-- webm-iterable provides the EBML and WebM writing path for normalized audio.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3385332793"] = "webm-iterable provides the EBML and WebM writing path for normalized audio."
 
 -- Status:
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3396815215"] = "Status:"
@@ -6979,6 +7171,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T396609403"] = "not applicable"
 -- Copies the allowed host configuration to the clipboard
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3970230163"] = "Copies the allowed host configuration to the clipboard"
 
+-- Symphonia is used for media container demuxing and audio decoding. The exact MPL-covered source is available from the repository linked and is identified in the offline notices bundled with AI Studio.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3971563979"] = "Symphonia is used for media container demuxing and audio decoding. The exact MPL-covered source is available from the repository linked and is identified in the offline notices bundled with AI Studio."
+
 -- Installed Pandoc version
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3983971016"] = "Installed Pandoc version"
 
@@ -6996,6 +7191,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4060906280"] = "This library is 
 
 -- This library is used to create asynchronous streams in Rust. It allows us to work with streams of data that can be produced asynchronously, making it easier to handle events or data that arrive over time. We use this, e.g., to stream arbitrary data from the file system to the embedding system.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4079152443"] = "This library is used to create asynchronous streams in Rust. It allows us to work with streams of data that can be produced asynchronously, making it easier to handle events or data that arrive over time. We use this, e.g., to stream arbitrary data from the file system to the embedding system."
+
+-- Ropus provides the Opus encoder and decoder used by the media pipeline.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4113556626"] = "Ropus provides the Opus encoder and decoder used by the media pipeline."
 
 -- Community & Code
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4158546761"] = "Community & Code"
@@ -7065,6 +7263,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T864851737"] = "Axum is used to p
 
 -- For some data transfers, we need to encode the data in base64. This Rust library is great for this purpose.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T870640199"] = "For some data transfers, we need to encode the data in base64. This Rust library is great for this purpose."
+
+-- How to update
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T906183311"] = "How to update"
 
 -- Install Pandoc
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T986578435"] = "Install Pandoc"
@@ -7507,6 +7708,9 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T3612390107
 -- Toggle the sidebar: show the workspaces next to the chat when desired
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T3711207137"] = "Toggle the sidebar: show the workspaces next to the chat when desired"
 
+-- Updates disabled by your organization
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T4048970098"] = "Updates disabled by your organization"
+
 -- Also show features in alpha: these are in development; expect bugs and missing features
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::CONFIGURATIONSELECTDATAFACTORY::T4146964761"] = "Also show features in alpha: these are in development; expect bugs and missing features"
 
@@ -7776,6 +7980,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T4262148639"] = "Rewrite
 
 -- Localization Assistant
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T446674624"] = "Localization Assistant"
+
+-- Log Viewer Assistant
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T555062689"] = "Log Viewer Assistant"
 
 -- New Chat
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T826248509"] = "New Chat"
@@ -8539,6 +8746,42 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T378481461"] = "Source like p
 -- Document
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T4165204724"] = "Document"
 
+-- The configured transcription provider could not be created.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T1235984176"] = "The configured transcription provider could not be created."
+
+-- The selected media file no longer exists.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T129859547"] = "The selected media file no longer exists."
+
+-- The selected media file does not contain an audio track.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T134825479"] = "The selected media file does not contain an audio track."
+
+-- The media file could not be transcribed.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T1543974632"] = "The media file could not be transcribed."
+
+-- The selected file cannot be processed as media.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T1707342767"] = "The selected file cannot be processed as media."
+
+-- The audio track contains no audible signal, so there is nothing to transcribe.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T1988190152"] = "The audio track contains no audible signal, so there is nothing to transcribe."
+
+-- The media file is damaged or its format could not be identified.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T2004316549"] = "The media file is damaged or its format could not be identified."
+
+-- This media format or audio codec is not supported.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T2142564510"] = "This media format or audio codec is not supported."
+
+-- No usable transcription provider is configured.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T2282521655"] = "No usable transcription provider is configured."
+
+-- The media file could not be prepared for transcription.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T2749117459"] = "The media file could not be prepared for transcription."
+
+-- The transcription provider could not transcribe the media file.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T3091669215"] = "The transcription provider could not transcribe the media file."
+
+-- The media pipeline ended without an output file.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T632852430"] = "The media pipeline ended without an output file."
+
 -- The Assistant Builder context could not be loaded.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T108292972"] = "The Assistant Builder context could not be loaded."
 
@@ -8713,8 +8956,17 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T1110203516"] = "Failed
 -- Failed to store the API key due to an API issue.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T1704298921"] = "Failed to store the API key due to an API issue."
 
+-- The runtime file manager endpoint returned '{0}'.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T2158262203"] = "The runtime file manager endpoint returned '{0}'."
+
 -- Failed to delete the secret data due to an API issue.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T2303057928"] = "Failed to delete the secret data due to an API issue."
+
+-- The runtime file manager endpoint is not available.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T2486847754"] = "The runtime file manager endpoint is not available."
+
+-- The runtime file manager endpoint failed without details.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T3082220817"] = "The runtime file manager endpoint failed without details."
 
 -- Successfully copied the text to your clipboard
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T3351807428"] = "Successfully copied the text to your clipboard"

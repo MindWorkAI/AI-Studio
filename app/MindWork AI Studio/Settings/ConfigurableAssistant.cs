@@ -29,4 +29,6 @@ public enum ConfigurableAssistant
     // ReSharper disable InconsistentNaming
     I18N_ASSISTANT,
     // ReSharper restore InconsistentNaming
+
+    LOG_VIEWER_ASSISTANT,
 }
