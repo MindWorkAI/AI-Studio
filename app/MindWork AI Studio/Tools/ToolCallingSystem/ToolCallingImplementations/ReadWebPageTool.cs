@@ -1,10 +1,10 @@
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using AIStudio.Provider;
 using AIStudio.Tools.PluginSystem;
-using HtmlAgilityPack;
 
 namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations;
 
@@ -19,21 +19,9 @@ public sealed class ReadWebPageTool(HTMLParser htmlParser, ILogger<ReadWebPageTo
     private const int MAX_RESPONSE_BYTES = 5 * 1024 * 1024;
     private const int MAX_TRACE_LENGTH = 12000;
     private const string ALLOWED_PRIVATE_HOSTS_SETTING = "allowedPrivateHosts";
-
-    private static readonly string[] REMOVED_NODE_XPATHS =
-    [
-        "//script",
-        "//style",
-        "//noscript",
-        "//nav",
-        "//footer",
-        "//aside",
-        "//form",
-        "//iframe",
-        "//*[@role='navigation']",
-        "//*[@role='contentinfo']",
-        "//*[@role='complementary']"
-    ];
+    private const string MODEL_RESULT_HEADER = "WEB_PAGE_RESULT";
+    private const string UNTRUSTED_CONTENT_START = "--- BEGIN UNTRUSTED WEB PAGE CONTENT ---";
+    private const string UNTRUSTED_CONTENT_END = "--- END UNTRUSTED WEB PAGE CONTENT ---";
 
     public string ImplementationKey => ToolSelectionRules.READ_WEB_PAGE_TOOL_ID;
 
@@ -43,7 +31,7 @@ public sealed class ReadWebPageTool(HTMLParser htmlParser, ILogger<ReadWebPageTo
 
     public string GetDisplayName() => TB("Read Web Page");
 
-    public string GetDescription() => TB("Load a single web page and extract its main HTML content.");
+    public string GetDescription() => TB("Load a web page and extract its readable content, links, and page details.");
 
     public string GetSettingsFieldLabel(string fieldName, ToolSettingsFieldDefinition fieldDefinition) => fieldName switch
     {
@@ -154,54 +142,128 @@ public sealed class ReadWebPageTool(HTMLParser htmlParser, ILogger<ReadWebPageTo
         if (!IsSupportedHtmlContentType(page.ContentType))
             throw new InvalidOperationException($"Unsupported content type '{page.ContentType}'. Only HTML pages are supported.");
 
-        var document = page.Document;
-        var title = htmlParser.ExtractTitle(document);
-        var contentRoot = document.DocumentNode.SelectSingleNode("//article") ??
-                          document.DocumentNode.SelectSingleNode("//main") ??
-                          document.DocumentNode.SelectSingleNode("//body") ??
-                          document.DocumentNode;
-
-        RemoveNoiseNodes(contentRoot);
-
-        var markdown = htmlParser.ParseToMarkdown(contentRoot.InnerHtml).Trim();
-        var warnings = new JsonArray();
-        if (string.IsNullOrWhiteSpace(title))
-            warnings.Add("No title could be extracted from the page.");
+        var extractedPage = WebPageContentExtractor.Extract(htmlParser, page.Document, page.FinalUrl);
+        var markdown = extractedPage.Markdown;
+        var originalContentCharacters = markdown.Length;
+        List<string> warnings = [];
 
         if (string.IsNullOrWhiteSpace(markdown))
-            warnings.Add("The extracted page content is empty.");
-        else if (markdown.Length < 200)
-            warnings.Add("The extracted page content is very short and may be incomplete.");
+            warnings.Add("No readable static page content was extracted. The page may require JavaScript, authentication, or browser cookies.");
+        else if (markdown.Length < 500)
+            warnings.Add("Only a small amount of readable page content was extracted; the result may be incomplete.");
 
+        var contentTruncated = false;
         if (markdown.Length > maxContentCharacters)
         {
-            markdown = markdown[..maxContentCharacters].TrimEnd();
-            warnings.Add($"The extracted page content was truncated to {maxContentCharacters} characters.");
+            markdown = TruncateMarkdown(markdown, maxContentCharacters);
+            contentTruncated = true;
+            warnings.Add($"The extracted page content was truncated from {originalContentCharacters} to {markdown.Length} characters.");
         }
 
         return new ToolExecutionResult
         {
-            JsonContent = BuildResponseJson(page, title, markdown, warnings)
+            TextContent = BuildModelContent(page, extractedPage, markdown, originalContentCharacters, contentTruncated, warnings)
         };
     }
 
-    private static JsonObject BuildResponseJson(HTMLParserWebPage page, string title, string markdown, JsonArray warnings)
+    private static string BuildModelContent(
+        HTMLParserWebPage page,
+        ExtractedWebPage extractedPage,
+        string markdown,
+        int originalContentCharacters,
+        bool contentTruncated,
+        IReadOnlyList<string> warnings)
     {
-        var response = new JsonObject
+        var source = new JsonObject
         {
-            ["metadata"] = new JsonObject
-            {
-                ["url"] = page.RequestedUrl.ToString(),
-                ["final_url"] = page.FinalUrl.ToString(),
-                ["title"] = title,
-            },
-            ["content_markdown"] = markdown,
+            ["requested_url"] = page.RequestedUrl.ToString(),
+            ["final_url"] = page.FinalUrl.ToString(),
         };
+        AddIfNotEmpty(source, "canonical_url", extractedPage.CanonicalUrl?.ToString());
+        AddIfNotEmpty(source, "title", extractedPage.Title);
+        AddIfNotEmpty(source, "description", extractedPage.Description);
+        AddIfNotEmpty(source, "site_name", extractedPage.SiteName);
+        AddIfNotEmpty(source, "language", extractedPage.Language);
+        AddStringArrayIfNotEmpty(source, "authors", extractedPage.Authors);
+        AddIfNotEmpty(source, "published_time", extractedPage.PublishedTime);
+        AddIfNotEmpty(source, "modified_time", extractedPage.ModifiedTime);
+        AddIfNotEmpty(source, "media_type", page.ContentType);
 
-        if (warnings.Count > 0)
-            response["warnings"] = warnings;
+        var status = string.IsNullOrWhiteSpace(markdown)
+            ? "empty"
+            : contentTruncated || originalContentCharacters < 500
+                ? "partial"
+                : "complete";
+        var warningArray = new JsonArray();
+        foreach (var warning in warnings)
+            warningArray.Add(warning);
+        var result = new JsonObject
+        {
+            ["status"] = status,
+            ["retrieved_at_utc"] = DateTimeOffset.UtcNow.ToString("O"),
+            ["content_format"] = "markdown",
+            ["truncated"] = contentTruncated,
+            ["warnings"] = warningArray,
+        };
+        if (contentTruncated)
+        {
+            result["original_content_characters"] = originalContentCharacters;
+            result["returned_content_characters"] = markdown.Length;
+        }
 
-        return response;
+        var header = new JsonObject
+        {
+            ["source"] = source,
+            ["result"] = result,
+        };
+        if (contentTruncated)
+        {
+            var outline = new JsonArray();
+            foreach (var heading in extractedPage.Outline)
+                outline.Add(heading);
+            header["outline"] = outline;
+        }
+
+        var output = new StringBuilder();
+        output.Append(MODEL_RESULT_HEADER).Append('\n');
+        output.Append(header.ToJsonString()).Append('\n');
+        output.Append(UNTRUSTED_CONTENT_START).Append('\n');
+        output.Append(markdown).Append('\n');
+        output.Append(UNTRUSTED_CONTENT_END);
+        return output.ToString();
+    }
+
+    private static void AddIfNotEmpty(JsonObject target, string propertyName, string? value)
+    {
+        if (!string.IsNullOrWhiteSpace(value))
+            target[propertyName] = value;
+    }
+
+    private static void AddStringArrayIfNotEmpty(JsonObject target, string propertyName, IReadOnlyList<string> values)
+    {
+        if (values.Count == 0)
+            return;
+
+        var array = new JsonArray();
+        foreach (var value in values)
+            array.Add(value);
+        target[propertyName] = array;
+    }
+
+    private static string TruncateMarkdown(string markdown, int maxCharacters)
+    {
+        const string TRUNCATION_MARKER = "[Page content truncated]";
+        if (maxCharacters <= TRUNCATION_MARKER.Length)
+            return markdown[..maxCharacters];
+
+        var contentLimit = maxCharacters - TRUNCATION_MARKER.Length - 2;
+        var breakPosition = markdown.LastIndexOf("\n\n", contentLimit, StringComparison.Ordinal);
+        if (breakPosition < contentLimit / 2)
+            breakPosition = markdown.LastIndexOf('\n', contentLimit);
+        if (breakPosition < contentLimit / 2)
+            breakPosition = contentLimit;
+
+        return $"{markdown[..breakPosition].TrimEnd()}\n\n{TRUNCATION_MARKER}";
     }
 
     public string FormatTraceResult(string rawResult)
@@ -415,19 +477,6 @@ public sealed class ReadWebPageTool(HTMLParser htmlParser, ILogger<ReadWebPageTo
     private static IEnumerable<string> SplitAllowedPrivateHostPatterns(string? rawValue) => rawValue?
         .Split(['\r', '\n', ',', ';'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
         .Where(x => !string.IsNullOrWhiteSpace(x)) ?? [];
-
-    private static void RemoveNoiseNodes(HtmlNode rootNode)
-    {
-        foreach (var xpath in REMOVED_NODE_XPATHS)
-        {
-            var nodes = rootNode.SelectNodes(xpath);
-            if (nodes is null)
-                continue;
-
-            foreach (var node in nodes.ToList())
-                node.Remove();
-        }
-    }
 
     private static bool IsSupportedHtmlContentType(string? contentType) =>
         string.IsNullOrWhiteSpace(contentType) ||

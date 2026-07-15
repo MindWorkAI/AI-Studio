@@ -8008,9 +8008,6 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::ITOOLIMPLEMENTATION::T35170
 -- Tool description
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::ITOOLIMPLEMENTATION::T4056470505"] = "Tool description"
 
--- Load a single web page and extract its main HTML content.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T204256540"] = "Load a single web page and extract its main HTML content."
-
 -- Allowed private hosts must be host names only, without scheme or path.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T2196457612"] = "Allowed private hosts must be host names only, without scheme or path."
 
@@ -8034,6 +8031,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS:
 
 -- Optional global truncation limit for extracted characters returned to the model.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T364016543"] = "Optional global truncation limit for extracted characters returned to the model."
+
+-- Load a web page and extract its readable content, links, and page details.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T3715690061"] = "Load a web page and extract its readable content, links, and page details."
 
 -- The web page was not loaded because private or VPN web pages require a High-confidence provider.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T3856267430"] = "The web page was not loaded because private or VPN web pages require a High-confidence provider."
