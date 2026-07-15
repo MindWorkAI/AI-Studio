@@ -43,6 +43,7 @@ pub fn init_logging() {
     log_config.push_str("tower_http=info, ");
     log_config.push_str("rustls=info, ");
     log_config.push_str("tokio_rustls=info, ");
+    log_config.push_str("symphonia_format_mkv=info, ");
     log_config.push_str("reqwest=info");
 
     // Configure the initial filename. On Unix systems, the file should start

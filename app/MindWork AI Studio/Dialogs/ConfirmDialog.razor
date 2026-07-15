@@ -1,9 +1,16 @@
 @inherits MSGComponentBase
 <MudDialog>
     <DialogContent>
-        <MudJustifiedText Typo="Typo.body1">
-            @this.Message
-        </MudJustifiedText>
+        @if (!string.IsNullOrWhiteSpace(this.MarkdownBody))
+        {
+            <MudJustifiedMarkdown Value="@this.MarkdownBody" />
+        }
+        else
+        {
+            <MudJustifiedText Typo="Typo.body1">
+                @this.Message
+            </MudJustifiedText>
+        }
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">

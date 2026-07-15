@@ -27,7 +27,8 @@
       "../app/MindWork AI Studio/bin/dist/mindworkAIStudioServer"
     ],
     "resources": [
-      "resources/libraries/*"
+      "resources/libraries/*",
+      "resources/notices/*"
     ],
     "macOS": {
       "exceptionDomain": "localhost"
