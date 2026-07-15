@@ -1058,7 +1058,8 @@ public abstract class BaseProvider : IProvider, ISecretId
                         yield break;
                     }
 
-                    if (responseMessage.ToolCalls.Count == 0)
+                    var toolCalls = responseMessage.ToolCalls ?? [];
+                    if (toolCalls.Count == 0)
                     {
                         await ResetToolRuntimeStatusAsync();
                         if (!string.IsNullOrWhiteSpace(responseMessage.Content))
@@ -1069,16 +1070,16 @@ public abstract class BaseProvider : IProvider, ISecretId
                         yield break;
                     }
 
-                    await ShowToolRuntimeStatusAsync(responseMessage.ToolCalls
+                    await ShowToolRuntimeStatusAsync(toolCalls
                         .Select(x => runnableTools.FirstOrDefault(tool => tool.Definition.Function.Name.Equals(x.Function.Name, StringComparison.Ordinal)).Implementation?.GetDisplayName() ?? x.Function.Name));
 
                     internalMessages.Add(new AssistantToolCallMessage
                     {
                         Content = responseMessage.Content,
-                        ToolCalls = responseMessage.ToolCalls,
+                        ToolCalls = toolCalls,
                     });
-                    
-                    foreach (var toolCall in responseMessage.ToolCalls)
+
+                    foreach (var toolCall in toolCalls)
                     {
                         toolCallCount++;
                         if (toolCallCount > ToolSelectionRules.MAX_TOOL_CALLS)
@@ -1113,7 +1114,6 @@ public abstract class BaseProvider : IProvider, ISecretId
                         {
                             Content = toolContent,
                             ToolCallId = toolCall.Id,
-                            Name = toolCall.Function.Name,
                         });
                     }
 

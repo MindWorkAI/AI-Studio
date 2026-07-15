@@ -50,6 +50,15 @@ public sealed class ToolSettingsService(SettingsManager settingsManager, RustSer
         CancellationToken token = default)
     {
         var values = await this.GetSettingsAsync(definition);
+        return await this.ValidateSettingsAsync(definition, values, implementation, token);
+    }
+
+    public async Task<ToolConfigurationState> ValidateSettingsAsync(
+        ToolDefinition definition,
+        IReadOnlyDictionary<string, string> values,
+        IToolImplementation? implementation = null,
+        CancellationToken token = default)
+    {
         var missing = new List<string>();
         foreach (var requiredField in definition.SettingsSchema.Required)
         {

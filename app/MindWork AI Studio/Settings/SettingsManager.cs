@@ -459,14 +459,25 @@ public sealed class SettingsManager
             var managedValues = configMeta.GetValue();
             if (managedValues.TryGetValue(toolId, out var configuredManagedLevel) &&
                 Enum.TryParse<ConfidenceLevel>(configuredManagedLevel, true, out var managedConfidenceLevel) &&
+                Enum.IsDefined(managedConfidenceLevel) &&
                 managedConfidenceLevel is not ConfidenceLevel.UNKNOWN)
             {
                 return new(managedConfidenceLevel, "managed config");
+            }
+
+            if (managedValues.ContainsKey(toolId))
+            {
+                this.logger.LogError(
+                    "Managed minimum provider confidence '{ConfiguredLevel}' for tool '{ToolId}' is invalid. Requiring HIGH as a safe fallback.",
+                    configuredManagedLevel,
+                    toolId);
+                return new(ConfidenceLevel.HIGH, "invalid managed config; safe fallback");
             }
         }
 
         if (this.ConfigurationData.Tools.MinimumProviderConfidenceByToolId.TryGetValue(toolId, out var configuredLevel) &&
             Enum.TryParse<ConfidenceLevel>(configuredLevel, true, out var confidenceLevel) &&
+            Enum.IsDefined(confidenceLevel) &&
             confidenceLevel is not ConfidenceLevel.UNKNOWN)
         {
             return new(confidenceLevel, "stored override");

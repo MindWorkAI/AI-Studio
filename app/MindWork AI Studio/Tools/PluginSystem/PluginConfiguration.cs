@@ -1,3 +1,4 @@
+using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Services;
@@ -144,6 +145,9 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
             message = TB("The SETTINGS table does not exist or is not a valid table.");
             return false;
         }
+
+        if (!TryValidateMinimumProviderConfidenceConfiguration(settingsTable, out message))
+            return false;
         
         // Config: check for updates, and if so, how often?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.UpdateInterval, this.Id, settingsTable, dryRun);
@@ -223,6 +227,37 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.UseTranscriptionProvider, Guid.Empty, this.Id, settingsTable, dryRun);
 
         message = string.Empty;
+        return true;
+    }
+
+    private static bool TryValidateMinimumProviderConfidenceConfiguration(LuaTable settingsTable, out string message)
+    {
+        const string SETTING_NAME = "DataTools.MinimumProviderConfidenceByToolId";
+        message = string.Empty;
+        if (!settingsTable.TryGetValue(SETTING_NAME, out var configuredValue))
+            return true;
+
+        if (configuredValue.Type is not LuaValueType.Table || !configuredValue.TryRead<LuaTable>(out var configuredTable))
+        {
+            message = $"The setting '{SETTING_NAME}' must be a table of tool IDs and confidence levels.";
+            return false;
+        }
+
+        var previousKey = LuaValue.Nil;
+        while (configuredTable.TryGetNext(previousKey, out var pair))
+        {
+            previousKey = pair.Key;
+            if (!pair.Key.TryRead<string>(out var toolId) || string.IsNullOrWhiteSpace(toolId) ||
+                !pair.Value.TryRead<string>(out var configuredLevel) ||
+                !Enum.TryParse<ConfidenceLevel>(configuredLevel, true, out var confidenceLevel) ||
+                !Enum.IsDefined(confidenceLevel) ||
+                confidenceLevel is ConfidenceLevel.UNKNOWN)
+            {
+                message = $"The setting '{SETTING_NAME}' contains an invalid tool ID or confidence level. Allowed confidence levels are NONE, UNTRUSTED, VERY_LOW, LOW, MODERATE, MEDIUM, and HIGH.";
+                return false;
+            }
+        }
+
         return true;
     }
 

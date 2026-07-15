@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 
 using AIStudio.Provider;
 using AIStudio.Settings;
@@ -62,6 +63,7 @@ public sealed class ToolInvocationTrace
 
     public Dictionary<string, string> Arguments { get; set; } = [];
 
+    [JsonIgnore]
     public string Result { get; set; } = string.Empty;
 }
 

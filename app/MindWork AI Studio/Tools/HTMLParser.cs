@@ -51,7 +51,8 @@ public sealed class HTMLParser
         Func<Uri, CancellationToken, Task<IReadOnlyList<IPAddress>>>? resolveUrlAddressesAsync = null,
         int maxResponseBytes = DEFAULT_MAX_RESPONSE_BYTES,
         ExternalWebAuthenticationMode authenticationMode = ExternalWebAuthenticationMode.NONE,
-        ExternalHttpTrustPolicy trustPolicy = ExternalHttpTrustPolicy.ALLOW_CUSTOM_ROOTS_WHEN_HOST_WHITELISTED)
+        ExternalHttpTrustPolicy trustPolicy = ExternalHttpTrustPolicy.ALLOW_CUSTOM_ROOTS_WHEN_HOST_WHITELISTED,
+        Func<Uri, IReadOnlyList<IPAddress>, bool>? shouldUseDefaultCredentials = null)
     {
         using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(token);
         timeoutCts.CancelAfter(TimeSpan.FromSeconds(timeoutSeconds));
@@ -61,7 +62,13 @@ public sealed class HTMLParser
         for (var redirectCount = 0; redirectCount <= MAX_REDIRECTS; redirectCount++)
         {
             ValidateHttpOrHttpsUrl(currentUrl);
-            using var handler = CreateHandler(currentUrl, resolveUrlAddressesAsync, authenticationMode, trustPolicy, cookieContainer);
+            var resolvedAddresses = resolveUrlAddressesAsync is null
+                ? null
+                : await resolveUrlAddressesAsync(currentUrl, timeoutCts.Token);
+            var useDefaultCredentials = authenticationMode is ExternalWebAuthenticationMode.OS_DEFAULT_CREDENTIALS &&
+                                        resolvedAddresses is not null &&
+                                        shouldUseDefaultCredentials?.Invoke(currentUrl, resolvedAddresses) is true;
+            using var handler = CreateHandler(currentUrl, resolvedAddresses, useDefaultCredentials, trustPolicy, cookieContainer);
             using var httpClient = new HttpClient(handler)
             {
                 Timeout = Timeout.InfiniteTimeSpan,
@@ -106,8 +113,8 @@ public sealed class HTMLParser
 
     private static SocketsHttpHandler CreateHandler(
         Uri url,
-        Func<Uri, CancellationToken, Task<IReadOnlyList<IPAddress>>>? resolveUrlAddressesAsync,
-        ExternalWebAuthenticationMode authenticationMode,
+        IReadOnlyList<IPAddress>? resolvedAddresses,
+        bool useDefaultCredentials,
         ExternalHttpTrustPolicy trustPolicy,
         CookieContainer cookieContainer)
     {
@@ -120,14 +127,14 @@ public sealed class HTMLParser
         };
         ExternalHttpClientTimeout.ConfigureSocketsHttpHandler(handler, url.Host, trustPolicy);
 
-        if (authenticationMode is ExternalWebAuthenticationMode.OS_DEFAULT_CREDENTIALS)
+        if (useDefaultCredentials)
             handler.Credentials = CreateDefaultCredentialCache(url);
 
-        if (resolveUrlAddressesAsync is not null)
+        if (resolvedAddresses is not null)
         {
             // The callback binds the request to a vetted target IP; a proxy would change the endpoint being connected to.
             handler.UseProxy = false;
-            handler.ConnectCallback = async (context, connectionToken) => await ConnectToResolvedAddressAsync(context, resolveUrlAddressesAsync, connectionToken);
+            handler.ConnectCallback = (context, connectionToken) => ConnectToResolvedAddressAsync(context, resolvedAddresses, connectionToken);
         }
 
         return handler;
@@ -154,13 +161,12 @@ public sealed class HTMLParser
 
     private static async ValueTask<Stream> ConnectToResolvedAddressAsync(
         SocketsHttpConnectionContext context,
-        Func<Uri, CancellationToken, Task<IReadOnlyList<IPAddress>>> resolveUrlAddressesAsync,
+        IReadOnlyList<IPAddress> addresses,
         CancellationToken token)
     {
         var requestUri = context.InitialRequestMessage.RequestUri ??
                          throw new HttpRequestException("The HTTP request did not contain a target URL.");
 
-        var addresses = await resolveUrlAddressesAsync(requestUri, token);
         if (addresses.Count == 0)
             throw new HttpRequestException($"The host '{requestUri.Host}' did not resolve to an IP address.");
 

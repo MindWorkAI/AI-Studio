@@ -27,7 +27,16 @@ public sealed class ToolRegistry
         this.toolSettingsService = toolSettingsService;
 
         foreach (var implementation in implementations)
-            this.implementationsByKey[implementation.ImplementationKey] = implementation;
+        {
+            if (string.IsNullOrWhiteSpace(implementation.ImplementationKey))
+            {
+                this.logger.LogWarning("Skipping a tool implementation with an empty implementation key.");
+                continue;
+            }
+
+            if (!this.implementationsByKey.TryAdd(implementation.ImplementationKey, implementation))
+                this.logger.LogWarning("Skipping duplicate tool implementation key '{ImplementationKey}'.", implementation.ImplementationKey);
+        }
 
         var definitionsDirectory = webHostEnvironment.WebRootFileProvider.GetDirectoryContents("tool_definitions");
         if (!definitionsDirectory.Exists)
@@ -41,15 +50,22 @@ public sealed class ToolRegistry
             PropertyNameCaseInsensitive = true,
         };
 
+        var functionNames = new HashSet<string>(StringComparer.Ordinal);
         foreach (var file in definitionsDirectory.Where(x => !x.IsDirectory && x.Name.EndsWith(".json", StringComparison.OrdinalIgnoreCase)))
         {
             try
             {
                 using var stream = file.CreateReadStream();
                 var definition = JsonSerializer.Deserialize<ToolDefinition>(stream, serializerOptions);
-                if (definition is null || string.IsNullOrWhiteSpace(definition.Id))
+                if (definition is null)
                 {
                     this.logger.LogWarning("Skipping tool definition '{ToolFile}' because it could not be deserialized.", file.Name);
+                    continue;
+                }
+
+                if (!TryValidateDefinition(definition, out var validationIssue))
+                {
+                    this.logger.LogWarning("Skipping tool definition '{ToolFile}': {ValidationIssue}", file.Name, validationIssue);
                     continue;
                 }
 
@@ -59,7 +75,19 @@ public sealed class ToolRegistry
                     continue;
                 }
 
-                this.definitionsById[definition.Id] = definition;
+                if (this.definitionsById.ContainsKey(definition.Id))
+                {
+                    this.logger.LogWarning("Skipping duplicate tool definition ID '{ToolId}' from '{ToolFile}'.", definition.Id, file.Name);
+                    continue;
+                }
+
+                if (!functionNames.Add(definition.Function.Name))
+                {
+                    this.logger.LogWarning("Skipping tool definition '{ToolId}' because function name '{FunctionName}' is already registered.", definition.Id, definition.Function.Name);
+                    continue;
+                }
+
+                this.definitionsById.Add(definition.Id, definition);
             }
             catch (Exception exception)
             {
@@ -67,6 +95,81 @@ public sealed class ToolRegistry
             }
         }
     }
+
+    private static bool TryValidateDefinition(ToolDefinition definition, out string issue)
+    {
+        issue = string.Empty;
+        if (definition.SchemaVersion != 1)
+        {
+            issue = $"unsupported schema version '{definition.SchemaVersion}'";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(definition.Id))
+        {
+            issue = "the definition ID is empty";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(definition.ImplementationKey))
+        {
+            issue = "the implementation key is empty";
+            return false;
+        }
+
+        if (definition.Function is null || !IsValidFunctionName(definition.Function.Name))
+        {
+            issue = "the function name must contain 1-64 ASCII letters, digits, underscores, or hyphens";
+            return false;
+        }
+
+        if (definition.Function.Parameters.ValueKind is not JsonValueKind.Object)
+        {
+            issue = "the function parameters schema must be a JSON object";
+            return false;
+        }
+
+        if (definition.SettingsSchema is null ||
+            !string.Equals(definition.SettingsSchema.Type, "object", StringComparison.OrdinalIgnoreCase) ||
+            definition.SettingsSchema.Properties is null ||
+            definition.SettingsSchema.Required is null)
+        {
+            issue = "the settings schema must have type 'object'";
+            return false;
+        }
+
+        if (definition.SettingsSchema.Properties.Any(x =>
+                string.IsNullOrWhiteSpace(x.Key) ||
+                x.Value is null ||
+                !string.Equals(x.Value.Type, "string", StringComparison.OrdinalIgnoreCase) ||
+                x.Value.EnumValues is null))
+        {
+            issue = "settings properties must be named string fields with valid enum lists";
+            return false;
+        }
+
+        if (definition.SettingsSchema.Required.Any(string.IsNullOrWhiteSpace))
+        {
+            issue = "required setting names cannot be empty";
+            return false;
+        }
+
+        var missingRequiredProperties = definition.SettingsSchema.Required
+            .Where(x => !definition.SettingsSchema.Properties.ContainsKey(x))
+            .ToList();
+        if (missingRequiredProperties.Count > 0)
+        {
+            issue = $"required settings are missing definitions: {string.Join(", ", missingRequiredProperties)}";
+            return false;
+        }
+
+        return true;
+    }
+
+    private static bool IsValidFunctionName(string? functionName) =>
+        !string.IsNullOrWhiteSpace(functionName) &&
+        functionName.Length <= 64 &&
+        functionName.All(character => char.IsAsciiLetterOrDigit(character) || character is '_' or '-');
 
     public IReadOnlyList<ToolDefinition> GetDefinitionsForComponent(AIStudio.Tools.Components component)
     {

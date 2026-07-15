@@ -113,7 +113,7 @@ public sealed class ReadWebPageTool(HTMLParser htmlParser, ILogger<ReadWebPageTo
         var maxContentCharacters = Math.Min(ReadOptionalPositiveIntSetting(context.SettingsValues, "maxContentCharacters") ?? DEFAULT_MAX_CONTENT_CHARACTERS, MAX_CONTENT_CHARACTERS);
         if (!TryReadAllowedPrivateHostPatterns(context.SettingsValues.GetValueOrDefault(ALLOWED_PRIVATE_HOSTS_SETTING), out var allowedPrivateHosts, out var allowlistError))
             throw new InvalidOperationException(allowlistError);
-        var shouldTryOsSso = ShouldTryOsSso(url, allowedPrivateHosts, context.ProviderConfidence);
+        var triedOsSso = false;
 
         HTMLParserWebPage page;
         try
@@ -124,7 +124,13 @@ public sealed class ReadWebPageTool(HTMLParser htmlParser, ILogger<ReadWebPageTo
                 timeoutSeconds,
                 async (candidateUrl, validationToken) => await this.ResolveValidatedUrlAddressesAsync(candidateUrl, allowedPrivateHosts, context.ProviderConfidence, validationToken),
                 MAX_RESPONSE_BYTES,
-                shouldTryOsSso ? ExternalWebAuthenticationMode.OS_DEFAULT_CREDENTIALS : ExternalWebAuthenticationMode.NONE);
+                ExternalWebAuthenticationMode.OS_DEFAULT_CREDENTIALS,
+                shouldUseDefaultCredentials: (candidateUrl, addresses) =>
+                {
+                    var shouldTryOsSso = ShouldTryOsSso(url, candidateUrl, addresses, allowedPrivateHosts, context.ProviderConfidence);
+                    triedOsSso |= shouldTryOsSso;
+                    return shouldTryOsSso;
+                });
         }
         catch (OperationCanceledException) when (!token.IsCancellationRequested)
         {
@@ -135,7 +141,7 @@ public sealed class ReadWebPageTool(HTMLParser htmlParser, ILogger<ReadWebPageTo
             if (FindBlockedException(exception) is { } blockedException)
                 throw blockedException;
 
-            if (shouldTryOsSso && exception.StatusCode is HttpStatusCode.Unauthorized)
+            if (triedOsSso && exception.StatusCode is HttpStatusCode.Unauthorized)
             {
                 throw new InvalidOperationException(
                     $"Loading the web page failed: The server returned HTTP 401 (Unauthorized) for '{url}'. The host is reachable and AI Studio already tried your operating system's default sign-in, but the server did not accept it or requires an additional browser session/cookies.",
@@ -300,12 +306,19 @@ public sealed class ReadWebPageTool(HTMLParser htmlParser, ILogger<ReadWebPageTo
     }
 
     private static bool ShouldTryOsSso(
-        Uri url,
+        Uri originalUrl,
+        Uri candidateUrl,
+        IReadOnlyList<IPAddress> addresses,
         IReadOnlyList<AllowedPrivateHostPattern> allowedPrivateHosts,
         ConfidenceLevel providerConfidence) =>
         providerConfidence >= ConfidenceLevel.HIGH &&
-        !IsBlockedHostName(url.Host) &&
-        IsAllowedPrivateHost(url.Host, allowedPrivateHosts);
+        originalUrl.Scheme.Equals(candidateUrl.Scheme, StringComparison.OrdinalIgnoreCase) &&
+        originalUrl.Host.Equals(candidateUrl.Host, StringComparison.OrdinalIgnoreCase) &&
+        originalUrl.Port == candidateUrl.Port &&
+        !IsBlockedHostName(candidateUrl.Host) &&
+        IsAllowedPrivateHost(candidateUrl.Host, allowedPrivateHosts) &&
+        addresses.Count > 0 &&
+        addresses.All(IsNonPublicAddress);
 
     private static string NormalizeHost(string host) => host.Trim().TrimEnd('.').ToLowerInvariant();
 

@@ -19,6 +19,11 @@
                 @this.implementation?.GetDescription()
             </MudJustifiedText>
 
+            @if (!string.IsNullOrWhiteSpace(this.validationMessage))
+            {
+                <MudAlert Severity="Severity.Error" Class="mb-4">@this.validationMessage</MudAlert>
+            }
+
             <MudPaper Class="pa-3 mb-4 border-dashed border rounded-lg">
             @foreach (var property in this.toolDefinition.SettingsSchema.Properties)
             {
@@ -27,6 +32,10 @@
                 if (field.EnumValues.Count > 0)
                 {
                     <MudSelect T="string" Label="@this.GetFieldLabel(fieldName, field)" Value="@this.GetValue(fieldName)" ValueChanged="@(value => this.UpdateValue(fieldName, value))" Variant="Variant.Outlined" Margin="Margin.Dense" HelperText="@this.GetFieldDescription(fieldName, field)" Placeholder="@this.GetFieldPlaceholder(fieldName, field)" Class="mb-3" Disabled="@this.IsFieldDisabled(fieldName)">
+                        @if (!this.toolDefinition.SettingsSchema.Required.Contains(fieldName))
+                        {
+                            <MudSelectItem T="string" Value="@string.Empty">@T("Not set")</MudSelectItem>
+                        }
                         @foreach (var option in field.EnumValues)
                         {
                             <MudSelectItem T="string" Value="@option">@option</MudSelectItem>

@@ -29,7 +29,11 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
         {
         }
 
-        logger.LogInformation("Starting tool execution. ToolName={ToolName}, ToolCallId={ToolCallId}, Arguments={Arguments}", toolName, toolCallId, formattedArguments);
+        logger.LogInformation(
+            "Starting tool execution. ToolName={ToolName}, ToolCallId={ToolCallId}, ArgumentNames={ArgumentNames}",
+            toolName,
+            toolCallId,
+            formattedArguments.Keys.OrderBy(x => x, StringComparer.Ordinal).ToList());
         var stopwatch = Stopwatch.StartNew();
         if (runnableTool.Definition is null || runnableTool.Implementation is null)
         {
@@ -75,6 +79,10 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
                 Arguments = FormatArguments(document.RootElement, implementation.SensitiveTraceArgumentNames),
                 Result = implementation.FormatTraceResult(result.ToModelContent()),
             });
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
+        {
+            throw;
         }
         catch (ToolExecutionBlockedException exception)
         {

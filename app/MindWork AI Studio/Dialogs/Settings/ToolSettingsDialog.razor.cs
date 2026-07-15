@@ -19,6 +19,7 @@ public partial class ToolSettingsDialog : SettingsDialogBase
     private ToolDefinition? toolDefinition;
     private IToolImplementation? implementation;
     private Dictionary<string, string> values = new(StringComparer.Ordinal);
+    private string validationMessage = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -69,12 +70,25 @@ public partial class ToolSettingsDialog : SettingsDialogBase
     private string GetFieldPlaceholder(string fieldName, ToolSettingsFieldDefinition fieldDefinition) =>
         string.IsNullOrWhiteSpace(this.GetValue(fieldName)) ? this.GetFieldDefaultValue(fieldName, fieldDefinition) : string.Empty;
 
-    private void UpdateValue(string fieldName, string? value) => this.values[fieldName] = value ?? string.Empty;
+    private void UpdateValue(string fieldName, string? value)
+    {
+        this.values[fieldName] = value ?? string.Empty;
+        this.validationMessage = string.Empty;
+    }
 
     private async Task Save()
     {
         if (this.toolDefinition is null)
             return;
+
+        var validationState = await this.ToolSettingsService.ValidateSettingsAsync(this.toolDefinition, this.values, this.implementation);
+        if (!validationState.IsConfigured)
+        {
+            this.validationMessage = !string.IsNullOrWhiteSpace(validationState.Message)
+                ? validationState.Message
+                : string.Format(T("Please configure the required settings: {0}"), string.Join(", ", validationState.MissingRequiredFields));
+            return;
+        }
 
         await this.ToolSettingsService.SaveSettingsAsync(this.toolDefinition, this.values);
         this.MudDialog.Close();

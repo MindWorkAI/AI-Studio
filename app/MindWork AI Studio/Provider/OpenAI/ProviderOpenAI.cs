@@ -319,10 +319,8 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
         var providerTools = runnableTools
             .Select(x => (object)ProviderToolAdapters.ToResponsesTool(x.Definition))
             .ToList();
-        // Keep only the minimal safe continuation state across follow-up requests.
-        // The Responses API requires the original function_call item together with
-        // the later function_call_output, but replaying all response output would
-        // include server-side IDs that are unavailable when store=false.
+        // Preserve every output item required to continue the response, including
+        // reasoning items emitted alongside function calls.
         var internalItems = new List<object>();
         var toolCallCount = 0;
 
@@ -361,8 +359,8 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
             await ShowToolRuntimeStatusAsync(currentAssistantContent, functionCalls
                 .Select(x => runnableTools.FirstOrDefault(tool => tool.Definition.Function.Name.Equals(x.Name, StringComparison.Ordinal)).Implementation?.GetDisplayName() ?? x.Name));
 
-            foreach (var functionCallItem in response.GetRawFunctionCallItems())
-                internalItems.Add(functionCallItem);
+            foreach (var outputItem in response.Output)
+                internalItems.Add(outputItem);
 
             foreach (var functionCall in functionCalls)
             {

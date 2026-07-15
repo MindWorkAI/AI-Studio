@@ -5,16 +5,12 @@ using System.Text.Json;
 using AIStudio.Chat;
 using AIStudio.Provider.OpenAI;
 using AIStudio.Settings;
-using AIStudio.Tools.PluginSystem;
-using AIStudio.Tools.Rust;
 
 namespace AIStudio.Provider.Anthropic;
 
 public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, new Uri("https://api.anthropic.com/v1/"), ExternalHttpTrustPolicy.SYSTEM_TRUST_ONLY, LOGGER)
 {
     private static readonly ILogger<ProviderAnthropic> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderAnthropic>();
-    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ProviderAnthropic).Namespace, nameof(ProviderAnthropic));
-
     #region Implementation of IProvider
 
     /// <inheritdoc />

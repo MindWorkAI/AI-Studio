@@ -1,6 +1,6 @@
 # Tool Development
 
-This document explains how model-driven tools are added to AI Studio. Tool calling let a model request a small, well-defined action during a chat or assistant run, such as searching the web or reading a web page.
+This document explains how model-driven tools are added to AI Studio. Tool calling lets a model request a small, well-defined action during a chat or assistant run, such as searching the web or reading a web page.
 
 Tools are part of the .NET app. They are not Lua plugins and they are not loaded dynamically from user folders. Adding a tool requires code changes.
 
@@ -78,10 +78,10 @@ Example:
       "demoLabel"
     ]
   },
-  "policyInstructions": "Use this tool only when the user asks for current weather conditions.", // this is added to the system prompt as guide for the LLM on what to do and what not to do with this tool
+  "policyInstructions": "Use this tool only when the user asks for current weather conditions.",
   "function": {
     "name": "get_current_weather",
-    "description": "Get the current weather in a given location.", // this description is used by the LLM to understand what the tool does and when to use it as the LLM
+    "description": "Get the current weather in a given location.",
     "strict": true,
     "parameters": {
       "type": "object",
