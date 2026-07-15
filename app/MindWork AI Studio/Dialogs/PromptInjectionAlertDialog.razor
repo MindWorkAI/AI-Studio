@@ -1,49 +1,131 @@
 @using AIStudio.Tools.Security
 @inherits MSGComponentBase
 
-<MudDialog>
-    <TitleContent>
-        <MudText Typo="Typo.h6" Class="d-flex align-center">
-            <MudIcon Icon="@Icons.Material.Filled.GppMaybe" Class="mr-2" Color="Color.Warning" />
-            @T("Prompt Injection Detected")
-        </MudText>
-    </TitleContent>
+<MudDialog MaxWidth="MaxWidth.Medium" FullWidth="true">
+
     <DialogContent>
-        @if (this.Result is not null)
+
+        @if (Result is not null)
         {
-            <MudAlert Severity="Severity.Warning" Variant="Variant.Filled" Dense="true" Class="mb-4">
-                @T("AI Studio blocked this content before it reached a model or agent.")
-            </MudAlert>
+            <MudPaper Class="pa-6 mb-4" Elevation="0" Style="background:#fff5f5;border:1px solid #f5d0d0;">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3">
+                    <MudAvatar Size="Size.Large"
+                               Color="Color.Error"
+                               Variant="Variant.Filled">
+                        <MudIcon Icon="@Icons.Material.Filled.GppMaybe"/>
+                    </MudAvatar>
 
-            <MudText Typo="Typo.body1" Class="mb-2">
-                @T("Source kind"): @this.Result.Source.Kind
-            </MudText>
-            <MudText Typo="Typo.body2" Class="mb-4">
-                @T("Source"): @this.Result.Source.Label
-            </MudText>
+                    <MudStack Spacing="0">
+                        <MudText Typo="Typo.h5">
+                            @T("Danger detected")
+                        </MudText>
 
-            <MudText Typo="Typo.subtitle1" Class="mb-2">
-                @T("Detected signals")
-            </MudText>
-            <MudList T="string" Dense="true" Class="mb-4">
-                @foreach (var finding in this.Result.Findings)
-                {
-                    <MudListItem T="string" Icon="@Icons.Material.Filled.ReportProblem">
-                        @($"{finding.Category} / {finding.DetectionStage}: {finding.Snippet}")
-                    </MudListItem>
-                }
-            </MudList>
+                        <MudText Typo="Typo.body2"
+                                 Color="Color.Error">
+                            @T("AI Studio blocked this content before it reached a model or agent.")
+                        </MudText>
+                    </MudStack>
+                </MudStack>
+            </MudPaper>
 
-            <MudText Typo="Typo.body2">
-                @T("More information"):
-                <MudLink Href="@PromptInjectionGuardService.WIKI_URL" Target="_blank">
-                    @PromptInjectionGuardService.WIKI_URL
-                </MudLink>
-            </MudText>
+            <MudDivider />
+            <MudStack Row="true" Justify="Justify.Center" Class="my-2">
+                <MudButton Variant="Variant.Text"
+                           EndIcon="@(showPromptInjectionInformation ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)"
+                           OnClick="@TogglePromptInjectionInformation">
+
+                    @(showPromptInjectionInformation
+                        ? T("Hide more information")
+                        : T("More information"))
+                </MudButton>
+            </MudStack>
+
+            <MudCollapse Expanded="@showPromptInjectionInformation">
+                <MudText Typo="Typo.body2" Class="mb-4">
+                    <strong>
+                        @T("Typical attacks on AI systems (e.g. prompt injection) hide instructions within untrusted content to trick an AI model into ignoring its intended rules or performing unintended actions.")
+                    </strong>
+                </MudText>
+
+                <MudPaper Outlined="true"
+                          Class="pa-4 mb-4">
+                    <MudGrid>
+                        <MudItem xs="12" md="3">
+                            <MudStack>
+                                <MudIcon Icon="@Icons.Material.Filled.Source" />
+
+                                <MudText Typo="Typo.subtitle2">
+                                    @T("Source type")
+                                </MudText>
+
+                                <MudText Typo="Typo.body2">
+                                    @this.GetSourceKindLabel(Result.Source.Kind)
+                                </MudText>
+                            </MudStack>
+                        </MudItem>
+
+                        <MudItem xs="12" md="4">
+                            <MudStack>
+                                <MudIcon Icon="@Icons.Material.Outlined.Description"/>
+
+                                <MudText Typo="Typo.subtitle2">
+                                    @T("Content source")
+                                </MudText>
+
+                                <MudText Typo="Typo.body2"
+                                         Style="word-break:break-all;">
+                                    @Result.Source.Label
+                                </MudText>
+                            </MudStack>
+                        </MudItem>
+
+                        <MudItem xs="12" md="5">
+                            <MudStack>
+                                <MudIcon Icon="@Icons.Material.Outlined.WarningAmber"/>
+
+                                <MudText Typo="Typo.subtitle2">
+                                    @T("Detected content")
+                                </MudText>
+
+                                @foreach (var finding in Result.Findings)
+                                {
+                                    <MudStack Spacing="0">
+                                        <MudText Typo="Typo.body2">
+                                            <b>
+                                                @($"{this.GetFindingCategoryLabel(finding.Category)}")
+                                            </b>
+                                        </MudText>
+
+                                        <MudText Typo="Typo.body2" Class="ml-4 mt-1">
+                                            @finding.Snippet
+                                        </MudText>
+                                    </MudStack>
+                                }
+                            </MudStack>
+                        </MudItem>
+                    </MudGrid>
+                </MudPaper>
+
+                <MudPaper Class="pa-4 mt-2"
+                          Style="background:#fafafa;">
+
+                    <MudText Typo="Typo.body2" Class="mb-3">
+                        @T("Prompt injection is a method used to manipulate AI systems such as chatbots. An attacker places misleading instructions in content so that the AI treats them as legitimate. This can cause the AI to ignore safeguards, expose private information, or generate harmful content.")
+                    </MudText>
+
+                    <MudLink Href="@PromptInjectionGuardService.WIKI_URL"
+                             Target="_blank">
+                        @PromptInjectionGuardService.WIKI_URL
+                    </MudLink>
+                </MudPaper>
+            </MudCollapse>
         }
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="@this.Close" Variant="Variant.Filled">
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Default"
+                   OnClick="@Close">
+
             @T("Close")
         </MudButton>
     </DialogActions>

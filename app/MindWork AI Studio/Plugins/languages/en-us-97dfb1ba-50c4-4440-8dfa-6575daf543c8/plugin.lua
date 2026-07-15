@@ -4740,6 +4740,42 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINGGUIDELINEDIALOG::T384594633"] = "Th
 -- Prompting Guideline
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINGGUIDELINEDIALOG::T4250996615"] = "Prompting Guideline"
 
+-- Danger detected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T1081126836"] = "Danger detected"
+
+-- More Information
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T1266371726"] = "More Information"
+
+-- Prompt injection is an attempt to hide instructions in untrusted content so that an AI model ignores its intended rules or performs unintended actions.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T163682410"] = "Prompt injection is an attempt to hide instructions in untrusted content so that an AI model ignores its intended rules or performs unintended actions."
+
+-- Source
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T1642243064"] = "Source"
+
+-- Hide More Information
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T1648537896"] = "Hide More Information"
+
+-- AI Studio blocked this content before it reached a model or agent.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T2378027194"] = "AI Studio blocked this content before it reached a model or agent."
+
+-- Prompt Injection detected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T3052247348"] = "Prompt Injection detected"
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T3448155331"] = "Close"
+
+-- Prompt injection is a trick used to manipulate AI systems like chatbots. Normally, these systems follow the rules set by their developers—such as being helpful and safe. But with prompt injection, an attacker crafts a clever input that makes the AI think it’s receiving a new, legitimate instruction. This can cause the AI to ignore its usual safeguards and do something unintended, like sharing private information or generating harmful content. The issue arises because the AI can’t always tell the difference between a trusted command and a deceptive one.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T3548442822"] = "Prompt injection is a trick used to manipulate AI systems like chatbots. Normally, these systems follow the rules set by their developers—such as being helpful and safe. But with prompt injection, an attacker crafts a clever input that makes the AI think it’s receiving a new, legitimate instruction. This can cause the AI to ignore its usual safeguards and do something unintended, like sharing private information or generating harmful content. The issue arises because the AI can’t always tell the difference between a trusted command and a deceptive one."
+
+-- Source kind
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T47437466"] = "Source kind"
+
+-- More information
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T475337262"] = "More information"
+
+-- Detected signals
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T556618402"] = "Detected signals"
+
 -- Hugging Face Inference Provider
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1085481431"] = "Hugging Face Inference Provider"
 
@@ -5220,6 +5256,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T6790
 -- When enabled, you can preselect options. This is might be useful when you prefer a specific language or LLM model.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T711745239"] = "When enabled, you can preselect options. This is might be useful when you prefer a specific language or LLM model."
 
+-- Protect against prompt injection in external content?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T1040385578"] = "Protect against prompt injection in external content?"
+
 -- Preselect one of your chat templates?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T1402022556"] = "Preselect one of your chat templates?"
 
@@ -5241,11 +5280,17 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T1915793195"] 
 -- Preselect a profile
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T2322771068"] = "Preselect a profile"
 
+-- A blocking alert explains the detected attack pattern
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T2341755932"] = "A blocking alert explains the detected attack pattern"
+
 -- Apply default data source option when sending assistant results to chat
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T2510376349"] = "Apply default data source option when sending assistant results to chat"
 
 -- Control how the LLM provider for added chats is selected.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T263621180"] = "Control how the LLM provider for added chats is selected."
+
+-- Show a learning alert when prompt injection is detected?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T2754886869"] = "Show a learning alert when prompt injection is detected?"
 
 -- Provider selection when loading a chat and sending assistant results to chat
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T2868379953"] = "Provider selection when loading a chat and sending assistant results to chat"
@@ -5256,6 +5301,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T2913693228"] 
 -- Do you want to use any shortcut to send your input?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T2936560092"] = "Do you want to use any shortcut to send your input?"
 
+-- Shows an explanation dialog with an external reference when AI Studio blocks suspicious content.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3129787554"] = "Shows an explanation dialog with an external reference when AI Studio blocks suspicious content."
+
 -- Would you like to set one of your chat templates as the default for chats?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3234927721"] = "Would you like to set one of your chat templates as the default for chats?"
 
@@ -5264,6 +5312,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3383186996"] 
 
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3448155331"] = "Close"
+
+-- Only the block notification is shown
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3491678837"] = "Only the block notification is shown"
 
 -- First (oldest) message is shown, after loading a chat
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3507181366"] = "First (oldest) message is shown, after loading a chat"
@@ -5277,8 +5328,14 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3730599555"] 
 -- Latest message is shown, after loading a chat
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3755993611"] = "Latest message is shown, after loading a chat"
 
+-- Potential prompt injections are blocked before they reach an LLM
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3982766677"] = "Potential prompt injections are blocked before they reach an LLM"
+
 -- Do you want to apply the default data source options when sending assistant results to chat?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T4033153439"] = "Do you want to apply the default data source options when sending assistant results to chat?"
+
+-- External content is passed through without prompt-injection checks
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T4245463281"] = "External content is passed through without prompt-injection checks"
 
 -- When enabled, you can preselect chat options. This is might be useful when you prefer a specific provider.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T477675197"] = "When enabled, you can preselect chat options. This is might be useful when you prefer a specific provider."
@@ -5288,6 +5345,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T492357592"] =
 
 -- When enabled, the latest message is shown after loading a chat. When disabled, the first (oldest) message is shown.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T582516016"] = "When enabled, the latest message is shown after loading a chat. When disabled, the first (oldest) message is shown."
+
+-- Checks web content, file attachments, retrieval context, and similar external input for prompt-injection patterns before it is sent to a model or agent.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T69192586"] = "Checks web content, file attachments, retrieval context, and similar external input for prompt-injection patterns before it is sent to a model or agent."
 
 -- Customize your AI experience with chat templates. Whether you want to experiment with prompt engineering, simply use a custom system prompt in the standard chat interface, or create a specialized assistant, chat templates give you full control. Similar to common AI companies' playgrounds, you can define your own system prompts and leverage assistant prompts for providers that support them.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHATTEMPLATE::T1172171653"] = "Customize your AI experience with chat templates. Whether you want to experiment with prompt engineering, simply use a custom system prompt in the standard chat interface, or create a specialized assistant, chat templates give you full control. Similar to common AI companies' playgrounds, you can define your own system prompts and leverage assistant prompts for providers that support them."
@@ -6359,6 +6419,9 @@ UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T2936083926"] = "AI Studio could 
 
 -- Writing
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T2979224202"] = "Writing"
+
+-- Prompt Injection Detected
+UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T3580322580"] = "Prompt Injection Detected"
 
 -- Show details
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T3692372066"] = "Show details"
@@ -8456,6 +8519,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T378481461"] = "Source like p
 
 -- Document
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T4165204724"] = "Document"
+
+-- AI Studio blocked content from '{0}' because it looks like a prompt-injection attempt.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONGUARDSERVICE::T3560909296"] = "AI Studio blocked content from '{0}' because it looks like a prompt-injection attempt."
 
 -- Pandoc Installation
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PANDOCAVAILABILITYSERVICE::T185447014"] = "Pandoc Installation"
