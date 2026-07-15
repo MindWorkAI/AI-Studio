@@ -17,6 +17,7 @@ public static class ComponentsExtensions
         Components.BIAS_DAY_ASSISTANT => false,
         Components.I18N_ASSISTANT => false,
         Components.DOCUMENT_ANALYSIS_ASSISTANT => false,
+        Components.LOG_VIEWER_ASSISTANT => false,
         
         Components.APP_SETTINGS => false,
         Components.WRITER => false,
@@ -50,6 +51,7 @@ public static class ComponentsExtensions
         Components.DOCUMENT_ANALYSIS_ASSISTANT => TB("Document Analysis Assistant"),
         Components.SLIDE_BUILDER_ASSISTANT => TB("Slide Planner Assistant"),
         Components.META_ASSISTANT => TB("Assistant Builder"),
+        Components.LOG_VIEWER_ASSISTANT => TB("Log Viewer Assistant"),
         
         Components.CHAT => TB("New Chat"),
         

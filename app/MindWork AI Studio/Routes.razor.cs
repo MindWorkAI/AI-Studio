@@ -32,5 +32,6 @@ public sealed partial class Routes
     public const string ASSISTANT_DOCUMENT_ANALYSIS = "/assistant/document-analysis";
     public const string ASSISTANT_DYNAMIC = "/assistant/dynamic";
     public const string ASSISTANT_META_ASSISTANT = "/assistant/builder";
+    public const string ASSISTANT_LOG_VIEWER = "/assistant/log-viewer";
     // ReSharper restore InconsistentNaming
 }
