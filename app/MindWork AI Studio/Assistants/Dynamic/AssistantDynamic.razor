@@ -42,6 +42,12 @@ else
 }
 
 @code {
+    private protected override RenderFragment? HeaderActions => this.CanReviseCurrentAssistant
+        ? @<MudTooltip Text="@T("Revise assistant")">
+              <MudIconButton Variant="Variant.Text" Icon="@Icons.Material.Filled.AutoMode" OnClick="@(async () => await this.OpenRevisionDialogAsync())"/>
+          </MudTooltip>
+        : null;
+
     private RenderFragment RenderSwitch(AssistantSwitch assistantSwitch) => @<MudSwitch T="bool"
                 Value="@this.assistantState.Booleans[assistantSwitch.Name]"
                 ValueChanged="@(value => this.ExecuteSwitchChangedAsync(assistantSwitch, value))"

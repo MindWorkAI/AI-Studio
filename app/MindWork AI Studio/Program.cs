@@ -139,6 +139,7 @@ internal sealed class Program
         builder.Services.AddSingleton<MediaTranscriptionService>();
         builder.Services.AddSingleton<AssistantPluginInstallService>();
         builder.Services.AddSingleton<UpdatePolicy>();
+        builder.Services.AddSingleton<AssistantPluginGenerationService>();
         builder.Services.AddSingleton<DataSourceService>();
         builder.Services.AddScoped<PandocAvailabilityService>();
         builder.Services.AddTransient<HTMLParser>();

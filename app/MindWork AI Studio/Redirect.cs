@@ -4,11 +4,12 @@ internal static class Redirect
 {
     private const string CONTENT = "/_content/";
     private const string SYSTEM = "/system/";
+    private const string CODE_EDITOR = "/system/CodeEditor/";
     
     internal static async Task HandlerContentAsync(HttpContext context, Func<Task> nextHandler)
     {
         var path = context.Request.Path.Value;
-        if(string.IsNullOrWhiteSpace(path))
+        if (string.IsNullOrWhiteSpace(path))
         {
             await nextHandler();
             return;
@@ -16,6 +17,12 @@ internal static class Redirect
         
         #if DEBUG
         
+        if (path.StartsWith(CODE_EDITOR, StringComparison.InvariantCulture))
+        {
+            await nextHandler();
+            return;
+        }
+
         if (path.StartsWith(SYSTEM, StringComparison.InvariantCulture))
         {
             context.Response.Redirect(path.Replace(SYSTEM, CONTENT), true, true);

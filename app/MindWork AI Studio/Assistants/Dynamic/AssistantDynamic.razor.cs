@@ -1,4 +1,7 @@
 using System.Text;
+using AIStudio.Agents.AssistantAudit;
+using AIStudio.Chat;
+using AIStudio.Dialogs;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Settings;
 using AIStudio.Tools.AssistantSessions;
@@ -8,11 +11,15 @@ using AIStudio.Tools.PluginSystem.Assistants.DataModel;
 using Lua;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.WebUtilities;
+using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Assistants.Dynamic;
 
 public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
 {
+    [Inject]
+    private IDialogService DialogService { get; init; } = null!;
+
     [Parameter] 
     public AssistantForm? RootComponent { get; set; }
     
@@ -32,7 +39,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
     /// Gets the plugin ID as the assistant session instance ID.
     /// </summary>
     protected override string AssistantSessionInstanceId => this.assistantPlugin is null ? base.AssistantSessionInstanceId : this.assistantPlugin.Id.ToString();
-
+    
     private string title = string.Empty;
     private string description = string.Empty;
     private string systemPrompt = string.Empty;
@@ -66,6 +73,8 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
     private static readonly AssistantSessionStateKey<PluginAssistantAudit?> AUDIT_STATE_KEY = new(nameof(audit));
     private static readonly AssistantSessionStateKey<string> SECURITY_MESSAGE_STATE_KEY = new(nameof(securityMessage));
     private static readonly AssistantSessionStateKey<bool> IS_SECURITY_BLOCKED_STATE_KEY = new(nameof(isSecurityBlocked));
+
+    private bool CanReviseCurrentAssistant => this.assistantPlugin is { IsInternal: false, IsManagedByConfigServer: false } && !string.IsNullOrWhiteSpace(this.assistantPlugin.PluginPath);
 
     /// <inheritdoc />
     protected override void CaptureCustomAssistantSessionState(AssistantSessionStateWriter state)
@@ -208,6 +217,93 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
 
         this.Logger.LogWarning("AssistantDynamic query parameter '{Parameter}' is not a valid GUID.", value);
         return null;
+    }
+
+    private async Task OpenRevisionDialogAsync()
+    {
+        if (this.assistantPlugin is null || !this.CanReviseCurrentAssistant)
+            return;
+
+        var testContext = await this.BuildRevisionTestContextAsync();
+        var parameters = new DialogParameters<AssistantPluginRevisionDialog>
+        {
+            { x => x.PluginId, this.assistantPlugin.Id },
+            { x => x.PluginLocalPath, this.assistantPlugin.PluginPath },
+            { x => x.TestContext, testContext },
+        };
+
+        var dialog = await this.DialogService.ShowAsync<AssistantPluginRevisionDialog>(this.T("Revise Assistant"), parameters, DialogOptions.BLOCKING_FULLSCREEN);
+        var result = await dialog.Result;
+        if (result is null || result.Canceled)
+            return;
+
+        if (result.Data is not AssistantPluginRevisionDialogResult revisionResult)
+            return;
+
+        this.Logger.LogInformation($"AssistantDynamic of plugin '{revisionResult.PluginName}' ({revisionResult.PluginName}) was successfully revised with audit result {revisionResult.Audit?.Level ?? AssistantAuditLevel.UNKNOWN}.");
+        var updatedPlugin = PluginFactory.RunningPlugins.OfType<PluginAssistants>().FirstOrDefault(x => x.Id == revisionResult.PluginId);
+        if (updatedPlugin is not null)
+            this.ApplyUpdatedAssistantPlugin(updatedPlugin);
+
+        await this.MessageBus.SendSuccess(new(Icons.Material.Filled.AutoFixHigh, string.Format(this.T("The assistant '{0}' has been updated."), revisionResult.PluginName)));
+        await this.MessageBus.SendMessage<bool>(this, Event.PLUGINS_RELOADED);
+        await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+        await this.InvokeAsync(this.StateHasChanged);
+    }
+
+    private async Task<string> BuildRevisionTestContextAsync()
+    {
+        var builder = new StringBuilder();
+
+        if (this.assistantPlugin is not null)
+        {
+            var componentSummary = this.assistantPlugin.CreateAuditComponentSummary();
+            if (!string.IsNullOrWhiteSpace(componentSummary))
+            {
+                builder.AppendLine("Current component overview:");
+                builder.AppendLine(componentSummary);
+                builder.AppendLine();
+            }
+        }
+
+        var promptPreview = await this.CollectUserPromptAsync();
+        if (!string.IsNullOrWhiteSpace(promptPreview))
+        {
+            builder.AppendLine("Current prompt preview from the assistant form:");
+            builder.AppendLine(promptPreview);
+            builder.AppendLine();
+        }
+
+        if (this.ResultingContentBlock?.Content is ContentText text && !string.IsNullOrWhiteSpace(text.Text))
+        {
+            builder.AppendLine("Last assistant response visible in this session:");
+            builder.AppendLine(text.Text);
+        }
+
+        return builder.ToString().Trim();
+    }
+
+    private void ApplyUpdatedAssistantPlugin(PluginAssistants updatedPlugin)
+    {
+        this.assistantPlugin = updatedPlugin;
+        this.RootComponent = updatedPlugin.RootComponent;
+        this.title = updatedPlugin.AssistantTitle;
+        this.description = updatedPlugin.AssistantDescription;
+        this.systemPrompt = updatedPlugin.SystemPrompt;
+        this.submitText = updatedPlugin.SubmitText;
+        this.allowProfiles = updatedPlugin.AllowProfiles;
+        this.showFooterProfileSelection = !updatedPlugin.HasEmbeddedProfileSelection;
+        this.pluginPath = updatedPlugin.PluginPath;
+        var pluginHash = updatedPlugin.ComputeAuditHash();
+        this.audit = this.SettingsManager.ConfigurationData.AssistantPluginAudits.FirstOrDefault(x => x.PluginId == updatedPlugin.Id && x.PluginHash == pluginHash);
+
+        var securityState = PluginAssistantSecurityResolver.Resolve(this.SettingsManager, updatedPlugin);
+        this.securityMessage = securityState.CanStartAssistant ? string.Empty : securityState.Description;
+        this.isSecurityBlocked = !securityState.CanStartAssistant;
+
+        this.assistantState.Clear();
+        if (this.RootComponent is not null)
+            this.InitializeComponentState(this.RootComponent.Children);
     }
 
     #endregion
