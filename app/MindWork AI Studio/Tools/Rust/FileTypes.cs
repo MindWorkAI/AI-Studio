@@ -117,7 +117,7 @@ public static class FileTypes
 
         if (types.Any(t => t.ContainsType(SOURCE_LIKE_FILE_NAMES)))
         { 
-            if (SOURCE_LIKE_FILE_NAMES.FilterExtensions.Contains(fileName))
+            if (SOURCE_LIKE_FILE_NAMES.FilterExtensions.Contains(fileName, StringComparer.OrdinalIgnoreCase))
                 return true;
         }
         
