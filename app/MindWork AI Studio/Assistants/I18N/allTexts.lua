@@ -8746,42 +8746,6 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T378481461"] = "Source like p
 -- Document
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T4165204724"] = "Document"
 
--- The configured transcription provider could not be created.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T1235984176"] = "The configured transcription provider could not be created."
-
--- The selected media file no longer exists.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T129859547"] = "The selected media file no longer exists."
-
--- The selected media file does not contain an audio track.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T134825479"] = "The selected media file does not contain an audio track."
-
--- The media file could not be transcribed.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T1543974632"] = "The media file could not be transcribed."
-
--- The selected file cannot be processed as media.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T1707342767"] = "The selected file cannot be processed as media."
-
--- The audio track contains no audible signal, so there is nothing to transcribe.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T1988190152"] = "The audio track contains no audible signal, so there is nothing to transcribe."
-
--- The media file is damaged or its format could not be identified.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T2004316549"] = "The media file is damaged or its format could not be identified."
-
--- This media format or audio codec is not supported.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T2142564510"] = "This media format or audio codec is not supported."
-
--- No usable transcription provider is configured.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T2282521655"] = "No usable transcription provider is configured."
-
--- The media file could not be prepared for transcription.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T2749117459"] = "The media file could not be prepared for transcription."
-
--- The transcription provider could not transcribe the media file.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T3091669215"] = "The transcription provider could not transcribe the media file."
-
--- The media pipeline ended without an output file.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T632852430"] = "The media pipeline ended without an output file."
-
 -- The Assistant Builder context could not be loaded.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T108292972"] = "The Assistant Builder context could not be loaded."
 
@@ -8943,6 +8907,42 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T8163
 
 -- The generated assistant plugin is invalid. Issue: {0}
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T939708112"] = "The generated assistant plugin is invalid. Issue: {0}"
+
+-- The configured transcription provider could not be created.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T1235984176"] = "The configured transcription provider could not be created."
+
+-- The selected media file no longer exists.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T129859547"] = "The selected media file no longer exists."
+
+-- The selected media file does not contain an audio track.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T134825479"] = "The selected media file does not contain an audio track."
+
+-- The media file could not be transcribed.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T1543974632"] = "The media file could not be transcribed."
+
+-- The selected file cannot be processed as media.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T1707342767"] = "The selected file cannot be processed as media."
+
+-- The audio track contains no audible signal, so there is nothing to transcribe.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T1988190152"] = "The audio track contains no audible signal, so there is nothing to transcribe."
+
+-- The media file is damaged or its format could not be identified.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T2004316549"] = "The media file is damaged or its format could not be identified."
+
+-- This media format or audio codec is not supported.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T2142564510"] = "This media format or audio codec is not supported."
+
+-- No usable transcription provider is configured.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T2282521655"] = "No usable transcription provider is configured."
+
+-- The media file could not be prepared for transcription.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T2749117459"] = "The media file could not be prepared for transcription."
+
+-- The transcription provider could not transcribe the media file.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T3091669215"] = "The transcription provider could not transcribe the media file."
+
+-- The media pipeline ended without an output file.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T632852430"] = "The media pipeline ended without an output file."
 
 -- Pandoc Installation
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PANDOCAVAILABILITYSERVICE::T185447014"] = "Pandoc Installation"
