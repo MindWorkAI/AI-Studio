@@ -1,5 +1,4 @@
 @attribute [Route(Routes.ASSISTANT_LOG_VIEWER)]
-@using AIStudio.Tools.Services
 @inherits MSGComponentBase
 
 <div class="inner-scrolling-context">
@@ -99,7 +98,7 @@
                     <div class="log-viewer-lines" role="textbox" aria-readonly="true">
                         @foreach (var line in this.displayLines)
                         {
-                            <div class="@this.GetLineClass(line)">
+                            <div class="@GetLineClass(line)">
                                 <span class="log-viewer-line-number">@line.Number</span>
                                 <span class="log-viewer-line-text">@((MarkupString)this.RenderLine(line))</span>
                             </div>
