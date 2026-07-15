@@ -240,6 +240,11 @@ public enum Event
     SEND_TO_TRANSLATION_ASSISTANT,
 
     /// <summary>
+    /// Sends content to the image generation assistant.
+    /// </summary>
+    SEND_TO_IMAGE_GENERATION_ASSISTANT,
+
+    /// <summary>
     /// Sends content to the agenda assistant.
     /// </summary>
     SEND_TO_AGENDA_ASSISTANT,

@@ -56,6 +56,7 @@
       <PackageReference Include="MudBlazor.Markdown" Version="8.11.0" />
       <PackageReference Include="ReverseMarkdown" Version="5.0.0" />
       <PackageReference Include="LuaCSharp" Version="0.5.5" />
+      <PackageReference Include="ModelContextProtocol" Version="1.2.0" />
     </ItemGroup>
 
     <ItemGroup>

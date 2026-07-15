@@ -310,6 +310,13 @@ public static class ConfigurationSelectDataFactory
             yield return new(theme.GetName(), theme);
     }
 
+    public static IEnumerable<ConfigurationSelectData<DataSourceSecurity>> GetMCPServerSecurityPolicyData()
+    {
+        yield return new(TB("Please select a security policy"), DataSourceSecurity.NOT_SPECIFIED);
+        yield return new(TB("Self-hosted / within my trusted network"), DataSourceSecurity.SELF_HOSTED);
+        yield return new(TB("Could be an external / third-party server"), DataSourceSecurity.ALLOW_ANY);
+    }
+
     public static IEnumerable<ConfigurationSelectData<AssistantAuditLevel>> GetAssistantAuditLevelsData()
     {
         foreach (var level in Enum.GetValues<AssistantAuditLevel>())

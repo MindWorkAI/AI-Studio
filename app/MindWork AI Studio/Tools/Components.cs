@@ -21,6 +21,7 @@ public enum Components
     ERI_ASSISTANT,
     DOCUMENT_ANALYSIS_ASSISTANT,
     SLIDE_BUILDER_ASSISTANT,
+    IMAGE_GENERATION_ASSISTANT,
     META_ASSISTANT,
     
     // ReSharper disable InconsistentNaming

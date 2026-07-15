@@ -1,0 +1,35 @@
+@using AIStudio.Settings
+@using AIStudio.Settings.DataModel
+@inherits SettingsDialogBase
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6" Class="d-flex align-center">
+            <MudIcon Icon="@Icons.Material.Filled.Image" Class="mr-2" />
+            @T("Assistant: Image Generation Options")
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudPaper Class="pa-3 mb-8 border-dashed border rounded-lg">
+            <MudText Typo="Typo.subtitle1" Class="mb-2">@T("MCP Image Server")</MudText>
+            <ConfigurationText OptionDescription="@T("MCP server URL")" Icon="@Icons.Material.Filled.Link" Text="@(() => this.SettingsManager.ConfigurationData.ImageGeneration.MCPServerUrl)" TextUpdate="@(updatedText => this.SettingsManager.ConfigurationData.ImageGeneration.MCPServerUrl = updatedText)" OptionHelp="@T("The URL of your local MCP server that offers an image generation tool, e.g., http://localhost:3001/mcp.")"/>
+            <SecretInputField Secret="@this.SettingsManager.ConfigurationData.ImageGeneration.MCPServerBearerToken" SecretChanged="@this.OnBearerTokenChanged" Label="@T("Bearer token (optional)")" Placeholder="@T("Leave empty when your server does not require authentication.")" Class="mb-3"/>
+            <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Wifi" Disabled="@this.isTestingConnection" OnClick="@this.TestConnectionAsync" Class="mb-4">
+                @T("Test connection & load tools")
+            </MudButton>
+            <ConfigurationSelect OptionDescription="@T("Image generation tool")" Data="@this.discoveredTools" SelectedValue="@(() => this.SettingsManager.ConfigurationData.ImageGeneration.MCPServerToolName)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.ImageGeneration.MCPServerToolName = selectedValue)" OptionHelp="@T("Which tool, offered by the MCP server, should be used to generate images? Use the button above to discover the available tools.")"/>
+            <ConfigurationSelect OptionDescription="@T("Is this MCP server trustworthy?")" Data="@ConfigurationSelectDataFactory.GetMCPServerSecurityPolicyData()" SelectedValue="@(() => this.SettingsManager.ConfigurationData.ImageGeneration.MCPServerSecurityPolicy)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.ImageGeneration.MCPServerSecurityPolicy = selectedValue)" OptionHelp="@T("Your prompts (and, depending on your server, possibly the generated images) are sent to this MCP server. Only self-hosted servers or servers within your trusted network should be considered trustworthy.")"/>
+            <TextInfoLines Label="@T("Your security policy")" MaxLines="3" Value="@this.SettingsManager.ConfigurationData.ImageGeneration.MCPServerSecurityPolicy.ToMCPInfoText()" Color="@this.SettingsManager.ConfigurationData.ImageGeneration.MCPServerSecurityPolicy.GetColor()" ClipboardTooltipSubject="@T("your security policy")"/>
+        </MudPaper>
+        <MudPaper Class="pa-3 mb-8 border-dashed border rounded-lg">
+            <MudText Typo="Typo.subtitle1" Class="mb-2">@T("Prompt Refinement")</MudText>
+            <ConfigurationOption OptionDescription="@T("Preselect image generation options?")" LabelOn="@T("Image generation options are preselected")" LabelOff="@T("No image generation options are preselected")" State="@(() => this.SettingsManager.ConfigurationData.ImageGeneration.PreselectOptions)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.ImageGeneration.PreselectOptions = updatedState)" OptionHelp="@T("When enabled, you can preselect the LLM that refines your image description into a detailed prompt.")"/>
+            <ConfigurationMinConfidenceSelection Disabled="@(() => !this.SettingsManager.ConfigurationData.ImageGeneration.PreselectOptions)" RestrictToGlobalMinimumConfidence="@true" SelectedValue="@(() => this.SettingsManager.ConfigurationData.ImageGeneration.MinimumProviderConfidence)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.ImageGeneration.MinimumProviderConfidence = selectedValue)"/>
+            <ConfigurationProviderSelection Component="Components.IMAGE_GENERATION_ASSISTANT" Data="@this.AvailableLLMProviders" Disabled="@(() => !this.SettingsManager.ConfigurationData.ImageGeneration.PreselectOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.ImageGeneration.PreselectedProvider)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.ImageGeneration.PreselectedProvider = selectedValue)"/>
+        </MudPaper>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Close" Variant="Variant.Filled">
+            @T("Close")
+        </MudButton>
+    </DialogActions>
+</MudDialog>

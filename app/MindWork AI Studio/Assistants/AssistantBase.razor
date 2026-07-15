@@ -121,14 +121,14 @@
                     {
                         case ButtonData buttonData when !string.IsNullOrWhiteSpace(buttonData.Tooltip):
                             <MudTooltip Text="@buttonData.Tooltip">
-                                <MudButton Variant="Variant.Filled" Color="@buttonData.Color" Disabled="@buttonData.DisabledAction()" StartIcon="@GetButtonIcon(buttonData.Icon)" OnClick="@(async () => await buttonData.AsyncAction())">
+                                <MudButton Variant="Variant.Filled" Color="@buttonData.Color" Style="@buttonData.Style" IconClass="@buttonData.IconClass" Disabled="@buttonData.DisabledAction()" StartIcon="@GetButtonIcon(buttonData.Icon)" OnClick="@(async () => await buttonData.AsyncAction())">
                                     @buttonData.Text
                                 </MudButton>
                             </MudTooltip>
                             break;
 
                         case ButtonData buttonData:
-                            <MudButton Variant="Variant.Filled" Color="@buttonData.Color" Disabled="@buttonData.DisabledAction()" StartIcon="@GetButtonIcon(buttonData.Icon)" OnClick="@(async () => await buttonData.AsyncAction())">
+                            <MudButton Variant="Variant.Filled" Color="@buttonData.Color" Style="@buttonData.Style" IconClass="@buttonData.IconClass" Disabled="@buttonData.DisabledAction()" StartIcon="@GetButtonIcon(buttonData.Icon)" OnClick="@(async () => await buttonData.AsyncAction())">
                                 @buttonData.Text
                             </MudButton>
                             break;
@@ -148,7 +148,7 @@
                             break;
                     }
                 }
-                
+
                 @if (this.ShowCopyResult)
                 {
                     <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.ContentCopy" OnClick="@(async () => await this.CopyToClipboard())">

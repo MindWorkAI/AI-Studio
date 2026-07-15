@@ -1,0 +1,12 @@
+@attribute [Route(Routes.ASSISTANT_IMAGE_GENERATION)]
+@inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogImageGeneration>
+@using AIStudio.Chat
+
+<MudTextField T="string" @bind-Text="@this.inputText" Validation="@this.ValidatingText" AdornmentIcon="@Icons.Material.Filled.Image" Adornment="Adornment.Start" Label="@T("Describe the image you want")" Variant="Variant.Outlined" Lines="4" AutoGrow="@true" MaxLines="12" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+<ProviderSelection @bind-ProviderSettings="@this.ProviderSettings" ValidateProvider="@this.ValidatingProvider"/>
+
+@code {
+    private protected override RenderFragment? AfterResultContent => this.ResultingContentBlock?.Content is ContentImage generatedImage
+        ? @<MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Download" OnClick="@(() => this.DownloadImageAsync(generatedImage.Source))" Class="mt-3">@T("Download image")</MudButton>
+        : null;
+}
