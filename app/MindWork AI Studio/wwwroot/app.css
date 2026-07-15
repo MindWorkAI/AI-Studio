@@ -267,6 +267,10 @@
     color: var(--mud-palette-warning-darken);
 }
 
+.log-viewer-line-info {
+    color: var(--mud-palette-info);
+}
+
 .log-viewer-line-debug,
 .log-viewer-line-trace {
     color: var(--mud-palette-text-secondary);

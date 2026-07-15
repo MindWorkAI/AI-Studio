@@ -445,6 +445,9 @@ public partial class AssistantLogViewer : MSGComponentBase
         if (level.Contains("WARN", StringComparison.OrdinalIgnoreCase))
             return "log-viewer-line log-viewer-line-warn";
 
+        if (level.Equals("INFO", StringComparison.OrdinalIgnoreCase) || level.Equals("INFORMATION", StringComparison.OrdinalIgnoreCase))
+            return "log-viewer-line log-viewer-line-info";
+
         if (level.Contains("DEBUG", StringComparison.OrdinalIgnoreCase))
             return "log-viewer-line log-viewer-line-debug";
 
