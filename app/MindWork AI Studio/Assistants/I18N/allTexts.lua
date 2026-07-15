@@ -1642,11 +1642,14 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T104207602
 -- The log file could not be read: {0}
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T1147062477"] = "The log file could not be read: {0}"
 
+-- Select a log file
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T1231773010"] = "Select a log file"
+
+-- Log level
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T1318706515"] = "Log level"
+
 -- Refresh
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T135637716"] = "Refresh"
-
--- Log type
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T1649755707"] = "Log type"
 
 -- Showing {0} of {1} loaded lines. {2} older lines were skipped. Last refresh: {3}.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T1747827400"] = "Showing {0} of {1} loaded lines. {2} older lines were skipped. Last refresh: {3}."
@@ -1713,9 +1716,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T403174727
 
 -- Open in folder
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T4048746540"] = "Open in folder"
-
--- Log file
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T4129341821"] = "Log file"
 
 -- Log Viewer
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T4130241777"] = "Log Viewer"
@@ -8725,26 +8725,17 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T3082220817"] = "The ru
 -- Successfully copied the text to your clipboard
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T3351807428"] = "Successfully copied the text to your clipboard"
 
--- The path does not exist and its parent folder could not be found.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T3606079336"] = "The path does not exist and its parent folder could not be found."
-
 -- Failed to delete the API key due to an API issue.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T3658273365"] = "Failed to delete the API key due to an API issue."
 
 -- Failed to copy the text to your clipboard.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T3724548108"] = "Failed to copy the text to your clipboard."
 
--- The local file manager command failed: {0}
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T381756374"] = "The local file manager command failed: {0}"
-
 -- Failed to get the API key due to an API issue.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T3875720022"] = "Failed to get the API key due to an API issue."
 
 -- Failed to get the secret data due to an API issue.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T4007657575"] = "Failed to get the secret data due to an API issue."
-
--- The local file manager command did not start.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T613631541"] = "The local file manager command did not start."
 
 -- No update found.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::UPDATESERVICE::T1015418291"] = "No update found."
