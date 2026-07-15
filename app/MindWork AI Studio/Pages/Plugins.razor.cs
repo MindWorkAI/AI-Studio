@@ -4,7 +4,6 @@ using AIStudio.Dialogs;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.PluginSystem.Assistants;
 using AIStudio.Tools.PluginSystem;
-using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
