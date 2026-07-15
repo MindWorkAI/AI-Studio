@@ -21,7 +21,7 @@
 }
 else
 {
-    <MudList Color="Color.Primary" T="DataDocumentAnalysisPolicy" Class="mb-1" SelectedValue="@this.selectedPolicy" SelectedValueChanged="@this.SelectedPolicyChanged">
+    <MudList Disabled="@this.ArePolicyControlsDisabled" Color="Color.Primary" T="DataDocumentAnalysisPolicy" Class="mb-1" SelectedValue="@this.selectedPolicy" SelectedValueChanged="@this.SelectedPolicyChanged">
         @foreach (var policy in this.SettingsManager.ConfigurationData.DocumentAnalysis.Policies)
         {
             @if (policy.IsEnterpriseConfiguration)
@@ -44,10 +44,10 @@ else
 }
 
 <MudStack Row="@true" Class="mt-1">
-    <MudButton OnClick="@this.AddPolicy" Variant="Variant.Filled" Color="Color.Primary">
+    <MudButton OnClick="@this.AddPolicy" Disabled="@this.ArePolicyControlsDisabled" Variant="Variant.Filled" Color="Color.Primary">
         @T("Add policy")
     </MudButton>
-    <MudButton OnClick="@this.RemovePolicy" Disabled="@((this.selectedPolicy?.IsProtected ?? true) || (this.selectedPolicy?.IsEnterpriseConfiguration ?? true))" Variant="Variant.Filled" Color="Color.Error">
+    <MudButton OnClick="@this.RemovePolicy" Disabled="@(this.ArePolicyControlsDisabled || (this.selectedPolicy?.IsProtected ?? true) || (this.selectedPolicy?.IsEnterpriseConfiguration ?? true))" Variant="Variant.Filled" Color="Color.Error">
         @T("Delete this policy")
     </MudButton>
 </MudStack>

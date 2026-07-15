@@ -61,7 +61,7 @@ public static class FileTypes
     public static readonly FileTypeFilter IMAGE = FileTypeFilter.Leaf(TB("Image"),
         "jpg", "jpeg", "png", "gif", "bmp", "tiff", "svg", "webp", "heic");
     public static readonly FileTypeFilter AUDIO = FileTypeFilter.Leaf(TB("Audio"),
-        "mp3", "wav", "wave", "aac", "flac", "ogg", "m4a", "wma", "alac", "aiff", "m4b");
+        "mp3", "wav", "wave", "aac", "flac", "ogg", "opus", "m4a", "m4b", "wma", "alac", "aif", "aiff", "caf");
     public static readonly FileTypeFilter VIDEO = FileTypeFilter.Leaf(TB("Video"),
         "mp4", "m4v", "avi", "mkv", "mov", "wmv", "flv", "webm");
 
