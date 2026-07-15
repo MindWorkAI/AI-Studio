@@ -288,6 +288,7 @@
                     @if (OperatingSystem.IsLinux())
                     {
                         <ThirdPartyComponent Name="GStreamer" Developer="GStreamer contributors & Open Source Community" LicenseName="LGPL-2.1" LicenseUrl="https://gstreamer.freedesktop.org/documentation/frequently-asked-questions/licensing.html" RepositoryUrl="https://gitlab.freedesktop.org/gstreamer/gstreamer" UseCase="@T("Linux AppImages bundle GStreamer components to support microphone access and WebM audio recording in the embedded WebKitGTK web view.")"/>
+                        <ThirdPartyComponent Name="ashpd" Developer="Bilal Elmoussaoui & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/bilelmoussaoui/ashpd/blob/main/LICENSE" RepositoryUrl="https://github.com/bilelmoussaoui/ashpd" UseCase="@T("On Linux, ashpd provides access to desktop portals, allowing AI Studio to open folders and files for the user.")"/>
                     }
                     
                     <ThirdPartyComponent Name="Qdrant Edge" Developer="Andrey Vasnetsov, Tim Visée, Arnaud Gourlay, Luis Cossío, Ivan Pleshkov, Roman Titov, xzfc, JojiiOfficial & Open Source Community" LicenseName="Apache-2.0" LicenseUrl="https://github.com/qdrant/qdrant/blob/master/LICENSE" RepositoryUrl="https://github.com/qdrant/qdrant" UseCase="@T("Qdrant Edge is an embedded vector database and vector similarity search engine. We use it to realize local RAG—retrieval-augmented generation—within AI Studio. Thanks for the effort and great work that has been and is being put into Qdrant.")"/>
