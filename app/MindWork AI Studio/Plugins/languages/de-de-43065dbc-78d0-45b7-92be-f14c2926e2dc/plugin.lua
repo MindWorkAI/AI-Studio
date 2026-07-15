@@ -7176,6 +7176,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3801531724"] = "Quelle der Konfi
 -- this version does not met the requirements
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3813932670"] = "diese Version erfüllt die Anforderungen nicht"
 
+-- On Linux, ashpd provides access to desktop portals, allowing AI Studio to open folders and files for the user.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3871176264"] = "Unter Linux ermöglicht ashpd den Zugriff auf Desktop-Portale, sodass AI Studio Ordner und Dateien für den Nutzer öffnen kann."
+
 -- This library is used to access the Windows registry. We use this for Windows enterprise environments to read the desired configuration.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3874337003"] = "Diese Bibliothek wird verwendet, um auf die Windows-Registry zuzugreifen. Wir nutzen sie in Windows-Unternehmensumgebungen, um die gewünschte Konfiguration auszulesen."
 
