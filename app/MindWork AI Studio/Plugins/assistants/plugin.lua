@@ -49,6 +49,11 @@ DEPRECATION_MESSAGE = ""
 -- Enterprise-managed assistants cannot be revised with AI. Keep false for locally managed plugins:
 DEPLOYED_USING_CONFIG_SERVER = false
 
+-- Reserved for assistants created by the AI Studio Assistant Builder. Generated assistants use this
+-- metadata so AI Studio can identify them and offer Builder-specific actions such as safe deletion.
+-- Manually authored or enterprise-distributed assistants must not set this metadata:
+-- AI_STUDIO_ASSISTANT_BUILDER = {Generated = true, SchemaVersion = 1}
+
 ASSISTANT = {
     ["Title"] = "<Title of your assistant>",
     ["Description"] = "<Description presented to the users, explaining your assistant>",

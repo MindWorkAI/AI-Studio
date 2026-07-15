@@ -28,9 +28,6 @@ public partial class Plugins : MSGComponentBase
     [Inject]
     private AssistantPluginAuditService AssistantPluginAuditService { get; init; } = null!;
 
-    [Inject]
-    private AssistantPluginInstallService AssistantPluginInstallService { get; init; } = null!;
-    
     private static readonly ILogger LOG = Program.LOGGER_FACTORY.CreateLogger(nameof(Plugins));
 
     #region Overrides of ComponentBase
@@ -190,8 +187,6 @@ public partial class Plugins : MSGComponentBase
 
     private static bool CanEditAssistantPlugin(IAvailablePlugin plugin) => plugin is { IsInternal: false, Type: PluginType.ASSISTANT } && !string.IsNullOrWhiteSpace(plugin.LocalPath);
 
-    private static bool CanDeleteAssistantPlugin(IAvailablePlugin plugin) => plugin is { IsInternal: false, Type: PluginType.ASSISTANT } && !string.IsNullOrWhiteSpace(plugin.LocalPath);
-
     private static bool CanReviseAssistantPlugin(IAvailablePlugin plugin)
     {
         var assistantPlugin = PluginFactory.RunningPlugins.OfType<PluginAssistants>().FirstOrDefault(x => x.Id == plugin.Id);
@@ -236,33 +231,6 @@ public partial class Plugins : MSGComponentBase
         LOG.LogInformation($"The assistant plugin '{result.PluginName}' ({result.PluginId}) has been successfully revised.");
         await this.MessageBus.SendMessage<bool>(this, Event.PLUGINS_RELOADED);
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
-        await this.InvokeAsync(this.StateHasChanged);
-    }
-
-    private async Task DeleteAssistantPluginAsync(IAvailablePlugin plugin)
-    {
-        var dialogParameters = new DialogParameters<ConfirmDialog>
-        {
-            {
-                x => x.Message,
-                string.Format(this.T("Do you really want to delete the assistant plugin '{0}'? This will permanently delete the local plugin files."), plugin.Name)
-            },
-        };
-
-        var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(this.T("Delete Assistant Plugin"), dialogParameters, DialogOptions.FULLSCREEN);
-        var dialogResult = await dialogReference.Result;
-        if (dialogResult is null || dialogResult.Canceled)
-            return;
-
-        var result = await this.AssistantPluginInstallService.DeleteInstalledAssistantAsync(plugin, CancellationToken.None);
-        if (!result.Success)
-        {
-            LOG.LogError($"Failed to delete assistant plugin '{result.PluginName}' ({result.PluginId}) from '{result.PluginDirectory}' with issue '{result.Issue}'.");
-            await this.MessageBus.SendError(new(Icons.Material.Filled.DeleteForever, string.Format(this.T("The assistant plugin '{0}' could not be deleted: {1}"), plugin.Name, result.Issue)));
-            return;
-        }
-
-        await this.MessageBus.SendSuccess(new(Icons.Material.Filled.Check, string.Format(this.T("The '{0}' assistant plugin has been successfully removed."), result.PluginName)));
         await this.InvokeAsync(this.StateHasChanged);
     }
 

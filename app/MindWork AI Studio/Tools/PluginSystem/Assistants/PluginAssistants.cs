@@ -37,6 +37,7 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
     public bool HasEmbeddedProfileSelection { get; private set; }
     public bool HasCustomPromptBuilder => this.buildPromptFunction is not null;
     public bool IsAssistantBuilderGenerated { get; private set; }
+    public bool HasDeploymentManagementMetadata { get; private set; }
     public bool IsManagedByConfigServer { get; private set; }
     public AssistantPluginLaunchBehavior LaunchBehavior { get; private set; }
     public string LaunchWorkspaceName { get; private set; } = string.Empty;
@@ -66,6 +67,7 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
         message = string.Empty;
         this.HasEmbeddedProfileSelection = false;
         this.IsAssistantBuilderGenerated = false;
+        this.HasDeploymentManagementMetadata = false;
         this.IsManagedByConfigServer = false;
         this.buildPromptFunction = null;
         this.LaunchBehavior = AssistantPluginLaunchBehavior.NONE;
@@ -169,7 +171,10 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
     private void TryReadDeploymentMetadata()
     {
         if (this.State.Environment["DEPLOYED_USING_CONFIG_SERVER"].TryRead<bool>(out var deployedUsingConfigServer))
+        {
+            this.HasDeploymentManagementMetadata = true;
             this.IsManagedByConfigServer = deployedUsingConfigServer;
+        }
     }
 
     private bool TryReadLaunchConfiguration(LuaTable assistantTable, out string message)

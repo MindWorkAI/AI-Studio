@@ -1,5 +1,7 @@
 using System.Text;
 using AIStudio.Settings;
+using AIStudio.Tools.AssistantSessions;
+using AIStudio.Tools.Media;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.PluginSystem.Assistants;
 
@@ -24,6 +26,8 @@ public sealed class AssistantPluginInstallService
     
     private readonly ILogger<AssistantPluginInstallService> logger;
     private readonly SettingsManager settingsManager;
+    private readonly AssistantSessionService assistantSessionService;
+    private readonly MediaTranscriptionService mediaTranscriptionService;
     private readonly SemaphoreSlim installSemaphore = new(1, 1);
     
     private static AssistantPluginInstallResult Error(string issue) => new(false, Guid.Empty, string.Empty, string.Empty, false, issue);
@@ -34,11 +38,37 @@ public sealed class AssistantPluginInstallService
 
     private static AssistantPluginUpdateResult UpdateError(IPluginMetadata plugin, string pluginDirectory, string issue) => new(false, plugin.Id, plugin.Name, pluginDirectory, issue);
 
-    public AssistantPluginInstallService(ILogger<AssistantPluginInstallService> logger, SettingsManager settingsManager)
+    public AssistantPluginInstallService(
+        ILogger<AssistantPluginInstallService> logger,
+        SettingsManager settingsManager,
+        AssistantSessionService assistantSessionService,
+        MediaTranscriptionService mediaTranscriptionService)
     {
         this.logger = logger;
         this.settingsManager = settingsManager;
+        this.assistantSessionService = assistantSessionService;
+        this.mediaTranscriptionService = mediaTranscriptionService;
         this.logger.LogInformation("The assistant plugin install service has been initialized.");
+    }
+
+    /// <summary>
+    /// Checks whether a local plugin is an Assistant Builder generated assistant that users may delete.
+    /// </summary>
+    public static bool CanDeleteInstalledAssistant(IAvailablePlugin plugin) => string.IsNullOrWhiteSpace(GetAssistantDeletionEligibilityIssue(plugin));
+
+    /// <summary>
+    /// Checks whether an assistant still owns running or canceling background work.
+    /// </summary>
+    public bool HasActiveAssistantWork(Guid pluginId)
+    {
+        var instanceId = pluginId.ToString();
+        if (this.assistantSessionService.GetSnapshots().Any(snapshot => snapshot.IsActive && string.Equals(snapshot.Key.InstanceId, instanceId, StringComparison.Ordinal)))
+            return true;
+
+        var ownerIdSuffix = $":{instanceId}";
+        return this.mediaTranscriptionService.GetSnapshots().Any(snapshot =>
+            snapshot is { IsBusy: true, Owner.Kind: MediaImportOwnerKind.ASSISTANT } &&
+            snapshot.Owner.Id.EndsWith(ownerIdSuffix, StringComparison.Ordinal));
     }
 
     /// <summary>
@@ -232,32 +262,28 @@ public sealed class AssistantPluginInstallService
     /// </returns>
     public async Task<AssistantPluginDeleteResult> DeleteInstalledAssistantAsync(IAvailablePlugin plugin, CancellationToken token)
     {
-        if (plugin.Type is not PluginType.ASSISTANT)
-            return DeleteError(plugin, plugin.LocalPath, TB("Only assistant plugins can be deleted."));
+        var eligibilityIssue = GetAssistantDeletionEligibilityIssue(plugin);
+        if (!string.IsNullOrEmpty(eligibilityIssue))
+            return DeleteError(plugin, plugin.LocalPath, eligibilityIssue);
 
-        if (plugin.IsInternal)
-            return DeleteError(plugin, plugin.LocalPath, TB("Internal assistant plugins cannot be deleted."));
-
-        if (string.IsNullOrWhiteSpace(plugin.LocalPath))
-            return DeleteError(plugin, string.Empty, TB("The assistant plugin has no local directory."));
-
-        if (!TryGetAssistantPluginsRoot(out var assistantPluginsRoot, out var rootIssue))
-            return DeleteError(plugin, plugin.LocalPath, rootIssue);
-
-        var pluginDirectory = plugin.LocalPath;
-        if (!IsPathInsideDirectory(assistantPluginsRoot, pluginDirectory) || IsSameDirectory(assistantPluginsRoot, pluginDirectory))
-            return DeleteError(plugin, pluginDirectory, TB("The assistant plugin directory is outside the local assistant plugin directory."));
-
-        if (!Directory.Exists(pluginDirectory))
-            return DeleteError(plugin, pluginDirectory, TB("The assistant plugin directory does not exist."));
+        if (this.HasActiveAssistantWork(plugin.Id))
+            return DeleteError(plugin, plugin.LocalPath, TB("The assistant cannot be deleted while background work is still running."));
 
         await this.installSemaphore.WaitAsync(token);
+        var pluginDirectory = plugin.LocalPath;
         var backupDirectory = string.Empty;
         var wasEnabled = false;
         var removedAudits = new List<PluginAssistantAudit>();
 
         try
         {
+            eligibilityIssue = GetAssistantDeletionEligibilityIssue(plugin);
+            if (!string.IsNullOrEmpty(eligibilityIssue))
+                return DeleteError(plugin, pluginDirectory, eligibilityIssue);
+
+            if (this.HasActiveAssistantWork(plugin.Id))
+                return DeleteError(plugin, pluginDirectory, TB("The assistant cannot be deleted while background work is still running."));
+
             backupDirectory = CreateDeleteBackupDirectory(plugin);
             Directory.CreateDirectory(Path.GetDirectoryName(backupDirectory)!);
             Directory.Move(pluginDirectory, backupDirectory);
@@ -484,6 +510,41 @@ public sealed class AssistantPluginInstallService
 
         assistantPluginsRoot = Path.Join(dataDirectory, "plugins", PluginType.ASSISTANT.GetDirectory());
         return true;
+    }
+
+    private static string GetAssistantDeletionEligibilityIssue(IAvailablePlugin plugin)
+    {
+        if (plugin.Type is not PluginType.ASSISTANT)
+            return TB("Only assistant plugins can be deleted.");
+
+        if (plugin.IsInternal)
+            return TB("Internal assistant plugins cannot be deleted.");
+
+        if (plugin.IsManagedByConfigServer)
+            return TB("Config Server managed assistant plugins cannot be deleted.");
+
+        if (string.IsNullOrWhiteSpace(plugin.LocalPath))
+            return TB("The assistant plugin has no local directory.");
+
+        var assistantPlugin = PluginFactory.RunningPlugins
+            .OfType<PluginAssistants>()
+            .FirstOrDefault(candidate => candidate.Id == plugin.Id && IsSameDirectory(candidate.PluginPath, plugin.LocalPath));
+        
+        if (assistantPlugin is null || assistantPlugin.IsInternal || !assistantPlugin.IsAssistantBuilderGenerated)
+            return TB("Only assistants generated by the Assistant Builder can be deleted.");
+
+        if (assistantPlugin.IsManagedByConfigServer)
+            return TB("Config Server managed assistant plugins cannot be deleted.");
+
+        if (!TryGetAssistantPluginsRoot(out var assistantPluginsRoot, out var rootIssue))
+            return rootIssue;
+
+        if (!IsPathInsideDirectory(assistantPluginsRoot, plugin.LocalPath) || IsSameDirectory(assistantPluginsRoot, plugin.LocalPath))
+            return TB("The assistant plugin directory is outside the local assistant plugin directory.");
+
+        return Directory.Exists(plugin.LocalPath)
+            ? string.Empty
+            : TB("The assistant plugin directory does not exist.");
     }
 
     private void TryDeleteStagingDirectory(string stagingDirectory)

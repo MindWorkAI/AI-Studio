@@ -50,6 +50,7 @@
                     {
                         <MudIconButton Variant="Variant.Text" Icon="@Icons.Material.Filled.Settings" Color="Color.Default" OnClick="@this.OpenSettingsDialog"/>
                     }
+                    @this.AdditionalActions
                 </MudButtonGroup>
                 @if (this.SecurityBadge is not null)
                 {

@@ -115,11 +115,9 @@
                                 </MudTooltip>
                             }
 
-                            @if (context is IAvailablePlugin availablePlugin && CanDeleteAssistantPlugin(availablePlugin))
+                            @if (context is IAvailablePlugin availablePlugin)
                             {
-                                <MudTooltip Text="@T("Delete assistant plugin")">
-                                    <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline" Size="Size.Medium" OnClick="@(() => this.DeleteAssistantPluginAsync(availablePlugin))"/>
-                                </MudTooltip>
+                                <AssistantPluginDeleteAction Plugin="@availablePlugin" />
                             }
                         </MudButtonGroup>
                     </MudStack>

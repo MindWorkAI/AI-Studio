@@ -2391,6 +2391,24 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T3571008422"] = "Assistan
 -- The result is ready.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T661906146"] = "The result is ready."
 
+-- The assistant cannot be deleted while background work is still running.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINDELETEACTION::T1318944584"] = "The assistant cannot be deleted while background work is still running."
+
+-- Delete assistant plugin
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINDELETEACTION::T1692493145"] = "Delete assistant plugin"
+
+-- Delete Assistant Plugin
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINDELETEACTION::T3637071001"] = "Delete Assistant Plugin"
+
+-- The '{0}' assistant plugin has been successfully removed.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINDELETEACTION::T3815023384"] = "The '{0}' assistant plugin has been successfully removed."
+
+-- The assistant plugin '{0}' could not be deleted: {1}
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINDELETEACTION::T3985264168"] = "The assistant plugin '{0}' could not be deleted: {1}"
+
+-- Do you really want to delete the assistant plugin '{0}'? This will permanently delete the local plugin files.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINDELETEACTION::T4033722845"] = "Do you really want to delete the assistant plugin '{0}'? This will permanently delete the local plugin files."
+
 -- Show or hide the detailed security information.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T1045105126"] = "Show or hide the detailed security information."
 
@@ -7284,9 +7302,6 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T1506922856"] = "Assistant Audit"
 -- Internal Plugins
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T158493184"] = "Internal Plugins"
 
--- Delete assistant plugin
-UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T1692493145"] = "Delete assistant plugin"
-
 -- Disabled Plugins
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T1724138133"] = "Disabled Plugins"
 
@@ -7320,23 +7335,11 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3143506997"] = "The assistant plugin
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3448155331"] = "Close"
 
--- Delete Assistant Plugin
-UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3637071001"] = "Delete Assistant Plugin"
-
 -- Revise assistant plugin with AI
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3801095542"] = "Revise assistant plugin with AI"
 
--- The '{0}' assistant plugin has been successfully removed.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3815023384"] = "The '{0}' assistant plugin has been successfully removed."
-
 -- Actions
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3865031940"] = "Actions"
-
--- The assistant plugin '{0}' could not be deleted: {1}
-UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3985264168"] = "The assistant plugin '{0}' could not be deleted: {1}"
-
--- Do you really want to delete the assistant plugin '{0}'? This will permanently delete the local plugin files.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T4033722845"] = "Do you really want to delete the assistant plugin '{0}'? This will permanently delete the local plugin files."
 
 -- The automatic security audit for the assistant plugin '{0}' failed. Please run it manually.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T4066679817"] = "The automatic security audit for the assistant plugin '{0}' failed. Please run it manually."
@@ -8748,42 +8751,6 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T378481461"] = "Source like p
 -- Document
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T4165204724"] = "Document"
 
--- The configured transcription provider could not be created.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T1235984176"] = "The configured transcription provider could not be created."
-
--- The selected media file no longer exists.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T129859547"] = "The selected media file no longer exists."
-
--- The selected media file does not contain an audio track.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T134825479"] = "The selected media file does not contain an audio track."
-
--- The media file could not be transcribed.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T1543974632"] = "The media file could not be transcribed."
-
--- The selected file cannot be processed as media.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T1707342767"] = "The selected file cannot be processed as media."
-
--- The audio track contains no audible signal, so there is nothing to transcribe.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T1988190152"] = "The audio track contains no audible signal, so there is nothing to transcribe."
-
--- The media file is damaged or its format could not be identified.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T2004316549"] = "The media file is damaged or its format could not be identified."
-
--- This media format or audio codec is not supported.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T2142564510"] = "This media format or audio codec is not supported."
-
--- No usable transcription provider is configured.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T2282521655"] = "No usable transcription provider is configured."
-
--- The media file could not be prepared for transcription.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T2749117459"] = "The media file could not be prepared for transcription."
-
--- The transcription provider could not transcribe the media file.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T3091669215"] = "The transcription provider could not transcribe the media file."
-
--- The media pipeline ended without an output file.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T632852430"] = "The media pipeline ended without an output file."
-
 -- The Assistant Builder context could not be loaded.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T108292972"] = "The Assistant Builder context could not be loaded."
 
@@ -8895,6 +8862,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T1211
 -- Only assistant plugins can be edited.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T1288328479"] = "Only assistant plugins can be edited."
 
+-- The assistant cannot be deleted while background work is still running.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T1318944584"] = "The assistant cannot be deleted while background work is still running."
+
 -- No Lua plugin code was generated.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T1839013358"] = "No Lua plugin code was generated."
 
@@ -8925,6 +8895,12 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T2955
 -- The generated assistant plugin uses the ID of an internal AI Studio plugin.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T3162363526"] = "The generated assistant plugin uses the ID of an internal AI Studio plugin."
 
+-- Config Server managed assistant plugins cannot be deleted.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T3751820312"] = "Config Server managed assistant plugins cannot be deleted."
+
+-- Only assistants generated by the Assistant Builder can be deleted.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T3940247198"] = "Only assistants generated by the Assistant Builder can be deleted."
+
 -- The edited plugin is not an assistant plugin. Issue: {0}
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T3984111892"] = "The edited plugin is not an assistant plugin. Issue: {0}"
 
@@ -8945,6 +8921,42 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T8163
 
 -- The generated assistant plugin is invalid. Issue: {0}
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T939708112"] = "The generated assistant plugin is invalid. Issue: {0}"
+
+-- The configured transcription provider could not be created.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T1235984176"] = "The configured transcription provider could not be created."
+
+-- The selected media file no longer exists.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T129859547"] = "The selected media file no longer exists."
+
+-- The selected media file does not contain an audio track.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T134825479"] = "The selected media file does not contain an audio track."
+
+-- The media file could not be transcribed.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T1543974632"] = "The media file could not be transcribed."
+
+-- The selected file cannot be processed as media.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T1707342767"] = "The selected file cannot be processed as media."
+
+-- The audio track contains no audible signal, so there is nothing to transcribe.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T1988190152"] = "The audio track contains no audible signal, so there is nothing to transcribe."
+
+-- The media file is damaged or its format could not be identified.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T2004316549"] = "The media file is damaged or its format could not be identified."
+
+-- This media format or audio codec is not supported.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T2142564510"] = "This media format or audio codec is not supported."
+
+-- No usable transcription provider is configured.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T2282521655"] = "No usable transcription provider is configured."
+
+-- The media file could not be prepared for transcription.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T2749117459"] = "The media file could not be prepared for transcription."
+
+-- The transcription provider could not transcribe the media file.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T3091669215"] = "The transcription provider could not transcribe the media file."
+
+-- The media pipeline ended without an output file.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T632852430"] = "The media pipeline ended without an output file."
 
 -- Pandoc Installation
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PANDOCAVAILABILITYSERVICE::T185447014"] = "Pandoc Installation"

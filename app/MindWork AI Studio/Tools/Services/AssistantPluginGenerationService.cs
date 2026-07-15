@@ -115,7 +115,7 @@ public sealed class AssistantPluginGenerationService(ILogger<AssistantPluginGene
         if (!generatedAssistant.IsAssistantBuilderGenerated)
             return InitialFailure(TB("The generated assistant plugin must include the Assistant Builder metadata."));
 
-        if (generatedAssistant.IsManagedByConfigServer)
+        if (!generatedAssistant.HasDeploymentManagementMetadata || generatedAssistant.IsManagedByConfigServer)
             return InitialFailure(TB("The generated assistant plugin must be marked as locally managed."));
 
         return new(true, fullLua, parsedResponse.Plugin?.Name ?? string.Empty, string.Empty);
@@ -168,7 +168,8 @@ public sealed class AssistantPluginGenerationService(ILogger<AssistantPluginGene
         if (plugin.IsAssistantBuilderGenerated && !revisedAssistant.IsAssistantBuilderGenerated)
             return RevisionFailure(TB("The revised assistant plugin must keep the Assistant Builder metadata."));
 
-        if (revisedAssistant.IsManagedByConfigServer)
+        if (revisedAssistant.IsManagedByConfigServer ||
+            plugin.IsAssistantBuilderGenerated && !revisedAssistant.HasDeploymentManagementMetadata)
             return RevisionFailure(TB("The revised assistant plugin must remain locally managed."));
 
         return new(true, revisedLua, parsedResponse.Plugin?.Name ?? plugin.Name, string.Empty);
@@ -364,7 +365,7 @@ public sealed class AssistantPluginGenerationService(ILogger<AssistantPluginGene
     {
         var companionLua = FormatCompanionLuaFiles(plugin);
         var builderMetadataRule = plugin.IsAssistantBuilderGenerated
-            ? "- Keep AI_STUDIO_ASSISTANT_BUILDER = {Generated = true, SchemaVersion = 1}."
+            ? "- Keep AI_STUDIO_ASSISTANT_BUILDER = {Generated = true, SchemaVersion = 1} and set DEPLOYED_USING_CONFIG_SERVER = false explicitly."
             : string.Empty;
         return $$"""
           Revise an existing locally managed AI Studio Lua assistant plugin.
