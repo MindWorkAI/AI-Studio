@@ -29,6 +29,7 @@ public partial class Home : MSGComponentBase
     private const string PANEL_ID_LAST_CHANGELOG = "last-changelog";
     private const string PANEL_ID_VISION = "vision";
     private const string PANEL_ID_QUICK_START_GUIDE = "quick-start-guide";
+    
     #region Overrides of ComponentBase
 
     protected override async Task OnInitializedAsync()
@@ -101,6 +102,13 @@ public partial class Home : MSGComponentBase
     {
         this.introductions = PluginFactory.GetIntroductions().ToList();
     }
+
+    private bool HasVisibleHomePanels =>
+        this.SettingsManager.ConfigurationData.App.ShowIntroduction ||
+        this.introductions.Count > 0 ||
+        this.SettingsManager.ConfigurationData.App.ShowLastChangelog ||
+        this.SettingsManager.ConfigurationData.App.ShowVision ||
+        this.SettingsManager.ConfigurationData.App.ShowQuickStartGuide;
 
     private string GetDefaultExpandedPanelId()
     {
