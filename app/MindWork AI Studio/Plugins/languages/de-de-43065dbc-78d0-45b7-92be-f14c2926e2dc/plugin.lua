@@ -1650,6 +1650,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T174782740
 -- The log file does not exist: {0}
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T1807514273"] = "Die Protokolldatei existiert nicht: {0}"
 
+-- Could not open the log file location.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T1828231197"] = "Konnte den Speicherort der Protokolldatei nicht öffnen."
+
 -- Other
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T1849229205"] = "Andere"
 
@@ -1668,6 +1671,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T237835357
 -- No matching log lines.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T2511997530"] = "Keine passenden Protokollzeilen."
 
+-- Could not open the log file location: {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T2533784927"] = "Konnte den Speicherort der Protokolldatei nicht öffnen: {0}"
+
 -- Source details
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T2686813966"] = "Quellendetails"
 
@@ -1679,6 +1685,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T315262563
 
 -- Loading log file...
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T333036481"] = "Lade Protokolldatei..."
+
+-- Unknown error
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T3461425987"] = "Unbekannter Fehler"
 
 -- The log file path is not available yet.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T3686775689"] = "Der Pfad zur Protokolldatei ist noch nicht verfügbar."
@@ -1698,11 +1707,17 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T397479987
 -- Usage log
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T4031747274"] = "Nutzungsprotokoll"
 
+-- Open in folder
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T4048746540"] = "Im Ordner öffnen"
+
 -- Log file
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T4129341821"] = "Protokolldatei"
 
 -- Log Viewer
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T4130241777"] = "Protokollanzeige"
+
+-- Opened the log file location.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T4162897654"] = "Der Speicherort der Protokolldatei wurde geöffnet."
 
 -- Show timestamps
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T469116133"] = "Zeitstempel anzeigen"
@@ -8586,11 +8601,23 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T1110203516"] = "Fehler
 -- Failed to store the API key due to an API issue.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T1704298921"] = "Fehler beim Speichern des API-Schlüssels aufgrund eines API-Problems."
 
+-- The runtime file manager endpoint returned '{0}'.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T2158262203"] = "Der Laufzeit-Dateimanager-Endpunkt hat '{0}' zurückgegeben."
+
 -- Failed to delete the secret data due to an API issue.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T2303057928"] = "Das Löschen der geheimen Daten ist aufgrund eines API-Problems fehlgeschlagen."
 
+-- The runtime file manager endpoint is not available.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T2486847754"] = "Der Laufzeit-Dateimanager-Endpunkt ist nicht verfügbar."
+
+-- The runtime file manager endpoint failed without details.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T3082220817"] = "Der Laufzeit-Dateimanager-Endpunkt ist ohne Details fehlgeschlagen."
+
 -- Successfully copied the text to your clipboard
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T3351807428"] = "Der Text wurde erfolgreich in die Zwischenablage kopiert."
+
+-- The path does not exist and its parent folder could not be found.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T3606079336"] = "Der Pfad existiert nicht, und der übergeordnete Ordner konnte nicht gefunden werden."
 
 -- Failed to delete the API key due to an API issue.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T3658273365"] = "Das API-Schlüssel konnte aufgrund eines API-Problems nicht gelöscht werden."
@@ -8598,11 +8625,17 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T3658273365"] = "Das AP
 -- Failed to copy the text to your clipboard.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T3724548108"] = "Der Text konnte nicht in die Zwischenablage kopiert werden."
 
+-- The local file manager command failed: {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T381756374"] = "Der Befehl des lokalen Dateimanagers ist fehlgeschlagen: {0}"
+
 -- Failed to get the API key due to an API issue.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T3875720022"] = "Der API-Schlüssel konnte aufgrund eines API-Problems nicht abgerufen werden."
 
 -- Failed to get the secret data due to an API issue.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T4007657575"] = "Abrufen der geheimen Daten aufgrund eines API-Problems fehlgeschlagen."
+
+-- The local file manager command did not start.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T613631541"] = "Der Befehl des lokalen Dateimanagers wurde nicht gestartet."
 
 -- No update found.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::UPDATESERVICE::T1015418291"] = "Kein Update gefunden."

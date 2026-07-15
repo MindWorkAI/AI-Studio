@@ -22,6 +22,9 @@
                     </MudButton>
                 }
                 <MudNumericField T="int" Value="@this.maxLines" ValueChanged="@this.MaxLinesChanged" Label="@T("Max lines")" Variant="Variant.Outlined" Margin="Margin.Dense" Min="@MIN_MAX_LINES" Max="@MAX_MAX_LINES" Step="500" Class="log-viewer-number" />
+                <MudButton Variant="Variant.Outlined" Color="Color.Default" StartIcon="@Icons.Material.Filled.FolderOpen" OnClick="@this.OpenCurrentLogInFileManager" Disabled="@(!this.CanOpenCurrentLogPath)">
+                    @T("Open in folder")
+                </MudButton>
             </MudStack>
 
             <MudStack Row="@true" Wrap="@Wrap.Wrap" AlignItems="@AlignItems.Center" Spacing="2" Class="mb-1">

@@ -2,9 +2,17 @@
 use axum::extract::Query;
 use axum::Json;
 use serde::{Deserialize, Serialize};
+use std::path::{Path, PathBuf};
+use std::process::Command;
+#[cfg(windows)]
+use std::os::windows::process::CommandExt;
 use tauri_plugin_dialog::{DialogExt, FileDialogBuilder};
 use crate::api_token::APIToken;
 use crate::app_window::MAIN_WINDOW;
+
+/// Microsoft documents CREATE_NO_WINDOW as a process creation flag with value 0x08000000.
+#[cfg(windows)]
+const CREATE_NO_WINDOW: u32 = 0x08000000;
 
 #[derive(Clone, Deserialize)]
 pub struct PreviousDirectory {
@@ -36,6 +44,11 @@ pub struct SaveFileOptions {
     filter: Option<FileTypeFilter>,
 }
 
+#[derive(Clone, Deserialize)]
+pub struct OpenPathOptions {
+    path: String,
+}
+
 #[derive(Serialize)]
 pub struct DirectorySelectionResponse {
     user_cancelled: bool,
@@ -58,6 +71,12 @@ pub struct FilesSelectionResponse {
 pub struct FileSaveResponse {
     user_cancelled: bool,
     save_file_path: String,
+}
+
+#[derive(Serialize)]
+pub struct OpenPathResponse {
+    success: bool,
+    issue: String,
 }
 
 #[derive(Clone, Deserialize)]
@@ -286,6 +305,55 @@ pub async fn save_file(_token: APIToken, payload: Json<SaveFileOptions>) -> Json
     }
 }
 
+pub async fn open_path_in_file_manager(
+    _token: APIToken,
+    payload: Json<OpenPathOptions>,
+) -> Json<OpenPathResponse> {
+    let requested_path = PathBuf::from(payload.path.trim());
+    if requested_path.as_os_str().is_empty() {
+        return Json(OpenPathResponse {
+            success: false,
+            issue: String::from("The path is empty."),
+        });
+    }
+
+    let Some(target) = resolve_file_manager_target(&requested_path) else {
+        let issue = format!(
+            "The path does not exist and its parent folder could not be found: {}",
+            requested_path.to_string_lossy(),
+        );
+        error!(Source = "Tauri"; "{issue}");
+        return Json(OpenPathResponse {
+            success: false,
+            issue,
+        });
+    };
+
+    let mut command = create_file_manager_command(&target);
+
+    #[cfg(windows)]
+    command.creation_flags(CREATE_NO_WINDOW);
+
+    match command.spawn() {
+        Ok(_) => {
+            info!("Opened file manager for path: {:?}", target.path);
+            Json(OpenPathResponse {
+                success: true,
+                issue: String::new(),
+            })
+        }
+
+        Err(error) => {
+            let issue = format!("Failed to open the file manager: {error}");
+            error!(Source = "Tauri"; "{issue}");
+            Json(OpenPathResponse {
+                success: false,
+                issue,
+            })
+        }
+    }
+}
+
 /// Applies an optional file type filter to a FileDialogBuilder.
 fn apply_filter<R: tauri::Runtime>(file_dialog: FileDialogBuilder<R>, filter: &Option<FileTypeFilter>) -> FileDialogBuilder<R> {
     match filter {
@@ -296,4 +364,68 @@ fn apply_filter<R: tauri::Runtime>(file_dialog: FileDialogBuilder<R>, filter: &O
 
         None => file_dialog,
     }
+}
+
+struct FileManagerTarget {
+    path: PathBuf,
+    reveal_file: bool,
+}
+
+fn resolve_file_manager_target(requested_path: &Path) -> Option<FileManagerTarget> {
+    if requested_path.is_file() {
+        return Some(FileManagerTarget {
+            path: requested_path.to_path_buf(),
+            reveal_file: true,
+        });
+    }
+
+    if requested_path.is_dir() {
+        return Some(FileManagerTarget {
+            path: requested_path.to_path_buf(),
+            reveal_file: false,
+        });
+    }
+
+    requested_path.parent()
+        .filter(|parent| parent.is_dir())
+        .map(|parent| FileManagerTarget {
+            path: parent.to_path_buf(),
+            reveal_file: false,
+        })
+}
+
+#[cfg(target_os = "windows")]
+fn create_file_manager_command(target: &FileManagerTarget) -> Command {
+    let mut command = Command::new("explorer.exe");
+    if target.reveal_file {
+        command.arg(format!("/select,{}", target.path.to_string_lossy()));
+    } else {
+        command.arg(&target.path);
+    }
+
+    command
+}
+
+#[cfg(target_os = "macos")]
+fn create_file_manager_command(target: &FileManagerTarget) -> Command {
+    let mut command = Command::new("open");
+    if target.reveal_file {
+        command.arg("-R");
+    }
+
+    command.arg(&target.path);
+    command
+}
+
+#[cfg(all(unix, not(target_os = "macos")))]
+fn create_file_manager_command(target: &FileManagerTarget) -> Command {
+    let mut command = Command::new("xdg-open");
+    let directory = if target.reveal_file {
+        target.path.parent().unwrap_or(&target.path)
+    } else {
+        &target.path
+    };
+
+    command.arg(directory);
+    command
 }

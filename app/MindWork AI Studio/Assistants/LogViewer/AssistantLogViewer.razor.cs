@@ -35,6 +35,9 @@ public partial class AssistantLogViewer : MSGComponentBase
     private RustService RustService { get; init; } = null!;
 
     [Inject]
+    private ISnackbar Snackbar { get; init; } = null!;
+
+    [Inject]
     private NavigationManager NavigationManager { get; init; } = null!;
 
     [Inject]
@@ -64,6 +67,8 @@ public partial class AssistantLogViewer : MSGComponentBase
     private DateTimeOffset? lastLoadedAt;
 
     private string CurrentLogPath => this.selectedLogFile is LogFileKind.APP ? this.logPaths.LogAppPath : this.logPaths.LogStartupPath;
+
+    private bool CanOpenCurrentLogPath => !string.IsNullOrWhiteSpace(this.CurrentLogPath);
 
     private bool HasDropdownFilter => this.selectedLogLevels.Count > 0 || this.selectedLoggers.Count > 0 || this.selectedSourceDetails.Count > 0;
 
@@ -201,6 +206,68 @@ public partial class AssistantLogViewer : MSGComponentBase
 
         this.maxLines = normalizedValue;
         await this.RefreshLogAsync();
+    }
+
+    private async Task OpenCurrentLogInFileManager()
+    {
+        try
+        {
+            this.logPaths = await this.RustService.GetLogPaths();
+        }
+        catch (Exception e)
+        {
+            this.Logger.LogWarning(e, "Could not refresh the log file paths before opening the file manager.");
+            this.Snackbar.Add(T("The log file path is not available yet."), Severity.Warning, config =>
+            {
+                config.Icon = Icons.Material.Filled.Folder;
+                config.IconSize = Size.Large;
+            });
+            return;
+        }
+
+        var path = this.CurrentLogPath;
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            this.Snackbar.Add(T("The log file path is not available yet."), Severity.Warning, config =>
+            {
+                config.Icon = Icons.Material.Filled.Folder;
+                config.IconSize = Size.Large;
+            });
+            return;
+        }
+
+        OpenPathResponse response;
+        try
+        {
+            response = await this.RustService.OpenPathInFileManager(path);
+        }
+        catch (Exception e)
+        {
+            this.Logger.LogWarning(e, "Could not open the log file location in the file manager.");
+            this.Snackbar.Add(T("Could not open the log file location."), Severity.Error, config =>
+            {
+                config.Icon = Icons.Material.Filled.Folder;
+                config.IconSize = Size.Large;
+            });
+            return;
+        }
+
+        if (response.Success)
+        {
+            this.Snackbar.Add(T("Opened the log file location."), Severity.Success, config =>
+            {
+                config.Icon = Icons.Material.Filled.FolderOpen;
+                config.IconSize = Size.Large;
+            });
+            return;
+        }
+
+        var issue = string.IsNullOrWhiteSpace(response.Issue) ? T("Unknown error") : response.Issue;
+        this.Snackbar.Add(string.Format(T("Could not open the log file location: {0}"), issue), Severity.Error, config =>
+        {
+            config.Icon = Icons.Material.Filled.Folder;
+            config.IconSize = Size.Large;
+        });
     }
 
     private void ClearFilters()

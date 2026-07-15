@@ -1650,6 +1650,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T174782740
 -- The log file does not exist: {0}
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T1807514273"] = "The log file does not exist: {0}"
 
+-- Could not open the log file location.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T1828231197"] = "Could not open the log file location."
+
 -- Other
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T1849229205"] = "Other"
 
@@ -1668,6 +1671,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T237835357
 -- No matching log lines.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T2511997530"] = "No matching log lines."
 
+-- Could not open the log file location: {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T2533784927"] = "Could not open the log file location: {0}"
+
 -- Source details
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T2686813966"] = "Source details"
 
@@ -1679,6 +1685,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T315262563
 
 -- Loading log file...
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T333036481"] = "Loading log file..."
+
+-- Unknown error
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T3461425987"] = "Unknown error"
 
 -- The log file path is not available yet.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T3686775689"] = "The log file path is not available yet."
@@ -1698,11 +1707,17 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T397479987
 -- Usage log
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T4031747274"] = "Usage log"
 
+-- Open in folder
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T4048746540"] = "Open in folder"
+
 -- Log file
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T4129341821"] = "Log file"
 
 -- Log Viewer
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T4130241777"] = "Log Viewer"
+
+-- Opened the log file location.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T4162897654"] = "Opened the log file location."
 
 -- Show timestamps
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T469116133"] = "Show timestamps"
@@ -8586,11 +8601,23 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T1110203516"] = "Failed
 -- Failed to store the API key due to an API issue.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T1704298921"] = "Failed to store the API key due to an API issue."
 
+-- The runtime file manager endpoint returned '{0}'.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T2158262203"] = "The runtime file manager endpoint returned '{0}'."
+
 -- Failed to delete the secret data due to an API issue.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T2303057928"] = "Failed to delete the secret data due to an API issue."
 
+-- The runtime file manager endpoint is not available.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T2486847754"] = "The runtime file manager endpoint is not available."
+
+-- The runtime file manager endpoint failed without details.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T3082220817"] = "The runtime file manager endpoint failed without details."
+
 -- Successfully copied the text to your clipboard
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T3351807428"] = "Successfully copied the text to your clipboard"
+
+-- The path does not exist and its parent folder could not be found.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T3606079336"] = "The path does not exist and its parent folder could not be found."
 
 -- Failed to delete the API key due to an API issue.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T3658273365"] = "Failed to delete the API key due to an API issue."
@@ -8598,11 +8625,17 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T3658273365"] = "Failed
 -- Failed to copy the text to your clipboard.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T3724548108"] = "Failed to copy the text to your clipboard."
 
+-- The local file manager command failed: {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T381756374"] = "The local file manager command failed: {0}"
+
 -- Failed to get the API key due to an API issue.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T3875720022"] = "Failed to get the API key due to an API issue."
 
 -- Failed to get the secret data due to an API issue.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T4007657575"] = "Failed to get the secret data due to an API issue."
+
+-- The local file manager command did not start.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T613631541"] = "The local file manager command did not start."
 
 -- No update found.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::UPDATESERVICE::T1015418291"] = "No update found."
