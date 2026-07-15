@@ -3,6 +3,7 @@ using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.AIJobs;
 using AIStudio.Tools.AssistantSessions;
+using AIStudio.Tools.Media;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
@@ -37,6 +38,9 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
 
     [Inject]
     private AssistantSessionService AssistantSessionService { get; init; } = null!;
+
+    [Inject]
+    private MediaTranscriptionService MediaTranscriptionService { get; init; } = null!;
     
     [Inject]
     private ISnackbar Snackbar { get; init; } = null!;
@@ -75,6 +79,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     protected override async Task OnInitializedAsync()
     {
         this.NavigationManager.RegisterLocationChangingHandler(this.OnLocationChanging);
+        this.MediaTranscriptionService.StateChanged += this.OnMediaImportStateChanged;
         
         //
         // We use the Tauri API (Rust) to get the data and config directories
@@ -348,6 +353,16 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     {
         this.navItems = new List<NavBarItem>(this.GetNavItems());
     }
+
+    /// <summary>Refreshes navigation activity colors when a media import changes state.</summary>
+    private void OnMediaImportStateChanged(MediaImportOwner owner)
+    {
+        _ = this.InvokeAsync(() =>
+        {
+            this.LoadNavItems();
+            this.StateHasChanged();
+        });
+    }
     
     private IEnumerable<NavBarItem> GetNavItems()
     {
@@ -356,10 +371,15 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         var activityIndicatorDarkColor = this.ColorTheme.GetActivityIndicatorDarkColor();
         var defaultLightColor = palette.DarkLighten;
         var defaultDarkColor = palette.GrayLight;
-        var chatLightColor = this.AIJobService.HasActiveJobs ? activityIndicatorLightColor : defaultLightColor;
-        var chatDarkColor = this.AIJobService.HasActiveJobs ? activityIndicatorDarkColor : defaultDarkColor;
-        var assistantsLightColor = this.AssistantSessionService.HasActiveSessions ? activityIndicatorLightColor : defaultLightColor;
-        var assistantsDarkColor = this.AssistantSessionService.HasActiveSessions ? activityIndicatorDarkColor : defaultDarkColor;
+        var mediaSnapshots = this.MediaTranscriptionService.GetSnapshots();
+        var hasActiveChatMedia = mediaSnapshots.Any(snapshot => snapshot.IsBusy && snapshot.Owner.Kind is MediaImportOwnerKind.CHAT);
+        var hasActiveAssistantMedia = mediaSnapshots.Any(snapshot => snapshot.IsBusy && snapshot.Owner.Kind is MediaImportOwnerKind.ASSISTANT);
+        var hasActiveChatWork = this.AIJobService.HasActiveJobs || hasActiveChatMedia;
+        var hasActiveAssistantWork = this.AssistantSessionService.HasActiveSessions || hasActiveAssistantMedia;
+        var chatLightColor = hasActiveChatWork ? activityIndicatorLightColor : defaultLightColor;
+        var chatDarkColor = hasActiveChatWork ? activityIndicatorDarkColor : defaultDarkColor;
+        var assistantsLightColor = hasActiveAssistantWork ? activityIndicatorLightColor : defaultLightColor;
+        var assistantsDarkColor = hasActiveAssistantWork ? activityIndicatorDarkColor : defaultDarkColor;
         
         yield return new(T("Home"), Icons.Material.Filled.Home, defaultLightColor, defaultDarkColor, Routes.HOME, true);
         yield return new(T("Chat"), Icons.Material.Filled.Chat, chatLightColor, chatDarkColor, Routes.CHAT, false);
@@ -535,6 +555,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
 
     public void Dispose()
     {
+        this.MediaTranscriptionService.StateChanged -= this.OnMediaImportStateChanged;
         this.MessageBus.Unregister(this);
         this.mandatoryInfoDialogSemaphore.Dispose();
     }

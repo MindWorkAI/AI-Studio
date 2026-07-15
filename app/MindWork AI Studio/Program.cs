@@ -136,6 +136,7 @@ internal sealed class Program
         builder.Services.AddSingleton<AIJobService>();
         builder.Services.AddSingleton<AssistantSessionService>();
         builder.Services.AddSingleton<VoiceRecordingAvailabilityService>();
+        builder.Services.AddSingleton<MediaTranscriptionService>();
         builder.Services.AddSingleton<AssistantPluginInstallService>();
         builder.Services.AddSingleton<UpdatePolicy>();
         builder.Services.AddSingleton<DataSourceService>();
@@ -148,6 +149,7 @@ internal sealed class Program
         builder.Services.AddTransient<AssistantPluginAuditService>();
         builder.Services.AddHostedService<UpdateService>();
         builder.Services.AddHostedService<TemporaryChatService>();
+        builder.Services.AddHostedService<TranscriptStagingCleanupService>();
         builder.Services.AddHostedService<EnterpriseEnvironmentService>();
         builder.Services.AddSingleton<DatabaseClientProvider>();
         builder.Services.AddHostedService<GlobalShortcutService>();
