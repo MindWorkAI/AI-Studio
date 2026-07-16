@@ -12,8 +12,21 @@ use mindwork_ai_studio::metadata::MetaData;
 use mindwork_ai_studio::runtime_api::start_runtime_api;
 use mindwork_ai_studio::secret::init_secret_store;
 
-#[tokio::main]
-async fn main() {
+// Keep `main` synchronous. Tauri owns the application's Tokio runtime, and Tauri itself as
+// well as synchronous plugins may internally call `block_on` while they are initialized.
+// In v26.7.3, `#[tokio::main]` caused the Linux single-instance plugin's synchronous D-Bus
+// setup to enter `block_on` through zbus/tokio. Cargo feature unification made that path use
+// Tokio, so startup panicked because a runtime was being started from inside another runtime.
+//
+// Run asynchronous background work with `tauri::async_runtime::spawn`. If startup must await
+// asynchronous work, call `tauri::async_runtime::block_on` from this synchronous function
+// before Tauri enters its event loop. If a real `#[tokio::main]` ever becomes unavoidable,
+// first call `tauri::async_runtime::set(tokio::runtime::Handle::current())` before using any
+// Tauri async function. Then audit every synchronously initialized Tauri plugin and transitive
+// dependency for internal `block_on` calls. In particular, the Linux single-instance/D-Bus
+// path must be made async, replaced, or moved to a non-conflicting backend. Such a runtime
+// change requires explicit Linux startup tests; compiling successfully is not sufficient.
+fn main() {
     let metadata = MetaData::init_from_string(include_str!("../../metadata.txt"));
 
     init_logging();
