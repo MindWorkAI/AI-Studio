@@ -441,7 +441,7 @@ jobs:
 
           gh pr merge "$pr_number" \
             --repo "$FLATPAK_REPOSITORY" \
-            --merge \
+            --squash \
             --delete-branch \
             --match-head-commit "$sync_commit"
 
