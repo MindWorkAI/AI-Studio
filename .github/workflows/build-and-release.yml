@@ -256,6 +256,14 @@ jobs:
       PDFIUM_CHROMIUM_REVISION: ${{ needs.read_metadata.outputs.pdfium_chromium_revision }}
 
     steps:
+      - name: Checkout AI Studio release metadata
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.AI_STUDIO_COMMIT }}
+          path: ai-studio
+          sparse-checkout: metadata.txt
+          sparse-checkout-cone-mode: false
+
       - name: Checkout Flatpak repository
         uses: actions/checkout@v4
         with:
@@ -315,6 +323,15 @@ jobs:
         run: |
           set -euo pipefail
 
+          release_version=$(sed -n '1p' ../ai-studio/metadata.txt)
+          release_timestamp=$(sed -n '2p' ../ai-studio/metadata.txt)
+          release_date=${release_timestamp%% *}
+
+          test "$release_version" = "${AI_STUDIO_TAG#v}"
+          [[ "$release_timestamp" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}[[:space:]][0-9]{2}:[0-9]{2}:[0-9]{2}[[:space:]]UTC$ ]]
+          python3 ./update-metainfo.py "$release_version" "$release_date"
+          python3 ./update-metainfo.py --check "$release_version" "$release_date"
+
           pdfium_base_url="https://github.com/bblanchon/pdfium-binaries/releases/download/chromium%2F${PDFIUM_CHROMIUM_REVISION}"
           pdfium_x64_url="${pdfium_base_url}/pdfium-linux-x64.tgz"
           pdfium_arm64_url="${pdfium_base_url}/pdfium-linux-arm64.tgz"
@@ -368,7 +385,7 @@ jobs:
 
           branch="sync/ai-studio-${AI_STUDIO_TAG}"
           git checkout -B "$branch"
-          git add org.MindWorkAI.AIStudio.yml cargo-sources.json dotnet-sources.json tauri-cli-sources.json
+          git add org.MindWorkAI.AIStudio.yml org.MindWorkAI.AIStudio.metainfo.xml cargo-sources.json dotnet-sources.json tauri-cli-sources.json
 
           if git diff --cached --quiet; then
             echo "Flatpak repository is already synced for ${AI_STUDIO_TAG}."
