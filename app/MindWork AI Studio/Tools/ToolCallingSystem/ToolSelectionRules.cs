@@ -33,7 +33,7 @@ public static class ToolSelectionRules
         _ => ConfidenceLevel.NONE,
     };
 
-    public static string GetMaxToolCallsLimitMessage() => $"Tool calling stopped because the maximum of {MAX_TOOL_CALLS} tool calls was reached.";
+    public static string GetMaxToolCallsFinalResponseInstruction() => $"The maximum of {MAX_TOOL_CALLS} tool calls has been reached. No more tools are available. Provide the best possible final answer to the user based on the tool results already available.";
 
     public static string BuildToolPolicyPrompt(IEnumerable<ToolDefinition> definitions)
     {

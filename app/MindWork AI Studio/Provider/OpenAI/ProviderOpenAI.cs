@@ -326,19 +326,43 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
 
         while (true)
         {
+            var finalResponseRequired = toolCallCount >= ToolSelectionRules.MAX_TOOL_CALLS;
+            var requestInput = new List<object>(baseInput);
+            if (finalResponseRequired && requestInput.FirstOrDefault() is TextMessage systemPrompt)
+            {
+                requestInput[0] = systemPrompt with
+                {
+                    Content = $"{systemPrompt.Content}{Environment.NewLine}{Environment.NewLine}{ToolSelectionRules.GetMaxToolCallsFinalResponseInstruction()}",
+                };
+            }
+            requestInput.AddRange(internalItems);
+
             var requestDto = new ResponsesAPIRequest
             {
                 Model = chatModel.Id,
-                Input = [..baseInput, ..internalItems],
+                Input = requestInput,
                 Stream = false,
                 Store = false,
-                Tools = providerTools,
+                Tools = finalResponseRequired ? [] : providerTools,
                 AdditionalApiParameters = apiParameters,
             };
             var response = await this.ExecuteResponsesRequest(requestDto, requestedSecret, token);
             if (response is null)
             {
                 await ResetToolRuntimeStatusAsync(currentAssistantContent);
+                yield break;
+            }
+
+            if (finalResponseRequired)
+            {
+                await ResetToolRuntimeStatusAsync(currentAssistantContent);
+
+                var textOutput = response.GetTextOutput();
+                if (!string.IsNullOrWhiteSpace(textOutput))
+                    yield return new ContentStreamChunk(textOutput, []);
+                else
+                    yield return new ContentStreamChunk("The model did not return a final answer after completing the available tool calls.", []);
+
                 yield break;
             }
 
@@ -364,26 +388,18 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
 
             foreach (var functionCall in functionCalls)
             {
-                toolCallCount++;
-                if (toolCallCount > ToolSelectionRules.MAX_TOOL_CALLS)
+                if (toolCallCount >= ToolSelectionRules.MAX_TOOL_CALLS)
                 {
-                    var limitMessage = ToolSelectionRules.GetMaxToolCallsLimitMessage();
-                    currentAssistantContent?.ToolInvocations.Add(new ToolInvocationTrace
+                    var finalResponseInstruction = ToolSelectionRules.GetMaxToolCallsFinalResponseInstruction();
+                    internalItems.Add(new ResponsesFunctionCallOutputItem
                     {
-                        Order = toolCallCount,
-                        ToolId = functionCall.Name,
-                        ToolName = functionCall.Name,
-                        ToolCallId = functionCall.CallId,
-                        Status = ToolInvocationTraceStatus.BLOCKED,
-                        StatusMessage = limitMessage,
-                        Result = limitMessage,
+                        CallId = functionCall.CallId,
+                        Output = finalResponseInstruction,
                     });
-
-                    await ResetToolRuntimeStatusAsync(currentAssistantContent);
-                    yield return new ContentStreamChunk(limitMessage, []);
-                    yield break;
+                    continue;
                 }
 
+                toolCallCount++;
                 var (toolContent, trace) = await toolExecutor.ExecuteAsync(
                     functionCall.CallId,
                     functionCall.Name,

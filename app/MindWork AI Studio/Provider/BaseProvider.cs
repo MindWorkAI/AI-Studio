@@ -1044,7 +1044,17 @@ public abstract class BaseProvider : IProvider, ISecretId
                 var toolCallCount = 0;
                 while (true)
                 {
-                    ChatCompletionAPIRequest requestDtoBase = await requestFactory(systemPrompt, apiParameters, providerTools);
+                    var finalResponseRequired = toolCallCount >= ToolSelectionRules.MAX_TOOL_CALLS;
+                    var requestSystemPrompt = finalResponseRequired
+                        ? systemPrompt with
+                        {
+                            Content = $"{systemPrompt.Content}{Environment.NewLine}{Environment.NewLine}{ToolSelectionRules.GetMaxToolCallsFinalResponseInstruction()}",
+                        }
+                        : systemPrompt;
+                    ChatCompletionAPIRequest requestDtoBase = await requestFactory(
+                        requestSystemPrompt,
+                        apiParameters,
+                        finalResponseRequired ? null : providerTools);
                     var requestDto = requestDtoBase with
                     {
                         Messages = [..requestDtoBase.Messages, ..internalMessages],
@@ -1070,6 +1080,17 @@ public abstract class BaseProvider : IProvider, ISecretId
                         yield break;
                     }
 
+                    if (finalResponseRequired)
+                    {
+                        await ResetToolRuntimeStatusAsync();
+                        if (!string.IsNullOrWhiteSpace(responseMessage.Content))
+                            yield return new ContentStreamChunk(responseMessage.Content, []);
+                        else
+                            yield return new ContentStreamChunk("The model did not return a final answer after completing the available tool calls.", []);
+
+                        yield break;
+                    }
+
                     await ShowToolRuntimeStatusAsync(toolCalls
                         .Select(x => runnableTools.FirstOrDefault(tool => tool.Definition.Function.Name.Equals(x.Function.Name, StringComparison.Ordinal)).Implementation?.GetDisplayName() ?? x.Function.Name));
 
@@ -1081,25 +1102,18 @@ public abstract class BaseProvider : IProvider, ISecretId
 
                     foreach (var toolCall in toolCalls)
                     {
-                        toolCallCount++;
-                        if (toolCallCount > ToolSelectionRules.MAX_TOOL_CALLS)
+                        if (toolCallCount >= ToolSelectionRules.MAX_TOOL_CALLS)
                         {
-                            var limitMessage = ToolSelectionRules.GetMaxToolCallsLimitMessage();
-                            currentAssistantContent?.ToolInvocations.Add(new ToolInvocationTrace
+                            var finalResponseInstruction = ToolSelectionRules.GetMaxToolCallsFinalResponseInstruction();
+                            internalMessages.Add(new ToolResultMessage
                             {
-                                Order = toolCallCount,
-                                ToolId = toolCall.Function.Name,
-                                ToolName = toolCall.Function.Name,
+                                Content = finalResponseInstruction,
                                 ToolCallId = toolCall.Id,
-                                Status = ToolInvocationTraceStatus.BLOCKED,
-                                StatusMessage = limitMessage,
-                                Result = limitMessage,
                             });
-                            await ResetToolRuntimeStatusAsync();
-                            yield return new ContentStreamChunk(limitMessage, []);
-                            yield break;
+                            continue;
                         }
 
+                        toolCallCount++;
                         var (toolContent, trace) = await toolExecutor.ExecuteAsync(
                             toolCall.Id,
                             toolCall.Function.Name,

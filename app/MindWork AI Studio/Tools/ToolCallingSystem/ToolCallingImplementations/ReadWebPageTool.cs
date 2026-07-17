@@ -43,9 +43,9 @@ public sealed class ReadWebPageTool(HTMLParser htmlParser, ILogger<ReadWebPageTo
 
     public string GetSettingsFieldDescription(string fieldName, ToolSettingsFieldDefinition fieldDefinition) => fieldName switch
     {
-        "timeoutSeconds" => TB("Optional HTTP timeout for loading a web page in seconds."),
-        "maxContentCharacters" => TB("Optional global truncation limit for extracted characters returned to the model."),
-        ALLOWED_PRIVATE_HOSTS_SETTING => TB("Optional host allowlist for private or VPN web pages. For security reasons, private or VPN web pages aren't allowed to be read by default. Separate host patterns with commas, such as example.de, *.example.de. Allowed private hosts require a high-confidence provider. For allowed internal hosts, AI Studio also tries the operating system's default sign-in automatically when the server responds with integrated authentication."),
+        "timeoutSeconds" => TB("(Optional) HTTP timeout for loading a web page in seconds."),
+        "maxContentCharacters" => TB("(Optional) Global truncation limit for extracted characters returned to the model."),
+        ALLOWED_PRIVATE_HOSTS_SETTING => TB("(Optional) Host allowlist for private or VPN web pages. For security reasons, private or VPN web pages aren't allowed to be read by default. Separate host patterns with commas, such as example.de, *.example.de. Allowed private hosts require a high-confidence provider. For allowed internal hosts, AI Studio also tries the operating system's default sign-in automatically when the server responds with integrated authentication."),
         _ => TB(fieldDefinition.Description),
     };
 
