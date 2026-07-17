@@ -12,7 +12,7 @@ use calamine::{open_workbook_auto, Reader};
 use file_format::{FileFormat, Kind};
 use futures::{Stream, StreamExt};
 use pdfium_render::prelude::Pdfium;
-use pptx_to_md::{ImageHandlingMode, ParserConfig, PresentationContainer, PresentationFormat, PresentationMetadata };
+use pptx_to_md::{DiagnosticSeverity, ImageHandlingMode, MarkdownOptions, ParserConfig, PresentationContainer, PresentationFormat, PresentationMetadata, ReadingOrder};
 use serde::{Deserialize, Deserializer, Serialize};
 use serde::de::{Error as SerdeError, Visitor};
 use std::path::Path;
@@ -460,83 +460,122 @@ async fn stream_presentation(file_path: &str, extract_images: bool, format: Pres
         .compress_images(true)
         .quality(75)
         .image_handling_mode(ImageHandlingMode::Manually)
-        .include_slide_number_as_comment(true)
-        .include_speaker_notes(true)
-        .include_comments(true)
+        .include_presentation_metadata(true)
         .build();
+
+    let markdown_options = MarkdownOptions {
+        reading_order: ReadingOrder::Spatial,
+        include_slide_number_as_comment: true,
+        include_speaker_notes: true,
+        include_comments: true,
+        render_unsupported_comments: true,
+    };
 
     let mut streamer = tokio::task::spawn_blocking(move || {
         PresentationContainer::open_as(&path, parser_config, format).map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send + Sync>)
     }).await??;
 
     let (tx, rx) = mpsc::channel(32);
+    let worker_error_tx = tx.clone();
 
-    tokio::spawn(async move {
-        let metadata_md = presentation_metadata_to_markdown(streamer.metadata());
+    // Slide iteration performs synchronous ZIP/XML work and image compression,
+    // so the complete producer must stay outside Tokio's asynchronous workers.
+    let worker = tokio::task::spawn_blocking(move || {
+        let mut metadata_md = presentation_metadata_to_markdown(streamer.metadata());
 
         for slide_result in streamer.iter_slides() {
-            match slide_result {
-                Ok(slide) => {
-                    if let Some(mut content) = slide.convert_to_md() {
-                        if slide.slide_number == 1 && let Some(metadata) = metadata_md.as_deref() {
-                            content = format!("{metadata}\n\n{content}");
-                        }
+            let slide = match slide_result {
+                Ok(slide) => slide,
+                Err(e) => {
+                    let _ = tx.blocking_send(Err(Box::new(e) as Box<dyn std::error::Error + Send + Sync>));
+                    return;
+                },
+            };
+
+            for diagnostic in &slide.diagnostics {
+                let source = diagnostic.source.as_deref().unwrap_or("presentation");
+                match diagnostic.severity {
+                    DiagnosticSeverity::Warning => warn!(
+                        "Presentation slide {} warning in '{}': {}",
+                        slide.slide_number,
+                        source,
+                        diagnostic.message
+                    ),
+                    DiagnosticSeverity::Error => error!(
+                        "Presentation slide {} error in '{}': {}",
+                        slide.slide_number,
+                        source,
+                        diagnostic.message
+                    ),
+                }
+            }
+
+            let mut content = match slide.to_markdown(&markdown_options) {
+                Ok(content) => content,
+                Err(e) => {
+                    let _ = tx.blocking_send(Err(Box::new(e) as Box<dyn std::error::Error + Send + Sync>));
+                    return;
+                },
+            };
+
+            if let Some(metadata) = metadata_md.take() {
+                content = format!("{metadata}\n\n{content}");
+            }
+
+            let chunk = Chunk::new(
+                content,
+                Metadata::Presentation {
+                    slide_number: slide.slide_number,
+                    image: None,
+                }
+            );
+
+            if tx.blocking_send(Ok(chunk)).is_err() {
+                return;
+            }
+
+            if let Some(images) = slide.load_images_manually() {
+                for image in images.iter() {
+                    let base64_data = &image.base64_content;
+                    let total_length = base64_data.len();
+                    let mut offset = 0;
+                    let mut segment_index = 0;
+
+                    while offset < total_length {
+                        let end = min(offset + IMAGE_SEGMENT_SIZE_IN_CHARS, total_length);
+                        let segment_content = &base64_data[offset..end];
+                        let is_end = end == total_length;
+
+                        let base64_image = Base64Image::new(
+                            image.img_ref.id.clone(),
+                            segment_content.to_string(),
+                            segment_index,
+                            is_end
+                        );
 
                         let chunk = Chunk::new(
-                            content,
+                            String::new(),
                             Metadata::Presentation {
                                 slide_number: slide.slide_number,
-                                image: None,
+                                image: Some(base64_image),
                             }
                         );
 
-                        if tx.send(Ok(chunk)).await.is_err() {
-                            break;
+                        if tx.blocking_send(Ok(chunk)).is_err() {
+                            return;
                         }
+
+                        offset = end;
+                        segment_index += 1;
                     }
-
-                    if let Some(images) = slide.load_images_manually() {
-                        for image in images.iter() {
-                            let base64_data = &image.base64_content;
-                            let total_length = base64_data.len();
-                            let mut offset = 0;
-                            let mut segment_index = 0;
-
-                            while offset < total_length {
-                                let end = min(offset + IMAGE_SEGMENT_SIZE_IN_CHARS, total_length);
-                                let segment_content = &base64_data[offset..end];
-                                let is_end = end == total_length;
-
-                                let base64_image = Base64Image::new(
-                                    image.img_ref.id.clone(),
-                                    segment_content.to_string(),
-                                    segment_index,
-                                    is_end
-                                );
-
-                                let chunk = Chunk::new(
-                                    String::new(),
-                                    Metadata::Presentation {
-                                        slide_number: slide.slide_number,
-                                        image: Some(base64_image),
-                                    }
-                                );
-
-                                if tx.send(Ok(chunk)).await.is_err() {
-                                    break;
-                                }
-
-                                offset = end;
-                                segment_index += 1;
-                            }
-                        }
-                    }
-                },
-                Err(e) => {
-                    let _ = tx.send(Err(Box::new(e) as Box<dyn std::error::Error + Send + Sync>)).await;
-                    break;
                 }
             }
+        }
+    });
+
+    tokio::spawn(async move {
+        if let Err(e) = worker.await {
+            let _ = worker_error_tx.send(Err(format!("Presentation parser task failed: {e}").into())).await;
         }
     });
 
