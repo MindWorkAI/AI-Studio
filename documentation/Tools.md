@@ -81,7 +81,7 @@ Example:
   "policyInstructions": "Use this tool only when the user asks for current weather conditions.",
   "function": {
     "name": "get_current_weather",
-    "description": "Get the current weather in a given location.",
+    "descriptionForLLM": "Get the current weather in a given location.",
     "strict": true,
     "parameters": {
       "type": "object",
@@ -116,7 +116,7 @@ Example:
 
 Use stable lower-case IDs with underscores. Keep `id`, `implementationKey`, and `function.name` identical unless there is a clear compatibility reason not to.
 
-Keep `function.description` focused on what the tool does. Put sequencing rules, answer-format guidance, or other behavior instructions in `policyInstructions`. When runnable tools are selected, their non-empty policy text is combined centrally and appended to the effective system prompt.
+Keep `function.descriptionForLLM` focused on what the tool does. This value is mapped to the provider's function `description` field and is only shown to the LLM. Put sequencing rules, answer-format guidance, or other behavior instructions in `policyInstructions`. When runnable tools are selected, their non-empty policy text is combined centrally and appended to the effective system prompt.
 
 ## Implementation
 

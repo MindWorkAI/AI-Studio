@@ -14,7 +14,7 @@ public static class ToolCallingAvailabilityExtensions
     public static ToolCallingAvailability GetToolCallingAvailability(this AIStudio.Settings.Provider provider)
     {
         if (provider == AIStudio.Settings.Provider.NONE || provider.UsedLLMProvider is LLMProviders.NONE)
-            return new(false, I18N.I.T("The selected model does not support tool calling.", typeof(ToolCallingAvailabilityExtensions).Namespace, nameof(ToolCallingAvailabilityExtensions)));
+            return new(false, I18N.I.T("Please select an LLM provider.", typeof(ToolCallingAvailabilityExtensions).Namespace, nameof(ToolCallingAvailabilityExtensions)));
 
         if (provider.UsedLLMProvider is LLMProviders.ANTHROPIC)
             return new(false, I18N.I.T("Tool calling for this provider is not implemented yet.", typeof(ToolCallingAvailabilityExtensions).Namespace, nameof(ToolCallingAvailabilityExtensions)));

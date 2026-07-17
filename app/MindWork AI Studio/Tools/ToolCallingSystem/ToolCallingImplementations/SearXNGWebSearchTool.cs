@@ -19,7 +19,7 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
     private const int MAX_RESPONSE_BYTES = 1024 * 1024;
     private const int MAX_TRACE_LENGTH = 4000;
 
-    public string ImplementationKey => "web_search";
+    public string ImplementationKey => ToolSelectionRules.WEB_SEARCH_TOOL_ID;
 
     public string Icon => Icons.Material.Filled.Language;
 
@@ -224,11 +224,7 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
 
         return new ToolExecutionResult
         {
-            JsonContent = new JsonObject
-            {
-                ["request"] = requestJson,
-                ["response"] = responseObject,
-            },
+            JsonContent = responseObject
         };
     }
 
@@ -313,11 +309,11 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
 
         var resultArray = responseObject["results"] as JsonArray;
         var sanitizedResults = BuildSanitizedResults(resultArray, effectiveLimit);
-        sanitizedResponse["results"] = sanitizedResults;
+        sanitizedResponse["websearch_results"] = sanitizedResults;
 
-        var suggestions = BuildSuggestions(responseObject["suggestions"] as JsonArray);
-        if (suggestions.Count > 0)
-            sanitizedResponse["suggestions"] = suggestions;
+        //var suggestions = BuildSuggestions(responseObject["suggestions"] as JsonArray);
+        //if (suggestions.Count > 0)
+        //    sanitizedResponse["suggestions"] = suggestions;
 
         return sanitizedResponse;
     }
@@ -348,7 +344,7 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
         CopyPropertyIfPresent(result, sanitizedResult, "title");
         CopyPropertyIfPresent(result, sanitizedResult, "url");
         CopyPropertyIfPresent(result, sanitizedResult, "content");
-        CopyPropertyIfPresent(result, sanitizedResult, "score");
+        // CopyPropertyIfPresent(result, sanitizedResult, "score");
         CopyPropertyIfPresent(result, sanitizedResult, "engine");
         CopyPropertyIfPresent(result, sanitizedResult, "category");
         CopyPropertyIfPresent(result, sanitizedResult, "publishedDate");

@@ -66,8 +66,9 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
                 ProviderConfidence = providerConfidence,
             }, token);
             logger.LogInformation("Completed tool execution. ToolName={ToolName}, ToolCallId={ToolCallId}, DurationMs={DurationMs}, Status={Status}", toolName, toolCallId, stopwatch.ElapsedMilliseconds, ToolInvocationTraceStatus.SUCCESS);
-
-            return (result.ToModelContent(), new ToolInvocationTrace
+            
+            var resultModelContent = result.ToModelContent();
+            var toolInvocationTrace = new ToolInvocationTrace
             {
                 Order = order,
                 ToolId = definition.Id,
@@ -76,9 +77,13 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
                 ToolCallId = toolCallId,
                 Status = ToolInvocationTraceStatus.SUCCESS,
                 WasExecuted = true,
-                Arguments = FormatArguments(document.RootElement, implementation.SensitiveTraceArgumentNames),
-                Result = implementation.FormatTraceResult(result.ToModelContent()),
-            });
+                Arguments = FormatArguments(document.RootElement,
+                    implementation.SensitiveTraceArgumentNames),
+                Result =
+                    implementation.FormatTraceResult(result.ToModelContent()),
+            };
+            
+            return (resultModelContent, toolInvocationTrace);
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested)
         {
@@ -88,7 +93,7 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
         {
             logger.LogWarning(exception, "Tool execution was blocked. ToolName={ToolName}, ToolCallId={ToolCallId}, DurationMs={DurationMs}, Status={Status}, ErrorMessage={ErrorMessage}", toolName, toolCallId, stopwatch.ElapsedMilliseconds, ToolInvocationTraceStatus.BLOCKED, exception.Message);
 
-            return (exception.Message, new ToolInvocationTrace
+            var toolInvocationTrace = new ToolInvocationTrace
             {
                 Order = order,
                 ToolId = definition.Id,
@@ -99,14 +104,16 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
                 StatusMessage = exception.Message,
                 Arguments = formattedArguments,
                 Result = exception.Message,
-            });
+            }; 
+            
+            return (exception.Message, toolInvocationTrace);
         }
         catch (Exception exception)
         {
             var error = $"Tool execution failed: {exception.Message}";
             logger.LogError(exception, "Tool execution failed. ToolName={ToolName}, ToolCallId={ToolCallId}, DurationMs={DurationMs}, Status={Status}, ErrorMessage={ErrorMessage}", toolName, toolCallId, stopwatch.ElapsedMilliseconds, ToolInvocationTraceStatus.ERROR, exception.Message);
 
-            return (error, new ToolInvocationTrace
+            var toolInvocationTrace = new ToolInvocationTrace
             {
                 Order = order,
                 ToolId = definition.Id,
@@ -117,7 +124,9 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
                 StatusMessage = error,
                 Arguments = formattedArguments,
                 Result = error,
-            });
+            };
+            
+            return (error, toolInvocationTrace);
         }
     }
 

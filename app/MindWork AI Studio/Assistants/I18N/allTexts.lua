@@ -8008,14 +8008,14 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::ITOOLIMPLEMENTATION::T35170
 -- Tool description
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::ITOOLIMPLEMENTATION::T4056470505"] = "Tool description"
 
+-- (Optional) Host allowlist for private or VPN web pages. For security reasons, private or VPN web pages aren't allowed to be read by default. Separate host patterns with commas, such as example.de, *.example.de. Allowed private hosts require a high-confidence provider. For allowed internal hosts, AI Studio also tries the operating system's default sign-in automatically when the server responds with integrated authentication.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T1410249500"] = "(Optional) Host allowlist for private or VPN web pages. For security reasons, private or VPN web pages aren't allowed to be read by default. Separate host patterns with commas, such as example.de, *.example.de. Allowed private hosts require a high-confidence provider. For allowed internal hosts, AI Studio also tries the operating system's default sign-in automatically when the server responds with integrated authentication."
+
 -- Allowed private hosts must be host names only, without scheme or path.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T2196457612"] = "Allowed private hosts must be host names only, without scheme or path."
 
 -- Maximum Content Characters
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T2801581200"] = "Maximum Content Characters"
-
--- Optional HTTP timeout for loading a web page in seconds.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T2941521561"] = "Optional HTTP timeout for loading a web page in seconds."
 
 -- Allowed private host '{0}' is not valid.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T3089707139"] = "Allowed private host '{0}' is not valid."
@@ -8029,17 +8029,17 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS:
 -- Read Web Page
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T3612587998"] = "Read Web Page"
 
--- Optional global truncation limit for extracted characters returned to the model.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T364016543"] = "Optional global truncation limit for extracted characters returned to the model."
-
 -- Load a web page and extract its readable content, links, and page details.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T3715690061"] = "Load a web page and extract its readable content, links, and page details."
 
 -- The web page was not loaded because private or VPN web pages require a High-confidence provider.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T3856267430"] = "The web page was not loaded because private or VPN web pages require a High-confidence provider."
 
--- Optional host allowlist for private or VPN web pages. For security reasons, private or VPN web pages aren't allowed to be read by default. Separate host patterns with commas, such as example.de, *.example.de. Allowed private hosts require a high-confidence provider. For allowed internal hosts, AI Studio also tries the operating system's default sign-in automatically when the server responds with integrated authentication.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T854695329"] = "Optional host allowlist for private or VPN web pages. For security reasons, private or VPN web pages aren't allowed to be read by default. Separate host patterns with commas, such as example.de, *.example.de. Allowed private hosts require a high-confidence provider. For allowed internal hosts, AI Studio also tries the operating system's default sign-in automatically when the server responds with integrated authentication."
+-- (Optional) HTTP timeout for loading a web page in seconds.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T4126164830"] = "(Optional) HTTP timeout for loading a web page in seconds."
+
+-- (Optional) Global truncation limit for extracted characters returned to the model.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T900659180"] = "(Optional) Global truncation limit for extracted characters returned to the model."
 
 -- Maximum Results
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T1273024715"] = "Maximum Results"

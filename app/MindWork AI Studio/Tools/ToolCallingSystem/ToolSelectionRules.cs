@@ -37,18 +37,23 @@ public static class ToolSelectionRules
 
     public static string BuildToolPolicyPrompt(IEnumerable<ToolDefinition> definitions)
     {
-        var policyLines = definitions
-            .Select(x => x.PolicyInstructions?.Trim())
-            .Where(x => !string.IsNullOrWhiteSpace(x))
+        var policySections = definitions
+            .Select(x => (ToolName: x.Function.Name, PolicyLines: x.SystemPromptInstructions?.Trim()))
+            .Where(x => !string.IsNullOrWhiteSpace(x.PolicyLines))
+            .Select(x => $"## Tool `{x.ToolName}`{Environment.NewLine}{x.PolicyLines}")
             .Distinct(StringComparer.Ordinal)
             .ToList();
-        if (policyLines.Count == 0)
+        if (policySections.Count == 0)
             return string.Empty;
 
-        return $"""
-                Tool usage policy:
-                {string.Join(Environment.NewLine + Environment.NewLine, policyLines)}
-                """;
+        var toolPolicyPrompt = $"""
+                            # Tool usage instructions:
+                            You have multiple tools available. Each tool has a different purpose and usage policy. Choose wisely and if you are not sure, always ask the user for clarification. You must follow the usage policy of each tool to ensure accurate and reliable results. Here are the usage policies for each tool:
+                            
+                            {string.Join(Environment.NewLine+Environment.NewLine, policySections)}
+                            """;
+
+        return toolPolicyPrompt;
     }
 
     public static bool IsProviderConfidenceAllowed(ConfidenceLevel providerConfidence, ConfidenceLevel minimumToolConfidence) =>

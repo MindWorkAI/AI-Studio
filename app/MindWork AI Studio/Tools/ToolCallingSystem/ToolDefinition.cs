@@ -19,7 +19,7 @@ public sealed class ToolDefinition
 
     public ToolSettingsSchema SettingsSchema { get; init; } = new();
 
-    public string PolicyInstructions { get; init; } = string.Empty;
+    public string SystemPromptInstructions { get; init; } = string.Empty;
 
     public ToolFunctionDefinition Function { get; init; } = new();
 }
@@ -35,7 +35,7 @@ public sealed class ToolFunctionDefinition
 {
     public string Name { get; init; } = string.Empty;
 
-    public string Description { get; init; } = string.Empty;
+    public string DescriptionForLLM { get; init; } = string.Empty;
 
     public bool Strict { get; init; } = true;
 

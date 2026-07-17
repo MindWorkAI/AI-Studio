@@ -13,15 +13,12 @@ public sealed class ReadWebPageTool(HTMLParser htmlParser, ILogger<ReadWebPageTo
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ReadWebPageTool).Namespace, nameof(ReadWebPageTool));
 
     private const int DEFAULT_TIMEOUT_SECONDS = 30;
-    private const int DEFAULT_MAX_CONTENT_CHARACTERS = 12000;
+    private const int DEFAULT_MAX_CONTENT_CHARACTERS = 30000;
     private const int MAX_TIMEOUT_SECONDS = 60;
     private const int MAX_CONTENT_CHARACTERS = 50000;
-    private const int MAX_RESPONSE_BYTES = 5 * 1024 * 1024;
+    private const int MAX_RESPONSE_BYTES = 5 * 1024 * 1024; 
     private const int MAX_TRACE_LENGTH = 12000;
     private const string ALLOWED_PRIVATE_HOSTS_SETTING = "allowedPrivateHosts";
-    private const string MODEL_RESULT_HEADER = "WEB_PAGE_RESULT";
-    private const string UNTRUSTED_CONTENT_START = "--- BEGIN UNTRUSTED WEB PAGE CONTENT ---";
-    private const string UNTRUSTED_CONTENT_END = "--- END UNTRUSTED WEB PAGE CONTENT ---";
 
     public string ImplementationKey => ToolSelectionRules.READ_WEB_PAGE_TOOL_ID;
 
@@ -29,7 +26,7 @@ public sealed class ReadWebPageTool(HTMLParser htmlParser, ILogger<ReadWebPageTo
 
     public IReadOnlySet<string> SensitiveTraceArgumentNames => new HashSet<string>(StringComparer.Ordinal);
 
-    public string GetDisplayName() => TB("Read Web Page");
+    public static string GetDisplayName() => TB("Read Web Page");
 
     public string GetDescription() => TB("Load a web page and extract its readable content, links, and page details.");
 
@@ -162,75 +159,62 @@ public sealed class ReadWebPageTool(HTMLParser htmlParser, ILogger<ReadWebPageTo
 
         return new ToolExecutionResult
         {
-            TextContent = BuildModelContent(page, extractedPage, markdown, originalContentCharacters, contentTruncated, warnings)
+            JsonContent = BuildModelContent(page, extractedPage, markdown, originalContentCharacters, contentTruncated, warnings)
         };
     }
 
-    private static string BuildModelContent(
+    private static JsonNode? BuildModelContent(
         HTMLParserWebPage page,
         ExtractedWebPage extractedPage,
-        string markdown,
+        string websiteContentAsMarkdown,
         int originalContentCharacters,
         bool contentTruncated,
         IReadOnlyList<string> warnings)
     {
-        var source = new JsonObject
+        var metadata = new JsonObject
         {
-            ["requested_url"] = page.RequestedUrl.ToString(),
-            ["final_url"] = page.FinalUrl.ToString(),
         };
-        AddIfNotEmpty(source, "canonical_url", extractedPage.CanonicalUrl?.ToString());
-        AddIfNotEmpty(source, "title", extractedPage.Title);
-        AddIfNotEmpty(source, "description", extractedPage.Description);
-        AddIfNotEmpty(source, "site_name", extractedPage.SiteName);
-        AddIfNotEmpty(source, "language", extractedPage.Language);
-        AddStringArrayIfNotEmpty(source, "authors", extractedPage.Authors);
-        AddIfNotEmpty(source, "published_time", extractedPage.PublishedTime);
-        AddIfNotEmpty(source, "modified_time", extractedPage.ModifiedTime);
-        AddIfNotEmpty(source, "media_type", page.ContentType);
 
-        var status = string.IsNullOrWhiteSpace(markdown)
-            ? "empty"
+        var status = string.IsNullOrWhiteSpace(websiteContentAsMarkdown)
+            ? "empty response"
             : contentTruncated || originalContentCharacters < 500
                 ? "partial"
                 : "complete";
         var warningArray = new JsonArray();
         foreach (var warning in warnings)
             warningArray.Add(warning);
+        
+        AddIfNotEmpty(metadata, "language", extractedPage.Language);
+        AddIfNotEmpty(metadata, "published_time", extractedPage.PublishedTime);
+        AddIfNotEmpty(metadata, "modified_time", extractedPage.ModifiedTime);
+        AddIfNotEmpty(metadata, "media_type", page.ContentType);
+        metadata["warnings"] = warningArray;
+        if (contentTruncated)
+        {
+            metadata["original_content_characters"] = originalContentCharacters;
+            metadata["returned_content_characters"] = websiteContentAsMarkdown.Length;
+        }
+        
+        var content = new JsonObject
+        {
+            ["text_content"] = websiteContentAsMarkdown,
+        };
+        
+        AddIfNotEmpty(content, "title", extractedPage.Title);
+        AddIfNotEmpty(content, "description", extractedPage.Description);
+        AddStringArrayIfNotEmpty(content, "authors", extractedPage.Authors);
+        
+
         var result = new JsonObject
         {
+            ["url"] = page.RequestedUrl.ToString(),
             ["status"] = status,
             ["retrieved_at_utc"] = DateTimeOffset.UtcNow.ToString("O"),
-            ["content_format"] = "markdown",
-            ["truncated"] = contentTruncated,
-            ["warnings"] = warningArray,
+            ["content"] = content,
+            ["metadata"] = metadata,
         };
-        if (contentTruncated)
-        {
-            result["original_content_characters"] = originalContentCharacters;
-            result["returned_content_characters"] = markdown.Length;
-        }
-
-        var header = new JsonObject
-        {
-            ["source"] = source,
-            ["result"] = result,
-        };
-        if (contentTruncated)
-        {
-            var outline = new JsonArray();
-            foreach (var heading in extractedPage.Outline)
-                outline.Add(heading);
-            header["outline"] = outline;
-        }
-
-        var output = new StringBuilder();
-        output.Append(MODEL_RESULT_HEADER).Append('\n');
-        output.Append(header.ToJsonString()).Append('\n');
-        output.Append(UNTRUSTED_CONTENT_START).Append('\n');
-        output.Append(markdown).Append('\n');
-        output.Append(UNTRUSTED_CONTENT_END);
-        return output.ToString();
+        
+        return result;
     }
 
     private static void AddIfNotEmpty(JsonObject target, string propertyName, string? value)

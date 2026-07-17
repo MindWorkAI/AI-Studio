@@ -47,10 +47,10 @@
       "baseUrl"
     ]
   },
-  "policyInstructions": "Use the `web_search` tool to discover relevant candidate URLs. Prefer categories for broad search intent. Use engines only when the user explicitly asks for specific search engines. Use the search only to gather interesting websites and not for information gathering. Information for answering questions should be gathered using the `read_web_page` tool to extract the information from the websites that the `web_search` tool found.",
+  "systemPromptInstructions": "Use the `web_search` tool to discover URLs of websites to answer the user's question. Prefer categories for broad search intent and use a date, if appropriate. If you are not sure what you should search for, ask the user for clarification. `web_search` enables you to gather information that is after your knowledge cutoff date. Use the search to gather interesting websites, not for information gathering. Information for answering questions should be gathered using the `read_web_page`. Use `web_search` only once or twice to gather candidate URLs.",
   "function": {
     "name": "web_search",
-    "description": "Search the web via a configured SearXNG instance and return candidate result URLs to use with the `read_web_page` tool.",
+    "descriptionForLLM": "Search the web and return candidate website URLs to answer user questions for use with the `read_web_page` tool.",
     "strict": true,
     "parameters": {
       "type": "object",
@@ -64,7 +64,7 @@
             "array",
             "null"
           ],
-          "description": "Optional list of SearXNG categories to use for the search.",
+          "description": "Optional list of categories to use for the search.",
           "items": {
             "type": "string"
           }
@@ -74,7 +74,7 @@
             "array",
             "null"
           ],
-          "description": "Optional list of specific SearXNG engines to use when the user requests them explicitly.",
+          "description": "Optional list of specific search engines to use when the user requests them explicitly.",
           "items": {
             "type": "string"
           }
@@ -91,7 +91,7 @@
             "string",
             "null"
           ],
-          "description": "Optional time range filter for engines that support it.",
+          "description": "Optional time range filter for search engines that support it.",
           "enum": [
             null,
             "day",

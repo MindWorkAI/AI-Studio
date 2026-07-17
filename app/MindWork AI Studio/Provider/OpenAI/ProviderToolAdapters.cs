@@ -16,7 +16,7 @@ public static class ProviderToolAdapters
         function = new
         {
             name = definition.Function.Name,
-            description = definition.Function.Description,
+            description = definition.Function.DescriptionForLLM,
             parameters = definition.Function.Parameters,
             strict = definition.Function.Strict,
         }
@@ -28,7 +28,7 @@ public static class ProviderToolAdapters
     public static ResponsesFunctionTool ToResponsesTool(ToolDefinition definition) => new()
     {
         Name = definition.Function.Name,
-        Description = definition.Function.Description,
+        Description = definition.Function.DescriptionForLLM,
         Parameters = definition.Function.Parameters,
         Strict = definition.Function.Strict,
     };
