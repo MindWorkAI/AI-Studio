@@ -72,7 +72,7 @@ windows-native-keyring-store = "1.1.0"
 apple-native-keyring-store = { version = "1.0.0", features = ["keychain"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
-ashpd = { version = "0.13.12", default-features = false, features = ["tokio", "open_uri"] }
+ashpd = { version = "0.13.12", default-features = false, features = ["tokio", "open_uri", "global_shortcuts"] }
 dbus-secret-service-keyring-store = { version = "1.0.0", features = ["crypto-rust"] }
 webkit2gtk = { version = "2.0.2", features = ["v2_8"] }
 

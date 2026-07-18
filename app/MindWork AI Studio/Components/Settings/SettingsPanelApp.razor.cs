@@ -45,7 +45,7 @@ public partial class SettingsPanelApp : SettingsPanelBase
 
     protected override async Task OnInitializedAsync()
     {
-        this.ApplyFilters([], [ Event.CONFIGURATION_CHANGED ]);
+        this.ApplyFilters([], [ Event.CONFIGURATION_CHANGED, Event.GLOBAL_SHORTCUT_CHANGED ]);
         await base.OnInitializedAsync();
         this.updatePolicyMode = this.UpdatePolicy.CurrentMode;
     }
@@ -54,6 +54,9 @@ public partial class SettingsPanelApp : SettingsPanelBase
     {
         if (triggeredEvent is Event.CONFIGURATION_CHANGED)
             this.updatePolicyMode = this.UpdatePolicy.CurrentMode;
+
+        if (triggeredEvent is Event.GLOBAL_SHORTCUT_CHANGED)
+            this.StateHasChanged();
 
         await base.ProcessIncomingMessage(sendingComponent, triggeredEvent, data);
     }
