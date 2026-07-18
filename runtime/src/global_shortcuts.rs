@@ -20,7 +20,7 @@ use ashpd::desktop::{CreateSessionOptions, ResponseError};
 
 #[cfg(target_os = "linux")]
 use ashpd::desktop::global_shortcuts::{
-    BindShortcutsOptions, GlobalShortcuts, ListShortcutsOptions, NewShortcut,
+    BindShortcutsOptions, GlobalShortcuts, ListShortcutsOptions, NewShortcut, Shortcut as AshpdShortcut,
 };
 
 #[cfg(target_os = "linux")]
@@ -510,6 +510,18 @@ struct PortalShortcutInfo {
     effective_display_name: String,
 }
 
+#[cfg(target_os = "linux")]
+/// Normalizes shortcuts returned by `ashpd` for backend-independent processing.
+fn normalize_portal_shortcuts(shortcuts: &[AshpdShortcut]) -> Vec<PortalShortcutInfo> {
+    shortcuts
+        .iter()
+        .map(|shortcut| PortalShortcutInfo {
+            id: shortcut.id().to_string(),
+            effective_display_name: shortcut.trigger_description().to_string(),
+        })
+        .collect()
+}
+
 /// Abstracts portal listing and binding operations for deterministic lifecycle tests.
 trait PortalAdapter {
     /// Lists shortcuts restored into the current portal session.
@@ -576,14 +588,7 @@ impl PortalAdapter for AshpdPortalAdapter<'_> {
             .and_then(|request| request.response())
             .map_err(PortalFailure::from_error)?;
 
-        Ok(response
-            .shortcuts()
-            .iter()
-            .map(|shortcut| PortalShortcutInfo {
-                id: shortcut.id().to_string(),
-                effective_display_name: shortcut.trigger_description().to_string(),
-            })
-            .collect())
+        Ok(normalize_portal_shortcuts(response.shortcuts()))
     }
 
     /// Binds one shortcut through the XDG portal and normalizes its response.
@@ -601,14 +606,7 @@ impl PortalAdapter for AshpdPortalAdapter<'_> {
             .and_then(|request| request.response())
             .map_err(PortalFailure::from_error)?;
 
-        Ok(response
-            .shortcuts()
-            .iter()
-            .map(|shortcut| PortalShortcutInfo {
-                id: shortcut.id().to_string(),
-                effective_display_name: shortcut.trigger_description().to_string(),
-            })
-            .collect())
+        Ok(normalize_portal_shortcuts(response.shortcuts()))
     }
 }
 
