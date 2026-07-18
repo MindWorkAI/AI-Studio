@@ -1,3 +1,3 @@
 namespace AIStudio.Tools.Rust;
 
-public sealed record RegisterShortcutRequest(Shortcut Id, string Shortcut);
+public sealed record RegisterShortcutRequest(Shortcut Id, string Shortcut, string Description, bool Reconfigure);

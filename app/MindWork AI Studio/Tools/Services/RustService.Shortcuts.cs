@@ -10,34 +10,36 @@ public sealed partial class RustService
     /// </summary>
     /// <param name="shortcutId">The identifier for the shortcut.</param>
     /// <param name="shortcut">The shortcut string in Tauri format (e.g., "CmdOrControl+1"). Use empty string to disable.</param>
-    /// <returns>True if the shortcut was registered successfully, false otherwise.</returns>
-    public async Task<bool> UpdateGlobalShortcut(Shortcut shortcutId, string shortcut)
+    /// <param name="description">Localized action description shown by the desktop portal.</param>
+    /// <param name="reconfigure">Whether the user deliberately selected a different preferred trigger.</param>
+    /// <returns>A typed result including the selected backend and effective portal label.</returns>
+    public async Task<ShortcutRegistrationResult> UpdateGlobalShortcut(Shortcut shortcutId, string shortcut, string description, bool reconfigure)
     {
         try
         {
-            var request = new RegisterShortcutRequest(shortcutId, shortcut);
+            var request = new RegisterShortcutRequest(shortcutId, shortcut, description, reconfigure);
             var response = await this.http.PostAsJsonAsync("/shortcuts/register", request, this.jsonRustSerializerOptions);
 
             if (!response.IsSuccessStatusCode)
             {
                 this.logger?.LogError("Failed to register global shortcut '{ShortcutId}' due to network error: {StatusCode}", shortcutId, response.StatusCode);
-                return false;
+                return ShortcutRegistrationResult.Failed(TB("The global shortcut could not be registered because the desktop service is unavailable."));
             }
 
-            var result = await response.Content.ReadFromJsonAsync<ShortcutResponse>(this.jsonRustSerializerOptions);
+            var result = await response.Content.ReadFromJsonAsync<ShortcutRegistrationResult>(this.jsonRustSerializerOptions);
             if (result is null || !result.Success)
             {
                 this.logger?.LogError("Failed to register global shortcut '{ShortcutId}': {Error}", shortcutId, result?.ErrorMessage ?? "Unknown error");
-                return false;
+                return result ?? ShortcutRegistrationResult.Failed(TB("The desktop service returned an invalid response while registering the global shortcut."));
             }
 
             this.logger?.LogInformation("Global shortcut '{ShortcutId}' registered successfully with key '{Shortcut}'.", shortcutId, shortcut);
-            return true;
+            return result;
         }
         catch (Exception ex)
         {
             this.logger?.LogError(ex, "Exception while registering global shortcut '{ShortcutId}'.", shortcutId);
-            return false;
+            return ShortcutRegistrationResult.Failed(TB("The global shortcut could not be registered because of a desktop integration error."));
         }
     }
 

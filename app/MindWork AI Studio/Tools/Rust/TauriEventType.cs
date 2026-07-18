@@ -17,4 +17,5 @@ public enum TauriEventType
     FILE_DROP_CANCELED,
 
     GLOBAL_SHORTCUT_PRESSED,
+    GLOBAL_SHORTCUT_CHANGED,
 }

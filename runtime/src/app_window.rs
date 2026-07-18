@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::convert::Infallible;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
@@ -13,12 +12,10 @@ use log::{debug, error, info, trace, warn};
 use once_cell::sync::Lazy;
 use pdfium_render::prelude::Pdfium;
 use serde::{Deserialize, Serialize};
-use strum_macros::Display;
 use tauri::{DragDropEvent,RunEvent, Manager, WindowEvent, generate_context};
 use tauri::path::PathResolver;
 use tauri::WebviewWindow;
 use tauri_plugin_updater::{UpdaterExt, Update};
-use tauri_plugin_global_shortcut::GlobalShortcutExt;
 use tauri_plugin_opener::OpenerExt;
 use tokio::sync::broadcast;
 use tokio::time;
@@ -31,6 +28,7 @@ use crate::environment::{
 use crate::log::switch_to_file_logging;
 use crate::pdfium::PDFIUM_LIB_PATH;
 use crate::qdrant_edge_database::{start_qdrant_edge_database, stop_qdrant_edge_database};
+use crate::global_shortcuts::{RegisterShortcutRequest, ShortcutResponse};
 
 #[cfg(debug_assertions)]
 use crate::dotnet::create_startup_env_file;
@@ -50,19 +48,8 @@ static CHECK_UPDATE_RESPONSE: Lazy<Mutex<Option<Update>>> = Lazy::new(|| Mutex::
 /// The event broadcast sender for Tauri events.
 static EVENT_BROADCAST: Lazy<Mutex<Option<broadcast::Sender<Event>>>> = Lazy::new(|| Mutex::new(None));
 
-/// Stores the currently registered global shortcuts (name -> shortcut string).
-static REGISTERED_SHORTCUTS: Lazy<Mutex<HashMap<Shortcut, String>>> = Lazy::new(|| Mutex::new(HashMap::new()));
-
 /// Stores the localhost origin of the Blazor app after the .NET server is ready.
 static APPROVED_APP_URL: Lazy<Mutex<Option<tauri::Url>>> = Lazy::new(|| Mutex::new(None));
-
-/// Enum identifying global keyboard shortcuts.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Display)]
-#[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
-pub enum Shortcut {
-    None = 0,
-    VoiceRecordingToggle,
-}
 
 /// Starts the Tauri app.
 pub fn start_tauri() {
@@ -486,6 +473,7 @@ pub enum TauriEventType {
     FileDropCanceled,
 
     GlobalShortcutPressed,
+    GlobalShortcutChanged,
 }
 
 /// Changes the location of the main window to the given URL.
@@ -676,51 +664,11 @@ fn self_update_allowed(development: bool, flatpak: bool) -> bool {
     !development && !flatpak
 }
 
-/// Request payload for registering a global shortcut.
-#[derive(Clone, Deserialize)]
-pub struct RegisterShortcutRequest {
-    /// The shortcut ID to use.
-    id: Shortcut,
-
-    /// The shortcut string in Tauri format (e.g., "CmdOrControl+1").
-    /// Use empty string to unregister the shortcut.
-    shortcut: String,
-}
-
-/// Response for shortcut registration.
-#[derive(Serialize)]
-pub struct ShortcutResponse {
-    success: bool,
-    error_message: String,
-}
-
 /// Response for application exit requests.
 #[derive(Serialize)]
 pub struct AppExitResponse {
     success: bool,
     error_message: String,
-}
-
-/// Internal helper function to register a shortcut with its callback.
-/// This is used by both `register_shortcut` and `resume_shortcuts` to
-/// avoid code duplication.
-fn register_shortcut_with_callback<R: tauri::Runtime>(
-    app_handle: &tauri::AppHandle<R>,
-    shortcut: &str,
-    shortcut_id: Shortcut,
-    event_sender: broadcast::Sender<Event>,
-) -> Result<(), tauri_plugin_global_shortcut::Error> {
-    let shortcut_manager = app_handle.global_shortcut();
-    shortcut_manager.on_shortcut(shortcut, move |_app, _shortcut, _event| {
-        info!(Source = "Tauri"; "Global shortcut triggered for '{}'.", shortcut_id);
-        let event = Event::new(TauriEventType::GlobalShortcutPressed, vec![shortcut_id.to_string()]);
-        let sender = event_sender.clone();
-        tauri::async_runtime::spawn(async move {
-            if let Err(error) = sender.send(event) {
-                error!(Source = "Tauri"; "Failed to send global shortcut event: {error}");
-            }
-        });
-    })
 }
 
 /// Requests a controlled shutdown of the entire desktop application.
@@ -754,89 +702,9 @@ pub async fn exit_app(_token: APIToken) -> Json<AppExitResponse> {
 /// Registers or updates a global shortcut. If the shortcut string is empty,
 /// the existing shortcut for that name will be unregistered.
 pub async fn register_shortcut(_token: APIToken, payload: Json<RegisterShortcutRequest>) -> Json<ShortcutResponse> {
-    let id = payload.id;
-    let new_shortcut = payload.shortcut.clone();
-
-    if id == Shortcut::None {
-        error!(Source = "Tauri"; "Cannot register NONE shortcut.");
-        return Json(ShortcutResponse {
-            success: false,
-            error_message: "Cannot register NONE shortcut".to_string(),
-        });
-    }
-
-    info!(Source = "Tauri"; "Registering global shortcut '{}' with key '{new_shortcut}'.", id);
-
-    // Get the main window to access the global shortcut manager:
-    let main_window_lock = MAIN_WINDOW.lock().unwrap();
-    let main_window = match main_window_lock.as_ref() {
-        Some(window) => window,
-        None => {
-            error!(Source = "Tauri"; "Cannot register shortcut: main window not available.");
-            return Json(ShortcutResponse {
-                success: false,
-                error_message: "Main window not available".to_string(),
-            });
-        }
-    };
-
-    let app_handle = main_window.app_handle();
-    let shortcut_manager = app_handle.global_shortcut();
-    let mut registered_shortcuts = REGISTERED_SHORTCUTS.lock().unwrap();
-
-    // Unregister the old shortcut if one exists for this name:
-    if let Some(old_shortcut) = registered_shortcuts.get(&id) && !old_shortcut.is_empty() {
-        match shortcut_manager.unregister(old_shortcut.as_str()) {
-            Ok(_) => info!(Source = "Tauri"; "Unregistered old shortcut '{old_shortcut}' for '{}'.", id),
-            Err(error) => warn!(Source = "Tauri"; "Failed to unregister old shortcut '{old_shortcut}': {error}"),
-        }
-    }
-
-    // When the new shortcut is empty, we're done (just unregistering):
-    if new_shortcut.is_empty() {
-        registered_shortcuts.remove(&id);
-        info!(Source = "Tauri"; "Shortcut '{}' has been disabled.", id);
-        return Json(ShortcutResponse {
-            success: true,
-            error_message: String::new(),
-        });
-    }
-
-    // Get the event broadcast sender for the shortcut callback:
-    let event_broadcast_lock = EVENT_BROADCAST.lock().unwrap();
-    let event_sender = match event_broadcast_lock.as_ref() {
-        Some(sender) => sender.clone(),
-        None => {
-            error!(Source = "Tauri"; "Cannot register shortcut: event broadcast not initialized.");
-            return Json(ShortcutResponse {
-                success: false,
-                error_message: "Event broadcast not initialized".to_string(),
-            });
-        }
-    };
-
-    drop(event_broadcast_lock);
-
-    // Register the new shortcut:
-    match register_shortcut_with_callback(app_handle, &new_shortcut, id, event_sender) {
-        Ok(_) => {
-            info!(Source = "Tauri"; "Global shortcut '{new_shortcut}' registered successfully for '{}'.", id);
-            registered_shortcuts.insert(id, new_shortcut);
-            Json(ShortcutResponse {
-                success: true,
-                error_message: String::new(),
-            })
-        },
-
-        Err(error) => {
-            let error_msg = format!("Failed to register shortcut: {error}");
-            error!(Source = "Tauri"; "{error_msg}");
-            Json(ShortcutResponse {
-                success: false,
-                error_message: error_msg,
-            })
-        }
-    }
+    let app_handle = MAIN_WINDOW.lock().unwrap().as_ref().map(|window| window.app_handle().clone());
+    let event_sender = EVENT_BROADCAST.lock().unwrap().clone();
+    Json(crate::global_shortcuts::register(app_handle, event_sender, payload.0).await)
 }
 
 /// Request payload for validating a shortcut.
@@ -872,8 +740,7 @@ pub async fn validate_shortcut(_token: APIToken, payload: Json<ValidateShortcutR
     }
 
     // Check if the shortcut is already registered:
-    let registered_shortcuts = REGISTERED_SHORTCUTS.lock().unwrap();
-    for (name, registered_shortcut) in registered_shortcuts.iter() {
+    for (name, registered_shortcut) in crate::global_shortcuts::registered_shortcuts().await {
         if registered_shortcut.eq_ignore_ascii_case(&shortcut) {
             return Json(ShortcutValidationResponse {
                 is_valid: true,
@@ -883,8 +750,6 @@ pub async fn validate_shortcut(_token: APIToken, payload: Json<ValidateShortcutR
             });
         }
     }
-
-    drop(registered_shortcuts);
 
     // Try to parse the shortcut to validate syntax.
     // We can't easily validate without registering in Tauri 1.x,
@@ -908,100 +773,20 @@ pub async fn validate_shortcut(_token: APIToken, payload: Json<ValidateShortcutR
     }
 }
 
-/// Suspends shortcut processing by unregistering all shortcuts from the OS.
-/// The shortcuts remain in our internal map, so they can be re-registered on resume.
+/// Suspends shortcut processing. Portal sessions remain active and ignore activations;
+/// Tauri shortcuts are temporarily unregistered and restored on resume.
 /// This is useful when opening a dialog to configure shortcuts, so the user can
 /// press the current shortcut to re-enter it without triggering the action.
 pub async fn suspend_shortcuts(_token: APIToken) -> Json<ShortcutResponse> {
-    // Get the main window to access the global shortcut manager:
-    let main_window_lock = MAIN_WINDOW.lock().unwrap();
-    let main_window = match main_window_lock.as_ref() {
-        Some(window) => window,
-        None => {
-            error!(Source = "Tauri"; "Cannot suspend shortcuts: main window not available.");
-            return Json(ShortcutResponse {
-                success: false,
-                error_message: "Main window not available".to_string(),
-            });
-        }
-    };
-
-    let app_handle = main_window.app_handle();
-    let shortcut_manager = app_handle.global_shortcut();
-    let registered_shortcuts = REGISTERED_SHORTCUTS.lock().unwrap();
-
-    // Unregister all shortcuts from the OS (but keep them in our map):
-    for (name, shortcut) in registered_shortcuts.iter() {
-        if !shortcut.is_empty() {
-            match shortcut_manager.unregister(shortcut.as_str()) {
-                Ok(_) => info!(Source = "Tauri"; "Temporarily unregistered shortcut '{shortcut}' for '{}'.", name),
-                Err(error) => warn!(Source = "Tauri"; "Failed to unregister shortcut '{shortcut}' for '{}': {error}", name),
-            }
-        }
-    }
-
-    info!(Source = "Tauri"; "Shortcut processing has been suspended ({} shortcuts unregistered).", registered_shortcuts.len());
-    Json(ShortcutResponse {
-        success: true,
-        error_message: String::new(),
-    })
+    let app_handle = MAIN_WINDOW.lock().unwrap().as_ref().map(|window| window.app_handle().clone());
+    Json(crate::global_shortcuts::suspend(app_handle).await)
 }
 
 /// Resumes shortcut processing by re-registering all shortcuts with the OS.
 pub async fn resume_shortcuts(_token: APIToken) -> Json<ShortcutResponse> {
-    // Get the main window to access the global shortcut manager:
-    let main_window_lock = MAIN_WINDOW.lock().unwrap();
-    let main_window = match main_window_lock.as_ref() {
-        Some(window) => window,
-        None => {
-            error!(Source = "Tauri"; "Cannot resume shortcuts: main window not available.");
-            return Json(ShortcutResponse {
-                success: false,
-                error_message: "Main window not available".to_string(),
-            });
-        }
-    };
-
-    let app_handle = main_window.app_handle();
-    let registered_shortcuts = REGISTERED_SHORTCUTS.lock().unwrap();
-
-    // Get the event broadcast sender for the shortcut callbacks:
-    let event_broadcast_lock = EVENT_BROADCAST.lock().unwrap();
-    let event_sender = match event_broadcast_lock.as_ref() {
-        Some(sender) => sender.clone(),
-        None => {
-            error!(Source = "Tauri"; "Cannot resume shortcuts: event broadcast not initialized.");
-            return Json(ShortcutResponse {
-                success: false,
-                error_message: "Event broadcast not initialized".to_string(),
-            });
-        }
-    };
-
-    drop(event_broadcast_lock);
-
-    // Re-register all shortcuts with the OS:
-    let mut success_count = 0;
-    for (shortcut_id, shortcut) in registered_shortcuts.iter() {
-        if shortcut.is_empty() {
-            continue;
-        }
-
-        match register_shortcut_with_callback(app_handle, shortcut, *shortcut_id, event_sender.clone()) {
-            Ok(_) => {
-                info!(Source = "Tauri"; "Re-registered shortcut '{shortcut}' for '{}'.", shortcut_id);
-                success_count += 1;
-            },
-
-            Err(error) => warn!(Source = "Tauri"; "Failed to re-register shortcut '{shortcut}' for '{}': {error}", shortcut_id),
-        }
-    }
-
-    info!(Source = "Tauri"; "Shortcut processing has been resumed ({success_count} shortcuts re-registered).");
-    Json(ShortcutResponse {
-        success: true,
-        error_message: String::new(),
-    })
+    let app_handle = MAIN_WINDOW.lock().unwrap().as_ref().map(|window| window.app_handle().clone());
+    let event_sender = EVENT_BROADCAST.lock().unwrap().clone();
+    Json(crate::global_shortcuts::resume(app_handle, event_sender).await)
 }
 
 /// Validates the syntax of a shortcut string.
