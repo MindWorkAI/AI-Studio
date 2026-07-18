@@ -23,6 +23,7 @@ use tauri_plugin_opener::OpenerExt;
 use tokio::sync::broadcast;
 use tokio::time;
 use crate::api_token::APIToken;
+use crate::clipboard::shutdown_clipboard;
 use crate::dotnet::{cleanup_dotnet_server, start_dotnet_server, stop_dotnet_server};
 use crate::environment::{
     is_prod, is_dev, is_flatpak, CONFIG_DIRECTORY, DATA_DIRECTORY, FLATPAK_LIBRARY_DIRECTORY,
@@ -217,6 +218,7 @@ pub fn start_tauri() {
 
             RunEvent::ExitRequested { .. } => {
                 warn!(Source = "Tauri"; "Run event: exit was requested.");
+                shutdown_clipboard();
                 stop_qdrant_edge_database();
                 if is_prod() {
                     warn!("Try to stop the .NET server as well...");
