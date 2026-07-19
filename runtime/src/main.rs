@@ -28,8 +28,10 @@ use mindwork_ai_studio::secret::init_secret_store;
 // change requires explicit Linux startup tests; compiling successfully is not sufficient.
 fn main() {
     let metadata = MetaData::init_from_string(include_str!("../../metadata.txt"));
+    let tauri_context = tauri::generate_context!();
+    let bundle_identifier = tauri_context.config().identifier.clone();
 
-    init_logging();
+    init_logging(&bundle_identifier);
     info!("Starting MindWork AI Studio:");
     
     let working_directory = std::env::current_dir().unwrap();
@@ -59,5 +61,5 @@ fn main() {
     generate_runtime_certificate();
     start_runtime_api();
     
-    start_tauri();
+    start_tauri(tauri_context);
 }

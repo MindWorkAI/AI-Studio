@@ -4147,6 +4147,7 @@ dependencies = [
  "cfg-if",
  "dbus-secret-service",
  "dbus-secret-service-keyring-store",
+ "dirs",
  "file-format",
  "flexi_logger",
  "futures",
