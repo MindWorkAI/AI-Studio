@@ -4138,6 +4138,7 @@ dependencies = [
  "calamine",
  "cbc 0.2.1",
  "cfg-if",
+ "dbus-secret-service",
  "dbus-secret-service-keyring-store",
  "file-format",
  "flexi_logger",
