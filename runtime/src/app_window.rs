@@ -12,7 +12,7 @@ use log::{debug, error, info, trace, warn};
 use once_cell::sync::Lazy;
 use pdfium_render::prelude::Pdfium;
 use serde::{Deserialize, Serialize};
-use tauri::{DragDropEvent,RunEvent, Manager, WindowEvent, generate_context};
+use tauri::{DragDropEvent,RunEvent, Manager, WindowEvent};
 use tauri::path::PathResolver;
 use tauri::WebviewWindow;
 use tauri_plugin_updater::{UpdaterExt, Update};
@@ -52,7 +52,7 @@ static EVENT_BROADCAST: Lazy<Mutex<Option<broadcast::Sender<Event>>>> = Lazy::ne
 static APPROVED_APP_URL: Lazy<Mutex<Option<tauri::Url>>> = Lazy::new(|| Mutex::new(None));
 
 /// Starts the Tauri app.
-pub fn start_tauri() {
+pub fn start_tauri(tauri_context: tauri::Context<tauri::Wry>) {
     info!("Starting Tauri app...");
 
     // Create the event broadcast channel:
@@ -179,7 +179,7 @@ pub fn start_tauri() {
             Ok(())
         })
         .plugin(tauri_plugin_window_state::Builder::default().build())
-        .build(generate_context!())
+        .build(tauri_context)
         .expect("Error while running Tauri application");
 
     // The app event handler:

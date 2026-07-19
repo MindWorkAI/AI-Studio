@@ -6996,6 +6996,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2273492381"] = "Wir müssen Zufa
 -- Configuration plugin ID:
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2301484629"] = "Konfigurations-Plugin-ID:"
 
+-- dirs determines the platform-specific local application data directory. AI Studio uses it so the Flatpak startup log is written to the same application data directory that Tauri uses.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2325338322"] = "dirs bestimmt das plattformspezifische lokale Anwendungsdatenverzeichnis. AI Studio verwendet es, damit das Flatpak-Startprotokoll in dasselbe Verzeichnis geschrieben wird, das auch Tauri verwendet."
+
 -- The C# language is used for the implementation of the user interface and the backend. To implement the user interface with C#, the Blazor technology from ASP.NET Core is used. All these technologies are integrated into the .NET SDK.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2329884315"] = "Die Programmiersprache C# wird für die Umsetzung der Benutzeroberfläche und des Backends verwendet. Für die Entwicklung der Benutzeroberfläche mit C# kommt die Blazor-Technologie aus ASP.NET Core zum Einsatz. Alle diese Technologien sind im .NET SDK integriert."
 
