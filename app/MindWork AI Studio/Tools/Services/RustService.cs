@@ -17,6 +17,7 @@ public sealed partial class RustService : BackgroundService
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(RustService).Namespace, nameof(RustService));
     
     private readonly HttpClient http;
+    private readonly SemaphoreSlim fileDialogLock = new(1, 1);
     private readonly SemaphoreSlim userLanguageLock = new(1, 1);
     private readonly SemaphoreSlim userNameLock = new(1, 1);
 
