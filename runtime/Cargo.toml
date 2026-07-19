@@ -74,6 +74,7 @@ apple-native-keyring-store = { version = "1.0.0", features = ["keychain"] }
 [target.'cfg(target_os = "linux")'.dependencies]
 ashpd = { version = "0.13.12", default-features = false, features = ["tokio", "open_uri", "global_shortcuts"] }
 dbus-secret-service-keyring-store = { version = "1.0.0", features = ["crypto-rust"] }
+dbus-secret-service = "4.1.0"
 webkit2gtk = { version = "2.0.2", features = ["v2_8"] }
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]

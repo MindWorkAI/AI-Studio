@@ -7071,6 +7071,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2868174483"] = "Das .NET-Backend
 -- AI Studio runs with an enterprise configuration and configuration servers. The configuration plugins are not yet available.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2924964415"] = "AI Studio wird mit Unternehmenskonfigurationen und Konfigurationsservern betrieben. Die Konfigurations-Plugins sind noch nicht verfügbar."
 
+-- On Linux, this library communicates with the FreeDesktop Secret Service. AI Studio uses its structured errors to provide helpful guidance when secure credential storage is unavailable or not configured correctly.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2928990457"] = "Unter Linux kommuniziert diese Bibliothek mit dem FreeDesktop Secret Service. AI Studio nutzt dessen strukturierte Fehlermeldungen, um hilfreiche Hinweise zu geben, wenn die sichere Speicherung von Zugangsdaten nicht verfügbar oder nicht korrekt konfiguriert ist."
+
 -- Copies the configuration source to the clipboard
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2929232062"] = "Kopiert die Quelle der Konfiguration in die Zwischenablage"
 
@@ -8925,6 +8928,12 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T8163
 -- The generated assistant plugin is invalid. Issue: {0}
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T939708112"] = "Das generierte Assistenten-Plugin ist ungültig. Problem: {0}"
 
+-- The global shortcut could not be registered. The previous shortcut remains active.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::GLOBALSHORTCUTSERVICE::T2266307101"] = "Die globale Tastenkombination konnte nicht registriert werden. Die vorherige Tastenkombination bleibt aktiv."
+
+-- The global shortcut change was cancelled. The previous shortcut remains active.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::GLOBALSHORTCUTSERVICE::T3299913860"] = "Die Änderung der globalen Tastenkombination wurde abgebrochen. Die vorherige Tastenkombination bleibt aktiv."
+
 -- The configured transcription provider could not be created.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T1235984176"] = "Der konfigurierte Transkriptionsanbieter konnte nicht erstellt werden."
 
@@ -8970,8 +8979,14 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PANDOCAVAILABILITYSERVICE::T25964655
 -- Failed to store the secret data due to an API issue.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T1110203516"] = "Fehler beim Speichern der geheimen Daten aufgrund eines API-Problems."
 
+-- No compatible secure-storage service is available. Configure a password manager that provides the FreeDesktop Secret Service.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T1238078807"] = "Es ist kein kompatibler Dienst zur sicheren Speicherung verfügbar. Richten Sie einen Passwortmanager ein, der den FreeDesktop Secret Service bereitstellt."
+
 -- Failed to store the API key due to an API issue.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T1704298921"] = "Fehler beim Speichern des API-Schlüssels aufgrund eines API-Problems."
+
+-- The global shortcut could not be registered because of a desktop integration error.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T2032590244"] = "Die globale Tastenkombination konnte aufgrund eines Fehlers bei der Desktop-Integration nicht registriert werden."
 
 -- The runtime file manager endpoint returned '{0}'.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T2158262203"] = "Der Laufzeit-Dateimanager-Endpunkt hat '{0}' zurückgegeben."
@@ -8982,11 +8997,23 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T2303057928"] = "Das L�
 -- The runtime file manager endpoint is not available.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T2486847754"] = "Der Laufzeit-Dateimanager-Endpunkt ist nicht verfügbar."
 
+-- The global shortcut could not be registered because the desktop service is unavailable.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T2944914452"] = "Die globale Tastenkombination konnte nicht registriert werden, da der Desktopdienst nicht verfügbar ist."
+
+-- AI Studio could not access secure storage because the default collection is locked. Open your password manager and unlock the default collection.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T3005355097"] = "AI Studio konnte nicht auf den sicheren Speicher zugreifen, da die Standardsammlung gesperrt ist. Öffnen Sie Ihren Passwortmanager und entsperren Sie die Standardsammlung."
+
 -- The runtime file manager endpoint failed without details.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T3082220817"] = "Der Laufzeit-Dateimanager-Endpunkt ist ohne Details fehlgeschlagen."
 
 -- Successfully copied the text to your clipboard
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T3351807428"] = "Der Text wurde erfolgreich in die Zwischenablage kopiert."
+
+-- The desktop service returned an invalid response while registering the global shortcut.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T3369097283"] = "Der Desktop-Dienst hat beim Registrieren des globalen Tastaturkürzels eine ungültige Antwort zurückgegeben."
+
+-- AI Studio could not access secure storage because no default collection is configured. Open a compatible password manager, create or select a collection, unlock it, and set it as the default.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T3611400673"] = "AI Studio konnte nicht auf den sicheren Speicher zugreifen, da keine Standardsammlung konfiguriert ist. Öffnen Sie einen kompatiblen Passwortmanager, erstellen Sie eine Sammlung oder wählen Sie eine aus, entsperren sie und legen Sie diese als Standard fest."
 
 -- Failed to delete the API key due to an API issue.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T3658273365"] = "Das API-Schlüssel konnte aufgrund eines API-Problems nicht gelöscht werden."
@@ -8997,8 +9024,17 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T3724548108"] = "Der Te
 -- Failed to get the API key due to an API issue.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T3875720022"] = "Der API-Schlüssel konnte aufgrund eines API-Problems nicht abgerufen werden."
 
+-- No saved secret was found.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T3929880252"] = "Es wurde kein gespeichertes Geheimnis gefunden."
+
 -- Failed to get the secret data due to an API issue.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T4007657575"] = "Abrufen der geheimen Daten aufgrund eines API-Problems fehlgeschlagen."
+
+-- AI Studio could not access secure storage. See the log for technical details.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T624023541"] = "AI Studio konnte nicht auf den sicheren Speicher zugreifen. Technische Details finden Sie im Protokoll."
+
+-- The secure-storage confirmation was canceled. Repeat the operation and confirm the password manager prompt.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T824858123"] = "Die Bestätigung für den sicheren Speicher wurde abgebrochen. Wiederholen Sie den Vorgang und bestätigen Sie die Aufforderung des Passwort-Managers."
 
 -- No update found.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::UPDATESERVICE::T1015418291"] = "Kein Update gefunden."
