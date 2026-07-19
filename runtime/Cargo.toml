@@ -12,7 +12,7 @@ tauri-build = { version = "2.6.3", features = [] }
 tauri = { version = "2.11.5", features = [] }
 tauri-plugin-window-state = { version = "2.4.1" }
 tauri-plugin-shell = "2.3.5"
-tauri-plugin-dialog = "2.7.1"
+tauri-plugin-dialog = { version = "2.7.1", default-features = false, features = ["xdg-portal"] }
 tauri-plugin-opener = "2.5.4"
 tauri-plugin-single-instance = "2"
 serde = { version = "1.0.228", features = ["derive"] }

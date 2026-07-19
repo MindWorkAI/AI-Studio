@@ -261,7 +261,10 @@ jobs:
         with:
           ref: ${{ env.AI_STUDIO_COMMIT }}
           path: ai-studio
-          sparse-checkout: metadata.txt
+          sparse-checkout: |
+            metadata.txt
+            runtime/packaging/linux/org.mindworkai.AIStudio.desktop
+            runtime/packaging/linux/org.mindworkai.AIStudio.metainfo.xml
           sparse-checkout-cone-mode: false
 
       - name: Checkout Flatpak repository
@@ -329,8 +332,12 @@ jobs:
 
           test "$release_version" = "${AI_STUDIO_TAG#v}"
           [[ "$release_timestamp" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}[[:space:]][0-9]{2}:[0-9]{2}:[0-9]{2}[[:space:]]UTC$ ]]
-          python3 ./update-metainfo.py "$release_version" "$release_date"
-          python3 ./update-metainfo.py --check "$release_version" "$release_date"
+          test -s ../ai-studio/runtime/packaging/linux/org.mindworkai.AIStudio.desktop
+          python3 ./update-metainfo.py \
+            --check \
+            --metainfo ../ai-studio/runtime/packaging/linux/org.mindworkai.AIStudio.metainfo.xml \
+            "$release_version" \
+            "$release_date"
 
           pdfium_base_url="https://github.com/bblanchon/pdfium-binaries/releases/download/chromium%2F${PDFIUM_CHROMIUM_REVISION}"
           pdfium_x64_url="${pdfium_base_url}/pdfium-linux-x64.tgz"
@@ -353,16 +360,16 @@ jobs:
             (.modules[] | select(.name == "mind-work-ai-studio").sources[] | select(.type == "archive" and .only-arches[0] == "x86_64").sha256) = strenv(PDFIUM_X64_SHA256) |
             (.modules[] | select(.name == "mind-work-ai-studio").sources[] | select(.type == "archive" and .only-arches[0] == "aarch64").url) = strenv(PDFIUM_ARM64_URL) |
             (.modules[] | select(.name == "mind-work-ai-studio").sources[] | select(.type == "archive" and .only-arches[0] == "aarch64").sha256) = strenv(PDFIUM_ARM64_SHA256)
-          ' org.MindWorkAI.AIStudio.yml
+          ' org.mindworkai.AIStudio.yml
 
           ./update-dependencies
 
-          test "$(yq -r '(.modules[] | select(.name == "mind-work-ai-studio")).sources[0].tag' org.MindWorkAI.AIStudio.yml)" = "$AI_STUDIO_TAG"
-          test "$(yq -r '(.modules[] | select(.name == "mind-work-ai-studio")).sources[0].commit' org.MindWorkAI.AIStudio.yml)" = "$AI_STUDIO_COMMIT"
-          test "$(yq -r '(.modules[] | select(.name == "mind-work-ai-studio")).sources[] | select(.type == "archive" and .only-arches[0] == "x86_64").url' org.MindWorkAI.AIStudio.yml)" = "$PDFIUM_X64_URL"
-          test "$(yq -r '(.modules[] | select(.name == "mind-work-ai-studio")).sources[] | select(.type == "archive" and .only-arches[0] == "x86_64").sha256' org.MindWorkAI.AIStudio.yml)" = "$PDFIUM_X64_SHA256"
-          test "$(yq -r '(.modules[] | select(.name == "mind-work-ai-studio")).sources[] | select(.type == "archive" and .only-arches[0] == "aarch64").url' org.MindWorkAI.AIStudio.yml)" = "$PDFIUM_ARM64_URL"
-          test "$(yq -r '(.modules[] | select(.name == "mind-work-ai-studio")).sources[] | select(.type == "archive" and .only-arches[0] == "aarch64").sha256' org.MindWorkAI.AIStudio.yml)" = "$PDFIUM_ARM64_SHA256"
+          test "$(yq -r '(.modules[] | select(.name == "mind-work-ai-studio")).sources[0].tag' org.mindworkai.AIStudio.yml)" = "$AI_STUDIO_TAG"
+          test "$(yq -r '(.modules[] | select(.name == "mind-work-ai-studio")).sources[0].commit' org.mindworkai.AIStudio.yml)" = "$AI_STUDIO_COMMIT"
+          test "$(yq -r '(.modules[] | select(.name == "mind-work-ai-studio")).sources[] | select(.type == "archive" and .only-arches[0] == "x86_64").url' org.mindworkai.AIStudio.yml)" = "$PDFIUM_X64_URL"
+          test "$(yq -r '(.modules[] | select(.name == "mind-work-ai-studio")).sources[] | select(.type == "archive" and .only-arches[0] == "x86_64").sha256' org.mindworkai.AIStudio.yml)" = "$PDFIUM_X64_SHA256"
+          test "$(yq -r '(.modules[] | select(.name == "mind-work-ai-studio")).sources[] | select(.type == "archive" and .only-arches[0] == "aarch64").url' org.mindworkai.AIStudio.yml)" = "$PDFIUM_ARM64_URL"
+          test "$(yq -r '(.modules[] | select(.name == "mind-work-ai-studio")).sources[] | select(.type == "archive" and .only-arches[0] == "aarch64").sha256' org.mindworkai.AIStudio.yml)" = "$PDFIUM_ARM64_SHA256"
 
           for generated_source in cargo-sources.json dotnet-sources.json tauri-cli-sources.json; do
             test -s "$generated_source"
@@ -385,7 +392,7 @@ jobs:
 
           branch="sync/ai-studio-${AI_STUDIO_TAG}"
           git checkout -B "$branch"
-          git add org.MindWorkAI.AIStudio.yml org.MindWorkAI.AIStudio.metainfo.xml cargo-sources.json dotnet-sources.json tauri-cli-sources.json
+          git add org.mindworkai.AIStudio.yml cargo-sources.json dotnet-sources.json tauri-cli-sources.json
 
           if git diff --cached --quiet; then
             echo "Flatpak repository is already synced for ${AI_STUDIO_TAG}."
