@@ -6,6 +6,8 @@ namespace AIStudio.Dialogs.Settings;
 
 public partial class SettingsDialogChatTemplate : SettingsDialogBase
 {
+    private bool isPluginDirectoryDialogOpen;
+
     [Parameter]
     public bool CreateTemplateFromExistingChatThread { get; set; }
 
@@ -131,7 +133,7 @@ public partial class SettingsDialogChatTemplate : SettingsDialogBase
 
     private async Task ExportChatTemplateWithPackagedAttachments(ChatTemplate chatTemplate)
     {
-        if (!this.SettingsManager.ConfigurationData.App.ShowAdminSettings)
+        if (!this.SettingsManager.ConfigurationData.App.ShowAdminSettings || this.isPluginDirectoryDialogOpen)
             return;
 
         if (chatTemplate == ChatTemplate.NO_CHAT_TEMPLATE || chatTemplate.IsEnterpriseConfiguration)
@@ -143,11 +145,19 @@ public partial class SettingsDialogChatTemplate : SettingsDialogBase
             return;
         }
 
-        var pluginDirectoryResponse = await this.RustService.SelectDirectory(T("Select configuration plugin folder"));
-        if (pluginDirectoryResponse.UserCancelled)
-            return;
+        this.isPluginDirectoryDialogOpen = true;
+        try
+        {
+            var pluginDirectoryResponse = await this.RustService.SelectDirectory(T("Select configuration plugin folder"));
+            if (pluginDirectoryResponse.UserCancelled)
+                return;
 
-        await this.CopyPackagedChatTemplateLuaToClipboard(chatTemplate, pluginDirectoryResponse.SelectedDirectory);
+            await this.CopyPackagedChatTemplateLuaToClipboard(chatTemplate, pluginDirectoryResponse.SelectedDirectory);
+        }
+        finally
+        {
+            this.isPluginDirectoryDialogOpen = false;
+        }
     }
 
     private async Task CopyChatTemplateLuaToClipboard(ChatTemplate chatTemplate)

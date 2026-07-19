@@ -19,7 +19,7 @@
                Variant="Variant.Outlined"
                Color="Color.Primary"
                Size="Size.Small"
-               Disabled="@this.IsDisabled"
+               Disabled="@(this.IsDisabled || this.isFileDialogOpen)"
                Class="mb-1"
                OnClick="@this.OpenFileDialog">
         @T("Choose File")

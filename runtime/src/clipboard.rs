@@ -1,9 +1,9 @@
 use std::fmt::Display;
 use std::sync::Mutex;
 use arboard::Clipboard;
+use axum::Json;
 use log::{debug, error, warn};
 use once_cell::sync::Lazy;
-use axum::Json;
 use serde::Serialize;
 use crate::api_token::APIToken;
 use crate::encryption::{EncryptedText, ENCRYPTION};
@@ -26,17 +26,32 @@ impl ClipboardBackend for Clipboard {
     }
 }
 
+#[derive(Debug, PartialEq, Eq)]
+enum ClipboardOperationError<E> {
+    Initialization(E),
+    Write(E),
+}
+
+impl<E: Display> Display for ClipboardOperationError<E> {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Initialization(error) => write!(formatter, "Failed to initialize the clipboard backend: {error}"),
+            Self::Write(error) => write!(formatter, "Failed to write to the clipboard: {error}"),
+        }
+    }
+}
+
 fn set_text_with_retry<B, F>(
     clipboard: &mut Option<B>,
     text: String,
     mut create_clipboard: F,
-) -> Result<(), B::Error>
+) -> Result<(), ClipboardOperationError<B::Error>>
 where
     B: ClipboardBackend,
     F: FnMut() -> Result<B, B::Error>,
 {
     if clipboard.is_none() {
-        *clipboard = Some(create_clipboard()?);
+        *clipboard = Some(create_clipboard().map_err(ClipboardOperationError::Initialization)?);
     }
 
     let first_result = clipboard.as_mut().unwrap().set_text(text.clone());
@@ -44,10 +59,10 @@ where
         warn!(Source = "Clipboard"; "Failed to set text using the current clipboard backend; reinitializing it once: {first_error}.");
         *clipboard = None;
 
-        let mut retry_clipboard = create_clipboard()?;
+        let mut retry_clipboard = create_clipboard().map_err(ClipboardOperationError::Initialization)?;
         if let Err(retry_error) = retry_clipboard.set_text(text) {
             error!(Source = "Clipboard"; "Failed to set text after reinitializing the clipboard backend: {retry_error}.");
-            return Err(retry_error);
+            return Err(ClipboardOperationError::Write(retry_error));
         }
 
         *clipboard = Some(retry_clipboard);
@@ -87,7 +102,7 @@ pub async fn set_clipboard(_token: APIToken, encrypted_text: String) -> Json<Set
         },
 
         Err(e) => {
-            error!(Source = "Clipboard"; "Failed to set text to the clipboard: {e}.");
+            error!(Source = "Clipboard"; "Clipboard operation failed: {e}.");
             Json(SetClipboardResponse {
                 success: false,
                 issue: e.to_string(),
@@ -116,7 +131,7 @@ mod tests {
     use std::collections::VecDeque;
     use std::sync::atomic::{AtomicUsize, Ordering};
     use std::sync::{Arc, Mutex};
-    use super::{release_clipboard, set_text_with_retry, ClipboardBackend};
+    use super::{ClipboardOperationError, release_clipboard, set_text_with_retry, ClipboardBackend};
 
     struct MockClipboard {
         id: usize,
@@ -187,6 +202,30 @@ mod tests {
     }
 
     #[test]
+    fn reports_initialization_failures_and_retries_on_the_next_request() {
+        let mut clipboard: Option<MockClipboard> = None;
+        let mut factory = MockFactory::new([false]);
+        let mut fail_initialization = true;
+
+        let error = set_text_with_retry(&mut clipboard, "first".to_string(), || {
+            if fail_initialization {
+                fail_initialization = false;
+                Err("initialization failed".to_string())
+            } else {
+                factory.create()
+            }
+        }).unwrap_err();
+
+        assert_eq!(error, ClipboardOperationError::Initialization("initialization failed".to_string()));
+        assert!(clipboard.is_none());
+
+        set_text_with_retry(&mut clipboard, "second".to_string(), || factory.create()).unwrap();
+
+        assert_eq!(factory.created, 1);
+        assert!(clipboard.is_some());
+    }
+
+    #[test]
     fn reuses_the_same_instance_for_multiple_writes() {
         let mut clipboard = None;
         let mut factory = MockFactory::new([false]);
@@ -211,13 +250,33 @@ mod tests {
     }
 
     #[test]
+    fn reports_reinitialization_failures_and_discards_the_failed_instance() {
+        let mut clipboard = None;
+        let mut factory = MockFactory::new([true]);
+        let mut initialization_attempts = 0;
+
+        let error = set_text_with_retry(&mut clipboard, "text".to_string(), || {
+            initialization_attempts += 1;
+            if initialization_attempts == 1 {
+                factory.create()
+            } else {
+                Err("reinitialization failed".to_string())
+            }
+        }).unwrap_err();
+
+        assert_eq!(error, ClipboardOperationError::Initialization("reinitialization failed".to_string()));
+        assert_eq!(initialization_attempts, 2);
+        assert!(clipboard.is_none());
+    }
+
+    #[test]
     fn returns_the_retry_error_and_discards_the_failed_instance() {
         let mut clipboard = None;
         let mut factory = MockFactory::new([true, true]);
 
         let error = set_text_with_retry(&mut clipboard, "text".to_string(), || factory.create()).unwrap_err();
 
-        assert_eq!(error, "backend 1 failed");
+        assert_eq!(error, ClipboardOperationError::Write("backend 1 failed".to_string()));
         assert_eq!(factory.created, 2);
         assert!(clipboard.is_none());
     }

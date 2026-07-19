@@ -74,9 +74,10 @@ public partial class ReadFileContent : MSGComponentBase
     private string dragClass = DEFAULT_DRAG_CLASS;
     private uint numDropAreasAboveThis;
     private bool isComponentHovered;
+    private bool isFileDialogOpen;
     private bool IsCurrentTargetBusy => this.MediaTranscriptionService.GetSnapshot(this.EffectiveImportOwner) is { IsBusy: true } snapshot
                                         && snapshot.Target == this.EffectiveMediaImportTarget;
-    private bool IsUnavailable => this.Disabled || this.MediaTranscriptionService.IsBusy(this.EffectiveImportOwner);
+    private bool IsUnavailable => this.Disabled || this.isFileDialogOpen || this.MediaTranscriptionService.IsBusy(this.EffectiveImportOwner);
 
     #region Overrides of MSGComponentBase
 
@@ -217,14 +218,22 @@ public partial class ReadFileContent : MSGComponentBase
         if (this.IsUnavailable)
             return;
 
-        var selectedFile = await this.RustService.SelectFile(T("Select file to read its content"));
-        if (selectedFile.UserCancelled)
+        this.isFileDialogOpen = true;
+        try
         {
-            this.Logger.LogInformation("User cancelled the file selection");
-            return;
-        }
+            var selectedFile = await this.RustService.SelectFile(T("Select file to read its content"));
+            if (selectedFile.UserCancelled)
+            {
+                this.Logger.LogInformation("User cancelled the file selection");
+                return;
+            }
 
-        await this.LoadFileIfValid(selectedFile.SelectedFilePath);
+            await this.LoadFileIfValid(selectedFile.SelectedFilePath);
+        }
+        finally
+        {
+            this.isFileDialogOpen = false;
+        }
     }
 
     private async Task<bool> EnsurePandocAvailability()
@@ -246,6 +255,15 @@ public partial class ReadFileContent : MSGComponentBase
 
     private async Task LoadFirstValidFile(List<string> paths)
     {
+        var inaccessiblePaths = paths.Where(path => !File.Exists(path)).ToList();
+        if (inaccessiblePaths.Count > 0)
+        {
+            this.Logger.LogWarning("Could not access {Count} dropped file(s): {Paths}", inaccessiblePaths.Count, string.Join(", ", inaccessiblePaths));
+            await this.MessageBus.SendWarning(new(
+                Icons.Material.Filled.Warning,
+                this.T("Some dropped files could not be accessed. Please select them with the file chooser instead.")));
+        }
+
         foreach (var path in paths)
         {
             if (await this.LoadFileIfValid(path))
