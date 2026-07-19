@@ -119,7 +119,6 @@
             <MudStack Row="@true" Wrap="@Wrap.Wrap" Class="mb-3">
                 <AssistantBlock TSettings="SettingsDialogCoding" Component="Components.CODING_ASSISTANT" Name="@T("Coding")" Description="@T("Get coding and debugging support from an LLM.")" Icon="@Icons.Material.Filled.Code" Link="@Routes.ASSISTANT_CODING"/>
                 <AssistantBlock TSettings="SettingsDialogERIServer" Component="Components.ERI_ASSISTANT" RequiredPreviewFeature="PreviewFeatures.PRE_RAG_2024" Name="@T("ERI Server")" Description="@T("Generate an ERI server to integrate business systems.")" Icon="@Icons.Material.Filled.PrivateConnectivity" Link="@Routes.ASSISTANT_ERI"/>
-                <AssistantBlock TSettings="NoSettingsPanel" Component="Components.LOG_VIEWER_ASSISTANT" Name="@T("Log Viewer")" Description="@T("View and filter AI Studio log files.")" Icon="@Icons.Material.Filled.Article" Link="@Routes.ASSISTANT_LOG_VIEWER"/>
             </MudStack>
         }
 
@@ -132,6 +131,7 @@
             </MudText>
             <MudStack Row="@true" Wrap="@Wrap.Wrap" Class="mb-3">
                 <AssistantBlock TSettings="SettingsDialogI18N" Component="Components.I18N_ASSISTANT" Name="@T("Localization")" Description="@T("Translate AI Studio text content into other languages")" Icon="@Icons.Material.Filled.Translate" Link="@Routes.ASSISTANT_AI_STUDIO_I18N"/>
+                <AssistantBlock TSettings="NoSettingsPanel" Component="Components.LOG_VIEWER_ASSISTANT" Name="@T("Log Viewer")" Description="@T("View and filter AI Studio log files.")" Icon="@Icons.Material.Filled.Article" Link="@Routes.ASSISTANT_LOG_VIEWER"/>
             </MudStack>
         }
 
