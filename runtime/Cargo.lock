@@ -1907,20 +1907,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "docx-to-md"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7ff66168dc94c192d9372fa8fa8201900bd6f2b1edfbbdd2674a2e69c98073b6"
-dependencies = [
- "base64 0.22.1",
- "image",
- "quick-xml",
- "thiserror 2.0.18",
- "url",
- "zip 8.6.0",
-]
-
-[[package]]
 name = "dom_query"
 version = "0.27.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4136,7 +4122,6 @@ dependencies = [
  "cbc 0.2.1",
  "cfg-if",
  "dbus-secret-service-keyring-store",
- "docx-to-md",
  "file-format",
  "flexi_logger",
  "futures",
