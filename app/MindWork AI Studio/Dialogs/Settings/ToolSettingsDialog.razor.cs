@@ -1,4 +1,3 @@
-using AIStudio.Settings;
 using AIStudio.Tools.ToolCallingSystem;
 
 using Microsoft.AspNetCore.Components;
@@ -53,19 +52,8 @@ public partial class ToolSettingsDialog : SettingsDialogBase
         return string.Format(T("{0} Default: {1}"), description, defaultValue);
     }
 
-    private bool IsFieldDisabled(string fieldName)
-    {
-        if (this.toolDefinition?.Id.Equals(ToolSelectionRules.WEB_SEARCH_TOOL_ID, StringComparison.Ordinal) is true &&
-            fieldName.Equals("baseUrl", StringComparison.Ordinal) &&
-            ManagedConfiguration.TryGet(x => x.Tools, x => x.WebSearchBaseUrl, out var webSearchMeta) &&
-            webSearchMeta.IsLocked)
-            return true;
-
-        return this.toolDefinition?.Id.Equals(ToolSelectionRules.READ_WEB_PAGE_TOOL_ID, StringComparison.Ordinal) is true &&
-               fieldName.Equals("allowedPrivateHosts", StringComparison.Ordinal) &&
-               ManagedConfiguration.TryGet(x => x.Tools, x => x.ReadWebPageAllowedPrivateHosts, out var readWebPageMeta) &&
-               readWebPageMeta.IsLocked;
-    }
+    private bool IsFieldDisabled(string fieldName) =>
+        this.toolDefinition is not null && this.ToolSettingsService.IsFieldLocked(this.toolDefinition, fieldName);
 
     private string GetFieldPlaceholder(string fieldName, ToolSettingsFieldDefinition fieldDefinition) =>
         string.IsNullOrWhiteSpace(this.GetValue(fieldName)) ? this.GetFieldDefaultValue(fieldName, fieldDefinition) : string.Empty;

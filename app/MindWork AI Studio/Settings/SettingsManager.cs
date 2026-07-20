@@ -594,6 +594,9 @@ public sealed class SettingsManager
 
     public HashSet<string> FilterToolIdsForProvider(AIStudio.Settings.Provider provider, IEnumerable<string> selectedToolIds)
     {
+        if (!this.AreToolsEnabled())
+            return [];
+
         var toolCallingAvailability = provider.GetToolCallingAvailability();
         if (!toolCallingAvailability.IsAvailable)
             return [];
@@ -610,6 +613,12 @@ public sealed class SettingsManager
 
         foreach (var toolId in filtered.ToList())
         {
+            if (!this.IsToolActive(toolId))
+            {
+                filtered.Remove(toolId);
+                continue;
+            }
+
             var minimumToolConfidence = this.GetMinimumProviderConfidenceForTool(toolId);
             if (!ToolSelectionRules.IsProviderConfidenceAllowed(providerConfidence, minimumToolConfidence))
                 filtered.Remove(toolId);
@@ -617,6 +626,12 @@ public sealed class SettingsManager
 
         return filtered;
     }
+
+    public bool AreToolsEnabled() => this.ConfigurationData.Tools.EnableTools;
+
+    public bool IsToolActive(string toolId) =>
+        this.AreToolsEnabled() &&
+        !this.ConfigurationData.Tools.DisabledToolIds.Contains(toolId);
 
     public bool IsToolSelectionVisible(AIStudio.Tools.Components component) => component switch
     {

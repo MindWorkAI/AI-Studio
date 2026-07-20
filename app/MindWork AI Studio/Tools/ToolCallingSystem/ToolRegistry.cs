@@ -208,6 +208,7 @@ public sealed class ToolRegistry
                 Definition = definition,
                 Implementation = implementation,
                 ConfigurationState = await this.toolSettingsService.GetConfigurationStateAsync(definition, implementation),
+                IsActive = this.settingsManager.IsToolActive(definition.Id),
                 MinimumProviderConfidence = this.settingsManager.GetMinimumProviderConfidenceForTool(definition.Id),
             });
         }
@@ -223,6 +224,12 @@ public sealed class ToolRegistry
         ConfidenceLevel providerConfidence,
         bool isToolSelectionVisible)
     {
+        if (!this.settingsManager.AreToolsEnabled())
+        {
+            this.logger.LogInformation("Tool calling is skipped because tools are disabled by managed configuration.");
+            return [];
+        }
+
         if (!isToolSelectionVisible)
         {
             this.logger.LogInformation("Tool calling is skipped for component '{Component}' because tool selection is not visible.", component);
@@ -250,6 +257,12 @@ public sealed class ToolRegistry
         var result = new List<(ToolDefinition, IToolImplementation)>(definitions.Count);
         foreach (var definition in definitions)
         {
+            if (!this.settingsManager.IsToolActive(definition.Id))
+            {
+                this.logger.LogInformation("Skipping tool '{ToolId}' because it is disabled by managed configuration.", definition.Id);
+                continue;
+            }
+
             if (!this.implementationsByKey.TryGetValue(definition.ImplementationKey, out var implementation))
             {
                 this.logger.LogInformation("Skipping tool '{ToolId}' because no implementation is registered.", definition.Id);

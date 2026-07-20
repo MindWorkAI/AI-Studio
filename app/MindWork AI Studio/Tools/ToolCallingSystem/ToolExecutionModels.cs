@@ -98,6 +98,8 @@ public sealed class ToolCatalogItem
 
     public required ToolConfigurationState ConfigurationState { get; init; }
 
+    public bool IsActive { get; init; }
+
     public ConfidenceLevel MinimumProviderConfidence { get; init; } = ConfidenceLevel.NONE;
 }
 

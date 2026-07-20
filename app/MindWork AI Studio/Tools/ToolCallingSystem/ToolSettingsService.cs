@@ -1,12 +1,30 @@
+using System.Linq.Expressions;
+
 using AIStudio.Settings;
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Services;
 
 namespace AIStudio.Tools.ToolCallingSystem;
 
 public sealed class ToolSettingsService(SettingsManager settingsManager, RustService rustService)
 {
-    private const string WEB_SEARCH_BASE_URL_FIELD = "baseUrl";
-    private const string READ_WEB_PAGE_ALLOWED_PRIVATE_HOSTS_FIELD = "allowedPrivateHosts";
+    private static readonly Dictionary<(string ToolId, string FieldName), ManagedToolSetting> MANAGED_SETTINGS = new()
+    {
+        [(ToolSelectionRules.WEB_SEARCH_TOOL_ID, "baseUrl")] = CreateManagedToolSetting(x => x.WebSearchBaseUrl, (tools, value) => tools.WebSearchBaseUrl = value),
+        [(ToolSelectionRules.WEB_SEARCH_TOOL_ID, "defaultLanguage")] = CreateManagedToolSetting(x => x.WebSearchDefaultLanguage),
+        [(ToolSelectionRules.WEB_SEARCH_TOOL_ID, "defaultSafeSearch")] = CreateManagedToolSetting(x => x.WebSearchDefaultSafeSearch),
+        [(ToolSelectionRules.WEB_SEARCH_TOOL_ID, "defaultCategories")] = CreateManagedToolSetting(x => x.WebSearchDefaultCategories),
+        [(ToolSelectionRules.WEB_SEARCH_TOOL_ID, "defaultEngines")] = CreateManagedToolSetting(x => x.WebSearchDefaultEngines),
+        [(ToolSelectionRules.WEB_SEARCH_TOOL_ID, "maxResults")] = CreateManagedToolSetting(x => x.WebSearchMaxResults),
+        [(ToolSelectionRules.WEB_SEARCH_TOOL_ID, "timeoutSeconds")] = CreateManagedToolSetting(x => x.WebSearchTimeoutSeconds),
+        [(ToolSelectionRules.WEB_SEARCH_TOOL_ID, "maxTotalContentCharacters")] = CreateManagedToolSetting(x => x.WebSearchMaxTotalContentCharacters),
+        [(ToolSelectionRules.WEB_SEARCH_TOOL_ID, "minContentCharactersPerResult")] = CreateManagedToolSetting(x => x.WebSearchMinContentCharactersPerResult),
+        [(ToolSelectionRules.WEB_SEARCH_TOOL_ID, "pageTimeoutSeconds")] = CreateManagedToolSetting(x => x.WebSearchPageTimeoutSeconds),
+        [(ToolSelectionRules.WEB_SEARCH_TOOL_ID, "retrievalTimeoutSeconds")] = CreateManagedToolSetting(x => x.WebSearchRetrievalTimeoutSeconds),
+        [(ToolSelectionRules.READ_WEB_PAGE_TOOL_ID, "timeoutSeconds")] = CreateManagedToolSetting(x => x.ReadWebPageTimeoutSeconds),
+        [(ToolSelectionRules.READ_WEB_PAGE_TOOL_ID, "maxContentCharacters")] = CreateManagedToolSetting(x => x.ReadWebPageMaxContentCharacters),
+        [(ToolSelectionRules.READ_WEB_PAGE_TOOL_ID, "allowedPrivateHosts")] = CreateManagedToolSetting(x => x.ReadWebPageAllowedPrivateHosts, (tools, value) => tools.ReadWebPageAllowedPrivateHosts = value),
+    };
 
     public async Task<Dictionary<string, string>> GetSettingsAsync(ToolDefinition definition)
     {
@@ -16,15 +34,16 @@ public sealed class ToolSettingsService(SettingsManager settingsManager, RustSer
         {
             var fieldName = property.Key;
             var fieldDefinition = property.Value;
-            if (IsWebSearchBaseUrlField(definition, fieldName))
+            if (TryGetManagedSetting(definition, fieldName, out var managedSetting))
             {
-                values[fieldName] = settingsManager.ConfigurationData.Tools.WebSearchBaseUrl;
-                continue;
-            }
+                var meta = managedSetting.GetMeta();
+                if (meta?.IsLocked is true || managedSetting.SetLegacyLocalValue is not null)
+                    values[fieldName] = managedSetting.GetValue(settingsManager.ConfigurationData.Tools);
+                else if (storedValues?.TryGetValue(fieldName, out var managedStoredValue) is true)
+                    values[fieldName] = managedStoredValue;
+                else if (meta?.ManagedMode is ManagedConfigurationMode.EDITABLE_DEFAULT)
+                    values[fieldName] = managedSetting.GetValue(settingsManager.ConfigurationData.Tools);
 
-            if (IsReadWebPageAllowedPrivateHostsField(definition, fieldName))
-            {
-                values[fieldName] = settingsManager.ConfigurationData.Tools.ReadWebPageAllowedPrivateHosts;
                 continue;
             }
 
@@ -103,18 +122,15 @@ public sealed class ToolSettingsService(SettingsManager settingsManager, RustSer
             values.TryGetValue(fieldName, out var value);
             value ??= string.Empty;
 
-            if (IsWebSearchBaseUrlField(definition, fieldName))
+            if (TryGetManagedSetting(definition, fieldName, out var managedSetting))
             {
-                if (!IsWebSearchBaseUrlLocked())
-                    settingsManager.ConfigurationData.Tools.WebSearchBaseUrl = value;
+                if (managedSetting.GetMeta()?.IsLocked is true)
+                    continue;
 
-                continue;
-            }
-
-            if (IsReadWebPageAllowedPrivateHostsField(definition, fieldName))
-            {
-                if (!IsReadWebPageAllowedPrivateHostsLocked())
-                    settingsManager.ConfigurationData.Tools.ReadWebPageAllowedPrivateHosts = value;
+                if (managedSetting.SetLegacyLocalValue is not null)
+                    managedSetting.SetLegacyLocalValue(settingsManager.ConfigurationData.Tools, value);
+                else
+                    storedValues[fieldName] = value;
 
                 continue;
             }
@@ -137,17 +153,26 @@ public sealed class ToolSettingsService(SettingsManager settingsManager, RustSer
         await MessageBus.INSTANCE.SendMessage<object?>(null, Event.CONFIGURATION_CHANGED, null);
     }
 
-    private static bool IsWebSearchBaseUrlField(ToolDefinition definition, string fieldName) =>
-        definition.Id.Equals(ToolSelectionRules.WEB_SEARCH_TOOL_ID, StringComparison.Ordinal) &&
-        fieldName.Equals(WEB_SEARCH_BASE_URL_FIELD, StringComparison.Ordinal);
+    public bool IsFieldLocked(ToolDefinition definition, string fieldName) =>
+        TryGetManagedSetting(definition, fieldName, out var managedSetting) &&
+        managedSetting.GetMeta()?.IsLocked is true;
 
-    private static bool IsWebSearchBaseUrlLocked() =>
-        ManagedConfiguration.TryGet(x => x.Tools, x => x.WebSearchBaseUrl, out var meta) && meta.IsLocked;
+    private static bool TryGetManagedSetting(ToolDefinition definition, string fieldName, out ManagedToolSetting managedSetting) =>
+        MANAGED_SETTINGS.TryGetValue((definition.Id, fieldName), out managedSetting!);
 
-    private static bool IsReadWebPageAllowedPrivateHostsField(ToolDefinition definition, string fieldName) =>
-        definition.Id.Equals(ToolSelectionRules.READ_WEB_PAGE_TOOL_ID, StringComparison.Ordinal) &&
-        fieldName.Equals(READ_WEB_PAGE_ALLOWED_PRIVATE_HOSTS_FIELD, StringComparison.Ordinal);
+    private static ManagedToolSetting CreateManagedToolSetting(
+        Expression<Func<DataTools, string>> propertyExpression,
+        Action<DataTools, string>? setLegacyLocalValue = null)
+    {
+        var getValue = propertyExpression.Compile();
+        return new ManagedToolSetting(
+            getValue,
+            () => ManagedConfiguration.TryGet(x => x.Tools, propertyExpression, out var meta) ? meta : null,
+            setLegacyLocalValue);
+    }
 
-    private static bool IsReadWebPageAllowedPrivateHostsLocked() =>
-        ManagedConfiguration.TryGet(x => x.Tools, x => x.ReadWebPageAllowedPrivateHosts, out var meta) && meta.IsLocked;
+    private sealed record ManagedToolSetting(
+        Func<DataTools, string> GetValue,
+        Func<ConfigMeta<DataTools, string>?> GetMeta,
+        Action<DataTools, string>? SetLegacyLocalValue);
 }

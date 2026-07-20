@@ -113,6 +113,16 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
             });
         }
 
+        var defaultSafeSearch = settingsValues.GetValueOrDefault("defaultSafeSearch");
+        if (!string.IsNullOrWhiteSpace(defaultSafeSearch) && defaultSafeSearch is not ("0" or "1" or "2"))
+        {
+            return Task.FromResult<ToolConfigurationState?>(new ToolConfigurationState
+            {
+                IsConfigured = false,
+                Message = TB("The default safe search setting must be 0, 1, or 2."),
+            });
+        }
+
         if (!ToolSettingsValueParser.TryReadOptionalPositiveInt(settingsValues, "maxResults", positiveIntegerErrorFormat, out _, out var maxResultsError))
         {
             return Task.FromResult<ToolConfigurationState?>(new ToolConfigurationState

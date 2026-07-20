@@ -47,8 +47,14 @@
                         <MudPaper Class="pa-2 mb-2 border rounded-lg">
                             <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
                                 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                                    <MudSwitch T="bool" Color="Color.Primary" Value="@isSelected" ValueChanged="@(value => this.ChangeSelection(item.Definition.Id, value))" Disabled="@(!isConfigured || isBlockedByProviderConfidence || this.Disabled || !this.SupportsTools)" />
+                                    <MudSwitch T="bool" Color="Color.Primary" Value="@isSelected" ValueChanged="@(value => this.ChangeSelection(item.Definition.Id, value))" Disabled="@(!item.IsActive || !isConfigured || isBlockedByProviderConfidence || this.Disabled || !this.SupportsTools)" />
                                     <MudIcon Icon="@item.Implementation.Icon" Color="Color.Info" />
+                                    @if (!item.IsActive)
+                                    {
+                                        <MudTooltip Text="@T("This tool has been disabled by your organization.")">
+                                            <MudIcon Icon="@Icons.Material.Filled.Lock" Color="Color.Error" Size="Size.Small" />
+                                        </MudTooltip>
+                                    }
                                     <MudTooltip Text="@item.Implementation.GetDescription()">
                                         <MudText Typo="Typo.body1">@item.Implementation.GetDisplayName()</MudText>
                                     </MudTooltip>
@@ -58,6 +64,10 @@
                             @if (!isConfigured)
                             {
                                 <MudText Typo="Typo.caption" Color="Color.Warning">@(string.IsNullOrWhiteSpace(item.ConfigurationState.Message) ? T("Required settings are missing. Configure this tool before enabling it.") : item.ConfigurationState.Message)</MudText>
+                            }
+                            @if (!item.IsActive)
+                            {
+                                <MudText Typo="Typo.caption" Color="Color.Warning">@T("This tool has been disabled by your organization.")</MudText>
                             }
                             @if (!string.IsNullOrWhiteSpace(providerConfidenceHint))
                             {

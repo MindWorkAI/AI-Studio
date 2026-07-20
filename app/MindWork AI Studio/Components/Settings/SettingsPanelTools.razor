@@ -37,7 +37,13 @@
                 </MudMenu>
             </MudTd>
             <MudTd>
-                @if (context.ConfigurationState.IsConfigured)
+                @if (!context.IsActive)
+                {
+                    <MudTooltip Text="@T("This tool has been disabled by your organization.")">
+                        <MudIcon Icon="@Icons.Material.Filled.Lock" Color="Color.Error" />
+                    </MudTooltip>
+                }
+                else if (context.ConfigurationState.IsConfigured)
                 {
                     <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
                 }

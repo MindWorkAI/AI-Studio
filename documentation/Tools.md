@@ -222,7 +222,7 @@ All values must be positive. The total budget must be large enough to reserve th
 
 The two tools can be selected independently. Tool policy text tells the model not to call `read_web_page` for a URL already returned by `web_search`, because the search result already contains that page's retrieved content.
 
-For settings that administrators should be able to manage centrally, add the setting to the appropriate `Settings/DataModel` class, register it with `ManagedConfiguration.Register(...)`, process it in `PluginConfiguration`, clean leftovers in `PluginFactory.Loading`, and document it in `Plugins/configuration/plugin.lua`.
+Every non-secret tool field that administrators should be able to manage centrally must have an explicit enterprise mapping in `ToolSettingsService`. Add its backing setting to the appropriate `Settings/DataModel` class, register it with `ManagedConfiguration.Register(...)`, process it in `PluginConfiguration`, clean leftovers in `PluginFactory.Loading`, and document its allowed values, default, and limits in `Plugins/configuration/plugin.lua`. Locked enterprise values override the local field, while editable enterprise defaults apply only until a user saves a local value. Secret fields require the existing OS-keyring path and must not be routed through plain enterprise settings.
 
 ## Checklist
 
@@ -230,6 +230,7 @@ For settings that administrators should be able to manage centrally, add the set
 - Add the `IToolImplementation` class.
 - Register the implementation in `Program.cs`.
 - Validate settings and model arguments.
+- Add the enterprise mapping for each administratively configurable non-secret setting.
 - Protect secrets and sensitive trace arguments.
 - Add provider-confidence checks when tool output may contain sensitive data.
 - Update configuration plugin documentation when admins can manage the setting.

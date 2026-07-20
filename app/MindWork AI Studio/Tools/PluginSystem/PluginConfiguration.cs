@@ -199,13 +199,29 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         // Config: global voice recording shortcut
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.ShortcutVoiceRecording, this.Id, settingsTable, dryRun);
 
+        // Config: global tool availability
+        ManagedConfiguration.TryProcessConfiguration(x => x.Tools, x => x.EnableTools, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.Tools, x => x.DisabledToolIds, this.Id, settingsTable, dryRun);
+
         // Config: minimum provider confidence per tool
         ManagedConfiguration.TryProcessConfiguration(x => x.Tools, x => x.MinimumProviderConfidenceByToolId, this.Id, settingsTable, dryRun);
 
-        // Config: SearXNG base URL for the web search tool
+        // Config: web search tool settings
         ManagedConfiguration.TryProcessConfiguration(x => x.Tools, x => x.WebSearchBaseUrl, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.Tools, x => x.WebSearchDefaultLanguage, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.Tools, x => x.WebSearchDefaultSafeSearch, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.Tools, x => x.WebSearchDefaultCategories, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.Tools, x => x.WebSearchDefaultEngines, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.Tools, x => x.WebSearchMaxResults, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.Tools, x => x.WebSearchTimeoutSeconds, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.Tools, x => x.WebSearchMaxTotalContentCharacters, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.Tools, x => x.WebSearchMinContentCharactersPerResult, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.Tools, x => x.WebSearchPageTimeoutSeconds, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.Tools, x => x.WebSearchRetrievalTimeoutSeconds, this.Id, settingsTable, dryRun);
 
-        // Config: private hosts allowed for the read web page tool
+        // Config: read web page tool settings
+        ManagedConfiguration.TryProcessConfiguration(x => x.Tools, x => x.ReadWebPageTimeoutSeconds, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.Tools, x => x.ReadWebPageMaxContentCharacters, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.Tools, x => x.ReadWebPageAllowedPrivateHosts, this.Id, settingsTable, dryRun);
 
         // Config: timeout for external HTTP requests

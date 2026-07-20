@@ -3607,6 +3607,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T3728248397
 -- Tool Settings
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T3730473128"] = "Tool Settings"
 
+-- This tool has been disabled by your organization.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T3794167684"] = "This tool has been disabled by your organization."
+
 -- Status
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T6222351"] = "Status"
 
@@ -3723,6 +3726,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T3119156561"] = "Required 
 
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T3448155331"] = "Close"
+
+-- This tool has been disabled by your organization.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T3794167684"] = "This tool has been disabled by your organization."
 
 -- No tools are available in this context.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T3904490680"] = "No tools are available in this context."
@@ -6535,6 +6541,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSDIALOG::T3616903110"] 
 -- Tool Settings
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSDIALOG::T3730473128"] = "Tool Settings"
 
+-- This tool has been disabled by your organization.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSDIALOG::T3794167684"] = "This tool has been disabled by your organization."
+
 -- The selected tool could not be loaded.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSDIALOG::T3907843187"] = "The selected tool could not be loaded."
 
@@ -9285,6 +9294,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS:
 
 -- Optional HTTP timeout for the search request in seconds.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T3078115445"] = "Optional HTTP timeout for the search request in seconds."
+
+-- The default safe search setting must be 0, 1, or 2.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T3187215042"] = "The default safe search setting must be 0, 1, or 2."
 
 -- Search the web with a configured SearXNG instance and retrieve the readable content of the best matching pages.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T3361633224"] = "Search the web with a configured SearXNG instance and retrieve the readable content of the best matching pages."
