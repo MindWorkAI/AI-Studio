@@ -1201,7 +1201,7 @@ public abstract class BaseProvider : IProvider, ISecretId
     {
         using var request = new HttpRequestMessage(HttpMethod.Post, requestPath);
         if (requestedSecret.Success)
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(ENCRYPTION));
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
 
         headersAction?.Invoke(request.Headers);
         request.Content = new StringContent(JsonSerializer.Serialize(requestDto, JSON_SERIALIZER_OPTIONS), Encoding.UTF8, "application/json");

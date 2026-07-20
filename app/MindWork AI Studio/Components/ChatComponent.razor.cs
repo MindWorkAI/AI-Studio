@@ -1294,10 +1294,6 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 }
                 break;
 
-            case Event.CONFIGURATION_CHANGED:
-                await this.RefreshProviderSelectionFromConfigurationAsync();
-                await this.InvokeAsync(this.StateHasChanged);
-                break;
         }
     }
 
