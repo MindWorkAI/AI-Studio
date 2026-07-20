@@ -4,7 +4,7 @@
 {
     <div @onmouseenter="@this.OnMouseEnter" @onmouseleave="@this.OnMouseLeave">
         <MudPaper Outlined="true" Class="@this.dragClass">
-            <MudStack Row="true" AlignItems="AlignItems.Center" StretchItems="StretchItems.None" Wrap="Wrap.Wrap">
+            <MudStack Row="true" AlignItems="AlignItems.Start" StretchItems="StretchItems.None" Wrap="Wrap.Wrap">
                 <MudButton StartIcon="@Icons.Material.Filled.Description" OnClick="@(async () => await this.SelectFile())" Variant="Variant.Filled" Disabled="@this.IsUnavailable">
                     @this.ButtonText
                 </MudButton>
@@ -18,6 +18,15 @@
                         @T("Drop one file here to load its content.")
                     </MudText>
                 }
+                <MudSpacer/>
+                @if (this.hasLoadedFileContent)
+                {
+                    <MudTooltip Text="@this.FileLoadedTooltip()">
+                        <MudBadge Content="1" Color="Color.Success" Overlap="true">
+                            <MudIcon Icon="@Icons.Material.Filled.AttachFile" Color="Color.Default"/>
+                        </MudBadge>
+                    </MudTooltip>
+                }
             </MudStack>
         </MudPaper>
     </div>
@@ -29,5 +38,13 @@ else
             @this.ButtonText
         </MudButton>
         <MediaTranscriptionStatus Owner="@this.EffectiveImportOwner" TargetId="@this.EffectiveMediaImportTarget.TargetId" Compact="true"/>
+        @if (this.hasLoadedFileContent)
+        {
+            <MudTooltip Text="@this.FileLoadedTooltip()">
+                <MudBadge Icon="@Icons.Material.Filled.Check" Color="Color.Success" Overlap="true" Class="mx-6 my-4">
+                    <MudIcon Icon="@Icons.Material.Filled.AttachFile" Color="Color.Default" />
+                </MudBadge>
+            </MudTooltip>
+        }
     </MudStack>
 }
