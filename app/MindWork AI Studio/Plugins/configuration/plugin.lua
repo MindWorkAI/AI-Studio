@@ -378,7 +378,7 @@ CONFIG["SETTINGS"] = {}
 -- WebSearchBaseUrl: required SearXNG HTTP(S) root URL or /search endpoint; no default.
 -- CONFIG["SETTINGS"]["DataTools.WebSearchBaseUrl"] = "https://searxng.website/"
 -- WebSearchDefaultLanguage: optional language code; default is empty.
--- CONFIG["SETTINGS"]["DataTools.WebSearchDefaultLanguage"] = "en"
+-- CONFIG["SETTINGS"]["DataTools.WebSearchDefaultLanguage"] = "de"
 -- WebSearchDefaultSafeSearch: optional SearXNG safe-search level "0", "1", or "2"; default is empty.
 -- CONFIG["SETTINGS"]["DataTools.WebSearchDefaultSafeSearch"] = "1"
 -- WebSearchDefaultCategories: optional comma-separated categories; default is empty.
@@ -391,6 +391,7 @@ CONFIG["SETTINGS"] = {}
 -- WebSearchTimeoutSeconds: positive integer; default 20, effective maximum 60.
 -- CONFIG["SETTINGS"]["DataTools.WebSearchTimeoutSeconds"] = "20"
 -- WebSearchMaxTotalContentCharacters: positive integer; default and maximum 100000.
+-- maximum number of content characters per web search
 -- CONFIG["SETTINGS"]["DataTools.WebSearchMaxTotalContentCharacters"] = "100000"
 -- WebSearchMinContentCharactersPerResult: positive integer; default and maximum 3000.
 -- The total content budget must be at least this value multiplied by the hard limit of 20 results.
