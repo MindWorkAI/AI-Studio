@@ -2,6 +2,7 @@ using AIStudio.Chat;
 using AIStudio.Dialogs;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
+using AIStudio.Tools.Security;
 using AIStudio.Tools.Services;
 using AIStudio.Tools.Validation;
 
@@ -74,6 +75,9 @@ public partial class AttachDocuments : MSGComponentBase
 
     [Inject]
     private PandocAvailabilityService PandocAvailabilityService { get; init; } = null!;
+
+    [Inject]
+    private PromptInjectionGuardService PromptInjectionGuardService { get; init; } = null!;
 
     private const Placement TOOLBAR_TOOLTIP_PLACEMENT = Placement.Top;
     private static readonly string DROP_FILES_HERE_TEXT = TB("Drop files here to attach them.");
@@ -184,12 +188,7 @@ public partial class AttachDocuments : MSGComponentBase
                 }
 
                 foreach (var path in paths)
-                {
-                    if(!await FileExtensionValidation.IsExtensionValidWithNotifyAsync(FileExtensionValidation.UseCase.ATTACHING_CONTENT, path, this.ValidateMediaFileTypes, this.Provider))
-                        continue;
-
-                    this.DocumentPaths.Add(FileAttachment.FromPath(path));
-                }
+                    await this.TryAddFileAsync(path);
 
                 await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
                 await this.OnChange(this.DocumentPaths);
@@ -232,14 +231,41 @@ public partial class AttachDocuments : MSGComponentBase
             if (!File.Exists(selectedFilePath))
                 continue;
 
-            if (!await FileExtensionValidation.IsExtensionValidWithNotifyAsync(FileExtensionValidation.UseCase.ATTACHING_CONTENT, selectedFilePath, this.ValidateMediaFileTypes, this.Provider))
-                continue;
-
-            this.DocumentPaths.Add(FileAttachment.FromPath(selectedFilePath));
+            await this.TryAddFileAsync(selectedFilePath);
         }
 
         await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
         await this.OnChange(this.DocumentPaths);
+    }
+
+    private async Task<bool> TryAddFileAsync(string filePath)
+    {
+        if (!await FileExtensionValidation.IsExtensionValidWithNotifyAsync(FileExtensionValidation.UseCase.ATTACHING_CONTENT, filePath, this.ValidateMediaFileTypes, this.Provider))
+            return false;
+
+        var attachment = FileAttachment.FromPath(filePath);
+        if (attachment.Type is FileAttachmentType.DOCUMENT && this.PromptInjectionGuardService.IsProtectionEnabled)
+        {
+            try
+            {
+                var fileContent = await this.RustService.ReadArbitraryFileData(filePath, int.MaxValue);
+                await this.PromptInjectionGuardService.EnsureSafeForLlmAsync(fileContent, PromptInjectionSource.ChatAttachment(filePath));
+            }
+            catch (PromptInjectionBlockedException)
+            {
+                return false;
+            }
+            catch (Exception exception)
+            {
+                this.Logger.LogError(exception, "File attachment '{FilePath}' could not be checked for prompt injection and will not be attached.", filePath);
+                await this.MessageBus.SendError(new(
+                    Icons.Material.Filled.Cancel,
+                    string.Format(T("The file '{0}' could not be checked for prompt injection and was not attached."), attachment.FileName)));
+                return false;
+            }
+        }
+
+        return this.DocumentPaths.Add(attachment);
     }
 
     private async Task OpenAttachmentsDialog()

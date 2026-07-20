@@ -351,7 +351,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
             };
 
             var dialogReference = await this.DialogService.ShowAsync<PromptInjectionAlertDialog>(
-                T("Prompt Injection Detected"),
+                T("Security notice"),
                 dialogParameters,
                 DialogOptions.BLOCKING_FULLSCREEN);
 

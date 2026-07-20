@@ -2404,6 +2404,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T1875575968"] = "Click h
 -- Drag and drop files into the marked area or click here to attach documents:
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T230755331"] = "Drag and drop files into the marked area or click here to attach documents:"
 
+-- The file '{0}' could not be checked for prompt injection and was not attached.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T2404630365"] = "The file '{0}' could not be checked for prompt injection and was not attached."
+
 -- Select files to attach
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T2495931372"] = "Select files to attach"
 
@@ -4741,14 +4744,14 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINGGUIDELINEDIALOG::T4250996615"] = "P
 -- Chat attachment
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T1071345316"] = "Chat attachment"
 
--- Danger detected
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T1081126836"] = "Danger detected"
-
 -- Content source
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T1129278507"] = "Content source"
 
 -- Attempt to override instructions
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T161976090"] = "Attempt to override instructions"
+
+-- Security warning
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T1862129203"] = "Security warning"
 
 -- Attempt to expose protected data
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T2050274293"] = "Attempt to expose protected data"
@@ -4786,11 +4789,17 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T3448155331"] = 
 -- Attempt to manipulate an agent
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T355252317"] = "Attempt to manipulate an agent"
 
+-- AI Studio has reliably detected and blocked the suspicious content. Your applications and data remain protected. Please review the content you uploaded.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T3661810823"] = "AI Studio has reliably detected and blocked the suspicious content. Your applications and data remain protected. Please review the content you uploaded."
+
 -- File content
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T3788064862"] = "File content"
 
 -- Persistent or delayed instruction
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T4169123215"] = "Persistent or delayed instruction"
+
+-- Security active
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T4212328947"] = "Security active"
 
 -- Typical attacks on AI systems (e.g. prompt injection) hide instructions within untrusted content to trick an AI model into ignoring its intended rules or performing unintended actions.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T4221674400"] = "Typical attacks on AI systems (e.g. prompt injection) hide instructions within untrusted content to trick an AI model into ignoring its intended rules or performing unintended actions."
@@ -6454,11 +6463,11 @@ UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T2936083926"] = "AI Studio could 
 -- Writer
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T2979224202"] = "Writer"
 
--- Prompt Injection Detected
-UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T3580322580"] = "Prompt Injection Detected"
-
 -- Show details
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T3692372066"] = "Show details"
+
+-- Security notice
+UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T4004397997"] = "Security notice"
 
 -- Information
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T4256323669"] = "Information"

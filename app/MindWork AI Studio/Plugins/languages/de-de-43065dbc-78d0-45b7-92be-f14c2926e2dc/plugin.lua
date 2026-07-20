@@ -2406,6 +2406,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T1875575968"] = "Klicken
 -- Drag and drop files into the marked area or click here to attach documents:
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T230755331"] = "Ziehen Sie Dateien in den markierten Bereich oder klicken Sie hier, um Dokumente anzuhängen:"
 
+-- The file '{0}' could not be checked for prompt injection and was not attached.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T2404630365"] = "Die Datei '{0}' konnte nicht auf Prompt-Injection überprüft werden und wurde nicht angehängt."
+
 -- Select files to attach
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T2495931372"] = "Dateien zum Anhängen auswählen"
 
@@ -4743,17 +4746,14 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINGGUIDELINEDIALOG::T4250996615"] = "P
 -- Chat attachment
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T1071345316"] = "Dateianhang"
 
--- Danger detected
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T1081126836"] = "Gefahr erkannt"
-
 -- Content source
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T1129278507"] = "Datei"
 
--- Prompt injection hides instructions in untrusted content to make an AI model ignore its intended rules or perform unintended actions.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T4221674400"] = "Typische Angriffe auf KI-Systeme (z.B. Prompt Injection) verbergen Anweisungen in nicht vertrauenswürdigen Inhalten, um ein KI-Modell dazu zu bringen, seine vorgesehenen Regeln zu ignorieren oder ungewollte Aktionen auszuführen."
-
 -- Attempt to override instructions
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T161976090"] = "Versuch, Anweisungen zu überschreiben"
+
+-- Security warning
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T1862129203"] = "Sicherheitswarnung"
 
 -- Attempt to expose protected data
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T2050274293"] = "Versuch, geschützte Daten offenzulegen"
@@ -4791,11 +4791,20 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T3448155331"] = 
 -- Attempt to manipulate an agent
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T355252317"] = "Versuch, einen Agenten zu manipulieren"
 
+-- AI Studio has reliably detected and blocked the suspicious content. Your applications and data remain protected. Please review the content you uploaded.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T3661810823"] = "AI Studio hat den verdächtigen Inhalt zuverlässig erkannt und blockiert. Ihre Anwendungen und Daten bleiben geschützt. Bitte überprüfen Sie den von Ihnen hochgeladenen Inhalt."
+
 -- File content
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T3788064862"] = "Inhalt der Datei"
 
 -- Persistent or delayed instruction
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T4169123215"] = "Dauerhafte oder verzögerte Anweisung"
+
+-- Security active
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T4212328947"] = "Sicherheit aktiv"
+
+-- Typical attacks on AI systems
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T4221674400"] = "Typische Angriffe auf KI-Systeme (z.B. Prompt Injection) verbergen Anweisungen in nicht vertrauenswürdigen Inhalten, um ein KI-Modell dazu zu bringen, seine vorgesehenen Regeln zu ignorieren oder ungewollte Aktionen auszuführen."
 
 -- Detected content
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T4223810750"] = "Erkannter Inhalt"
@@ -6456,11 +6465,11 @@ UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T2936083926"] = "AI Studio konnte
 -- Writing
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T2979224202"] = "Schreiben"
 
--- Prompt Injection Detected
-UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T3580322580"] = "Prompt-Injection erkannt"
-
 -- Show details
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T3692372066"] = "Details anzeigen"
+
+-- Security notice
+UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T4004397997"] = "Sicherheitshinweis"
 
 -- Information
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T4256323669"] = "Information"
