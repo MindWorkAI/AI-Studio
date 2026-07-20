@@ -33,7 +33,8 @@ public sealed record Provider(
     string Hostname = "http://localhost:1234",
     Host Host = Host.NONE,
     HFInferenceProvider HFInferenceProvider = HFInferenceProvider.NONE,
-    string AdditionalJsonApiParameters = "") : ConfigurationBaseObject, ISecretId
+    string AdditionalJsonApiParameters = "",
+    ProviderCapabilityOverrides? CapabilityOverrides = null) : ConfigurationBaseObject, ISecretId
 {
     private static readonly ILogger<Provider> LOGGER = Program.LOGGER_FACTORY.CreateLogger<Provider>();
     
@@ -72,7 +73,7 @@ public sealed record Provider(
     
     /// <inheritdoc />
     [JsonIgnore]
-    public string SecretId => this.IsEnterpriseConfiguration ? $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{this.UsedLLMProvider.ToName()}" : this.UsedLLMProvider.ToName();
+    public string SecretId => this.IsEnterpriseConfiguration ? $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{this.UsedLLMProvider.ToSecretId()}" : this.UsedLLMProvider.ToSecretId();
     
     /// <inheritdoc />
     [JsonIgnore]
@@ -152,6 +153,8 @@ public sealed record Provider(
             additionalJsonApiParameters = string.Empty;
         }
 
+        var capabilityOverrides = ProviderCapabilityOverrides.TryParseFromLuaTable(idx, table, configPluginId, LOGGER);
+
         provider = new Provider
         {
             Num = 0, // will be set later by the PluginConfigurationObject
@@ -166,6 +169,7 @@ public sealed record Provider(
             Host = host,
             HFInferenceProvider = hfInferenceProvider,
             AdditionalJsonApiParameters = additionalJsonApiParameters,
+            CapabilityOverrides = capabilityOverrides,
         };
 
         // Handle encrypted API key if present:
@@ -182,7 +186,7 @@ public sealed record Provider(
                     {
                         // Queue the API key for storage in the OS keyring:
                         PendingEnterpriseApiKeys.Add(new(
-                            $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{usedLLMProvider.ToName()}",
+                            $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{usedLLMProvider.ToSecretId()}",
                             instanceName,
                             decryptedApiKey,
                             SecretStoreType.LLM_PROVIDER));
@@ -241,6 +245,8 @@ public sealed record Provider(
                           """;
         }
 
+        var capabilityOverridesLine = this.CapabilityOverrides?.ExportAsLuaTable("    ") ?? string.Empty;
+
         return $$"""
                 CONFIG["LLM_PROVIDERS"][#CONFIG["LLM_PROVIDERS"]+1] = {
                     ["Id"] = "{{Guid.NewGuid().ToString()}}",
@@ -252,6 +258,7 @@ public sealed record Provider(
                     {{hfInferenceProviderLine}}
                     {{apiKeyLine}}
                     ["AdditionalJsonApiParameters"] = "{{LuaTools.EscapeLuaString(this.AdditionalJsonApiParameters)}}",
+                    {{capabilityOverridesLine}}
                     ["Model"] = {
                         ["Id"] = "{{LuaTools.EscapeLuaString(this.Model.Id)}}",
                         ["DisplayName"] = "{{LuaTools.EscapeLuaString(this.Model.DisplayName ?? this.Model.Id)}}",

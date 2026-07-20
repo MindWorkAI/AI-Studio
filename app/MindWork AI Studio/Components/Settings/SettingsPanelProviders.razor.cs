@@ -1,7 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 
 using AIStudio.Dialogs;
-using AIStudio.Provider;
 using AIStudio.Settings;
 
 using Microsoft.AspNetCore.Components;
@@ -73,6 +72,7 @@ public partial class SettingsPanelProviders : SettingsPanelProviderBase
             { x => x.DataHost, provider.Host },
             { x => x.HFInferenceProviderId, provider.HFInferenceProvider },
             { x => x.AdditionalJsonApiParameters, provider.AdditionalJsonApiParameters },
+            { x => x.DataCapabilityOverrides, provider.CapabilityOverrides },
         };
 
         var dialogReference = await this.DialogService.ShowAsync<ProviderDialog>(T("Edit LLM Provider"), dialogParameters, DialogOptions.FULLSCREEN);
@@ -166,26 +166,4 @@ public partial class SettingsPanelProviders : SettingsPanelProviderBase
         await this.AvailableLLMProvidersChanged.InvokeAsync(this.AvailableLLMProviders);
     }
 
-    private string GetCurrentConfidenceLevelName(LLMProviders llmProvider)
-    {
-        if (this.SettingsManager.ConfigurationData.LLMProviders.CustomConfidenceScheme.TryGetValue(llmProvider, out var level))
-            return level.GetName();
-
-        return T("Not yet configured");
-    }
-    
-    private string SetCurrentConfidenceLevelColorStyle(LLMProviders llmProvider)
-    {
-        if (this.SettingsManager.ConfigurationData.LLMProviders.CustomConfidenceScheme.TryGetValue(llmProvider, out var level))
-            return $"background-color: {level.GetColor(this.SettingsManager)};";
-
-        return $"background-color: {ConfidenceLevel.UNKNOWN.GetColor(this.SettingsManager)};";
-    }
-
-    private async Task ChangeCustomConfidenceLevel(LLMProviders llmProvider, ConfidenceLevel level)
-    {
-        this.SettingsManager.ConfigurationData.LLMProviders.CustomConfidenceScheme[llmProvider] = level;
-        await this.SettingsManager.StoreSettings();
-        await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
-    }
 }

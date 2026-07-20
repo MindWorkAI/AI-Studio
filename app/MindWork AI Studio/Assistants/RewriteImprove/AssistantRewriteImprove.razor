@@ -1,6 +1,7 @@
 @attribute [Route(Routes.ASSISTANT_REWRITE)]
 @inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogRewrite>
 
+<ReadFileContent Text="@T("Load text from file")" @bind-FileContent="@this.inputText" EnableDragDrop="true" Layer="@DropLayers.ASSISTANTS" CatchAllDocuments="true"/>
 <MudTextField T="string" @bind-Text="@this.inputText" Validation="@this.ValidateText" AdornmentIcon="@Icons.Material.Filled.DocumentScanner" Adornment="Adornment.Start" Label="@T("Your input to improve")" Variant="Variant.Outlined" Lines="6" AutoGrow="@true" MaxLines="12" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 <EnumSelection T="CommonLanguages" NameFunc="@(language => language.NameSelectingOptional())" @bind-Value="@this.selectedTargetLanguage" Icon="@Icons.Material.Filled.Translate" Label="@T("Language")" AllowOther="@true" OtherValue="CommonLanguages.OTHER" @bind-OtherInput="@this.customTargetLanguage" ValidateOther="@this.ValidateCustomLanguage" LabelOther="@T("Custom language")" />
 <EnumSelection T="WritingStyles" NameFunc="@(style => style.Name())" @bind-Value="@this.selectedWritingStyle" Icon="@Icons.Material.Filled.Edit" Label="@T("Writing style")" AllowOther="@false" />

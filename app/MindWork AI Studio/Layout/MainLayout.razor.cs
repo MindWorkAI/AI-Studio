@@ -2,6 +2,8 @@ using AIStudio.Dialogs;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.AIJobs;
+using AIStudio.Tools.AssistantSessions;
+using AIStudio.Tools.Media;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
@@ -29,7 +31,16 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     private RustService RustService { get; init; } = null!;
 
     [Inject]
+    private UpdatePolicy UpdatePolicy { get; init; } = null!;
+
+    [Inject]
     private AIJobService AIJobService { get; init; } = null!;
+
+    [Inject]
+    private AssistantSessionService AssistantSessionService { get; init; } = null!;
+
+    [Inject]
+    private MediaTranscriptionService MediaTranscriptionService { get; init; } = null!;
     
     [Inject]
     private ISnackbar Snackbar { get; init; } = null!;
@@ -58,6 +69,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     private MudThemeProvider themeProvider = null!;
     private bool useDarkMode;
     private bool startupCompleted;
+    private bool settingsWriteProtectionWarningShown;
     private readonly SemaphoreSlim mandatoryInfoDialogSemaphore = new(1, 1);
 
     private IReadOnlyCollection<NavBarItem> navItems = [];
@@ -67,6 +79,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     protected override async Task OnInitializedAsync()
     {
         this.NavigationManager.RegisterLocationChangingHandler(this.OnLocationChanging);
+        this.MediaTranscriptionService.StateChanged += this.OnMediaImportStateChanged;
         
         //
         // We use the Tauri API (Rust) to get the data and config directories
@@ -101,7 +114,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
             Event.UPDATE_AVAILABLE, Event.CONFIGURATION_CHANGED, Event.COLOR_THEME_CHANGED, Event.SHOW_ERROR,
             Event.SHOW_WARNING, Event.SHOW_SUCCESS, Event.STARTUP_PLUGIN_SYSTEM, Event.PLUGINS_RELOADED,
             Event.INSTALL_UPDATE, Event.STARTUP_COMPLETED, Event.AI_JOB_CHANGED, Event.AI_JOB_FINISHED,
-            Event.CHAT_GENERATION_CHANGED,
+            Event.CHAT_GENERATION_CHANGED, Event.ASSISTANT_SESSION_CHANGED, Event.ASSISTANT_SESSION_FINISHED,
         ]);
         
         // Set the snackbar for the update service:
@@ -127,6 +140,39 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
 
     #endregion
 
+    private void ShowSettingsWriteProtectionWarning()
+    {
+        if(!this.SettingsManager.SettingsWriteBlocked || this.settingsWriteProtectionWarningShown)
+            return;
+
+        this.settingsWriteProtectionWarningShown = true;
+        var reason = this.SettingsManager.SettingsWriteBlockReason;
+        var message = reason switch
+        {
+            SettingsWriteBlockReason.VERSION_NEWER_THAN_APP => T("Your settings were created by a newer AI Studio version. Changes in this session will not be saved. Please install or start the latest available update."),
+            SettingsWriteBlockReason.VERSION_MISSING => T("Your settings file does not contain a settings-format version. Changes in this session will not be saved to avoid overwriting your settings. Please check for updates or contact support."),
+            SettingsWriteBlockReason.VERSION_UNKNOWN => T("AI Studio does not recognize your settings-format version. Changes in this session will not be saved to avoid overwriting your settings. Please check for updates or contact support."),
+            SettingsWriteBlockReason.FILE_UNREADABLE => T("AI Studio could not read your settings file. Changes in this session will not be saved to avoid overwriting recoverable settings. Please check for updates or contact support."),
+            SettingsWriteBlockReason.CURRENT_VERSION_INVALID => T("AI Studio found the current settings format but could not load it safely. Changes in this session will not be saved. Please check for updates or contact support."),
+            _ => T("AI Studio cannot safely save settings in this session. Please check for updates or contact support."),
+        };
+        message = $"{message} {T("Reason")}: {reason}";
+
+        this.Snackbar.Add(message, Severity.Warning, config =>
+        {
+            config.Icon = Icons.Material.Filled.WarningAmber;
+            config.IconSize = Size.Large;
+            config.VisibleStateDuration = 32_000;
+            config.HideTransitionDuration = 600;
+            config.Action = T("Check for updates");
+            config.ActionVariant = Variant.Filled;
+            config.OnClick = async _ =>
+            {
+                await this.MessageBus.SendMessage<bool>(this, Event.USER_SEARCH_FOR_UPDATE);
+            };
+        });
+    }
+
     #region Implementation of ILang
 
     /// <inheritdoc />
@@ -148,6 +194,8 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
             switch (triggeredEvent)
             {
                 case Event.INSTALL_UPDATE:
+                    if (!this.UpdatePolicy.AllowsInstallations)
+                        break;
                     this.performingUpdate = true;
                     this.StateHasChanged();
                     break;
@@ -194,6 +242,8 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
                 case Event.AI_JOB_CHANGED:
                 case Event.AI_JOB_FINISHED:
                 case Event.CHAT_GENERATION_CHANGED:
+                case Event.ASSISTANT_SESSION_CHANGED:
+                case Event.ASSISTANT_SESSION_FINISHED:
                     this.LoadNavItems();
                     this.StateHasChanged();
                     break;
@@ -276,6 +326,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
                 case Event.PLUGINS_RELOADED:
                     this.Lang = await this.SettingsManager.GetActiveLanguagePlugin();
                     I18N.Init(this.Lang);
+                    this.ShowSettingsWriteProtectionWarning();
                     this.LoadNavItems();
 
                     await this.InvokeAsync(this.StateHasChanged);
@@ -302,26 +353,52 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     {
         this.navItems = new List<NavBarItem>(this.GetNavItems());
     }
+
+    /// <summary>Refreshes navigation activity colors when a media import changes state.</summary>
+    private void OnMediaImportStateChanged(MediaImportOwner owner)
+    {
+        _ = this.InvokeAsync(() =>
+        {
+            this.LoadNavItems();
+            this.StateHasChanged();
+        });
+    }
     
     private IEnumerable<NavBarItem> GetNavItems()
     {
         var palette = this.ColorTheme.GetCurrentPalette(this.SettingsManager);
+        var activityIndicatorLightColor = this.ColorTheme.GetActivityIndicatorLightColor();
+        var activityIndicatorDarkColor = this.ColorTheme.GetActivityIndicatorDarkColor();
+        var defaultLightColor = palette.DarkLighten;
+        var defaultDarkColor = palette.GrayLight;
+        var mediaSnapshots = this.MediaTranscriptionService.GetSnapshots();
+        var hasActiveChatMedia = mediaSnapshots.Any(snapshot => snapshot.IsBusy && snapshot.Owner.Kind is MediaImportOwnerKind.CHAT);
+        var hasActiveAssistantMedia = mediaSnapshots.Any(snapshot => snapshot.IsBusy && snapshot.Owner.Kind is MediaImportOwnerKind.ASSISTANT);
+        var hasActiveChatWork = this.AIJobService.HasActiveJobs || hasActiveChatMedia;
+        var hasActiveAssistantWork = this.AssistantSessionService.HasActiveSessions || hasActiveAssistantMedia;
+        var chatLightColor = hasActiveChatWork ? activityIndicatorLightColor : defaultLightColor;
+        var chatDarkColor = hasActiveChatWork ? activityIndicatorDarkColor : defaultDarkColor;
+        var assistantsLightColor = hasActiveAssistantWork ? activityIndicatorLightColor : defaultLightColor;
+        var assistantsDarkColor = hasActiveAssistantWork ? activityIndicatorDarkColor : defaultDarkColor;
         
-        yield return new(T("Home"), Icons.Material.Filled.Home, palette.DarkLighten, palette.GrayLight, Routes.HOME, true);
-        yield return new(T("Chat"), this.AIJobService.HasActiveJobs ? Icons.Material.Filled.Chat : Icons.Material.Outlined.Chat, palette.DarkLighten, palette.GrayLight, Routes.CHAT, false);
-        yield return new(T("Assistants"), Icons.Material.Filled.Apps, palette.DarkLighten, palette.GrayLight, Routes.ASSISTANTS, false);
+        yield return new(T("Home"), Icons.Material.Filled.Home, defaultLightColor, defaultDarkColor, Routes.HOME, true);
+        yield return new(T("Chat"), Icons.Material.Filled.Chat, chatLightColor, chatDarkColor, Routes.CHAT, false);
+        yield return new(T("Assistants"), Icons.Material.Filled.Apps, assistantsLightColor, assistantsDarkColor, Routes.ASSISTANTS, false);
 
         if (PreviewFeatures.PRE_WRITER_MODE_2024.IsEnabled(this.SettingsManager))
-            yield return new(T("Writer"), Icons.Material.Filled.Create, palette.DarkLighten, palette.GrayLight, Routes.WRITER, false);
+            yield return new(T("Writer"), Icons.Material.Filled.Create, defaultLightColor, defaultDarkColor, Routes.WRITER, false);
 
-        yield return new(T("Plugins"), Icons.Material.TwoTone.Extension, palette.DarkLighten, palette.GrayLight, Routes.PLUGINS, false);
+        yield return new(T("Plugins"), Icons.Material.TwoTone.Extension, defaultLightColor, defaultDarkColor, Routes.PLUGINS, false);
         yield return new(T("Supporters"), Icons.Material.Filled.Favorite, palette.Error.Value, "#801a00", Routes.SUPPORTERS, false);
-        yield return new(T("Information"), Icons.Material.Filled.Info, palette.DarkLighten, palette.GrayLight, Routes.ABOUT, false);
-        yield return new(T("Settings"), Icons.Material.Filled.Settings, palette.DarkLighten, palette.GrayLight, Routes.SETTINGS, false);
+        yield return new(T("Information"), Icons.Material.Filled.Info, defaultLightColor, defaultDarkColor, Routes.ABOUT, false);
+        yield return new(T("Settings"), Icons.Material.Filled.Settings, defaultLightColor, defaultDarkColor, Routes.SETTINGS, false);
     }
 
     private async Task ShowUpdateDialog()
     {
+        if (!this.UpdatePolicy.AllowsInstallations)
+            return;
+
         if(this.currentUpdateResponse is null)
             return;
         
@@ -347,6 +424,9 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         var dialogReference = await this.DialogService.ShowAsync<UpdateDialog>(T("Update"), dialogParameters, DialogOptions.FULLSCREEN_NO_HEADER);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
+            return;
+
+        if (!this.UpdatePolicy.AllowsInstallations)
             return;
         
         this.performingUpdate = true;
@@ -475,6 +555,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
 
     public void Dispose()
     {
+        this.MediaTranscriptionService.StateChanged -= this.OnMediaImportStateChanged;
         this.MessageBus.Unregister(this);
         this.mandatoryInfoDialogSemaphore.Dispose();
     }

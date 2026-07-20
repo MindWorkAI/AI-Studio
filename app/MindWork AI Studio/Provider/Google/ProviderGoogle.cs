@@ -15,7 +15,7 @@ public class ProviderGoogle() : BaseProvider(LLMProviders.GOOGLE, new Uri("https
     #region Implementation of IProvider
 
     /// <inheritdoc />
-    public override string Id => LLMProviders.GOOGLE.ToName();
+    public override string Id => LLMProviders.GOOGLE.ToSecretId();
 
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "Google Gemini";
@@ -73,7 +73,7 @@ public class ProviderGoogle() : BaseProvider(LLMProviders.GOOGLE, new Uri("https
     /// <inhertidoc />
     public override async Task<IReadOnlyList<IReadOnlyList<float>>> EmbedTextAsync(Model embeddingModel, SettingsManager settingsManager, CancellationToken token = default, params List<string> texts)
     {
-        var requestedSecret = await RUST_SERVICE.GetAPIKey(this, SecretStoreType.EMBEDDING_PROVIDER);
+        var requestedSecret = await Program.RUST_SERVICE.GetAPIKey(this, SecretStoreType.EMBEDDING_PROVIDER);
         try
         {
             var modelName = embeddingModel.Id;
@@ -106,7 +106,7 @@ public class ProviderGoogle() : BaseProvider(LLMProviders.GOOGLE, new Uri("https
             var embeddingRequest = JsonSerializer.Serialize(payload, JSON_SERIALIZER_OPTIONS);
             var embedUrl = $"https://generativelanguage.googleapis.com/v1beta/models/{modelName}:embedContent";
             using var request = new HttpRequestMessage(HttpMethod.Post, embedUrl);
-            request.Headers.Add("x-goog-api-key", await requestedSecret.Secret.Decrypt(ENCRYPTION));
+            request.Headers.Add("x-goog-api-key", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
             
             // Set the content:
             request.Content = new StringContent(embeddingRequest, Encoding.UTF8, "application/json");

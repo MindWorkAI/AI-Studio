@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use std::convert::Infallible;
+use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 use std::time::Duration;
 use async_stream::stream;
@@ -10,24 +10,34 @@ use axum::Json;
 use bytes::Bytes;
 use log::{debug, error, info, trace, warn};
 use once_cell::sync::Lazy;
+use pdfium_render::prelude::Pdfium;
 use serde::{Deserialize, Serialize};
-use strum_macros::Display;
-use tauri::{DragDropEvent,RunEvent, Manager, WindowEvent, generate_context};
+use tauri::{DragDropEvent,RunEvent, Manager, WindowEvent};
 use tauri::path::PathResolver;
 use tauri::WebviewWindow;
 use tauri_plugin_updater::{UpdaterExt, Update};
-use tauri_plugin_global_shortcut::GlobalShortcutExt;
 use tauri_plugin_opener::OpenerExt;
 use tokio::sync::broadcast;
 use tokio::time;
 use crate::api_token::APIToken;
+use crate::clipboard::shutdown_clipboard;
 use crate::dotnet::{cleanup_dotnet_server, start_dotnet_server, stop_dotnet_server};
-use crate::environment::{is_prod, is_dev, CONFIG_DIRECTORY, DATA_DIRECTORY};
+use crate::environment::{
+    is_prod, is_dev, is_flatpak, CONFIG_DIRECTORY, DATA_DIRECTORY, FLATPAK_LIBRARY_DIRECTORY,
+};
 use crate::log::switch_to_file_logging;
 use crate::pdfium::PDFIUM_LIB_PATH;
 use crate::qdrant_edge_database::{start_qdrant_edge_database, stop_qdrant_edge_database};
+use crate::global_shortcuts::{RegisterShortcutRequest, ShortcutResponse};
+
 #[cfg(debug_assertions)]
 use crate::dotnet::create_startup_env_file;
+
+#[cfg(target_os = "linux")]
+use webkit2gtk::glib::Cast;
+
+#[cfg(target_os = "linux")]
+use webkit2gtk::{PermissionRequestExt, UserMediaPermissionRequestExt};
 
 /// The Tauri main window.
 pub static MAIN_WINDOW: Lazy<Mutex<Option<WebviewWindow>>> = Lazy::new(|| Mutex::new(None));
@@ -38,22 +48,11 @@ static CHECK_UPDATE_RESPONSE: Lazy<Mutex<Option<Update>>> = Lazy::new(|| Mutex::
 /// The event broadcast sender for Tauri events.
 static EVENT_BROADCAST: Lazy<Mutex<Option<broadcast::Sender<Event>>>> = Lazy::new(|| Mutex::new(None));
 
-/// Stores the currently registered global shortcuts (name -> shortcut string).
-static REGISTERED_SHORTCUTS: Lazy<Mutex<HashMap<Shortcut, String>>> = Lazy::new(|| Mutex::new(HashMap::new()));
-
 /// Stores the localhost origin of the Blazor app after the .NET server is ready.
 static APPROVED_APP_URL: Lazy<Mutex<Option<tauri::Url>>> = Lazy::new(|| Mutex::new(None));
 
-/// Enum identifying global keyboard shortcuts.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Display)]
-#[strum(serialize_all = "SCREAMING_SNAKE_CASE")]
-pub enum Shortcut {
-    None = 0,
-    VoiceRecordingToggle,
-}
-
 /// Starts the Tauri app.
-pub fn start_tauri() {
+pub fn start_tauri(tauri_context: tauri::Context<tauri::Wry>) {
     info!("Starting Tauri app...");
 
     // Create the event broadcast channel:
@@ -85,6 +84,26 @@ pub fn start_tauri() {
     });
 
     let app = tauri::Builder::default()
+        .plugin(tauri_plugin_single_instance::init(|app, args, cwd| {
+            info!(Source = "Tauri"; "Prevented second app instance from starting. cwd='{cwd}', args={args:?}");
+
+            let Some(window) = app.get_webview_window("main") else {
+                warn!(Source = "Tauri"; "Second app instance was blocked, but the main window was not available for activation.");
+                return;
+            };
+
+            if let Err(error) = window.show() {
+                warn!(Source = "Tauri"; "Failed to show main window after second app start: {error}");
+            }
+
+            if let Err(error) = window.unminimize() {
+                warn!(Source = "Tauri"; "Failed to unminimize main window after second app start: {error}");
+            }
+
+            if let Err(error) = window.set_focus() {
+                warn!(Source = "Tauri"; "Failed to focus main window after second app start: {error}");
+            }
+        }))
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_opener::init())
@@ -113,6 +132,9 @@ pub fn start_tauri() {
 
             // Get the main window:
             let window = app.get_webview_window("main").expect("Failed to get main window.");
+
+            #[cfg(target_os = "linux")]
+            register_linux_permission_request_handler(&window);
 
             // Register a callback for window events, such as file drops. We have to use
             // this handler in addition to the app event handler, because file drop events
@@ -157,7 +179,7 @@ pub fn start_tauri() {
             Ok(())
         })
         .plugin(tauri_plugin_window_state::Builder::default().build())
-        .build(generate_context!())
+        .build(tauri_context)
         .expect("Error while running Tauri application");
 
     // The app event handler:
@@ -183,6 +205,7 @@ pub fn start_tauri() {
 
             RunEvent::ExitRequested { .. } => {
                 warn!(Source = "Tauri"; "Run event: exit was requested.");
+                shutdown_clipboard();
                 stop_qdrant_edge_database();
                 if is_prod() {
                     warn!("Try to stop the .NET server as well...");
@@ -221,6 +244,69 @@ fn same_origin(left: &tauri::Url, right: &tauri::Url) -> bool {
     left.scheme() == right.scheme()
         && left.host_str() == right.host_str()
         && left.port_or_known_default() == right.port_or_known_default()
+}
+
+#[cfg(any(target_os = "linux", test))]
+fn should_allow_audio_capture(
+    approved_app_url: Option<&tauri::Url>,
+    current_webview_url: Option<&tauri::Url>,
+    requests_audio: bool,
+    requests_video: bool,
+) -> bool {
+    requests_audio
+        && !requests_video
+        && approved_app_url.is_some_and(is_local_http_url)
+        && approved_app_url
+            .zip(current_webview_url)
+            .is_some_and(|(approved, current)| same_origin(approved, current))
+}
+
+#[cfg(target_os = "linux")]
+fn register_linux_permission_request_handler(window: &WebviewWindow) {
+    if let Err(error) = window.with_webview(|platform_webview| {
+        use webkit2gtk::WebViewExt;
+        use webkit2gtk::UserMediaPermissionRequest;
+
+        let webview = platform_webview.inner();
+        webview.connect_permission_request(|webview, request| {
+            let Some(user_media_request) = request.downcast_ref::<UserMediaPermissionRequest>() else {
+                request.deny();
+                info!(Source = "Tauri"; "Denied a non-user-media WebKit permission request.");
+                return true;
+            };
+
+            let current_webview_url = webview
+                .uri()
+                .and_then(|uri| tauri::Url::parse(uri.as_str()).ok());
+            let approved_app_url = APPROVED_APP_URL.lock().unwrap().clone();
+            let origin_matches = approved_app_url
+                .as_ref()
+                .zip(current_webview_url.as_ref())
+                .is_some_and(|(approved, current)| same_origin(approved, current));
+            let requests_audio = user_media_request.is_for_audio_device();
+            let requests_video = user_media_request.is_for_video_device();
+            let allow = should_allow_audio_capture(
+                approved_app_url.as_ref(),
+                current_webview_url.as_ref(),
+                requests_audio,
+                requests_video,
+            );
+
+            if allow {
+                request.allow();
+            } else {
+                request.deny();
+            }
+
+            info!(
+                Source = "Tauri";
+                "Handled WebKit user-media permission request: allowed={allow}, origin_matches={origin_matches}, audio={requests_audio}, video={requests_video}."
+            );
+            true
+        });
+    }) {
+        error!(Source = "Tauri"; "Failed to register the Linux WebKit permission request handler: {error}");
+    }
 }
 
 fn should_open_in_system_browser<R: tauri::Runtime>(webview: &tauri::Webview<R>, url: &tauri::Url) -> bool {
@@ -387,6 +473,7 @@ pub enum TauriEventType {
     FileDropCanceled,
 
     GlobalShortcutPressed,
+    GlobalShortcutChanged,
 }
 
 /// Changes the location of the main window to the given URL.
@@ -427,8 +514,9 @@ pub async fn change_location_to(url: &str) {
 
 /// Checks for updates.
 pub async fn check_for_update(_token: APIToken) -> Json<CheckUpdateResponse> {
-    if is_dev() {
-        warn!(Source = "Updater"; "The app is running in development mode; skipping update check.");
+    if !self_update_allowed(is_dev(), is_flatpak()) {
+        let reason = if is_flatpak() { "Flatpak installations are updated externally" } else { "the app is running in development mode" };
+        warn!(Source = "Updater"; "Skipping update check because {reason}.");
         return Json(CheckUpdateResponse {
             update_is_available: false,
             error: false,
@@ -512,8 +600,9 @@ pub struct CheckUpdateResponse {
 
 /// Installs the update.
 pub async fn install_update(_token: APIToken) {
-    if is_dev() {
-        warn!(Source = "Updater"; "The app is running in development mode; skipping update installation.");
+    if !self_update_allowed(is_dev(), is_flatpak()) {
+        let reason = if is_flatpak() { "Flatpak installations are updated externally" } else { "the app is running in development mode" };
+        warn!(Source = "Updater"; "Skipping update installation because {reason}.");
         return;
     }
 
@@ -571,22 +660,8 @@ pub async fn install_update(_token: APIToken) {
     }
 }
 
-/// Request payload for registering a global shortcut.
-#[derive(Clone, Deserialize)]
-pub struct RegisterShortcutRequest {
-    /// The shortcut ID to use.
-    id: Shortcut,
-
-    /// The shortcut string in Tauri format (e.g., "CmdOrControl+1").
-    /// Use empty string to unregister the shortcut.
-    shortcut: String,
-}
-
-/// Response for shortcut registration.
-#[derive(Serialize)]
-pub struct ShortcutResponse {
-    success: bool,
-    error_message: String,
+fn self_update_allowed(development: bool, flatpak: bool) -> bool {
+    !development && !flatpak
 }
 
 /// Response for application exit requests.
@@ -594,28 +669,6 @@ pub struct ShortcutResponse {
 pub struct AppExitResponse {
     success: bool,
     error_message: String,
-}
-
-/// Internal helper function to register a shortcut with its callback.
-/// This is used by both `register_shortcut` and `resume_shortcuts` to
-/// avoid code duplication.
-fn register_shortcut_with_callback<R: tauri::Runtime>(
-    app_handle: &tauri::AppHandle<R>,
-    shortcut: &str,
-    shortcut_id: Shortcut,
-    event_sender: broadcast::Sender<Event>,
-) -> Result<(), tauri_plugin_global_shortcut::Error> {
-    let shortcut_manager = app_handle.global_shortcut();
-    shortcut_manager.on_shortcut(shortcut, move |_app, _shortcut, _event| {
-        info!(Source = "Tauri"; "Global shortcut triggered for '{}'.", shortcut_id);
-        let event = Event::new(TauriEventType::GlobalShortcutPressed, vec![shortcut_id.to_string()]);
-        let sender = event_sender.clone();
-        tauri::async_runtime::spawn(async move {
-            if let Err(error) = sender.send(event) {
-                error!(Source = "Tauri"; "Failed to send global shortcut event: {error}");
-            }
-        });
-    })
 }
 
 /// Requests a controlled shutdown of the entire desktop application.
@@ -649,89 +702,9 @@ pub async fn exit_app(_token: APIToken) -> Json<AppExitResponse> {
 /// Registers or updates a global shortcut. If the shortcut string is empty,
 /// the existing shortcut for that name will be unregistered.
 pub async fn register_shortcut(_token: APIToken, payload: Json<RegisterShortcutRequest>) -> Json<ShortcutResponse> {
-    let id = payload.id;
-    let new_shortcut = payload.shortcut.clone();
-
-    if id == Shortcut::None {
-        error!(Source = "Tauri"; "Cannot register NONE shortcut.");
-        return Json(ShortcutResponse {
-            success: false,
-            error_message: "Cannot register NONE shortcut".to_string(),
-        });
-    }
-
-    info!(Source = "Tauri"; "Registering global shortcut '{}' with key '{new_shortcut}'.", id);
-
-    // Get the main window to access the global shortcut manager:
-    let main_window_lock = MAIN_WINDOW.lock().unwrap();
-    let main_window = match main_window_lock.as_ref() {
-        Some(window) => window,
-        None => {
-            error!(Source = "Tauri"; "Cannot register shortcut: main window not available.");
-            return Json(ShortcutResponse {
-                success: false,
-                error_message: "Main window not available".to_string(),
-            });
-        }
-    };
-
-    let app_handle = main_window.app_handle();
-    let shortcut_manager = app_handle.global_shortcut();
-    let mut registered_shortcuts = REGISTERED_SHORTCUTS.lock().unwrap();
-
-    // Unregister the old shortcut if one exists for this name:
-    if let Some(old_shortcut) = registered_shortcuts.get(&id) && !old_shortcut.is_empty() {
-        match shortcut_manager.unregister(old_shortcut.as_str()) {
-            Ok(_) => info!(Source = "Tauri"; "Unregistered old shortcut '{old_shortcut}' for '{}'.", id),
-            Err(error) => warn!(Source = "Tauri"; "Failed to unregister old shortcut '{old_shortcut}': {error}"),
-        }
-    }
-
-    // When the new shortcut is empty, we're done (just unregistering):
-    if new_shortcut.is_empty() {
-        registered_shortcuts.remove(&id);
-        info!(Source = "Tauri"; "Shortcut '{}' has been disabled.", id);
-        return Json(ShortcutResponse {
-            success: true,
-            error_message: String::new(),
-        });
-    }
-
-    // Get the event broadcast sender for the shortcut callback:
-    let event_broadcast_lock = EVENT_BROADCAST.lock().unwrap();
-    let event_sender = match event_broadcast_lock.as_ref() {
-        Some(sender) => sender.clone(),
-        None => {
-            error!(Source = "Tauri"; "Cannot register shortcut: event broadcast not initialized.");
-            return Json(ShortcutResponse {
-                success: false,
-                error_message: "Event broadcast not initialized".to_string(),
-            });
-        }
-    };
-
-    drop(event_broadcast_lock);
-
-    // Register the new shortcut:
-    match register_shortcut_with_callback(app_handle, &new_shortcut, id, event_sender) {
-        Ok(_) => {
-            info!(Source = "Tauri"; "Global shortcut '{new_shortcut}' registered successfully for '{}'.", id);
-            registered_shortcuts.insert(id, new_shortcut);
-            Json(ShortcutResponse {
-                success: true,
-                error_message: String::new(),
-            })
-        },
-
-        Err(error) => {
-            let error_msg = format!("Failed to register shortcut: {error}");
-            error!(Source = "Tauri"; "{error_msg}");
-            Json(ShortcutResponse {
-                success: false,
-                error_message: error_msg,
-            })
-        }
-    }
+    let app_handle = MAIN_WINDOW.lock().unwrap().as_ref().map(|window| window.app_handle().clone());
+    let event_sender = EVENT_BROADCAST.lock().unwrap().clone();
+    Json(crate::global_shortcuts::register(app_handle, event_sender, payload.0).await)
 }
 
 /// Request payload for validating a shortcut.
@@ -767,8 +740,7 @@ pub async fn validate_shortcut(_token: APIToken, payload: Json<ValidateShortcutR
     }
 
     // Check if the shortcut is already registered:
-    let registered_shortcuts = REGISTERED_SHORTCUTS.lock().unwrap();
-    for (name, registered_shortcut) in registered_shortcuts.iter() {
+    for (name, registered_shortcut) in crate::global_shortcuts::registered_shortcuts().await {
         if registered_shortcut.eq_ignore_ascii_case(&shortcut) {
             return Json(ShortcutValidationResponse {
                 is_valid: true,
@@ -778,8 +750,6 @@ pub async fn validate_shortcut(_token: APIToken, payload: Json<ValidateShortcutR
             });
         }
     }
-
-    drop(registered_shortcuts);
 
     // Try to parse the shortcut to validate syntax.
     // We can't easily validate without registering in Tauri 1.x,
@@ -803,100 +773,20 @@ pub async fn validate_shortcut(_token: APIToken, payload: Json<ValidateShortcutR
     }
 }
 
-/// Suspends shortcut processing by unregistering all shortcuts from the OS.
-/// The shortcuts remain in our internal map, so they can be re-registered on resume.
+/// Suspends shortcut processing. Portal sessions remain active and ignore activations;
+/// Tauri shortcuts are temporarily unregistered and restored on resume.
 /// This is useful when opening a dialog to configure shortcuts, so the user can
 /// press the current shortcut to re-enter it without triggering the action.
 pub async fn suspend_shortcuts(_token: APIToken) -> Json<ShortcutResponse> {
-    // Get the main window to access the global shortcut manager:
-    let main_window_lock = MAIN_WINDOW.lock().unwrap();
-    let main_window = match main_window_lock.as_ref() {
-        Some(window) => window,
-        None => {
-            error!(Source = "Tauri"; "Cannot suspend shortcuts: main window not available.");
-            return Json(ShortcutResponse {
-                success: false,
-                error_message: "Main window not available".to_string(),
-            });
-        }
-    };
-
-    let app_handle = main_window.app_handle();
-    let shortcut_manager = app_handle.global_shortcut();
-    let registered_shortcuts = REGISTERED_SHORTCUTS.lock().unwrap();
-
-    // Unregister all shortcuts from the OS (but keep them in our map):
-    for (name, shortcut) in registered_shortcuts.iter() {
-        if !shortcut.is_empty() {
-            match shortcut_manager.unregister(shortcut.as_str()) {
-                Ok(_) => info!(Source = "Tauri"; "Temporarily unregistered shortcut '{shortcut}' for '{}'.", name),
-                Err(error) => warn!(Source = "Tauri"; "Failed to unregister shortcut '{shortcut}' for '{}': {error}", name),
-            }
-        }
-    }
-
-    info!(Source = "Tauri"; "Shortcut processing has been suspended ({} shortcuts unregistered).", registered_shortcuts.len());
-    Json(ShortcutResponse {
-        success: true,
-        error_message: String::new(),
-    })
+    let app_handle = MAIN_WINDOW.lock().unwrap().as_ref().map(|window| window.app_handle().clone());
+    Json(crate::global_shortcuts::suspend(app_handle).await)
 }
 
 /// Resumes shortcut processing by re-registering all shortcuts with the OS.
 pub async fn resume_shortcuts(_token: APIToken) -> Json<ShortcutResponse> {
-    // Get the main window to access the global shortcut manager:
-    let main_window_lock = MAIN_WINDOW.lock().unwrap();
-    let main_window = match main_window_lock.as_ref() {
-        Some(window) => window,
-        None => {
-            error!(Source = "Tauri"; "Cannot resume shortcuts: main window not available.");
-            return Json(ShortcutResponse {
-                success: false,
-                error_message: "Main window not available".to_string(),
-            });
-        }
-    };
-
-    let app_handle = main_window.app_handle();
-    let registered_shortcuts = REGISTERED_SHORTCUTS.lock().unwrap();
-
-    // Get the event broadcast sender for the shortcut callbacks:
-    let event_broadcast_lock = EVENT_BROADCAST.lock().unwrap();
-    let event_sender = match event_broadcast_lock.as_ref() {
-        Some(sender) => sender.clone(),
-        None => {
-            error!(Source = "Tauri"; "Cannot resume shortcuts: event broadcast not initialized.");
-            return Json(ShortcutResponse {
-                success: false,
-                error_message: "Event broadcast not initialized".to_string(),
-            });
-        }
-    };
-
-    drop(event_broadcast_lock);
-
-    // Re-register all shortcuts with the OS:
-    let mut success_count = 0;
-    for (shortcut_id, shortcut) in registered_shortcuts.iter() {
-        if shortcut.is_empty() {
-            continue;
-        }
-
-        match register_shortcut_with_callback(app_handle, shortcut, *shortcut_id, event_sender.clone()) {
-            Ok(_) => {
-                info!(Source = "Tauri"; "Re-registered shortcut '{shortcut}' for '{}'.", shortcut_id);
-                success_count += 1;
-            },
-
-            Err(error) => warn!(Source = "Tauri"; "Failed to re-register shortcut '{shortcut}' for '{}': {error}", shortcut_id),
-        }
-    }
-
-    info!(Source = "Tauri"; "Shortcut processing has been resumed ({success_count} shortcuts re-registered).");
-    Json(ShortcutResponse {
-        success: true,
-        error_message: String::new(),
-    })
+    let app_handle = MAIN_WINDOW.lock().unwrap().as_ref().map(|window| window.app_handle().clone());
+    let event_sender = EVENT_BROADCAST.lock().unwrap().clone();
+    Json(crate::global_shortcuts::resume(app_handle, event_sender).await)
 }
 
 /// Validates the syntax of a shortcut string.
@@ -952,19 +842,9 @@ fn set_pdfium_path<R: tauri::Runtime>(path_resolver: &PathResolver<R>) {
         }
     };
 
-    let candidate_paths = [
-        resource_dir.join("resources").join("libraries"),
-        resource_dir.join("libraries"),
-    ];
-
-    let pdfium_source_path = candidate_paths
-        .iter()
-        .find(|path| path.exists())
-        .map(|path| path.to_string_lossy().to_string());
-
-    match pdfium_source_path {
+    match select_pdfium_library_directory(&resource_dir, is_flatpak()) {
         Some(path) => {
-            *PDFIUM_LIB_PATH.lock().unwrap() = Some(path);
+            *PDFIUM_LIB_PATH.lock().unwrap() = Some(path.to_string_lossy().to_string());
         }
         None => {
             error!(Source = "Bootloader Tauri"; "Failed to set the PDFium library path.");
@@ -972,9 +852,128 @@ fn set_pdfium_path<R: tauri::Runtime>(path_resolver: &PathResolver<R>) {
     }
 }
 
+fn select_pdfium_library_directory(resource_dir: &Path, include_flatpak_library_directory: bool) -> Option<PathBuf> {
+    select_pdfium_library_directory_for(resource_dir, include_flatpak_library_directory, Path::new(FLATPAK_LIBRARY_DIRECTORY))
+}
+
+fn select_pdfium_library_directory_for(
+    resource_dir: &Path,
+    include_flatpak_library_directory: bool,
+    flatpak_library_directory: &Path,
+) -> Option<PathBuf> {
+    let mut candidate_paths = Vec::new();
+
+    if include_flatpak_library_directory {
+        candidate_paths.push(flatpak_library_directory.to_path_buf());
+    }
+
+    candidate_paths.push(resource_dir.join("resources").join("libraries"));
+    candidate_paths.push(resource_dir.join("libraries"));
+
+    for path in candidate_paths {
+        let pdfium_library_path = Pdfium::pdfium_platform_library_name_at_path(&path);
+        if pdfium_library_path.exists() {
+            return Some(path);
+        }
+
+        if path.exists() {
+            warn!(
+                Source = "Bootloader Tauri";
+                "PDFium library directory exists, but the library file was not found at '{path}'.",
+                path = pdfium_library_path.to_string_lossy(),
+            );
+        }
+    }
+
+    None
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::fs;
+
+    #[test]
+    fn self_update_is_disabled_in_development() {
+        assert!(!self_update_allowed(true, false));
+    }
+
+    #[test]
+    fn self_update_is_disabled_for_flatpak() {
+        assert!(!self_update_allowed(false, true));
+    }
+
+    #[test]
+    fn self_update_is_enabled_for_normal_production_installations() {
+        assert!(self_update_allowed(false, false));
+    }
+    #[test]
+    fn pdfium_library_directory_prefers_resources_libraries() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let resources_libraries = temp_dir.path().join("resources").join("libraries");
+        let libraries = temp_dir.path().join("libraries");
+        create_pdfium_library_in(&resources_libraries);
+        create_pdfium_library_in(&libraries);
+
+        assert_eq!(
+            select_pdfium_library_directory(temp_dir.path(), false),
+            Some(resources_libraries)
+        );
+    }
+
+    #[test]
+    fn pdfium_library_directory_falls_back_when_first_directory_has_no_library() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let resources_libraries = temp_dir.path().join("resources").join("libraries");
+        let libraries = temp_dir.path().join("libraries");
+        fs::create_dir_all(&resources_libraries).unwrap();
+        create_pdfium_library_in(&libraries);
+
+        assert_eq!(
+            select_pdfium_library_directory(temp_dir.path(), false),
+            Some(libraries)
+        );
+    }
+
+    #[test]
+    fn pdfium_library_directory_requires_library_file() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        fs::create_dir_all(temp_dir.path().join("resources").join("libraries")).unwrap();
+        fs::create_dir_all(temp_dir.path().join("libraries")).unwrap();
+
+        assert_eq!(select_pdfium_library_directory(temp_dir.path(), false), None);
+    }
+
+    #[test]
+    fn pdfium_library_directory_prefers_flatpak_library_directory_when_flatpak() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let flatpak_library_directory = temp_dir.path().join("app").join("lib");
+        let resources_libraries = temp_dir.path().join("resources").join("libraries");
+        create_pdfium_library_in(&flatpak_library_directory);
+        create_pdfium_library_in(&resources_libraries);
+
+        assert_eq!(
+            select_pdfium_library_directory_for(temp_dir.path(), true, &flatpak_library_directory),
+            Some(flatpak_library_directory)
+        );
+    }
+
+    #[test]
+    fn pdfium_library_directory_skips_flatpak_library_directory_when_not_flatpak() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let flatpak_library_directory = temp_dir.path().join("app").join("lib");
+        create_pdfium_library_in(&flatpak_library_directory);
+
+        assert_eq!(
+            select_pdfium_library_directory_for(temp_dir.path(), false, &flatpak_library_directory),
+            None
+        );
+    }
+
+    fn create_pdfium_library_in(path: &Path) {
+        fs::create_dir_all(path).unwrap();
+        fs::File::create(Pdfium::pdfium_platform_library_name_at_path(path)).unwrap();
+    }
 
     #[test]
     fn tauri_localhost_is_tauri_asset_url() {
@@ -999,5 +998,43 @@ mod tests {
 
         assert!(!is_tauri_asset_url(&url));
         assert!(!is_local_http_url(&url));
+    }
+
+    #[test]
+    fn audio_capture_is_allowed_for_exact_approved_app_origin() {
+        let approved = tauri::Url::parse("http://localhost:12345/").unwrap();
+        let current = tauri::Url::parse("http://localhost:12345/voice-recorder").unwrap();
+
+        assert!(should_allow_audio_capture(Some(&approved), Some(&current), true, false));
+    }
+
+    #[test]
+    fn audio_capture_is_denied_for_wrong_port() {
+        let approved = tauri::Url::parse("http://localhost:12345/").unwrap();
+        let current = tauri::Url::parse("http://localhost:54321/").unwrap();
+
+        assert!(!should_allow_audio_capture(Some(&approved), Some(&current), true, false));
+    }
+
+    #[test]
+    fn audio_capture_is_denied_for_external_origin() {
+        let approved = tauri::Url::parse("http://localhost:12345/").unwrap();
+        let current = tauri::Url::parse("https://example.com/").unwrap();
+
+        assert!(!should_allow_audio_capture(Some(&approved), Some(&current), true, false));
+    }
+
+    #[test]
+    fn video_capture_is_denied() {
+        let approved = tauri::Url::parse("http://localhost:12345/").unwrap();
+
+        assert!(!should_allow_audio_capture(Some(&approved), Some(&approved), false, true));
+    }
+
+    #[test]
+    fn combined_audio_and_video_capture_is_denied() {
+        let approved = tauri::Url::parse("http://localhost:12345/").unwrap();
+
+        assert!(!should_allow_audio_capture(Some(&approved), Some(&approved), true, true));
     }
 }

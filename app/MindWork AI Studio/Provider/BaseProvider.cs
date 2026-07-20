@@ -14,7 +14,6 @@ using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.MIME;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
-using AIStudio.Tools.Services;
 
 using Microsoft.Extensions.DependencyInjection;
 
@@ -39,16 +38,6 @@ public abstract class BaseProvider : IProvider, ISecretId
     /// </summary>
     private readonly ILogger logger;
 
-    static BaseProvider()
-    {
-        RUST_SERVICE = Program.RUST_SERVICE;
-        ENCRYPTION = Program.ENCRYPTION;
-    }
-
-    protected static readonly RustService RUST_SERVICE;
-    
-    protected static readonly Encryption ENCRYPTION;
-    
     protected static readonly JsonSerializerOptions JSON_SERIALIZER_OPTIONS = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
@@ -91,6 +80,9 @@ public abstract class BaseProvider : IProvider, ISecretId
     
     /// <inheritdoc />
     public abstract string Id { get; }
+
+    /// <inheritdoc />
+    public string ConfiguredProviderId { get; init; } = string.Empty;
     
     /// <inheritdoc />
     public abstract string InstanceName { get; set; }
@@ -164,9 +156,9 @@ public abstract class BaseProvider : IProvider, ISecretId
     protected async Task<string?> GetModelLoadingSecretKey(SecretStoreType storeType, string? apiKeyProvisional = null, bool isTryingSecret = false) => apiKeyProvisional switch
     {
         not null => apiKeyProvisional,
-        _ => await RUST_SERVICE.GetAPIKey(this, storeType, isTrying: isTryingSecret) switch
+        _ => await Program.RUST_SERVICE.GetAPIKey(this, storeType, isTrying: isTryingSecret) switch
         {
-            { Success: true } result => await result.Secret.Decrypt(ENCRYPTION),
+            { Success: true } result => await result.Secret.Decrypt(Program.ENCRYPTION),
             _ => null,
         }
     };
@@ -985,7 +977,7 @@ public abstract class BaseProvider : IProvider, ISecretId
         where TAnnotation : IAnnotationStreamLine
     {
         // Get the API key:
-        var requestedSecret = await RUST_SERVICE.GetAPIKey(this, storeType, isTrying: isTryingSecret);
+        var requestedSecret = await Program.RUST_SERVICE.GetAPIKey(this, storeType, isTrying: isTryingSecret);
         if(!requestedSecret.Success && !isTryingSecret)
             yield break;
 
@@ -1156,7 +1148,7 @@ public abstract class BaseProvider : IProvider, ISecretId
 
             // Set the authorization header:
             if (requestedSecret.Success)
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(ENCRYPTION));
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
 
             // Set provider-specific headers:
             headersAction?.Invoke(request.Headers);
@@ -1262,7 +1254,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             {
                 case LLMProviders.SELF_HOSTED:
                     if(requestedSecret.Success)
-                        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(ENCRYPTION));
+                        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
                     
                     break;
                 
@@ -1273,7 +1265,7 @@ public abstract class BaseProvider : IProvider, ISecretId
                         return TranscriptionResult.Failure();
                     }
                     
-                    request.Headers.Add("Authorization", await requestedSecret.Secret.Decrypt(ENCRYPTION));
+                    request.Headers.Add("Authorization", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
                     break;
                 
                 default:
@@ -1283,10 +1275,14 @@ public abstract class BaseProvider : IProvider, ISecretId
                         return TranscriptionResult.Failure();
                     }
                     
-                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(ENCRYPTION));
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
                     break;
             }
-            
+
+            this.logger.LogInformation("Uploading transcription media '{FileName}' with content type '{ContentType}' and {FileSize} bytes.",
+                Path.GetFileName(audioFilePath),
+                mimeType.TextRepresentation,
+                fileStream.Length);
             using var response = await this.HttpClient.SendAsync(request, token);
             var responseBody = await response.Content.ReadAsStringAsync(token);
         
@@ -1305,6 +1301,10 @@ public abstract class BaseProvider : IProvider, ISecretId
             }
 
             return TranscriptionResult.FromText(transcriptionResponse.Text);
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
+        {
+            throw;
         }
         catch (Exception e)
         {
@@ -1344,7 +1344,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             {
                 case LLMProviders.SELF_HOSTED:
                     if(requestedSecret.Success)
-                        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(ENCRYPTION));
+                        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
                     
                     break;
                 
@@ -1355,7 +1355,7 @@ public abstract class BaseProvider : IProvider, ISecretId
                         return [];
                     }
                     
-                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(ENCRYPTION));
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
                     break;
             }
             
@@ -1408,42 +1408,15 @@ public abstract class BaseProvider : IProvider, ISecretId
     protected IDictionary<string, object> ParseAdditionalApiParameters(
         params string[] keysToRemove)
     {
-        if(string.IsNullOrWhiteSpace(this.AdditionalJsonApiParameters))
-            return new Dictionary<string, object>();
-        
-        try
+        if (!AdditionalApiParametersParser.TryParse(this.AdditionalJsonApiParameters, out var apiParameters, out var errorMessage))
         {
-            // Wrap the user-provided parameters in curly brackets to form a valid JSON object:
-            var json = $"{{{this.AdditionalJsonApiParameters}}}";
-            var jsonDoc = JsonSerializer.Deserialize<JsonElement>(json, JSON_SERIALIZER_OPTIONS);
-            var dict = ConvertToDictionary(jsonDoc);
-
-            // Some keys are always removed because we set them:
-            var removeSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            if (keysToRemove.Length > 0)
-                removeSet.UnionWith(keysToRemove);
-            
-            removeSet.Add("stream");
-            removeSet.Add("model");
-            removeSet.Add("messages");
-
-            // Remove the specified keys (case-insensitive):
-            if (removeSet.Count > 0)
-            {
-                foreach (var key in dict.Keys.ToList())
-                {
-                    if (removeSet.Contains(key))
-                        dict.Remove(key);
-                }
-            }
-
-            return dict;
-        }
-        catch (JsonException ex)
-        {
-            this.logger.LogError("Failed to parse additional API parameters: {ExceptionMessage}", ex.Message);
+            this.logger.LogError("Failed to parse additional API parameters: {ExceptionMessage}", errorMessage);
             return new Dictionary<string, object>();
         }
+
+        // Some keys are always removed because AI Studio sets them itself.
+        var reservedKeys = keysToRemove.Concat(["stream", "model", "messages"]);
+        return AdditionalApiParametersParser.RemoveKeys(apiParameters, reservedKeys);
     }
     
     protected static bool TryPopIntParameter(IDictionary<string, object> parameters, string key, out int value)
@@ -1525,27 +1498,4 @@ public abstract class BaseProvider : IProvider, ISecretId
         return true;
     }
 
-    private static IDictionary<string, object> ConvertToDictionary(JsonElement element)
-    {
-        return element.EnumerateObject()
-            .ToDictionary<JsonProperty, string, object>(
-                p => p.Name,
-                p => ConvertJsonValue(p.Value) ?? string.Empty
-            );
-    }
-
-    private static object? ConvertJsonValue(JsonElement element) => element.ValueKind switch
-    {
-        JsonValueKind.String => element.GetString(),
-        JsonValueKind.Number => element.TryGetInt32(out var i) ? i :
-            element.TryGetInt64(out var l) ? l :
-            element.TryGetDouble(out var d) ? d :
-            element.GetDecimal(),
-        JsonValueKind.True or JsonValueKind.False => element.GetBoolean(),
-        JsonValueKind.Null => string.Empty,
-        JsonValueKind.Object => ConvertToDictionary(element),
-        JsonValueKind.Array => element.EnumerateArray().Select(ConvertJsonValue).ToList(),
-        
-        _ => string.Empty,
-    };
 }

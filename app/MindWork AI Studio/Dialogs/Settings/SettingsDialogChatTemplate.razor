@@ -33,9 +33,14 @@
                 <MudTd>
                     @if (context.IsEnterpriseConfiguration)
                     {
-                        <MudTooltip Text="@T("This template is managed by your organization.")">
-                            <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Business" Disabled="true"/>
-                        </MudTooltip>
+                        <MudStack Row="true" Class="mb-2 mt-2" Wrap="Wrap.Wrap">
+                            <MudTooltip Text="@T("This template is managed by your organization.")">
+                                <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Business" Disabled="true"/>
+                            </MudTooltip>
+                            <MudTooltip Text="@T("View")">
+                                <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Visibility" OnClick="@(() => this.ViewChatTemplate(context))"/>
+                            </MudTooltip>
+                        </MudStack>
                     }
                     else
                     {
@@ -58,7 +63,7 @@
                                             <MudMenuItem Icon="@Icons.Material.Filled.Link" OnClick="@(() => this.ExportChatTemplateWithSharedAttachmentPaths(context))">
                                                 @T("Use shared attachment paths")
                                             </MudMenuItem>
-                                            <MudMenuItem Icon="@Icons.Material.Filled.Folder" OnClick="@(() => this.ExportChatTemplateWithPackagedAttachments(context))">
+                                            <MudMenuItem Icon="@Icons.Material.Filled.Folder" Disabled="@this.isPluginDirectoryDialogOpen" OnClick="@(() => this.ExportChatTemplateWithPackagedAttachments(context))">
                                                 @T("Copy attachments into plugin")
                                             </MudMenuItem>
                                         </MudMenu>

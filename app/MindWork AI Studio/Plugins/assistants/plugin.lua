@@ -46,6 +46,14 @@ IS_MAINTAINED = true
 -- When the plugin is deprecated, this message will be shown to users:
 DEPRECATION_MESSAGE = ""
 
+-- Enterprise-managed assistants cannot be revised with AI. Keep false for locally managed plugins:
+DEPLOYED_USING_CONFIG_SERVER = false
+
+-- Reserved for assistants created by the AI Studio Assistant Builder. Generated assistants use this
+-- metadata so AI Studio can identify them and offer Builder-specific actions such as safe deletion.
+-- Manually authored or enterprise-distributed assistants must not set this metadata:
+-- AI_STUDIO_ASSISTANT_BUILDER = {Generated = true, SchemaVersion = 1}
+
 ASSISTANT = {
     ["Title"] = "<Title of your assistant>",
     ["Description"] = "<Description presented to the users, explaining your assistant>",
@@ -62,6 +70,8 @@ ASSISTANT = {
     ["SystemPrompt"] = "<prompt that fundamentally changes behaviour, personality and task focus of your assistant. Invisible to the user>", -- required
     ["SubmitText"] = "<label for submit button>", -- required
     ["AllowProfiles"] = true, -- if true, allows AiStudios profiles; required
+    ["LaunchBehavior"] = "<NONE|OPEN_WORKSPACE_CHAT_BY_NAME>", -- optional; when set to OPEN_WORKSPACE_CHAT_BY_NAME the tile opens a chat directly
+    ["WorkspaceName"] = "<name of the workspace to open or create>", -- optional; required for OPEN_WORKSPACE_CHAT_BY_NAME
     ["UI"] = {
         ["Type"] = "FORM",
         ["Children"] = {

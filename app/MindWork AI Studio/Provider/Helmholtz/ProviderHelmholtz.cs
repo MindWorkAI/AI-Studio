@@ -15,7 +15,7 @@ public sealed class ProviderHelmholtz() : BaseProvider(LLMProviders.HELMHOLTZ, n
     #region Implementation of IProvider
 
     /// <inheritdoc />
-    public override string Id => LLMProviders.HELMHOLTZ.ToName();
+    public override string Id => LLMProviders.HELMHOLTZ.ToSecretId();
 
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "Helmholtz Blablador";
@@ -72,7 +72,7 @@ public sealed class ProviderHelmholtz() : BaseProvider(LLMProviders.HELMHOLTZ, n
     /// <inhertidoc />
     public override async Task<IReadOnlyList<IReadOnlyList<float>>> EmbedTextAsync(Model embeddingModel, SettingsManager settingsManager, CancellationToken token = default, params List<string> texts)
     {
-        var requestedSecret = await RUST_SERVICE.GetAPIKey(this, SecretStoreType.EMBEDDING_PROVIDER);
+        var requestedSecret = await Program.RUST_SERVICE.GetAPIKey(this, SecretStoreType.EMBEDDING_PROVIDER);
         return await this.PerformStandardTextEmbeddingRequest(requestedSecret, embeddingModel, token: token, texts: texts);
     }
 

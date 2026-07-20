@@ -12,6 +12,8 @@ namespace AIStudio.Tools;
 
 public static class WorkspaceBehaviour
 {
+    public readonly record struct TryCreateWorkspaceResult(bool Success, WorkspaceTreeWorkspace Workspace);
+
     private sealed class WorkspaceChatCacheEntry
     {
         public Guid WorkspaceId { get; init; }
@@ -76,9 +78,9 @@ public static class WorkspaceBehaviour
 
     private static readonly TimeSpan PREFETCH_DELAY_DURATION = TimeSpan.FromMilliseconds(45);
 
-    private static string WorkspaceRootDirectory => Path.Join(SettingsManager.DataDirectory, "workspaces");
+    private static readonly string WORKSPACE_ROOT_DIRECTORY = Path.Join(SettingsManager.DataDirectory, "workspaces");
 
-    private static string TemporaryChatsRootDirectory => Path.Join(SettingsManager.DataDirectory, "tempChats");
+    private static readonly string TEMPORARY_CHATS_ROOT_DIRECTORY = Path.Join(SettingsManager.DataDirectory, "tempChats");
 
     private static SemaphoreSlim GetChatSemaphore(Guid workspaceId, Guid chatId)
     {
@@ -156,9 +158,9 @@ public static class WorkspaceBehaviour
     private static async Task<List<WorkspaceChatCacheEntry>> ReadTemporaryChatsCoreAsync()
     {
         var chats = new List<WorkspaceChatCacheEntry>();
-        Directory.CreateDirectory(TemporaryChatsRootDirectory);
+        Directory.CreateDirectory(TEMPORARY_CHATS_ROOT_DIRECTORY);
 
-        foreach (var tempChatPath in Directory.EnumerateDirectories(TemporaryChatsRootDirectory))
+        foreach (var tempChatPath in Directory.EnumerateDirectories(TEMPORARY_CHATS_ROOT_DIRECTORY))
         {
             if (!Guid.TryParse(Path.GetFileName(tempChatPath), out var chatId))
                 continue;
@@ -188,8 +190,8 @@ public static class WorkspaceBehaviour
         WORKSPACE_TREE_CACHE.Workspaces.Clear();
         WORKSPACE_TREE_CACHE.WorkspaceOrder.Clear();
 
-        Directory.CreateDirectory(WorkspaceRootDirectory);
-        foreach (var workspacePath in Directory.EnumerateDirectories(WorkspaceRootDirectory))
+        Directory.CreateDirectory(WORKSPACE_ROOT_DIRECTORY);
+        foreach (var workspacePath in Directory.EnumerateDirectories(WORKSPACE_ROOT_DIRECTORY))
         {
             if (!Guid.TryParse(Path.GetFileName(workspacePath), out var workspaceId))
                 continue;
@@ -228,6 +230,99 @@ public static class WorkspaceBehaviour
         var existingIndex = chats.FindIndex(existing => existing.ChatId == chatId);
         if (existingIndex >= 0)
             chats.RemoveAt(existingIndex);
+    }
+
+    private static IReadOnlyList<string> ParseSearchTerms(string searchText) => searchText
+        .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+        .Where(term => !string.IsNullOrWhiteSpace(term))
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .ToList();
+
+    private static IReadOnlyList<string> GetMissingTerms(string text, IReadOnlyList<string> terms) => terms
+        .Where(term => text.IndexOf(term, StringComparison.OrdinalIgnoreCase) < 0)
+        .ToList();
+
+    private static bool ChatThreadContainsTerms(ChatThread thread, IReadOnlyList<string> terms)
+    {
+        var matchedTerms = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var block in thread.Blocks)
+        {
+            if (block.HideFromUser || block.Content is not ContentText textContent || string.IsNullOrWhiteSpace(textContent.Text))
+                continue;
+
+            foreach (var term in terms)
+                if (textContent.Text.Contains(term, StringComparison.OrdinalIgnoreCase))
+                    matchedTerms.Add(term);
+
+            if (matchedTerms.Count == terms.Count)
+                return true;
+        }
+
+        return false;
+    }
+
+    private static bool WorkspaceNameExistsCore(string workspaceName, Guid excludedWorkspaceId = default)
+    {
+        return WORKSPACE_TREE_CACHE.Workspaces.Values.Any(workspace =>
+            workspace.WorkspaceId != excludedWorkspaceId &&
+            string.Equals(workspace.WorkspaceName.Trim(), workspaceName, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static async Task<bool> ThreadContainsTermsAsync(WorkspaceTreeChat chat, IReadOnlyList<string> terms, CancellationToken token)
+    {
+        var (acquired, semaphore) = await TryAcquireChatSemaphoreAsync(chat.WorkspaceId, chat.ChatId, nameof(ThreadContainsTermsAsync));
+        if (!acquired)
+            return false;
+
+        try
+        {
+            var threadPath = Path.Join(chat.ChatPath, "thread.json");
+            if (!File.Exists(threadPath))
+                return false;
+
+            var chatData = await File.ReadAllTextAsync(threadPath, Encoding.UTF8, token);
+            token.ThrowIfCancellationRequested();
+            var thread = JsonSerializer.Deserialize<ChatThread>(chatData, JSON_OPTIONS);
+            return thread is not null && ChatThreadContainsTerms(thread, terms);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            LOG.LogWarning(ex, "Failed to search chat thread for workspace '{WorkspaceId}', chat '{ChatId}'.", chat.WorkspaceId, chat.ChatId);
+            return false;
+        }
+        finally
+        {
+            semaphore.Release();
+        }
+    }
+
+    private static async Task<List<WorkspaceSearchResult>> SearchChatsAsync(IReadOnlyList<WorkspaceTreeChat> chats, IReadOnlyList<string> terms, bool includeThreadContents, CancellationToken token)
+    {
+        var results = new List<WorkspaceSearchResult>();
+        foreach (var chat in chats)
+        {
+            token.ThrowIfCancellationRequested();
+
+            var missingTerms = GetMissingTerms(chat.Name, terms);
+            if (missingTerms.Count == 0)
+            {
+                results.Add(new(chat, NameMatched: true, ThreadMatched: false));
+                continue;
+            }
+
+            if (!includeThreadContents)
+                continue;
+
+            var threadMatched = await ThreadContainsTermsAsync(chat, missingTerms, token);
+            if (threadMatched)
+                results.Add(new(chat, NameMatched: false, ThreadMatched: true));
+        }
+
+        return results;
     }
 
     private static async Task UpdateCacheAfterChatStored(Guid workspaceId, Guid chatId, string chatDirectory, string chatName, DateTimeOffset lastEditTime)
@@ -348,6 +443,55 @@ public static class WorkspaceBehaviour
         }
     }
 
+    public static async Task<WorkspaceSearchSnapshot> SearchWorkspaceChatsAsync(string searchText, bool includeThreadContents, CancellationToken token = default)
+    {
+        var terms = ParseSearchTerms(searchText);
+        if (terms.Count == 0)
+            return new([], []);
+
+        List<WorkspaceTreeWorkspace> workspaces;
+        List<WorkspaceTreeChat> temporaryChats;
+
+        await WORKSPACE_TREE_CACHE_SEMAPHORE.WaitAsync(token);
+        try
+        {
+            await EnsureTreeShellLoadedCoreAsync();
+            workspaces = [];
+            foreach (var workspaceId in WORKSPACE_TREE_CACHE.WorkspaceOrder)
+            {
+                token.ThrowIfCancellationRequested();
+                if (!WORKSPACE_TREE_CACHE.Workspaces.TryGetValue(workspaceId, out var workspace))
+                    continue;
+
+                if (!workspace.ChatsLoaded)
+                {
+                    workspace.Chats = await ReadWorkspaceChatsCoreAsync(workspaceId, workspace.WorkspacePath);
+                    workspace.ChatsLoaded = true;
+                }
+
+                workspaces.Add(ToPublicWorkspace(workspace));
+            }
+
+            temporaryChats = WORKSPACE_TREE_CACHE.TemporaryChats.Select(ToPublicChat).ToList();
+        }
+        finally
+        {
+            WORKSPACE_TREE_CACHE_SEMAPHORE.Release();
+        }
+
+        var matchingWorkspaces = new List<WorkspaceSearchWorkspace>();
+        foreach (var workspace in workspaces)
+        {
+            token.ThrowIfCancellationRequested();
+            var matchingChats = await SearchChatsAsync(workspace.Chats, terms, includeThreadContents, token);
+            if (matchingChats.Count > 0)
+                matchingWorkspaces.Add(new(workspace.WorkspaceId, workspace.WorkspacePath, workspace.Name, matchingChats));
+        }
+
+        var matchingTemporaryChats = await SearchChatsAsync(temporaryChats, terms, includeThreadContents, token);
+        return new(matchingWorkspaces, matchingTemporaryChats);
+    }
+
     public static async Task TryPrefetchRemainingChatsAsync(Func<Guid, Task>? onWorkspaceUpdated = null, CancellationToken token = default)
     {
         while (true)
@@ -452,13 +596,147 @@ public static class WorkspaceBehaviour
             WORKSPACE_TREE_CACHE_SEMAPHORE.Release();
         }
     }
+
+    public static string NormalizeWorkspaceName(string workspaceName) => workspaceName.Trim();
+
+    public static async Task<bool> IsWorkspaceNameExistingAsync(string workspaceName, Guid excludedWorkspaceId = default)
+    {
+        var normalizedWorkspaceName = NormalizeWorkspaceName(workspaceName);
+        if (string.IsNullOrWhiteSpace(normalizedWorkspaceName))
+            return false;
+
+        await WORKSPACE_TREE_CACHE_SEMAPHORE.WaitAsync();
+        try
+        {
+            await EnsureTreeShellLoadedCoreAsync();
+            return WorkspaceNameExistsCore(normalizedWorkspaceName, excludedWorkspaceId);
+        }
+        finally
+        {
+            WORKSPACE_TREE_CACHE_SEMAPHORE.Release();
+        }
+    }
+
+    public static async Task<Guid> ResolveOrCreateWorkspaceIdByNameAsync(string workspaceName)
+    {
+        var normalizedWorkspaceName = NormalizeWorkspaceName(workspaceName);
+        if (string.IsNullOrWhiteSpace(normalizedWorkspaceName))
+            return Guid.Empty;
+
+        await WORKSPACE_TREE_CACHE_SEMAPHORE.WaitAsync();
+        try
+        {
+            await EnsureTreeShellLoadedCoreAsync();
+
+            var existingWorkspace = WORKSPACE_TREE_CACHE.Workspaces.Values.FirstOrDefault(workspace =>
+                string.Equals(workspace.WorkspaceName.Trim(), normalizedWorkspaceName, StringComparison.OrdinalIgnoreCase));
+            if (existingWorkspace is not null)
+                return existingWorkspace.WorkspaceId;
+        }
+        finally
+        {
+            WORKSPACE_TREE_CACHE_SEMAPHORE.Release();
+        }
+
+        var result = await TryCreateWorkspaceAsync(normalizedWorkspaceName);
+        if (result.Success)
+            return result.Workspace.WorkspaceId;
+
+        await WORKSPACE_TREE_CACHE_SEMAPHORE.WaitAsync();
+        try
+        {
+            await EnsureTreeShellLoadedCoreAsync();
+
+            var existingWorkspace = WORKSPACE_TREE_CACHE.Workspaces.Values.FirstOrDefault(workspace =>
+                string.Equals(workspace.WorkspaceName.Trim(), normalizedWorkspaceName, StringComparison.OrdinalIgnoreCase));
+            return existingWorkspace?.WorkspaceId ?? Guid.Empty;
+        }
+        finally
+        {
+            WORKSPACE_TREE_CACHE_SEMAPHORE.Release();
+        }
+    }
+
+    public static async Task<TryCreateWorkspaceResult> TryCreateWorkspaceAsync(string workspaceName)
+    {
+        var normalizedWorkspaceName = NormalizeWorkspaceName(workspaceName);
+        if (string.IsNullOrWhiteSpace(normalizedWorkspaceName))
+            return new(false, default);
+
+        await WORKSPACE_TREE_CACHE_SEMAPHORE.WaitAsync();
+        try
+        {
+            await EnsureTreeShellLoadedCoreAsync();
+            if (WorkspaceNameExistsCore(normalizedWorkspaceName))
+                return new(false, default);
+
+            var workspaceId = Guid.NewGuid();
+            var workspacePath = Path.Join(WORKSPACE_ROOT_DIRECTORY, workspaceId.ToString());
+            Directory.CreateDirectory(workspacePath);
+
+            var workspaceNamePath = Path.Join(workspacePath, "name");
+            await File.WriteAllTextAsync(workspaceNamePath, normalizedWorkspaceName, Encoding.UTF8);
+
+            var workspace = new WorkspaceCacheEntry
+            {
+                WorkspaceId = workspaceId,
+                WorkspacePath = workspacePath,
+                WorkspaceName = normalizedWorkspaceName,
+                Chats = [],
+                ChatsLoaded = false,
+            };
+            WORKSPACE_TREE_CACHE.Workspaces[workspaceId] = workspace;
+            WORKSPACE_TREE_CACHE.WorkspaceOrder.Add(workspaceId);
+
+            return new(true, ToPublicWorkspace(workspace));
+        }
+        finally
+        {
+            WORKSPACE_TREE_CACHE_SEMAPHORE.Release();
+        }
+    }
+
+    public static async Task<bool> RenameWorkspaceAsync(Guid workspaceId, string workspaceName)
+    {
+        var normalizedWorkspaceName = NormalizeWorkspaceName(workspaceName);
+        if (string.IsNullOrWhiteSpace(normalizedWorkspaceName))
+            return false;
+
+        await WORKSPACE_TREE_CACHE_SEMAPHORE.WaitAsync();
+        try
+        {
+            await EnsureTreeShellLoadedCoreAsync();
+            if (!WORKSPACE_TREE_CACHE.Workspaces.TryGetValue(workspaceId, out var workspace))
+                return false;
+
+            var workspaceNamePath = Path.Join(workspace.WorkspacePath, "name");
+            if (string.Equals(workspace.WorkspaceName.Trim(), normalizedWorkspaceName, StringComparison.OrdinalIgnoreCase))
+            {
+                await File.WriteAllTextAsync(workspaceNamePath, normalizedWorkspaceName, Encoding.UTF8);
+                workspace.WorkspaceName = normalizedWorkspaceName;
+                return true;
+            }
+
+            if (WorkspaceNameExistsCore(normalizedWorkspaceName, workspaceId))
+                return false;
+
+            await File.WriteAllTextAsync(workspaceNamePath, normalizedWorkspaceName, Encoding.UTF8);
+            workspace.WorkspaceName = normalizedWorkspaceName;
+
+            return true;
+        }
+        finally
+        {
+            WORKSPACE_TREE_CACHE_SEMAPHORE.Release();
+        }
+    }
     
     public static bool IsChatExisting(LoadChat loadChat)
     {
         var chatPath = loadChat.WorkspaceId == Guid.Empty
             ? Path.Join(SettingsManager.DataDirectory, "tempChats", loadChat.ChatId.ToString())
             : Path.Join(SettingsManager.DataDirectory, "workspaces", loadChat.WorkspaceId.ToString(), loadChat.ChatId.ToString());
-        
+
         return Directory.Exists(chatPath);
     }
 
@@ -476,6 +754,7 @@ public static class WorkspaceBehaviour
 
             Directory.CreateDirectory(chatDirectory);
 
+            await FinalizeStagedTranscriptsAsync(chat, chatDirectory);
             var chatNamePath = Path.Join(chatDirectory, "name");
             await File.WriteAllTextAsync(chatNamePath, chat.Name);
 
@@ -490,6 +769,225 @@ public static class WorkspaceBehaviour
             semaphore.Release();
         }
     }
+
+    /// <summary>Creates a transcript atomically inside an already persisted chat.</summary>
+    /// <param name="chat">Persisted chat that owns the transcript counter.</param>
+    /// <param name="originalPath">Original media path.</param>
+    /// <param name="transcript">Provider transcript.</param>
+    /// <returns>The chat-owned managed attachment.</returns>
+    public static async Task<ManagedTranscriptAttachment> CreateManagedTranscriptAsync(ChatThread chat, string originalPath, string transcript)
+    {
+        var (acquired, semaphore) = await TryAcquireChatSemaphoreAsync(chat.WorkspaceId, chat.ChatId, nameof(CreateManagedTranscriptAsync));
+        if (!acquired)
+            throw new IOException("The chat transcript directory is busy.");
+
+        try
+        {
+            var chatDirectory = GetChatDirectory(chat.WorkspaceId, chat.ChatId);
+            if (!Directory.Exists(chatDirectory))
+                throw new DirectoryNotFoundException($"The owning chat directory does not exist: '{chatDirectory}'.");
+            
+            var transcriptDirectory = Path.Combine(chatDirectory, "attachments", "transcripts");
+            Directory.CreateDirectory(transcriptDirectory);
+            ReconcileTranscriptCounter(chat, transcriptDirectory);
+            
+            var targetPath = NextTranscriptPath(chat, transcriptDirectory, Path.GetFileName(originalPath));
+            return await ManagedTranscriptAttachment.CreateAtomicAsync(targetPath, Path.GetFileName(originalPath), transcript);
+        }
+        finally
+        {
+            semaphore.Release();
+        }
+    }
+
+    public static async Task MoveChatAsync(ChatThread chat, Guid targetWorkspaceId)
+    {
+        if (chat.WorkspaceId == targetWorkspaceId)
+            return;
+
+        var sourceWorkspaceId = chat.WorkspaceId;
+        var sourceDirectory = GetChatDirectory(sourceWorkspaceId, chat.ChatId);
+        var targetDirectory = GetChatDirectory(targetWorkspaceId, chat.ChatId);
+        var sourceSemaphore = GetChatSemaphore(sourceWorkspaceId, chat.ChatId);
+        var targetSemaphore = GetChatSemaphore(targetWorkspaceId, chat.ChatId);
+        // Always acquire both workspace/chat locks in canonical workspace-ID order. This prevents
+        // opposing moves of the same chat from waiting on one another with reversed lock order.
+        var orderedSemaphores = string.CompareOrdinal(sourceWorkspaceId.ToString("N"), targetWorkspaceId.ToString("N")) <= 0
+            ? new[] { sourceSemaphore, targetSemaphore }
+            : new[] { targetSemaphore, sourceSemaphore };
+        
+        await orderedSemaphores[0].WaitAsync();
+        await orderedSemaphores[1].WaitAsync();
+        
+        var moved = false;
+        try
+        {
+            if (!Directory.Exists(sourceDirectory))
+                throw new DirectoryNotFoundException($"The source chat directory does not exist: '{sourceDirectory}'.");
+            
+            // Only the workspace parent is created here. Directory.Move requires the chat target
+            // directory itself not to exist so an existing destination is never merged silently.
+            var targetWorkspaceDirectory = Path.GetDirectoryName(targetDirectory)!;
+            Directory.CreateDirectory(targetWorkspaceDirectory);
+            if (Directory.Exists(targetDirectory))
+                throw new IOException($"The target chat directory already exists: '{targetDirectory}'.");
+
+            Directory.Move(sourceDirectory, targetDirectory);
+            moved = true;
+            
+            UpdateAttachmentPathsAfterMove(chat, sourceDirectory, targetDirectory);
+            chat.WorkspaceId = targetWorkspaceId;
+            
+            await FinalizeStagedTranscriptsAsync(chat, targetDirectory);
+            await StoreMovedChatFilesAsync(chat, targetDirectory);
+        }
+        catch
+        {
+            if (moved)
+            {
+                try
+                {
+                    UpdateAttachmentPathsAfterMove(chat, targetDirectory, sourceDirectory);
+                    chat.WorkspaceId = sourceWorkspaceId;
+                    
+                    if (Directory.Exists(targetDirectory) && !Directory.Exists(sourceDirectory))
+                        Directory.Move(targetDirectory, sourceDirectory);
+                    
+                    if (Directory.Exists(sourceDirectory))
+                        await StoreMovedChatFilesAsync(chat, sourceDirectory);
+                }
+                catch (Exception rollbackError)
+                {
+                    LOG.LogError(rollbackError, "Could not roll back moving chat '{ChatId}' to workspace '{WorkspaceId}'.", chat.ChatId, targetWorkspaceId);
+                }
+            }
+            throw;
+        }
+        finally
+        {
+            orderedSemaphores[1].Release();
+            orderedSemaphores[0].Release();
+            InvalidateWorkspaceTreeCache();
+        }
+    }
+
+    /// <summary>Atomically stores the name and thread after a directory move.</summary>
+    private static async Task StoreMovedChatFilesAsync(ChatThread chat, string chatDirectory)
+    {
+        await File.WriteAllTextAsync(Path.Join(chatDirectory, "name"), chat.Name);
+        var chatPath = Path.Join(chatDirectory, "thread.json");
+        var temporaryPath = Path.Join(chatDirectory, $".thread-{Guid.NewGuid():N}.tmp");
+        
+        try
+        {
+            await File.WriteAllTextAsync(temporaryPath, JsonSerializer.Serialize(chat, JSON_OPTIONS), Encoding.UTF8);
+            File.Move(temporaryPath, chatPath, overwrite: true);
+        }
+        finally
+        {
+            if (File.Exists(temporaryPath))
+                File.Delete(temporaryPath);
+        }
+    }
+
+    /// <summary>Rewrites absolute attachment paths after moving the complete chat directory.</summary>
+    private static void UpdateAttachmentPathsAfterMove(ChatThread chat, string sourceDirectory, string targetDirectory)
+    {
+        var sourcePrefix = sourceDirectory.EndsWith(Path.DirectorySeparatorChar)
+            ? sourceDirectory
+            : sourceDirectory + Path.DirectorySeparatorChar;
+
+        var pathComparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+        foreach (var content in chat.Blocks.Select(block => block.Content).OfType<ContentText>())
+        {
+            for (var index = 0; index < content.FileAttachments.Count; index++)
+            {
+                var attachment = content.FileAttachments[index];
+                if (!Path.GetFullPath(attachment.FilePath).StartsWith(sourcePrefix, pathComparison))
+                    continue;
+
+                var relativePath = Path.GetRelativePath(sourceDirectory, attachment.FilePath);
+                var movedPath = Path.Combine(targetDirectory, relativePath);
+
+                content.FileAttachments[index] = attachment switch
+                {
+                    ManagedTranscriptAttachment managed => managed with { FilePath = movedPath },
+                    FileAttachmentImage image => image with { FilePath = movedPath },
+                    _ => attachment with { FilePath = movedPath },
+                };
+            }
+        }
+    }
+
+    private static async Task FinalizeStagedTranscriptsAsync(ChatThread chat, string chatDirectory)
+    {
+        var transcriptDirectory = Path.Combine(chatDirectory, "attachments", "transcripts");
+        ReconcileTranscriptCounter(chat, transcriptDirectory);
+        foreach (var content in chat.Blocks.Select(block => block.Content).OfType<ContentText>())
+        {
+            for (var index = 0; index < content.FileAttachments.Count; index++)
+            {
+                if (content.FileAttachments[index] is not ManagedTranscriptAttachment { IsStaged: true } staged
+                    || !File.Exists(staged.FilePath))
+                    continue;
+
+                Directory.CreateDirectory(transcriptDirectory);
+                var targetPath = NextTranscriptPath(chat, transcriptDirectory, staged.OriginalFileName);
+
+                File.Move(staged.FilePath, targetPath);
+                var sourceDirectory = Path.GetDirectoryName(staged.FilePath);
+                if (sourceDirectory is not null && Directory.Exists(sourceDirectory) && !Directory.EnumerateFileSystemEntries(sourceDirectory).Any())
+                    Directory.Delete(sourceDirectory);
+
+                content.FileAttachments[index] = new ManagedTranscriptAttachment(
+                    Path.GetFileName(targetPath),
+                    targetPath,
+                    new FileInfo(targetPath).Length,
+                    staged.OriginalFileName,
+                    false);
+            }
+        }
+
+        await Task.CompletedTask;
+    }
+
+    /// <summary>Raises the persisted counter to the highest transcript suffix found chat-wide.</summary>
+    private static void ReconcileTranscriptCounter(ChatThread chat, string transcriptDirectory)
+    {
+        if (!Directory.Exists(transcriptDirectory))
+            return;
+        
+        ulong highest = 0;
+        foreach (var path in Directory.EnumerateFiles(transcriptDirectory, "*-transcript-*.md", SearchOption.TopDirectoryOnly))
+        {
+            var name = Path.GetFileNameWithoutExtension(path);
+            var marker = name.LastIndexOf("-transcript-", StringComparison.Ordinal);
+            
+            if (marker >= 0 && ulong.TryParse(name[(marker + "-transcript-".Length)..], out var number))
+                highest = Math.Max(highest, number);
+        }
+        
+        chat.LastMediaTranscriptNumber = Math.Max(chat.LastMediaTranscriptNumber, highest);
+    }
+
+    /// <summary>Allocates the next globally monotonic transcript path for one chat.</summary>
+    private static string NextTranscriptPath(ChatThread chat, string transcriptDirectory, string originalFileName)
+    {
+        string targetPath;
+        do
+        {
+            chat.LastMediaTranscriptNumber++;
+            var stem = ManagedTranscriptAttachment.NormalizeOriginalStem(originalFileName);
+            targetPath = Path.Combine(transcriptDirectory, $"{stem}-transcript-{chat.LastMediaTranscriptNumber:D4}.md");
+        } while (File.Exists(targetPath));
+        
+        return targetPath;
+    }
+
+    /// <summary>Returns the canonical storage directory for a chat identity.</summary>
+    private static string GetChatDirectory(Guid workspaceId, Guid chatId) => workspaceId == Guid.Empty
+        ? Path.Join(SettingsManager.DataDirectory, "tempChats", chatId.ToString())
+        : Path.Join(SettingsManager.DataDirectory, "workspaces", workspaceId.ToString(), chatId.ToString());
 
     public static async Task<ChatThread?> LoadChatAsync(LoadChat loadChat)
     {
@@ -533,7 +1031,7 @@ public static class WorkspaceBehaviour
 
             // Not in cache — read from disk and update cache in the same semaphore scope
             // to avoid a second semaphore acquisition via UpdateWorkspaceNameInCacheAsync:
-            var workspacePath = Path.Join(WorkspaceRootDirectory, workspaceId.ToString());
+            var workspacePath = Path.Join(WORKSPACE_ROOT_DIRECTORY, workspaceId.ToString());
             var workspaceNamePath = Path.Join(workspacePath, "name");
             string workspaceName;
 
@@ -621,7 +1119,7 @@ public static class WorkspaceBehaviour
 
     private static async Task EnsureWorkspace(Guid workspaceId, string workspaceName)
     {
-        var workspacePath = Path.Join(WorkspaceRootDirectory, workspaceId.ToString());
+        var workspacePath = Path.Join(WORKSPACE_ROOT_DIRECTORY, workspaceId.ToString());
         var workspaceNamePath = Path.Join(workspacePath, "name");
         
         if (!Path.Exists(workspacePath))

@@ -1,11 +1,76 @@
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.Rust;
+using AIStudio.Tools.Services;
+
+using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Components.Settings;
 
 public partial class SettingsPanelApp : SettingsPanelBase
 {
+    [Inject]
+    private UpdatePolicy UpdatePolicy { get; init; } = null!;
+
+    private UpdatePolicyMode updatePolicyMode;
+
+    private UpdateInterval DisplayedUpdateInterval => this.updatePolicyMode is UpdatePolicyMode.FLATPAK
+        ? UpdateInterval.NO_CHECK
+        : this.SettingsManager.ConfigurationData.App.UpdateInterval;
+
+    private UpdateInstallation DisplayedUpdateInstallation => this.updatePolicyMode is UpdatePolicyMode.FLATPAK
+        ? UpdateInstallation.MANUAL
+        : this.SettingsManager.ConfigurationData.App.UpdateInstallation;
+
+    private string UpdateIntervalHelp => this.updatePolicyMode switch
+    {
+        UpdatePolicyMode.ENTERPRISE_DISABLED => T("Your organization has disabled update checks and installations."),
+        UpdatePolicyMode.FLATPAK => T("AI Studio cannot check for updates when running as a Flatpak. Updates are managed outside the app."),
+        _ => T("How often should we check for app updates?")
+    };
+
+    private string UpdateInstallationHelp => this.updatePolicyMode switch
+    {
+        UpdatePolicyMode.ENTERPRISE_DISABLED => T("This setting has no effect while updates are disabled by your organization."),
+        UpdatePolicyMode.FLATPAK => T("AI Studio cannot install updates when running as a Flatpak. Use the update method provided by your Flatpak distribution."),
+        _ => T("Should updates be installed automatically or manually?")
+    };
+
+    private bool IsUpdateIntervalLocked() => this.updatePolicyMode is UpdatePolicyMode.ENTERPRISE_DISABLED or UpdatePolicyMode.FLATPAK ||
+        ManagedConfiguration.TryGet(x => x.App, x => x.UpdateInterval, out var meta) && meta.IsLocked;
+
+    private bool IsUpdateInstallationLocked() => this.updatePolicyMode is UpdatePolicyMode.ENTERPRISE_DISABLED or UpdatePolicyMode.FLATPAK ||
+        ManagedConfiguration.TryGet(x => x.App, x => x.UpdateInstallation, out var meta) && meta.IsLocked;
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.ApplyFilters([], [ Event.CONFIGURATION_CHANGED, Event.GLOBAL_SHORTCUT_CHANGED ]);
+        await base.OnInitializedAsync();
+        this.updatePolicyMode = this.UpdatePolicy.CurrentMode;
+    }
+
+    protected override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
+    {
+        if (triggeredEvent is Event.CONFIGURATION_CHANGED)
+            this.updatePolicyMode = this.UpdatePolicy.CurrentMode;
+
+        if (triggeredEvent is Event.GLOBAL_SHORTCUT_CHANGED)
+            this.StateHasChanged();
+
+        await base.ProcessIncomingMessage(sendingComponent, triggeredEvent, data);
+    }
+
+    private ConfigurationShortcutData VoiceRecordingShortcut => new()
+    {
+        Id = Shortcut.VOICE_RECORDING_TOGGLE,
+        Value = () => this.SettingsManager.ConfigurationData.App.ShortcutVoiceRecording,
+        ValueUpdate = shortcut => this.SettingsManager.ConfigurationData.App.ShortcutVoiceRecording = shortcut,
+        DisplayName = () => this.SettingsManager.ConfigurationData.App.ShortcutVoiceRecordingDisplayName,
+        DisplaySource = () => this.SettingsManager.ConfigurationData.App.ShortcutVoiceRecordingDisplaySource,
+        DisplayUpdate = this.UpdateShortcutVoiceRecordingDisplay,
+    };
+
     private async Task GenerateEncryptionSecret()
     {
         var secret = EnterpriseEncryption.GenerateSecret();
@@ -91,6 +156,12 @@ public partial class SettingsPanelApp : SettingsPanelBase
     {
         selectedFeatures.UnionWith(this.GetPluginContributedPreviewFeatures());
         this.SettingsManager.ConfigurationData.App.EnabledPreviewFeatures = selectedFeatures;
+    }
+
+    private void UpdateShortcutVoiceRecordingDisplay(string displayName, string displaySource)
+    {
+        this.SettingsManager.ConfigurationData.App.ShortcutVoiceRecordingDisplayName = displayName;
+        this.SettingsManager.ConfigurationData.App.ShortcutVoiceRecordingDisplaySource = displaySource;
     }
 
     private async Task UpdateLangBehaviour(LangBehavior behavior)

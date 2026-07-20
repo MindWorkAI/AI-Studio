@@ -4,11 +4,15 @@ using AIStudio.Settings;
 using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.Databases;
 using AIStudio.Tools.AIJobs;
+using AIStudio.Tools.AssistantSessions;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.PluginSystem.Assistants;
+using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations;
 using AIStudio.Tools.Web;
+
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Logging.Console;
 
@@ -89,6 +93,7 @@ internal sealed class Program
             return;
         }
         
+        var runtimeInfo = await rust.GetRuntimeInfo();
         var builder = WebApplication.CreateBuilder();
         builder.WebHost.ConfigureKestrel(kestrelServerOptions =>
         {
@@ -110,6 +115,32 @@ internal sealed class Program
             options.FormatterName = TerminalLogger.FORMATTER_NAME;
         }).AddConsoleFormatter<TerminalLogger, ConsoleFormatterOptions>();
 
+        if(runtimeInfo.LinuxPackageType == "flatpak")
+        {
+            try
+            {
+                var tauriDataDirectory = await rust.GetDataDirectory();
+                if(string.IsNullOrWhiteSpace(tauriDataDirectory))
+                    throw new InvalidOperationException("Rust returned an empty Tauri data directory.");
+
+                var dataProtectionKeysDirectory = Path.Combine(tauriDataDirectory, "data-protection-keys");
+                Directory.CreateDirectory(dataProtectionKeysDirectory);
+                var writeTestPath = Path.Combine(dataProtectionKeysDirectory, $".write-test-{Guid.NewGuid():N}");
+                using (new FileStream(writeTestPath, FileMode.CreateNew, FileAccess.Write, FileShare.None, 1, FileOptions.DeleteOnClose))
+                {
+                }
+
+                builder.Services.AddDataProtection()
+                    .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionKeysDirectory))
+                    .SetApplicationName("org.mindworkai.AIStudio");
+            }
+            catch(Exception exception)
+            {
+                Console.WriteLine($"Error: Failed to configure Flatpak data-protection keys in the Tauri data directory: {exception.Message}");
+                return;
+            }
+        }
+
         builder.Services.AddMudExtensions();
         builder.Services.AddMudServices(config =>
         {
@@ -128,6 +159,7 @@ internal sealed class Program
         builder.Services.AddSingleton(new MudTheme());
         builder.Services.AddSingleton(MessageBus.INSTANCE);
         builder.Services.AddSingleton(rust);
+        builder.Services.AddSingleton(typeof(RuntimeInfoResponse), runtimeInfo);
         builder.Services.AddMudMarkdownClipboardService<MarkdownClipboardService>();
         builder.Services.AddSingleton<SettingsManager>();
         builder.Services.AddSingleton<ToolSettingsService>();
@@ -138,7 +170,12 @@ internal sealed class Program
         builder.Services.AddSingleton<ToolExecutor>();
         builder.Services.AddSingleton<ThreadSafeRandom>();
         builder.Services.AddSingleton<AIJobService>();
+        builder.Services.AddSingleton<AssistantSessionService>();
         builder.Services.AddSingleton<VoiceRecordingAvailabilityService>();
+        builder.Services.AddSingleton<MediaTranscriptionService>();
+        builder.Services.AddSingleton<AssistantPluginInstallService>();
+        builder.Services.AddSingleton<UpdatePolicy>();
+        builder.Services.AddSingleton<AssistantPluginGenerationService>();
         builder.Services.AddSingleton<DataSourceService>();
         builder.Services.AddScoped<PandocAvailabilityService>();
         builder.Services.AddTransient<HTMLParser>();
@@ -149,6 +186,7 @@ internal sealed class Program
         builder.Services.AddTransient<AssistantPluginAuditService>();
         builder.Services.AddHostedService<UpdateService>();
         builder.Services.AddHostedService<TemporaryChatService>();
+        builder.Services.AddHostedService<TranscriptStagingCleanupService>();
         builder.Services.AddHostedService<EnterpriseEnvironmentService>();
         builder.Services.AddSingleton<DatabaseClientProvider>();
         builder.Services.AddHostedService<GlobalShortcutService>();
@@ -159,12 +197,17 @@ internal sealed class Program
         // ReSharper restore AccessToDisposedClosure
         
         builder.Services.AddRazorComponents()
-            .AddInteractiveServerComponents()
+            .AddInteractiveServerComponents(options =>
+            {
+                options.DisconnectedCircuitRetentionPeriod = TimeSpan.FromDays(30);
+                options.DisconnectedCircuitMaxRetained = 2;
+            })
             .AddHubOptions(options =>
             {
                 options.MaximumReceiveMessageSize = null;
-                options.ClientTimeoutInterval = TimeSpan.FromDays(14);
+                options.ClientTimeoutInterval = TimeSpan.FromSeconds(120);
                 options.HandshakeTimeout = TimeSpan.FromSeconds(30);
+                options.KeepAliveInterval = TimeSpan.FromSeconds(30);
             });
 
         builder.Services.AddSingleton(new HttpClient

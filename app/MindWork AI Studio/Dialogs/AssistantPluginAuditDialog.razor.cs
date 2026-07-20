@@ -37,6 +37,7 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
     private IReadOnlyCollection<TreeItemData<ITreeItem>> fileSystemTreeItems = [];
     private CultureInfo currentCultureInfo = CultureInfo.InvariantCulture;
     private bool isAuditing;
+    private PluginAssistantSecurityState securityState = new();
 
     private AIStudio.Settings.Provider CurrentProvider => this.SettingsManager.GetPreselectedProvider(Tools.Components.AGENT_ASSISTANT_PLUGIN_AUDIT, null, true);
 
@@ -50,15 +51,15 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
 
     private string MinimumLevelLabel => this.MinimumLevel.GetName();
 
-    private bool CanRunAudit => this.plugin is not null && this.CurrentProvider != AIStudio.Settings.Provider.NONE && !this.isAuditing;
+    private bool CanRunAudit => this.plugin is not null && this.CurrentProvider != AIStudio.Settings.Provider.NONE && !this.isAuditing && !this.securityState.IsEnterpriseApproved;
 
     private bool IsAuditBelowMinimum => this.audit is not null && this.audit.Level < this.MinimumLevel;
 
-    private bool IsActivationBlockedBySettings => this.audit is null || this.IsAuditBelowMinimum && this.AuditSettings.BlockActivationBelowMinimum;
+    private bool IsActivationBlockedBySettings => this.AuditSettings.RequireAuditBeforeActivation && (this.audit is null || this.IsAuditBelowMinimum && this.AuditSettings.BlockActivationBelowMinimum);
 
-    private bool RequiresActivationConfirmation => this.audit is not null && this.IsAuditBelowMinimum && !this.AuditSettings.BlockActivationBelowMinimum;
+    private bool RequiresActivationConfirmation => this.audit is not null && this.IsAuditBelowMinimum && !this.IsActivationBlockedBySettings;
 
-    private bool CanEnablePlugin => this.audit is not null && !this.isAuditing && !this.IsActivationBlockedBySettings;
+    private bool CanEnablePlugin => this.plugin is not null && !this.isAuditing && !this.IsActivationBlockedBySettings;
 
     private Color EnableButtonColor => this.RequiresActivationConfirmation ? Color.Warning : Color.Success;
     private bool justAudited;
@@ -74,6 +75,7 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
             .FirstOrDefault(x => x.Id == this.PluginId);
         if (this.plugin is not null)
         {
+            this.securityState = PluginAssistantSecurityResolver.Resolve(this.SettingsManager, this.plugin);
             this.promptPreview = await this.plugin.BuildAuditPromptPreviewAsync();
             this.promptFallbackPreview = this.plugin.BuildAuditPromptFallbackPreview();
             this.plugin.CreateAuditComponentSummary();
@@ -96,6 +98,7 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
         try
         {
             this.audit = await this.AssistantPluginAuditService.RunAuditAsync(this.plugin);
+            this.securityState = PluginAssistantSecurityResolver.Resolve(this.SettingsManager, this.plugin);
         }
         finally
         {
@@ -118,7 +121,7 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
 
     private async Task EnablePlugin()
     {
-        if (this.audit is null)
+        if (this.plugin is null)
             return;
 
         if (this.IsActivationBlockedBySettings)
@@ -137,7 +140,7 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
             {
                 x => x.Message,
                 string.Format(
-                    T("The assistant plugin \"{0}\" was audited with the level \"{1}\", which is below the required safety level \"{2}\". Your current settings still allow activation, but this may be unsafe. Do you really want to enable this plugin?"),
+                    T("The assistant plugin '{0}' was audited with the level '{1}', which is below the required safety level '{2}'. Your current settings still allow activation, but this may be unsafe. Do you really want to enable this plugin?"),
                     this.plugin?.Name ?? T("Unknown plugin"),
                     this.audit?.Level.GetName() ?? T("Unknown"),
                     this.MinimumLevelLabel)

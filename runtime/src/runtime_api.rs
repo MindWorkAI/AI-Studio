@@ -1,6 +1,6 @@
 use log::info;
 use once_cell::sync::Lazy;
-use axum::routing::{get, post};
+use axum::routing::{delete, get, post};
 use axum::Router;
 use axum_server::tls_rustls::RustlsConfig;
 use std::net::SocketAddr;
@@ -46,6 +46,7 @@ pub fn start_runtime_api() {
         .route("/select/file", post(crate::file_actions::select_file))
         .route("/select/files", post(crate::file_actions::select_files))
         .route("/save/file", post(crate::file_actions::save_file))
+        .route("/open/path", post(crate::file_actions::open_path_in_file_manager))
         .route("/secrets/get", post(crate::secret::get_secret))
         .route("/secrets/store", post(crate::secret::store_secret))
         .route("/secrets/delete", post(crate::secret::delete_secret))
@@ -59,6 +60,9 @@ pub fn start_runtime_api() {
         .route("/system/enterprise/config/encryption_secret", get(crate::environment::read_enterprise_env_config_encryption_secret))
         .route("/system/enterprise/configs", get(crate::environment::read_enterprise_configs))
         .route("/retrieval/fs/extract", get(crate::file_data::extract_data))
+        .route("/media/jobs", post(crate::media::create_job))
+        .route("/media/jobs/{id}/events", get(crate::media::get_job_events))
+        .route("/media/jobs/{id}", delete(crate::media::cancel_job))
         .route("/log/paths", get(crate::log::get_log_paths))
         .route("/log/event", post(crate::log::log_event))
         .route("/shortcuts/register", post(crate::app_window::register_shortcut))

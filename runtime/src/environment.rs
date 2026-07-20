@@ -21,9 +21,17 @@ const ENTERPRISE_CONFIG_SERVER_URL_KEY_PREFIX: &str = "config_server_url";
 const ENTERPRISE_REGISTRY_KEY_PATH: &str = r"Software\github\MindWork AI Studio\Enterprise IT";
 
 const ENTERPRISE_POLICY_SECRET_FILE_NAME: &str = "config_encryption_secret.yaml";
+const EXTERNAL_HTTP_CUSTOM_ROOT_CERTIFICATE_POLICY_FILE_NAME: &str = "external_http_custom_root_certificates.yaml";
+
+pub const DOTNET_ENV_CUSTOM_ROOT_CERTIFICATE_POLICY_CONFIGURED: &str = "AI_STUDIO_EXTERNAL_HTTP_CUSTOM_ROOT_CERTIFICATES_POLICY_CONFIGURED";
+pub const DOTNET_ENV_CUSTOM_ROOT_CERTIFICATES_ENABLED: &str = "AI_STUDIO_EXTERNAL_HTTP_CUSTOM_ROOT_CERTIFICATES_ENABLED";
+pub const DOTNET_ENV_CUSTOM_ROOT_CERTIFICATE_BUNDLE_PATH: &str = "AI_STUDIO_EXTERNAL_HTTP_CUSTOM_ROOT_CERTIFICATE_BUNDLE_PATH";
+pub const DOTNET_ENV_CUSTOM_ROOT_CERTIFICATE_ALLOWED_HOSTS: &str = "AI_STUDIO_EXTERNAL_HTTP_CUSTOM_ROOT_CERTIFICATE_ALLOWED_HOSTS";
 
 #[cfg(any(target_os = "linux", test))]
 const FLATPAK_ENTERPRISE_POLICY_DIRECTORY: &str = "/app/etc/MindWorkAI";
+
+pub(crate) const FLATPAK_LIBRARY_DIRECTORY: &str = "/app/lib";
 
 const ENTERPRISE_ENV_CONFIG_ID_PREFIX: &str = "MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_ID";
 const ENTERPRISE_ENV_CONFIG_SERVER_URL_PREFIX: &str = "MINDWORK_AI_STUDIO_ENTERPRISE_CONFIG_SERVER_URL";
@@ -99,11 +107,16 @@ fn detect_linux_package_type() -> &'static str {
 }
 
 #[cfg(target_os = "linux")]
-fn is_flatpak() -> bool {
+pub(crate) fn is_flatpak() -> bool {
     env_var_has_value("FLATPAK_ID")
         || Path::new("/.flatpak-info").is_file()
         || env::var("container")
             .is_ok_and(|value| value.trim().eq_ignore_ascii_case("flatpak"))
+}
+
+#[cfg(not(target_os = "linux"))]
+pub(crate) fn is_flatpak() -> bool {
+    false
 }
 
 #[cfg(target_os = "linux")]
@@ -257,6 +270,15 @@ pub struct EnterpriseConfig {
     pub slot: String,
 }
 
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct ExternalHttpCustomRootCertificatePolicy {
+    pub is_configured: bool,
+    pub enabled: bool,
+    pub bundle_path: String,
+    pub allowed_hosts: String,
+    pub source_detail: String,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 struct EnterpriseSourceValue {
     value: String,
@@ -335,6 +357,10 @@ pub async fn read_enterprise_env_config_encryption_secret(_token: APIToken) -> S
 pub async fn read_enterprise_configs(_token: APIToken) -> Json<Vec<EnterpriseConfig>> {
     info!("Trying to read the effective enterprise configurations.");
     Json(resolve_effective_enterprise_config_source().configs)
+}
+
+pub fn resolve_external_http_custom_root_certificate_policy() -> ExternalHttpCustomRootCertificatePolicy {
+    load_external_http_custom_root_certificate_policy_from_directories(&enterprise_policy_directories())
 }
 
 fn resolve_effective_enterprise_config_source() -> EnterpriseSourceData {
@@ -646,6 +672,54 @@ fn load_policy_values_from_directories(directories: &[PathBuf]) -> EnterpriseSou
     values
 }
 
+fn load_external_http_custom_root_certificate_policy_from_directories(directories: &[PathBuf]) -> ExternalHttpCustomRootCertificatePolicy {
+    for directory in directories {
+        let path = directory.join(EXTERNAL_HTTP_CUSTOM_ROOT_CERTIFICATE_POLICY_FILE_NAME);
+        let Some(values) = read_policy_yaml_mapping(&path) else {
+            continue;
+        };
+
+        if let Some(policy) = parse_external_http_custom_root_certificate_policy(&path, &values) {
+            info!("Using external HTTP custom root certificate policy from '{}'.", policy.source_detail);
+            return policy;
+        }
+    }
+
+    ExternalHttpCustomRootCertificatePolicy::default()
+}
+
+fn parse_external_http_custom_root_certificate_policy(path: &Path, values: &HashMap<String, String>) -> Option<ExternalHttpCustomRootCertificatePolicy> {
+    let Some(raw_enabled) = values.get("enabled") else {
+        warn!("Ignoring external HTTP custom root certificate policy '{}': missing 'enabled'.", path.display());
+        return None;
+    };
+
+    let Some(enabled) = parse_policy_boolean_value(raw_enabled) else {
+        warn!("Ignoring external HTTP custom root certificate policy '{}': invalid 'enabled' value.", path.display());
+        return None;
+    };
+
+    let source_detail = path
+        .canonicalize()
+        .unwrap_or_else(|_| path.to_path_buf())
+        .to_string_lossy()
+        .into_owned();
+
+    Some(ExternalHttpCustomRootCertificatePolicy {
+        is_configured: true,
+        enabled,
+        bundle_path: values
+            .get("bundle_path")
+            .and_then(|value| normalize_enterprise_value(value))
+            .unwrap_or_default(),
+        allowed_hosts: values
+            .get("allowed_hosts")
+            .and_then(|value| normalize_enterprise_value(value))
+            .unwrap_or_default(),
+        source_detail,
+    })
+}
+
 fn enterprise_policy_file_slot_suffix(file_name: &str) -> Option<&str> {
     let suffix = file_name
         .strip_prefix("config")?
@@ -735,6 +809,25 @@ fn parse_policy_yaml_value(raw_value: &str) -> Option<String> {
     }
 
     Some(String::from(trimmed))
+}
+
+fn parse_policy_boolean_value(raw_value: &str) -> Option<bool> {
+    let normalized = raw_value.trim();
+    if normalized.eq_ignore_ascii_case("true")
+        || normalized == "1"
+        || normalized.eq_ignore_ascii_case("yes")
+        || normalized.eq_ignore_ascii_case("on") {
+        return Some(true);
+    }
+
+    if normalized.eq_ignore_ascii_case("false")
+        || normalized == "0"
+        || normalized.eq_ignore_ascii_case("no")
+        || normalized.eq_ignore_ascii_case("off") {
+        return Some(false);
+    }
+
+    None
 }
 
 fn insert_first_non_empty_value(values: &mut EnterpriseSourceValues, key: &str, raw_value: &str, source_detail: &str) {
@@ -963,10 +1056,12 @@ fn normalize_enterprise_config_id(value: &str) -> Option<String> {
 mod tests {
     use super::{
         enterprise_environment_key_name, enterprise_policy_file_slot_suffix,
+        load_external_http_custom_root_certificate_policy_from_directories,
         linux_policy_directories_from_xdg, load_policy_values_from_directories,
         normalize_locale_tag, parse_enterprise_source_values,
         select_effective_enterprise_config_source, select_effective_enterprise_secret_source,
         EnterpriseConfig, EnterpriseSourceData, EnterpriseSourceValue, EnterpriseSourceValues,
+        ExternalHttpCustomRootCertificatePolicy,
     };
     use std::collections::HashMap;
     use std::fs;
@@ -1488,6 +1583,120 @@ mod tests {
 
         assert!(source.configs.is_empty());
         assert_eq!(source.encryption_secret, "POLICY-SECRET");
+    }
+
+    #[test]
+    fn load_external_http_custom_root_certificate_policy_uses_first_valid_directory() {
+        let directory_a = tempdir().unwrap();
+        let directory_b = tempdir().unwrap();
+
+        fs::write(
+            directory_a.path().join("external_http_custom_root_certificates.yaml"),
+            "enabled: true\nbundle_path: \"/app/etc/MindWorkAI/company-a.pem\"\nallowed_hosts: \"*.a.example.org;eri.a.example.org\"",
+        )
+        .unwrap();
+        fs::write(
+            directory_b.path().join("external_http_custom_root_certificates.yaml"),
+            "enabled: true\nbundle_path: \"/app/etc/MindWorkAI/company-b.pem\"\nallowed_hosts: \"*.b.example.org\"",
+        )
+        .unwrap();
+
+        let policy = load_external_http_custom_root_certificate_policy_from_directories(&[
+            directory_a.path().to_path_buf(),
+            directory_b.path().to_path_buf(),
+        ]);
+
+        assert_eq!(
+            policy,
+            ExternalHttpCustomRootCertificatePolicy {
+                is_configured: true,
+                enabled: true,
+                bundle_path: String::from("/app/etc/MindWorkAI/company-a.pem"),
+                allowed_hosts: String::from("*.a.example.org;eri.a.example.org"),
+                source_detail: policy_path(directory_a.path().join("external_http_custom_root_certificates.yaml")),
+            }
+        );
+    }
+
+    #[test]
+    fn load_external_http_custom_root_certificate_policy_allows_disabled_policy_to_win() {
+        let directory_a = tempdir().unwrap();
+        let directory_b = tempdir().unwrap();
+
+        fs::write(
+            directory_a.path().join("external_http_custom_root_certificates.yaml"),
+            "enabled: false",
+        )
+        .unwrap();
+        fs::write(
+            directory_b.path().join("external_http_custom_root_certificates.yaml"),
+            "enabled: true\nbundle_path: \"/app/etc/MindWorkAI/company-b.pem\"\nallowed_hosts: \"*.b.example.org\"",
+        )
+        .unwrap();
+
+        let policy = load_external_http_custom_root_certificate_policy_from_directories(&[
+            directory_a.path().to_path_buf(),
+            directory_b.path().to_path_buf(),
+        ]);
+
+        assert_eq!(
+            policy,
+            ExternalHttpCustomRootCertificatePolicy {
+                is_configured: true,
+                enabled: false,
+                bundle_path: String::new(),
+                allowed_hosts: String::new(),
+                source_detail: policy_path(directory_a.path().join("external_http_custom_root_certificates.yaml")),
+            }
+        );
+    }
+
+    #[test]
+    fn load_external_http_custom_root_certificate_policy_skips_invalid_files() {
+        let directory_a = tempdir().unwrap();
+        let directory_b = tempdir().unwrap();
+
+        fs::write(
+            directory_a.path().join("external_http_custom_root_certificates.yaml"),
+            "enabled: maybe\nbundle_path: \"/app/etc/MindWorkAI/ignored.pem\"",
+        )
+        .unwrap();
+        fs::write(
+            directory_b.path().join("external_http_custom_root_certificates.yaml"),
+            "enabled: yes\nbundle_path: \"/app/etc/MindWorkAI/company-b.pem\"\nallowed_hosts: \"*.b.example.org,eri.b.example.org\"",
+        )
+        .unwrap();
+
+        let policy = load_external_http_custom_root_certificate_policy_from_directories(&[
+            directory_a.path().to_path_buf(),
+            directory_b.path().to_path_buf(),
+        ]);
+
+        assert_eq!(
+            policy,
+            ExternalHttpCustomRootCertificatePolicy {
+                is_configured: true,
+                enabled: true,
+                bundle_path: String::from("/app/etc/MindWorkAI/company-b.pem"),
+                allowed_hosts: String::from("*.b.example.org,eri.b.example.org"),
+                source_detail: policy_path(directory_b.path().join("external_http_custom_root_certificates.yaml")),
+            }
+        );
+    }
+
+    #[test]
+    fn load_external_http_custom_root_certificate_policy_requires_enabled_key() {
+        let directory = tempdir().unwrap();
+
+        fs::write(
+            directory.path().join("external_http_custom_root_certificates.yaml"),
+            "bundle_path: \"/app/etc/MindWorkAI/company.pem\"\nallowed_hosts: \"*.example.org\"",
+        )
+        .unwrap();
+
+        let policy = load_external_http_custom_root_certificate_policy_from_directories(&[directory.path().to_path_buf()]);
+
+        assert_eq!(policy, ExternalHttpCustomRootCertificatePolicy::default());
     }
 
     #[test]

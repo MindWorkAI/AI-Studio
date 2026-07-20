@@ -8,7 +8,7 @@
         
         @if (this.Document is null)
         {
-            <ReadFileContent Text="@T("Load file")" @bind-FileContent="@this.FileContent"/>
+            <ReadFileContent Text="@T("Load file")" @bind-FileContent="@this.FileContent" EnableDragDrop="true" Layer="@DropLayers.DIALOGS" CatchAllDocuments="true"/>
         }
         else
         {

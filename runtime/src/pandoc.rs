@@ -5,12 +5,19 @@ use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 use log::{info, warn};
 use tokio::process::Command;
-use crate::environment::DATA_DIRECTORY;
+use crate::environment::{DATA_DIRECTORY, is_flatpak};
 use crate::metadata::META_DATA;
 
 /// Tracks whether the RID mismatch warning has been logged.
 static HAS_LOGGED_RID_MISMATCH: OnceLock<()> = OnceLock::new();
 static HAS_LOGGED_PANDOC_PATH: OnceLock<()> = OnceLock::new();
+const FLATPAK_PANDOC_PLUGIN_BIN_DIRECTORY: &str = "/app/plugins/pandoc/bin";
+
+/// Microsoft documents CREATE_NO_WINDOW as a process creation flag with value 0x08000000.
+/// It starts console applications without opening a console window:
+/// https://learn.microsoft.com/en-us/windows/win32/procthread/process-creation-flags
+#[cfg(windows)]
+const CREATE_NO_WINDOW: u32 = 0x08000000;
 
 pub struct PandocExecutable {
     pub executable: String,
@@ -99,6 +106,9 @@ impl PandocProcessBuilder {
 
         let pandoc_executable = Self::pandoc_executable_path();
         let mut command = Command::new(&pandoc_executable.executable);
+        
+        #[cfg(windows)]
+        command.creation_flags(CREATE_NO_WINDOW);
         command.args(&arguments);
 
         PandocPreparedProcess {
@@ -177,8 +187,12 @@ impl PandocProcessBuilder {
     }
 
     fn system_pandoc_executable_candidates(executable_name: &str) -> Vec<PathBuf> {
+        Self::system_pandoc_executable_candidates_for(env::consts::OS, executable_name, is_flatpak())
+    }
+
+    fn system_pandoc_executable_candidates_for(os: &str, executable_name: &str, include_flatpak_extension: bool) -> Vec<PathBuf> {
         let mut candidates: Vec<PathBuf> = Vec::new();
-        match env::consts::OS {
+        match os {
             "windows" => {
                 Self::push_env_candidate(&mut candidates, "LOCALAPPDATA", &["Pandoc", executable_name]);
                 Self::push_env_candidate(&mut candidates, "ProgramFiles", &["Pandoc", executable_name]);
@@ -190,6 +204,9 @@ impl PandocProcessBuilder {
                 candidates.push(PathBuf::from("/usr/bin").join(executable_name));
             },
             "linux" => {
+                if include_flatpak_extension {
+                    candidates.push(PathBuf::from(FLATPAK_PANDOC_PLUGIN_BIN_DIRECTORY).join(executable_name));
+                }
                 candidates.push(PathBuf::from("/usr/local/bin").join(executable_name));
                 candidates.push(PathBuf::from("/usr/bin").join(executable_name));
                 candidates.push(PathBuf::from("/snap/bin").join(executable_name));
@@ -271,5 +288,47 @@ impl PandocProcessBuilder {
             "windows" => "pandoc.exe".to_string(),
             _ => "pandoc".to_string(),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{FLATPAK_PANDOC_PLUGIN_BIN_DIRECTORY, PandocProcessBuilder};
+    use std::fs;
+    use std::path::PathBuf;
+    use tempfile::tempdir;
+
+    #[test]
+    fn linux_candidates_include_flatpak_pandoc_extension_first_when_flatpak() {
+        let candidates = PandocProcessBuilder::system_pandoc_executable_candidates_for("linux", "pandoc", true);
+        let flatpak_candidate = PathBuf::from(FLATPAK_PANDOC_PLUGIN_BIN_DIRECTORY).join("pandoc");
+        let usr_local_candidate = PathBuf::from("/usr/local/bin").join("pandoc");
+
+        let flatpak_index = candidates.iter().position(|candidate| candidate == &flatpak_candidate).unwrap();
+        let usr_local_index = candidates.iter().position(|candidate| candidate == &usr_local_candidate).unwrap();
+
+        assert!(flatpak_index < usr_local_index);
+    }
+
+    #[test]
+    fn linux_candidates_skip_flatpak_pandoc_extension_when_not_flatpak() {
+        let candidates = PandocProcessBuilder::system_pandoc_executable_candidates_for("linux", "pandoc", false);
+        let flatpak_candidate = PathBuf::from(FLATPAK_PANDOC_PLUGIN_BIN_DIRECTORY).join("pandoc");
+
+        assert!(!candidates.contains(&flatpak_candidate));
+    }
+
+    #[test]
+    fn local_pandoc_search_finds_data_directory_installation() {
+        let directory = tempdir().unwrap();
+        let pandoc_directory = directory.path().join("pandoc").join("bin");
+        fs::create_dir_all(&pandoc_directory).unwrap();
+        let pandoc_path = pandoc_directory.join("pandoc");
+        fs::File::create(&pandoc_path).unwrap();
+
+        assert_eq!(
+            PandocProcessBuilder::find_executable_in_dir(directory.path(), "pandoc").unwrap(),
+            pandoc_path
+        );
     }
 }

@@ -13,7 +13,7 @@ public sealed class ProviderGWDG() : BaseProvider(LLMProviders.GWDG, new Uri("ht
     #region Implementation of IProvider
 
     /// <inheritdoc />
-    public override string Id => LLMProviders.GWDG.ToName();
+    public override string Id => LLMProviders.GWDG.ToSecretId();
 
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "GWDG SAIA";
@@ -64,7 +64,7 @@ public sealed class ProviderGWDG() : BaseProvider(LLMProviders.GWDG, new Uri("ht
     /// <inheritdoc />
     public override async Task<TranscriptionResult> TranscribeAudioAsync(Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default)
     {
-        var requestedSecret = await RUST_SERVICE.GetAPIKey(this, SecretStoreType.TRANSCRIPTION_PROVIDER);
+        var requestedSecret = await Program.RUST_SERVICE.GetAPIKey(this, SecretStoreType.TRANSCRIPTION_PROVIDER);
         return await this.PerformStandardTranscriptionRequest(requestedSecret, transcriptionModel, audioFilePath, token: token);
     }
     

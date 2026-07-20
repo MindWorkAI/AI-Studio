@@ -1,0 +1,265 @@
+@attribute [Route(Routes.ASSISTANT_META_ASSISTANT)]
+@using AIStudio.Agents.AssistantAudit
+@using AIStudio.Tools.PluginSystem.Assistants.DataModel
+@inherits AssistantBaseCore<AIStudio.Dialogs.Settings.NoSettingsPanel>
+
+<PreviewBeta ApplyInnerScrollingFix="true"/>
+
+@if (this.step is BuilderStep.DESCRIBE)
+{
+    <MudTextField T="string" @bind-Text="@this.assistantDescription" Validation="@this.ValidateAssistantDescription" AdornmentIcon="@Icons.Material.Filled.AutoAwesome" Adornment="Adornment.Start" Label="@T("Describe your assistant")" HelperText="@T("Describe the task, inputs, and desired output in your own words. The model will infer all the plugin details.")" Placeholder="@T("I need an assistant that turns meeting notes into clear tasks with owners and deadlines.")" Variant="Variant.Outlined" Lines="8" AutoGrow="@true" MaxLines="18" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+
+    <MudExpansionPanels Dense="@true" Elevation="0" Class="mb-3 rounded">
+        <MudExpansionPanel Dense="@true" Class="border-solid border rounded pt-n4" Style="border-color: #BDBDBD">
+            <TitleContent>
+                <div class="d-flex align-center">
+                    <MudIcon Icon="@Icons.Material.Filled.Tune" Class="mr-3"/>
+                    <MudText Typo="Typo.button">
+                        @T("Advanced Options")
+                    </MudText>
+                </div>
+            </TitleContent>
+            <ChildContent>
+                <MudTextField T="string" @bind-Text="@this.assistantName" AdornmentIcon="@Icons.Material.Filled.Assistant" Adornment="Adornment.Start" IconSize="Size.Small" Label="@T("Display Name (Optional)")" Placeholder="@T("Meeting Task Extractor")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+                <EnumSelection T="AssistantCategory" NameFunc="@(category => category.NameSelecting())" @bind-Value="@this.selectedCategory" ValidateSelection="@this.ValidatingCategory" Icon="@Icons.Material.Filled.Category" IconSize="Size.Small" Label="@T("Category (Optional)")" AllowOther="@true" OtherValue="AssistantCategory.OTHER" @bind-OtherInput="@this.customCategory" ValidateOther="@this.ValidateCustomCategory" LabelOther="@T("Custom assistant category")" />
+                <MudTextField T="string" @bind-Text="@this.typicalInput" AdornmentIcon="@Icons.Material.Filled.Login" Adornment="Adornment.Start" IconSize="Size.Small" Label="@T("Typical input (Optional)")" Placeholder="@T("What users provide, e.g. text, notes, files, or a URL")" Variant="Variant.Outlined" Margin="Margin.Dense" Lines="3" AutoGrow="@true" MaxLines="8" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+                <MudTextField T="string" @bind-Text="@this.expectedOutput" AdornmentIcon="@Icons.Material.Filled.Logout" Adornment="Adornment.Start" IconSize="Size.Small" Label="@T("Expected output (Optional)")" Placeholder="@T("What users should get, e.g. a summary or checklist")" Variant="Variant.Outlined" Margin="Margin.Dense" Lines="3" AutoGrow="@true" MaxLines="8" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+                <MudSelect T="AssistantComponentType" Label="@T("Input and UI components (Optional)")" MultiSelection="@true" @bind-SelectedValues="@this.selectedAssistantComponents" MultiSelectionTextFunc="@this.GetSelectedAssistantComponentText" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3 rounded-lg" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.ViewDay" IconSize="Size.Small">
+                    @foreach (var component in ASSISTANT_COMPONENT_OPTIONS)
+                    {
+                        <MudSelectItem T="AssistantComponentType" Value="@component">
+                            @component.GetDisplayName()
+                        </MudSelectItem>
+                    }
+                </MudSelect>
+                <EnumSelection T="CommonLanguages" NameFunc="@(language => language.NameSelectingOptional())" @bind-Value="@this.selectedOutputLanguage" Icon="@Icons.Material.Filled.Translate" IconSize="Size.Small" Label="@T("(Optional) Output language")" AllowOther="@true" OtherValue="CommonLanguages.OTHER" @bind-OtherInput="@this.customOutputLanguage" ValidateOther="@this.ValidateCustomOutputLanguage" LabelOther="@T("Custom output language")" />
+                <MudSwitch T="bool" @bind-Value="@this.allowGeneratedAssistantProfiles" Label="@T("Allow AI Studio profiles")" LabelPlacement="Placement.End" Color="Color.Primary" Class="mb-3"/>
+                <MudTextField T="string" @bind-Text="@this.extraRules" AdornmentIcon="@Icons.Material.Filled.Rule" Adornment="Adornment.Start" IconSize="Size.Small" Label="@T("Additional rules (Optional)")" Placeholder="@T("What to avoid or consider, e.g. do not invent missing facts")" Variant="Variant.Outlined" Margin="Margin.Dense" Lines="3" AutoGrow="@true" MaxLines="10" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+                <MudTextField T="string" @bind-Text="@this.exampleRequest" AdornmentIcon="@Icons.Material.Filled.Lightbulb" Adornment="Adornment.Start" IconSize="Size.Small" Label="@T("Example prompt (Optional)")" Placeholder="@T("An expected user prompt, e.g. summarize this document")" Variant="Variant.Outlined" Margin="Margin.Dense" Lines="3" AutoGrow="@true" MaxLines="10" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+            </ChildContent>
+        </MudExpansionPanel>
+    </MudExpansionPanels>
+
+    <ProviderSelection @bind-ProviderSettings="@this.ProviderSettings" ValidateProvider="@this.ValidatingProvider"/>
+    <MudAlert Severity="Severity.Info" Square="true" Class="mb-2 mt-n1" Style="width: max-content">@this.HighPerformanceLLMInfo</MudAlert>
+}
+else
+{
+    <MudStack Row="@true" AlignItems="AlignItems.Center" Class="mb-3">
+        <MudText Typo="Typo.h6">
+            @T("Assistant draft")
+        </MudText>
+        <MudSpacer/>
+        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Visibility" OnClick="@(async () => await this.OpenDraftDialog())">
+            @T("View accepted draft")
+        </MudButton>
+    </MudStack>
+    
+    <MudTextField T="string" @bind-Text="@this.reviewNotes" AdornmentIcon="@Icons.Material.Filled.EditNote" Adornment="Adornment.Start" Label="@T("Additional changes (Optional)")" HelperText="@T("These notes are applied on top of the accepted draft and can still change the generated assistant plugin. Leave empty to use the draft as-is.")" Variant="Variant.Outlined" Margin="Margin.Dense" Lines="2" AutoGrow="@true" MaxLines="8" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+
+    <MudStack Row="@true" AlignItems="AlignItems.Center" Class="mb-6">
+        <MudTooltip  Text="@T("Return to the original assistant description. The current draft and the plugin preview will be discarded.")">
+            <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ArrowBack" Size="Size.Small" OnClick="@this.BackToDescription">
+                @T("Change description")
+            </MudButton>
+        </MudTooltip>
+        @if (this.step is BuilderStep.DONE)
+        {
+            <MudTooltip Text="@T("Discard the current plugin preview, edit the accepted draft, and generate the plugin again.")">
+                <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Edit" Size="Size.Small" IconSize="Size.Small" OnClick="@(async () => await this.EditDraftAndDiscardPluginPreview())">
+                    @T("Edit draft")
+                </MudButton>
+            </MudTooltip>
+        }
+    </MudStack>
+
+    <ProviderSelection @bind-ProviderSettings="@this.ProviderSettings" ValidateProvider="@this.ValidatingProvider"/>
+    <MudAlert Severity="Severity.Info" Square="true" Class="mb-2 mt-n1" Style="width: max-content">@this.HighPerformanceLLMInfo</MudAlert>
+}
+
+@code {
+    private protected override RenderFragment? BelowSubmitContent => this.step is BuilderStep.DONE && !string.IsNullOrWhiteSpace(this.generatedLuaAssistant)
+        ? @<MudStack Spacing="3" Class="mb-3">
+              <MudExpansionPanels Dense="@true" Elevation="0" Class="rounded">
+                  <MudExpansionPanel Dense="@true" Class="border-solid border rounded pt-n4" Style="border-color: #BDBDBD">
+                      <TitleContent>
+                          <div class="d-flex align-center">
+                              <MudIcon Icon="@Icons.Material.Filled.Code" Class="mr-3" Color="Color.Primary"/>
+                              <MudText Typo="Typo.button">
+                                  @T("Generated Lua plugin")
+                              </MudText>
+                          </div>
+                      </TitleContent>
+                      <ChildContent>
+                          <MudTextField T="string" Text="@this.generatedLuaAssistant" ReadOnly="true" Variant="Variant.Outlined" Lines="18" Class="mt-2" Style="font-family: monospace"/>
+                      </ChildContent>
+                  </MudExpansionPanel>
+              </MudExpansionPanels>
+
+              <MudStepper @bind-ActiveIndex="@this.stepperIndex" CompletedStepColor="Color.Primary" CurrentStepColor="Color.Primary" ErrorStepColor="Color.Error" NonLinear="@false" ShowResetButton="@false" Class="mb-3">
+                  <ChildContent>
+                      <MudStep Title="@T("Validate plugin")" Completed="@this.PluginCheckCompleted" HasError="@this.IsInstallStepFailed(BuilderInstallStep.CHECK_PLUGIN)">
+                          <MudStack Spacing="2" Class="mt-2">
+                              @if (this.isCheckingPlugin)
+                              {
+                                  <MudProgressLinear Color="Color.Primary" Indeterminate="@true"/>
+                                  <MudText Typo="Typo.body2">@T("Validating the generated assistant...")</MudText>
+                              }
+                              else if (this.IsInstallStepFailed(BuilderInstallStep.CHECK_PLUGIN))
+                              {
+                                  <MudAlert Severity="Severity.Error" Dense="@true">
+                                      @T("The generated assistant could not be checked.")
+                                      @if (!string.IsNullOrWhiteSpace(this.installFlowIssue))
+                                      {
+                                          <span> @string.Format(T("Issue: {0}"), this.installFlowIssue)</span>
+                                      }
+                                  </MudAlert>
+                              }
+                              else if (this.PluginCheckCompleted)
+                              {
+                                  <MudAlert Severity="Severity.Info" Dense="@true" Icon="@Icons.Material.Filled.CheckCircle">
+                                      @string.Format(T("The generated assistant '{0}' is valid and runnable."), this.pluginCheckResult?.PluginName ?? T("Unknown assistant"))
+                                  </MudAlert>
+                              }
+                              else
+                              {
+                                  <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Settings" Disabled="@(!this.CanRunPluginCheck)" OnClick="@(async () => await this.CheckGeneratedAssistantAsync())">
+                                      @T("Validate generated assistant")
+                                  </MudButton>
+                              }
+                          </MudStack>
+                      </MudStep>
+
+                      <MudStep Title="@T("Install assistant")" Completed="@this.PluginInstallCompleted" HasError="@this.IsInstallStepFailed(BuilderInstallStep.INSTALL_ASSISTANT)">
+                          <MudStack Spacing="2" Class="mt-2">
+                              @if (this.isInstallingPlugin)
+                              {
+                                  <MudProgressLinear Color="Color.Primary" Indeterminate="@true"/>
+                                  <MudText Typo="Typo.body2">@T("Installing the assistant...")</MudText>
+                              }
+                              else if (this.IsInstallStepFailed(BuilderInstallStep.INSTALL_ASSISTANT))
+                              {
+                                  <MudAlert Severity="Severity.Error" Dense="@true">
+                                      @T("The assistant could not be installed.")
+                                      @if (!string.IsNullOrWhiteSpace(this.installFlowIssue))
+                                      {
+                                          <span> @string.Format(T("Issue: {0}"), this.installFlowIssue)</span>
+                                      }
+                                  </MudAlert>
+                              }
+                              else if (this.PluginInstallCompleted)
+                              {
+                                  <MudAlert Severity="Severity.Info" Dense="@true" Icon="@Icons.Material.Filled.Extension">
+                                      @(this.pluginInstallResult?.ReplacedExisting is true
+                                          ? string.Format(T("The assistant '{0}' was updated."), this.pluginInstallResult?.PluginName ?? T("Unknown assistant"))
+                                          : string.Format(T("The assistant '{0}' was installed."), this.pluginInstallResult?.PluginName ?? T("Unknown assistant")))
+                                  </MudAlert>
+                              }
+                              else
+                              {
+                                  <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Extension" Disabled="@(!this.CanInstallPlugin)" OnClick="@(async () => await this.InstallGeneratedAssistantAsync())">
+                                      @T("Install assistant")
+                                  </MudButton>
+                              }
+                          </MudStack>
+                      </MudStep>
+
+                      <MudStep Title="@T("Security audit")" Completed="@(!this.AuditRequiredForActivation || this.AuditCompleted)" HasError="@this.IsInstallStepFailed(BuilderInstallStep.SECURITY_CHECK)">
+                          <MudStack Spacing="2" Class="mt-2">
+                              @if (this.isAuditingPlugin)
+                              {
+                                  <MudProgressLinear Color="Color.Primary" Indeterminate="@true"/>
+                                  <MudText Typo="Typo.body2">@T("Auditing assistants safety...")</MudText>
+                              }
+                              else if (this.IsInstallStepFailed(BuilderInstallStep.SECURITY_CHECK))
+                              {
+                                  <MudAlert Severity="Severity.Error" Dense="@true">
+                                      @T("The security audit could not be completed.")
+                                      @if (!string.IsNullOrWhiteSpace(this.installFlowIssue))
+                                      {
+                                          <span> @string.Format(T("Issue: {0}"), this.installFlowIssue)</span>
+                                      }
+                                  </MudAlert>
+                              }
+                              else if (this.AuditCompleted)
+                              {
+                                  <MudAlert Severity="@this.AuditSeverity" Dense="@true" Icon="@this.pluginAudit!.Level.GetIcon()">
+                                      <strong>@this.pluginAudit.Level.GetName()</strong><span>: @this.pluginAudit.Summary</span>
+                                  </MudAlert>
+                              }
+                              else
+                              {
+                                  <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Security" Disabled="@(!this.CanRunAudit)" OnClick="@(async () => await this.RunSecurityCheckAsync())">
+                                      @T("Start security audit")
+                                  </MudButton>
+                              }
+                          </MudStack>
+                      </MudStep>
+
+                      <MudStep Title="@T("Enable assistant")" Completed="@this.EnableCompleted" HasError="@this.IsInstallStepFailed(BuilderInstallStep.ENABLE_ASSISTANT)">
+                          <MudStack Spacing="2" Class="mt-2">
+                              @if (this.isEnablingPlugin)
+                              {
+                                  <MudProgressLinear Color="Color.Primary" Indeterminate="@true"/>
+                                  <MudText Typo="Typo.body2">@T("Enabling the assistant...")</MudText>
+                              }
+                              else if (this.IsInstallStepFailed(BuilderInstallStep.ENABLE_ASSISTANT))
+                              {
+                                  <MudAlert Severity="Severity.Error" Dense="@true">
+                                      @T("The assistant cannot be enabled.")
+                                      @if (!string.IsNullOrWhiteSpace(this.installFlowIssue))
+                                      {
+                                          <span> @string.Format(T("Issue: {0}"), this.installFlowIssue)</span>
+                                      }
+                                  </MudAlert>
+                              }
+                              else if (this.EnableCompleted)
+                              {
+                                  <MudAlert Severity="Severity.Info" Dense="@true" Icon="@Icons.Material.Filled.ToggleOn">
+                                      @T("The assistant is enabled.")
+                                  </MudAlert>
+                              }
+                              else
+                              {
+                                  @if (this.RequiresActivationConfirmation)
+                                  {
+                                      <MudAlert Severity="Severity.Warning" Dense="@true" Icon="@Icons.Material.Filled.WarningAmber">
+                                          @T("The security check is below your required level. Your settings allow activation after confirmation.")
+                                      </MudAlert>
+                                  }
+                                  <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ToggleOn" Disabled="@(!this.CanEnableAssistant)" OnClick="@(async () => await this.EnableInstalledAssistantAsync())">
+                                      @T("Enable assistant")
+                                  </MudButton>
+                              }
+                          </MudStack>
+                      </MudStep>
+
+                      <MudStep Title="@T("Open assistant")">
+                          <MudStack Spacing="2" Class="mt-2">
+                              @if (this.CanOpenAssistant)
+                              {
+                                  <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.OpenInNew" OnClick="@this.OpenInstalledAssistant">
+                                      @T("Open assistant")
+                                  </MudButton>
+                              }
+                              else
+                              {
+                                  <MudText Typo="Typo.body2">@T("Enable the assistant before opening it.")</MudText>
+                              }
+                          </MudStack>
+                      </MudStep>
+                  </ChildContent>
+                  <ActionContent Context="_">
+                  </ActionContent>
+              </MudStepper>
+          </MudStack>
+        : null;
+
+    private protected override RenderFragment AfterSubmitContent => @<MudCard>
+        <MudCardContent>
+            <MudSkeleton />
+            <MudSkeleton Animation="Animation.False" />
+            <MudSkeleton Animation="Animation.Wave" />
+        </MudCardContent>
+    </MudCard>;
+}

@@ -13,7 +13,7 @@ public sealed class ProviderMistral() : BaseProvider(LLMProviders.MISTRAL, new U
     #region Implementation of IProvider
 
     /// <inheritdoc />
-    public override string Id => LLMProviders.MISTRAL.ToName();
+    public override string Id => LLMProviders.MISTRAL.ToSecretId();
     
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "Mistral";
@@ -71,14 +71,14 @@ public sealed class ProviderMistral() : BaseProvider(LLMProviders.MISTRAL, new U
     /// <inheritdoc />
     public override async Task<TranscriptionResult> TranscribeAudioAsync(Provider.Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default)
     {
-        var requestedSecret = await RUST_SERVICE.GetAPIKey(this, SecretStoreType.TRANSCRIPTION_PROVIDER);
+        var requestedSecret = await Program.RUST_SERVICE.GetAPIKey(this, SecretStoreType.TRANSCRIPTION_PROVIDER);
         return await this.PerformStandardTranscriptionRequest(requestedSecret, transcriptionModel, audioFilePath, token: token);
     }
 
     /// <inhertidoc />
     public override async Task<IReadOnlyList<IReadOnlyList<float>>> EmbedTextAsync(Provider.Model embeddingModel, SettingsManager settingsManager, CancellationToken token = default, params List<string> texts)
     {
-        var requestedSecret = await RUST_SERVICE.GetAPIKey(this, SecretStoreType.EMBEDDING_PROVIDER);
+        var requestedSecret = await Program.RUST_SERVICE.GetAPIKey(this, SecretStoreType.EMBEDDING_PROVIDER);
         return await this.PerformStandardTextEmbeddingRequest(requestedSecret, embeddingModel, token: token, texts: texts);
     }
 

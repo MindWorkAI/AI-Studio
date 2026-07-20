@@ -87,6 +87,11 @@ public enum Event
     /// Notifies receivers that voice recording availability changed.
     /// </summary>
     VOICE_RECORDING_AVAILABILITY_CHANGED,
+
+    /// <summary>
+    /// Notifies settings UI receivers that a portal changed the effective global shortcut label.
+    /// </summary>
+    GLOBAL_SHORTCUT_CHANGED,
     
     // Update events:
     /// <summary>
@@ -144,6 +149,16 @@ public enum Event
     /// Notifies receivers that chat generation state changed.
     /// </summary>
     CHAT_GENERATION_CHANGED,
+
+    /// <summary>
+    /// Notifies receivers that an assistant session changed.
+    /// </summary>
+    ASSISTANT_SESSION_CHANGED,
+
+    /// <summary>
+    /// Notifies receivers that an assistant session finished.
+    /// </summary>
+    ASSISTANT_SESSION_FINISHED,
     
     // Workspace events:
     /// <summary>
@@ -155,6 +170,16 @@ public enum Event
     /// Requests the chat workspace overlay to be toggled.
     /// </summary>
     WORKSPACE_TOGGLE_OVERLAY,
+
+    /// <summary>
+    /// Notifies receivers that a workspace was renamed.
+    /// </summary>
+    WORKSPACE_RENAMED,
+
+    /// <summary>
+    /// Notifies receivers that a workspace was created.
+    /// </summary>
+    WORKSPACE_CREATED,
     
     
     

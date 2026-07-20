@@ -70,8 +70,21 @@ CONFIG["LLM_PROVIDERS"] = {}
 --     -- Please refer to the documentation of the selected host for details.
 --     -- Might be something like ... \"temperature\": 0.5 ... for one parameter.
 --     -- Could be something like ... \"temperature\": 0.5, \"max_tokens\": 1000 ... for multiple parameters.
+--     -- Recognized reasoning parameters, such as reasoning_effort, thinking, think, and chat_template_kwargs.enable_thinking, may affect whether AI Studio shows the reasoning icon for this provider.
 --     -- Please do not add the enclosing curly braces {} here. Also, no trailing comma is allowed.
 --     ["AdditionalJsonApiParameters"] = "",
+--
+--     -- Optional: expert capability overrides.
+--     -- Allowed keys are exactly:
+--     -- AUDIO_INPUT, MULTIPLE_IMAGE_INPUT, SPEECH_INPUT, VIDEO_INPUT,
+--     -- OPTIONAL_REASONING, ALWAYS_REASONING, REASONING_BY_DEFAULT
+--     -- Allowed values are booleans only.
+--     -- For default-on reasoning (rhinking), set OPTIONAL_REASONING and REASONING_BY_DEFAULT to true.
+--     -- ALWAYS_REASONING means the model cannot disable reasoning (thinking).
+--     -- Missing keys keep the automatic capability detection result.
+--     -- ["CapabilityOverrides"] = {
+--     --     ["VIDEO_INPUT"] = false,
+--     -- },
 --
 --     -- Optional: Hugging Face inference provider. Only relevant for UsedLLMProvider = HUGGINGFACE.
 --     -- Allowed values are: CEREBRAS, NEBIUS_AI_STUDIO, SAMBANOVA, NOVITA, HYPERBOLIC, TOGETHER_AI, FIREWORKS, HF_INFERENCE_API
@@ -187,7 +200,10 @@ CONFIG["DATA_SOURCES"] = {}
 CONFIG["SETTINGS"] = {}
 
 -- Configure the update check interval:
--- Allowed values are: NO_CHECK, ONCE_STARTUP, HOURLY, DAILY, WEEKLY
+-- Allowed values are: NO_CHECK, DISABLE_UPDATES, ONCE_STARTUP, HOURLY, DAILY, WEEKLY
+-- NO_CHECK disables automatic checks, but users can still check and install updates manually.
+-- DISABLE_UPDATES is intended for enterprise configurations and disables all update checks
+-- and installations. It is not offered as a selectable option in the normal app settings.
 -- CONFIG["SETTINGS"]["DataApp.UpdateInterval"] = "NO_CHECK"
 
 -- Configure how updates are installed:
@@ -204,12 +220,22 @@ CONFIG["SETTINGS"] = {}
 -- but users can still choose another start page in the app settings.
 -- CONFIG["SETTINGS"]["DataApp.StartPage.AllowUserOverride"] = true
 
+-- Configure whether the quick start guide is shown on the welcome page.
+-- CONFIG["SETTINGS"]["DataApp.ShowQuickStartGuide"] = false
+
+-- Configure whether the built-in introduction is shown on the welcome page.
+-- CONFIG["SETTINGS"]["DataApp.ShowIntroduction"] = false
+
+-- Configure whether the last changelog is shown on the welcome page.
+-- CONFIG["SETTINGS"]["DataApp.ShowLastChangelog"] = false
+
+-- Configure whether the vision panel is shown on the welcome page.
+-- CONFIG["SETTINGS"]["DataApp.ShowVision"] = false
+
 -- Configure the user permission to add providers:
--- Allowed values are: true, false
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToAddProvider"] = false
 
 -- Configure whether administration settings are visible in the UI:
--- Allowed values are: true, false
 -- CONFIG["SETTINGS"]["DataApp.ShowAdminSettings"] = true
 
 -- Configure the visibility of preview features:
@@ -234,6 +260,58 @@ CONFIG["SETTINGS"] = {}
 -- Please note: using an empty string ("") will lock the preselected profile selection, even though no valid preselected profile is found.
 -- CONFIG["SETTINGS"]["DataApp.PreselectedProfile"] = "00000000-0000-0000-0000-000000000000"
 
+-- Configure chat-specific preselected options.
+-- This must be enabled for the chat-specific provider, profile, and chat template to take effect.
+-- CONFIG["SETTINGS"]["DataChat.PreselectOptions"] = true
+--
+-- Configure the preselected provider for chats.
+-- It must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"].
+-- CONFIG["SETTINGS"]["DataChat.PreselectedProvider"] = "00000000-0000-0000-0000-000000000000"
+--
+-- Configure the preselected profile for chats.
+-- It must be one of the profile IDs defined in CONFIG["PROFILES"].
+-- Please note: using an empty string ("") means chats will use the app default profile.
+-- Please note: using "00000000-0000-0000-0000-000000000000" means chats will use no profile.
+-- CONFIG["SETTINGS"]["DataChat.PreselectedProfile"] = "00000000-0000-0000-0000-000000000000"
+--
+-- Configure the preselected chat template for chats.
+-- It must be one of the chat template IDs defined in CONFIG["CHAT_TEMPLATES"].
+-- Please note: using an empty string ("") or "00000000-0000-0000-0000-000000000000" means chats will use no chat template.
+-- CONFIG["SETTINGS"]["DataChat.PreselectedChatTemplate"] = "00000000-0000-0000-0000-000000000000"
+--
+--
+-- Configure default data source options for new chats.
+--
+-- Controls whether data sources are off by default:
+-- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesDisabled"] = false
+
+-- Controls whether AI Studio asks an agent to choose data sources:
+-- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesAutomaticSelection"] = true
+
+-- Controls whether retrieved data is validated by an agent:
+-- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesAutomaticValidation"] = true
+
+-- Must contain IDs from CONFIG["DATA_SOURCES"] or user-configured data sources.
+-- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourceIds"] = {
+--     "00000000-0000-0000-0000-000000000000",
+-- }
+--
+-- Configure whether default chat data source options are applied when assistant results are sent to chat.
+-- Allowed values are: NO_DATA_SOURCES, APPLY_STANDARD_CHAT_DATA_SOURCE_OPTIONS
+-- CONFIG["SETTINGS"]["DataChat.SendToChatDataSourceBehavior"] = "APPLY_STANDARD_CHAT_DATA_SOURCE_OPTIONS"
+--
+-- Allow users to change any configured chat default locally.
+-- Allowed values are: true, false
+-- CONFIG["SETTINGS"]["DataChat.PreselectOptions.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataChat.PreselectedProvider.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataChat.PreselectedProfile.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataChat.PreselectedChatTemplate.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesDisabled.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesAutomaticSelection.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesAutomaticValidation.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourceIds.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataChat.SendToChatDataSourceBehavior.AllowUserOverride"] = true
+
 -- Configure the transcription provider for voice-to-text functionality.
 -- It must be one of the transcription provider IDs defined in CONFIG["TRANSCRIPTION_PROVIDERS"].
 -- Without a selected transcription provider, dictation and transcription features will be disabled.
@@ -247,8 +325,26 @@ CONFIG["SETTINGS"] = {}
 --   CODING_ASSISTANT, TEXT_SUMMARIZER_ASSISTANT, EMAIL_ASSISTANT,
 --   LEGAL_CHECK_ASSISTANT, SYNONYMS_ASSISTANT, MY_TASKS_ASSISTANT,
 --   JOB_POSTING_ASSISTANT, BIAS_DAY_ASSISTANT, ERI_ASSISTANT,
---   DOCUMENT_ANALYSIS_ASSISTANT, SLIDE_BUILDER_ASSISTANT, I18N_ASSISTANT
+--   DOCUMENT_ANALYSIS_ASSISTANT, SLIDE_BUILDER_ASSISTANT, I18N_ASSISTANT,
+--   LOG_VIEWER_ASSISTANT
 -- CONFIG["SETTINGS"]["DataApp.HiddenAssistants"] = { "ERI_ASSISTANT", "I18N_ASSISTANT" }
+
+-- Configure enterprise approvals for assistant plugins.
+-- Each approval is matched only by the current SHA-256 hash over all Lua files
+-- in the assistant plugin folder, in canonical sorted order.
+-- When the hash matches, the assistant plugin is treated as SAFE immediately and
+-- no user-run security audit is required.
+-- You can generate the exact hash with the build-script command:
+--   dotnet run --project app/Build -- assistant-plugin-hash "<plugin-dir>" --lua-snippet
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.EnterpriseApprovedPlugins"] = {
+--     {
+--         ["PluginHash"] = "0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF",
+--         ["DisplayName"] = "Name of Plugin",
+--         ["Comment"] = "Optional comment",
+--         ["ApprovedBy"] = "Optional Approver",
+--         ["ApprovedAtUtc"] = "2026-07-02T09:30:00Z",
+--     }
+-- }
 
 -- Configure a global shortcut for starting and stopping dictation.
 -- 
@@ -308,6 +404,113 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataApp.ExternalHttpCustomRootCertificateBundlePath"] = "/path/in/sandbox/company-root-cas.pem"
 -- CONFIG["SETTINGS"]["DataApp.ExternalHttpCustomRootCertificateAllowedHosts"] = { "*.intra.example.org", "eri.example.org" }
 
+-- Configure provider confidence settings.
+-- These settings apply to LLM providers, embedding providers, and transcription providers.
+--
+-- Configure a predefined confidence scheme.
+-- Allowed values are: TRUST_ALL, TRUST_USA_EUROPE, TRUST_USA, TRUST_EUROPE, TRUST_ASIA, LOCAL_TRUST_ONLY, CUSTOM
+-- CONFIG["SETTINGS"]["DataConfidence.ConfidenceScheme"] = "TRUST_EUROPE"
+--
+-- Configure whether users can still change the confidence scheme locally.
+-- Allowed values are: true, false
+-- When set to true, the configured confidence scheme becomes the organization default,
+-- but users can still choose another scheme in the app settings.
+-- CONFIG["SETTINGS"]["DataConfidence.ConfidenceScheme.AllowUserOverride"] = true
+--
+-- Configure whether confidence levels are shown in the UI.
+-- CONFIG["SETTINGS"]["DataConfidence.ShowProviderConfidence"] = true
+--
+-- Configure an app-wide minimum confidence level.
+-- Allowed values are: NONE, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
+-- CONFIG["SETTINGS"]["DataConfidence.EnforceGlobalMinimumConfidence"] = true
+-- CONFIG["SETTINGS"]["DataConfidence.GlobalMinimumConfidence"] = "MEDIUM"
+--
+-- Configure whether users can change the app-wide minimum confidence level locally.
+-- CONFIG["SETTINGS"]["DataConfidence.EnforceGlobalMinimumConfidence.AllowUserOverride"] = false
+-- CONFIG["SETTINGS"]["DataConfidence.GlobalMinimumConfidence.AllowUserOverride"] = false
+--
+-- Configure a custom confidence scheme.
+-- This is used when DataConfidence.ConfidenceScheme is set to CUSTOM.
+-- Allowed provider keys are: OPEN_AI, ANTHROPIC, MISTRAL, GOOGLE, X, DEEP_SEEK, ALIBABA_CLOUD,
+--   PERPLEXITY, OPEN_ROUTER, FIREWORKS, GROQ, HUGGINGFACE, SELF_HOSTED, HELMHOLTZ, GWDG
+-- Allowed confidence values are: UNTRUSTED, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
+-- CONFIG["SETTINGS"]["DataConfidence.CustomConfidenceScheme"] = {
+--     ["OPEN_AI"] = "MODERATE",
+--     ["ANTHROPIC"] = "MODERATE",
+--     ["MISTRAL"] = "HIGH",
+--     ["GOOGLE"] = "LOW",
+--     ["X"] = "LOW",
+--     ["DEEP_SEEK"] = "LOW",
+--     ["ALIBABA_CLOUD"] = "LOW",
+--     ["PERPLEXITY"] = "MODERATE",
+--     ["OPEN_ROUTER"] = "MODERATE",
+--     ["FIREWORKS"] = "MODERATE",
+--     ["GROQ"] = "MODERATE",
+--     ["HUGGINGFACE"] = "MODERATE",
+--     ["SELF_HOSTED"] = "HIGH",
+--     ["HELMHOLTZ"] = "HIGH",
+--     ["GWDG"] = "HIGH",
+-- }
+--
+-- Configure whether users can change the custom confidence scheme locally.
+-- CONFIG["SETTINGS"]["DataConfidence.CustomConfidenceScheme.AllowUserOverride"] = false
+--
+-- Configure provider instances trusted by your organization for data-source security checks.
+-- These IDs may refer to LLM providers, embedding providers, or transcription providers
+-- defined in this configuration. Trusted providers are treated like self-hosted providers
+-- only for data-source security checks and related local data warnings.
+-- CONFIG["SETTINGS"]["DataSourceSecuritySettings.TrustedProviderIds"] = {
+--     "00000000-0000-0000-0000-000000000000",
+--     "00000000-0000-0000-0000-000000000001",
+-- }
+
+-- Configure the data source selection agent.
+-- This agent is used when chat data source options enable AI-based data source selection.
+-- The provider must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"].
+-- CONFIG["SETTINGS"]["DataAgentDataSourceSelection.PreselectAgentOptions"] = true
+-- CONFIG["SETTINGS"]["DataAgentDataSourceSelection.PreselectedAgentProvider"] = "00000000-0000-0000-0000-000000000000"
+-- CONFIG["SETTINGS"]["DataAgentDataSourceSelection.PreselectAgentOptions.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataAgentDataSourceSelection.PreselectedAgentProvider.AllowUserOverride"] = true
+
+-- Configure the retrieval context validation agent.
+-- This agent is used when retrieval context validation is enabled globally and chat data source options enable AI-based validation.
+-- The provider must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"].
+-- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.EnableRetrievalContextValidation"] = true
+-- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.PreselectAgentOptions"] = true
+-- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.PreselectedAgentProvider"] = "00000000-0000-0000-0000-000000000000"
+-- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.NumParallelValidations"] = 3
+-- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.EnableRetrievalContextValidation.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.PreselectAgentOptions.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.PreselectedAgentProvider.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.NumParallelValidations.AllowUserOverride"] = true
+
+-- Configure assistant plugin security audits.
+--
+-- Configure whether assistant plugins must be audited before users can activate them.
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.RequireAuditBeforeActivation"] = true
+--
+-- Configure a dedicated provider for assistant plugin audits.
+-- It must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"].
+-- Without a selected audit provider, AI Studio uses the app-wide default provider.
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.PreselectedAgentProvider"] = "00000000-0000-0000-0000-000000000000"
+--
+-- Configure the minimum audit level assistant plugins must meet.
+-- Allowed values are: UNKNOWN, DANGEROUS, CAUTION, SAFE
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.MinimumLevel"] = "CAUTION"
+--
+-- Configure whether activation is blocked when the audit result is below the minimum level.
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.BlockActivationBelowMinimum"] = true
+--
+-- Configure whether new or changed assistant plugins are audited automatically in the background.
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.AutomaticallyAuditAssistants"] = false
+--
+-- Configure whether users can change assistant plugin audit settings locally.
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.RequireAuditBeforeActivation.AllowUserOverride"] = false
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.PreselectedAgentProvider.AllowUserOverride"] = false
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.MinimumLevel.AllowUserOverride"] = false
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.BlockActivationBelowMinimum.AllowUserOverride"] = false
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.AutomaticallyAuditAssistants.AllowUserOverride"] = false
+
 -- Example chat templates for this configuration:
 CONFIG["CHAT_TEMPLATES"] = {}
 
@@ -358,6 +561,26 @@ CONFIG["CHAT_TEMPLATES"] = {}
 --             ["Content"] = "Thank you. I'll analyze the documents and provide a comprehensive summary."
 --         }
 --     }
+-- }
+
+-- Introduction texts shown as expansion panels on the welcome page:
+CONFIG["INTRODUCTIONS"] = {}
+
+-- An example introduction:
+-- CONFIG["INTRODUCTIONS"][#CONFIG["INTRODUCTIONS"]+1] = {
+--     ["Id"] = "00000000-0000-0000-0000-000000000000",
+--     ["Title"] = "Welcome to Your Organization's AI Studio",
+--     ["Version"] = "1",
+--     ["Index"] = 1,
+--     ["Markdown"] = [===[
+--                         ## Getting Started
+--
+--                         This AI Studio installation is managed by your organization.
+--                         Please use the preconfigured providers and follow your internal
+--                         AI usage guidelines.
+--
+--                         Further information is available in the [internal wiki](https://example.org/wiki).
+--                         ]===]
 -- }
 
 -- Mandatory infos that users must explicitly accept before using AI Studio:

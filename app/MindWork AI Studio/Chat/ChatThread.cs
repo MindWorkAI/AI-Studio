@@ -28,6 +28,17 @@ public sealed record ChatThread
     public Guid WorkspaceId { get; set; }
 
     /// <summary>
+    /// The monotonically increasing number used for managed media transcript filenames.
+    /// </summary>
+    public ulong LastMediaTranscriptNumber { get; set; }
+
+    /// <summary>
+    /// Managed transcript attachments prepared for the composer but not sent yet.
+    /// Empty by default so older serialized threads require no migration.
+    /// </summary>
+    public List<ManagedTranscriptAttachment> PendingMediaTranscripts { get; set; } = [];
+
+    /// <summary>
     /// Specifies the provider selected for the chat thread.
     /// </summary>
     public string SelectedProvider { get; set; } = string.Empty;
@@ -103,6 +114,8 @@ public sealed record ChatThread
     /// <returns>The prepared system prompt.</returns>
     public string PrepareSystemPrompt(SettingsManager settingsManager, IEnumerable<ToolDefinition>? runnableToolDefinitions = null)
     {
+        this.allowProfile = true;
+
         //
         // Use the information from the chat template, if provided. Otherwise, use the default system prompt
         //
@@ -120,8 +133,8 @@ public sealed record ChatThread
                     systemPromptTextWithChatTemplate = this.SystemPrompt;
                 else
                 {
-                    var chatTemplate = settingsManager.ConfigurationData.ChatTemplates.FirstOrDefault(x => x.Id == this.SelectedChatTemplate);
-                    if(chatTemplate == null)
+                    var chatTemplate = settingsManager.GetChatTemplateById(this.SelectedChatTemplate);
+                    if(chatTemplate == ChatTemplate.NO_CHAT_TEMPLATE)
                         systemPromptTextWithChatTemplate = this.SystemPrompt;
                     else
                     {
@@ -177,8 +190,8 @@ public sealed record ChatThread
                     systemPromptText = systemPromptWithAugmentedData;
                 else
                 {
-                    var profile = settingsManager.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == this.SelectedProfile);
-                    if(profile is null)
+                    var profile = settingsManager.GetProfileById(this.SelectedProfile);
+                    if(profile == Profile.NO_PROFILE)
                         systemPromptText = systemPromptWithAugmentedData;
                     else
                     {
@@ -258,12 +271,26 @@ public sealed record ChatThread
             {
                 var previousBlock = sortedBlocks[index - 1];
                 if (previousBlock.Role is ChatRole.USER && previousBlock.HideFromUser)
+                {
+                    DeleteManagedAttachments(previousBlock);
                     this.Blocks.Remove(previousBlock);
+                }
             }
         }
 
+        DeleteManagedAttachments(block);
+
         // Remove the block from the chat thread:
         this.Blocks.Remove(block);
+    }
+
+    private static void DeleteManagedAttachments(ContentBlock block)
+    {
+        if (block.Content is not ContentText textContent)
+            return;
+            
+        foreach (var attachment in textContent.FileAttachments)
+            ManagedTranscriptAttachment.TryDeleteOwnedFile(attachment);
     }
 
     /// <summary>

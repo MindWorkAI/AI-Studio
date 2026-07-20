@@ -7,7 +7,15 @@
         <MudForm @ref="@this.form" @bind-IsValid="@this.dataIsValid" @bind-Errors="@this.dataIssues">
             <MudStack Row="@true" AlignItems="AlignItems.Center">
                 @* ReSharper disable once CSharpWarnings::CS8974 *@
-                <MudSelect @bind-Value="@this.DataLLMProvider" Label="@T("Provider")" Class="mb-3" OpenIcon="@Icons.Material.Filled.AccountBalance" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.providerValidation.ValidatingProvider">
+                <MudSelect T="LLMProviders"
+                           Value="@this.DataLLMProvider"
+                           ValueChanged="@this.OnProviderChanged"
+                           Label="@T("Provider")"
+                           Class="mb-3"
+                           OpenIcon="@Icons.Material.Filled.AccountBalance"
+                           AdornmentColor="Color.Info"
+                           Adornment="Adornment.Start"
+                           Validation="@this.providerValidation.ValidatingProvider">
                     @foreach (LLMProviders provider in Enum.GetValues(typeof(LLMProviders)))
                     {
                         <MudSelectItem Value="@provider">
@@ -71,7 +79,7 @@
                 @* ReSharper restore Asp.Entity *@
             }       
 
-            @if (!this.DataLLMProvider.IsLLMModelSelectionHidden(this.DataHost))
+            @if (!this.IsLLMModelSelectionHidden)
             {
                 <MudField FullWidth="true" Label="@T("Model selection")" Variant="Variant.Outlined" Class="mb-3">
                     <MudStack Row="@true" AlignItems="AlignItems.Center" StretchItems="StretchItems.End">
@@ -105,7 +113,9 @@
                             }
                             else
                             {
-                                <MudSelect @bind-Value="@this.DataModel"
+                                <MudSelect T="Provider.Model"
+                                           Value="@this.DataModel"
+                                           ValueChanged="@(async model => await this.OnModelChanged(model))"
                                            OpenIcon="@Icons.Material.Filled.FaceRetouchingNatural" AdornmentColor="Color.Info"
                                            Adornment="Adornment.Start" Validation="@this.providerValidation.ValidatingModel">
                                     @foreach (var model in this.availableModels)
@@ -157,8 +167,67 @@
                 </MudButton>
                 <MudDivider />
                 <MudCollapse Expanded="@this.showExpertSettings" Class="@this.GetExpertStyles">
-                    <MudJustifiedText Class="mb-5">
-                        @T("Please be aware: This section is for experts only. You are responsible for verifying the correctness of the additional parameters you provide to the API call. By default, AI Studio uses the OpenAI-compatible chat completions API, when that it is supported by the underlying service and model.")
+                    <MudAlert Severity="Severity.Warning" Class="mb-4">
+                        @T("Please be careful: wrong expert settings can break model usage, disable supported features, or make unsupported features appear available.")
+                    </MudAlert>
+                    <MudText Typo="Typo.subtitle2" Class="mb-2">
+                        @T("Override Model Capabilities")
+                    </MudText>
+                    <MudJustifiedText Typo="Typo.body2" Class="mb-4">
+                        @T("Stored default model capabilities may not reflect its full range. Override them here if needed.")
+                    </MudJustifiedText>
+                    <MudStack Class="mb-4" Spacing="2">
+                        @foreach (var capability in SWITCH_CAPABILITY_OVERRIDES)
+                        {
+                            <MudPaper Outlined="@true" Class="pa-3">
+                                <MudStack Row="@true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Wrap="Wrap.Wrap">
+                                    <MudStack Spacing="0">
+                                        <MudText Typo="Typo.body2">
+                                            @this.GetCapabilityOverrideLabel(capability)
+                                        </MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                            @this.GetCapabilityEffectiveLabel(capability)
+                                        </MudText>
+                                    </MudStack>
+                                    <MudStack Row="@true" AlignItems="AlignItems.Center" Spacing="2">
+                                        <MudSwitch T="bool"
+                                                   Value="@this.IsCapabilityEnabled(capability)"
+                                                   ValueChanged="@(value => this.OnCapabilitySwitchChanged(capability, value))"
+                                                   Color="Color.Primary" />
+                                        <MudButton Variant="Variant.Outlined"
+                                                   Color="Color.Default"
+                                                   Size="Size.Small"
+                                                   StartIcon="@Icons.Material.Filled.RestartAlt"
+                                                   Disabled="@(!this.HasCapabilityOverride(capability))"
+                                                   OnClick="@(() => this.ResetCapabilityOverride(capability))">
+                                            @T("Reset")
+                                        </MudButton>
+                                    </MudStack>
+                                </MudStack>
+                            </MudPaper>
+                        }
+                        <MudPaper Outlined="@true" Class="pa-3">
+                            <MudSelect T="ReasoningOverrideMode"
+                                       Value="@this.GetReasoningOverrideMode()"
+                                       ValueChanged="@this.SetReasoningOverrideMode"
+                                       Label="@T("Reasoning (thinking) behavior")"
+                                       HelperText="@this.GetReasoningOverrideModeDescription(this.GetReasoningOverrideMode())"
+                                       Variant="Variant.Outlined"
+                                       Margin="Margin.Dense"
+                                       OpenIcon="@Icons.Material.Filled.Psychology"
+                                       AdornmentColor="Color.Info"
+                                       Adornment="Adornment.Start">
+                                @foreach (var mode in REASONING_OVERRIDE_MODES)
+                                {
+                                    <MudSelectItem Value="@mode">
+                                        @this.GetReasoningOverrideModeLabel(mode)
+                                    </MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudPaper>
+                    </MudStack>
+                    <MudJustifiedText Typo="Typo.body2" Class="mb-4">
+                        @string.Format(T("The current model uses the {0}."), this.GetCurrentModelApiLabel())
                     </MudJustifiedText>
                     <MudTextField T="string" Label=@T("Additional API parameters") Variant="Variant.Outlined" Lines="4" AutoGrow="true" MaxLines="10" HelperText=@T("""Add the parameters in proper JSON formatting, e.g., "temperature": 0.5. Remove trailing commas. The usual surrounding curly brackets {} must not be used, though.""") Placeholder="@GetPlaceholderExpertSettings" @bind-Value="@this.AdditionalJsonApiParameters" Immediate="true" Validation="@this.ValidateAdditionalJsonApiParameters" OnBlur="@this.OnInputChangeExpertSettings"/>
                 </MudCollapse>

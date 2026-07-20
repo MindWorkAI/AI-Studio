@@ -7,6 +7,7 @@ using AIStudio.Dialogs.Settings;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.AssistantSessions;
 
 using Microsoft.AspNetCore.Components;
 
@@ -279,13 +280,67 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
     private ProfilePreselection policyPreselectedProfile = ProfilePreselection.NoProfile;
     private HashSet<FileAttachment> loadedDocumentPaths = [];
     private readonly List<ConfigurationSelectData<string>> availableLLMProviders = new();
+    private static readonly AssistantSessionStateKey<DataDocumentAnalysisPolicy?> SELECTED_POLICY_STATE_KEY = new(nameof(selectedPolicy));
+    private static readonly AssistantSessionStateKey<bool> POLICY_IS_PROTECTED_STATE_KEY = new(nameof(policyIsProtected));
+    private static readonly AssistantSessionStateKey<bool> POLICY_HIDE_POLICY_DEFINITION_STATE_KEY = new(nameof(policyHidePolicyDefinition));
+    private static readonly AssistantSessionStateKey<bool> POLICY_DEFINITION_EXPANDED_STATE_KEY = new(nameof(policyDefinitionExpanded));
+    private static readonly AssistantSessionStateKey<string> POLICY_NAME_STATE_KEY = new(nameof(policyName));
+    private static readonly AssistantSessionStateKey<string> POLICY_DESCRIPTION_STATE_KEY = new(nameof(policyDescription));
+    private static readonly AssistantSessionStateKey<string> POLICY_ANALYSIS_RULES_STATE_KEY = new(nameof(policyAnalysisRules));
+    private static readonly AssistantSessionStateKey<string> POLICY_OUTPUT_RULES_STATE_KEY = new(nameof(policyOutputRules));
+    private static readonly AssistantSessionStateKey<ConfidenceLevel> POLICY_MINIMUM_PROVIDER_CONFIDENCE_STATE_KEY = new(nameof(policyMinimumProviderConfidence));
+    private static readonly AssistantSessionStateKey<string> POLICY_PRESELECTED_PROVIDER_ID_STATE_KEY = new(nameof(policyPreselectedProviderId));
+    private static readonly AssistantSessionStateKey<ProfilePreselection> POLICY_PRESELECTED_PROFILE_STATE_KEY = new(nameof(policyPreselectedProfile));
+    private static readonly AssistantSessionStateKey<HashSet<FileAttachment>> LOADED_DOCUMENT_PATHS_STATE_KEY = new(nameof(loadedDocumentPaths));
+    private static readonly AssistantSessionStateKey<List<ConfigurationSelectData<string>>> AVAILABLE_LLM_PROVIDERS_STATE_KEY = new(nameof(availableLLMProviders));
+
+    /// <inheritdoc />
+    protected override void CaptureCustomAssistantSessionState(AssistantSessionStateWriter state)
+    {
+        state.Set(SELECTED_POLICY_STATE_KEY, this.selectedPolicy);
+        state.Set(POLICY_IS_PROTECTED_STATE_KEY, this.policyIsProtected);
+        state.Set(POLICY_HIDE_POLICY_DEFINITION_STATE_KEY, this.policyHidePolicyDefinition);
+        state.Set(POLICY_DEFINITION_EXPANDED_STATE_KEY, this.policyDefinitionExpanded);
+        state.Set(POLICY_NAME_STATE_KEY, this.policyName);
+        state.Set(POLICY_DESCRIPTION_STATE_KEY, this.policyDescription);
+        state.Set(POLICY_ANALYSIS_RULES_STATE_KEY, this.policyAnalysisRules);
+        state.Set(POLICY_OUTPUT_RULES_STATE_KEY, this.policyOutputRules);
+        state.Set(POLICY_MINIMUM_PROVIDER_CONFIDENCE_STATE_KEY, this.policyMinimumProviderConfidence);
+        state.Set(POLICY_PRESELECTED_PROVIDER_ID_STATE_KEY, this.policyPreselectedProviderId);
+        state.Set(POLICY_PRESELECTED_PROFILE_STATE_KEY, this.policyPreselectedProfile);
+        state.SetHashSet(LOADED_DOCUMENT_PATHS_STATE_KEY, this.loadedDocumentPaths);
+        state.SetList(AVAILABLE_LLM_PROVIDERS_STATE_KEY, this.availableLLMProviders);
+    }
+
+    /// <inheritdoc />
+    protected override void RestoreCustomAssistantSessionState(AssistantSessionStateReader state)
+    {
+        state.Restore(SELECTED_POLICY_STATE_KEY, value => this.selectedPolicy = value);
+        state.Restore(POLICY_IS_PROTECTED_STATE_KEY, value => this.policyIsProtected = value);
+        state.Restore(POLICY_HIDE_POLICY_DEFINITION_STATE_KEY, value => this.policyHidePolicyDefinition = value);
+        state.Restore(POLICY_DEFINITION_EXPANDED_STATE_KEY, value => this.policyDefinitionExpanded = value);
+        state.Restore(POLICY_NAME_STATE_KEY, value => this.policyName = value);
+        state.Restore(POLICY_DESCRIPTION_STATE_KEY, value => this.policyDescription = value);
+        state.Restore(POLICY_ANALYSIS_RULES_STATE_KEY, value => this.policyAnalysisRules = value);
+        state.Restore(POLICY_OUTPUT_RULES_STATE_KEY, value => this.policyOutputRules = value);
+        state.Restore(POLICY_MINIMUM_PROVIDER_CONFIDENCE_STATE_KEY, value => this.policyMinimumProviderConfidence = value);
+        state.Restore(POLICY_PRESELECTED_PROVIDER_ID_STATE_KEY, value => this.policyPreselectedProviderId = value);
+        state.Restore(POLICY_PRESELECTED_PROFILE_STATE_KEY, value => this.policyPreselectedProfile = value);
+        state.RestoreHashSet(LOADED_DOCUMENT_PATHS_STATE_KEY, this.loadedDocumentPaths);
+        state.RestoreList(AVAILABLE_LLM_PROVIDERS_STATE_KEY, this.availableLLMProviders);
+    }
     
     private bool IsNoPolicySelectedOrProtected => this.selectedPolicy is null || this.selectedPolicy.IsProtected;
     
     private bool IsNoPolicySelected => this.selectedPolicy is null;
+
+    private bool ArePolicyControlsDisabled => this.IsProcessing || this.IsMediaImportBusy;
     
     private void SelectedPolicyChanged(DataDocumentAnalysisPolicy? policy)
     {
+        if (this.ArePolicyControlsDisabled)
+            return;
+
         this.selectedPolicy = policy;
         this.ResetForm();
         this.policyDefinitionExpanded = !this.selectedPolicy?.IsProtected ?? true;
@@ -303,6 +358,9 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
     
     private async Task AddPolicy()
     {
+        if (this.ArePolicyControlsDisabled)
+            return;
+
         this.SettingsManager.ConfigurationData.DocumentAnalysis.Policies.Add(new ()
         {
             Id = Guid.NewGuid().ToString(),
@@ -323,6 +381,9 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
 
     private async Task RemovePolicy()
     {
+        if (this.ArePolicyControlsDisabled)
+            return;
+
         if(this.selectedPolicy is null)
             return;
         
@@ -439,10 +500,10 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
     private ConfidenceLevel GetPolicyMinimumConfidenceLevel()
     {
         var minimumLevel = ConfidenceLevel.NONE;
-        var llmSettings = this.SettingsManager.ConfigurationData.LLMProviders;
-        var enforceGlobalMinimumConfidence = llmSettings is { EnforceGlobalMinimumConfidence: true, GlobalMinimumConfidence: not ConfidenceLevel.NONE and not ConfidenceLevel.UNKNOWN };
+        var confidenceSettings = this.SettingsManager.ConfigurationData.Confidence;
+        var enforceGlobalMinimumConfidence = confidenceSettings is { EnforceGlobalMinimumConfidence: true, GlobalMinimumConfidence: not ConfidenceLevel.NONE and not ConfidenceLevel.UNKNOWN };
         if (enforceGlobalMinimumConfidence)
-            minimumLevel = llmSettings.GlobalMinimumConfidence;
+            minimumLevel = confidenceSettings.GlobalMinimumConfidence;
 
         if (this.selectedPolicy is not null && this.selectedPolicy.MinimumProviderConfidence > minimumLevel)
             minimumLevel = this.selectedPolicy.MinimumProviderConfidence;
@@ -515,7 +576,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
                 break;
         }
 
-        return Task.CompletedTask;
+        return base.ProcessIncomingMessage(sendingComponent, triggeredEvent, data);
     }
 
     #endregion

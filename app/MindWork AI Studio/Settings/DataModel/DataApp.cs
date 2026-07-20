@@ -58,6 +58,26 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     public StartPage StartPage { get; set; } = ManagedConfiguration.Register(configSelection, n => n.StartPage, StartPage.HOME);
 
     /// <summary>
+    /// Should the built-in introduction be visible on the home page?
+    /// </summary>
+    public bool ShowIntroduction { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ShowIntroduction, true);
+
+    /// <summary>
+    /// Should the quick start guide be visible on the home page?
+    /// </summary>
+    public bool ShowQuickStartGuide { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ShowQuickStartGuide, true);
+
+    /// <summary>
+    /// Should the last changelog be visible on the home page?
+    /// </summary>
+    public bool ShowLastChangelog { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ShowLastChangelog, true);
+
+    /// <summary>
+    /// Should the vision panel be visible on the home page?
+    /// </summary>
+    public bool ShowVision { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ShowVision, true);
+
+    /// <summary>
     /// The visibility setting for previews features.
     /// </summary>
     public PreviewVisibility PreviewVisibility { get; set; } = ManagedConfiguration.Register(configSelection, n => n.PreviewVisibility, PreviewVisibility.NONE);
@@ -93,6 +113,16 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     /// Set to empty string to disable the global shortcut.
     /// </summary>
     public string ShortcutVoiceRecording { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ShortcutVoiceRecording, string.Empty);
+
+    /// <summary>
+    /// The user-facing label for the voice recording shortcut, based on the user's keyboard layout.
+    /// </summary>
+    public string ShortcutVoiceRecordingDisplayName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// The canonical voice recording shortcut value this display label belongs to.
+    /// </summary>
+    public string ShortcutVoiceRecordingDisplaySource { get; set; } = string.Empty;
 
     /// <summary>
     /// The HTTP timeout in seconds for external HTTP clients.

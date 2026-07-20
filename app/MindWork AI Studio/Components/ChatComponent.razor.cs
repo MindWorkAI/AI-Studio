@@ -5,6 +5,8 @@ using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.AIJobs;
+using AIStudio.Tools.Media;
+using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
@@ -15,6 +17,7 @@ namespace AIStudio.Components;
 
 public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 {
+    private readonly Guid draftMediaOwnerId = Guid.NewGuid();
     private const string CHAT_INPUT_ID = "chat-user-input";
     private const string MARKDOWN_CODE = "code";
     private const string MARKDOWN_BOLD = "bold";
@@ -55,11 +58,15 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     [Inject]
     private AIJobService AIJobService { get; init; } = null!;
 
+    [Inject]
+    private MediaTranscriptionService MediaTranscriptionService { get; init; } = null!;
+
     private const Placement TOOLBAR_TOOLTIP_PLACEMENT = Placement.Top;
     private static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
 
     private DataSourceSelection? dataSourceSelectionComponent;
     private DataSourceOptions earlyDataSourceOptions = new();
+    private DataSourceOptions lastAppliedStandardDataSourceOptions = new();
     private Profile currentProfile = Profile.NO_PROFILE;
     private ChatTemplate currentChatTemplate = ChatTemplate.NO_CHAT_TEMPLATE;
     private bool hasUnsavedChanges;
@@ -71,6 +78,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private LoadChat loadChat;
     private bool autoSaveEnabled;
     private HashSet<string> selectedToolIds = [];
+    private bool previousInputForbidden = true;
+    private Guid lastSeenChatId = Guid.Empty;
+    private AIStudio.Settings.Provider lastSeenProvider = AIStudio.Settings.Provider.NONE;
     private string currentWorkspaceName = string.Empty;
     private Guid currentWorkspaceId = Guid.Empty;
     private Guid currentChatThreadId = Guid.Empty;
@@ -78,6 +88,8 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private Guid loadedParameterWorkspaceId = Guid.Empty;
     private Guid foregroundChatId = Guid.Empty;
     private int workspaceHeaderSyncVersion;
+
+    private MediaImportOwner CurrentMediaImportOwner => MediaImportOwner.ForChat(this.ChatThread?.ChatId ?? this.draftMediaOwnerId);
 
     // Unfortunately, we need the input field reference to blur the focus away. Without
     // this, we cannot clear the input field.
@@ -102,8 +114,10 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 
     protected override async Task OnInitializedAsync()
     {
+        this.MediaTranscriptionService.StateChanged += this.OnMediaImportStateChanged;
+
         // Apply the filters for the message bus:
-        this.ApplyFilters([], [ Event.HAS_CHAT_UNSAVED_CHANGES, Event.RESET_CHAT_STATE, Event.CHAT_STREAMING_DONE, Event.AI_JOB_CHANGED, Event.AI_JOB_FINISHED, Event.CHAT_GENERATION_CHANGED, Event.CONFIGURATION_CHANGED ]);
+        this.ApplyFilters([], [ Event.HAS_CHAT_UNSAVED_CHANGES, Event.RESET_CHAT_STATE, Event.CHAT_STREAMING_DONE, Event.AI_JOB_CHANGED, Event.AI_JOB_FINISHED, Event.CHAT_GENERATION_CHANGED, Event.WORKSPACE_RENAMED, Event.CONFIGURATION_CHANGED ]);
         
         // Configure the spellchecking for the user input:
         this.SettingsManager.InjectSpellchecking(USER_INPUT_ATTRIBUTES);
@@ -117,6 +131,8 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         if (!this.ComposerState.HasUserDraft && !this.ComposerState.HasComposerContent)
             this.ComposerState.ApplyTemplate(this.currentChatTemplate);
         this.selectedToolIds = ToolSelectionRules.NormalizeSelection(this.SettingsManager.GetDefaultToolIds(Tools.Components.CHAT));
+
+        this.lastAppliedStandardDataSourceOptions = this.SettingsManager.ConfigurationData.Chat.PreselectedDataSourceOptions.CreateCopy();
 
         var deferredInput = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_CHAT_INPUT).FirstOrDefault();
         if (!string.IsNullOrWhiteSpace(deferredInput))
@@ -240,7 +256,48 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         // Select the correct provider:
         await this.SelectProviderWhenLoadingChat();
         await this.SyncForegroundChatAsync();
+        await this.ConsumeMediaOutcomeAsync();
         await base.OnInitializedAsync();
+    }
+
+    /// <summary>Refreshes send and attachment controls when the media import lane changes.</summary>
+    private void OnMediaImportStateChanged(MediaImportOwner owner)
+    {
+        if (owner == this.CurrentMediaImportOwner)
+            _ = this.InvokeAsync(async () =>
+            {
+                await this.ConsumeMediaOutcomeAsync();
+                this.StateHasChanged();
+            });
+    }
+
+    /// <summary>Consumes a terminal media notification when its chat is visible.</summary>
+    private async Task ConsumeMediaOutcomeAsync()
+    {
+        var outcome = this.MediaTranscriptionService.TryConsumeOutcome(this.CurrentMediaImportOwner);
+        if (outcome is null)
+            return;
+
+        if (outcome.Failures.Count > 0)
+        {
+            var message = string.Join(Environment.NewLine, outcome.Failures.Select(failure => $"{failure.FileName}: {failure.UserMessage}"));
+            await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, message));
+        }
+        else if (outcome.Status is MediaImportStatus.FAILED)
+        {
+            await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, this.T("The media file could not be transcribed.")));
+        }
+
+        if (outcome.Warnings.Count > 0)
+        {
+            var message = string.Join(Environment.NewLine, outcome.Warnings.Select(warning => $"{warning.FileName}: {warning.UserMessage}"));
+            await this.MessageBus.SendWarning(new(Icons.Material.Filled.VoiceChat, message));
+        }
+
+        if (outcome.Status is MediaImportStatus.CANCELLED)
+        {
+            await this.MessageBus.SendWarning(new(Icons.Material.Filled.VoiceChat, this.T("The media transcription was canceled.")));
+        }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -290,14 +347,28 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 this.StateHasChanged();
             }
         }
-        
+
+        var inputForbidden = this.IsInputForbidden();
+        if (!inputForbidden && this.previousInputForbidden)
+            await this.inputField.FocusAsync();
+
+        this.previousInputForbidden = inputForbidden;
         await base.OnAfterRenderAsync(firstRender);
     }
 
     protected override async Task OnParametersSetAsync()
     {
+        var incomingChatId = this.ChatThread?.ChatId ?? Guid.Empty;
+        if (incomingChatId != this.lastSeenChatId || this.Provider != this.lastSeenProvider)
+        {
+            this.lastSeenChatId = incomingChatId;
+            this.lastSeenProvider = this.Provider;
+            this.previousInputForbidden = true;
+        }
+
         await this.ApplyLoadedChatParameterAsync();
         await this.SyncForegroundChatAsync();
+        await this.ConsumeMediaOutcomeAsync();
         await base.OnParametersSetAsync();
     }
 
@@ -380,6 +451,29 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         this.WorkspaceName(this.currentWorkspaceName);
     }
 
+    private async Task RefreshRenamedWorkspaceHeaderAsync(Guid workspaceId)
+    {
+        var currentChatThread = this.ChatThread;
+        if (currentChatThread is null || currentChatThread.WorkspaceId != workspaceId)
+            return;
+
+        var syncVersion = Interlocked.Increment(ref this.workspaceHeaderSyncVersion);
+        var chatThreadId = currentChatThread.ChatId;
+        var loadedWorkspaceName = await WorkspaceBehaviour.LoadWorkspaceNameAsync(workspaceId);
+
+        if (syncVersion != this.workspaceHeaderSyncVersion)
+            return;
+
+        if (this.ChatThread is null
+            || this.ChatThread.ChatId != chatThreadId
+            || this.ChatThread.WorkspaceId != workspaceId)
+            return;
+
+        this.currentChatThreadId = chatThreadId;
+        this.currentWorkspaceId = workspaceId;
+        this.PublishWorkspaceNameIfChanged(loadedWorkspaceName);
+    }
+
     private async Task SyncForegroundChatAsync()
     {
         var nextForegroundChatId = this.ChatThread?.ChatId ?? Guid.Empty;
@@ -415,18 +509,48 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     
     private string TooltipAddChatToWorkspace => string.Format(T("Start new chat in workspace '{0}'"), this.currentWorkspaceName);
 
-    private string UserInputStyle => this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence ? this.Provider.UsedLLMProvider.GetConfidence(this.SettingsManager).SetColorStyle(this.SettingsManager) : string.Empty;
-    
-    private string UserInputClass => this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence ? "confidence-border" : string.Empty;
+    private string UserInputStyle => this.SettingsManager.ConfigurationData.Confidence.ShowProviderConfidence ? this.Provider.UsedLLMProvider.GetConfidence(this.SettingsManager).SetColorStyle(this.SettingsManager) : string.Empty;
+
+    private string UserInputClass => this.SettingsManager.ConfigurationData.Confidence.ShowProviderConfidence ? "confidence-border" : string.Empty;
     
     private void ApplyStandardDataSourceOptions()
     {
         var chatDefaultOptions = this.SettingsManager.ConfigurationData.Chat.PreselectedDataSourceOptions.CreateCopy();
+        this.lastAppliedStandardDataSourceOptions = chatDefaultOptions.CreateCopy();
         this.earlyDataSourceOptions = chatDefaultOptions;
         if(this.ChatThread is not null)
             this.ChatThread.DataSourceOptions = chatDefaultOptions;
         
         this.dataSourceSelectionComponent?.ChangeOptionWithoutSaving(chatDefaultOptions);
+    }
+
+    private async Task ApplyUpdatedStandardDataSourceOptionsAfterConfigurationChange()
+    {
+        var updatedStandardOptions = this.SettingsManager.ConfigurationData.Chat.PreselectedDataSourceOptions.CreateCopy();
+        var previousStandardOptions = this.lastAppliedStandardDataSourceOptions;
+        this.lastAppliedStandardDataSourceOptions = updatedStandardOptions.CreateCopy();
+
+        if (this.ChatThread is null)
+        {
+            this.earlyDataSourceOptions = updatedStandardOptions;
+            this.dataSourceSelectionComponent?.ChangeOptionWithoutSaving(updatedStandardOptions);
+            return;
+        }
+
+        if (!DataSourceOptionsAreEqual(this.ChatThread.DataSourceOptions, previousStandardOptions))
+            return;
+
+        await this.SetCurrentDataSourceOptions(updatedStandardOptions);
+        this.dataSourceSelectionComponent?.ChangeOptionWithoutSaving(updatedStandardOptions, this.ChatThread.AISelectedDataSources);
+        await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
+    }
+
+    private static bool DataSourceOptionsAreEqual(DataSourceOptions left, DataSourceOptions right)
+    {
+        return left.DisableDataSources == right.DisableDataSources
+               && left.AutomaticDataSourceSelection == right.AutomaticDataSourceSelection
+               && left.AutomaticValidation == right.AutomaticValidation
+               && left.PreselectedDataSourceIds.ToHashSet(StringComparer.Ordinal).SetEquals(right.PreselectedDataSourceIds);
     }
     
     private string ExtractThreadName(string firstUserInput)
@@ -450,7 +574,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     
     private async Task ProfileWasChanged(Profile profile)
     {
-        this.currentProfile = profile;
+        this.currentProfile = this.SettingsManager.GetProfileById(profile.Id);
         if(this.ChatThread is null)
             return;
 
@@ -464,7 +588,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     
     private async Task ChatTemplateWasChanged(ChatTemplate chatTemplate)
     {
-        this.currentChatTemplate = chatTemplate;
+        this.currentChatTemplate = this.SettingsManager.GetChatTemplateById(chatTemplate.Id);
         if(!string.IsNullOrWhiteSpace(this.currentChatTemplate.PredefinedUserPrompt))
             this.ComposerState.SetSystemInput(this.currentChatTemplate.PredefinedUserPrompt);
 
@@ -475,6 +599,44 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             return;
 
         await this.StartNewChat(true);
+    }
+
+    private void RefreshCurrentProfileAndChatTemplate()
+    {
+        this.currentProfile = this.SettingsManager.GetProfileById(this.currentProfile.Id);
+        this.currentChatTemplate = this.SettingsManager.GetChatTemplateById(this.currentChatTemplate.Id);
+    }
+
+    private async Task RefreshChatSelectionsAfterConfigurationChange()
+    {
+        var previousProvider = this.Provider;
+        var previousChatTemplate = this.currentChatTemplate;
+        var chatProviderId = this.ChatThread?.SelectedProvider;
+
+        this.Provider = this.SettingsManager.GetChatProviderForLoadedChat(chatProviderId);
+        if (this.Provider != previousProvider)
+            await this.ProviderChanged.InvokeAsync(this.Provider);
+
+        if (this.ChatThread is null)
+        {
+            this.currentProfile = this.SettingsManager.GetPreselectedProfile(Tools.Components.CHAT);
+            this.currentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(Tools.Components.CHAT);
+        }
+        else
+        {
+            this.currentProfile = string.IsNullOrWhiteSpace(this.ChatThread.SelectedProfile)
+                ? this.SettingsManager.GetProfileById(this.currentProfile.Id)
+                : this.SettingsManager.GetProfileById(this.ChatThread.SelectedProfile);
+
+            this.currentChatTemplate = string.IsNullOrWhiteSpace(this.ChatThread.SelectedChatTemplate)
+                ? this.SettingsManager.GetChatTemplateById(this.currentChatTemplate.Id)
+                : this.SettingsManager.GetChatTemplateById(this.ChatThread.SelectedChatTemplate);
+        }
+
+        if (!this.ComposerState.HasUserDraft && previousChatTemplate != this.currentChatTemplate)
+            this.ComposerState.ApplyTemplate(this.currentChatTemplate);
+
+        await this.ApplyUpdatedStandardDataSourceOptionsAfterConfigurationChange();
     }
 
     private IReadOnlyList<DataSourceAgentSelected> GetAgentSelectedDataSources()
@@ -573,9 +735,43 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         this.ComposerState.MarkUserDraft();
         this.hasUnsavedChanges = true;
     }
+
+    /// <summary>Creates and stores a stable draft immediately after media import confirmation.</summary>
+    private async Task<ChatThread?> EnsureMediaImportChatAsync(string firstMediaPath)
+    {
+        if (this.ChatThread is not null)
+            return this.ChatThread;
+
+        this.RefreshCurrentProfileAndChatTemplate();
+        var promptName = this.ExtractThreadName(this.ComposerState.UserInput);
+        this.ChatThread = new()
+        {
+            IncludeDateTime = true,
+            SelectedProvider = this.Provider.Id,
+            SelectedProfile = this.currentProfile.Id,
+            SelectedChatTemplate = this.currentChatTemplate.Id,
+            SystemPrompt = SystemPrompts.DEFAULT,
+            WorkspaceId = this.currentWorkspaceId,
+            ChatId = Guid.NewGuid(),
+            DataSourceOptions = this.earlyDataSourceOptions,
+            Name = string.IsNullOrWhiteSpace(this.ComposerState.UserInput)
+                ? $"Transkription: {Path.GetFileName(firstMediaPath)}"
+                : promptName,
+            Blocks = this.currentChatTemplate == ChatTemplate.NO_CHAT_TEMPLATE ? [] : this.currentChatTemplate.ExampleConversation.Select(block => block.DeepClone()).ToList(),
+        };
+
+        await WorkspaceBehaviour.StoreChatAsync(this.ChatThread);
+        this.MarkCurrentChatAsLoadedParameter();
+        await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
+        await this.SyncForegroundChatAsync();
+        return this.ChatThread;
+    }
     
     private async Task SendMessage(bool reuseLastUserPrompt = false)
     {
+        if (this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner))
+            return;
+
         await this.RefreshProviderSelectionFromConfigurationAsync();
 
         if (!this.IsProviderSelected)
@@ -583,7 +779,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         
         if(!this.ChatThread.IsLLMProviderAllowed(this.Provider))
             return;
-        
+
+        this.RefreshCurrentProfileAndChatTemplate();
+
         // Blur the focus away from the input field to be able to clear it:
         await this.inputField.BlurAsync();
         
@@ -638,6 +836,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 Text = this.ComposerState.UserInput,
                 FileAttachments = normalizedAttachments,
             };
+            this.ChatThread.PendingMediaTranscripts.Clear();
 
             //
             // Add the user message to the thread:
@@ -786,6 +985,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         this.hasUnsavedChanges = false;
         this.ComposerState.Clear();
         this.selectedToolIds = ToolSelectionRules.NormalizeSelection(this.SettingsManager.GetDefaultToolIds(Tools.Components.CHAT));
+        this.RefreshCurrentProfileAndChatTemplate();
         
         //
         // Reset the LLM provider considering the user's settings:
@@ -878,7 +1078,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             { x => x.ConfirmText, T("Move chat") },
         };
         
-        var dialogReference = await this.DialogService.ShowAsync<WorkspaceSelectionDialog>(T("Move Chat to Workspace"), dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogReference = await this.DialogService.ShowAsync<WorkspaceSelectionDialog>(T("Move Chat to Workspace"), dialogParameters, DialogOptions.FULLSCREEN_MANUAL_ESCAPE);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return;
@@ -887,12 +1087,8 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         if (workspaceId == Guid.Empty)
             return;
         
-        // Delete the chat from the current workspace or the temporary storage:
-        await WorkspaceBehaviour.DeleteChatAsync(this.DialogService, this.ChatThread!.WorkspaceId, this.ChatThread.ChatId, askForConfirmation: false);
-        
-        this.ChatThread!.WorkspaceId = workspaceId;
+        await WorkspaceBehaviour.MoveChatAsync(this.ChatThread!, workspaceId);
         this.MarkCurrentChatAsLoadedParameter();
-        await this.SaveThread();
 
         await this.SyncWorkspaceHeaderWithChatThreadAsync();
     }
@@ -971,14 +1167,11 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 
         // Try to select the profile:
         if (!string.IsNullOrWhiteSpace(chatProfile))
-            this.currentProfile = this.SettingsManager.ConfigurationData.Profiles.FirstOrDefault(x => x.Id == chatProfile) ?? Profile.NO_PROFILE;
+            this.currentProfile = this.SettingsManager.GetProfileById(chatProfile);
         
         // Try to select the chat template:
         if (!string.IsNullOrWhiteSpace(chatChatTemplate))
-        {
-            var selectedTemplate = this.SettingsManager.ConfigurationData.ChatTemplates.FirstOrDefault(x => x.Id == chatChatTemplate);
-            this.currentChatTemplate = selectedTemplate ?? ChatTemplate.NO_CHAT_TEMPLATE;
-        }
+            this.currentChatTemplate = this.SettingsManager.GetChatTemplateById(chatChatTemplate);
     }
 
     private async Task ToggleWorkspaceOverlay()
@@ -1073,6 +1266,17 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 if(this.autoSaveEnabled)
                     await this.SaveThread();
                 break;
+
+            case Event.WORKSPACE_RENAMED:
+                if (data is Guid workspaceId)
+                    await this.RefreshRenamedWorkspaceHeaderAsync(workspaceId);
+                break;
+
+            case Event.CONFIGURATION_CHANGED:
+            case Event.PLUGINS_RELOADED:
+                await this.RefreshChatSelectionsAfterConfigurationChange();
+                this.StateHasChanged();
+                break;
             
             case Event.AI_JOB_CHANGED:
             case Event.AI_JOB_FINISHED:
@@ -1081,7 +1285,10 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 {
                     this.ChatThread = this.AIJobService.TryGetLiveChatThread(snapshot.SubjectId) ?? this.ChatThread;
                     if (!snapshot.IsActive)
+                    {
                         this.hasUnsavedChanges = false;
+                        this.previousInputForbidden = true;
+                    }
 
                     this.StateHasChanged();
                 }
@@ -1117,6 +1324,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
+        this.MediaTranscriptionService.StateChanged -= this.OnMediaImportStateChanged;
         if(this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
         {
             await this.SaveThread();

@@ -2,79 +2,105 @@
 
 @if (this.UseSmallForm)
 {
-    <div @onmouseenter="@this.OnMouseEnter" @onmouseleave="@this.OnMouseLeave">
-        @if (this.isDraggingOver)
-        {
-            <MudBadge
-                Content="@this.DocumentPaths.Count"
-                Color="Color.Primary"
-                Overlap="true"
-                Class="cursor-pointer"
-                OnClick="@this.OpenAttachmentsDialog">
-                <MudLink OnClick="@this.AddFilesManually" Style="text-decoration: none;">
-                    <MudTextField T="string"
-                                  Text="@DROP_FILES_HERE_TEXT"
-                                  Adornment="Adornment.Start"
-                                  AdornmentIcon="@Icons.Material.Filled.AttachFile"
-                                  Typo="Typo.body2"
-                                  Variant="Variant.Outlined"
-                                  ReadOnly="true"
-                    />
-                </MudLink>
-            </MudBadge>
-        }
-        else if (this.DocumentPaths.Any())
-        {
-            <MudTooltip Text="@T("Click the paperclip to attach files, or click the number to see your attached files.")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+    <MudStack Spacing="0">
+        <div @onmouseenter="@this.OnMouseEnter" @onmouseleave="@this.OnMouseLeave">
+            @if (this.isDraggingOver)
+            {
                 <MudBadge
                     Content="@this.DocumentPaths.Count"
                     Color="Color.Primary"
                     Overlap="true"
                     Class="cursor-pointer"
                     OnClick="@this.OpenAttachmentsDialog">
+                    <MudLink OnClick="@this.AddFilesManually" Style="text-decoration: none;">
+                        <MudTextField T="string"
+                                      Text="@DROP_FILES_HERE_TEXT"
+                                      Adornment="Adornment.Start"
+                                      AdornmentIcon="@Icons.Material.Filled.AttachFile"
+                                      Typo="Typo.body2"
+                                      Variant="Variant.Outlined"
+                                      ReadOnly="true"
+                                      Disabled="@this.IsUnavailable"
+                        />
+                    </MudLink>
+                </MudBadge>
+            }
+            else if (this.DocumentPaths.Any())
+            {
+                <MudTooltip Text="@T("Click the paperclip to attach files, or click the number to see your attached files.")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                    <MudBadge
+                        Content="@this.DocumentPaths.Count"
+                        Color="Color.Primary"
+                        Overlap="true"
+                        Class="cursor-pointer"
+                        OnClick="@this.OpenAttachmentsDialog">
+                        <MudIconButton
+                            Icon="@Icons.Material.Filled.AttachFile"
+                            Color="Color.Default"
+                            Disabled="@this.IsUnavailable"
+                            OnClick="@this.AddFilesManually"/>
+                    </MudBadge>
+                </MudTooltip>
+            }
+            else
+            {
+                <MudTooltip Text="@T("Click here to attach files.")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                     <MudIconButton
                         Icon="@Icons.Material.Filled.AttachFile"
                         Color="Color.Default"
+                        Disabled="@this.IsUnavailable"
                         OnClick="@this.AddFilesManually"/>
-                </MudBadge>
-            </MudTooltip>
-        }
-        else
+                </MudTooltip>
+            }
+        </div>
+        @if (this.ShowMediaStatus)
         {
-            <MudTooltip Text="@T("Click here to attach files.")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
-                <MudIconButton
-                    Icon="@Icons.Material.Filled.AttachFile"
-                    Color="Color.Default"
-                    OnClick="@this.AddFilesManually"/>
-            </MudTooltip>
+            <MediaTranscriptionStatus Owner="@this.EffectiveImportOwner" TargetId="@this.EffectiveMediaImportTarget.TargetId" Compact="true"/>
         }
-    </div>
+    </MudStack>
 }
 else
 {
-    <MudStack Row="true" AlignItems="AlignItems.Center" StretchItems="StretchItems.None" Wrap="Wrap.Wrap">
-        <MudText Typo="Typo.body1" Inline="true">
-            @T("Drag and drop files into the marked area or click here to attach documents: ")
-        </MudText>
-        <MudButton
-            Variant="Variant.Filled"
-            StartIcon="@Icons.Material.Filled.Add"
-            Color="Color.Primary"
-            OnClick="@(() => this.AddFilesManually())"
-            Style="vertical-align: top; margin-top: -2px;"
-            Size="Size.Small">
-            @T("Add file")
-        </MudButton>
-    </MudStack>
+    @if (!this.IsUnavailable)
+    {
+        <MudStack Row="true" AlignItems="AlignItems.Center" StretchItems="StretchItems.None" Wrap="Wrap.Wrap">
+            <MudText Typo="Typo.body1" Inline="true">
+                @T("Drag and drop files into the marked area or click here to attach documents: ")
+            </MudText>
+            <MudButton
+                Variant="Variant.Filled"
+                StartIcon="@Icons.Material.Filled.Add"
+                Color="Color.Primary"
+                OnClick="@(() => this.AddFilesManually())"
+                Style="vertical-align: top; margin-top: -2px;"
+                Size="Size.Small">
+                @T("Add file")
+            </MudButton>
+        </MudStack>
+    }
+    @if (this.ShowMediaStatus)
+    {
+        <MediaTranscriptionStatus Owner="@this.EffectiveImportOwner" TargetId="@this.EffectiveMediaImportTarget.TargetId"/>
+    }
     <div @onmouseenter="@this.OnMouseEnter" @onmouseleave="@this.OnMouseLeave">
         <MudPaper Height="20em" Outlined="true" Class="@this.dragClass" Style="overflow-y: auto;">
             @foreach (var fileAttachment in this.DocumentPaths)
             {
-                <MudChip T="string" Color="Color.Dark" Text="@fileAttachment.FileName" tabindex="-1" Icon="@Icons.Material.Filled.Search" OnClick="@(() => this.InvestigateFile(fileAttachment))" OnClose="@(() => this.RemoveDocument(fileAttachment))"/>
+                @if (this.IsUnavailable)
+                {
+                    <MudChip T="string" Color="Color.Dark" Text="@fileAttachment.FileName" tabindex="-1" Icon="@Icons.Material.Filled.Search" OnClick="@(() => this.InvestigateFile(fileAttachment))"/>
+                }
+                else
+                {
+                    <MudChip T="string" Color="Color.Dark" Text="@fileAttachment.FileName" tabindex="-1" Icon="@Icons.Material.Filled.Search" OnClick="@(() => this.InvestigateFile(fileAttachment))" OnClose="@(() => this.RemoveDocument(fileAttachment))"/>
+                }
             }
         </MudPaper>
     </div>
-    <MudButton OnClick="@(async () => await this.ClearAllFiles())" Variant="Variant.Filled" Color="Color.Info" Class="mt-2" StartIcon="@Icons.Material.Filled.Delete">
-        @T("Clear file list")
-    </MudButton>
+    @if (!this.IsUnavailable)
+    {
+        <MudButton OnClick="@(async () => await this.ClearAllFiles())" Variant="Variant.Filled" Color="Color.Info" Class="mt-2" StartIcon="@Icons.Material.Filled.Delete">
+            @T("Clear file list")
+        </MudButton>
+    }
 }

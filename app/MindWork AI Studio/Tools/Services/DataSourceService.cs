@@ -1,6 +1,5 @@
 using AIStudio.Assistants.ERI;
 using AIStudio.Provider;
-using AIStudio.Provider.SelfHosted;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.ERIClient;
@@ -43,7 +42,7 @@ public sealed class DataSourceService
             return new([], []);
         }
         
-        return await this.GetDataSources(selectedLLMProvider.IsSelfHosted, previousSelectedDataSources);
+        return await this.GetDataSources(selectedLLMProvider.IsTrustedForDataSourceSecurityChecks(this.settingsManager), previousSelectedDataSources);
     }
     
     /// <summary>
@@ -66,19 +65,20 @@ public sealed class DataSourceService
             return new([], []);
         }
         
-        return await this.GetDataSources(selectedLLMProvider is ProviderSelfHosted, previousSelectedDataSources);
+        return await this.GetDataSources(selectedLLMProvider.IsTrustedForDataSourceSecurityChecks(this.settingsManager), previousSelectedDataSources);
     }
     
-    private async Task<AllowedSelectedDataSources> GetDataSources(bool usingSelfHostedProvider, IReadOnlyCollection<IDataSource>? previousSelectedDataSources = null)
+    private async Task<AllowedSelectedDataSources> GetDataSources(bool usingTrustedProvider, IReadOnlyCollection<IDataSource>? previousSelectedDataSources = null)
     {
-        var allDataSources = this.settingsManager.ConfigurationData.DataSources;
+        var allDataSources = this.settingsManager.ConfigurationData.DataSources.ToList();
+        var previousSelectedDataSourceIds = previousSelectedDataSources?.Select(source => source.Id).ToHashSet(StringComparer.Ordinal) ?? [];
         var filteredDataSources = new List<IDataSource>(allDataSources.Count);
-        var filteredSelectedDataSources = new List<IDataSource>(previousSelectedDataSources?.Count ?? 0);
+        var filteredSelectedDataSources = new List<IDataSource>(previousSelectedDataSourceIds.Count);
         var tasks = new List<Task<IDataSource?>>(allDataSources.Count);
         
         // Start all checks in parallel:
         foreach (var source in allDataSources)
-            tasks.Add(this.CheckOneDataSource(source, usingSelfHostedProvider));
+            tasks.Add(this.CheckOneDataSource(source, usingTrustedProvider));
         
         // Wait for all checks and collect the results:
         foreach (var task in tasks)
@@ -87,7 +87,7 @@ public sealed class DataSourceService
             if (source is not null)
             {
                 filteredDataSources.Add(source);
-                if (previousSelectedDataSources is not null && previousSelectedDataSources.Contains(source))
+                if (previousSelectedDataSourceIds.Contains(source.Id))
                     filteredSelectedDataSources.Add(source);
             }
         }
@@ -95,7 +95,7 @@ public sealed class DataSourceService
         return new(filteredDataSources, filteredSelectedDataSources);
     }
     
-    private async Task<IDataSource?> CheckOneDataSource(IDataSource source, bool usingSelfHostedProvider)
+    private async Task<IDataSource?> CheckOneDataSource(IDataSource source, bool usingTrustedProvider)
     {
         //
         // Unfortunately, we have to live-check any ERI source for its security requirements.
@@ -137,10 +137,10 @@ public sealed class DataSourceService
             case DataSourceSecurity.ALLOW_ANY:
                 
                 //
-                // Case: The data source allows any provider type. We want to use a self-hosted provider.
+                // Case: The data source allows any provider type. We want to use a trusted provider.
                 //       There is no issue with this source. Accept it.
                 //
-                if(usingSelfHostedProvider)
+                if(usingTrustedProvider)
                     return source;
 
                 //
@@ -151,13 +151,13 @@ public sealed class DataSourceService
                     return source;
 
                 //
-                // Case: The ERI source requires a self-hosted provider. This misconfiguration happens
+                // Case: The ERI source requires a self-hosted or organization-trusted provider. This misconfiguration happens
                 //       when the ERI server operator changes the security requirements. The ERI server
                 //       operator owns the data -- we have to respect their rules. We skip this source.
                 //
                 if (eriSourceRequirements is { AllowedProviderType: ProviderType.SELF_HOSTED })
                 {
-                    this.logger.LogWarning($"The ERI source '{source.Name}' (id={source.Id}) requires a self-hosted provider. We skip this source.");
+                    this.logger.LogWarning($"The ERI source '{source.Name}' (id={source.Id}) requires a self-hosted or organization-trusted provider. We skip this source.");
                     return null;
                 }    
                 
@@ -171,22 +171,22 @@ public sealed class DataSourceService
                 //
                 // Case: Missing rules. We skip this source. Better safe than sorry.
                 //
-                this.logger.LogDebug($"The ERI source '{source.Name}' (id={source.Id}) was filtered out due to missing rules.");
+                this.logger.LogWarning($"The ERI source '{source.Name}' (id={source.Id}) was filtered out due to missing rules.");
                 return null;
 
             //
-            // Case: The data source requires a self-hosted provider. We want to use a self-hosted provider.
+            // Case: The data source requires a trusted provider. We want to use a trusted provider.
             //       There is no issue with this source. Accept it.
             //
-            case DataSourceSecurity.SELF_HOSTED when usingSelfHostedProvider:
+            case DataSourceSecurity.SELF_HOSTED when usingTrustedProvider:
                 return source;
             
             //
-            // Case: The data source requires a self-hosted provider. We want to use a cloud provider.
+            // Case: The data source requires a trusted provider. We want to use an untrusted provider.
             //       We skip this source.
             //
-            case DataSourceSecurity.SELF_HOSTED when !usingSelfHostedProvider:
-                this.logger.LogWarning($"The data source '{source.Name}' (id={source.Id}) requires a self-hosted provider. We skip this source.");
+            case DataSourceSecurity.SELF_HOSTED when !usingTrustedProvider:
+                this.logger.LogWarning($"The data source '{source.Name}' (id={source.Id}) requires a self-hosted or organization-trusted provider. We skip this source.");
                 return null;
             
             //

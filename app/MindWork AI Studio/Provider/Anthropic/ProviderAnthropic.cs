@@ -14,7 +14,7 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, n
     #region Implementation of IProvider
 
     /// <inheritdoc />
-    public override string Id => LLMProviders.ANTHROPIC.ToName();
+    public override string Id => LLMProviders.ANTHROPIC.ToSecretId();
 
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "Anthropic";
@@ -26,7 +26,7 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, n
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
     {
         // Get the API key:
-        var requestedSecret = await RUST_SERVICE.GetAPIKey(this, SecretStoreType.LLM_PROVIDER);
+        var requestedSecret = await Program.RUST_SERVICE.GetAPIKey(this, SecretStoreType.LLM_PROVIDER);
         if(!requestedSecret.Success)
             yield break;
         
@@ -92,7 +92,7 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, n
             var request = new HttpRequestMessage(HttpMethod.Post, "messages");
 
             // Set the authorization header:
-            request.Headers.Add("x-api-key", await requestedSecret.Secret.Decrypt(ENCRYPTION));
+            request.Headers.Add("x-api-key", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
 
             // Set the Anthropic version:
             request.Headers.Add("anthropic-version", "2023-06-01");

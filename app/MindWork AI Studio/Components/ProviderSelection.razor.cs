@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 
 using AIStudio.Provider;
+using AIStudio.Settings;
 
 using Microsoft.AspNetCore.Components;
 
@@ -20,17 +21,67 @@ public partial class ProviderSelection : MSGComponentBase
     [Parameter]
     public Func<AIStudio.Settings.Provider, string?> ValidateProvider { get; set; } = _ => null;
 
+    /// <summary>
+    /// Gets or sets whether provider selection is disabled.
+    /// </summary>
+    [Parameter]
+    public bool Disabled { get; set; }
+
     [Parameter]
     public ConfidenceLevel ExplicitMinimumConfidence { get; set; } = ConfidenceLevel.UNKNOWN;
     
     [Inject]
     private ILogger<ProviderSelection> Logger { get; init; } = null!;
+
+    #region Overrides of ComponentBase
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.ApplyFilters([], [ Event.CONFIGURATION_CHANGED ]);
+        await base.OnInitializedAsync();
+    }
+
+    #endregion
     
     private async Task SelectionChanged(AIStudio.Settings.Provider provider)
     {
         this.ProviderSettings = provider;
         await this.ProviderSettingsChanged.InvokeAsync(provider);
     }
+
+    private IEnumerable<ProviderSelectionItem> GetAvailableProviderSelectionItems()
+    {
+        foreach (var provider in this.GetAvailableProviders())
+            yield return new(provider, this.GetCapabilityIcons(provider));
+    }
+
+    private IReadOnlyList<CapabilityIcon> GetCapabilityIcons(AIStudio.Settings.Provider provider)
+    {
+        var capabilities = provider.GetModelCapabilities();
+        List<CapabilityIcon> capabilityIcons = [];
+
+        if (capabilities.Contains(Capability.AUDIO_INPUT))
+            capabilityIcons.Add(new(Icons.Material.Filled.GraphicEq, this.T("Audio input possible")));
+
+        if (capabilities.Contains(Capability.SINGLE_IMAGE_INPUT) || capabilities.Contains(Capability.MULTIPLE_IMAGE_INPUT))
+            capabilityIcons.Add(new(Icons.Material.Filled.Image, this.T("Image input possible")));
+
+        if (capabilities.Contains(Capability.SPEECH_INPUT))
+            capabilityIcons.Add(new(Icons.Material.Filled.Mic, this.T("Speech input possible")));
+
+        var reasoningIndicatorState = provider.GetReasoningIndicatorState();
+        if (reasoningIndicatorState is not ReasoningIndicatorState.NONE)
+            capabilityIcons.Add(new(Icons.Material.Filled.Psychology, this.GetReasoningTooltip(reasoningIndicatorState)));
+
+        return capabilityIcons;
+    }
+
+    private string GetReasoningTooltip(ReasoningIndicatorState reasoningIndicatorState) => reasoningIndicatorState switch
+    {
+        ReasoningIndicatorState.DEFAULT_ON => this.T("Uses reasoning (thinking) by default"),
+        ReasoningIndicatorState.CONFIGURED => this.T("Uses reasoning (thinking) configured by settings"),
+        _ => this.T("Uses reasoning (thinking)"),
+    };
     
     [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
     private IEnumerable<AIStudio.Settings.Provider> GetAvailableProviders()
@@ -62,4 +113,20 @@ public partial class ProviderSelection : MSGComponentBase
                 break;
         }
     }
+
+    #region Overrides of MSGComponentBase
+
+    protected override Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
+    {
+        if (triggeredEvent is Event.CONFIGURATION_CHANGED or Event.PLUGINS_RELOADED)
+            this.StateHasChanged();
+
+        return Task.CompletedTask;
+    }
+
+    #endregion
+
+    private readonly record struct CapabilityIcon(string Icon, string Tooltip);
+
+    private readonly record struct ProviderSelectionItem(AIStudio.Settings.Provider Provider, IReadOnlyList<CapabilityIcon> CapabilityIcons);
 }

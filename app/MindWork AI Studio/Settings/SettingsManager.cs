@@ -21,6 +21,11 @@ public sealed class SettingsManager
     public readonly record struct ToolMinimumProviderConfidenceResolution(ConfidenceLevel ConfidenceLevel, string Source);
 
     private const string SETTINGS_FILENAME = "settings.json";
+    private const Version CURRENT_SETTINGS_VERSION = Version.V6;
+    
+    private readonly record struct SettingsVersionReadResult(Version Version, SettingsWriteBlockReason FailureReason);
+    
+    private readonly record struct CurrentSettingsReadResult(Data? SettingsData, SettingsWriteBlockReason FailureReason);
     
     private static readonly JsonSerializerOptions JSON_OPTIONS = new()
     {
@@ -67,6 +72,16 @@ public sealed class SettingsManager
     public bool HasCompletedInitialSettingsLoad { get; private set; }
 
     /// <summary>
+    /// Indicates why settings writes are blocked for the current session.
+    /// </summary>
+    public SettingsWriteBlockReason SettingsWriteBlockReason { get; private set; } = SettingsWriteBlockReason.NONE;
+
+    /// <summary>
+    /// Indicates that settings writes are blocked for the current session.
+    /// </summary>
+    public bool SettingsWriteBlocked => this.SettingsWriteBlockReason is not SettingsWriteBlockReason.NONE;
+
+    /// <summary>
     /// The configuration data.
     /// </summary>
     public Data ConfigurationData { get; private set; } = new();
@@ -91,6 +106,7 @@ public sealed class SettingsManager
     /// <returns>A (migrated) settings snapshot, or null if it could not be read.</returns>
     public async Task<Data?> TryReadSettingsSnapshot()
     {
+        this.SettingsWriteBlockReason = SettingsWriteBlockReason.NONE;
         if(!this.IsSetUp)
         {
             this.logger.LogWarning("Cannot load settings, because the configuration is not set up yet.");
@@ -104,38 +120,175 @@ public sealed class SettingsManager
             return null;
         }
 
-        // We read the `"Version": "V3"` line to determine the version of the settings file:
-        await foreach (var line in File.ReadLinesAsync(settingsPath))
+        var settingsVersion = await this.TryReadSettingsVersion(settingsPath);
+        if(settingsVersion.FailureReason is not SettingsWriteBlockReason.NONE)
         {
-            if (!line.Contains("""
-                               "Version":
-                               """))
-                continue;
+            this.BlockSettingsWrites(settingsVersion.FailureReason, "The settings file version could not be identified. Settings writes are blocked to avoid overwriting newer or unreadable settings.");
+            return await this.TryReadCurrentVersionBackupSnapshotForBlockedSettings();
+        }
 
-            // Extract the version from the line:
-            var settingsVersionText = line.Split('"')[3];
+        if(settingsVersion.Version > CURRENT_SETTINGS_VERSION)
+        {
+            this.BlockSettingsWrites(SettingsWriteBlockReason.VERSION_NEWER_THAN_APP, $"The settings file uses the newer version '{settingsVersion.Version}'. Settings writes are blocked to avoid overwriting newer settings.");
+            return await this.TryReadCurrentVersionBackupSnapshotForBlockedSettings();
+        }
 
-            // Parse the version:
-            Enum.TryParse(settingsVersionText, out Version settingsVersion);
-            if(settingsVersion is Version.UNKNOWN)
+        Data? settingsData;
+        if(settingsVersion.Version < CURRENT_SETTINGS_VERSION)
+        {
+            settingsData = await this.TryReadCurrentVersionBackupSnapshot();
+            if(settingsData is not null)
             {
-                this.logger.LogError("Unknown version of the settings file found.");
-                return new();
+                this.PrepareLoadedSettings(settingsData);
+                await this.StoreSettingsSnapshot(settingsData, settingsPath);
+                await this.StoreCurrentVersionBackup(settingsData);
+                this.logger.LogInformation($"Restored settings from the '{GetBackupSettingsFilename(CURRENT_SETTINGS_VERSION)}' backup file.");
+                return settingsData;
             }
 
-            var settingsData = SettingsMigrations.Migrate(this.logger, settingsVersion, await File.ReadAllTextAsync(settingsPath), JSON_OPTIONS);
-
-            //
-            // We filter the enabled preview features based on the preview visibility.
-            // This is necessary when the app starts up: some preview features may have
-            // been disabled or released from the last time the app was started.
-            //
-            settingsData.App.EnabledPreviewFeatures = settingsData.App.PreviewVisibility.FilterPreviewFeatures(settingsData.App.EnabledPreviewFeatures);
+            this.logger.LogInformation("No valid current-version settings backup was found. Migrating the settings file.");
+            settingsData = SettingsMigrations.Migrate(this.logger, settingsVersion.Version, await File.ReadAllTextAsync(settingsPath), JSON_OPTIONS);
+            this.PrepareLoadedSettings(settingsData);
+            await this.StoreSettingsSnapshot(settingsData, settingsPath);
+            await this.StoreCurrentVersionBackup(settingsData);
             return settingsData;
         }
 
-        this.logger.LogError("Failed to read the version of the settings file.");
-        return new();
+        var currentSettings = await this.TryDeserializeCurrentSettings(settingsPath, "settings file");
+        if(currentSettings.FailureReason is not SettingsWriteBlockReason.NONE)
+        {
+            this.BlockSettingsWrites(currentSettings.FailureReason, "The current settings file could not be safely loaded. Settings writes are blocked to avoid overwriting recoverable settings.");
+            return await this.TryReadCurrentVersionBackupSnapshotForBlockedSettings();
+        }
+
+        settingsData = currentSettings.SettingsData!;
+        this.PrepareLoadedSettings(settingsData);
+        await this.StoreCurrentVersionBackup(settingsData);
+        return settingsData;
+    }
+
+    private async Task<SettingsVersionReadResult> TryReadSettingsVersion(string settingsPath)
+    {
+        try
+        {
+            await using var settingsStream = File.OpenRead(settingsPath);
+            using var settingsDocument = await JsonDocument.ParseAsync(settingsStream);
+            if(!settingsDocument.RootElement.TryGetProperty("Version", out var versionElement))
+            {
+                this.logger.LogError($"Failed to read the version of the settings file '{settingsPath}'.");
+                return new(Version.UNKNOWN, SettingsWriteBlockReason.VERSION_MISSING);
+            }
+
+            if(versionElement.ValueKind is JsonValueKind.String && versionElement.GetString() is { } versionText)
+            {
+                if(Enum.TryParse(versionText, out Version stringVersion) && Enum.IsDefined(stringVersion) && stringVersion is not Version.UNKNOWN)
+                    return new(stringVersion, SettingsWriteBlockReason.NONE);
+
+                if(versionText.StartsWith('V') && int.TryParse(versionText[1..], out var futureVersion) && futureVersion > (int)CURRENT_SETTINGS_VERSION)
+                    return new((Version)futureVersion, SettingsWriteBlockReason.NONE);
+
+                if(int.TryParse(versionText, out var numericStringVersion) && numericStringVersion > (int)CURRENT_SETTINGS_VERSION)
+                    return new((Version)numericStringVersion, SettingsWriteBlockReason.NONE);
+            }
+
+            if(versionElement.ValueKind is JsonValueKind.Number && versionElement.TryGetInt32(out var numericVersion) && numericVersion > (int)Version.UNKNOWN && (Enum.IsDefined(typeof(Version), numericVersion) || numericVersion > (int)CURRENT_SETTINGS_VERSION))
+                return new((Version)numericVersion, SettingsWriteBlockReason.NONE);
+        }
+        catch(Exception e)
+        {
+            this.logger.LogError(e, $"Failed to read the version of the settings file '{settingsPath}'.");
+            return new(Version.UNKNOWN, SettingsWriteBlockReason.FILE_UNREADABLE);
+        }
+
+        return new(Version.UNKNOWN, SettingsWriteBlockReason.VERSION_UNKNOWN);
+    }
+
+    private async Task<Data?> TryReadCurrentVersionBackupSnapshot()
+    {
+        var backupSettingsPath = GetBackupSettingsPath(CURRENT_SETTINGS_VERSION);
+        if(!File.Exists(backupSettingsPath))
+        {
+            this.logger.LogInformation($"The settings backup file '{backupSettingsPath}' does not exist.");
+            return null;
+        }
+
+        var backupVersion = await this.TryReadSettingsVersion(backupSettingsPath);
+        if(backupVersion.FailureReason is not SettingsWriteBlockReason.NONE)
+        {
+            this.logger.LogWarning($"The settings backup file '{backupSettingsPath}' could not be used because its version could not be identified. Reason: '{backupVersion.FailureReason}'.");
+            return null;
+        }
+
+        if(backupVersion.Version != CURRENT_SETTINGS_VERSION)
+        {
+            this.logger.LogWarning($"The settings backup file '{backupSettingsPath}' uses version '{backupVersion.Version}' instead of '{CURRENT_SETTINGS_VERSION}'.");
+            return null;
+        }
+
+        var backupSettings = await this.TryDeserializeCurrentSettings(backupSettingsPath, "settings backup file");
+        if(backupSettings.FailureReason is not SettingsWriteBlockReason.NONE)
+        {
+            this.logger.LogWarning($"The settings backup file '{backupSettingsPath}' could not be used. Reason: '{backupSettings.FailureReason}'.");
+            return null;
+        }
+
+        return backupSettings.SettingsData;
+    }
+
+    private async Task<Data?> TryReadCurrentVersionBackupSnapshotForBlockedSettings()
+    {
+        var settingsData = await this.TryReadCurrentVersionBackupSnapshot();
+        if(settingsData is null)
+        {
+            this.logger.LogWarning($"No valid current-version settings backup was found while settings writes are blocked. Reason: '{this.SettingsWriteBlockReason}'.");
+            return null;
+        }
+
+        this.PrepareLoadedSettings(settingsData);
+        this.logger.LogWarning($"Loaded settings from the '{GetBackupSettingsFilename(CURRENT_SETTINGS_VERSION)}' backup file while settings writes remain blocked. Reason: '{this.SettingsWriteBlockReason}'.");
+        return settingsData;
+    }
+
+    private async Task<CurrentSettingsReadResult> TryDeserializeCurrentSettings(string settingsPath, string sourceDescription)
+    {
+        try
+        {
+            var settingsData = JsonSerializer.Deserialize<Data>(await File.ReadAllTextAsync(settingsPath), JSON_OPTIONS);
+            if(settingsData is null)
+            {
+                this.logger.LogError($"Failed to parse the {sourceDescription} '{settingsPath}'.");
+                return new(null, SettingsWriteBlockReason.CURRENT_VERSION_INVALID);
+            }
+
+            if(settingsData.Version != CURRENT_SETTINGS_VERSION)
+            {
+                this.logger.LogError($"The {sourceDescription} '{settingsPath}' uses version '{settingsData.Version}' instead of '{CURRENT_SETTINGS_VERSION}'.");
+                return new(null, SettingsWriteBlockReason.CURRENT_VERSION_INVALID);
+            }
+
+            return new(settingsData, SettingsWriteBlockReason.NONE);
+        }
+        catch(Exception e)
+        {
+            this.logger.LogError(e, $"Failed to parse the {sourceDescription} '{settingsPath}'.");
+            return new(null, SettingsWriteBlockReason.FILE_UNREADABLE);
+        }
+    }
+
+    private void BlockSettingsWrites(SettingsWriteBlockReason reason, string message)
+    {
+        this.SettingsWriteBlockReason = reason;
+        this.logger.LogError($"{message} Reason: '{reason}'.");
+    }
+
+    private void PrepareLoadedSettings(Data settingsData)
+    {
+        //
+        // We filter the enabled preview features based on the preview visibility.
+        // This is necessary when the app starts up: some preview features may have
+        // been disabled or released from the last time the app was started.
+        //
+        settingsData.App.EnabledPreviewFeatures = settingsData.App.PreviewVisibility.FilterPreviewFeatures(settingsData.App.EnabledPreviewFeatures);
     }
 
     /// <summary>
@@ -149,19 +302,48 @@ public sealed class SettingsManager
             return;
         }
 
+        if(this.SettingsWriteBlocked)
+        {
+            this.logger.LogWarning($"Cannot store settings, because settings writes are blocked. Reason: '{this.SettingsWriteBlockReason}'.");
+            return;
+        }
+
         var settingsPath = Path.Combine(ConfigDirectory!, SETTINGS_FILENAME);
+        await this.StoreSettingsSnapshot(this.ConfigurationData, settingsPath);
+        await this.StoreCurrentVersionBackup(this.ConfigurationData);
+    }
+
+    private static string GetBackupSettingsFilename(Version version) => $"settings.{version.ToString().ToLowerInvariant()}.json";
+
+    private static string GetBackupSettingsPath(Version version) => Path.Combine(ConfigDirectory!, GetBackupSettingsFilename(version));
+
+    private async Task StoreCurrentVersionBackup(Data settingsData)
+    {
+        if(settingsData.Version != CURRENT_SETTINGS_VERSION)
+        {
+            this.logger.LogWarning($"Skipping settings backup because the settings version '{settingsData.Version}' is not the current version '{CURRENT_SETTINGS_VERSION}'.");
+            return;
+        }
+
+        var backupSettingsPath = GetBackupSettingsPath(CURRENT_SETTINGS_VERSION);
+        await this.StoreSettingsSnapshot(settingsData, backupSettingsPath);
+        this.logger.LogInformation($"Stored the settings backup file '{backupSettingsPath}'.");
+    }
+
+    private async Task StoreSettingsSnapshot(Data settingsData, string settingsPath)
+    {
         if(!Directory.Exists(ConfigDirectory))
         {
             this.logger.LogInformation("Creating the configuration directory.");
             Directory.CreateDirectory(ConfigDirectory!);
         }
 
-        var settingsJson = JsonSerializer.Serialize(this.ConfigurationData, JSON_OPTIONS);
+        var settingsJson = JsonSerializer.Serialize(settingsData, JSON_OPTIONS);
         var tempFile = Path.GetTempFileName();
         await File.WriteAllTextAsync(tempFile, settingsJson);
         
         File.Move(tempFile, settingsPath, true);
-        this.logger.LogInformation("Stored the settings to the file system.");
+        this.logger.LogInformation($"Stored the settings to '{settingsPath}'.");
     }
     
     public void InjectSpellchecking(Dictionary<string, object?> attributes) => attributes["spellcheck"] = this.ConfigurationData.App.EnableSpellchecking ? "true" : "false";
@@ -169,9 +351,9 @@ public sealed class SettingsManager
     public ConfidenceLevel GetMinimumConfidenceLevel(Tools.Components component)
     {
         var minimumLevel = ConfidenceLevel.NONE;
-        var enforceGlobalMinimumConfidence = this.ConfigurationData.LLMProviders is { EnforceGlobalMinimumConfidence: true, GlobalMinimumConfidence: not ConfidenceLevel.NONE and not ConfidenceLevel.UNKNOWN };
+        var enforceGlobalMinimumConfidence = this.ConfigurationData.Confidence is { EnforceGlobalMinimumConfidence: true, GlobalMinimumConfidence: not ConfidenceLevel.NONE and not ConfidenceLevel.UNKNOWN };
         if (enforceGlobalMinimumConfidence)
-            minimumLevel = this.ConfigurationData.LLMProviders.GlobalMinimumConfidence;
+            minimumLevel = this.ConfigurationData.Confidence.GlobalMinimumConfidence;
         
         var componentMinimumLevel = component.MinimumConfidence(this);
         if (componentMinimumLevel > minimumLevel)
@@ -352,17 +534,13 @@ public sealed class SettingsManager
             return Profile.NO_PROFILE;
 
         if (preselection.UseSpecificProfile)
-        {
-            var componentProfile = this.ConfigurationData.Profiles.FirstOrDefault(x => x.Id.Equals(preselection.SpecificProfileId, StringComparison.OrdinalIgnoreCase));
-            return componentProfile ?? Profile.NO_PROFILE;
-        }
+            return this.GetProfileById(preselection.SpecificProfileId);
 
         var appPreselection = ProfilePreselection.FromStoredValue(this.ConfigurationData.App.PreselectedProfile);
         if (appPreselection.DoNotPreselectProfile || !appPreselection.UseSpecificProfile)
             return Profile.NO_PROFILE;
 
-        var appProfile = this.ConfigurationData.Profiles.FirstOrDefault(x => x.Id.Equals(appPreselection.SpecificProfileId, StringComparison.OrdinalIgnoreCase));
-        return appProfile ?? Profile.NO_PROFILE;
+        return this.GetProfileById(appPreselection.SpecificProfileId);
     }
 
     public Profile GetAppPreselectedProfile()
@@ -371,8 +549,7 @@ public sealed class SettingsManager
         if (appPreselection.DoNotPreselectProfile || !appPreselection.UseSpecificProfile)
             return Profile.NO_PROFILE;
 
-        var appProfile = this.ConfigurationData.Profiles.FirstOrDefault(x => x.Id.Equals(appPreselection.SpecificProfileId, StringComparison.OrdinalIgnoreCase));
-        return appProfile ?? Profile.NO_PROFILE;
+        return this.GetProfileById(appPreselection.SpecificProfileId);
     }
     
     public ChatTemplate GetPreselectedChatTemplate(Tools.Components component)
@@ -381,8 +558,29 @@ public sealed class SettingsManager
         if (preselection != ChatTemplate.NO_CHAT_TEMPLATE)
             return preselection;
         
-        preselection = this.ConfigurationData.ChatTemplates.FirstOrDefault(x => x.Id.Equals(this.ConfigurationData.App.PreselectedChatTemplate, StringComparison.OrdinalIgnoreCase));
-        return preselection ?? ChatTemplate.NO_CHAT_TEMPLATE;
+        return this.GetChatTemplateById(this.ConfigurationData.App.PreselectedChatTemplate);
+    }
+
+    public Profile GetProfileById(string? profileId)
+    {
+        if (string.IsNullOrWhiteSpace(profileId))
+            return Profile.NO_PROFILE;
+
+        if (string.Equals(profileId, Profile.NO_PROFILE.Id, StringComparison.OrdinalIgnoreCase))
+            return Profile.NO_PROFILE;
+
+        return this.ConfigurationData.Profiles.FirstOrDefault(x => x.Id.Equals(profileId, StringComparison.OrdinalIgnoreCase)) ?? Profile.NO_PROFILE;
+    }
+
+    public ChatTemplate GetChatTemplateById(string? chatTemplateId)
+    {
+        if (string.IsNullOrWhiteSpace(chatTemplateId))
+            return ChatTemplate.NO_CHAT_TEMPLATE;
+
+        if (string.Equals(chatTemplateId, ChatTemplate.NO_CHAT_TEMPLATE.Id, StringComparison.OrdinalIgnoreCase))
+            return ChatTemplate.NO_CHAT_TEMPLATE;
+
+        return this.ConfigurationData.ChatTemplates.FirstOrDefault(x => x.Id.Equals(chatTemplateId, StringComparison.OrdinalIgnoreCase)) ?? ChatTemplate.NO_CHAT_TEMPLATE;
     }
 
     public HashSet<string> GetDefaultToolIds(AIStudio.Tools.Components component)
@@ -491,7 +689,7 @@ public sealed class SettingsManager
         if(llmProvider is LLMProviders.NONE)
             return ConfidenceLevel.NONE;
         
-        switch (this.ConfigurationData.LLMProviders.ConfidenceScheme)
+        switch (this.ConfigurationData.Confidence.ConfidenceScheme)
         {
             case ConfidenceSchemes.TRUST_ALL:
                 return llmProvider switch
@@ -551,7 +749,7 @@ public sealed class SettingsManager
                 };
 
             case ConfidenceSchemes.CUSTOM:
-                return this.ConfigurationData.LLMProviders.CustomConfidenceScheme.GetValueOrDefault(llmProvider, ConfidenceLevel.UNKNOWN);
+                return this.ConfigurationData.Confidence.CustomConfidenceScheme.GetValueOrDefault(llmProvider, ConfidenceLevel.UNKNOWN);
 
             default:
                 return ConfidenceLevel.UNKNOWN;

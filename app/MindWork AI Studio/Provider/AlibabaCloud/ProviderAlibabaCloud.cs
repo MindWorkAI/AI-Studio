@@ -13,7 +13,7 @@ public sealed class ProviderAlibabaCloud() : BaseProvider(LLMProviders.ALIBABA_C
     #region Implementation of IProvider
 
     /// <inheritdoc />
-    public override string Id => LLMProviders.ALIBABA_CLOUD.ToName();
+    public override string Id => LLMProviders.ALIBABA_CLOUD.ToSecretId();
 
     /// <inheritdoc />
     public override string InstanceName { get; set; } = "AlibabaCloud";
@@ -70,7 +70,7 @@ public sealed class ProviderAlibabaCloud() : BaseProvider(LLMProviders.ALIBABA_C
     /// <inhertidoc />
     public override async Task<IReadOnlyList<IReadOnlyList<float>>> EmbedTextAsync(Model embeddingModel, SettingsManager settingsManager, CancellationToken token = default, params List<string> texts)
     {
-        var requestedSecret = await RUST_SERVICE.GetAPIKey(this, SecretStoreType.EMBEDDING_PROVIDER);
+        var requestedSecret = await Program.RUST_SERVICE.GetAPIKey(this, SecretStoreType.EMBEDDING_PROVIDER);
         return await this.PerformStandardTextEmbeddingRequest(requestedSecret, embeddingModel, token: token, texts: texts);
     }
 

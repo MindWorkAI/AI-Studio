@@ -1,6 +1,7 @@
 @attribute [Route(Routes.ASSISTANTS)]
 @using AIStudio.Dialogs.Settings
 @using AIStudio.Settings.DataModel
+@using AIStudio.Tools.PluginSystem
 @using AIStudio.Tools.PluginSystem.Assistants
 @inherits MSGComponentBase
 
@@ -17,7 +18,8 @@
             (Components.GRAMMAR_SPELLING_ASSISTANT, PreviewFeatures.NONE),
             (Components.REWRITE_ASSISTANT, PreviewFeatures.NONE),
             (Components.PROMPT_OPTIMIZER_ASSISTANT, PreviewFeatures.NONE),
-            (Components.SYNONYMS_ASSISTANT, PreviewFeatures.NONE)
+            (Components.SYNONYMS_ASSISTANT, PreviewFeatures.NONE),
+            (Components.META_ASSISTANT, PreviewFeatures.PRE_META_ASSISTANT_V1)
             ))
         {
             <MudText Typo="Typo.h4" Class="mb-2 mr-3">
@@ -30,6 +32,7 @@
                 <AssistantBlock TSettings="SettingsDialogRewrite" Component="Components.REWRITE_ASSISTANT" Name="@T("Rewrite & Improve")" Description="@T("Rewrite and improve a given text for a chosen style.")" Icon="@Icons.Material.Filled.Edit" Link="@Routes.ASSISTANT_REWRITE"/>
                 <AssistantBlock TSettings="SettingsDialogPromptOptimizer" Component="Components.PROMPT_OPTIMIZER_ASSISTANT" Name="@T("Prompt Optimizer")" Description="@T("Optimize your prompt using a structured guideline.")" Icon="@Icons.Material.Filled.AutoFixHigh" Link="@Routes.ASSISTANT_PROMPT_OPTIMIZER"/>
                 <AssistantBlock TSettings="SettingsDialogSynonyms" Component="Components.SYNONYMS_ASSISTANT" Name="@T("Synonyms")" Description="@T("Find synonyms for a given word or phrase.")" Icon="@Icons.Material.Filled.Spellcheck" Link="@Routes.ASSISTANT_SYNONYMS"/>
+                <AssistantBlock TSettings="NoSettingsPanel" Component="Components.META_ASSISTANT" RequiredPreviewFeature="PreviewFeatures.PRE_META_ASSISTANT_V1" Name="@T("Assistant Builder")" Description="@T("Generate your own assistants.")" Icon="@Icons.Material.Filled.AutoMode" Link="@Routes.ASSISTANT_META_ASSISTANT"/>
             </MudStack>
         }
 
@@ -42,12 +45,22 @@
                 @foreach (var assistantPlugin in this.AssistantPlugins)
                 {
                     var securityState = PluginAssistantSecurityResolver.Resolve(this.SettingsManager, assistantPlugin);
+                    var launchLink = assistantPlugin.StartsChatDirectly ? string.Empty : $"{Routes.ASSISTANT_DYNAMIC}?assistantId={assistantPlugin.Id}";
+                    var availablePlugin = PluginFactory.AvailablePlugins.OfType<IAvailablePlugin>().FirstOrDefault(plugin => plugin.Id == assistantPlugin.Id);
                     <AssistantBlock TSettings="NoSettingsPanel"
                                     Name="@T(assistantPlugin.AssistantTitle)"
                                     Description="@T(assistantPlugin.Description)"
                                     Icon="@Icons.Material.Filled.FindInPage"
                                     Disabled="@(!securityState.CanStartAssistant)"
-                                    Link="@($"{Routes.ASSISTANT_DYNAMIC}?assistantId={assistantPlugin.Id}")">
+                                    AssistantSessionInstanceId="@assistantPlugin.Id.ToString()"
+                                    Link="@launchLink"
+                                    OnClick="@(() => this.StartAssistantPluginAsync(assistantPlugin))">
+                        <AdditionalActions>
+                            @if (availablePlugin is not null)
+                            {
+                                <AssistantPluginDeleteAction Plugin="@availablePlugin" />
+                            }
+                        </AdditionalActions>
                         <SecurityBadge>
                             <AssistantPluginSecurityCard Plugin="@assistantPlugin" Compact="@true" />
                         </SecurityBadge>
@@ -96,7 +109,8 @@
 
         @if (this.SettingsManager.IsAnyCategoryAssistantVisible("Software Engineering",
             (Components.CODING_ASSISTANT, PreviewFeatures.NONE),
-            (Components.ERI_ASSISTANT, PreviewFeatures.PRE_RAG_2024)
+            (Components.ERI_ASSISTANT, PreviewFeatures.PRE_RAG_2024),
+            (Components.LOG_VIEWER_ASSISTANT, PreviewFeatures.NONE)
             ))
         {
             <MudText Typo="Typo.h4" Class="mb-2 mr-3 mt-6">
@@ -117,6 +131,7 @@
             </MudText>
             <MudStack Row="@true" Wrap="@Wrap.Wrap" Class="mb-3">
                 <AssistantBlock TSettings="SettingsDialogI18N" Component="Components.I18N_ASSISTANT" Name="@T("Localization")" Description="@T("Translate AI Studio text content into other languages")" Icon="@Icons.Material.Filled.Translate" Link="@Routes.ASSISTANT_AI_STUDIO_I18N"/>
+                <AssistantBlock TSettings="NoSettingsPanel" Component="Components.LOG_VIEWER_ASSISTANT" Name="@T("Log Viewer")" Description="@T("View and filter AI Studio log files.")" Icon="@Icons.Material.Filled.Article" Link="@Routes.ASSISTANT_LOG_VIEWER"/>
             </MudStack>
         }
 

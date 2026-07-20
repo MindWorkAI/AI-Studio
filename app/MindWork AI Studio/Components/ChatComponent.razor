@@ -33,6 +33,7 @@
         }
     </ChildContent>
     <FooterContent>
+        <MediaTranscriptionStatus Owner="@this.CurrentMediaImportOwner"/>
         <MudElement Style="flex: 0 0 auto;">
             <MudTextField
                 T="string"
@@ -45,7 +46,7 @@
                 Label="@this.InputLabel"
                 Placeholder="@this.ProviderPlaceholder"
                 Adornment="Adornment.End"
-                AdornmentIcon="@Icons.Material.Filled.Send"
+                AdornmentIcon="@(this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner) ? Icons.Material.Filled.HourglassTop : Icons.Material.Filled.Send)"
                 OnAdornmentClick="() => this.SendMessage()"
                 Disabled="@this.IsInputForbidden()"
                 Immediate="@true"
@@ -100,7 +101,7 @@
                 </MudTooltip>
             }
             
-            <AttachDocuments Name="File Attachments" Layer="@DropLayers.PAGES" DocumentPaths="@this.ComposerState.FileAttachments" DocumentPathsChanged="@this.ComposerAttachmentsChanged" CatchAllDocuments="true" UseSmallForm="true" Provider="@this.Provider"/>
+            <AttachDocuments Name="File Attachments" Layer="@DropLayers.PAGES" DocumentPaths="@this.ComposerState.FileAttachments" DocumentPathsChanged="@this.ComposerAttachmentsChanged" CatchAllDocuments="true" UseSmallForm="true" ShowMediaStatus="false" Provider="@this.Provider" OwnerChat="@this.ChatThread" EnsureOwnerChatAsync="@this.EnsureMediaImportChatAsync" Disabled="@this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner)"/>
             
             <MudDivider Vertical="true" Style="height: 24px; align-self: center;"/>
             
@@ -131,7 +132,7 @@
                 <DataSourceSelection @ref="@this.dataSourceSelectionComponent" PopoverTriggerMode="PopoverTriggerMode.BUTTON" LLMProvider="@this.Provider" DataSourceOptions="@this.GetCurrentDataSourceOptions()" DataSourceOptionsChanged="@(async options => await this.SetCurrentDataSourceOptions(options))" DataSourcesAISelected="@this.GetAgentSelectedDataSources()"/>
             }
             
-            @if (this.SettingsManager.ConfigurationData.LLMProviders.ShowProviderConfidence)
+            @if (this.SettingsManager.ConfigurationData.Confidence.ShowProviderConfidence)
             {
                 <ConfidenceInfo Mode="PopoverTriggerMode.ICON" LLMProvider="@this.Provider.UsedLLMProvider"/>
             }

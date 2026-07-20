@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 MindWork AI Studio is a cross-platform desktop application for interacting with Large Language Models (LLMs). The app uses a hybrid architecture combining a Rust Tauri runtime (for the native desktop shell) with a .NET Blazor Server web application (for the UI and business logic).
 
 **Key Architecture Points:**
-- **Runtime:** Rust-based Tauri v1.8 application providing the native window, system integration, and IPC layer
+- **Runtime:** Rust-based Tauri v2 application providing the native window, system integration, and IPC layer
 - **App:** .NET 9 Blazor Server application providing the UI and core functionality
 - **Communication:** The Rust runtime and .NET app communicate via HTTPS with TLS certificates generated at startup
 - **Providers:** Multi-provider architecture supporting OpenAI, Anthropic, Google, Mistral, Perplexity, self-hosted models, and others
@@ -18,7 +18,7 @@ MindWork AI Studio is a cross-platform desktop application for interacting with 
 ### Prerequisites
 - .NET 9 SDK
 - Rust toolchain (stable)
-- Tauri v1.6.2 CLI: `cargo install --version 1.6.2 tauri-cli`
+- Tauri v2 CLI
 - Tauri prerequisites (platform-specific dependencies)
 - **Note:** Development on Linux is discouraged due to complex Tauri dependencies that vary by distribution
 
@@ -112,12 +112,16 @@ Plugins can configure:
 - Chat templates
 - etc.
 
-When adding configuration options, update:
-- `app/MindWork AI Studio/Tools/PluginSystem/PluginConfiguration.cs`: In method `TryProcessConfiguration` register new options.
-- `app/MindWork AI Studio/Tools/PluginSystem/PluginFactory.Loading.cs`: In method `LoadAll` check for leftover configuration.
-- The corresponding data class in `app/MindWork AI Studio/Settings/DataModel/` to call `ManagedConfiguration.Register(...)`, when adding config options (in contrast to complex config. objects)
-- `app/MindWork AI Studio/Tools/PluginSystem/PluginConfigurationObject.cs` for parsing logic of complex configuration objects.
-- `app/MindWork AI Studio/Plugins/configuration/plugin.lua` to document the new configuration option.
+Configuration plugins provide three kinds of values:
+- **Managed settings:** simple values such as booleans, numbers, strings, enums, lists, or sets handled through `ManagedConfiguration`. These values may be locked or used as organization defaults.
+- **Managed configuration objects:** complex Lua tables that are persisted into `SettingsManager.ConfigurationData`, implement `IConfigurationObject`, and are cleaned up through `PluginConfigurationObject.CleanLeftOverConfigurationObjects(...)`. Examples include providers, profiles, chat templates, data sources, and document analysis policies.
+- **Live plugin content:** complex Lua tables that implement `ILivePluginContent` and are read live from running plugins instead of being persisted to `ConfigurationData`. Examples include `MANDATORY_INFOS` and `INTRODUCTIONS`. If live plugin content creates persistent side data, add a dedicated cleanup path for that side data, like mandatory-info acceptances.
+
+When adding configuration plugin capabilities:
+- For managed settings, update the corresponding data class in `app/MindWork AI Studio/Settings/DataModel/` to call `ManagedConfiguration.Register(...)`, process the setting in `PluginConfiguration.TryProcessConfiguration`, and check for leftover managed configuration in `PluginFactory.Loading.LoadAll`.
+- For managed configuration objects, update `PluginConfigurationObject.cs` and `PluginConfigurationObjectType.cs`, persist them in the appropriate `ConfigurationData` collection, and add cleanup via `PluginConfigurationObject.CleanLeftOverConfigurationObjects(...)`.
+- For live plugin content, add a data type implementing `ILivePluginContent`, parse it in `PluginConfiguration`, expose it through `PluginFactory`, and add any required cleanup only for persistent side data.
+- Always document the new capability in `app/MindWork AI Studio/Plugins/configuration/plugin.lua`.
 
 ## Tool Calling System
 
@@ -164,7 +168,7 @@ Multi-level confidence scheme allows users to control which providers see which 
 ## Dependencies and Frameworks
 
 **Rust:**
-- Tauri 1.8 - Desktop application framework
+- Tauri 2 - Desktop application framework
 - Axum - HTTPS API server
 - tokio - Async runtime
 - keyring - OS keyring integration
@@ -209,6 +213,7 @@ Multi-level confidence scheme allows users to control which providers see which 
 - **Encryption** - Initialized before Rust service is marked ready
 - **Message Bus** - Singleton event bus for cross-component communication inside the .NET app
 - **Naming conventions** - Constants, enum members, and `static readonly` fields use `UPPER_SNAKE_CASE` such as `MY_CONSTANT`.
+- **Compatibility shims** - Temporary fallback or read-repair code must be documented in `documentation/compatibility-shims/` with an introduced date, remove-after date, code references, and removal checklist. Add a short code comment near the shim that references the document and remove-after date. Check this folder before adding similar fallback logic, and do not extend expired shims without explicit maintainer direction. Do not use this process for permanent settings schema migrations; those belong in `app/MindWork AI Studio/Settings/SettingsMigrations.cs`.
 - **Empty lines** - Avoid adding extra empty lines at the end of files.
 
 ## Changelogs

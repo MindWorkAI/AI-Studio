@@ -17,6 +17,7 @@ public static class ComponentsExtensions
         Components.BIAS_DAY_ASSISTANT => false,
         Components.I18N_ASSISTANT => false,
         Components.DOCUMENT_ANALYSIS_ASSISTANT => false,
+        Components.LOG_VIEWER_ASSISTANT => false,
         
         Components.APP_SETTINGS => false,
         Components.WRITER => false,
@@ -25,6 +26,7 @@ public static class ComponentsExtensions
         Components.AGENT_DATA_SOURCE_SELECTION => false,
         Components.AGENT_RETRIEVAL_CONTEXT_VALIDATION => false,
         Components.AGENT_ASSISTANT_PLUGIN_AUDIT => false,
+        Components.META_ASSISTANT => false,
         
         _ => true,
     };
@@ -48,6 +50,8 @@ public static class ComponentsExtensions
         Components.I18N_ASSISTANT => TB("Localization Assistant"),
         Components.DOCUMENT_ANALYSIS_ASSISTANT => TB("Document Analysis Assistant"),
         Components.SLIDE_BUILDER_ASSISTANT => TB("Slide Planner Assistant"),
+        Components.META_ASSISTANT => TB("Assistant Builder"),
+        Components.LOG_VIEWER_ASSISTANT => TB("Log Viewer Assistant"),
         
         Components.CHAT => TB("New Chat"),
         
@@ -169,7 +173,7 @@ public static class ComponentsExtensions
     
     public static ChatTemplate PreselectedChatTemplate(this Components component, SettingsManager settingsManager) => component switch
     {
-        Components.CHAT => settingsManager.ConfigurationData.Chat.PreselectOptions ? settingsManager.ConfigurationData.ChatTemplates.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.Chat.PreselectedChatTemplate) ?? ChatTemplate.NO_CHAT_TEMPLATE : ChatTemplate.NO_CHAT_TEMPLATE,
+        Components.CHAT => settingsManager.ConfigurationData.Chat.PreselectOptions ? settingsManager.GetChatTemplateById(settingsManager.ConfigurationData.Chat.PreselectedChatTemplate) : ChatTemplate.NO_CHAT_TEMPLATE,
         
         _ => ChatTemplate.NO_CHAT_TEMPLATE,
     };

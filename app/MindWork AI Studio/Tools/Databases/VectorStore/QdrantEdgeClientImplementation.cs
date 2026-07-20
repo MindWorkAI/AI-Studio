@@ -17,10 +17,12 @@ public sealed class QdrantEdgeClientImplementation(
     private const string INSERT_PATH = "/system/qdrant-edge/insert";
     private const string DELETE_FILE_PATH = "/system/qdrant-edge/delete-file";
     private const string DELETE_STORE_PATH = "/system/qdrant-edge/delete-store";
+    
+    private readonly string path = path;
 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(QdrantEdgeClientImplementation).Namespace, nameof(QdrantEdgeClientImplementation));
 
-    public override string CacheKey => $"{this.Name}:{path}:{version}";
+    public override string CacheKey => $"{this.Name}:{this.path}:{version}";
 
     public static async Task<DatabaseClient> CreateAsync(
         RustService rustService,
@@ -46,7 +48,9 @@ public sealed class QdrantEdgeClientImplementation(
         if (!qdrantEdgeInfo.IsAvailable || qdrantEdgeInfo.Status is QdrantEdgeStatus.UNAVAILABLE)
         {
             var reason = qdrantEdgeInfo.UnavailableReason ?? "unknown";
+            // ReSharper disable DuplicateItemInLoggerTemplate
             logger.LogWarning("{VectorStoreName} is not available. Starting without {VectorStoreName} vector store. Reason: '{Reason}'.", DATABASE_NAME, DATABASE_NAME, reason);
+            // ReSharper restore DuplicateItemInLoggerTemplate
             return CreateNoVectorStoreClient(DATABASE_NAME, qdrantEdgeInfo.UnavailableReason, DatabaseClientStatus.UNAVAILABLE, databaseClientLogger);
         }
 
@@ -99,11 +103,13 @@ public sealed class QdrantEdgeClientImplementation(
         return client;
     }
 
+    // ReSharper disable NotAccessedPositionalProperty.Local
     private sealed record EnsureVectorStoreRequest(string StoreName, int VectorSize);
 
     private sealed record InsertEmbeddingRequest(string StoreName, IReadOnlyList<VectorStoragePoint> Points);
 
     private sealed record DeleteEmbeddingByFileRequest(string StoreName, string FilePath);
-
+    
     private sealed record DeleteVectorStoreRequest(string StoreName);
+    // ReSharper restore NotAccessedPositionalProperty.Local
 }

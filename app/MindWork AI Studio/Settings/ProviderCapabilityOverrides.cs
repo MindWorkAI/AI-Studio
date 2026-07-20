@@ -1,0 +1,207 @@
+using System.Text;
+using System.Text.Json.Serialization;
+
+using AIStudio.Provider;
+
+using Lua;
+
+using LuaTable = Lua.LuaTable;
+
+namespace AIStudio.Settings;
+
+/// <summary>
+/// Optional expert capability overrides for a configured LLM provider.
+/// Missing values keep the automatic capability detection result.
+/// </summary>
+public sealed record ProviderCapabilityOverrides
+{
+    private static readonly IReadOnlyList<Capability> SUPPORTED_CAPABILITIES =
+    [
+        Capability.AUDIO_INPUT,
+        Capability.MULTIPLE_IMAGE_INPUT,
+        Capability.SPEECH_INPUT,
+        Capability.VIDEO_INPUT,
+        Capability.OPTIONAL_REASONING,
+        Capability.ALWAYS_REASONING,
+        Capability.REASONING_BY_DEFAULT
+    ];
+
+    [JsonPropertyName("AUDIO_INPUT")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public bool? AudioInput { get; init; }
+
+    [JsonPropertyName("MULTIPLE_IMAGE_INPUT")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public bool? MultipleImageInput { get; init; }
+
+    [JsonPropertyName("SPEECH_INPUT")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public bool? SpeechInput { get; init; }
+
+    [JsonPropertyName("VIDEO_INPUT")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public bool? VideoInput { get; init; }
+
+    [JsonPropertyName("OPTIONAL_REASONING")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public bool? OptionalReasoning { get; init; }
+
+    [JsonPropertyName("ALWAYS_REASONING")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public bool? AlwaysReasoning { get; init; }
+
+    [JsonPropertyName("REASONING_BY_DEFAULT")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public bool? ReasoningByDefault { get; init; }
+
+    [JsonIgnore]
+    public bool HasOverrides =>
+        this.AudioInput is not null ||
+        this.MultipleImageInput is not null ||
+        this.SpeechInput is not null ||
+        this.VideoInput is not null ||
+        this.OptionalReasoning is not null ||
+        this.AlwaysReasoning is not null ||
+        this.ReasoningByDefault is not null;
+
+    public bool? GetOverride(Capability capability) => capability switch
+    {
+        Capability.AUDIO_INPUT => this.AudioInput,
+        Capability.MULTIPLE_IMAGE_INPUT => this.MultipleImageInput,
+        Capability.SPEECH_INPUT => this.SpeechInput,
+        Capability.VIDEO_INPUT => this.VideoInput,
+        Capability.OPTIONAL_REASONING => this.OptionalReasoning,
+        Capability.ALWAYS_REASONING => this.AlwaysReasoning,
+        Capability.REASONING_BY_DEFAULT => this.ReasoningByDefault,
+        _ => null
+    };
+
+    public ProviderCapabilityOverrides SetOverride(Capability capability, bool? value) => capability switch
+    {
+        Capability.AUDIO_INPUT => this with { AudioInput = value },
+        Capability.MULTIPLE_IMAGE_INPUT => this with { MultipleImageInput = value },
+        Capability.SPEECH_INPUT => this with { SpeechInput = value },
+        Capability.VIDEO_INPUT => this with { VideoInput = value },
+        Capability.OPTIONAL_REASONING => this with { OptionalReasoning = value },
+        Capability.ALWAYS_REASONING => this with { AlwaysReasoning = value },
+        Capability.REASONING_BY_DEFAULT => this with { ReasoningByDefault = value },
+        _ => this
+    };
+
+    public List<Capability> ApplyTo(IEnumerable<Capability> automaticCapabilities)
+    {
+        var mergedCapabilities = automaticCapabilities.Distinct().ToList();
+        foreach (var capability in SUPPORTED_CAPABILITIES)
+        {
+            var overrideValue = this.GetOverride(capability);
+            if (overrideValue == true && !mergedCapabilities.Contains(capability))
+                mergedCapabilities.Add(capability);
+            else if (overrideValue == false)
+                mergedCapabilities.Remove(capability);
+        }
+
+        this.NormalizeReasoningCapabilities(mergedCapabilities);
+        return mergedCapabilities;
+    }
+
+    private void NormalizeReasoningCapabilities(List<Capability> capabilities)
+    {
+        if (this.AlwaysReasoning == true ||
+            this.AlwaysReasoning is not false &&
+            this.OptionalReasoning is not true &&
+            this.ReasoningByDefault is not true &&
+            capabilities.Contains(Capability.ALWAYS_REASONING))
+        {
+            capabilities.Remove(Capability.OPTIONAL_REASONING);
+            capabilities.Remove(Capability.REASONING_BY_DEFAULT);
+            return;
+        }
+
+        if (this.AlwaysReasoning == false ||
+            this.OptionalReasoning == true ||
+            this.ReasoningByDefault == true)
+            capabilities.Remove(Capability.ALWAYS_REASONING);
+
+        if (this.OptionalReasoning == false)
+        {
+            capabilities.Remove(Capability.REASONING_BY_DEFAULT);
+            return;
+        }
+
+        if (this.ReasoningByDefault == true && !capabilities.Contains(Capability.OPTIONAL_REASONING))
+            capabilities.Add(Capability.OPTIONAL_REASONING);
+
+        if (!capabilities.Contains(Capability.OPTIONAL_REASONING))
+            capabilities.Remove(Capability.REASONING_BY_DEFAULT);
+    }
+
+    public string ExportAsLuaTable(string indentation)
+    {
+        if (!this.HasOverrides)
+            return string.Empty;
+
+        var builder = new StringBuilder();
+        builder.AppendLine($@"{indentation}[""CapabilityOverrides""] = {{");
+        foreach (var capability in SUPPORTED_CAPABILITIES)
+        {
+            var overrideValue = this.GetOverride(capability);
+            if (overrideValue is null)
+                continue;
+
+            builder.AppendLine($@"{indentation}    [""{capability}""] = {overrideValue.Value.ToString().ToLowerInvariant()},");
+        }
+
+        builder.Append($@"{indentation}}},");
+        return builder.ToString();
+    }
+
+    public static ProviderCapabilityOverrides? TryParseFromLuaTable(int idx, LuaTable providerTable, Guid configPluginId, ILogger logger)
+    {
+        if (!providerTable.TryGetValue("CapabilityOverrides", out var capabilityOverridesValue))
+            return null;
+
+        if (capabilityOverridesValue.Type is not LuaValueType.Table || !capabilityOverridesValue.TryRead<LuaTable>(out var capabilityOverridesTable))
+        {
+            logger.LogWarning("The configured provider {ProviderIndex} contains an invalid CapabilityOverrides table. Automatic capability detection will be used instead. (Plugin ID: {PluginId})", idx, configPluginId);
+            return null;
+        }
+
+        var result = new ProviderCapabilityOverrides();
+        var previousKey = LuaValue.Nil;
+        while (capabilityOverridesTable.TryGetNext(previousKey, out var pair))
+        {
+            previousKey = pair.Key;
+
+            if (!pair.Key.TryRead<string>(out var keyText))
+            {
+                logger.LogWarning("The configured provider {ProviderIndex} contains a CapabilityOverrides entry with a non-string key. The entry will be ignored. (Plugin ID: {PluginId})", idx, configPluginId);
+                continue;
+            }
+
+            if (!TryParseSupportedCapability(keyText, out var capability))
+            {
+                logger.LogWarning("The configured provider {ProviderIndex} contains an unsupported capability override '{CapabilityKey}'. The entry will be ignored. (Plugin ID: {PluginId})", idx, keyText, configPluginId);
+                continue;
+            }
+
+            if (!pair.Value.TryRead<bool>(out var overrideValue))
+            {
+                logger.LogWarning("The configured provider {ProviderIndex} contains a non-boolean capability override for '{CapabilityKey}'. Automatic capability detection will be used for that capability. (Plugin ID: {PluginId})", idx, keyText, configPluginId);
+                continue;
+            }
+
+            result = result.SetOverride(capability, overrideValue);
+        }
+
+        return result.HasOverrides ? result : null;
+    }
+
+    private static bool TryParseSupportedCapability(string capabilityKey, out Capability capability)
+    {
+        capability = Capability.NONE;
+        if (!Enum.TryParse(capabilityKey, true, out capability))
+            return false;
+
+        return SUPPORTED_CAPABILITIES.Contains(capability);
+    }
+}

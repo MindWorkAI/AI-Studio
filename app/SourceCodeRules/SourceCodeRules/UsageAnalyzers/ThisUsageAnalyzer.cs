@@ -227,6 +227,9 @@ public sealed class ThisUsageAnalyzer : DiagnosticAnalyzer
         }
         
         // Also check for conditional access expressions (e.g., instance?.Member):
+        if (node.Parent is MemberBindingExpressionSyntax)
+            return true;
+
         if (node.Parent is ConditionalAccessExpressionSyntax)
             return true;
         

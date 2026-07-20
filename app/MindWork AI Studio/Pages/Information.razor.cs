@@ -28,6 +28,12 @@ public partial class Information : MSGComponentBase
 
     [Inject]
     private ISnackbar Snackbar { get; init; } = null!;
+
+    [Inject]
+    private UpdatePolicy UpdatePolicy { get; init; } = null!;
+
+    [Inject]
+    private RuntimeInfoResponse RuntimeInfo { get; init; }
     
     [Inject]
     private DatabaseClientProvider DatabaseClientProvider { get; init; } = null!;
@@ -42,7 +48,7 @@ public partial class Information : MSGComponentBase
 
     private string osLanguage = string.Empty;
     private string osUserName = string.Empty;
-    private RuntimeInfoResponse runtimeInfo;
+    private UpdatePolicyMode updatePolicyMode;
     
     private static string VersionApp => $"MindWork AI Studio: v{META_DATA.Version} (commit {META_DATA.AppCommitHash}, build {META_DATA.BuildNum}, {META_DATA_ARCH.Architecture.ToRID().ToUserFriendlyName()})";
     
@@ -54,13 +60,13 @@ public partial class Information : MSGComponentBase
     
     private string OSUserName => $"{T("Username provided by the OS")}: '{this.osUserName}'";
 
-    private string WorkingDirectory => $"{T("Working directory")}: {this.runtimeInfo.WorkingDirectory}";
+    private string WorkingDirectory => $"{T("Working directory")}: {this.RuntimeInfo.WorkingDirectory}";
 
-    private string ExecutablePath => $"{T("Executable path")}: {this.runtimeInfo.ExecutablePath}";
+    private string ExecutablePath => $"{T("Executable path")}: {this.RuntimeInfo.ExecutablePath}";
 
     private string LinuxPackageType => $"{T("Linux package")}: {this.LinuxPackageTypeDisplayName}";
 
-    private string LinuxPackageTypeDisplayName => this.runtimeInfo.LinuxPackageType switch
+    private string LinuxPackageTypeDisplayName => this.RuntimeInfo.LinuxPackageType switch
     {
         "appimage" => "AppImage",
         "flatpak" => "Flatpak",
@@ -162,7 +168,7 @@ public partial class Information : MSGComponentBase
         
         this.osLanguage = await this.RustService.ReadUserLanguage();
         this.osUserName = await this.RustService.ReadUserName();
-        this.runtimeInfo = await this.RustService.GetRuntimeInfo();
+        this.updatePolicyMode = this.UpdatePolicy.CurrentMode;
         this.logPaths = await this.RustService.GetLogPaths();
         
         await this.RefreshVectorStoreInfo(CancellationToken.None);
@@ -185,6 +191,7 @@ public partial class Information : MSGComponentBase
             case Event.PLUGINS_RELOADED:
             case Event.ENTERPRISE_ENVIRONMENTS_CHANGED:
             case Event.CONFIGURATION_CHANGED:
+                this.updatePolicyMode = this.UpdatePolicy.CurrentMode;
                 this.RefreshEnterpriseConfigurationState();
                 await this.InvokeAsync(this.StateHasChanged);
                 break;
@@ -604,6 +611,26 @@ public partial class Information : MSGComponentBase
     
     private async Task CheckForUpdate()
     {
-        await this.MessageBus.SendMessage<bool>(this, Event.USER_SEARCH_FOR_UPDATE);
+        this.updatePolicyMode = this.UpdatePolicy.CurrentMode;
+        if (this.updatePolicyMode is UpdatePolicyMode.SELF_UPDATE)
+        {
+            await this.MessageBus.SendMessage<bool>(this, Event.USER_SEARCH_FOR_UPDATE);
+            return;
+        }
+
+        var parameters = new DialogParameters<UpdateInstructionsDialog>();
+        if (this.updatePolicyMode is UpdatePolicyMode.ENTERPRISE_DISABLED)
+        {
+            parameters.Add(x => x.Message, T("Updates are managed by your organization. Contact your IT department if you have questions about updating AI Studio."));
+        }
+        else if (this.updatePolicyMode is UpdatePolicyMode.FLATPAK)
+        {
+            parameters.Add(x => x.Message, T("AI Studio cannot update itself when installed as a Flatpak. A Flathub listing is planned. Until then, you can find the latest release on GitHub."));
+            parameters.Add(x => x.ReleaseUrl, "https://github.com/MindWorkAI/AI-Studio/releases/latest");
+        }
+        else
+            return;
+
+        await this.DialogService.ShowAsync<UpdateInstructionsDialog>(T("How to update"), parameters, DialogOptions.FULLSCREEN);
     }
 }

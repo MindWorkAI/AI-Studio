@@ -3,7 +3,7 @@
 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
     <MudIcon Icon="@this.Icon" Color="@this.IconColor"/>
     <MudText Typo="Typo.body1" Class="flex-grow-1">
-        @if (string.IsNullOrWhiteSpace(this.Shortcut()))
+        @if (string.IsNullOrWhiteSpace(this.Data.Value()))
         {
             @T("No shortcut configured")
         }

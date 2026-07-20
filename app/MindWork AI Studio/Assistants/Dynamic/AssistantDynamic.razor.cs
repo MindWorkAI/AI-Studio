@@ -1,17 +1,25 @@
 using System.Text;
+using AIStudio.Agents.AssistantAudit;
+using AIStudio.Chat;
+using AIStudio.Dialogs;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Settings;
+using AIStudio.Tools.AssistantSessions;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.PluginSystem.Assistants;
 using AIStudio.Tools.PluginSystem.Assistants.DataModel;
 using Lua;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.WebUtilities;
+using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Assistants.Dynamic;
 
 public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
 {
+    [Inject]
+    private IDialogService DialogService { get; init; } = null!;
+
     [Parameter] 
     public AssistantForm? RootComponent { get; set; }
     
@@ -27,6 +35,11 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
     // Reuse chat-level provider filtering/preselection instead of NONE.
     protected override Tools.Components Component => Tools.Components.CHAT;
 
+    /// <summary>
+    /// Gets the plugin ID as the assistant session instance ID.
+    /// </summary>
+    protected override string AssistantSessionInstanceId => this.assistantPlugin is null ? base.AssistantSessionInstanceId : this.assistantPlugin.Id.ToString();
+    
     private string title = string.Empty;
     private string description = string.Empty;
     private string systemPrompt = string.Empty;
@@ -44,11 +57,72 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
     private string securityMessage = string.Empty;
     private bool isSecurityBlocked;
     private const string ASSISTANT_QUERY_KEY = "assistantId";
+    private static readonly Dictionary<string, object?> SPELLCHECK_ATTRIBUTES = new();
+    private static readonly AssistantSessionStateKey<string> TITLE_STATE_KEY = new(nameof(title));
+    private static readonly AssistantSessionStateKey<string> DESCRIPTION_STATE_KEY = new(nameof(description));
+    private static readonly AssistantSessionStateKey<string> SYSTEM_PROMPT_STATE_KEY = new(nameof(systemPrompt));
+    private static readonly AssistantSessionStateKey<bool> ALLOW_PROFILES_STATE_KEY = new(nameof(allowProfiles));
+    private static readonly AssistantSessionStateKey<string> SUBMIT_TEXT_STATE_KEY = new(nameof(submitText));
+    private static readonly AssistantSessionStateKey<bool> SHOW_FOOTER_PROFILE_SELECTION_STATE_KEY = new(nameof(showFooterProfileSelection));
+    private static readonly AssistantSessionStateKey<PluginAssistants?> ASSISTANT_PLUGIN_STATE_KEY = new(nameof(assistantPlugin));
+    private static readonly AssistantSessionStateKey<AssistantState> ASSISTANT_STATE_STATE_KEY = new(nameof(assistantState));
+    private static readonly AssistantSessionStateKey<Dictionary<string, string>> IMAGE_CACHE_STATE_KEY = new(nameof(imageCache));
+    private static readonly AssistantSessionStateKey<HashSet<string>> EXECUTING_BUTTON_ACTIONS_STATE_KEY = new(nameof(executingButtonActions));
+    private static readonly AssistantSessionStateKey<HashSet<string>> EXECUTING_SWITCH_ACTIONS_STATE_KEY = new(nameof(executingSwitchActions));
+    private static readonly AssistantSessionStateKey<string> PLUGIN_PATH_STATE_KEY = new(nameof(pluginPath));
+    private static readonly AssistantSessionStateKey<PluginAssistantAudit?> AUDIT_STATE_KEY = new(nameof(audit));
+    private static readonly AssistantSessionStateKey<string> SECURITY_MESSAGE_STATE_KEY = new(nameof(securityMessage));
+    private static readonly AssistantSessionStateKey<bool> IS_SECURITY_BLOCKED_STATE_KEY = new(nameof(isSecurityBlocked));
+
+    private bool CanReviseCurrentAssistant => this.assistantPlugin is { IsInternal: false, IsManagedByConfigServer: false } && !string.IsNullOrWhiteSpace(this.assistantPlugin.PluginPath);
+
+    /// <inheritdoc />
+    protected override void CaptureCustomAssistantSessionState(AssistantSessionStateWriter state)
+    {
+        state.Set(TITLE_STATE_KEY, this.title);
+        state.Set(DESCRIPTION_STATE_KEY, this.description);
+        state.Set(SYSTEM_PROMPT_STATE_KEY, this.systemPrompt);
+        state.Set(ALLOW_PROFILES_STATE_KEY, this.allowProfiles);
+        state.Set(SUBMIT_TEXT_STATE_KEY, this.submitText);
+        state.Set(SHOW_FOOTER_PROFILE_SELECTION_STATE_KEY, this.showFooterProfileSelection);
+        state.Set(ASSISTANT_PLUGIN_STATE_KEY, this.assistantPlugin);
+        state.Set(ASSISTANT_STATE_STATE_KEY, this.assistantState.Clone());
+        state.SetDictionary(IMAGE_CACHE_STATE_KEY, this.imageCache);
+        state.SetHashSet(EXECUTING_BUTTON_ACTIONS_STATE_KEY, this.executingButtonActions);
+        state.SetHashSet(EXECUTING_SWITCH_ACTIONS_STATE_KEY, this.executingSwitchActions);
+        state.Set(PLUGIN_PATH_STATE_KEY, this.pluginPath);
+        state.Set(AUDIT_STATE_KEY, this.audit);
+        state.Set(SECURITY_MESSAGE_STATE_KEY, this.securityMessage);
+        state.Set(IS_SECURITY_BLOCKED_STATE_KEY, this.isSecurityBlocked);
+    }
+
+    /// <inheritdoc />
+    protected override void RestoreCustomAssistantSessionState(AssistantSessionStateReader state)
+    {
+        state.Restore(TITLE_STATE_KEY, value => this.title = value);
+        state.Restore(DESCRIPTION_STATE_KEY, value => this.description = value);
+        state.Restore(SYSTEM_PROMPT_STATE_KEY, value => this.systemPrompt = value);
+        state.Restore(ALLOW_PROFILES_STATE_KEY, value => this.allowProfiles = value);
+        state.Restore(SUBMIT_TEXT_STATE_KEY, value => this.submitText = value);
+        state.Restore(SHOW_FOOTER_PROFILE_SELECTION_STATE_KEY, value => this.showFooterProfileSelection = value);
+        state.Restore(ASSISTANT_PLUGIN_STATE_KEY, value => this.assistantPlugin = value);
+        state.Restore(ASSISTANT_STATE_STATE_KEY, value => this.assistantState.CopyFrom(value));
+        state.RestoreDictionary(IMAGE_CACHE_STATE_KEY, this.imageCache);
+        state.RestoreHashSet(EXECUTING_BUTTON_ACTIONS_STATE_KEY, this.executingButtonActions);
+        state.RestoreHashSet(EXECUTING_SWITCH_ACTIONS_STATE_KEY, this.executingSwitchActions);
+        state.Restore(PLUGIN_PATH_STATE_KEY, value => this.pluginPath = value);
+        state.Restore(AUDIT_STATE_KEY, value => this.audit = value);
+        state.Restore(SECURITY_MESSAGE_STATE_KEY, value => this.securityMessage = value);
+        state.Restore(IS_SECURITY_BLOCKED_STATE_KEY, value => this.isSecurityBlocked = value);
+    }
 
     #region Implementation of AssistantBase
 
     protected override void OnInitialized()
     {
+        // Configure the spellchecking for the instance name input:
+        this.SettingsManager.InjectSpellchecking(SPELLCHECK_ATTRIBUTES);
+        
         var pluginAssistant = this.ResolveAssistantPlugin();
         if (pluginAssistant is null)
         {
@@ -143,6 +217,93 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
 
         this.Logger.LogWarning("AssistantDynamic query parameter '{Parameter}' is not a valid GUID.", value);
         return null;
+    }
+
+    private async Task OpenRevisionDialogAsync()
+    {
+        if (this.assistantPlugin is null || !this.CanReviseCurrentAssistant)
+            return;
+
+        var testContext = await this.BuildRevisionTestContextAsync();
+        var parameters = new DialogParameters<AssistantPluginRevisionDialog>
+        {
+            { x => x.PluginId, this.assistantPlugin.Id },
+            { x => x.PluginLocalPath, this.assistantPlugin.PluginPath },
+            { x => x.TestContext, testContext },
+        };
+
+        var dialog = await this.DialogService.ShowAsync<AssistantPluginRevisionDialog>(this.T("Revise Assistant"), parameters, DialogOptions.BLOCKING_FULLSCREEN);
+        var result = await dialog.Result;
+        if (result is null || result.Canceled)
+            return;
+
+        if (result.Data is not AssistantPluginRevisionDialogResult revisionResult)
+            return;
+
+        this.Logger.LogInformation($"AssistantDynamic of plugin '{revisionResult.PluginName}' ({revisionResult.PluginName}) was successfully revised with audit result {revisionResult.Audit?.Level ?? AssistantAuditLevel.UNKNOWN}.");
+        var updatedPlugin = PluginFactory.RunningPlugins.OfType<PluginAssistants>().FirstOrDefault(x => x.Id == revisionResult.PluginId);
+        if (updatedPlugin is not null)
+            this.ApplyUpdatedAssistantPlugin(updatedPlugin);
+
+        await this.MessageBus.SendSuccess(new(Icons.Material.Filled.AutoFixHigh, string.Format(this.T("The assistant '{0}' has been updated."), revisionResult.PluginName)));
+        await this.MessageBus.SendMessage<bool>(this, Event.PLUGINS_RELOADED);
+        await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+        await this.InvokeAsync(this.StateHasChanged);
+    }
+
+    private async Task<string> BuildRevisionTestContextAsync()
+    {
+        var builder = new StringBuilder();
+
+        if (this.assistantPlugin is not null)
+        {
+            var componentSummary = this.assistantPlugin.CreateAuditComponentSummary();
+            if (!string.IsNullOrWhiteSpace(componentSummary))
+            {
+                builder.AppendLine("Current component overview:");
+                builder.AppendLine(componentSummary);
+                builder.AppendLine();
+            }
+        }
+
+        var promptPreview = await this.CollectUserPromptAsync();
+        if (!string.IsNullOrWhiteSpace(promptPreview))
+        {
+            builder.AppendLine("Current prompt preview from the assistant form:");
+            builder.AppendLine(promptPreview);
+            builder.AppendLine();
+        }
+
+        if (this.ResultingContentBlock?.Content is ContentText text && !string.IsNullOrWhiteSpace(text.Text))
+        {
+            builder.AppendLine("Last assistant response visible in this session:");
+            builder.AppendLine(text.Text);
+        }
+
+        return builder.ToString().Trim();
+    }
+
+    private void ApplyUpdatedAssistantPlugin(PluginAssistants updatedPlugin)
+    {
+        this.assistantPlugin = updatedPlugin;
+        this.RootComponent = updatedPlugin.RootComponent;
+        this.title = updatedPlugin.AssistantTitle;
+        this.description = updatedPlugin.AssistantDescription;
+        this.systemPrompt = updatedPlugin.SystemPrompt;
+        this.submitText = updatedPlugin.SubmitText;
+        this.allowProfiles = updatedPlugin.AllowProfiles;
+        this.showFooterProfileSelection = !updatedPlugin.HasEmbeddedProfileSelection;
+        this.pluginPath = updatedPlugin.PluginPath;
+        var pluginHash = updatedPlugin.ComputeAuditHash();
+        this.audit = this.SettingsManager.ConfigurationData.AssistantPluginAudits.FirstOrDefault(x => x.PluginId == updatedPlugin.Id && x.PluginHash == pluginHash);
+
+        var securityState = PluginAssistantSecurityResolver.Resolve(this.SettingsManager, updatedPlugin);
+        this.securityMessage = securityState.CanStartAssistant ? string.Empty : securityState.Description;
+        this.isSecurityBlocked = !securityState.CanStartAssistant;
+
+        this.assistantState.Clear();
+        if (this.RootComponent is not null)
+            this.InitializeComponentState(this.RootComponent.Children);
     }
 
     #endregion

@@ -11,7 +11,7 @@ public sealed class Data
     /// The version of the settings file. Allows us to upgrade the settings
     /// when a new version is available.
     /// </summary>
-    public Version Version { get; init; } = Version.V5;
+    public Version Version { get; init; } = Version.V6;
 
     /// <summary>
     /// List of configured providers.
@@ -19,9 +19,14 @@ public sealed class Data
     public List<Provider> Providers { get; init; } = [];
     
     /// <summary>
-    /// Settings concerning the LLM providers.
+    /// Settings concerning confidence levels.
     /// </summary>
-    public DataLLMProviders LLMProviders { get; init; } = new();
+    public DataConfidence Confidence { get; init; } = new(x => x.Confidence);
+
+    /// <summary>
+    /// Settings concerning data source security checks.
+    /// </summary>
+    public DataSourceSecuritySettings DataSourceSecurity { get; init; } = new(x => x.DataSourceSecurity);
 
     /// <summary>
     /// A collection of embedding providers configured.
@@ -100,7 +105,7 @@ public sealed class Data
 
     public DataApp App { get; init; } = new(x => x.App);
 
-    public DataChat Chat { get; init; } = new();
+    public DataChat Chat { get; init; } = new(x => x.Chat);
 
     public DataWorkspace Workspace { get; init; } = new();
 
@@ -120,9 +125,9 @@ public sealed class Data
 
     public DataTextContentCleaner TextContentCleaner { get; init; } = new();
     
-    public DataAgentDataSourceSelection AgentDataSourceSelection { get; init; } = new();
+    public DataAgentDataSourceSelection AgentDataSourceSelection { get; init; } = new(x => x.AgentDataSourceSelection);
     
-    public DataAgentRetrievalContextValidation AgentRetrievalContextValidation { get; init; } = new();
+    public DataAgentRetrievalContextValidation AgentRetrievalContextValidation { get; init; } = new(x => x.AgentRetrievalContextValidation);
 
     public DataAssistantPluginAudit AssistantPluginAudit { get; init; } = new(x => x.AssistantPluginAudit);
     

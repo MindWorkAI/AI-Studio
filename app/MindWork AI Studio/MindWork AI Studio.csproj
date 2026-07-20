@@ -45,12 +45,13 @@
         <EmbeddedResource Include="Plugins\**" CopyToOutputDirectory="PreserveNewest" />
         <EmbeddedResource Include="Assistants\I18N\allTexts.lua" CopyToOutputDirectory="PreserveNewest" />
         <EmbeddedResource Include="Assistants\PromptOptimizer\prompting_guideline.md" CopyToOutputDirectory="PreserveNewest" />
+        <EmbeddedResource Include="Assistants\Builder\AssistantBuilderLuaResponse.schema.json" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
 
     <ItemGroup>
       <PackageReference Include="CodeBeam.MudBlazor.Extensions" Version="8.3.0" />
       <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
-      <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="9.0.16" />
+      <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="9.0.18" />
       <PackageReference Include="MudBlazor" Version="8.15.0" />
       <PackageReference Include="MudBlazor.Markdown" Version="8.11.0" />
       <PackageReference Include="ReverseMarkdown" Version="5.0.0" />

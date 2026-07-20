@@ -32,18 +32,18 @@
       },
       "Microsoft.Extensions.FileProviders.Embedded": {
         "type": "Direct",
-        "requested": "[9.0.16, )",
-        "resolved": "9.0.16",
-        "contentHash": "QRlSWz7zEplBxETrySKK3qpPm/7NPaRGnUpEXQNP3k6Ht2KdVy59JcoUPXlNGnNE3tJd3ycXfMeWqxBG6SyV0w==",
+        "requested": "[9.0.18, )",
+        "resolved": "9.0.18",
+        "contentHash": "+t0Bq5qZZ/zbmO4X70nDMC+anTsNSCxNvjtqXmRiUwh53cNfMoXkB/R95rUO9+yFYhsTR7B302ys9LqXDdIt6g==",
         "dependencies": {
-          "Microsoft.Extensions.FileProviders.Abstractions": "9.0.16"
+          "Microsoft.Extensions.FileProviders.Abstractions": "9.0.18"
         }
       },
       "Microsoft.NET.ILLink.Tasks": {
         "type": "Direct",
-        "requested": "[9.0.16, )",
-        "resolved": "9.0.16",
-        "contentHash": "ccPBYGLPJt8DeJTUzQ0JzOh/iuUAgnjayU63PokVywAhUOx+dzDKSPTL7AG94U/VpvNXflTT2AjsFAIF1+bXBw=="
+        "requested": "[9.0.12, )",
+        "resolved": "9.0.12",
+        "contentHash": "StA3kyImQHqDo8A8ZHaSxgASbEuT5UIqgeCvK5SzUPj//xE1QSys421J9pEs4cYuIVwq7CJvWSKxtyH7aPr1LA=="
       },
       "MudBlazor": {
         "type": "Direct",
@@ -159,10 +159,10 @@
       },
       "Microsoft.Extensions.FileProviders.Abstractions": {
         "type": "Transitive",
-        "resolved": "9.0.16",
-        "contentHash": "/YLSWDs+p0Y4+UGPoWI3uUNq7R5/f/8zw8XeViuhfSTGnPowoqbllBE9aR4TteFgNfIH4IHkhUwSlhMLB0aL8g==",
+        "resolved": "9.0.18",
+        "contentHash": "YqkFlTwnVSMuunsf8IT9b+KySfm6vnMBBM+CKYCfXfjRMQ62uFggVOEu4C2cgR4fXpEO1rZ6utUZC1KoYKgiSg==",
         "dependencies": {
-          "Microsoft.Extensions.Primitives": "9.0.16"
+          "Microsoft.Extensions.Primitives": "9.0.18"
         }
       },
       "Microsoft.Extensions.Localization": {
@@ -200,8 +200,8 @@
       },
       "Microsoft.Extensions.Primitives": {
         "type": "Transitive",
-        "resolved": "9.0.16",
-        "contentHash": "w5RE1MR0lnAElsRJaFd2POIXl/H62aBKmfX8ibYmRmbk0JB9V/9jR0VD5NxiP1ETWpnDAnPguTSe7fF/FdsHEQ=="
+        "resolved": "9.0.18",
+        "contentHash": "hfHudMC5zDlwMrC0HiHOJesSHMvM+CdqjomjcV/YVzFq5dfSpBRvyRLm1n1Bfh41ZpQnyJzqX+YEo95BAmcDAQ=="
       },
       "Microsoft.JSInterop": {
         "type": "Transitive",
@@ -212,6 +212,6 @@
         "type": "Project"
       }
     },
-    "net9.0/osx-arm64": {}
+    "net9.0/win-x64": {}
   }
 }
