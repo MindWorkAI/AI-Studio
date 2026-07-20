@@ -342,10 +342,24 @@ ASSISTANT = {
                 }
             },
             {
-                ["Type"] = "FILE_CONTENT_READER", -- allows the user to load local files
+                ["Type"] = "FILE_CONTENT_READER", -- allows the user to load one expected local file and inject its content into the prompt
                 ["Props"] = {
                     ["Name"] = "<unique identifier of this component>", -- required
-                    ["UserPrompt"] = "<help text reminding the user what kind of file they should load>"
+                    ["UserPrompt"] = "<prompt context for the selected file>",
+                    ["Class"] = "<optional MudBlazor or css classes>",
+                    ["Style"] = "<optional css styles>",
+                }
+            },
+            {
+                ["Type"] = "FILE_ATTACHMENTS", -- allows the user to attach multiple local documents or images as context
+                ["Props"] = {
+                    ["Name"] = "<unique identifier of this component>", -- required
+                    ["Heading"] = "<component heading>",
+                    ["CatchAllDocuments"] = true, -- whether the component catches all documents that are hovered over the AI Studio window and not only over the drop zone
+                    ["UseSmallForm"] = false, -- whether the component should be rendered compact; keep false by default unless compact layout is explicitly needed
+                    ["UserPrompt"] = "<prompt context for the selected file(s)>",
+                    ["Class"] = "<optional MudBlazor or css classes>",
+                    ["Style"] = "<optional css styles>",
                 }
             },
             {
@@ -358,7 +372,7 @@ ASSISTANT = {
                     ["ShowToolbar"] = true, -- weather the toolbar to toggle between picker, grid or palette is shown
                     ["ShowModeSwitch"] = true, -- weather switch to toggle between RGB(A), HEX or HSL color mode is shown
                     ["PickerVariant"] = "<Dialog|Inline|Static>", -- different rendering modes: `Dialog` opens the picker in a modal type screen, `Inline` shows the picker next to the input field and `Static` renders the picker widget directly (default); Case sensitiv
-                    ["UserPrompt"] = "<help text reminding the user what kind of file they should load>",
+                    ["UserPrompt"] = "<prompt context for the selected color>",
                 }
             },
             {
