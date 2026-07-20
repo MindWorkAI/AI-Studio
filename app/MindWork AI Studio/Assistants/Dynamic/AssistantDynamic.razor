@@ -145,6 +145,27 @@ else
                 }
                 break;
                 
+            case AssistantComponentType.FILE_ATTACHMENTS:
+                if (component is AssistantFileAttachment fileAttachment)
+                {
+                    var fileState = this.assistantState.FileAttachments[fileAttachment.Name];
+                    <div class="@fileAttachment.Class mb-3" style="@GetOptionalStyle(fileAttachment.Style)">
+                        @if (!string.IsNullOrWhiteSpace(fileAttachment.Heading))
+                        {
+                            <MudText Typo="Typo.h6" Class="mb-2">@fileAttachment.Heading</MudText>
+                        }
+                        <div class="px-4">
+                            <AttachDocuments Name="@fileAttachment.Name"
+                                             Layer="@DropLayers.ASSISTANTS"
+                                             @bind-DocumentPaths="@fileState.DocumentPaths"
+                                             CatchAllDocuments="@fileAttachment.CatchAllDocuments"
+                                             UseSmallForm="@fileAttachment.UseSmallForm"
+                                             Provider="@this.ProviderSettings"/>
+                            </div>
+                    </div>
+                }
+                break;
+
             case AssistantComponentType.DROPDOWN:
                 if (component is AssistantDropdown assistantDropdown)
                 {
