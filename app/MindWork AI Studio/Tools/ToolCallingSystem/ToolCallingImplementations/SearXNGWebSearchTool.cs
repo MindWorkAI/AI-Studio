@@ -4,10 +4,11 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using AIStudio.Tools;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Web;
 
 namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations;
 
-public sealed class SearXNGWebSearchTool : IToolImplementation
+public sealed class SearXNGWebSearchTool(WebPageRetrievalService webPageRetrievalService) : IToolImplementation
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(SearXNGWebSearchTool).Namespace, nameof(SearXNGWebSearchTool));
 
@@ -18,6 +19,15 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
     private const int MAX_TIMEOUT_SECONDS = 60;
     private const int MAX_RESPONSE_BYTES = 1024 * 1024;
     private const int MAX_TRACE_LENGTH = 4000;
+    private const int DEFAULT_MAX_TOTAL_CONTENT_CHARACTERS = 100000;
+    private const int DEFAULT_MIN_CONTENT_CHARACTERS_PER_RESULT = 3000;
+    private const int DEFAULT_PAGE_TIMEOUT_SECONDS = 30;
+    private const int DEFAULT_RETRIEVAL_TIMEOUT_SECONDS = 90;
+    private const int MAX_TOTAL_CONTENT_CHARACTERS = 100000;
+    private const int MAX_MIN_CONTENT_CHARACTERS_PER_RESULT = 3000;
+    private const int MAX_PAGE_TIMEOUT_SECONDS = 30;
+    private const int MAX_RETRIEVAL_TIMEOUT_SECONDS = 90;
+    private const int MAX_PARALLEL_RETRIEVALS = 4;
 
     public string ImplementationKey => ToolSelectionRules.WEB_SEARCH_TOOL_ID;
 
@@ -27,7 +37,7 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
 
     public string GetDisplayName() => TB("Web Search");
 
-    public string GetDescription() => TB("Search the web with a configured SearXNG instance and return candidate URLs for the model. Use Read Web Page on relevant result URLs before answering factual or detailed web questions.");
+    public string GetDescription() => TB("Search the web with a configured SearXNG instance and retrieve the readable content of the best matching pages.");
 
     public string GetSettingsFieldLabel(string fieldName, ToolSettingsFieldDefinition fieldDefinition) => fieldName switch
     {
@@ -38,6 +48,10 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
         "defaultEngines" => TB("Default Engines"),
         "maxResults" => TB("Maximum Results"),
         "timeoutSeconds" => TB("Timeout Seconds"),
+        "maxTotalContentCharacters" => TB("Maximum Total Content Characters"),
+        "minContentCharactersPerResult" => TB("Minimum Content Characters Per Result"),
+        "pageTimeoutSeconds" => TB("Page Timeout Seconds"),
+        "retrievalTimeoutSeconds" => TB("Retrieval Timeout Seconds"),
         _ => TB(fieldDefinition.Title),
     };
 
@@ -50,6 +64,10 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
         "defaultEngines" => TB("Optional comma-separated default engines. Do not set this together with default categories."),
         "maxResults" => TB("Optional default maximum number of results returned to the model when the model does not provide a limit."),
         "timeoutSeconds" => TB("Optional HTTP timeout for the search request in seconds."),
+        "maxTotalContentCharacters" => TB("Optional total character budget shared by all retrieved pages."),
+        "minContentCharactersPerResult" => TB("Optional minimum character budget reserved for each successfully retrieved page."),
+        "pageTimeoutSeconds" => TB("Optional timeout for loading each individual result page in seconds."),
+        "retrievalTimeoutSeconds" => TB("Optional overall timeout for retrieving all result pages in seconds."),
         _ => TB(fieldDefinition.Description),
     };
 
@@ -57,6 +75,10 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
     {
         "maxResults" => DEFAULT_MAX_RESULTS.ToString(),
         "timeoutSeconds" => DEFAULT_TIMEOUT_SECONDS.ToString(),
+        "maxTotalContentCharacters" => DEFAULT_MAX_TOTAL_CONTENT_CHARACTERS.ToString(),
+        "minContentCharactersPerResult" => DEFAULT_MIN_CONTENT_CHARACTERS_PER_RESULT.ToString(),
+        "pageTimeoutSeconds" => DEFAULT_PAGE_TIMEOUT_SECONDS.ToString(),
+        "retrievalTimeoutSeconds" => DEFAULT_RETRIEVAL_TIMEOUT_SECONDS.ToString(),
         _ => null,
     };
 
@@ -105,6 +127,53 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
             });
         }
 
+        if (!TryReadBoundedOptionalPositiveInt(settingsValues, "maxTotalContentCharacters", MAX_TOTAL_CONTENT_CHARACTERS, out var maxTotalContentCharacters, out var maxTotalContentError))
+        {
+            return Task.FromResult<ToolConfigurationState?>(new ToolConfigurationState
+            {
+                IsConfigured = false,
+                Message = maxTotalContentError,
+            });
+        }
+
+        if (!TryReadBoundedOptionalPositiveInt(settingsValues, "minContentCharactersPerResult", MAX_MIN_CONTENT_CHARACTERS_PER_RESULT, out var minContentCharactersPerResult, out var minContentError))
+        {
+            return Task.FromResult<ToolConfigurationState?>(new ToolConfigurationState
+            {
+                IsConfigured = false,
+                Message = minContentError,
+            });
+        }
+
+        if (!TryReadBoundedOptionalPositiveInt(settingsValues, "pageTimeoutSeconds", MAX_PAGE_TIMEOUT_SECONDS, out _, out var pageTimeoutError))
+        {
+            return Task.FromResult<ToolConfigurationState?>(new ToolConfigurationState
+            {
+                IsConfigured = false,
+                Message = pageTimeoutError,
+            });
+        }
+
+        if (!TryReadBoundedOptionalPositiveInt(settingsValues, "retrievalTimeoutSeconds", MAX_RETRIEVAL_TIMEOUT_SECONDS, out _, out var retrievalTimeoutError))
+        {
+            return Task.FromResult<ToolConfigurationState?>(new ToolConfigurationState
+            {
+                IsConfigured = false,
+                Message = retrievalTimeoutError,
+            });
+        }
+
+        var effectiveMaxTotalContentCharacters = maxTotalContentCharacters ?? DEFAULT_MAX_TOTAL_CONTENT_CHARACTERS;
+        var effectiveMinContentCharactersPerResult = minContentCharactersPerResult ?? DEFAULT_MIN_CONTENT_CHARACTERS_PER_RESULT;
+        if (effectiveMaxTotalContentCharacters < effectiveMinContentCharactersPerResult * MAX_RESULTS)
+        {
+            return Task.FromResult<ToolConfigurationState?>(new ToolConfigurationState
+            {
+                IsConfigured = false,
+                Message = string.Format(TB("The total content budget must reserve at least {0} characters for each of up to {1} results."), effectiveMinContentCharactersPerResult, MAX_RESULTS),
+            });
+        }
+
         return Task.FromResult<ToolConfigurationState?>(null);
     }
 
@@ -141,6 +210,12 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
         var defaultLimit = ReadOptionalPositiveIntSetting(context.SettingsValues, "maxResults") ?? DEFAULT_MAX_RESULTS;
         var effectiveLimit = Math.Min(requestedLimit ?? defaultLimit, MAX_RESULTS);
         var timeoutSeconds = Math.Min(ReadOptionalPositiveIntSetting(context.SettingsValues, "timeoutSeconds") ?? DEFAULT_TIMEOUT_SECONDS, MAX_TIMEOUT_SECONDS);
+        var maxTotalContentCharacters = Math.Min(ReadOptionalPositiveIntSetting(context.SettingsValues, "maxTotalContentCharacters") ?? DEFAULT_MAX_TOTAL_CONTENT_CHARACTERS, MAX_TOTAL_CONTENT_CHARACTERS);
+        var minContentCharactersPerResult = Math.Min(ReadOptionalPositiveIntSetting(context.SettingsValues, "minContentCharactersPerResult") ?? DEFAULT_MIN_CONTENT_CHARACTERS_PER_RESULT, MAX_MIN_CONTENT_CHARACTERS_PER_RESULT);
+        var pageTimeoutSeconds = Math.Min(ReadOptionalPositiveIntSetting(context.SettingsValues, "pageTimeoutSeconds") ?? DEFAULT_PAGE_TIMEOUT_SECONDS, MAX_PAGE_TIMEOUT_SECONDS);
+        var retrievalTimeoutSeconds = Math.Min(ReadOptionalPositiveIntSetting(context.SettingsValues, "retrievalTimeoutSeconds") ?? DEFAULT_RETRIEVAL_TIMEOUT_SECONDS, MAX_RETRIEVAL_TIMEOUT_SECONDS);
+        if (maxTotalContentCharacters < minContentCharactersPerResult * MAX_RESULTS)
+            throw new InvalidOperationException(TB("The configured web search content budget is not valid."));
         if (page is > MAX_PAGE)
             throw new ArgumentException($"Argument 'page' must be less than or equal to {MAX_PAGE}.");
 
@@ -195,36 +270,78 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
         if (responseJson is not JsonObject responseObject)
             throw new InvalidOperationException("The SearXNG response JSON must be an object.");
 
-        responseObject = SanitizeResponse(responseObject, effectiveLimit);
+        var candidates = BuildCandidates(responseObject["results"] as JsonArray, effectiveLimit, out var candidateCount);
+        var attemptedCount = 0;
+        var retrievalTimedOut = 0;
+        using var retrievalTimeoutCts = CancellationTokenSource.CreateLinkedTokenSource(token);
+        retrievalTimeoutCts.CancelAfter(TimeSpan.FromSeconds(retrievalTimeoutSeconds));
+        using var retrievalSemaphore = new SemaphoreSlim(MAX_PARALLEL_RETRIEVALS);
 
-        var requestJson = new JsonObject
+        async Task<RetrievedSearchPage?> RetrieveCandidateAsync(SearchCandidate candidate)
         {
-            ["query"] = query,
-            ["format"] = "json",
-            ["limit"] = effectiveLimit,
+            var enteredSemaphore = false;
+            try
+            {
+                await retrievalSemaphore.WaitAsync(retrievalTimeoutCts.Token);
+                enteredSemaphore = true;
+                Interlocked.Increment(ref attemptedCount);
+                var retrievedPage = await webPageRetrievalService.RetrieveAsync(
+                    candidate.RetrievalUrl,
+                    new WebPageRetrievalOptions
+                    {
+                        TimeoutSeconds = pageTimeoutSeconds,
+                        PublicTargetsOnly = true,
+                    },
+                    retrievalTimeoutCts.Token);
+                if (string.IsNullOrWhiteSpace(retrievedPage.ExtractedPage.Markdown))
+                    return null;
+
+                return new RetrievedSearchPage(candidate, retrievedPage);
+            }
+            catch (OperationCanceledException) when (!token.IsCancellationRequested)
+            {
+                Interlocked.Exchange(ref retrievalTimedOut, 1);
+                return null;
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+            finally
+            {
+                if (enteredSemaphore)
+                    retrievalSemaphore.Release();
+            }
+        }
+
+        var retrievedPages = await Task.WhenAll(candidates.Select(RetrieveCandidateAsync));
+        token.ThrowIfCancellationRequested();
+        var mergedResults = MergeFinalUrlDuplicates(retrievedPages.OfType<RetrievedSearchPage>());
+        ApplyContentBudget(mergedResults, maxTotalContentCharacters, minContentCharactersPerResult);
+        var resultArray = new JsonArray();
+        foreach (var result in mergedResults)
+            resultArray.Add(BuildResultJson(result));
+
+        var resultObject = new JsonObject
+        {
+            // ["query"] = query,
+            ["candidate_count"] = candidateCount,
+            // ["attempted_count"] = attemptedCount,
+            ["result_count"] = mergedResults.Count,
+            // ["omitted_count"] = Math.Max(0, candidateCount - mergedResults.Count),
+            ["retrieval_timed_out"] = retrievalTimedOut == 1,
+            ["results"] = resultArray,
         };
-
-        if (categories.Count > 0)
-            requestJson["categories"] = BuildJsonArray(categories);
-
-        if (engines.Count > 0)
-            requestJson["engines"] = BuildJsonArray(engines);
-
-        if (!string.IsNullOrWhiteSpace(language))
-            requestJson["language"] = language;
-
-        if (!string.IsNullOrWhiteSpace(timeRange))
-            requestJson["time_range"] = timeRange;
-
-        if (page is not null)
-            requestJson["page"] = page.Value;
-
-        if (!string.IsNullOrWhiteSpace(safeSearch))
-            requestJson["safesearch"] = safeSearch;
+        if (mergedResults.Count == 0)
+            resultObject["diagnostic"] = "No result page could be retrieved as readable public HTML. Pages may have failed, timed out, been blocked by network safety checks, used an unsupported content type, or contained no readable static content.";
 
         return new ToolExecutionResult
         {
-            JsonContent = responseObject
+            JsonContent = resultObject
         };
     }
 
@@ -294,92 +411,179 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
         return values;
     }
 
-    private static JsonArray BuildJsonArray(IEnumerable<string> values)
+    private static List<SearchCandidate> BuildCandidates(JsonArray? resultArray, int effectiveLimit, out int candidateCount)
     {
-        var array = new JsonArray();
-        foreach (var value in values)
-            array.Add(value);
-
-        return array;
-    }
-
-    private static JsonObject SanitizeResponse(JsonObject responseObject, int effectiveLimit)
-    {
-        var sanitizedResponse = new JsonObject();
-
-        var resultArray = responseObject["results"] as JsonArray;
-        var sanitizedResults = BuildSanitizedResults(resultArray, effectiveLimit);
-        sanitizedResponse["websearch_results"] = sanitizedResults;
-
-        //var suggestions = BuildSuggestions(responseObject["suggestions"] as JsonArray);
-        //if (suggestions.Count > 0)
-        //    sanitizedResponse["suggestions"] = suggestions;
-
-        return sanitizedResponse;
-    }
-
-    private static JsonArray BuildSanitizedResults(JsonArray? resultArray, int effectiveLimit)
-    {
-        var sanitizedResults = new JsonArray();
-        if (resultArray is null)
-            return sanitizedResults;
-
-        var resultObjects = resultArray.OfType<JsonObject>().ToList();
+        var resultObjects = resultArray?.OfType<JsonObject>().ToList() ?? [];
         var hasSortableScores = resultObjects.Any(result => TryGetScore(result, out _));
         IEnumerable<JsonObject> orderedResults = hasSortableScores
             ? resultObjects
                 .OrderByDescending(result => TryGetScore(result, out var score) ? score : double.MinValue)
                 .ThenBy(result => result["title"]?.ToString(), StringComparer.OrdinalIgnoreCase)
             : resultObjects;
+        var rankedResults = orderedResults
+            .Take(effectiveLimit)
+            .ToList();
+        candidateCount = rankedResults.Count;
 
-        foreach (var result in orderedResults.Take(effectiveLimit))
-            sanitizedResults.Add(SanitizeResult(result));
-
-        return sanitizedResults;
-    }
-
-    private static JsonObject SanitizeResult(JsonObject result)
-    {
-        var sanitizedResult = new JsonObject();
-        CopyPropertyIfPresent(result, sanitizedResult, "title");
-        CopyPropertyIfPresent(result, sanitizedResult, "url");
-        CopyPropertyIfPresent(result, sanitizedResult, "content");
-        // CopyPropertyIfPresent(result, sanitizedResult, "score");
-        CopyPropertyIfPresent(result, sanitizedResult, "engine");
-        CopyPropertyIfPresent(result, sanitizedResult, "category");
-        CopyPropertyIfPresent(result, sanitizedResult, "publishedDate");
-        CopyPropertyIfPresent(result, sanitizedResult, "published_date");
-
-        return sanitizedResult;
-    }
-
-    private static JsonArray BuildSuggestions(JsonArray? suggestionsArray)
-    {
-        var suggestions = new JsonArray();
-        if (suggestionsArray is null)
-            return suggestions;
-
-        foreach (var suggestionNode in suggestionsArray.Take(3))
+        var candidatesByUrl = new Dictionary<string, SearchCandidate>(StringComparer.Ordinal);
+        for (var index = 0; index < rankedResults.Count; index++)
         {
-            var suggestion = suggestionNode switch
-            {
-                JsonValue value => value.TryGetValue<string>(out var stringSuggestion) ? stringSuggestion : null,
-                JsonObject suggestionObject when suggestionObject.TryGetPropertyValue("suggestion", out var suggestionValue) => suggestionValue?.ToString(),
-                JsonObject suggestionObject when suggestionObject.TryGetPropertyValue("title", out var titleValue) => titleValue?.ToString(),
-                _ => suggestionNode?.ToString(),
-            };
+            var result = rankedResults[index];
+            var originalUrl = ReadNodeString(result["url"]);
+            if (!Uri.TryCreate(originalUrl, UriKind.Absolute, out var url) || url is not { Scheme: "http" or "https" })
+                continue;
 
-            if (!string.IsNullOrWhiteSpace(suggestion))
-                suggestions.Add(suggestion);
+            var retrievalUrl = RemoveFragment(url);
+            var candidate = new SearchCandidate
+            {
+                Rank = index + 1,
+                RetrievalUrl = retrievalUrl,
+                OriginalUrls = [originalUrl],
+                Title = ReadNodeString(result["title"]),
+                Snippet = ReadNodeString(result["content"]),
+                Engines = ReadStringValues(result, "engine", "engines"),
+                Categories = ReadStringValues(result, "category", "categories"),
+                PublishedDate = FirstNonEmpty(ReadNodeString(result["publishedDate"]), ReadNodeString(result["published_date"])),
+            };
+            var normalizedUrl = NormalizeUrl(retrievalUrl);
+            if (candidatesByUrl.TryGetValue(normalizedUrl, out var existingCandidate))
+                existingCandidate.Merge(candidate);
+            else
+                candidatesByUrl[normalizedUrl] = candidate;
         }
 
-        return suggestions;
+        return candidatesByUrl.Values
+            .OrderBy(candidate => candidate.Rank)
+            .ToList();
     }
 
-    private static void CopyPropertyIfPresent(JsonObject source, JsonObject target, string propertyName)
+    private static List<SearchResult> MergeFinalUrlDuplicates(IEnumerable<RetrievedSearchPage> retrievedPages) => retrievedPages
+        .GroupBy(result => NormalizeUrl(result.RetrievedPage.Page.FinalUrl), StringComparer.Ordinal)
+        .Select(group =>
+        {
+            var rankedGroup = group.OrderBy(result => result.Candidate.Rank).ToList();
+            var metadata = rankedGroup[0].Candidate.Clone();
+            foreach (var duplicate in rankedGroup.Skip(1))
+                metadata.Merge(duplicate.Candidate);
+
+            return new SearchResult(metadata, rankedGroup[0].RetrievedPage);
+        })
+        .OrderBy(result => result.Candidate.Rank)
+        .ToList();
+
+    private static void ApplyContentBudget(List<SearchResult> results, int maxTotalContentCharacters, int minContentCharactersPerResult)
     {
-        if (source.TryGetPropertyValue(propertyName, out var propertyValue) && propertyValue is not null)
-            target[propertyName] = propertyValue.DeepClone();
+        var remainingBudget = maxTotalContentCharacters;
+        for (var index = 0; index < results.Count; index++)
+        {
+            var result = results[index];
+            var originalMarkdown = result.RetrievedPage.ExtractedPage.Markdown;
+            var remainingResults = results.Count - index - 1;
+            var currentBudget = remainingBudget - minContentCharactersPerResult * remainingResults;
+            if (originalMarkdown.Length > currentBudget)
+            {
+                result.ReturnedMarkdown = MarkdownTruncator.Truncate(originalMarkdown, currentBudget);
+                result.ContentTruncated = true;
+            }
+            else
+            {
+                result.ReturnedMarkdown = originalMarkdown;
+            }
+
+            remainingBudget -= result.ReturnedMarkdown.Length;
+        }
+    }
+
+    private static JsonObject BuildResultJson(SearchResult result)
+    {
+        var extractedPage = result.RetrievedPage.ExtractedPage;
+        var page = result.RetrievedPage.Page;
+        var originalContentCharacters = extractedPage.Markdown.Length;
+        var searchMetadata = new JsonObject
+        {
+            ["rank"] = result.Candidate.Rank,
+            ["requested_url"] = page.RequestedUrl.ToString(),
+            ["final_url"] = page.FinalUrl.ToString(),
+            // ["title"] = result.Candidate.Title,
+            // ["snippet"] = result.Candidate.Snippet,
+            ["engines"] = BuildJsonArray(result.Candidate.Engines),
+            // ["categories"] = BuildJsonArray(result.Candidate.Categories),
+            ["published_date"] = result.Candidate.PublishedDate,
+        };
+        var pageContent = new JsonObject
+        {
+            // ["url"] = page.RequestedUrl.ToString(),
+            // ["retrieved_at_utc"] = result.RetrievedPage.RetrievedAtUtc.ToString("O"),
+            ["status"] = result.ContentTruncated || originalContentCharacters < 500 ? "partial or truncated" : "complete",
+            ["title"] = extractedPage.Title,
+            ["description"] = extractedPage.Description,
+            ["authors"] = BuildJsonArray(extractedPage.Authors),
+            ["content"] = result.ReturnedMarkdown,
+            // ["language"] = extractedPage.Language,
+            // ["published_time"] = extractedPage.PublishedTime,
+            // ["modified_time"] = extractedPage.ModifiedTime,
+            // ["media_type"] = page.ContentType,
+            // ["content_truncated"] = result.ContentTruncated,
+            // ["original_content_characters"] = originalContentCharacters,
+            // ["returned_content_characters"] = result.ReturnedMarkdown.Length,
+        };
+
+        return new JsonObject
+        {
+            ["search_metadata"] = searchMetadata,
+            ["page"] = pageContent,
+        };
+    }
+
+    private static JsonArray BuildJsonArray(IEnumerable<string> values)
+    {
+        var result = new JsonArray();
+        foreach (var value in values)
+            result.Add(value);
+        return result;
+    }
+
+    private static List<string> ReadStringValues(JsonObject source, string singularPropertyName, string pluralPropertyName)
+    {
+        var values = new List<string>();
+        AddNodeStringValues(source[singularPropertyName], values);
+        AddNodeStringValues(source[pluralPropertyName], values);
+        return values
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    private static void AddNodeStringValues(JsonNode? node, List<string> values)
+    {
+        if (node is JsonArray array)
+        {
+            foreach (var item in array)
+                AddNodeStringValues(item, values);
+            return;
+        }
+
+        var value = ReadNodeString(node);
+        if (!string.IsNullOrWhiteSpace(value))
+            values.Add(value);
+    }
+
+    private static string ReadNodeString(JsonNode? node) => node is null ? string.Empty : node.ToString().Trim();
+
+    private static string FirstNonEmpty(params string[] values) => values.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value)) ?? string.Empty;
+
+    private static Uri RemoveFragment(Uri url) => new UriBuilder(url)
+    {
+        Fragment = string.Empty,
+    }.Uri;
+
+    private static string NormalizeUrl(Uri url)
+    {
+        var scheme = url.Scheme.ToLowerInvariant();
+        var host = url.IdnHost.TrimEnd('.').ToLowerInvariant();
+        var port = url.IsDefaultPort ? string.Empty : $":{url.Port}";
+        var userInfo = string.IsNullOrEmpty(url.UserInfo) ? string.Empty : $"{url.UserInfo}@";
+        return $"{scheme}://{userInfo}{host}{port}{url.AbsolutePath}{url.Query}";
     }
 
     private static bool TryGetScore(JsonObject result, out double score)
@@ -462,6 +666,23 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
         return false;
     }
 
+    private static bool TryReadBoundedOptionalPositiveInt(
+        IReadOnlyDictionary<string, string> settingsValues,
+        string key,
+        int maximum,
+        out int? value,
+        out string error)
+    {
+        if (!TryReadOptionalPositiveInt(settingsValues, key, out value, out error))
+            return false;
+
+        if (value is null || value <= maximum)
+            return true;
+
+        error = string.Format(TB("The setting '{0}' must be less than or equal to {1}."), key, maximum);
+        return false;
+    }
+
     private static bool TryNormalizeSearchUri(string rawUrl, out Uri searchUri, out string error)
     {
         searchUri = null!;
@@ -535,9 +756,88 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
         {
             throw new TimeoutException($"The SearXNG request timed out after {timeoutSeconds} seconds.");
         }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
         catch (Exception exception)
         {
             throw new InvalidOperationException($"The SearXNG request failed: {exception.Message}", exception);
         }
+    }
+
+    private sealed class SearchCandidate
+    {
+        public required int Rank { get; set; }
+
+        public required Uri RetrievalUrl { get; set; }
+
+        public required List<string> OriginalUrls { get; init; }
+
+        public required string Title { get; set; }
+
+        public required string Snippet { get; set; }
+
+        public required List<string> Engines { get; init; }
+
+        public required List<string> Categories { get; init; }
+
+        public required string PublishedDate { get; set; }
+
+        public SearchCandidate Clone() => new()
+        {
+            Rank = this.Rank,
+            RetrievalUrl = this.RetrievalUrl,
+            OriginalUrls = [..this.OriginalUrls],
+            Title = this.Title,
+            Snippet = this.Snippet,
+            Engines = [..this.Engines],
+            Categories = [..this.Categories],
+            PublishedDate = this.PublishedDate,
+        };
+
+        public void Merge(SearchCandidate candidate)
+        {
+            if (candidate.Rank < this.Rank)
+            {
+                this.Rank = candidate.Rank;
+                this.RetrievalUrl = candidate.RetrievalUrl;
+                this.Title = candidate.Title;
+                this.Snippet = candidate.Snippet;
+                this.PublishedDate = candidate.PublishedDate;
+            }
+            else
+            {
+                this.Title = FirstNonEmpty(this.Title, candidate.Title);
+                this.Snippet = FirstNonEmpty(this.Snippet, candidate.Snippet);
+                this.PublishedDate = FirstNonEmpty(this.PublishedDate, candidate.PublishedDate);
+            }
+
+            AddDistinct(this.OriginalUrls, candidate.OriginalUrls, StringComparer.Ordinal);
+            AddDistinct(this.Engines, candidate.Engines, StringComparer.OrdinalIgnoreCase);
+            AddDistinct(this.Categories, candidate.Categories, StringComparer.OrdinalIgnoreCase);
+        }
+
+        private static void AddDistinct(List<string> target, IEnumerable<string> values, StringComparer comparer)
+        {
+            foreach (var value in values)
+            {
+                if (!target.Contains(value, comparer))
+                    target.Add(value);
+            }
+        }
+    }
+
+    private sealed record RetrievedSearchPage(SearchCandidate Candidate, RetrievedWebPage RetrievedPage);
+
+    private sealed class SearchResult(SearchCandidate candidate, RetrievedWebPage retrievedPage)
+    {
+        public SearchCandidate Candidate { get; } = candidate;
+
+        public RetrievedWebPage RetrievedPage { get; } = retrievedPage;
+
+        public string ReturnedMarkdown { get; set; } = string.Empty;
+
+        public bool ContentTruncated { get; set; }
     }
 }

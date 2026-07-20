@@ -1,14 +1,12 @@
-using System.Net;
-using System.Net.Sockets;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using AIStudio.Provider;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Web;
 
 namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations;
 
-public sealed class ReadWebPageTool(HTMLParser htmlParser, ILogger<ReadWebPageTool> logger) : IToolImplementation
+public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalService, ILogger<ReadWebPageTool> logger) : IToolImplementation
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ReadWebPageTool).Namespace, nameof(ReadWebPageTool));
 
@@ -16,7 +14,6 @@ public sealed class ReadWebPageTool(HTMLParser htmlParser, ILogger<ReadWebPageTo
     private const int DEFAULT_MAX_CONTENT_CHARACTERS = 30000;
     private const int MAX_TIMEOUT_SECONDS = 60;
     private const int MAX_CONTENT_CHARACTERS = 50000;
-    private const int MAX_RESPONSE_BYTES = 5 * 1024 * 1024; 
     private const int MAX_TRACE_LENGTH = 12000;
     private const string ALLOWED_PRIVATE_HOSTS_SETTING = "allowedPrivateHosts";
 
@@ -98,48 +95,27 @@ public sealed class ReadWebPageTool(HTMLParser htmlParser, ILogger<ReadWebPageTo
         var maxContentCharacters = Math.Min(ReadOptionalPositiveIntSetting(context.SettingsValues, "maxContentCharacters") ?? DEFAULT_MAX_CONTENT_CHARACTERS, MAX_CONTENT_CHARACTERS);
         if (!TryReadAllowedPrivateHostPatterns(context.SettingsValues.GetValueOrDefault(ALLOWED_PRIVATE_HOSTS_SETTING), out var allowedPrivateHosts, out var allowlistError))
             throw new InvalidOperationException(allowlistError);
-        var triedOsSso = false;
-
-        HTMLParserWebPage page;
+        RetrievedWebPage retrievedPage;
         try
         {
-            page = await htmlParser.LoadWebPageAsync(
+            retrievedPage = await webPageRetrievalService.RetrieveAsync(
                 url,
-                token,
-                timeoutSeconds,
-                async (candidateUrl, validationToken) => await this.ResolveValidatedUrlAddressesAsync(candidateUrl, allowedPrivateHosts, context.ProviderConfidence, validationToken),
-                MAX_RESPONSE_BYTES,
-                ExternalWebAuthenticationMode.OS_DEFAULT_CREDENTIALS,
-                shouldUseDefaultCredentials: (candidateUrl, addresses) =>
+                new WebPageRetrievalOptions
                 {
-                    var shouldTryOsSso = ShouldTryOsSso(url, candidateUrl, addresses, allowedPrivateHosts, context.ProviderConfidence);
-                    triedOsSso |= shouldTryOsSso;
-                    return shouldTryOsSso;
-                });
+                    TimeoutSeconds = timeoutSeconds,
+                    ProviderConfidence = context.ProviderConfidence,
+                    UseOsSso = true,
+                    IsPrivateHostAllowed = host => IsAllowedPrivateHost(host, allowedPrivateHosts),
+                    OnPrivateHostProviderBlockAsync = this.ReportPrivateHostProviderBlockAsync,
+                },
+                token);
         }
-        catch (OperationCanceledException) when (!token.IsCancellationRequested)
+        catch (WebPageAccessBlockedException exception)
         {
-            throw new TimeoutException($"Loading the web page timed out after {timeoutSeconds} seconds.");
+            throw new ToolExecutionBlockedException(exception.Message);
         }
-        catch (HttpRequestException exception)
-        {
-            if (FindBlockedException(exception) is { } blockedException)
-                throw blockedException;
-
-            if (triedOsSso && exception.StatusCode is HttpStatusCode.Unauthorized)
-            {
-                throw new InvalidOperationException(
-                    $"Loading the web page failed: The server returned HTTP 401 (Unauthorized) for '{url}'. The host is reachable and AI Studio already tried your operating system's default sign-in, but the server did not accept it or requires an additional browser session/cookies.",
-                    exception);
-            }
-
-            throw new InvalidOperationException($"Loading the web page failed: {exception.Message}", exception);
-        }
-
-        if (!IsSupportedHtmlContentType(page.ContentType))
-            throw new InvalidOperationException($"Unsupported content type '{page.ContentType}'. Only HTML pages are supported.");
-
-        var extractedPage = WebPageContentExtractor.Extract(htmlParser, page.Document, page.FinalUrl);
+        var page = retrievedPage.Page;
+        var extractedPage = retrievedPage.ExtractedPage;
         var markdown = extractedPage.Markdown;
         var originalContentCharacters = markdown.Length;
         List<string> warnings = [];
@@ -152,7 +128,7 @@ public sealed class ReadWebPageTool(HTMLParser htmlParser, ILogger<ReadWebPageTo
         var contentTruncated = false;
         if (markdown.Length > maxContentCharacters)
         {
-            markdown = TruncateMarkdown(markdown, maxContentCharacters);
+            markdown = MarkdownTruncator.Truncate(markdown, maxContentCharacters);
             contentTruncated = true;
             warnings.Add($"The extracted page content was truncated from {originalContentCharacters} to {markdown.Length} characters.");
         }
@@ -234,77 +210,12 @@ public sealed class ReadWebPageTool(HTMLParser htmlParser, ILogger<ReadWebPageTo
         target[propertyName] = array;
     }
 
-    private static string TruncateMarkdown(string markdown, int maxCharacters)
-    {
-        const string TRUNCATION_MARKER = "[Page content truncated]";
-        if (maxCharacters <= TRUNCATION_MARKER.Length)
-            return markdown[..maxCharacters];
-
-        var contentLimit = maxCharacters - TRUNCATION_MARKER.Length - 2;
-        var breakPosition = markdown.LastIndexOf("\n\n", contentLimit, StringComparison.Ordinal);
-        if (breakPosition < contentLimit / 2)
-            breakPosition = markdown.LastIndexOf('\n', contentLimit);
-        if (breakPosition < contentLimit / 2)
-            breakPosition = contentLimit;
-
-        return $"{markdown[..breakPosition].TrimEnd()}\n\n{TRUNCATION_MARKER}";
-    }
-
     public string FormatTraceResult(string rawResult)
     {
         if (rawResult.Length <= MAX_TRACE_LENGTH)
             return rawResult;
 
         return $"{rawResult[..MAX_TRACE_LENGTH]}...";
-    }
-
-    private static ToolExecutionBlockedException? FindBlockedException(Exception exception)
-    {
-        if (exception is ToolExecutionBlockedException blockedException)
-            return blockedException;
-
-        if (exception is AggregateException aggregateException)
-        {
-            foreach (var innerException in aggregateException.InnerExceptions)
-            {
-                if (FindBlockedException(innerException) is { } innerBlockedException)
-                    return innerBlockedException;
-            }
-        }
-
-        return exception.InnerException is null ? null : FindBlockedException(exception.InnerException);
-    }
-
-    private async Task<IReadOnlyList<IPAddress>> ResolveValidatedUrlAddressesAsync(
-        Uri url,
-        IReadOnlyList<AllowedPrivateHostPattern> allowedPrivateHosts,
-        ConfidenceLevel providerConfidence,
-        CancellationToken token)
-    {
-        if (url is not { Scheme: "http" or "https" })
-            throw new ToolExecutionBlockedException("Only HTTP and HTTPS URLs are supported.");
-
-        if (IsBlockedHostName(url.Host))
-            throw new ToolExecutionBlockedException("Local web page URLs are not supported.");
-
-        var addresses = await ResolveHostAddressesAsync(url, token);
-        if (addresses.Count == 0)
-            throw new InvalidOperationException($"The host '{url.Host}' did not resolve to an IP address.");
-
-        if (addresses.Any(IsNeverAllowedAddress))
-            throw new ToolExecutionBlockedException("Local, link-local, multicast, and unspecified network addresses are not supported.");
-
-        if (!addresses.Any(IsNonPublicAddress))
-            return addresses;
-
-        if (!IsAllowedPrivateHost(url.Host, allowedPrivateHosts))
-            throw new ToolExecutionBlockedException("Private or local-network web page URLs are not supported unless their host is explicitly allowed.");
-
-        if (providerConfidence >= ConfidenceLevel.HIGH)
-            return addresses;
-
-        await this.ReportPrivateHostProviderBlockAsync(url, providerConfidence);
-        throw new ToolExecutionBlockedException("This private or VPN web page requires a High-confidence provider.");
     }
 
     private async Task ReportPrivateHostProviderBlockAsync(Uri url, ConfidenceLevel providerConfidence)
@@ -319,110 +230,13 @@ public sealed class ReadWebPageTool(HTMLParser htmlParser, ILogger<ReadWebPageTo
             TB("The web page was not loaded because private or VPN web pages require a High-confidence provider.")));
     }
 
-    private static async Task<IReadOnlyList<IPAddress>> ResolveHostAddressesAsync(Uri url, CancellationToken token)
-    {
-        if (IPAddress.TryParse(url.Host, out var parsedAddress))
-            return [NormalizeAddress(parsedAddress)];
-
-        try
-        {
-            return (await Dns.GetHostAddressesAsync(url.DnsSafeHost, token))
-                .Select(NormalizeAddress)
-                .ToList();
-        }
-        catch (SocketException exception)
-        {
-            throw new InvalidOperationException($"The host '{url.Host}' could not be resolved: {exception.Message}", exception);
-        }
-    }
-
-    private static IPAddress NormalizeAddress(IPAddress address) => address.IsIPv4MappedToIPv6 ? address.MapToIPv4() : address;
-
-    private static bool IsBlockedHostName(string host)
-    {
-        var normalizedHost = NormalizeHost(host);
-        return normalizedHost is "localhost" ||
-               normalizedHost.EndsWith(".localhost", StringComparison.Ordinal);
-    }
-
     private static bool IsAllowedPrivateHost(string host, IReadOnlyList<AllowedPrivateHostPattern> allowedPrivateHosts)
     {
         var normalizedHost = NormalizeHost(host);
         return allowedPrivateHosts.Any(pattern => pattern.IsMatch(normalizedHost));
     }
 
-    private static bool ShouldTryOsSso(
-        Uri originalUrl,
-        Uri candidateUrl,
-        IReadOnlyList<IPAddress> addresses,
-        IReadOnlyList<AllowedPrivateHostPattern> allowedPrivateHosts,
-        ConfidenceLevel providerConfidence) =>
-        providerConfidence >= ConfidenceLevel.HIGH &&
-        originalUrl.Scheme.Equals(candidateUrl.Scheme, StringComparison.OrdinalIgnoreCase) &&
-        originalUrl.Host.Equals(candidateUrl.Host, StringComparison.OrdinalIgnoreCase) &&
-        originalUrl.Port == candidateUrl.Port &&
-        !IsBlockedHostName(candidateUrl.Host) &&
-        IsAllowedPrivateHost(candidateUrl.Host, allowedPrivateHosts) &&
-        addresses.Count > 0 &&
-        addresses.All(IsNonPublicAddress);
-
     private static string NormalizeHost(string host) => host.Trim().TrimEnd('.').ToLowerInvariant();
-
-    private static bool IsNeverAllowedAddress(IPAddress address)
-    {
-        address = NormalizeAddress(address);
-        if (IPAddress.IsLoopback(address))
-            return true;
-
-        if (address.AddressFamily is AddressFamily.InterNetwork)
-        {
-            var bytes = address.GetAddressBytes();
-            return address.Equals(IPAddress.Any) ||
-                   bytes[0] is 0 or 127 or >= 224 ||
-                   (bytes[0] == 169 && bytes[1] == 254);
-        }
-
-        if (address.AddressFamily is AddressFamily.InterNetworkV6)
-        {
-            return address.Equals(IPAddress.IPv6Any) ||
-                   address.Equals(IPAddress.IPv6None) ||
-                   address.Equals(IPAddress.IPv6Loopback) ||
-                   address.IsIPv6LinkLocal ||
-                   address.IsIPv6Multicast;
-        }
-
-        return true;
-    }
-
-    private static bool IsNonPublicAddress(IPAddress address)
-    {
-        address = NormalizeAddress(address);
-        if (IsNeverAllowedAddress(address))
-            return true;
-
-        if (address.AddressFamily is AddressFamily.InterNetwork)
-        {
-            var bytes = address.GetAddressBytes();
-            return bytes[0] == 10 || // Private network: 10.0.0.0/8
-                   (bytes[0] == 100 && bytes[1] is >= 64 and <= 127) || // Carrier-grade NAT: 100.64.0.0/10
-                   (bytes[0] == 172 && bytes[1] is >= 16 and <= 31) || // Private network: 172.16.0.0/12
-                   (bytes[0] == 192 && bytes[1] == 168) || // Private network: 192.168.0.0/16
-                   (bytes[0] == 192 && bytes[1] == 0 && bytes[2] == 0) || // IETF protocol assignments: 192.0.0.0/24
-                   (bytes[0] == 192 && bytes[1] == 0 && bytes[2] == 2) || // Documentation range: 192.0.2.0/24
-                   (bytes[0] == 198 && bytes[1] is 18 or 19) || // Benchmark testing range: 198.18.0.0/15
-                   (bytes[0] == 198 && bytes[1] == 51 && bytes[2] == 100) || // Documentation range: 198.51.100.0/24
-                   (bytes[0] == 203 && bytes[1] == 0 && bytes[2] == 113); // Documentation range: 203.0.113.0/24
-        }
-
-        if (address.AddressFamily is AddressFamily.InterNetworkV6)
-        {
-            var bytes = address.GetAddressBytes();
-            return (bytes[0] & 0xfe) == 0xfc || // Unique local addresses: fc00::/7
-                   address.IsIPv6SiteLocal; // Deprecated site-local addresses: fec0::/10
-        }
-
-        return true;
-    }
 
     private static bool TryReadAllowedPrivateHostPatterns(
         string? rawValue,
@@ -461,11 +275,6 @@ public sealed class ReadWebPageTool(HTMLParser htmlParser, ILogger<ReadWebPageTo
     private static IEnumerable<string> SplitAllowedPrivateHostPatterns(string? rawValue) => rawValue?
         .Split(['\r', '\n', ',', ';'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
         .Where(x => !string.IsNullOrWhiteSpace(x)) ?? [];
-
-    private static bool IsSupportedHtmlContentType(string? contentType) =>
-        string.IsNullOrWhiteSpace(contentType) ||
-        contentType.StartsWith("text/html", StringComparison.OrdinalIgnoreCase) ||
-        contentType.StartsWith("application/xhtml+xml", StringComparison.OrdinalIgnoreCase);
 
     private static string ReadRequiredString(JsonElement arguments, string propertyName)
     {

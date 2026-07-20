@@ -1068,7 +1068,7 @@ public abstract class BaseProvider : IProvider, ISecretId
                         yield break;
                     }
 
-                    var toolCalls = responseMessage.ToolCalls ?? [];
+                    var toolCalls = this.CanonicalizeToolCallNames(responseMessage.ToolCalls ?? [], runnableTools);
                     if (toolCalls.Count == 0)
                     {
                         await ResetToolRuntimeStatusAsync();
@@ -1176,6 +1176,29 @@ public abstract class BaseProvider : IProvider, ISecretId
         Model = chatModel,
         InstanceName = this.InstanceName,
     };
+
+    private IList<ChatCompletionToolCall> CanonicalizeToolCallNames(
+        IEnumerable<ChatCompletionToolCall> toolCalls,
+        IReadOnlyList<(ToolDefinition Definition, IToolImplementation Implementation)> runnableTools) => toolCalls
+            .Select(toolCall =>
+            {
+                var returnedName = toolCall.Function.Name;
+                var canonicalName = runnableTools
+                    .Select(x => x.Definition.Function.Name)
+                    .FirstOrDefault(x => x.Equals(returnedName.Trim(), StringComparison.Ordinal));
+                if (canonicalName is null || canonicalName.Equals(returnedName, StringComparison.Ordinal))
+                    return toolCall;
+
+                this.logger.LogWarning("Canonicalized tool call function name '{ReturnedFunctionName}' to '{CanonicalFunctionName}'.", returnedName, canonicalName);
+                return toolCall with
+                {
+                    Function = toolCall.Function with
+                    {
+                        Name = canonicalName,
+                    },
+                };
+            })
+            .ToList();
 
     private async Task<ChatCompletionResponse?> ExecuteChatCompletionRequest(
         ChatCompletionAPIRequest requestDto,

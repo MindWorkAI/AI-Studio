@@ -410,25 +410,11 @@ public sealed class SettingsManager
         var providerConfidence = provider.UsedLLMProvider.GetConfidence(this).Level;
         var filtered = ToolSelectionRules.NormalizeSelection(selectedToolIds);
 
-        var changed = true;
-        while (changed)
+        foreach (var toolId in filtered.ToList())
         {
-            changed = false;
-            foreach (var toolId in filtered.ToList())
-            {
-                var minimumToolConfidence = this.GetMinimumProviderConfidenceForTool(toolId);
-                if (ToolSelectionRules.IsProviderConfidenceAllowed(providerConfidence, minimumToolConfidence))
-                    continue;
-
+            var minimumToolConfidence = this.GetMinimumProviderConfidenceForTool(toolId);
+            if (!ToolSelectionRules.IsProviderConfidenceAllowed(providerConfidence, minimumToolConfidence))
                 filtered.Remove(toolId);
-                changed = true;
-            }
-
-            if (filtered.Contains(ToolSelectionRules.WEB_SEARCH_TOOL_ID) && !filtered.Contains(ToolSelectionRules.READ_WEB_PAGE_TOOL_ID))
-            {
-                filtered.Remove(ToolSelectionRules.WEB_SEARCH_TOOL_ID);
-                changed = true;
-            }
         }
 
         return filtered;

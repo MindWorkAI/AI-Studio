@@ -3,7 +3,7 @@ using System.Text;
 using System.Text.Json;
 using HtmlAgilityPack;
 
-namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations;
+namespace AIStudio.Tools.Web;
 
 internal static class WebPageContentExtractor
 {
@@ -553,7 +553,7 @@ internal static class WebPageContentExtractor
     }
 }
 
-internal sealed class ExtractedWebPage
+public sealed class ExtractedWebPage
 {
     public required string Title { get; init; }
 

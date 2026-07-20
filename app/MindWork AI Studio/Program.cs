@@ -8,6 +8,7 @@ using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.PluginSystem.Assistants;
 using AIStudio.Tools.Services;
 using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations;
+using AIStudio.Tools.Web;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Logging.Console;
 
@@ -130,6 +131,7 @@ internal sealed class Program
         builder.Services.AddMudMarkdownClipboardService<MarkdownClipboardService>();
         builder.Services.AddSingleton<SettingsManager>();
         builder.Services.AddSingleton<ToolSettingsService>();
+        builder.Services.AddSingleton<WebPageRetrievalService>();
         builder.Services.AddSingleton<IToolImplementation, ReadWebPageTool>();
         builder.Services.AddSingleton<IToolImplementation, SearXNGWebSearchTool>();
         builder.Services.AddSingleton<ToolRegistry>();

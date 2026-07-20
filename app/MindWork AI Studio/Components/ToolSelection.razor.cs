@@ -84,22 +84,9 @@ public partial class ToolSelection : MSGComponentBase
         await this.SelectedToolIdsChanged.InvokeAsync(updated);
     }
 
-    private bool IsSelectionLockedByDependency(string toolId) => ToolSelectionRules.IsRequiredBySelectedTools(toolId, this.SelectedToolIds);
-
     private ConfidenceLevel GetMinimumProviderConfidence(ToolCatalogItem item) => this.SettingsManager.GetMinimumProviderConfidenceForTool(item.Definition.Id);
 
     private bool IsBlockedByProviderConfidence(ToolCatalogItem item) => !ToolSelectionRules.IsProviderConfidenceAllowed(this.ProviderConfidence, this.GetMinimumProviderConfidence(item));
-
-    private string? GetDependencyHint(string toolId)
-    {
-        if (toolId == ToolSelectionRules.WEB_SEARCH_TOOL_ID)
-            return this.T("Enabling this tool also enables Read Web Page.");
-
-        if (this.IsSelectionLockedByDependency(toolId))
-            return this.T("This tool is currently required because Web Search is enabled.");
-
-        return null;
-    }
 
     private string? GetProviderConfidenceHint(ToolCatalogItem item)
     {
