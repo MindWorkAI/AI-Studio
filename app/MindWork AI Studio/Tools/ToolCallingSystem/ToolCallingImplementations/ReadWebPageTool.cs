@@ -55,7 +55,8 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
         IReadOnlyDictionary<string, string> settingsValues,
         CancellationToken token = default)
     {
-        if (!TryReadOptionalPositiveInt(settingsValues, "timeoutSeconds", out _, out var timeoutError))
+        var positiveIntegerErrorFormat = TB("The setting '{0}' must be a positive integer.");
+        if (!ToolSettingsValueParser.TryReadOptionalPositiveInt(settingsValues, "timeoutSeconds", positiveIntegerErrorFormat, out _, out var timeoutError))
         {
             return Task.FromResult<ToolConfigurationState?>(new ToolConfigurationState
             {
@@ -64,7 +65,7 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
             });
         }
 
-        if (!TryReadOptionalPositiveInt(settingsValues, "maxContentCharacters", out _, out var contentError))
+        if (!ToolSettingsValueParser.TryReadOptionalPositiveInt(settingsValues, "maxContentCharacters", positiveIntegerErrorFormat, out _, out var contentError))
         {
             return Task.FromResult<ToolConfigurationState?>(new ToolConfigurationState
             {
@@ -91,8 +92,8 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
         if (!Uri.TryCreate(urlText, UriKind.Absolute, out var url) || url is not { Scheme: "http" or "https" })
             throw new ArgumentException("Argument 'url' must be a valid HTTP or HTTPS URL.");
 
-        var timeoutSeconds = Math.Min(ReadOptionalPositiveIntSetting(context.SettingsValues, "timeoutSeconds") ?? DEFAULT_TIMEOUT_SECONDS, MAX_TIMEOUT_SECONDS);
-        var maxContentCharacters = Math.Min(ReadOptionalPositiveIntSetting(context.SettingsValues, "maxContentCharacters") ?? DEFAULT_MAX_CONTENT_CHARACTERS, MAX_CONTENT_CHARACTERS);
+        var timeoutSeconds = Math.Min(ToolSettingsValueParser.ReadOptionalPositiveInt(context.SettingsValues, "timeoutSeconds") ?? DEFAULT_TIMEOUT_SECONDS, MAX_TIMEOUT_SECONDS);
+        var maxContentCharacters = Math.Min(ToolSettingsValueParser.ReadOptionalPositiveInt(context.SettingsValues, "maxContentCharacters") ?? DEFAULT_MAX_CONTENT_CHARACTERS, MAX_CONTENT_CHARACTERS);
         if (!TryReadAllowedPrivateHostPatterns(context.SettingsValues.GetValueOrDefault(ALLOWED_PRIVATE_HOSTS_SETTING), out var allowedPrivateHosts, out var allowlistError))
             throw new InvalidOperationException(allowlistError);
         RetrievedWebPage retrievedPage;
@@ -135,13 +136,14 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
 
         return new ToolExecutionResult
         {
-            JsonContent = BuildModelContent(page, extractedPage, markdown, originalContentCharacters, contentTruncated, warnings)
+            JsonContent = BuildModelContent(page, extractedPage, retrievedPage.RetrievedAtUtc, markdown, originalContentCharacters, contentTruncated, warnings)
         };
     }
 
     private static JsonNode? BuildModelContent(
         HTMLParserWebPage page,
         ExtractedWebPage extractedPage,
+        DateTimeOffset retrievedAtUtc,
         string websiteContentAsMarkdown,
         int originalContentCharacters,
         bool contentTruncated,
@@ -185,7 +187,7 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
         {
             ["url"] = page.RequestedUrl.ToString(),
             ["status"] = status,
-            ["retrieved_at_utc"] = DateTimeOffset.UtcNow.ToString("O"),
+            ["retrieved_at_utc"] = retrievedAtUtc.ToString("O"),
             ["content"] = content,
             ["metadata"] = metadata,
         };
@@ -232,11 +234,9 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
 
     private static bool IsAllowedPrivateHost(string host, IReadOnlyList<AllowedPrivateHostPattern> allowedPrivateHosts)
     {
-        var normalizedHost = NormalizeHost(host);
+        var normalizedHost = WebHostHelper.Normalize(host);
         return allowedPrivateHosts.Any(pattern => pattern.IsMatch(normalizedHost));
     }
-
-    private static string NormalizeHost(string host) => host.Trim().TrimEnd('.').ToLowerInvariant();
 
     private static bool TryReadAllowedPrivateHostPatterns(
         string? rawValue,
@@ -248,7 +248,7 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
 
         foreach (var rawPattern in SplitAllowedPrivateHostPatterns(rawValue))
         {
-            var pattern = NormalizeHost(rawPattern);
+            var pattern = WebHostHelper.Normalize(rawPattern);
             if (pattern.Contains("://", StringComparison.Ordinal) || pattern.Contains('/'))
             {
                 error = TB("Allowed private hosts must be host names only, without scheme or path.");
@@ -286,36 +286,6 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
             throw new ArgumentException($"Missing required argument '{propertyName}'.");
 
         return text;
-    }
-
-    private static int? ReadOptionalPositiveIntSetting(IReadOnlyDictionary<string, string> settingsValues, string key)
-    {
-        if (!settingsValues.TryGetValue(key, out var value) || string.IsNullOrWhiteSpace(value))
-            return null;
-
-        return int.TryParse(value, out var parsedValue) && parsedValue > 0 ? parsedValue : null;
-    }
-
-    private static bool TryReadOptionalPositiveInt(
-        IReadOnlyDictionary<string, string> settingsValues,
-        string key,
-        out int? value,
-        out string error)
-    {
-        value = null;
-        error = string.Empty;
-
-        if (!settingsValues.TryGetValue(key, out var rawValue) || string.IsNullOrWhiteSpace(rawValue))
-            return true;
-
-        if (int.TryParse(rawValue, out var parsedValue) && parsedValue > 0)
-        {
-            value = parsedValue;
-            return true;
-        }
-
-        error = I18N.I.T($"The setting '{key}' must be a positive integer.", typeof(ReadWebPageTool).Namespace, nameof(ReadWebPageTool));
-        return false;
     }
 
     private readonly record struct AllowedPrivateHostPattern(string Host, bool IsWildcard)

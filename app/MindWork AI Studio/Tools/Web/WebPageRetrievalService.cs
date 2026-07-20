@@ -84,30 +84,40 @@ public sealed class WebPageRetrievalService(HTMLParser htmlParser)
         CancellationToken token)
     {
         if (url is not { Scheme: "http" or "https" })
-            throw new WebPageAccessBlockedException("Only HTTP and HTTPS URLs are supported.");
+            throw new WebPageAccessBlockedException(
+                "Only HTTP and HTTPS URLs are supported.",
+                WebPageAccessBlockReason.UNSUPPORTED_SCHEME);
 
         if (IsBlockedHostName(url.Host))
-            throw new WebPageAccessBlockedException("Local web page URLs are not supported.");
+            throw new WebPageAccessBlockedException(
+                "Local web page URLs are not supported.",
+                WebPageAccessBlockReason.LOCAL_HOST_NAME);
 
         var addresses = await ResolveHostAddressesAsync(url, token);
         if (addresses.Count == 0)
             throw new InvalidOperationException($"The host '{url.Host}' did not resolve to an IP address.");
 
         if (addresses.Any(IsNeverAllowedAddress))
-            throw new WebPageAccessBlockedException("Local, link-local, multicast, and unspecified network addresses are not supported.");
+            throw new WebPageAccessBlockedException(
+                "Local, link-local, multicast, and unspecified network addresses are not supported.",
+                WebPageAccessBlockReason.NEVER_ALLOWED_ADDRESS);
 
         if (!addresses.Any(IsNonPublicAddress))
             return addresses;
 
         if (options.PublicTargetsOnly || options.IsPrivateHostAllowed?.Invoke(url.Host) is not true)
-            throw new WebPageAccessBlockedException("Private or local-network web page URLs are not supported unless their host is explicitly allowed.");
+            throw new WebPageAccessBlockedException(
+                "Private or local-network web page URLs are not supported unless their host is explicitly allowed.",
+                WebPageAccessBlockReason.PRIVATE_HOST_NOT_ALLOWED);
 
         if (options.ProviderConfidence >= ConfidenceLevel.HIGH)
             return addresses;
 
         if (options.OnPrivateHostProviderBlockAsync is not null)
             await options.OnPrivateHostProviderBlockAsync(url, options.ProviderConfidence);
-        throw new WebPageAccessBlockedException("This private or VPN web page requires a High-confidence provider.");
+        throw new WebPageAccessBlockedException(
+            "This private or VPN web page requires a High-confidence provider.",
+            WebPageAccessBlockReason.INSUFFICIENT_PROVIDER_CONFIDENCE);
     }
 
     private static async Task<IReadOnlyList<IPAddress>> ResolveHostAddressesAsync(Uri url, CancellationToken token)
@@ -146,12 +156,10 @@ public sealed class WebPageRetrievalService(HTMLParser htmlParser)
 
     private static bool IsBlockedHostName(string host)
     {
-        var normalizedHost = NormalizeHost(host);
+        var normalizedHost = WebHostHelper.Normalize(host);
         return normalizedHost is "localhost" ||
                normalizedHost.EndsWith(".localhost", StringComparison.Ordinal);
     }
-
-    private static string NormalizeHost(string host) => host.Trim().TrimEnd('.').ToLowerInvariant();
 
     private static bool IsNeverAllowedAddress(IPAddress address)
     {

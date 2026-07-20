@@ -8032,6 +8032,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS:
 -- (Optional) HTTP timeout for loading a web page in seconds.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T4126164830"] = "(Optional) HTTP timeout for loading a web page in seconds."
 
+-- The setting '{0}' must be a positive integer.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T4199432074"] = "The setting '{0}' must be a positive integer."
+
 -- (Optional) Global truncation limit for extracted characters returned to the model.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T900659180"] = "(Optional) Global truncation limit for extracted characters returned to the model."
 
