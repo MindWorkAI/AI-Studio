@@ -769,7 +769,7 @@ public static partial class ManagedConfiguration
 
         var successful = false;
         var configuredValue = CloneStringDictionary(configMeta.Default);
-        
+
         // Step 1 -- try to read the Lua value (we expect a table) out of the Lua table:
         if (settings.TryGetValue(SettingsManager.ToSettingName(propertyExpression), out var configuredLuaList) &&
             configuredLuaList.Type is LuaValueType.Table &&

@@ -37,7 +37,7 @@ public static class ToolSelectionRules
         var toolPolicyPrompt = $"""
                             # Tool usage instructions:
                             You have multiple tools available. Each tool has a different purpose and usage policy. Choose wisely and if you are not sure, always ask the user for clarification. You must follow the usage policy of each tool to ensure accurate and reliable results. Here are the usage policies for each tool:
-                            
+
                             {string.Join(Environment.NewLine+Environment.NewLine, policySections)}
                             """;
 

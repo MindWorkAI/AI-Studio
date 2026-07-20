@@ -24,6 +24,8 @@ public sealed class ToolExecutionResult
 
     public JsonNode? JsonContent { get; init; }
 
+    public ConfidenceLevel RequiredProviderConfidence { get; init; } = ConfidenceLevel.NONE;
+
     public string ToModelContent()
     {
         if (this.JsonContent is not null)

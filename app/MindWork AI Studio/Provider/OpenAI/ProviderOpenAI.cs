@@ -227,8 +227,10 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
         {
             await foreach (var content in this.StreamResponsesWithLocalTools(
                                chatModel,
+                               chatThread,
                                baseInput,
                                apiParameters,
+                               providerTools,
                                runnableTools,
                                toolExecutor,
                                currentAssistantContent,
@@ -308,8 +310,10 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
 
     private async IAsyncEnumerable<ContentStreamChunk> StreamResponsesWithLocalTools(
         Model chatModel,
+        ChatThread chatThread,
         IList<object> baseInput,
         IDictionary<string, object> apiParameters,
+        IList<object> providerTools,
         IReadOnlyList<(ToolDefinition Definition, IToolImplementation Implementation)> runnableTools,
         ToolExecutor toolExecutor,
         ContentText? currentAssistantContent,
@@ -317,8 +321,15 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
         ConfidenceLevel providerConfidence,
         [EnumeratorCancellation] CancellationToken token)
     {
-        var providerTools = runnableTools
+        var localProviderTools = runnableTools
             .Select(x => (object)ProviderToolAdapters.ToResponsesTool(x.Definition))
+            .ToList();
+        var localFunctionNames = runnableTools
+            .Select(x => x.Definition.Function.Name)
+            .ToHashSet(StringComparer.Ordinal);
+        var effectiveProviderTools = providerTools
+            .Where(x => x is not ProviderTool providerTool || !localFunctionNames.Contains(providerTool.Type))
+            .Concat(localProviderTools)
             .ToList();
         // Preserve every output item required to continue the response, including
         // reasoning items emitted alongside function calls.
@@ -344,7 +355,7 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
                 Input = requestInput,
                 Stream = false,
                 Store = false,
-                Tools = finalResponseRequired ? [] : providerTools,
+                Tools = finalResponseRequired ? [] : effectiveProviderTools,
                 AdditionalApiParameters = apiParameters,
             };
             var response = await this.ExecuteResponsesRequest(requestDto, requestedSecret, token);
@@ -381,45 +392,51 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
                 yield break;
             }
 
-            await ShowToolRuntimeStatusAsync(currentAssistantContent, functionCalls
-                .Select(x => runnableTools.FirstOrDefault(tool => tool.Definition.Function.Name.Equals(x.Name, StringComparison.Ordinal)).Implementation?.GetDisplayName() ?? x.Name));
-
-            foreach (var outputItem in response.Output)
-                internalItems.Add(outputItem);
-
-            foreach (var functionCall in functionCalls)
+            try
             {
-                if (toolCallCount >= ToolSelectionRules.MAX_TOOL_CALLS)
+                await ShowToolRuntimeStatusAsync(currentAssistantContent, functionCalls
+                    .Select(x => runnableTools.FirstOrDefault(tool => tool.Definition.Function.Name.Equals(x.Name, StringComparison.Ordinal)).Implementation?.GetDisplayName() ?? x.Name));
+
+                foreach (var outputItem in response.Output)
+                    internalItems.Add(outputItem);
+
+                foreach (var functionCall in functionCalls)
                 {
-                    var finalResponseInstruction = ToolSelectionRules.GetMaxToolCallsFinalResponseInstruction();
+                    if (toolCallCount >= ToolSelectionRules.MAX_TOOL_CALLS)
+                    {
+                        var finalResponseInstruction = ToolSelectionRules.GetMaxToolCallsFinalResponseInstruction();
+                        internalItems.Add(new ResponsesFunctionCallOutputItem
+                        {
+                            CallId = functionCall.CallId,
+                            Output = finalResponseInstruction,
+                        });
+                        continue;
+                    }
+
+                    toolCallCount++;
+                    var (toolContent, trace, requiredProviderConfidence) = await toolExecutor.ExecuteAsync(
+                        functionCall.CallId,
+                        functionCall.Name,
+                        functionCall.Arguments,
+                        runnableTools,
+                        providerConfidence,
+                        toolCallCount,
+                        token);
+
+                    chatThread.RequireProviderConfidence(requiredProviderConfidence);
+                    currentAssistantContent?.ToolInvocations.Add(trace);
                     internalItems.Add(new ResponsesFunctionCallOutputItem
                     {
                         CallId = functionCall.CallId,
-                        Output = finalResponseInstruction,
+                        Output = toolContent,
                     });
-                    continue;
                 }
 
-                toolCallCount++;
-                var (toolContent, trace) = await toolExecutor.ExecuteAsync(
-                    functionCall.CallId,
-                    functionCall.Name,
-                    functionCall.Arguments,
-                    runnableTools,
-                    providerConfidence,
-                    toolCallCount,
-                    token);
-
-                currentAssistantContent?.ToolInvocations.Add(trace);
-                internalItems.Add(new ResponsesFunctionCallOutputItem
-                {
-                    CallId = functionCall.CallId,
-                    Output = toolContent,
-                });
             }
-
-            if (currentAssistantContent is not null)
-                await currentAssistantContent.StreamingEvent();
+            finally
+            {
+                await ResetToolRuntimeStatusAsync(currentAssistantContent);
+            }
         }
     }
 

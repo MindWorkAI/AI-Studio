@@ -1083,48 +1083,54 @@ public abstract class BaseProvider : IProvider, ISecretId
                         yield break;
                     }
 
-                    await ShowToolRuntimeStatusAsync(toolCalls
-                        .Select(x => runnableTools.FirstOrDefault(tool => tool.Definition.Function.Name.Equals(x.Function.Name, StringComparison.Ordinal)).Implementation?.GetDisplayName() ?? x.Function.Name));
-
-                    internalMessages.Add(new AssistantToolCallMessage
+                    try
                     {
-                        Content = responseMessage.Content,
-                        ToolCalls = toolCalls,
-                    });
+                        await ShowToolRuntimeStatusAsync(toolCalls
+                            .Select(x => runnableTools.FirstOrDefault(tool => tool.Definition.Function.Name.Equals(x.Function.Name, StringComparison.Ordinal)).Implementation?.GetDisplayName() ?? x.Function.Name));
 
-                    foreach (var toolCall in toolCalls)
-                    {
-                        if (toolCallCount >= ToolSelectionRules.MAX_TOOL_CALLS)
+                        internalMessages.Add(new AssistantToolCallMessage
                         {
-                            var finalResponseInstruction = ToolSelectionRules.GetMaxToolCallsFinalResponseInstruction();
+                            Content = responseMessage.Content,
+                            ToolCalls = toolCalls,
+                        });
+
+                        foreach (var toolCall in toolCalls)
+                        {
+                            if (toolCallCount >= ToolSelectionRules.MAX_TOOL_CALLS)
+                            {
+                                var finalResponseInstruction = ToolSelectionRules.GetMaxToolCallsFinalResponseInstruction();
+                                internalMessages.Add(new ToolResultMessage
+                                {
+                                    Content = finalResponseInstruction,
+                                    ToolCallId = toolCall.Id,
+                                });
+                                continue;
+                            }
+
+                            toolCallCount++;
+                            var (toolContent, trace, requiredProviderConfidence) = await toolExecutor.ExecuteAsync(
+                                toolCall.Id,
+                                toolCall.Function.Name,
+                                toolCall.Function.Arguments,
+                                runnableTools,
+                                this.Provider.GetConfidence(settingsManager).Level,
+                                toolCallCount,
+                                token);
+
+                            chatThread.RequireProviderConfidence(requiredProviderConfidence);
+                            currentAssistantContent?.ToolInvocations.Add(trace);
                             internalMessages.Add(new ToolResultMessage
                             {
-                                Content = finalResponseInstruction,
+                                Content = toolContent,
                                 ToolCallId = toolCall.Id,
                             });
-                            continue;
                         }
 
-                        toolCallCount++;
-                        var (toolContent, trace) = await toolExecutor.ExecuteAsync(
-                            toolCall.Id,
-                            toolCall.Function.Name,
-                            toolCall.Function.Arguments,
-                            runnableTools,
-                            this.Provider.GetConfidence(settingsManager).Level,
-                            toolCallCount,
-                            token);
-
-                        currentAssistantContent?.ToolInvocations.Add(trace);
-                        internalMessages.Add(new ToolResultMessage
-                        {
-                            Content = toolContent,
-                            ToolCallId = toolCall.Id,
-                        });
                     }
-
-                    if (currentAssistantContent is not null)
-                        await currentAssistantContent.StreamingEvent();
+                    finally
+                    {
+                        await ResetToolRuntimeStatusAsync();
+                    }
                 }
             }
 

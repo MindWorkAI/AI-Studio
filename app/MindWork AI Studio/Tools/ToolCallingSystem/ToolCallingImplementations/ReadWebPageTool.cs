@@ -136,7 +136,8 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
 
         return new ToolExecutionResult
         {
-            JsonContent = BuildModelContent(page, extractedPage, retrievedPage.RetrievedAtUtc, markdown, originalContentCharacters, contentTruncated, warnings)
+            JsonContent = BuildModelContent(page, extractedPage, retrievedPage.RetrievedAtUtc, markdown, originalContentCharacters, contentTruncated, warnings),
+            RequiredProviderConfidence = retrievedPage.RequiredProviderConfidence,
         };
     }
 
@@ -161,7 +162,7 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
         var warningArray = new JsonArray();
         foreach (var warning in warnings)
             warningArray.Add(warning);
-        
+
         AddIfNotEmpty(metadata, "language", extractedPage.Language);
         AddIfNotEmpty(metadata, "published_time", extractedPage.PublishedTime);
         AddIfNotEmpty(metadata, "modified_time", extractedPage.ModifiedTime);
@@ -172,16 +173,16 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
             metadata["original_content_characters"] = originalContentCharacters;
             metadata["returned_content_characters"] = websiteContentAsMarkdown.Length;
         }
-        
+
         var content = new JsonObject
         {
             ["text_content"] = websiteContentAsMarkdown,
         };
-        
+
         AddIfNotEmpty(content, "title", extractedPage.Title);
         AddIfNotEmpty(content, "description", extractedPage.Description);
         AddStringArrayIfNotEmpty(content, "authors", extractedPage.Authors);
-        
+
 
         var result = new JsonObject
         {
@@ -191,7 +192,7 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
             ["content"] = content,
             ["metadata"] = metadata,
         };
-        
+
         return result;
     }
 

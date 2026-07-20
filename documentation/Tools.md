@@ -78,7 +78,7 @@ Example:
       "demoLabel"
     ]
   },
-  "policyInstructions": "Use this tool only when the user asks for current weather conditions.",
+  "systemPromptInstructions": "Use this tool only when the user asks for current weather conditions.",
   "function": {
     "name": "get_current_weather",
     "descriptionForLLM": "Get the current weather in a given location.",
@@ -116,7 +116,7 @@ Example:
 
 Use stable lower-case IDs with underscores. Keep `id`, `implementationKey`, and `function.name` identical unless there is a clear compatibility reason not to.
 
-Keep `function.descriptionForLLM` focused on what the tool does. This value is mapped to the provider's function `description` field and is only shown to the LLM. Put sequencing rules, answer-format guidance, or other behavior instructions in `policyInstructions`. When runnable tools are selected, their non-empty policy text is combined centrally and appended to the effective system prompt.
+Keep `function.descriptionForLLM` focused on what the tool does. This value is mapped to the provider's function `description` field and is only shown to the LLM. Put sequencing rules, answer-format guidance, or other behavior instructions in `systemPromptInstructions`. When runnable tools are selected, their non-empty policy text is combined centrally and appended to the effective system prompt.
 
 ## Implementation
 
@@ -188,6 +188,8 @@ Tool settings are stored through `ToolSettingsService`. Plain settings are store
 Use `ValidateConfigurationAsync` when a setting needs more than "required field is present" validation, such as URL syntax, numeric limits, mutually exclusive options, or allowlist parsing.
 
 Use `SensitiveTraceArgumentNames` for model-provided arguments that must not be shown in tool traces. Do not return secrets in `TextContent`, `JsonContent`, exception messages, logs, or trace formatting.
+
+When a tool returns data that future messages must only send to providers at or above a specific confidence level, set `ToolExecutionResult.RequiredProviderConfidence`. AI Studio persists the highest requirement reached by the chat and applies it to later provider checks.
 
 ## Security
 

@@ -14,6 +14,7 @@ public sealed class WebPageRetrievalService(HTMLParser htmlParser)
         CancellationToken token = default)
     {
         var triedOsSso = false;
+        var requiredProviderConfidence = ConfidenceLevel.NONE;
         HTMLParserWebPage page;
         try
         {
@@ -21,7 +22,14 @@ public sealed class WebPageRetrievalService(HTMLParser htmlParser)
                 url,
                 token,
                 options.TimeoutSeconds,
-                async (candidateUrl, validationToken) => await ResolveValidatedUrlAddressesAsync(candidateUrl, options, validationToken),
+                async (candidateUrl, validationToken) =>
+                {
+                    var addresses = await ResolveValidatedUrlAddressesAsync(candidateUrl, options, validationToken);
+                    if (addresses.Any(IsNonPublicAddress))
+                        requiredProviderConfidence = ConfidenceLevel.HIGH;
+
+                    return addresses;
+                },
                 MAX_RESPONSE_BYTES,
                 options.UseOsSso ? ExternalWebAuthenticationMode.OS_DEFAULT_CREDENTIALS : ExternalWebAuthenticationMode.NONE,
                 shouldUseDefaultCredentials: (candidateUrl, addresses) =>
@@ -58,6 +66,7 @@ public sealed class WebPageRetrievalService(HTMLParser htmlParser)
             Page = page,
             ExtractedPage = WebPageContentExtractor.Extract(htmlParser, page.Document, page.FinalUrl),
             RetrievedAtUtc = DateTimeOffset.UtcNow,
+            RequiredProviderConfidence = requiredProviderConfidence,
         };
     }
 
@@ -245,4 +254,6 @@ public sealed class RetrievedWebPage
     public required ExtractedWebPage ExtractedPage { get; init; }
 
     public required DateTimeOffset RetrievedAtUtc { get; init; }
+
+    public ConfidenceLevel RequiredProviderConfidence { get; init; } = ConfidenceLevel.NONE;
 }
