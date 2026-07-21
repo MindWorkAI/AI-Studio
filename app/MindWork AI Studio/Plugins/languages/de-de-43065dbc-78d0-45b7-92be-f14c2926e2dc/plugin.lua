@@ -2946,6 +2946,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T2274562398"] = "Datei h
 -- The media transcription was canceled.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T241403726"] = "Die Transkription des Mediums wurde abgebrochen."
 
+-- File content loaded
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T2768170467"] = "Dateiinhalt geladen"
+
 -- The selected media file will be prepared locally. Its audio will then be uploaded to the configured transcription provider.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T2839709466"] = "Die ausgewählte Mediendatei wird lokal vorbereitet. Anschließend wird die Audiospur an den konfigurierten Transkriptionsanbieter hochgeladen."
 
@@ -2963,6 +2966,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T3554222960"] = "Mediend
 
 -- Some dropped files could not be accessed. Please select them with the file chooser instead.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T3896246824"] = "Auf einige abgelegte Dateien konnte nicht zugegriffen werden. Bitte wähle die Dateien stattdessen über den Dateiauswahl-Dialog aus."
+
+-- Attached file '{0}'.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T853724151"] = "Datei „{0}“ angehängt."
 
 -- The content is cleaned using an LLM agent: the main content is extracted, advertisements and other irrelevant things are attempted to be removed; relative links are attempted to be converted into absolute links so that they can be used.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T1164201762"] = "Der Inhalt wird mithilfe eines LLM-Agents bereinigt: Der Hauptinhalt wird extrahiert, Werbung und andere irrelevante Elemente werden nach Möglichkeit entfernt. Relative Links werden nach Möglichkeit in absolute Links umgewandelt, damit sie verwendet werden können."
@@ -8273,6 +8279,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANT
 
 -- Grid Item
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T1991378436"] = "Rasterelement"
+
+-- File Attachments
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T2294745309"] = "Dateianhänge"
 
 -- List
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T2368288673"] = "Liste"
