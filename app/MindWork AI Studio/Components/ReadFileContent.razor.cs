@@ -91,6 +91,17 @@ public partial class ReadFileContent : MSGComponentBase
     
     #region Overrides of MSGComponentBase
 
+    protected override void OnParametersSet()
+    {
+        if (string.IsNullOrWhiteSpace(this.FileContent))
+        {
+            this.hasLoadedFileContent = false;
+            this.loadedFileName = string.Empty;
+        }
+
+        base.OnParametersSet();
+    }
+
     protected override async Task OnInitializedAsync()
     {
         this.MediaTranscriptionService.StateChanged += this.OnMediaImportStateChanged;
