@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>org.mindworkai.AIStudio</id>
+  <name>MindWork AI Studio</name>
+  <project_license>FSL-1.1-MIT</project_license>
+  <metadata_license>MIT</metadata_license>
+
+  <summary>MindWork AI Studio is a free, independent cross-platform desktop app for local and cloud LLMs across providers, built to democratize AI access.</summary>
+  <developer id="org.mindworkai">
+    <name>MindWork AI Community</name>
+  </developer>
+  <content_rating type="oars-1.1" />
+  <description>
+    <p>
+      MindWork AI Studio is a free desktop app for macOS, Windows, and Linux. It provides a unified user interface
+      for interaction with Large Language Models (LLM). AI Studio also offers so-called assistants, where prompting
+      is not necessary. You can think of AI Studio like an email program: you bring your own API key for the LLM of
+      your choice and can then use these AI systems with AI Studio.
+    </p>
+    <p>Key advantages:</p>
+    <ul>
+      <li>
+        Free of charge: The app is free to use, both for personal and commercial purposes.
+      </li>
+      <li>
+        Democratization of AI: MindWork AI Studio runs even on low-cost hardware, including
+        computers such as Raspberry Pi. This makes the app and its full feature set accessible
+        to people and families with limited budgets. You can start with local LLMs or use
+        affordable cloud models.
+      </li>
+      <li>
+        Independence: You are not tied to any single provider. Choose the providers that best
+        suit your needs, including OpenAI, Perplexity, Mistral, Anthropic, Google Gemini, xAI,
+        DeepSeek, Alibaba Cloud, OpenRouter, Hugging Face, Groq, Fireworks, Helmholtz, GWDG,
+        and self-hosted models.
+      </li>
+      <li>
+        Assistants: Use ready-made assistants for common business and other tasks without writing prompts yourself.
+      </li>
+      <li>
+        Unrestricted usage: Unlike services that impose limits after intensive use, MindWork
+        AI Studio lets you use provider APIs without restrictions imposed by the app.
+      </li>
+      <li>
+        Cost-effective: You only pay providers for what you use, which can be cheaper than a
+        monthly subscription when used infrequently. For intensive usage, API costs may be
+        higher, so you should monitor your provider accounts and use prepaid credit or cost
+        limits when available.
+      </li>
+      <li>
+        Privacy: Control which providers receive your data using provider confidence settings
+        and assign different protection levels to different tasks.
+      </li>
+      <li>
+        Flexibility: Choose the provider and model best suited to your current task.
+      </li>
+      <li>
+        No bloatware: The app requires little storage and memory and has minimal impact on
+        system resources and battery life.
+      </li>
+    </ul>
+  </description>
+
+  <launchable type="desktop-id">org.mindworkai.AIStudio.desktop</launchable>
+
+  <categories>
+    <category>Utility</category>
+    <category>Office</category>
+    <category>Science</category>
+  </categories>
+
+  <keywords>
+    <keyword>AI</keyword>
+    <keyword>Assistant</keyword>
+    <keyword>Privacy</keyword>
+  </keywords>
+
+  <url type="homepage">https://mindworkai.org</url>
+  <url type="bugtracker">https://github.com/MindWorkAI/AI-Studio/issues</url>
+  <url type="contact">https://github.com/MindWorkAI</url>
+  <url type="contribute">https://github.com/MindWorkAI/AI-Studio#contributing-ov-file</url>
+  <url type="vcs-browser">https://github.com/MindWorkAI/AI-Studio</url>
+
+  <provides>
+    <binary>mind-work-ai-studio</binary>
+  </provides>
+
+  <branding>
+    <color type="primary" scheme_preference="light">#b4bed5</color>
+    <color type="primary" scheme_preference="dark">#707e99</color>
+  </branding>
+
+  <screenshots>
+    <screenshot type="default">
+      <image>https://github.com/MindWorkAI/AI-Studio/blob/main/documentation/AI%20Studio%20Home.png?raw=true</image>
+      <caption>Getting started</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://raw.githubusercontent.com/MindWorkAI/AI-Studio/refs/heads/main/documentation/AI%20Studio%20Assistants.png</image>
+      <caption>Assistants</caption>
+    </screenshot>
+  </screenshots>
+
+  <releases>
+    <release type="stable" version="26.7.3" date="2026-07-21">
+      <description>
+        <p>Update</p>
+      </description>
+    </release>
+  </releases>
+</component>

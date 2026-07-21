@@ -42,6 +42,12 @@ else
 }
 
 @code {
+    private protected override RenderFragment? HeaderActions => this.CanReviseCurrentAssistant
+        ? @<MudTooltip Text="@T("Revise assistant")">
+              <MudIconButton Variant="Variant.Text" Icon="@Icons.Material.Filled.AutoMode" OnClick="@(async () => await this.OpenRevisionDialogAsync())"/>
+          </MudTooltip>
+        : null;
+
     private RenderFragment RenderSwitch(AssistantSwitch assistantSwitch) => @<MudSwitch T="bool"
                 Value="@this.assistantState.Booleans[assistantSwitch.Name]"
                 ValueChanged="@(value => this.ExecuteSwitchChangedAsync(assistantSwitch, value))"
@@ -134,11 +140,32 @@ else
                 {
                     var fileState = this.assistantState.FileContent[fileContent.Name];
                     <div class="@fileContent.Class" style="@GetOptionalStyle(fileContent.Style)">
-                        <ReadFileContent @bind-FileContent="@fileState.Content" MediaImportTargetId="@fileContent.Name" EnableDragDrop="true" Layer="@DropLayers.ASSISTANTS" CatchAllDocuments="true" />
+                        <ReadFileContent @bind-FileContent="@fileState.Content" MediaImportTargetId="@fileContent.Name" EnableDragDrop="true" Layer="@DropLayers.ASSISTANTS" CatchAllDocuments="true" ShowAttachedDocumentState="@fileContent.ShowAttachedDocumentState" />
                     </div>
                 }
                 break;
                 
+            case AssistantComponentType.FILE_ATTACHMENTS:
+                if (component is AssistantFileAttachment fileAttachment)
+                {
+                    var fileState = this.assistantState.FileAttachments[fileAttachment.Name];
+                    <div class="@fileAttachment.Class mb-3" style="@GetOptionalStyle(fileAttachment.Style)">
+                        @if (!string.IsNullOrWhiteSpace(fileAttachment.Heading))
+                        {
+                            <MudText Typo="Typo.h6" Class="mb-2">@fileAttachment.Heading</MudText>
+                        }
+                        <div class="px-4">
+                            <AttachDocuments Name="@fileAttachment.Name"
+                                             Layer="@DropLayers.ASSISTANTS"
+                                             @bind-DocumentPaths="@fileState.DocumentPaths"
+                                             CatchAllDocuments="@fileAttachment.CatchAllDocuments"
+                                             UseSmallForm="@fileAttachment.UseSmallForm"
+                                             Provider="@this.ProviderSettings"/>
+                            </div>
+                    </div>
+                }
+                break;
+
             case AssistantComponentType.DROPDOWN:
                 if (component is AssistantDropdown assistantDropdown)
                 {

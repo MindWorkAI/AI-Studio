@@ -102,13 +102,14 @@ public partial class AttachDocuments : MSGComponentBase
     private uint numDropAreasAboveThis;
     private bool isComponentHovered;
     private bool isDraggingOver;
+    private bool isFileDialogOpen;
     private MediaImportOwner EffectiveImportOwner => this.OwnerChat is not null
         ? MediaImportOwner.ForChat(this.OwnerChat.ChatId)
         : this.ImportOwner ?? this.fallbackMediaImportOwner;
 
     private MediaImportTarget EffectiveMediaImportTarget => new(this.EffectiveImportOwner, string.IsNullOrWhiteSpace(this.Name) ? "attachments" : this.Name);
 
-    private bool IsUnavailable => this.Disabled || this.MediaTranscriptionService.IsBusy(this.EffectiveImportOwner);
+    private bool IsUnavailable => this.Disabled || this.isFileDialogOpen || this.MediaTranscriptionService.IsBusy(this.EffectiveImportOwner);
 
     #region Overrides of MSGComponentBase
 
@@ -310,13 +311,21 @@ public partial class AttachDocuments : MSGComponentBase
         if (this.IsUnavailable)
             return;
 
-        var selectFiles = await this.RustService.SelectFiles(T("Select files to attach"));
-        if (selectFiles.UserCancelled)
-            return;
+        this.isFileDialogOpen = true;
+        try
+        {
+            var selectFiles = await this.RustService.SelectFiles(T("Select files to attach"));
+            if (selectFiles.UserCancelled)
+                return;
 
-        await this.AddFileBatchAsync(selectFiles.SelectedFilePaths);
-        await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
-        await this.OnChange(this.DocumentPaths);
+            await this.AddFileBatchAsync(selectFiles.SelectedFilePaths);
+            await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
+            await this.OnChange(this.DocumentPaths);
+        }
+        finally
+        {
+            this.isFileDialogOpen = false;
+        }
     }
 
     private async Task OpenAttachmentsDialog()
@@ -397,7 +406,17 @@ public partial class AttachDocuments : MSGComponentBase
 
     private async Task AddFileBatchAsync(IEnumerable<string> paths)
     {
-        var existingPaths = paths.Where(File.Exists).ToList();
+        var pathList = paths.ToList();
+        var inaccessiblePaths = pathList.Where(path => !File.Exists(path)).ToList();
+        if (inaccessiblePaths.Count > 0)
+        {
+            this.Logger.LogWarning("Could not access {Count} dropped or selected file(s): {Paths}", inaccessiblePaths.Count, string.Join(", ", inaccessiblePaths));
+            await this.MessageBus.SendWarning(new(
+                Icons.Material.Filled.Warning,
+                this.T("Some files could not be accessed. Please select them with the file chooser instead.")));
+        }
+
+        var existingPaths = pathList.Except(inaccessiblePaths).ToList();
         var mediaPaths = existingPaths.Where(IsTranscribableMedia).ToList();
         var regularPaths = existingPaths.Except(mediaPaths).ToList();
 

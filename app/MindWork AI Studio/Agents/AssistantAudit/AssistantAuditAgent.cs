@@ -117,10 +117,14 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
     /// <summary>
     /// Resolves and stores the provider configuration used for assistant plugin audits.
     /// </summary>
+    /// <param name="fallbackProvider">The provider to use when no provider is configured for the audit agent.</param>
     /// <returns>The configured provider, or <see cref="AIStudio.Settings.Provider.NONE"/> when no audit provider is configured.</returns>
-    public AIStudio.Settings.Provider ResolveProvider()
+    public AIStudio.Settings.Provider ResolveProvider(AIStudio.Settings.Provider? fallbackProvider = null)
     {
         var provider = this.SettingsManager.GetPreselectedProvider(Tools.Components.AGENT_ASSISTANT_PLUGIN_AUDIT, null, true);
+        if (provider == AIStudio.Settings.Provider.NONE && fallbackProvider is not null)
+            provider = fallbackProvider;
+
         this.ProviderSettings = provider;
         return provider;
     }
@@ -130,12 +134,13 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
     /// </summary>
     /// <param name="plugin">The assistant plugin to audit.</param>
     /// <param name="token">A cancellation token for prompt generation and the audit request.</param>
+    /// <param name="fallbackProvider">The provider to use when no provider is configured for the audit agent.</param>
     /// <returns>
     /// The parsed audit result, or an <c>UNKNOWN</c> result when no provider is configured or the model response cannot be used.
     /// </returns>
-    public async Task<AssistantAuditResult> AuditAsync(PluginAssistants plugin, CancellationToken token = default)
+    public async Task<AssistantAuditResult> AuditAsync(PluginAssistants plugin, CancellationToken token = default, AIStudio.Settings.Provider? fallbackProvider = null)
     {
-        var provider = this.ResolveProvider();
+        var provider = this.ResolveProvider(fallbackProvider);
         if (provider == AIStudio.Settings.Provider.NONE)
         {
             await MessageBus.INSTANCE.SendError(new (Icons.Material.Filled.SettingsSuggest, string.Format(TB("No provider is configured for the Security Audit Agent."))));

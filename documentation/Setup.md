@@ -58,15 +58,91 @@ When you are confident in the app's safety, follow these steps:
 The AI Studio app should now open without any issues. Once the app is installed, it will check for updates automatically. If a new version is available, you will be prompted to install it.
 
 ## Linux
-MindWork AI Studio is available for modern 64-bit Linux systems. The app is provided as an `AppImage`. We test our app using Ubuntu 22.04 and Raspberry Pi OS 12 (64-bit), but it should work on other distributions as well.
+MindWork AI Studio is available for modern 64-bit Linux systems. Starting with release v26.7.3, Flatpak is the recommended installation method. We test AI Studio on Ubuntu 24.04 and 26.04, Kubuntu 24.04, Fedora 43 or newer, and openSUSE Leap 16 or newer, but it should work on other distributions as well.
 
-We have to figure out if you have an Intel/AMD or a modern ARM system on your Linux machine. Open a terminal and run the command `uname -m`. When the output is `x86_64`, you have an Intel/AMD system. When the output is `aarch64`, you have an ARM system.
+First, determine whether your system uses the Intel/AMD or ARM architecture:
 
-- **Intel/AMD:** [Download the Intel/AMD AppImage](https://github.com/MindWorkAI/AI-Studio/releases/latest/download/mind-work-ai-studio_amd64.AppImage) of AI Studio.
+```bash
+uname -m
+```
 
-- **ARM:** [Download the ARM AppImage](https://github.com/MindWorkAI/AI-Studio/releases/latest/download/mind-work-ai-studio_aarch64.AppImage) of AI Studio.
+`x86_64` means Intel/AMD; `aarch64` means ARM.
 
-### AppImage Installation
+### Recommended: Flatpak Installation
+
+On Ubuntu, install Flatpak first:
+
+```bash
+sudo apt update
+sudo apt install flatpak
+```
+
+For other Linux distributions, follow the [official Flatpak setup instructions](https://flatpak.org/setup/).
+
+Open the [latest AI Studio release](https://github.com/MindWorkAI/AI-Studio/releases/latest) and download the bundle for your architecture:
+
+- **Intel/AMD (`x86_64`):** `MindWork.AI.Studio_x86_64.flatpak`
+- **ARM (`aarch64`):** `MindWork.AI.Studio_aarch64.flatpak`
+
+Install the downloaded bundle for your user account. For Intel/AMD, run:
+
+```bash
+cd ~/Downloads
+flatpak install --user ./MindWork.AI.Studio_x86_64.flatpak
+```
+
+For ARM, run:
+
+```bash
+cd ~/Downloads
+flatpak install --user ./MindWork.AI.Studio_aarch64.flatpak
+```
+
+Confirm the installation of the required GNOME runtime from Flathub when Flatpak asks for it.
+
+#### Pandoc Extension (Strongly Recommended)
+
+Pandoc is required for essential file features, including regular file attachments in chats, importing and converting Office documents, and other document-based functionality. We therefore strongly recommend installing the Pandoc extension. AI Studio checks whether a compatible Pandoc version is already available.
+
+For Intel/AMD, download `MindWork.AI.Studio.Plugin.Pandoc_x86_64.flatpak` and run:
+
+```bash
+cd ~/Downloads
+flatpak install --user ./MindWork.AI.Studio.Plugin.Pandoc_x86_64.flatpak
+```
+
+For ARM, download `MindWork.AI.Studio.Plugin.Pandoc_aarch64.flatpak` and run:
+
+```bash
+cd ~/Downloads
+flatpak install --user ./MindWork.AI.Studio.Plugin.Pandoc_aarch64.flatpak
+```
+
+#### Starting and Updating the Flatpak
+
+Start AI Studio from your application menu or run:
+
+```bash
+flatpak run org.mindworkai.AIStudio
+```
+
+If no application-menu entry appears, sign out of your desktop session completely and sign in again, or restart the system.
+
+Until AI Studio is published on Flathub, bundles installed from GitHub do not receive automatic app updates. Download each new bundle and reinstall it. For Intel/AMD, run:
+
+```bash
+cd ~/Downloads
+flatpak install --user --reinstall ./MindWork.AI.Studio_x86_64.flatpak
+```
+
+Use `MindWork.AI.Studio_aarch64.flatpak` instead on ARM.
+
+### Alternative: AppImage Installation
+
+If you prefer not to use Flatpak, AI Studio is also available as an AppImage:
+
+- **Intel/AMD:** [Download the Intel/AMD AppImage](https://github.com/MindWorkAI/AI-Studio/releases/latest/download/mind-work-ai-studio_amd64.AppImage).
+- **ARM:** [Download the ARM AppImage](https://github.com/MindWorkAI/AI-Studio/releases/latest/download/mind-work-ai-studio_aarch64.AppImage).
 
 **Prepare the AppImage using the desktop environment:**
 1. Download the AppImage from the link above.
@@ -81,7 +157,20 @@ We have to figure out if you have an Intel/AMD or a modern ARM system on your Li
 
 **Prepare the AppImage using the terminal:**
 1. Download the AppImage from the link above.
-2. Open a terminal and navigate to the Downloads folder: `cd Downloads`.
+2. Open a terminal and navigate to the Downloads folder: `cd ~/Downloads`.
 3. Make the AppImage executable: `chmod +x mind-work-ai-studio_amd64.AppImage`.
 4. You might want to move the AppImage to a more convenient location, e.g., your home directory: `mv mind-work-ai-studio_amd64.AppImage ~/`.
-5. Now you can run the AppImage from your file manager (double-click) or the terminal: `./mind-work-ai-studio_amd64.AppImage`.
+5. Now you can run the AppImage from your file manager (double-click) or the terminal: `~/mind-work-ai-studio_amd64.AppImage`.
+
+Use the `aarch64` file name instead of the `amd64` file name on ARM systems.
+
+### Secure Storage for API Keys
+
+On Linux, AI Studio stores API keys through the FreeDesktop Secret Service API. A compatible password manager must provide this service, and it must have an unlocked default collection. AI Studio never creates, selects, unlocks, or changes a password manager's default collection itself.
+
+Compatible configurations include:
+
+- GNOME Keyring, which can be managed with an application such as Seahorse. Create a password collection if necessary, unlock it, and choose **Set as default**.
+- KeePassXC with Secret Service integration enabled and a database group exposed to the service. Keep the relevant database and group unlocked when AI Studio needs to access secrets.
+
+Automatic login can prevent GNOME Keyring from being unlocked automatically. If secure storage remains locked after login, unlock the default collection in your password manager.

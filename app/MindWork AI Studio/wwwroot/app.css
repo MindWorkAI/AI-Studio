@@ -34,6 +34,16 @@
     src: url('fonts/roboto-v30-latin-700.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
 }
 
+/* JetBrainsMono-Regular - latin */
+@font-face {
+    font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+    font-family: 'JetBrains Mono';
+    font-style: normal;
+    font-weight: 400;
+    src: url('fonts/JetBrainsMono-Regular.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+}
+
+
 .mud-text-list .mud-list-item-icon {
     margin-top: 4px;
 }
@@ -290,4 +300,90 @@
     justify-content: center;
     gap: 0.75rem;
     color: var(--mud-palette-text-secondary);
+}
+
+.code-editor {
+    display: grid;
+    grid-template-columns: minmax(2.8rem, auto) minmax(0, 1fr);
+    min-height: 32rem;
+    height: auto;
+    width: 100%;
+    overflow: hidden;
+    border: 3px solid var(--mw-code-editor-border, rgba(0,0,0,0.11764705882352941));
+    border-radius: 4px;
+    background: var(--mw-code-editor-background, rgba(255,255,255,1));
+    color: var(--mw-code-editor-foreground, rgba(66,66,66,1));
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.65rem;
+    line-height: 1.45;
+    tab-size: 4;
+}
+
+.code-editor-line-numbers {
+    overflow: hidden;
+    padding: 0.8rem 0.65rem 0.8rem 0.5rem;
+    border-right: 1px solid var(--mw-code-editor-border, rgba(0,0,0,0.11764705882352941));
+    color: var(--mw-code-editor-foreground, rgba(66,66,66,1));
+    opacity: 0.55;
+    text-align: right;
+    white-space: pre;
+    user-select: none;
+    font: inherit;
+    font-variant-numeric: tabular-nums;
+}
+
+.code-editor-input {
+    min-width: 0;
+    height: 100%;
+    overflow: auto;
+    padding: 0.8rem;
+    color: var(--mw-code-editor-foreground, rgba(66,66,66,1));
+    caret-color: var(--mw-code-editor-foreground, rgba(66,66,66,1));
+    font: inherit;
+    line-height: inherit;
+    tab-size: inherit;
+    outline: none;
+}
+
+.code-editor .lua-comment {
+    color: var(--mw-code-editor-comment, #6a9955);
+    font-style: italic;
+}
+
+.code-editor .lua-string {
+    color: var(--mw-code-editor-string, #a31515);
+}
+
+.code-editor .lua-number {
+    color: var(--mw-code-editor-number, #098658);
+}
+
+.code-editor .lua-keyword {
+    color: var(--mw-code-editor-keyword, #0000ff);
+    font-weight: 600;
+}
+
+.code-editor .lua-literal {
+    color: var(--mw-code-editor-literal, #0000ff);
+}
+
+.code-editor .lua-built-in {
+    color: var(--mw-code-editor-built-in, #795e26);
+}
+
+.code-editor .lua-constant {
+    color: var(--mw-code-editor-constant, #0070c1);
+    font-weight: 500;
+}
+
+.code-editor .lua-function {
+    color: var(--mw-code-editor-function, #795e26);
+}
+
+.code-editor .lua-property {
+    color: var(--mw-code-editor-property, #001080);
+}
+
+.code-editor .lua-variable {
+    color: var(--mw-code-editor-variable, #267f99);
 }

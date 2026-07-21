@@ -140,7 +140,7 @@ public partial class AssistantPluginAuditDialog : MSGComponentBase
             {
                 x => x.Message,
                 string.Format(
-                    T("The assistant plugin \"{0}\" was audited with the level \"{1}\", which is below the required safety level \"{2}\". Your current settings still allow activation, but this may be unsafe. Do you really want to enable this plugin?"),
+                    T("The assistant plugin '{0}' was audited with the level '{1}', which is below the required safety level '{2}'. Your current settings still allow activation, but this may be unsafe. Do you really want to enable this plugin?"),
                     this.plugin?.Name ?? T("Unknown plugin"),
                     this.audit?.Level.GetName() ?? T("Unknown"),
                     this.MinimumLevelLabel)

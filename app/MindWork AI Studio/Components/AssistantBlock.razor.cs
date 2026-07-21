@@ -44,6 +44,9 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase where TSetting
     public RenderFragment? SecurityBadge { get; set; }
 
     [Parameter]
+    public RenderFragment? AdditionalActions { get; set; }
+
+    [Parameter]
     public Tools.Components Component { get; set; } = Tools.Components.NONE;
 
     /// <summary>

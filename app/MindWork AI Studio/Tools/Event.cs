@@ -87,6 +87,11 @@ public enum Event
     /// Notifies receivers that voice recording availability changed.
     /// </summary>
     VOICE_RECORDING_AVAILABILITY_CHANGED,
+
+    /// <summary>
+    /// Notifies settings UI receivers that a portal changed the effective global shortcut label.
+    /// </summary>
+    GLOBAL_SHORTCUT_CHANGED,
     
     // Update events:
     /// <summary>

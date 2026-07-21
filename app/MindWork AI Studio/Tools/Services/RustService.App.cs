@@ -113,7 +113,7 @@ public sealed partial class RustService
         var response = await this.http.GetAsync("/system/directories/data");
         if (!response.IsSuccessStatusCode)
         {
-            this.logger!.LogError($"Failed to get the data directory from Rust: '{response.StatusCode}'");
+            this.logger?.LogError($"Failed to get the data directory from Rust: '{response.StatusCode}'");
             return string.Empty;
         }
         

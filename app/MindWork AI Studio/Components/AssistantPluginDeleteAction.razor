@@ -1,0 +1,13 @@
+@inherits MSGComponentBase
+
+@if (this.CanDelete)
+{
+    <MudTooltip Text="@this.Tooltip">
+        <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline"
+                       Color="Color.Error"
+                       Variant="Variant.Text"
+                       Size="Size.Medium"
+                       Disabled="@this.IsBlockedByActiveWork"
+                       OnClick="@this.DeleteAssistantPluginAsync" />
+    </MudTooltip>
+}

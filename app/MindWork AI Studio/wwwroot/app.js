@@ -170,3 +170,103 @@ window.unregisterEscapeHandler = function (id) {
     document.removeEventListener('keydown', handler, true)
     escapeHandlers.delete(id)
 }
+
+const localShortcutHandlers = new Map()
+
+function tauriKeyFromKeyboardCode(code) {
+    if (/^Key[A-Z]$/.test(code))
+        return code.substring(3)
+
+    if (/^Digit[0-9]$/.test(code))
+        return code.substring(5)
+
+    if (/^F(?:[1-9]|1[0-9]|2[0-4])$/.test(code))
+        return code
+
+    const keys = {
+        Space: 'Space', Enter: 'Enter', Tab: 'Tab', Escape: 'Escape', Backspace: 'Backspace',
+        Delete: 'Delete', Insert: 'Insert', Home: 'Home', End: 'End', PageUp: 'PageUp', PageDown: 'PageDown',
+        ArrowUp: 'Up', ArrowDown: 'Down', ArrowLeft: 'Left', ArrowRight: 'Right',
+        Numpad0: 'Num0', Numpad1: 'Num1', Numpad2: 'Num2', Numpad3: 'Num3', Numpad4: 'Num4',
+        Numpad5: 'Num5', Numpad6: 'Num6', Numpad7: 'Num7', Numpad8: 'Num8', Numpad9: 'Num9',
+        NumpadAdd: 'NumAdd', NumpadSubtract: 'NumSubtract', NumpadMultiply: 'NumMultiply',
+        NumpadDivide: 'NumDivide', NumpadDecimal: 'NumDecimal', NumpadEnter: 'NumEnter',
+        Minus: 'Minus', Equal: 'Equal', BracketLeft: 'BracketLeft', BracketRight: 'BracketRight',
+        Backslash: 'Backslash', Semicolon: 'Semicolon', Quote: 'Quote', Backquote: 'Backquote',
+        Comma: 'Comma', Period: 'Period', Slash: 'Slash'
+    }
+
+    return keys[code] ?? code
+}
+
+function parseTauriShortcut(shortcut) {
+    const expected = { ctrl: false, shift: false, alt: false, meta: false, key: '' }
+    const isMac = /Mac|iPhone|iPad|iPod/.test(navigator.platform)
+
+    for (const rawPart of shortcut.split('+')) {
+        const part = rawPart.trim().toLowerCase()
+        switch (part) {
+            case 'cmdorcontrol':
+            case 'commandorcontrol':
+                expected[isMac ? 'meta' : 'ctrl'] = true
+                break
+            case 'ctrl':
+            case 'control':
+                expected.ctrl = true
+                break
+            case 'cmd':
+            case 'command':
+            case 'meta':
+            case 'super':
+                expected.meta = true
+                break
+            case 'shift':
+                expected.shift = true
+                break
+            case 'alt':
+            case 'option':
+                expected.alt = true
+                break
+            default:
+                expected.key = rawPart.trim()
+                break
+        }
+    }
+
+    return expected
+}
+
+window.localShortcut = {
+    register: function (id, shortcut, dotNetReference) {
+        this.unregister(id)
+        const expected = parseTauriShortcut(shortcut)
+        if (!expected.key)
+            return
+
+        const handler = function (event) {
+            if (event.repeat
+                || event.ctrlKey !== expected.ctrl
+                || event.shiftKey !== expected.shift
+                || event.altKey !== expected.alt
+                || event.metaKey !== expected.meta
+                || tauriKeyFromKeyboardCode(event.code).toLowerCase() !== expected.key.toLowerCase())
+                return
+
+            event.preventDefault()
+            event.stopPropagation()
+            dotNetReference.invokeMethodAsync('OnLocalShortcutPressed').catch(() => {})
+        }
+
+        document.addEventListener('keydown', handler, true)
+        localShortcutHandlers.set(id, handler)
+    },
+
+    unregister: function (id) {
+        const handler = localShortcutHandlers.get(id)
+        if (!handler)
+            return
+
+        document.removeEventListener('keydown', handler, true)
+        localShortcutHandlers.delete(id)
+    }
+}
