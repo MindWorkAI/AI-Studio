@@ -91,6 +91,9 @@ pub enum ShortcutBackend {
 
     /// The Tauri global-shortcut plugin manages the shortcut.
     Tauri,
+
+    /// The focused application window handles the shortcut.
+    Local,
 }
 
 /// Response for shortcut registration and processing state changes.
@@ -151,6 +154,12 @@ enum ActiveBinding {
         shortcut: String,
     },
 
+    /// Stores a shortcut handled within the focused application window.
+    Local {
+        /// Contains the registered shortcut in Tauri syntax.
+        shortcut: String,
+    },
+
     #[cfg(target_os = "linux")]
     /// Stores a shortcut and its live XDG portal session.
     Portal {
@@ -170,6 +179,7 @@ impl ActiveBinding {
     fn shortcut(&self) -> &str {
         match self {
             Self::Tauri { shortcut } => shortcut,
+            Self::Local { shortcut } => shortcut,
             #[cfg(target_os = "linux")]
             Self::Portal { shortcut, .. } => shortcut,
         }
@@ -179,6 +189,7 @@ impl ActiveBinding {
     fn backend(&self) -> ShortcutBackend {
         match self {
             Self::Tauri { .. } => ShortcutBackend::Tauri,
+            Self::Local { .. } => ShortcutBackend::Local,
             #[cfg(target_os = "linux")]
             Self::Portal { .. } => ShortcutBackend::Portal,
         }
@@ -188,6 +199,7 @@ impl ActiveBinding {
     fn effective_display_name(&self) -> String {
         match self {
             Self::Tauri { shortcut } => shortcut.clone(),
+            Self::Local { shortcut } => shortcut.clone(),
             #[cfg(target_os = "linux")]
             Self::Portal { effective_display_name, .. } => effective_display_name.clone(),
         }
@@ -246,8 +258,15 @@ pub async fn register(
 
             Err(error) => {
                 let current_backend = manager.bindings.get(&request.id).map(ActiveBinding::backend);
-                if may_fallback_to_tauri(error.kind, current_backend) {
-                    warn!(Source = "XDG portal"; "Global shortcut registration failed; using the Tauri X11 backend: {}", error.message);
+                if may_fallback_to_local(error.kind, current_backend) {
+                    warn!(Source = "XDG portal"; "Global shortcut registration failed; using the focused-window fallback: {}", error.message);
+
+                    if let Some(old_binding) = manager.bindings.remove(&request.id) {
+                        close_binding(&app_handle, request.id, old_binding).await;
+                    }
+
+                    manager.bindings.insert(request.id, ActiveBinding::Local { shortcut: request.shortcut.clone() });
+                    return ShortcutResponse::success(ShortcutBackend::Local, request.shortcut);
                 } else {
                     let cancelled = error.kind == PortalFailureKind::Cancelled;
                     if cancelled {
@@ -264,6 +283,7 @@ pub async fn register(
         }
     }
 
+    #[cfg(not(target_os = "linux"))]
     match register_tauri_binding(&app_handle, &request.shortcut, request.id, event_sender) {
         Ok(()) => {
             if let Some(old_binding) = manager.bindings.remove(&request.id) {
@@ -328,6 +348,8 @@ async fn close_binding(app_handle: &tauri::AppHandle, id: Shortcut, binding: Act
                 warn!(Source = "Tauri"; "Failed to unregister shortcut '{shortcut}' for '{}': {error}", id);
             }
         },
+
+        ActiveBinding::Local { .. } => {},
 
         #[cfg(target_os = "linux")]
         ActiveBinding::Portal { generation, session, .. } => {
@@ -447,8 +469,8 @@ enum PortalFailureKind {
     Technical,
 }
 
-/// Determines whether a failed portal attempt may safely fall back to Tauri.
-fn may_fallback_to_tauri(_failure: PortalFailureKind, current_backend: Option<ShortcutBackend>) -> bool {
+/// Determines whether a failed portal attempt may safely use the focused-window fallback.
+fn may_fallback_to_local(_failure: PortalFailureKind, current_backend: Option<ShortcutBackend>) -> bool {
     current_backend != Some(ShortcutBackend::Portal)
 }
 
@@ -946,29 +968,46 @@ mod tests {
     }
 
     #[test]
-    /// Verifies that all initial portal failures use the Tauri fallback.
-    fn all_initial_portal_failures_use_tauri_fallback() {
+    /// Verifies that all initial portal failures use the focused-window fallback.
+    fn all_initial_portal_failures_use_local_fallback() {
         for failure in [
             PortalFailureKind::Unavailable,
             PortalFailureKind::Cancelled,
             PortalFailureKind::Denied,
             PortalFailureKind::Technical,
         ] {
-            assert!(may_fallback_to_tauri(failure, None));
+            assert!(may_fallback_to_local(failure, None));
         }
     }
 
     #[test]
     /// Verifies that a failed reconfiguration never replaces an active portal binding.
     fn failed_reconfiguration_preserves_portal_binding() {
-        assert!(!may_fallback_to_tauri(PortalFailureKind::Cancelled, Some(ShortcutBackend::Portal)));
-        assert!(!may_fallback_to_tauri(PortalFailureKind::Denied, Some(ShortcutBackend::Portal)));
+        for failure in [
+            PortalFailureKind::Unavailable,
+            PortalFailureKind::Cancelled,
+            PortalFailureKind::Denied,
+            PortalFailureKind::Technical,
+        ] {
+            assert!(!may_fallback_to_local(failure, Some(ShortcutBackend::Portal)));
+        }
+    }
+
+    #[test]
+    /// Verifies that focused-window bindings expose their shortcut and backend consistently.
+    fn local_binding_reports_runtime_state() {
+        let binding = ActiveBinding::Local { shortcut: "CmdOrControl+3".to_string() };
+
+        assert_eq!(binding.shortcut(), "CmdOrControl+3");
+        assert_eq!(binding.backend(), ShortcutBackend::Local);
+        assert_eq!(binding.effective_display_name(), "CmdOrControl+3");
     }
 
     #[test]
     /// Verifies that suspend keeps portal sessions while unregistering Tauri bindings.
     fn suspend_keeps_portal_session_registered() {
         assert!(!unregister_backend_during_suspend(ShortcutBackend::Portal));
+        assert!(!unregister_backend_during_suspend(ShortcutBackend::Local));
         assert!(unregister_backend_during_suspend(ShortcutBackend::Tauri));
     }
 

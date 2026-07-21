@@ -23,6 +23,9 @@ public partial class VoiceRecorder : MSGComponentBase
     private RustService RustService { get; init; } = null!;
 
     [Inject]
+    private GlobalShortcutService GlobalShortcutService { get; init; } = null!;
+
+    [Inject]
     private ISnackbar Snackbar { get; init; } = null!;
 
     [Inject]
@@ -35,6 +38,8 @@ public partial class VoiceRecorder : MSGComponentBase
 
     protected override async Task OnInitializedAsync()
     {
+        this.GlobalShortcutService.RuntimeStateChanged += this.OnShortcutRuntimeStateChanged;
+
         // Register for global shortcut events:
         this.ApplyFilters([], [Event.TAURI_EVENT_RECEIVED, Event.VOICE_RECORDING_AVAILABILITY_CHANGED]);
 
@@ -43,8 +48,15 @@ public partial class VoiceRecorder : MSGComponentBase
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender && this.ShouldRenderVoiceRecording)
-            await this.EnsureSoundEffectsAvailableAsync("during the first interactive render");
+        if (firstRender)
+        {
+            this.localShortcutDotNetReference = DotNetObjectReference.Create(this);
+            this.localShortcutInteropReady = true;
+            await this.ApplyLocalShortcutState(this.GlobalShortcutService.GetRuntimeState(Shortcut.VOICE_RECORDING_TOGGLE));
+
+            if (this.ShouldRenderVoiceRecording)
+                await this.EnsureSoundEffectsAvailableAsync("during the first interactive render");
+        }
 
         await base.OnAfterRenderAsync(firstRender);
     }
@@ -67,6 +79,36 @@ public partial class VoiceRecorder : MSGComponentBase
                 this.StateHasChanged();
                 break;
         }
+    }
+
+    private async Task OnShortcutRuntimeStateChanged(GlobalShortcutRuntimeState runtimeState)
+    {
+        try
+        {
+            await this.InvokeAsync(() => this.ApplyLocalShortcutState(runtimeState));
+        }
+        catch (ObjectDisposedException)
+        {
+            this.Logger.LogDebug("Ignoring a shortcut state change after the voice recorder was disposed.");
+        }
+        catch (InvalidOperationException ex)
+        {
+            this.Logger.LogDebug(ex, "The focused-window shortcut listener could not be updated because the component dispatcher is unavailable.");
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnLocalShortcutPressed()
+    {
+        var runtimeState = this.GlobalShortcutService.GetRuntimeState(Shortcut.VOICE_RECORDING_TOGGLE);
+        if (runtimeState.Backend is not ShortcutBackend.LOCAL || runtimeState.IsSuspended)
+        {
+            this.Logger.LogDebug("Ignoring a stale focused-window shortcut event.");
+            return;
+        }
+
+        this.Logger.LogInformation("Focused-window shortcut triggered for voice recording toggle.");
+        await this.ToggleRecordingFromShortcut();
     }
 
     /// <summary>
@@ -101,6 +143,48 @@ public partial class VoiceRecorder : MSGComponentBase
     private string? currentRecordingPath;
     private string? finalRecordingPath;
     private DotNetObjectReference<VoiceRecorder>? dotNetReference;
+    private DotNetObjectReference<VoiceRecorder>? localShortcutDotNetReference;
+    private bool localShortcutInteropReady;
+
+    private async Task ApplyLocalShortcutState(GlobalShortcutRuntimeState runtimeState)
+    {
+        if (!this.localShortcutInteropReady
+            || this.localShortcutDotNetReference is null
+            || runtimeState.ShortcutId is not Shortcut.VOICE_RECORDING_TOGGLE)
+        {
+            return;
+        }
+
+        try
+        {
+            if (runtimeState.Backend is ShortcutBackend.LOCAL
+                && !runtimeState.IsSuspended
+                && !string.IsNullOrWhiteSpace(runtimeState.Shortcut))
+            {
+                await this.JsRuntime.InvokeVoidAsync(
+                    "localShortcut.register",
+                    "voice-recording-toggle",
+                    runtimeState.Shortcut,
+                    this.localShortcutDotNetReference);
+            }
+            else
+            {
+                await this.JsRuntime.InvokeVoidAsync("localShortcut.unregister", "voice-recording-toggle");
+            }
+        }
+        catch (JSDisconnectedException)
+        {
+            this.Logger.LogDebug("The focused-window shortcut listener could not be updated because the JS runtime disconnected.");
+        }
+        catch (OperationCanceledException)
+        {
+            this.Logger.LogDebug("Updating the focused-window shortcut listener was canceled.");
+        }
+        catch (JSException ex)
+        {
+            this.Logger.LogWarning(ex, "Failed to update the focused-window shortcut listener.");
+        }
+    }
 
     private bool ShouldRenderVoiceRecording => PreviewFeatures.PRE_SPEECH_TO_TEXT_2026.IsEnabled(this.SettingsManager)
                                                && !string.IsNullOrWhiteSpace(this.SettingsManager.ConfigurationData.App.UseTranscriptionProvider);
@@ -482,6 +566,15 @@ public partial class VoiceRecorder : MSGComponentBase
 
     protected override void DisposeResources()
     {
+        this.GlobalShortcutService.RuntimeStateChanged -= this.OnShortcutRuntimeStateChanged;
+
+        if (this.localShortcutInteropReady)
+            _ = this.JsRuntime.InvokeVoidAsync("localShortcut.unregister", "voice-recording-toggle");
+
+        this.localShortcutDotNetReference?.Dispose();
+        this.localShortcutDotNetReference = null;
+        this.localShortcutInteropReady = false;
+
         // Clean up recording resources if still active:
         if (this.currentRecordingStream is not null)
         {
