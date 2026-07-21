@@ -168,48 +168,4 @@ public sealed partial class RustService
             result.Dispose();
         }
     }
-
-    public async Task<OpenPathResponse> TryOpenPathInRuntimeFileManager(string path)
-    {
-        HttpResponseMessage result;
-        try
-        {
-            result = await this.http.PostAsJsonAsync("/open/path", new OpenPathRequest(path), this.jsonRustSerializerOptions);
-        }
-        catch (HttpRequestException e)
-        {
-            this.logger!.LogWarning(e, "Failed to reach the Rust runtime file manager endpoint.");
-            return new OpenPathResponse(false, TB("The runtime file manager endpoint is not available."));
-        }
-        catch (TaskCanceledException e)
-        {
-            this.logger!.LogWarning(e, "Timed out while reaching the Rust runtime file manager endpoint.");
-            return new OpenPathResponse(false, TB("The runtime file manager endpoint is not available."));
-        }
-
-        try
-        {
-            if (!result.IsSuccessStatusCode)
-            {
-                this.logger!.LogWarning("Failed to open a path in the file manager through the Rust runtime: '{StatusCode}'", result.StatusCode);
-                return new OpenPathResponse(false, string.Format(TB("The runtime file manager endpoint returned '{0}'."), result.StatusCode));
-            }
-
-            var response = await result.Content.ReadFromJsonAsync<OpenPathResponse>(this.jsonRustSerializerOptions);
-            var normalizedResponse = response.Success
-                ? response
-                : new OpenPathResponse(false, string.IsNullOrWhiteSpace(response.Issue) ? TB("The runtime file manager endpoint failed without details.") : response.Issue);
-
-            return normalizedResponse;
-        }
-        catch (Exception e)
-        {
-            this.logger!.LogWarning(e, "Failed to process the Rust runtime file manager endpoint response.");
-            return new OpenPathResponse(false, TB("The runtime file manager endpoint failed without details."));
-        }
-        finally
-        {
-            result.Dispose();
-        }
-    }
 }

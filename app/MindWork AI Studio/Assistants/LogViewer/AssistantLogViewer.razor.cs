@@ -14,7 +14,6 @@ namespace AIStudio.Assistants.LogViewer;
 public partial class AssistantLogViewer : MSGComponentBase
 {
     private static readonly TimeSpan AUTO_REFRESH_INTERVAL = TimeSpan.FromSeconds(5);
-    private static readonly char[] WORD_SPLIT_CHARS = [' ', '\t', '\r', '\n'];
     private static readonly Dictionary<string, int> LOG_LEVEL_ORDER = new(StringComparer.OrdinalIgnoreCase)
     {
         ["ERROR"] = 0,
@@ -745,10 +744,7 @@ public partial class AssistantLogViewer : MSGComponentBase
         if (string.IsNullOrWhiteSpace(text))
             return [];
 
-        return text
-            .Split(WORD_SPLIT_CHARS, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToArray();
+        return [text.Trim()];
     }
 
     private static bool MatchesSearchTerms(string text, string[] terms)
