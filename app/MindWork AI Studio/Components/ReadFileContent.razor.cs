@@ -15,16 +15,8 @@ public partial class ReadFileContent : MSGComponentBase
     [CascadingParameter]
     private MediaImportOwner? ImportOwner { get; set; }
 
-    private MediaImportOwner EffectiveImportOwner => this.ImportOwner ?? this.fallbackMediaImportOwner;
-
     [Parameter]
     public string MediaImportTargetId { get; set; } = string.Empty;
-
-    private string EffectiveMediaImportTargetId => string.IsNullOrWhiteSpace(this.MediaImportTargetId)
-        ? string.IsNullOrWhiteSpace(this.Text) ? "primary" : this.Text
-        : this.MediaImportTargetId;
-
-    private MediaImportTarget EffectiveMediaImportTarget => new(this.EffectiveImportOwner, this.EffectiveMediaImportTargetId);
 
     [Parameter]
     public string Text { get; set; } = string.Empty;
@@ -34,6 +26,12 @@ public partial class ReadFileContent : MSGComponentBase
     
     [Parameter]
     public EventCallback<string> FileContentChanged { get; set; }
+
+    /// <summary>
+    /// If true, the component will display the state of the attached document (if any).
+    /// </summary>
+    [Parameter]
+    public bool ShowAttachedDocumentState { get; set; }
 
     [Parameter]
     public bool Disabled { get; set; }
@@ -75,11 +73,34 @@ public partial class ReadFileContent : MSGComponentBase
     private uint numDropAreasAboveThis;
     private bool isComponentHovered;
     private bool isFileDialogOpen;
+    private bool hasLoadedFileContent;
+    private string loadedFileName = string.Empty;
+    
     private bool IsCurrentTargetBusy => this.MediaTranscriptionService.GetSnapshot(this.EffectiveImportOwner) is { IsBusy: true } snapshot
                                         && snapshot.Target == this.EffectiveMediaImportTarget;
+    
     private bool IsUnavailable => this.Disabled || this.isFileDialogOpen || this.MediaTranscriptionService.IsBusy(this.EffectiveImportOwner);
 
+    private MediaImportOwner EffectiveImportOwner => this.ImportOwner ?? this.fallbackMediaImportOwner;
+    
+    private string EffectiveMediaImportTargetId => string.IsNullOrWhiteSpace(this.MediaImportTargetId)
+        ? string.IsNullOrWhiteSpace(this.Text) ? "primary" : this.Text
+        : this.MediaImportTargetId;
+
+    private MediaImportTarget EffectiveMediaImportTarget => new(this.EffectiveImportOwner, this.EffectiveMediaImportTargetId);
+    
     #region Overrides of MSGComponentBase
+
+    protected override void OnParametersSet()
+    {
+        if (string.IsNullOrWhiteSpace(this.FileContent))
+        {
+            this.hasLoadedFileContent = false;
+            this.loadedFileName = string.Empty;
+        }
+
+        base.OnParametersSet();
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -145,7 +166,11 @@ public partial class ReadFileContent : MSGComponentBase
         if (delivery is null || delivery.Text is not { } text)
             return;
 
-        await this.FileContentChanged.InvokeAsync(text);
+        var fileName = this.MediaTranscriptionService.GetSnapshot(this.EffectiveImportOwner) is { Target: var target } snapshot
+                       && target == this.EffectiveMediaImportTarget
+            ? snapshot.CurrentFileName
+            : string.Empty;
+        await this.ApplyFileContentAsync(text, fileName);
         this.MediaTranscriptionService.AcknowledgeDelivery(delivery);
     }
 
@@ -294,7 +319,7 @@ public partial class ReadFileContent : MSGComponentBase
         try
         {
             var fileContent = await UserFile.LoadFileData(filePath, this.RustService, this.DialogService);
-            await this.FileContentChanged.InvokeAsync(fileContent);
+            await this.ApplyFileContentAsync(fileContent, filePath);
             this.Logger.LogInformation("Successfully loaded file content: {FilePath}", filePath);
             return true;
         }
@@ -304,6 +329,13 @@ public partial class ReadFileContent : MSGComponentBase
             await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Error, T("Failed to load file content")));
             return false;
         }
+    }
+
+    private async Task ApplyFileContentAsync(string fileContent, string filePath)
+    {
+        await this.FileContentChanged.InvokeAsync(fileContent);
+        this.loadedFileName = Path.GetFileName(filePath);
+        this.hasLoadedFileContent = true;
     }
 
     private async Task<bool> LoadMediaTranscriptAsync(string filePath)
@@ -340,6 +372,17 @@ public partial class ReadFileContent : MSGComponentBase
         return this.MediaTranscriptionService.TryStartTextImport(
             filePath,
             this.EffectiveMediaImportTarget);
+    }
+
+    private string FileLoadedTooltip()
+    {
+        if (!this.hasLoadedFileContent)
+            return string.Empty;
+
+        if (string.IsNullOrWhiteSpace(this.loadedFileName))
+            return this.T("File content loaded");
+
+        return string.Format(this.T("Attached file '{0}'."), this.loadedFileName);
     }
 
     private bool CanCatchDroppedFile() => this.numDropAreasAboveThis is 0 && (this.isComponentHovered || this.CatchAllDocuments);

@@ -123,7 +123,7 @@ flatpak install --user ./MindWork.AI.Studio.Plugin.Pandoc_aarch64.flatpak
 Start AI Studio from your application menu or run:
 
 ```bash
-flatpak run org.MindWorkAI.AIStudio
+flatpak run org.mindworkai.AIStudio
 ```
 
 If no application-menu entry appears, sign out of your desktop session completely and sign in again, or restart the system.

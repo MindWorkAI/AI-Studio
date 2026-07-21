@@ -380,6 +380,11 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
 
     private static string GetOptionalStyle(string? style) => string.IsNullOrWhiteSpace(style) ? string.Empty : style;
 
+    private List<FileAttachment> CollectFileAttachments() =>
+        this.assistantState.FileAttachments.Values
+            .SelectMany(static state => state.DocumentPaths)
+            .ToList();
+
     private bool IsButtonActionRunning(string buttonName) => this.executingButtonActions.Contains(buttonName);
     private bool IsSwitchActionRunning(string switchName) => this.executingSwitchActions.Contains(switchName);
 
@@ -568,7 +573,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
         }
 
         this.CreateChatThread();
-        var time = this.AddUserRequest(await this.CollectUserPromptAsync());
+        var time = this.AddUserRequest(await this.CollectUserPromptAsync(), false, this.CollectFileAttachments());
         await this.AddAIResponseAsync(time);
     }
 

@@ -8,6 +8,12 @@ internal sealed class AssistantFileContentReader : StatefulAssistantComponentBas
     public override Dictionary<string, object> Props { get; set; } = new();
     public override List<IAssistantComponent> Children { get; set; } = new();
 
+    public bool ShowAttachedDocumentState
+    {
+        get => AssistantComponentPropHelper.ReadBool(this.Props, nameof(this.ShowAttachedDocumentState), true);
+        set => AssistantComponentPropHelper.WriteBool(this.Props, nameof(this.ShowAttachedDocumentState), value);
+    }
+
     public string Class
     {
         get => AssistantComponentPropHelper.ReadString(this.Props, nameof(this.Class));

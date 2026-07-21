@@ -2944,6 +2944,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T2274562398"] = "Drop on
 -- The media transcription was canceled.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T241403726"] = "The media transcription was canceled."
 
+-- File content loaded
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T2768170467"] = "File content loaded"
+
 -- The selected media file will be prepared locally. Its audio will then be uploaded to the configured transcription provider.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T2839709466"] = "The selected media file will be prepared locally. Its audio will then be uploaded to the configured transcription provider."
 
@@ -2961,6 +2964,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T3554222960"] = "Transcr
 
 -- Some dropped files could not be accessed. Please select them with the file chooser instead.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T3896246824"] = "Some dropped files could not be accessed. Please select them with the file chooser instead."
+
+-- Attached file '{0}'.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T853724151"] = "Attached file '{0}'."
 
 -- The content is cleaned using an LLM agent: the main content is extracted, advertisements and other irrelevant things are attempted to be removed; relative links are attempted to be converted into absolute links so that they can be used.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T1164201762"] = "The content is cleaned using an LLM agent: the main content is extracted, advertisements and other irrelevant things are attempted to be removed; relative links are attempted to be converted into absolute links so that they can be used."
@@ -8293,6 +8299,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANT
 -- Grid Item
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T1991378436"] = "Grid Item"
 
+-- File Attachments
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T2294745309"] = "File Attachments"
+
 -- List
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T2368288673"] = "List"
 
@@ -8976,6 +8985,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T8406
 
 -- The generated assistant plugin is invalid. Issue: {0}
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T939708112"] = "The generated assistant plugin is invalid. Issue: {0}"
+
+-- The voice recording shortcut currently works only while AI Studio is focused.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::GLOBALSHORTCUTSERVICE::T1204510649"] = "The voice recording shortcut currently works only while AI Studio is focused."
 
 -- The global shortcut could not be registered. The previous shortcut remains active.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::GLOBALSHORTCUTSERVICE::T2266307101"] = "The global shortcut could not be registered. The previous shortcut remains active."

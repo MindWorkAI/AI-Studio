@@ -15,7 +15,7 @@ public partial class ConfigurationShortcut : ConfigurationBaseCore
     private IDialogService DialogService { get; init; } = null!;
 
     [Inject]
-    private RustService RustService { get; init; } = null!;
+    private GlobalShortcutService GlobalShortcutService { get; init; } = null!;
 
     /// <summary>
     /// The shortcut binding data.
@@ -69,7 +69,7 @@ public partial class ConfigurationShortcut : ConfigurationBaseCore
     {
         // Suspend shortcut processing while the dialog is open, so the user can
         // press the current shortcut to re-enter it without triggering the action:
-        await this.RustService.SuspendShortcutProcessing();
+        await this.GlobalShortcutService.SuspendShortcutProcessing();
         
         try
         {
@@ -106,7 +106,7 @@ public partial class ConfigurationShortcut : ConfigurationBaseCore
         finally
         {
             // Resume the shortcut processing when the dialog is closed:
-            await this.RustService.ResumeShortcutProcessing();
+            await this.GlobalShortcutService.ResumeShortcutProcessing();
         }
     }
 }
