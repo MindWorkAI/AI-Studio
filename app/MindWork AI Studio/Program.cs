@@ -183,6 +183,7 @@ internal sealed class Program
         builder.Services.AddHostedService<GlobalShortcutService>();
         builder.Services.AddHostedService<RustAvailabilityMonitorService>();
         builder.Services.AddScoped<NativeShareService>();
+        builder.Services.AddScoped<PluginShareService>();
         
         // ReSharper disable AccessToDisposedClosure
         builder.Services.AddHostedService<RustService>(_ => rust);
