@@ -159,6 +159,7 @@ internal sealed class Program
         builder.Services.AddSingleton(typeof(RuntimeInfoResponse), runtimeInfo);
         builder.Services.AddMudMarkdownClipboardService<MarkdownClipboardService>();
         builder.Services.AddSingleton<SettingsManager>();
+        builder.Services.AddSingleton<AIGeneratedContentDisclosureService>();
         builder.Services.AddSingleton<ThreadSafeRandom>();
         builder.Services.AddSingleton<AIJobService>();
         builder.Services.AddSingleton<AssistantSessionService>();

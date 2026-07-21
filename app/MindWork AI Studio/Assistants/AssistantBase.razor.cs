@@ -30,6 +30,9 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     
     [Inject]
     protected RustService RustService { get; init; } = null!;
+
+    [Inject]
+    protected AIGeneratedContentDisclosureService DisclosureService { get; init; } = null!;
     
     [Inject]
     protected NavigationManager NavigationManager { get; init; } = null!;
@@ -529,7 +532,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     
     protected async Task CopyToClipboard()
     {
-        await this.RustService.CopyText2Clipboard(this.Snackbar, this.Result2Copy());
+        await this.DisclosureService.CopyText2Clipboard(this.Snackbar, this.Result2Copy());
     }
 
     private ChatThread CreateSendToChatThread()

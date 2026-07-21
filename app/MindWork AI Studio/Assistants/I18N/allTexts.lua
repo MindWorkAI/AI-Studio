@@ -3166,6 +3166,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONT
 -- Spellchecking is disabled
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1059411425"] = "Spellchecking is disabled"
 
+-- AI-generated content is labeled
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1096690933"] = "AI-generated content is labeled"
+
 -- Do you want to show preview features in the app?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1118505044"] = "Do you want to show preview features in the app?"
 
@@ -3189,6 +3192,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1454730224"]
 
 -- Root certificate bundle path
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1471315821"] = "Root certificate bundle path"
+
+-- Label AI-generated content?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1503137557"] = "Label AI-generated content?"
 
 -- Select the desired behavior for the navigation bar.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1555038969"] = "Select the desired behavior for the navigation bar."
@@ -3298,6 +3304,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3914529369"]
 -- Additional root certificates are disabled
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3985928190"] = "Additional root certificates are disabled"
 
+-- When enabled, copied AI-generated text and Microsoft Word exports include a bold notice that the content was generated using AI.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3990854800"] = "When enabled, copied AI-generated text and Microsoft Word exports include a bold notice that the content was generated using AI."
+
 -- Preselect one of your profiles?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T4004501229"] = "Preselect one of your profiles?"
 
@@ -3333,6 +3342,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T716338721"] 
 
 -- Start page
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T78084670"] = "Start page"
+
+-- AI-generated content is not labeled
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T807210448"] = "AI-generated content is not labeled"
 
 -- Preview feature visibility
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T817101267"] = "Preview feature visibility"
@@ -8772,6 +8784,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T378481461"] = "Source like p
 
 -- Document
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T4165204724"] = "Document"
+
+-- This content was generated using artificial intelligence (AI).
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::AIGENERATEDCONTENTDISCLOSURESERVICE::T3440957850"] = "This content was generated using artificial intelligence (AI)."
 
 -- The Assistant Builder context could not be loaded.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T108292972"] = "The Assistant Builder context could not be loaded."

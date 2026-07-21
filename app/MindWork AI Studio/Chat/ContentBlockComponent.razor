@@ -64,7 +64,7 @@
                     <MudIconButton Icon="@Icons.Material.Filled.Save" OnClick="@this.ExportToWord"/>
                 </MudTooltip>
             }
-            <MudCopyClipboardButton Content="@this.Content" Type="@this.Type" Size="Size.Medium"/>
+            <MudCopyClipboardButton Content="@this.Content" Type="@this.Type" Size="Size.Medium" IsAIGenerated="@(this.Role is ChatRole.AI)"/>
         </CardHeaderActions>
     </MudCardHeader>
     <MudCardContent>

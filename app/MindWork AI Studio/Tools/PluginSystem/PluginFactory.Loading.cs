@@ -268,6 +268,10 @@ public static partial class PluginFactory
         // Check for admin settings visibility:
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.ShowAdminSettings, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;
+
+        // Check for the AI-generated content disclosure:
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.AddAIGeneratedContentDisclosure, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
         
         // Check for preview visibility:
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.PreviewVisibility, AVAILABLE_PLUGINS))

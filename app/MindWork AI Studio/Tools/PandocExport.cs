@@ -15,7 +15,7 @@ public static class PandocExport
     
     private static string TB(string fallbackEn) => I18N.I.T(fallbackEn, typeof(PandocExport).Namespace, nameof(PandocExport));
     
-    public static async Task<bool> ToMicrosoftWord(RustService rustService, IDialogService dialogService, string dialogTitle, IContent markdownContent)
+    public static async Task<bool> ToMicrosoftWord(RustService rustService, AIGeneratedContentDisclosureService disclosureService, IDialogService dialogService, string dialogTitle, IContent markdownContent)
     {
         var response = await rustService.SaveFile(dialogTitle, [FileTypes.MS_WORD]);
         if (response.UserCancelled)
@@ -40,6 +40,8 @@ public static class PandocExport
 
                 _ => "Unknown content type. Cannot export to Word."
             };
+
+            markdownText = await disclosureService.AddDisclosureToMarkdown(markdownText);
 
             // Write text content to a temporary file:
             await File.WriteAllTextAsync(tempMarkdownFilePath, markdownText);

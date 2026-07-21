@@ -238,6 +238,11 @@ CONFIG["SETTINGS"] = {}
 -- Configure whether administration settings are visible in the UI:
 -- CONFIG["SETTINGS"]["DataApp.ShowAdminSettings"] = true
 
+-- Configure whether copied and exported AI-generated content includes a disclosure.
+-- The disclosure is enabled by default and is localized using the active app language.
+-- CONFIG["SETTINGS"]["DataApp.AddAIGeneratedContentDisclosure"] = true
+-- CONFIG["SETTINGS"]["DataApp.AddAIGeneratedContentDisclosure.AllowUserOverride"] = false
+
 -- Configure the visibility of preview features:
 -- Allowed values are: NONE, RELEASE_CANDIDATE, BETA, ALPHA, PROTOTYPE, EXPERIMENTAL
 -- Please note:

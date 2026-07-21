@@ -92,6 +92,9 @@ public partial class ContentBlockComponent : MSGComponentBase, IAsyncDisposable
     private RustService RustService { get; init; } = null!;
 
     [Inject]
+    private AIGeneratedContentDisclosureService DisclosureService { get; init; } = null!;
+
+    [Inject]
     private IJSRuntime JsRuntime { get; init; } = null!;
 
     private bool HideContent { get; set; }
@@ -548,7 +551,7 @@ public partial class ContentBlockComponent : MSGComponentBase, IAsyncDisposable
     
     private async Task ExportToWord()
     {
-        await PandocExport.ToMicrosoftWord(this.RustService, this.DialogService, T("Export Chat to Microsoft Word"), this.Content);
+        await PandocExport.ToMicrosoftWord(this.RustService, this.DisclosureService, this.DialogService, T("Export Chat to Microsoft Word"), this.Content);
     }
     
     private async Task RegenerateBlock()

@@ -155,6 +155,11 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     public bool ShowAdminSettings { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ShowAdminSettings, false);
 
     /// <summary>
+    /// Should copied and exported AI-generated content include a disclosure?
+    /// </summary>
+    public bool AddAIGeneratedContentDisclosure { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AddAIGeneratedContentDisclosure, true);
+
+    /// <summary>
     /// List of assistants that should be hidden from the UI.
     /// </summary>
     public HashSet<ConfigurableAssistant> HiddenAssistants { get; set; } = ManagedConfiguration.Register(configSelection, n => n.HiddenAssistants, []);

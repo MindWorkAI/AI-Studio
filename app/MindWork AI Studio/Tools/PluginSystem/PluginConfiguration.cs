@@ -181,6 +181,9 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
 
         // Config: show administration settings?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.ShowAdminSettings, this.Id, settingsTable, dryRun);
+
+        // Config: add a disclosure to copied and exported AI-generated content?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AddAIGeneratedContentDisclosure, this.Id, settingsTable, dryRun);
         
         // Config: preview features visibility
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.PreviewVisibility, this.Id, settingsTable, dryRun);

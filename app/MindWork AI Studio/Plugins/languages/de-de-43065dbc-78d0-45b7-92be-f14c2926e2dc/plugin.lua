@@ -3168,6 +3168,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAGENTRETRIEVALCONT
 -- Spellchecking is disabled
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1059411425"] = "Rechtschreibprüfung ist deaktiviert"
 
+-- AI-generated content is labeled
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1096690933"] = "KI-generierte Inhalte sind gekennzeichnet"
+
 -- Do you want to show preview features in the app?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1118505044"] = "Möchten Sie Vorschaufunktionen in der App anzeigen lassen?"
 
@@ -3191,6 +3194,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1454730224"]
 
 -- Root certificate bundle path
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1471315821"] = "Pfad zum Stammzertifikatsbundle"
+
+-- Label AI-generated content?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1503137557"] = "Soll KI-generierter Inhalt gekennzeichnet werden?"
 
 -- Select the desired behavior for the navigation bar.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1555038969"] = "Wählen Sie das gewünschte Verhalten für die Navigationsleiste aus."
@@ -3300,6 +3306,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3914529369"]
 -- Additional root certificates are disabled
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3985928190"] = "Zusätzliche Stammzertifikate sind deaktiviert"
 
+-- When enabled, copied AI-generated text and Microsoft Word exports include a bold notice that the content was generated using AI.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3990854800"] = "Wenn aktiviert, enthalten kopierter, von KI generierter Text und Microsoft Word-Exporte einen fett gedruckten Hinweis, dass der Inhalt mit KI erstellt wurde."
+
 -- Preselect one of your profiles?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T4004501229"] = "Möchten Sie eines ihrer Profile vorauswählen?"
 
@@ -3335,6 +3344,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T716338721"] 
 
 -- Start page
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T78084670"] = "Startseite"
+
+-- AI-generated content is not labeled
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T807210448"] = "KI-generierte Inhalte sind nicht gekennzeichnet"
 
 -- Preview feature visibility
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T817101267"] = "Sichtbarkeit der Vorschaufunktion"
@@ -8774,6 +8786,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T378481461"] = "Source Code �
 
 -- Document
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T4165204724"] = "Dokument"
+
+-- This content was generated using artificial intelligence (AI).
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::AIGENERATEDCONTENTDISCLOSURESERVICE::T3440957850"] = "Dieser Inhalt wurde mit künstlicher Intelligenz (KI) erstellt."
 
 -- The Assistant Builder context could not be loaded.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T108292972"] = "Der Kontext des Assistenten-Builders konnte nicht geladen werden."
