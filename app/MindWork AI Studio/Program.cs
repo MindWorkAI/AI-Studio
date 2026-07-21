@@ -182,6 +182,7 @@ internal sealed class Program
         builder.Services.AddSingleton<DatabaseClientProvider>();
         builder.Services.AddHostedService<GlobalShortcutService>();
         builder.Services.AddHostedService<RustAvailabilityMonitorService>();
+        builder.Services.AddScoped<NativeShareService>();
         
         // ReSharper disable AccessToDisposedClosure
         builder.Services.AddHostedService<RustService>(_ => rust);
