@@ -356,6 +356,67 @@ CONFIG["SETTINGS"] = {}
 -- Examples are: "CmdOrControl+Shift+D", "Alt+F9", "F8"
 -- CONFIG["SETTINGS"]["DataApp.ShortcutVoiceRecording"] = "CmdOrControl+1"
 
+-- Configure whether tools are available at all. The default is true.
+-- When tools are disabled globally, tool selection is hidden in chats and assistants,
+-- but the global tool settings remain available to administrators.
+-- CONFIG["SETTINGS"]["DataTools.EnableTools"] = false
+
+-- Disable individual tools by their stable tool ID. The default is an empty set.
+-- Unknown IDs are safely ignored and can be deployed before a future tool is installed.
+-- CONFIG["SETTINGS"]["DataTools.DisabledToolIds"] = { "web_search" }
+
+-- Configure the minimum provider confidence level required for individual tools.
+-- Tool IDs include: web_search, read_web_page
+-- Allowed values are: NONE, UNTRUSTED, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
+-- Defaults: web_search = MEDIUM, read_web_page = MEDIUM, but higher confidence is recommended
+-- CONFIG["SETTINGS"]["DataTools.MinimumProviderConfidenceByToolId"] = {
+--     ["web_search"] = "MEDIUM",
+--     ["read_web_page"] = "MEDIUM"
+-- }
+
+-- Configure the Web Search tool. All values are strings.
+-- WebSearchBaseUrl: required SearXNG HTTP(S) root URL or /search endpoint; no default.
+-- CONFIG["SETTINGS"]["DataTools.WebSearchBaseUrl"] = "https://searxng.website/"
+-- WebSearchDefaultLanguage: optional language code; default is empty.
+-- CONFIG["SETTINGS"]["DataTools.WebSearchDefaultLanguage"] = "de"
+-- WebSearchDefaultSafeSearch: optional SearXNG safe-search level "0", "1", or "2"; default is empty.
+-- CONFIG["SETTINGS"]["DataTools.WebSearchDefaultSafeSearch"] = "1"
+-- WebSearchDefaultCategories: optional comma-separated categories; default is empty.
+-- WebSearchDefaultEngines: optional comma-separated engines; default is empty.
+-- Categories and engines cannot both be configured.
+-- CONFIG["SETTINGS"]["DataTools.WebSearchDefaultCategories"] = "general, science"
+-- CONFIG["SETTINGS"]["DataTools.WebSearchDefaultEngines"] = ""
+-- WebSearchMaxResults: positive integer; default 5, effective maximum 20.
+-- CONFIG["SETTINGS"]["DataTools.WebSearchMaxResults"] = "5"
+-- WebSearchTimeoutSeconds: positive integer; default 20, effective maximum 60.
+-- CONFIG["SETTINGS"]["DataTools.WebSearchTimeoutSeconds"] = "20"
+-- WebSearchMaxTotalContentCharacters: positive integer; default and maximum 100000.
+-- maximum number of content characters per web search
+-- CONFIG["SETTINGS"]["DataTools.WebSearchMaxTotalContentCharacters"] = "100000"
+-- WebSearchMinContentCharactersPerResult: positive integer; default and maximum 3000.
+-- The total content budget must be at least this value multiplied by the hard limit of 20 results.
+-- CONFIG["SETTINGS"]["DataTools.WebSearchMinContentCharactersPerResult"] = "3000"
+-- WebSearchPageTimeoutSeconds: positive integer; default and maximum 30.
+-- CONFIG["SETTINGS"]["DataTools.WebSearchPageTimeoutSeconds"] = "30"
+-- WebSearchRetrievalTimeoutSeconds: positive integer; default and maximum 90.
+-- CONFIG["SETTINGS"]["DataTools.WebSearchRetrievalTimeoutSeconds"] = "90"
+
+-- Configure the Read Web Page tool. All values are strings.
+-- ReadWebPageTimeoutSeconds: positive integer; default 30, effective maximum 60.
+-- CONFIG["SETTINGS"]["DataTools.ReadWebPageTimeoutSeconds"] = "30"
+-- ReadWebPageMaxContentCharacters: positive integer; default 30000, effective maximum 50000.
+-- CONFIG["SETTINGS"]["DataTools.ReadWebPageMaxContentCharacters"] = "30000"
+-- ReadWebPageAllowedPrivateHosts: optional comma-separated private or VPN host patterns; default is empty.
+-- Public pages do not need to be listed. Wildcards only match subdomains, so add the root domain separately.
+-- Allowed private hosts require a provider with HIGH confidence. AI Studio tries the current user's
+-- operating-system sign-in when integrated authentication is requested, but does not reuse browser cookies.
+-- CONFIG["SETTINGS"]["DataTools.ReadWebPageAllowedPrivateHosts"] = "dlr.de, *.dlr.de"
+
+-- The 14 Web Search and Read Web Page settings are locked by default. Add
+-- ".AllowUserOverride" = true to any of them to provide an editable organization default instead.
+-- A saved local value then takes precedence.
+-- CONFIG["SETTINGS"]["DataTools.WebSearchBaseUrl.AllowUserOverride"] = true
+
 -- Configure the HTTP timeout for external requests, in seconds.
 -- The default is 3600 (1 hour).
 -- CONFIG["SETTINGS"]["DataApp.HttpClientTimeoutSeconds"] = 3600

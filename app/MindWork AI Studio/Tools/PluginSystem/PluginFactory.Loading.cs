@@ -292,6 +292,61 @@ public static partial class PluginFactory
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.ShortcutVoiceRecording, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;
 
+        // Check for global tool availability:
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Tools, x => x.EnableTools, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Tools, x => x.DisabledToolIds, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        // Check for minimum provider confidence per tool:
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Tools, x => x.MinimumProviderConfidenceByToolId, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        // Check for web search tool settings:
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Tools, x => x.WebSearchBaseUrl, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Tools, x => x.WebSearchDefaultLanguage, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Tools, x => x.WebSearchDefaultSafeSearch, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Tools, x => x.WebSearchDefaultCategories, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Tools, x => x.WebSearchDefaultEngines, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Tools, x => x.WebSearchMaxResults, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Tools, x => x.WebSearchTimeoutSeconds, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Tools, x => x.WebSearchMaxTotalContentCharacters, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Tools, x => x.WebSearchMinContentCharactersPerResult, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Tools, x => x.WebSearchPageTimeoutSeconds, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Tools, x => x.WebSearchRetrievalTimeoutSeconds, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        // Check for read web page tool settings:
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Tools, x => x.ReadWebPageTimeoutSeconds, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Tools, x => x.ReadWebPageMaxContentCharacters, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Tools, x => x.ReadWebPageAllowedPrivateHosts, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
         // Check for the external HTTP client timeout:
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.HttpClientTimeoutSeconds, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;

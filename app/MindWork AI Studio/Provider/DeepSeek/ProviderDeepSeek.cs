@@ -29,7 +29,7 @@ public sealed class ProviderDeepSeek() : BaseProvider(LLMProviders.DEEP_SEEK, ne
                            chatModel,
                            chatThread,
                            settingsManager,
-                           async (systemPrompt, apiParameters) =>
+                           async (systemPrompt, apiParameters, tools) =>
                            {
                                // Build the list of messages:
                                var messages = await chatThread.Blocks.BuildMessagesUsingDirectImageUrlAsync(this.Provider, chatModel);
@@ -44,6 +44,8 @@ public sealed class ProviderDeepSeek() : BaseProvider(LLMProviders.DEEP_SEEK, ne
                                    Messages = [systemPrompt, ..messages],
 
                                    Stream = true,
+                                   Tools = tools,
+                                   ParallelToolCalls = tools is null ? null : true,
                                    AdditionalApiParameters = apiParameters
                                };
                            },

@@ -2293,20 +2293,41 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CHATROLEEXTENSIONS::T601166687"] = "AI"
 -- Edit Message
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1183581066"] = "Edit Message"
 
+-- Result
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1347088452"] = "Result"
+
 -- Do you really want to remove this message?
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1347427447"] = "Do you really want to remove this message?"
 
 -- Yes, remove the AI response and edit it
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1350385882"] = "Yes, remove the AI response and edit it"
 
+-- Failed
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1434043348"] = "Failed"
+
+-- Tool Calls ({0})
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1493057571"] = "Tool Calls ({0})"
+
+-- Executed
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1564757972"] = "Executed"
+
 -- Yes, regenerate it
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1603883875"] = "Yes, regenerate it"
+
+-- No result
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1684269223"] = "No result"
 
 -- Yes, remove it
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1820166585"] = "Yes, remove it"
 
 -- Number of sources
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1848978959"] = "Number of sources"
+
+-- Show {0} tool calls
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1981771421"] = "Show {0} tool calls"
+
+-- Show tool call for {0}
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2004842583"] = "Show tool call for {0}"
 
 -- Do you really want to edit this message? In order to edit this message, the AI response will be deleted.
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2018431076"] = "Do you really want to edit this message? In order to edit this message, the AI response will be deleted."
@@ -2317,6 +2338,9 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2093355991"] = "Removes
 -- Regenerate Message
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2308444540"] = "Regenerate Message"
 
+-- Arguments
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2738624831"] = "Arguments"
+
 -- Number of attachments
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3018847255"] = "Number of attachments"
 
@@ -2326,8 +2350,14 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3175548294"] = "Cannot 
 -- Edit
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3267849393"] = "Edit"
 
+-- Unknown
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3424652889"] = "Unknown"
+
 -- Regenerate
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3587744975"] = "Regenerate"
+
+-- Blocked
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3816336467"] = "Blocked"
 
 -- Do you really want to regenerate this message?
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3878878761"] = "Do you really want to regenerate this message?"
@@ -2338,8 +2368,14 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T4070211974"] = "Remove 
 -- No, keep it
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T4188329028"] = "No, keep it"
 
+-- No tool calls
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T4224149521"] = "No tool calls"
+
 -- Export Chat to Microsoft Word
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T861873672"] = "Export Chat to Microsoft Word"
+
+-- No arguments
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T931993614"] = "No arguments"
 
 -- The selected model '{0}' is no longer available from '{1}' (provider={2}). Please adapt your provider settings.
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTTEXT::T3267850764"] = "The selected model '{0}' is no longer available from '{1}' (provider={2}). Please adapt your provider settings."
@@ -2655,15 +2691,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONMINCONFIDENCESELECTION::T252
 
 -- Select a minimum confidence level
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONMINCONFIDENCESELECTION::T2579793544"] = "Select a minimum confidence level"
-
--- You have selected 1 preview feature.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONMULTISELECT::T1384241824"] = "You have selected 1 preview feature."
-
--- No preview features selected.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONMULTISELECT::T2809641588"] = "No preview features selected."
-
--- You have selected {0} preview features.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONMULTISELECT::T3513450626"] = "You have selected {0} preview features."
 
 -- Preselected provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONPROVIDERSELECTION::T1469984996"] = "Preselected provider"
@@ -3550,6 +3577,42 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T900237
 -- Export configuration
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T975426229"] = "Export configuration"
 
+-- Settings
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T1258653480"] = "Settings"
+
+-- Description
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T1725856265"] = "Description"
+
+-- Icon
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T1759955728"] = "Icon"
+
+-- This tool still needs to be configured.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T1958939818"] = "This tool still needs to be configured."
+
+-- Missing required settings: {0}
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T2588115579"] = "Missing required settings: {0}"
+
+-- Name
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T266367750"] = "Name"
+
+-- No minimum confidence level chosen
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T2828607242"] = "No minimum confidence level chosen"
+
+-- Minimum provider confidence
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T3461070436"] = "Minimum provider confidence"
+
+-- Configure global settings for each tool.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T3728248397"] = "Configure global settings for each tool."
+
+-- Tool Settings
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T3730473128"] = "Tool Settings"
+
+-- This tool has been disabled by your organization.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T3794167684"] = "This tool has been disabled by your organization."
+
+-- Status
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T6222351"] = "Status"
+
 -- No transcription provider configured yet.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T1079350363"] = "No transcription provider configured yet."
 
@@ -3621,6 +3684,63 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::THIRDPARTYCOMPONENT::T1392042694"] = "Ope
 
 -- License:
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::THIRDPARTYCOMPONENT::T1908172666"] = "License:"
+
+-- Tool selection is hidden
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLDEFAULTSCONFIGURATION::T2096103917"] = "Tool selection is hidden"
+
+-- You have selected 1 tool.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLDEFAULTSCONFIGURATION::T2493128368"] = "You have selected 1 tool."
+
+-- Choose which tools should be preselected for new runs of this assistant.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLDEFAULTSCONFIGURATION::T2696618758"] = "Choose which tools should be preselected for new runs of this assistant."
+
+-- Default tools for this assistant
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLDEFAULTSCONFIGURATION::T3253667950"] = "Default tools for this assistant"
+
+-- Tool selection is visible
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLDEFAULTSCONFIGURATION::T3384582069"] = "Tool selection is visible"
+
+-- Show tool selection in this assistant?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLDEFAULTSCONFIGURATION::T3494508870"] = "Show tool selection in this assistant?"
+
+-- You have selected {0} tools.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLDEFAULTSCONFIGURATION::T3729156356"] = "You have selected {0} tools."
+
+-- No tools selected.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLDEFAULTSCONFIGURATION::T3934845540"] = "No tools selected."
+
+-- Default tools for chat
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLDEFAULTSCONFIGURATION::T907403808"] = "Default tools for chat"
+
+-- Choose which tools should be preselected for new chats.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLDEFAULTSCONFIGURATION::T948842182"] = "Choose which tools should be preselected for new chats."
+
+-- Tool changes are locked while a response is running. Your current selection is shown below and applies again from the next message once the run is finished.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T1688023907"] = "Tool changes are locked while a response is running. Your current selection is shown below and applies again from the next message once the run is finished."
+
+-- Tools allow the LLM to perform targeted additional actions such as web searches or reading web pages.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T1944689297"] = "Tools allow the LLM to perform targeted additional actions such as web searches or reading web pages."
+
+-- Required settings are missing. Configure this tool before enabling it.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T3119156561"] = "Required settings are missing. Configure this tool before enabling it."
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T3448155331"] = "Close"
+
+-- This tool has been disabled by your organization.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T3794167684"] = "This tool has been disabled by your organization."
+
+-- No tools are available in this context.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T3904490680"] = "No tools are available in this context."
+
+-- This tool requires provider confidence {0}. The selected provider has {1}.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T4097602620"] = "This tool requires provider confidence {0}. The selected provider has {1}."
+
+-- Tool Selection
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T749664565"] = "Tool Selection"
+
+-- Select tools
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T998515990"] = "Select tools"
 
 -- You'll interact with the AI systems using your voice. To achieve this, we want to integrate voice input (speech-to-text) and output (text-to-speech). However, later on, it should also have a natural conversation flow, i.e., seamless conversation.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T1015366320"] = "You'll interact with the AI systems using your voice. To achieve this, we want to integrate voice input (speech-to-text) and output (text-to-speech). However, later on, it should also have a natural conversation flow, i.e., seamless conversation."
@@ -6410,6 +6530,30 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGWRITINGEMAILS::T3547
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGWRITINGEMAILS::T3832719342"] = "Preselect e-mail options?"
 
 -- Save
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSDIALOG::T1294818664"] = "Save"
+
+-- Please configure the required settings: {0}
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSDIALOG::T2412603418"] = "Please configure the required settings: {0}"
+
+-- Not set
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSDIALOG::T3616903110"] = "Not set"
+
+-- Tool Settings
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSDIALOG::T3730473128"] = "Tool Settings"
+
+-- This tool has been disabled by your organization.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSDIALOG::T3794167684"] = "This tool has been disabled by your organization."
+
+-- The selected tool could not be loaded.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSDIALOG::T3907843187"] = "The selected tool could not be loaded."
+
+-- {0} Default: {1}
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSDIALOG::T403490413"] = "{0} Default: {1}"
+
+-- Cancel
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSDIALOG::T900713019"] = "Cancel"
+
+-- Save
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SHORTCUTDIALOG::T1294818664"] = "Save"
 
 -- Press the desired key combination to set the shortcut. The shortcut will be registered globally and will work even when the app is not focused.
@@ -7489,6 +7633,9 @@ UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T3014737766"] = "We tried to 
 -- We tried to communicate with the LLM provider '{0}' (type={1}). Even after {2} retries, there were some problems with the request. The provider message is: '{3}'.
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T3049689432"] = "We tried to communicate with the LLM provider '{0}' (type={1}). Even after {2} retries, there were some problems with the request. The provider message is: '{3}'."
 
+-- The tool calling request failed with status code {0}. See the logs for details.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T3117779001"] = "The tool calling request failed with status code {0}. See the logs for details."
+
 -- Tried to communicate with the LLM provider '{0}'. There were some problems with the request. The provider message is: '{1}'
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T3573577433"] = "Tried to communicate with the LLM provider '{0}'. There were some problems with the request. The provider message is: '{1}'"
 
@@ -7578,6 +7725,9 @@ UI_TEXT_CONTENT["AISTUDIO::PROVIDER::MODELLOADFAILUREREASONEXTENSIONS::T37333904
 
 -- We could not load models from '{0}' due to an unknown error.
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::MODELLOADFAILUREREASONEXTENSIONS::T3907712809"] = "We could not load models from '{0}' due to an unknown error."
+
+-- The tool calling request failed with status code {0}. See the logs for details.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::OPENAI::PROVIDEROPENAI::T3117779001"] = "The tool calling request failed with status code {0}. See the logs for details."
 
 -- It looks like you do not have any API credits left with OpenAI. Please add credits to your account and try again.
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::OPENAI::PROVIDEROPENAI::T757371511"] = "It looks like you do not have any API credits left with OpenAI. Please add credits to your account and try again."
@@ -9057,6 +9207,147 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEEXTENSIONS::T4174900468"] = "Sources pro
 
 -- Sources provided by the AI
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEEXTENSIONS::T4261248356"] = "Sources provided by the AI"
+
+-- Tool
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::ITOOLIMPLEMENTATION::T3517012711"] = "Tool"
+
+-- Tool description
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::ITOOLIMPLEMENTATION::T4056470505"] = "Tool description"
+
+-- (Optional) Host allowlist for private or VPN web pages. For security reasons, private or VPN web pages aren't allowed to be read by default. Separate host patterns with commas, such as example.de, *.example.de. Allowed private hosts require a high-confidence provider. For allowed internal hosts, AI Studio also tries the operating system's default sign-in automatically when the server responds with integrated authentication.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T1410249500"] = "(Optional) Host allowlist for private or VPN web pages. For security reasons, private or VPN web pages aren't allowed to be read by default. Separate host patterns with commas, such as example.de, *.example.de. Allowed private hosts require a high-confidence provider. For allowed internal hosts, AI Studio also tries the operating system's default sign-in automatically when the server responds with integrated authentication."
+
+-- Allowed private hosts must be host names only, without scheme or path.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T2196457612"] = "Allowed private hosts must be host names only, without scheme or path."
+
+-- Maximum Content Characters
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T2801581200"] = "Maximum Content Characters"
+
+-- Allowed private host '{0}' is not valid.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T3089707139"] = "Allowed private host '{0}' is not valid."
+
+-- Allowed Private Hosts
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T3415515539"] = "Allowed Private Hosts"
+
+-- Timeout Seconds
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T3567699845"] = "Timeout Seconds"
+
+-- Read Web Page
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T3612587998"] = "Read Web Page"
+
+-- Load a web page and extract its readable content, links, and page details.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T3715690061"] = "Load a web page and extract its readable content, links, and page details."
+
+-- The web page was not loaded because private or VPN web pages require a High-confidence provider.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T3856267430"] = "The web page was not loaded because private or VPN web pages require a High-confidence provider."
+
+-- (Optional) HTTP timeout for loading a web page in seconds.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T4126164830"] = "(Optional) HTTP timeout for loading a web page in seconds."
+
+-- The setting '{0}' must be a positive integer.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T4199432074"] = "The setting '{0}' must be a positive integer."
+
+-- (Optional) Global truncation limit for extracted characters returned to the model.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T900659180"] = "(Optional) Global truncation limit for extracted characters returned to the model."
+
+-- Maximum Results
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T1273024715"] = "Maximum Results"
+
+-- Optional comma-separated default categories. Do not set this together with default engines.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T1342681591"] = "Optional comma-separated default categories. Do not set this together with default engines."
+
+-- Default Safe Search
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T1343180281"] = "Default Safe Search"
+
+-- The setting '{0}' must be less than or equal to {1}.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T1391527409"] = "The setting '{0}' must be less than or equal to {1}."
+
+-- Base URL of the SearXNG instance. You can enter either the instance root URL or the /search endpoint.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T1739312423"] = "Base URL of the SearXNG instance. You can enter either the instance root URL or the /search endpoint."
+
+-- A SearXNG URL is required.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T1746583720"] = "A SearXNG URL is required."
+
+-- Default Engines
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T1865580137"] = "Default Engines"
+
+-- Optional fallback language code when the model does not provide a language.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T1868101906"] = "Optional fallback language code when the model does not provide a language."
+
+-- Default Categories
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T2053347010"] = "Default Categories"
+
+-- The total content budget must reserve at least {0} characters for each of up to {1} results.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T2124070269"] = "The total content budget must reserve at least {0} characters for each of up to {1} results."
+
+-- Retrieval Timeout Seconds
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T2479422697"] = "Retrieval Timeout Seconds"
+
+-- Default Language
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T2526826120"] = "Default Language"
+
+-- The configured web search content budget is not valid.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T299004879"] = "The configured web search content budget is not valid."
+
+-- The configured SearXNG URL is not a valid absolute URL.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T3038368943"] = "The configured SearXNG URL is not a valid absolute URL."
+
+-- Optional HTTP timeout for the search request in seconds.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T3078115445"] = "Optional HTTP timeout for the search request in seconds."
+
+-- The default safe search setting must be 0, 1, or 2.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T3187215042"] = "The default safe search setting must be 0, 1, or 2."
+
+-- Search the web with a configured SearXNG instance and retrieve the readable content of the best matching pages.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T3361633224"] = "Search the web with a configured SearXNG instance and retrieve the readable content of the best matching pages."
+
+-- Page Timeout Seconds
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T3459475852"] = "Page Timeout Seconds"
+
+-- Timeout Seconds
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T3567699845"] = "Timeout Seconds"
+
+-- Optional default maximum number of results returned to the model when the model does not provide a limit.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T3603838271"] = "Optional default maximum number of results returned to the model when the model does not provide a limit."
+
+-- Maximum Total Content Characters
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T366488298"] = "Maximum Total Content Characters"
+
+-- Optional timeout for loading each individual result page in seconds.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T3668086641"] = "Optional timeout for loading each individual result page in seconds."
+
+-- Web Search
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T3815068443"] = "Web Search"
+
+-- Optional overall timeout for retrieving all result pages in seconds.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T3854998169"] = "Optional overall timeout for retrieving all result pages in seconds."
+
+-- Optional safe search policy sent to SearXNG when configured.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T3967748757"] = "Optional safe search policy sent to SearXNG when configured."
+
+-- Default categories and default engines cannot both be set for the web search tool.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T4009446158"] = "Default categories and default engines cannot both be set for the web search tool."
+
+-- Optional comma-separated default engines. Do not set this together with default categories.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T4108908537"] = "Optional comma-separated default engines. Do not set this together with default categories."
+
+-- The setting '{0}' must be a positive integer.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T4199432074"] = "The setting '{0}' must be a positive integer."
+
+-- Optional minimum character budget reserved for each successfully retrieved page.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T647700675"] = "Optional minimum character budget reserved for each successfully retrieved page."
+
+-- Minimum Content Characters Per Result
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T75712506"] = "Minimum Content Characters Per Result"
+
+-- Optional total character budget shared by all retrieved pages.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T836062282"] = "Optional total character budget shared by all retrieved pages."
+
+-- The configured SearXNG URL must start with http:// or https://.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T944878454"] = "The configured SearXNG URL must start with http:// or https://."
+
+-- SearXNG URL
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T993547568"] = "SearXNG URL"
 
 -- Pandoc Installation
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::USERFILE::T185447014"] = "Pandoc Installation"

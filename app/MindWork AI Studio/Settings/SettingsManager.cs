@@ -4,6 +4,8 @@ using System.Text.Json;
 
 using AIStudio.Provider;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools;
+using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Services;
 
@@ -16,6 +18,8 @@ namespace AIStudio.Settings;
 /// </summary>
 public sealed class SettingsManager
 {
+    public readonly record struct ToolMinimumProviderConfidenceResolution(ConfidenceLevel ConfidenceLevel, string Source);
+
     private const string SETTINGS_FILENAME = "settings.json";
     private const Version CURRENT_SETTINGS_VERSION = Version.V6;
     
@@ -577,6 +581,122 @@ public sealed class SettingsManager
             return ChatTemplate.NO_CHAT_TEMPLATE;
 
         return this.ConfigurationData.ChatTemplates.FirstOrDefault(x => x.Id.Equals(chatTemplateId, StringComparison.OrdinalIgnoreCase)) ?? ChatTemplate.NO_CHAT_TEMPLATE;
+    }
+
+    public HashSet<string> GetDefaultToolIds(AIStudio.Tools.Components component)
+    {
+        var key = component.ToString();
+        if (this.ConfigurationData.Tools.DefaultToolIdsByComponent.TryGetValue(key, out var toolIds))
+            return ToolSelectionRules.NormalizeSelection(toolIds);
+
+        return [];
+    }
+
+    public HashSet<string> FilterToolIdsForProvider(AIStudio.Settings.Provider provider, IEnumerable<string> selectedToolIds)
+    {
+        if (!this.AreToolsEnabled())
+            return [];
+
+        var toolCallingAvailability = provider.GetToolCallingAvailability();
+        if (!toolCallingAvailability.IsAvailable)
+            return [];
+
+        var modelCapabilities = provider.GetModelCapabilities();
+        var supportsRequiredApis =
+            modelCapabilities.Contains(Capability.CHAT_COMPLETION_API) ||
+            modelCapabilities.Contains(Capability.RESPONSES_API);
+        if (!supportsRequiredApis || !modelCapabilities.Contains(Capability.FUNCTION_CALLING))
+            return [];
+
+        var providerConfidence = provider.UsedLLMProvider.GetConfidence(this).Level;
+        var filtered = ToolSelectionRules.NormalizeSelection(selectedToolIds);
+
+        foreach (var toolId in filtered.ToList())
+        {
+            if (!this.IsToolActive(toolId))
+            {
+                filtered.Remove(toolId);
+                continue;
+            }
+
+            var minimumToolConfidence = this.GetMinimumProviderConfidenceForTool(toolId);
+            if (!ToolSelectionRules.IsProviderConfidenceAllowed(providerConfidence, minimumToolConfidence))
+                filtered.Remove(toolId);
+        }
+
+        return filtered;
+    }
+
+    public bool AreToolsEnabled() => this.ConfigurationData.Tools.EnableTools;
+
+    public bool IsToolActive(string toolId) =>
+        this.AreToolsEnabled() &&
+        !this.ConfigurationData.Tools.DisabledToolIds.Contains(toolId);
+
+    public bool IsToolSelectionVisible(AIStudio.Tools.Components component) => component switch
+    {
+        AIStudio.Tools.Components.CHAT => true,
+        _ => this.ConfigurationData.Tools.VisibleToolSelectionComponents.Contains(component.ToString()),
+    };
+
+    public void SetToolSelectionVisibility(AIStudio.Tools.Components component, bool isVisible)
+    {
+        if (component is AIStudio.Tools.Components.CHAT)
+            return;
+
+        var key = component.ToString();
+        if (isVisible)
+            this.ConfigurationData.Tools.VisibleToolSelectionComponents.Add(key);
+        else
+            this.ConfigurationData.Tools.VisibleToolSelectionComponents.Remove(key);
+    }
+
+    public ToolMinimumProviderConfidenceResolution GetMinimumProviderConfidenceResolutionForTool(string toolId)
+    {
+        if (ManagedConfiguration.TryGet(x => x.Tools, x => x.MinimumProviderConfidenceByToolId, out var configMeta) && configMeta.IsLocked)
+        {
+            var managedValues = configMeta.GetValue();
+            if (managedValues.TryGetValue(toolId, out var configuredManagedLevel) &&
+                Enum.TryParse<ConfidenceLevel>(configuredManagedLevel, true, out var managedConfidenceLevel) &&
+                Enum.IsDefined(managedConfidenceLevel) &&
+                managedConfidenceLevel is not ConfidenceLevel.UNKNOWN)
+            {
+                return new(managedConfidenceLevel, "managed config");
+            }
+
+            if (managedValues.ContainsKey(toolId))
+            {
+                this.logger.LogError(
+                    "Managed minimum provider confidence '{ConfiguredLevel}' for tool '{ToolId}' is invalid. Requiring HIGH as a safe fallback.",
+                    configuredManagedLevel,
+                    toolId);
+                return new(ConfidenceLevel.HIGH, "invalid managed config; safe fallback");
+            }
+        }
+
+        if (this.ConfigurationData.Tools.MinimumProviderConfidenceByToolId.TryGetValue(toolId, out var configuredLevel) &&
+            Enum.TryParse<ConfidenceLevel>(configuredLevel, true, out var confidenceLevel) &&
+            Enum.IsDefined(confidenceLevel) &&
+            confidenceLevel is not ConfidenceLevel.UNKNOWN)
+        {
+            return new(confidenceLevel, "stored override");
+        }
+
+        return new(ToolSelectionRules.GetDefaultMinimumProviderConfidence(toolId), "default fallback");
+    }
+
+    public ConfidenceLevel GetMinimumProviderConfidenceForTool(string toolId) => this.GetMinimumProviderConfidenceResolutionForTool(toolId).ConfidenceLevel;
+
+    public void SetMinimumProviderConfidenceForTool(string toolId, ConfidenceLevel confidenceLevel)
+    {
+        var defaultLevel = ToolSelectionRules.GetDefaultMinimumProviderConfidence(toolId);
+        if (confidenceLevel == defaultLevel)
+        {
+            this.ConfigurationData.Tools.MinimumProviderConfidenceByToolId.Remove(toolId);
+            return;
+        }
+
+        this.ConfigurationData.Tools.MinimumProviderConfidenceByToolId[toolId] = confidenceLevel.ToString();
     }
 
     public ConfidenceLevel GetConfiguredConfidenceLevel(LLMProviders llmProvider)

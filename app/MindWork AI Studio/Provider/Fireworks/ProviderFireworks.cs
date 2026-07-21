@@ -29,7 +29,7 @@ public class ProviderFireworks() : BaseProvider(LLMProviders.FIREWORKS, new Uri(
                            chatModel,
                            chatThread,
                            settingsManager,
-                           async (systemPrompt, apiParameters) =>
+                           async (systemPrompt, apiParameters, tools) =>
                            {
                                // Build the list of messages:
                                var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel);
@@ -45,6 +45,8 @@ public class ProviderFireworks() : BaseProvider(LLMProviders.FIREWORKS, new Uri(
 
                                    // Right now, we only support streaming completions:
                                    Stream = true,
+                                   Tools = tools,
+                                   ParallelToolCalls = tools is null ? null : true,
                                    AdditionalApiParameters = apiParameters
                                };
                            },

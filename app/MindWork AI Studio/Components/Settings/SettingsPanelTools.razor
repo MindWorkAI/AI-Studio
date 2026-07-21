@@ -1,0 +1,62 @@
+@using AIStudio.Provider
+@using AIStudio.Tools.ToolCallingSystem
+@inherits SettingsPanelBase
+
+<ExpansionPanel HeaderIcon="@Icons.Material.Filled.Build" HeaderText="@T("Tool Settings")">
+    <MudText Typo="Typo.body1" Class="mb-4">
+        @T("Configure global settings for each tool.")
+    </MudText>
+
+    <MudTable Items="@this.items" Hover="@true" Dense="@true">
+        <HeaderContent>
+            <MudTh>@T("Icon")</MudTh>
+            <MudTh>@T("Name")</MudTh>
+            <MudTh>@T("Description")</MudTh>
+            <MudTh>@T("Minimum provider confidence")</MudTh>
+            <MudTh>@T("Status")</MudTh>
+            <MudTh>@T("Settings")</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>
+                <MudIcon Icon="@context.Implementation.Icon" Color="Color.Info" />
+            </MudTd>
+            <MudTd>
+                <MudText Typo="Typo.body1">@context.Implementation.GetDisplayName()</MudText>
+            </MudTd>
+            <MudTd>
+                <MudText Typo="Typo.body2">@context.Implementation.GetDescription()</MudText>
+            </MudTd>
+            <MudTd>
+                <MudMenu StartIcon="@Icons.Material.Filled.Security" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="@this.GetCurrentConfidenceLevelName(context)" Variant="Variant.Filled" Style="@this.SetCurrentConfidenceLevelColorStyle(context)" Disabled="@this.IsToolConfidenceManaged()">
+                    @foreach (var confidenceLevel in this.GetSelectableConfidenceLevels())
+                    {
+                        <MudMenuItem OnClick="@(async () => await this.ChangeMinimumProviderConfidence(context, confidenceLevel))">
+                            @this.GetConfidenceLevelName(confidenceLevel)
+                        </MudMenuItem>
+                    }
+                </MudMenu>
+            </MudTd>
+            <MudTd>
+                @if (!context.IsActive)
+                {
+                    <MudTooltip Text="@T("This tool has been disabled by your organization.")">
+                        <MudIcon Icon="@Icons.Material.Filled.Lock" Color="Color.Error" />
+                    </MudTooltip>
+                }
+                else if (context.ConfigurationState.IsConfigured)
+                {
+                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
+                }
+                else
+                {
+                    <MudTooltip Text="@this.GetConfigurationTooltip(context)">
+                        <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Warning" />
+                    </MudTooltip>
+                }
+            </MudTd>
+            <MudTd>
+                <MudIconButton Icon="@Icons.Material.Filled.Settings" OnClick="@(async () => await this.OpenSettings(context.Definition.Id))" />
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+</ExpansionPanel>

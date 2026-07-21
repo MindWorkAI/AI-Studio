@@ -1,7 +1,9 @@
 using AIStudio.Components;
 using AIStudio.Dialogs;
 using AIStudio.Tools.Services;
+using AIStudio.Tools.ToolCallingSystem;
 using Microsoft.AspNetCore.Components;
+using MudBlazor;
 
 namespace AIStudio.Chat;
 
@@ -103,6 +105,8 @@ public partial class ContentBlockComponent : MSGComponentBase, IAsyncDisposable
     private string lastMathRenderSignature = string.Empty;
     private bool hasActiveMathContainer;
     private bool isDisposed;
+    private bool showToolTrace;
+    private readonly HashSet<int> expandedToolInvocations = [];
 
     #region Overrides of ComponentBase
 
@@ -199,6 +203,27 @@ public partial class ContentBlockComponent : MSGComponentBase, IAsyncDisposable
                 hash.Add(textValue.Length);
                 hash.Add(textValue.GetHashCode(StringComparison.Ordinal));
                 hash.Add(text.Sources.Count);
+                hash.Add(text.ToolInvocations.Count);
+                hash.Add(text.ToolRuntimeStatus.IsRunning);
+                hash.Add(text.ToolRuntimeStatus.Message);
+                hash.Add(this.showToolTrace);
+                hash.Add(this.expandedToolInvocations.Count);
+                foreach (var expandedInvocation in this.expandedToolInvocations.Order())
+                    hash.Add(expandedInvocation);
+                foreach (var invocation in text.ToolInvocations)
+                {
+                    hash.Add(invocation.Order);
+                    hash.Add(invocation.ToolId);
+                    hash.Add(invocation.Status);
+                    hash.Add(invocation.StatusMessage);
+                    hash.Add(invocation.Result);
+                    hash.Add(invocation.Arguments.Count);
+                    foreach (var argument in invocation.Arguments)
+                    {
+                        hash.Add(argument.Key);
+                        hash.Add(argument.Value);
+                    }
+                }
                 break;
 
             case ContentImage image:
@@ -214,7 +239,54 @@ public partial class ContentBlockComponent : MSGComponentBase, IAsyncDisposable
     
     private string CardClasses => $"my-2 rounded-lg {this.Class}";
 
+    private bool HasToolTrace => this.Role is ChatRole.AI && this.GetToolInvocations().Count > 0;
+
     private CodeBlockTheme CodeColorPalette => this.SettingsManager.IsDarkMode ? CodeBlockTheme.Dark : CodeBlockTheme.Default;
+
+    private static Color GetTraceColor(ToolInvocationTraceStatus status) => status switch
+    {
+        ToolInvocationTraceStatus.SUCCESS => Color.Success,
+        ToolInvocationTraceStatus.ERROR => Color.Error,
+        ToolInvocationTraceStatus.BLOCKED => Color.Warning,
+        _ => Color.Default,
+    };
+
+    private string GetTraceStatusText(ToolInvocationTrace trace) => trace.Status switch
+    {
+        ToolInvocationTraceStatus.SUCCESS => this.T("Executed"),
+        ToolInvocationTraceStatus.ERROR => this.T("Failed"),
+        ToolInvocationTraceStatus.BLOCKED => this.T("Blocked"),
+        _ => this.T("Unknown"),
+    };
+
+    private IReadOnlyList<ToolInvocationTrace> GetToolInvocations() => this.Content is ContentText textContent
+        ? textContent.ToolInvocations.OrderBy(x => x.Order).ToList()
+        : [];
+
+    private string GetToolTraceTooltip()
+    {
+        var invocations = this.GetToolInvocations();
+        return invocations.Count switch
+        {
+            0 => this.T("No tool calls"),
+            1 => string.Format(this.T("Show tool call for {0}"), invocations[0].ToolName),
+            _ => string.Format(this.T("Show {0} tool calls"), invocations.Count),
+        };
+    }
+
+    private void ToggleToolTrace() => this.showToolTrace = !this.showToolTrace;
+
+    private bool IsToolInvocationExpanded(int order) => this.expandedToolInvocations.Contains(order);
+
+    private void ToggleToolInvocation(int order)
+    {
+        if (!this.expandedToolInvocations.Add(order))
+            this.expandedToolInvocations.Remove(order);
+    }
+
+    private string GetToolInvocationResult(ToolInvocationTrace invocation) => string.IsNullOrWhiteSpace(invocation.Result)
+        ? this.T("No result")
+        : invocation.Result;
 
     private MudMarkdownStyling MarkdownStyling => new()
     {

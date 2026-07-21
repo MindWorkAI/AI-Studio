@@ -10,9 +10,12 @@ using AIStudio.Provider.Anthropic;
 using AIStudio.Provider.OpenAI;
 using AIStudio.Provider.SelfHosted;
 using AIStudio.Settings;
+using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.MIME;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
+
+using Microsoft.Extensions.DependencyInjection;
 
 using Host = AIStudio.Provider.SelfHosted.Host;
 
@@ -962,13 +965,14 @@ public abstract class BaseProvider : IProvider, ISecretId
         Model chatModel,
         ChatThread chatThread,
         SettingsManager settingsManager,
-        Func<TextMessage, IDictionary<string, object>, Task<TRequest>> requestFactory,
+        Func<TextMessage, IDictionary<string, object>, IList<object>?, Task<TRequest>> requestFactory,
         SecretStoreType storeType = SecretStoreType.LLM_PROVIDER,
         bool isTryingSecret = false,
         string systemPromptRole = "system",
         string requestPath = "chat/completions",
         Action<HttpRequestHeaders>? headersAction = null,
         [EnumeratorCancellation] CancellationToken token = default)
+        where TRequest : ChatCompletionAPIRequest
         where TDelta : IResponseStreamLine
         where TAnnotation : IAnnotationStreamLine
     {
@@ -977,18 +981,171 @@ public abstract class BaseProvider : IProvider, ISecretId
         if(!requestedSecret.Success && !isTryingSecret)
             yield break;
 
-        // Prepare the system prompt:
-        var systemPrompt = new TextMessage
-        {
-            Role = systemPromptRole,
-            Content = chatThread.PrepareSystemPrompt(settingsManager),
-        };
-
         // Parse the API parameters:
         var apiParameters = this.ParseAdditionalApiParameters();
 
+        var toolRegistry = Program.SERVICE_PROVIDER.GetService<ToolRegistry>();
+        var toolExecutor = Program.SERVICE_PROVIDER.GetService<ToolExecutor>();
+        var currentAssistantContent = chatThread.Blocks.LastOrDefault(x => x.Role is ChatRole.AI)?.Content as ContentText;
+        currentAssistantContent?.ToolInvocations.Clear();
+
+        async Task ResetToolRuntimeStatusAsync()
+        {
+            if (currentAssistantContent is null)
+                return;
+
+            currentAssistantContent.ToolRuntimeStatus = new();
+            await currentAssistantContent.StreamingEvent();
+        }
+
+        async Task ShowToolRuntimeStatusAsync(IEnumerable<string> toolNames)
+        {
+            if (currentAssistantContent is null)
+                return;
+
+            currentAssistantContent.ToolRuntimeStatus = new ToolRuntimeStatus
+            {
+                IsRunning = true,
+                ToolNames = toolNames.ToList(),
+            };
+            await currentAssistantContent.StreamingEvent();
+        }
+
+        TextMessage systemPrompt;
+        if (toolRegistry is not null && toolExecutor is not null)
+        {
+            var runnableTools = await toolRegistry.GetRunnableToolsAsync(
+                this.CreateSettingsProvider(chatModel),
+                chatThread.RuntimeComponent,
+                chatThread.RuntimeSelectedToolIds,
+                this.Provider.GetModelCapabilities(chatModel),
+                this.Provider.GetConfidence(settingsManager).Level,
+                settingsManager.IsToolSelectionVisible(chatThread.RuntimeComponent));
+
+            systemPrompt = new TextMessage
+            {
+                Role = systemPromptRole,
+                Content = chatThread.PrepareSystemPrompt(settingsManager, runnableTools.Select(x => x.Definition)),
+            };
+
+            if (runnableTools.Count > 0)
+            {
+                var providerTools = runnableTools.Select(x => ProviderToolAdapters.ToChatCompletionTool(x.Definition)).ToList();
+
+                var internalMessages = new List<IMessageBase>();
+                var toolCallCount = 0;
+                while (true)
+                {
+                    var finalResponseRequired = toolCallCount >= ToolSelectionRules.MAX_TOOL_CALLS;
+                    var requestSystemPrompt = finalResponseRequired
+                        ? systemPrompt with
+                        {
+                            Content = $"{systemPrompt.Content}{Environment.NewLine}{Environment.NewLine}{ToolSelectionRules.GetMaxToolCallsFinalResponseInstruction()}",
+                        }
+                        : systemPrompt;
+                    ChatCompletionAPIRequest requestDtoBase = await requestFactory(
+                        requestSystemPrompt,
+                        apiParameters,
+                        finalResponseRequired ? null : providerTools);
+                    var requestDto = requestDtoBase with
+                    {
+                        Messages = [..requestDtoBase.Messages, ..internalMessages],
+                        Stream = false,
+                    };
+                    var response = await this.ExecuteChatCompletionRequest(requestDto, requestPath, requestedSecret, headersAction, token);
+                    var responseMessage = response?.Choices.FirstOrDefault()?.Message;
+                    if (responseMessage is null)
+                    {
+                        await ResetToolRuntimeStatusAsync();
+                        yield break;
+                    }
+
+                    var toolCalls = this.CanonicalizeToolCallNames(responseMessage.ToolCalls ?? [], runnableTools);
+                    if (toolCalls.Count == 0)
+                    {
+                        await ResetToolRuntimeStatusAsync();
+                        if (!string.IsNullOrWhiteSpace(responseMessage.Content))
+                            yield return new ContentStreamChunk(responseMessage.Content, []);
+                        else if (toolCallCount > 0)
+                            yield return new ContentStreamChunk("The model completed the tool call but did not return a final answer.", []);
+
+                        yield break;
+                    }
+
+                    if (finalResponseRequired)
+                    {
+                        await ResetToolRuntimeStatusAsync();
+                        if (!string.IsNullOrWhiteSpace(responseMessage.Content))
+                            yield return new ContentStreamChunk(responseMessage.Content, []);
+                        else
+                            yield return new ContentStreamChunk("The model did not return a final answer after completing the available tool calls.", []);
+
+                        yield break;
+                    }
+
+                    try
+                    {
+                        await ShowToolRuntimeStatusAsync(toolCalls
+                            .Select(x => runnableTools.FirstOrDefault(tool => tool.Definition.Function.Name.Equals(x.Function.Name, StringComparison.Ordinal)).Implementation?.GetDisplayName() ?? x.Function.Name));
+
+                        internalMessages.Add(new AssistantToolCallMessage
+                        {
+                            Content = responseMessage.Content,
+                            ToolCalls = toolCalls,
+                        });
+
+                        foreach (var toolCall in toolCalls)
+                        {
+                            if (toolCallCount >= ToolSelectionRules.MAX_TOOL_CALLS)
+                            {
+                                var finalResponseInstruction = ToolSelectionRules.GetMaxToolCallsFinalResponseInstruction();
+                                internalMessages.Add(new ToolResultMessage
+                                {
+                                    Content = finalResponseInstruction,
+                                    ToolCallId = toolCall.Id,
+                                });
+                                continue;
+                            }
+
+                            toolCallCount++;
+                            var (toolContent, trace, requiredProviderConfidence) = await toolExecutor.ExecuteAsync(
+                                toolCall.Id,
+                                toolCall.Function.Name,
+                                toolCall.Function.Arguments,
+                                runnableTools,
+                                this.Provider.GetConfidence(settingsManager).Level,
+                                toolCallCount,
+                                token);
+
+                            chatThread.RequireProviderConfidence(requiredProviderConfidence);
+                            currentAssistantContent?.ToolInvocations.Add(trace);
+                            internalMessages.Add(new ToolResultMessage
+                            {
+                                Content = toolContent,
+                                ToolCallId = toolCall.Id,
+                            });
+                        }
+
+                    }
+                    finally
+                    {
+                        await ResetToolRuntimeStatusAsync();
+                    }
+                }
+            }
+
+        }
+        else
+        {
+            systemPrompt = new TextMessage
+            {
+                Role = systemPromptRole,
+                Content = chatThread.PrepareSystemPrompt(settingsManager),
+            };
+        }
+
         // Prepare the provider HTTP chat request:
-        var providerChatRequest = JsonSerializer.Serialize(await requestFactory(systemPrompt, apiParameters), JSON_SERIALIZER_OPTIONS);
+        var providerChatRequest = JsonSerializer.Serialize(await requestFactory(systemPrompt, apiParameters, null), JSON_SERIALIZER_OPTIONS);
 
         async Task<HttpRequestMessage> RequestBuilder()
         {
@@ -1009,6 +1166,64 @@ public abstract class BaseProvider : IProvider, ISecretId
 
         await foreach (var content in this.StreamChatCompletionInternal<TDelta, TAnnotation>(providerName, RequestBuilder, token))
             yield return content;
+    }
+
+    private AIStudio.Settings.Provider CreateSettingsProvider(Model chatModel) => new()
+    {
+        UsedLLMProvider = this.Provider,
+        Model = chatModel,
+        InstanceName = this.InstanceName,
+    };
+
+    private IList<ChatCompletionToolCall> CanonicalizeToolCallNames(
+        IEnumerable<ChatCompletionToolCall> toolCalls,
+        IReadOnlyList<(ToolDefinition Definition, IToolImplementation Implementation)> runnableTools) => toolCalls
+            .Select(toolCall =>
+            {
+                var returnedName = toolCall.Function.Name;
+                var canonicalName = runnableTools
+                    .Select(x => x.Definition.Function.Name)
+                    .FirstOrDefault(x => x.Equals(returnedName.Trim(), StringComparison.Ordinal));
+                if (canonicalName is null || canonicalName.Equals(returnedName, StringComparison.Ordinal))
+                    return toolCall;
+
+                this.logger.LogWarning("Canonicalized tool call function name '{ReturnedFunctionName}' to '{CanonicalFunctionName}'.", returnedName, canonicalName);
+                return toolCall with
+                {
+                    Function = toolCall.Function with
+                    {
+                        Name = canonicalName,
+                    },
+                };
+            })
+            .ToList();
+
+    private async Task<ChatCompletionResponse?> ExecuteChatCompletionRequest(
+        ChatCompletionAPIRequest requestDto,
+        string requestPath,
+        RequestedSecret requestedSecret,
+        Action<HttpRequestHeaders>? headersAction,
+        CancellationToken token)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, requestPath);
+        if (requestedSecret.Success)
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
+
+        headersAction?.Invoke(request.Headers);
+        request.Content = new StringContent(JsonSerializer.Serialize(requestDto, JSON_SERIALIZER_OPTIONS), Encoding.UTF8, "application/json");
+
+        using var response = await this.HttpClient.SendAsync(request, token);
+        if (!response.IsSuccessStatusCode)
+        {
+            var responseBody = await response.Content.ReadAsStringAsync(token);
+            this.logger.LogError("Tool calling chat completion request failed with status code {ResponseStatusCode} and body: '{ResponseBody}'.", response.StatusCode, responseBody);
+            await MessageBus.INSTANCE.SendError(new(
+                Icons.Material.Filled.Build,
+                string.Format(TB("The tool calling request failed with status code {0}. See the logs for details."), (int)response.StatusCode)));
+            return null;
+        }
+
+        return await response.Content.ReadFromJsonAsync<ChatCompletionResponse>(JSON_SERIALIZER_OPTIONS, token);
     }
 
     protected async Task<TranscriptionResult> PerformStandardTranscriptionRequest(RequestedSecret requestedSecret, Model transcriptionModel, string audioFilePath, Host host = Host.NONE, CancellationToken token = default)

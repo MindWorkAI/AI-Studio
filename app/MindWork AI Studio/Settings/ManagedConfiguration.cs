@@ -426,17 +426,17 @@ public static partial class ManagedConfiguration
         if (!TryGet(configSelection, propertyExpression, out var configMeta))
             return false;
 
-        if (configMeta.LockedByConfigPluginId == Guid.Empty || !configMeta.IsLocked)
-            return false;
-
-        var plugin = availablePlugins.FirstOrDefault(x => x.Id == configMeta.LockedByConfigPluginId);
-        if (plugin is null)
+        if (configMeta.LockedByConfigPluginId != Guid.Empty && configMeta.IsLocked)
         {
-            configMeta.ResetLockedConfiguration();
-            return true;
+            var plugin = availablePlugins.FirstOrDefault(x => x.Id == configMeta.LockedByConfigPluginId);
+            if (plugin is null)
+            {
+                configMeta.ResetLockedConfiguration();
+                return true;
+            }
         }
 
-        return false;
+        return CleanupEditableDefaultState(configMeta, SettingName(propertyExpression), [..availablePlugins]);
     }
 
     public static bool IsConfigurationLeftOver<TClass, TKey, TValue>(

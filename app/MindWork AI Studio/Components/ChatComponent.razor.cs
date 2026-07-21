@@ -3,6 +3,7 @@ using AIStudio.Dialogs;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.AIJobs;
 using AIStudio.Tools.Media;
 using AIStudio.Tools.Services;
@@ -76,6 +77,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private bool mustLoadChat;
     private LoadChat loadChat;
     private bool autoSaveEnabled;
+    private HashSet<string> selectedToolIds = [];
     private bool previousInputForbidden = true;
     private Guid lastSeenChatId = Guid.Empty;
     private AIStudio.Settings.Provider lastSeenProvider = AIStudio.Settings.Provider.NONE;
@@ -113,7 +115,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     protected override async Task OnInitializedAsync()
     {
         this.MediaTranscriptionService.StateChanged += this.OnMediaImportStateChanged;
-        
+
         // Apply the filters for the message bus:
         this.ApplyFilters([], [ Event.HAS_CHAT_UNSAVED_CHANGES, Event.RESET_CHAT_STATE, Event.CHAT_STREAMING_DONE, Event.AI_JOB_CHANGED, Event.AI_JOB_FINISHED, Event.CHAT_GENERATION_CHANGED, Event.WORKSPACE_RENAMED, Event.CONFIGURATION_CHANGED ]);
         
@@ -128,6 +130,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         this.currentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(Tools.Components.CHAT);
         if (!this.ComposerState.HasUserDraft && !this.ComposerState.HasComposerContent)
             this.ComposerState.ApplyTemplate(this.currentChatTemplate);
+        this.selectedToolIds = ToolSelectionRules.NormalizeSelection(this.SettingsManager.GetDefaultToolIds(Tools.Components.CHAT));
 
         this.lastAppliedStandardDataSourceOptions = this.SettingsManager.ConfigurationData.Chat.PreselectedDataSourceOptions.CreateCopy();
 
@@ -769,6 +772,8 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         if (this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner))
             return;
 
+        await this.RefreshProviderSelectionFromConfigurationAsync();
+
         if (!this.IsProviderSelected)
             return;
         
@@ -890,15 +895,17 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         }
         
         this.Logger.LogDebug($"Start processing user input using provider '{this.Provider.InstanceName}' with model '{this.Provider.Model}'.");
+        this.StateHasChanged();
+        this.ChatThread!.RuntimeComponent = Tools.Components.CHAT;
+        this.ChatThread.RuntimeSelectedToolIds = this.SettingsManager.FilterToolIdsForProvider(this.Provider, this.selectedToolIds);
         await this.AIJobService.TryStartChatGenerationAsync(new ChatGenerationRequest
         {
-            ChatThread = this.ChatThread!,
+            ChatThread = this.ChatThread,
             AIText = aiText,
             LastUserPrompt = lastUserPrompt,
             ProviderSettings = this.Provider,
             IsForeground = true,
         });
-
         await this.SyncForegroundChatAsync();
         this.StateHasChanged();
     }
@@ -907,6 +914,12 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     {
         if (this.ChatThread is not null)
             await this.AIJobService.CancelChatGenerationAsync(this.ChatThread.ChatId);
+    }
+
+    private Task SelectedToolIdsChanged(HashSet<string> updatedToolIds)
+    {
+        this.selectedToolIds = ToolSelectionRules.NormalizeSelection(updatedToolIds);
+        return Task.CompletedTask;
     }
     
     private async Task SaveThread()
@@ -971,6 +984,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         //
         this.hasUnsavedChanges = false;
         this.ComposerState.Clear();
+        this.selectedToolIds = ToolSelectionRules.NormalizeSelection(this.SettingsManager.GetDefaultToolIds(Tools.Components.CHAT));
         this.RefreshCurrentProfileAndChatTemplate();
         
         //
@@ -1113,6 +1127,19 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         }
         
         this.StateHasChanged();
+    }
+
+    private async Task RefreshProviderSelectionFromConfigurationAsync()
+    {
+        var updatedProvider = this.SettingsManager.GetPreselectedProvider(Tools.Components.CHAT, this.Provider.Id);
+        var providerChanged = updatedProvider != this.Provider;
+        if (providerChanged)
+            this.Provider = updatedProvider;
+
+        if (!providerChanged)
+            return;
+
+        await this.ProviderChanged.InvokeAsync(this.Provider);
     }
     
     private async Task ResetState()
@@ -1266,6 +1293,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                     this.StateHasChanged();
                 }
                 break;
+
         }
     }
 

@@ -7,6 +7,11 @@ using System.Text.Json;
 using AIStudio.Chat;
 using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Rust;
+using AIStudio.Tools.ToolCallingSystem;
+using AIStudio.Tools.Services;
+
+using Microsoft.Extensions.DependencyInjection;
 
 namespace AIStudio.Provider.OpenAI;
 
@@ -16,7 +21,6 @@ namespace AIStudio.Provider.OpenAI;
 public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Uri("https://api.openai.com/v1/"), ExternalHttpTrustPolicy.SYSTEM_TRUST_ONLY, LOGGER)
 {
     private static readonly ILogger<ProviderOpenAI> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderOpenAI>();
-    
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ProviderOpenAI).Namespace, nameof(ProviderOpenAI));
     
     #region Implementation of IProvider
@@ -98,81 +102,148 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
         
         LOGGER.LogInformation("Using the system prompt role '{SystemPromptRole}' and the '{RequestPath}' API for model '{ChatModelId}'.", systemPromptRole, requestPath, chatModel.Id);
         
-        // Prepare the system prompt:
-        var systemPrompt = new TextMessage
-        {
-            Role = systemPromptRole,
-            Content = chatThread.PrepareSystemPrompt(settingsManager),
-        };
-
         //
         // Prepare the tools we want to use:
         //
-        IList<ProviderTool> providerTools = modelCapabilities.Contains(Capability.WEB_SEARCH) switch
-        {
-            true => [ ProviderTools.WEB_SEARCH ],
-            _ => []
-        };
+        var providerConfidence = this.Provider.GetConfidence(settingsManager).Level;
+        var minimumWebSearchConfidence = settingsManager.GetMinimumProviderConfidenceForTool(ToolSelectionRules.WEB_SEARCH_TOOL_ID);
+        var isWebSearchAllowed = settingsManager.IsToolActive(ToolSelectionRules.WEB_SEARCH_TOOL_ID) &&
+                                 ToolSelectionRules.IsProviderConfidenceAllowed(providerConfidence, minimumWebSearchConfidence);
+        IList<object> providerTools = modelCapabilities.Contains(Capability.WEB_SEARCH) && isWebSearchAllowed
+            ? [ ProviderTools.WEB_SEARCH ]
+            : [];
         
         
         // Parse the API parameters:
         var apiParameters = this.ParseAdditionalApiParameters("input", "store", "tools");
 
+        if (!usingResponsesAPI)
+        {
+            await foreach (var content in this.StreamOpenAICompatibleChatCompletion<ChatCompletionAPIRequest, ChatCompletionDeltaStreamLine, ChatCompletionAnnotationStreamLine>(
+                               "OpenAI",
+                               chatModel,
+                               chatThread,
+                               settingsManager,
+                               async (systemPrompt, apiParameters, tools) =>
+                               {
+                                   var messages = await chatThread.Blocks.BuildMessagesAsync(
+                                       this.Provider,
+                                       chatModel,
+                                       role => role switch
+                                       {
+                                           ChatRole.USER => "user",
+                                           ChatRole.AI => "assistant",
+                                           ChatRole.AGENT => "assistant",
+                                           ChatRole.SYSTEM => systemPromptRole,
+                                           _ => "user",
+                                       },
+                                       text => new SubContentText
+                                       {
+                                           Text = text,
+                                       },
+                                       async attachment => new SubContentImageUrlNested
+                                       {
+                                           ImageUrl = new SubContentImageUrlData
+                                           {
+                                               Url = await attachment.TryAsBase64(token: token) is (true, var base64Content)
+                                                   ? $"data:{attachment.DetermineMimeType()};base64,{base64Content}"
+                                                   : string.Empty,
+                                           },
+                                       });
+
+                                   return new ChatCompletionAPIRequest
+                                   {
+                                       Model = chatModel.Id,
+                                       Messages = [systemPrompt, ..messages],
+                                       Stream = true,
+                                       Tools = tools,
+                                       ParallelToolCalls = tools is null ? null : true,
+                                       AdditionalApiParameters = apiParameters,
+                                   };
+                               },
+                               systemPromptRole: systemPromptRole,
+                               requestPath: "chat/completions",
+                               token: token))
+                yield return content;
+
+            yield break;
+        }
+
+        var toolRegistry = Program.SERVICE_PROVIDER.GetService<ToolRegistry>();
+        var toolExecutor = Program.SERVICE_PROVIDER.GetService<ToolExecutor>();
+        var currentAssistantContent = chatThread.Blocks.LastOrDefault(x => x.Role is ChatRole.AI)?.Content as ContentText;
+        currentAssistantContent?.ToolInvocations.Clear();
+
+        IReadOnlyList<(ToolDefinition Definition, IToolImplementation Implementation)> runnableTools = toolRegistry is null
+            ? []
+            : await toolRegistry.GetRunnableToolsAsync(
+                new AIStudio.Settings.Provider
+                {
+                    UsedLLMProvider = this.Provider,
+                    Model = chatModel,
+                    InstanceName = this.InstanceName,
+                },
+                chatThread.RuntimeComponent,
+                chatThread.RuntimeSelectedToolIds,
+                modelCapabilities,
+                providerConfidence,
+                settingsManager.IsToolSelectionVisible(chatThread.RuntimeComponent));
+
+        var toolAwareDefinitions = toolExecutor is null
+            ? Enumerable.Empty<ToolDefinition>()
+            : runnableTools.Select(x => x.Definition);
+        var systemPrompt = new TextMessage
+        {
+            Role = systemPromptRole,
+            Content = chatThread.PrepareSystemPrompt(settingsManager, toolAwareDefinitions),
+        };
+
         // Build the list of messages:
         var messages = await chatThread.Blocks.BuildMessagesAsync(
             this.Provider, chatModel,
-
-            // OpenAI-specific role mapping:
             role => role switch
             {
                 ChatRole.USER => "user",
                 ChatRole.AI => "assistant",
                 ChatRole.AGENT => "assistant",
                 ChatRole.SYSTEM => systemPromptRole,
-
                 _ => "user",
             },
-
-            // OpenAI's text sub-content depends on the model, whether we are using
-            // the Responses API or the Chat Completion API:
-            text => usingResponsesAPI switch
+            text => new SubContentInputText
             {
-                // Responses API uses INPUT_TEXT:
-                true => new SubContentInputText
-                {
-                    Text = text,
-                },
-
-                // Chat Completion API uses TEXT:
-                false => new SubContentText
-                {
-                    Text = text,
-                },
+                Text = text,
             },
-
-            // OpenAI's image sub-content depends on the model as well,
-            // whether we are using the Responses API or the Chat Completion API:
-            async attachment => usingResponsesAPI switch
+            async attachment => new SubContentInputImage
             {
-                // Responses API uses INPUT_IMAGE:
-                true => new SubContentInputImage
-                {
-                    ImageUrl = await attachment.TryAsBase64(token: token) is (true, var base64Content)
-                        ? $"data:{attachment.DetermineMimeType()};base64,{base64Content}"
-                        : string.Empty,
-                },
-                
-                // Chat Completion API uses IMAGE_URL:
-                false => new SubContentImageUrlNested
-                {
-                    ImageUrl = new SubContentImageUrlData
-                    {
-                        Url = await attachment.TryAsBase64(token: token) is (true, var base64Content)
-                            ? $"data:{attachment.DetermineMimeType()};base64,{base64Content}"
-                            : string.Empty,
-                    },
-                }
+                ImageUrl = await attachment.TryAsBase64(token: token) is (true, var base64Content)
+                    ? $"data:{attachment.DetermineMimeType()};base64,{base64Content}"
+                    : string.Empty,
             });
+
+        var baseInput = new List<object> { systemPrompt };
+        baseInput.AddRange(messages.Cast<object>());
+
+        if (usingResponsesAPI && toolExecutor is not null && runnableTools.Count > 0)
+        {
+            await foreach (var content in this.StreamResponsesWithLocalTools(
+                               chatModel,
+                               chatThread,
+                               baseInput,
+                               apiParameters,
+                               providerTools,
+                               runnableTools,
+                               toolExecutor,
+                               currentAssistantContent,
+                               requestedSecret,
+                               providerConfidence,
+                               token))
+                yield return content;
+
+            yield break;
+        }
+
+        if (runnableTools.Count > 0)
+            providerTools = [];
         
         //
         // Create the request: either for the Responses API or the Chat Completion API
@@ -198,7 +269,7 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
                 Model = chatModel.Id,
             
                 // All messages go into the input field:
-                Input = [systemPrompt, ..messages],
+                Input = baseInput,
             
                 // Right now, we only support streaming completions:
                 Stream = true,
@@ -207,7 +278,7 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
                 Store = false,
                 
                 // Tools we want to use:
-                ProviderTools = providerTools,
+                Tools = providerTools,
                 
                 // Additional API parameters:
                 AdditionalApiParameters = apiParameters
@@ -235,6 +306,180 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
         else
             await foreach (var content in this.StreamChatCompletionInternal<ChatCompletionDeltaStreamLine, ChatCompletionAnnotationStreamLine>("OpenAI", RequestBuilder, token))
                 yield return content;
+    }
+
+    private async IAsyncEnumerable<ContentStreamChunk> StreamResponsesWithLocalTools(
+        Model chatModel,
+        ChatThread chatThread,
+        IList<object> baseInput,
+        IDictionary<string, object> apiParameters,
+        IList<object> providerTools,
+        IReadOnlyList<(ToolDefinition Definition, IToolImplementation Implementation)> runnableTools,
+        ToolExecutor toolExecutor,
+        ContentText? currentAssistantContent,
+        RequestedSecret requestedSecret,
+        ConfidenceLevel providerConfidence,
+        [EnumeratorCancellation] CancellationToken token)
+    {
+        var localProviderTools = runnableTools
+            .Select(x => (object)ProviderToolAdapters.ToResponsesTool(x.Definition))
+            .ToList();
+        var localFunctionNames = runnableTools
+            .Select(x => x.Definition.Function.Name)
+            .ToHashSet(StringComparer.Ordinal);
+        var effectiveProviderTools = providerTools
+            .Where(x => x is not ProviderTool providerTool || !localFunctionNames.Contains(providerTool.Type))
+            .Concat(localProviderTools)
+            .ToList();
+        // Preserve every output item required to continue the response, including
+        // reasoning items emitted alongside function calls.
+        var internalItems = new List<object>();
+        var toolCallCount = 0;
+
+        while (true)
+        {
+            var finalResponseRequired = toolCallCount >= ToolSelectionRules.MAX_TOOL_CALLS;
+            var requestInput = new List<object>(baseInput);
+            if (finalResponseRequired && requestInput.FirstOrDefault() is TextMessage systemPrompt)
+            {
+                requestInput[0] = systemPrompt with
+                {
+                    Content = $"{systemPrompt.Content}{Environment.NewLine}{Environment.NewLine}{ToolSelectionRules.GetMaxToolCallsFinalResponseInstruction()}",
+                };
+            }
+            requestInput.AddRange(internalItems);
+
+            var requestDto = new ResponsesAPIRequest
+            {
+                Model = chatModel.Id,
+                Input = requestInput,
+                Stream = false,
+                Store = false,
+                Tools = finalResponseRequired ? [] : effectiveProviderTools,
+                AdditionalApiParameters = apiParameters,
+            };
+            var response = await this.ExecuteResponsesRequest(requestDto, requestedSecret, token);
+            if (response is null)
+            {
+                await ResetToolRuntimeStatusAsync(currentAssistantContent);
+                yield break;
+            }
+
+            if (finalResponseRequired)
+            {
+                await ResetToolRuntimeStatusAsync(currentAssistantContent);
+
+                var textOutput = response.GetTextOutput();
+                if (!string.IsNullOrWhiteSpace(textOutput))
+                    yield return new ContentStreamChunk(textOutput, []);
+                else
+                    yield return new ContentStreamChunk("The model did not return a final answer after completing the available tool calls.", []);
+
+                yield break;
+            }
+
+            var functionCalls = response.GetFunctionCalls();
+            if (functionCalls.Count == 0)
+            {
+                await ResetToolRuntimeStatusAsync(currentAssistantContent);
+
+                var textOutput = response.GetTextOutput();
+                if (!string.IsNullOrWhiteSpace(textOutput))
+                    yield return new ContentStreamChunk(textOutput, []);
+                else if (toolCallCount > 0)
+                    yield return new ContentStreamChunk("The model completed the tool call but did not return a final answer.", []);
+
+                yield break;
+            }
+
+            try
+            {
+                await ShowToolRuntimeStatusAsync(currentAssistantContent, functionCalls
+                    .Select(x => runnableTools.FirstOrDefault(tool => tool.Definition.Function.Name.Equals(x.Name, StringComparison.Ordinal)).Implementation?.GetDisplayName() ?? x.Name));
+
+                foreach (var outputItem in response.Output)
+                    internalItems.Add(outputItem);
+
+                foreach (var functionCall in functionCalls)
+                {
+                    if (toolCallCount >= ToolSelectionRules.MAX_TOOL_CALLS)
+                    {
+                        var finalResponseInstruction = ToolSelectionRules.GetMaxToolCallsFinalResponseInstruction();
+                        internalItems.Add(new ResponsesFunctionCallOutputItem
+                        {
+                            CallId = functionCall.CallId,
+                            Output = finalResponseInstruction,
+                        });
+                        continue;
+                    }
+
+                    toolCallCount++;
+                    var (toolContent, trace, requiredProviderConfidence) = await toolExecutor.ExecuteAsync(
+                        functionCall.CallId,
+                        functionCall.Name,
+                        functionCall.Arguments,
+                        runnableTools,
+                        providerConfidence,
+                        toolCallCount,
+                        token);
+
+                    chatThread.RequireProviderConfidence(requiredProviderConfidence);
+                    currentAssistantContent?.ToolInvocations.Add(trace);
+                    internalItems.Add(new ResponsesFunctionCallOutputItem
+                    {
+                        CallId = functionCall.CallId,
+                        Output = toolContent,
+                    });
+                }
+
+            }
+            finally
+            {
+                await ResetToolRuntimeStatusAsync(currentAssistantContent);
+            }
+        }
+    }
+
+    private static async Task ResetToolRuntimeStatusAsync(ContentText? currentAssistantContent)
+    {
+        if (currentAssistantContent is null)
+            return;
+
+        currentAssistantContent.ToolRuntimeStatus = new();
+        await currentAssistantContent.StreamingEvent();
+    }
+
+    private static async Task ShowToolRuntimeStatusAsync(ContentText? currentAssistantContent, IEnumerable<string> toolNames)
+    {
+        if (currentAssistantContent is null)
+            return;
+
+        currentAssistantContent.ToolRuntimeStatus = new ToolRuntimeStatus
+        {
+            IsRunning = true,
+            ToolNames = toolNames.ToList(),
+        };
+        await currentAssistantContent.StreamingEvent();
+    }
+
+    private async Task<ResponsesResponse?> ExecuteResponsesRequest(ResponsesAPIRequest requestDto, RequestedSecret requestedSecret, CancellationToken token)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, "responses");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
+        request.Content = new StringContent(JsonSerializer.Serialize(requestDto, JSON_SERIALIZER_OPTIONS), Encoding.UTF8, "application/json");
+
+        using var response = await this.HttpClient.SendAsync(request, token);
+        if (!response.IsSuccessStatusCode)
+        {
+            var responseBody = await response.Content.ReadAsStringAsync(token);
+            LOGGER.LogError("Tool calling Responses API request failed with status code {ResponseStatusCode} and body: '{ResponseBody}'.", response.StatusCode, responseBody);
+            await MessageBus.INSTANCE.SendError(new(
+                Icons.Material.Filled.Build,
+                string.Format(TB("The tool calling request failed with status code {0}. See the logs for details."), (int)response.StatusCode)));
+            return null;
+        }
+
+        return await response.Content.ReadFromJsonAsync<ResponsesResponse>(JSON_SERIALIZER_OPTIONS, token);
     }
 
     #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously

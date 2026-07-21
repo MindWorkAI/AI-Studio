@@ -1,6 +1,7 @@
 using AIStudio.Agents;
 using AIStudio.Agents.AssistantAudit;
 using AIStudio.Settings;
+using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.Databases;
 using AIStudio.Tools.AIJobs;
 using AIStudio.Tools.AssistantSessions;
@@ -8,6 +9,8 @@ using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.PluginSystem.Assistants;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
+using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations;
+using AIStudio.Tools.Web;
 
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
@@ -159,6 +162,12 @@ internal sealed class Program
         builder.Services.AddSingleton(typeof(RuntimeInfoResponse), runtimeInfo);
         builder.Services.AddMudMarkdownClipboardService<MarkdownClipboardService>();
         builder.Services.AddSingleton<SettingsManager>();
+        builder.Services.AddSingleton<ToolSettingsService>();
+        builder.Services.AddSingleton<WebPageRetrievalService>();
+        builder.Services.AddSingleton<IToolImplementation, ReadWebPageTool>();
+        builder.Services.AddSingleton<IToolImplementation, SearXNGWebSearchTool>();
+        builder.Services.AddSingleton<ToolRegistry>();
+        builder.Services.AddSingleton<ToolExecutor>();
         builder.Services.AddSingleton<ThreadSafeRandom>();
         builder.Services.AddSingleton<AIJobService>();
         builder.Services.AddSingleton<AssistantSessionService>();

@@ -11,7 +11,6 @@ namespace AIStudio.Provider.Anthropic;
 public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, new Uri("https://api.anthropic.com/v1/"), ExternalHttpTrustPolicy.SYSTEM_TRUST_ONLY, LOGGER)
 {
     private static readonly ILogger<ProviderAnthropic> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderAnthropic>();
-
     #region Implementation of IProvider
 
     /// <inheritdoc />
@@ -70,7 +69,7 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, n
                 }
             }
         );
-        
+
         // Prepare the Anthropic HTTP chat request:
         var chatRequest = JsonSerializer.Serialize(new ChatRequest
         {
@@ -164,9 +163,8 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, n
     {
         return Task.FromResult(ModelLoadResult.FromModels([]));
     }
-    
     #endregion
-    
+
     private Task<ModelLoadResult> LoadModels(SecretStoreType storeType, CancellationToken token, string? apiKeyProvisional = null)
     {
         return this.LoadModelsResponse<ModelsResponse>(

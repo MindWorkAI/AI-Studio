@@ -154,4 +154,6 @@ public sealed class Data
     public DataBiasOfTheDay BiasOfTheDay { get; init; } = new();
     
     public DataI18N I18N { get; init; } = new();
+
+    public DataTools Tools { get; init; } = new(x => x.Tools);
 }

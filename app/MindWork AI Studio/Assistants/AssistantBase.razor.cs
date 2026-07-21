@@ -6,6 +6,7 @@ using AIStudio.Tools.AIJobs;
 using AIStudio.Tools.AssistantSessions;
 using AIStudio.Tools.Media;
 using AIStudio.Tools.Services;
+using AIStudio.Tools.ToolCallingSystem;
 
 using Microsoft.AspNetCore.Components;
 
@@ -130,8 +131,10 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     protected virtual bool HasSettingsPanel => typeof(TSettings) != typeof(NoSettingsPanel);
     
+    protected HashSet<string> selectedToolIds = [];
+
     private readonly Timer formChangeTimer = new(TimeSpan.FromSeconds(1.6));
-    
+
     protected MudForm? Form;
     protected CancellationTokenSource? CancellationTokenSource;
     private bool isDisposed;
@@ -183,6 +186,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         this.ProviderSettings = this.SettingsManager.GetPreselectedProvider(this.Component);
         this.CurrentProfile = this.SettingsManager.GetPreselectedProfile(this.Component);
         this.CurrentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(this.Component);
+        this.selectedToolIds = this.SettingsManager.GetDefaultToolIds(this.Component);
         this.assistantSessionKey = new(this.Component, this.AssistantSessionInstanceId);
         await this.AttachAssistantSessionIfAvailable();
         await this.ConsumeMediaOutcomeAsync();
@@ -233,6 +237,10 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     private async Task Start()
     {
+        await this.RefreshProviderSelectionFromConfigurationAsync();
+        if (this.ProviderSettings == Settings.Provider.NONE)
+            return;
+
         if (this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner))
             return;
 
@@ -349,6 +357,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             ChatId = Guid.NewGuid(),
             Name = string.Format(this.TB("Assistant - {0}"), this.Title),
             Blocks = [],
+            RuntimeComponent = this.Component,
         };
     }
 
@@ -365,9 +374,16 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             ChatId = chatId,
             Name = name,
             Blocks = [],
+            RuntimeComponent = this.Component,
         };
         
         return chatId;
+    }
+
+    private Task RefreshProviderSelectionFromConfigurationAsync()
+    {
+        this.ProviderSettings = this.SettingsManager.GetPreselectedProvider(this.Component, this.ProviderSettings.Id);
+        return Task.CompletedTask;
     }
 
     protected virtual void ResetProviderAndProfileSelection()
@@ -375,6 +391,13 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         this.ProviderSettings = this.SettingsManager.GetPreselectedProvider(this.Component);
         this.CurrentProfile = this.SettingsManager.GetPreselectedProfile(this.Component);
         this.CurrentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(this.Component);
+        this.selectedToolIds = this.SettingsManager.GetDefaultToolIds(this.Component);
+    }
+
+    protected Task SelectedToolIdsChanged(HashSet<string> updatedToolIds)
+    {
+        this.selectedToolIds = ToolSelectionRules.NormalizeSelection(updatedToolIds);
+        return Task.CompletedTask;
     }
     
     protected DateTimeOffset AddUserRequest(string request, bool hideContentFromUser = false, params List<FileAttachment> attachments)
@@ -435,6 +458,10 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         {
             this.ChatThread.Blocks.Add(this.ResultingContentBlock);
             this.ChatThread.SelectedProvider = this.ProviderSettings.Id;
+            this.ChatThread.RuntimeComponent = this.Component;
+            this.ChatThread.RuntimeSelectedToolIds = this.SettingsManager.IsToolSelectionVisible(this.Component)
+                ? this.SettingsManager.FilterToolIdsForProvider(this.ProviderSettings, this.selectedToolIds)
+                : [];
         }
 
         this.IsProcessing = true;

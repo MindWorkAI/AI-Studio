@@ -31,7 +31,7 @@ public class ProviderGoogle() : BaseProvider(LLMProviders.GOOGLE, new Uri("https
                            chatModel,
                            chatThread,
                            settingsManager,
-                           async (systemPrompt, apiParameters) =>
+                           async (systemPrompt, apiParameters, tools) =>
                            {
                                // Build the list of messages:
                                var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel);
@@ -47,6 +47,8 @@ public class ProviderGoogle() : BaseProvider(LLMProviders.GOOGLE, new Uri("https
 
                                    // Right now, we only support streaming completions:
                                    Stream = true,
+                                   Tools = tools,
+                                   ParallelToolCalls = tools is null ? null : true,
                                    AdditionalApiParameters = apiParameters
                                };
                            },
