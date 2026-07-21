@@ -15,16 +15,8 @@ public partial class ReadFileContent : MSGComponentBase
     [CascadingParameter]
     private MediaImportOwner? ImportOwner { get; set; }
 
-    private MediaImportOwner EffectiveImportOwner => this.ImportOwner ?? this.fallbackMediaImportOwner;
-
     [Parameter]
     public string MediaImportTargetId { get; set; } = string.Empty;
-
-    private string EffectiveMediaImportTargetId => string.IsNullOrWhiteSpace(this.MediaImportTargetId)
-        ? string.IsNullOrWhiteSpace(this.Text) ? "primary" : this.Text
-        : this.MediaImportTargetId;
-
-    private MediaImportTarget EffectiveMediaImportTarget => new(this.EffectiveImportOwner, this.EffectiveMediaImportTargetId);
 
     [Parameter]
     public string Text { get; set; } = string.Empty;
@@ -77,10 +69,20 @@ public partial class ReadFileContent : MSGComponentBase
     private bool isFileDialogOpen;
     private bool hasLoadedFileContent;
     private string loadedFileName = string.Empty;
+    
     private bool IsCurrentTargetBusy => this.MediaTranscriptionService.GetSnapshot(this.EffectiveImportOwner) is { IsBusy: true } snapshot
                                         && snapshot.Target == this.EffectiveMediaImportTarget;
+    
     private bool IsUnavailable => this.Disabled || this.isFileDialogOpen || this.MediaTranscriptionService.IsBusy(this.EffectiveImportOwner);
 
+    private MediaImportOwner EffectiveImportOwner => this.ImportOwner ?? this.fallbackMediaImportOwner;
+    
+    private string EffectiveMediaImportTargetId => string.IsNullOrWhiteSpace(this.MediaImportTargetId)
+        ? string.IsNullOrWhiteSpace(this.Text) ? "primary" : this.Text
+        : this.MediaImportTargetId;
+
+    private MediaImportTarget EffectiveMediaImportTarget => new(this.EffectiveImportOwner, this.EffectiveMediaImportTargetId);
+    
     #region Overrides of MSGComponentBase
 
     protected override async Task OnInitializedAsync()
