@@ -27,6 +27,12 @@ public partial class ReadFileContent : MSGComponentBase
     [Parameter]
     public EventCallback<string> FileContentChanged { get; set; }
 
+    /// <summary>
+    /// If true, the component will display the state of the attached document (if any).
+    /// </summary>
+    [Parameter]
+    public bool ShowAttachedDocumentState { get; set; }
+
     [Parameter]
     public bool Disabled { get; set; }
 

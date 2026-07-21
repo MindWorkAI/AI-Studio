@@ -346,6 +346,7 @@ ASSISTANT = {
                 ["Props"] = {
                     ["Name"] = "<unique identifier of this component>", -- required
                     ["UserPrompt"] = "<prompt context for the selected file>",
+                    ["ShowAttachedDocumentState"] = true, -- whether to show the loaded-document indicator; defaults to true
                     ["Class"] = "<optional MudBlazor or css classes>",
                     ["Style"] = "<optional css styles>",
                 }

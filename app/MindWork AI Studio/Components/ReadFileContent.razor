@@ -21,7 +21,7 @@
                 
                 <MudSpacer/>
                 
-                @if (this.hasLoadedFileContent)
+                @if (this.ShowAttachedDocumentState && this.hasLoadedFileContent)
                 {
                     <MudTooltip Text="@this.FileLoadedTooltip()">
                         <MudIcon Icon="@Icons.Material.Filled.AttachFile" Color="Color.Success"/>
@@ -38,7 +38,7 @@ else
             @this.ButtonText
         </MudButton>
         <MediaTranscriptionStatus Owner="@this.EffectiveImportOwner" TargetId="@this.EffectiveMediaImportTarget.TargetId" Compact="true"/>
-        @if (this.hasLoadedFileContent)
+        @if (this.ShowAttachedDocumentState && this.hasLoadedFileContent)
         {
             <MudTooltip Text="@this.FileLoadedTooltip()">
                 <MudIcon Icon="@Icons.Material.Filled.AttachFile" Color="Color.Success" />

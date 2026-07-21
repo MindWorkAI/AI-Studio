@@ -82,8 +82,8 @@ public static class ComponentPropSpecs
             ),
             [AssistantComponentType.FILE_CONTENT_READER] = new(
                 required: ["Name"],
-                optional: ["UserPrompt", "Class", "Style"],
-                nonWriteable: ["Name", "UserPrompt", "Class", "Style" ]
+                optional: ["UserPrompt", "ShowAttachedDocumentState", "Class", "Style"],
+                nonWriteable: ["Name", "UserPrompt", "ShowAttachedDocumentState", "Class", "Style" ]
             ),
             [AssistantComponentType.FILE_ATTACHMENTS] = new(
                 required: ["Name"],
