@@ -163,6 +163,7 @@ internal sealed class Program
         builder.Services.AddSingleton<AIJobService>();
         builder.Services.AddSingleton<AssistantSessionService>();
         builder.Services.AddSingleton<VoiceRecordingAvailabilityService>();
+        builder.Services.AddSingleton<GlobalShortcutService>();
         builder.Services.AddSingleton<MediaTranscriptionService>();
         builder.Services.AddSingleton<AssistantPluginInstallService>();
         builder.Services.AddSingleton<UpdatePolicy>();
@@ -180,7 +181,7 @@ internal sealed class Program
         builder.Services.AddHostedService<TranscriptStagingCleanupService>();
         builder.Services.AddHostedService<EnterpriseEnvironmentService>();
         builder.Services.AddSingleton<DatabaseClientProvider>();
-        builder.Services.AddHostedService<GlobalShortcutService>();
+        builder.Services.AddHostedService<GlobalShortcutService>(serviceProvider => serviceProvider.GetRequiredService<GlobalShortcutService>());
         builder.Services.AddHostedService<RustAvailabilityMonitorService>();
         
         // ReSharper disable AccessToDisposedClosure
