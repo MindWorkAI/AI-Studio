@@ -204,19 +204,16 @@ public partial class Plugins : MSGComponentBase
             : this.T("Enable plugin");
     }
 
-    private static bool CanEditAssistantPlugin(IAvailablePlugin plugin) => plugin is { IsInternal: false, Type: PluginType.ASSISTANT } && 
-                                                                           !string.IsNullOrWhiteSpace(plugin.LocalPath) && !IS_SHARING_PLUGIN;
+    private static bool CanEditAssistantPlugin(IAvailablePlugin plugin) => plugin is { IsInternal: false, Type: PluginType.ASSISTANT } && !string.IsNullOrWhiteSpace(plugin.LocalPath) && !IS_SHARING_PLUGIN;
 
     private static bool CanReviseAssistantPlugin(IAvailablePlugin plugin)
     {
         var assistantPlugin = PluginFactory.RunningPlugins.OfType<PluginAssistants>().FirstOrDefault(x => x.Id == plugin.Id);
-        return plugin is { IsInternal: false, IsManagedByConfigServer: false, Type: PluginType.ASSISTANT } &&
-               !string.IsNullOrWhiteSpace(plugin.LocalPath) && assistantPlugin?.IsManagedByConfigServer is false && !IS_SHARING_PLUGIN;
+        return plugin is { IsInternal: false, IsManagedByConfigServer: false, Type: PluginType.ASSISTANT } && !string.IsNullOrWhiteSpace(plugin.LocalPath) && assistantPlugin?.IsManagedByConfigServer is false && !IS_SHARING_PLUGIN;
     }
     
-    private static bool CanSharePlugin(IAvailablePlugin plugin) => plugin is { IsInternal: false, IsManagedByConfigServer: false } &&
-                                                                   !string.IsNullOrWhiteSpace(plugin.LocalPath) && !IS_SHARING_PLUGIN;
-
+    private static bool CanSharePlugin(IAvailablePlugin plugin) => plugin is { IsInternal: false, IsManagedByConfigServer: false } && !string.IsNullOrWhiteSpace(plugin.LocalPath) && !IS_SHARING_PLUGIN;
+    
     private async Task OpenAssistantPluginEditorDialogAsync(IAvailablePlugin plugin)
     {
         var parameters = new DialogParameters<AssistantPluginEditorDialog>
