@@ -18,13 +18,13 @@
                         @T("Drop one file here to load its content.")
                     </MudText>
                 }
+                
                 <MudSpacer/>
+                
                 @if (this.hasLoadedFileContent)
                 {
                     <MudTooltip Text="@this.FileLoadedTooltip()">
-                        <MudBadge Content="1" Color="Color.Success" Overlap="true">
-                            <MudIcon Icon="@Icons.Material.Filled.AttachFile" Color="Color.Default"/>
-                        </MudBadge>
+                        <MudIcon Icon="@Icons.Material.Filled.AttachFile" Color="Color.Success"/>
                     </MudTooltip>
                 }
             </MudStack>
@@ -41,9 +41,7 @@ else
         @if (this.hasLoadedFileContent)
         {
             <MudTooltip Text="@this.FileLoadedTooltip()">
-                <MudBadge Icon="@Icons.Material.Filled.Check" Color="Color.Success" Overlap="true" Class="mx-6 my-4">
-                    <MudIcon Icon="@Icons.Material.Filled.AttachFile" Color="Color.Default" />
-                </MudBadge>
+                <MudIcon Icon="@Icons.Material.Filled.AttachFile" Color="Color.Success" />
             </MudTooltip>
         }
     </MudStack>
