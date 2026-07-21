@@ -11,6 +11,7 @@ use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use strum_macros::Display;
 use tauri_plugin_global_shortcut::GlobalShortcutExt;
+use tauri_plugin_global_shortcut::ShortcutState;
 use tokio::sync::{Mutex, broadcast};
 
 use crate::app_window::{Event, TauriEventType};
@@ -217,6 +218,7 @@ pub async fn register(
     let Some(app_handle) = app_handle else {
         return ShortcutResponse::error("Main window not available", ShortcutBackend::None, false);
     };
+
     let Some(event_sender) = event_sender else {
         return ShortcutResponse::error("Event broadcast not initialized", ShortcutBackend::None, false);
     };
@@ -242,24 +244,22 @@ pub async fn register(
                 return ShortcutResponse::success(ShortcutBackend::Portal, effective_display_name);
             },
 
-            Err(error) if may_fallback_to_tauri(
-                error.kind,
-                manager.bindings.get(&request.id).map(ActiveBinding::backend),
-            ) => {
-                warn!(Source = "XDG portal"; "Global shortcuts portal is unavailable; using the Tauri X11 backend: {}", error.message);
-            },
-
             Err(error) => {
-                let cancelled = error.kind == PortalFailureKind::Cancelled;
-                if cancelled {
-                    warn!(Source = "XDG portal"; "Global shortcut configuration was cancelled by the user.");
-                } else if error.kind == PortalFailureKind::Denied {
-                    warn!(Source = "XDG portal"; "Global shortcut permission was denied: {}", error.message);
+                let current_backend = manager.bindings.get(&request.id).map(ActiveBinding::backend);
+                if may_fallback_to_tauri(error.kind, current_backend) {
+                    warn!(Source = "XDG portal"; "Global shortcut registration failed; using the Tauri X11 backend: {}", error.message);
                 } else {
-                    error!(Source = "XDG portal"; "Global shortcut registration failed: {}", error.message);
-                }
+                    let cancelled = error.kind == PortalFailureKind::Cancelled;
+                    if cancelled {
+                        warn!(Source = "XDG portal"; "Global shortcut configuration was cancelled by the user; preserving the active portal binding.");
+                    } else if error.kind == PortalFailureKind::Denied {
+                        warn!(Source = "XDG portal"; "Global shortcut permission was denied; preserving the active portal binding: {}", error.message);
+                    } else {
+                        error!(Source = "XDG portal"; "Global shortcut registration failed; preserving the active portal binding: {}", error.message);
+                    }
 
-                return ShortcutResponse::error(error.message, ShortcutBackend::Portal, cancelled);
+                    return ShortcutResponse::error(error.message, ShortcutBackend::Portal, cancelled);
+                }
             },
         }
     }
@@ -349,13 +349,22 @@ fn register_tauri_binding(
     shortcut_id: Shortcut,
     event_sender: broadcast::Sender<Event>,
 ) -> Result<(), tauri_plugin_global_shortcut::Error> {
-    app_handle.global_shortcut().on_shortcut(shortcut, move |_app, _shortcut, _event| {
-        if PROCESSING_SUSPENDED.load(Ordering::Relaxed) {
+    app_handle.global_shortcut().on_shortcut(shortcut, move |_app, _shortcut, event| {
+        if !should_forward_tauri_event(event.state) || PROCESSING_SUSPENDED.load(Ordering::Relaxed) {
             return;
         }
 
-        send_shortcut_pressed(&event_sender, shortcut_id, "Tauri");
+        info!(Source = "Tauri"; "Tauri shortcut callback received for '{}'.", shortcut_id);
+        let sender = event_sender.clone();
+        tauri::async_runtime::spawn(async move {
+            send_shortcut_pressed(&sender, shortcut_id, "Tauri");
+        });
     })
+}
+
+/// Returns whether a native shortcut event represents the single actionable key press.
+fn should_forward_tauri_event(state: ShortcutState) -> bool {
+    state == ShortcutState::Pressed
 }
 
 /// Publishes a shortcut activation using the existing runtime event format.
@@ -438,9 +447,9 @@ enum PortalFailureKind {
     Technical,
 }
 
-/// Determines whether an unavailable portal may safely fall back to Tauri.
-fn may_fallback_to_tauri(failure: PortalFailureKind, current_backend: Option<ShortcutBackend>) -> bool {
-    failure == PortalFailureKind::Unavailable && current_backend.is_none_or(|backend| backend == ShortcutBackend::Tauri)
+/// Determines whether a failed portal attempt may safely fall back to Tauri.
+fn may_fallback_to_tauri(_failure: PortalFailureKind, current_backend: Option<ShortcutBackend>) -> bool {
+    current_backend != Some(ShortcutBackend::Portal)
 }
 
 /// Determines whether a backend must unregister its shortcut during suspension.
@@ -937,14 +946,23 @@ mod tests {
     }
 
     #[test]
-    /// Verifies that fallback is restricted to unavailable portals and safe active states.
-    fn fallback_is_limited_to_an_unavailable_portal() {
-        assert!(may_fallback_to_tauri(PortalFailureKind::Unavailable, None));
-        assert!(may_fallback_to_tauri(PortalFailureKind::Unavailable, Some(ShortcutBackend::Tauri)));
-        assert!(!may_fallback_to_tauri(PortalFailureKind::Unavailable, Some(ShortcutBackend::Portal)));
-        assert!(!may_fallback_to_tauri(PortalFailureKind::Cancelled, None));
-        assert!(!may_fallback_to_tauri(PortalFailureKind::Denied, None));
-        assert!(!may_fallback_to_tauri(PortalFailureKind::Technical, None));
+    /// Verifies that all initial portal failures use the Tauri fallback.
+    fn all_initial_portal_failures_use_tauri_fallback() {
+        for failure in [
+            PortalFailureKind::Unavailable,
+            PortalFailureKind::Cancelled,
+            PortalFailureKind::Denied,
+            PortalFailureKind::Technical,
+        ] {
+            assert!(may_fallback_to_tauri(failure, None));
+        }
+    }
+
+    #[test]
+    /// Verifies that a failed reconfiguration never replaces an active portal binding.
+    fn failed_reconfiguration_preserves_portal_binding() {
+        assert!(!may_fallback_to_tauri(PortalFailureKind::Cancelled, Some(ShortcutBackend::Portal)));
+        assert!(!may_fallback_to_tauri(PortalFailureKind::Denied, Some(ShortcutBackend::Portal)));
     }
 
     #[test]
@@ -954,10 +972,17 @@ mod tests {
         assert!(unregister_backend_during_suspend(ShortcutBackend::Tauri));
     }
 
+    #[test]
+    /// Verifies that Tauri key releases cannot trigger a second shortcut event.
+    fn tauri_only_forwards_pressed_events() {
+        assert!(should_forward_tauri_event(ShortcutState::Pressed));
+        assert!(!should_forward_tauri_event(ShortcutState::Released));
+    }
+
     #[cfg(target_os = "linux")]
     #[test]
     /// Verifies recognition of unavailable-portal D-Bus errors without misclassifying rejection.
-    fn only_unavailable_portal_errors_allow_fallback() {
+    fn recognizes_unavailable_portal_errors() {
         assert!(portal_error_is_unavailable("org.freedesktop.DBus.Error.UnknownMethod"));
         assert!(portal_error_is_unavailable("ServiceUnknown"));
         assert!(!portal_error_is_unavailable("Portal request was cancelled"));

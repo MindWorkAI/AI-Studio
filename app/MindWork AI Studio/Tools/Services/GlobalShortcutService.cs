@@ -149,12 +149,12 @@ public sealed class GlobalShortcutService : BackgroundService, IMessageBusReceiv
                     && !string.Equals(lastNonEmptyShortcut, requestedState.Shortcut, StringComparison.Ordinal);
                 
                 var result = await this.rustService.UpdateGlobalShortcut(shortcutId, requestedState.Shortcut, description, reconfigure);
-                this.lastSentStates[shortcutId] = requestedState;
-                if (!string.IsNullOrWhiteSpace(requestedState.Shortcut))
-                    this.lastNonEmptyShortcuts[shortcutId] = requestedState.Shortcut;
-
                 if (result.Success)
                 {
+                    this.lastSentStates[shortcutId] = requestedState;
+                    if (!string.IsNullOrWhiteSpace(requestedState.Shortcut))
+                        this.lastNonEmptyShortcuts[shortcutId] = requestedState.Shortcut;
+
                     this.logger.LogInformation(
                         "Global shortcut '{ShortcutId}' ({Shortcut}) synchronized through {Backend}.",
                         shortcutId,
