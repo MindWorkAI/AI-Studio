@@ -1,6 +1,7 @@
 @attribute [Route(Routes.ASSISTANTS)]
 @using AIStudio.Dialogs.Settings
 @using AIStudio.Settings.DataModel
+@using AIStudio.Tools.PluginSystem
 @using AIStudio.Tools.PluginSystem.Assistants
 @inherits MSGComponentBase
 
@@ -45,6 +46,7 @@
                 {
                     var securityState = PluginAssistantSecurityResolver.Resolve(this.SettingsManager, assistantPlugin);
                     var launchLink = assistantPlugin.StartsChatDirectly ? string.Empty : $"{Routes.ASSISTANT_DYNAMIC}?assistantId={assistantPlugin.Id}";
+                    var availablePlugin = PluginFactory.AvailablePlugins.OfType<IAvailablePlugin>().FirstOrDefault(plugin => plugin.Id == assistantPlugin.Id);
                     <AssistantBlock TSettings="NoSettingsPanel"
                                     Name="@T(assistantPlugin.AssistantTitle)"
                                     Description="@T(assistantPlugin.Description)"
@@ -53,6 +55,12 @@
                                     AssistantSessionInstanceId="@assistantPlugin.Id.ToString()"
                                     Link="@launchLink"
                                     OnClick="@(() => this.StartAssistantPluginAsync(assistantPlugin))">
+                        <AdditionalActions>
+                            @if (availablePlugin is not null)
+                            {
+                                <AssistantPluginDeleteAction Plugin="@availablePlugin" />
+                            }
+                        </AdditionalActions>
                         <SecurityBadge>
                             <AssistantPluginSecurityCard Plugin="@assistantPlugin" Compact="@true" />
                         </SecurityBadge>
@@ -101,7 +109,8 @@
 
         @if (this.SettingsManager.IsAnyCategoryAssistantVisible("Software Engineering",
             (Components.CODING_ASSISTANT, PreviewFeatures.NONE),
-            (Components.ERI_ASSISTANT, PreviewFeatures.PRE_RAG_2024)
+            (Components.ERI_ASSISTANT, PreviewFeatures.PRE_RAG_2024),
+            (Components.LOG_VIEWER_ASSISTANT, PreviewFeatures.NONE)
             ))
         {
             <MudText Typo="Typo.h4" Class="mb-2 mr-3 mt-6">
@@ -122,6 +131,7 @@
             </MudText>
             <MudStack Row="@true" Wrap="@Wrap.Wrap" Class="mb-3">
                 <AssistantBlock TSettings="SettingsDialogI18N" Component="Components.I18N_ASSISTANT" Name="@T("Localization")" Description="@T("Translate AI Studio text content into other languages")" Icon="@Icons.Material.Filled.Translate" Link="@Routes.ASSISTANT_AI_STUDIO_I18N"/>
+                <AssistantBlock TSettings="NoSettingsPanel" Component="Components.LOG_VIEWER_ASSISTANT" Name="@T("Log Viewer")" Description="@T("View and filter AI Studio log files.")" Icon="@Icons.Material.Filled.Article" Link="@Routes.ASSISTANT_LOG_VIEWER"/>
             </MudStack>
         }
 

@@ -35,8 +35,9 @@ public static partial class PluginFactory
             return;
         }
         
-        if (!await PLUGIN_LOAD_SEMAPHORE.WaitAsync(0, cancellationToken))
-            return;
+        // Wait for ongoing reloads instead of silently skipping this request.
+        // This caller must return only after its reload has run.
+        await PLUGIN_LOAD_SEMAPHORE.WaitAsync(cancellationToken);
 
         var configObjectList = new List<PluginConfigurationObject>();
         
@@ -120,6 +121,8 @@ public static partial class PluginFactory
                             LOG.LogWarning($"The configuration plugin '{plugin.Id}' does not define 'DEPLOYED_USING_CONFIG_SERVER'. Falling back to the plugin path and treating it as managed because it is stored under '{CONFIGURATION_PLUGINS_ROOT}'.");
                         }
                     }
+                    else if (plugin is PluginAssistants assistantPlugin)
+                        isManagedByConfigServer = assistantPlugin.IsManagedByConfigServer;
 
                     // For configuration plugins, validate that the plugin ID matches the enterprise config ID
                     // (the directory name under which the plugin was downloaded):
@@ -249,7 +252,15 @@ public static partial class PluginFactory
         // Check for the quick start guide visibility:
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.ShowQuickStartGuide, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;
-        
+
+        // Check for the last changelog visibility:
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.ShowLastChangelog, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        // Check for the vision panel visibility:
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.ShowVision, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
         // Check for users allowed to added providers:
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.AllowUserToAddProvider, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;

@@ -1,5 +1,6 @@
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
 
 using Microsoft.AspNetCore.Components;
@@ -19,6 +20,8 @@ public sealed class GlobalShortcutService : BackgroundService, IMessageBusReceiv
     }
 
     private readonly SemaphoreSlim registrationSemaphore = new(1, 1);
+    private readonly Dictionary<Shortcut, ShortcutState> lastSentStates = [];
+    private readonly Dictionary<Shortcut, string> lastNonEmptyShortcuts = [];
     private readonly ILogger<GlobalShortcutService> logger;
     private readonly SettingsManager settingsManager;
     private readonly MessageBus messageBus;
@@ -39,7 +42,7 @@ public sealed class GlobalShortcutService : BackgroundService, IMessageBusReceiv
         this.voiceRecordingAvailabilityService = voiceRecordingAvailabilityService;
 
         this.messageBus.RegisterComponent(this);
-        this.ApplyFilters([], [Event.CONFIGURATION_CHANGED, Event.PLUGINS_RELOADED, Event.STARTUP_COMPLETED, Event.VOICE_RECORDING_AVAILABILITY_CHANGED]);
+        this.ApplyFilters([], [Event.CONFIGURATION_CHANGED, Event.PLUGINS_RELOADED, Event.STARTUP_COMPLETED, Event.TAURI_EVENT_RECEIVED, Event.VOICE_RECORDING_AVAILABILITY_CHANGED]);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -86,6 +89,14 @@ public sealed class GlobalShortcutService : BackgroundService, IMessageBusReceiv
 
                 await this.RegisterAllShortcuts(ShortcutSyncSource.VOICE_RECORDING_AVAILABILITY_CHANGED);
                 break;
+
+            case Event.TAURI_EVENT_RECEIVED:
+                if (data is TauriEvent tauriEvent
+                    && tauriEvent.TryGetShortcutChange(out var shortcutId, out var effectiveDisplayName))
+                {
+                    await this.UpdateEffectiveDisplayName(shortcutId, effectiveDisplayName);
+                }
+                break;
         }
     }
 
@@ -107,6 +118,7 @@ public sealed class GlobalShortcutService : BackgroundService, IMessageBusReceiv
                 var shortcutState = await this.GetShortcutState(shortcutId, source);
                 var shortcut = shortcutState.Shortcut;
                 var isEnabled = shortcutState.IsEnabled;
+                var requestedState = new ShortcutState(isEnabled ? shortcut : string.Empty, isEnabled, shortcutState.UsesPersistedFallback);
                 this.logger.LogInformation(
                     "Sync shortcut '{ShortcutId}' (source='{Source}', enabled={IsEnabled}, configured='{Shortcut}').",
                     shortcutId,
@@ -123,25 +135,53 @@ public sealed class GlobalShortcutService : BackgroundService, IMessageBusReceiv
                         shortcut);
                 }
 
-                if (isEnabled && !string.IsNullOrWhiteSpace(shortcut))
+                if (this.lastSentStates.TryGetValue(shortcutId, out var lastSentState)
+                    && lastSentState.Shortcut == requestedState.Shortcut
+                    && lastSentState.IsEnabled == requestedState.IsEnabled)
                 {
-                    var success = await this.rustService.UpdateGlobalShortcut(shortcutId, shortcut);
-                    if (success)
-                        this.logger.LogInformation("Global shortcut '{ShortcutId}' ({Shortcut}) registered.", shortcutId, shortcut);
-                    else
-                        this.logger.LogWarning("Failed to register global shortcut '{ShortcutId}' ({Shortcut}).", shortcutId, shortcut);
+                    this.logger.LogDebug("Skipping unchanged global shortcut '{ShortcutId}'.", shortcutId);
+                    continue;
+                }
+
+                var description = await this.GetShortcutDescription(shortcutId);
+                var reconfigure = !string.IsNullOrWhiteSpace(requestedState.Shortcut)
+                    && this.lastNonEmptyShortcuts.TryGetValue(shortcutId, out var lastNonEmptyShortcut)
+                    && !string.Equals(lastNonEmptyShortcut, requestedState.Shortcut, StringComparison.Ordinal);
+                
+                var result = await this.rustService.UpdateGlobalShortcut(shortcutId, requestedState.Shortcut, description, reconfigure);
+                if (result.Success)
+                {
+                    this.lastSentStates[shortcutId] = requestedState;
+                    if (!string.IsNullOrWhiteSpace(requestedState.Shortcut))
+                        this.lastNonEmptyShortcuts[shortcutId] = requestedState.Shortcut;
+
+                    this.logger.LogInformation(
+                        "Global shortcut '{ShortcutId}' ({Shortcut}) synchronized through {Backend}.",
+                        shortcutId,
+                        requestedState.Shortcut,
+                        result.Backend);
+
+                    if (result.Backend is ShortcutBackend.PORTAL)
+                        await this.UpdateEffectiveDisplayName(shortcutId, result.EffectiveDisplayName);
                 }
                 else
                 {
-                    this.logger.LogInformation(
-                        "Disabling global shortcut '{ShortcutId}' (source='{Source}', enabled={IsEnabled}, configured='{Shortcut}').",
+                    var userMessage = result.Cancelled
+                        ? TB("The global shortcut change was cancelled. The previous shortcut remains active.")
+                        : TB("The global shortcut could not be registered. The previous shortcut remains active.");
+                    
+                    this.logger.LogWarning(
+                        "Failed to synchronize global shortcut '{ShortcutId}' ({Shortcut}, backend={Backend}, cancelled={Cancelled}): {Error}",
                         shortcutId,
-                        source,
-                        isEnabled,
-                        shortcut);
+                        requestedState.Shortcut,
+                        result.Backend,
+                        result.Cancelled,
+                        result.ErrorMessage);
 
-                    // Disable the shortcut when empty or feature is disabled:
-                    await this.rustService.UpdateGlobalShortcut(shortcutId, string.Empty);
+                    if (result.Cancelled)
+                        await this.messageBus.SendWarning(new(Icons.Material.Filled.Keyboard, userMessage));
+                    else
+                        await this.messageBus.SendError(new(Icons.Material.Filled.Keyboard, userMessage));
                 }
             }
 
@@ -169,6 +209,34 @@ public sealed class GlobalShortcutService : BackgroundService, IMessageBusReceiv
         // Other shortcuts are always allowed:
         _ => true,
     };
+
+    private async Task<string> GetShortcutDescription(Shortcut shortcutId)
+    {
+        var language = await this.settingsManager.GetActiveLanguagePlugin();
+        return shortcutId switch
+        {
+            Shortcut.VOICE_RECORDING_TOGGLE => I18N.I.GetText(language, "Toggle voice recording", typeof(GlobalShortcutService).Namespace, nameof(GlobalShortcutService)),
+            _ => I18N.I.GetText(language, "Global shortcut", typeof(GlobalShortcutService).Namespace, nameof(GlobalShortcutService)),
+        };
+    }
+
+    private async Task UpdateEffectiveDisplayName(Shortcut shortcutId, string effectiveDisplayName)
+    {
+        if (shortcutId is not Shortcut.VOICE_RECORDING_TOGGLE || string.IsNullOrWhiteSpace(effectiveDisplayName))
+            return;
+
+        var configuredShortcut = this.settingsManager.ConfigurationData.App.ShortcutVoiceRecording;
+        if (this.settingsManager.ConfigurationData.App.ShortcutVoiceRecordingDisplayName == effectiveDisplayName
+            && this.settingsManager.ConfigurationData.App.ShortcutVoiceRecordingDisplaySource == configuredShortcut)
+            return;
+
+        this.settingsManager.ConfigurationData.App.ShortcutVoiceRecordingDisplayName = effectiveDisplayName;
+        this.settingsManager.ConfigurationData.App.ShortcutVoiceRecordingDisplaySource = configuredShortcut;
+        await this.settingsManager.StoreSettings();
+        await this.messageBus.SendMessage<bool>(null, Event.GLOBAL_SHORTCUT_CHANGED);
+    }
+
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(GlobalShortcutService).Namespace, nameof(GlobalShortcutService));
 
     private async Task<ShortcutState> GetShortcutState(Shortcut shortcutId, ShortcutSyncSource source)
     {

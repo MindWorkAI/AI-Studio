@@ -4,6 +4,26 @@ namespace AIStudio.Tools.Services;
 
 public sealed partial class RustService
 {
+    private static string TranslateSecretStoreIssue(SecretStoreIssueCode issueCode, string issue) => issueCode switch
+    {
+        SecretStoreIssueCode.NONE => issue,
+        SecretStoreIssueCode.SECRET_NOT_FOUND => TB("No saved secret was found."),
+        SecretStoreIssueCode.NO_DEFAULT_COLLECTION => TB("AI Studio could not access secure storage because no default collection is configured. Open a compatible password manager, create or select a collection, unlock it, and set it as the default."),
+        SecretStoreIssueCode.COLLECTION_LOCKED => TB("AI Studio could not access secure storage because the default collection is locked. Open your password manager and unlock the default collection."),
+        SecretStoreIssueCode.PROMPT_DISMISSED => TB("The secure-storage confirmation was canceled. Repeat the operation and confirm the password manager prompt."),
+        SecretStoreIssueCode.SERVICE_UNAVAILABLE => TB("No compatible secure-storage service is available. Configure a password manager that provides the FreeDesktop Secret Service."),
+        _ => TB("AI Studio could not access secure storage. See the log for technical details."),
+    };
+
+    private static StoreSecretResponse TranslateSecretStoreIssue(StoreSecretResponse response) =>
+        response.Success ? response : response with { Issue = TranslateSecretStoreIssue(response.IssueCode, response.Issue) };
+
+    private static RequestedSecret TranslateSecretStoreIssue(RequestedSecret response) =>
+        response.Success ? response : response with { Issue = TranslateSecretStoreIssue(response.IssueCode, response.Issue) };
+
+    private static DeleteSecretResponse TranslateSecretStoreIssue(DeleteSecretResponse response) =>
+        response.Success ? response : response with { Issue = TranslateSecretStoreIssue(response.IssueCode, response.Issue) };
+
     private static string SecretKey(ISecretId secretId, SecretStoreType storeType) => $"{storeType.Prefix()}::{secretId.SecretId}::{secretId.SecretName}";
 
     private static string LegacySecretKey(ISecretId secretId) => $"secret::{secretId.SecretId}::{secretId.SecretName}";
@@ -30,9 +50,6 @@ public sealed partial class RustService
             return legacySecret;
         }
 
-        if (!secret.Success && !isTrying)
-            this.logger!.LogError($"Failed to get the secret data for '{secretKey}': '{secret.Issue}'");
-        
         return secret;
     }
     
@@ -62,7 +79,7 @@ public sealed partial class RustService
         if (state.Success && storeType is SecretStoreType.DATA_SOURCE)
             await this.DeleteSecretByKey(LegacySecretKey(secretId));
         
-        return state;
+        return TranslateSecretStoreIssue(state);
     }
     
     /// <summary>
@@ -95,7 +112,16 @@ public sealed partial class RustService
             return new RequestedSecret(false, new EncryptedText(string.Empty), TB("Failed to get the secret data due to an API issue."));
         }
 
-        return await result.Content.ReadFromJsonAsync<RequestedSecret>(this.jsonRustSerializerOptions);
+        var state = await result.Content.ReadFromJsonAsync<RequestedSecret>(this.jsonRustSerializerOptions);
+        if (!state.Success)
+        {
+            if (isTrying)
+                this.logger!.LogDebug($"No secret data configured for '{secretKey}' (try mode): '{state.Issue}'");
+            else
+                this.logger!.LogError($"Failed to get the secret data for '{secretKey}': '{state.Issue}'");
+        }
+
+        return TranslateSecretStoreIssue(state);
     }
 
     private async Task<DeleteSecretResponse> DeleteSecretByKey(string secretKey)
@@ -112,6 +138,6 @@ public sealed partial class RustService
         if (!state.Success)
             this.logger!.LogError($"Failed to delete the secret data for '{secretKey}': '{state.Issue}'");
         
-        return state;
+        return TranslateSecretStoreIssue(state);
     }
 }

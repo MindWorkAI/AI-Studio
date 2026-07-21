@@ -32,18 +32,18 @@
       },
       "Microsoft.Extensions.FileProviders.Embedded": {
         "type": "Direct",
-        "requested": "[9.0.17, )",
-        "resolved": "9.0.17",
-        "contentHash": "ItYX3BajZhWwq1wmvUnYA1jahNi9jyy2BMGzyWPTgdSuay8FfMF0gAfNe8mVE6F+GJaQWymElj8hKimRmGxOzw==",
+        "requested": "[9.0.18, )",
+        "resolved": "9.0.18",
+        "contentHash": "+t0Bq5qZZ/zbmO4X70nDMC+anTsNSCxNvjtqXmRiUwh53cNfMoXkB/R95rUO9+yFYhsTR7B302ys9LqXDdIt6g==",
         "dependencies": {
-          "Microsoft.Extensions.FileProviders.Abstractions": "9.0.17"
+          "Microsoft.Extensions.FileProviders.Abstractions": "9.0.18"
         }
       },
       "Microsoft.NET.ILLink.Tasks": {
         "type": "Direct",
-        "requested": "[9.0.17, )",
-        "resolved": "9.0.17",
-        "contentHash": "P5qY/hIYMlo0+QRM0W3Gd/SRf20TX+z5W5NwpdzkOk0FtgcbSTNwNcYBRNDgfThFcLpcDFslz65RcGqWOq00/w=="
+        "requested": "[9.0.18, )",
+        "resolved": "9.0.18",
+        "contentHash": "ztGVXB28bi8SeplFmAx+4MkqP1ieA4UNzj/M3qyyz5tLa37Ln8x8LuaXdxzzoOdaucjQBKXSdCMFSbpQaNGIEg=="
       },
       "MudBlazor": {
         "type": "Direct",
@@ -159,10 +159,10 @@
       },
       "Microsoft.Extensions.FileProviders.Abstractions": {
         "type": "Transitive",
-        "resolved": "9.0.17",
-        "contentHash": "uTkT+/Km0tEPOw9kiLTXJwXlEVQZ5IBxRQm2EvIAwebfKqqaVY/ClkgcZ7FyzzwqFkFmhklWet4Ju4yWRy5jPg==",
+        "resolved": "9.0.18",
+        "contentHash": "YqkFlTwnVSMuunsf8IT9b+KySfm6vnMBBM+CKYCfXfjRMQ62uFggVOEu4C2cgR4fXpEO1rZ6utUZC1KoYKgiSg==",
         "dependencies": {
-          "Microsoft.Extensions.Primitives": "9.0.17"
+          "Microsoft.Extensions.Primitives": "9.0.18"
         }
       },
       "Microsoft.Extensions.Localization": {
@@ -200,8 +200,8 @@
       },
       "Microsoft.Extensions.Primitives": {
         "type": "Transitive",
-        "resolved": "9.0.17",
-        "contentHash": "WBjZ/zeb6PyCLT6lpGSzNtdMyRDloFSPqjY9kIGb5rdSng03rd0+ix/jDEYU6DUjE7JVLuhggXeMONVBxBHEXg=="
+        "resolved": "9.0.18",
+        "contentHash": "hfHudMC5zDlwMrC0HiHOJesSHMvM+CdqjomjcV/YVzFq5dfSpBRvyRLm1n1Bfh41ZpQnyJzqX+YEo95BAmcDAQ=="
       },
       "Microsoft.JSInterop": {
         "type": "Transitive",

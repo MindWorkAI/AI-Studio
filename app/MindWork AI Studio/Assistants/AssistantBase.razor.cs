@@ -4,6 +4,7 @@ using AIStudio.Settings;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Tools.AIJobs;
 using AIStudio.Tools.AssistantSessions;
+using AIStudio.Tools.Media;
 using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
@@ -47,6 +48,9 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     /// </summary>
     [Inject]
     protected AIJobService AIJobService { get; init; } = null!;
+
+    [Inject]
+    protected MediaTranscriptionService MediaTranscriptionService { get; init; } = null!;
     
     protected abstract string Title { get; }
     
@@ -132,6 +136,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     protected CancellationTokenSource? CancellationTokenSource;
     private bool isDisposed;
     private AssistantSessionKey assistantSessionKey;
+    private MediaImportOwner CurrentMediaImportOwner => MediaImportOwner.ForAssistant(this.assistantSessionKey);
     private Guid? assistantSessionId;
     private AssistantSessionSnapshot? pendingRenderedAssistantSessionSnapshot;
 
@@ -145,6 +150,9 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     /// </summary>
     protected bool HasAssistantSession => this.assistantSessionId is not null;
 
+    /// <summary>Gets whether this assistant currently owns active media work.</summary>
+    protected bool IsMediaImportBusy => this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner);
+
     /// <summary>
     /// Gets the assistant-specific identifier used to distinguish session slots.
     /// </summary>
@@ -154,6 +162,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     protected override async Task OnInitializedAsync()
     {
+        this.MediaTranscriptionService.StateChanged += this.OnMediaImportStateChanged;
         await base.OnInitializedAsync();
 
         if (!this.SettingsManager.IsAssistantVisible(this.Component, assistantName: this.Title))
@@ -176,6 +185,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         this.CurrentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(this.Component);
         this.assistantSessionKey = new(this.Component, this.AssistantSessionInstanceId);
         await this.AttachAssistantSessionIfAvailable();
+        await this.ConsumeMediaOutcomeAsync();
     }
 
     protected override async Task OnParametersSetAsync()
@@ -223,6 +233,9 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     private async Task Start()
     {
+        if (this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner))
+            return;
+
         var activeSession = this.AssistantSessionService.TryGetSnapshot(this.assistantSessionKey);
         if (activeSession?.IsActive ?? false)
         {
@@ -634,10 +647,12 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     
     private async Task InnerResetForm()
     {
-        if (this.AssistantSessionService.TryGetSnapshot(this.assistantSessionKey)?.IsActive ?? false)
+        if ((this.AssistantSessionService.TryGetSnapshot(this.assistantSessionKey)?.IsActive ?? false)
+            || this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner))
             return;
 
         await this.AssistantSessionService.ClearAsync(this.assistantSessionKey);
+        this.MediaTranscriptionService.ClearOwnerState(this.CurrentMediaImportOwner);
         this.assistantSessionId = null;
         this.ResultingContentBlock = null;
         this.ProviderSettings = Settings.Provider.NONE;
@@ -672,6 +687,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     protected override void DisposeResources()
     {
+        this.MediaTranscriptionService.StateChanged -= this.OnMediaImportStateChanged;
         this.isDisposed = true;
         try
         {
@@ -684,6 +700,46 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         }
         
         base.DisposeResources();
+    }
+
+    /// <summary>Refreshes assistant actions when the shared import lane changes.</summary>
+    private void OnMediaImportStateChanged(MediaImportOwner owner)
+    {
+        if (owner == this.CurrentMediaImportOwner)
+            _ = this.InvokeAsync(async () =>
+            {
+                await this.ConsumeMediaOutcomeAsync();
+                this.StateHasChanged();
+            });
+    }
+
+    /// <summary>Consumes a terminal media notification when this assistant is visible.</summary>
+    private async Task ConsumeMediaOutcomeAsync()
+    {
+        var outcome = this.MediaTranscriptionService.TryConsumeOutcome(this.CurrentMediaImportOwner);
+        if (outcome is null)
+            return;
+
+        if (outcome.Failures.Count > 0)
+        {
+            var message = string.Join(Environment.NewLine, outcome.Failures.Select(failure => $"{failure.FileName}: {failure.UserMessage}"));
+            await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, message));
+        }
+        else if (outcome.Status is MediaImportStatus.FAILED)
+        {
+            await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, this.TB("The media file could not be transcribed.")));
+        }
+
+        if (outcome.Warnings.Count > 0)
+        {
+            var message = string.Join(Environment.NewLine, outcome.Warnings.Select(warning => $"{warning.FileName}: {warning.UserMessage}"));
+            await this.MessageBus.SendWarning(new(Icons.Material.Filled.VoiceChat, message));
+        }
+
+        if (outcome.Status is MediaImportStatus.CANCELLED)
+        {
+            await this.MessageBus.SendWarning(new(Icons.Material.Filled.VoiceChat, this.TB("The media transcription was canceled.")));
+        }
     }
 
     #endregion

@@ -169,7 +169,13 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
 
         // Config: show quick start guide on the home page?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.ShowQuickStartGuide, this.Id, settingsTable, dryRun);
-        
+
+        // Config: show last changelog on the home page?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.ShowLastChangelog, this.Id, settingsTable, dryRun);
+
+        // Config: show vision panel on the home page?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.ShowVision, this.Id, settingsTable, dryRun);
+
         // Config: allow the user to add providers?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToAddProvider, this.Id, settingsTable, dryRun);
 

@@ -226,6 +226,12 @@ CONFIG["SETTINGS"] = {}
 -- Configure whether the built-in introduction is shown on the welcome page.
 -- CONFIG["SETTINGS"]["DataApp.ShowIntroduction"] = false
 
+-- Configure whether the last changelog is shown on the welcome page.
+-- CONFIG["SETTINGS"]["DataApp.ShowLastChangelog"] = false
+
+-- Configure whether the vision panel is shown on the welcome page.
+-- CONFIG["SETTINGS"]["DataApp.ShowVision"] = false
+
 -- Configure the user permission to add providers:
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToAddProvider"] = false
 
@@ -319,7 +325,8 @@ CONFIG["SETTINGS"] = {}
 --   CODING_ASSISTANT, TEXT_SUMMARIZER_ASSISTANT, EMAIL_ASSISTANT,
 --   LEGAL_CHECK_ASSISTANT, SYNONYMS_ASSISTANT, MY_TASKS_ASSISTANT,
 --   JOB_POSTING_ASSISTANT, BIAS_DAY_ASSISTANT, ERI_ASSISTANT,
---   DOCUMENT_ANALYSIS_ASSISTANT, SLIDE_BUILDER_ASSISTANT, I18N_ASSISTANT
+--   DOCUMENT_ANALYSIS_ASSISTANT, SLIDE_BUILDER_ASSISTANT, I18N_ASSISTANT,
+--   LOG_VIEWER_ASSISTANT
 -- CONFIG["SETTINGS"]["DataApp.HiddenAssistants"] = { "ERI_ASSISTANT", "I18N_ASSISTANT" }
 
 -- Configure enterprise approvals for assistant plugins.

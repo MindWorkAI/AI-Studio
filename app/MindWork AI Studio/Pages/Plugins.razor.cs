@@ -27,6 +27,8 @@ public partial class Plugins : MSGComponentBase
     [Inject]
     private AssistantPluginAuditService AssistantPluginAuditService { get; init; } = null!;
 
+    private static readonly ILogger LOG = Program.LOGGER_FACTORY.CreateLogger(nameof(Plugins));
+
     #region Overrides of ComponentBase
 
     protected override async Task OnInitializedAsync()
@@ -88,7 +90,7 @@ public partial class Plugins : MSGComponentBase
             return;
         }
 
-        if (securityState.IsBelowMinimum && securityState.IsBlocked)
+        if (securityState is { IsBelowMinimum: true, IsBlocked: true })
         {
             var blockedAudit = securityState.Audit;
             if (blockedAudit is not null)
@@ -96,7 +98,7 @@ public partial class Plugins : MSGComponentBase
             return;
         }
 
-        if (securityState.IsBelowMinimum && securityState.CanOverride &&
+        if (securityState is { IsBelowMinimum: true, CanOverride: true } &&
             !await this.ConfirmActivationBelowMinimumAsync(pluginMeta.Name, securityState.Audit!.Level))
         {
             return;
@@ -135,7 +137,7 @@ public partial class Plugins : MSGComponentBase
             {
                 x => x.Message,
                 string.Format(
-                    this.T("The assistant plugin \"{0}\" was audited with the level \"{1}\", which is below the required minimum level \"{2}\". Your current settings allow activation anyway, but this may be potentially dangerous. Do you really want to enable this plugin?"),
+                    this.T("The assistant plugin '{0}' was audited with the level '{1}', which is below the required minimum level \"{2}\". Your current settings allow activation anyway, but this may be potentially dangerous. Do you really want to enable this plugin?"),
                     pluginName,
                     actualLevel.GetName(),
                     this.AssistantPluginAuditSettings.MinimumLevel.GetName())
@@ -158,7 +160,7 @@ public partial class Plugins : MSGComponentBase
             return false;
 
         var securityState = PluginAssistantSecurityResolver.Resolve(this.SettingsManager, assistantPlugin);
-        return securityState.IsBlocked && !securityState.RequiresAudit;
+        return securityState is { IsBlocked: true, RequiresAudit: false };
     }
 
     private string GetActivationTooltip(IPluginMetadata pluginMeta, bool isEnabled)
@@ -180,6 +182,55 @@ public partial class Plugins : MSGComponentBase
         return securityState.IsBlocked
             ? securityState.Description
             : this.T("Enable plugin");
+    }
+
+    private static bool CanEditAssistantPlugin(IAvailablePlugin plugin) => plugin is { IsInternal: false, Type: PluginType.ASSISTANT } && !string.IsNullOrWhiteSpace(plugin.LocalPath);
+
+    private static bool CanReviseAssistantPlugin(IAvailablePlugin plugin)
+    {
+        var assistantPlugin = PluginFactory.RunningPlugins.OfType<PluginAssistants>().FirstOrDefault(x => x.Id == plugin.Id);
+        return plugin is { IsInternal: false, IsManagedByConfigServer: false, Type: PluginType.ASSISTANT } &&
+               !string.IsNullOrWhiteSpace(plugin.LocalPath) &&
+               assistantPlugin?.IsManagedByConfigServer is false;
+    }
+
+    private async Task OpenAssistantPluginEditorDialogAsync(IAvailablePlugin plugin)
+    {
+        var parameters = new DialogParameters<AssistantPluginEditorDialog>
+        {
+            { x => x.PluginId, plugin.Id },
+            { x => x.PluginLocalPath, plugin.LocalPath },
+        };
+        
+        var dialogReference = await this.DialogService.ShowAsync<AssistantPluginEditorDialog>(this.T("Edit Assistant Plugin"), parameters, DialogOptions.BLOCKING_FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        if (dialogResult is null || dialogResult.Canceled || dialogResult.Data is not AssistantPluginEditorDialogResult result)
+            return;
+
+        await this.MessageBus.SendSuccess(new(Icons.Material.Filled.Save, string.Format(this.T("The assistant plugin '{0}' has been successfully saved."), result.PluginName)));
+        LOG.LogInformation($"The assistant plugin '{result.PluginName}' ({result.PluginId}) has been successfully updated.");
+        await this.MessageBus.SendMessage<bool>(this, Event.PLUGINS_RELOADED);
+        await this.InvokeAsync(this.StateHasChanged);
+    }
+
+    private async Task OpenAssistantPluginRevisionDialogAsync(IAvailablePlugin plugin)
+    {
+        var parameters = new DialogParameters<AssistantPluginRevisionDialog>
+        {
+            { x => x.PluginId, plugin.Id },
+            { x => x.PluginLocalPath, plugin.LocalPath },
+        };
+
+        var dialogReference = await this.DialogService.ShowAsync<AssistantPluginRevisionDialog>(this.T("Revise Assistant Plugin"), parameters, DialogOptions.BLOCKING_FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        if (dialogResult is null || dialogResult.Canceled || dialogResult.Data is not AssistantPluginRevisionDialogResult result)
+            return;
+
+        await this.MessageBus.SendSuccess(new(Icons.Material.Filled.AutoFixHigh, string.Format(this.T("The assistant plugin '{0}' has been successfully revised."), result.PluginName)));
+        LOG.LogInformation($"The assistant plugin '{result.PluginName}' ({result.PluginId}) has been successfully revised.");
+        await this.MessageBus.SendMessage<bool>(this, Event.PLUGINS_RELOADED);
+        await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+        await this.InvokeAsync(this.StateHasChanged);
     }
 
     private static bool IsSendingMail(string sourceUrl) => sourceUrl.TrimStart().StartsWith("mailto:", StringComparison.OrdinalIgnoreCase);

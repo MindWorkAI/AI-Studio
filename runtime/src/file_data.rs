@@ -190,10 +190,14 @@ async fn stream_data(file_path: &str, extract_images: bool) -> Result<ChunkStrea
         },
     };
 
-    let ext = file_path.split('.').next_back().unwrap_or("");
+    let ext = Path::new(file_path)
+        .extension()
+        .and_then(|extension| extension.to_str())
+        .map(str::to_ascii_lowercase)
+        .unwrap_or_default();
     debug!("Extracting data from file: '{file_path}', format: '{fmt:?}', extension: '{ext}'");
 
-    let stream = match ext {
+    let stream = match ext.as_str() {
         DOCX | ODT => {
             let from = if ext == DOCX { "docx" } else { "odt" };
             convert_with_pandoc(file_path, from, TO_MARKDOWN).await?

@@ -304,6 +304,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::AGENDA::NUMBERPARTICIPANTSEXTENSIONS::T81
 -- Stop generation
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T1317408357"] = "Stop generation"
 
+-- The media file could not be transcribed.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T1543974632"] = "The media file could not be transcribed."
+
 -- Reset
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T180921696"] = "Reset"
 
@@ -312,6 +315,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T1809312323"] = "Please se
 
 -- The assistant failed. The message is: '{0}'
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T1833836281"] = "The assistant failed. The message is: '{0}'"
+
+-- The media transcription was canceled.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T241403726"] = "The media transcription was canceled."
 
 -- This assistant is already running. AI Studio opens the running session instead.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T2575715765"] = "This assistant is already running. AI Studio opens the running session instead."
@@ -355,26 +361,17 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T65674494
 -- Bias of the Day
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T782102948"] = "Bias of the Day"
 
--- The assistant \"{0}\" was checked with the level \"{1}\", which is below your required level \"{2}\". Your settings allow activation anyway, but this may be unsafe. Do you want to enable this assistant?
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1017087366"] = "The assistant \\\"{0}\\\" was checked with the level \\\"{1}\\\", which is below your required level \\\"{2}\\\". Your settings allow activation anyway, but this may be unsafe. Do you want to enable this assistant?"
-
 -- Security audit
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1078888788"] = "Security audit"
 
 -- Validate generated assistant
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1135532230"] = "Validate generated assistant"
 
--- Assistant Draft
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1176795724"] = "Assistant Draft"
-
 -- Generate Assistant
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1199074722"] = "Generate Assistant"
 
 -- Additional rules (Optional)
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1239995078"] = "Additional rules (Optional)"
-
--- User Goal
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1264526921"] = "User Goal"
 
 -- Auditing assistants safety...
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1322393857"] = "Auditing assistants safety..."
@@ -403,9 +400,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1644710572"] 
 -- Security check completed with findings.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1696631610"] = "Security check completed with findings."
 
--- Description
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1725856265"] = "Description"
-
 -- (Optional) Output language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1821434787"] = "(Optional) Output language"
 
@@ -414,9 +408,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1889523922"] 
 
 -- No assistant plugin was generated yet.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1911729967"] = "No assistant plugin was generated yet."
-
--- The generated assistant \"{0}\" is valid and runnable.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1912722439"] = "The generated assistant \\\"{0}\\\" is valid and runnable."
 
 -- View accepted draft
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1985923838"] = "View accepted draft"
@@ -430,11 +421,11 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2063479946"] 
 -- Assistant installed.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2069785341"] = "Assistant installed."
 
+-- The assistant '{0}' was updated.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2078723318"] = "The assistant '{0}' was updated."
+
 -- Typical input (Optional)
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2172900154"] = "Typical input (Optional)"
-
--- The assistant \"{0}\" was installed.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T232818957"] = "The assistant \\\"{0}\\\" was installed."
 
 -- These notes are applied on top of the accepted draft and can still change the generated assistant plugin. Leave empty to use the draft as-is.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2345545005"] = "These notes are applied on top of the accepted draft and can still change the generated assistant plugin. Leave empty to use the draft as-is."
@@ -442,17 +433,17 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2345545005"] 
 -- What users provide, e.g. text, notes, files, or a URL
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2381710500"] = "What users provide, e.g. text, notes, files, or a URL"
 
+-- The assistant '{0}' was checked with the level '{1}', which is below your required level '{2}'. Your settings allow activation anyway, but this may be unsafe. Do you want to enable this assistant?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T239354512"] = "The assistant '{0}' was checked with the level '{1}', which is below your required level '{2}'. Your settings allow activation anyway, but this may be unsafe. Do you want to enable this assistant?"
+
 -- The assistant could not be installed.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2432974339"] = "The assistant could not be installed."
 
 -- Security check completed. No security issues were found.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2521082424"] = "Security check completed. No security issues were found."
 
--- Inputs
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2647381688"] = "Inputs"
-
--- Name
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T266367750"] = "Name"
+-- The assistant '{0}' was installed.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T254606977"] = "The assistant '{0}' was installed."
 
 -- I need an assistant that turns meeting notes into clear tasks with owners and deadlines.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2703350865"] = "I need an assistant that turns meeting notes into clear tasks with owners and deadlines."
@@ -475,26 +466,17 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2795779287"] 
 -- Installing the assistant...
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2824185303"] = "Installing the assistant..."
 
+-- The generated assistant '{0}' is valid and runnable.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T283315403"] = "The generated assistant '{0}' is valid and runnable."
+
 -- The generated assistant could not be checked.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2844109727"] = "The generated assistant could not be checked."
-
--- Category
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2947802513"] = "Category"
-
--- Assumptions
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T299451"] = "Assumptions"
-
--- UI Components
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3053707933"] = "UI Components"
 
 -- Enable assistant
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3055650774"] = "Enable assistant"
 
 -- Validate plugin
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3111970038"] = "Validate plugin"
-
--- The Assistant-Builder was not able to read the JSON response schema and therefore cannot safely generate your assistant right now.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3154764026"] = "The Assistant-Builder was not able to read the JSON response schema and therefore cannot safely generate your assistant right now."
 
 -- Edit draft
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3159409454"] = "Edit draft"
@@ -504,9 +486,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3163704605"] 
 
 -- Regenerate Assistant
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3171038735"] = "Regenerate Assistant"
-
--- The Assistant-Builder was not able to read the plugin manifest and therefore cannot safely generate your assistant right now.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3278037634"] = "The Assistant-Builder was not able to read the plugin manifest and therefore cannot safely generate your assistant right now."
 
 -- The security check could not determine a result.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3303290181"] = "The security check could not determine a result."
@@ -535,9 +514,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T358632395"] =
 -- Please provide a custom category.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3588686406"] = "Please provide a custom category."
 
--- Safety Notes
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3633499050"] = "Safety Notes"
-
 -- Enable the assistant before opening it.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3658628501"] = "Enable the assistant before opening it."
 
@@ -559,17 +535,11 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3863433088"] 
 -- Assistant draft
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3957423852"] = "Assistant draft"
 
--- Output
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T4000727844"] = "Output"
-
 -- Please describe the assistant you want to create.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T4004589285"] = "Please describe the assistant you want to create."
 
 -- Assistant updated.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T40397082"] = "Assistant updated."
-
--- Prompt Strategy
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T410529216"] = "Prompt Strategy"
 
 -- Allow AI Studio profiles
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T4155351992"] = "Allow AI Studio profiles"
@@ -612,9 +582,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T746714819"] =
 
 -- It is recommended to a powerful LLM.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T767601000"] = "It is recommended to a powerful LLM."
-
--- The assistant \"{0}\" was updated.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T838472906"] = "The assistant \\\"{0}\\\" was updated."
 
 -- What users should get, e.g. a summary or checklist
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T889445968"] = "What users should get, e.g. a summary or checklist"
@@ -874,8 +841,17 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTA
 -- Yes, hide the policy definition
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T940701960"] = "Yes, hide the policy definition"
 
+-- Revise Assistant
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DYNAMIC::ASSISTANTDYNAMIC::T1070696505"] = "Revise Assistant"
+
 -- No assistant plugin are currently installed.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DYNAMIC::ASSISTANTDYNAMIC::T1913566603"] = "No assistant plugin are currently installed."
+
+-- The assistant '{0}' has been updated.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DYNAMIC::ASSISTANTDYNAMIC::T2466742351"] = "The assistant '{0}' has been updated."
+
+-- Revise assistant
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DYNAMIC::ASSISTANTDYNAMIC::T3167933145"] = "Revise assistant"
 
 -- Please select one of your profiles.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DYNAMIC::ASSISTANTDYNAMIC::T465395981"] = "Please select one of your profiles."
@@ -1630,6 +1606,99 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LEGALCHECK::ASSISTANTLEGALCHECK::T4254597
 -- Ask your questions
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LEGALCHECK::ASSISTANTLEGALCHECK::T467099852"] = "Ask your questions"
 
+-- Find
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T1042076026"] = "Find"
+
+-- The log file could not be read: {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T1147062477"] = "The log file could not be read: {0}"
+
+-- Select a log file
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T1231773010"] = "Select a log file"
+
+-- Log level
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T1318706515"] = "Log level"
+
+-- Refresh
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T135637716"] = "Refresh"
+
+-- Showing {0} of {1} loaded lines. {2} older lines were skipped. Last refresh: {3}.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T1747827400"] = "Showing {0} of {1} loaded lines. {2} older lines were skipped. Last refresh: {3}."
+
+-- The log file does not exist: {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T1807514273"] = "The log file does not exist: {0}"
+
+-- Could not open the log file location.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T1828231197"] = "Could not open the log file location."
+
+-- Other
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T1849229205"] = "Other"
+
+-- Max lines
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T1904230854"] = "Max lines"
+
+-- All
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T1974461284"] = "All"
+
+-- Startup log
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T2288538420"] = "Startup log"
+
+-- Showing {0} of {1} lines. Last refresh: {2}.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T2378353570"] = "Showing {0} of {1} lines. Last refresh: {2}."
+
+-- No matching log lines.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T2511997530"] = "No matching log lines."
+
+-- Could not open the log file location: {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T2533784927"] = "Could not open the log file location: {0}"
+
+-- Source details
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T2686813966"] = "Source details"
+
+-- Loaded {0} lines. Last refresh: {1}.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T2920304709"] = "Loaded {0} lines. Last refresh: {1}."
+
+-- Filter only
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T3152625639"] = "Filter only"
+
+-- Loading log file...
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T333036481"] = "Loading log file..."
+
+-- Unknown error
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T3461425987"] = "Unknown error"
+
+-- The log file path is not available yet.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T3686775689"] = "The log file path is not available yet."
+
+-- Logger
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T376222229"] = "Logger"
+
+-- Auto-refresh
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T3837203600"] = "Auto-refresh"
+
+-- not loaded yet
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T3863250749"] = "not loaded yet"
+
+-- Loading...
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T397479987"] = "Loading..."
+
+-- Usage log
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T4031747274"] = "Usage log"
+
+-- Open in folder
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T4048746540"] = "Open in folder"
+
+-- Log Viewer
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T4130241777"] = "Log Viewer"
+
+-- Opened the log file location.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T4162897654"] = "Opened the log file location."
+
+-- Show timestamps
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T469116133"] = "Show timestamps"
+
+-- Clear
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::LOGVIEWER::ASSISTANTLOGVIEWER::T77955010"] = "Clear"
+
 -- You can enter text, attach one or more documents, or use both. At least one input is required.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MYTASKS::ASSISTANTMYTASKS::T1442535450"] = "You can enter text, attach one or more documents, or use both. At least one input is required."
 
@@ -2293,8 +2362,23 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::IIMAGESOURCEEXTENSIONS::T349928509"] = "The ima
 -- Open Settings
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T1172211894"] = "Open Settings"
 
+-- Media transcription was canceled. Open the assistant to review it.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T1233815302"] = "Media transcription was canceled. Open the assistant to review it."
+
+-- Media transcription failed. Open the assistant to review it.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T2177964639"] = "Media transcription failed. Open the assistant to review it."
+
+-- Media transcription completed with a warning. Open the assistant to review it.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T2217674098"] = "Media transcription completed with a warning. Open the assistant to review it."
+
+-- Media is still being prepared.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T2600900617"] = "Media is still being prepared."
+
 -- Assistant is still running.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T2719896610"] = "Assistant is still running."
+
+-- The media transcript is ready.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T3248321953"] = "The media transcript is ready."
 
 -- Assistant was canceled. Open it to review the result.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T3390934621"] = "Assistant was canceled. Open it to review the result."
@@ -2304,6 +2388,24 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T3571008422"] = "Assistan
 
 -- The result is ready.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T661906146"] = "The result is ready."
+
+-- The assistant cannot be deleted while background work is still running.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINDELETEACTION::T1318944584"] = "The assistant cannot be deleted while background work is still running."
+
+-- Delete assistant plugin
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINDELETEACTION::T1692493145"] = "Delete assistant plugin"
+
+-- Delete Assistant Plugin
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINDELETEACTION::T3637071001"] = "Delete Assistant Plugin"
+
+-- The '{0}' assistant plugin has been successfully removed.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINDELETEACTION::T3815023384"] = "The '{0}' assistant plugin has been successfully removed."
+
+-- The assistant plugin '{0}' could not be deleted: {1}
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINDELETEACTION::T3985264168"] = "The assistant plugin '{0}' could not be deleted: {1}"
+
+-- Do you really want to delete the assistant plugin '{0}'? This will permanently delete the local plugin files.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINDELETEACTION::T4033722845"] = "Do you really want to delete the assistant plugin '{0}'? This will permanently delete the local plugin files."
 
 -- Show or hide the detailed security information.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T1045105126"] = "Show or hide the detailed security information."
@@ -2398,17 +2500,35 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T1358313858"] = "Click t
 -- Drop files here to attach them.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T143112277"] = "Drop files here to attach them."
 
+-- The media file could not be transcribed.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T1543974632"] = "The media file could not be transcribed."
+
 -- Click here to attach files.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T1875575968"] = "Click here to attach files."
+
+-- Transcribe media files
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T2178031033"] = "Transcribe media files"
 
 -- Drag and drop files into the marked area or click here to attach documents:
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T230755331"] = "Drag and drop files into the marked area or click here to attach documents:"
 
+-- The media transcription was canceled.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T241403726"] = "The media transcription was canceled."
+
 -- Select files to attach
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T2495931372"] = "Select files to attach"
 
+-- Some files could not be accessed. Please select them with the file chooser instead.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T2625895378"] = "Some files could not be accessed. Please select them with the file chooser instead."
+
 -- Document Preview
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T285154968"] = "Document Preview"
+
+-- Media files require a configured transcription provider. Configure one in the transcription settings.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T3172443094"] = "Media files require a configured transcription provider. Configure one in the transcription settings."
+
+-- The selected audio and video files will be prepared locally. Their audio will then be uploaded to the configured transcription provider.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T322693339"] = "The selected audio and video files will be prepared locally. Their audio will then be uploaded to the configured transcription provider."
 
 -- Clear file list
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T3759696136"] = "Clear file list"
@@ -2434,6 +2554,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1317408357"] = "Stop gene
 -- Save chat
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1516264254"] = "Save chat"
 
+-- The media file could not be transcribed.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1543974632"] = "The media file could not be transcribed."
+
 -- Type your input here...
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1849313532"] = "Type your input here..."
 
@@ -2445,6 +2568,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2036185364"] = "Code"
 
 -- Italic
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2377171085"] = "Italic"
+
+-- The media transcription was canceled.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T241403726"] = "The media transcription was canceled."
 
 -- Profile usage is disabled according to your chat template settings.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T2670286472"] = "Profile usage is disabled according to your chat template settings."
@@ -2671,6 +2797,24 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANDATORYINFODISPLAY::T3511160492"] = "Ac
 -- Please review this text again. The content was changed.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANDATORYINFODISPLAY::T941885055"] = "Please review this text again. The content was changed."
 
+-- Waiting to prepare media
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MEDIATRANSCRIPTIONSTATUS::T1167267986"] = "Waiting to prepare media"
+
+-- Stop media transcription
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MEDIATRANSCRIPTIONSTATUS::T1868377405"] = "Stop media transcription"
+
+-- Stopping media transcription
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MEDIATRANSCRIPTIONSTATUS::T1878101489"] = "Stopping media transcription"
+
+-- Inspecting media
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MEDIATRANSCRIPTIONSTATUS::T2431421733"] = "Inspecting media"
+
+-- Transcribing
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MEDIATRANSCRIPTIONSTATUS::T2938661425"] = "Transcribing"
+
+-- Preparing audio
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MEDIATRANSCRIPTIONSTATUS::T3200155905"] = "Preparing audio"
+
 -- Given that my employer's workplace uses both Windows and Linux, I wanted a cross-platform solution that would work seamlessly across all major operating systems, including macOS. Additionally, I wanted to demonstrate that it is possible to create modern, efficient, cross-platform applications without resorting to Electron bloatware. The combination of .NET and Rust with Tauri proved to be an excellent technology stack for building such robust applications.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MOTIVATION::T1057189794"] = "Given that my employer's workplace uses both Windows and Linux, I wanted a cross-platform solution that would work seamlessly across all major operating systems, including macOS. Additionally, I wanted to demonstrate that it is possible to create modern, efficient, cross-platform applications without resorting to Electron bloatware. The combination of .NET and Rust with Tauri proved to be an excellent technology stack for building such robust applications."
 
@@ -2788,17 +2932,41 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T4279448758"] = "Uses 
 -- Provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PROVIDERSELECTION::T900237532"] = "Provider"
 
+-- The media file could not be transcribed.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T1543974632"] = "The media file could not be transcribed."
+
 -- Failed to load file content
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T1989554334"] = "Failed to load file content"
 
 -- Drop one file here to load its content.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T2274562398"] = "Drop one file here to load its content."
 
+-- The media transcription was canceled.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T241403726"] = "The media transcription was canceled."
+
+-- File content loaded
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T2768170467"] = "File content loaded"
+
+-- The selected media file will be prepared locally. Its audio will then be uploaded to the configured transcription provider.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T2839709466"] = "The selected media file will be prepared locally. Its audio will then be uploaded to the configured transcription provider."
+
+-- Media files require a configured transcription provider. Configure one in the transcription settings.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T3172443094"] = "Media files require a configured transcription provider. Configure one in the transcription settings."
+
 -- Use file content as input
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T3499386973"] = "Use file content as input"
 
 -- Select file to read its content
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T354817589"] = "Select file to read its content"
+
+-- Transcribe media file
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T3554222960"] = "Transcribe media file"
+
+-- Some dropped files could not be accessed. Please select them with the file chooser instead.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T3896246824"] = "Some dropped files could not be accessed. Please select them with the file chooser instead."
+
+-- Attached file '{0}'.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T853724151"] = "Attached file '{0}'."
 
 -- The content is cleaned using an LLM agent: the main content is extracted, advertisements and other irrelevant things are attempted to be removed; relative links are attempted to be converted into absolute links so that they can be used.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READWEBCONTENT::T1164201762"] = "The content is cleaned using an LLM agent: the main content is extracted, advertisements and other irrelevant things are attempted to be removed; relative links are attempted to be converted into absolute links so that they can be used."
@@ -3538,9 +3706,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T586430036"] = "Useful assistants
 -- Voice recording has been disabled for this session because audio playback could not be initialized on the client.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T1123032432"] = "Voice recording has been disabled for this session because audio playback could not be initialized on the client."
 
--- Failed to create the transcription provider.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T1689988905"] = "Failed to create the transcription provider."
-
 -- Failed to start audio recording.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T2144994226"] = "Failed to start audio recording."
 
@@ -3559,20 +3724,11 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T2851219233"] = "Transcrip
 -- Unfortunately, there was an error communicating with the AI system.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T3236134591"] = "Unfortunately, there was an error communicating with the AI system."
 
--- The configured transcription provider was not found.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T331613105"] = "The configured transcription provider was not found."
-
 -- Failed to stop audio recording.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T3462568264"] = "Failed to stop audio recording."
 
--- The configured transcription provider does not meet the minimum confidence level.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T3834149033"] = "The configured transcription provider does not meet the minimum confidence level."
-
 -- An error occurred during transcription.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T588743762"] = "An error occurred during transcription."
-
--- No transcription provider is configured.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T663630295"] = "No transcription provider is configured."
 
 -- The transcription result is empty.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T974954792"] = "The transcription result is empty."
@@ -3802,9 +3958,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T3224848879"] = 
 -- Advanced Prompt Building
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T3399544173"] = "Advanced Prompt Building"
 
--- The assistant plugin \"{0}\" was audited with the level \"{1}\", which is below the required safety level \"{2}\". Your current settings still allow activation, but this may be unsafe. Do you really want to enable this plugin?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T3418077666"] = "The assistant plugin \\\"{0}\\\" was audited with the level \\\"{1}\\\", which is below the required safety level \\\"{2}\\\". Your current settings still allow activation, but this may be unsafe. Do you really want to enable this plugin?"
-
 -- Unknown
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T3424652889"] = "Unknown"
 
@@ -3841,6 +3994,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T413646574"] = "
 -- Fallback Prompt
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T4229995215"] = "Fallback Prompt"
 
+-- The assistant plugin '{0}' was audited with the level '{1}', which is below the required safety level '{2}'. Your current settings still allow activation, but this may be unsafe. Do you really want to enable this plugin?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T521056824"] = "The assistant plugin '{0}' was audited with the level '{1}', which is below the required safety level '{2}'. Your current settings still allow activation, but this may be unsafe. Do you really want to enable this plugin?"
+
 -- System Prompt
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T628396066"] = "System Prompt"
 
@@ -3855,6 +4011,81 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T811648299"] = "
 
 -- Cancel
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINAUDITDIALOG::T900713019"] = "Cancel"
+
+-- Fullscreen
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINEDITORDIALOG::T1026214520"] = "Fullscreen"
+
+-- Save
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINEDITORDIALOG::T1294818664"] = "Save"
+
+-- The assistant plugin could not be resolved.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINEDITORDIALOG::T1823819434"] = "The assistant plugin could not be resolved."
+
+-- The assistant plugin could not be loaded: {0}
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINEDITORDIALOG::T2486953475"] = "The assistant plugin could not be loaded: {0}"
+
+-- The plugin.lua file could not be found.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINEDITORDIALOG::T2530869782"] = "The plugin.lua file could not be found."
+
+-- This plugin cannot be edited.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINEDITORDIALOG::T3059987617"] = "This plugin cannot be edited."
+
+-- Exit fullscreen
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINEDITORDIALOG::T3558641766"] = "Exit fullscreen"
+
+-- Saving...
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINEDITORDIALOG::T518047887"] = "Saving..."
+
+-- Cancel
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINEDITORDIALOG::T900713019"] = "Cancel"
+
+-- Add a field for the target audience and make the final answer shorter.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINREVISIONDIALOG::T1383965111"] = "Add a field for the target audience and make the final answer shorter."
+
+-- Running security audit...
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINREVISIONDIALOG::T1731066725"] = "Running security audit..."
+
+-- Please select a provider.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINREVISIONDIALOG::T1809312323"] = "Please select a provider."
+
+-- The assistant plugin could not be resolved.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINREVISIONDIALOG::T1823819434"] = "The assistant plugin could not be resolved."
+
+-- Creating revision...
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINREVISIONDIALOG::T2337749895"] = "Creating revision..."
+
+-- The assistant plugin could not be loaded: {0}
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINREVISIONDIALOG::T2486953475"] = "The assistant plugin could not be loaded: {0}"
+
+-- The plugin.lua file could not be found.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINREVISIONDIALOG::T2530869782"] = "The plugin.lua file could not be found."
+
+-- Revised Lua plugin
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINREVISIONDIALOG::T2551052936"] = "Revised Lua plugin"
+
+-- Updating assistant...
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINREVISIONDIALOG::T3193127843"] = "Updating assistant..."
+
+-- Describe what should change after trying the assistant. AI Studio will revise the installed plugin while keeping the same assistant ID.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINREVISIONDIALOG::T3229664631"] = "Describe what should change after trying the assistant. AI Studio will revise the installed plugin while keeping the same assistant ID."
+
+-- Update assistant
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINREVISIONDIALOG::T3242039532"] = "Update assistant"
+
+-- Requested changes
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINREVISIONDIALOG::T3561753822"] = "Requested changes"
+
+-- Only locally managed assistant plugins can be revised with AI.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINREVISIONDIALOG::T3633992223"] = "Only locally managed assistant plugins can be revised with AI."
+
+-- Create revision
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINREVISIONDIALOG::T413917014"] = "Create revision"
+
+-- The revised assistant '{0}' is valid and ready to update.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINREVISIONDIALOG::T68761554"] = "The revised assistant '{0}' is valid and ready to update."
+
+-- Cancel
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINREVISIONDIALOG::T900713019"] = "Cancel"
 
 -- Only text content is supported in the editing mode yet.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T1352914344"] = "Only text content is supported in the editing mode yet."
@@ -6502,6 +6733,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3930052338"] = "Job Posting"
 -- Ask a question about a legal document.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T3970214537"] = "Ask a question about a legal document."
 
+-- Log Viewer
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T4130241777"] = "Log Viewer"
+
 -- ERI Server
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T4204533420"] = "ERI Server"
 
@@ -6522,6 +6756,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T782102948"] = "Bias of the Day"
 
 -- Learn about one cognitive bias every day.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T878695986"] = "Learn about one cognitive bias every day."
+
+-- View and filter AI Studio log files.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T892147062"] = "View and filter AI Studio log files."
 
 -- Localization
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T897888480"] = "Localization"
@@ -6748,9 +6985,6 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2037899437"] = "Copies the serve
 -- This library is used to create temporary folders in runtime tests and supporting filesystem operations.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2160280545"] = "This library is used to create temporary folders in runtime tests and supporting filesystem operations."
 
--- This library is used to determine the file type of a file. This is necessary, e.g., when we want to stream a file.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2173617769"] = "This library is used to determine the file type of a file. This is necessary, e.g., when we want to stream a file."
-
 -- For the secure communication between the user interface and the runtime, we need to create certificates. This Rust library is great for this purpose.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2174764529"] = "For the secure communication between the user interface and the runtime, we need to create certificates. This Rust library is great for this purpose."
 
@@ -6766,8 +7000,14 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2273492381"] = "We must generate
 -- Configuration plugin ID:
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2301484629"] = "Configuration plugin ID:"
 
+-- dirs determines the platform-specific local application data directory. AI Studio uses it so the Flatpak startup log is written to the same application data directory that Tauri uses.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2325338322"] = "dirs determines the platform-specific local application data directory. AI Studio uses it so the Flatpak startup log is written to the same application data directory that Tauri uses."
+
 -- The C# language is used for the implementation of the user interface and the backend. To implement the user interface with C#, the Blazor technology from ASP.NET Core is used. All these technologies are integrated into the .NET SDK.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2329884315"] = "The C# language is used for the implementation of the user interface and the backend. To implement the user interface with C#, the Blazor technology from ASP.NET Core is used. All these technologies are integrated into the .NET SDK."
+
+-- We use Rubato to resample the decoded audio to 48 kHz before the Opus encoding.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2345444286"] = "We use Rubato to resample the decoded audio to 48 kHz before the Opus encoding."
 
 -- Linux AppImages bundle GStreamer components to support microphone access and WebM audio recording in the embedded WebKitGTK web view.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T234598990"] = "Linux AppImages bundle GStreamer components to support microphone access and WebM audio recording in the embedded WebKitGTK web view."
@@ -6844,11 +7084,17 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2868174483"] = "The .NET backend
 -- AI Studio runs with an enterprise configuration and configuration servers. The configuration plugins are not yet available.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2924964415"] = "AI Studio runs with an enterprise configuration and configuration servers. The configuration plugins are not yet available."
 
+-- On Linux, this library communicates with the FreeDesktop Secret Service. AI Studio uses its structured errors to provide helpful guidance when secure credential storage is unavailable or not configured correctly.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2928990457"] = "On Linux, this library communicates with the FreeDesktop Secret Service. AI Studio uses its structured errors to provide helpful guidance when secure credential storage is unavailable or not configured correctly."
+
 -- Copies the configuration source to the clipboard
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2929232062"] = "Copies the configuration source to the clipboard"
 
 -- Copies the root certificate fingerprint to the clipboard
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2989678330"] = "Copies the root certificate fingerprint to the clipboard"
+
+-- This library identifies files by their content. It is used for document streaming and as the first safety and media classification step before local audio processing.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3002755581"] = "This library identifies files by their content. It is used for document streaming and as the first safety and media classification step before local audio processing."
 
 -- Changelog
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3017574265"] = "Changelog"
@@ -6894,6 +7140,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3315279770"] = "External HTTPS c
 
 -- User-language provided by the OS
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3334355246"] = "User-language provided by the OS"
+
+-- webm-iterable provides the EBML and WebM writing path for normalized audio.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3385332793"] = "webm-iterable provides the EBML and WebM writing path for normalized audio."
 
 -- Status:
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3396815215"] = "Status:"
@@ -6943,17 +7192,26 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3801531724"] = "Configuration so
 -- this version does not met the requirements
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3813932670"] = "this version does not met the requirements"
 
+-- On Linux, ashpd provides access to desktop portals, allowing AI Studio to open folders and files for the user.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3871176264"] = "On Linux, ashpd provides access to desktop portals, allowing AI Studio to open folders and files for the user."
+
 -- This library is used to access the Windows registry. We use this for Windows enterprise environments to read the desired configuration.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3874337003"] = "This library is used to access the Windows registry. We use this for Windows enterprise environments to read the desired configuration."
 
 -- Now we have multiple systems, some developed in .NET and others in Rust. The data format JSON is responsible for translating data between both worlds (called data serialization and deserialization). Serde takes on this task in the Rust world. The counterpart in the .NET world is an integral part of .NET and is located in System.Text.Json.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3908558992"] = "Now we have multiple systems, some developed in .NET and others in Rust. The data format JSON is responsible for translating data between both worlds (called data serialization and deserialization). Serde takes on this task in the Rust world. The counterpart in the .NET world is an integral part of .NET and is located in System.Text.Json."
 
+-- CodeJar is a lightweight embeddable code editor for the browser.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3918449841"] = "CodeJar is a lightweight embeddable code editor for the browser."
+
 -- not applicable
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T396609403"] = "not applicable"
 
 -- Copies the allowed host configuration to the clipboard
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3970230163"] = "Copies the allowed host configuration to the clipboard"
+
+-- Symphonia is used for media container demuxing and audio decoding. The exact MPL-covered source is available from the repository linked and is identified in the offline notices bundled with AI Studio.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3971563979"] = "Symphonia is used for media container demuxing and audio decoding. The exact MPL-covered source is available from the repository linked and is identified in the offline notices bundled with AI Studio."
 
 -- Installed Pandoc version
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3983971016"] = "Installed Pandoc version"
@@ -6972,6 +7230,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4060906280"] = "This library is 
 
 -- This library is used to create asynchronous streams in Rust. It allows us to work with streams of data that can be produced asynchronously, making it easier to handle events or data that arrive over time. We use this, e.g., to stream arbitrary data from the file system to the embedding system.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4079152443"] = "This library is used to create asynchronous streams in Rust. It allows us to work with streams of data that can be produced asynchronously, making it easier to handle events or data that arrive over time. We use this, e.g., to stream arbitrary data from the file system to the embedding system."
+
+-- Ropus provides the Opus encoder and decoder used by the media pipeline.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4113556626"] = "Ropus provides the Opus encoder and decoder used by the media pipeline."
 
 -- Community & Code
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4158546761"] = "Community & Code"
@@ -7063,23 +7324,38 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T158493184"] = "Internal Plugins"
 -- Disabled Plugins
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T1724138133"] = "Disabled Plugins"
 
+-- Edit assistant plugin
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T1851885496"] = "Edit assistant plugin"
+
 -- Send a mail
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T1999487139"] = "Send a mail"
 
 -- Enable plugin
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2057806005"] = "Enable plugin"
 
+-- No source url available
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2058912565"] = "No source url available"
+
 -- Plugins
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2222816203"] = "Plugins"
 
--- The assistant plugin \"{0}\" was audited with the level \"{1}\", which is below the required minimum level \"{2}\". Your current settings allow activation anyway, but this may be potentially dangerous. Do you really want to enable this plugin?
-UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2531356312"] = "The assistant plugin \\\"{0}\\\" was audited with the level \\\"{1}\\\", which is below the required minimum level \\\"{2}\\\". Your current settings allow activation anyway, but this may be potentially dangerous. Do you really want to enable this plugin?"
+-- Edit Assistant Plugin
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2477579768"] = "Edit Assistant Plugin"
 
 -- Enabled Plugins
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2738444034"] = "Enabled Plugins"
 
+-- Revise Assistant Plugin
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T284393424"] = "Revise Assistant Plugin"
+
+-- The assistant plugin '{0}' has been successfully saved.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3143506997"] = "The assistant plugin '{0}' has been successfully saved."
+
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3448155331"] = "Close"
+
+-- Revise assistant plugin with AI
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3801095542"] = "Revise assistant plugin with AI"
 
 -- Actions
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3865031940"] = "Actions"
@@ -7087,8 +7363,14 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3865031940"] = "Actions"
 -- The automatic security audit for the assistant plugin '{0}' failed. Please run it manually.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T4066679817"] = "The automatic security audit for the assistant plugin '{0}' failed. Please run it manually."
 
+-- The assistant plugin '{0}' has been successfully revised.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T4157246824"] = "The assistant plugin '{0}' has been successfully revised."
+
 -- Open website
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T4239378936"] = "Open website"
+
+-- The assistant plugin '{0}' was audited with the level '{1}', which is below the required minimum level \"{2}\". Your current settings allow activation anyway, but this may be potentially dangerous. Do you really want to enable this plugin?
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T448946658"] = "The assistant plugin '{0}' was audited with the level '{1}', which is below the required minimum level \\\"{2}\\\". Your current settings allow activation anyway, but this may be potentially dangerous. Do you really want to enable this plugin?"
 
 -- Settings
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SETTINGS::T1258653480"] = "Settings"
@@ -7723,6 +8005,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T4262148639"] = "Rewrite
 -- Localization Assistant
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T446674624"] = "Localization Assistant"
 
+-- Log Viewer Assistant
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T555062689"] = "Log Viewer Assistant"
+
 -- New Chat
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T826248509"] = "New Chat"
 
@@ -7992,6 +8277,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANT
 
 -- Grid Item
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T1991378436"] = "Grid Item"
+
+-- File Attachments
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T2294745309"] = "File Attachments"
 
 -- List
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T2368288673"] = "List"
@@ -8485,6 +8773,219 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T378481461"] = "Source like p
 -- Document
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T4165204724"] = "Document"
 
+-- The Assistant Builder context could not be loaded.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T108292972"] = "The Assistant Builder context could not be loaded."
+
+-- Assistant Draft
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T1176795724"] = "Assistant Draft"
+
+-- User Goal
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T1264526921"] = "User Goal"
+
+-- The generated assistant plugin must be marked as locally managed.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T1349875803"] = "The generated assistant plugin must be marked as locally managed."
+
+-- The revision model did not return a usable answer.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T1411545143"] = "The revision model did not return a usable answer."
+
+-- Description
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T1725856265"] = "Description"
+
+-- Please select a provider.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T1809312323"] = "Please select a provider."
+
+-- The generation model did not return a usable answer.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T1992169096"] = "The generation model did not return a usable answer."
+
+-- The generated assistant plugin must use the assigned plugin ID.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T2177405163"] = "The generated assistant plugin must use the assigned plugin ID."
+
+-- Please describe what should be changed.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T2377842064"] = "Please describe what should be changed."
+
+-- The revised assistant plugin must keep the Assistant Builder metadata.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T2462041384"] = "The revised assistant plugin must keep the Assistant Builder metadata."
+
+-- The current plugin.lua content is empty.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T2491968008"] = "The current plugin.lua content is empty."
+
+-- Inputs
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T2647381688"] = "Inputs"
+
+-- Name
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T266367750"] = "Name"
+
+-- Category
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T2947802513"] = "Category"
+
+-- Assumptions
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T299451"] = "Assumptions"
+
+-- UI Components
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3053707933"] = "UI Components"
+
+-- Assistant Plugin Revision
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3245954919"] = "Assistant Plugin Revision"
+
+-- The Assistant-Builder was not able to read the plugin manifest and therefore cannot safely generate your assistant right now.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3278037634"] = "The Assistant-Builder was not able to read the plugin manifest and therefore cannot safely generate your assistant right now."
+
+-- The generated assistant plugin is not a valid assistant plugin.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3317114503"] = "The generated assistant plugin is not a valid assistant plugin."
+
+-- The revised assistant plugin must keep the same plugin ID.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3493590294"] = "The revised assistant plugin must keep the same plugin ID."
+
+-- Assistant Plugin Generation
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T355580240"] = "Assistant Plugin Generation"
+
+-- Model decides
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T358632395"] = "Model decides"
+
+-- Safety Notes
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3633499050"] = "Safety Notes"
+
+-- Only locally managed assistant plugins can be revised with AI.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3633992223"] = "Only locally managed assistant plugins can be revised with AI."
+
+-- The revised assistant plugin must remain locally managed.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3791030033"] = "The revised assistant plugin must remain locally managed."
+
+-- The revised assistant plugin is not a valid assistant plugin.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T390267914"] = "The revised assistant plugin is not a valid assistant plugin."
+
+-- The generated assistant plugin must include the Assistant Builder metadata.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3985906496"] = "The generated assistant plugin must include the Assistant Builder metadata."
+
+-- Output
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T4000727844"] = "Output"
+
+-- Please describe the assistant you want to create.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T4004589285"] = "Please describe the assistant you want to create."
+
+-- Prompt Strategy
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T410529216"] = "Prompt Strategy"
+
+-- The draft model did not return a usable answer.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T4183375977"] = "The draft model did not return a usable answer."
+
+-- The Assistant Builder response schema could not be loaded.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T4235833611"] = "The Assistant Builder response schema could not be loaded."
+
+-- Please create an assistant draft first.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T4269176489"] = "Please create an assistant draft first."
+
+-- Internal assistant plugins cannot be deleted.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T1084244321"] = "Internal assistant plugins cannot be deleted."
+
+-- The assistant plugin directory is outside the local assistant plugin directory.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T1211881977"] = "The assistant plugin directory is outside the local assistant plugin directory."
+
+-- Only assistant plugins can be edited.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T1288328479"] = "Only assistant plugins can be edited."
+
+-- The assistant cannot be deleted while background work is still running.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T1318944584"] = "The assistant cannot be deleted while background work is still running."
+
+-- No Lua plugin code was generated.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T1839013358"] = "No Lua plugin code was generated."
+
+-- The edited assistant plugin uses the ID of an internal AI Studio plugin.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T2061233834"] = "The edited assistant plugin uses the ID of an internal AI Studio plugin."
+
+-- The assistant plugin directory does not exist.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T2148384567"] = "The assistant plugin directory does not exist."
+
+-- The resolved plugin directory is outside the assistant plugin directory.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T2223071618"] = "The resolved plugin directory is outside the assistant plugin directory."
+
+-- Unexpected error: {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T2350673880"] = "Unexpected error: {0}"
+
+-- The assistant plugin has no local directory.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T2682912892"] = "The assistant plugin has no local directory."
+
+-- The AI Studio data directory is not initialized yet.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T2712481762"] = "The AI Studio data directory is not initialized yet."
+
+-- Only assistant plugins can be deleted.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T2864597027"] = "Only assistant plugins can be deleted."
+
+-- The generated plugin is not an assistant plugin. Issue: {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T2955055168"] = "The generated plugin is not an assistant plugin. Issue: {0}"
+
+-- The generated assistant plugin uses the ID of an internal AI Studio plugin.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T3162363526"] = "The generated assistant plugin uses the ID of an internal AI Studio plugin."
+
+-- Config Server managed assistant plugins cannot be deleted.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T3751820312"] = "Config Server managed assistant plugins cannot be deleted."
+
+-- Only assistants generated by the Assistant Builder can be deleted.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T3940247198"] = "Only assistants generated by the Assistant Builder can be deleted."
+
+-- The edited plugin is not an assistant plugin. Issue: {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T3984111892"] = "The edited plugin is not an assistant plugin. Issue: {0}"
+
+-- The plugin system is not initialized yet.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T3984839613"] = "The plugin system is not initialized yet."
+
+-- The plugin file is outside the assistant plugin directory.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T4062980447"] = "The plugin file is outside the assistant plugin directory."
+
+-- The edited assistant plugin is invalid. Issue: {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T554567780"] = "The edited assistant plugin is invalid. Issue: {0}"
+
+-- The edited assistant plugin must keep the same plugin ID.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T693124809"] = "The edited assistant plugin must keep the same plugin ID."
+
+-- Internal assistant plugins cannot be edited.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T816339833"] = "Internal assistant plugins cannot be edited."
+
+-- The generated assistant plugin is invalid. Issue: {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T939708112"] = "The generated assistant plugin is invalid. Issue: {0}"
+
+-- The global shortcut could not be registered. The previous shortcut remains active.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::GLOBALSHORTCUTSERVICE::T2266307101"] = "The global shortcut could not be registered. The previous shortcut remains active."
+
+-- The global shortcut change was cancelled. The previous shortcut remains active.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::GLOBALSHORTCUTSERVICE::T3299913860"] = "The global shortcut change was cancelled. The previous shortcut remains active."
+
+-- The configured transcription provider could not be created.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T1235984176"] = "The configured transcription provider could not be created."
+
+-- The selected media file no longer exists.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T129859547"] = "The selected media file no longer exists."
+
+-- The selected media file does not contain an audio track.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T134825479"] = "The selected media file does not contain an audio track."
+
+-- The media file could not be transcribed.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T1543974632"] = "The media file could not be transcribed."
+
+-- The selected file cannot be processed as media.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T1707342767"] = "The selected file cannot be processed as media."
+
+-- The audio track contains no audible signal, so there is nothing to transcribe.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T1988190152"] = "The audio track contains no audible signal, so there is nothing to transcribe."
+
+-- The media file is damaged or its format could not be identified.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T2004316549"] = "The media file is damaged or its format could not be identified."
+
+-- This media format or audio codec is not supported.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T2142564510"] = "This media format or audio codec is not supported."
+
+-- No usable transcription provider is configured.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T2282521655"] = "No usable transcription provider is configured."
+
+-- The media file could not be prepared for transcription.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T2749117459"] = "The media file could not be prepared for transcription."
+
+-- The transcription provider could not transcribe the media file.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T3091669215"] = "The transcription provider could not transcribe the media file."
+
+-- The media pipeline ended without an output file.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T632852430"] = "The media pipeline ended without an output file."
+
 -- Pandoc Installation
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PANDOCAVAILABILITYSERVICE::T185447014"] = "Pandoc Installation"
 
@@ -8494,14 +8995,41 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PANDOCAVAILABILITYSERVICE::T25964655
 -- Failed to store the secret data due to an API issue.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T1110203516"] = "Failed to store the secret data due to an API issue."
 
+-- No compatible secure-storage service is available. Configure a password manager that provides the FreeDesktop Secret Service.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T1238078807"] = "No compatible secure-storage service is available. Configure a password manager that provides the FreeDesktop Secret Service."
+
 -- Failed to store the API key due to an API issue.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T1704298921"] = "Failed to store the API key due to an API issue."
+
+-- The global shortcut could not be registered because of a desktop integration error.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T2032590244"] = "The global shortcut could not be registered because of a desktop integration error."
+
+-- The runtime file manager endpoint returned '{0}'.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T2158262203"] = "The runtime file manager endpoint returned '{0}'."
 
 -- Failed to delete the secret data due to an API issue.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T2303057928"] = "Failed to delete the secret data due to an API issue."
 
+-- The runtime file manager endpoint is not available.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T2486847754"] = "The runtime file manager endpoint is not available."
+
+-- The global shortcut could not be registered because the desktop service is unavailable.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T2944914452"] = "The global shortcut could not be registered because the desktop service is unavailable."
+
+-- AI Studio could not access secure storage because the default collection is locked. Open your password manager and unlock the default collection.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T3005355097"] = "AI Studio could not access secure storage because the default collection is locked. Open your password manager and unlock the default collection."
+
+-- The runtime file manager endpoint failed without details.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T3082220817"] = "The runtime file manager endpoint failed without details."
+
 -- Successfully copied the text to your clipboard
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T3351807428"] = "Successfully copied the text to your clipboard"
+
+-- The desktop service returned an invalid response while registering the global shortcut.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T3369097283"] = "The desktop service returned an invalid response while registering the global shortcut."
+
+-- AI Studio could not access secure storage because no default collection is configured. Open a compatible password manager, create or select a collection, unlock it, and set it as the default.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T3611400673"] = "AI Studio could not access secure storage because no default collection is configured. Open a compatible password manager, create or select a collection, unlock it, and set it as the default."
 
 -- Failed to delete the API key due to an API issue.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T3658273365"] = "Failed to delete the API key due to an API issue."
@@ -8512,8 +9040,17 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T3724548108"] = "Failed
 -- Failed to get the API key due to an API issue.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T3875720022"] = "Failed to get the API key due to an API issue."
 
+-- No saved secret was found.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T3929880252"] = "No saved secret was found."
+
 -- Failed to get the secret data due to an API issue.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T4007657575"] = "Failed to get the secret data due to an API issue."
+
+-- AI Studio could not access secure storage. See the log for technical details.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T624023541"] = "AI Studio could not access secure storage. See the log for technical details."
+
+-- The secure-storage confirmation was canceled. Repeat the operation and confirm the password manager prompt.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T824858123"] = "The secure-storage confirmation was canceled. Repeat the operation and confirm the password manager prompt."
 
 -- No update found.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::UPDATESERVICE::T1015418291"] = "No update found."

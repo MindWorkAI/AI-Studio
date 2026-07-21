@@ -1,5 +1,6 @@
 using AIStudio.Chat;
 using AIStudio.Dialogs;
+using AIStudio.Tools.Media;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
@@ -13,6 +14,11 @@ using DialogOptions = Dialogs.DialogOptions;
 
 public partial class AttachDocuments : MSGComponentBase
 {
+    private readonly MediaImportOwner fallbackMediaImportOwner = new(MediaImportOwnerKind.CHAT, $"attachments:{Guid.NewGuid():N}");
+
+    [CascadingParameter]
+    private MediaImportOwner? ImportOwner { get; set; }
+
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(AttachDocuments).Namespace, nameof(AttachDocuments));
 
     [Parameter]
@@ -48,6 +54,10 @@ public partial class AttachDocuments : MSGComponentBase
     [Parameter]
     public bool UseSmallForm { get; set; }
 
+    /// <summary>Whether this control renders its own media status.</summary>
+    [Parameter]
+    public bool ShowMediaStatus { get; set; } = true;
+
     [Parameter]
     public bool Disabled { get; set; }
 
@@ -63,6 +73,14 @@ public partial class AttachDocuments : MSGComponentBase
     [Parameter]
     public AIStudio.Settings.Provider? Provider { get; set; }
 
+    /// <summary>Optional persisted chat that can own transcript files immediately.</summary>
+    [Parameter]
+    public ChatThread? OwnerChat { get; set; }
+
+    /// <summary>Creates and persists a draft owner after media import confirmation.</summary>
+    [Parameter]
+    public Func<string, Task<ChatThread?>> EnsureOwnerChatAsync { get; set; } = _ => Task.FromResult<ChatThread?>(null);
+
     [Inject]
     private ILogger<AttachDocuments> Logger { get; set; } = null!;
 
@@ -75,17 +93,29 @@ public partial class AttachDocuments : MSGComponentBase
     [Inject]
     private PandocAvailabilityService PandocAvailabilityService { get; init; } = null!;
 
+    [Inject]
+    private MediaTranscriptionService MediaTranscriptionService { get; init; } = null!;
+
     private const Placement TOOLBAR_TOOLTIP_PLACEMENT = Placement.Top;
     private static readonly string DROP_FILES_HERE_TEXT = TB("Drop files here to attach them.");
 
     private uint numDropAreasAboveThis;
     private bool isComponentHovered;
     private bool isDraggingOver;
+    private bool isFileDialogOpen;
+    private MediaImportOwner EffectiveImportOwner => this.OwnerChat is not null
+        ? MediaImportOwner.ForChat(this.OwnerChat.ChatId)
+        : this.ImportOwner ?? this.fallbackMediaImportOwner;
+
+    private MediaImportTarget EffectiveMediaImportTarget => new(this.EffectiveImportOwner, string.IsNullOrWhiteSpace(this.Name) ? "attachments" : this.Name);
+
+    private bool IsUnavailable => this.Disabled || this.isFileDialogOpen || this.MediaTranscriptionService.IsBusy(this.EffectiveImportOwner);
 
     #region Overrides of MSGComponentBase
 
     protected override async Task OnInitializedAsync()
     {
+        this.MediaTranscriptionService.StateChanged += this.OnMediaImportStateChanged;
         this.ApplyFilters([], [ Event.TAURI_EVENT_RECEIVED, Event.REGISTER_FILE_DROP_AREA, Event.UNREGISTER_FILE_DROP_AREA ]);
 
         // Register this drop area:
@@ -93,9 +123,101 @@ public partial class AttachDocuments : MSGComponentBase
         await base.OnInitializedAsync();
     }
 
+    /// <summary>Rehydrates results after the component is assigned another chat or target.</summary>
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+        await this.SyncCompletedMediaAttachmentsAsync();
+    }
+
+    /// <summary>Refreshes disabled controls when the shared import lane changes.</summary>
+    private void OnMediaImportStateChanged(MediaImportOwner owner)
+    {
+        if (owner == this.EffectiveImportOwner)
+            _ = this.InvokeAsync(async () =>
+            {
+                await this.SyncCompletedMediaAttachmentsAsync();
+                await this.ConsumeStandaloneMediaOutcomeAsync();
+                this.StateHasChanged();
+            });
+    }
+
+    /// <summary>Consumes outcomes for dialog-local controls that have no chat or assistant owner surface.</summary>
+    private async Task ConsumeStandaloneMediaOutcomeAsync()
+    {
+        if (this.ImportOwner is not null || this.OwnerChat is not null)
+            return;
+
+        var outcome = this.MediaTranscriptionService.TryConsumeOutcome(this.EffectiveImportOwner);
+        if (outcome is null)
+            return;
+
+        if (outcome.Failures.Count > 0)
+        {
+            var message = string.Join(Environment.NewLine, outcome.Failures.Select(failure => $"{failure.FileName}: {failure.UserMessage}"));
+            await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, message));
+        }
+        else if (outcome.Status is MediaImportStatus.FAILED)
+        {
+            await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, this.T("The media file could not be transcribed.")));
+        }
+
+        if (outcome.Warnings.Count > 0)
+        {
+            var message = string.Join(Environment.NewLine, outcome.Warnings.Select(warning => $"{warning.FileName}: {warning.UserMessage}"));
+            await this.MessageBus.SendWarning(new(Icons.Material.Filled.VoiceChat, message));
+        }
+
+        if (outcome.Status is MediaImportStatus.CANCELLED)
+        {
+            await this.MessageBus.SendWarning(new(Icons.Material.Filled.VoiceChat, this.T("The media transcription was canceled.")));
+        }
+    }
+
+    /// <summary>Reattaches completed owner results after progress updates or navigation.</summary>
+    private async Task SyncCompletedMediaAttachmentsAsync()
+    {
+        var delivery = this.MediaTranscriptionService.GetPendingDelivery(this.EffectiveMediaImportTarget);
+        var completed = delivery?.Attachments ?? [];
+        var pending = this.OwnerChat?.PendingMediaTranscripts ?? [];
+        var changed = false;
+        var ownerPendingChanged = false;
+        
+        foreach (var attachment in completed.Concat(pending))
+            changed |= this.DocumentPaths.Add(attachment);
+
+        if (this.OwnerChat is not null)
+        {
+            foreach (var attachment in completed.OfType<ManagedTranscriptAttachment>())
+            {
+                if (this.OwnerChat.PendingMediaTranscripts.All(existing => existing.FilePath != attachment.FilePath))
+                {
+                    this.OwnerChat.PendingMediaTranscripts.Add(attachment);
+                    ownerPendingChanged = true;
+                }
+            }
+        }
+
+        if (changed || ownerPendingChanged)
+        {
+            await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
+            await this.OnChange(this.DocumentPaths);
+        }
+
+        if (delivery is not null)
+            this.MediaTranscriptionService.AcknowledgeDelivery(delivery);
+    }
+
+    /// <summary>Unsubscribes from the singleton media service.</summary>
+    protected override void DisposeResources()
+    {
+        this.MediaTranscriptionService.StateChanged -= this.OnMediaImportStateChanged;
+        base.DisposeResources();
+    }
+
     protected override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
     {
-        if (this.Disabled && triggeredEvent == Event.TAURI_EVENT_RECEIVED)
+        if (this.IsUnavailable && triggeredEvent == Event.TAURI_EVENT_RECEIVED)
             return;
 
         switch (triggeredEvent)
@@ -168,29 +290,7 @@ public partial class AttachDocuments : MSGComponentBase
                     return;
                 }
 
-                // Ensure that Pandoc is installed and ready:
-                var pandocState = await this.PandocAvailabilityService.EnsureAvailabilityAsync(
-                    showSuccessMessage: false,
-                    showDialog: true);
-
-                // If Pandoc is not available (user cancelled installation), abort file drop:
-                if (!pandocState.IsAvailable)
-                {
-                    this.Logger.LogWarning("The user cancelled the Pandoc installation or Pandoc is not available. Aborting file drop.");
-                    this.isDraggingOver = false;
-                    this.ClearDragClass();
-                    this.StateHasChanged();
-                    return;
-                }
-
-                foreach (var path in paths)
-                {
-                    if(!await FileExtensionValidation.IsExtensionValidWithNotifyAsync(FileExtensionValidation.UseCase.ATTACHING_CONTENT, path, this.ValidateMediaFileTypes, this.Provider))
-                        continue;
-
-                    this.DocumentPaths.Add(FileAttachment.FromPath(path));
-                }
-
+                await this.AddFileBatchAsync(paths);
                 await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
                 await this.OnChange(this.DocumentPaths);
                 this.isDraggingOver = false;
@@ -208,54 +308,49 @@ public partial class AttachDocuments : MSGComponentBase
 
     private async Task AddFilesManually()
     {
-        if (this.Disabled)
+        if (this.IsUnavailable)
             return;
 
-        // Ensure that Pandoc is installed and ready:
-        var pandocState = await this.PandocAvailabilityService.EnsureAvailabilityAsync(
-            showSuccessMessage: false,
-            showDialog: true);
-
-        // If Pandoc is not available (user cancelled installation), abort file selection:
-        if (!pandocState.IsAvailable)
+        this.isFileDialogOpen = true;
+        try
         {
-            this.Logger.LogWarning("The user cancelled the Pandoc installation or Pandoc is not available. Aborting file selection.");
-            return;
+            var selectFiles = await this.RustService.SelectFiles(T("Select files to attach"));
+            if (selectFiles.UserCancelled)
+                return;
+
+            await this.AddFileBatchAsync(selectFiles.SelectedFilePaths);
+            await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
+            await this.OnChange(this.DocumentPaths);
         }
-
-        var selectFiles = await this.RustService.SelectFiles(T("Select files to attach"));
-        if (selectFiles.UserCancelled)
-            return;
-
-        foreach (var selectedFilePath in selectFiles.SelectedFilePaths)
+        finally
         {
-            if (!File.Exists(selectedFilePath))
-                continue;
-
-            if (!await FileExtensionValidation.IsExtensionValidWithNotifyAsync(FileExtensionValidation.UseCase.ATTACHING_CONTENT, selectedFilePath, this.ValidateMediaFileTypes, this.Provider))
-                continue;
-
-            this.DocumentPaths.Add(FileAttachment.FromPath(selectedFilePath));
+            this.isFileDialogOpen = false;
         }
-
-        await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
-        await this.OnChange(this.DocumentPaths);
     }
 
     private async Task OpenAttachmentsDialog()
     {
-        if (this.Disabled)
+        if (this.IsUnavailable)
             return;
 
+        var previousAttachments = this.DocumentPaths.ToHashSet();
         this.DocumentPaths = await ReviewAttachmentsDialog.OpenDialogAsync(this.DialogService, this.DocumentPaths);
+        foreach (var removedAttachment in previousAttachments.Except(this.DocumentPaths))
+            ManagedTranscriptAttachment.TryDeleteOwnedFile(removedAttachment);
+        
+        this.ReconcileOwnerPendingTranscripts();
     }
 
     private async Task ClearAllFiles()
     {
-        if (this.Disabled)
+        if (this.IsUnavailable)
             return;
 
+        foreach (var attachment in this.DocumentPaths)
+            ManagedTranscriptAttachment.TryDeleteOwnedFile(attachment);
+        
         this.DocumentPaths.Clear();
+        this.ReconcileOwnerPendingTranscripts();
         await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
         await this.OnChange(this.DocumentPaths);
     }
@@ -266,7 +361,7 @@ public partial class AttachDocuments : MSGComponentBase
 
     private void OnMouseEnter(EventArgs _)
     {
-        if(this.Disabled || this.PauseCatchingDrops)
+        if(this.IsUnavailable || this.PauseCatchingDrops)
             return;
 
         this.Logger.LogDebug("Attach documents component '{Name}' is hovered.", this.Name);
@@ -277,7 +372,7 @@ public partial class AttachDocuments : MSGComponentBase
 
     private void OnMouseLeave(EventArgs _)
     {
-        if(this.Disabled || this.PauseCatchingDrops)
+        if(this.IsUnavailable || this.PauseCatchingDrops)
             return;
 
         this.Logger.LogDebug("Attach documents component '{Name}' is no longer hovered.", this.Name);
@@ -288,14 +383,107 @@ public partial class AttachDocuments : MSGComponentBase
 
     private async Task RemoveDocument(FileAttachment fileAttachment)
     {
-        if (this.Disabled)
+        if (this.IsUnavailable)
             return;
 
         this.DocumentPaths.Remove(fileAttachment);
+        ManagedTranscriptAttachment.TryDeleteOwnedFile(fileAttachment);
+        this.ReconcileOwnerPendingTranscripts();
 
         await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
         await this.OnChange(this.DocumentPaths);
     }
+
+    /// <summary>Keeps persisted chat-draft transcript references aligned with the composer.</summary>
+    private void ReconcileOwnerPendingTranscripts()
+    {
+        if (this.OwnerChat is null)
+            return;
+
+        var retainedPaths = this.DocumentPaths.Select(attachment => attachment.FilePath).ToHashSet(StringComparer.Ordinal);
+        this.OwnerChat.PendingMediaTranscripts.RemoveAll(attachment => !retainedPaths.Contains(attachment.FilePath));
+    }
+
+    private async Task AddFileBatchAsync(IEnumerable<string> paths)
+    {
+        var pathList = paths.ToList();
+        var inaccessiblePaths = pathList.Where(path => !File.Exists(path)).ToList();
+        if (inaccessiblePaths.Count > 0)
+        {
+            this.Logger.LogWarning("Could not access {Count} dropped or selected file(s): {Paths}", inaccessiblePaths.Count, string.Join(", ", inaccessiblePaths));
+            await this.MessageBus.SendWarning(new(
+                Icons.Material.Filled.Warning,
+                this.T("Some files could not be accessed. Please select them with the file chooser instead.")));
+        }
+
+        var existingPaths = pathList.Except(inaccessiblePaths).ToList();
+        var mediaPaths = existingPaths.Where(IsTranscribableMedia).ToList();
+        var regularPaths = existingPaths.Except(mediaPaths).ToList();
+
+        var canAddRegularFiles = true;
+        if (regularPaths.Count > 0)
+        {
+            var pandocState = await this.PandocAvailabilityService.EnsureAvailabilityAsync(
+                showSuccessMessage: false,
+                showDialog: true);
+            canAddRegularFiles = pandocState.IsAvailable;
+        }
+
+        foreach (var path in regularPaths)
+        {
+            if (!canAddRegularFiles)
+                break;
+
+            if (!await FileExtensionValidation.IsExtensionValidWithNotifyAsync(
+                    FileExtensionValidation.UseCase.ATTACHING_CONTENT,
+                    path,
+                    this.ValidateMediaFileTypes,
+                    this.Provider))
+                continue;
+            this.DocumentPaths.Add(FileAttachment.FromPath(path));
+        }
+
+        if (mediaPaths.Count is 0)
+            return;
+
+        if (string.IsNullOrWhiteSpace(this.SettingsManager.ConfigurationData.App.UseTranscriptionProvider))
+        {
+            await this.MessageBus.SendWarning(new(
+                Icons.Material.Filled.VoiceChat,
+                this.T("Media files require a configured transcription provider. Configure one in the transcription settings.")));
+            return;
+        }
+
+        var names = string.Join('\n', mediaPaths.Select(path => $"- {Markdown.EscapeInlineText(Path.GetFileName(path))}"));
+        var message = this.T("The selected audio and video files will be prepared locally. Their audio will then be uploaded to the configured transcription provider.");
+        var dialogParameters = new DialogParameters<ConfirmDialog>
+        {
+            {
+                x => x.MarkdownBody,
+                $"""
+                 {message}
+
+                 {names}
+                 """
+            },
+        };
+
+        var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(
+            this.T("Transcribe media files"),
+            dialogParameters,
+            DialogOptions.FULLSCREEN);
+
+        var dialogResult = await dialogReference.Result;
+        if (dialogResult is null || dialogResult.Canceled)
+            return;
+
+        if (this.OwnerChat is null)
+            this.OwnerChat = await this.EnsureOwnerChatAsync(mediaPaths[0]);
+
+        this.MediaTranscriptionService.TryStartAttachmentBatch(mediaPaths, this.EffectiveMediaImportTarget, this.OwnerChat);
+    }
+
+    private static bool IsTranscribableMedia(string path) => FileTypes.IsAllowedPath(path, FileTypes.AUDIO) || FileTypes.IsAllowedPath(path, FileTypes.VIDEO);
 
     /// <summary>
     /// The user might want to check what we actually extract from his file and therefore give the LLM as an input.

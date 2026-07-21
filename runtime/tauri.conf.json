@@ -1,7 +1,7 @@
 {
   "productName": "MindWork AI Studio",
   "mainBinaryName": "MindWork AI Studio",
-  "version": "26.7.2",
+  "version": "26.7.3",
   "identifier": "com.github.mindwork-ai.ai-studio",
   
   "build": {
@@ -27,7 +27,8 @@
       "../app/MindWork AI Studio/bin/dist/mindworkAIStudioServer"
     ],
     "resources": [
-      "resources/libraries/*"
+      "resources/libraries/*",
+      "resources/notices/*"
     ],
     "macOS": {
       "exceptionDomain": "localhost"
