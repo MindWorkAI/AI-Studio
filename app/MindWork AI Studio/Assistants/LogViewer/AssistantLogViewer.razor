@@ -60,7 +60,11 @@
                 <MudButton Variant="Variant.Text" Color="Color.Default" StartIcon="@Icons.Material.Filled.Clear" Disabled="@(!this.HasActiveFilter)" OnClick="@this.ClearFilters">
                     @T("Clear")
                 </MudButton>
+                <MudButton Variant="Variant.Text" Color="Color.Default" StartIcon="@Icons.Material.Filled.ContentCopy" Disabled="@(!this.CanCopyDisplayedLines)" OnClick="@this.CopyDisplayedLines">
+                    @T("Copy visible lines")
+                </MudButton>
                 <MudCheckBox T="bool" @bind-Value="@this.FilterOnly" Label="@T("Filter only")" Color="Color.Primary" />
+                <MudCheckBox T="bool" @bind-Value="@this.InvertFilters" Label="@T("Invert filters")" Color="Color.Primary" />
             </MudStack>
 
             <MudText Typo="Typo.body2" Class="log-viewer-path mb-1">

@@ -60,6 +60,7 @@ public partial class AssistantLogViewer : MSGComponentBase
     private bool isLoading;
     private bool autoRefresh;
     private bool filterOnly = true;
+    private bool invertFilters;
     private bool showTimestamps = true;
     private int maxLines = DEFAULT_MAX_LINES;
     private int totalLineCount;
@@ -72,7 +73,11 @@ public partial class AssistantLogViewer : MSGComponentBase
 
     private bool HasDropdownFilter => this.selectedLogLevels.Count > 0 || this.selectedLoggers.Count > 0 || this.selectedSourceDetails.Count > 0;
 
-    private bool HasActiveFilter => !string.IsNullOrWhiteSpace(this.filterText) || this.HasDropdownFilter;
+    private bool HasActiveFilter => !string.IsNullOrWhiteSpace(this.filterText) || this.HasDropdownFilter || this.invertFilters;
+
+    private bool HasActiveVisibilityFilter => this.HasDropdownFilter || (this.filterOnly && this.activeSearchTerms.Length > 0);
+
+    private bool CanCopyDisplayedLines => this.displayLines.Count > 0;
 
     private string FilterText
     {
@@ -96,6 +101,19 @@ public partial class AssistantLogViewer : MSGComponentBase
                 return;
 
             this.filterOnly = value;
+            this.RefreshDisplayLines();
+        }
+    }
+
+    private bool InvertFilters
+    {
+        get => this.invertFilters;
+        set
+        {
+            if (this.invertFilters == value)
+                return;
+
+            this.invertFilters = value;
             this.RefreshDisplayLines();
         }
     }
@@ -208,6 +226,12 @@ public partial class AssistantLogViewer : MSGComponentBase
         await this.RefreshLogAsync();
     }
 
+    private async Task CopyDisplayedLines()
+    {
+        var text = string.Join(Environment.NewLine, this.displayLines.Select(this.GetPlainRenderedLine));
+        await this.RustService.CopyText2Clipboard(this.Snackbar, text);
+    }
+
     private async Task OpenCurrentLogInFileManager()
     {
         try
@@ -276,6 +300,7 @@ public partial class AssistantLogViewer : MSGComponentBase
         this.selectedLogLevels.Clear();
         this.selectedLoggers.Clear();
         this.selectedSourceDetails.Clear();
+        this.invertFilters = false;
         this.RefreshDisplayLines();
     }
 
@@ -387,6 +412,14 @@ public partial class AssistantLogViewer : MSGComponentBase
 
     private bool LineMatchesFilters(LogLine line)
     {
+        if (this.invertFilters && this.HasActiveVisibilityFilter)
+            return !this.LineMatchesAnyActiveFilter(line);
+
+        return this.LineMatchesActiveFilters(line);
+    }
+
+    private bool LineMatchesActiveFilters(LogLine line)
+    {
         if (!MatchesSelection(line.Segments.Level, this.selectedLogLevels))
             return false;
 
@@ -400,6 +433,20 @@ public partial class AssistantLogViewer : MSGComponentBase
             return true;
 
         return MatchesSearchTerms(this.GetPlainRenderedLine(line), this.activeSearchTerms);
+    }
+
+    private bool LineMatchesAnyActiveFilter(LogLine line)
+    {
+        if (ActiveSelectionMatches(line.Segments.Level, this.selectedLogLevels))
+            return true;
+
+        if (ActiveSelectionMatches(line.Segments.Logger, this.selectedLoggers))
+            return true;
+
+        if (ActiveSelectionMatches(line.Segments.SourceDetails, this.selectedSourceDetails))
+            return true;
+
+        return this.filterOnly && this.activeSearchTerms.Length > 0 && MatchesSearchTerms(this.GetPlainRenderedLine(line), this.activeSearchTerms);
     }
 
     private string RenderLine(LogLine line)
@@ -688,8 +735,13 @@ public partial class AssistantLogViewer : MSGComponentBase
 
     private static bool MatchesSelection(string? value, HashSet<string> selectedValues)
     {
+        return selectedValues.Count == 0 || ActiveSelectionMatches(value, selectedValues);
+    }
+
+    private static bool ActiveSelectionMatches(string? value, HashSet<string> selectedValues)
+    {
         if (selectedValues.Count == 0)
-            return true;
+            return false;
 
         var normalizedValue = string.IsNullOrWhiteSpace(value) ? OTHER_OPTION_VALUE : value;
         return selectedValues.Contains(normalizedValue);
