@@ -376,7 +376,10 @@ public partial class ReadFileContent : MSGComponentBase
 
     private string FileLoadedTooltip()
     {
-        if (!this.hasLoadedFileContent || string.IsNullOrWhiteSpace(this.loadedFileName))
+        if (!this.hasLoadedFileContent)
+            return string.Empty;
+
+        if (string.IsNullOrWhiteSpace(this.loadedFileName))
             return this.T("File content loaded");
 
         return string.Format(this.T("Attached file '{0}'."), this.loadedFileName);
