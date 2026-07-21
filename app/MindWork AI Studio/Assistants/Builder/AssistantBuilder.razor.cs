@@ -570,7 +570,7 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
         this.isAuditingPlugin = true;
         try
         {
-            this.pluginAudit = await this.AssistantPluginAuditService.RunAuditAsync(this.installedAssistantPlugin);
+            this.pluginAudit = await this.AssistantPluginAuditService.RunAuditAsync(this.installedAssistantPlugin, fallbackProvider: this.ProviderSettings);
             if (this.pluginAudit.Level is AssistantAuditLevel.UNKNOWN)
             {
                 this.FailInstallStep(BuilderInstallStep.SECURITY_CHECK, T("The security check could not determine a result."));
