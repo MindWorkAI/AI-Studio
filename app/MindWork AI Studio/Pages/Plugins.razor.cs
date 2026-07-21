@@ -4,6 +4,7 @@ using AIStudio.Dialogs;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.PluginSystem.Assistants;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 using Microsoft.AspNetCore.Components;
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
@@ -16,6 +17,7 @@ public partial class Plugins : MSGComponentBase
     private const string GROUP_DISABLED = "Disabled";
     private const string GROUP_INTERNAL = "Internal";
     private bool isAutoAuditing;
+    private bool isImportingAssistantPlugin;
 
     private DataAssistantPluginAudit AssistantPluginAuditSettings => this.SettingsManager.ConfigurationData.AssistantPluginAudit;
     
@@ -30,9 +32,22 @@ public partial class Plugins : MSGComponentBase
     [Inject] 
     private PluginShareService PluginShareService { get; init; } = null!;
 
+    [Inject]
+    private RustService RustService { get; init; } = null!;
+
+    [Inject]
+    private AssistantPluginInstallService AssistantPluginInstallService { get; init; } = null!;
+
     private static readonly ILogger LOG = Program.LOGGER_FACTORY.CreateLogger(nameof(Plugins));
     
     private static bool IS_SHARING_PLUGIN;
+
+    private const string IMPORT_ICON =
+        @"<svg class=""mud-icon-root mud-svg-icon mud-dark-text mud-icon-size-medium"" focusable=""false"" viewBox=""0 0 24 24"" aria-hidden=""true"" role=""img"">
+    <path d=""M0 0h24v24H0V0z"" fill=""none""></path>
+    <path d=""M16 5l-1.42 1.42-1.59-1.59V16h-1.98V4.83L9.42 6.42 8 5l4-4 4 4z"" transform=""rotate(180 12 10)""></path>
+    <path d=""M20 10v11c0 1.1-.9 2-2 2H6c-1.11 0-2-.9-2-2V10c0-1.11.89-2 2-2h3v2H6v11h12V10h-3V8h3c1.1 0 2 .89 2 2z""></path>
+  </svg>";
 
     #region Overrides of ComponentBase
 
@@ -263,6 +278,42 @@ public partial class Plugins : MSGComponentBase
         finally
         {
             IS_SHARING_PLUGIN = false;
+            await this.InvokeAsync(this.StateHasChanged);
+        }
+    }
+
+    private async Task ImportAssistantPluginAsync()
+    {
+        if (this.isImportingAssistantPlugin)
+            return;
+
+        this.isImportingAssistantPlugin = true;
+        await this.InvokeAsync(this.StateHasChanged);
+
+        try
+        {
+            var selection = await this.RustService.SelectFile(this.T("Import assistant plugin"), [FileTypes.PLUGIN_ARCHIVE]);
+            if (selection.UserCancelled)
+                return;
+
+            var result = await this.AssistantPluginInstallService.InstallArchiveAsync(selection.SelectedFilePath, CancellationToken.None);
+            if (!result.Success)
+            {
+                LOG.LogError("Failed to import assistant plugin archive '{ArchivePath}': {Issue}", selection.SelectedFilePath, result.Issue);
+                await this.MessageBus.SendError(new(Icons.Material.Filled.ReportProblem, string.Format(this.T("The assistant plugin could not be imported: {0}"), result.Issue)));
+                return;
+            }
+
+            var message = result.ReplacedExisting
+                ? this.T("Assistant updated.")
+                : this.T("Assistant installed.");
+            await this.MessageBus.SendSuccess(new(Icons.Material.Filled.Extension, message));
+            await this.MessageBus.SendMessage<bool>(this, Event.PLUGINS_RELOADED);
+            await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+        }
+        finally
+        {
+            this.isImportingAssistantPlugin = false;
             await this.InvokeAsync(this.StateHasChanged);
         }
     }

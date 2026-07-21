@@ -5,9 +5,17 @@
 @attribute [Route(Routes.PLUGINS)]
 
 <div class="inner-scrolling-context">
-    <MudText Typo="Typo.h3" Class="mb-2">
-        @T("Plugins")
-    </MudText>
+    <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
+        <MudText Typo="Typo.h3">
+            @T("Plugins")
+        </MudText>
+        <MudSpacer />
+        <MudTooltip Text="@T("Import assistant plugin")">
+            <MudButton Variant="Variant.Outlined" StartIcon="@IMPORT_ICON" OnClick="@this.ImportAssistantPluginAsync" Disabled="@this.isImportingAssistantPlugin">
+                @T("Import")
+            </MudButton>
+        </MudTooltip>
+    </MudStack>
     
     <InnerScrolling>
         
