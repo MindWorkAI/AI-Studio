@@ -1,5 +1,4 @@
 @attribute [Route(Routes.ASSISTANT_LOG_VIEWER)]
-@using AIStudio.Tools.Services
 @inherits MSGComponentBase
 
 <div class="inner-scrolling-context">
@@ -10,7 +9,7 @@
     <InnerScrolling FillEntireHorizontalSpace="@true" Class="log-viewer-shell">
         <HeaderContent>
             <MudStack Row="@true" Wrap="@Wrap.Wrap" AlignItems="@AlignItems.Center" Spacing="2" Class="mb-2">
-                <MudSelect T="LogFileKind" Value="@this.selectedLogFile" ValueChanged="@this.SelectedLogFileChanged" Label="@T("Log file")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="log-viewer-select">
+                <MudSelect T="LogFileKind" Value="@this.selectedLogFile" ValueChanged="@this.SelectedLogFileChanged" Label="@T("Select a log file")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="log-viewer-select">
                     <MudSelectItem T="LogFileKind" Value="@LogFileKind.APP">@T("Usage log")</MudSelectItem>
                     <MudSelectItem T="LogFileKind" Value="@LogFileKind.STARTUP">@T("Startup log")</MudSelectItem>
                 </MudSelect>
@@ -28,7 +27,7 @@
             </MudStack>
 
             <MudStack Row="@true" Wrap="@Wrap.Wrap" AlignItems="@AlignItems.Center" Spacing="2" Class="mb-1">
-                <MudSelect T="string" Label="@T("Log type")" MultiSelection="@true" SelectedValues="@this.selectedLogLevels" SelectedValuesChanged="@this.SelectedLogLevelsChanged" MultiSelectionTextFunc="@this.GetMultiSelectionText" Variant="Variant.Outlined" Margin="Margin.Dense" Class="log-viewer-multiselect" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Label">
+                <MudSelect T="string" Label="@T("Log level")" MultiSelection="@true" SelectedValues="@this.selectedLogLevels" SelectedValuesChanged="@this.SelectedLogLevelsChanged" MultiSelectionTextFunc="@this.GetMultiSelectionText" Variant="Variant.Outlined" Margin="Margin.Dense" Class="log-viewer-multiselect" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Label">
                     @foreach (var option in this.logLevelOptions)
                     {
                         <MudSelectItem T="string" Value="@option">
@@ -103,7 +102,7 @@
                     <div class="log-viewer-lines" role="textbox" aria-readonly="true">
                         @foreach (var line in this.displayLines)
                         {
-                            <div class="@this.GetLineClass(line)">
+                            <div class="@GetLineClass(line)">
                                 <span class="log-viewer-line-number">@line.Number</span>
                                 <span class="log-viewer-line-text">@((MarkupString)this.RenderLine(line))</span>
                             </div>

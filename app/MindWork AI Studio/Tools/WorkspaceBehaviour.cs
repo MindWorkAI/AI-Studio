@@ -736,7 +736,7 @@ public static class WorkspaceBehaviour
         var chatPath = loadChat.WorkspaceId == Guid.Empty
             ? Path.Join(SettingsManager.DataDirectory, "tempChats", loadChat.ChatId.ToString())
             : Path.Join(SettingsManager.DataDirectory, "workspaces", loadChat.WorkspaceId.ToString(), loadChat.ChatId.ToString());
-        
+
         return Directory.Exists(chatPath);
     }
 
@@ -754,6 +754,7 @@ public static class WorkspaceBehaviour
 
             Directory.CreateDirectory(chatDirectory);
 
+            await FinalizeStagedTranscriptsAsync(chat, chatDirectory);
             var chatNamePath = Path.Join(chatDirectory, "name");
             await File.WriteAllTextAsync(chatNamePath, chat.Name);
 
@@ -768,6 +769,225 @@ public static class WorkspaceBehaviour
             semaphore.Release();
         }
     }
+
+    /// <summary>Creates a transcript atomically inside an already persisted chat.</summary>
+    /// <param name="chat">Persisted chat that owns the transcript counter.</param>
+    /// <param name="originalPath">Original media path.</param>
+    /// <param name="transcript">Provider transcript.</param>
+    /// <returns>The chat-owned managed attachment.</returns>
+    public static async Task<ManagedTranscriptAttachment> CreateManagedTranscriptAsync(ChatThread chat, string originalPath, string transcript)
+    {
+        var (acquired, semaphore) = await TryAcquireChatSemaphoreAsync(chat.WorkspaceId, chat.ChatId, nameof(CreateManagedTranscriptAsync));
+        if (!acquired)
+            throw new IOException("The chat transcript directory is busy.");
+
+        try
+        {
+            var chatDirectory = GetChatDirectory(chat.WorkspaceId, chat.ChatId);
+            if (!Directory.Exists(chatDirectory))
+                throw new DirectoryNotFoundException($"The owning chat directory does not exist: '{chatDirectory}'.");
+            
+            var transcriptDirectory = Path.Combine(chatDirectory, "attachments", "transcripts");
+            Directory.CreateDirectory(transcriptDirectory);
+            ReconcileTranscriptCounter(chat, transcriptDirectory);
+            
+            var targetPath = NextTranscriptPath(chat, transcriptDirectory, Path.GetFileName(originalPath));
+            return await ManagedTranscriptAttachment.CreateAtomicAsync(targetPath, Path.GetFileName(originalPath), transcript);
+        }
+        finally
+        {
+            semaphore.Release();
+        }
+    }
+
+    public static async Task MoveChatAsync(ChatThread chat, Guid targetWorkspaceId)
+    {
+        if (chat.WorkspaceId == targetWorkspaceId)
+            return;
+
+        var sourceWorkspaceId = chat.WorkspaceId;
+        var sourceDirectory = GetChatDirectory(sourceWorkspaceId, chat.ChatId);
+        var targetDirectory = GetChatDirectory(targetWorkspaceId, chat.ChatId);
+        var sourceSemaphore = GetChatSemaphore(sourceWorkspaceId, chat.ChatId);
+        var targetSemaphore = GetChatSemaphore(targetWorkspaceId, chat.ChatId);
+        // Always acquire both workspace/chat locks in canonical workspace-ID order. This prevents
+        // opposing moves of the same chat from waiting on one another with reversed lock order.
+        var orderedSemaphores = string.CompareOrdinal(sourceWorkspaceId.ToString("N"), targetWorkspaceId.ToString("N")) <= 0
+            ? new[] { sourceSemaphore, targetSemaphore }
+            : new[] { targetSemaphore, sourceSemaphore };
+        
+        await orderedSemaphores[0].WaitAsync();
+        await orderedSemaphores[1].WaitAsync();
+        
+        var moved = false;
+        try
+        {
+            if (!Directory.Exists(sourceDirectory))
+                throw new DirectoryNotFoundException($"The source chat directory does not exist: '{sourceDirectory}'.");
+            
+            // Only the workspace parent is created here. Directory.Move requires the chat target
+            // directory itself not to exist so an existing destination is never merged silently.
+            var targetWorkspaceDirectory = Path.GetDirectoryName(targetDirectory)!;
+            Directory.CreateDirectory(targetWorkspaceDirectory);
+            if (Directory.Exists(targetDirectory))
+                throw new IOException($"The target chat directory already exists: '{targetDirectory}'.");
+
+            Directory.Move(sourceDirectory, targetDirectory);
+            moved = true;
+            
+            UpdateAttachmentPathsAfterMove(chat, sourceDirectory, targetDirectory);
+            chat.WorkspaceId = targetWorkspaceId;
+            
+            await FinalizeStagedTranscriptsAsync(chat, targetDirectory);
+            await StoreMovedChatFilesAsync(chat, targetDirectory);
+        }
+        catch
+        {
+            if (moved)
+            {
+                try
+                {
+                    UpdateAttachmentPathsAfterMove(chat, targetDirectory, sourceDirectory);
+                    chat.WorkspaceId = sourceWorkspaceId;
+                    
+                    if (Directory.Exists(targetDirectory) && !Directory.Exists(sourceDirectory))
+                        Directory.Move(targetDirectory, sourceDirectory);
+                    
+                    if (Directory.Exists(sourceDirectory))
+                        await StoreMovedChatFilesAsync(chat, sourceDirectory);
+                }
+                catch (Exception rollbackError)
+                {
+                    LOG.LogError(rollbackError, "Could not roll back moving chat '{ChatId}' to workspace '{WorkspaceId}'.", chat.ChatId, targetWorkspaceId);
+                }
+            }
+            throw;
+        }
+        finally
+        {
+            orderedSemaphores[1].Release();
+            orderedSemaphores[0].Release();
+            InvalidateWorkspaceTreeCache();
+        }
+    }
+
+    /// <summary>Atomically stores the name and thread after a directory move.</summary>
+    private static async Task StoreMovedChatFilesAsync(ChatThread chat, string chatDirectory)
+    {
+        await File.WriteAllTextAsync(Path.Join(chatDirectory, "name"), chat.Name);
+        var chatPath = Path.Join(chatDirectory, "thread.json");
+        var temporaryPath = Path.Join(chatDirectory, $".thread-{Guid.NewGuid():N}.tmp");
+        
+        try
+        {
+            await File.WriteAllTextAsync(temporaryPath, JsonSerializer.Serialize(chat, JSON_OPTIONS), Encoding.UTF8);
+            File.Move(temporaryPath, chatPath, overwrite: true);
+        }
+        finally
+        {
+            if (File.Exists(temporaryPath))
+                File.Delete(temporaryPath);
+        }
+    }
+
+    /// <summary>Rewrites absolute attachment paths after moving the complete chat directory.</summary>
+    private static void UpdateAttachmentPathsAfterMove(ChatThread chat, string sourceDirectory, string targetDirectory)
+    {
+        var sourcePrefix = sourceDirectory.EndsWith(Path.DirectorySeparatorChar)
+            ? sourceDirectory
+            : sourceDirectory + Path.DirectorySeparatorChar;
+
+        var pathComparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+        foreach (var content in chat.Blocks.Select(block => block.Content).OfType<ContentText>())
+        {
+            for (var index = 0; index < content.FileAttachments.Count; index++)
+            {
+                var attachment = content.FileAttachments[index];
+                if (!Path.GetFullPath(attachment.FilePath).StartsWith(sourcePrefix, pathComparison))
+                    continue;
+
+                var relativePath = Path.GetRelativePath(sourceDirectory, attachment.FilePath);
+                var movedPath = Path.Combine(targetDirectory, relativePath);
+
+                content.FileAttachments[index] = attachment switch
+                {
+                    ManagedTranscriptAttachment managed => managed with { FilePath = movedPath },
+                    FileAttachmentImage image => image with { FilePath = movedPath },
+                    _ => attachment with { FilePath = movedPath },
+                };
+            }
+        }
+    }
+
+    private static async Task FinalizeStagedTranscriptsAsync(ChatThread chat, string chatDirectory)
+    {
+        var transcriptDirectory = Path.Combine(chatDirectory, "attachments", "transcripts");
+        ReconcileTranscriptCounter(chat, transcriptDirectory);
+        foreach (var content in chat.Blocks.Select(block => block.Content).OfType<ContentText>())
+        {
+            for (var index = 0; index < content.FileAttachments.Count; index++)
+            {
+                if (content.FileAttachments[index] is not ManagedTranscriptAttachment { IsStaged: true } staged
+                    || !File.Exists(staged.FilePath))
+                    continue;
+
+                Directory.CreateDirectory(transcriptDirectory);
+                var targetPath = NextTranscriptPath(chat, transcriptDirectory, staged.OriginalFileName);
+
+                File.Move(staged.FilePath, targetPath);
+                var sourceDirectory = Path.GetDirectoryName(staged.FilePath);
+                if (sourceDirectory is not null && Directory.Exists(sourceDirectory) && !Directory.EnumerateFileSystemEntries(sourceDirectory).Any())
+                    Directory.Delete(sourceDirectory);
+
+                content.FileAttachments[index] = new ManagedTranscriptAttachment(
+                    Path.GetFileName(targetPath),
+                    targetPath,
+                    new FileInfo(targetPath).Length,
+                    staged.OriginalFileName,
+                    false);
+            }
+        }
+
+        await Task.CompletedTask;
+    }
+
+    /// <summary>Raises the persisted counter to the highest transcript suffix found chat-wide.</summary>
+    private static void ReconcileTranscriptCounter(ChatThread chat, string transcriptDirectory)
+    {
+        if (!Directory.Exists(transcriptDirectory))
+            return;
+        
+        ulong highest = 0;
+        foreach (var path in Directory.EnumerateFiles(transcriptDirectory, "*-transcript-*.md", SearchOption.TopDirectoryOnly))
+        {
+            var name = Path.GetFileNameWithoutExtension(path);
+            var marker = name.LastIndexOf("-transcript-", StringComparison.Ordinal);
+            
+            if (marker >= 0 && ulong.TryParse(name[(marker + "-transcript-".Length)..], out var number))
+                highest = Math.Max(highest, number);
+        }
+        
+        chat.LastMediaTranscriptNumber = Math.Max(chat.LastMediaTranscriptNumber, highest);
+    }
+
+    /// <summary>Allocates the next globally monotonic transcript path for one chat.</summary>
+    private static string NextTranscriptPath(ChatThread chat, string transcriptDirectory, string originalFileName)
+    {
+        string targetPath;
+        do
+        {
+            chat.LastMediaTranscriptNumber++;
+            var stem = ManagedTranscriptAttachment.NormalizeOriginalStem(originalFileName);
+            targetPath = Path.Combine(transcriptDirectory, $"{stem}-transcript-{chat.LastMediaTranscriptNumber:D4}.md");
+        } while (File.Exists(targetPath));
+        
+        return targetPath;
+    }
+
+    /// <summary>Returns the canonical storage directory for a chat identity.</summary>
+    private static string GetChatDirectory(Guid workspaceId, Guid chatId) => workspaceId == Guid.Empty
+        ? Path.Join(SettingsManager.DataDirectory, "tempChats", chatId.ToString())
+        : Path.Join(SettingsManager.DataDirectory, "workspaces", workspaceId.ToString(), chatId.ToString());
 
     public static async Task<ChatThread?> LoadChatAsync(LoadChat loadChat)
     {

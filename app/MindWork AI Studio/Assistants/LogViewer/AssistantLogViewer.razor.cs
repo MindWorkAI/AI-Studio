@@ -7,6 +7,7 @@ using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
+// ReSharper disable NotAccessedPositionalProperty.Local
 
 namespace AIStudio.Assistants.LogViewer;
 
@@ -26,9 +27,9 @@ public partial class AssistantLogViewer : MSGComponentBase
         ["TRACE"] = 7,
     };
 
-    private const int DEFAULT_MAX_LINES = 5000;
-    protected const int MIN_MAX_LINES = 100;
-    protected const int MAX_MAX_LINES = 100000;
+    private const int DEFAULT_MAX_LINES = 5_000;
+    private const int MIN_MAX_LINES = 100;
+    private const int MAX_MAX_LINES = 100_000;
     private const string OTHER_OPTION_VALUE = "__OTHER__";
 
     [Inject]
@@ -43,6 +44,10 @@ public partial class AssistantLogViewer : MSGComponentBase
     [Inject]
     private ILogger<AssistantLogViewer> Logger { get; init; } = null!;
 
+    private readonly HashSet<string> selectedLogLevels = new(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<string> selectedLoggers = new(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<string> selectedSourceDetails = new(StringComparer.OrdinalIgnoreCase);
+    
     private GetLogPathsResponse logPaths;
     private LogFileKind selectedLogFile = LogFileKind.APP;
     private List<LogLine> loadedLines = [];
@@ -50,9 +55,7 @@ public partial class AssistantLogViewer : MSGComponentBase
     private List<string> logLevelOptions = [OTHER_OPTION_VALUE];
     private List<string> loggerOptions = [OTHER_OPTION_VALUE];
     private List<string> sourceDetailOptions = [OTHER_OPTION_VALUE];
-    private HashSet<string> selectedLogLevels = new(StringComparer.OrdinalIgnoreCase);
-    private HashSet<string> selectedLoggers = new(StringComparer.OrdinalIgnoreCase);
-    private HashSet<string> selectedSourceDetails = new(StringComparer.OrdinalIgnoreCase);
+    
     private string[] activeSearchTerms = [];
     private CancellationTokenSource? autoRefreshCancellationTokenSource;
     private string filterText = string.Empty;
@@ -159,13 +162,13 @@ public partial class AssistantLogViewer : MSGComponentBase
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-
         if (!this.SettingsManager.IsAssistantVisible(Tools.Components.LOG_VIEWER_ASSISTANT, assistantName: T("Log Viewer")))
         {
             this.NavigationManager.NavigateTo(Routes.ASSISTANTS);
             return;
         }
 
+        this.logPaths = await this.RustService.GetLogPaths();
         await this.RefreshLogAsync();
     }
 
@@ -207,7 +210,6 @@ public partial class AssistantLogViewer : MSGComponentBase
     private async Task AutoRefreshChanged(bool value)
     {
         this.autoRefresh = value;
-
         if (this.autoRefresh)
             this.StartAutoRefresh();
         else
@@ -234,21 +236,6 @@ public partial class AssistantLogViewer : MSGComponentBase
 
     private async Task OpenCurrentLogInFileManager()
     {
-        try
-        {
-            this.logPaths = await this.RustService.GetLogPaths();
-        }
-        catch (Exception e)
-        {
-            this.Logger.LogWarning(e, "Could not refresh the log file paths before opening the file manager.");
-            this.Snackbar.Add(T("The log file path is not available yet."), Severity.Warning, config =>
-            {
-                config.Icon = Icons.Material.Filled.Folder;
-                config.IconSize = Size.Large;
-            });
-            return;
-        }
-
         var path = this.CurrentLogPath;
         if (string.IsNullOrWhiteSpace(path))
         {
@@ -263,7 +250,7 @@ public partial class AssistantLogViewer : MSGComponentBase
         OpenPathResponse response;
         try
         {
-            response = await this.RustService.OpenPathInFileManager(path);
+            response = await this.RustService.TryOpenPathInRuntimeFileManager(path);
         }
         catch (Exception e)
         {
@@ -315,9 +302,7 @@ public partial class AssistantLogViewer : MSGComponentBase
 
         try
         {
-            this.logPaths = await this.RustService.GetLogPaths();
             var path = this.CurrentLogPath;
-
             if (string.IsNullOrWhiteSpace(path))
             {
                 this.loadedLines = [];
@@ -497,7 +482,7 @@ public partial class AssistantLogViewer : MSGComponentBase
         return parts.Count == 0 ? string.Empty : string.Join(" ", parts);
     }
 
-    private string GetLineClass(LogLine line)
+    private static string GetLineClass(LogLine line)
     {
         var level = line.Segments.Level ?? string.Empty;
 
@@ -506,6 +491,9 @@ public partial class AssistantLogViewer : MSGComponentBase
 
         if (level.Contains("WARN", StringComparison.OrdinalIgnoreCase))
             return "log-viewer-line log-viewer-line-warn";
+
+        if (level.Equals("INFO", StringComparison.OrdinalIgnoreCase) || level.Equals("INFORMATION", StringComparison.OrdinalIgnoreCase))
+            return "log-viewer-line log-viewer-line-info";
 
         if (level.Contains("DEBUG", StringComparison.OrdinalIgnoreCase))
             return "log-viewer-line log-viewer-line-debug";
@@ -668,7 +656,7 @@ public partial class AssistantLogViewer : MSGComponentBase
 
     private static bool IsSourceDetails(string content)
     {
-        return content.Contains("=", StringComparison.Ordinal);
+        return content.Contains('=', StringComparison.Ordinal);
     }
 
     private static int SkipWhiteSpace(string text, int start)
@@ -831,10 +819,4 @@ public partial class AssistantLogViewer : MSGComponentBase
     private readonly record struct LogSnapshot(List<LogLine> Lines, int TotalLineCount, int SkippedLineCount);
 
     private readonly record struct HighlightRange(int Start, int Length);
-}
-
-public enum LogFileKind
-{
-    APP,
-    STARTUP,
 }
