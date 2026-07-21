@@ -4,6 +4,7 @@ using AIStudio.Tools.AssistantSessions;
 using AIStudio.Tools.Media;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.PluginSystem.Assistants;
+using AIStudio.Tools.Rust;
 
 namespace AIStudio.Tools.Services;
 
@@ -134,69 +135,73 @@ public sealed class AssistantPluginInstallService
             if (!validation.Success || validation.AssistantPlugin is null)
                 return Error(validation.Issue);
 
-            Directory.CreateDirectory(assistantPluginsRoot);
+            return await this.InstallStagedAssistantAsync(assistantPluginsRoot, validation, token);
+        }
+        finally
+        {
+            this.installSemaphore.Release();
+        }
+    }
 
-            var stagingDirectory = validation.StagingDirectory;
-            var assistantPlugin = validation.AssistantPlugin;
-            string? backupDirectory = null;
-            string? finalDirectory = null;
-            var replacedExisting = false;
+    /// <summary>
+    /// Installs an assistant plugin archive that contains exactly one <c>plugin.lua</c> file.
+    /// Companion files are validated from and moved with the same staging directory.
+    /// </summary>
+    /// <param name="archivePath">The local <c>.mwplugin</c> or <c>.zip</c> archive path.</param>
+    /// <param name="token">Cancellation token for extraction, validation, file IO, and plugin reload.</param>
+    /// <returns>Installation result that contains success state, installed plugin metadata, and a user-facing issue when installation failed.</returns>
+    public async Task<AssistantPluginInstallResult> InstallArchiveAsync(string archivePath, CancellationToken token)
+    {
+        if (!FileTypes.IsAllowedPath(archivePath, FileTypes.PLUGIN_ARCHIVE))
+            return Error(TB("Please select a plugin archive with the extension .mwplugin or .zip."));
 
+        if (!File.Exists(archivePath))
+            return Error(TB("The selected plugin archive does not exist."));
+
+        if (!TryGetAssistantPluginsRoot(out var assistantPluginsRoot, out var rootIssue))
+            return Error(rootIssue);
+
+        if (!PluginFactory.IsInitialized)
+            return Error(TB("The plugin system is not initialized yet."));
+
+        await this.installSemaphore.WaitAsync(token);
+        var stagingDirectory = Path.Join(Path.GetTempPath(), $"assistant-plugin-import.staging-{Guid.NewGuid():N}");
+        try
+        {
             try
             {
-                finalDirectory = DetermineFinalDirectory(assistantPluginsRoot, assistantPlugin);
-                if (!IsPathInsideDirectory(assistantPluginsRoot, finalDirectory))
-                    return Error(TB("The resolved plugin directory is outside the assistant plugin directory."));
+                token.ThrowIfCancellationRequested();
+                PluginArchive.Extract(archivePath, stagingDirectory);
 
-                if (Directory.Exists(finalDirectory))
-                {
-                    replacedExisting = true;
-                    backupDirectory = Path.Join(assistantPluginsRoot, $".{Path.GetFileName(finalDirectory)}.backup-{Guid.NewGuid():N}");
-                    Directory.Move(finalDirectory, backupDirectory);
-                }
+                var pluginFiles = Directory.EnumerateFiles(stagingDirectory, PLUGIN_FILE_NAME, SearchOption.AllDirectories).ToArray();
+                if (pluginFiles.Length != 1)
+                    return Error(TB("The plugin archive must contain exactly one plugin.lua file."));
 
-                Directory.Move(stagingDirectory, finalDirectory);
-                if (!string.IsNullOrWhiteSpace(backupDirectory) && Directory.Exists(backupDirectory))
-                {
-                    try
-                    {
-                        Directory.Delete(backupDirectory, true);
-                    }
-                    catch (Exception e)
-                    {
-                        this.logger.LogError(e, $"Failed to delete assistant plugin backup directory '{backupDirectory}'.");
-                    }
-                }
+                var pluginFile = pluginFiles[0];
+                var pluginDirectory = Path.GetDirectoryName(pluginFile)!;
+                var pluginCode = await File.ReadAllTextAsync(pluginFile, Encoding.UTF8, token);
+                var validation = await this.ValidateAssistantPluginCodeAsync(
+                    pluginDirectory,
+                    pluginCode.Trim(),
+                    TB("The imported plugin is not an assistant plugin. Issue: {0}"),
+                    TB("The imported assistant plugin is invalid. Issue: {0}"),
+                    TB("The imported assistant plugin uses the ID of an internal AI Studio plugin."),
+                    token);
 
-                await PluginFactory.LoadAll(token);
-                this.logger.LogInformation($"Installed assistant plugin '{assistantPlugin.Name}' ({assistantPlugin.Id}) to '{finalDirectory}'.");
-                return new(true, assistantPlugin.Id, assistantPlugin.Name, finalDirectory, replacedExisting, string.Empty);
+                if (!validation.Success || validation.AssistantPlugin is null)
+                    return Error(validation.Issue);
+
+                return await this.InstallStagedAssistantAsync(assistantPluginsRoot, validation with { StagingDirectory = pluginDirectory }, token);
             }
-            catch (Exception e)
+            catch (Exception e) when (e is not OperationCanceledException)
             {
-                this.logger.LogError(e, "Failed to install assistant plugin.");
-
-                if (!string.IsNullOrWhiteSpace(backupDirectory) && Directory.Exists(backupDirectory) && !string.IsNullOrWhiteSpace(finalDirectory) && !Directory.Exists(finalDirectory))
-                {
-                    try
-                    {
-                        Directory.Move(backupDirectory, finalDirectory);
-                    }
-                    catch (Exception restoreException)
-                    {
-                        this.logger.LogError(restoreException, "Failed to restore the previous assistant plugin after a failed installation.");
-                    }
-                }
-
+                this.logger.LogError(e, "Failed to extract or validate assistant plugin archive '{ArchivePath}'.", archivePath);
                 return Error(string.Format(TB("Unexpected error: {0}"), e.Message));
-            }
-            finally
-            {
-                this.TryDeleteStagingDirectory(stagingDirectory);
             }
         }
         finally
         {
+            this.TryDeleteStagingDirectory(stagingDirectory);
             this.installSemaphore.Release();
         }
     }
@@ -409,6 +414,65 @@ public sealed class AssistantPluginInstallService
             this.TryDeleteFile(tempFile, "assistant plugin edit temp file");
 
             this.installSemaphore.Release();
+        }
+    }
+
+    private async Task<AssistantPluginInstallResult> InstallStagedAssistantAsync(string assistantPluginsRoot, AssistantPluginValidationResult validation, CancellationToken token)
+    {
+        var stagingDirectory = validation.StagingDirectory;
+        var assistantPlugin = validation.AssistantPlugin!;
+        string? backupDirectory = null;
+        string? finalDirectory = null;
+        var replacedExisting = false;
+
+        try
+        {
+            Directory.CreateDirectory(assistantPluginsRoot);
+            finalDirectory = DetermineFinalDirectory(assistantPluginsRoot, assistantPlugin);
+            if (!IsPathInsideDirectory(assistantPluginsRoot, finalDirectory))
+                return Error(TB("The resolved plugin directory is outside the assistant plugin directory."));
+
+            if (Directory.Exists(finalDirectory))
+            {
+                replacedExisting = true;
+                backupDirectory = Path.Join(assistantPluginsRoot, $".{Path.GetFileName(finalDirectory)}.backup-{Guid.NewGuid():N}");
+                Directory.Move(finalDirectory, backupDirectory);
+            }
+
+            Directory.Move(stagingDirectory, finalDirectory);
+            await PluginFactory.LoadAll(token);
+
+            if (!string.IsNullOrWhiteSpace(backupDirectory))
+                TryDeleteDirectory(backupDirectory, "assistant plugin backup", this.logger);
+
+            this.logger.LogInformation("Installed assistant plugin '{PluginName}' ({PluginId}) to '{PluginDirectory}'.", assistantPlugin.Name, assistantPlugin.Id, finalDirectory);
+            return new(true, assistantPlugin.Id, assistantPlugin.Name, finalDirectory, replacedExisting, string.Empty);
+        }
+        catch (Exception e)
+        {
+            this.logger.LogError(e, "Failed to install assistant plugin.");
+
+            if (!string.IsNullOrWhiteSpace(finalDirectory) && Directory.Exists(finalDirectory))
+                TryDeleteDirectory(finalDirectory, "failed assistant plugin installation", this.logger);
+
+            if (!string.IsNullOrWhiteSpace(backupDirectory) && Directory.Exists(backupDirectory) && !string.IsNullOrWhiteSpace(finalDirectory) && !Directory.Exists(finalDirectory))
+            {
+                try
+                {
+                    Directory.Move(backupDirectory, finalDirectory);
+                    await PluginFactory.LoadAll(CancellationToken.None);
+                }
+                catch (Exception restoreException)
+                {
+                    this.logger.LogError(restoreException, "Failed to restore the previous assistant plugin after a failed installation.");
+                }
+            }
+
+            return Error(string.Format(TB("Unexpected error: {0}"), e.Message));
+        }
+        finally
+        {
+            this.TryDeleteStagingDirectory(stagingDirectory);
         }
     }
 
