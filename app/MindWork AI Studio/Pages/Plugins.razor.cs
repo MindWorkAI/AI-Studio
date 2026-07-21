@@ -4,7 +4,7 @@ using AIStudio.Dialogs;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.PluginSystem.Assistants;
 using AIStudio.Tools.PluginSystem;
-
+using AIStudio.Tools.Services;
 using Microsoft.AspNetCore.Components;
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
@@ -27,7 +27,12 @@ public partial class Plugins : MSGComponentBase
     [Inject]
     private AssistantPluginAuditService AssistantPluginAuditService { get; init; } = null!;
 
+    [Inject] 
+    private PluginShareService PluginShareService { get; init; } = null!;
+
     private static readonly ILogger LOG = Program.LOGGER_FACTORY.CreateLogger(nameof(Plugins));
+    
+    private static bool IS_SHARING_PLUGIN;
 
     #region Overrides of ComponentBase
 
@@ -184,15 +189,18 @@ public partial class Plugins : MSGComponentBase
             : this.T("Enable plugin");
     }
 
-    private static bool CanEditAssistantPlugin(IAvailablePlugin plugin) => plugin is { IsInternal: false, Type: PluginType.ASSISTANT } && !string.IsNullOrWhiteSpace(plugin.LocalPath);
+    private static bool CanEditAssistantPlugin(IAvailablePlugin plugin) => plugin is { IsInternal: false, Type: PluginType.ASSISTANT } && 
+                                                                           !string.IsNullOrWhiteSpace(plugin.LocalPath) && !IS_SHARING_PLUGIN;
 
     private static bool CanReviseAssistantPlugin(IAvailablePlugin plugin)
     {
         var assistantPlugin = PluginFactory.RunningPlugins.OfType<PluginAssistants>().FirstOrDefault(x => x.Id == plugin.Id);
         return plugin is { IsInternal: false, IsManagedByConfigServer: false, Type: PluginType.ASSISTANT } &&
-               !string.IsNullOrWhiteSpace(plugin.LocalPath) &&
-               assistantPlugin?.IsManagedByConfigServer is false;
+               !string.IsNullOrWhiteSpace(plugin.LocalPath) && assistantPlugin?.IsManagedByConfigServer is false && !IS_SHARING_PLUGIN;
     }
+    
+    private static bool CanSharePlugin(IAvailablePlugin plugin) => plugin is { IsInternal: false, IsManagedByConfigServer: false } &&
+                                                                   !string.IsNullOrWhiteSpace(plugin.LocalPath) && !IS_SHARING_PLUGIN;
 
     private async Task OpenAssistantPluginEditorDialogAsync(IAvailablePlugin plugin)
     {
@@ -231,6 +239,32 @@ public partial class Plugins : MSGComponentBase
         await this.MessageBus.SendMessage<bool>(this, Event.PLUGINS_RELOADED);
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
         await this.InvokeAsync(this.StateHasChanged);
+    }
+
+    private async Task SharePluginAsync(IAvailablePlugin plugin)
+    {
+        if (IS_SHARING_PLUGIN)
+            return;
+
+        IS_SHARING_PLUGIN = true;
+        // invoke a state change right away to guard action buttons
+        await this.InvokeAsync(this.StateHasChanged);
+
+        try
+        {
+            var shareResult = await this.PluginShareService.ShareAsync(plugin, CancellationToken.None);
+            if (!shareResult.Success)
+            {
+                LOG.LogError($"Sharing the plugin '{shareResult.PluginName}' from archive '{shareResult.ArchivePath}' failed with Issue: '{shareResult.Issue}'.");
+                await this.MessageBus.SendError(new(Icons.Material.Filled.ReportProblem, T("An error occurred while sharing the plugin.")));
+                return;
+            }
+        }
+        finally
+        {
+            IS_SHARING_PLUGIN = false;
+            await this.InvokeAsync(this.StateHasChanged);
+        }
     }
 
     private static bool IsSendingMail(string sourceUrl) => sourceUrl.TrimStart().StartsWith("mailto:", StringComparison.OrdinalIgnoreCase);

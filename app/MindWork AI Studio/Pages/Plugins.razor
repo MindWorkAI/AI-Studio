@@ -107,6 +107,13 @@
                                     <MudIconButton Icon="@Icons.Material.Filled.Code" Size="Size.Medium" OnClick="@(() => this.OpenAssistantPluginEditorDialogAsync(editablePlugin))"/>
                                 </MudTooltip>
                             }
+                            
+                            @if (context is IAvailablePlugin shareablePlugin && CanSharePlugin(shareablePlugin))
+                            {
+                                <MudTooltip Text="@T("Share plugin archive")">
+                                    <MudIconButton Icon="@Icons.Material.Filled.IosShare" Size="Size.Medium" OnClick="@(() => this.SharePluginAsync(shareablePlugin))"/>
+                                </MudTooltip>
+                            }
 
                             @if (context is IAvailablePlugin revisionPlugin && CanReviseAssistantPlugin(revisionPlugin))
                             {
