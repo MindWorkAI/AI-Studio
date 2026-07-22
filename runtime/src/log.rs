@@ -65,7 +65,7 @@ pub fn init_logging(bundle_identifier: &str) {
         .suffix("log");
 
     // Store the startup log path:
-    store_startup_log_path(&LOG_STARTUP_PATH, &log_path);
+    let startup_log_path = store_startup_log_path(&LOG_STARTUP_PATH, &log_path);
 
     let runtime_logger = Logger::try_with_str(log_config).expect("Cannot create logging")
         .log_to_file(log_path)
@@ -83,13 +83,17 @@ pub fn init_logging(bundle_identifier: &str) {
 
     LOGGER.set(runtime_logger).expect("Cannot set LOGGER");
 
+    log::info!(Source = "Tauri"; "Startup log file path: {startup_log_path}");
+
     if let Some(fallback_warning) = fallback_warning {
         log::warn!("{fallback_warning}");
     }
 }
 
-fn store_startup_log_path(storage: &OnceLock<String>, log_path: &FileSpec) {
-    let _ = storage.set(convert_log_path_to_string(log_path));
+fn store_startup_log_path(storage: &OnceLock<String>, log_path: &FileSpec) -> String {
+    let log_path = convert_log_path_to_string(log_path);
+    let _ = storage.set(log_path.clone());
+    log_path
 }
 
 fn convert_log_path_to_string(log_path: &FileSpec) -> String {
@@ -129,11 +133,14 @@ fn get_startup_log_path(bundle_identifier: &str) -> (PathBuf, Option<String>) {
         ).unwrap_or_else(|error| panic!("Cannot prepare a Flatpak startup log directory: {error}"));
     }
 
-    (get_non_flatpak_startup_log_path(
+    get_non_flatpak_startup_log_path(
+        bundle_identifier,
+        dirs::data_local_dir(),
         home_directory(),
         current_dir().ok(),
         temp_dir(),
-    ), None)
+        ensure_log_directory_is_writable,
+    ).unwrap_or_else(|error| panic!("Cannot prepare a startup log directory: {error}"))
 }
 
 // Note: Rust plans to remove the deprecation flag for std::env::home_dir() in Rust 1.86.0.
@@ -142,25 +149,35 @@ fn home_directory() -> Option<PathBuf> {
     std::env::home_dir()
 }
 
-fn get_non_flatpak_startup_log_path(
+fn get_non_flatpak_startup_log_path<F>(
+    bundle_identifier: &str,
+    data_local_directory: Option<PathBuf>,
     home_directory: Option<PathBuf>,
     working_directory: Option<PathBuf>,
     temporary_directory: PathBuf,
-) -> PathBuf {
-    match home_directory {
-        // Case: We could determine the home directory:
-        Some(home_directory) => home_directory,
-        
-        // Case: We could not determine the home directory. Let's try to use the working directory:
-        None => match working_directory {
-
-            // Case: We could determine the working directory:
-            Some(working_directory) => working_directory,
-
-            // Case: We could not determine the working directory. Let's use the temporary directory:
-            None => temporary_directory,
-        },
+    mut ensure_writable: F,
+) -> Result<(PathBuf, Option<String>), String>
+where
+    F: FnMut(&Path) -> Result<(), String>,
+{
+    let standard_directory = data_local_directory.map(|directory| directory.join(bundle_identifier).join("data"));
+    let mut fallback_candidates = Vec::new();
+    if let Some(home_directory) = home_directory {
+        fallback_candidates.push(("home directory", home_directory));
     }
+
+    if let Some(working_directory) = working_directory {
+        fallback_candidates.push(("working directory", working_directory));
+    }
+
+    fallback_candidates.push(("temporary directory", temporary_directory));
+
+    select_startup_log_path(
+        "standard path",
+        standard_directory,
+        fallback_candidates,
+        &mut ensure_writable,
+    )
 }
 
 fn select_flatpak_startup_log_path<F>(
@@ -174,49 +191,56 @@ where
     F: FnMut(&Path) -> Result<(), String>,
 {
     let standard_directory = data_local_directory.map(|directory| directory.join(bundle_identifier).join("data"));
-    let persistent_fallback = persistent_data_directory.join(bundle_identifier).join("data");
-    let temporary_fallback = temporary_directory.join(bundle_identifier).join("data");
+    let fallback_candidates = vec![
+        ("persistent fallback", persistent_data_directory.join(bundle_identifier).join("data")),
+        ("temporary fallback", temporary_directory.join(bundle_identifier).join("data")),
+    ];
+
+    select_startup_log_path(
+        "standard Flatpak path",
+        standard_directory,
+        fallback_candidates,
+        &mut ensure_writable,
+    )
+}
+
+fn select_startup_log_path<F>(
+    standard_name: &str,
+    standard_directory: Option<PathBuf>,
+    fallback_candidates: Vec<(&'static str, PathBuf)>,
+    ensure_writable: &mut F,
+) -> Result<(PathBuf, Option<String>), String>
+where
+    F: FnMut(&Path) -> Result<(), String>,
+{
     let mut failures = Vec::new();
 
     if let Some(standard_directory) = standard_directory {
         match ensure_writable(&standard_directory) {
             Ok(()) => return Ok((standard_directory, None)),
-            Err(error) => failures.push(format!("standard path failed: {error}")),
+            Err(error) => failures.push(format!("{standard_name} failed: {error}")),
         }
     } else {
-        failures.push(String::from("standard path failed: dirs::data_local_dir() returned no path"));
+        failures.push(format!("{standard_name} failed: dirs::data_local_dir() returned no path"));
     }
 
-    match ensure_writable(&persistent_fallback) {
-        Ok(()) => {
-            let warning = format!(
-                "The standard Flatpak startup log directory was unavailable; using persistent fallback '{}'. {}",
-                persistent_fallback.display(),
-                failures.join("; "),
-            );
-            
-            return Ok((persistent_fallback, Some(warning)));
-        },
-        
-        Err(error) => failures.push(format!("persistent fallback failed: {error}")),
+    for (fallback_name, fallback_directory) in fallback_candidates {
+        match ensure_writable(&fallback_directory) {
+            Ok(()) => {
+                let warning = format!(
+                    "The standard startup log directory was unavailable; using {fallback_name} '{}'. {}",
+                    fallback_directory.display(),
+                    failures.join("; "),
+                );
+
+                return Ok((fallback_directory, Some(warning)));
+            }
+
+            Err(error) => failures.push(format!("{fallback_name} failed: {error}")),
+        }
     }
 
-    match ensure_writable(&temporary_fallback) {
-        Ok(()) => {
-            let warning = format!(
-                "The standard and persistent Flatpak startup log directories were unavailable; using temporary fallback '{}'. {}",
-                temporary_fallback.display(),
-                failures.join("; "),
-            );
-            
-            Ok((temporary_fallback, Some(warning)))
-        },
-        
-        Err(error) => {
-            failures.push(format!("temporary fallback failed: {error}"));
-            Err(failures.join("; "))
-        },
-    }
+    Err(failures.join("; "))
 }
 
 fn ensure_log_directory_is_writable(directory: &Path) -> Result<(), String> {
@@ -242,8 +266,10 @@ pub fn switch_to_file_logging(logger_path: PathBuf) -> Result<(), Box<dyn Error>
         .basename("events")
         .suppress_timestamp()
         .suffix("log");
-    let _ = LOG_APP_PATH.set(convert_log_path_to_string(&log_path));
+    let app_log_path = convert_log_path_to_string(&log_path);
+    let _ = LOG_APP_PATH.set(app_log_path.clone());
     LOGGER.get().expect("No LOGGER was set").handle.reset_flw(&FileLogWriter::builder(log_path))?;
+    log::info!(Source = "Tauri"; "Usage log file path: {app_log_path}");
 
     Ok(())
 }
@@ -338,9 +364,18 @@ fn file_logger_format(
 }
 
 pub async fn get_log_paths(_token: APIToken) -> Json<LogPathsResponse> {
+    let log_startup_path = LOG_STARTUP_PATH.get().expect("No startup log path was set").clone();
+    let log_app_path = LOG_APP_PATH.get().expect("No app log path was set").clone();
+    log::info!(
+        Source = "Tauri";
+        "Returning log file paths: startup='{}', usage='{}'.",
+        log_startup_path,
+        log_app_path,
+    );
+
     Json(LogPathsResponse {
-        log_startup_path: LOG_STARTUP_PATH.get().expect("No startup log path was set").clone(),
-        log_app_path: LOG_APP_PATH.get().expect("No app log path was set").clone(),
+        log_startup_path,
+        log_app_path,
     })
 }
 
@@ -497,23 +532,51 @@ mod tests {
     }
 
     #[test]
-    fn non_flatpak_path_selection_keeps_existing_fallback_order() {
+    fn non_flatpak_path_selection_prefers_local_app_data_path() {
+        let local_data = PathBuf::from("/local-data");
+        let expected = local_data.join(BUNDLE_IDENTIFIER).join("data");
         let home = PathBuf::from("/home/user");
         let working = PathBuf::from("/working");
         let temporary = PathBuf::from("/tmp");
 
-        assert_eq!(
-            get_non_flatpak_startup_log_path(Some(home.clone()), Some(working.clone()), temporary.clone()),
-            home,
-        );
-        assert_eq!(
-            get_non_flatpak_startup_log_path(None, Some(working.clone()), temporary.clone()),
-            working,
-        );
-        assert_eq!(
-            get_non_flatpak_startup_log_path(None, None, temporary.clone()),
+        let (selected, warning) = get_non_flatpak_startup_log_path(
+            BUNDLE_IDENTIFIER,
+            Some(local_data),
+            Some(home),
+            Some(working),
             temporary,
-        );
+            |_| Ok(()),
+        ).unwrap();
+
+        assert_eq!(selected, expected);
+        assert!(warning.is_none());
+    }
+
+    #[test]
+    fn non_flatpak_path_selection_falls_back_to_home_when_local_app_data_is_unwritable() {
+        let local_data = PathBuf::from("/local-data");
+        let standard = local_data.join(BUNDLE_IDENTIFIER).join("data");
+        let home = PathBuf::from("/home/user");
+        let working = PathBuf::from("/working");
+        let temporary = PathBuf::from("/tmp");
+
+        let (selected, warning) = get_non_flatpak_startup_log_path(
+            BUNDLE_IDENTIFIER,
+            Some(local_data),
+            Some(home.clone()),
+            Some(working),
+            temporary,
+            |candidate| {
+                if candidate == standard {
+                    Err(String::from("read-only"))
+                } else {
+                    Ok(())
+                }
+            },
+        ).unwrap();
+
+        assert_eq!(selected, home);
+        assert!(warning.unwrap().contains("home directory"));
     }
 
     #[test]
@@ -533,7 +596,7 @@ mod tests {
             },
         ).unwrap();
         let log_path = FileSpec::default()
-            .directory(selected)
+            .directory(selected.clone())
             .basename(".AI Studio Events")
             .suppress_timestamp()
             .suffix("log");
@@ -542,8 +605,8 @@ mod tests {
         store_startup_log_path(&storage, &log_path);
 
         assert_eq!(
-            storage.get().unwrap(),
-            "/tmp/org.mindworkai.AIStudio/data/.AI Studio Events.log",
+            PathBuf::from(storage.get().unwrap()),
+            absolute(selected.join(".AI Studio Events.log")).unwrap(),
         );
     }
 }
