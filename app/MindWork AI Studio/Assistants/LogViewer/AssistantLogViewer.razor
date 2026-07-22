@@ -13,17 +13,22 @@
                     <MudSelectItem T="LogFileKind" Value="@LogFileKind.APP">@T("Usage log")</MudSelectItem>
                     <MudSelectItem T="LogFileKind" Value="@LogFileKind.STARTUP">@T("Startup log")</MudSelectItem>
                 </MudSelect>
-                <MudCheckBox T="bool" Value="@this.autoRefresh" ValueChanged="@this.AutoRefreshChanged" Label="@T("Auto-refresh")" Color="Color.Primary" />
+                <MudTooltip Text="@this.AutoRefreshTooltip" Placement="Placement.Bottom">
+                    <MudIconButton Icon="@Icons.Material.Filled.Update" Variant="@this.AutoRefreshButtonVariant" Color="@this.AutoRefreshButtonColor" OnClick="@this.ToggleAutoRefresh" />
+                </MudTooltip>
                 @if (!this.autoRefresh)
                 {
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="@this.RefreshLogAsync" Disabled="@this.isLoading">
-                        @T("Refresh")
-                    </MudButton>
+                    <MudTooltip Text="@T("Refresh")" Placement="Placement.Bottom">
+                        <MudIconButton Icon="@Icons.Material.Filled.Refresh" Variant="Variant.Filled" Color="Color.Primary" OnClick="@this.RefreshLogAsync" Disabled="@this.isLoading" />
+                    </MudTooltip>
                 }
                 <MudNumericField T="int" Value="@this.maxLines" ValueChanged="@this.MaxLinesChanged" Label="@T("Max lines")" Variant="Variant.Outlined" Margin="Margin.Dense" Min="@MIN_MAX_LINES" Max="@MAX_MAX_LINES" Step="500" Class="log-viewer-number" />
-                <MudButton Variant="Variant.Outlined" Color="Color.Default" StartIcon="@Icons.Material.Filled.FolderOpen" OnClick="@this.OpenCurrentLogInFileManager" Disabled="@(!this.CanOpenCurrentLogPath)">
-                    @T("Open in folder")
-                </MudButton>
+                <MudTooltip Text="@T("Open in folder")" Placement="Placement.Bottom">
+                    <MudIconButton Icon="@Icons.Material.Filled.FolderOpen" Variant="Variant.Outlined" Color="Color.Default" OnClick="@this.OpenCurrentLogInFileManager" Disabled="@(!this.CanOpenCurrentLogPath)" />
+                </MudTooltip>
+                <MudTooltip Text="@T("Copy visible lines")" Placement="Placement.Bottom">
+                    <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" Variant="Variant.Outlined" Color="Color.Default" Disabled="@(!this.CanCopyDisplayedLines)" OnClick="@this.CopyDisplayedLines" />
+                </MudTooltip>
             </MudStack>
 
             <MudStack Row="@true" Wrap="@Wrap.Wrap" AlignItems="@AlignItems.Center" Spacing="2" Class="mb-1">
@@ -51,19 +56,20 @@
                         </MudSelectItem>
                     }
                 </MudSelect>
-                <MudCheckBox T="bool" @bind-Value="@this.ShowTimestamps" Label="@T("Show timestamps")" Color="Color.Primary" />
+                <MudTooltip Text="@this.ShowTimestampsTooltip" Placement="Placement.Bottom">
+                    <MudIconButton Icon="@Icons.Material.Filled.Schedule" Variant="@this.ShowTimestampsButtonVariant" Color="@this.ShowTimestampsButtonColor" OnClick="@this.ToggleShowTimestamps" />
+                </MudTooltip>
+                <MudTooltip Text="@this.InvertFiltersTooltip" Placement="Placement.Bottom">
+                    <MudIconButton Icon="@Icons.Material.Filled.SearchOff" Variant="@this.InvertFiltersButtonVariant" Color="@this.InvertFiltersButtonColor" OnClick="@this.ToggleInvertFilters" />
+                </MudTooltip>
             </MudStack>
 
             <MudStack Row="@true" Wrap="@Wrap.Wrap" AlignItems="@AlignItems.Center" Spacing="2" Class="mb-1">
-                <MudTextField T="string" @bind-Text="@this.FilterText" Immediate="@true" Label="@T("Find")" Variant="Variant.Outlined" Margin="Margin.Dense" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Class="log-viewer-filter" />
-                <MudButton Variant="Variant.Text" Color="Color.Default" StartIcon="@Icons.Material.Filled.Clear" Disabled="@(!this.HasActiveFilter)" OnClick="@this.ClearFilters">
-                    @T("Clear")
-                </MudButton>
-                <MudButton Variant="Variant.Text" Color="Color.Default" StartIcon="@Icons.Material.Filled.ContentCopy" Disabled="@(!this.CanCopyDisplayedLines)" OnClick="@this.CopyDisplayedLines">
-                    @T("Copy visible lines")
-                </MudButton>
-                <MudCheckBox T="bool" @bind-Value="@this.FilterOnly" Label="@T("Filter only")" Color="Color.Primary" />
-                <MudCheckBox T="bool" @bind-Value="@this.InvertFilters" Label="@T("Invert filters")" Color="Color.Primary" />
+                <MudTextField T="string" @bind-Text="@this.FilterText" Immediate="@true" Label="@T("Find")" Variant="Variant.Outlined" Margin="Margin.Dense" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Clearable="@true" ClearIcon="@Icons.Material.Filled.Clear" OnClearButtonClick="@(() => this.ClearFilterText())" Class="log-viewer-filter" />
+                <MudTooltip Text="@this.FilterOnlyTooltip" Placement="Placement.Bottom">
+                    <MudIconButton Icon="@Icons.Material.Filled.Visibility" Variant="@this.FilterOnlyButtonVariant" Color="@this.FilterOnlyButtonColor" OnClick="@this.ToggleFilterOnly" />
+                </MudTooltip>
+                <MudTextField T="string" @bind-Text="@this.ExcludeText" Immediate="@true" Label="@T("Exclude")" Variant="Variant.Outlined" Margin="Margin.Dense" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Block" Clearable="@true" ClearIcon="@Icons.Material.Filled.Clear" OnClearButtonClick="@(() => this.ClearExcludeText())" Class="log-viewer-filter" />
             </MudStack>
 
             <MudText Typo="Typo.body2" Class="log-viewer-path mb-1">

@@ -56,8 +56,10 @@ public partial class AssistantLogViewer : MSGComponentBase
     private List<string> sourceDetailOptions = [OTHER_OPTION_VALUE];
     
     private string[] activeSearchTerms = [];
+    private string[] activeExcludeTerms = [];
     private CancellationTokenSource? autoRefreshCancellationTokenSource;
     private string filterText = string.Empty;
+    private string excludeText = string.Empty;
     private string loadError = string.Empty;
     private bool isLoading;
     private bool autoRefresh;
@@ -75,11 +77,40 @@ public partial class AssistantLogViewer : MSGComponentBase
 
     private bool HasDropdownFilter => this.selectedLogLevels.Count > 0 || this.selectedLoggers.Count > 0 || this.selectedSourceDetails.Count > 0;
 
-    private bool HasActiveFilter => !string.IsNullOrWhiteSpace(this.filterText) || this.HasDropdownFilter || this.invertFilters;
-
-    private bool HasActiveVisibilityFilter => this.HasDropdownFilter || (this.filterOnly && this.activeSearchTerms.Length > 0);
-
     private bool CanCopyDisplayedLines => this.displayLines.Count > 0;
+
+    private string AutoRefreshTooltip => this.autoRefresh ? T("Disable auto-refresh") : T("Enable auto-refresh");
+
+    private Variant AutoRefreshButtonVariant => GetToggleVariant(this.autoRefresh);
+
+    private Color AutoRefreshButtonColor => GetToggleColor(this.autoRefresh);
+
+    private string FilterOnlyTooltip => this.filterOnly ? T("Highlight matches without hiding lines") : T("Show only matching lines");
+
+    private Variant FilterOnlyButtonVariant => GetToggleVariant(this.filterOnly);
+
+    private Color FilterOnlyButtonColor => GetToggleColor(this.filterOnly);
+
+    private string ShowTimestampsTooltip => this.showTimestamps ? T("Hide timestamps") : T("Show timestamps");
+
+    private Variant ShowTimestampsButtonVariant => GetToggleVariant(this.showTimestamps);
+
+    private Color ShowTimestampsButtonColor => GetToggleColor(this.showTimestamps);
+
+    private string InvertFiltersTooltip
+    {
+        get
+        {
+            if (!this.HasDropdownFilter)
+                return T("Select a dropdown filter to invert");
+
+            return this.invertFilters ? T("Disable inverted dropdown filters") : T("Invert dropdown filters");
+        }
+    }
+
+    private Variant InvertFiltersButtonVariant => GetToggleVariant(this.invertFilters);
+
+    private Color InvertFiltersButtonColor => GetToggleColor(this.invertFilters);
 
     private string FilterText
     {
@@ -90,6 +121,19 @@ public partial class AssistantLogViewer : MSGComponentBase
                 return;
 
             this.filterText = value;
+            this.RefreshDisplayLines();
+        }
+    }
+
+    private string ExcludeText
+    {
+        get => this.excludeText;
+        set
+        {
+            if (this.excludeText == value)
+                return;
+
+            this.excludeText = value;
             this.RefreshDisplayLines();
         }
     }
@@ -112,10 +156,11 @@ public partial class AssistantLogViewer : MSGComponentBase
         get => this.invertFilters;
         set
         {
-            if (this.invertFilters == value)
+            var normalizedValue = value && this.HasDropdownFilter;
+            if (this.invertFilters == normalizedValue)
                 return;
 
-            this.invertFilters = value;
+            this.invertFilters = normalizedValue;
             this.RefreshDisplayLines();
         }
     }
@@ -188,6 +233,7 @@ public partial class AssistantLogViewer : MSGComponentBase
     private Task SelectedLogLevelsChanged(IEnumerable<string?>? selectedValues)
     {
         UpdateSelectedValues(this.selectedLogLevels, selectedValues);
+        this.DisableInvertFiltersIfNoDropdownFilter();
         this.RefreshDisplayLines();
         return Task.CompletedTask;
     }
@@ -195,6 +241,7 @@ public partial class AssistantLogViewer : MSGComponentBase
     private Task SelectedLoggersChanged(IEnumerable<string?>? selectedValues)
     {
         UpdateSelectedValues(this.selectedLoggers, selectedValues);
+        this.DisableInvertFiltersIfNoDropdownFilter();
         this.RefreshDisplayLines();
         return Task.CompletedTask;
     }
@@ -202,6 +249,7 @@ public partial class AssistantLogViewer : MSGComponentBase
     private Task SelectedSourceDetailsChanged(IEnumerable<string?>? selectedValues)
     {
         UpdateSelectedValues(this.selectedSourceDetails, selectedValues);
+        this.DisableInvertFiltersIfNoDropdownFilter();
         this.RefreshDisplayLines();
         return Task.CompletedTask;
     }
@@ -215,6 +263,26 @@ public partial class AssistantLogViewer : MSGComponentBase
             this.StopAutoRefresh();
 
         await Task.CompletedTask;
+    }
+
+    private async Task ToggleAutoRefresh()
+    {
+        await this.AutoRefreshChanged(!this.autoRefresh);
+    }
+
+    private void ToggleFilterOnly()
+    {
+        this.FilterOnly = !this.filterOnly;
+    }
+
+    private void ToggleShowTimestamps()
+    {
+        this.ShowTimestamps = !this.showTimestamps;
+    }
+
+    private void ToggleInvertFilters()
+    {
+        this.InvertFilters = !this.invertFilters;
     }
 
     private async Task MaxLinesChanged(int value)
@@ -280,13 +348,15 @@ public partial class AssistantLogViewer : MSGComponentBase
         });
     }
 
-    private void ClearFilters()
+    private void ClearFilterText()
     {
         this.filterText = string.Empty;
-        this.selectedLogLevels.Clear();
-        this.selectedLoggers.Clear();
-        this.selectedSourceDetails.Clear();
-        this.invertFilters = false;
+        this.RefreshDisplayLines();
+    }
+
+    private void ClearExcludeText()
+    {
+        this.excludeText = string.Empty;
         this.RefreshDisplayLines();
     }
 
@@ -384,11 +454,29 @@ public partial class AssistantLogViewer : MSGComponentBase
         NormalizeSelectedValues(this.selectedLogLevels, this.logLevelOptions);
         NormalizeSelectedValues(this.selectedLoggers, this.loggerOptions);
         NormalizeSelectedValues(this.selectedSourceDetails, this.sourceDetailOptions);
+        this.DisableInvertFiltersIfNoDropdownFilter();
+    }
+
+    private void DisableInvertFiltersIfNoDropdownFilter()
+    {
+        if (!this.HasDropdownFilter)
+            this.invertFilters = false;
+    }
+
+    private static Variant GetToggleVariant(bool isActive)
+    {
+        return isActive ? Variant.Filled : Variant.Outlined;
+    }
+
+    private static Color GetToggleColor(bool isActive)
+    {
+        return isActive ? Color.Primary : Color.Default;
     }
 
     private void RefreshDisplayLines()
     {
         this.activeSearchTerms = BuildSearchTerms(this.filterText);
+        this.activeExcludeTerms = BuildSearchTerms(this.excludeText);
         this.displayLines = this.loadedLines
             .Where(this.LineMatchesFilters)
             .ToList();
@@ -396,41 +484,26 @@ public partial class AssistantLogViewer : MSGComponentBase
 
     private bool LineMatchesFilters(LogLine line)
     {
-        if (this.invertFilters && this.HasActiveVisibilityFilter)
-            return !this.LineMatchesAnyActiveFilter(line);
+        if (!this.LineMatchesDropdownFilters(line))
+            return false;
 
-        return this.LineMatchesActiveFilters(line);
+        var renderedLine = this.GetPlainRenderedLine(line);
+        if (this.filterOnly && this.activeSearchTerms.Length > 0 && !MatchesSearchTerms(renderedLine, this.activeSearchTerms))
+            return false;
+
+        return this.activeExcludeTerms.Length == 0 || !MatchesSearchTerms(renderedLine, this.activeExcludeTerms);
     }
 
-    private bool LineMatchesActiveFilters(LogLine line)
+    private bool LineMatchesDropdownFilters(LogLine line)
     {
-        if (!MatchesSelection(line.Segments.Level, this.selectedLogLevels))
-            return false;
+        var matchesDropdownFilters = MatchesSelection(line.Segments.Level, this.selectedLogLevels)
+                                     && MatchesSelection(line.Segments.Logger, this.selectedLoggers)
+                                     && MatchesSelection(line.Segments.SourceDetails, this.selectedSourceDetails);
 
-        if (!MatchesSelection(line.Segments.Logger, this.selectedLoggers))
-            return false;
-
-        if (!MatchesSelection(line.Segments.SourceDetails, this.selectedSourceDetails))
-            return false;
-
-        if (!this.filterOnly || this.activeSearchTerms.Length == 0)
+        if (!this.HasDropdownFilter)
             return true;
 
-        return MatchesSearchTerms(this.GetPlainRenderedLine(line), this.activeSearchTerms);
-    }
-
-    private bool LineMatchesAnyActiveFilter(LogLine line)
-    {
-        if (ActiveSelectionMatches(line.Segments.Level, this.selectedLogLevels))
-            return true;
-
-        if (ActiveSelectionMatches(line.Segments.Logger, this.selectedLoggers))
-            return true;
-
-        if (ActiveSelectionMatches(line.Segments.SourceDetails, this.selectedSourceDetails))
-            return true;
-
-        return this.filterOnly && this.activeSearchTerms.Length > 0 && MatchesSearchTerms(this.GetPlainRenderedLine(line), this.activeSearchTerms);
+        return this.invertFilters ? !matchesDropdownFilters : matchesDropdownFilters;
     }
 
     private string RenderLine(LogLine line)
