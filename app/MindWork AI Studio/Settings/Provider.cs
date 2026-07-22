@@ -38,6 +38,8 @@ public sealed record Provider(
 {
     private static readonly ILogger<Provider> LOGGER = Program.LOGGER_FACTORY.CreateLogger<Provider>();
     
+    public const string NO_PROVIDER_PRESELECTION_ID = "__NO_PROVIDER__";
+    
     public static readonly Provider NONE = new();
 
     public Provider() : this(
@@ -68,6 +70,8 @@ public sealed record Provider(
     }
 
     #endregion
+
+    public static bool IsNoProviderPreselection(string? providerId) => providerId == NO_PROVIDER_PRESELECTION_ID;
     
     #region Implementation of ISecretId
     
