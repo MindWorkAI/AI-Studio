@@ -7,19 +7,6 @@ use tauri_plugin_dialog::{DialogExt, FileDialogBuilder};
 use crate::api_token::APIToken;
 use crate::app_window::MAIN_WINDOW;
 
-#[cfg(any(windows, target_os = "macos"))]
-use std::process::Command;
-
-#[cfg(target_os = "linux")]
-use ashpd::desktop::open_uri::{OpenDirectoryRequest, OpenFileRequest};
-
-#[cfg(windows)]
-use std::os::windows::process::CommandExt;
-
-/// Microsoft documents CREATE_NO_WINDOW as a process creation flag with value 0x08000000.
-#[cfg(windows)]
-const CREATE_NO_WINDOW: u32 = 0x08000000;
-
 #[derive(Clone, Deserialize)]
 pub struct PreviousDirectory {
     path: String,
@@ -325,7 +312,7 @@ pub async fn open_path_in_file_manager(
 
     let Some(target) = resolve_file_manager_target(&requested_path) else {
         let issue = format!(
-            "The path does not exist and its parent folder could not be found: {}",
+            "The path does not exist or is not a file or folder: {}",
             requested_path.to_string_lossy(),
         );
         error!(Source = "Tauri"; "{issue}");
@@ -335,51 +322,35 @@ pub async fn open_path_in_file_manager(
         });
     };
 
-    #[cfg(target_os = "linux")]
-    {
-        return match open_path_in_linux_file_manager(&target).await {
-            Ok(()) => {
-                info!("Opened file manager for path: {:?}", target.path);
-                Json(OpenPathResponse {
-                    success: true,
-                    issue: String::new(),
-                })
-            }
+    info!(
+        Source = "Tauri";
+        "Opening resolved file manager target: requested='{}', target='{}', reveal_file={}.",
+        requested_path.display(),
+        target.path.display(),
+        target.reveal_file,
+    );
 
-            Err(issue) => {
-                error!(Source = "Tauri"; "{issue}");
-                Json(OpenPathResponse {
-                    success: false,
-                    issue,
-                })
-            }
-        };
-    }
+    match open_file_manager_target(&target).await {
+        Ok(()) => {
+            info!(
+                Source = "Tauri";
+                "Opened file manager target: requested='{}', target='{}', reveal_file={}.",
+                requested_path.display(),
+                target.path.display(),
+                target.reveal_file,
+            );
+            Json(OpenPathResponse {
+                success: true,
+                issue: String::new(),
+            })
+        }
 
-    #[cfg(any(windows, target_os = "macos"))]
-    {
-        let mut command = create_file_manager_command(&target);
-
-        #[cfg(windows)]
-        command.creation_flags(CREATE_NO_WINDOW);
-
-        match command.spawn() {
-            Ok(_) => {
-                info!("Opened file manager for path: {:?}", target.path);
-                Json(OpenPathResponse {
-                    success: true,
-                    issue: String::new(),
-                })
-            }
-
-            Err(error) => {
-                let issue = format!("Failed to open the file manager: {error}");
-                error!(Source = "Tauri"; "{issue}");
-                Json(OpenPathResponse {
-                    success: false,
-                    issue,
-                })
-            }
+        Err(issue) => {
+            error!(Source = "Tauri"; "{issue}");
+            Json(OpenPathResponse {
+                success: false,
+                issue,
+            })
         }
     }
 }
@@ -402,126 +373,142 @@ struct FileManagerTarget {
     reveal_file: bool,
 }
 
-#[cfg(any(target_os = "linux", test))]
-#[derive(Debug, PartialEq, Eq)]
-enum LinuxPortalOperation {
-    RevealFile,
-    OpenDirectory,
-}
-
 fn resolve_file_manager_target(requested_path: &Path) -> Option<FileManagerTarget> {
-    if requested_path.is_file() {
+    let metadata = requested_path.metadata().ok()?;
+
+    if metadata.is_file() {
         return Some(FileManagerTarget {
             path: requested_path.to_path_buf(),
             reveal_file: true,
         });
     }
 
-    if requested_path.is_dir() {
+    if metadata.is_dir() {
         return Some(FileManagerTarget {
             path: requested_path.to_path_buf(),
             reveal_file: false,
         });
     }
 
-    requested_path.parent()
-        .filter(|parent| parent.is_dir())
-        .map(|parent| FileManagerTarget {
-            path: parent.to_path_buf(),
-            reveal_file: false,
-        })
-}
-
-#[cfg(any(target_os = "linux", test))]
-fn linux_portal_operation(target: &FileManagerTarget) -> LinuxPortalOperation {
-    if target.reveal_file {
-        LinuxPortalOperation::RevealFile
-    } else {
-        LinuxPortalOperation::OpenDirectory
-    }
-}
-
-#[cfg(any(target_os = "linux", test))]
-fn xdg_open_fallback_path(target: &FileManagerTarget) -> &Path {
-    if target.reveal_file {
-        target.path.parent().unwrap_or(&target.path)
-    } else {
-        &target.path
-    }
-}
-
-#[cfg(target_os = "linux")]
-enum LinuxPortalError {
-    Unavailable(String),
-    RequestFailed(String),
-}
-
-#[cfg(target_os = "linux")]
-async fn open_path_with_linux_portal(target: &FileManagerTarget) -> Result<(), LinuxPortalError> {
-    let file = std::fs::File::open(&target.path)
-        .map_err(|error| LinuxPortalError::Unavailable(format!("Failed to open the path for the desktop portal: {error}")))?;
-
-    let request = match linux_portal_operation(target) {
-        LinuxPortalOperation::RevealFile => OpenDirectoryRequest::default().send(&file).await,
-        LinuxPortalOperation::OpenDirectory => OpenFileRequest::default().send_file(&file).await,
-    }
-    .map_err(|error| LinuxPortalError::Unavailable(format!("Desktop portal invocation failed: {error}")))?;
-
-    request.response()
-        .map_err(|error| LinuxPortalError::RequestFailed(format!("Desktop portal request failed: {error}")))
-}
-
-#[cfg(target_os = "linux")]
-async fn open_path_with_xdg_open(target: &FileManagerTarget) -> Result<(), String> {
-    let fallback_path = xdg_open_fallback_path(target);
-    let status = tokio::process::Command::new("xdg-open")
-        .arg(fallback_path)
-        .status()
-        .await
-        .map_err(|error| format!("xdg-open failed to start for '{}': {error}", fallback_path.to_string_lossy()))?;
-
-    if status.success() {
-        Ok(())
-    } else {
-        Err(format!("xdg-open failed for '{}' with exit status {status}", fallback_path.to_string_lossy()))
-    }
-}
-
-#[cfg(target_os = "linux")]
-async fn open_path_in_linux_file_manager(target: &FileManagerTarget) -> Result<(), String> {
-    match open_path_with_linux_portal(target).await {
-        Ok(()) => Ok(()),
-        Err(LinuxPortalError::RequestFailed(error)) => Err(error),
-        Err(LinuxPortalError::Unavailable(portal_error)) => {
-            match open_path_with_xdg_open(target).await {
-                Ok(()) => Ok(()),
-                Err(fallback_error) => Err(format!("{portal_error} Fallback failed: {fallback_error}")),
-            }
-        }
-    }
+    None
 }
 
 #[cfg(target_os = "windows")]
-fn create_file_manager_command(target: &FileManagerTarget) -> Command {
-    let mut command = Command::new("explorer.exe");
+async fn open_file_manager_target(target: &FileManagerTarget) -> Result<(), String> {
     if target.reveal_file {
-        command.arg(format!("/select,{}", target.path.to_string_lossy()));
-    } else {
-        command.arg(&target.path);
+        return tauri_plugin_opener::reveal_item_in_dir(&target.path)
+            .map_err(|error| format!("Failed to reveal '{}' in the file manager: {error}", target.path.display()));
     }
 
-    command
+    tauri_plugin_opener::open_path(&target.path, None::<&str>)
+        .map_err(|error| format!("Failed to open '{}' in the file manager: {error}", target.path.display()))
 }
 
 #[cfg(target_os = "macos")]
-fn create_file_manager_command(target: &FileManagerTarget) -> Command {
-    let mut command = Command::new("open");
+async fn open_file_manager_target(target: &FileManagerTarget) -> Result<(), String> {
+    let mut command = tokio::process::Command::new("open");
     if target.reveal_file {
         command.arg("-R");
     }
 
     command.arg(&target.path);
+    run_file_manager_command(command, &format!("macOS open for '{}'", target.path.display())).await
+}
+
+#[cfg(target_os = "linux")]
+async fn open_file_manager_target(target: &FileManagerTarget) -> Result<(), String> {
+    if target.reveal_file {
+        return match reveal_linux_file(&target.path).await {
+            Ok(()) => Ok(()),
+            Err(reveal_error) => {
+                let parent_directory = target.path.parent().ok_or_else(|| {
+                    format!("Failed to determine the parent folder for '{}'.", target.path.display())
+                })?;
+                info!(
+                    Source = "Tauri";
+                    "Linux file reveal failed for '{}': {} Opening parent directory '{}'.",
+                    target.path.display(),
+                    reveal_error,
+                    parent_directory.display(),
+                );
+                open_linux_directory(parent_directory).await.map_err(|fallback_error| {
+                    format!(
+                        "Failed to reveal '{}' in the file manager: {} Fallback failed: {}",
+                        target.path.display(),
+                        reveal_error,
+                        fallback_error,
+                    )
+                })
+            }
+        };
+    }
+
+    open_linux_directory(&target.path).await
+}
+
+#[cfg(target_os = "linux")]
+async fn reveal_linux_file(path: &Path) -> Result<(), String> {
+    let mut command = tokio::process::Command::new("dbus-send");
     command
+        .arg("--session")
+        .arg("--dest=org.freedesktop.FileManager1")
+        .arg("--type=method_call")
+        .arg("/org/freedesktop/FileManager1")
+        .arg("org.freedesktop.FileManager1.ShowItems")
+        .arg(format!("array:string:{}", path_to_file_uri(path)))
+        .arg("string:");
+
+    run_file_manager_command(command, &format!("Linux FileManager1 ShowItems for '{}'", path.display())).await
+}
+
+#[cfg(target_os = "linux")]
+async fn open_linux_directory(path: &Path) -> Result<(), String> {
+    let mut command = tokio::process::Command::new("xdg-open");
+    command.arg(path);
+    run_file_manager_command(command, &format!("Linux xdg-open for '{}'", path.display())).await
+}
+
+#[cfg(any(target_os = "linux", test))]
+fn path_to_file_uri(path: &Path) -> String {
+    let path = path.to_string_lossy().replace('\\', "/");
+    let mut uri = String::from("file://");
+    if !path.starts_with('/') {
+        uri.push('/');
+    }
+
+    for byte in path.as_bytes() {
+        match *byte {
+            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'/' | b'-' | b'_' | b'.' | b'~' => uri.push(*byte as char),
+            _ => uri.push_str(&format!("%{:02X}", *byte)),
+        }
+    }
+
+    uri
+}
+
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+async fn run_file_manager_command(
+    mut command: tokio::process::Command,
+    description: &str,
+) -> Result<(), String> {
+    let status = tokio::time::timeout(
+        std::time::Duration::from_secs(5),
+        command.status(),
+    )
+        .await
+        .map_err(|_| format!("{description} timed out."))?
+        .map_err(|error| format!("{description} failed to start: {error}"))?;
+
+    if status.success() {
+        Ok(())
+    } else {
+        Err(format!("{description} failed with exit status {status}"))
+    }
+}
+
+#[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
+async fn open_file_manager_target(target: &FileManagerTarget) -> Result<(), String> {
+    Err(format!("Opening '{}' in the file manager is not supported on this platform.", target.path.display()))
 }
 
 #[cfg(test)]
@@ -530,7 +517,7 @@ mod tests {
     use std::fs;
 
     #[test]
-    fn existing_file_is_revealed_and_falls_back_to_its_parent() {
+    fn existing_file_is_revealed() {
         let temp_dir = tempfile::tempdir().unwrap();
         let file_path = temp_dir.path().join("application.log");
         fs::write(&file_path, "log").unwrap();
@@ -539,8 +526,6 @@ mod tests {
 
         assert_eq!(target.path, file_path);
         assert!(target.reveal_file);
-        assert_eq!(linux_portal_operation(&target), LinuxPortalOperation::RevealFile);
-        assert_eq!(xdg_open_fallback_path(&target), temp_dir.path());
     }
 
     #[test]
@@ -551,21 +536,14 @@ mod tests {
 
         assert_eq!(target.path, temp_dir.path());
         assert!(!target.reveal_file);
-        assert_eq!(linux_portal_operation(&target), LinuxPortalOperation::OpenDirectory);
-        assert_eq!(xdg_open_fallback_path(&target), temp_dir.path());
     }
 
     #[test]
-    fn missing_file_uses_its_existing_parent_directory() {
+    fn missing_file_with_existing_parent_is_rejected() {
         let temp_dir = tempfile::tempdir().unwrap();
         let missing_file = temp_dir.path().join("missing.log");
 
-        let target = resolve_file_manager_target(&missing_file).unwrap();
-
-        assert_eq!(target.path, temp_dir.path());
-        assert!(!target.reveal_file);
-        assert_eq!(linux_portal_operation(&target), LinuxPortalOperation::OpenDirectory);
-        assert_eq!(xdg_open_fallback_path(&target), temp_dir.path());
+        assert!(resolve_file_manager_target(&missing_file).is_none());
     }
 
     #[test]
@@ -574,5 +552,15 @@ mod tests {
         let invalid_path = temp_dir.path().join("missing-directory").join("missing.log");
 
         assert!(resolve_file_manager_target(&invalid_path).is_none());
+    }
+
+    #[test]
+    fn linux_file_uri_encodes_spaces_in_log_paths() {
+        let path = PathBuf::from("/home/koud_pa/.local/share/org.mindworkai.AIStudio/data/.AI Studio Events.log");
+
+        assert_eq!(
+            path_to_file_uri(&path),
+            "file:///home/koud_pa/.local/share/org.mindworkai.AIStudio/data/.AI%20Studio%20Events.log",
+        );
     }
 }

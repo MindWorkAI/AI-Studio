@@ -14,7 +14,6 @@ namespace AIStudio.Assistants.LogViewer;
 public partial class AssistantLogViewer : MSGComponentBase
 {
     private static readonly TimeSpan AUTO_REFRESH_INTERVAL = TimeSpan.FromSeconds(5);
-    private static readonly char[] WORD_SPLIT_CHARS = [' ', '\t', '\r', '\n'];
     private static readonly Dictionary<string, int> LOG_LEVEL_ORDER = new(StringComparer.OrdinalIgnoreCase)
     {
         ["ERROR"] = 0,
@@ -57,12 +56,15 @@ public partial class AssistantLogViewer : MSGComponentBase
     private List<string> sourceDetailOptions = [OTHER_OPTION_VALUE];
     
     private string[] activeSearchTerms = [];
+    private string[] activeExcludeTerms = [];
     private CancellationTokenSource? autoRefreshCancellationTokenSource;
     private string filterText = string.Empty;
+    private string excludeText = string.Empty;
     private string loadError = string.Empty;
     private bool isLoading;
     private bool autoRefresh;
     private bool filterOnly = true;
+    private bool invertFilters;
     private bool showTimestamps = true;
     private int maxLines = DEFAULT_MAX_LINES;
     private int totalLineCount;
@@ -75,7 +77,40 @@ public partial class AssistantLogViewer : MSGComponentBase
 
     private bool HasDropdownFilter => this.selectedLogLevels.Count > 0 || this.selectedLoggers.Count > 0 || this.selectedSourceDetails.Count > 0;
 
-    private bool HasActiveFilter => !string.IsNullOrWhiteSpace(this.filterText) || this.HasDropdownFilter;
+    private bool CanCopyDisplayedLines => this.displayLines.Count > 0;
+
+    private string AutoRefreshTooltip => this.autoRefresh ? T("Disable auto-refresh") : T("Enable auto-refresh");
+
+    private Variant AutoRefreshButtonVariant => GetToggleVariant(this.autoRefresh);
+
+    private Color AutoRefreshButtonColor => GetToggleColor(this.autoRefresh);
+
+    private string FilterOnlyTooltip => this.filterOnly ? T("Highlight matches without hiding lines") : T("Show only matching lines");
+
+    private Variant FilterOnlyButtonVariant => GetToggleVariant(this.filterOnly);
+
+    private Color FilterOnlyButtonColor => GetToggleColor(this.filterOnly);
+
+    private string ShowTimestampsTooltip => this.showTimestamps ? T("Hide timestamps") : T("Show timestamps");
+
+    private Variant ShowTimestampsButtonVariant => GetToggleVariant(this.showTimestamps);
+
+    private Color ShowTimestampsButtonColor => GetToggleColor(this.showTimestamps);
+
+    private string InvertFiltersTooltip
+    {
+        get
+        {
+            if (!this.HasDropdownFilter)
+                return T("Select a dropdown filter to invert");
+
+            return this.invertFilters ? T("Disable inverted dropdown filters") : T("Invert dropdown filters");
+        }
+    }
+
+    private Variant InvertFiltersButtonVariant => GetToggleVariant(this.invertFilters);
+
+    private Color InvertFiltersButtonColor => GetToggleColor(this.invertFilters);
 
     private string FilterText
     {
@@ -90,6 +125,19 @@ public partial class AssistantLogViewer : MSGComponentBase
         }
     }
 
+    private string ExcludeText
+    {
+        get => this.excludeText;
+        set
+        {
+            if (this.excludeText == value)
+                return;
+
+            this.excludeText = value;
+            this.RefreshDisplayLines();
+        }
+    }
+
     private bool FilterOnly
     {
         get => this.filterOnly;
@@ -99,6 +147,20 @@ public partial class AssistantLogViewer : MSGComponentBase
                 return;
 
             this.filterOnly = value;
+            this.RefreshDisplayLines();
+        }
+    }
+
+    private bool InvertFilters
+    {
+        get => this.invertFilters;
+        set
+        {
+            var normalizedValue = value && this.HasDropdownFilter;
+            if (this.invertFilters == normalizedValue)
+                return;
+
+            this.invertFilters = normalizedValue;
             this.RefreshDisplayLines();
         }
     }
@@ -171,6 +233,7 @@ public partial class AssistantLogViewer : MSGComponentBase
     private Task SelectedLogLevelsChanged(IEnumerable<string?>? selectedValues)
     {
         UpdateSelectedValues(this.selectedLogLevels, selectedValues);
+        this.DisableInvertFiltersIfNoDropdownFilter();
         this.RefreshDisplayLines();
         return Task.CompletedTask;
     }
@@ -178,6 +241,7 @@ public partial class AssistantLogViewer : MSGComponentBase
     private Task SelectedLoggersChanged(IEnumerable<string?>? selectedValues)
     {
         UpdateSelectedValues(this.selectedLoggers, selectedValues);
+        this.DisableInvertFiltersIfNoDropdownFilter();
         this.RefreshDisplayLines();
         return Task.CompletedTask;
     }
@@ -185,6 +249,7 @@ public partial class AssistantLogViewer : MSGComponentBase
     private Task SelectedSourceDetailsChanged(IEnumerable<string?>? selectedValues)
     {
         UpdateSelectedValues(this.selectedSourceDetails, selectedValues);
+        this.DisableInvertFiltersIfNoDropdownFilter();
         this.RefreshDisplayLines();
         return Task.CompletedTask;
     }
@@ -200,6 +265,26 @@ public partial class AssistantLogViewer : MSGComponentBase
         await Task.CompletedTask;
     }
 
+    private async Task ToggleAutoRefresh()
+    {
+        await this.AutoRefreshChanged(!this.autoRefresh);
+    }
+
+    private void ToggleFilterOnly()
+    {
+        this.FilterOnly = !this.filterOnly;
+    }
+
+    private void ToggleShowTimestamps()
+    {
+        this.ShowTimestamps = !this.showTimestamps;
+    }
+
+    private void ToggleInvertFilters()
+    {
+        this.InvertFilters = !this.invertFilters;
+    }
+
     private async Task MaxLinesChanged(int value)
     {
         var normalizedValue = Math.Clamp(value, MIN_MAX_LINES, MAX_MAX_LINES);
@@ -208,6 +293,12 @@ public partial class AssistantLogViewer : MSGComponentBase
 
         this.maxLines = normalizedValue;
         await this.RefreshLogAsync();
+    }
+
+    private async Task CopyDisplayedLines()
+    {
+        var text = string.Join(Environment.NewLine, this.displayLines.Select(this.GetPlainRenderedLine));
+        await this.RustService.CopyText2Clipboard(this.Snackbar, text);
     }
 
     private async Task OpenCurrentLogInFileManager()
@@ -257,12 +348,15 @@ public partial class AssistantLogViewer : MSGComponentBase
         });
     }
 
-    private void ClearFilters()
+    private void ClearFilterText()
     {
         this.filterText = string.Empty;
-        this.selectedLogLevels.Clear();
-        this.selectedLoggers.Clear();
-        this.selectedSourceDetails.Clear();
+        this.RefreshDisplayLines();
+    }
+
+    private void ClearExcludeText()
+    {
+        this.excludeText = string.Empty;
         this.RefreshDisplayLines();
     }
 
@@ -360,11 +454,29 @@ public partial class AssistantLogViewer : MSGComponentBase
         NormalizeSelectedValues(this.selectedLogLevels, this.logLevelOptions);
         NormalizeSelectedValues(this.selectedLoggers, this.loggerOptions);
         NormalizeSelectedValues(this.selectedSourceDetails, this.sourceDetailOptions);
+        this.DisableInvertFiltersIfNoDropdownFilter();
+    }
+
+    private void DisableInvertFiltersIfNoDropdownFilter()
+    {
+        if (!this.HasDropdownFilter)
+            this.invertFilters = false;
+    }
+
+    private static Variant GetToggleVariant(bool isActive)
+    {
+        return isActive ? Variant.Filled : Variant.Outlined;
+    }
+
+    private static Color GetToggleColor(bool isActive)
+    {
+        return isActive ? Color.Primary : Color.Default;
     }
 
     private void RefreshDisplayLines()
     {
         this.activeSearchTerms = BuildSearchTerms(this.filterText);
+        this.activeExcludeTerms = BuildSearchTerms(this.excludeText);
         this.displayLines = this.loadedLines
             .Where(this.LineMatchesFilters)
             .ToList();
@@ -372,19 +484,26 @@ public partial class AssistantLogViewer : MSGComponentBase
 
     private bool LineMatchesFilters(LogLine line)
     {
-        if (!MatchesSelection(line.Segments.Level, this.selectedLogLevels))
+        if (!this.LineMatchesDropdownFilters(line))
             return false;
 
-        if (!MatchesSelection(line.Segments.Logger, this.selectedLoggers))
+        var renderedLine = this.GetPlainRenderedLine(line);
+        if (this.filterOnly && this.activeSearchTerms.Length > 0 && !MatchesSearchTerms(renderedLine, this.activeSearchTerms))
             return false;
 
-        if (!MatchesSelection(line.Segments.SourceDetails, this.selectedSourceDetails))
-            return false;
+        return this.activeExcludeTerms.Length == 0 || !MatchesSearchTerms(renderedLine, this.activeExcludeTerms);
+    }
 
-        if (!this.filterOnly || this.activeSearchTerms.Length == 0)
+    private bool LineMatchesDropdownFilters(LogLine line)
+    {
+        var matchesDropdownFilters = MatchesSelection(line.Segments.Level, this.selectedLogLevels)
+                                     && MatchesSelection(line.Segments.Logger, this.selectedLoggers)
+                                     && MatchesSelection(line.Segments.SourceDetails, this.selectedSourceDetails);
+
+        if (!this.HasDropdownFilter)
             return true;
 
-        return MatchesSearchTerms(this.GetPlainRenderedLine(line), this.activeSearchTerms);
+        return this.invertFilters ? !matchesDropdownFilters : matchesDropdownFilters;
     }
 
     private string RenderLine(LogLine line)
@@ -676,8 +795,13 @@ public partial class AssistantLogViewer : MSGComponentBase
 
     private static bool MatchesSelection(string? value, HashSet<string> selectedValues)
     {
+        return selectedValues.Count == 0 || ActiveSelectionMatches(value, selectedValues);
+    }
+
+    private static bool ActiveSelectionMatches(string? value, HashSet<string> selectedValues)
+    {
         if (selectedValues.Count == 0)
-            return true;
+            return false;
 
         var normalizedValue = string.IsNullOrWhiteSpace(value) ? OTHER_OPTION_VALUE : value;
         return selectedValues.Contains(normalizedValue);
@@ -693,10 +817,7 @@ public partial class AssistantLogViewer : MSGComponentBase
         if (string.IsNullOrWhiteSpace(text))
             return [];
 
-        return text
-            .Split(WORD_SPLIT_CHARS, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToArray();
+        return [text.Trim()];
     }
 
     private static bool MatchesSearchTerms(string text, string[] terms)
