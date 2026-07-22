@@ -35,13 +35,13 @@ public partial class ConfigurationMultiSelect<TData> : ConfigurationBaseCore
     public Func<TData, bool> IsItemLocked { get; set; } = _ => false;
 
     [Parameter]
-    public string EmptySelectionText { get; set; } = "No items selected.";
+    public string? EmptySelectionText { get; set; }
 
     [Parameter]
-    public string SingleSelectionText { get; set; } = "You have selected 1 item.";
+    public string? SingleSelectionText { get; set; }
 
     [Parameter]
-    public string MultipleSelectionText { get; set; } = "You have selected {0} items.";
+    public string? MultipleSelectionText { get; set; }
     
     #region Overrides of ConfigurationBase
 
@@ -70,12 +70,12 @@ public partial class ConfigurationMultiSelect<TData> : ConfigurationBaseCore
     private string GetMultiSelectionText(List<TData?>? selectedValues)
     {
         if(selectedValues is null || selectedValues.Count == 0)
-            return T(this.EmptySelectionText);
+            return this.EmptySelectionText ?? T("No items selected.");
         
         if(selectedValues.Count == 1)
-            return T(this.SingleSelectionText);
+            return this.SingleSelectionText ?? T("You have selected 1 item.");
         
-        return string.Format(T(this.MultipleSelectionText), selectedValues.Count);
+        return string.Format(this.MultipleSelectionText ?? T("You have selected {0} items."), selectedValues.Count);
     }
 
     private bool IsLockedValue(TData value) => this.IsItemLocked(value);

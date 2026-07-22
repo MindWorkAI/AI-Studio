@@ -24,7 +24,7 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
 
     public IReadOnlySet<string> SensitiveTraceArgumentNames => new HashSet<string>(StringComparer.Ordinal);
 
-    public static string GetDisplayName() => TB("Read Web Page");
+    public string GetDisplayName() => TB("Read Web Page");
 
     public string GetDescription() => TB("Load a web page and extract its readable content, links, and page details.");
 
