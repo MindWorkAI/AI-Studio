@@ -330,7 +330,7 @@ pub async fn open_path_in_file_manager(
         target.reveal_file,
     );
 
-    match open_file_manager_target(&target) {
+    match open_file_manager_target(&target).await {
         Ok(()) => {
             info!(
                 Source = "Tauri";
@@ -393,7 +393,8 @@ fn resolve_file_manager_target(requested_path: &Path) -> Option<FileManagerTarge
     None
 }
 
-fn open_file_manager_target(target: &FileManagerTarget) -> Result<(), String> {
+#[cfg(target_os = "windows")]
+async fn open_file_manager_target(target: &FileManagerTarget) -> Result<(), String> {
     if target.reveal_file {
         return tauri_plugin_opener::reveal_item_in_dir(&target.path)
             .map_err(|error| format!("Failed to reveal '{}' in the file manager: {error}", target.path.display()));
@@ -401,6 +402,113 @@ fn open_file_manager_target(target: &FileManagerTarget) -> Result<(), String> {
 
     tauri_plugin_opener::open_path(&target.path, None::<&str>)
         .map_err(|error| format!("Failed to open '{}' in the file manager: {error}", target.path.display()))
+}
+
+#[cfg(target_os = "macos")]
+async fn open_file_manager_target(target: &FileManagerTarget) -> Result<(), String> {
+    let mut command = tokio::process::Command::new("open");
+    if target.reveal_file {
+        command.arg("-R");
+    }
+
+    command.arg(&target.path);
+    run_file_manager_command(command, &format!("macOS open for '{}'", target.path.display())).await
+}
+
+#[cfg(target_os = "linux")]
+async fn open_file_manager_target(target: &FileManagerTarget) -> Result<(), String> {
+    if target.reveal_file {
+        return match reveal_linux_file(&target.path).await {
+            Ok(()) => Ok(()),
+            Err(reveal_error) => {
+                let parent_directory = target.path.parent().ok_or_else(|| {
+                    format!("Failed to determine the parent folder for '{}'.", target.path.display())
+                })?;
+                info!(
+                    Source = "Tauri";
+                    "Linux file reveal failed for '{}': {} Opening parent directory '{}'.",
+                    target.path.display(),
+                    reveal_error,
+                    parent_directory.display(),
+                );
+                open_linux_directory(parent_directory).await.map_err(|fallback_error| {
+                    format!(
+                        "Failed to reveal '{}' in the file manager: {} Fallback failed: {}",
+                        target.path.display(),
+                        reveal_error,
+                        fallback_error,
+                    )
+                })
+            }
+        };
+    }
+
+    open_linux_directory(&target.path).await
+}
+
+#[cfg(target_os = "linux")]
+async fn reveal_linux_file(path: &Path) -> Result<(), String> {
+    let mut command = tokio::process::Command::new("dbus-send");
+    command
+        .arg("--session")
+        .arg("--dest=org.freedesktop.FileManager1")
+        .arg("--type=method_call")
+        .arg("/org/freedesktop/FileManager1")
+        .arg("org.freedesktop.FileManager1.ShowItems")
+        .arg(format!("array:string:{}", path_to_file_uri(path)))
+        .arg("string:");
+
+    run_file_manager_command(command, &format!("Linux FileManager1 ShowItems for '{}'", path.display())).await
+}
+
+#[cfg(target_os = "linux")]
+async fn open_linux_directory(path: &Path) -> Result<(), String> {
+    let mut command = tokio::process::Command::new("xdg-open");
+    command.arg(path);
+    run_file_manager_command(command, &format!("Linux xdg-open for '{}'", path.display())).await
+}
+
+#[cfg(any(target_os = "linux", test))]
+fn path_to_file_uri(path: &Path) -> String {
+    let path = path.to_string_lossy().replace('\\', "/");
+    let mut uri = String::from("file://");
+    if !path.starts_with('/') {
+        uri.push('/');
+    }
+
+    for byte in path.as_bytes() {
+        match *byte {
+            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'/' | b'-' | b'_' | b'.' | b'~' => uri.push(*byte as char),
+            _ => uri.push_str(&format!("%{:02X}", *byte)),
+        }
+    }
+
+    uri
+}
+
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+async fn run_file_manager_command(
+    mut command: tokio::process::Command,
+    description: &str,
+) -> Result<(), String> {
+    let status = tokio::time::timeout(
+        std::time::Duration::from_secs(5),
+        command.status(),
+    )
+        .await
+        .map_err(|_| format!("{description} timed out."))?
+        .map_err(|error| format!("{description} failed to start: {error}"))?;
+
+    if status.success() {
+        Ok(())
+    } else {
+        Err(format!("{description} failed with exit status {status}"))
+    }
+}
+
+#[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
+async fn open_file_manager_target(target: &FileManagerTarget) -> Result<(), String> {
+    Err(format!("Opening '{}' in the file manager is not supported on this platform.", target.path.display()))
 }
 
 #[cfg(test)]
@@ -444,5 +552,15 @@ mod tests {
         let invalid_path = temp_dir.path().join("missing-directory").join("missing.log");
 
         assert!(resolve_file_manager_target(&invalid_path).is_none());
+    }
+
+    #[test]
+    fn linux_file_uri_encodes_spaces_in_log_paths() {
+        let path = PathBuf::from("/home/koud_pa/.local/share/org.mindworkai.AIStudio/data/.AI Studio Events.log");
+
+        assert_eq!(
+            path_to_file_uri(&path),
+            "file:///home/koud_pa/.local/share/org.mindworkai.AIStudio/data/.AI%20Studio%20Events.log",
+        );
     }
 }
