@@ -18,6 +18,7 @@ pub mod qdrant_edge_database;
 pub mod certificate_factory;
 pub mod runtime_api_token;
 pub mod stale_process_cleanup;
+pub mod share_sheet;
 mod sidecar_types;
 mod file_actions;
 pub mod global_shortcuts;

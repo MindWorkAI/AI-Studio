@@ -5,9 +5,17 @@
 @attribute [Route(Routes.PLUGINS)]
 
 <div class="inner-scrolling-context">
-    <MudText Typo="Typo.h3" Class="mb-2">
-        @T("Plugins")
-    </MudText>
+    <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
+        <MudText Typo="Typo.h3">
+            @T("Plugins")
+        </MudText>
+        <MudSpacer />
+        <MudTooltip Text="@T("Import assistant plugin")">
+            <MudButton Variant="Variant.Outlined" StartIcon="@IMPORT_ICON" OnClick="@this.ImportAssistantPluginAsync" Disabled="@this.isImportingAssistantPlugin">
+                @T("Import")
+            </MudButton>
+        </MudTooltip>
+    </MudStack>
     
     <InnerScrolling>
         
@@ -89,7 +97,7 @@
                                 {
                                     var isDefaultSupportContact = string.Equals(sourceUrl, AssistantPluginGenerationService.DEFAULT_SUPPORT_CONTACT, StringComparison.Ordinal);
                                     <MudTooltip Text="@(isDefaultSupportContact ? string.Empty : T("Send a mail"))">
-                                                                                                                 <MudIconButton Icon="@Icons.Material.Filled.Email" Href="@sourceUrl" Target="_blank" Size="Size.Medium" Disabled="@isDefaultSupportContact"/>
+                                        <MudIconButton Icon="@Icons.Material.Filled.Email" Href="@sourceUrl" Target="_blank" Size="Size.Medium" Disabled="@isDefaultSupportContact"/>
                                     </MudTooltip>
                                 }
                                 else
@@ -104,14 +112,21 @@
                             @if (context is IAvailablePlugin editablePlugin && CanEditAssistantPlugin(editablePlugin))
                             {
                                 <MudTooltip Text="@T("Edit assistant plugin")">
-                                    <MudIconButton Icon="@Icons.Material.Filled.Code" Size="Size.Medium" OnClick="@(() => this.OpenAssistantPluginEditorDialogAsync(editablePlugin))"/>
+                                    <MudIconButton Icon="@Icons.Material.Filled.Code" Size="Size.Medium" OnClick="@(() => this.OpenAssistantPluginEditorDialogAsync(editablePlugin))" Disabled="@(!CanEditAssistantPlugin(editablePlugin))"/>
+                                </MudTooltip>
+                            }
+                            
+                            @if (context is IAvailablePlugin shareablePlugin && CanSharePlugin(shareablePlugin))
+                            {
+                                <MudTooltip Text="@T("Share plugin archive")">
+                                    <MudIconButton Icon="@Icons.Material.Filled.IosShare" Size="Size.Medium" OnClick="@(() => this.SharePluginAsync(shareablePlugin))" Disabled="@(!CanSharePlugin(shareablePlugin))"/>
                                 </MudTooltip>
                             }
 
                             @if (context is IAvailablePlugin revisionPlugin && CanReviseAssistantPlugin(revisionPlugin))
                             {
                                 <MudTooltip Text="@T("Revise assistant plugin with AI")">
-                                    <MudIconButton Icon="@Icons.Material.Filled.AutoMode" Size="Size.Medium" OnClick="@(() => this.OpenAssistantPluginRevisionDialogAsync(revisionPlugin))"/>
+                                    <MudIconButton Icon="@Icons.Material.Filled.AutoMode" Size="Size.Medium" OnClick="@(() => this.OpenAssistantPluginRevisionDialogAsync(revisionPlugin))" Disabled="@(!CanReviseAssistantPlugin(revisionPlugin))"/>
                                 </MudTooltip>
                             }
 
