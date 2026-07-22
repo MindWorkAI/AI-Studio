@@ -11,6 +11,7 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
 
     private readonly SearXNGSearchClient searchClient = new();
     private readonly SearXNGPageRetrievalService pageRetrievalService;
+    private readonly ILogger<SearXNGWebSearchTool> logger;
 
     private const int DEFAULT_MAX_RESULTS = 5;
     private const int DEFAULT_TIMEOUT_SECONDS = 20;
@@ -26,10 +27,12 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
     private const int MAX_MIN_CONTENT_CHARACTERS_PER_RESULT = 3000;
     private const int MAX_PAGE_TIMEOUT_SECONDS = 30;
     private const int MAX_RETRIEVAL_TIMEOUT_SECONDS = 90;
+    private const int MAX_LOG_QUERY_LENGTH = 1000;
 
-    public SearXNGWebSearchTool(WebPageRetrievalService webPageRetrievalService)
+    public SearXNGWebSearchTool(WebPageRetrievalService webPageRetrievalService, ILogger<SearXNGWebSearchTool> logger)
     {
         this.pageRetrievalService = new SearXNGPageRetrievalService(webPageRetrievalService);
+        this.logger = logger;
     }
 
     public string ImplementationKey => ToolSelectionRules.WEB_SEARCH_TOOL_ID;
@@ -232,6 +235,17 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
         if (page is > MAX_PAGE)
             throw new ArgumentException($"Argument 'page' must be less than or equal to {MAX_PAGE}.");
 
+        this.logger.LogInformation(
+            "Starting web search. ToolCallId={ToolCallId}, Query={Query}, Categories=[{Categories}], Engines=[{Engines}], Language={Language}, TimeRange={TimeRange}, Page={Page}, Limit={Limit}",
+            context.ToolCallId,
+            FormatQueryForLog(query),
+            string.Join(", ", categories),
+            string.Join(", ", engines),
+            language,
+            timeRange,
+            page,
+            effectiveLimit);
+
         var searchResponse = await this.searchClient.SearchAsync(
             new SearXNGSearchRequest(
                 searchUri,
@@ -266,6 +280,20 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
         };
         if (retrievalResult.Results.Count == 0)
             resultObject["diagnostic"] = "No result page could be retrieved as readable public HTML. Pages may have failed, timed out, been blocked by network safety checks, used an unsupported content type, or contained no readable static content.";
+
+        var retrievalStatistics = retrievalResult.ErrorStatistics;
+        this.logger.LogInformation(
+            "Completed web search. ToolCallId={ToolCallId}, CandidateCount={CandidateCount}, ResultCount={ResultCount}, BlockedPageCount={BlockedPageCount}, PageTimeoutCount={PageTimeoutCount}, FailedPageCount={FailedPageCount}, EmptyContentCount={EmptyContentCount}, RetrievalTimedOut={RetrievalTimedOut}, ReturnedContentCharacters={ReturnedContentCharacters}, TruncatedResultCount={TruncatedResultCount}",
+            context.ToolCallId,
+            searchResponse.CandidateCount,
+            retrievalResult.Results.Count,
+            retrievalStatistics.BlockedCount,
+            retrievalStatistics.PageTimedOutCount,
+            retrievalStatistics.FailedCount,
+            retrievalStatistics.EmptyContentCount,
+            retrievalResult.RetrievalTimedOut,
+            retrievalResult.Results.Sum(result => result.ReturnedMarkdown.Length),
+            retrievalResult.Results.Count(result => result.ContentTruncated));
 
         return new ToolExecutionResult
         {
@@ -381,6 +409,18 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
         .Where(x => !string.IsNullOrWhiteSpace(x))
         .Distinct(StringComparer.Ordinal)
         .ToList() ?? [];
+
+    private static string FormatQueryForLog(string query)
+    {
+        var singleLineQuery = query
+            .Replace('\r', ' ')
+            .Replace('\n', ' ')
+            .Replace('\t', ' ')
+            .Trim();
+        return singleLineQuery.Length <= MAX_LOG_QUERY_LENGTH
+            ? singleLineQuery
+            : $"{singleLineQuery[..MAX_LOG_QUERY_LENGTH]}...";
+    }
 
     private static bool TryNormalizeSearchUri(string rawUrl, out Uri searchUri, out string error) =>
         SearXNGSearchClient.TryNormalizeSearchUri(

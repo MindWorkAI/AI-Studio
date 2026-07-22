@@ -226,32 +226,32 @@ public sealed class ToolRegistry
     {
         if (!this.settingsManager.AreToolsEnabled())
         {
-            this.logger.LogInformation("Tool calling is skipped because tools are disabled by managed configuration.");
+            this.logger.LogDebug("Tool calling is skipped because tools are disabled by managed configuration.");
             return [];
         }
 
         if (!isToolSelectionVisible)
         {
-            this.logger.LogInformation("Tool calling is skipped for component '{Component}' because tool selection is not visible.", component);
+            this.logger.LogDebug("Tool calling is skipped for component '{Component}' because tool selection is not visible.", component);
             return [];
         }
 
         var toolCallingAvailability = provider.GetToolCallingAvailability();
         if (!toolCallingAvailability.IsAvailable)
         {
-            this.logger.LogInformation("Tool calling is unavailable for provider '{Provider}' with model '{ModelId}': {Reason}", provider.InstanceName, provider.Model.Id, toolCallingAvailability.Message);
+            this.logger.LogDebug("Tool calling is unavailable for provider '{Provider}' with model '{ModelId}': {Reason}", provider.InstanceName, provider.Model.Id, toolCallingAvailability.Message);
             return [];
         }
 
         if (!modelCapabilities.Contains(Capability.FUNCTION_CALLING) ||
             (!modelCapabilities.Contains(Capability.CHAT_COMPLETION_API) && !modelCapabilities.Contains(Capability.RESPONSES_API)))
         {
-            this.logger.LogInformation("Tool calling is unavailable for provider '{Provider}' with model '{ModelId}' because the model lacks the required API or function-calling capability.", provider.InstanceName, provider.Model.Id);
+            this.logger.LogDebug("Tool calling is unavailable for provider '{Provider}' with model '{ModelId}' because the model lacks the required API or function-calling capability.", provider.InstanceName, provider.Model.Id);
             return [];
         }
 
         var selectedToolIdSet = ToolSelectionRules.NormalizeSelection(selectedToolIds);
-        this.logger.LogInformation("Resolving runnable tools for provider '{Provider}' with model '{ModelId}'. Selected tool IDs: [{ToolIds}].", provider.InstanceName, provider.Model.Id, string.Join(", ", selectedToolIdSet.OrderBy(x => x, StringComparer.Ordinal)));
+        this.logger.LogDebug("Resolving runnable tools for provider '{Provider}' with model '{ModelId}'. Selected tool IDs: [{ToolIds}].", provider.InstanceName, provider.Model.Id, string.Join(", ", selectedToolIdSet.OrderBy(x => x, StringComparer.Ordinal)));
 
         var definitions = this.GetDefinitionsForComponent(component).Where(x => selectedToolIdSet.Contains(x.Id)).ToList();
         var result = new List<(ToolDefinition, IToolImplementation)>(definitions.Count);
@@ -259,26 +259,26 @@ public sealed class ToolRegistry
         {
             if (!this.settingsManager.IsToolActive(definition.Id))
             {
-                this.logger.LogInformation("Skipping tool '{ToolId}' because it is disabled by managed configuration.", definition.Id);
+                this.logger.LogDebug("Skipping tool '{ToolId}' because it is disabled by managed configuration.", definition.Id);
                 continue;
             }
 
             if (!this.implementationsByKey.TryGetValue(definition.ImplementationKey, out var implementation))
             {
-                this.logger.LogInformation("Skipping tool '{ToolId}' because no implementation is registered.", definition.Id);
+                this.logger.LogWarning("Skipping tool '{ToolId}' because no implementation is registered.", definition.Id);
                 continue;
             }
 
             var configurationState = await this.toolSettingsService.GetConfigurationStateAsync(definition, implementation);
             if (!configurationState.IsConfigured)
             {
-                this.logger.LogInformation("Skipping tool '{ToolId}' because it is not configured.", definition.Id);
+                this.logger.LogDebug("Skipping tool '{ToolId}' because it is not configured.", definition.Id);
                 continue;
             }
 
             var resolution = this.settingsManager.GetMinimumProviderConfidenceResolutionForTool(definition.Id);
             var minimumToolConfidence = resolution.ConfidenceLevel;
-            this.logger.LogInformation("Tool '{ToolId}' uses minimum provider confidence '{ConfidenceLevel}' from {Source}.", definition.Id, minimumToolConfidence, resolution.Source);
+            this.logger.LogDebug("Tool '{ToolId}' uses minimum provider confidence '{ConfidenceLevel}' from {Source}.", definition.Id, minimumToolConfidence, resolution.Source);
 
             if (!ToolSelectionRules.IsProviderConfidenceAllowed(providerConfidence, minimumToolConfidence))
             {
@@ -290,7 +290,7 @@ public sealed class ToolRegistry
         }
 
         foreach (var selectedToolId in selectedToolIdSet.Where(selectedToolId => definitions.All(definition => !definition.Id.Equals(selectedToolId, StringComparison.Ordinal))))
-            this.logger.LogInformation("Skipping tool '{ToolId}' because it is not selected in this component or not available in this context.", selectedToolId);
+            this.logger.LogDebug("Skipping tool '{ToolId}' because it is not selected in this component or not available in this context.", selectedToolId);
 
         return result;
     }

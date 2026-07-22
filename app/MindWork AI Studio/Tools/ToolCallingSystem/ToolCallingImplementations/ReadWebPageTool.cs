@@ -15,6 +15,7 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
     private const int MAX_TIMEOUT_SECONDS = 60;
     private const int MAX_CONTENT_CHARACTERS = 50000;
     private const int MAX_TRACE_LENGTH = 12000;
+    private const int MAX_LOG_URL_LENGTH = 2000;
     private const string ALLOWED_PRIVATE_HOSTS_SETTING = "allowedPrivateHosts";
 
     public string ImplementationKey => ToolSelectionRules.READ_WEB_PAGE_TOOL_ID;
@@ -96,6 +97,14 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
         var maxContentCharacters = Math.Min(ToolSettingsValueParser.ReadOptionalPositiveInt(context.SettingsValues, "maxContentCharacters") ?? DEFAULT_MAX_CONTENT_CHARACTERS, MAX_CONTENT_CHARACTERS);
         if (!TryReadAllowedPrivateHostPatterns(context.SettingsValues.GetValueOrDefault(ALLOWED_PRIVATE_HOSTS_SETTING), out var allowedPrivateHosts, out var allowlistError))
             throw new InvalidOperationException(allowlistError);
+
+        logger.LogInformation(
+            "Starting web page retrieval. ToolCallId={ToolCallId}, Url={Url}, TimeoutSeconds={TimeoutSeconds}, MaxContentCharacters={MaxContentCharacters}",
+            context.ToolCallId,
+            FormatUrlForLog(url),
+            timeoutSeconds,
+            maxContentCharacters);
+
         RetrievedWebPage retrievedPage;
         try
         {
@@ -133,6 +142,18 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
             contentTruncated = true;
             warnings.Add($"The extracted page content was truncated from {originalContentCharacters} to {markdown.Length} characters.");
         }
+
+        logger.LogInformation(
+            "Completed web page retrieval. ToolCallId={ToolCallId}, RequestedUrl={RequestedUrl}, FinalUrl={FinalUrl}, WasRedirected={WasRedirected}, ContentType={ContentType}, OriginalContentCharacters={OriginalContentCharacters}, ReturnedContentCharacters={ReturnedContentCharacters}, ContentTruncated={ContentTruncated}, RequiredProviderConfidence={RequiredProviderConfidence}",
+            context.ToolCallId,
+            FormatUrlForLog(page.RequestedUrl),
+            FormatUrlForLog(page.FinalUrl),
+            !page.RequestedUrl.Equals(page.FinalUrl),
+            page.ContentType,
+            originalContentCharacters,
+            markdown.Length,
+            contentTruncated,
+            retrievedPage.RequiredProviderConfidence);
 
         return new ToolExecutionResult
         {
@@ -287,6 +308,29 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
             throw new ArgumentException($"Missing required argument '{propertyName}'.");
 
         return text;
+    }
+
+    private static string FormatUrlForLog(Uri url)
+    {
+        var builder = new UriBuilder(url)
+        {
+            UserName = string.Empty,
+            Password = string.Empty,
+            Fragment = string.Empty,
+            Query = string.Join("&", url.Query
+                .TrimStart('?')
+                .Split('&', StringSplitOptions.RemoveEmptyEntries)
+                .Select(parameter =>
+                {
+                    var separatorIndex = parameter.IndexOf('=');
+                    var name = separatorIndex >= 0 ? parameter[..separatorIndex] : parameter;
+                    return string.IsNullOrWhiteSpace(name) ? "*****" : $"{name}=*****";
+                })),
+        };
+        var formattedUrl = builder.Uri.AbsoluteUri;
+        return formattedUrl.Length <= MAX_LOG_URL_LENGTH
+            ? formattedUrl
+            : $"{formattedUrl[..MAX_LOG_URL_LENGTH]}...";
     }
 
     private readonly record struct AllowedPrivateHostPattern(string Host, bool IsWildcard)

@@ -11,6 +11,8 @@ public sealed class ToolExecutionContext
 {
     public required ToolDefinition Definition { get; init; }
 
+    public string ToolCallId { get; init; } = string.Empty;
+
     public required SettingsManager SettingsManager { get; init; }
 
     public required IReadOnlyDictionary<string, string> SettingsValues { get; init; }
