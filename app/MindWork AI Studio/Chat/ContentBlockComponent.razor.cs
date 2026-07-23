@@ -217,6 +217,7 @@ public partial class ContentBlockComponent : MSGComponentBase, IAsyncDisposable
                     hash.Add(invocation.Status);
                     hash.Add(invocation.StatusMessage);
                     hash.Add(invocation.Result);
+                    hash.Add(invocation.JsonResult is not null);
                     hash.Add(invocation.Arguments.Count);
                     foreach (var argument in invocation.Arguments)
                     {

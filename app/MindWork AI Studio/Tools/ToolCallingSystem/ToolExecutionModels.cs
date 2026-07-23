@@ -26,6 +26,8 @@ public sealed class ToolExecutionResult
 
     public JsonNode? JsonContent { get; init; }
 
+    public IReadOnlyList<Source> Sources { get; init; } = [];
+
     public ConfidenceLevel RequiredProviderConfidence { get; init; } = ConfidenceLevel.NONE;
 
     public string ToModelContent()
@@ -69,20 +71,9 @@ public sealed class ToolInvocationTrace
 
     [JsonIgnore]
     public string Result { get; set; } = string.Empty;
-}
 
-public sealed class ToolRuntimeStatus
-{
-    public bool IsRunning { get; set; }
-
-    public List<string> ToolNames { get; set; } = [];
-
-    public string Message => this.ToolNames.Count switch
-    {
-        0 => string.Empty,
-        1 => $"Using tool: {this.ToolNames[0]}",
-        _ => $"Using tools: {string.Join(", ", this.ToolNames)}",
-    };
+    [JsonIgnore]
+    public JsonNode? JsonResult { get; set; }
 }
 
 public sealed class ToolConfigurationState

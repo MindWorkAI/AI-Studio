@@ -10,11 +10,10 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ReadWebPageTool).Namespace, nameof(ReadWebPageTool));
 
-    private const int DEFAULT_TIMEOUT_SECONDS = 30;
+    private const int DEFAULT_TIMEOUT_SECONDS = 60;
     private const int DEFAULT_MAX_CONTENT_CHARACTERS = 30000;
-    private const int MAX_TIMEOUT_SECONDS = 60;
-    private const int MAX_CONTENT_CHARACTERS = 50000;
-    private const int MAX_TRACE_LENGTH = 12000;
+    private const int MAX_TIMEOUT_SECONDS = 240;
+    private const int MAX_CONTENT_CHARACTERS = 100000;
     private const int MAX_LOG_URL_LENGTH = 2000;
     private const string ALLOWED_PRIVATE_HOSTS_SETTING = "allowedPrivateHosts";
 
@@ -158,6 +157,9 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
         return new ToolExecutionResult
         {
             JsonContent = BuildModelContent(page, extractedPage, retrievedPage.RetrievedAtUtc, markdown, originalContentCharacters, contentTruncated, warnings),
+            Sources = string.IsNullOrWhiteSpace(markdown)
+                ? []
+                : [new Source(string.IsNullOrWhiteSpace(extractedPage.Title) ? page.FinalUrl.ToString() : extractedPage.Title, page.FinalUrl.ToString(), SourceOrigin.TOOL)],
             RequiredProviderConfidence = retrievedPage.RequiredProviderConfidence,
         };
     }
@@ -232,14 +234,6 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
         foreach (var value in values)
             array.Add(value);
         target[propertyName] = array;
-    }
-
-    public string FormatTraceResult(string rawResult)
-    {
-        if (rawResult.Length <= MAX_TRACE_LENGTH)
-            return rawResult;
-
-        return $"{rawResult[..MAX_TRACE_LENGTH]}...";
     }
 
     private async Task ReportPrivateHostProviderBlockAsync(Uri url, ConfidenceLevel providerConfidence)

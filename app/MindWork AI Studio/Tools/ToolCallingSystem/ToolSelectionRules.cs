@@ -8,6 +8,7 @@ namespace AIStudio.Tools.ToolCallingSystem;
 public static class ToolSelectionRules
 {
     public const int MAX_TOOL_CALLS = 15;
+    public const int MAX_TOOL_RESULT_CHARACTERS = 300_000;
     public const string WEB_SEARCH_TOOL_ID = "web_search";
     public const string READ_WEB_PAGE_TOOL_ID = "read_web_page";
 
@@ -22,6 +23,18 @@ public static class ToolSelectionRules
     };
 
     public static string GetMaxToolCallsFinalResponseInstruction() => $"The maximum of {MAX_TOOL_CALLS} tool calls has been reached. No more tools are available. Provide the best possible final answer to the user based on the tool results already available.";
+
+    public static string GetMaxToolResultCharactersFinalResponseInstruction() => $"The maximum total of {MAX_TOOL_RESULT_CHARACTERS} characters across tool call results has been exceeded. Do not make any more tool calls. Provide the best possible final answer to the user based on the tool results already available.";
+
+    public static string? GetToolCallsUnavailableInstruction(int toolCallCount, long toolResultCharacterCount)
+    {
+        if (toolResultCharacterCount > MAX_TOOL_RESULT_CHARACTERS)
+            return GetMaxToolResultCharactersFinalResponseInstruction();
+
+        return toolCallCount >= MAX_TOOL_CALLS
+            ? GetMaxToolCallsFinalResponseInstruction()
+            : null;
+    }
 
     public static string BuildToolPolicyPrompt(IEnumerable<ToolDefinition> definitions)
     {

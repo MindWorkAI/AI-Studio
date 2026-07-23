@@ -148,11 +148,6 @@
                                                         <MudText Typo="Typo.body2" Color="Color.Warning" Class="mt-3 mb-3">@invocation.StatusMessage</MudText>
                                                     }
 
-                                                    <MudText Typo="Typo.subtitle2">@T("Result")</MudText>
-                                                    <MudPaper Class="pa-3 mt-2 mb-3">
-                                                        <MudText Typo="Typo.body2" Style="white-space: pre-wrap;">@this.GetToolInvocationResult(invocation)</MudText>
-                                                    </MudPaper>
-
                                                     <MudText Typo="Typo.subtitle2">@T("Arguments")</MudText>
                                                     @if (invocation.Arguments.Count == 0)
                                                     {
@@ -169,6 +164,18 @@
                                                             }
                                                         </MudList>
                                                     }
+
+                                                    <MudText Typo="Typo.subtitle2" Class="mt-3">@T("Result")</MudText>
+                                                    <MudPaper Class="pa-3 mt-2 mb-3">
+                                                        @if (invocation.JsonResult is not null)
+                                                        {
+                                                            <JsonTreeView Value="@invocation.JsonResult" />
+                                                        }
+                                                        else
+                                                        {
+                                                            <MudText Typo="Typo.body2" Style="white-space: pre-wrap; overflow-wrap: anywhere;">@this.GetToolInvocationResult(invocation)</MudText>
+                                                        }
+                                                    </MudPaper>
                                                 }
                                             </MudPaper>
                                         }

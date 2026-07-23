@@ -213,10 +213,12 @@ public sealed class GlobalShortcutService : BackgroundService, IMessageBusReceiv
     private async Task<string> GetShortcutDescription(Shortcut shortcutId)
     {
         var language = await this.settingsManager.GetActiveLanguagePlugin();
+        string T(string fallbackEN) => I18N.I.GetText(language, fallbackEN, typeof(GlobalShortcutService).Namespace, nameof(GlobalShortcutService));
+
         return shortcutId switch
         {
-            Shortcut.VOICE_RECORDING_TOGGLE => I18N.I.GetText(language, "Toggle voice recording", typeof(GlobalShortcutService).Namespace, nameof(GlobalShortcutService)),
-            _ => I18N.I.GetText(language, "Global shortcut", typeof(GlobalShortcutService).Namespace, nameof(GlobalShortcutService)),
+            Shortcut.VOICE_RECORDING_TOGGLE => T("Toggle voice recording"),
+            _ => T("Global shortcut"),
         };
     }
 

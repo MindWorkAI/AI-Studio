@@ -1,0 +1,26 @@
+@using MudBlazor
+
+<MudTreeView T="JsonTreeNode"
+             Items="@this.items"
+             ReadOnly="true"
+             Hover="true"
+             Dense="true"
+             ExpandOnClick="true">
+    <ItemTemplate Context="item">
+        @if (item.Value is JsonTreeNode node)
+        {
+            <MudTreeViewItem T="JsonTreeNode"
+                             Icon="@node.Icon"
+                             Value="@item.Value"
+                             Expanded="@item.Expanded"
+                             CanExpand="@node.Expandable"
+                             Items="@item.Children">
+                <BodyContent>
+                    <MudText Typo="Typo.body2" Style="font-family: monospace; white-space: pre-wrap; overflow-wrap: anywhere;">
+                        @node.Text
+                    </MudText>
+                </BodyContent>
+            </MudTreeViewItem>
+        }
+    </ItemTemplate>
+</MudTreeView>

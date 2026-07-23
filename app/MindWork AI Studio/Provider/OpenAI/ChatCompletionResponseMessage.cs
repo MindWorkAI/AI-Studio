@@ -6,5 +6,7 @@ public sealed record ChatCompletionResponseMessage
 
     public string? Content { get; init; }
 
+    public string? ReasoningContent { get; init; }
+
     public IList<ChatCompletionToolCall>? ToolCalls { get; init; }
 }

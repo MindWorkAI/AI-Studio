@@ -335,16 +335,19 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
         // reasoning items emitted alongside function calls.
         var internalItems = new List<object>();
         var toolCallCount = 0;
+        var toolResultCharacterCount = 0L;
+        var toolSources = new List<Source>();
 
         while (true)
         {
-            var finalResponseRequired = toolCallCount >= ToolSelectionRules.MAX_TOOL_CALLS;
+            var finalResponseInstruction = ToolSelectionRules.GetToolCallsUnavailableInstruction(toolCallCount, toolResultCharacterCount);
+            var finalResponseRequired = finalResponseInstruction is not null;
             var requestInput = new List<object>(baseInput);
             if (finalResponseRequired && requestInput.FirstOrDefault() is TextMessage systemPrompt)
             {
                 requestInput[0] = systemPrompt with
                 {
-                    Content = $"{systemPrompt.Content}{Environment.NewLine}{Environment.NewLine}{ToolSelectionRules.GetMaxToolCallsFinalResponseInstruction()}",
+                    Content = $"{systemPrompt.Content}{Environment.NewLine}{Environment.NewLine}{finalResponseInstruction}",
                 };
             }
             requestInput.AddRange(internalItems);
@@ -365,15 +368,17 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
                 yield break;
             }
 
+            toolSources.MergeSources(response.GetSources());
+
             if (finalResponseRequired)
             {
                 await ResetToolRuntimeStatusAsync(currentAssistantContent);
 
                 var textOutput = response.GetTextOutput();
                 if (!string.IsNullOrWhiteSpace(textOutput))
-                    yield return new ContentStreamChunk(textOutput, []);
+                    yield return new ContentStreamChunk(textOutput, [..toolSources]);
                 else
-                    yield return new ContentStreamChunk("The model did not return a final answer after completing the available tool calls.", []);
+                    yield return new ContentStreamChunk("The model did not return a final answer after completing the available tool calls.", [..toolSources]);
 
                 yield break;
             }
@@ -385,9 +390,9 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
 
                 var textOutput = response.GetTextOutput();
                 if (!string.IsNullOrWhiteSpace(textOutput))
-                    yield return new ContentStreamChunk(textOutput, []);
+                    yield return new ContentStreamChunk(textOutput, [..toolSources]);
                 else if (toolCallCount > 0)
-                    yield return new ContentStreamChunk("The model completed the tool call but did not return a final answer.", []);
+                    yield return new ContentStreamChunk("The model completed the tool call but did not return a final answer.", [..toolSources]);
 
                 yield break;
             }
@@ -402,19 +407,19 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
 
                 foreach (var functionCall in functionCalls)
                 {
-                    if (toolCallCount >= ToolSelectionRules.MAX_TOOL_CALLS)
+                    var toolCallsUnavailableInstruction = ToolSelectionRules.GetToolCallsUnavailableInstruction(toolCallCount, toolResultCharacterCount);
+                    if (toolCallsUnavailableInstruction is not null)
                     {
-                        var finalResponseInstruction = ToolSelectionRules.GetMaxToolCallsFinalResponseInstruction();
                         internalItems.Add(new ResponsesFunctionCallOutputItem
                         {
                             CallId = functionCall.CallId,
-                            Output = finalResponseInstruction,
+                            Output = toolCallsUnavailableInstruction,
                         });
                         continue;
                     }
 
                     toolCallCount++;
-                    var (toolContent, trace, requiredProviderConfidence) = await toolExecutor.ExecuteAsync(
+                    var (toolContent, trace, requiredProviderConfidence, sources) = await toolExecutor.ExecuteAsync(
                         functionCall.CallId,
                         functionCall.Name,
                         functionCall.Arguments,
@@ -422,8 +427,10 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
                         providerConfidence,
                         toolCallCount,
                         token);
+                    toolResultCharacterCount += toolContent.Length;
 
                     chatThread.RequireProviderConfidence(requiredProviderConfidence);
+                    toolSources.MergeSources(sources);
                     currentAssistantContent?.ToolInvocations.Add(trace);
                     internalItems.Add(new ResponsesFunctionCallOutputItem
                     {

@@ -1034,13 +1034,16 @@ public abstract class BaseProvider : IProvider, ISecretId
 
                 var internalMessages = new List<IMessageBase>();
                 var toolCallCount = 0;
+                var toolResultCharacterCount = 0L;
+                var toolSources = new List<Source>();
                 while (true)
                 {
-                    var finalResponseRequired = toolCallCount >= ToolSelectionRules.MAX_TOOL_CALLS;
+                    var finalResponseInstruction = ToolSelectionRules.GetToolCallsUnavailableInstruction(toolCallCount, toolResultCharacterCount);
+                    var finalResponseRequired = finalResponseInstruction is not null;
                     var requestSystemPrompt = finalResponseRequired
                         ? systemPrompt with
                         {
-                            Content = $"{systemPrompt.Content}{Environment.NewLine}{Environment.NewLine}{ToolSelectionRules.GetMaxToolCallsFinalResponseInstruction()}",
+                            Content = $"{systemPrompt.Content}{Environment.NewLine}{Environment.NewLine}{finalResponseInstruction}",
                         }
                         : systemPrompt;
                     ChatCompletionAPIRequest requestDtoBase = await requestFactory(
@@ -1051,6 +1054,10 @@ public abstract class BaseProvider : IProvider, ISecretId
                     {
                         Messages = [..requestDtoBase.Messages, ..internalMessages],
                         Stream = false,
+                        ParallelToolCalls = requestDtoBase.Tools is not null &&
+                                            chatModel.Id.Contains("gpt-oss", StringComparison.InvariantCultureIgnoreCase)
+                            ? false
+                            : requestDtoBase.ParallelToolCalls,
                     };
                     var response = await this.ExecuteChatCompletionRequest(requestDto, requestPath, requestedSecret, headersAction, token);
                     var responseMessage = response?.Choices.FirstOrDefault()?.Message;
@@ -1065,9 +1072,9 @@ public abstract class BaseProvider : IProvider, ISecretId
                     {
                         await ResetToolRuntimeStatusAsync();
                         if (!string.IsNullOrWhiteSpace(responseMessage.Content))
-                            yield return new ContentStreamChunk(responseMessage.Content, []);
+                            yield return new ContentStreamChunk(responseMessage.Content, [..toolSources]);
                         else if (toolCallCount > 0)
-                            yield return new ContentStreamChunk("The model completed the tool call but did not return a final answer.", []);
+                            yield return new ContentStreamChunk("The model completed the tool call but did not return a final answer.", [..toolSources]);
 
                         yield break;
                     }
@@ -1076,9 +1083,9 @@ public abstract class BaseProvider : IProvider, ISecretId
                     {
                         await ResetToolRuntimeStatusAsync();
                         if (!string.IsNullOrWhiteSpace(responseMessage.Content))
-                            yield return new ContentStreamChunk(responseMessage.Content, []);
+                            yield return new ContentStreamChunk(responseMessage.Content, [..toolSources]);
                         else
-                            yield return new ContentStreamChunk("The model did not return a final answer after completing the available tool calls.", []);
+                            yield return new ContentStreamChunk("The model did not return a final answer after completing the available tool calls.", [..toolSources]);
 
                         yield break;
                     }
@@ -1091,24 +1098,25 @@ public abstract class BaseProvider : IProvider, ISecretId
                         internalMessages.Add(new AssistantToolCallMessage
                         {
                             Content = responseMessage.Content,
+                            ReasoningContent = responseMessage.ReasoningContent,
                             ToolCalls = toolCalls,
                         });
 
                         foreach (var toolCall in toolCalls)
                         {
-                            if (toolCallCount >= ToolSelectionRules.MAX_TOOL_CALLS)
+                            var toolCallsUnavailableInstruction = ToolSelectionRules.GetToolCallsUnavailableInstruction(toolCallCount, toolResultCharacterCount);
+                            if (toolCallsUnavailableInstruction is not null)
                             {
-                                var finalResponseInstruction = ToolSelectionRules.GetMaxToolCallsFinalResponseInstruction();
                                 internalMessages.Add(new ToolResultMessage
                                 {
-                                    Content = finalResponseInstruction,
+                                    Content = toolCallsUnavailableInstruction,
                                     ToolCallId = toolCall.Id,
                                 });
                                 continue;
                             }
 
                             toolCallCount++;
-                            var (toolContent, trace, requiredProviderConfidence) = await toolExecutor.ExecuteAsync(
+                            var (toolContent, trace, requiredProviderConfidence, sources) = await toolExecutor.ExecuteAsync(
                                 toolCall.Id,
                                 toolCall.Function.Name,
                                 toolCall.Function.Arguments,
@@ -1116,8 +1124,10 @@ public abstract class BaseProvider : IProvider, ISecretId
                                 this.Provider.GetConfidence(settingsManager).Level,
                                 toolCallCount,
                                 token);
+                            toolResultCharacterCount += toolContent.Length;
 
                             chatThread.RequireProviderConfidence(requiredProviderConfidence);
+                            toolSources.MergeSources(sources);
                             currentAssistantContent?.ToolInvocations.Add(trace);
                             internalMessages.Add(new ToolResultMessage
                             {

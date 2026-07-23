@@ -1,7 +1,7 @@
 namespace AIStudio.Tools;
 
 /// <summary>
-/// Represents the origin of a source, whether it was provided by the LLM or by the RAG process.
+/// Represents the origin of a source.
 /// </summary>
 public enum SourceOrigin
 {
@@ -14,4 +14,9 @@ public enum SourceOrigin
     /// The source was provided by the RAG process.
     /// </summary>
     RAG,
+
+    /// <summary>
+    /// The source was used by a locally executed tool.
+    /// </summary>
+    TOOL,
 }

@@ -9,7 +9,7 @@ namespace AIStudio.Tools.ToolCallingSystem;
 
 public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogger<ToolExecutor> logger)
 {
-    public async Task<(string Content, ToolInvocationTrace Trace, ConfidenceLevel RequiredProviderConfidence)> ExecuteAsync(
+    public async Task<(string Content, ToolInvocationTrace Trace, ConfidenceLevel RequiredProviderConfidence, IReadOnlyList<Source> Sources)> ExecuteAsync(
         string toolCallId,
         string toolName,
         string argumentsJson,
@@ -48,7 +48,7 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
                 StatusMessage = "Tool is not available in the current context.",
                 Arguments = formattedArguments,
                 Result = error,
-            }, ConfidenceLevel.NONE);
+            }, ConfidenceLevel.NONE, []);
         }
 
         var definition = runnableTool.Definition;
@@ -79,11 +79,11 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
                 WasExecuted = true,
                 Arguments = FormatArguments(document.RootElement,
                     implementation.SensitiveTraceArgumentNames),
-                Result =
-                    implementation.FormatTraceResult(result.ToModelContent()),
+                Result = result.TextContent ?? string.Empty,
+                JsonResult = result.JsonContent,
             };
 
-            return (resultModelContent, toolInvocationTrace, result.RequiredProviderConfidence);
+            return (resultModelContent, toolInvocationTrace, result.RequiredProviderConfidence, result.Sources);
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested)
         {
@@ -107,7 +107,7 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
                 Result = exception.Message,
             };
 
-            return (exception.Message, toolInvocationTrace, ConfidenceLevel.NONE);
+            return (exception.Message, toolInvocationTrace, ConfidenceLevel.NONE, []);
         }
         catch (Exception exception)
         {
@@ -127,7 +127,7 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
                 Result = error,
             };
 
-            return (error, toolInvocationTrace, ConfidenceLevel.NONE);
+            return (error, toolInvocationTrace, ConfidenceLevel.NONE, []);
         }
     }
 

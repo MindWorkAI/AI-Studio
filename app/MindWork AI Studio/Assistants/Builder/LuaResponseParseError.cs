@@ -17,7 +17,7 @@ public enum LuaResponseParseError
 
 public static class LuaResponseParseErrorExtension
 {
-    private static string TB(string fallbackEN) => Tools.PluginSystem.I18N.I.T(fallbackEN, typeof(LuaResponseParseErrorExtension).Namespace, nameof(LuaResponseParseErrorExtension));
+    private static string TB(string fallbackEN) => Tools.PluginSystem.I18N.I.T(fallbackEN, typeof(LuaResponseParseError).Namespace, nameof(LuaResponseParseError));
 
     public static string GetMessage(this LuaResponseParseError parseError, string technicalDetails) => parseError switch
     {

@@ -1084,8 +1084,8 @@ public static class WorkspaceBehaviour
                 {
                     x => x.Message, (chat.WorkspaceId == Guid.Empty) switch
                     {
-                        true => TB($"Are you sure you want to delete the temporary chat '{chat.Name}'?"),
-                        false => TB($"Are you sure you want to delete the chat '{chat.Name}' in the workspace '{workspaceName}'?"),
+                        true => string.Format(TB("Are you sure you want to delete the temporary chat '{0}'?"), chat.Name),
+                        false => string.Format(TB("Are you sure you want to delete the chat '{0}' in the workspace '{1}'?"), chat.Name, workspaceName),
                     }
                 },
             };

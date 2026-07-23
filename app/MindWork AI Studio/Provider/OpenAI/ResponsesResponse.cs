@@ -35,19 +35,35 @@ public sealed record ResponsesResponse
         return string.Concat(this.Output
             .Where(x => ReadString(x, "type").Equals("message", StringComparison.Ordinal))
             .SelectMany(ReadContentItems)
-            .Where(x => ReadString(x, "type").Equals("output_text", StringComparison.Ordinal))
-            .Select(x => ReadString(x, "text")));
+            .Select(x => ReadString(x, "type") switch
+            {
+                "output_text" => ReadString(x, "text"),
+                "refusal" => ReadString(x, "refusal"),
+                _ => string.Empty,
+            }));
     }
 
+    public IReadOnlyList<Source> GetSources() => this.Output
+        .Where(x => ReadString(x, "type").Equals("message", StringComparison.Ordinal))
+        .SelectMany(ReadContentItems)
+        .SelectMany(x => ReadArrayItems(x, "annotations"))
+        .Where(x => ReadString(x, "type").Equals("url_citation", StringComparison.Ordinal))
+        .Select(x => new Source(ReadString(x, "title"), ReadString(x, "url"), SourceOrigin.LLM))
+        .Where(x => !string.IsNullOrWhiteSpace(x.Title) && !string.IsNullOrWhiteSpace(x.URL))
+        .ToList();
+
     private static IEnumerable<JsonElement> ReadContentItems(JsonElement outputItem)
+        => ReadArrayItems(outputItem, "content");
+
+    private static IEnumerable<JsonElement> ReadArrayItems(JsonElement item, string propertyName)
     {
-        if (outputItem.ValueKind is not JsonValueKind.Object ||
-            !outputItem.TryGetProperty("content", out var content) ||
-            content.ValueKind is not JsonValueKind.Array)
+        if (item.ValueKind is not JsonValueKind.Object ||
+            !item.TryGetProperty(propertyName, out var array) ||
+            array.ValueKind is not JsonValueKind.Array)
             yield break;
 
-        foreach (var contentItem in content.EnumerateArray())
-            yield return contentItem;
+        foreach (var arrayItem in array.EnumerateArray())
+            yield return arrayItem;
     }
 
     private static string ReadString(JsonElement item, string propertyName)

@@ -211,14 +211,16 @@ Page loading and readable Markdown extraction are shared with `read_web_page` th
 
 The `web_search` result separates each hit into `search_metadata` and `page`. Top-level counters report how many ranked candidates were considered, how many unique retrievals started, how many final pages were returned, and how many candidates were omitted. Search-result URLs and final redirect URLs are deduplicated separately so metadata from merged candidates is retained with the best rank.
 
+Every successfully retrieved page with readable content is also returned as a structured tool source. The source uses the final URL after redirects and prefers the extracted page title, followed by the search-result title and URL as fallbacks. The provider collects these sources across local tool calls and attaches them to the final response under the separate “Sources used by tools” heading. Failed, blocked, empty, and duplicate retrievals do not add sources.
+
 Retrieved Markdown shares a configurable total character budget. Every successful result first receives its configured minimum allocation; the remaining budget is then assigned in ranking order. Short pages leave their unused allocation available to later results. Truncated pages use the shared truncation marker and report `partial` status together with original and returned character counts.
 
 The Web Search settings use these defaults and hard maximums:
 
-- `maxTotalContentCharacters`: 100,000 total returned characters
-- `minContentCharactersPerResult`: 3,000 reserved characters per successful result
-- `pageTimeoutSeconds`: 30 seconds per page
-- `retrievalTimeoutSeconds`: 90 seconds for all page retrievals
+- `maxTotalContentCharacters`: 100,000 total returned characters by default, with a hard maximum of 200,000
+- `minContentCharactersPerResult`: 2,000 reserved characters per successful result by default, with a hard maximum of 10,000
+- `pageTimeoutSeconds`: 30 seconds per page by default, with a hard maximum of 60
+- `retrievalTimeoutSeconds`: 60 seconds for all page retrievals by default, with a hard maximum of 120
 
 All values must be positive. The total budget must be large enough to reserve the configured minimum for the hard limit of 20 results. The existing `timeoutSeconds` setting continues to apply only to the SearXNG request.
 

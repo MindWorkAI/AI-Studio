@@ -14,19 +14,25 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
     private readonly ILogger<SearXNGWebSearchTool> logger;
 
     private const int DEFAULT_MAX_RESULTS = 5;
-    private const int DEFAULT_TIMEOUT_SECONDS = 20;
     private const int MAX_RESULTS = 20;
+    
     private const int MAX_PAGE = 20;
-    private const int MAX_TIMEOUT_SECONDS = 60;
-    private const int MAX_TRACE_LENGTH = 4000;
-    private const int DEFAULT_MAX_TOTAL_CONTENT_CHARACTERS = 100000;
-    private const int DEFAULT_MIN_CONTENT_CHARACTERS_PER_RESULT = 3000;
+    
+    private const int DEFAULT_TIMEOUT_SECONDS = 30;
+    private const int MAX_TIMEOUT_SECONDS = 240;
+    
     private const int DEFAULT_PAGE_TIMEOUT_SECONDS = 30;
-    private const int DEFAULT_RETRIEVAL_TIMEOUT_SECONDS = 90;
-    private const int MAX_TOTAL_CONTENT_CHARACTERS = 100000;
-    private const int MAX_MIN_CONTENT_CHARACTERS_PER_RESULT = 3000;
-    private const int MAX_PAGE_TIMEOUT_SECONDS = 30;
-    private const int MAX_RETRIEVAL_TIMEOUT_SECONDS = 90;
+    private const int MAX_PAGE_TIMEOUT_SECONDS = 60;
+    
+    private const int DEFAULT_RETRIEVAL_TIMEOUT_SECONDS = 60;
+    private const int MAX_RETRIEVAL_TIMEOUT_SECONDS = 120;
+    
+    private const int DEFAULT_MAX_TOTAL_CONTENT_CHARACTERS = 100000;
+    private const int MAX_TOTAL_CONTENT_CHARACTERS = 200000;
+    
+    private const int DEFAULT_MIN_CONTENT_CHARACTERS_PER_RESULT = 2000;
+    private const int MAX_MIN_CONTENT_CHARACTERS_PER_RESULT = 10000;
+    
     private const int MAX_LOG_QUERY_LENGTH = 1000;
 
     public SearXNGWebSearchTool(WebPageRetrievalService webPageRetrievalService, ILogger<SearXNGWebSearchTool> logger)
@@ -268,8 +274,17 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
             token);
 
         var resultArray = new JsonArray();
+        var sources = new List<Source>();
         foreach (var result in retrievalResult.Results)
+        {
             resultArray.Add(BuildResultJson(result));
+            var finalUrl = result.RetrievedPage.Page.FinalUrl.ToString();
+            var title = SearXNGSearchClient.FirstNonEmpty(
+                result.RetrievedPage.ExtractedPage.Title,
+                result.Candidate.Title,
+                finalUrl);
+            sources.Add(new Source(title, finalUrl, SourceOrigin.TOOL));
+        }
 
         var resultObject = new JsonObject
         {
@@ -297,16 +312,9 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
 
         return new ToolExecutionResult
         {
-            JsonContent = resultObject
+            JsonContent = resultObject,
+            Sources = sources,
         };
-    }
-
-    public string FormatTraceResult(string rawResult)
-    {
-        if (rawResult.Length <= MAX_TRACE_LENGTH)
-            return rawResult;
-
-        return $"{rawResult[..MAX_TRACE_LENGTH]}...";
     }
 
     private static JsonObject BuildResultJson(WebSearchPageResult result)
@@ -317,7 +325,6 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
         var searchMetadata = new JsonObject
         {
             ["rank"] = result.Candidate.Rank,
-            ["requested_url"] = page.RequestedUrl.ToString(),
             ["final_url"] = page.FinalUrl.ToString(),
             ["engines"] = BuildJsonArray(result.Candidate.Engines),
             ["published_date"] = result.Candidate.PublishedDate,
@@ -333,6 +340,7 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
 
         return new JsonObject
         {
+            ["requested_url"] = page.RequestedUrl.ToString(),
             ["search_metadata"] = searchMetadata,
             ["page"] = pageContent,
         };

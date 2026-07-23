@@ -3619,7 +3619,7 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T3728248397
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T3730473128"] = "Werkzeugeinstellungen"
 
 -- This tool has been disabled by your organization.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T3794167684"] = "Dieses Tool wurde von Ihrer Organisation deaktiviert."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T3794167684"] = "Dieses Werkzeug wurde von Ihrer Organisation deaktiviert."
 
 -- Status
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T6222351"] = "Status"
@@ -3739,7 +3739,7 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T3119156561"] = "Erforderl
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T3448155331"] = "Schließen"
 
 -- This tool has been disabled by your organization.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T3794167684"] = "Dieses Tool wurde von Ihrer Organisation deaktiviert."
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T3794167684"] = "Dieses Werkzeug wurde von Ihrer Organisation deaktiviert."
 
 -- No tools are available in this context.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::TOOLSELECTION::T3904490680"] = "Keine Werkzeuge sind in diesem Kontext verfügbar."
@@ -9099,8 +9099,14 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T9397
 -- The global shortcut could not be registered. The previous shortcut remains active.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::GLOBALSHORTCUTSERVICE::T2266307101"] = "Die globale Tastenkombination konnte nicht registriert werden. Die vorherige Tastenkombination bleibt aktiv."
 
+-- Global shortcut
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::GLOBALSHORTCUTSERVICE::T2637055764"] = "Globale Tastenkombination"
+
 -- The global shortcut change was cancelled. The previous shortcut remains active.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::GLOBALSHORTCUTSERVICE::T3299913860"] = "Die Änderung der globalen Tastenkombination wurde abgebrochen. Die vorherige Tastenkombination bleibt aktiv."
+
+-- Toggle voice recording
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::GLOBALSHORTCUTSERVICE::T40517664"] = "Sprachaufnahme umschalten"
 
 -- The configured transcription provider could not be created.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T1235984176"] = "Der konfigurierte Transkriptionsanbieter konnte nicht erstellt werden."
@@ -9219,11 +9225,23 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEEXTENSIONS::T4174900468"] = "Von den Dat
 -- Sources provided by the AI
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEEXTENSIONS::T4261248356"] = "Von der KI bereitgestellte Quellen"
 
+-- Sources used by tools
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEEXTENSIONS::T535360212"] = "Quellen, die von Werkzeugen verwendet werden"
+
 -- Tool
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::ITOOLIMPLEMENTATION::T3517012711"] = "Werkzeug"
 
 -- Tool description
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::ITOOLIMPLEMENTATION::T4056470505"] = "Werkzeugbeschreibung"
+
+-- Please select an LLM provider.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGAVAILABILITYEXTENSIONS::T1110311702"] = "Bitte wählen Sie einen LLM-Anbieter aus."
+
+-- The selected model does not support tool calling.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGAVAILABILITYEXTENSIONS::T1960397623"] = "Das ausgewählte Modell unterstützt keine Werkzeug-Nutzung."
+
+-- Tool calling for this provider is not implemented yet.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGAVAILABILITYEXTENSIONS::T3776963202"] = "Werkzeug-Aufruf für diesen Anbieter ist noch nicht implementiert."
 
 -- (Optional) Host allowlist for private or VPN web pages. For security reasons, private or VPN web pages aren't allowed to be read by default. Separate host patterns with commas, such as example.de, *.example.de. Allowed private hosts require a high-confidence provider. For allowed internal hosts, AI Studio also tries the operating system's default sign-in automatically when the server responds with integrated authentication.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T1410249500"] = "(Optional) Host-Whitelist für private oder VPN-Webseiten. Aus Sicherheitsgründen dürfen private oder VPN-Webseiten standardmäßig nicht gelesen werden. Trennen Sie Host-Muster durch Kommas, z. B. example.de, *.example.de. Erlaubte private Hosts erfordern einen Anbieter mit hoher Zuverlässigkeit. Für erlaubte interne Hosts versucht AI Studio außerdem automatisch die Standard-Anmeldung des Betriebssystems, wenn der Server mit integrierter Authentifizierung antwortet."
@@ -9359,6 +9377,12 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS:
 
 -- SearXNG URL
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T993547568"] = "SearXNG-URL"
+
+-- Using tools: {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLRUNTIMESTATUS::T2834986024"] = "Verwendung von Tools: {0}"
+
+-- Using tool: {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLRUNTIMESTATUS::T4185351801"] = "Verwendetes Tool: {0}"
 
 -- Pandoc Installation
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::USERFILE::T185447014"] = "Pandoc-Installation"
@@ -9501,11 +9525,17 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::PROVIDERVALIDATION::T497939286"] =
 -- Please select a model.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::PROVIDERVALIDATION::T818893091"] = "Bitte wählen Sie ein Modell aus."
 
+-- Are you sure you want to delete the chat '{0}' in the workspace '{1}'?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::WORKSPACEBEHAVIOUR::T1016188706"] = "Möchtest du den Chat '{0}' im Arbeitsbereich '{1}' wirklich löschen?"
+
 -- Unnamed workspace
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::WORKSPACEBEHAVIOUR::T1307384014"] = "Unbenannter Arbeitsbereich"
 
 -- Delete Chat
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::WORKSPACEBEHAVIOUR::T2244038752"] = "Chat löschen"
+
+-- Are you sure you want to delete the temporary chat '{0}'?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::WORKSPACEBEHAVIOUR::T3043761007"] = "Möchtest du den temporären Chat '{0}' wirklich löschen?"
 
 -- Unnamed chat
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::WORKSPACEBEHAVIOUR::T3310482275"] = "Unbenannter Chat"

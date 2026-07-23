@@ -9099,8 +9099,14 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T9397
 -- The global shortcut could not be registered. The previous shortcut remains active.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::GLOBALSHORTCUTSERVICE::T2266307101"] = "The global shortcut could not be registered. The previous shortcut remains active."
 
+-- Global shortcut
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::GLOBALSHORTCUTSERVICE::T2637055764"] = "Global shortcut"
+
 -- The global shortcut change was cancelled. The previous shortcut remains active.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::GLOBALSHORTCUTSERVICE::T3299913860"] = "The global shortcut change was cancelled. The previous shortcut remains active."
+
+-- Toggle voice recording
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::GLOBALSHORTCUTSERVICE::T40517664"] = "Toggle voice recording"
 
 -- The configured transcription provider could not be created.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T1235984176"] = "The configured transcription provider could not be created."
@@ -9219,11 +9225,23 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEEXTENSIONS::T4174900468"] = "Sources pro
 -- Sources provided by the AI
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEEXTENSIONS::T4261248356"] = "Sources provided by the AI"
 
+-- Sources used by tools
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEEXTENSIONS::T535360212"] = "Sources used by tools"
+
 -- Tool
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::ITOOLIMPLEMENTATION::T3517012711"] = "Tool"
 
 -- Tool description
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::ITOOLIMPLEMENTATION::T4056470505"] = "Tool description"
+
+-- Please select an LLM provider.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGAVAILABILITYEXTENSIONS::T1110311702"] = "Please select an LLM provider."
+
+-- The selected model does not support tool calling.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGAVAILABILITYEXTENSIONS::T1960397623"] = "The selected model does not support tool calling."
+
+-- Tool calling for this provider is not implemented yet.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGAVAILABILITYEXTENSIONS::T3776963202"] = "Tool calling for this provider is not implemented yet."
 
 -- (Optional) Host allowlist for private or VPN web pages. For security reasons, private or VPN web pages aren't allowed to be read by default. Separate host patterns with commas, such as example.de, *.example.de. Allowed private hosts require a high-confidence provider. For allowed internal hosts, AI Studio also tries the operating system's default sign-in automatically when the server responds with integrated authentication.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T1410249500"] = "(Optional) Host allowlist for private or VPN web pages. For security reasons, private or VPN web pages aren't allowed to be read by default. Separate host patterns with commas, such as example.de, *.example.de. Allowed private hosts require a high-confidence provider. For allowed internal hosts, AI Studio also tries the operating system's default sign-in automatically when the server responds with integrated authentication."
@@ -9359,6 +9377,12 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS:
 
 -- SearXNG URL
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T993547568"] = "SearXNG URL"
+
+-- Using tools: {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLRUNTIMESTATUS::T2834986024"] = "Using tools: {0}"
+
+-- Using tool: {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLRUNTIMESTATUS::T4185351801"] = "Using tool: {0}"
 
 -- Pandoc Installation
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::USERFILE::T185447014"] = "Pandoc Installation"
@@ -9501,11 +9525,17 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::PROVIDERVALIDATION::T497939286"] =
 -- Please select a model.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::PROVIDERVALIDATION::T818893091"] = "Please select a model."
 
+-- Are you sure you want to delete the chat '{0}' in the workspace '{1}'?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::WORKSPACEBEHAVIOUR::T1016188706"] = "Are you sure you want to delete the chat '{0}' in the workspace '{1}'?"
+
 -- Unnamed workspace
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::WORKSPACEBEHAVIOUR::T1307384014"] = "Unnamed workspace"
 
 -- Delete Chat
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::WORKSPACEBEHAVIOUR::T2244038752"] = "Delete Chat"
+
+-- Are you sure you want to delete the temporary chat '{0}'?
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::WORKSPACEBEHAVIOUR::T3043761007"] = "Are you sure you want to delete the temporary chat '{0}'?"
 
 -- Unnamed chat
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::WORKSPACEBEHAVIOUR::T3310482275"] = "Unnamed chat"

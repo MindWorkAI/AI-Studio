@@ -266,6 +266,7 @@ public sealed class ContentText : IContent
             StatusMessage = x.StatusMessage,
             Arguments = new Dictionary<string, string>(x.Arguments, StringComparer.Ordinal),
             Result = x.Result,
+            JsonResult = x.JsonResult?.DeepClone(),
         })],
     };
 
