@@ -50,7 +50,6 @@ public sealed class ProviderHuggingFace : BaseProvider
 
                                    Stream = true,
                                    Tools = tools,
-                                   ParallelToolCalls = tools is null ? null : true,
                                    AdditionalApiParameters = apiParameters
                                };
                            },

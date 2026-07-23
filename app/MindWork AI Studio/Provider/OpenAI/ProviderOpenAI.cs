@@ -157,7 +157,6 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
                                        Messages = [systemPrompt, ..messages],
                                        Stream = true,
                                        Tools = tools,
-                                       ParallelToolCalls = tools is null ? null : true,
                                        AdditionalApiParameters = apiParameters,
                                    };
                                },
@@ -235,7 +234,6 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
                                toolExecutor,
                                currentAssistantContent,
                                requestedSecret,
-                               providerConfidence,
                                token))
                 yield return content;
 
@@ -318,7 +316,6 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
         ToolExecutor toolExecutor,
         ContentText? currentAssistantContent,
         RequestedSecret requestedSecret,
-        ConfidenceLevel providerConfidence,
         [EnumeratorCancellation] CancellationToken token)
     {
         var localProviderTools = runnableTools
@@ -424,7 +421,7 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
                         functionCall.Name,
                         functionCall.Arguments,
                         runnableTools,
-                        providerConfidence,
+                        this,
                         toolCallCount,
                         token);
                     toolResultCharacterCount += toolContent.Length;

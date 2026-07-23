@@ -17,8 +17,8 @@ public static class ToolSelectionRules
 
     public static ConfidenceLevel GetDefaultMinimumProviderConfidence(string toolId) => toolId switch
     {
-        WEB_SEARCH_TOOL_ID => ConfidenceLevel.MEDIUM,
-        READ_WEB_PAGE_TOOL_ID => ConfidenceLevel.MEDIUM,
+        WEB_SEARCH_TOOL_ID => ConfidenceLevel.VERY_LOW,
+        READ_WEB_PAGE_TOOL_ID => ConfidenceLevel.VERY_LOW,
         _ => ConfidenceLevel.NONE,
     };
 

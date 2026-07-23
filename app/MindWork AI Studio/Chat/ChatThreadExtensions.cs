@@ -35,7 +35,14 @@ public static class ChatThreadExtensions
 
             _ => ConfidenceLevel.UNKNOWN,
         };
-        if (providerConfidence < chatThread.RequiredProviderConfidence)
+        var isTrustedByConfiguration = provider switch
+        {
+            IProvider p => p.IsTrustedByConfiguration(settingsManager),
+            AIStudio.Settings.Provider p => p.IsTrustedByConfiguration(settingsManager),
+
+            _ => false,
+        };
+        if (providerConfidence < chatThread.RequiredProviderConfidence && !isTrustedByConfiguration)
             return false;
 
         // The chat thread is available, but the data security is not specified.

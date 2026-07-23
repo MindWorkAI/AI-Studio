@@ -39,7 +39,7 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
     {
         "timeoutSeconds" => TB("(Optional) HTTP timeout for loading a web page in seconds."),
         "maxContentCharacters" => TB("(Optional) Global truncation limit for extracted characters returned to the model."),
-        ALLOWED_PRIVATE_HOSTS_SETTING => TB("(Optional) Host allowlist for private or VPN web pages. For security reasons, private or VPN web pages aren't allowed to be read by default. Separate host patterns with commas, such as example.de, *.example.de. Allowed private hosts require a high-confidence provider. For allowed internal hosts, AI Studio also tries the operating system's default sign-in automatically when the server responds with integrated authentication."),
+        ALLOWED_PRIVATE_HOSTS_SETTING => TB("(Optional) Host allowlist for private or VPN web pages. For security reasons, private or VPN web pages aren't allowed to be read by default. Separate host patterns with commas, such as example.de, *.example.de. Allowed private hosts require a High-confidence provider or a provider trusted by your organization's configuration. For allowed internal hosts, AI Studio also tries the operating system's default sign-in automatically when the server responds with integrated authentication."),
         _ => TB(fieldDefinition.Description),
     };
 
@@ -113,6 +113,7 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
                 {
                     TimeoutSeconds = timeoutSeconds,
                     ProviderConfidence = context.ProviderConfidence,
+                    ProviderIsTrustedByConfiguration = context.ProviderIsTrustedByConfiguration,
                     UseOsSso = true,
                     IsPrivateHostAllowed = host => IsAllowedPrivateHost(host, allowedPrivateHosts),
                     OnPrivateHostProviderBlockAsync = this.ReportPrivateHostProviderBlockAsync,
@@ -239,13 +240,13 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
     private async Task ReportPrivateHostProviderBlockAsync(Uri url, ConfidenceLevel providerConfidence)
     {
         logger.LogWarning(
-            "Blocked read_web_page access to allowed private host '{Host}' because provider confidence '{ProviderConfidence}' is below HIGH.",
+            "Blocked read_web_page access to allowed private host '{Host}' because provider confidence '{ProviderConfidence}' is below HIGH and the provider is not trusted by configuration.",
             url.Host,
             providerConfidence);
 
         await MessageBus.INSTANCE.SendError(new DataErrorMessage(
             Icons.Material.Filled.Security,
-            TB("The web page was not loaded because private or VPN web pages require a High-confidence provider.")));
+            TB("The web page was not loaded because private or VPN web pages require a High-confidence provider or a provider trusted by your organization's configuration.")));
     }
 
     private static bool IsAllowedPrivateHost(string host, IReadOnlyList<AllowedPrivateHostPattern> allowedPrivateHosts)

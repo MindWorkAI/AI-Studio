@@ -52,7 +52,6 @@ public sealed class ProviderMistral() : BaseProvider(LLMProviders.MISTRAL, new U
                                    // Right now, we only support streaming completions:
                                    Stream = true,
                                    Tools = tools,
-                                   ParallelToolCalls = tools is null ? null : true,
                                    AdditionalApiParameters = apiParameters
                                };
                            },

@@ -368,10 +368,10 @@ CONFIG["SETTINGS"] = {}
 -- Configure the minimum provider confidence level required for individual tools.
 -- Tool IDs include: web_search, read_web_page
 -- Allowed values are: NONE, UNTRUSTED, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
--- Defaults: web_search = MEDIUM, read_web_page = MEDIUM, but higher confidence is recommended
+-- Defaults: web_search = VERY_LOW, read_web_page = VERY_LOW
 -- CONFIG["SETTINGS"]["DataTools.MinimumProviderConfidenceByToolId"] = {
---     ["web_search"] = "MEDIUM",
---     ["read_web_page"] = "MEDIUM"
+--     ["web_search"] = "VERY_LOW",
+--     ["read_web_page"] = "VERY_LOW"
 -- }
 
 -- Configure the Web Search tool. All values are strings.
@@ -489,7 +489,8 @@ CONFIG["SETTINGS"] = {}
 -- Configure provider instances trusted by your organization for data-source security checks.
 -- These IDs may refer to LLM providers, embedding providers, or transcription providers
 -- defined in this configuration. Trusted providers are treated like self-hosted providers
--- only for data-source security checks and related local data warnings.
+-- only for data-source security checks and related local data warnings. Trusted LLM providers
+-- can also use read_web_page for explicitly allowed private or VPN hosts.
 -- CONFIG["SETTINGS"]["DataSourceSecuritySettings.TrustedProviderIds"] = {
 --     "00000000-0000-0000-0000-000000000000",
 --     "00000000-0000-0000-0000-000000000001",

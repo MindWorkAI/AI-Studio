@@ -46,7 +46,6 @@ public class ProviderFireworks() : BaseProvider(LLMProviders.FIREWORKS, new Uri(
                                    // Right now, we only support streaming completions:
                                    Stream = true,
                                    Tools = tools,
-                                   ParallelToolCalls = tools is null ? null : true,
                                    AdditionalApiParameters = apiParameters
                                };
                            },

@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Text.Json;
 
 using AIStudio.Provider;
+using AIStudio.Settings;
 
 using Microsoft.Extensions.DependencyInjection;
 
@@ -14,7 +15,7 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
         string toolName,
         string argumentsJson,
         IReadOnlyList<(ToolDefinition Definition, IToolImplementation Implementation)> runnableTools,
-        ConfidenceLevel providerConfidence,
+        IProvider provider,
         int order,
         CancellationToken token = default)
     {
@@ -57,13 +58,15 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
         {
             using var document = JsonDocument.Parse(string.IsNullOrWhiteSpace(argumentsJson) ? "{}" : argumentsJson);
             var settingsValues = await toolSettingsService.GetSettingsAsync(definition);
+            var settingsManager = Program.SERVICE_PROVIDER.GetRequiredService<SettingsManager>();
             var result = await implementation.ExecuteAsync(document.RootElement, new ToolExecutionContext
             {
                 Definition = definition,
                 ToolCallId = toolCallId,
-                SettingsManager = Program.SERVICE_PROVIDER.GetRequiredService<Settings.SettingsManager>(),
+                SettingsManager = settingsManager,
                 SettingsValues = settingsValues,
-                ProviderConfidence = providerConfidence,
+                ProviderConfidence = provider.Provider.GetConfidence(settingsManager).Level,
+                ProviderIsTrustedByConfiguration = provider.IsTrustedByConfiguration(settingsManager),
             }, token);
             logger.LogInformation("Completed tool execution. ToolName={ToolName}, ToolCallId={ToolCallId}, DurationMs={DurationMs}, Status={Status}", toolName, toolCallId, stopwatch.ElapsedMilliseconds, ToolInvocationTraceStatus.SUCCESS);
 

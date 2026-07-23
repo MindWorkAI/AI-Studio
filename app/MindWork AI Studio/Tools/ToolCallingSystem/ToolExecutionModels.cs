@@ -18,6 +18,8 @@ public sealed class ToolExecutionContext
     public required IReadOnlyDictionary<string, string> SettingsValues { get; init; }
 
     public ConfidenceLevel ProviderConfidence { get; init; } = ConfidenceLevel.UNKNOWN;
+
+    public bool ProviderIsTrustedByConfiguration { get; init; }
 }
 
 public sealed class ToolExecutionResult

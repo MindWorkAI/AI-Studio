@@ -1,12 +1,16 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
 namespace AIStudio.Provider.OpenAI;
 
 /// <summary>
 /// The delta text of a choice.
 /// </summary>
-/// <param name="Content">The content of the delta text.</param>
-public record ChatCompletionDelta(string Content)
+public sealed record ChatCompletionDelta
 {
-    public ChatCompletionDelta() : this(string.Empty)
-    {
-    }
+    [JsonPropertyName("content")]
+    public JsonElement? RawContent { get; init; }
+
+    [JsonIgnore]
+    public string Content => ChatCompletionContent.GetText(this.RawContent) ?? string.Empty;
 }

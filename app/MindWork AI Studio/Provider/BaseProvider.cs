@@ -982,7 +982,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             yield break;
 
         // Parse the API parameters:
-        var apiParameters = this.ParseAdditionalApiParameters();
+        var apiParameters = this.ParseAdditionalApiParameters("parallel_tool_calls");
 
         var toolRegistry = Program.SERVICE_PROVIDER.GetService<ToolRegistry>();
         var toolExecutor = Program.SERVICE_PROVIDER.GetService<ToolExecutor>();
@@ -1054,10 +1054,7 @@ public abstract class BaseProvider : IProvider, ISecretId
                     {
                         Messages = [..requestDtoBase.Messages, ..internalMessages],
                         Stream = false,
-                        ParallelToolCalls = requestDtoBase.Tools is not null &&
-                                            chatModel.Id.Contains("gpt-oss", StringComparison.InvariantCultureIgnoreCase)
-                            ? false
-                            : requestDtoBase.ParallelToolCalls,
+                        ParallelToolCalls = requestDtoBase.Tools is null ? null : false,
                     };
                     var response = await this.ExecuteChatCompletionRequest(requestDto, requestPath, requestedSecret, headersAction, token);
                     var responseMessage = response?.Choices.FirstOrDefault()?.Message;
@@ -1097,7 +1094,7 @@ public abstract class BaseProvider : IProvider, ISecretId
 
                         internalMessages.Add(new AssistantToolCallMessage
                         {
-                            Content = responseMessage.Content,
+                            Content = responseMessage.RawContent,
                             ReasoningContent = responseMessage.ReasoningContent,
                             ToolCalls = toolCalls,
                         });
@@ -1121,7 +1118,7 @@ public abstract class BaseProvider : IProvider, ISecretId
                                 toolCall.Function.Name,
                                 toolCall.Function.Arguments,
                                 runnableTools,
-                                this.Provider.GetConfidence(settingsManager).Level,
+                                this,
                                 toolCallCount,
                                 token);
                             toolResultCharacterCount += toolContent.Length;

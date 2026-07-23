@@ -53,7 +53,6 @@ public sealed class ProviderPerplexity() : BaseProvider(LLMProviders.PERPLEXITY,
                                    Messages = [systemPrompt, ..messages],
                                    Stream = true,
                                    Tools = tools,
-                                   ParallelToolCalls = tools is null ? null : true,
                                    AdditionalApiParameters = apiParameters
                                };
                            },

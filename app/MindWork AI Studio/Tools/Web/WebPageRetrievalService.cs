@@ -119,13 +119,13 @@ public sealed class WebPageRetrievalService(HTMLParser htmlParser)
                 "Private or local-network web page URLs are not supported unless their host is explicitly allowed.",
                 WebPageAccessBlockReason.PRIVATE_HOST_NOT_ALLOWED);
 
-        if (options.ProviderConfidence >= ConfidenceLevel.HIGH)
+        if (options.ProviderConfidence >= ConfidenceLevel.HIGH || options.ProviderIsTrustedByConfiguration)
             return addresses;
 
         if (options.OnPrivateHostProviderBlockAsync is not null)
             await options.OnPrivateHostProviderBlockAsync(url, options.ProviderConfidence);
         throw new WebPageAccessBlockedException(
-            "This private or VPN web page requires a High-confidence provider.",
+            "This private or VPN web page requires a High-confidence provider or a provider trusted by configuration.",
             WebPageAccessBlockReason.INSUFFICIENT_PROVIDER_CONFIDENCE);
     }
 
@@ -152,7 +152,7 @@ public sealed class WebPageRetrievalService(HTMLParser htmlParser)
         IReadOnlyList<IPAddress> addresses,
         WebPageRetrievalOptions options) =>
         options.UseOsSso &&
-        options.ProviderConfidence >= ConfidenceLevel.HIGH &&
+        (options.ProviderConfidence >= ConfidenceLevel.HIGH || options.ProviderIsTrustedByConfiguration) &&
         originalUrl.Scheme.Equals(candidateUrl.Scheme, StringComparison.OrdinalIgnoreCase) &&
         originalUrl.Host.Equals(candidateUrl.Host, StringComparison.OrdinalIgnoreCase) &&
         originalUrl.Port == candidateUrl.Port &&
@@ -239,6 +239,8 @@ public sealed class WebPageRetrievalOptions
     public bool PublicTargetsOnly { get; init; }
 
     public ConfidenceLevel ProviderConfidence { get; init; } = ConfidenceLevel.NONE;
+
+    public bool ProviderIsTrustedByConfiguration { get; init; }
 
     public bool UseOsSso { get; init; }
 
