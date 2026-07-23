@@ -18,12 +18,6 @@ internal sealed class SearXNGSearchClient
             new("format", "json"),
         };
 
-        if (searchRequest.Categories.Count > 0)
-            queryParameters.Add(new KeyValuePair<string, string>("categories", string.Join(",", searchRequest.Categories)));
-
-        if (searchRequest.Engines.Count > 0)
-            queryParameters.Add(new KeyValuePair<string, string>("engines", string.Join(",", searchRequest.Engines)));
-
         if (!string.IsNullOrWhiteSpace(searchRequest.Language))
             queryParameters.Add(new KeyValuePair<string, string>("language", searchRequest.Language));
 
@@ -140,8 +134,6 @@ internal sealed class SearXNGSearchClient
                 OriginalUrls = [originalUrl],
                 Title = ReadNodeString(result["title"]),
                 Snippet = ReadNodeString(result["content"]),
-                Engines = ReadStringValues(result, "engine", "engines"),
-                Categories = ReadStringValues(result, "category", "categories"),
                 PublishedDate = FirstNonEmpty(ReadNodeString(result["publishedDate"]), ReadNodeString(result["published_date"])),
             };
             var normalizedUrl = NormalizeUrl(retrievalUrl);
@@ -154,31 +146,6 @@ internal sealed class SearXNGSearchClient
         return candidatesByUrl.Values
             .OrderBy(candidate => candidate.Rank)
             .ToList();
-    }
-
-    private static List<string> ReadStringValues(JsonObject source, string singularPropertyName, string pluralPropertyName)
-    {
-        var values = new List<string>();
-        AddNodeStringValues(source[singularPropertyName], values);
-        AddNodeStringValues(source[pluralPropertyName], values);
-        return values
-            .Where(value => !string.IsNullOrWhiteSpace(value))
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToList();
-    }
-
-    private static void AddNodeStringValues(JsonNode? node, List<string> values)
-    {
-        if (node is JsonArray array)
-        {
-            foreach (var item in array)
-                AddNodeStringValues(item, values);
-            return;
-        }
-
-        var value = ReadNodeString(node);
-        if (!string.IsNullOrWhiteSpace(value))
-            values.Add(value);
     }
 
     private static string ReadNodeString(JsonNode? node) => node is null ? string.Empty : node.ToString().Trim();
@@ -292,8 +259,6 @@ internal sealed class SearXNGSearchClient
 internal sealed record SearXNGSearchRequest(
     Uri SearchUri,
     string Query,
-    IReadOnlyList<string> Categories,
-    IReadOnlyList<string> Engines,
     string? Language,
     string? TimeRange,
     int? Page,
@@ -315,10 +280,6 @@ internal sealed class SearchCandidate
 
     public required string Snippet { get; set; }
 
-    public required List<string> Engines { get; init; }
-
-    public required List<string> Categories { get; init; }
-
     public required string PublishedDate { get; set; }
 
     public SearchCandidate Clone() => new()
@@ -328,8 +289,6 @@ internal sealed class SearchCandidate
         OriginalUrls = [..this.OriginalUrls],
         Title = this.Title,
         Snippet = this.Snippet,
-        Engines = [..this.Engines],
-        Categories = [..this.Categories],
         PublishedDate = this.PublishedDate,
     };
 
@@ -351,8 +310,6 @@ internal sealed class SearchCandidate
         }
 
         AddDistinct(this.OriginalUrls, candidate.OriginalUrls, StringComparer.Ordinal);
-        AddDistinct(this.Engines, candidate.Engines, StringComparer.OrdinalIgnoreCase);
-        AddDistinct(this.Categories, candidate.Categories, StringComparer.OrdinalIgnoreCase);
     }
 
     private static void AddDistinct(List<string> target, IEnumerable<string> values, StringComparer comparer)

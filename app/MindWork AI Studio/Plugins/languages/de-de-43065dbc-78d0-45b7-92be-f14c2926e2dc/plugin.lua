@@ -9282,9 +9282,6 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS:
 -- Maximum Results
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T1273024715"] = "Maximale Anzahl an Ergebnissen"
 
--- Optional comma-separated default categories. Do not set this together with default engines.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T1342681591"] = "Optionale, durch Kommas getrennte Standardkategorien. Nicht zusammen mit Standard-Engines festlegen."
-
 -- Default Safe Search
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T1343180281"] = "Standard-SafeSearch"
 
@@ -9297,14 +9294,8 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS:
 -- A SearXNG URL is required.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T1746583720"] = "Eine SearXNG-URL ist erforderlich."
 
--- Default Engines
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T1865580137"] = "Standard-Engines"
-
 -- Optional fallback language code when the model does not provide a language.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T1868101906"] = "Optionaler Fallback-Sprachcode, wenn das Modell keine Sprache angibt."
-
--- Default Categories
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T2053347010"] = "Standardkategorien"
 
 -- The total content budget must reserve at least {0} characters for each of up to {1} results.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T2124070269"] = "Das Gesamtinhaltsbudget muss mindestens {0} Zeichen für jeweils bis zu {1} Ergebnisse reservieren."
@@ -9353,12 +9344,6 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS:
 
 -- Optional safe search policy sent to SearXNG when configured.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T3967748757"] = "Optionale SafeSearch-Richtlinie, die bei entsprechender Konfiguration an SearXNG gesendet wird."
-
--- Default categories and default engines cannot both be set for the web search tool.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T4009446158"] = "Standardkategorien und Standard-Engines können für die Websuche nicht gleichzeitig festgelegt werden."
-
--- Optional comma-separated default engines. Do not set this together with default categories.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T4108908537"] = "Optionale, durch Kommas getrennte Standard-Engines. Nicht zusammen mit Standardkategorien festlegen."
 
 -- The setting '{0}' must be a positive integer.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T4199432074"] = "Die Einstellung „{0}“ muss eine positive ganze Zahl sein."

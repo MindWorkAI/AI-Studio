@@ -26,14 +26,6 @@
         ],
         "secret": false
       },
-      "defaultCategories": {
-        "type": "string",
-        "secret": false
-      },
-      "defaultEngines": {
-        "type": "string",
-        "secret": false
-      },
       "maxResults": {
         "type": "string",
         "secret": false
@@ -75,26 +67,6 @@
           "type": "string",
           "description": "The search query."
         },
-        "categories": {
-          "type": [
-            "array",
-            "null"
-          ],
-          "description": "Optional list of categories to use for the search.",
-          "items": {
-            "type": "string"
-          }
-        },
-        "engines": {
-          "type": [
-            "array",
-            "null"
-          ],
-          "description": "Optional list of specific search engines to use when the user requests them explicitly.",
-          "items": {
-            "type": "string"
-          }
-        },
         "language": {
           "type": [
             "string",
@@ -107,7 +79,7 @@
             "string",
             "null"
           ],
-          "description": "Optional time range filter for search engines that support it.",
+          "description": "Optional time range filter for the search.",
           "enum": [
             null,
             "day",
@@ -132,8 +104,6 @@
       },
       "required": [
         "query",
-        "categories",
-        "engines",
         "language",
         "time_range",
         "page",

@@ -207,6 +207,8 @@ For tools that perform network requests:
 
 `web_search` is a combined search-and-retrieve tool. It asks the configured SearXNG instance for ranked candidates, applies the requested result limit, deduplicates equivalent URLs, and then loads the remaining public HTTP or HTTPS pages. Up to four pages are retrieved concurrently. Failed, blocked, unsupported, and empty pages are omitted, while an overall retrieval timeout returns any pages that completed successfully before cancellation.
 
+Web Search does not send category or engine parameters. The SearXNG instance selects them using its own configuration.
+
 Page loading and readable Markdown extraction are shared with `read_web_page` through `WebPageRetrievalService`. The service validates DNS results and every redirect target before connecting. `web_search` always uses the public-only policy and never reads private, loopback, link-local, or otherwise non-public targets. `read_web_page` remains the independent single-URL tool and may use its configured private-host allowlist, provider-confidence check, and operating-system sign-in behavior.
 
 The `web_search` result separates each hit into `search_metadata` and `page`. Top-level counters report how many ranked candidates were considered, how many unique retrievals started, how many final pages were returned, and how many candidates were omitted. Search-result URLs and final redirect URLs are deduplicated separately so metadata from merged candidates is retained with the best rank.

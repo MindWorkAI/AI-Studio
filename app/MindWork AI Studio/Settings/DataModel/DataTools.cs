@@ -46,16 +46,6 @@ public sealed class DataTools(Expression<Func<Data, DataTools>>? configSelection
         x => x.WebSearchDefaultSafeSearch,
         string.Empty);
 
-    public string WebSearchDefaultCategories { get; set; } = ManagedConfiguration.Register<DataTools>(
-        configSelection,
-        x => x.WebSearchDefaultCategories,
-        string.Empty);
-
-    public string WebSearchDefaultEngines { get; set; } = ManagedConfiguration.Register<DataTools>(
-        configSelection,
-        x => x.WebSearchDefaultEngines,
-        string.Empty);
-
     public string WebSearchMaxResults { get; set; } = ManagedConfiguration.Register<DataTools>(
         configSelection,
         x => x.WebSearchMaxResults,

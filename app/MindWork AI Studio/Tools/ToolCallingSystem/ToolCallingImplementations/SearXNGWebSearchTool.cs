@@ -56,8 +56,6 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
         "baseUrl" => TB("SearXNG URL"),
         "defaultLanguage" => TB("Default Language"),
         "defaultSafeSearch" => TB("Default Safe Search"),
-        "defaultCategories" => TB("Default Categories"),
-        "defaultEngines" => TB("Default Engines"),
         "maxResults" => TB("Maximum Results"),
         "timeoutSeconds" => TB("Timeout Seconds"),
         "maxTotalContentCharacters" => TB("Maximum Total Content Characters"),
@@ -72,8 +70,6 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
         "baseUrl" => TB("Base URL of the SearXNG instance. You can enter either the instance root URL or the /search endpoint."),
         "defaultLanguage" => TB("Optional fallback language code when the model does not provide a language."),
         "defaultSafeSearch" => TB("Optional safe search policy sent to SearXNG when configured."),
-        "defaultCategories" => TB("Optional comma-separated default categories. Do not set this together with default engines."),
-        "defaultEngines" => TB("Optional comma-separated default engines. Do not set this together with default categories."),
         "maxResults" => TB("Optional default maximum number of results returned to the model when the model does not provide a limit."),
         "timeoutSeconds" => TB("Optional HTTP timeout for the search request in seconds."),
         "maxTotalContentCharacters" => TB("Optional total character budget shared by all retrieved pages."),
@@ -108,17 +104,6 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
             {
                 IsConfigured = false,
                 Message = uriError,
-            });
-        }
-
-        var hasDefaultCategories = !string.IsNullOrWhiteSpace(settingsValues.GetValueOrDefault("defaultCategories"));
-        var hasDefaultEngines = !string.IsNullOrWhiteSpace(settingsValues.GetValueOrDefault("defaultEngines"));
-        if (hasDefaultCategories && hasDefaultEngines)
-        {
-            return Task.FromResult<ToolConfigurationState?>(new ToolConfigurationState
-            {
-                IsConfigured = false,
-                Message = TB("Default categories and default engines cannot both be set for the web search tool."),
             });
         }
 
@@ -207,8 +192,6 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
             throw new InvalidOperationException(uriError);
 
         var query = ReadRequiredString(arguments, "query");
-        var categories = ReadOptionalStringArray(arguments, "categories");
-        var engines = ReadOptionalStringArray(arguments, "engines");
         var language = ReadOptionalString(arguments, "language");
         var timeRange = ReadOptionalString(arguments, "time_range");
         var page = ReadOptionalPositiveInt(arguments, "page");
@@ -219,15 +202,6 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
 
         language = string.IsNullOrWhiteSpace(language) ? context.SettingsValues.GetValueOrDefault("defaultLanguage") : language;
         var safeSearch = context.SettingsValues.GetValueOrDefault("defaultSafeSearch");
-
-        if (categories.Count == 0)
-            categories = SplitCommaSeparatedValues(context.SettingsValues.GetValueOrDefault("defaultCategories"));
-
-        if (engines.Count == 0)
-            engines = SplitCommaSeparatedValues(context.SettingsValues.GetValueOrDefault("defaultEngines"));
-
-        if (categories.Count > 0 && engines.Count > 0 && !string.IsNullOrWhiteSpace(context.SettingsValues.GetValueOrDefault("defaultCategories")) && !string.IsNullOrWhiteSpace(context.SettingsValues.GetValueOrDefault("defaultEngines")))
-            throw new InvalidOperationException(TB("Default categories and default engines cannot both be set for the web search tool."));
 
         var defaultLimit = ToolSettingsValueParser.ReadOptionalPositiveInt(context.SettingsValues, "maxResults") ?? DEFAULT_MAX_RESULTS;
         var effectiveLimit = Math.Min(requestedLimit ?? defaultLimit, MAX_RESULTS);
@@ -242,11 +216,9 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
             throw new ArgumentException($"Argument 'page' must be less than or equal to {MAX_PAGE}.");
 
         this.logger.LogInformation(
-            "Starting web search. ToolCallId={ToolCallId}, Query={Query}, Categories=[{Categories}], Engines=[{Engines}], Language={Language}, TimeRange={TimeRange}, Page={Page}, Limit={Limit}",
+            "Starting web search. ToolCallId={ToolCallId}, Query={Query}, Language={Language}, TimeRange={TimeRange}, Page={Page}, Limit={Limit}",
             context.ToolCallId,
             FormatQueryForLog(query),
-            string.Join(", ", categories),
-            string.Join(", ", engines),
             language,
             timeRange,
             page,
@@ -256,8 +228,6 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
             new SearXNGSearchRequest(
                 searchUri,
                 query,
-                categories,
-                engines,
                 language,
                 timeRange,
                 page,
@@ -326,7 +296,6 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
         {
             ["rank"] = result.Candidate.Rank,
             ["final_url"] = page.FinalUrl.ToString(),
-            ["engines"] = BuildJsonArray(result.Candidate.Engines),
             ["published_date"] = result.Candidate.PublishedDate,
         };
         var pageContent = new JsonObject
@@ -389,34 +358,6 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
 
         return intValue;
     }
-
-    private static List<string> ReadOptionalStringArray(JsonElement arguments, string propertyName)
-    {
-        if (!arguments.TryGetProperty(propertyName, out var value) || value.ValueKind is JsonValueKind.Null)
-            return [];
-
-        if (value.ValueKind is not JsonValueKind.Array)
-            throw new ArgumentException($"Argument '{propertyName}' must be an array of strings.");
-
-        var values = new List<string>();
-        foreach (var element in value.EnumerateArray())
-        {
-            if (element.ValueKind is not JsonValueKind.String)
-                throw new ArgumentException($"Argument '{propertyName}' must be an array of strings.");
-
-            var item = element.GetString()?.Trim();
-            if (!string.IsNullOrWhiteSpace(item))
-                values.Add(item);
-        }
-
-        return values;
-    }
-
-    private static List<string> SplitCommaSeparatedValues(string? value) => value?
-        .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-        .Where(x => !string.IsNullOrWhiteSpace(x))
-        .Distinct(StringComparer.Ordinal)
-        .ToList() ?? [];
 
     private static string FormatQueryForLog(string query)
     {

@@ -313,12 +313,6 @@ public static partial class PluginFactory
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Tools, x => x.WebSearchDefaultSafeSearch, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;
 
-        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Tools, x => x.WebSearchDefaultCategories, AVAILABLE_PLUGINS))
-            wasConfigurationChanged = true;
-
-        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Tools, x => x.WebSearchDefaultEngines, AVAILABLE_PLUGINS))
-            wasConfigurationChanged = true;
-
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Tools, x => x.WebSearchMaxResults, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;
 

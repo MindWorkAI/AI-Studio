@@ -210,8 +210,6 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         ManagedConfiguration.TryProcessConfiguration(x => x.Tools, x => x.WebSearchBaseUrl, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.Tools, x => x.WebSearchDefaultLanguage, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.Tools, x => x.WebSearchDefaultSafeSearch, this.Id, settingsTable, dryRun);
-        ManagedConfiguration.TryProcessConfiguration(x => x.Tools, x => x.WebSearchDefaultCategories, this.Id, settingsTable, dryRun);
-        ManagedConfiguration.TryProcessConfiguration(x => x.Tools, x => x.WebSearchDefaultEngines, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.Tools, x => x.WebSearchMaxResults, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.Tools, x => x.WebSearchTimeoutSeconds, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.Tools, x => x.WebSearchMaxTotalContentCharacters, this.Id, settingsTable, dryRun);

@@ -381,11 +381,6 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataTools.WebSearchDefaultLanguage"] = "de"
 -- WebSearchDefaultSafeSearch: optional SearXNG safe-search level "0", "1", or "2"; default is empty.
 -- CONFIG["SETTINGS"]["DataTools.WebSearchDefaultSafeSearch"] = "1"
--- WebSearchDefaultCategories: optional comma-separated categories; default is empty.
--- WebSearchDefaultEngines: optional comma-separated engines; default is empty.
--- Categories and engines cannot both be configured.
--- CONFIG["SETTINGS"]["DataTools.WebSearchDefaultCategories"] = "general, science"
--- CONFIG["SETTINGS"]["DataTools.WebSearchDefaultEngines"] = ""
 -- WebSearchMaxResults: positive integer; default 5, effective maximum 20.
 -- CONFIG["SETTINGS"]["DataTools.WebSearchMaxResults"] = "5"
 -- WebSearchTimeoutSeconds: positive integer; default 20, effective maximum 60.
@@ -412,7 +407,7 @@ CONFIG["SETTINGS"] = {}
 -- operating-system sign-in when integrated authentication is requested, but does not reuse browser cookies.
 -- CONFIG["SETTINGS"]["DataTools.ReadWebPageAllowedPrivateHosts"] = "dlr.de, *.dlr.de"
 
--- The 14 Web Search and Read Web Page settings are locked by default. Add
+-- The 12 Web Search and Read Web Page settings are locked by default. Add
 -- ".AllowUserOverride" = true to any of them to provide an editable organization default instead.
 -- A saved local value then takes precedence.
 -- CONFIG["SETTINGS"]["DataTools.WebSearchBaseUrl.AllowUserOverride"] = true

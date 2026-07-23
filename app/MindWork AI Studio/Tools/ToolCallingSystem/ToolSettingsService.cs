@@ -13,8 +13,6 @@ public sealed class ToolSettingsService(SettingsManager settingsManager, RustSer
         [(ToolSelectionRules.WEB_SEARCH_TOOL_ID, "baseUrl")] = CreateManagedToolSetting(x => x.WebSearchBaseUrl, (tools, value) => tools.WebSearchBaseUrl = value),
         [(ToolSelectionRules.WEB_SEARCH_TOOL_ID, "defaultLanguage")] = CreateManagedToolSetting(x => x.WebSearchDefaultLanguage),
         [(ToolSelectionRules.WEB_SEARCH_TOOL_ID, "defaultSafeSearch")] = CreateManagedToolSetting(x => x.WebSearchDefaultSafeSearch),
-        [(ToolSelectionRules.WEB_SEARCH_TOOL_ID, "defaultCategories")] = CreateManagedToolSetting(x => x.WebSearchDefaultCategories),
-        [(ToolSelectionRules.WEB_SEARCH_TOOL_ID, "defaultEngines")] = CreateManagedToolSetting(x => x.WebSearchDefaultEngines),
         [(ToolSelectionRules.WEB_SEARCH_TOOL_ID, "maxResults")] = CreateManagedToolSetting(x => x.WebSearchMaxResults),
         [(ToolSelectionRules.WEB_SEARCH_TOOL_ID, "timeoutSeconds")] = CreateManagedToolSetting(x => x.WebSearchTimeoutSeconds),
         [(ToolSelectionRules.WEB_SEARCH_TOOL_ID, "maxTotalContentCharacters")] = CreateManagedToolSetting(x => x.WebSearchMaxTotalContentCharacters),
