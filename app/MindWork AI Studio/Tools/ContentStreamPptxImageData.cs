@@ -15,4 +15,7 @@ public sealed class ContentStreamPptxImageData
 
     [JsonPropertyName("is_end")] 
     public bool IsEnd { get; init; }
+
+    [JsonPropertyName("media_type")]
+    public string? MediaType { get; init; }
 }
