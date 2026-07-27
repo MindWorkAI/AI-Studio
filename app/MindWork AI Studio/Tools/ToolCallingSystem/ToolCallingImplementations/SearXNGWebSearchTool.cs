@@ -18,14 +18,14 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
     
     private const int MAX_PAGE = 20;
     
-    private const int DEFAULT_TIMEOUT_SECONDS = 30;
-    private const int MAX_TIMEOUT_SECONDS = 240;
+    private const int DEFAULT_SEARCH_TIMEOUT_SECONDS = 30;
+    private const int MAX_SEARCH_TIMEOUT_SECONDS = 240;
     
     private const int DEFAULT_PAGE_TIMEOUT_SECONDS = 30;
     private const int MAX_PAGE_TIMEOUT_SECONDS = 60;
     
-    private const int DEFAULT_RETRIEVAL_TIMEOUT_SECONDS = 60;
-    private const int MAX_RETRIEVAL_TIMEOUT_SECONDS = 120;
+    private const int DEFAULT_ALL_PAGES_RETRIEVAL_TIMEOUT_SECONDS = 60;
+    private const int MAX_ALL_PAGES_RETRIEVAL_TIMEOUT_SECONDS = 120;
     
     private const int DEFAULT_MAX_TOTAL_CONTENT_CHARACTERS = 100000;
     private const int MAX_TOTAL_CONTENT_CHARACTERS = 200000;
@@ -55,13 +55,13 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
     {
         "baseUrl" => TB("SearXNG URL"),
         "defaultLanguage" => TB("Default Language"),
-        "defaultSafeSearch" => TB("Default Safe Search"),
+        "defaultSafeSearch" => TB("Default Safe Search Policy"),
         "maxResults" => TB("Maximum Results"),
-        "timeoutSeconds" => TB("Timeout Seconds"),
+        "searchTimeoutSeconds" => TB("Search Timeout Seconds"),
         "maxTotalContentCharacters" => TB("Maximum Total Content Characters"),
-        "minContentCharactersPerResult" => TB("Minimum Content Characters Per Result"),
+        "minContentCharactersPerResult" => TB("Minimum Content Characters Budget Per Website"),
         "pageTimeoutSeconds" => TB("Page Timeout Seconds"),
-        "retrievalTimeoutSeconds" => TB("Retrieval Timeout Seconds"),
+        "allPagesRetrievalTimeoutSeconds" => TB("All Pages Retrieval Timeout Seconds"),
         _ => TB(fieldDefinition.Title),
     };
 
@@ -71,22 +71,22 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
         "defaultLanguage" => TB("Optional fallback language code when the model does not provide a language."),
         "defaultSafeSearch" => TB("Optional safe search policy sent to SearXNG when configured."),
         "maxResults" => TB("Optional default maximum number of results returned to the model when the model does not provide a limit."),
-        "timeoutSeconds" => TB("Optional HTTP timeout for the search request in seconds."),
+        "searchTimeoutSeconds" => TB("Optional HTTP timeout for the SearXNG search request in seconds."),
         "maxTotalContentCharacters" => TB("Optional total character budget shared by all retrieved pages."),
-        "minContentCharactersPerResult" => TB("Optional minimum character budget reserved for each successfully retrieved page."),
+        "minContentCharactersPerResult" => TB("Optional minimum character budget reserved for each successfully retrieved website."),
         "pageTimeoutSeconds" => TB("Optional timeout for loading each individual result page in seconds."),
-        "retrievalTimeoutSeconds" => TB("Optional overall timeout for retrieving all result pages in seconds."),
+        "allPagesRetrievalTimeoutSeconds" => TB("Optional overall timeout for retrieving all result pages in seconds."),
         _ => TB(fieldDefinition.Description),
     };
 
     public string? GetSettingsFieldDefaultValue(string fieldName, ToolSettingsFieldDefinition fieldDefinition) => fieldName switch
     {
         "maxResults" => DEFAULT_MAX_RESULTS.ToString(),
-        "timeoutSeconds" => DEFAULT_TIMEOUT_SECONDS.ToString(),
+        "searchTimeoutSeconds" => DEFAULT_SEARCH_TIMEOUT_SECONDS.ToString(),
         "maxTotalContentCharacters" => DEFAULT_MAX_TOTAL_CONTENT_CHARACTERS.ToString(),
         "minContentCharactersPerResult" => DEFAULT_MIN_CONTENT_CHARACTERS_PER_RESULT.ToString(),
         "pageTimeoutSeconds" => DEFAULT_PAGE_TIMEOUT_SECONDS.ToString(),
-        "retrievalTimeoutSeconds" => DEFAULT_RETRIEVAL_TIMEOUT_SECONDS.ToString(),
+        "allPagesRetrievalTimeoutSeconds" => DEFAULT_ALL_PAGES_RETRIEVAL_TIMEOUT_SECONDS.ToString(),
         _ => null,
     };
 
@@ -126,12 +126,12 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
             });
         }
 
-        if (!ToolSettingsValueParser.TryReadOptionalPositiveInt(settingsValues, "timeoutSeconds", positiveIntegerErrorFormat, out _, out var timeoutError))
+        if (!ToolSettingsValueParser.TryReadOptionalPositiveInt(settingsValues, "searchTimeoutSeconds", positiveIntegerErrorFormat, out _, out var searchTimeoutError))
         {
             return Task.FromResult<ToolConfigurationState?>(new ToolConfigurationState
             {
                 IsConfigured = false,
-                Message = timeoutError,
+                Message = searchTimeoutError,
             });
         }
 
@@ -162,12 +162,12 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
             });
         }
 
-        if (!ToolSettingsValueParser.TryReadBoundedOptionalPositiveInt(settingsValues, "retrievalTimeoutSeconds", MAX_RETRIEVAL_TIMEOUT_SECONDS, positiveIntegerErrorFormat, maximumErrorFormat, out _, out var retrievalTimeoutError))
+        if (!ToolSettingsValueParser.TryReadBoundedOptionalPositiveInt(settingsValues, "allPagesRetrievalTimeoutSeconds", MAX_ALL_PAGES_RETRIEVAL_TIMEOUT_SECONDS, positiveIntegerErrorFormat, maximumErrorFormat, out _, out var allPagesRetrievalTimeoutError))
         {
             return Task.FromResult<ToolConfigurationState?>(new ToolConfigurationState
             {
                 IsConfigured = false,
-                Message = retrievalTimeoutError,
+                Message = allPagesRetrievalTimeoutError,
             });
         }
 
@@ -205,11 +205,11 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
 
         var defaultLimit = ToolSettingsValueParser.ReadOptionalPositiveInt(context.SettingsValues, "maxResults") ?? DEFAULT_MAX_RESULTS;
         var effectiveLimit = Math.Min(requestedLimit ?? defaultLimit, MAX_RESULTS);
-        var timeoutSeconds = Math.Min(ToolSettingsValueParser.ReadOptionalPositiveInt(context.SettingsValues, "timeoutSeconds") ?? DEFAULT_TIMEOUT_SECONDS, MAX_TIMEOUT_SECONDS);
+        var searchTimeoutSeconds = Math.Min(ToolSettingsValueParser.ReadOptionalPositiveInt(context.SettingsValues, "searchTimeoutSeconds") ?? DEFAULT_SEARCH_TIMEOUT_SECONDS, MAX_SEARCH_TIMEOUT_SECONDS);
         var maxTotalContentCharacters = Math.Min(ToolSettingsValueParser.ReadOptionalPositiveInt(context.SettingsValues, "maxTotalContentCharacters") ?? DEFAULT_MAX_TOTAL_CONTENT_CHARACTERS, MAX_TOTAL_CONTENT_CHARACTERS);
         var minContentCharactersPerResult = Math.Min(ToolSettingsValueParser.ReadOptionalPositiveInt(context.SettingsValues, "minContentCharactersPerResult") ?? DEFAULT_MIN_CONTENT_CHARACTERS_PER_RESULT, MAX_MIN_CONTENT_CHARACTERS_PER_RESULT);
         var pageTimeoutSeconds = Math.Min(ToolSettingsValueParser.ReadOptionalPositiveInt(context.SettingsValues, "pageTimeoutSeconds") ?? DEFAULT_PAGE_TIMEOUT_SECONDS, MAX_PAGE_TIMEOUT_SECONDS);
-        var retrievalTimeoutSeconds = Math.Min(ToolSettingsValueParser.ReadOptionalPositiveInt(context.SettingsValues, "retrievalTimeoutSeconds") ?? DEFAULT_RETRIEVAL_TIMEOUT_SECONDS, MAX_RETRIEVAL_TIMEOUT_SECONDS);
+        var allPagesRetrievalTimeoutSeconds = Math.Min(ToolSettingsValueParser.ReadOptionalPositiveInt(context.SettingsValues, "allPagesRetrievalTimeoutSeconds") ?? DEFAULT_ALL_PAGES_RETRIEVAL_TIMEOUT_SECONDS, MAX_ALL_PAGES_RETRIEVAL_TIMEOUT_SECONDS);
         if (maxTotalContentCharacters < minContentCharactersPerResult * MAX_RESULTS)
             throw new InvalidOperationException(TB("The configured web search content budget is not valid."));
         if (page is > MAX_PAGE)
@@ -233,12 +233,12 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
                 page,
                 safeSearch,
                 effectiveLimit,
-                timeoutSeconds),
+                searchTimeoutSeconds),
             token);
         var retrievalResult = await this.pageRetrievalService.RetrieveAsync(
             searchResponse.Candidates,
             pageTimeoutSeconds,
-            retrievalTimeoutSeconds,
+            allPagesRetrievalTimeoutSeconds,
             maxTotalContentCharacters,
             minContentCharactersPerResult,
             token);

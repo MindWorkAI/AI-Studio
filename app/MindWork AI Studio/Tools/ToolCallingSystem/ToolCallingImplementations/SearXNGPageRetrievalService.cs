@@ -9,7 +9,7 @@ internal sealed class SearXNGPageRetrievalService(WebPageRetrievalService webPag
     public async Task<WebSearchPageRetrievalResult> RetrieveAsync(
         IReadOnlyList<SearchCandidate> candidates,
         int pageTimeoutSeconds,
-        int retrievalTimeoutSeconds,
+        int allPagesRetrievalTimeoutSeconds,
         int maxTotalContentCharacters,
         int minContentCharactersPerResult,
         CancellationToken token)
@@ -21,7 +21,7 @@ internal sealed class SearXNGPageRetrievalService(WebPageRetrievalService webPag
         var emptyContentCount = 0;
         var retrievalTimedOut = 0;
         using var retrievalTimeoutCts = CancellationTokenSource.CreateLinkedTokenSource(token);
-        retrievalTimeoutCts.CancelAfter(TimeSpan.FromSeconds(retrievalTimeoutSeconds));
+        retrievalTimeoutCts.CancelAfter(TimeSpan.FromSeconds(allPagesRetrievalTimeoutSeconds));
         using var retrievalSemaphore = new SemaphoreSlim(MAX_PARALLEL_RETRIEVALS);
 
         async Task<RetrievedSearchPage?> RetrieveCandidateAsync(SearchCandidate candidate)
