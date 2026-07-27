@@ -9,6 +9,7 @@ use axum::extract::rejection::QueryRejection;
 use axum::response::sse::{Event, Sse};
 use base64::{engine::general_purpose, Engine as _};
 use calamine::{open_workbook_auto, Reader};
+use docx_to_md::{DocumentContainer, ImageHandlingMode as DocumentImageHandlingMode, Metadata as DocumentMetadata, ParserConfig as DocumentParserConfig};
 use file_format::{FileFormat, Kind};
 use futures::{Stream, StreamExt};
 use pdfium_render::prelude::Pdfium;
@@ -53,7 +54,10 @@ pub enum Metadata {
         row_number: usize,
     },
     
-    Document {},
+    Document {
+        page_number: Option<usize>,
+        image: Option<Base64Image>,
+    },
     Image {},
     
     Presentation {
@@ -67,12 +71,13 @@ pub struct Base64Image {
     pub id: String,
     pub content: String,
     pub segment: usize,
-    pub is_end: bool
+    pub is_end: bool,
+    pub media_type: Option<String>,
 }
 
 impl Base64Image {
-    fn new(id: String, content: String, segment: usize, is_end: bool) -> Self {
-        Self { id, content, segment, is_end }
+    fn new(id: String, content: String, segment: usize, is_end: bool, media_type: Option<String>) -> Self {
+        Self { id, content, segment, is_end, media_type }
     }
 }
 
@@ -140,7 +145,7 @@ pub async fn extract_data(
     let stream = stream! {
         match query {
             Ok(query) => {
-                let stream_result = stream_data(&query.path, query.extract_images).await;
+                let stream_result = stream_data(&query.path, query.extract_images, &query.stream_id).await;
                 let id_ref = &query.stream_id;
 
                 match stream_result {
@@ -175,7 +180,7 @@ pub async fn extract_data(
     Sse::new(stream)
 }
 
-async fn stream_data(file_path: &str, extract_images: bool) -> Result<ChunkStream> {
+async fn stream_data(file_path: &str, extract_images: bool, stream_id: &str) -> Result<ChunkStream> {
     if !Path::new(file_path).exists() {
         error!("File does not exist: '{file_path}'");
         return Err("File does not exist.".into());
@@ -198,10 +203,7 @@ async fn stream_data(file_path: &str, extract_images: bool) -> Result<ChunkStrea
     debug!("Extracting data from file: '{file_path}', format: '{fmt:?}', extension: '{ext}'");
 
     let stream = match ext.as_str() {
-        DOCX | ODT => {
-            let from = if ext == DOCX { "docx" } else { "odt" };
-            convert_with_pandoc(file_path, from, TO_MARKDOWN).await?
-        }
+        DOCX | ODT => stream_document(file_path, extract_images, stream_id).await?,
 
         "csv" | "tsv" => {
             stream_text_file(file_path, true, Some("csv".to_string())).await?
@@ -219,11 +221,11 @@ async fn stream_data(file_path: &str, extract_images: bool) -> Result<ChunkStrea
                 FileFormat::PortableDocumentFormat => stream_pdf(file_path).await?,
 
                 FileFormat::MicrosoftWordDocument => {
-                    convert_with_pandoc(file_path, "docx", TO_MARKDOWN).await?
+                    stream_document(file_path, extract_images, stream_id).await?
                 },
 
                 FileFormat::OfficeOpenXmlDocument => {
-                    convert_with_pandoc(file_path, fmt.extension(), TO_MARKDOWN).await?
+                    stream_document(file_path, extract_images, stream_id).await?
                 },
 
                 _ => stream_text_file(file_path, false, None).await?,
@@ -427,7 +429,10 @@ async fn convert_with_pandoc(
             match String::from_utf8(output.stdout.clone()) {
                 Ok(content) => yield Ok(Chunk::new(
                     content,
-                    Metadata::Document {}
+                    Metadata::Document {
+                        page_number: None,
+                        image: None,
+                    }
                 )),
                 Err(e) => yield Err(e.into()),
             }
@@ -454,6 +459,95 @@ async fn chunk_image(file_path: &str) -> Result<ChunkStream> {
     };
 
     Ok(Box::pin(stream))
+}
+
+async fn stream_document(file_path: &str, extract_images: bool, stream_id: &str) -> Result<ChunkStream> {
+    let path = Path::new(file_path).to_owned();
+    let stream_id = stream_id.to_owned();
+    let parser_config = DocumentParserConfig::builder()
+        .extract_images(extract_images)
+        .compress_images(true)
+        .quality(75)
+        .image_handling_mode(DocumentImageHandlingMode::Manually)
+        .include_document_metadata(true)
+        .include_headers_footers(true)
+        .include_footnotes(true)
+        .include_endnotes(true)
+        .include_comments(true)
+        .include_page_number_as_comment(false)
+        .build();
+    let (tx, rx) = mpsc::channel(32);
+    let worker_error_tx = tx.clone();
+
+    let worker = tokio::task::spawn_blocking(move || {
+        let document = match DocumentContainer::open(&path, parser_config) {
+            Ok(document) => document,
+            Err(e) => {
+                let _ = tx.blocking_send(Err(Box::new(e) as Box<dyn std::error::Error + Send + Sync>));
+                return;
+            },
+        };
+        let mut metadata_md = document_metadata_to_markdown(document.metadata());
+        let pages = match document.iter_pages() {
+            Ok(pages) => pages,
+            Err(e) => {
+                let _ = tx.blocking_send(Err(Box::new(e) as Box<dyn std::error::Error + Send + Sync>));
+                return;
+            },
+        };
+
+        for page_result in pages {
+            let page = match page_result {
+                Ok(page) => page,
+                Err(e) => {
+                    let _ = tx.blocking_send(Err(Box::new(e) as Box<dyn std::error::Error + Send + Sync>));
+                    return;
+                },
+            };
+            let mut content = match page.to_markdown() {
+                Ok(content) => content,
+                Err(e) => {
+                    let _ = tx.blocking_send(Err(Box::new(e) as Box<dyn std::error::Error + Send + Sync>));
+                    return;
+                },
+            };
+            if let Some(metadata) = metadata_md.take() {
+                content = format!("{metadata}\n\n{content}");
+            }
+            if tx.blocking_send(Ok(Chunk::new(content, Metadata::Document {
+                page_number: Some(page.page_number),
+                image: None,
+            }))).is_err() {
+                return;
+            }
+
+            for image in page.images.values() {
+                let base64_data = image.base64();
+                let image_id = format!("{stream_id}-{}-{}", page.page_number, image.id);
+                let mut offset = 0;
+                let mut segment_index = 0;
+                while offset < base64_data.len() {
+                    let end = min(offset + IMAGE_SEGMENT_SIZE_IN_CHARS, base64_data.len());
+                    let base64_image = Base64Image::new(image_id.clone(), base64_data[offset..end].to_string(), segment_index, end == base64_data.len(), Some(image.media_type.clone()));
+                    if tx.blocking_send(Ok(Chunk::new(String::new(), Metadata::Document {
+                        page_number: Some(page.page_number),
+                        image: Some(base64_image),
+                    }))).is_err() {
+                        return;
+                    }
+                    offset = end;
+                    segment_index += 1;
+                }
+            }
+        }
+    });
+
+    tokio::spawn(async move {
+        if let Err(e) = worker.await {
+            let _ = worker_error_tx.send(Err(format!("Document parser task failed: {e}").into())).await;
+        }
+    });
+    Ok(Box::pin(ReceiverStream::new(rx)))
 }
 
 async fn stream_presentation(file_path: &str, extract_images: bool, format: PresentationFormat) -> Result<ChunkStream> {
@@ -551,10 +645,11 @@ async fn stream_presentation(file_path: &str, extract_images: bool, format: Pres
                         let is_end = end == total_length;
 
                         let base64_image = Base64Image::new(
-                            image.img_ref.id.clone(),
-                            segment_content.to_string(),
-                            segment_index,
-                            is_end
+                        image.img_ref.id.clone(),
+                        segment_content.to_string(),
+                        segment_index,
+                        is_end,
+                        None,
                         );
 
                         let chunk = Chunk::new(
@@ -610,6 +705,24 @@ fn presentation_metadata_to_markdown(metadata: &PresentationMetadata) -> Option<
             fields.join("\n")
         ))
     }
+}
+
+fn document_metadata_to_markdown(metadata: &DocumentMetadata) -> Option<String> {
+    let mut fields = Vec::new();
+    push_presentation_metadata_field(&mut fields, "Title", metadata.title.as_deref());
+    push_presentation_metadata_field(&mut fields, "Subject", metadata.subject.as_deref());
+    push_presentation_metadata_field(&mut fields, "Author", metadata.author.as_deref());
+    push_presentation_metadata_field(&mut fields, "Last Modified By", metadata.last_modified_by.as_deref());
+    push_presentation_metadata_field(&mut fields, "Description", metadata.description.as_deref());
+    if !metadata.keywords.is_empty() {
+        fields.push(format!("Keywords: {}", sanitize_presentation_metadata_value(&metadata.keywords.join("; "))));
+    }
+    push_presentation_metadata_field(&mut fields, "Created", metadata.created_at.as_deref());
+    push_presentation_metadata_field(&mut fields, "Modified", metadata.modified_at.as_deref());
+    for (name, value) in &metadata.custom {
+        fields.push(format!("Custom {name}: {}", sanitize_presentation_metadata_value(value)));
+    }
+    if fields.is_empty() { None } else { Some(format!("<!-- Document Metadata\n{}\n-->", fields.join("\n"))) }
 }
 
 fn push_presentation_metadata_field(fields: &mut Vec<String>, label: &str, value: Option<&str>) {
