@@ -1249,6 +1249,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             {
                 Id = toolCallId,
                 Type = string.IsNullOrWhiteSpace(returnedToolCall?.Type) ? "function" : returnedToolCall.Type,
+                AdditionalMetadata = returnedToolCall?.AdditionalMetadata ?? new Dictionary<string, JsonElement>(),
                 Function = new ChatCompletionToolFunction
                 {
                     Name = string.IsNullOrWhiteSpace(returnedFunctionName) ? "invalid_tool_call" : returnedFunctionName,
