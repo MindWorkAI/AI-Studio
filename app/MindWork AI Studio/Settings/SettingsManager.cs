@@ -635,13 +635,20 @@ public sealed class SettingsManager
 
     public bool IsToolSelectionVisible(AIStudio.Tools.Components component) => component switch
     {
-        AIStudio.Tools.Components.CHAT => true,
+        AIStudio.Tools.Components.CHAT or
+        AIStudio.Tools.Components.CODING_ASSISTANT or
+        AIStudio.Tools.Components.SLIDE_BUILDER_ASSISTANT or
+        AIStudio.Tools.Components.DOCUMENT_ANALYSIS_ASSISTANT => true,
         _ => this.ConfigurationData.Tools.VisibleToolSelectionComponents.Contains(component.ToString()),
     };
 
     public void SetToolSelectionVisibility(AIStudio.Tools.Components component, bool isVisible)
     {
-        if (component is AIStudio.Tools.Components.CHAT)
+        if (component is
+            AIStudio.Tools.Components.CHAT or
+            AIStudio.Tools.Components.CODING_ASSISTANT or
+            AIStudio.Tools.Components.SLIDE_BUILDER_ASSISTANT or
+            AIStudio.Tools.Components.DOCUMENT_ANALYSIS_ASSISTANT)
             return;
 
         var key = component.ToString();
