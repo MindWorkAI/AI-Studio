@@ -1,8 +1,8 @@
 # Tool Development
 
-This document explains how model-driven tools are added to AI Studio. Tool calling lets a model request a small, well-defined action during a chat or assistant run, such as searching the web or reading a web page.
+This document explains how local model-driven tools are added to AI Studio. Tool calling lets a model request a small, well-defined action during a chat or assistant run, such as searching the web or reading a web page.
 
-Tools are part of the .NET app. They are not Lua plugins and they are not loaded dynamically from user folders. Adding a tool requires code changes.
+Tools are currently part of the .NET app. They are currently not Lua plugins and they are currently not loaded dynamically from user folders. Adding a tool currently requires code changes.
 
 ## Architecture
 
@@ -13,11 +13,19 @@ A tool has two parts:
 
 At startup, `ToolRegistry` reads all JSON definitions and matches each definition to a registered implementation by `implementationKey`. `ToolExecutor` runs the implementation when a provider returns a matching function call.
 
-The provider only sees tools that are available for the current component, selected by the user or defaults, supported by the model, configured correctly, and allowed by the provider confidence rules. The shared tool-call loop limit is `ToolSelectionRules.MAX_TOOL_CALLS`, and all provider tool-call paths use that same limit.
+The provider only sees local tools that are
+
+- available for the current component and
+- selected by the user or defaults and
+- supported by the model and
+- configured correctly and
+- allowed by the provider confidence rules.
+
+Local tool-call loops share two limits from `ToolSelectionRules`: `MAX_TOOL_CALLS` limits the number of calls, while `MAX_TOOL_RESULT_CHARACTERS` limits the cumulative size of results returned to the model. All local provider tool-call paths enforce both limits and ask the model for a final response after either limit is reached.
 
 ## Provider API Shapes
 
-The JSON definition in `wwwroot/tool_definitions` is the single source of truth for a tool. Do not create separate tool definition files for different provider APIs. Provider-specific request shapes are generated in code from the same `ToolDefinition`.
+The JSON definition in `wwwroot/tool_definitions` is the single source of truth for a local function tool. There are no separate local tool definition files for different provider APIs. Provider-specific request shapes are generated in code from the same `ToolDefinition`.
 
 Chat Completions compatible APIs use a nested function shape:
 
@@ -52,6 +60,8 @@ Tool result handling also differs by API. Chat Completions returns tool calls in
 AI Studio currently executes local tool calls sequentially. Therefore, Chat Completions requests with tools always set `parallel_tool_calls` to `false`, limiting each model response to at most one tool call. Requests without tools omit the parameter, and additional API parameters cannot override this behavior. Models can still request additional tools across subsequent responses.
 
 The OpenAI Responses API may continue to return multiple function calls in one response. AI Studio processes those calls sequentially as well; concurrent execution of separate local tool calls is not currently implemented. This does not restrict concurrency used internally by an individual tool.
+
+Provider-native tools are separate from local function tools and do not have a `ToolDefinition` or an `IToolImplementation`. The local tool calling implementation does not influence the provider-native tool selection at all.
 
 If a tool throws `ToolExecutionBlockedException`, `ToolExecutor` returns the exception message as plain text to the model and records the trace as `BLOCKED`. Other exceptions are logged with details and returned to the model as plain text in the form `Tool execution failed: ...`, with the trace recorded as `ERROR`.
 
@@ -222,24 +232,15 @@ For tools that perform network requests:
 
 Web Search does not send category or engine parameters. The SearXNG instance selects them using its own configuration.
 
-Page loading and readable Markdown extraction are shared with `read_web_page` through `WebPageRetrievalService`. The service validates DNS results and every redirect target before connecting. `web_search` always uses the public-only policy and never reads private, loopback, link-local, or otherwise non-public targets. `read_web_page` remains the independent single-URL tool and may use its configured private-host allowlist and operating-system sign-in behavior for allowed HTTPS targets. An allowed private host can only be read by a High-confidence provider or a provider instance listed in `DataSourceSecuritySettings.TrustedProviderIds`.
+Page loading and readable Markdown extraction are shared with `read_web_page` through `WebPageRetrievalService`. The service validates DNS results and every redirect target before connecting. `web_search` always uses the public-only policy and never reads private, loopback, link-local, or otherwise non-public targets. 
+
+`read_web_page` remains the independent single-URL tool and may use its configured private-host allowlist and operating-system sign-in behavior for allowed HTTPS targets. An allowed private host can only be read by a High-confidence provider or a provider instance listed in `DataSourceSecuritySettings.TrustedProviderIds`.
 
 The `web_search` result separates each hit into `search_metadata` and `page`. Its top-level execution metadata contains `candidate_count`, `result_count`, and `retrieval_timed_out`. Search-result URLs and final redirect URLs are deduplicated separately so metadata from merged candidates is retained with the best rank.
 
 Every successfully retrieved page with readable content is also returned as a structured tool source. The source uses the final URL after redirects and prefers the extracted page title, followed by the search-result title and URL as fallbacks. The provider collects these sources across local tool calls and attaches them to the final response under the separate “Sources used by tools” heading. Failed, blocked, empty, and duplicate retrievals do not add sources.
 
-Retrieved Markdown shares a configurable total character budget. Every successful result first receives its configured minimum allocation; the remaining budget is then assigned in ranking order. Short pages leave their unused allocation available to later results. Truncated pages use the shared truncation marker and report `partial` status together with original and returned character counts.
-
-The Web Search settings use these defaults and hard maximums:
-
-- `maxTotalContentCharacters`: 100,000 total returned characters by default, with a hard maximum of 200,000
-- `minContentCharactersPerResult`: 2,000 reserved characters per successful result by default, with a hard maximum of 10,000
-- `pageTimeoutSeconds`: 30 seconds per page by default, with a hard maximum of 60
-- `retrievalTimeoutSeconds`: 60 seconds for all page retrievals by default, with a hard maximum of 120
-
-All values must be positive. The total budget must be large enough to reserve the configured minimum for the hard limit of 20 results. The existing `timeoutSeconds` setting continues to apply only to the SearXNG request.
-
-The two tools can be selected independently. Tool policy text tells the model not to call `read_web_page` for a URL already returned by `web_search`, because the search result already contains that page's retrieved content.
+Retrieved Markdown shares a configurable total character budget. Every successful result first receives its configured minimum allocation; the remaining budget is then assigned in ranking order. Short pages leave their unused allocation available to later results. A page whose content is truncated, or whose original extracted content contains fewer than 500 characters, reports the status `partial or truncated`. Truncated content uses the shared truncation marker.
 
 Every non-secret tool field that administrators should be able to manage centrally must have an explicit enterprise mapping in `ToolSettingsService`. Add its backing setting to the appropriate `Settings/DataModel` class, register it with `ManagedConfiguration.Register(...)`, process it in `PluginConfiguration`, clean leftovers in `PluginFactory.Loading`, and document its purpose, data type, and an example assignment in `Plugins/configuration/plugin.lua`. Locked enterprise values override the local field, while editable enterprise defaults apply only until a user saves a local value. Secret fields require the existing OS-keyring path and must not be routed through plain enterprise settings.
 
