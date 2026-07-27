@@ -90,6 +90,8 @@ public abstract class BaseProvider : IProvider, ISecretId
     /// <inheritdoc />
     public string AdditionalJsonApiParameters { get; init; } = string.Empty;
 
+    internal ProviderCapabilityOverrides? CapabilityOverrides { get; set; }
+
     /// <inheritdoc />
     public abstract bool HasModelLoadingCapability { get; }
 
@@ -1014,11 +1016,12 @@ public abstract class BaseProvider : IProvider, ISecretId
         TextMessage systemPrompt;
         if (toolRegistry is not null && toolExecutor is not null)
         {
+            var providerSettings = this.CreateSettingsProvider(chatModel);
             var runnableTools = await toolRegistry.GetRunnableToolsAsync(
-                this.CreateSettingsProvider(chatModel),
+                providerSettings,
                 chatThread.RuntimeComponent,
                 chatThread.RuntimeSelectedToolIds,
-                this.Provider.GetModelCapabilities(chatModel),
+                providerSettings.GetModelCapabilities(),
                 this.Provider.GetConfidence(settingsManager).Level,
                 settingsManager.IsToolSelectionVisible(chatThread.RuntimeComponent));
 
@@ -1228,6 +1231,7 @@ public abstract class BaseProvider : IProvider, ISecretId
         UsedLLMProvider = this.Provider,
         Model = chatModel,
         InstanceName = this.InstanceName,
+        CapabilityOverrides = this.CapabilityOverrides,
     };
 
     private IList<PreparedChatCompletionToolCall> PrepareChatCompletionToolCalls(
@@ -1294,24 +1298,22 @@ public abstract class BaseProvider : IProvider, ISecretId
         Action<HttpRequestHeaders>? headersAction,
         CancellationToken token)
     {
-        using var request = new HttpRequestMessage(HttpMethod.Post, requestPath);
-        if (requestedSecret.Success)
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
-
-        headersAction?.Invoke(request.Headers);
-        request.Content = new StringContent(JsonSerializer.Serialize(requestDto, JSON_SERIALIZER_OPTIONS), Encoding.UTF8, "application/json");
-
-        using var response = await this.HttpClient.SendAsync(request, token);
-        if (!response.IsSuccessStatusCode)
+        async Task<HttpRequestMessage> RequestBuilder()
         {
-            var responseBody = await response.Content.ReadAsStringAsync(token);
-            this.logger.LogError("Tool calling chat completion request failed with status code {ResponseStatusCode} and body: '{ResponseBody}'.", response.StatusCode, responseBody);
-            await MessageBus.INSTANCE.SendError(new(
-                Icons.Material.Filled.Build,
-                string.Format(TB("The tool calling request failed with status code {0}. See the logs for details."), (int)response.StatusCode)));
-            return null;
+            var request = new HttpRequestMessage(HttpMethod.Post, requestPath);
+            if (requestedSecret.Success)
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
+
+            headersAction?.Invoke(request.Headers);
+            request.Content = new StringContent(JsonSerializer.Serialize(requestDto, JSON_SERIALIZER_OPTIONS), Encoding.UTF8, "application/json");
+            return request;
         }
 
+        var responseData = await this.SendRequest(RequestBuilder, token);
+        if (responseData.IsFailedAfterAllRetries)
+            return null;
+
+        using var response = responseData.Response!;
         return await response.Content.ReadFromJsonAsync<ChatCompletionResponse>(JSON_SERIALIZER_OPTIONS, token);
     }
 

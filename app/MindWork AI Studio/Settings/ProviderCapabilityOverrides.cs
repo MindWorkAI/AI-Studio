@@ -18,6 +18,7 @@ public sealed record ProviderCapabilityOverrides
     private static readonly IReadOnlyList<Capability> SUPPORTED_CAPABILITIES =
     [
         Capability.AUDIO_INPUT,
+        Capability.FUNCTION_CALLING,
         Capability.MULTIPLE_IMAGE_INPUT,
         Capability.SPEECH_INPUT,
         Capability.VIDEO_INPUT,
@@ -29,6 +30,10 @@ public sealed record ProviderCapabilityOverrides
     [JsonPropertyName("AUDIO_INPUT")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public bool? AudioInput { get; init; }
+
+    [JsonPropertyName("FUNCTION_CALLING")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public bool? FunctionCalling { get; init; }
 
     [JsonPropertyName("MULTIPLE_IMAGE_INPUT")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
@@ -57,6 +62,7 @@ public sealed record ProviderCapabilityOverrides
     [JsonIgnore]
     public bool HasOverrides =>
         this.AudioInput is not null ||
+        this.FunctionCalling is not null ||
         this.MultipleImageInput is not null ||
         this.SpeechInput is not null ||
         this.VideoInput is not null ||
@@ -67,6 +73,7 @@ public sealed record ProviderCapabilityOverrides
     public bool? GetOverride(Capability capability) => capability switch
     {
         Capability.AUDIO_INPUT => this.AudioInput,
+        Capability.FUNCTION_CALLING => this.FunctionCalling,
         Capability.MULTIPLE_IMAGE_INPUT => this.MultipleImageInput,
         Capability.SPEECH_INPUT => this.SpeechInput,
         Capability.VIDEO_INPUT => this.VideoInput,
@@ -79,6 +86,7 @@ public sealed record ProviderCapabilityOverrides
     public ProviderCapabilityOverrides SetOverride(Capability capability, bool? value) => capability switch
     {
         Capability.AUDIO_INPUT => this with { AudioInput = value },
+        Capability.FUNCTION_CALLING => this with { FunctionCalling = value },
         Capability.MULTIPLE_IMAGE_INPUT => this with { MultipleImageInput = value },
         Capability.SPEECH_INPUT => this with { SpeechInput = value },
         Capability.VIDEO_INPUT => this with { VideoInput = value },

@@ -76,7 +76,7 @@ CONFIG["LLM_PROVIDERS"] = {}
 --
 --     -- Optional: expert capability overrides.
 --     -- Allowed keys are exactly:
---     -- AUDIO_INPUT, MULTIPLE_IMAGE_INPUT, SPEECH_INPUT, VIDEO_INPUT,
+--     -- AUDIO_INPUT, FUNCTION_CALLING, MULTIPLE_IMAGE_INPUT, SPEECH_INPUT, VIDEO_INPUT,
 --     -- OPTIONAL_REASONING, ALWAYS_REASONING, REASONING_BY_DEFAULT
 --     -- Allowed values are booleans only.
 --     -- For default-on reasoning (rhinking), set OPTIONAL_REASONING and REASONING_BY_DEFAULT to true.

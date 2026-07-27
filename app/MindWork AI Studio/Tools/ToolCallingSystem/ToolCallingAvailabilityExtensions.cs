@@ -22,7 +22,7 @@ public static class ToolCallingAvailabilityExtensions
             modelCapabilities.Contains(Capability.RESPONSES_API);
 
         if (!supportsRequiredApis || !modelCapabilities.Contains(Capability.FUNCTION_CALLING))
-            return new(false, TB("The selected model does not support tool calling."));
+            return new(false, TB("Tool calling support is not enabled by default for this model, but you can enable this capability in the expert settings of the provider if you are sure the model supports it."));
 
         return ToolCallingAvailability.Available();
     }
