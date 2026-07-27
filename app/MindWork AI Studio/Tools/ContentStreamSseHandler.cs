@@ -7,6 +7,7 @@ public static class ContentStreamSseHandler
 {
     private static readonly ConcurrentDictionary<string, List<ContentStreamPptxImageData>> CHUNKED_IMAGES = new();
     private static readonly ConcurrentDictionary<string, SlideManager> SLIDE_MANAGERS = new();
+    private static readonly ConcurrentDictionary<string, DocumentManager> DOCUMENT_MANAGERS = new();
 
     public static string? ProcessEvent(ContentStreamSseEvent? sseEvent, bool extractImages = true)
     {
@@ -39,7 +40,12 @@ public static class ContentStreamSseHandler
                         spreadSheetResult.Append(sseEvent.Content);
                         return spreadSheetResult.ToString();
                 
-                    case ContentStreamDocumentMetadata:
+                    case ContentStreamDocumentMetadata documentMetadata:
+                        if (documentMetadata.Document?.PageNumber is not > 0)
+                            return sseEvent.Content;
+                        var documentManager = DOCUMENT_MANAGERS.GetOrAdd(sseEvent.StreamId!, _ => new());
+                        return documentManager.AddPage(documentMetadata, sseEvent.Content, extractImages);
+
                     case ContentStreamImageMetadata:
                         return sseEvent.Content;
 
@@ -79,6 +85,7 @@ public static class ContentStreamSseHandler
             Content = content,
             Segment = segment,
             IsEnd = isEnd,
+            MediaType = contentStreamPptxImageData.MediaType,
         };
         
         CHUNKED_IMAGES.AddOrUpdate(
@@ -123,8 +130,16 @@ public static class ContentStreamSseHandler
             if (!string.IsNullOrWhiteSpace(result))
                 finalContentChunk.Append(result);
         }
+
+        if (DOCUMENT_MANAGERS.TryGetValue(streamId, out var documentManager))
+        {
+            var result = documentManager.Flush();
+            if (!string.IsNullOrWhiteSpace(result))
+                finalContentChunk.Append(result);
+        }
         
         SLIDE_MANAGERS.TryRemove(streamId, out _);
+        DOCUMENT_MANAGERS.TryRemove(streamId, out _);
         var imageIdPrefix = $"{streamId}-";
         foreach (var key in CHUNKED_IMAGES.Keys.Where(k => k.StartsWith(imageIdPrefix, StringComparison.InvariantCultureIgnoreCase)))
             CHUNKED_IMAGES.TryRemove(key, out _);
