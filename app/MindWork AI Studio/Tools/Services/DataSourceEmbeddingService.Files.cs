@@ -50,8 +50,8 @@ public sealed partial class DataSourceEmbeddingService
                     var chunk = currentChunk.ToString().Trim();
                     if (!string.IsNullOrWhiteSpace(chunk))
                     {
-                        await foreach (var finalChunk in this.SplitChunkByEmbeddingTokenLimitAsync(chunk, embeddingProvider, token))
-                            yield return finalChunk;
+                        await foreach (var splitChunk in this.SplitChunkByEmbeddingTokenLimitAsync(chunk, embeddingProvider, token))
+                            yield return splitChunk;
                     }
 
                     var overlap = chunk.Length > CHUNK_OVERLAP_LENGTH
@@ -239,8 +239,7 @@ public sealed partial class DataSourceEmbeddingService
                         break;
 
                     default:
-                        result.FailedFiles = 1;
-                        result.LastError = $"The selected file '{localFile.FilePath}' is not supported for background embeddings.";
+                        result.AddFailure(localFile.FilePath, $"The selected file '{localFile.FilePath}' is not supported for background embeddings.");
                         break;
                 }
 
@@ -254,13 +253,11 @@ public sealed partial class DataSourceEmbeddingService
         switch (dataSource)
         {
             case DataSourceLocalFile localFile:
-                result.FailedFiles = 1;
-                result.LastError = $"The selected file '{localFile.FilePath}' does not exist.";
+                result.AddFailure(localFile.FilePath, $"The selected file '{localFile.FilePath}' does not exist.");
                 break;
 
             case DataSourceLocalDirectory localDirectory:
-                result.FailedFiles = 1;
-                result.LastError = $"The selected directory '{localDirectory.Path}' does not exist.";
+                result.AddFailure(localDirectory.Path, $"The selected directory '{localDirectory.Path}' does not exist.");
                 break;
         }
 
@@ -286,8 +283,7 @@ public sealed partial class DataSourceEmbeddingService
             catch (Exception exception)
             {
                 logger.LogWarning(exception, "Cannot access directory '{DirectoryPath}' while indexing.", currentPath);
-                result.FailedFiles++;
-                result.LastError = $"The directory '{currentPath}' could not be accessed.";
+                result.AddFailure(currentPath, $"The directory '{currentPath}' could not be accessed.");
                 continue;
             }
 
@@ -303,8 +299,7 @@ public sealed partial class DataSourceEmbeddingService
                 catch (Exception exception)
                 {
                     logger.LogWarning(exception, "Cannot inspect file '{FilePath}' while indexing.", filePath);
-                    result.FailedFiles++;
-                    result.LastError = $"The file '{filePath}' could not be inspected.";
+                    result.AddFailure(filePath, $"The file '{filePath}' could not be inspected.");
                     continue;
                 }
 

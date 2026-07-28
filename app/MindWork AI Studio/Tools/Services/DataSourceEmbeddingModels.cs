@@ -28,7 +28,8 @@ public sealed record DataSourceEmbeddingStatus(
     int IndexedFiles,
     int FailedFiles,
     string CurrentFile,
-    string LastError)
+    string LastError,
+    IReadOnlyList<DataSourceEmbeddingFailure> Failures)
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(DataSourceEmbeddingService).Namespace, nameof(DataSourceEmbeddingService));
 
@@ -53,13 +54,26 @@ public sealed record DataSourceEmbeddingStatus(
     };
 }
 
+public sealed record DataSourceEmbeddingFailure(
+    string FilePath,
+    string Reason);
+
 public sealed class FileEnumerationResult
 {
     public List<FileInfo> Files { get; } = [];
 
+    public List<DataSourceEmbeddingFailure> Failures { get; } = [];
+
     public int FailedFiles { get; set; }
 
     public string LastError { get; set; } = string.Empty;
+
+    public void AddFailure(string filePath, string reason)
+    {
+        this.Failures.Add(new DataSourceEmbeddingFailure(filePath, reason));
+        this.FailedFiles = this.Failures.Count;
+        this.LastError = reason;
+    }
 }
 
 public sealed class DataSourceEmbeddingManifest

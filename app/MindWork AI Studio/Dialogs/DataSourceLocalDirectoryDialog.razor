@@ -59,17 +59,7 @@
             {
                 if (this.SelectedCloudEmbedding)
                 {
-                    <MudJustifiedText Typo="Typo.body1" Color="Color.Error" Class="mb-3">
-                        @if (string.IsNullOrWhiteSpace(this.dataPath))
-                        {
-                            @T("Please note: the embedding you selected runs in the cloud. All your data will be sent to the cloud. Please confirm that you have read and understood this.")
-                        }
-                        else
-                        {
-                            @string.Format(T("Please note: the embedding you selected runs in the cloud. All your data from the folder '{0}' and all its subdirectories will be sent to the cloud. Please confirm that you have read and understood this."), this.dataPath)
-                        }
-                    </MudJustifiedText>
-                    <MudTextSwitch @bind-Value="@this.dataUserAcknowledgedCloudEmbedding" Label="@T("I confirm that I have read and understood the above")" LabelOn="@T("Yes, please send my data to the cloud")" LabelOff="@T("No, I will chose another embedding")" Validation="@this.dataSourceValidation.ValidateUserAcknowledgedCloudEmbedding"/>
+                    <DataSourceCloudEmbeddingWarning DataSourceType="DataSourceType.LOCAL_DIRECTORY" SourcePath="@this.dataPath" @bind-UserAcknowledged="@this.dataUserAcknowledgedCloudEmbedding" Validation="@this.dataSourceValidation.ValidateUserAcknowledgedCloudEmbedding"/>
                 }
                 else
                 {

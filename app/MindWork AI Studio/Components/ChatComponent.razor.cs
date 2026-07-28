@@ -81,7 +81,6 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private Guid loadedParameterWorkspaceId = Guid.Empty;
     private Guid foregroundChatId = Guid.Empty;
     private int workspaceHeaderSyncVersion;
-    private CancellationTokenSource? cancellationTokenSource;
     private HashSet<FileAttachment> chatDocumentPaths = [];
     private string tokenCount = "0";
     private string TokenCountMessage => $"{this.T("Estimated amount of tokens:")} {this.tokenCount}";

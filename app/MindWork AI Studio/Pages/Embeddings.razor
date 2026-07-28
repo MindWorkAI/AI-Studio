@@ -28,7 +28,15 @@
                 <MudStack Spacing="2">
                     <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
                         <MudText Typo="Typo.h6">@status.DataSourceName</MudText>
-                        <MudChip T="string" Color="@GetStatusColor(status)" Variant="Variant.Filled">@status.StateLabel</MudChip>
+                        <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
+                            <MudChip T="string" Color="@GetStatusColor(status)" Variant="Variant.Filled">@status.StateLabel</MudChip>
+                            @if (CanRefresh(status))
+                            {
+                                <MudTooltip Text="@T("Refresh this data source")">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Sync" Color="Color.Info" Size="Size.Small" OnClick="@(async () => await this.RefreshDataSource(status))" />
+                                </MudTooltip>
+                            }
+                        </MudStack>
                     </MudStack>
 
                     <MudProgressLinear Value="@status.ProgressPercent" Rounded="@true" Color="@GetStatusColor(status)" />
@@ -51,7 +59,28 @@
                         </MudText>
                     }
 
-                    @if (!string.IsNullOrWhiteSpace(status.LastError))
+                    @if (status.Failures.Count > 0)
+                    {
+                        <MudExpansionPanels MultiExpansion="@false" Class="mt-2">
+                            <ExpansionPanel HeaderIcon="@Icons.Material.Filled.ReportProblem" HeaderText="@string.Format(T("Failure details ({0})"), status.Failures.Count)" MaxHeight="360">
+                                <MudStack Spacing="2">
+                                    @foreach (var failure in status.Failures)
+                                    {
+                                        <MudStack Spacing="1" Class="py-1">
+                                            <MudText Typo="Typo.body2" Style="word-break: break-word;">
+                                                @failure.FilePath
+                                            </MudText>
+                                            <MudText Typo="Typo.caption" Color="Color.Warning" Style="word-break: break-word;">
+                                                @failure.Reason
+                                            </MudText>
+                                        </MudStack>
+                                    }
+                                </MudStack>
+                            </ExpansionPanel>
+                        </MudExpansionPanels>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(status.LastError) && status.Failures.Count == 0)
                     {
                         <MudAlert Severity="Severity.Warning" Variant="Variant.Text">
                             @status.LastError

@@ -54,4 +54,18 @@ public partial class Embeddings : MSGComponentBase
         DataSourceEmbeddingState.COMPLETED => Color.Success,
         _ => Color.Default,
     };
+
+    private bool CanRefresh(DataSourceEmbeddingStatus status)
+    {
+        return this.DataSourceEmbeddingService.CanRefreshDataSource(status.DataSourceId) &&
+            status.State is not DataSourceEmbeddingState.RUNNING and not DataSourceEmbeddingState.QUEUED &&
+            (status.State is DataSourceEmbeddingState.FAILED || status.FailedFiles > 0);
+    }
+
+    private async Task RefreshDataSource(DataSourceEmbeddingStatus status)
+    {
+        await this.DataSourceEmbeddingService.QueueDataSourceAsync(status.DataSourceId);
+        this.ReloadStatuses();
+        await this.InvokeAsync(this.StateHasChanged);
+    }
 }

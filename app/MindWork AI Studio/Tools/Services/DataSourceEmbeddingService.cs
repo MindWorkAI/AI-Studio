@@ -103,9 +103,27 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         this.RefreshWatchers();
     }
 
+    public bool CanRefreshDataSource(IDataSource dataSource)
+    {
+        return this.IsSupportedInternalDataSource(dataSource);
+    }
+
+    public bool CanRefreshDataSource(string dataSourceId)
+    {
+        return this.TryGetConfiguredDataSource(dataSourceId, out var dataSource) &&
+            this.CanRefreshDataSource(dataSource);
+    }
+
     public Task QueueDataSourceAsync(IDataSource dataSource)
     {
         return this.QueueDataSourceAsync(dataSource, true);
+    }
+
+    public Task QueueDataSourceAsync(string dataSourceId)
+    {
+        return this.TryGetConfiguredDataSource(dataSourceId, out var dataSource)
+            ? this.QueueDataSourceAsync(dataSource)
+            : Task.CompletedTask;
     }
 
     private async Task QueueDataSourceAsync(IDataSource dataSource, bool queueAfterCurrentRun)
@@ -134,7 +152,15 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
 
         logger.LogInformation("Queueing data source '{DataSourceName}' ({DataSourceId}) for background embeddings.", dataSource.Name, dataSource.Id);
         if (!this.statuses.TryGetValue(dataSource.Id, out var currentStatus) || currentStatus.State is not DataSourceEmbeddingState.RUNNING)
-            this.UpsertStatus(this.CreateStatus(dataSource, DataSourceEmbeddingState.QUEUED, currentStatus?.TotalFiles ?? 0, currentStatus?.IndexedFiles ?? 0, currentStatus?.FailedFiles ?? 0));
+        {
+            this.UpsertStatus(this.CreateStatus(
+                dataSource,
+                DataSourceEmbeddingState.QUEUED,
+                currentStatus?.TotalFiles ?? 0,
+                currentStatus?.IndexedFiles ?? 0,
+                currentStatus?.FailedFiles ?? 0,
+                failures: currentStatus?.Failures ?? []));
+        }
         logger.LogDebug("Upserting status for data source '{DataSourceName}' ({DataSourceId}).", dataSource.Name, dataSource.Id);
         await this.queue.Writer.WriteAsync(dataSource.Id);
         logger.LogDebug("Queued data source '{DataSourceName}' ({DataSourceId}).", dataSource.Name, dataSource.Id);
@@ -266,13 +292,15 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             totalFiles,
             0,
             inputFiles.FailedFiles,
-            lastError: inputFiles.LastError));
+            lastError: inputFiles.LastError,
+            failures: inputFiles.Failures));
 
         var provider = embeddingProvider.CreateProvider();
         var skippedFiles = 0;
         var completedFiles = 0;
         var failedFiles = inputFiles.FailedFiles;
         var lastError = inputFiles.LastError;
+        var failureDetails = inputFiles.Failures.ToList();
 
         foreach (var file in indexedFiles)
         {
@@ -288,11 +316,11 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                     dataSource.Name,
                     dataSource.Id);
                 skippedFiles++;
-                this.UpsertStatus(this.CreateStatus(dataSource, DataSourceEmbeddingState.RUNNING, totalFiles, skippedFiles + completedFiles, failedFiles, lastError: lastError));
+                this.UpsertStatus(this.CreateStatus(dataSource, DataSourceEmbeddingState.RUNNING, totalFiles, skippedFiles + completedFiles, failedFiles, lastError: lastError, failures: failureDetails));
                 continue;
             }
 
-            this.UpsertStatus(this.CreateStatus(dataSource, DataSourceEmbeddingState.RUNNING, totalFiles, skippedFiles + completedFiles, failedFiles, file.Name, lastError));
+            this.UpsertStatus(this.CreateStatus(dataSource, DataSourceEmbeddingState.RUNNING, totalFiles, skippedFiles + completedFiles, failedFiles, file.Name, lastError, failureDetails));
 
             try
             {
@@ -338,16 +366,17 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             {
                 failedFiles++;
                 lastError = exception.Message;
+                failureDetails.Add(new DataSourceEmbeddingFailure(file.FullName, exception.Message));
                 manifest.Files.Remove(file.FullName);
                 await this.DeleteFilePointsAsync(vectorStore, collectionName, file.FullName, token);
                 await embeddingState.DeleteFileAsync(dataSource.Id, file.FullName, token);
 
                 logger.LogWarning(exception, "Failed to embed file '{FilePath}' for data source '{DataSourceName}'.", file.FullName, dataSource.Name);
-                this.UpsertStatus(this.CreateStatus(dataSource, DataSourceEmbeddingState.RUNNING, totalFiles, skippedFiles + completedFiles, failedFiles, file.Name, exception.Message));
+                this.UpsertStatus(this.CreateStatus(dataSource, DataSourceEmbeddingState.RUNNING, totalFiles, skippedFiles + completedFiles, failedFiles, file.Name, exception.Message, failureDetails));
             }
         }
 
-        this.UpsertStatus(this.CreateCompletedStatus(dataSource, totalFiles, skippedFiles + completedFiles, failedFiles, lastError));
+        this.UpsertStatus(this.CreateCompletedStatus(dataSource, totalFiles, skippedFiles + completedFiles, failedFiles, lastError, failureDetails));
         logger.LogInformation(
             "Finished background embeddings for data source '{DataSourceName}' ({DataSourceId}). Indexed={IndexedFiles}, Failed={FailedFiles}, Total={TotalFiles}.",
             dataSource.Name,
@@ -558,6 +587,14 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         return dataSource is DataSourceLocalDirectory or DataSourceLocalFile;
     }
 
+    private bool TryGetConfiguredDataSource(string dataSourceId, [NotNullWhen(true)] out IDataSource? dataSource)
+    {
+        dataSource = settingsManager.ConfigurationData.DataSources
+            .FirstOrDefault(source => source.Id.Equals(dataSourceId, StringComparison.OrdinalIgnoreCase));
+
+        return dataSource is not null;
+    }
+
     private bool TryResolveEmbeddingProvider(IDataSource dataSource, [NotNullWhen(true)] out EmbeddingProvider? embeddingProvider)
     {
         embeddingProvider = settingsManager.ConfigurationData.EmbeddingProviders.FirstOrDefault(provider =>
@@ -641,7 +678,8 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         int indexedFiles,
         int failedFiles,
         string currentFile = "",
-        string lastError = "")
+        string lastError = "",
+        IReadOnlyList<DataSourceEmbeddingFailure>? failures = null)
     {
         return new DataSourceEmbeddingStatus(
             dataSource.Id,
@@ -652,10 +690,11 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             indexedFiles,
             failedFiles,
             currentFile,
-            lastError);
+            lastError,
+            failures?.ToList() ?? []);
     }
 
-    private DataSourceEmbeddingStatus CreateCompletedStatus(IDataSource dataSource, int totalFiles, int indexedFiles, int failedFiles, string lastError)
+    private DataSourceEmbeddingStatus CreateCompletedStatus(IDataSource dataSource, int totalFiles, int indexedFiles, int failedFiles, string lastError, IReadOnlyList<DataSourceEmbeddingFailure>? failures = null)
     {
         return this.CreateStatus(
             dataSource,
@@ -667,12 +706,20 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                 ? string.IsNullOrWhiteSpace(lastError)
                     ? "Some files could not be embedded. See the logs for details."
                     : lastError
-                : string.Empty);
+                : string.Empty,
+            failures: failures);
     }
 
     private DataSourceEmbeddingStatus GetFallbackStatus(IDataSource dataSource, string errorMessage)
     {
-        return this.CreateStatus(dataSource, DataSourceEmbeddingState.FAILED, 0, 0, 1, lastError: errorMessage);
+        return this.CreateStatus(
+            dataSource,
+            DataSourceEmbeddingState.FAILED,
+            0,
+            0,
+            1,
+            lastError: errorMessage,
+            failures: [new DataSourceEmbeddingFailure(dataSource.Name, errorMessage)]);
     }
 
     private DataSourceQueueRequestResult TryReserveDataSourceQueueSlot(string dataSourceId, bool queueAfterCurrentRun)
@@ -749,7 +796,8 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             currentStatus?.TotalFiles ?? 0,
             currentStatus?.IndexedFiles ?? 0,
             currentStatus?.FailedFiles ?? 0,
-            lastError: currentStatus?.LastError ?? string.Empty));
+            lastError: currentStatus?.LastError ?? string.Empty,
+            failures: currentStatus?.Failures ?? []));
 
         try
         {

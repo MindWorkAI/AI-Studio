@@ -31,7 +31,7 @@ public partial class SettingsDialogDataSources : SettingsDialogBase
 
     private bool CanRefreshDataSource(IDataSource dataSource)
     {
-        return dataSource is DataSourceLocalDirectory or DataSourceLocalFile;
+        return this.DataSourceEmbeddingService.CanRefreshDataSource(dataSource);
     }
 
     private bool HasRefreshableDataSources()

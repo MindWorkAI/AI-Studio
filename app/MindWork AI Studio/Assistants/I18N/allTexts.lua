@@ -2206,6 +2206,36 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONSHORTCUT::T4081853237"] = "C
 -- Configure Keyboard Shortcut
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONSHORTCUT::T636303786"] = "Configure Keyboard Shortcut"
 
+-- Yes, please send my data to the external embedding provider
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCECLOUDEMBEDDINGWARNING::T1159107763"] = "Yes, please send my data to the external embedding provider"
+
+-- No, I will choose another embedding
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCECLOUDEMBEDDINGWARNING::T1246976418"] = "No, I will choose another embedding"
+
+-- The data source '{0}'
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCECLOUDEMBEDDINGWARNING::T2503488371"] = "The data source '{0}'"
+
+-- The file '{0}'
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCECLOUDEMBEDDINGWARNING::T2794508936"] = "The file '{0}'"
+
+-- Warning: The selected embedding provider is not self-hosted. Creating embeddings can cost money and may need to run multiple times, for example after errors or file changes. {0} will be sent to an external third party. MindWork AI Studio has no control over what that third party does with the data after it is sent.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCECLOUDEMBEDDINGWARNING::T3457494593"] = "Warning: The selected embedding provider is not self-hosted. Creating embeddings can cost money and may need to run multiple times, for example after errors or file changes. {0} will be sent to an external third party. MindWork AI Studio has no control over what that third party does with the data after it is sent."
+
+-- I confirm that I have read and understood the above
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCECLOUDEMBEDDINGWARNING::T3683380716"] = "I confirm that I have read and understood the above"
+
+-- The selected data
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCECLOUDEMBEDDINGWARNING::T3793916111"] = "The selected data"
+
+-- The selected file
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCECLOUDEMBEDDINGWARNING::T3999057817"] = "The selected file"
+
+-- All files in the folder '{0}' and its subfolders
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCECLOUDEMBEDDINGWARNING::T661754597"] = "All files in the folder '{0}' and its subfolders"
+
+-- All files in this folder and its subfolders
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCECLOUDEMBEDDINGWARNING::T916879200"] = "All files in this folder and its subfolders"
+
 -- Yes, let the AI decide which data sources are needed.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T1031370894"] = "Yes, let the AI decide which data sources are needed."
 
@@ -3805,14 +3835,8 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T1827669611"
 -- Update
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T1847791252"] = "Update"
 
--- Please note: the embedding you selected runs in the cloud. All your data will be sent to the cloud. Please confirm that you have read and understood this.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T1922618794"] = "Please note: the embedding you selected runs in the cloud. All your data will be sent to the cloud. Please confirm that you have read and understood this."
-
 -- In order for the AI to be able to determine the appropriate data at any time, you must choose an embedding method.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T1948697886"] = "In order for the AI to be able to determine the appropriate data at any time, you must choose an embedding method."
-
--- Please note: the embedding you selected runs in the cloud. All your data from the folder '{0}' and all its subdirectories will be sent to the cloud. Please confirm that you have read and understood this.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T2403121734"] = "Please note: the embedding you selected runs in the cloud. All your data from the folder '{0}' and all its subdirectories will be sent to the cloud. Please confirm that you have read and understood this."
 
 -- Add
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T2646845972"] = "Add"
@@ -3826,17 +3850,8 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T2838542994"
 -- For some data types, such as Office files, MindWork AI Studio requires the open-source application Pandoc.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3359366900"] = "For some data types, such as Office files, MindWork AI Studio requires the open-source application Pandoc."
 
--- Yes, please send my data to the cloud
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3572613009"] = "Yes, please send my data to the cloud"
-
--- I confirm that I have read and understood the above
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T3683380716"] = "I confirm that I have read and understood the above"
-
 -- Your security policy
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T4081226330"] = "Your security policy"
-
--- No, I will chose another embedding
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T4253147533"] = "No, I will chose another embedding"
 
 -- Select the base directory
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALDIRECTORYDIALOG::T562479068"] = "Select the base directory"
@@ -3931,14 +3946,8 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T1827669611"] = "
 -- Update
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T1847791252"] = "Update"
 
--- Please note: the embedding you selected runs in the cloud. All your data will be sent to the cloud. Please confirm that you have read and understood this.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T1922618794"] = "Please note: the embedding you selected runs in the cloud. All your data will be sent to the cloud. Please confirm that you have read and understood this."
-
 -- In order for the AI to be able to determine the appropriate data at any time, you must choose an embedding method.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T1948697886"] = "In order for the AI to be able to determine the appropriate data at any time, you must choose an embedding method."
-
--- Please note: the embedding you selected runs in the cloud. All your data within the file '{0}' will be sent to the cloud. Please confirm that you have read and understood this.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T2090178026"] = "Please note: the embedding you selected runs in the cloud. All your data within the file '{0}' will be sent to the cloud. Please confirm that you have read and understood this."
 
 -- Add
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T2646845972"] = "Add"
@@ -3955,20 +3964,11 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T2859265837"] = "
 -- For some data types, such as Office files, MindWork AI Studio requires the open-source application Pandoc.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T3359366900"] = "For some data types, such as Office files, MindWork AI Studio requires the open-source application Pandoc."
 
--- Yes, please send my data to the cloud
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T3572613009"] = "Yes, please send my data to the cloud"
-
--- I confirm that I have read and understood the above
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T3683380716"] = "I confirm that I have read and understood the above"
-
 -- Select the file
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T3740148848"] = "Select the file"
 
 -- Your security policy
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T4081226330"] = "Your security policy"
-
--- No, I will chose another embedding
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T4253147533"] = "No, I will chose another embedding"
 
 -- Data Source Name
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEDIALOG::T813773421"] = "Data Source Name"
@@ -4168,6 +4168,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T2331453405"] = "(O
 -- Invalid tokenizer:
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T2448302543"] = "Invalid tokenizer:"
 
+-- Maximum number of tokens sent to the embedding model per chunk.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T2544519277"] = "Maximum number of tokens sent to the embedding model per chunk."
+
 -- Add
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T2646845972"] = "Add"
 
@@ -4182,6 +4185,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T2842060373"] = "In
 
 -- Currently, we cannot query the embedding models for the selected provider and/or host. Therefore, please enter the model name manually.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T290547799"] = "Currently, we cannot query the embedding models for the selected provider and/or host. Therefore, please enter the model name manually."
+
+-- Token limit
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T2961294165"] = "Token limit"
+
+-- Please enter a token limit greater than 0.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T3316544737"] = "Please enter a token limit greater than 0."
 
 -- Choose a custom tokenizer here
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T3787466119"] = "Choose a custom tokenizer here"
@@ -6160,6 +6169,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T2525374657"] = "{0} of {1} files 
 -- Background embeddings
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T2547971789"] = "Background embeddings"
 
+-- Refresh this data source
+UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T2901874229"] = "Refresh this data source"
+
 -- Failed files: {0}
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T309404893"] = "Failed files: {0}"
 
@@ -6168,6 +6180,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T3473125711"] = "Indexed files: {0
 
 -- No local data source has been queued for embedding yet.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T3774205531"] = "No local data source has been queued for embedding yet."
+
+-- Failure details ({0})
+UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T843144866"] = "Failure details ({0})"
 
 -- Unlike services like ChatGPT, which impose limits after intensive use, MindWork AI Studio offers unlimited usage through the providers API.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T1009708591"] = "Unlike services like ChatGPT, which impose limits after intensive use, MindWork AI Studio offers unlimited usage through the providers API."
