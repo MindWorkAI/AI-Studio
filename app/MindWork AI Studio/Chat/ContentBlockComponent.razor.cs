@@ -33,6 +33,8 @@ public partial class ContentBlockComponent : MSGComponentBase, IAsyncDisposable
         "<iframe",
         "<svg",
     ];
+    
+    private static readonly ILogger LOGGER = Program.LOGGER_FACTORY.CreateLogger(nameof(ContentBlockComponent));
 
     /// <summary>
     /// The role of the chat content block.
@@ -546,9 +548,17 @@ public partial class ContentBlockComponent : MSGComponentBase, IAsyncDisposable
             await this.RemoveBlockFunc(this.Content);
     }
     
-    private async Task ExportToWord()
+    private async Task ExportDocument(FileExportFormat format)
     {
-        await PandocExport.ToMicrosoftWord(this.RustService, this.DialogService, T("Export Chat to Microsoft Word"), this.Content);
+        try
+        {
+            await PandocExport.ToDocument(this.RustService, this.DialogService, format, this.Content);
+        }
+        catch (ArgumentOutOfRangeException e)
+        {
+            await this.MessageBus.SendError(new(Icons.Material.Filled.Error, string.Format(this.T("Failed to export document to unknown file format '{0}'."), format)));
+            LOGGER.LogError($"Failed to export document, because the format ('{format}') is unknown to our Pandoc service:\n{e}");
+        }
     }
     
     private async Task RegenerateBlock()
