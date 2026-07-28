@@ -424,7 +424,20 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             dataSource.Id);
 
         var texts = batch.Select(item => item.Text).ToList();
-        var vectors = await provider.EmbedTextAsync(embeddingProvider.Model, settingsManager, token, texts);
+        IReadOnlyList<IReadOnlyList<float>> vectors;
+        try
+        {
+            vectors = await provider.EmbedTextAsync(embeddingProvider.Model, settingsManager, token, texts);
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            throw new InvalidOperationException($"The embedding provider failed to embed {batch.Count} chunk(s) for file '{file.Name}'. Provider message: {exception.Message}", exception);
+        }
+
         if (vectors.Count != batch.Count)
             throw new InvalidOperationException($"The embedding provider returned {vectors.Count} vectors for {batch.Count} text chunks.");
 

@@ -82,12 +82,21 @@ public sealed partial class DataSourceEmbeddingService
 
     private async IAsyncEnumerable<string> SplitChunkByEmbeddingTokenLimitAsync(string chunk, EmbeddingProvider embeddingProvider, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken token)
     {
-        var tokenLimit = embeddingProvider.EffectiveTokenLimit;
+        var tokenLimit = embeddingProvider.EffectiveChunkTokenLimit;
         var tokenCount = await this.GetEmbeddingTokenCountAsync(embeddingProvider, chunk, token);
         if (tokenCount <= tokenLimit)
         {
             yield return chunk;
             yield break;
+        }
+
+        if (embeddingProvider.UsesAssumedTokenSizing)
+        {
+            logger.LogDebug(
+                "Using conservative embedding chunk limit {ChunkTokenLimit} for provider '{EmbeddingProviderName}' because tokenizer or token limit sizing is assumed. ConfiguredTokenLimit={ConfiguredTokenLimit}.",
+                tokenLimit,
+                embeddingProvider.Name,
+                embeddingProvider.EffectiveTokenLimit);
         }
 
         logger.LogDebug(
@@ -430,7 +439,8 @@ public sealed partial class DataSourceEmbeddingService
             embeddingProvider.Host,
             embeddingProvider.Hostname,
             embeddingProvider.TokenizerPath,
-            embeddingProvider.EffectiveTokenLimit);
+            embeddingProvider.EffectiveTokenLimit,
+            embeddingProvider.EffectiveChunkTokenLimit);
     }
 
     private async Task<string> BuildFingerprintAsync(FileInfo file, CancellationToken token)

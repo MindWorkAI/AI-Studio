@@ -25,6 +25,7 @@ public sealed record EmbeddingProvider(
     int TokenLimit = 8_191) : ConfigurationBaseObject, ISecretId
 {
     public const int DEFAULT_TOKEN_LIMIT = 8_191;
+    private const int ASSUMED_TOKEN_LIMIT_SAFETY_PERCENT = 80;
 
     private static readonly ILogger<EmbeddingProvider> LOGGER = Program.LOGGER_FACTORY.CreateLogger<EmbeddingProvider>();
 
@@ -56,6 +57,16 @@ public sealed record EmbeddingProvider(
 
     [JsonIgnore]
     public int EffectiveTokenLimit => this.TokenLimit > 0 ? this.TokenLimit : DEFAULT_TOKEN_LIMIT;
+
+    [JsonIgnore]
+    public bool UsesAssumedTokenSizing => string.IsNullOrWhiteSpace(this.TokenizerPath)
+                                          || this.TokenLimit <= 0
+                                          || this.TokenLimit == DEFAULT_TOKEN_LIMIT;
+
+    [JsonIgnore]
+    public int EffectiveChunkTokenLimit => this.UsesAssumedTokenSizing
+        ? Math.Max(1, (int)Math.Ceiling(this.EffectiveTokenLimit * ASSUMED_TOKEN_LIMIT_SAFETY_PERCENT / 100d) - 1)
+        : this.EffectiveTokenLimit;
 
     #endregion
 
