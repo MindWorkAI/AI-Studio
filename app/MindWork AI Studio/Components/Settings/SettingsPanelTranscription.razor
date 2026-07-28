@@ -36,9 +36,9 @@
 
                 <MudTd>
                     <MudStack Row="true" Class="mb-2 mt-2" Spacing="1" Wrap="Wrap.Wrap">
-                        @if (context.IsTrustedByConfiguration(this.SettingsManager))
+                        @if (context.IsTrustedForDataSourceSecurityChecks(this.SettingsManager))
                         {
-                            <MudTooltip Text="@T("This transcription provider is trusted by your organization for data source security checks.")">
+                            <MudTooltip Text="@(context.IsSelfHosted ? T("This self-hosted transcription provider is trusted for data source security checks.") : T("This transcription provider is trusted by your organization for data source security checks."))">
                                 <MudIconButton Color="Color.Success" Icon="@Icons.Material.Filled.VerifiedUser" Disabled="true"/>
                             </MudTooltip>
                         }
