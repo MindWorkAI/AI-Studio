@@ -15,6 +15,7 @@ public record ConfigMeta<TClass, TValue> : ConfigMetaBase
     {
         this.ConfigSelection = configSelection;
         this.PropertyExpression = propertyExpression;
+        this.SettingName = SettingsManager.ToSettingName(propertyExpression);
     }
 
     /// <summary>
@@ -26,6 +27,11 @@ public record ConfigMeta<TClass, TValue> : ConfigMetaBase
     /// The expression to select the property within the configuration class.
     /// </summary>
     private Expression<Func<TClass, TValue>> PropertyExpression { get; }
+
+    /// <summary>
+    /// The persisted name of the configuration setting.
+    /// </summary>
+    private string SettingName { get; }
 	
     /// <summary>
     /// Indicates whether the configuration is locked by a configuration plugin.
@@ -77,6 +83,25 @@ public record ConfigMeta<TClass, TValue> : ConfigMetaBase
         this.LockedByConfigPluginId = pluginId;
         this.ManagedMode = ManagedConfigurationMode.LOCKED;
         this.EditableDefaultByConfigPluginId = Guid.Empty;
+        SettingsManagerAccess.ConfigurationData.ManagedLockedConfigurations[this.SettingName] = pluginId;
+    }
+
+    /// <summary>
+    /// Restores persisted locked configuration metadata after settings were loaded.
+    /// </summary>
+    public void RestoreLockedConfiguration()
+    {
+        if (this.IsLocked || this.ManagedMode is not null)
+            return;
+
+        if (!SettingsManagerAccess.ConfigurationData.ManagedLockedConfigurations.TryGetValue(this.SettingName, out var pluginId)
+            || pluginId == Guid.Empty)
+            return;
+
+        this.IsLocked = true;
+        this.LockedByConfigPluginId = pluginId;
+        this.ManagedMode = ManagedConfigurationMode.LOCKED;
+        this.EditableDefaultByConfigPluginId = Guid.Empty;
     }
     
     /// <summary>
@@ -85,6 +110,7 @@ public record ConfigMeta<TClass, TValue> : ConfigMetaBase
     /// </summary>
     public void ResetLockedConfiguration()
     {
+        SettingsManagerAccess.ConfigurationData.ManagedLockedConfigurations.Remove(this.SettingName);
         this.IsLocked = false;
         this.LockedByConfigPluginId = Guid.Empty;
         if (this.ManagedMode is ManagedConfigurationMode.LOCKED)
@@ -98,6 +124,7 @@ public record ConfigMeta<TClass, TValue> : ConfigMetaBase
     /// </summary>
     public void UnlockConfiguration()
     {
+        SettingsManagerAccess.ConfigurationData.ManagedLockedConfigurations.Remove(this.SettingName);
         this.IsLocked = false;
         this.LockedByConfigPluginId = Guid.Empty;
         if (this.ManagedMode is ManagedConfigurationMode.LOCKED)
@@ -109,6 +136,7 @@ public record ConfigMeta<TClass, TValue> : ConfigMetaBase
     /// </summary>
     public void SetEditableDefaultConfiguration(Guid pluginId)
     {
+        SettingsManagerAccess.ConfigurationData.ManagedLockedConfigurations.Remove(this.SettingName);
         this.IsLocked = false;
         this.LockedByConfigPluginId = Guid.Empty;
         this.ManagedMode = ManagedConfigurationMode.EDITABLE_DEFAULT;

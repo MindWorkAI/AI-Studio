@@ -37,6 +37,7 @@ public static partial class ManagedConfiguration
         var configPath = Path(configSelection, propertyExpression);
         if (METADATA.TryGetValue(configPath, out var value) && value is ConfigMeta<TClass, TValue> meta)
         {
+            meta.RestoreLockedConfiguration();
             configMeta = meta;
             return true;
         }
@@ -73,6 +74,7 @@ public static partial class ManagedConfiguration
         var configPath = Path(configSelection, propertyExpression);
         if (METADATA.TryGetValue(configPath, out var value) && value is ConfigMeta<TClass, string> meta)
         {
+            meta.RestoreLockedConfiguration();
             configMeta = meta;
             return true;
         }
@@ -114,6 +116,7 @@ public static partial class ManagedConfiguration
         var configPath = Path(configSelection, propertyExpression);
         if (METADATA.TryGetValue(configPath, out var value) && value is ConfigMeta<TClass, TValue> meta)
         {
+            meta.RestoreLockedConfiguration();
             configMeta = meta;
             return true;
         }
@@ -151,6 +154,7 @@ public static partial class ManagedConfiguration
         var configPath = Path(configSelection, propertyExpression);
         if (METADATA.TryGetValue(configPath, out var value) && value is ConfigMeta<TClass, IList<TValue>> meta)
         {
+            meta.RestoreLockedConfiguration();
             configMeta = meta;
             return true;
         }
@@ -186,6 +190,7 @@ public static partial class ManagedConfiguration
         var configPath = Path(configSelection, propertyExpression);
         if (METADATA.TryGetValue(configPath, out var value) && value is ConfigMeta<TClass, ISet<TValue>> meta)
         {
+            meta.RestoreLockedConfiguration();
             configMeta = meta;
             return true;
         }
@@ -220,6 +225,7 @@ public static partial class ManagedConfiguration
         var configPath = Path(configSelection, propertyExpression);
         if (METADATA.TryGetValue(configPath, out var value) && value is ConfigMeta<TClass, IDictionary<string, string>> meta)
         {
+            meta.RestoreLockedConfiguration();
             configMeta = meta;
             return true;
         }
@@ -258,6 +264,7 @@ public static partial class ManagedConfiguration
         var configPath = Path(configSelection, propertyExpression);
         if (METADATA.TryGetValue(configPath, out var value) && value is ConfigMeta<TClass, Dictionary<TKey, TValue>> meta)
         {
+            meta.RestoreLockedConfiguration();
             configMeta = meta;
             return true;
         }

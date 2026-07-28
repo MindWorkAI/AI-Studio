@@ -369,6 +369,72 @@ public static partial class PluginFactory
         // Check enterprise-managed assistant plugin approvals
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.AssistantPluginAudit, x => x.EnterpriseApprovedPlugins, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;
+
+        // Compatibility shim: repair config-only values that may predate persisted lock ownership.
+        // these values can only be set by a config plugin and therefore cause the biggest problem, since the user can not change them himself
+        if (ManagedConfiguration.TryGet(x => x.App, x => x.ShowIntroduction, out var showIntroductionMeta)
+            && showIntroductionMeta.ManagedMode is null
+            && !SettingsManagerAccess.ConfigurationData.App.ShowIntroduction)
+        {
+            showIntroductionMeta.ResetLockedConfiguration();
+            wasConfigurationChanged = true;
+        }
+
+        if (ManagedConfiguration.TryGet(x => x.App, x => x.ShowQuickStartGuide, out var showQuickStartGuideMeta)
+            && showQuickStartGuideMeta.ManagedMode is null
+            && !SettingsManagerAccess.ConfigurationData.App.ShowQuickStartGuide)
+        {
+            showQuickStartGuideMeta.ResetLockedConfiguration();
+            wasConfigurationChanged = true;
+        }
+
+        if (ManagedConfiguration.TryGet(x => x.App, x => x.ShowLastChangelog, out var showLastChangelogMeta)
+            && showLastChangelogMeta.ManagedMode is null
+            && !SettingsManagerAccess.ConfigurationData.App.ShowLastChangelog)
+        {
+            showLastChangelogMeta.ResetLockedConfiguration();
+            wasConfigurationChanged = true;
+        }
+
+        if (ManagedConfiguration.TryGet(x => x.App, x => x.ShowVision, out var showVisionMeta)
+            && showVisionMeta.ManagedMode is null
+            && !SettingsManagerAccess.ConfigurationData.App.ShowVision)
+        {
+            showVisionMeta.ResetLockedConfiguration();
+            wasConfigurationChanged = true;
+        }
+
+        if (ManagedConfiguration.TryGet(x => x.App, x => x.AllowUserToAddProvider, out var allowUserToAddProviderMeta)
+            && allowUserToAddProviderMeta.ManagedMode is null
+            && !SettingsManagerAccess.ConfigurationData.App.AllowUserToAddProvider)
+        {
+            allowUserToAddProviderMeta.ResetLockedConfiguration();
+            wasConfigurationChanged = true;
+        }
+
+        if (ManagedConfiguration.TryGet(x => x.App, x => x.HiddenAssistants, out var hiddenAssistantsMeta)
+            && hiddenAssistantsMeta.ManagedMode is null
+            && SettingsManagerAccess.ConfigurationData.App.HiddenAssistants.Count > 0)
+        {
+            hiddenAssistantsMeta.ResetLockedConfiguration();
+            wasConfigurationChanged = true;
+        }
+
+        if (ManagedConfiguration.TryGet(x => x.DataSourceSecurity, x => x.TrustedProviderIds, out var trustedProviderIdsMeta)
+            && trustedProviderIdsMeta.ManagedMode is null
+            && SettingsManagerAccess.ConfigurationData.DataSourceSecurity.TrustedProviderIds.Count > 0)
+        {
+            trustedProviderIdsMeta.ResetLockedConfiguration();
+            wasConfigurationChanged = true;
+        }
+
+        if (ManagedConfiguration.TryGet(x => x.AssistantPluginAudit, x => x.EnterpriseApprovedPlugins, out var enterpriseApprovedPluginsMeta)
+            && enterpriseApprovedPluginsMeta.ManagedMode is null
+            && SettingsManagerAccess.ConfigurationData.AssistantPluginAudit.EnterpriseApprovedPlugins.Count > 0)
+        {
+            enterpriseApprovedPluginsMeta.ResetLockedConfiguration();
+            wasConfigurationChanged = true;
+        }
         
         if (wasConfigurationChanged)
         {
