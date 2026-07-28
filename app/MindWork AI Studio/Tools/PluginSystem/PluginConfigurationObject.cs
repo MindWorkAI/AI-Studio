@@ -171,10 +171,11 @@ public sealed record PluginConfigurationObject
     public static async Task<bool> SyncManagedTokenizersAsync(Guid configPluginId, string pluginPath)
     {
         var wasConfigurationChanged = false;
+        var localSettingsManager = SettingsManagerAccess;
 
-        for (var i = 0; i < SETTINGS_MANAGER.ConfigurationData.Providers.Count; i++)
+        for (var i = 0; i < localSettingsManager.ConfigurationData.Providers.Count; i++)
         {
-            var provider = SETTINGS_MANAGER.ConfigurationData.Providers[i];
+            var provider = localSettingsManager.ConfigurationData.Providers[i];
             if (!provider.IsEnterpriseConfiguration || provider.EnterpriseConfigurationPluginId != configPluginId)
                 continue;
 
@@ -182,13 +183,13 @@ public sealed record PluginConfigurationObject
             if (syncedProvider == provider)
                 continue;
 
-            SETTINGS_MANAGER.ConfigurationData.Providers[i] = syncedProvider;
+            localSettingsManager.ConfigurationData.Providers[i] = syncedProvider;
             wasConfigurationChanged = true;
         }
 
-        for (var i = 0; i < SETTINGS_MANAGER.ConfigurationData.EmbeddingProviders.Count; i++)
+        for (var i = 0; i < localSettingsManager.ConfigurationData.EmbeddingProviders.Count; i++)
         {
-            var provider = SETTINGS_MANAGER.ConfigurationData.EmbeddingProviders[i];
+            var provider = localSettingsManager.ConfigurationData.EmbeddingProviders[i];
             if (!provider.IsEnterpriseConfiguration || provider.EnterpriseConfigurationPluginId != configPluginId)
                 continue;
 
@@ -196,7 +197,7 @@ public sealed record PluginConfigurationObject
             if (syncedProvider == provider)
                 continue;
 
-            SETTINGS_MANAGER.ConfigurationData.EmbeddingProviders[i] = syncedProvider;
+            localSettingsManager.ConfigurationData.EmbeddingProviders[i] = syncedProvider;
             wasConfigurationChanged = true;
         }
 
@@ -345,13 +346,13 @@ public sealed record PluginConfigurationObject
         {
             if (item is Settings.Provider provider)
             {
-                var deleteTokenizerResult = await RUST_SERVICE.DeleteTokenizer(TokenizerModelId.ForProvider(provider));
+                var deleteTokenizerResult = await RustService.DeleteTokenizer(TokenizerModelId.ForProvider(provider));
                 if (!deleteTokenizerResult.Success)
                     LOG.LogWarning("Failed to delete tokenizer for removed enterprise provider '{ProviderName}': {Issue}", provider.InstanceName, deleteTokenizerResult.Message);
             }
             else if (item is EmbeddingProvider embeddingProvider)
             {
-                var deleteTokenizerResult = await RUST_SERVICE.DeleteTokenizer(TokenizerModelId.ForEmbeddingProvider(embeddingProvider));
+                var deleteTokenizerResult = await RustService.DeleteTokenizer(TokenizerModelId.ForEmbeddingProvider(embeddingProvider));
                 if (!deleteTokenizerResult.Success)
                     LOG.LogWarning("Failed to delete tokenizer for removed enterprise embedding provider '{ProviderName}': {Issue}", embeddingProvider.Name, deleteTokenizerResult.Message);
             }
@@ -406,7 +407,7 @@ public sealed record PluginConfigurationObject
     {
         if (string.IsNullOrWhiteSpace(configuredTokenizerPath))
         {
-            var deleteResult = await RUST_SERVICE.DeleteTokenizer(modelId);
+            var deleteResult = await RustService.DeleteTokenizer(modelId);
             if (!deleteResult.Success)
                 LOG.LogWarning("Failed to delete tokenizer for {LogName}: {Issue}", logName, deleteResult.Message);
 
@@ -416,7 +417,7 @@ public sealed record PluginConfigurationObject
         var resolvedPath = ResolvePluginTokenizerPath(configuredTokenizerPath, pluginPath);
         if (resolvedPath is null)
         {
-            var deleteResult = await RUST_SERVICE.DeleteTokenizer(modelId);
+            var deleteResult = await RustService.DeleteTokenizer(modelId);
             if (!deleteResult.Success)
                 LOG.LogWarning("Failed to delete tokenizer after invalid path for {LogName}: {Issue}", logName, deleteResult.Message);
 
@@ -424,10 +425,10 @@ public sealed record PluginConfigurationObject
             return string.Empty;
         }
 
-        var validateResult = await RUST_SERVICE.ValidateTokenizer(resolvedPath);
+        var validateResult = await RustService.ValidateTokenizer(resolvedPath);
         if (!validateResult.Success)
         {
-            var deleteResult = await RUST_SERVICE.DeleteTokenizer(modelId);
+            var deleteResult = await RustService.DeleteTokenizer(modelId);
             if (!deleteResult.Success)
                 LOG.LogWarning("Failed to delete tokenizer after validation failure for {LogName}: {Issue}", logName, deleteResult.Message);
 
@@ -435,7 +436,7 @@ public sealed record PluginConfigurationObject
             return string.Empty;
         }
 
-        var storeResult = await RUST_SERVICE.StoreTokenizer(modelId, resolvedPath);
+        var storeResult = await RustService.StoreTokenizer(modelId, resolvedPath);
         if (!storeResult.Success)
         {
             LOG.LogWarning("Failed to store tokenizer for {LogName}. Path='{TokenizerPath}', issue='{Issue}'", logName, resolvedPath, storeResult.Message);

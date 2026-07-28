@@ -10,8 +10,19 @@ namespace AIStudio.Tools.Services;
 
 public sealed partial class DataSourceEmbeddingService
 {
-    private static readonly string[] ADDITIONAL_RAG_FILE_EXTENSIONS = ["csv", "tsv", "ods", "xlsm", "xlsb", "xla", "xlam"];
+    private const string OFFICE_LOCK_FILE_PREFIX = "~$";
+
+    private static readonly string[] RAG_DELIMITED_TABLE_FILE_EXTENSIONS = ["csv", "tsv"];
+    private static readonly string[] RAG_SPREADSHEET_FILE_EXTENSIONS = ["ods", "xlsm", "xlsb"];
+    private static readonly string[] RAG_SPREADSHEET_ADD_IN_FILE_EXTENSIONS = ["xla", "xlam"];
     private static readonly string[] SKIPPED_RAG_FILE_EXTENSIONS = ["lnk"];
+
+    private enum RagFileIndexingDecision
+    {
+        INDEXABLE,
+        EXCLUDED,
+        UNSUPPORTED,
+    }
 
     private async IAsyncEnumerable<string> StreamEmbeddingChunksAsync(string filePath, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken token)
     {
@@ -67,14 +78,21 @@ public sealed partial class DataSourceEmbeddingService
         switch (dataSource)
         {
             case DataSourceLocalFile localFile when File.Exists(localFile.FilePath):
-                if (this.IsSupportedRagFilePath(localFile.FilePath))
+                var file = new FileInfo(localFile.FilePath);
+                switch (this.GetRagFileIndexingDecision(file))
                 {
-                    result.Files.Add(new FileInfo(localFile.FilePath));
-                }
-                else
-                {
-                    result.FailedFiles = 1;
-                    result.LastError = $"The selected file '{localFile.FilePath}' is not supported for background embeddings.";
+                    case RagFileIndexingDecision.INDEXABLE:
+                        result.Files.Add(file);
+                        break;
+
+                    case RagFileIndexingDecision.EXCLUDED:
+                        logger.LogDebug("Skipping excluded file '{FilePath}' while indexing.", file.FullName);
+                        break;
+
+                    default:
+                        result.FailedFiles = 1;
+                        result.LastError = $"The selected file '{localFile.FilePath}' is not supported for background embeddings.";
+                        break;
                 }
 
                 return result;
@@ -141,14 +159,25 @@ public sealed partial class DataSourceEmbeddingService
                     continue;
                 }
 
-                if (!this.IsSupportedRagFilePath(fileInfo.FullName))
-                    continue;
+                switch (this.GetRagFileIndexingDecision(fileInfo))
+                {
+                    case RagFileIndexingDecision.INDEXABLE:
+                        result.Files.Add(fileInfo);
+                        break;
 
-                result.Files.Add(fileInfo);
+                    case RagFileIndexingDecision.EXCLUDED:
+                        logger.LogDebug("Skipping excluded file '{FilePath}' while indexing.", fileInfo.FullName);
+                        break;
+                }
             }
 
             foreach (var subDirectory in subDirectories)
+            {
+                if (this.IsSkippedRagDirectory(subDirectory))
+                    continue;
+
                 pendingDirectories.Push(subDirectory);
+            }
         }
     }
 
@@ -174,11 +203,59 @@ public sealed partial class DataSourceEmbeddingService
     private bool IsSupportedRagFilePath(string filePath)
     {
         var extension = Path.GetExtension(filePath).TrimStart('.');
-        if (SKIPPED_RAG_FILE_EXTENSIONS.Contains(extension, StringComparer.OrdinalIgnoreCase))
-            return false;
-
         return FileTypes.IsAllowedPath(filePath, FileTypes.DOCUMENT, FileTypes.IMAGE)
-               || ADDITIONAL_RAG_FILE_EXTENSIONS.Contains(extension, StringComparer.OrdinalIgnoreCase);
+               || RAG_DELIMITED_TABLE_FILE_EXTENSIONS.Contains(extension, StringComparer.OrdinalIgnoreCase)
+               || RAG_SPREADSHEET_FILE_EXTENSIONS.Contains(extension, StringComparer.OrdinalIgnoreCase)
+               || RAG_SPREADSHEET_ADD_IN_FILE_EXTENSIONS.Contains(extension, StringComparer.OrdinalIgnoreCase);
+    }
+
+    private RagFileIndexingDecision GetRagFileIndexingDecision(FileInfo file)
+    {
+        if (this.IsSkippedRagFile(file))
+            return RagFileIndexingDecision.EXCLUDED;
+
+        return this.IsSupportedRagFilePath(file.FullName)
+            ? RagFileIndexingDecision.INDEXABLE
+            : RagFileIndexingDecision.UNSUPPORTED;
+    }
+
+    private bool IsSkippedRagFile(FileInfo file)
+    {
+        var extension = file.Extension.TrimStart('.');
+        if (SKIPPED_RAG_FILE_EXTENSIONS.Contains(extension, StringComparer.OrdinalIgnoreCase))
+            return true;
+
+        if (file.Name.StartsWith(OFFICE_LOCK_FILE_PREFIX, StringComparison.Ordinal))
+            return true;
+
+        try
+        {
+            return file.Attributes.HasFlag(FileAttributes.ReparsePoint)
+                   || file.Attributes.HasFlag(FileAttributes.Offline)
+                   || file.Attributes.HasFlag(FileAttributes.Temporary)
+                   || file.Attributes.HasFlag(FileAttributes.System);
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(exception, "Cannot inspect file '{FilePath}' while indexing.", file.FullName);
+            return true;
+        }
+    }
+
+    private bool IsSkippedRagDirectory(string path)
+    {
+        try
+        {
+            var directory = new DirectoryInfo(path);
+            return directory.Attributes.HasFlag(FileAttributes.ReparsePoint)
+                   || directory.Attributes.HasFlag(FileAttributes.Offline)
+                   || directory.Attributes.HasFlag(FileAttributes.System);
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(exception, "Cannot inspect directory '{DirectoryPath}' while indexing.", path);
+            return true;
+        }
     }
 
     private string BuildImageIndexText(string filePath)
@@ -212,9 +289,17 @@ public sealed partial class DataSourceEmbeddingService
             embeddingProvider.TokenizerPath);
     }
 
-    private string BuildFingerprint(FileInfo file)
+    private async Task<string> BuildFingerprintAsync(FileInfo file, CancellationToken token)
     {
-        var fingerprintSource = $"{file.FullName}|{file.Length}|{file.LastWriteTimeUtc.Ticks}";
+        await using var stream = new FileStream(
+            file.FullName,
+            FileMode.Open,
+            FileAccess.Read,
+            FileShare.ReadWrite | FileShare.Delete,
+            1024 * 128,
+            FileOptions.Asynchronous | FileOptions.SequentialScan);
+        var contentHash = await SHA256.HashDataAsync(stream, token);
+        var fingerprintSource = $"{file.FullName}|{Convert.ToHexString(contentHash)}";
         var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(fingerprintSource));
         return Convert.ToHexString(bytes);
     }

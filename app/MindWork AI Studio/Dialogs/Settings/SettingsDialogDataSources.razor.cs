@@ -294,7 +294,7 @@ public partial class SettingsDialogDataSources : SettingsDialogBase
 
         var dialogParameters = new DialogParameters<ConfirmDialog>
         {
-            { x => x.Message, string.Format(T("Are you sure you want to delete the data source '{0}' of type {1}?"), dataSource.Name, dataSource.Type.GetDisplayName()) },
+            { x => x.Message, string.Format(T("Are you sure you want to delete the data source '{0}' of type '{1}'?"), dataSource.Name, dataSource.Type.GetDisplayName()) },
         };
         
         var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete Data Source"), dialogParameters, DialogOptions.FULLSCREEN);

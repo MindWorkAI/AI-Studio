@@ -225,7 +225,7 @@ public static class LLMProvidersExtensions
     /// <returns>The provider instance.</returns>
     public static IProvider CreateProvider(this AIStudio.Settings.Provider providerSettings)
     {
-        return providerSettings.UsedLLMProvider.CreateProvider(providerSettings.InstanceName, providerSettings.Host, providerSettings.Hostname, providerSettings.Model, providerSettings.HFInferenceProvider, providerSettings.Id, providerSettings.AdditionalJsonApiParameters, providerSettings.TokenizerPath, providerSettings.IsEnterpriseConfiguration);
+        return providerSettings.UsedLLMProvider.CreateProvider(providerSettings.InstanceName, providerSettings.Host, providerSettings.Hostname, providerSettings.Model, providerSettings.HFInferenceProvider, providerSettings.Id, providerSettings.AdditionalJsonApiParameters, tokenizerPath: providerSettings.TokenizerPath, providerSettings.IsEnterpriseConfiguration);
     }
     
     /// <summary>
@@ -235,7 +235,7 @@ public static class LLMProvidersExtensions
     /// <returns>The provider instance.</returns>
     public static IProvider CreateProvider(this EmbeddingProvider embeddingProviderSettings)
     {
-        return embeddingProviderSettings.UsedLLMProvider.CreateProvider(embeddingProviderSettings.Name, embeddingProviderSettings.Host, embeddingProviderSettings.Hostname, embeddingProviderSettings.Model, HFInferenceProvider.NONE, configuredProviderId: embeddingProviderSettings.Id, embeddingProviderSettings.TokenizerPath, isEnterpriseConfiguration: embeddingProviderSettings.IsEnterpriseConfiguration);
+        return embeddingProviderSettings.UsedLLMProvider.CreateProvider(embeddingProviderSettings.Name, embeddingProviderSettings.Host, embeddingProviderSettings.Hostname, embeddingProviderSettings.Model, HFInferenceProvider.NONE, configuredProviderId: embeddingProviderSettings.Id, tokenizerPath: embeddingProviderSettings.TokenizerPath, isEnterpriseConfiguration: embeddingProviderSettings.IsEnterpriseConfiguration);
     }
     
     /// <summary>
@@ -245,10 +245,10 @@ public static class LLMProvidersExtensions
     /// <returns>The provider instance.</returns>
     public static IProvider CreateProvider(this TranscriptionProvider transcriptionProviderSettings)
     {
-        return transcriptionProviderSettings.UsedLLMProvider.CreateProvider(transcriptionProviderSettings.Name, transcriptionProviderSettings.Host, transcriptionProviderSettings.Hostname, transcriptionProviderSettings.Model, HFInferenceProvider.NONE, configuredProviderId: transcriptionProviderSettings.Id, string.Empty, isEnterpriseConfiguration: transcriptionProviderSettings.IsEnterpriseConfiguration);
+        return transcriptionProviderSettings.UsedLLMProvider.CreateProvider(transcriptionProviderSettings.Name, transcriptionProviderSettings.Host, transcriptionProviderSettings.Hostname, transcriptionProviderSettings.Model, HFInferenceProvider.NONE, configuredProviderId: transcriptionProviderSettings.Id, tokenizerPath: string.Empty, isEnterpriseConfiguration: transcriptionProviderSettings.IsEnterpriseConfiguration);
     }
     
-    private static IProvider CreateProvider(this LLMProviders provider, string instanceName, Host host, string hostname, Model model, HFInferenceProvider inferenceProvider, string configuredProviderId = "", string tokenizerPath = "", string expertProviderApiParameter = "", bool isEnterpriseConfiguration = false)
+    private static IProvider CreateProvider(this LLMProviders provider, string instanceName, Host host, string hostname, Model model, HFInferenceProvider inferenceProvider, string configuredProviderId = "", string expertProviderApiParameter = "", string tokenizerPath = "", bool isEnterpriseConfiguration = false)
     {
         try
         {

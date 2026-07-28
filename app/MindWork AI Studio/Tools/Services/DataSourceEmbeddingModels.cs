@@ -62,11 +62,6 @@ public sealed class FileEnumerationResult
     public string LastError { get; set; } = string.Empty;
 }
 
-public sealed class PersistedEmbeddingState
-{
-    public Dictionary<string, DataSourceEmbeddingManifest> DataSources { get; init; } = new(StringComparer.OrdinalIgnoreCase);
-}
-
 public sealed class DataSourceEmbeddingManifest
 {
     public string EmbeddingProviderId { get; set; } = string.Empty;

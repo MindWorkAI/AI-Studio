@@ -17,6 +17,7 @@ public sealed class NoDatabaseClient(string name, string? unavailableReason, Dat
 
         await Task.CompletedTask;
     }
+
     public override void Dispose()
     {
     }

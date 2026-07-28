@@ -341,6 +341,11 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
         }
     }
 
+    /// <summary>
+    /// Stores a new tokenizer or deletes the existing one, based on the specified tokenizer path.
+    /// If the path is null or empty, any existing tokenizer is removed.
+    /// Otherwise, the tokenizer is stored at the specified path.
+    /// </summary>
     private Task<TokenizerResponse> StoreOrDeleteTokenizerAsync()
     {
         var tokenizerId = TokenizerModelId.ForEmbeddingProviderId(this.DataId);

@@ -1,5 +1,6 @@
-using AIStudio.Tools.Services;
+using AIStudio.Tools.Databases.EmbeddingState;
 using AIStudio.Tools.Databases.VectorStore;
+using AIStudio.Tools.Services;
 
 namespace AIStudio.Tools.Databases;
 
@@ -56,6 +57,18 @@ public sealed partial class DatabaseClientProvider(RustService rustService, ILog
             client.Status);
     }
 
+    public async Task<EmbeddingStateClient> GetEmbeddingStateAsync(CancellationToken cancellationToken = default)
+    {
+        var client = await this.GetClientAsync(DatabaseRole.EMBEDDING_STATE, cancellationToken);
+        if (client is EmbeddingStateClient embeddingState)
+            return embeddingState;
+
+        return new NoEmbeddingStateClient(
+            client.Name,
+            "The configured database client does not support embedding state operations.",
+            client.Status);
+    }
+
     private DatabaseClient CacheIfAvailable(DatabaseRole databaseRole, DatabaseClient client)
     {
         if (!client.IsAvailable)
@@ -92,6 +105,7 @@ public sealed partial class DatabaseClientProvider(RustService rustService, ILog
     private async Task<DatabaseClient> CreateClientAsync(DatabaseRole databaseRole, CancellationToken cancellationToken) => databaseRole switch
     {
         DatabaseRole.VECTOR_STORE => await QdrantEdgeClientImplementation.CreateAsync(rustService, this.logger, this.databaseClientLogger, cancellationToken),
+        DatabaseRole.EMBEDDING_STATE => await SqliteEmbeddingStateClientImplementation.CreateAsync(this.logger, this.databaseClientLogger, cancellationToken),
         _ => new NoDatabaseClient(databaseRole.ToString(), "The requested database role is not supported.")
     };
 

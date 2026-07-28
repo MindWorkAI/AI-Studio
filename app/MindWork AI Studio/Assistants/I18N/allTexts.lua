@@ -2896,10 +2896,11 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T32678
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T3448155331"] = "Close"
 
--- Couldn't delete the embedding provider '{0}'. The issue: {1}. We can ignore this issue and delete the embedding provider anyway. Do you want to ignore it and delete this embedding provider?
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T3703173892"] = "Couldn't delete the embedding provider '{0}'. The issue: {1}. We can ignore this issue and delete the embedding provider anyway. Do you want to ignore it and delete this embedding provider?"
 -- This embedding provider is trusted by your organization for data source security checks. Local data can be sent to it without security warnings.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T3459188215"] = "This embedding provider is trusted by your organization for data source security checks. Local data can be sent to it without security warnings."
+
+-- Couldn't delete the embedding provider '{0}'. The issue: {1}. We can ignore this issue and delete the embedding provider anyway. Do you want to ignore it and delete this embedding provider?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T3703173892"] = "Couldn't delete the embedding provider '{0}'. The issue: {1}. We can ignore this issue and delete the embedding provider anyway. Do you want to ignore it and delete this embedding provider?"
 
 -- Actions
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T3865031940"] = "Actions"
@@ -4956,9 +4957,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCODING::T585868261"]
 -- You might configure different data sources. A data source can include one file, all files in a directory, or data from your company. Later, you can incorporate these data sources as needed when the AI requires this data to complete a certain task.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T1084943026"] = "You might configure different data sources. A data source can include one file, all files in a directory, or data from your company. Later, you can incorporate these data sources as needed when the AI requires this data to complete a certain task."
 
--- Are you sure you want to delete the data source '{0}' of type {1}?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T1096979935"] = "Are you sure you want to delete the data source '{0}' of type {1}?"
-
 -- Automatic local data source refresh
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T1208397349"] = "Automatic local data source refresh"
 
@@ -5018,6 +5016,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T303146
 
 -- Edit
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T3267849393"] = "Edit"
+
+-- Are you sure you want to delete the data source '{0}' of type '{1}'?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T3337072977"] = "Are you sure you want to delete the data source '{0}' of type '{1}'?"
 
 -- Add Data Source
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T3387511033"] = "Add Data Source"
@@ -5916,10 +5917,11 @@ UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T1614176092"] = "Assistants"
 -- Update
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T1847791252"] = "Update"
 
--- Data sync
-UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T1903948824"] = "Data sync"
 -- Check for updates
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T1890416390"] = "Check for updates"
+
+-- Data sync
+UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T1903948824"] = "Data sync"
 
 -- Your settings were created by a newer AI Studio version. Changes in this session will not be saved. Please install or start the latest available update.
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T1988273622"] = "Your settings were created by a newer AI Studio version. Changes in this session will not be saved. Please install or start the latest available update."
@@ -5969,10 +5971,11 @@ UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T671981715"] = "Some embeddings f
 -- Embeddings are running: {0} of {1} files are indexed.
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T714077986"] = "Embeddings are running: {0} of {1} files are indexed."
 
--- Embeddings
-UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T951463987"] = "Embeddings"
 -- AI Studio does not recognize your settings-format version. Changes in this session will not be saved to avoid overwriting your settings. Please check for updates or contact support.
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T915412625"] = "AI Studio does not recognize your settings-format version. Changes in this session will not be saved to avoid overwriting your settings. Please check for updates or contact support."
+
+-- Embeddings
+UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T951463987"] = "Embeddings"
 
 -- Get coding and debugging support from an LLM.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1243850917"] = "Get coding and debugging support from an LLM."
@@ -6357,6 +6360,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2173617769"] = "This library is 
 
 -- For the secure communication between the user interface and the runtime, we need to create certificates. This Rust library is great for this purpose.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2174764529"] = "For the secure communication between the user interface and the runtime, we need to create certificates. This Rust library is great for this purpose."
+
+-- SQLite stores local RAG indexing metadata and the file fingerprints used to decide whether local files need to be indexed again, without requiring a separate database server or a system SQLite installation.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T224267373"] = "SQLite stores local RAG indexing metadata and the file fingerprints used to decide whether local files need to be indexed again, without requiring a separate database server or a system SQLite installation."
 
 -- OK
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2246359087"] = "OK"
@@ -7311,6 +7317,33 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::CONFIDENCESCHEMESEXTENSIONS::T3893997203"] = "
 
 -- Trust all LLM providers
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::CONFIDENCESCHEMESEXTENSIONS::T4107860491"] = "Trust all LLM providers"
+
+-- Reason
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::EMBEDDINGSTATE::NOEMBEDDINGSTATECLIENT::T1093747001"] = "Reason"
+
+-- Starting
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::EMBEDDINGSTATE::NOEMBEDDINGSTATECLIENT::T1233211769"] = "Starting"
+
+-- Unavailable
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::EMBEDDINGSTATE::NOEMBEDDINGSTATECLIENT::T3662391977"] = "Unavailable"
+
+-- Status
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::EMBEDDINGSTATE::NOEMBEDDINGSTATECLIENT::T6222351"] = "Status"
+
+-- Database path
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::EMBEDDINGSTATE::SQLITEEMBEDDINGSTATECLIENTIMPLEMENTATION::T1100578143"] = "Database path"
+
+-- Storage size
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::EMBEDDINGSTATE::SQLITEEMBEDDINGSTATECLIENTIMPLEMENTATION::T1230141403"] = "Storage size"
+
+-- Indexed files
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::EMBEDDINGSTATE::SQLITEEMBEDDINGSTATECLIENTIMPLEMENTATION::T2235289713"] = "Indexed files"
+
+-- Indexed data sources
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::EMBEDDINGSTATE::SQLITEEMBEDDINGSTATECLIENTIMPLEMENTATION::T3524534748"] = "Indexed data sources"
+
+-- Reported version
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::EMBEDDINGSTATE::SQLITEEMBEDDINGSTATECLIENTIMPLEMENTATION::T3556099842"] = "Reported version"
 
 -- Reason
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::NODATABASECLIENT::T1093747001"] = "Reason"
