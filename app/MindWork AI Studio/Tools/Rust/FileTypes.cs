@@ -31,6 +31,7 @@ public static class FileTypes
     public static readonly FileTypeFilter LUA        = FileTypeFilter.Leaf("Lua", "lua");
     public static readonly FileTypeFilter PHP        = FileTypeFilter.Leaf("PHP", "php");
     public static readonly FileTypeFilter WEB        = FileTypeFilter.Leaf("HTML/CSS", "html", "css");
+    public static readonly FileTypeFilter HYPERTEXT  = FileTypeFilter.Leaf("HTML", "html");
     public static readonly FileTypeFilter APP        = FileTypeFilter.Leaf("Swift/Kotlin", "swift", "kt");
     public static readonly FileTypeFilter SHELL      = FileTypeFilter.Leaf("Shell", "sh", "bash", "zsh");
     public static readonly FileTypeFilter LOG        = FileTypeFilter.Leaf("Log", "log");

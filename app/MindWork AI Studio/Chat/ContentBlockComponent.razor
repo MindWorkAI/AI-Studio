@@ -71,6 +71,11 @@
                                     @T("OpenDocument Text (.odt)")
                                 </MudTooltip>
                             </MudMenuItem>
+                            <MudMenuItem OnClick="@(() => this.ExportDocument(FileExportFormat.HTML))" Icon="@Icons.Custom.FileFormats.FileCode">
+                                <MudTooltip Text="@T("Webpage")">
+                                    @T("Hypertext (.html)")
+                                </MudTooltip>
+                            </MudMenuItem>
                         </MudMenu>
                     </MudTooltip>
                 }
