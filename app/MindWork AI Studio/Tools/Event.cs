@@ -302,5 +302,10 @@ public enum Event
     /// <summary>
     /// Sends content to the slide builder assistant.
     /// </summary>
-    SEND_TO_SLIDE_BUILDER_ASSISTANT
+    SEND_TO_SLIDE_BUILDER_ASSISTANT,
+
+    /// <summary>
+    /// Sends content to the Visual Briefing Assistant.
+    /// </summary>
+    SEND_TO_VISUAL_BRIEFING_ASSISTANT
 }

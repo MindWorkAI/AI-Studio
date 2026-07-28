@@ -103,7 +103,10 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase where TSetting
 
     private MediaImportOwner CurrentMediaImportOwner => MediaImportOwner.ForAssistant(new AssistantSessionKey(this.Component, this.AssistantSessionInstanceId));
 
-    private MediaImportSnapshot? MediaImportSnapshot => string.IsNullOrWhiteSpace(this.AssistantSessionInstanceId)
+    private MediaImportSnapshot? MediaImportSnapshot => this.Component is Tools.Components.VISUAL_BRIEFING_ASSISTANT
+        ? this.MediaTranscriptionService.GetSnapshots().FirstOrDefault(snapshot =>
+            snapshot.Owner.Kind is MediaImportOwnerKind.VISUAL_BRIEFING)
+        : string.IsNullOrWhiteSpace(this.AssistantSessionInstanceId)
         ? this.MediaTranscriptionService.GetSnapshots().FirstOrDefault(snapshot =>
             snapshot.Owner.Kind is MediaImportOwnerKind.ASSISTANT
             && snapshot.Owner.Id.StartsWith($"{this.Component}:", StringComparison.Ordinal))
@@ -140,7 +143,9 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase where TSetting
 
     private void OnMediaImportStateChanged(MediaImportOwner owner)
     {
-        var matches = string.IsNullOrWhiteSpace(this.AssistantSessionInstanceId)
+        var matches = this.Component is Tools.Components.VISUAL_BRIEFING_ASSISTANT
+            ? owner.Kind is MediaImportOwnerKind.VISUAL_BRIEFING
+            : string.IsNullOrWhiteSpace(this.AssistantSessionInstanceId)
             ? owner.Kind is MediaImportOwnerKind.ASSISTANT && owner.Id.StartsWith($"{this.Component}:", StringComparison.Ordinal)
             : owner == this.CurrentMediaImportOwner;
         

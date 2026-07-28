@@ -372,8 +372,8 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         var defaultLightColor = palette.DarkLighten;
         var defaultDarkColor = palette.GrayLight;
         var mediaSnapshots = this.MediaTranscriptionService.GetSnapshots();
-        var hasActiveChatMedia = mediaSnapshots.Any(snapshot => snapshot.IsBusy && snapshot.Owner.Kind is MediaImportOwnerKind.CHAT);
-        var hasActiveAssistantMedia = mediaSnapshots.Any(snapshot => snapshot.IsBusy && snapshot.Owner.Kind is MediaImportOwnerKind.ASSISTANT);
+        var hasActiveChatMedia = mediaSnapshots.Any(snapshot => snapshot is { IsBusy: true, Owner.Kind: MediaImportOwnerKind.CHAT });
+        var hasActiveAssistantMedia = mediaSnapshots.Any(snapshot => snapshot is { IsBusy: true, Owner.Kind: MediaImportOwnerKind.ASSISTANT or MediaImportOwnerKind.VISUAL_BRIEFING });
         var hasActiveChatWork = this.AIJobService.HasActiveJobs || hasActiveChatMedia;
         var hasActiveAssistantWork = this.AssistantSessionService.HasActiveSessions || hasActiveAssistantMedia;
         var chatLightColor = hasActiveChatWork ? activityIndicatorLightColor : defaultLightColor;

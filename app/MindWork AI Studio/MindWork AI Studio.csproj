@@ -46,6 +46,7 @@
         <EmbeddedResource Include="Assistants\I18N\allTexts.lua" CopyToOutputDirectory="PreserveNewest" />
         <EmbeddedResource Include="Assistants\PromptOptimizer\prompting_guideline.md" CopyToOutputDirectory="PreserveNewest" />
         <EmbeddedResource Include="Assistants\Builder\AssistantBuilderLuaResponse.schema.json" CopyToOutputDirectory="PreserveNewest" />
+        <EmbeddedResource Include="Assistants\VisualBriefing\Runtime\echarts.common.min.js" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
 
     <ItemGroup>

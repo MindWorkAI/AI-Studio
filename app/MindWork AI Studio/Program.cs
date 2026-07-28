@@ -1,9 +1,11 @@
 using AIStudio.Agents;
 using AIStudio.Agents.AssistantAudit;
+using AIStudio.Assistants.VisualBriefing;
 using AIStudio.Settings;
 using AIStudio.Tools.Databases;
 using AIStudio.Tools.AIJobs;
 using AIStudio.Tools.AssistantSessions;
+using AIStudio.Tools.Media;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.PluginSystem.Assistants;
 using AIStudio.Tools.Rust;
@@ -165,6 +167,22 @@ internal sealed class Program
         builder.Services.AddSingleton<VoiceRecordingAvailabilityService>();
         builder.Services.AddSingleton<GlobalShortcutService>();
         builder.Services.AddSingleton<MediaTranscriptionService>();
+        builder.Services.AddSingleton<VisualBriefingArtifactService>();
+        builder.Services.AddSingleton<VisualBriefingStore>();
+        builder.Services.AddSingleton<IStructuredLlmStageRunner, StructuredLlmStageRunner>();
+        builder.Services.AddSingleton<IVisualBriefingSourcePreparation, VisualBriefingSourcePreparationService>();
+        builder.Services.AddSingleton<IVisualBriefingEvidenceStage, VisualBriefingEvidenceStage>();
+        builder.Services.AddSingleton<IVisualBriefingPlanStage, VisualBriefingPlanStage>();
+        builder.Services.AddSingleton<IVisualBriefingContentStage, VisualBriefingContentStage>();
+        builder.Services.AddSingleton<VisualBriefingChartCompiler>();
+        builder.Services.AddSingleton<VisualBriefingInteractionCompiler>();
+        builder.Services.AddSingleton<VisualBriefingLayoutCompiler>();
+        builder.Services.AddSingleton<IVisualBriefingPresentationStage, VisualBriefingPresentationStage>();
+        builder.Services.AddSingleton<VisualBriefingBuildProgressService>();
+        builder.Services.AddSingleton<VisualBriefingBuildOrchestrator>();
+        builder.Services.AddSingleton<VisualBriefingPreviewTokenService>();
+        builder.Services.AddSingleton<VisualBriefingTranscriptStorage>();
+        builder.Services.AddSingleton<IMediaTranscriptStorage>(services => services.GetRequiredService<VisualBriefingTranscriptStorage>());
         builder.Services.AddSingleton<AssistantPluginInstallService>();
         builder.Services.AddSingleton<UpdatePolicy>();
         builder.Services.AddSingleton<AssistantPluginGenerationService>();
@@ -263,6 +281,47 @@ internal sealed class Program
 #endif
 
         app.UseAntiforgery();
+        app.MapGet(
+            "/visual-briefing/preview/{briefingId:guid}/{revisionId:guid}",
+            async (
+                Guid briefingId,
+                Guid revisionId,
+                string? token,
+                HttpContext context,
+                VisualBriefingPreviewTokenService tokenService,
+                VisualBriefingStore store,
+                VisualBriefingArtifactService artifactService,
+                ILoggerFactory loggerFactory,
+                CancellationToken cancellationToken) =>
+            {
+                var previewLogger = loggerFactory.CreateLogger("VisualBriefingPreview");
+                if (!tokenService.Validate(token, briefingId, revisionId))
+                {
+                    previewLogger.LogWarning(
+                        new EventId((int)VisualBriefingLogEventId.PREVIEW_REJECTED, VisualBriefingLogEventId.PREVIEW_REJECTED.ToString()),
+                        "Visual briefing preview token rejected. BriefingId={BriefingId} RevisionId={RevisionId}",
+                        briefingId,
+                        revisionId);
+                    return Results.NotFound();
+                }
+
+                var preview = await store.OpenValidatedVersionAsync(briefingId, revisionId, cancellationToken);
+                if (preview is null)
+                {
+                    previewLogger.LogWarning(
+                        new EventId((int)VisualBriefingLogEventId.SECURITY_REJECTED, nameof(VisualBriefingLogEventId.SECURITY_REJECTED)),
+                        "Visual briefing preview artifact rejected. BriefingId={BriefingId} RevisionId={RevisionId}",
+                        briefingId,
+                        revisionId);
+                    return Results.NotFound();
+                }
+
+                context.Response.Headers.CacheControl = "no-store";
+                context.Response.Headers.XContentTypeOptions = "nosniff";
+                context.Response.Headers["Referrer-Policy"] = "no-referrer";
+                context.Response.Headers.ContentSecurityPolicy = VisualBriefingArtifactService.GetContentSecurityPolicy(preview.Value.Parts);
+                return Results.File(preview.Value.Stream, "text/html; charset=utf-8", enableRangeProcessing: false);
+            });
         app.MapRazorComponents<App>()
             .AddInteractiveServerRenderMode();
 

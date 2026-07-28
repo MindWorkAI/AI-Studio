@@ -2272,6 +2272,300 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T61388
 -- Please provide a custom language.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::TRANSLATION::ASSISTANTTRANSLATION::T656744944"] = "Please provide a custom language."
 
+-- confidential
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T1052709079"] = "confidential"
+
+-- Kind
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T1073024099"] = "Kind"
+
+-- Running
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T1160324588"] = "Running"
+
+-- changed
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T1177151643"] = "changed"
+
+-- Rename visual briefing
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T118321815"] = "Rename visual briefing"
+
+-- This briefing is larger than 50 MB. Continue with the {0}?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T128099486"] = "This briefing is larger than 50 MB. Continue with the {0}?"
+
+-- Rebuild briefing
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T1282252432"] = "Rebuild briefing"
+
+-- The visual briefing settings could not be saved.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T131371789"] = "The visual briefing settings could not be saved."
+
+-- Permanently delete the visual briefing '{0}' and all of its versions and transcripts?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T1404635329"] = "Permanently delete the visual briefing '{0}' and all of its versions and transcripts?"
+
+-- Protection level
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T1407518380"] = "Protection level"
+
+-- Failed
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T1434043348"] = "Failed"
+
+-- Curate content
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T1458812674"] = "Curate content"
+
+-- Import
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T1463683828"] = "Import"
+
+-- Delete
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T1469573738"] = "Delete"
+
+-- Version
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T1573770551"] = "Version"
+
+-- Please enter a briefing name.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T1643887357"] = "Please enter a briefing name."
+
+-- private
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T1657474316"] = "private"
+
+-- Source material
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T1697755825"] = "Source material"
+
+-- secret
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T1719429393"] = "secret"
+
+-- This briefing revision was already imported.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T1732858483"] = "This briefing revision was already imported."
+
+-- The selected briefing version failed validation and cannot be exported.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T2007468657"] = "The selected briefing version failed validation and cannot be exported."
+
+-- Refresh status
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T2035829510"] = "Refresh status"
+
+-- Analyze material
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T204596900"] = "Analyze material"
+
+-- Copy technical details
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T208428325"] = "Copy technical details"
+
+-- Documents, spreadsheets, images, audio, and video are considered as source context.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T2228157968"] = "Documents, spreadsheets, images, audio, and video are considered as source context."
+
+-- Compile and save
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T2332777012"] = "Compile and save"
+
+-- Target language
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T237828418"] = "Target language"
+
+-- Audience age group
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T2496533563"] = "Audience age group"
+
+-- New briefing
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T2550941963"] = "New briefing"
+
+-- Briefing name
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T2563775936"] = "Briefing name"
+
+-- internal
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T2591649024"] = "internal"
+
+-- Audience organizational level
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T2599228833"] = "Audience organizational level"
+
+-- The visual briefing was exported.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T2629277950"] = "The visual briefing was exported."
+
+-- A new visual briefing version was created.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T2642092015"] = "A new visual briefing version was created."
+
+-- Update content
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T266242921"] = "Update content"
+
+-- Import as copy
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T2745663129"] = "Import as copy"
+
+-- Visual Briefing Assistant
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T277804139"] = "Visual Briefing Assistant"
+
+-- Enter a new name for this visual briefing.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T2782842014"] = "Enter a new name for this visual briefing."
+
+-- Prepare sources
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T2838352358"] = "Prepare sources"
+
+-- Linked sources
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T2857875074"] = "Linked sources"
+
+-- Action required
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T2870470104"] = "Action required"
+
+-- import
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T288002260"] = "import"
+
+-- Delete visual briefing permanently
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T294572739"] = "Delete visual briefing permanently"
+
+-- top secret
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3010261272"] = "top secret"
+
+-- Resume build
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3016389190"] = "Resume build"
+
+-- Visual assets
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3226971402"] = "Visual assets"
+
+-- Export visual briefing
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3261790455"] = "Export visual briefing"
+
+-- {0} in progress...
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3291403991"] = "{0} in progress..."
+
+-- The visual briefing was imported.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3348040099"] = "The visual briefing was imported."
+
+-- Rename
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3355849203"] = "Rename"
+
+-- other
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3363671541"] = "other"
+
+-- This briefing ID already exists under another name. Import it as a copy with a new ID?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3368713679"] = "This briefing ID already exists under another name. Import it as a copy with a new ID?"
+
+-- public
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3432027008"] = "public"
+
+-- Briefing {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3435387639"] = "Briefing {0}"
+
+-- Custom protection level
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3498106091"] = "Custom protection level"
+
+-- Relink briefing source
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3518578341"] = "Relink briefing source"
+
+-- Author (optional)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3529399925"] = "Author (optional)"
+
+-- Not started
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3531294543"] = "Not started"
+
+-- Plan briefing
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3576809882"] = "Plan briefing"
+
+-- unreachable
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3634242033"] = "unreachable"
+
+-- Audience profile
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3649769130"] = "Audience profile"
+
+-- The visual briefing generation was canceled.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3696523032"] = "The visual briefing generation was canceled."
+
+-- Custom target language
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3848935911"] = "Custom target language"
+
+-- Actions
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3865031940"] = "Actions"
+
+-- Export
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3898821075"] = "Export"
+
+-- Visual Briefings
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3944667360"] = "Visual Briefings"
+
+-- Choose a different export location so the immutable briefing version is not overwritten.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3955270674"] = "Choose a different export location so the immutable briefing version is not overwritten."
+
+-- Completed
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3968379570"] = "Completed"
+
+-- Show source references
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3977003073"] = "Show source references"
+
+-- Transcribe again
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3993380786"] = "Transcribe again"
+
+-- unchanged
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T4017131198"] = "unchanged"
+
+-- Design presentation
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T4023219825"] = "Design presentation"
+
+-- Create briefing
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T4028101071"] = "Create briefing"
+
+-- Create or import a visual briefing to begin.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T4062672222"] = "Create or import a visual briefing to begin."
+
+-- transcript outdated
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T4158473953"] = "transcript outdated"
+
+-- Canceled
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T4165352378"] = "Canceled"
+
+-- Large visual briefing
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T4198749440"] = "Large visual briefing"
+
+-- Relink
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T4202336288"] = "Relink"
+
+-- export
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T4211608755"] = "export"
+
+-- The visual briefing operation failed unexpectedly. Copy the technical details for support.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T4250226519"] = "The visual briefing operation failed unexpectedly. Copy the technical details for support."
+
+-- Change design
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T4263695061"] = "Change design"
+
+-- Audience expertise
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T4279519256"] = "Audience expertise"
+
+-- Reused
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T48113973"] = "Reused"
+
+-- The updated content no longer fits the current presentation. You can continue as a rebuild without another content model call.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T494870741"] = "The updated content no longer fits the current presentation. You can continue as a rebuild without another content model call."
+
+-- Import visual briefing
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T516399136"] = "Import visual briefing"
+
+-- Remove
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T564498461"] = "Remove"
+
+-- strictly confidential
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T578968331"] = "strictly confidential"
+
+-- PNG, JPEG, and WebP assets are analyzed and must appear visibly in the briefing.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T589522135"] = "PNG, JPEG, and WebP assets are analyzed and must appear visibly in the briefing."
+
+-- Status
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T6222351"] = "Status"
+
+-- Briefing scope, notes, or current change instruction (optional)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T622749317"] = "Briefing scope, notes, or current change instruction (optional)"
+
+-- Transcribe media again
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T66182990"] = "Transcribe media again"
+
+-- File
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T723007075"] = "File"
+
+-- Visual briefing preview
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T740269027"] = "Visual briefing preview"
+
+-- Build progress
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T909046610"] = "Build progress"
+
+-- Briefing settings
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T937201158"] = "Briefing settings"
+
+-- Continue as rebuild
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T952170979"] = "Continue as rebuild"
+
+-- Optimize large visual assets
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T981768140"] = "Optimize large visual assets"
+
+-- The media file changed. Transcribe it again with the configured transcription provider?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T998394163"] = "The media file changed. Transcribe it again with the configured transcription provider?"
+
 -- System
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CHATROLEEXTENSIONS::T2402387132"] = "System"
 
@@ -2508,6 +2802,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T1875575968"] = "Click h
 
 -- Transcribe media files
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T2178031033"] = "Transcribe media files"
+
+-- Some files do not use an allowed format and were not attached.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T2250917004"] = "Some files do not use an allowed format and were not attached."
 
 -- Drag and drop files into the marked area or click here to attach documents:
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T230755331"] = "Drag and drop files into the marked area or click here to attach documents:"
@@ -6346,6 +6643,51 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T894123
 -- Preselect live translation?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGTRANSLATION::T918172772"] = "Preselect live translation?"
 
+-- Source references are hidden
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGVISUALBRIEFING::T1087183156"] = "Source references are hidden"
+
+-- Default target language
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGVISUALBRIEFING::T1807183063"] = "Default target language"
+
+-- Large visual assets are optimized
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGVISUALBRIEFING::T181145330"] = "Large visual assets are optimized"
+
+-- Default audience expertise
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGVISUALBRIEFING::T1940046279"] = "Default audience expertise"
+
+-- Show source references by default?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGVISUALBRIEFING::T2029944376"] = "Show source references by default?"
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGVISUALBRIEFING::T3448155331"] = "Close"
+
+-- Default audience organizational level
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGVISUALBRIEFING::T3505026356"] = "Default audience organizational level"
+
+-- Default custom target language
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGVISUALBRIEFING::T3721334320"] = "Default custom target language"
+
+-- Optimize large visual assets by default?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGVISUALBRIEFING::T4001721873"] = "Optimize large visual assets by default?"
+
+-- Visual assets keep their original size
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGVISUALBRIEFING::T4020462859"] = "Visual assets keep their original size"
+
+-- Assistant: Visual Briefing defaults
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGVISUALBRIEFING::T4147978699"] = "Assistant: Visual Briefing defaults"
+
+-- Default audience age group
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGVISUALBRIEFING::T4280510424"] = "Default audience age group"
+
+-- Source references are visible
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGVISUALBRIEFING::T864087250"] = "Source references are visible"
+
+-- Default profile
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGVISUALBRIEFING::T956261591"] = "Default profile"
+
+-- Default audience profile
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGVISUALBRIEFING::T963676741"] = "Default audience profile"
+
 -- If and when should we delete your temporary chats?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGWORKSPACES::T1014418451"] = "If and when should we delete your temporary chats?"
 
@@ -6619,6 +6961,9 @@ UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T578410699"] = "Chat"
 -- AI Studio does not recognize your settings-format version. Changes in this session will not be saved to avoid overwriting your settings. Please check for updates or contact support.
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T915412625"] = "AI Studio does not recognize your settings-format version. Changes in this session will not be saved to avoid overwriting your settings. Please check for updates or contact support."
 
+-- Prototype
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1043365177"] = "Prototype"
+
 -- Get coding and debugging support from an LLM.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1243850917"] = "Get coding and debugging support from an LLM."
 
@@ -6661,6 +7006,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1934717573"] = "Check grammar and
 -- Translate text into another language.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T209791153"] = "Translate text into another language."
 
+-- Turn documents, data, images, audio, and video into an audience-ready interactive briefing.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T2357398627"] = "Turn documents, data, images, audio, and video into an audience-ready interactive briefing."
+
 -- Generate an e-mail for a given context.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T2383649630"] = "Generate an e-mail for a given context."
 
@@ -6678,6 +7026,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T2712131461"] = "Find synonyms for
 
 -- Document Analysis
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T2770149758"] = "Document Analysis"
+
+-- Visual Briefing Assistant
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T277804139"] = "Visual Briefing Assistant"
 
 -- AI Studio Development
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T2830810750"] = "AI Studio Development"
@@ -6901,6 +7252,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1126023000"] = "Qdrant Edge is a
 -- ID mismatch: the plugin ID differs from the enterprise configuration ID.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1137744461"] = "ID mismatch: the plugin ID differs from the enterprise configuration ID."
 
+-- Apache ECharts 6.1.0 common is embedded only in exported visual briefings that use supported data-driven charts.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1156306394"] = "Apache ECharts 6.1.0 common is embedded only in exported visual briefings that use supported data-driven charts."
+
 -- This is a private AI Studio installation. It runs without an enterprise configuration.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1209549230"] = "This is a private AI Studio installation. It runs without an enterprise configuration."
 
@@ -7062,6 +7416,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2765814390"] = "Determine Pandoc
 
 -- Code in the Rust language can be specified as synchronous or asynchronous. Unlike .NET and the C# language, Rust cannot execute asynchronous code by itself. Rust requires support in the form of an executor for this. Tokio is one such executor.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2777988282"] = "Code in the Rust language can be specified as synchronous or asynchronous. Unlike .NET and the C# language, Rust cannot execute asynchronous code by itself. Rust requires support in the form of an executor for this. Tokio is one such executor."
+
+-- The image crate decodes and optimizes PNG, JPEG, and WebP visual assets locally before they are analyzed and embedded in visual briefings.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2787929913"] = "The image crate decodes and optimizes PNG, JPEG, and WebP visual assets locally before they are analyzed and embedded in visual briefings."
 
 -- Show Details
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T27924674"] = "Show Details"
@@ -7798,6 +8155,9 @@ UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::LANGBEHAVIOREXTENSIONS::T3988034
 -- Choose the language automatically, based on your system language.
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::LANGBEHAVIOREXTENSIONS::T485389934"] = "Choose the language automatically, based on your system language."
 
+-- Visual Briefing Assistant: Turn source material into an interactive briefing
+UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::PREVIEWFEATURESEXTENSIONS::T1217946647"] = "Visual Briefing Assistant: Turn source material into an interactive briefing"
+
 -- Writer Mode: Experiments about how to write long texts using AI
 UI_TEXT_CONTENT["AISTUDIO::SETTINGS::DATAMODEL::PREVIEWFEATURESEXTENSIONS::T158702544"] = "Writer Mode: Experiments about how to write long texts using AI"
 
@@ -7977,6 +8337,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T2457005512"] = "Icon Fi
 
 -- Text Summarizer Assistant
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T2684676843"] = "Text Summarizer Assistant"
+
+-- Visual Briefing Assistant
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T277804139"] = "Visual Briefing Assistant"
 
 -- Synonym Assistant
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T2921123194"] = "Synonym Assistant"
@@ -8758,8 +9121,14 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T1779622119"] = "Config"
 -- Audio
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T2291602489"] = "Audio"
 
+-- Visual briefing
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T247025395"] = "Visual briefing"
+
 -- Custom
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T2502277006"] = "Custom"
+
+-- Visual briefing image
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T2505088878"] = "Visual briefing image"
 
 -- Media
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T3507473059"] = "Media"

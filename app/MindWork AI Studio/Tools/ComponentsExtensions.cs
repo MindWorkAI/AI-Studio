@@ -50,6 +50,7 @@ public static class ComponentsExtensions
         Components.I18N_ASSISTANT => TB("Localization Assistant"),
         Components.DOCUMENT_ANALYSIS_ASSISTANT => TB("Document Analysis Assistant"),
         Components.SLIDE_BUILDER_ASSISTANT => TB("Slide Planner Assistant"),
+        Components.VISUAL_BRIEFING_ASSISTANT => TB("Visual Briefing Assistant"),
         Components.META_ASSISTANT => TB("Assistant Builder"),
         Components.LOG_VIEWER_ASSISTANT => TB("Log Viewer Assistant"),
         
@@ -75,6 +76,7 @@ public static class ComponentsExtensions
         Components.JOB_POSTING_ASSISTANT => new(Event.SEND_TO_JOB_POSTING_ASSISTANT, Routes.ASSISTANT_JOB_POSTING),
         Components.DOCUMENT_ANALYSIS_ASSISTANT => new(Event.SEND_TO_DOCUMENT_ANALYSIS_ASSISTANT, Routes.ASSISTANT_DOCUMENT_ANALYSIS),
         Components.SLIDE_BUILDER_ASSISTANT => new(Event.SEND_TO_SLIDE_BUILDER_ASSISTANT, Routes.ASSISTANT_SLIDE_BUILDER),
+        Components.VISUAL_BRIEFING_ASSISTANT => new(Event.SEND_TO_VISUAL_BRIEFING_ASSISTANT, Routes.ASSISTANT_VISUAL_BRIEFING),
         
         Components.CHAT => new(Event.SEND_TO_CHAT, Routes.CHAT),
         
@@ -99,6 +101,7 @@ public static class ComponentsExtensions
         Components.BIAS_DAY_ASSISTANT => settingsManager.ConfigurationData.BiasOfTheDay.PreselectOptions ? settingsManager.ConfigurationData.BiasOfTheDay.MinimumProviderConfidence : default,
         Components.ERI_ASSISTANT => settingsManager.ConfigurationData.ERI.PreselectOptions ? settingsManager.ConfigurationData.ERI.MinimumProviderConfidence : default,
         Components.SLIDE_BUILDER_ASSISTANT => settingsManager.ConfigurationData.SlideBuilder.PreselectOptions ? settingsManager.ConfigurationData.SlideBuilder.MinimumProviderConfidence : default,
+        Components.VISUAL_BRIEFING_ASSISTANT => settingsManager.ConfigurationData.VisualBriefing.MinimumProviderConfidence,
         
         // The minimum confidence for the Document Analysis Assistant is set per policy.
         // We do this inside the Document Analysis Assistant component:
@@ -129,6 +132,7 @@ public static class ComponentsExtensions
             Components.ERI_ASSISTANT => settingsManager.ConfigurationData.ERI.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.ERI.PreselectedProvider) : null,
             Components.I18N_ASSISTANT => settingsManager.ConfigurationData.I18N.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.I18N.PreselectedProvider) : null,
             Components.SLIDE_BUILDER_ASSISTANT => settingsManager.ConfigurationData.SlideBuilder.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.SlideBuilder.PreselectedProvider) : null,
+            Components.VISUAL_BRIEFING_ASSISTANT => settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.VisualBriefing.PreselectedProvider),
             
             // The Document Analysis Assistant does not have a preselected provider at the component level.
             // The provider is selected per policy instead. We do this inside the Document Analysis Assistant component.
@@ -159,6 +163,7 @@ public static class ComponentsExtensions
             Components.BIAS_DAY_ASSISTANT => settingsManager.ConfigurationData.BiasOfTheDay.PreselectOptions ? settingsManager.ConfigurationData.BiasOfTheDay.PreselectedProfile : string.Empty,
             Components.ERI_ASSISTANT => settingsManager.ConfigurationData.ERI.PreselectOptions ? settingsManager.ConfigurationData.ERI.PreselectedProfile : string.Empty,
             Components.SLIDE_BUILDER_ASSISTANT => settingsManager.ConfigurationData.SlideBuilder.PreselectOptions ? settingsManager.ConfigurationData.SlideBuilder.PreselectedProfile : string.Empty,
+            Components.VISUAL_BRIEFING_ASSISTANT => settingsManager.ConfigurationData.VisualBriefing.PreselectedProfile,
             Components.CHAT => settingsManager.ConfigurationData.Chat.PreselectOptions ? settingsManager.ConfigurationData.Chat.PreselectedProfile : string.Empty,
 
             // The Document Analysis Assistant does not have a preselected profile at the component level.

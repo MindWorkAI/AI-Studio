@@ -325,9 +325,23 @@ CONFIG["SETTINGS"] = {}
 --   CODING_ASSISTANT, TEXT_SUMMARIZER_ASSISTANT, EMAIL_ASSISTANT,
 --   LEGAL_CHECK_ASSISTANT, SYNONYMS_ASSISTANT, MY_TASKS_ASSISTANT,
 --   JOB_POSTING_ASSISTANT, BIAS_DAY_ASSISTANT, ERI_ASSISTANT,
---   DOCUMENT_ANALYSIS_ASSISTANT, SLIDE_BUILDER_ASSISTANT, I18N_ASSISTANT,
+--   DOCUMENT_ANALYSIS_ASSISTANT, SLIDE_BUILDER_ASSISTANT, VISUAL_BRIEFING_ASSISTANT, I18N_ASSISTANT,
 --   LOG_VIEWER_ASSISTANT
 -- CONFIG["SETTINGS"]["DataApp.HiddenAssistants"] = { "ERI_ASSISTANT", "I18N_ASSISTANT" }
+
+-- Configure organization defaults for the Visual Briefing Assistant.
+-- Provider and profile values are IDs from CONFIG["LLM_PROVIDERS"] and CONFIG["PROFILES"].
+-- CONFIG["SETTINGS"]["DataVisualBriefing.PreselectedProvider"] = "00000000-0000-0000-0000-000000000000"
+-- CONFIG["SETTINGS"]["DataVisualBriefing.PreselectedProfile"] = "00000000-0000-0000-0000-000000000000"
+-- CONFIG["SETTINGS"]["DataVisualBriefing.PreselectedTargetLanguage"] = "EN_US"
+-- CONFIG["SETTINGS"]["DataVisualBriefing.PreselectedOtherLanguage"] = ""
+-- CONFIG["SETTINGS"]["DataVisualBriefing.PreselectedAudienceProfile"] = "UNSPECIFIED"
+-- CONFIG["SETTINGS"]["DataVisualBriefing.PreselectedAudienceAgeGroup"] = "UNSPECIFIED"
+-- CONFIG["SETTINGS"]["DataVisualBriefing.PreselectedAudienceOrganizationalLevel"] = "UNSPECIFIED"
+-- CONFIG["SETTINGS"]["DataVisualBriefing.PreselectedAudienceExpertise"] = "UNSPECIFIED"
+-- CONFIG["SETTINGS"]["DataVisualBriefing.ShowSourceReferences"] = true
+-- CONFIG["SETTINGS"]["DataVisualBriefing.OptimizeImages"] = true
+-- CONFIG["SETTINGS"]["DataVisualBriefing.MinimumProviderConfidence"] = "NONE"
 
 -- Configure enterprise approvals for assistant plugins.
 -- Each approval is matched only by the current SHA-256 hash over all Lua files

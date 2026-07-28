@@ -1,6 +1,7 @@
 using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Settings.DataModel;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Tools.AIJobs;
 using AIStudio.Tools.AssistantSessions;
@@ -606,7 +607,8 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         };
 
         var sendToData = destination.GetData();
-        if (destination is not Tools.Components.CHAT && this.AssistantSessionService.GetSnapshots().Any(snapshot => snapshot.IsActive && snapshot.Key.Component == destination))
+        if (destination is not Tools.Components.CHAT and not Tools.Components.VISUAL_BRIEFING_ASSISTANT &&
+            this.AssistantSessionService.GetSnapshots().Any(snapshot => snapshot.IsActive && snapshot.Key.Component == destination))
         {
             await this.MessageBus.SendWarning(new(Icons.Material.Filled.Apps, this.TB("This assistant is already running. AI Studio opens the running session instead.")));
             this.NavigationManager.NavigateTo(sendToData.Route);
@@ -642,7 +644,14 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         if (!component.AllowSendTo())
             return false;
 
-        return this.SettingsManager.IsAssistantVisible(component, withLogging: false);
+        var requiredPreviewFeature = component is Tools.Components.VISUAL_BRIEFING_ASSISTANT
+            ? PreviewFeatures.PRE_VISUAL_BRIEFING_ASSISTANT_2026
+            : PreviewFeatures.NONE;
+        
+        return this.SettingsManager.IsAssistantVisible(
+            component,
+            withLogging: false,
+            requiredPreviewFeature: requiredPreviewFeature);
     }
     
     private async Task InnerResetForm()

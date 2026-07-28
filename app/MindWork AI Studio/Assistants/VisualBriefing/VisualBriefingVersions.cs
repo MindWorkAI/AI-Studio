@@ -1,0 +1,30 @@
+namespace AIStudio.Assistants.VisualBriefing;
+
+/// <summary>
+/// Defines <c>VisualBriefingVersions</c> for the visual briefing feature.
+/// </summary>
+public static class VisualBriefingVersions
+{
+    /// <summary>Gets the standalone artifact contract version.</summary>
+    public const int ARTIFACT = 1;
+    /// <summary>Gets the project manifest contract version.</summary>
+    public const int MANIFEST = 1;
+    /// <summary>Gets the canonical data schema version.</summary>
+    public const int SCHEMA = 1;
+    /// <summary>Gets the embedded AI Studio runtime version.</summary>
+    public const int RUNTIME = 1;
+    /// <summary>Gets the formula-tree contract version.</summary>
+    public const int FORMULA = 1;
+    /// <summary>Gets the persistent build-record contract version.</summary>
+    public const int BUILD = 1;
+    /// <summary>Gets the immutable intermediate-artifact contract version.</summary>
+    public const int INTERMEDIATE_ARTIFACT = 1;
+    /// <summary>Gets the evidence-agent response contract version.</summary>
+    public const int EVIDENCE_CONTRACT = 1;
+    /// <summary>Gets the plan-agent response contract version.</summary>
+    public const int PLAN_CONTRACT = 1;
+    /// <summary>Gets the content-agent response contract version.</summary>
+    public const int CONTENT_CONTRACT = 1;
+    /// <summary>Gets the design-agent response contract version.</summary>
+    public const int DESIGN_CONTRACT = 1;
+}
