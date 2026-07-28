@@ -611,9 +611,8 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     {
         var previousProvider = this.Provider;
         var previousChatTemplate = this.currentChatTemplate;
-        var chatProviderId = this.ChatThread?.SelectedProvider;
 
-        this.Provider = this.SettingsManager.GetChatProviderForLoadedChat(chatProviderId);
+        this.Provider = this.SettingsManager.GetChatProviderForLoadedChat(this.Provider.Id);
         if (this.Provider != previousProvider)
             await this.ProviderChanged.InvokeAsync(this.Provider);
 
