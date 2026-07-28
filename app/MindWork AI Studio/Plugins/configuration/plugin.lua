@@ -136,6 +136,9 @@ CONFIG["EMBEDDING_PROVIDERS"] = {}
 --     -- Optional: tokenizer path for this provider relative to the plugin directory.
 --     -- ["TokenizerPath"] = "",
 --
+--     -- Optional: maximum number of tokens per embedding chunk. If omitted, AI Studio uses its default.
+--     -- ["TokenLimit"] = 8191,
+--
 --     ["Model"] = {
 --         ["Id"] = "<the model ID, e.g., nomic-embed-text>",
 --         ["DisplayName"] = "<user-friendly name of the model>",

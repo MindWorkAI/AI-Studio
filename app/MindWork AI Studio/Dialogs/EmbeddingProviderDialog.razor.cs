@@ -73,6 +73,9 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
 
     [Parameter]
     public string DataTokenizerPath { get; set; } = string.Empty;
+
+    [Parameter]
+    public int DataTokenLimit { get; set; } = EmbeddingProvider.DEFAULT_TOKEN_LIMIT;
     
     [Inject]
     private RustService RustService { get; init; } = null!;
@@ -148,6 +151,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
             IsEnterpriseConfiguration = false,
             EnterpriseConfigurationPluginId = Guid.Empty,
             TokenizerPath = this.dataFilePath,
+            TokenLimit = this.DataTokenLimit,
         };
     }
     
@@ -274,6 +278,14 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
         if (this.DataLLMProvider is LLMProviders.SELF_HOSTED && string.IsNullOrWhiteSpace(manuallyModel))
             return T("Please enter an embedding model name.");
         
+        return null;
+    }
+
+    private string? ValidateTokenLimit(int tokenLimit)
+    {
+        if (tokenLimit < 1)
+            return T("Please enter a token limit greater than 0.");
+
         return null;
     }
 

@@ -378,7 +378,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         var batch = new List<(string Text, int ChunkIndex)>(EMBEDDING_BATCH_SIZE);
         var totalChunkCount = 0;
 
-        await foreach (var chunk in this.StreamEmbeddingChunksAsync(file.FullName, token))
+        await foreach (var chunk in this.StreamEmbeddingChunksAsync(file.FullName, embeddingProvider, token))
         {
             batch.Add((chunk, totalChunkCount));
             totalChunkCount++;

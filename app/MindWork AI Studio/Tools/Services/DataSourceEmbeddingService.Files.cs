@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
@@ -24,11 +25,13 @@ public sealed partial class DataSourceEmbeddingService
         UNSUPPORTED,
     }
 
-    private async IAsyncEnumerable<string> StreamEmbeddingChunksAsync(string filePath, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken token)
+    private async IAsyncEnumerable<string> StreamEmbeddingChunksAsync(string filePath, EmbeddingProvider embeddingProvider, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken token)
     {
         if (this.IsImageFilePath(filePath))
         {
-            yield return this.BuildImageIndexText(filePath);
+            await foreach (var imageChunk in this.SplitChunkByEmbeddingTokenLimitAsync(this.BuildImageIndexText(filePath), embeddingProvider, token))
+                yield return imageChunk;
+
             yield break;
         }
 
@@ -46,7 +49,10 @@ public sealed partial class DataSourceEmbeddingService
                 {
                     var chunk = currentChunk.ToString().Trim();
                     if (!string.IsNullOrWhiteSpace(chunk))
-                        yield return chunk;
+                    {
+                        await foreach (var finalChunk in this.SplitChunkByEmbeddingTokenLimitAsync(chunk, embeddingProvider, token))
+                            yield return finalChunk;
+                    }
 
                     var overlap = chunk.Length > CHUNK_OVERLAP_LENGTH
                         ? chunk[^CHUNK_OVERLAP_LENGTH..]
@@ -68,7 +74,141 @@ public sealed partial class DataSourceEmbeddingService
 
         var finalChunk = currentChunk.ToString().Trim();
         if (!string.IsNullOrWhiteSpace(finalChunk))
-            yield return finalChunk;
+        {
+            await foreach (var chunk in this.SplitChunkByEmbeddingTokenLimitAsync(finalChunk, embeddingProvider, token))
+                yield return chunk;
+        }
+    }
+
+    private async IAsyncEnumerable<string> SplitChunkByEmbeddingTokenLimitAsync(string chunk, EmbeddingProvider embeddingProvider, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken token)
+    {
+        var tokenLimit = embeddingProvider.EffectiveTokenLimit;
+        var tokenCount = await this.GetEmbeddingTokenCountAsync(embeddingProvider, chunk, token);
+        if (tokenCount <= tokenLimit)
+        {
+            yield return chunk;
+            yield break;
+        }
+
+        logger.LogDebug(
+            "Splitting an embedding chunk for provider '{EmbeddingProviderName}' because it has {TokenCount} tokens and the configured limit is {TokenLimit}.",
+            embeddingProvider.Name,
+            tokenCount,
+            tokenLimit);
+
+        await foreach (var splitChunk in this.SplitTextByTokenLimitAsync(chunk, embeddingProvider, tokenLimit, token))
+            yield return splitChunk;
+    }
+
+    private async IAsyncEnumerable<string> SplitTextByTokenLimitAsync(string text, EmbeddingProvider embeddingProvider, int tokenLimit, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken token)
+    {
+        var units = SplitTextIntoTokenUnits(text);
+        var index = 0;
+
+        while (index < units.Count)
+        {
+            token.ThrowIfCancellationRequested();
+
+            var unitCount = await this.FindLargestUnitCountWithinTokenLimitAsync(units, index, embeddingProvider, tokenLimit, token);
+            if (unitCount > 0)
+            {
+                var chunk = string.Concat(units.Skip(index).Take(unitCount)).Trim();
+                if (!string.IsNullOrWhiteSpace(chunk))
+                    yield return chunk;
+
+                index += unitCount;
+                continue;
+            }
+
+            await foreach (var splitUnit in this.SplitOversizedTextUnitByTokenLimitAsync(units[index], embeddingProvider, tokenLimit, token))
+                yield return splitUnit;
+
+            index++;
+        }
+    }
+
+    private async Task<int> FindLargestUnitCountWithinTokenLimitAsync(IReadOnlyList<string> units, int startIndex, EmbeddingProvider embeddingProvider, int tokenLimit, CancellationToken token)
+    {
+        var low = 1;
+        var high = units.Count - startIndex;
+        var best = 0;
+
+        while (low <= high)
+        {
+            token.ThrowIfCancellationRequested();
+
+            var mid = low + (high - low) / 2;
+            var candidate = string.Concat(units.Skip(startIndex).Take(mid)).Trim();
+            var tokenCount = await this.GetEmbeddingTokenCountAsync(embeddingProvider, candidate, token);
+            if (tokenCount <= tokenLimit)
+            {
+                best = mid;
+                low = mid + 1;
+            }
+            else
+                high = mid - 1;
+        }
+
+        return best;
+    }
+
+    private async IAsyncEnumerable<string> SplitOversizedTextUnitByTokenLimitAsync(string text, EmbeddingProvider embeddingProvider, int tokenLimit, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken token)
+    {
+        var startIndex = 0;
+        while (startIndex < text.Length)
+        {
+            token.ThrowIfCancellationRequested();
+
+            var low = startIndex + 1;
+            var high = text.Length;
+            var bestEndIndex = startIndex;
+
+            while (low <= high)
+            {
+                var mid = low + (high - low) / 2;
+                var candidate = text[startIndex..mid].Trim();
+                var tokenCount = await this.GetEmbeddingTokenCountAsync(embeddingProvider, candidate, token);
+                if (tokenCount <= tokenLimit)
+                {
+                    bestEndIndex = mid;
+                    low = mid + 1;
+                }
+                else
+                    high = mid - 1;
+            }
+
+            if (bestEndIndex == startIndex)
+            {
+                var smallestCandidate = text[startIndex..Math.Min(startIndex + 1, text.Length)].Trim();
+                var smallestCandidateTokenCount = await this.GetEmbeddingTokenCountAsync(embeddingProvider, smallestCandidate, token);
+                throw new InvalidOperationException($"The token limit for embedding provider '{embeddingProvider.Name}' is too low. The smallest possible split still has {smallestCandidateTokenCount} tokens, but the configured limit is {tokenLimit}.");
+            }
+
+            var chunk = text[startIndex..bestEndIndex].Trim();
+            if (!string.IsNullOrWhiteSpace(chunk))
+                yield return chunk;
+
+            startIndex = bestEndIndex;
+        }
+    }
+
+    private async Task<int> GetEmbeddingTokenCountAsync(EmbeddingProvider embeddingProvider, string text, CancellationToken token)
+    {
+        var response = await rustService.GetTokenCount(embeddingProvider.Name, embeddingProvider.TokenizerPath, text, token);
+        if (response is { Success: true, Status: TokenizerStatus.AVAILABLE })
+            return response.Value.TokenCount;
+
+        var message = response?.Message ?? "No response was returned by the tokenizer service.";
+        throw new InvalidOperationException($"Could not count tokens for embedding provider '{embeddingProvider.Name}'. {message}");
+    }
+
+    private static List<string> SplitTextIntoTokenUnits(string text)
+    {
+        var matches = Regex.Matches(text, @"\S+\s*", RegexOptions.CultureInvariant);
+        if (matches.Count == 0)
+            return [text];
+
+        return matches.Cast<Match>().Select(match => match.Value).ToList();
     }
 
     private FileEnumerationResult GetInputFiles(IDataSource dataSource)
@@ -289,7 +429,8 @@ public sealed partial class DataSourceEmbeddingService
             embeddingProvider.Model.Id,
             embeddingProvider.Host,
             embeddingProvider.Hostname,
-            embeddingProvider.TokenizerPath);
+            embeddingProvider.TokenizerPath,
+            embeddingProvider.EffectiveTokenLimit);
     }
 
     private async Task<string> BuildFingerprintAsync(FileInfo file, CancellationToken token)

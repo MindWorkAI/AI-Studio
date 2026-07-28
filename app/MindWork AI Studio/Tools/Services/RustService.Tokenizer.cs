@@ -84,11 +84,33 @@ public sealed partial class RustService
         return await result.Content.ReadFromJsonAsync<TokenizerResponse>(this.jsonRustSerializerOptions);
     }
     
-    public async Task<TokenizerResponse?> GetTokenCount(string text)
+    public Task<TokenizerResponse?> GetTokenCount(string text)
+    {
+        return this.GetTokenCountCoreAsync(text);
+    }
+
+    public async Task<TokenizerResponse?> GetTokenCount(string providerName, string path, string text, CancellationToken cancellationToken = default)
+    {
+        await this.tokenizerLock.WaitAsync(cancellationToken);
+        try
+        {
+            var tokenizerResponse = await this.EnsureTokenizerCoreAsync(providerName, path);
+            if (tokenizerResponse is not { Success: true, Status: TokenizerStatus.AVAILABLE })
+                return tokenizerResponse;
+
+            return await this.GetTokenCountCoreAsync(text, cancellationToken);
+        }
+        finally
+        {
+            this.tokenizerLock.Release();
+        }
+    }
+
+    private async Task<TokenizerResponse?> GetTokenCountCoreAsync(string text, CancellationToken cancellationToken = default)
     {
         var result = await this.http.PostAsJsonAsync("/tokenizer/count", new {
             text = text,
-        }, this.jsonRustSerializerOptions);
+        }, this.jsonRustSerializerOptions, cancellationToken);
 
         if (!result.IsSuccessStatusCode)
         {
@@ -130,26 +152,31 @@ public sealed partial class RustService
         await this.tokenizerLock.WaitAsync();
         try
         {
-            if (this.hasInitializedTokenizer && this.currentTokenizerPath == path)
-                return new TokenizerResponse(true, 0, string.Empty, TokenizerStatus.AVAILABLE);
-
-            var response = await this.SetTokenizer(providerName, path);
-            if (response is { Success: true, Status: TokenizerStatus.AVAILABLE })
-            {
-                this.currentTokenizerPath = path;
-                this.hasInitializedTokenizer = true;
-            }
-            else
-            {
-                this.currentTokenizerPath = string.Empty;
-                this.hasInitializedTokenizer = false;
-            }
-
-            return response;
+            return await this.EnsureTokenizerCoreAsync(providerName, path);
         }
         finally
         {
             this.tokenizerLock.Release();
         }
+    }
+
+    private async Task<TokenizerResponse?> EnsureTokenizerCoreAsync(string providerName, string path)
+    {
+        if (this.hasInitializedTokenizer && this.currentTokenizerPath == path)
+            return new TokenizerResponse(true, 0, string.Empty, TokenizerStatus.AVAILABLE);
+
+        var response = await this.SetTokenizer(providerName, path);
+        if (response is { Success: true, Status: TokenizerStatus.AVAILABLE })
+        {
+            this.currentTokenizerPath = path;
+            this.hasInitializedTokenizer = true;
+        }
+        else
+        {
+            this.currentTokenizerPath = string.Empty;
+            this.hasInitializedTokenizer = false;
+        }
+
+        return response;
     }
 }

@@ -128,6 +128,18 @@
                 <MudJustifiedText Typo="Typo.body1" Class="mb-3">
                     @T("For better embeddings and less storage usage, it's recommended to use a custom tokenizer to enable a more accurate token count.")
                 </MudJustifiedText>
+                <MudNumericField
+                    T="int"
+                    @bind-Value="@this.DataTokenLimit"
+                    Label="@T("Token limit")"
+                    Class="mb-3"
+                    Min="1"
+                    Immediate="@true"
+                    Adornment="Adornment.Start"
+                    AdornmentIcon="@Icons.Material.Filled.Numbers"
+                    AdornmentColor="Color.Info"
+                    Validation="@this.ValidateTokenLimit"
+                    HelperText="@T("Maximum number of tokens sent to the embedding model per chunk.")"/>
                 <SelectFile 
                     File="@this.dataFilePath" 
                     FileChanged="@this.OnDataFilePathChanged" 

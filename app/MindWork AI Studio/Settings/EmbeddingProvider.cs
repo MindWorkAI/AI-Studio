@@ -21,8 +21,11 @@ public sealed record EmbeddingProvider(
     Guid EnterpriseConfigurationPluginId = default,
     string Hostname = "http://localhost:1234",
     Host Host = Host.NONE,
-    string TokenizerPath = "") : ConfigurationBaseObject, ISecretId
+    string TokenizerPath = "",
+    int TokenLimit = 8_191) : ConfigurationBaseObject, ISecretId
 {
+    public const int DEFAULT_TOKEN_LIMIT = 8_191;
+
     private static readonly ILogger<EmbeddingProvider> LOGGER = Program.LOGGER_FACTORY.CreateLogger<EmbeddingProvider>();
 
     public static readonly EmbeddingProvider NONE = new();
@@ -50,6 +53,9 @@ public sealed record EmbeddingProvider(
     /// <inheritdoc />
     [JsonIgnore]
     public string SecretName => this.Name;
+
+    [JsonIgnore]
+    public int EffectiveTokenLimit => this.TokenLimit > 0 ? this.TokenLimit : DEFAULT_TOKEN_LIMIT;
 
     #endregion
 
@@ -105,6 +111,13 @@ public sealed record EmbeddingProvider(
             tokenizerPath = string.Empty;
         }
 
+        var tokenLimit = DEFAULT_TOKEN_LIMIT;
+        if (table.TryGetValue("TokenLimit", out var tokenLimitValue) && (!tokenLimitValue.TryRead<int>(out tokenLimit) || tokenLimit < 1))
+        {
+            LOGGER.LogWarning($"The configured embedding provider {idx} does not contain a valid token limit. Falling back to {DEFAULT_TOKEN_LIMIT}. (Plugin ID: {configPluginId})");
+            tokenLimit = DEFAULT_TOKEN_LIMIT;
+        }
+
         provider = new EmbeddingProvider
         {
             Num = 0, // will be set later by the PluginConfigurationObject
@@ -118,6 +131,7 @@ public sealed record EmbeddingProvider(
             Hostname = hostname,
             Host = host,
             TokenizerPath = tokenizerPath,
+            TokenLimit = tokenLimit,
         };
 
         // Handle encrypted API key if present:
@@ -192,6 +206,7 @@ public sealed record EmbeddingProvider(
                     ["UsedLLMProvider"] = "{{this.UsedLLMProvider}}",
                     
                     ["TokenizerPath"] = "{{this.TokenizerPath}}",
+                    ["TokenLimit"] = {{this.EffectiveTokenLimit}},
                  
                     ["Host"] = "{{this.Host}}",
                     ["Hostname"] = "{{LuaTools.EscapeLuaString(this.Hostname)}}",

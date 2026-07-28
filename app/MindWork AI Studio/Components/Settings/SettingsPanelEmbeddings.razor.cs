@@ -80,6 +80,7 @@ public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
             { x => x.IsEditing, true },
             { x => x.DataHost, embeddingProvider.Host },
             { x => x.DataTokenizerPath, embeddingProvider.TokenizerPath },
+            { x => x.DataTokenLimit, embeddingProvider.EffectiveTokenLimit },
         };
 
         var dialogReference = await this.DialogService.ShowAsync<EmbeddingProviderDialog>(T("Edit Embedding Provider"), dialogParameters, DialogOptions.FULLSCREEN);
