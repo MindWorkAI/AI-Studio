@@ -22,9 +22,20 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
 
     private readonly Channel<string> queue = Channel.CreateUnbounded<string>();
     private readonly ConcurrentDictionary<string, byte> queuedIds = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, byte> runningIds = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, byte> pendingQueueIds = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, DataSourceEmbeddingStatus> statuses = new(StringComparer.OrdinalIgnoreCase);
+    private readonly object queueStateLock = new();
 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(DataSourceEmbeddingService).Namespace, nameof(DataSourceEmbeddingService));
+
+    private enum DataSourceQueueRequestResult
+    {
+        QUEUED,
+        ALREADY_QUEUED,
+        RUNNING,
+        RUNNING_MARKED_PENDING,
+    }
 
     public IReadOnlyList<DataSourceEmbeddingStatus> GetStatuses()
     {
@@ -62,11 +73,16 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
 
     public Task QueueAllInternalDataSourcesAsync()
     {
+        return this.QueueAllInternalDataSourcesAsync(true);
+    }
+
+    private Task QueueAllInternalDataSourcesAsync(bool queueAfterCurrentRun)
+    {
         this.RefreshWatchers();
 
         var tasks = settingsManager.ConfigurationData.DataSources
             .Where(this.IsSupportedInternalDataSource)
-            .Select(this.QueueDataSourceAsync);
+            .Select(dataSource => this.QueueDataSourceAsync(dataSource, queueAfterCurrentRun));
 
         return Task.WhenAll(tasks);
     }
@@ -79,7 +95,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             return Task.CompletedTask;
         }
 
-        return this.QueueAllInternalDataSourcesAsync();
+        return this.QueueAllInternalDataSourcesAsync(false);
     }
 
     public void RefreshAutomaticWatchers()
@@ -87,20 +103,40 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         this.RefreshWatchers();
     }
 
-    public async Task QueueDataSourceAsync(IDataSource dataSource)
+    public Task QueueDataSourceAsync(IDataSource dataSource)
+    {
+        return this.QueueDataSourceAsync(dataSource, true);
+    }
+
+    private async Task QueueDataSourceAsync(IDataSource dataSource, bool queueAfterCurrentRun)
     {
         if (!this.IsSupportedInternalDataSource(dataSource))
             return;
 
-        logger.LogInformation("Queueing data source '{DataSourceName}' ({DataSourceId}) for background embeddings.", dataSource.Name, dataSource.Id);
         this.RefreshWatchers();
-        logger.LogDebug("Adding watcher for data source '{DataSourceName}' ({DataSourceId}).", dataSource.Name, dataSource.Id);
+        logger.LogDebug("Ensured watcher for data source '{DataSourceName}' ({DataSourceId}).", dataSource.Name, dataSource.Id);
 
+        var queueRequestResult = this.TryReserveDataSourceQueueSlot(dataSource.Id, queueAfterCurrentRun);
+        switch (queueRequestResult)
+        {
+            case DataSourceQueueRequestResult.ALREADY_QUEUED:
+                logger.LogDebug("Data source '{DataSourceName}' ({DataSourceId}) is already queued for background embeddings. Ignoring duplicate queue request.", dataSource.Name, dataSource.Id);
+                return;
+
+            case DataSourceQueueRequestResult.RUNNING:
+                logger.LogDebug("Data source '{DataSourceName}' ({DataSourceId}) is already being embedded. Ignoring duplicate queue request.", dataSource.Name, dataSource.Id);
+                return;
+
+            case DataSourceQueueRequestResult.RUNNING_MARKED_PENDING:
+                logger.LogDebug("Data source '{DataSourceName}' ({DataSourceId}) is already being embedded. Scheduled one follow-up embedding run.", dataSource.Name, dataSource.Id);
+                return;
+        }
+
+        logger.LogInformation("Queueing data source '{DataSourceName}' ({DataSourceId}) for background embeddings.", dataSource.Name, dataSource.Id);
         if (!this.statuses.TryGetValue(dataSource.Id, out var currentStatus) || currentStatus.State is not DataSourceEmbeddingState.RUNNING)
             this.UpsertStatus(this.CreateStatus(dataSource, DataSourceEmbeddingState.QUEUED, currentStatus?.TotalFiles ?? 0, currentStatus?.IndexedFiles ?? 0, currentStatus?.FailedFiles ?? 0));
         logger.LogDebug("Upserting status for data source '{DataSourceName}' ({DataSourceId}).", dataSource.Name, dataSource.Id);
-        if (this.queuedIds.TryAdd(dataSource.Id, 0))
-            await this.queue.Writer.WriteAsync(dataSource.Id);
+        await this.queue.Writer.WriteAsync(dataSource.Id);
         logger.LogDebug("Queued data source '{DataSourceName}' ({DataSourceId}).", dataSource.Name, dataSource.Id);
     }
 
@@ -122,16 +158,18 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         while (!stoppingToken.IsCancellationRequested)
         {
             var dataSourceId = await this.queue.Reader.ReadAsync(stoppingToken);
-            this.queuedIds.TryRemove(dataSourceId, out _);
+            this.MarkDataSourceRunStarted(dataSourceId);
 
-            var dataSource = settingsManager.ConfigurationData.DataSources
-                .FirstOrDefault(source => source.Id.Equals(dataSourceId, StringComparison.OrdinalIgnoreCase));
-
-            if (dataSource is null || !this.IsSupportedInternalDataSource(dataSource))
-                continue;
+            IDataSource? dataSource = null;
 
             try
             {
+                dataSource = settingsManager.ConfigurationData.DataSources
+                    .FirstOrDefault(source => source.Id.Equals(dataSourceId, StringComparison.OrdinalIgnoreCase));
+
+                if (dataSource is null || !this.IsSupportedInternalDataSource(dataSource))
+                    continue;
+
                 await this.ProcessDataSourceAsync(dataSource, stoppingToken);
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
@@ -140,8 +178,19 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             }
             catch (Exception exception)
             {
-                logger.LogError(exception, "Background embedding failed for data source '{DataSourceName}' ({DataSourceId}).", dataSource.Name, dataSource.Id);
-                this.UpsertStatus(this.GetFallbackStatus(dataSource, exception.Message));
+                if (dataSource is null)
+                {
+                    logger.LogError(exception, "Background embedding failed for data source '{DataSourceId}'.", dataSourceId);
+                }
+                else
+                {
+                    logger.LogError(exception, "Background embedding failed for data source '{DataSourceName}' ({DataSourceId}).", dataSource.Name, dataSource.Id);
+                    this.UpsertStatus(this.GetFallbackStatus(dataSource, exception.Message));
+                }
+            }
+            finally
+            {
+                await this.QueuePendingDataSourceRunAsync(dataSourceId, stoppingToken);
             }
         }
     }
@@ -611,6 +660,92 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     private DataSourceEmbeddingStatus GetFallbackStatus(IDataSource dataSource, string errorMessage)
     {
         return this.CreateStatus(dataSource, DataSourceEmbeddingState.FAILED, 0, 0, 1, lastError: errorMessage);
+    }
+
+    private DataSourceQueueRequestResult TryReserveDataSourceQueueSlot(string dataSourceId, bool queueAfterCurrentRun)
+    {
+        lock (this.queueStateLock)
+        {
+            if (this.runningIds.ContainsKey(dataSourceId))
+            {
+                if (queueAfterCurrentRun && this.pendingQueueIds.TryAdd(dataSourceId, 0))
+                    return DataSourceQueueRequestResult.RUNNING_MARKED_PENDING;
+
+                return DataSourceQueueRequestResult.RUNNING;
+            }
+
+            if (!this.queuedIds.TryAdd(dataSourceId, 0))
+                return DataSourceQueueRequestResult.ALREADY_QUEUED;
+
+            return DataSourceQueueRequestResult.QUEUED;
+        }
+    }
+
+    private void MarkDataSourceRunStarted(string dataSourceId)
+    {
+        lock (this.queueStateLock)
+        {
+            this.queuedIds.TryRemove(dataSourceId, out _);
+            this.runningIds.TryAdd(dataSourceId, 0);
+        }
+    }
+
+    private bool TryCompleteDataSourceRun(string dataSourceId, bool allowPendingRequeue)
+    {
+        lock (this.queueStateLock)
+        {
+            this.runningIds.TryRemove(dataSourceId, out _);
+
+            if (!this.pendingQueueIds.TryRemove(dataSourceId, out _))
+                return false;
+
+            return allowPendingRequeue && this.queuedIds.TryAdd(dataSourceId, 0);
+        }
+    }
+
+    private void ReleaseQueuedDataSourceRun(string dataSourceId)
+    {
+        lock (this.queueStateLock)
+        {
+            this.queuedIds.TryRemove(dataSourceId, out _);
+        }
+    }
+
+    private async Task QueuePendingDataSourceRunAsync(string dataSourceId, CancellationToken token)
+    {
+        var dataSource = token.IsCancellationRequested
+            ? null
+            : settingsManager.ConfigurationData.DataSources
+                .FirstOrDefault(source => source.Id.Equals(dataSourceId, StringComparison.OrdinalIgnoreCase));
+
+        if (!this.TryCompleteDataSourceRun(dataSourceId, dataSource is not null && this.IsSupportedInternalDataSource(dataSource)))
+            return;
+
+        if (dataSource is null)
+        {
+            this.ReleaseQueuedDataSourceRun(dataSourceId);
+            return;
+        }
+
+        logger.LogInformation("Queueing one follow-up embedding run for data source '{DataSourceName}' ({DataSourceId}) after changes arrived during the previous run.", dataSource.Name, dataSource.Id);
+
+        this.statuses.TryGetValue(dataSource.Id, out var currentStatus);
+        this.UpsertStatus(this.CreateStatus(
+            dataSource,
+            DataSourceEmbeddingState.QUEUED,
+            currentStatus?.TotalFiles ?? 0,
+            currentStatus?.IndexedFiles ?? 0,
+            currentStatus?.FailedFiles ?? 0,
+            lastError: currentStatus?.LastError ?? string.Empty));
+
+        try
+        {
+            await this.queue.Writer.WriteAsync(dataSourceId, token);
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
+        {
+            this.ReleaseQueuedDataSourceRun(dataSourceId);
+        }
     }
 
     private void UpsertStatus(DataSourceEmbeddingStatus status)

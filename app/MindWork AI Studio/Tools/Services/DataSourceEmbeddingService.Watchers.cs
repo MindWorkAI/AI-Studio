@@ -67,16 +67,16 @@ public sealed partial class DataSourceEmbeddingService
                 NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite | NotifyFilters.CreationTime | NotifyFilters.Size,
             };
 
-            watcher.Changed += (_, _) => this.OnWatchedDataSourceChanged(dataSourceId);
-            watcher.Deleted += (_, _) => this.OnWatchedDataSourceChanged(dataSourceId);
-            watcher.Created += (_, _) => this.OnWatchedDataSourceChanged(dataSourceId);
-            watcher.Renamed += (_, _) => this.OnWatchedDataSourceChanged(dataSourceId);
+            watcher.Changed += (_, args) => this.OnWatchedDataSourceChanged(dataSourceId, configuration, args);
+            watcher.Deleted += (_, args) => this.OnWatchedDataSourceChanged(dataSourceId, configuration, args);
+            watcher.Created += (_, args) => this.OnWatchedDataSourceChanged(dataSourceId, configuration, args);
+            watcher.Renamed += (_, args) => this.OnWatchedDataSourceChanged(dataSourceId, configuration, args);
             watcher.Error += (_, args) =>
             {
                 logger.LogWarning(args.GetException(), "The file watcher for data source '{DataSourceId}' failed. Recreating it.", dataSourceId);
                 this.RemoveWatcher(dataSourceId);
                 this.EnsureWatcher(dataSourceId);
-                this.OnWatchedDataSourceChanged(dataSourceId);
+                this.ScheduleWatchedDataSourceRefresh(dataSourceId);
             };
             watcher.EnableRaisingEvents = true;
             return watcher;
@@ -112,12 +112,32 @@ public sealed partial class DataSourceEmbeddingService
         this.watchers.Clear();
     }
 
-    private void OnWatchedDataSourceChanged(string dataSourceId)
+    private void OnWatchedDataSourceChanged(string dataSourceId, DataSourceWatcherConfiguration configuration, FileSystemEventArgs args)
+    {
+        if (!this.IsRelevantWatcherEvent(configuration, args))
+        {
+            logger.LogDebug(
+                "Ignoring file system change for data source '{DataSourceId}' at '{Path}' (event={ChangeType}) because the path is not part of the RAG index.",
+                dataSourceId,
+                args.FullPath,
+                args.ChangeType);
+            return;
+        }
+
+        logger.LogDebug(
+            "Detected relevant file system change for data source '{DataSourceId}' at '{Path}' (event={ChangeType}). Scheduling a debounced embedding run.",
+            dataSourceId,
+            args.FullPath,
+            args.ChangeType);
+
+        this.ScheduleWatchedDataSourceRefresh(dataSourceId);
+    }
+
+    private void ScheduleWatchedDataSourceRefresh(string dataSourceId)
     {
         if (!settingsManager.ConfigurationData.DataSourceIndexing.AutomaticRefresh)
             return;
 
-        logger.LogDebug("Detected file system change for data source '{DataSourceId}'. Scheduling a debounced embedding run.", dataSourceId);
         var debounceToken = new CancellationTokenSource();
 
         lock (this.watcherDebounceLock)
@@ -142,7 +162,7 @@ public sealed partial class DataSourceEmbeddingService
                 if (dataSource is not null)
                 {
                     logger.LogInformation("Queueing data source '{DataSourceName}' ({DataSourceId}) after file system changes settled.", dataSource.Name, dataSource.Id);
-                    await this.QueueDataSourceAsync(dataSource);
+                    await this.QueueDataSourceAsync(dataSource, true);
                 }
             }
             catch (OperationCanceledException)
@@ -198,6 +218,42 @@ public sealed partial class DataSourceEmbeddingService
             this.watcherDebounceTokens.Remove(dataSourceId);
             return true;
         }
+    }
+
+    private bool IsRelevantWatcherEvent(DataSourceWatcherConfiguration configuration, FileSystemEventArgs args)
+    {
+        if (args is RenamedEventArgs renamedArgs)
+        {
+            return this.IsRelevantWatcherPath(configuration, renamedArgs.FullPath, args.ChangeType)
+                   || this.IsRelevantWatcherPath(configuration, renamedArgs.OldFullPath, args.ChangeType);
+        }
+
+        return this.IsRelevantWatcherPath(configuration, args.FullPath, args.ChangeType);
+    }
+
+    private bool IsRelevantWatcherPath(DataSourceWatcherConfiguration configuration, string path, WatcherChangeTypes changeType)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+            return false;
+
+        var fileName = Path.GetFileName(path);
+        if (string.IsNullOrWhiteSpace(fileName))
+            return true;
+
+        if (!configuration.IncludeSubdirectories && !string.Equals(fileName, configuration.Filter, StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        if (Directory.Exists(path))
+            return true;
+
+        if (IsSkippedRagFileName(fileName))
+            return false;
+
+        if (this.IsSupportedRagFilePath(path))
+            return true;
+
+        return changeType is WatcherChangeTypes.Deleted or WatcherChangeTypes.Renamed
+               && string.IsNullOrWhiteSpace(Path.GetExtension(path));
     }
 
     private static DataSourceWatcherConfiguration? GetWatchConfiguration(IDataSource dataSource) => dataSource switch

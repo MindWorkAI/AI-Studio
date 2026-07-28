@@ -221,11 +221,7 @@ public sealed partial class DataSourceEmbeddingService
 
     private bool IsSkippedRagFile(FileInfo file)
     {
-        var extension = file.Extension.TrimStart('.');
-        if (SKIPPED_RAG_FILE_EXTENSIONS.Contains(extension, StringComparer.OrdinalIgnoreCase))
-            return true;
-
-        if (file.Name.StartsWith(OFFICE_LOCK_FILE_PREFIX, StringComparison.Ordinal))
+        if (IsSkippedRagFileName(file.Name))
             return true;
 
         try
@@ -240,6 +236,13 @@ public sealed partial class DataSourceEmbeddingService
             logger.LogWarning(exception, "Cannot inspect file '{FilePath}' while indexing.", file.FullName);
             return true;
         }
+    }
+
+    private static bool IsSkippedRagFileName(string fileName)
+    {
+        var extension = Path.GetExtension(fileName).TrimStart('.');
+        return SKIPPED_RAG_FILE_EXTENSIONS.Contains(extension, StringComparer.OrdinalIgnoreCase)
+               || fileName.StartsWith(OFFICE_LOCK_FILE_PREFIX, StringComparison.Ordinal);
     }
 
     private bool IsSkippedRagDirectory(string path)
