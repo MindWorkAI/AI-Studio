@@ -16,6 +16,7 @@ public static class PandocExport
     private static readonly ExportTarget MICROSOFT_WORD = new("Microsoft Word (.docx)", "docx", FileTypes.MS_WORD);
     private static readonly ExportTarget OPEN_DOCUMENT_TEXT = new("OpenDocument Text (.odt)", "odt", FileTypes.OPEN_DOCUMENT_TEXT);
     private static readonly ExportTarget HTML = new("Hypertext (.html)", "html", FileTypes.HYPERTEXT);
+    private static readonly ExportTarget LATEX = new("LaTeX (.tex)", "latex", FileTypes.LATEX);
     
     private static string TB(string fallbackEn) => I18N.I.T(fallbackEn, typeof(PandocExport).Namespace, nameof(PandocExport));
     
@@ -26,6 +27,7 @@ public static class PandocExport
             FileExportFormat.MICROSOFT_WORD => MICROSOFT_WORD,
             FileExportFormat.OPEN_DOCUMENT_TEXT => OPEN_DOCUMENT_TEXT,
             FileExportFormat.HTML => HTML,
+            FileExportFormat.LATEX => LATEX,
             _ => throw new ArgumentOutOfRangeException(nameof(format), format, null),
         };
 
