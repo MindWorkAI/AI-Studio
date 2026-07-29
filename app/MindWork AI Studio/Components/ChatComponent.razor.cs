@@ -83,7 +83,10 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private int workspaceHeaderSyncVersion;
     private HashSet<FileAttachment> chatDocumentPaths = [];
     private string tokenCount = "0";
-    private string TokenCountMessage => $"{this.T("Estimated amount of tokens:")} {this.tokenCount}";
+    private bool HasCustomTokenizer => !string.IsNullOrWhiteSpace(this.Provider.TokenizerPath);
+    private string TokenCountMessage => this.HasCustomTokenizer
+        ? $"{this.T("Estimated amount of tokens:")} {this.tokenCount}"
+        : string.Empty;
 
     // Unfortunately, we need the input field reference to blur the focus away. Without
     // this, we cannot clear the input field.
@@ -307,15 +310,22 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     protected override async Task OnParametersSetAsync()
     {
         var incomingChatId = this.ChatThread?.ChatId ?? Guid.Empty;
+        var providerChanged = this.Provider != this.lastSeenProvider;
         if (incomingChatId != this.lastSeenChatId || this.Provider != this.lastSeenProvider)
         {
             this.lastSeenChatId = incomingChatId;
             this.lastSeenProvider = this.Provider;
+            if (providerChanged)
+                this.tokenCount = "0";
+
             this.previousInputForbidden = true;
         }
 
         await this.ApplyLoadedChatParameterAsync();
         await this.SyncForegroundChatAsync();
+        if (providerChanged && this.HasCustomTokenizer && this.inputField is not null)
+            await this.CalculateTokenCount();
+
         await base.OnParametersSetAsync();
     }
 
@@ -1114,6 +1124,17 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     
     private async Task CalculateTokenCount()
     {
+        if (!this.HasCustomTokenizer)
+        {
+            if (this.tokenCount != "0")
+            {
+                this.tokenCount = "0";
+                this.StateHasChanged();
+            }
+
+            return;
+        }
+
         if (this.inputField.Value is null)
         {
             this.tokenCount = "0";
