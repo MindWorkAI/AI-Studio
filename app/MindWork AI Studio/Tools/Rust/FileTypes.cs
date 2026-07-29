@@ -47,6 +47,7 @@ public static class FileTypes
     public static readonly FileTypeFilter PDF         = FileTypeFilter.Leaf("PDF", "pdf");
     public static readonly FileTypeFilter TEXT        = FileTypeFilter.Leaf(TB("Text"), "txt", "md", "rtf");
     public static readonly FileTypeFilter MARKDOWN        = FileTypeFilter.Leaf(TB("Markdown"), "md");
+    public static readonly FileTypeFilter CSV             = FileTypeFilter.Leaf("CSV", "csv");
     public static readonly FileTypeFilter MS_WORD     = FileTypeFilter.Leaf("Microsoft Word", "docx");
     public static readonly FileTypeFilter OPEN_DOCUMENT_TEXT = FileTypeFilter.Leaf("OpenDocument Text", "odt");
     public static readonly FileTypeFilter WORD        = FileTypeFilter.Parent("Word", OPEN_DOCUMENT_TEXT, MS_WORD);
