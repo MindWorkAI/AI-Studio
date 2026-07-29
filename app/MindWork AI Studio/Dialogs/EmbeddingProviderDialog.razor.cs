@@ -76,6 +76,9 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
 
     [Parameter]
     public int DataTokenLimit { get; set; } = EmbeddingProvider.DEFAULT_TOKEN_LIMIT;
+
+    [Parameter]
+    public int DataEmbeddingBatchSize { get; set; } = EmbeddingProvider.DEFAULT_EMBEDDING_BATCH_SIZE;
     
     [Inject]
     private RustService RustService { get; init; } = null!;
@@ -101,6 +104,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
     private string dataCustomTokenizerValidationIssue = string.Empty;
     private Task dataTokenizerValidationTask = Task.CompletedTask;
     private bool dataStoreWasAttempted;
+    private bool showExpertSettings;
     private int dataTokenizerValidationRevision;
 
     // We get the form reference from Blazor code to validate it manually:
@@ -151,6 +155,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
             IsEnterpriseConfiguration = false,
             EnterpriseConfigurationPluginId = Guid.Empty,
             TokenizerPath = this.dataFilePath,
+            EmbeddingBatchSize = this.DataEmbeddingBatchSize,
             TokenLimit = this.DataTokenLimit,
         };
     }
@@ -173,6 +178,9 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
         {
             this.dataEditingPreviousInstanceName = this.DataName.ToLowerInvariant();
             this.dataFilePath = this.DataTokenizerPath;
+            this.showExpertSettings = !string.IsNullOrWhiteSpace(this.DataTokenizerPath)
+                                      || this.DataTokenLimit != EmbeddingProvider.DEFAULT_TOKEN_LIMIT
+                                      || this.DataEmbeddingBatchSize != EmbeddingProvider.DEFAULT_EMBEDDING_BATCH_SIZE;
             
             // When using self-hosted embedding, we must copy the model name:
             if (this.DataLLMProvider is LLMProviders.SELF_HOSTED)
@@ -285,6 +293,14 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
     {
         if (tokenLimit < 1)
             return T("Please enter a token limit greater than 0.");
+
+        return null;
+    }
+
+    private string? ValidateEmbeddingBatchSize(int embeddingBatchSize)
+    {
+        if (embeddingBatchSize < 1)
+            return T("Please enter an embedding batch size greater than 0.");
 
         return null;
     }
@@ -411,4 +427,8 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
     };
     
     private bool IsNoneProvider => this.DataLLMProvider is LLMProviders.NONE;
+
+    private void ToggleExpertSettings() => this.showExpertSettings = !this.showExpertSettings;
+
+    private string GetExpertStyles => this.showExpertSettings ? "border-2 border-dashed rounded pa-2" : string.Empty;
 }

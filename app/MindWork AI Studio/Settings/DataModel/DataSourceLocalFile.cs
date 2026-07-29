@@ -32,6 +32,12 @@ public readonly record struct DataSourceLocalFile : IInternalDataSource
     
     /// <inheritdoc />
     public string EmbeddingId { get; init; } = Guid.Empty.ToString();
+
+    /// <inheritdoc />
+    public int MaxChunkTokenLength { get; init; }
+
+    /// <inheritdoc />
+    public int ChunkOverlapTokenLength { get; init; }
     
     /// <inheritdoc />
     public DataSourceSecurity SecurityPolicy { get; init; } = DataSourceSecurity.NOT_SPECIFIED;

@@ -122,35 +122,55 @@
                 AdornmentIcon="@Icons.Material.Filled.Lightbulb"
                 AdornmentColor="Color.Info"
                 Validation="@this.providerValidation.ValidatingInstanceName"
-                UserAttributes="@SPELLCHECK_ATTRIBUTES"/>
+            UserAttributes="@SPELLCHECK_ATTRIBUTES"/>
             @if (this.DataLLMProvider != LLMProviders.NONE)
             {
-                <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-                    @T("For better embeddings and less storage usage, it's recommended to use a custom tokenizer to enable a more accurate token count.")
-                </MudJustifiedText>
-                <MudNumericField
-                    T="int"
-                    @bind-Value="@this.DataTokenLimit"
-                    Label="@T("Token limit")"
-                    Class="mb-3"
-                    Min="1"
-                    Immediate="@true"
-                    Adornment="Adornment.Start"
-                    AdornmentIcon="@Icons.Material.Filled.Numbers"
-                    AdornmentColor="Color.Info"
-                    Validation="@this.ValidateTokenLimit"
-                    HelperText="@T("Maximum number of tokens sent to the embedding model per chunk.")"/>
-                <SelectFile 
-                    File="@this.dataFilePath" 
-                    FileChanged="@this.OnDataFilePathChanged" 
-                    Label="@T("Selected file path for the custom tokenizer")" 
-                    FileDialogTitle="@T("Choose a custom tokenizer here")" 
-                    Filter="[FileTypes.JSON]" 
-                    IsClearable="@true"
-                    Error="@(!string.IsNullOrWhiteSpace(this.dataCustomTokenizerValidationIssue))"
-                    ErrorText="@(this.dataCustomTokenizerValidationIssue)"
-                    Validation="@this.providerValidation.ValidatingCustomTokenizer"
-                    OnClear="@this.ClearPathTokenizer" />
+                <MudStack>
+                    <MudButton OnClick="@this.ToggleExpertSettings">
+                        @(this.showExpertSettings ? T("Hide Expert Settings") : T("Show Expert Settings"))
+                    </MudButton>
+                    <MudDivider />
+                    <MudCollapse Expanded="@this.showExpertSettings" Class="@this.GetExpertStyles">
+                        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+                            @T("Please be aware: This section is for experts only. For cloud providers, the selected tokenizer and chunk settings may not match the real embedding model limits exactly.")
+                        </MudJustifiedText>
+                        <MudNumericField
+                            T="int"
+                            @bind-Value="@this.DataTokenLimit"
+                            Label="@T("Token limit")"
+                            Class="mb-3"
+                            Min="1"
+                            Immediate="@true"
+                            Adornment="Adornment.Start"
+                            AdornmentIcon="@Icons.Material.Filled.Numbers"
+                            AdornmentColor="Color.Info"
+                            Validation="@this.ValidateTokenLimit"
+                            HelperText="@T("Maximum number of tokens sent to the embedding model per chunk. The default is 16,384.")"/>
+                        <MudNumericField
+                            T="int"
+                            @bind-Value="@this.DataEmbeddingBatchSize"
+                            Label="@T("Embedding batch size")"
+                            Class="mb-3"
+                            Min="1"
+                            Immediate="@true"
+                            Adornment="Adornment.Start"
+                            AdornmentIcon="@Icons.Material.Filled.FormatListNumbered"
+                            AdornmentColor="Color.Info"
+                            Validation="@this.ValidateEmbeddingBatchSize"
+                            HelperText="@T("How many chunks are sent to the embedding provider at once. The default is 1.")"/>
+                        <SelectFile
+                            File="@this.dataFilePath"
+                            FileChanged="@this.OnDataFilePathChanged"
+                            Label="@T("Selected file path for the custom tokenizer")"
+                            FileDialogTitle="@T("Choose a custom tokenizer here")"
+                            Filter="[FileTypes.JSON]"
+                            IsClearable="@true"
+                            Error="@(!string.IsNullOrWhiteSpace(this.dataCustomTokenizerValidationIssue))"
+                            ErrorText="@(this.dataCustomTokenizerValidationIssue)"
+                            Validation="@this.providerValidation.ValidatingCustomTokenizer"
+                            OnClear="@this.ClearPathTokenizer" />
+                    </MudCollapse>
+                </MudStack>
             }
         </MudForm>
         @if (this.dataStoreWasAttempted)

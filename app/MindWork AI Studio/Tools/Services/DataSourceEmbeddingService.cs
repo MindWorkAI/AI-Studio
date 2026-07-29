@@ -15,11 +15,6 @@ namespace AIStudio.Tools.Services;
 public sealed partial class DataSourceEmbeddingService(SettingsManager settingsManager, RustService rustService, DatabaseClientProvider databaseClientProvider, ILogger<DataSourceEmbeddingService> logger)
     : BackgroundService
 {
-    private const int MAX_CHUNK_LENGTH = 3_200;
-    private const int MIN_CHUNK_LENGTH = 800;
-    private const int CHUNK_OVERLAP_LENGTH = 320;
-    private const int EMBEDDING_BATCH_SIZE = 16;
-
     private readonly Channel<string> queue = Channel.CreateUnbounded<string>();
     private readonly ConcurrentDictionary<string, byte> queuedIds = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, byte> runningIds = new(StringComparer.OrdinalIgnoreCase);
@@ -404,15 +399,16 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             collectionName);
         await this.DeleteFilePointsAsync(vectorStore, collectionName, file.FullName, token);
 
-        var batch = new List<(string Text, int ChunkIndex)>(EMBEDDING_BATCH_SIZE);
+        var embeddingBatchSize = embeddingProvider.EffectiveEmbeddingBatchSize;
+        var batch = new List<(string Text, int ChunkIndex)>(embeddingBatchSize);
         var totalChunkCount = 0;
 
-        await foreach (var chunk in this.StreamEmbeddingChunksAsync(file.FullName, embeddingProvider, token))
+        await foreach (var chunk in this.StreamEmbeddingChunksAsync(file.FullName, dataSource, embeddingProvider, token))
         {
             batch.Add((chunk, totalChunkCount));
             totalChunkCount++;
 
-            if (batch.Count >= EMBEDDING_BATCH_SIZE)
+            if (batch.Count >= embeddingBatchSize)
                 await this.FlushBatchAsync(embeddingState, vectorStore, dataSource, file, fingerprint, embeddingProvider, provider, manifest, collectionName, batch, token);
         }
 
@@ -612,7 +608,8 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         EmbeddingStateClient embeddingState,
         CancellationToken token)
     {
-        var embeddingSignature = this.BuildEmbeddingSignature(embeddingProvider);
+        var chunkingOptions = this.GetChunkingOptions(dataSource, embeddingProvider);
+        var embeddingSignature = this.BuildEmbeddingSignature(dataSource, embeddingProvider, chunkingOptions);
         var manifest = await embeddingState.GetManifestAsync(dataSource.Id, token);
 
         if (!string.Equals(manifest.EmbeddingSignature, embeddingSignature, StringComparison.Ordinal))
@@ -622,6 +619,12 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                 dataSource.Name,
                 dataSource.Id,
                 collectionName);
+            logger.LogDebug(
+                "Embedding signature mismatch for data source '{DataSourceName}' ({DataSourceId}). StoredSignature='{StoredEmbeddingSignature}', CurrentSignature='{CurrentEmbeddingSignature}'.",
+                dataSource.Name,
+                dataSource.Id,
+                manifest.EmbeddingSignature,
+                embeddingSignature);
             await this.ResetPersistedStateAsync(dataSource.Name, dataSource.Id, vectorStore, embeddingState, token);
             manifest = await embeddingState.GetManifestAsync(dataSource.Id, token);
         }

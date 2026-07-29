@@ -25,118 +25,137 @@ public sealed partial class DataSourceEmbeddingService
         UNSUPPORTED,
     }
 
-    private async IAsyncEnumerable<string> StreamEmbeddingChunksAsync(string filePath, EmbeddingProvider embeddingProvider, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken token)
+    private sealed record ExtractedFileContent(string Text, IReadOnlyList<string> SourceSegments);
+
+    private sealed record ChunkingOptions(int MaxChunkTokenLength, int OverlapTokenLength);
+
+    private sealed record ChunkingStrategy(string Name, IReadOnlyList<ChunkingRule> Rules);
+
+    private sealed record ChunkingRule(string Name, Func<string, IReadOnlyList<string>, IReadOnlyList<string>>? Split);
+
+    private async IAsyncEnumerable<string> StreamEmbeddingChunksAsync(string filePath, IDataSource dataSource, EmbeddingProvider embeddingProvider, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken token)
     {
+        var options = this.GetChunkingOptions(dataSource, embeddingProvider);
+        var strategy = this.GetChunkingStrategy(filePath);
+        ExtractedFileContent content;
+
         if (this.IsImageFilePath(filePath))
         {
-            await foreach (var imageChunk in this.SplitChunkByEmbeddingTokenLimitAsync(this.BuildImageIndexText(filePath), embeddingProvider, token))
-                yield return imageChunk;
-
-            yield break;
+            var imageIndexText = this.BuildImageIndexText(filePath);
+            content = new(imageIndexText, [imageIndexText]);
+        }
+        else
+        {
+            content = await this.ReadExtractedFileContentAsync(filePath, token);
         }
 
-        var currentChunk = new StringBuilder();
+        await foreach (var chunk in this.SplitByChunkingStrategyAsync(content, strategy, options, embeddingProvider, token))
+            yield return chunk;
+    }
+
+    private async Task<ExtractedFileContent> ReadExtractedFileContentAsync(string filePath, CancellationToken token)
+    {
+        var segments = new List<string>();
 
         await foreach (var segment in rustService.StreamArbitraryFileData(filePath, token: token))
         {
             var normalized = NormalizeChunkSegment(segment);
-            if (string.IsNullOrWhiteSpace(normalized))
-                continue;
-
-            if (currentChunk.Length > 0 && currentChunk.Length + normalized.Length + Environment.NewLine.Length > MAX_CHUNK_LENGTH)
-            {
-                if (currentChunk.Length >= MIN_CHUNK_LENGTH)
-                {
-                    var chunk = currentChunk.ToString().Trim();
-                    if (!string.IsNullOrWhiteSpace(chunk))
-                    {
-                        await foreach (var splitChunk in this.SplitChunkByEmbeddingTokenLimitAsync(chunk, embeddingProvider, token))
-                            yield return splitChunk;
-                    }
-
-                    var overlap = chunk.Length > CHUNK_OVERLAP_LENGTH
-                        ? chunk[^CHUNK_OVERLAP_LENGTH..]
-                        : chunk;
-
-                    currentChunk.Clear();
-                    currentChunk.Append(overlap);
-                    currentChunk.AppendLine();
-                }
-                else
-                {
-                    currentChunk.AppendLine();
-                }
-            }
-
-            currentChunk.Append(normalized);
-            currentChunk.AppendLine();
+            if (!string.IsNullOrWhiteSpace(normalized))
+                segments.Add(normalized);
         }
 
-        var finalChunk = currentChunk.ToString().Trim();
-        if (!string.IsNullOrWhiteSpace(finalChunk))
-        {
-            await foreach (var chunk in this.SplitChunkByEmbeddingTokenLimitAsync(finalChunk, embeddingProvider, token))
-                yield return chunk;
-        }
+        return new(string.Join("\n", segments).Trim(), segments);
     }
 
-    private async IAsyncEnumerable<string> SplitChunkByEmbeddingTokenLimitAsync(string chunk, EmbeddingProvider embeddingProvider, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken token)
+    private async IAsyncEnumerable<string> SplitByChunkingStrategyAsync(ExtractedFileContent content, ChunkingStrategy strategy, ChunkingOptions options, EmbeddingProvider embeddingProvider, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken token)
     {
-        var tokenLimit = embeddingProvider.EffectiveChunkTokenLimit;
-        var tokenCount = await this.GetEmbeddingTokenCountAsync(embeddingProvider, chunk, token);
-        if (tokenCount <= tokenLimit)
-        {
+        await foreach (var chunk in this.SplitTextByRulesAsync(content.Text, content.SourceSegments, strategy, 0, options, embeddingProvider, token))
             yield return chunk;
+    }
+
+    private async IAsyncEnumerable<string> SplitTextByRulesAsync(
+        string text,
+        IReadOnlyList<string> sourceSegments,
+        ChunkingStrategy strategy,
+        int ruleIndex,
+        ChunkingOptions options,
+        EmbeddingProvider embeddingProvider,
+        [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken token)
+    {
+        text = text.Trim();
+        if (string.IsNullOrWhiteSpace(text))
+            yield break;
+
+        var tokenCount = await this.GetEmbeddingTokenCountAsync(embeddingProvider, text, token);
+        if (tokenCount <= options.MaxChunkTokenLength)
+        {
+            yield return text;
             yield break;
         }
 
-        if (embeddingProvider.UsesAssumedTokenSizing)
+        if (ruleIndex >= strategy.Rules.Count)
         {
-            logger.LogDebug(
-                "Using conservative embedding chunk limit {ChunkTokenLimit} for provider '{EmbeddingProviderName}' because tokenizer or token limit sizing is assumed. ConfiguredTokenLimit={ConfiguredTokenLimit}.",
-                tokenLimit,
-                embeddingProvider.Name,
-                embeddingProvider.EffectiveTokenLimit);
+            await foreach (var hardChunk in this.SplitTextByHardCutAsync(text, options, embeddingProvider, token))
+                yield return hardChunk;
+
+            yield break;
+        }
+
+        var rule = strategy.Rules[ruleIndex];
+        if (rule.Split is null)
+        {
+            await foreach (var hardChunk in this.SplitTextByHardCutAsync(text, options, embeddingProvider, token))
+                yield return hardChunk;
+
+            yield break;
+        }
+
+        var units = NormalizeSplitUnits(rule.Split(text, sourceSegments), text);
+        if (units.Count <= 1)
+        {
+            await foreach (var chunk in this.SplitTextByRulesAsync(text, sourceSegments, strategy, ruleIndex + 1, options, embeddingProvider, token))
+                yield return chunk;
+
+            yield break;
         }
 
         logger.LogDebug(
-            "Splitting an embedding chunk for provider '{EmbeddingProviderName}' because it has {TokenCount} tokens and the configured limit is {TokenLimit}.",
+            "Splitting content for embedding provider '{EmbeddingProviderName}' with strategy '{ChunkingStrategy}' and rule '{ChunkingRule}'. TokenCount={TokenCount}, MaxChunkTokenLength={MaxChunkTokenLength}.",
             embeddingProvider.Name,
+            strategy.Name,
+            rule.Name,
             tokenCount,
-            tokenLimit);
+            options.MaxChunkTokenLength);
 
-        await foreach (var splitChunk in this.SplitTextByTokenLimitAsync(chunk, embeddingProvider, tokenLimit, token))
-            yield return splitChunk;
-    }
-
-    private async IAsyncEnumerable<string> SplitTextByTokenLimitAsync(string text, EmbeddingProvider embeddingProvider, int tokenLimit, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken token)
-    {
-        var units = SplitTextIntoTokenUnits(text);
         var index = 0;
 
         while (index < units.Count)
         {
             token.ThrowIfCancellationRequested();
 
-            var unitCount = await this.FindLargestUnitCountWithinTokenLimitAsync(units, index, embeddingProvider, tokenLimit, token);
+            var unitCount = await this.FindLargestUnitCountWithinMaxChunkLengthAsync(units, index, embeddingProvider, options.MaxChunkTokenLength, token);
             if (unitCount > 0)
             {
                 var chunk = string.Concat(units.Skip(index).Take(unitCount)).Trim();
                 if (!string.IsNullOrWhiteSpace(chunk))
                     yield return chunk;
 
-                index += unitCount;
+                var nextIndex = index + unitCount;
+                if (nextIndex >= units.Count)
+                    yield break;
+
+                index = await this.CalculateNextStartIndexAsync(units, index, nextIndex, options, embeddingProvider, token);
                 continue;
             }
 
-            await foreach (var splitUnit in this.SplitOversizedTextUnitByTokenLimitAsync(units[index], embeddingProvider, tokenLimit, token))
+            await foreach (var splitUnit in this.SplitTextByRulesAsync(units[index], [units[index]], strategy, ruleIndex + 1, options, embeddingProvider, token))
                 yield return splitUnit;
 
             index++;
         }
     }
 
-    private async Task<int> FindLargestUnitCountWithinTokenLimitAsync(IReadOnlyList<string> units, int startIndex, EmbeddingProvider embeddingProvider, int tokenLimit, CancellationToken token)
+    private async Task<int> FindLargestUnitCountWithinMaxChunkLengthAsync(IReadOnlyList<string> units, int startIndex, EmbeddingProvider embeddingProvider, int maxChunkTokenLength, CancellationToken token)
     {
         var low = 1;
         var high = units.Count - startIndex;
@@ -149,7 +168,7 @@ public sealed partial class DataSourceEmbeddingService
             var mid = low + (high - low) / 2;
             var candidate = string.Concat(units.Skip(startIndex).Take(mid)).Trim();
             var tokenCount = await this.GetEmbeddingTokenCountAsync(embeddingProvider, candidate, token);
-            if (tokenCount <= tokenLimit)
+            if (tokenCount <= maxChunkTokenLength)
             {
                 best = mid;
                 low = mid + 1;
@@ -161,7 +180,38 @@ public sealed partial class DataSourceEmbeddingService
         return best;
     }
 
-    private async IAsyncEnumerable<string> SplitOversizedTextUnitByTokenLimitAsync(string text, EmbeddingProvider embeddingProvider, int tokenLimit, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken token)
+    private async Task<int> CalculateNextStartIndexAsync(IReadOnlyList<string> units, int chunkStartIndex, int chunkEndIndex, ChunkingOptions options, EmbeddingProvider embeddingProvider, CancellationToken token)
+    {
+        if (options.OverlapTokenLength <= 0)
+            return chunkEndIndex;
+
+        var bestStartIndex = chunkEndIndex;
+        var bestDistance = int.MaxValue;
+
+        for (var candidateStartIndex = chunkEndIndex - 1; candidateStartIndex > chunkStartIndex; candidateStartIndex--)
+        {
+            token.ThrowIfCancellationRequested();
+
+            var candidate = string.Concat(units.Skip(candidateStartIndex).Take(chunkEndIndex - candidateStartIndex)).Trim();
+            if (string.IsNullOrWhiteSpace(candidate))
+                continue;
+
+            var tokenCount = await this.GetEmbeddingTokenCountAsync(embeddingProvider, candidate, token);
+            var distance = Math.Abs(tokenCount - options.OverlapTokenLength);
+            if (distance < bestDistance)
+            {
+                bestStartIndex = candidateStartIndex;
+                bestDistance = distance;
+            }
+
+            if (tokenCount >= options.OverlapTokenLength && bestStartIndex < chunkEndIndex)
+                break;
+        }
+
+        return bestStartIndex <= chunkStartIndex ? chunkEndIndex : bestStartIndex;
+    }
+
+    private async IAsyncEnumerable<string> SplitTextByHardCutAsync(string text, ChunkingOptions options, EmbeddingProvider embeddingProvider, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken token)
     {
         var startIndex = 0;
         while (startIndex < text.Length)
@@ -177,7 +227,7 @@ public sealed partial class DataSourceEmbeddingService
                 var mid = low + (high - low) / 2;
                 var candidate = text[startIndex..mid].Trim();
                 var tokenCount = await this.GetEmbeddingTokenCountAsync(embeddingProvider, candidate, token);
-                if (tokenCount <= tokenLimit)
+                if (tokenCount <= options.MaxChunkTokenLength)
                 {
                     bestEndIndex = mid;
                     low = mid + 1;
@@ -190,15 +240,46 @@ public sealed partial class DataSourceEmbeddingService
             {
                 var smallestCandidate = text[startIndex..Math.Min(startIndex + 1, text.Length)].Trim();
                 var smallestCandidateTokenCount = await this.GetEmbeddingTokenCountAsync(embeddingProvider, smallestCandidate, token);
-                throw new InvalidOperationException($"The token limit for embedding provider '{embeddingProvider.Name}' is too low. The smallest possible split still has {smallestCandidateTokenCount} tokens, but the configured limit is {tokenLimit}.");
+                throw new InvalidOperationException($"The max chunk length for embedding provider '{embeddingProvider.Name}' is too low. The smallest possible split still has {smallestCandidateTokenCount} tokens, but the configured limit is {options.MaxChunkTokenLength}.");
             }
 
             var chunk = text[startIndex..bestEndIndex].Trim();
             if (!string.IsNullOrWhiteSpace(chunk))
                 yield return chunk;
 
-            startIndex = bestEndIndex;
+            if (bestEndIndex >= text.Length)
+                yield break;
+
+            startIndex = await this.CalculateHardCutOverlapStartIndexAsync(text, startIndex, bestEndIndex, options, embeddingProvider, token);
         }
+    }
+
+    private async Task<int> CalculateHardCutOverlapStartIndexAsync(string text, int chunkStartIndex, int chunkEndIndex, ChunkingOptions options, EmbeddingProvider embeddingProvider, CancellationToken token)
+    {
+        if (options.OverlapTokenLength <= 0 || chunkEndIndex - chunkStartIndex <= 1)
+            return chunkEndIndex;
+
+        var low = chunkStartIndex + 1;
+        var high = chunkEndIndex - 1;
+        var bestStartIndex = chunkEndIndex;
+
+        while (low <= high)
+        {
+            token.ThrowIfCancellationRequested();
+
+            var mid = low + (high - low) / 2;
+            var candidate = text[mid..chunkEndIndex].Trim();
+            var tokenCount = await this.GetEmbeddingTokenCountAsync(embeddingProvider, candidate, token);
+            if (tokenCount <= options.OverlapTokenLength)
+            {
+                bestStartIndex = mid;
+                high = mid - 1;
+            }
+            else
+                low = mid + 1;
+        }
+
+        return bestStartIndex <= chunkStartIndex ? chunkEndIndex : bestStartIndex;
     }
 
     private async Task<int> GetEmbeddingTokenCountAsync(EmbeddingProvider embeddingProvider, string text, CancellationToken token)
@@ -211,13 +292,212 @@ public sealed partial class DataSourceEmbeddingService
         throw new InvalidOperationException($"Could not count tokens for embedding provider '{embeddingProvider.Name}'. {message}");
     }
 
-    private static List<string> SplitTextIntoTokenUnits(string text)
+    private ChunkingOptions GetChunkingOptions(IDataSource dataSource, EmbeddingProvider embeddingProvider)
+    {
+        var providerMaxChunkTokenLength = Math.Max(1, embeddingProvider.EffectiveTokenLimit);
+        var dataSourceMaxChunkTokenLength = dataSource is IInternalDataSource { MaxChunkTokenLength: > 0 } internalDataSource
+            ? internalDataSource.MaxChunkTokenLength
+            : 0;
+        var maxChunkTokenLength = dataSourceMaxChunkTokenLength > 0
+            ? Math.Min(dataSourceMaxChunkTokenLength, providerMaxChunkTokenLength)
+            : providerMaxChunkTokenLength;
+
+        var configuredOverlapTokenLength = dataSource is IInternalDataSource overlapDataSource
+            ? overlapDataSource.ChunkOverlapTokenLength
+            : 0;
+        var overlapTokenLength = Math.Clamp(configuredOverlapTokenLength, 0, Math.Max(0, maxChunkTokenLength - 1));
+
+        return new(maxChunkTokenLength, overlapTokenLength);
+    }
+
+    private ChunkingStrategy GetChunkingStrategy(string filePath)
+    {
+        if (this.IsImageFilePath(filePath))
+            return new("image", [
+                new("Whitespace", SplitByWhitespace),
+                new("Hard cut", null),
+            ]);
+
+        if (this.IsPresentationFilePath(filePath))
+            return new("presentation", [
+                new("Slide", SplitBySourceSegments),
+                new("Line break", SplitByLineBreaks),
+                new("Whitespace", SplitByWhitespace),
+                new("Hard cut", null),
+            ]);
+
+        if (this.IsDelimitedTableFilePath(filePath) || this.IsSpreadsheetFilePath(filePath))
+            return new("table", [
+                new("Row or sheet", SplitBySourceSegments),
+                new("Line break", SplitByLineBreaks),
+                new("Whitespace", SplitByWhitespace),
+                new("Hard cut", null),
+            ]);
+
+        if (this.IsSourceCodeFilePath(filePath))
+            return GetSourceCodeChunkingStrategy(filePath);
+
+        return new("document", [
+            new("Heading", SplitByDocumentHeadings),
+            new("Page or extracted section", SplitBySourceSegments),
+            new("Paragraph", SplitByParagraphs),
+            new("Line break", SplitByLineBreaks),
+            new("Whitespace", SplitByWhitespace),
+            new("Hard cut", null),
+        ]);
+    }
+
+    private static ChunkingStrategy GetSourceCodeChunkingStrategy(string filePath)
+    {
+        var rules = GetSourceCodeDelimiterRules(filePath).ToList();
+        rules.Add(new("Line break", SplitByLineBreaks));
+        rules.Add(new("Whitespace", SplitByWhitespace));
+        rules.Add(new("Hard cut", null));
+
+        return new("source-code", rules);
+    }
+
+    private static IReadOnlyList<ChunkingRule> GetSourceCodeDelimiterRules(string filePath) => Path.GetExtension(filePath).TrimStart('.') switch
+    {
+        _ => [],
+    };
+
+    private static List<string> NormalizeSplitUnits(IReadOnlyList<string> units, string fallbackText)
+    {
+        var result = units
+            .Where(unit => !string.IsNullOrWhiteSpace(unit))
+            .ToList();
+
+        return result.Count == 0 ? [fallbackText] : result;
+    }
+
+    private static IReadOnlyList<string> SplitBySourceSegments(string text, IReadOnlyList<string> sourceSegments)
+    {
+        return sourceSegments.Count > 1
+            ? sourceSegments.Select(segment => segment + "\n").ToList()
+            : [text];
+    }
+
+    private static IReadOnlyList<string> SplitByDocumentHeadings(string text, IReadOnlyList<string> sourceSegments)
+    {
+        var lines = ReadLines(text);
+        if (lines.Count < 2)
+            return [text];
+
+        var result = new List<string>();
+        var segmentStart = 0;
+
+        for (var i = 0; i < lines.Count; i++)
+        {
+            var (lineStart, _, lineText) = lines[i];
+            if (lineStart == 0)
+                continue;
+
+            var previousLine = i > 0 ? lines[i - 1].Text : string.Empty;
+            var nextLine = i + 1 < lines.Count ? lines[i + 1].Text : string.Empty;
+            if (!IsDocumentHeadingLine(lineText, previousLine, nextLine))
+                continue;
+
+            result.Add(text[segmentStart..lineStart]);
+            segmentStart = lineStart;
+        }
+
+        if (segmentStart == 0)
+            return [text];
+
+        result.Add(text[segmentStart..]);
+        return result;
+    }
+
+    private static IReadOnlyList<string> SplitByParagraphs(string text, IReadOnlyList<string> sourceSegments)
+    {
+        var matches = Regex.Matches(text, @"\n[ \t]*\n", RegexOptions.CultureInvariant);
+        if (matches.Count == 0)
+            return [text];
+
+        var result = new List<string>();
+        var start = 0;
+        foreach (Match match in matches)
+        {
+            var end = match.Index + match.Length;
+            result.Add(text[start..end]);
+            start = end;
+        }
+
+        if (start < text.Length)
+            result.Add(text[start..]);
+
+        return result;
+    }
+
+    private static IReadOnlyList<string> SplitByLineBreaks(string text, IReadOnlyList<string> sourceSegments)
+    {
+        var result = new List<string>();
+        var start = 0;
+
+        for (var i = 0; i < text.Length; i++)
+        {
+            if (text[i] != '\n')
+                continue;
+
+            result.Add(text[start..(i + 1)]);
+            start = i + 1;
+        }
+
+        if (start < text.Length)
+            result.Add(text[start..]);
+
+        return result.Count == 0 ? [text] : result;
+    }
+
+    private static IReadOnlyList<string> SplitByWhitespace(string text, IReadOnlyList<string> sourceSegments)
     {
         var matches = Regex.Matches(text, @"\S+\s*", RegexOptions.CultureInvariant);
         if (matches.Count == 0)
             return [text];
 
         return matches.Cast<Match>().Select(match => match.Value).ToList();
+    }
+
+    private static List<(int Start, int End, string Text)> ReadLines(string text)
+    {
+        var result = new List<(int Start, int End, string Text)>();
+        var start = 0;
+
+        for (var i = 0; i < text.Length; i++)
+        {
+            if (text[i] != '\n')
+                continue;
+
+            result.Add((start, i + 1, text[start..(i + 1)]));
+            start = i + 1;
+        }
+
+        if (start < text.Length)
+            result.Add((start, text.Length, text[start..]));
+
+        return result;
+    }
+
+    private static bool IsDocumentHeadingLine(string line, string previousLine, string nextLine)
+    {
+        var trimmed = line.Trim();
+        if (string.IsNullOrWhiteSpace(trimmed))
+            return false;
+
+        if (Regex.IsMatch(trimmed, @"^#{1,6}\s+\S", RegexOptions.CultureInvariant))
+            return true;
+
+        if (!string.IsNullOrWhiteSpace(previousLine) || !string.IsNullOrWhiteSpace(nextLine))
+            return false;
+
+        if (trimmed.Length is < 3 or > 120)
+            return false;
+
+        if (trimmed.Contains("|", StringComparison.Ordinal) || trimmed.EndsWith(".", StringComparison.Ordinal))
+            return false;
+
+        return Regex.IsMatch(trimmed, @"^(\d+(\.\d+)*\.?\s+\S|(?i:chapter|section)\s+\S|[A-Z0-9][A-Z0-9 ,:;'/&()_-]{2,})$", RegexOptions.CultureInvariant);
     }
 
     private FileEnumerationResult GetInputFiles(IDataSource dataSource)
@@ -344,6 +624,37 @@ public sealed partial class DataSourceEmbeddingService
         return FileTypes.IsAllowedPath(filePath, FileTypes.IMAGE);
     }
 
+    private bool IsPresentationFilePath(string filePath)
+    {
+        return FileTypes.IsAllowedPath(filePath, FileTypes.POWER_POINT);
+    }
+
+    private bool IsDelimitedTableFilePath(string filePath)
+    {
+        var extension = Path.GetExtension(filePath).TrimStart('.');
+        return RAG_DELIMITED_TABLE_FILE_EXTENSIONS.Contains(extension, StringComparer.OrdinalIgnoreCase);
+    }
+
+    private bool IsSpreadsheetFilePath(string filePath)
+    {
+        var extension = Path.GetExtension(filePath).TrimStart('.');
+        return FileTypes.IsAllowedPath(filePath, FileTypes.EXCEL)
+               || RAG_SPREADSHEET_FILE_EXTENSIONS.Contains(extension, StringComparer.OrdinalIgnoreCase)
+               || RAG_SPREADSHEET_ADD_IN_FILE_EXTENSIONS.Contains(extension, StringComparer.OrdinalIgnoreCase);
+    }
+
+    private bool IsSourceCodeFilePath(string filePath)
+    {
+        return !this.IsHtmlFilePath(filePath) && FileTypes.IsAllowedPath(filePath, FileTypes.SOURCE_CODE);
+    }
+
+    private bool IsHtmlFilePath(string filePath)
+    {
+        var extension = Path.GetExtension(filePath).TrimStart('.');
+        return extension.Equals("html", StringComparison.OrdinalIgnoreCase)
+               || extension.Equals("htm", StringComparison.OrdinalIgnoreCase);
+    }
+
     private bool IsSupportedRagFilePath(string filePath)
     {
         var extension = Path.GetExtension(filePath).TrimStart('.');
@@ -425,7 +736,7 @@ public sealed partial class DataSourceEmbeddingService
                  """;
     }
 
-    private string BuildEmbeddingSignature(EmbeddingProvider embeddingProvider)
+    private string BuildEmbeddingSignature(IDataSource dataSource, EmbeddingProvider embeddingProvider, ChunkingOptions chunkingOptions)
     {
         return string.Join('|',
             embeddingProvider.Id,
@@ -435,7 +746,10 @@ public sealed partial class DataSourceEmbeddingService
             embeddingProvider.Hostname,
             embeddingProvider.TokenizerPath,
             embeddingProvider.EffectiveTokenLimit,
-            embeddingProvider.EffectiveChunkTokenLimit);
+            dataSource is IInternalDataSource internalDataSource ? internalDataSource.MaxChunkTokenLength : 0,
+            dataSource is IInternalDataSource overlapDataSource ? overlapDataSource.ChunkOverlapTokenLength : 0,
+            chunkingOptions.MaxChunkTokenLength,
+            chunkingOptions.OverlapTokenLength);
     }
 
     private async Task<string> BuildFingerprintAsync(FileInfo file, CancellationToken token)

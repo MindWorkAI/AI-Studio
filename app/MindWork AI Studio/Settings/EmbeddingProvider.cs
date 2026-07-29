@@ -22,10 +22,11 @@ public sealed record EmbeddingProvider(
     string Hostname = "http://localhost:1234",
     Host Host = Host.NONE,
     string TokenizerPath = "",
-    int TokenLimit = 8_191) : ConfigurationBaseObject, ISecretId
+    int EmbeddingBatchSize = 0,
+    int TokenLimit = 0) : ConfigurationBaseObject, ISecretId
 {
-    public const int DEFAULT_TOKEN_LIMIT = 8_191;
-    private const int ASSUMED_TOKEN_LIMIT_SAFETY_PERCENT = 80;
+    public const int DEFAULT_TOKEN_LIMIT = 8192;
+    public const int DEFAULT_EMBEDDING_BATCH_SIZE = 1;
 
     private static readonly ILogger<EmbeddingProvider> LOGGER = Program.LOGGER_FACTORY.CreateLogger<EmbeddingProvider>();
 
@@ -59,14 +60,7 @@ public sealed record EmbeddingProvider(
     public int EffectiveTokenLimit => this.TokenLimit > 0 ? this.TokenLimit : DEFAULT_TOKEN_LIMIT;
 
     [JsonIgnore]
-    public bool UsesAssumedTokenSizing => string.IsNullOrWhiteSpace(this.TokenizerPath)
-                                          || this.TokenLimit <= 0
-                                          || this.TokenLimit == DEFAULT_TOKEN_LIMIT;
-
-    [JsonIgnore]
-    public int EffectiveChunkTokenLimit => this.UsesAssumedTokenSizing
-        ? Math.Max(1, (int)Math.Ceiling(this.EffectiveTokenLimit * ASSUMED_TOKEN_LIMIT_SAFETY_PERCENT / 100d) - 1)
-        : this.EffectiveTokenLimit;
+    public int EffectiveEmbeddingBatchSize => this.EmbeddingBatchSize > 0 ? this.EmbeddingBatchSize : DEFAULT_EMBEDDING_BATCH_SIZE;
 
     #endregion
 
@@ -129,6 +123,13 @@ public sealed record EmbeddingProvider(
             tokenLimit = DEFAULT_TOKEN_LIMIT;
         }
 
+        var embeddingBatchSize = DEFAULT_EMBEDDING_BATCH_SIZE;
+        if (table.TryGetValue("EmbeddingBatchSize", out var embeddingBatchSizeValue) && (!embeddingBatchSizeValue.TryRead<int>(out embeddingBatchSize) || embeddingBatchSize < 1))
+        {
+            LOGGER.LogWarning($"The configured embedding provider {idx} does not contain a valid embedding batch size. Falling back to {DEFAULT_EMBEDDING_BATCH_SIZE}. (Plugin ID: {configPluginId})");
+            embeddingBatchSize = DEFAULT_EMBEDDING_BATCH_SIZE;
+        }
+
         provider = new EmbeddingProvider
         {
             Num = 0, // will be set later by the PluginConfigurationObject
@@ -142,6 +143,7 @@ public sealed record EmbeddingProvider(
             Hostname = hostname,
             Host = host,
             TokenizerPath = tokenizerPath,
+            EmbeddingBatchSize = embeddingBatchSize,
             TokenLimit = tokenLimit,
         };
 
@@ -218,6 +220,7 @@ public sealed record EmbeddingProvider(
                     
                     ["TokenizerPath"] = "{{this.TokenizerPath}}",
                     ["TokenLimit"] = {{this.EffectiveTokenLimit}},
+                    ["EmbeddingBatchSize"] = {{this.EffectiveEmbeddingBatchSize}},
                  
                     ["Host"] = "{{this.Host}}",
                     ["Hostname"] = "{{LuaTools.EscapeLuaString(this.Hostname)}}",

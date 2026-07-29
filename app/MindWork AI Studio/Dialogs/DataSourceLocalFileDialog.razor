@@ -46,7 +46,7 @@
             <MudJustifiedText Typo="Typo.body1" Class="mb-3">
                 @T("In order for the AI to be able to determine the appropriate data at any time, you must choose an embedding method.")
             </MudJustifiedText>
-            <MudSelect @bind-Value="@this.dataEmbeddingId" Label="@T("Embedding")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.GetSelectedCloudEmbedding">
+            <MudSelect @bind-Value="@this.dataEmbeddingId" Label="@T("Embedding")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateEmbeddingId">
                 @foreach (var embedding in this.AvailableEmbeddings)
                 {
                     <MudSelectItem Value="@embedding.Value">
@@ -67,6 +67,45 @@
                         @T("The embedding you selected runs locally or in your organization. Your data is not sent to the cloud.")
                     </MudJustifiedText>
                 }
+
+                <MudStack Class="mb-3">
+                    <MudButton OnClick="@this.ToggleExpertSettings" Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Tune">
+                        @(this.showExpertSettings ? T("Hide Expert Settings") : T("Show Expert Settings"))
+                    </MudButton>
+                    <MudDivider/>
+                    <MudCollapse Expanded="@this.showExpertSettings" Class="@this.GetExpertStyles">
+                        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+                            @T("Optional expert settings for how this data source is split before embedding.")
+                        </MudJustifiedText>
+                        <MudNumericField
+                            T="int"
+                            @bind-Value="@this.dataMaxChunkTokenLength"
+                            Label="@T("Max chunk length")"
+                            Class="mb-3"
+                            Min="0"
+                            Immediate="@true"
+                            Validation="@this.ValidateMaxChunkTokenLength"
+                            HelperText="@T("Maximum number of tokens per chunk for this data source. Use 0 to use the embedding provider setting.")"
+                            Variant="Variant.Outlined"
+                            Adornment="Adornment.Start"
+                            AdornmentIcon="@Icons.Material.Filled.DataObject"
+                            AdornmentColor="Color.Info"
+                        />
+                        <MudNumericField
+                            T="int"
+                            @bind-Value="@this.dataChunkOverlapTokenLength"
+                            Label="@T("Chunk overlap length")"
+                            Min="0"
+                            Immediate="@true"
+                            Validation="@this.ValidateChunkOverlapTokenLength"
+                            HelperText="@T("Number of tokens repeated at the start of the next chunk. Use 0 to disable overlap.")"
+                            Variant="Variant.Outlined"
+                            Adornment="Adornment.Start"
+                            AdornmentIcon="@Icons.Material.Filled.CompareArrows"
+                            AdornmentColor="Color.Info"
+                        />
+                    </MudCollapse>
+                </MudStack>
             }
             
             <ManagePandocDependency IntroText="@T("For some data types, such as Office files, MindWork AI Studio requires the open-source application Pandoc.")"/>

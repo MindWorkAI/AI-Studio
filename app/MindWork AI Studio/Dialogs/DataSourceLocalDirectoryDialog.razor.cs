@@ -41,7 +41,10 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
     private bool dataUserAcknowledgedCloudEmbedding;
     private string dataEmbeddingId = string.Empty;
     private string dataPath = string.Empty;
+    private int dataMaxChunkTokenLength;
+    private int dataChunkOverlapTokenLength;
     private ushort dataMaxMatches = 10;
+    private bool showExpertSettings;
     private DataSourceSecurity dataSecurityPolicy;
     
     // We get the form reference from Blazor code to validate it manually:
@@ -77,8 +80,11 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
             this.dataDescription = this.DataSource.Description;
             this.dataEmbeddingId = this.DataSource.EmbeddingId;
             this.dataPath = this.DataSource.Path;
+            this.dataMaxChunkTokenLength = this.DataSource.MaxChunkTokenLength;
+            this.dataChunkOverlapTokenLength = this.DataSource.ChunkOverlapTokenLength;
             this.dataSecurityPolicy = this.DataSource.SecurityPolicy;
             this.dataMaxMatches = this.DataSource.MaxMatches;
+            this.showExpertSettings = this.dataMaxChunkTokenLength > 0 || this.dataChunkOverlapTokenLength > 0;
         }
         
         await base.OnInitializedAsync();
@@ -96,8 +102,10 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
 
     #endregion
     
-    private bool SelectedCloudEmbedding => this.SettingsManager.ConfigurationData.EmbeddingProviders
-        .FirstOrDefault(x => x.Id == this.dataEmbeddingId) is { IsSelfHosted: false };
+    private EmbeddingProvider? SelectedEmbedding => this.SettingsManager.ConfigurationData.EmbeddingProviders
+        .FirstOrDefault(x => x.Id == this.dataEmbeddingId);
+
+    private bool SelectedCloudEmbedding => this.SelectedEmbedding is { IsSelfHosted: false };
 
     private DataSourceLocalDirectory CreateDataSource() => new()
     {
@@ -108,6 +116,8 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
         Type = DataSourceType.LOCAL_DIRECTORY,
         EmbeddingId = this.dataEmbeddingId,
         Path = this.dataPath,
+        MaxChunkTokenLength = this.dataMaxChunkTokenLength,
+        ChunkOverlapTokenLength = this.dataChunkOverlapTokenLength,
         SecurityPolicy = this.dataSecurityPolicy,
         MaxMatches = this.dataMaxMatches,
     };
@@ -125,4 +135,34 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
     }
     
     private void Cancel() => this.MudDialog.Cancel();
+
+    private string? ValidateMaxChunkTokenLength(int maxChunkTokenLength)
+    {
+        if (maxChunkTokenLength < 0)
+            return T("Please enter 0 or a positive max chunk length.");
+
+        var providerMaxChunkTokenLength = this.SelectedEmbedding?.EffectiveTokenLimit ?? EmbeddingProvider.DEFAULT_TOKEN_LIMIT;
+        if (maxChunkTokenLength > providerMaxChunkTokenLength)
+            return string.Format(T("The data source max chunk length must be less than or equal to the embedding provider limit ({0})."), providerMaxChunkTokenLength);
+
+        return null;
+    }
+
+    private string? ValidateChunkOverlapTokenLength(int chunkOverlapTokenLength)
+    {
+        if (chunkOverlapTokenLength < 0)
+            return T("Please enter 0 or a positive overlap length.");
+
+        var effectiveMaxChunkTokenLength = this.dataMaxChunkTokenLength > 0
+            ? this.dataMaxChunkTokenLength
+            : this.SelectedEmbedding?.EffectiveTokenLimit ?? EmbeddingProvider.DEFAULT_TOKEN_LIMIT;
+        if (chunkOverlapTokenLength >= effectiveMaxChunkTokenLength)
+            return T("The overlap must be smaller than the effective max chunk length.");
+
+        return null;
+    }
+
+    private void ToggleExpertSettings() => this.showExpertSettings = !this.showExpertSettings;
+
+    private string GetExpertStyles => this.showExpertSettings ? "border-2 border-dashed rounded pa-2" : string.Empty;
 }
