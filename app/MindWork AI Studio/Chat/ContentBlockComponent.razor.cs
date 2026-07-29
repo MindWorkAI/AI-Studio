@@ -552,7 +552,22 @@ public partial class ContentBlockComponent : MSGComponentBase, IAsyncDisposable
     {
         try
         {
-            await PandocExport.ToDocument(this.RustService, this.DialogService, format, this.Content);
+            switch (format)
+            {
+                case FileExportFormat.MARKDOWN:
+                    await PlainFileExport.ToFile(this.RustService, format, this.Content);
+                    break;
+
+                case FileExportFormat.MICROSOFT_WORD:
+                case FileExportFormat.OPEN_DOCUMENT_TEXT:
+                case FileExportFormat.HTML:
+                    await PandocExport.ToDocument(this.RustService, this.DialogService, format, this.Content);
+                    break;
+
+                default:
+                    LOGGER.LogError($"No exporter is registered for {format}.");
+                    return;
+            }
         }
         catch (ArgumentOutOfRangeException e)
         {
