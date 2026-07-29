@@ -46,18 +46,20 @@ public static class FileTypes
     // Document hierarchy
     public static readonly FileTypeFilter PDF         = FileTypeFilter.Leaf("PDF", "pdf");
     public static readonly FileTypeFilter TEXT        = FileTypeFilter.Leaf(TB("Text"), "txt", "md", "rtf");
+    public static readonly FileTypeFilter MARKDOWN        = FileTypeFilter.Leaf(TB("Markdown"), "md");
     public static readonly FileTypeFilter MS_WORD     = FileTypeFilter.Leaf("Microsoft Word", "docx");
     public static readonly FileTypeFilter OPEN_DOCUMENT_TEXT = FileTypeFilter.Leaf("OpenDocument Text", "odt");
     public static readonly FileTypeFilter WORD        = FileTypeFilter.Parent("Word", OPEN_DOCUMENT_TEXT, MS_WORD);
     public static readonly FileTypeFilter EXCEL       = FileTypeFilter.Leaf("Excel", "xls", "xlsx");
     public static readonly FileTypeFilter POWER_POINT = FileTypeFilter.Leaf("PowerPoint", "ppt", "pptx", "odp");
     public static readonly FileTypeFilter MAIL        = FileTypeFilter.Leaf(TB("Mail"), "eml", "msg", "mbox");
-    public static readonly FileTypeFilter LATEX       = FileTypeFilter.Leaf("LaTeX", "tex", "bib", "sty", "cls", "log");
+    public static readonly FileTypeFilter LATEX_FAMILY = FileTypeFilter.Leaf("LaTeX", "tex", "bib", "sty", "cls", "log");
+    public static readonly FileTypeFilter LATEX = FileTypeFilter.Leaf("LaTeX", "tex");
 
     public static readonly FileTypeFilter OFFICE_FILES = FileTypeFilter.Parent(TB("Office Files"),
         WORD, EXCEL, POWER_POINT, PDF);
     public static readonly FileTypeFilter DOCUMENT     = FileTypeFilter.Parent(TB("Document"),
-        TEXT, OFFICE_FILES, SOURCE_CODE, LATEX);
+        TEXT, OFFICE_FILES, SOURCE_CODE, LATEX_FAMILY);
 
     // Media hierarchy
     public static readonly FileTypeFilter IMAGE = FileTypeFilter.Leaf(TB("Image"),
