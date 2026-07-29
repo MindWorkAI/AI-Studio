@@ -74,6 +74,13 @@
                             <MudMenuItem OnClick="@(() => this.ExportDocument(FileExportFormat.LATEX))" Icon="@Icons.Material.Filled.Functions">
                                 @T("LaTeX (.tex)")
                             </MudMenuItem>
+                            @if (this.HasCsv)
+                            {
+                                <MudDivider />
+                                <MudMenuItem OnClick="@(() => this.ExportDocument(FileExportFormat.CSV))" Icon="@Icons.Material.Filled.TableChart">
+                                    @T("CSV (.csv)")
+                                </MudMenuItem>
+                            }
                             <MudDivider />
                             <MudMenuItem OnClick="@(() => this.ExportDocument(FileExportFormat.MARKDOWN))" Icon="@Icons.Material.Filled.TextFields">
                                 @T("Markdown (.md)")

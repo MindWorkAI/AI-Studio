@@ -106,6 +106,8 @@ public partial class ContentBlockComponent : MSGComponentBase, IAsyncDisposable
     private bool hasActiveMathContainer;
     private bool isDisposed;
 
+    private bool HasCsv => PlainFileExport.TryExtractCsvContent(this.Content, out _);
+
     #region Overrides of ComponentBase
 
     protected override async Task OnInitializedAsync()
@@ -555,6 +557,7 @@ public partial class ContentBlockComponent : MSGComponentBase, IAsyncDisposable
             switch (format)
             {
                 case FileExportFormat.MARKDOWN:
+                case FileExportFormat.CSV:
                     await PlainFileExport.ToFile(this.RustService, format, this.Content);
                     break;
 
