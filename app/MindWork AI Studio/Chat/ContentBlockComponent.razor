@@ -71,6 +71,10 @@
                                     @T("OpenDocument Text (.odt)")
                                 </MudTooltip>
                             </MudMenuItem>
+                            <MudMenuItem OnClick="@(() => this.ExportDocument(FileExportFormat.LATEX))" Icon="@Icons.Material.Filled.Functions">
+                                @T("LaTeX (.tex)")
+                            </MudMenuItem>
+                            <MudDivider />
                             <MudMenuItem OnClick="@(() => this.ExportDocument(FileExportFormat.MARKDOWN))" Icon="@Icons.Material.Filled.TextFields">
                                 @T("Markdown (.md)")
                             </MudMenuItem>

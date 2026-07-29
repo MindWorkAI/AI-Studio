@@ -561,6 +561,7 @@ public partial class ContentBlockComponent : MSGComponentBase, IAsyncDisposable
                 case FileExportFormat.MICROSOFT_WORD:
                 case FileExportFormat.OPEN_DOCUMENT_TEXT:
                 case FileExportFormat.HTML:
+                case FileExportFormat.LATEX:
                     await PandocExport.ToDocument(this.RustService, this.DialogService, format, this.Content);
                     break;
 
