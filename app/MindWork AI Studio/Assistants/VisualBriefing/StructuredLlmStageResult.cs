@@ -8,6 +8,7 @@ namespace AIStudio.Assistants.VisualBriefing;
 /// <param name="Response">The validated response.</param>
 /// <param name="Issue">The final safe issue.</param>
 /// <param name="FailureCode">The final stable failure code.</param>
+/// <param name="ValidationRule">The stable semantic validation rule.</param>
 /// <param name="Diagnostic">The final safe structured-response diagnostic.</param>
 /// <param name="Attempts">The number of provider calls.</param>
 /// <param name="ResponseLength">The final response character count.</param>

@@ -24,7 +24,8 @@ public sealed partial class VisualBriefingStore
                 .Where(source => source.Status is VisualBriefingSourceStatus.UNREACHABLE or VisualBriefingSourceStatus.TRANSCRIPT_OUTDATED)
                 .ToArray();
             
-            if (request.EditMode is not VisualBriefingEditMode.CHANGE_DESIGN && blockingSources.Length > 0)
+            if (request.EditMode is not (VisualBriefingEditMode.CHANGE_DESIGN or VisualBriefingEditMode.RECOMPILE) &&
+                blockingSources.Length > 0)
                 return VisualBriefingRevisionResult.Failure("One or more sources are missing or have an outdated transcript.");
 
             var parent = request.ParentRevisionId is null
@@ -37,7 +38,9 @@ public sealed partial class VisualBriefingStore
             VisualBriefingArtifactParts? parentParts = null;
             if (parent is not null)
             {
-                parentParts = await this.ReadVersionPartsAsync(manifest.BriefingId, parent.RevisionId, token);
+                parentParts = request.EditMode is VisualBriefingEditMode.RECOMPILE
+                    ? await this.ReadVersionPartsForRecompileAsync(manifest.BriefingId, parent.RevisionId, token)
+                    : await this.ReadVersionPartsAsync(manifest.BriefingId, parent.RevisionId, token);
                 if (parentParts is null)
                     return VisualBriefingRevisionResult.Failure("The selected parent revision is invalid or damaged.");
 
@@ -75,6 +78,13 @@ public sealed partial class VisualBriefingStore
                      !string.Equals(parent.CssHash, hashes.CssHash, StringComparison.Ordinal) ||
                      !string.Equals(parent.RuntimeHash, hashes.RuntimeHash, StringComparison.Ordinal)))
                     return VisualBriefingRevisionResult.Failure("A content update attempted to modify the template, CSS, or runtime.");
+
+                if (request.EditMode is VisualBriefingEditMode.RECOMPILE &&
+                    (request.EvidenceArtifactId != parent.EvidenceArtifactId ||
+                     request.PlanArtifactId != parent.PlanArtifactId ||
+                     request.ContentArtifactId != parent.ContentArtifactId ||
+                     !string.Equals(parent.AssetHash, hashes.AssetHash, StringComparison.Ordinal)))
+                    return VisualBriefingRevisionResult.Failure("A recompile attempted to modify semantic artifacts or embedded assets.");
 
                 if (string.Equals(parent.DataHash, hashes.DataHash, StringComparison.Ordinal) &&
                     string.Equals(parent.AssetHash, hashes.AssetHash, StringComparison.Ordinal) &&
@@ -116,7 +126,7 @@ public sealed partial class VisualBriefingStore
                 overwrite: false);
             
             manifest.Versions.Add(version);
-            if (request.EditMode is not VisualBriefingEditMode.CHANGE_DESIGN)
+            if (request.EditMode is not (VisualBriefingEditMode.CHANGE_DESIGN or VisualBriefingEditMode.RECOMPILE))
                 foreach (var source in manifest.Sources.Where(source => File.Exists(source.Path)))
                     ApplyFileSnapshot(source, source.Path);
             
@@ -182,6 +192,45 @@ public sealed partial class VisualBriefingStore
             return null;
 
         return parts;
+    }
+
+    /// <summary>
+    /// Reads a local immutable version for recompilation, accepting an older runtime only when every
+    /// protected section still matches the locally persisted version hashes.
+    /// </summary>
+    /// <param name="briefingId">The briefing identifier.</param>
+    /// <param name="revisionId">The revision identifier.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>The verified parent artifact parts, or <see langword="null"/>.</returns>
+    internal async Task<VisualBriefingArtifactParts?> ReadVersionPartsForRecompileAsync(
+        Guid briefingId,
+        Guid revisionId,
+        CancellationToken token = default)
+    {
+        var manifest = await this.LoadAsync(briefingId, token);
+        var version = manifest?.Versions.FirstOrDefault(candidate => candidate.RevisionId == revisionId);
+        if (version is null)
+            return null;
+
+        var path = this.VersionPath(briefingId, version);
+        if (!File.Exists(path))
+            return null;
+
+        var html = await File.ReadAllTextAsync(path, token);
+        if (!VisualBriefingArtifactService.TryParseForRecompile(html, out var parts, out _) ||
+            parts.ExportManifest.BriefingId != briefingId ||
+            parts.ExportManifest.RevisionId != revisionId ||
+            !string.Equals(parts.PayloadHash, version.PayloadHash, StringComparison.OrdinalIgnoreCase))
+            return null;
+
+        var hashes = ComputeSectionHashes(parts);
+        return string.Equals(version.DataHash, hashes.DataHash, StringComparison.Ordinal) &&
+               string.Equals(version.AssetHash, hashes.AssetHash, StringComparison.Ordinal) &&
+               string.Equals(version.TemplateHash, hashes.TemplateHash, StringComparison.Ordinal) &&
+               string.Equals(version.CssHash, hashes.CssHash, StringComparison.Ordinal) &&
+               string.Equals(version.RuntimeHash, hashes.RuntimeHash, StringComparison.Ordinal)
+            ? parts
+            : null;
     }
 
     /// <summary>

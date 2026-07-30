@@ -10,9 +10,16 @@ public partial class VisualBriefingAssistant
     /// <summary>
     /// Gets whether the selected revision references all four intermediate artifacts.
     /// </summary>
-    private bool SelectedVersionSupportsEdits =>
+    private bool SelectedVersionSupportsEdits => this.VersionSupportsSemanticEdits(this.selectedRevisionId);
+
+    /// <summary>
+    /// Gets whether one revision references the complete semantic artifact set.
+    /// </summary>
+    /// <param name="revisionId">The revision to inspect.</param>
+    /// <returns>Whether the revision can be edited or recompiled without rebuilding its inputs.</returns>
+    private bool VersionSupportsSemanticEdits(Guid revisionId) =>
         this.selectedBriefing?.Versions.FirstOrDefault(version =>
-            version.RevisionId == this.selectedRevisionId) is
+            version.RevisionId == revisionId) is
         {
             EvidenceArtifactId: not null,
             PlanArtifactId: not null,

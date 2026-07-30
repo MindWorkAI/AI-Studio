@@ -9,25 +9,14 @@ namespace AIStudio.Assistants.VisualBriefing;
 /// <summary>
 /// Curates typed slot, chart, control, formula, accessibility, and reference data.
 /// </summary>
-internal sealed class VisualBriefingContentStage(
-    StructuredLlmStageRunner stageRunner,
-    VisualBriefingStore store,
-    VisualBriefingLayoutCompiler layoutCompiler,
-    VisualBriefingBuildProgressService progressService)
+internal sealed class VisualBriefingContentStage(StructuredLlmStageRunner stageRunner, VisualBriefingStore store, VisualBriefingBuildProgressService progressService)
 {
     /// <summary>
     /// The filter value that shows every row. The briefing runtime treats it as no filter.
     /// </summary>
     private const string SHOW_ALL_VALUE = "*";
 
-    public async Task<VisualBriefingContentArtifact> ExecuteAsync(
-        VisualBriefingManifest manifest,
-        ProviderSettings provider,
-        Profile profile,
-        VisualBriefingEvidenceArtifact evidence,
-        VisualBriefingPlanArtifact plan,
-        VisualBriefingBuildRecord build,
-        CancellationToken token)
+    public async Task<VisualBriefingContentArtifact> ExecuteAsync(VisualBriefingManifest manifest, ProviderSettings provider, Profile profile, VisualBriefingEvidenceArtifact evidence, VisualBriefingPlanArtifact plan, VisualBriefingBuildRecord build, CancellationToken token)
     {
         if (build.ContentArtifactId is { } completedId)
         {
@@ -35,50 +24,26 @@ internal sealed class VisualBriefingContentStage(
             if (completed is not null)
                 return completed;
         }
-        var stage = VisualBriefingEvidenceStage.Start(
-            build,
-            VisualBriefingBuildStage.CONTENT,
-            VisualBriefingHashing.ComputeSections(
-                evidence.PayloadHash,
-                plan.PayloadHash,
-                manifest.Settings.Instruction,
-                manifest.Settings.TargetLanguage.ToString(),
-                manifest.Settings.CustomTargetLanguage,
-                manifest.Settings.AudienceProfile.ToString(),
-                manifest.Settings.AudienceAgeGroup.ToString(),
-                manifest.Settings.AudienceOrganizationalLevel.ToString(),
-                manifest.Settings.AudienceExpertise.ToString(),
-                manifest.Settings.ShowSourceReferences.ToString(),
-                SourceReferenceFingerprint(manifest),
-                manifest.Settings.ProtectionLevel.ToString(),
-                manifest.Settings.CustomProtectionLevel,
-                provider.Id,
-                provider.Model.Id,
-                profile.Id,
-                VisualBriefingHashing.Compute(profile.ToSystemPrompt()),
-                VisualBriefingVersions.CONTENT_CONTRACT.ToString()));
+
+        var computedHash = VisualBriefingHashing.ComputeSections(evidence.PayloadHash, plan.PayloadHash, manifest.Settings.Instruction,
+            manifest.Settings.TargetLanguage.ToString(), manifest.Settings.CustomTargetLanguage, manifest.Settings.AudienceProfile.ToString(),
+            manifest.Settings.AudienceAgeGroup.ToString(), manifest.Settings.AudienceOrganizationalLevel.ToString(), manifest.Settings.AudienceExpertise.ToString(),
+            manifest.Settings.ShowSourceReferences.ToString(), SourceReferenceFingerprint(manifest), manifest.Settings.ProtectionLevel.ToString(),
+            manifest.Settings.CustomProtectionLevel, provider.Id, provider.Model.Id, profile.Id, VisualBriefingHashing.Compute(profile.ToSystemPrompt()),
+            VisualBriefingVersions.CONTENT_CONTRACT.ToString());
+        
+        var stage = VisualBriefingEvidenceStage.Start(build, VisualBriefingBuildStage.CONTENT, computedHash);
+        
         await store.SaveBuildAsync(build, token);
         progressService.Publish(build);
-        var run = await stageRunner.RunAsync<VisualBriefingContentResponse>(
-            provider,
-            profile,
-            BuildSystemContract(),
-            BuildPrompt(manifest, evidence, plan),
-            [],
-            VisualBriefingBuildStage.CONTENT,
-            build.OperationId,
-            build.BuildId,
-            response => this.ValidateResponseAndProject(manifest, plan, evidence, response),
-            token);
+        
+        var run = await stageRunner.RunAsync<VisualBriefingContentResponse>(provider, profile, BuildSystemContract(),
+            BuildPrompt(manifest, evidence, plan), [], VisualBriefingBuildStage.CONTENT, build.OperationId, build.BuildId,
+            response => this.ValidateResponseAndProject(manifest, plan, evidence, response), token);
+        
         stage.Attempts = run.Attempts;
         if (!run.Success || run.Response is null)
-            await VisualBriefingEvidenceStage.FailAsync(
-                store,
-                build,
-                stage,
-                run,
-                VisualBriefingValidationRule.SLOT_FULFILLMENT_INVALID,
-                token);
+            await VisualBriefingEvidenceStage.FailAsync(store, build, stage, run, VisualBriefingValidationRule.SLOT_FULFILLMENT_INVALID, token);
 
         var response = run.Response!;
         var artifact = Project(manifest, plan, evidence, response);
@@ -114,11 +79,15 @@ internal sealed class VisualBriefingContentStage(
             JsonSerializer.Serialize(artifact.SourceCoverage, VisualBriefingJson.Compact),
             JsonSerializer.Serialize(artifact.AssetPlan, VisualBriefingJson.Compact),
             artifact.StructuralSignature);
+        
         await store.WriteContentArtifactAsync(manifest.BriefingId, artifact, token);
         build.ContentArtifactId = artifact.ArtifactId;
+        
         VisualBriefingEvidenceStage.Complete(build, stage, artifact.PayloadHash);
+        
         await store.SaveBuildAsync(build, token);
         progressService.Publish(build);
+        
         return artifact;
     }
 
@@ -146,10 +115,7 @@ internal sealed class VisualBriefingContentStage(
           Do not return source references, reset controls, filter controls, or entries for ASSET components; AI Studio creates all of them deterministically.
           """;
 
-    private static string BuildPrompt(
-        VisualBriefingManifest manifest,
-        VisualBriefingEvidenceArtifact evidence,
-        VisualBriefingPlanArtifact plan)
+    private static string BuildPrompt(VisualBriefingManifest manifest, VisualBriefingEvidenceArtifact evidence, VisualBriefingPlanArtifact plan)
     {
         var components = plan.Sections.SelectMany(section => section.Components).ToArray();
         var componentIds = components.Select(component => component.ComponentId).ToArray();
@@ -171,13 +137,8 @@ internal sealed class VisualBriefingContentStage(
                     Role = VisualBriefingSlotRole.SUMMARY,
                     Type = VisualBriefingSlotType.TEXT,
                 },
-            }.Concat(section.Components.SelectMany(component => component.Slots.Select(slot => new
-            {
-                slot.SlotId,
-                slot.Role,
-                Type = VisualBriefingSlotTypes.Expected(slot),
-            }))))
-            .ToArray();
+            }.Concat(section.Components.SelectMany(component => component.Slots.Select(slot => new { slot.SlotId, slot.Role, Type = VisualBriefingSlotTypes.Expected(slot), }
+            )))).ToArray();
         
         var chartComponentIds = components
             .Where(component => component.Kind is VisualBriefingComponentKind.CHART)
@@ -186,12 +147,12 @@ internal sealed class VisualBriefingContentStage(
 
         // Filterable tables are absent here: AI Studio derives their controls from the table data:
         var controlRequirements = components
-            .Where(component => component.Kind is VisualBriefingComponentKind.TABS or
-                VisualBriefingComponentKind.SIMULATION)
+            .Where(component => component.Kind is VisualBriefingComponentKind.TABS or VisualBriefingComponentKind.SIMULATION)
             .Select(component => new
             {
                 component.ComponentId,
                 component.Kind,
+                
                 PanelSlotIds = component.Slots
                     .Where(slot => slot.Role is VisualBriefingSlotRole.PANEL)
                     .Select(slot => slot.SlotId)
@@ -201,8 +162,7 @@ internal sealed class VisualBriefingContentStage(
                     .Where(slot => slot.Role is VisualBriefingSlotRole.RESULT)
                     .Select(slot => slot.SlotId)
                     .ToArray(),
-            })
-            .ToArray();
+            }).ToArray();
         
         return $"""
                 Target language: {manifest.Settings.TargetLanguage.PromptGeneralPurpose(manifest.Settings.CustomTargetLanguage)}
@@ -218,30 +178,23 @@ internal sealed class VisualBriefingContentStage(
                 """;
     }
 
-    private VisualBriefingContractIssue? ValidateResponseAndProject(
-        VisualBriefingManifest manifest,
-        VisualBriefingPlanArtifact plan,
-        VisualBriefingEvidenceArtifact evidence,
-        VisualBriefingContentResponse response)
+    private VisualBriefingContractIssue? ValidateResponseAndProject(VisualBriefingManifest manifest, VisualBriefingPlanArtifact plan, VisualBriefingEvidenceArtifact evidence, VisualBriefingContentResponse response)
     {
         var issue = VisualBriefingValidation.ValidateContent(plan, response);
         if (issue is not null)
             return issue;
+        
         var evidenceIds = evidence.Facts.Select(item => item.EvidenceId)
             .Concat(evidence.Metrics.Select(item => item.EvidenceId))
             .Concat(evidence.Tables.Select(item => item.EvidenceId))
             .ToHashSet(StringComparer.Ordinal);
-        if (plan.Sections.SelectMany(section => section.Components)
-            .SelectMany(component => component.EvidenceIds)
-            .Any(evidenceId => !evidenceIds.Contains(evidenceId)))
-            return new(
-                VisualBriefingFailureCode.RESPONSE_CONTRACT_INVALID,
-                "The new evidence no longer fulfils the frozen plan.",
-                VisualBriefingValidationRule.SLOT_FULFILLMENT_INVALID);
+        
+        if (plan.Sections.SelectMany(section => section.Components).SelectMany(component => component.EvidenceIds).Any(evidenceId => !evidenceIds.Contains(evidenceId)))
+            return new(VisualBriefingFailureCode.RESPONSE_CONTRACT_INVALID, "The new evidence no longer fulfils the frozen plan.", VisualBriefingValidationRule.SLOT_FULFILLMENT_INVALID);
 
         // Everything the model controls has been validated above. The trial compilation only guards
         // AI Studio's own compiler output and therefore never yields a contract issue:
-        this.RunTrialCompilation(manifest, plan, evidence, response);
+        RunTrialCompilation(manifest, plan, evidence, response);
         return null;
     }
 
@@ -254,11 +207,7 @@ internal sealed class VisualBriefingContentStage(
     /// <param name="plan">The frozen plan artifact.</param>
     /// <param name="evidence">The validated evidence artifact.</param>
     /// <param name="response">The validated content response.</param>
-    private void RunTrialCompilation(
-        VisualBriefingManifest manifest,
-        VisualBriefingPlanArtifact plan,
-        VisualBriefingEvidenceArtifact evidence,
-        VisualBriefingContentResponse response)
+    private static void RunTrialCompilation(VisualBriefingManifest manifest, VisualBriefingPlanArtifact plan, VisualBriefingEvidenceArtifact evidence, VisualBriefingContentResponse response)
     {
         var projection = Project(manifest, plan, evidence, response);
         var layout = new VisualBriefingLayoutNode
@@ -289,22 +238,15 @@ internal sealed class VisualBriefingContentStage(
             ],
         };
         
-        var compiled = VisualBriefingCompilerInvariant.Guard(
-            VisualBriefingBuildStage.CONTENT,
-            () => layoutCompiler.Compile(plan, projection, layout, VisualBriefingDesignProfile.EDITORIAL));
-        
-        var data = compiled.Data.EnumerateObject()
-            .ToDictionary(property => property.Name, property => property.Value.Clone(), StringComparer.Ordinal);
+        var compiled = VisualBriefingCompilerInvariant.Guard(VisualBriefingBuildStage.CONTENT, () => VisualBriefingLayoutCompiler.Compile(plan, projection, layout, VisualBriefingDesignProfile.EDITORIAL));
+        var data = compiled.Data.EnumerateObject().ToDictionary(property => property.Name, property => property.Value.Clone(), StringComparer.Ordinal);
         
         data["_mwai"] = JsonSerializer.SerializeToElement(new
         {
             schemaVersion = VisualBriefingVersions.SCHEMA,
             runtimeVersion = VisualBriefingVersions.RUNTIME,
             aiStudioVersion = "validation",
-            assets = evidence.AssetPlan.ToDictionary(
-                asset => asset.AssetId,
-                _ => "data:image/png;base64,AA==",
-                StringComparer.Ordinal),
+            assets = evidence.AssetPlan.ToDictionary(asset => asset.AssetId, _ => "data:image/png;base64,AA==", StringComparer.Ordinal),
             footer = new
             {
                 createdWith = "validation",
@@ -316,8 +258,7 @@ internal sealed class VisualBriefingContentStage(
         }, VisualBriefingJson.Compact);
         
         var validationData = JsonSerializer.SerializeToElement(data, VisualBriefingJson.Compact);
-        VisualBriefingCompilerInvariant.Guard(
-            VisualBriefingBuildStage.CONTENT,
+        VisualBriefingCompilerInvariant.Guard(VisualBriefingBuildStage.CONTENT,
             VisualBriefingArtifactService.ValidateGeneratedParts(
                 manifest,
                 validationData,
@@ -336,31 +277,23 @@ internal sealed class VisualBriefingContentStage(
     /// <param name="evidence">The validated evidence artifact.</param>
     /// <param name="response">The validated content response.</param>
     /// <returns>The effective content without identity, hash, and data block.</returns>
-    private static VisualBriefingContentArtifact Project(
-        VisualBriefingManifest manifest,
-        VisualBriefingPlanArtifact plan,
-        VisualBriefingEvidenceArtifact evidence,
-        VisualBriefingContentResponse response)
+    private static VisualBriefingContentArtifact Project(VisualBriefingManifest manifest, VisualBriefingPlanArtifact plan, VisualBriefingEvidenceArtifact evidence, VisualBriefingContentResponse response)
     {
         var components = plan.Sections.SelectMany(section => section.Components).ToArray();
-        var assetAlternatives = evidence.AssetPlan.ToDictionary(
-            asset => asset.AssetId,
-            asset => asset.AltText,
-            StringComparer.Ordinal);
+        var assetAlternatives = evidence.AssetPlan.ToDictionary(asset => asset.AssetId, asset => asset.AltText, StringComparer.Ordinal);
         var accessibilityTexts = new Dictionary<string, string>(response.AccessibilityTexts, StringComparer.Ordinal);
 
         // Asset alternatives were written and validated by the evidence agent. Copying them is
         // AI Studio's job, not a task the content model could only get wrong:
-        foreach (var component in components.Where(component =>
-                     VisualBriefingComponentTexts.InheritsAccessibilityText(component.Kind)))
+        foreach (var component in components.Where(component => VisualBriefingComponentTexts.InheritsAccessibilityText(component.Kind)))
             if (component.AssetId is { } assetId && assetAlternatives.TryGetValue(assetId, out var altText))
                 accessibilityTexts[component.ComponentId] = altText;
 
         var slotValues = response.Slots.ToDictionary(slot => slot.SlotId, slot => slot.Value, StringComparer.Ordinal);
         var controls = new List<VisualBriefingControlSpec>(response.Controls);
         var filterIndex = 0;
-        foreach (var component in components.Where(component =>
-                     component.Kind is VisualBriefingComponentKind.FILTERABLE_TABLE))
+        
+        foreach (var component in components.Where(component => component.Kind is VisualBriefingComponentKind.FILTERABLE_TABLE))
             controls.Add(BuildFilterControl(component, slotValues, filterIndex++));
 
         return new()
@@ -384,10 +317,7 @@ internal sealed class VisualBriefingContentStage(
     /// <param name="slotValues">The content slot values by slot ID.</param>
     /// <param name="index">The zero-based index among all filterable tables.</param>
     /// <returns>The generated filter control.</returns>
-    private static VisualBriefingControlSpec BuildFilterControl(
-        VisualBriefingPlanComponent component,
-        IReadOnlyDictionary<string, JsonElement> slotValues,
-        int index)
+    private static VisualBriefingControlSpec BuildFilterControl(VisualBriefingPlanComponent component, IReadOnlyDictionary<string, JsonElement> slotValues, int index)
     {
         List<VisualBriefingControlOption> options =
         [
@@ -395,12 +325,7 @@ internal sealed class VisualBriefingContentStage(
         ];
         
         var tableSlotId = component.Slots.FirstOrDefault(slot => slot.Role is VisualBriefingSlotRole.TABLE_DATA)?.SlotId;
-        
-        if (tableSlotId is not null &&
-            slotValues.TryGetValue(tableSlotId, out var tableData) &&
-            tableData.ValueKind is JsonValueKind.Object &&
-            tableData.TryGetProperty("rows", out var rows) &&
-            rows.ValueKind is JsonValueKind.Array)
+        if (tableSlotId is not null && slotValues.TryGetValue(tableSlotId, out var tableData) && tableData.ValueKind is JsonValueKind.Object && tableData.TryGetProperty("rows", out var rows) && rows.ValueKind is JsonValueKind.Array)
         {
             HashSet<string> seen = new(StringComparer.Ordinal);
             foreach (var row in rows.EnumerateArray())
@@ -431,13 +356,11 @@ internal sealed class VisualBriefingContentStage(
         };
     }
 
-    private static Dictionary<string, List<string>> BuildSourceReferences(
-        VisualBriefingManifest manifest,
-        VisualBriefingEvidenceArtifact evidence,
-        VisualBriefingPlanArtifact plan)
+    private static Dictionary<string, List<string>> BuildSourceReferences(VisualBriefingManifest manifest, VisualBriefingEvidenceArtifact evidence, VisualBriefingPlanArtifact plan)
     {
         if (!manifest.Settings.ShowSourceReferences)
             return new(StringComparer.Ordinal);
+        
         var sourceIdsByEvidenceId = evidence.Facts
             .Select(item => (item.EvidenceId, item.SourceIds))
             .Concat(evidence.Metrics.Select(item => (item.EvidenceId, item.SourceIds)))
@@ -447,30 +370,30 @@ internal sealed class VisualBriefingContentStage(
         // The visible numbering follows the same canonical order as the handles the evidence agent
         // referenced, so [1] always denotes s1:
         var sourceLabels = VisualBriefingSourceHandles.Map(manifest)
-            .Select((item, index) => (
-                item.Handle,
-                Label: $"[{index + 1}] {Path.GetFileName(item.Source.Path)}"))
+            .Select((item, index) => (item.Handle, Label: $"[{index + 1}] {Path.GetFileName(item.Source.Path)}"))
             .ToArray();
+        
         Dictionary<string, List<string>> references = new(StringComparer.Ordinal);
         foreach (var component in plan.Sections.SelectMany(section => section.Components))
         {
             var referencedSourceIds = component.EvidenceIds
                 .SelectMany(evidenceId => sourceIdsByEvidenceId[evidenceId])
                 .ToHashSet(StringComparer.Ordinal);
-            references[component.ComponentId] = sourceLabels
-                .Where(source => referencedSourceIds.Contains(source.Handle))
-                .Select(source => source.Label)
-                .ToList();
+            
+            references[component.ComponentId] =
+            [
+                .. sourceLabels.Where(source => referencedSourceIds.Contains(source.Handle))
+                    .Select(source => source.Label)
+            ];
         }
+        
         return references;
     }
 
     private static string SourceReferenceFingerprint(VisualBriefingManifest manifest) =>
         !manifest.Settings.ShowSourceReferences
             ? VisualBriefingHashing.Compute("source-references-disabled")
-            : VisualBriefingHashing.ComputeSections(VisualBriefingSourceHandles.Map(manifest)
-                .Select(item => $"{item.Handle}:{item.Source.SourceId:D}:{Path.GetFileName(item.Source.Path)}")
-                .ToArray());
+            : VisualBriefingHashing.ComputeSections([.. VisualBriefingSourceHandles.Map(manifest).Select(item => $"{item.Handle}:{item.Source.SourceId:D}:{Path.GetFileName(item.Source.Path)}")]);
 
     /// <summary>
     /// The label of the reset control inside an exported briefing. The briefing body follows the

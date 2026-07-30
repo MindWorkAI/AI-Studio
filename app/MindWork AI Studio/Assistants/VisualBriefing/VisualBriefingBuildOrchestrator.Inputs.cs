@@ -28,7 +28,9 @@ internal sealed partial class VisualBriefingBuildOrchestrator
             throw new VisualBriefingBuildException(
                 VisualBriefingFailureCode.ARTIFACT_VALIDATION_FAILED,
                 VisualBriefingBuildStage.SOURCE_PREPARATION,
-                "The selected parent revision could not be loaded.",
+                mode is VisualBriefingEditMode.RECOMPILE
+                    ? "This briefing version cannot be recompiled with the current AI Studio version. Rebuild the briefing instead."
+                    : "The selected parent revision could not be loaded.",
                 "A non-initial build has no parent revision ID.");
 
         var version = manifest.Versions.FirstOrDefault(candidate => candidate.RevisionId == parentRevisionId);
@@ -40,7 +42,9 @@ internal sealed partial class VisualBriefingBuildOrchestrator
                     VisualBriefingBuildStage.SOURCE_PREPARATION,
                     "The selected parent revision could not be loaded.",
                     "The rebuild parent revision does not exist.");
-        var parts = await this.store.ReadVersionPartsAsync(manifest.BriefingId, parentRevisionId.Value, token);
+        var parts = mode is VisualBriefingEditMode.RECOMPILE
+            ? await this.store.ReadVersionPartsForRecompileAsync(manifest.BriefingId, parentRevisionId.Value, token)
+            : await this.store.ReadVersionPartsAsync(manifest.BriefingId, parentRevisionId.Value, token);
         if (version is null || parts is null ||
             version.EvidenceArtifactId is null ||
             version.PlanArtifactId is null ||
@@ -49,7 +53,9 @@ internal sealed partial class VisualBriefingBuildOrchestrator
             throw new VisualBriefingBuildException(
                 VisualBriefingFailureCode.ARTIFACT_VALIDATION_FAILED,
                 VisualBriefingBuildStage.SOURCE_PREPARATION,
-                "The selected parent revision is invalid or incomplete.",
+                mode is VisualBriefingEditMode.RECOMPILE
+                    ? "This briefing version cannot be recompiled with the current AI Studio version. Rebuild the briefing instead."
+                    : "The selected parent revision is invalid or incomplete.",
                 "The parent revision or its intermediate artifact references are unavailable.");
 
         var evidence = await this.store.ReadEvidenceArtifactAsync(
@@ -72,7 +78,9 @@ internal sealed partial class VisualBriefingBuildOrchestrator
             throw new VisualBriefingBuildException(
                 VisualBriefingFailureCode.ARTIFACT_VALIDATION_FAILED,
                 VisualBriefingBuildStage.SOURCE_PREPARATION,
-                "The selected parent revision has damaged intermediate artifacts.",
+                mode is VisualBriefingEditMode.RECOMPILE
+                    ? "This briefing version cannot be recompiled with the current AI Studio version. Rebuild the briefing instead."
+                    : "The selected parent revision has damaged intermediate artifacts.",
                 "A referenced evidence, plan, content, or design artifact failed hash validation.");
         return new(version, parts, evidence, plan, content, presentation);
     }
@@ -207,6 +215,7 @@ internal sealed partial class VisualBriefingBuildOrchestrator
             VisualBriefingVersions.PLAN_CONTRACT.ToString(),
             VisualBriefingVersions.CONTENT_CONTRACT.ToString(),
             VisualBriefingVersions.DESIGN_CONTRACT.ToString(),
+            VisualBriefingVersions.COMPILER.ToString(),
             VisualBriefingVersions.SCHEMA.ToString(),
             VisualBriefingVersions.RUNTIME.ToString());
 

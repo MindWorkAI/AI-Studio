@@ -5,191 +5,19 @@ using System.Text.Json;
 namespace AIStudio.Assistants.VisualBriefing;
 
 /// <summary>
-/// Turns a validated chart specification into a branded chart-library option object.
-/// </summary>
-internal sealed class VisualBriefingChartCompiler
-{
-    internal static JsonElement Compile(VisualBriefingChartSpec chart)
-    {
-        object series = chart.Kind switch
-        {
-            VisualBriefingChartKind.PIE or VisualBriefingChartKind.DONUT =>
-                chart.Categories.Select((category, index) => new
-                {
-                    name = category,
-                    value = chart.Series[0].Values[index],
-                }).ToArray(),
-            
-            VisualBriefingChartKind.RADAR => chart.Series.Select(item => new
-            {
-                name = item.Name,
-                type = "radar",
-                data = new[]
-                {
-                    new
-                    {
-                        value = item.Values,
-                        name = item.Name,
-                    },
-                },
-            }).ToArray(),
-            
-            _ => chart.Series.Select(item => new
-            {
-                name = item.Name,
-                type = SeriesType(chart.Kind),
-                stack = chart.Kind is VisualBriefingChartKind.STACKED_BAR ? "total" : null,
-                areaStyle = chart.Kind is VisualBriefingChartKind.AREA ? new { opacity = 0.18 } : null,
-                smooth = chart.Kind is VisualBriefingChartKind.LINE or VisualBriefingChartKind.AREA,
-                showSymbol = chart.Kind is VisualBriefingChartKind.SCATTER,
-                symbolSize = chart.Kind is VisualBriefingChartKind.SCATTER ? 10 : 6,
-                itemStyle = chart.Kind is VisualBriefingChartKind.BAR or VisualBriefingChartKind.STACKED_BAR
-                    ? new { borderRadius = new[] { 6, 6, 0, 0 } }
-                    : null,
-                data = item.Values,
-            }).ToArray(),
-        };
-        
-        var option = new
-        {
-            color = new[] { "#236A50", "#F2D264", "#79AE90", "#C97857", "#4E7894", "#9B6B8F" },
-            backgroundColor = "transparent",
-            textStyle = new
-            {
-                color = "#172A24",
-                fontFamily = "system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif",
-            },
-            
-            tooltip = new
-            {
-                trigger = chart.Kind is VisualBriefingChartKind.PIE or VisualBriefingChartKind.DONUT ? "item" : "axis",
-                borderColor = "#D6E2DC",
-                backgroundColor = "#FFFEFA",
-                textStyle = new { color = "#172A24" },
-            },
-            
-            legend = new { show = true, top = 0, textStyle = new { color = "#4F635B" } },
-            grid = chart.Kind is VisualBriefingChartKind.PIE or VisualBriefingChartKind.DONUT or VisualBriefingChartKind.RADAR
-                ? null
-                : new { left = 8, right = 16, top = 48, bottom = 8, containLabel = true },
-            
-            xAxis = chart.Kind is VisualBriefingChartKind.PIE or VisualBriefingChartKind.DONUT or VisualBriefingChartKind.RADAR
-                ? null
-                : new
-                {
-                    type = "category",
-                    data = chart.Categories,
-                    axisLine = new { lineStyle = new { color = "#B8C9C0" } },
-                    axisTick = new { show = false },
-                    axisLabel = new { color = "#5E7169" },
-                },
-            
-            yAxis = chart.Kind is VisualBriefingChartKind.PIE or VisualBriefingChartKind.DONUT or VisualBriefingChartKind.RADAR
-                ? null
-                : new
-                {
-                    type = "value",
-                    axisLine = new { show = false },
-                    axisTick = new { show = false },
-                    axisLabel = new { color = "#5E7169" },
-                    splitLine = new { lineStyle = new { color = "#E1EAE5" } },
-                },
-            
-            radar = chart.Kind is VisualBriefingChartKind.RADAR
-                ? new
-                {
-                    indicator = chart.Categories.Select(name => new { name }).ToArray(),
-                    splitArea = new { areaStyle = new { color = new[] { "#FFFEFA", "#EAF1EC" } } },
-                    axisName = new { color = "#5E7169" },
-                    splitLine = new { lineStyle = new { color = "#B8C9C0" } },
-                }
-                : null,
-            
-            series = chart.Kind is VisualBriefingChartKind.PIE or VisualBriefingChartKind.DONUT
-                ? new[]
-                {
-                    new
-                    {
-                        type = "pie",
-                        radius = chart.Kind is VisualBriefingChartKind.DONUT
-                            ? new[] { "45%", "70%" }
-                            : new[] { "0%", "70%" },
-                        padAngle = 2,
-                        itemStyle = new { borderColor = "#FFFEFA", borderWidth = 2, borderRadius = 5 },
-                        label = new { color = "#4F635B" },
-                        data = series,
-                    },
-                }
-                : series,
-        };
-        
-        return JsonSerializer.SerializeToElement(option, VisualBriefingJson.Compact);
-    }
-
-    private static string SeriesType(VisualBriefingChartKind kind) => kind switch
-    {
-        VisualBriefingChartKind.LINE or VisualBriefingChartKind.AREA => "line",
-        VisualBriefingChartKind.BAR or VisualBriefingChartKind.STACKED_BAR => "bar",
-        VisualBriefingChartKind.SCATTER => "scatter",
-        VisualBriefingChartKind.RADAR => "radar",
-        _ => "line",
-    };
-}
-
-/// <summary>
-/// Compiles interaction state and safe declarative controls.
-/// </summary>
-internal sealed class VisualBriefingInteractionCompiler
-{
-    internal static JsonElement Compile(IReadOnlyList<VisualBriefingControlSpec> controls, IReadOnlyList<VisualBriefingFormulaSpec> formulas)
-    {
-        var state = controls.ToDictionary(
-            control => control.ControlId,
-            control => control.InitialValue.Clone(),
-            StringComparer.Ordinal);
-        
-        var formulaMap = formulas.ToDictionary(
-            formula => formula.OutputSlotId,
-            formula => formula.Formula,
-            StringComparer.Ordinal);
-        
-        return JsonSerializer.SerializeToElement(new
-        {
-            controls,
-            state,
-            formulas = formulaMap,
-        }, VisualBriefingJson.Compact);
-    }
-
-    internal static string CompileMarkup(string componentId, IReadOnlyList<VisualBriefingControlSpec> controls)
-    {
-        var builder = new StringBuilder();
-        foreach (var indexed in controls.Select((control, index) => (Control: control, Index: index)).Where(item => item.Control.ComponentId == componentId))
-        {
-            var control = indexed.Control;
-            var id = HtmlEncoder.Default.Encode(control.ControlId);
-            var accessibilityPath = $"accessibility.{HtmlEncoder.Default.Encode(componentId)}";
-            builder.Append(control.Kind switch
-            {
-                VisualBriefingControlKind.SELECT or VisualBriefingControlKind.FILTER => $"<select data-mwai-model=\"interactions.state.{id}\" data-mwai-attr-aria-label=\"{accessibilityPath}\"><template data-mwai-each=\"interactions.controls.{indexed.Index}.options\"><option data-mwai-attr-value=\".value\" data-mwai-text=\".label\"></option></template></select>",
-                VisualBriefingControlKind.RANGE => $"<input type=\"range\" data-mwai-model=\"interactions.state.{id}\" data-mwai-attr-aria-label=\"{accessibilityPath}\">",
-                VisualBriefingControlKind.NUMBER => $"<input type=\"number\" data-mwai-model=\"interactions.state.{id}\" data-mwai-attr-aria-label=\"{accessibilityPath}\">",
-                _ => string.Empty,
-            });
-        }
-        
-        return builder.ToString();
-    }
-
-    internal static string CompileResetMarkup(string componentId) => $"<button type=\"button\" data-mwai-reset=\"{HtmlEncoder.Default.Encode(componentId)}\" data-mwai-text=\"labels.reset\"></button>";
-}
-
-/// <summary>
 /// Compiles validated content into the fixed MindWork editorial presentation system.
 /// </summary>
-internal sealed class VisualBriefingLayoutCompiler(VisualBriefingChartCompiler chartCompiler, VisualBriefingInteractionCompiler interactionCompiler)
+internal sealed class VisualBriefingLayoutCompiler
 {
-    internal VisualBriefingCompilationResult Compile(VisualBriefingPlanArtifact plan, VisualBriefingContentArtifact content, VisualBriefingLayoutNode layout, VisualBriefingDesignProfile profile)
+    /// <summary>
+    /// Compiles semantic plan, content, layout, and profile artifacts into standalone parts.
+    /// </summary>
+    /// <param name="plan">The validated semantic plan.</param>
+    /// <param name="content">The validated content.</param>
+    /// <param name="layout">The validated layout tree.</param>
+    /// <param name="profile">The bounded MindWork design profile.</param>
+    /// <returns>The deterministic compiled parts and hashes.</returns>
+    internal static VisualBriefingCompilationResult Compile(VisualBriefingPlanArtifact plan, VisualBriefingContentArtifact content, VisualBriefingLayoutNode layout, VisualBriefingDesignProfile profile)
     {
         var slots = content.Slots.ToDictionary(item => item.SlotId, item => item.Value.Clone(), StringComparer.Ordinal);
         var plannedSlotIds = plan.Sections
@@ -235,7 +63,7 @@ internal sealed class VisualBriefingLayoutCompiler(VisualBriefingChartCompiler c
             },
         }, VisualBriefingJson.Compact);
         
-        var html = this.CompileNode(layout, sections, components, content, true);
+        var html = CompileNode(layout, sections, components, content, true);
         var css = CompileCss(profile, layout);
         return new(
             data,
@@ -245,12 +73,7 @@ internal sealed class VisualBriefingLayoutCompiler(VisualBriefingChartCompiler c
             VisualBriefingHashing.Compute(css));
     }
 
-    private string CompileNode(
-        VisualBriefingLayoutNode node,
-        IReadOnlyDictionary<string, VisualBriefingPlanSection> sections,
-        IReadOnlyDictionary<string, VisualBriefingPlanComponent> components,
-        VisualBriefingContentArtifact content,
-        bool isRoot = false)
+    private static string CompileNode(VisualBriefingLayoutNode node, IReadOnlyDictionary<string, VisualBriefingPlanSection> sections, IReadOnlyDictionary<string, VisualBriefingPlanComponent> components, VisualBriefingContentArtifact content, bool isRoot = false)
     {
         var id = HtmlEncoder.Default.Encode(node.NodeId);
         if (node.Kind is VisualBriefingLayoutNodeKind.COMPONENT)
@@ -266,7 +89,7 @@ internal sealed class VisualBriefingLayoutCompiler(VisualBriefingChartCompiler c
         }
 
         var children = string.Concat(node.Children.OrderBy(child => child.Order)
-            .Select(child => this.CompileNode(child, sections, components, content)));
+            .Select(child => CompileNode(child, sections, components, content)));
         
         if (node.Kind is VisualBriefingLayoutNodeKind.SECTION)
         {
@@ -386,9 +209,7 @@ internal sealed class VisualBriefingLayoutCompiler(VisualBriefingChartCompiler c
 
     private static string Slot(VisualBriefingPlanComponent component, VisualBriefingSlotRole role, int occurrence = 0)
     {
-        var slot = component.Slots.Where(candidate => candidate.Role == role).ElementAtOrDefault(occurrence) ??
-                   throw new InvalidDataException($"A {component.Kind} component is missing its {role} slot.");
-        
+        var slot = component.Slots.Where(candidate => candidate.Role == role).ElementAtOrDefault(occurrence) ?? throw new InvalidDataException($"A {component.Kind} component is missing its {role} slot.");
         return HtmlEncoder.Default.Encode(slot.SlotId);
     }
 
@@ -511,9 +332,8 @@ internal sealed class VisualBriefingLayoutCompiler(VisualBriefingChartCompiler c
     {
         if (node.Kind is VisualBriefingLayoutNodeKind.GRID)
             yield return node;
-        
-        foreach (var child in node.Children)
-        foreach (var grid in EnumerateGridNodes(child))
+
+        foreach (var grid in node.Children.SelectMany(EnumerateGridNodes))
             yield return grid;
     }
 }

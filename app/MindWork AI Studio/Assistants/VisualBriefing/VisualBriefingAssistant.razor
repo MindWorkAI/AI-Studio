@@ -6,6 +6,7 @@
 
 <CascadingValue Value="Components.VISUAL_BRIEFING_ASSISTANT">
     <CascadingValue Value="@this.CurrentMediaOwner">
+        <PreviewPrototype ApplyInnerScrollingFix="true"/>
         <div class="visual-briefing-shell">
             <MudPaper Class="visual-briefing-projects pa-3" Outlined="true">
                 <MudText Typo="Typo.h5">@T("Visual Briefings")</MudText>
@@ -168,6 +169,13 @@
                         {
                             <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Palette" OnClick="@(() => this.GenerateAsync(VisualBriefingEditMode.CHANGE_DESIGN))" Disabled="@this.CannotGenerate(VisualBriefingEditMode.CHANGE_DESIGN)">@T("Change design")</MudButton>
                             <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Update" OnClick="@(() => this.GenerateAsync(VisualBriefingEditMode.UPDATE_CONTENT))" Disabled="@this.CannotGenerate(VisualBriefingEditMode.UPDATE_CONTENT)">@T("Update content")</MudButton>
+                            <MudTooltip Text="@(this.SelectedVersionSupportsEdits
+                                                  ? T("Recompile this version with the current AI Studio compiler and runtime without model calls.")
+                                                  : T("This version has no compatible semantic artifacts. Rebuild the briefing instead."))">
+                                <span>
+                                    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Code" OnClick="@(() => this.RecompileAsync())" Disabled="@this.CannotRecompile">@T("Recompile briefing")</MudButton>
+                                </span>
+                            </MudTooltip>
                             <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AutoAwesome" OnClick="@(() => this.GenerateAsync(VisualBriefingEditMode.REBUILD))" Disabled="@this.CannotGenerate(VisualBriefingEditMode.REBUILD)">@T("Rebuild briefing")</MudButton>
                         }
                     </MudStack>

@@ -23,6 +23,9 @@ namespace AIStudio.Assistants.VisualBriefing;
 /// <param name="CreatedAtUtc">The revision creation time.</param>
 /// <param name="EmbeddedAssets">The single protected embedded-asset map.</param>
 /// <param name="AssetPlan">The validated visual asset descriptions and alternatives.</param>
+/// <param name="EvidenceArtifactId">The immutable evidence artifact identifier.</param>
+/// <param name="PlanArtifactId">The immutable plan artifact identifier.</param>
+/// <param name="ExportMetadataSource">Optional user-facing export metadata copied from a parent revision.</param>
 public sealed record VisualBriefingRevisionRequest(
     Guid BriefingId,
     Guid? ParentRevisionId,
@@ -43,4 +46,5 @@ public sealed record VisualBriefingRevisionRequest(
     IReadOnlyDictionary<string, string>? EmbeddedAssets = null,
     IReadOnlyList<VisualBriefingAssetPlanItem>? AssetPlan = null,
     Guid? EvidenceArtifactId = null,
-    Guid? PlanArtifactId = null);
+    Guid? PlanArtifactId = null,
+    VisualBriefingExportManifest? ExportMetadataSource = null);

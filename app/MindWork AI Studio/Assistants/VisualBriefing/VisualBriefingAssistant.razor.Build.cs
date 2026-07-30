@@ -8,6 +8,14 @@ namespace AIStudio.Assistants.VisualBriefing;
 public partial class VisualBriefingAssistant
 {
     /// <summary>
+    /// Gets whether the selected revision cannot be recompiled without model calls.
+    /// </summary>
+    private bool CannotRecompile => this.IsCurrentBusy ||
+                                    this.selectedBriefing is null ||
+                                    this.selectedRevisionId == Guid.Empty ||
+                                    !this.SelectedVersionSupportsEdits;
+
+    /// <summary>
     /// Defines <c>CannotGenerate</c> for the visual briefing feature.
     /// </summary>
     private bool CannotGenerate(VisualBriefingEditMode mode) =>
@@ -119,6 +127,7 @@ public partial class VisualBriefingAssistant
             this.lastBuildDiagnostics = generation.Diagnostics;
             this.latestBuild = this.BuildProgressService.GetLatest(briefingId) ??
                                (await this.Store.ListBuildsAsync(briefingId, cancellation.Token)).FirstOrDefault();
+            
             if (!generation.Success || generation.Version is null)
             {
                 this.reusableContentBuildId = generation.CanContinueAsRebuild
@@ -184,18 +193,125 @@ public partial class VisualBriefingAssistant
     }
 
     /// <summary>
+    /// Recompiles the selected immutable revision with the current compiler and runtime.
+    /// </summary>
+    /// <param name="parentRevisionOverride">An optional parent used while resuming a persisted operation.</param>
+    private async Task RecompileAsync(Guid? parentRevisionOverride = null)
+    {
+        var parentRevisionId = parentRevisionOverride ?? this.selectedRevisionId;
+        if (this.selectedBriefing is null ||
+            this.IsCurrentBusy ||
+            !this.VersionSupportsSemanticEdits(parentRevisionId))
+            return;
+
+        var recompileBriefing = this.selectedBriefing;
+        var briefingId = recompileBriefing.BriefingId;
+        var sessionKey = new AssistantSessionKey(ComponentKind.VISUAL_BRIEFING_ASSISTANT, briefingId.ToString("D"));
+        if (this.AssistantSessionService.TryGetSnapshot(sessionKey)?.IsActive == true)
+            return;
+
+        var cancellation = new CancellationTokenSource();
+        var session = await this.AssistantSessionService.TryBeginAsync(
+            sessionKey,
+            recompileBriefing.Name,
+            cancellation,
+            null,
+            new(StringComparer.Ordinal),
+            this);
+        
+        var terminalStatus = AssistantSessionStatus.FAILED;
+        var terminalIssue = string.Empty;
+        this.generatingBriefings.Add(briefingId);
+        this.StateHasChanged();
+
+        try
+        {
+            var result = await this.BuildOrchestrator.RecompileAsync(
+                recompileBriefing,
+                parentRevisionId,
+                cancellation.Token);
+            
+            this.lastBuildDiagnostics = result.Diagnostics;
+            this.latestBuild = this.BuildProgressService.GetLatest(briefingId) ?? (await this.Store.ListBuildsAsync(briefingId, cancellation.Token)).FirstOrDefault();
+
+            if (result.FailureCode is VisualBriefingFailureCode.NO_CHANGES)
+            {
+                this.Snackbar.Add(T("The selected briefing version already uses the current compiler and runtime."), Severity.Info);
+                terminalStatus = AssistantSessionStatus.COMPLETED;
+                return;
+            }
+
+            if (!result.Success || result.Version is null)
+            {
+                terminalIssue = result.Issue;
+                this.Snackbar.Add(result.Issue, Severity.Error);
+                return;
+            }
+
+            if (this.selectedBriefing?.BriefingId == briefingId)
+            {
+                await this.ReloadListAsync(briefingId);
+                await this.SelectRevisionAsync(result.Version.RevisionId);
+            }
+            else
+            {
+                var latest = await this.Store.LoadAsync(briefingId, cancellation.Token);
+                if (latest is not null)
+                    this.briefings =
+                    [
+                        .. this.briefings
+                            .Select(briefing => briefing.BriefingId == briefingId ? latest : briefing)
+                            .OrderByDescending(briefing => briefing.ModifiedAtUtc)
+                    ];
+            }
+
+            this.Snackbar.Add(T("The briefing was recompiled with the current AI Studio runtime."), Severity.Success);
+            terminalStatus = AssistantSessionStatus.COMPLETED;
+        }
+        catch (OperationCanceledException)
+        {
+            terminalStatus = AssistantSessionStatus.CANCELED;
+            terminalIssue = T("The visual briefing recompilation was canceled.");
+        }
+        catch (Exception exception)
+        {
+            terminalIssue = T("The visual briefing recompilation failed unexpectedly. Copy the technical details for support.");
+            this.Logger.LogError(
+                "Unexpected visual briefing UI failure. BriefingId={BriefingId} Mode={Mode} ExceptionType={ExceptionType}",
+                briefingId,
+                VisualBriefingEditMode.RECOMPILE,
+                exception.GetType().Name);
+            this.Snackbar.Add(terminalIssue, Severity.Error);
+        }
+        finally
+        {
+            await this.AssistantSessionService.CompleteAsync(sessionKey, session.SessionId, terminalStatus, terminalIssue, null, new(StringComparer.Ordinal), this);
+            this.generatingBriefings.Remove(briefingId);
+            this.StateHasChanged();
+        }
+    }
+
+    /// <summary>
     /// Automatically resumes the selected build that was active when the app stopped.
     /// </summary>
     private async Task ResumeSelectedBuildAsync()
     {
-        if (this.selectedBriefing is null ||
-            this.provider == ProviderSettings.NONE)
+        if (this.selectedBriefing is null)
             return;
 
         var activeBuild = (await this.Store.ListBuildsAsync(this.selectedBriefing.BriefingId))
             .FirstOrDefault(build => build.Status is VisualBriefingBuildStatus.ACTIVE);
 
         if (activeBuild is null)
+            return;
+
+        if (activeBuild.Mode is VisualBriefingEditMode.RECOMPILE)
+        {
+            await this.RecompileAsync(activeBuild.ParentRevisionId);
+            return;
+        }
+
+        if (this.provider == ProviderSettings.NONE)
             return;
 
         await this.GenerateAsync(
@@ -224,9 +340,12 @@ public partial class VisualBriefingAssistant
         if (this.latestBuild?.Status is not (VisualBriefingBuildStatus.FAILED or VisualBriefingBuildStatus.CANCELED))
             return;
 
-        await this.GenerateAsync(
-            this.latestBuild.Mode,
-            parentRevisionOverride: this.latestBuild.ParentRevisionId);
+        if (this.latestBuild.Mode is VisualBriefingEditMode.RECOMPILE)
+            await this.RecompileAsync(this.latestBuild.ParentRevisionId);
+        else
+            await this.GenerateAsync(
+                this.latestBuild.Mode,
+                parentRevisionOverride: this.latestBuild.ParentRevisionId);
     }
 
     /// <summary>
@@ -322,9 +441,7 @@ public partial class VisualBriefingAssistant
     private string BuildGroupFailure(int index) =>
         BuildStageGroups()[index]
             .Select(stage => this.latestBuild?.Stages.FirstOrDefault(item => item.Stage == stage)?.Failure)
-            .FirstOrDefault(failure => failure is not null)?.UserMessage ??
-        this.latestBuild?.Failure?.UserMessage ??
-        string.Empty;
+            .FirstOrDefault(failure => failure is not null)?.UserMessage ?? this.latestBuild?.Failure?.UserMessage ?? string.Empty;
 
     /// <summary>
     /// Defines <c>CopyTechnicalDetailsAsync</c> for the visual briefing feature.

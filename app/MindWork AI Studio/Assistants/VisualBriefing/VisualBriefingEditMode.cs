@@ -24,6 +24,13 @@ public enum VisualBriefingEditMode
     /// Defines <c>REBUILD</c> for the visual briefing feature.
     /// </summary>
     REBUILD,
+
+    /// <summary>
+    /// Reuses the selected revision's semantic artifacts and runs only the current compiler,
+    /// standalone runtime assembly, and immutable commit stages.
+    /// </summary>
+    RECOMPILE,
+
     /// <summary>
     /// Defines <c>IMPORT</c> for the visual briefing feature.
     /// </summary>

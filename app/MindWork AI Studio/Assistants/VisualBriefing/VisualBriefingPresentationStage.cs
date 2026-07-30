@@ -9,22 +9,11 @@ namespace AIStudio.Assistants.VisualBriefing;
 /// <summary>
 /// Produces only a layout DSL and bounded tokens, then dry-runs deterministic compilation.
 /// </summary>
-internal sealed class VisualBriefingPresentationStage(
-    StructuredLlmStageRunner stageRunner,
-    VisualBriefingStore store,
-    VisualBriefingLayoutCompiler layoutCompiler,
-    VisualBriefingBuildProgressService progressService,
-    ILogger<VisualBriefingPresentationStage> logger)
+internal sealed class VisualBriefingPresentationStage(StructuredLlmStageRunner stageRunner, VisualBriefingStore store, VisualBriefingBuildProgressService progressService, ILogger<VisualBriefingPresentationStage> logger)
 {
-    public async Task<VisualBriefingPresentationArtifact> ExecuteAsync(
-        VisualBriefingManifest manifest,
-        ProviderSettings provider,
-        Profile profile,
-        VisualBriefingPlanArtifact plan,
-        VisualBriefingContentArtifact content,
-        VisualBriefingPresentationArtifact? parentPresentation,
-        VisualBriefingBuildRecord build,
-        CancellationToken token)
+    public async Task<VisualBriefingPresentationArtifact> ExecuteAsync(VisualBriefingManifest manifest, ProviderSettings provider, Profile profile,
+        VisualBriefingPlanArtifact plan, VisualBriefingContentArtifact content, VisualBriefingPresentationArtifact? parentPresentation,
+        VisualBriefingBuildRecord build, CancellationToken token)
     {
         if (build.PresentationArtifactId is { } completedId)
         {
@@ -48,21 +37,15 @@ internal sealed class VisualBriefingPresentationStage(
             profile.Id,
             VisualBriefingHashing.Compute(profile.ToSystemPrompt()),
             VisualBriefingVersions.DESIGN_CONTRACT.ToString());
+        
         build.UpdatedAtUtc = DateTimeOffset.UtcNow;
         await store.SaveBuildAsync(build, token);
         progressService.Publish(build);
 
-        var run = await stageRunner.RunAsync<VisualBriefingDesignResponse>(
-            provider,
-            profile,
-            BuildSystemContract(),
-            BuildPrompt(manifest, plan, parentPresentation),
-            [],
-            VisualBriefingBuildStage.DESIGN,
-            build.OperationId,
-            build.BuildId,
-            response => this.ValidateDesign(manifest, plan, content, response),
-            token);
+        var run = await stageRunner.RunAsync<VisualBriefingDesignResponse>(provider, profile, BuildSystemContract(),
+            BuildPrompt(manifest, plan, parentPresentation), [], VisualBriefingBuildStage.DESIGN, build.OperationId, build.BuildId,
+            response => ValidateDesign(manifest, plan, content, response), token);
+        
         stage.Attempts = run.Attempts;
         if (!run.Success || run.Response is null)
         {
@@ -70,31 +53,39 @@ internal sealed class VisualBriefingPresentationStage(
             {
                 Code = run.FailureCode,
                 Stage = VisualBriefingBuildStage.DESIGN,
+                
                 ValidationRule = run.ValidationRule is VisualBriefingValidationRule.NONE
                     ? VisualBriefingValidationRule.LAYOUT_INVALID
                     : run.ValidationRule,
+                
                 UserMessage = run.Issue,
+                
                 TechnicalDetails = run.Diagnostic is null
                     ? $"Rule={(run.ValidationRule is VisualBriefingValidationRule.NONE ? VisualBriefingValidationRule.LAYOUT_INVALID : run.ValidationRule)}; Attempts={run.Attempts}; ResponseLength={run.ResponseLength}."
                     : $"Rule={(run.ValidationRule is VisualBriefingValidationRule.NONE ? VisualBriefingValidationRule.LAYOUT_INVALID : run.ValidationRule)}; Attempts={run.Attempts}; ResponseLength={run.ResponseLength}; {run.Diagnostic.ToTechnicalDetails()}.",
+                
                 StructuredResponse = run.Diagnostic,
             };
+            
             stage.Status = VisualBriefingBuildStageStatus.FAILED;
             stage.FinishedAtUtc = DateTimeOffset.UtcNow;
             stage.Failure = failure;
+            
             build.Status = VisualBriefingBuildStatus.FAILED;
             build.Failure = failure;
             build.UpdatedAtUtc = DateTimeOffset.UtcNow;
+            
             await store.SaveBuildAsync(build, token);
             throw new VisualBriefingBuildException(failure.Code, failure.Stage, failure.UserMessage, failure.TechnicalDetails);
         }
 
-        var compiled = layoutCompiler.Compile(plan, content, run.Response.Layout, run.Response.Profile);
+        var compiled = VisualBriefingLayoutCompiler.Compile(plan, content, run.Response.Layout, run.Response.Profile);
         var payloadHash = VisualBriefingHashing.ComputeSections(
             JsonSerializer.Serialize(run.Response.Layout, VisualBriefingJson.Compact),
             run.Response.Profile.ToString(),
             compiled.TemplateHash,
             compiled.CssHash);
+        
         var artifact = new VisualBriefingPresentationArtifact
         {
             ArtifactId = Guid.NewGuid(),
@@ -108,32 +99,27 @@ internal sealed class VisualBriefingPresentationStage(
             CssHash = compiled.CssHash,
             Model = VisualBriefingModelNames.ExportLabel(provider.Model),
         };
+        
         await store.WritePresentationArtifactAsync(manifest.BriefingId, artifact, token);
         build.PresentationArtifactId = artifact.ArtifactId;
+        
         stage.Status = VisualBriefingBuildStageStatus.COMPLETED;
         stage.FinishedAtUtc = DateTimeOffset.UtcNow;
         stage.OutputHash = artifact.PayloadHash;
         stage.Failure = null;
+        
         build.Status = VisualBriefingBuildStatus.ACTIVE;
         build.Failure = null;
         build.UpdatedAtUtc = DateTimeOffset.UtcNow;
+        
         await store.SaveBuildAsync(build, token);
         progressService.Publish(build);
-        logger.LogInformation(
-            "Visual briefing design completed. OperationId={OperationId} BuildId={BuildId} LayoutHash={LayoutHash} TemplateHash={TemplateHash} CssHash={CssHash}",
-            build.OperationId,
-            build.BuildId,
-            VisualBriefingHashing.Compute(JsonSerializer.Serialize(artifact.Layout, VisualBriefingJson.Compact)),
-            artifact.TemplateHash,
-            artifact.CssHash);
+        logger.LogInformation("Visual briefing design completed. OperationId={OperationId} BuildId={BuildId} LayoutHash={LayoutHash} TemplateHash={TemplateHash} CssHash={CssHash}", build.OperationId, build.BuildId, VisualBriefingHashing.Compute(JsonSerializer.Serialize(artifact.Layout, VisualBriefingJson.Compact)), artifact.TemplateHash, artifact.CssHash);
+        
         return artifact;
     }
 
-    private VisualBriefingContractIssue? ValidateDesign(
-        VisualBriefingManifest manifest,
-        VisualBriefingPlanArtifact plan,
-        VisualBriefingContentArtifact content,
-        VisualBriefingDesignResponse response)
+    private static VisualBriefingContractIssue? ValidateDesign(VisualBriefingManifest manifest, VisualBriefingPlanArtifact plan, VisualBriefingContentArtifact content, VisualBriefingDesignResponse response)
     {
         var issue = VisualBriefingValidation.ValidateDesign(plan, response);
         if (issue is not null)
@@ -141,20 +127,21 @@ internal sealed class VisualBriefingPresentationStage(
 
         // The layout has been validated above, so the compilation below only guards AI Studio's own
         // compiler output, see VisualBriefingCompilerInvariant:
-        var compiled = VisualBriefingCompilerInvariant.Guard(
-            VisualBriefingBuildStage.DESIGN,
-            () => layoutCompiler.Compile(plan, content, response.Layout, response.Profile));
-        var data = compiled.Data.EnumerateObject()
-            .ToDictionary(property => property.Name, property => property.Value.Clone(), StringComparer.Ordinal);
+        var compiled = VisualBriefingCompilerInvariant.Guard(VisualBriefingBuildStage.DESIGN,
+            () => VisualBriefingLayoutCompiler.Compile(plan, content, response.Layout, response.Profile));
+        
+        var data = compiled.Data.EnumerateObject().ToDictionary(property => property.Name, property => property.Value.Clone(), StringComparer.Ordinal);
         data["_mwai"] = JsonSerializer.SerializeToElement(new
         {
             schemaVersion = VisualBriefingVersions.SCHEMA,
             runtimeVersion = VisualBriefingVersions.RUNTIME,
             aiStudioVersion = "validation",
+            
             assets = content.AssetPlan.ToDictionary(
                 asset => asset.AssetId,
                 _ => "data:image/png;base64,AA==",
                 StringComparer.Ordinal),
+            
             footer = new
             {
                 createdWith = "validation",
@@ -164,27 +151,23 @@ internal sealed class VisualBriefingPresentationStage(
                 protection = "validation",
             },
         }, VisualBriefingJson.Compact);
+        
         var validationData = JsonSerializer.SerializeToElement(data, VisualBriefingJson.Compact);
-        VisualBriefingCompilerInvariant.Guard(
-            VisualBriefingBuildStage.DESIGN,
-            VisualBriefingArtifactService.ValidateGeneratedParts(
-                manifest,
-                validationData,
-                compiled.TemplateHtml,
-                compiled.Css,
-                content.Charts.Count > 0));
+        VisualBriefingCompilerInvariant.Guard(VisualBriefingBuildStage.DESIGN,
+            VisualBriefingArtifactService.ValidateGeneratedParts(manifest, validationData, compiled.TemplateHtml, compiled.Css, content.Charts.Count > 0));
+        
         return null;
     }
 
     private static string BuildSystemContract() =>
-        $$"""
+        $"""
           You are the Design Agent for the Visual Briefing Assistant in MindWork AI Studio.
           Return exactly one JSON object without Markdown or commentary. Unknown fields are forbidden.
           You may only compose the supplied component IDs into the layout DSL and select bounded design tokens.
           Never return HTML, CSS, ECharts options, data-mwai attributes, JavaScript, URLs, or executable text.
 
           The object has exactly:
-          - "contractVersion": {{VisualBriefingVersions.DESIGN_CONTRACT}}
+          - "contractVersion": {VisualBriefingVersions.DESIGN_CONTRACT}
           - "profile": EDITORIAL for narrative storytelling, EXECUTIVE for concise decision briefings,
             or ANALYTICAL for dense evidence and data.
           - "layout": a recursive node with exactly nodeId, kind (SECTION, STACK, GRID, COMPONENT),
@@ -201,14 +184,9 @@ internal sealed class VisualBriefingPresentationStage(
           MindWork AI Studio owns all colors, typography, surfaces, and chart styling.
           """;
 
-    private static string BuildPrompt(
-        VisualBriefingManifest manifest,
-        VisualBriefingPlanArtifact plan,
-        VisualBriefingPresentationArtifact? parent)
+    private static string BuildPrompt(VisualBriefingManifest manifest, VisualBriefingPlanArtifact plan, VisualBriefingPresentationArtifact? parent)
     {
-        var parentJson = parent is null
-            ? "none"
-            : JsonSerializer.Serialize(new { parent.Layout, parent.Profile }, VisualBriefingJson.Compact);
+        var parentJson = parent is null ? "none" : JsonSerializer.Serialize(new { parent.Layout, parent.Profile }, VisualBriefingJson.Compact);
         return $"""
                 Operation: {(parent is null ? "CREATE_DESIGN" : "CHANGE_DESIGN")}
                 Design instruction: {manifest.Settings.Instruction}
@@ -219,15 +197,15 @@ internal sealed class VisualBriefingPresentationStage(
                 """;
     }
 
-    private static VisualBriefingBuildStageRecord GetStage(
-        VisualBriefingBuildRecord build,
-        VisualBriefingBuildStage stage)
+    private static VisualBriefingBuildStageRecord GetStage(VisualBriefingBuildRecord build, VisualBriefingBuildStage stage)
     {
         var record = build.Stages.FirstOrDefault(candidate => candidate.Stage == stage);
         if (record is not null)
             return record;
+        
         record = new() { Stage = stage };
         build.Stages.Add(record);
+        
         return record;
     }
 }

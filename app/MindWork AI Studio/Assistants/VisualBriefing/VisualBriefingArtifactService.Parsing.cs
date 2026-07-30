@@ -53,9 +53,33 @@ public sealed partial class VisualBriefingArtifactService
     private static partial Regex EChartsRegex();
 
     /// <summary>
-    /// Defines <c>TryParse</c> for the visual briefing feature.
+    /// Parses a standalone artifact using the current runtime contract.
     /// </summary>
-    public static bool TryParse(string html, out VisualBriefingArtifactParts parts, out string issue)
+    /// <param name="html">The complete standalone HTML document.</param>
+    /// <param name="parts">The validated artifact parts.</param>
+    /// <param name="issue">The user-safe validation issue.</param>
+    /// <returns>Whether the artifact is valid for the current runtime.</returns>
+    public static bool TryParse(string html, out VisualBriefingArtifactParts parts, out string issue) => TryParse(html, allowOutdatedRuntime: false, out parts, out issue);
+
+    /// <summary>
+    /// Parses a locally stored parent artifact for recompilation while allowing a previous runtime
+    /// bundle that will be discarded before the new revision is assembled.
+    /// </summary>
+    /// <param name="html">The complete standalone HTML document.</param>
+    /// <param name="parts">The validated artifact parts.</param>
+    /// <param name="issue">The user-safe validation issue.</param>
+    /// <returns>Whether the artifact is structurally valid for recompilation.</returns>
+    internal static bool TryParseForRecompile(string html, out VisualBriefingArtifactParts parts, out string issue) => TryParse(html, allowOutdatedRuntime: true, out parts, out issue);
+
+    /// <summary>
+    /// Parses and validates a standalone artifact under the selected runtime policy.
+    /// </summary>
+    /// <param name="html">The complete standalone HTML document.</param>
+    /// <param name="allowOutdatedRuntime">Whether a previous runtime bundle may be read but never reused.</param>
+    /// <param name="parts">The validated artifact parts.</param>
+    /// <param name="issue">The user-safe validation issue.</param>
+    /// <returns>Whether the artifact passed all applicable checks.</returns>
+    private static bool TryParse(string html, bool allowOutdatedRuntime, out VisualBriefingArtifactParts parts, out string issue)
     {
         parts = null!;
         issue = string.Empty;
@@ -98,7 +122,10 @@ public sealed partial class VisualBriefingArtifactService
         if (exportManifest is null ||
             exportManifest.ArtifactVersion != VisualBriefingVersions.ARTIFACT ||
             exportManifest.SchemaVersion != VisualBriefingVersions.SCHEMA ||
-            exportManifest.RuntimeVersion != VisualBriefingVersions.RUNTIME ||
+            exportManifest.RuntimeVersion <= 0 ||
+            exportManifest.RuntimeVersion > VisualBriefingVersions.RUNTIME ||
+            (!allowOutdatedRuntime &&
+             exportManifest.RuntimeVersion != VisualBriefingVersions.RUNTIME) ||
             exportManifest.BriefingId == Guid.Empty ||
             exportManifest.RevisionId == Guid.Empty ||
             string.IsNullOrWhiteSpace(exportManifest.Name) ||
@@ -244,7 +271,8 @@ public sealed partial class VisualBriefingArtifactService
         var echartsMatch = ECHARTS_REGEX.Match(html);
         var echarts = echartsMatch.Success ? echartsMatch.Groups["value"].Value : null;
         
-        if (echarts is not null && !string.Equals(echarts, ECHARTS_SCRIPT.Value, StringComparison.Ordinal))
+        var usesCurrentRuntime = exportManifest.RuntimeVersion == VisualBriefingVersions.RUNTIME;
+        if (echarts is not null && usesCurrentRuntime && !string.Equals(echarts, ECHARTS_SCRIPT.Value, StringComparison.Ordinal))
         {
             issue = "The briefing contains an unknown or modified ECharts runtime.";
             return false;
@@ -257,11 +285,14 @@ public sealed partial class VisualBriefingArtifactService
             return false;
         }
         
-        if (!string.Equals(runtime, BuildRuntimeScript(exportManifest.RuntimeAIStudioVersion), StringComparison.Ordinal))
+        if (usesCurrentRuntime && !string.Equals(runtime, BuildRuntimeScript(exportManifest.RuntimeAIStudioVersion), StringComparison.Ordinal))
         {
             issue = "The briefing contains an unknown or modified AI Studio runtime.";
             return false;
         }
+
+        // A previous runtime is never executed or copied by the recompile path. Its payload, CSP,
+        // and locally persisted section hashes are still verified before semantic artifacts are read.
 
         var dataJson = JsonSerializer.Serialize(data, JSON_OPTIONS);
         var payloadHash = ComputePayloadHash(dataJson, template, css, runtime, echarts);
@@ -312,7 +343,7 @@ public sealed partial class VisualBriefingArtifactService
             !protectedData.TryGetProperty("runtimeVersion", out var runtimeVersion) ||
             runtimeVersion.ValueKind is not JsonValueKind.Number ||
             !runtimeVersion.TryGetInt32(out var parsedRuntimeVersion) ||
-            parsedRuntimeVersion != VisualBriefingVersions.RUNTIME ||
+            parsedRuntimeVersion != exportManifest.RuntimeVersion ||
             !protectedData.TryGetProperty("aiStudioVersion", out var aiStudioVersion) ||
             aiStudioVersion.ValueKind is not JsonValueKind.String ||
             !string.Equals(aiStudioVersion.GetString(), exportManifest.AIStudioVersion, StringComparison.Ordinal) ||

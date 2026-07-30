@@ -1,0 +1,344 @@
+using System.Text.Json;
+
+namespace AIStudio.Assistants.VisualBriefing;
+
+internal sealed partial class VisualBriefingBuildOrchestrator
+{
+    /// <summary>
+    /// Recompiles one immutable revision with the current deterministic compiler and standalone
+    /// runtime without accessing sources or calling a model.
+    /// </summary>
+    /// <param name="manifest">The current local briefing manifest.</param>
+    /// <param name="parentRevisionId">The revision whose semantic artifacts are reused.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>The terminal recompile result.</returns>
+    public async Task<VisualBriefingBuildResult> RecompileAsync(VisualBriefingManifest manifest, Guid parentRevisionId, CancellationToken token = default)
+    {
+        var operationId = Guid.NewGuid();
+        var proposedBuildId = Guid.NewGuid();
+        var diagnostics = new VisualBriefingOperationDiagnostics
+        {
+            OperationId = operationId,
+            BuildId = proposedBuildId,
+            Stage = VisualBriefingBuildStage.COMPILATION,
+            StartedAtUtc = DateTimeOffset.UtcNow,
+        };
+        
+        this.liveDiagnostics[manifest.BriefingId] = diagnostics;
+        var gate = this.buildLocks.GetOrAdd(manifest.BriefingId, _ => new(1, 1));
+        await gate.WaitAsync(token);
+        VisualBriefingBuildRecord? build = null;
+
+        try
+        {
+            var parent = await this.LoadParentContextAsync(manifest, VisualBriefingEditMode.RECOMPILE, parentRevisionId, token);
+            if (parent is not
+                {
+                    ParentVersion: { } parentVersion,
+                    Parts: { } parentParts,
+                    Evidence: { } evidence,
+                    Plan: { } plan,
+                    Content: { } content,
+                    Presentation: { } previousPresentation,
+                })
+                throw new VisualBriefingBuildException(
+                    VisualBriefingFailureCode.ARTIFACT_VALIDATION_FAILED,
+                    VisualBriefingBuildStage.COMPILATION,
+                    "This briefing version cannot be recompiled with the current AI Studio version. Rebuild the briefing instead.",
+                    "The selected revision does not contain a complete compatible set of semantic artifacts.");
+
+            var inputFingerprint = VisualBriefingHashing.ComputeSections(
+                parentRevisionId.ToString("D"),
+                evidence.PayloadHash,
+                plan.PayloadHash,
+                content.PayloadHash,
+                previousPresentation.PayloadHash,
+                parentVersion.AssetHash,
+                VisualBriefingVersions.COMPILER.ToString(),
+                VisualBriefingVersions.SCHEMA.ToString(),
+                VisualBriefingVersions.RUNTIME.ToString());
+            
+            var now = DateTimeOffset.UtcNow;
+            var candidate = new VisualBriefingBuildRecord
+            {
+                BuildId = proposedBuildId,
+                OperationId = operationId,
+                BriefingId = manifest.BriefingId,
+                Mode = VisualBriefingEditMode.RECOMPILE,
+                ParentRevisionId = parentRevisionId,
+                InputFingerprint = inputFingerprint,
+                SourceFingerprint = parentVersion.AssetHash,
+                CreatedAtUtc = now,
+                UpdatedAtUtc = now,
+                EvidenceArtifactId = evidence.ArtifactId,
+                PlanArtifactId = plan.ArtifactId,
+                ContentArtifactId = content.ArtifactId,
+                Stages =
+                [
+                    .. Enum.GetValues<VisualBriefingBuildStage>().Select(stage => new VisualBriefingBuildStageRecord { Stage = stage })
+                ],
+            };
+            
+            var selectedBuild = await this.store.StartOrResumeBuildAsync(candidate, token);
+            build = selectedBuild.Build;
+            build.OperationId = operationId;
+            diagnostics.BuildId = build.BuildId;
+
+            MarkSkipped(build, VisualBriefingBuildStage.SOURCE_PREPARATION, parentVersion.AssetHash);
+            MarkSkipped(build, VisualBriefingBuildStage.EVIDENCE, evidence.PayloadHash);
+            MarkSkipped(build, VisualBriefingBuildStage.PLAN, plan.PayloadHash);
+            MarkSkipped(build, VisualBriefingBuildStage.CONTENT, content.PayloadHash);
+            MarkSkipped(build, VisualBriefingBuildStage.DESIGN, previousPresentation.PayloadHash);
+            await this.store.SaveBuildAsync(build, token);
+            this.progressService.Publish(build);
+
+            diagnostics.ContentHashes["evidence"] = evidence.PayloadHash;
+            diagnostics.ContentHashes["plan"] = plan.PayloadHash;
+            diagnostics.ContentHashes["content"] = content.PayloadHash;
+            diagnostics.ArtifactIds["evidence"] = evidence.ArtifactId;
+            diagnostics.ArtifactIds["plan"] = plan.ArtifactId;
+            diagnostics.ArtifactIds["content"] = content.ArtifactId;
+
+            diagnostics.Stage = VisualBriefingBuildStage.COMPILATION;
+            var compilationStage = GetStage(build, VisualBriefingBuildStage.COMPILATION);
+            compilationStage.Status = VisualBriefingBuildStageStatus.RUNNING;
+            compilationStage.StartedAtUtc = DateTimeOffset.UtcNow;
+            compilationStage.FinishedAtUtc = null;
+            compilationStage.Failure = null;
+            compilationStage.InputFingerprint = inputFingerprint;
+            build.UpdatedAtUtc = DateTimeOffset.UtcNow;
+            await this.store.SaveBuildAsync(build, token);
+            this.progressService.Publish(build);
+
+            var compiled = VisualBriefingCompilerInvariant.Guard(
+                VisualBriefingBuildStage.COMPILATION,
+                () => VisualBriefingLayoutCompiler.Compile(
+                    plan,
+                    content,
+                    previousPresentation.Layout,
+                    previousPresentation.Profile));
+            
+            var validationDataProperties = compiled.Data.EnumerateObject()
+                .ToDictionary(property => property.Name, property => property.Value.Clone(), StringComparer.Ordinal);
+            
+            validationDataProperties["_mwai"] = JsonSerializer.SerializeToElement(new
+            {
+                schemaVersion = VisualBriefingVersions.SCHEMA,
+                runtimeVersion = VisualBriefingVersions.RUNTIME,
+                aiStudioVersion = "validation",
+                assets = content.AssetPlan.ToDictionary(asset => asset.AssetId, _ => "data:image/png;base64,AA==", StringComparer.Ordinal),
+                footer = new
+                {
+                    createdWith = "validation",
+                    models = "validation",
+                    createdAt = "validation",
+                    authors = "validation",
+                    protection = "validation",
+                },
+            }, VisualBriefingJson.Compact);
+            
+            VisualBriefingCompilerInvariant.Guard(
+                VisualBriefingBuildStage.COMPILATION,
+                VisualBriefingArtifactService.ValidateGeneratedParts(manifest,
+                    JsonSerializer.SerializeToElement(validationDataProperties, VisualBriefingJson.Compact),
+                    compiled.TemplateHtml, compiled.Css,
+                    content.Charts.Count > 0));
+
+            var presentation = new VisualBriefingPresentationArtifact
+            {
+                ArtifactId = Guid.NewGuid(),
+                CreatedAtUtc = DateTimeOffset.UtcNow,
+                PayloadHash = VisualBriefingHashing.ComputeSections(
+                    JsonSerializer.Serialize(previousPresentation.Layout, VisualBriefingJson.Compact),
+                    previousPresentation.Profile.ToString(),
+                    compiled.TemplateHash,
+                    compiled.CssHash),
+                
+                Layout = previousPresentation.Layout,
+                Profile = previousPresentation.Profile,
+                TemplateHtml = compiled.TemplateHtml,
+                Css = compiled.Css,
+                TemplateHash = compiled.TemplateHash,
+                CssHash = compiled.CssHash,
+                Model = previousPresentation.Model,
+            };
+            
+            await this.store.WritePresentationArtifactAsync(manifest.BriefingId, presentation, token);
+            build.PresentationArtifactId = presentation.ArtifactId;
+            diagnostics.ContentHashes["design"] = presentation.PayloadHash;
+            diagnostics.ArtifactIds["design"] = presentation.ArtifactId;
+            
+            compilationStage.Status = VisualBriefingBuildStageStatus.COMPLETED;
+            compilationStage.FinishedAtUtc = DateTimeOffset.UtcNow;
+            compilationStage.OutputHash = VisualBriefingHashing.ComputeSections(
+                VisualBriefingHashing.Compute(VisualBriefingHashing.CanonicalJson(compiled.Data)),
+                compiled.TemplateHash,
+                compiled.CssHash);
+            
+            build.UpdatedAtUtc = DateTimeOffset.UtcNow;
+            await this.store.SaveBuildAsync(build, token);
+            this.progressService.Publish(build);
+
+            diagnostics.Stage = VisualBriefingBuildStage.ASSEMBLY;
+            var revisionId = build.RevisionId ?? Guid.NewGuid();
+            var revisionCreatedAt = DateTimeOffset.UtcNow;
+            
+            build.RevisionId = revisionId;
+            
+            var assemblyStage = GetStage(build, VisualBriefingBuildStage.ASSEMBLY);
+            assemblyStage.Status = VisualBriefingBuildStageStatus.RUNNING;
+            assemblyStage.StartedAtUtc = revisionCreatedAt;
+            assemblyStage.FinishedAtUtc = null;
+            assemblyStage.Failure = null;
+            
+            assemblyStage.InputFingerprint = VisualBriefingHashing.ComputeSections(
+                content.PayloadHash,
+                presentation.PayloadHash,
+                parentVersion.AssetHash,
+                VisualBriefingVersions.ARTIFACT.ToString(),
+                VisualBriefingVersions.COMPILER.ToString(),
+                VisualBriefingVersions.SCHEMA.ToString(),
+                VisualBriefingVersions.RUNTIME.ToString());
+            
+            build.UpdatedAtUtc = DateTimeOffset.UtcNow;
+            await this.store.SaveBuildAsync(build, token);
+            this.progressService.Publish(build);
+
+            var contributions = parentVersion.ModelContributions.ToList();
+            var revision = await this.store.AddRevisionAsync(new(
+                manifest.BriefingId,
+                parentRevisionId,
+                VisualBriefingEditMode.RECOMPILE,
+                string.Empty,
+                compiled.Data,
+                compiled.TemplateHtml,
+                compiled.Css,
+                string.Empty,
+                "MindWork AI Studio",
+                content.ArtifactId,
+                presentation.ArtifactId,
+                build.BuildId,
+                build.OperationId,
+                contributions,
+                revisionId,
+                revisionCreatedAt,
+                VisualBriefingData.ExtractAssets(parentParts.Data),
+                content.AssetPlan,
+                evidence.ArtifactId,
+                plan.ArtifactId,
+                parentParts.ExportManifest), token);
+            
+            var commitStage = GetStage(build, VisualBriefingBuildStage.COMMIT);
+            if (!revision.Success || revision.Version is null)
+            {
+                if (revision.Issue.Contains("did not change", StringComparison.OrdinalIgnoreCase))
+                {
+                    assemblyStage.Status = VisualBriefingBuildStageStatus.COMPLETED;
+                    assemblyStage.FinishedAtUtc = DateTimeOffset.UtcNow;
+                    assemblyStage.OutputHash = parentVersion.PayloadHash;
+                    MarkSkipped(build, VisualBriefingBuildStage.COMMIT, parentVersion.PayloadHash);
+                    build.Status = VisualBriefingBuildStatus.COMPLETED;
+                    build.Failure = null;
+                    build.UpdatedAtUtc = DateTimeOffset.UtcNow;
+                    await this.store.SaveBuildAsync(build, token);
+                    this.progressService.Publish(build);
+                    diagnostics.FailureCode = VisualBriefingFailureCode.NO_CHANGES;
+                    diagnostics.FinishedAtUtc = DateTimeOffset.UtcNow;
+                    return new(
+                        false,
+                        null,
+                        "The selected briefing version already uses the current compiler and runtime.",
+                        VisualBriefingFailureCode.NO_CHANGES,
+                        diagnostics,
+                        false);
+                }
+
+                throw new VisualBriefingBuildException(
+                    VisualBriefingFailureCode.STORE_FAILED,
+                    VisualBriefingBuildStage.COMMIT,
+                    revision.Issue,
+                    "The immutable recompiled revision commit was rejected.");
+            }
+
+            assemblyStage.Status = VisualBriefingBuildStageStatus.COMPLETED;
+            assemblyStage.FinishedAtUtc = DateTimeOffset.UtcNow;
+            assemblyStage.OutputHash = revision.Version.PayloadHash;
+            
+            commitStage.Status = VisualBriefingBuildStageStatus.COMPLETED;
+            commitStage.StartedAtUtc = assemblyStage.FinishedAtUtc;
+            commitStage.FinishedAtUtc = DateTimeOffset.UtcNow;
+            commitStage.InputFingerprint = revision.Version.PayloadHash;
+            commitStage.OutputHash = revision.Version.PayloadHash;
+            
+            build.CommittedRevisionId = revision.Version.RevisionId;
+            build.Status = VisualBriefingBuildStatus.COMPLETED;
+            build.Failure = null;
+            build.UpdatedAtUtc = DateTimeOffset.UtcNow;
+            
+            await this.store.SaveBuildAsync(build, token);
+            this.progressService.Publish(build);
+            diagnostics.ContentHashes["payload"] = revision.Version.PayloadHash;
+            diagnostics.FinishedAtUtc = DateTimeOffset.UtcNow;
+            
+            return new(
+                true,
+                revision.Version,
+                string.Empty,
+                VisualBriefingFailureCode.NONE,
+                diagnostics,
+                false);
+        }
+        catch (OperationCanceledException)
+        {
+            var failure = new VisualBriefingFailure
+            {
+                Code = VisualBriefingFailureCode.CANCELED,
+                Stage = diagnostics.Stage,
+                UserMessage = "The visual briefing recompilation was canceled.",
+                TechnicalDetails = "The operation cancellation token was signaled.",
+            };
+            
+            if (build is not null)
+                await this.SaveTerminalStateAsync(build, VisualBriefingBuildStatus.CANCELED, failure, CancellationToken.None);
+            
+            return FinishFailure(diagnostics, build, failure, canContinueAsRebuild: false);
+        }
+        catch (VisualBriefingBuildException exception)
+        {
+            var failure = new VisualBriefingFailure
+            {
+                Code = exception.Code,
+                Stage = exception.Stage,
+                ValidationRule = exception.Stage is VisualBriefingBuildStage.COMPILATION
+                    ? VisualBriefingValidationRule.COMPILER_OUTPUT_INVALID
+                    : VisualBriefingValidationRule.NONE,
+                UserMessage = exception.Message,
+                TechnicalDetails = exception.TechnicalDetails,
+            };
+            
+            if (build is not null)
+                await this.SaveTerminalStateAsync(build, VisualBriefingBuildStatus.FAILED, failure, CancellationToken.None);
+            
+            return FinishFailure(diagnostics, build, failure, canContinueAsRebuild: false);
+        }
+        catch (Exception exception)
+        {
+            var failure = new VisualBriefingFailure
+            {
+                Code = VisualBriefingFailureCode.UNEXPECTED,
+                Stage = diagnostics.Stage,
+                UserMessage = "The visual briefing could not be recompiled because of an unexpected internal error.",
+                TechnicalDetails = $"{exception.GetType().Name} at stage {diagnostics.Stage}.",
+            };
+            
+            if (build is not null)
+                await this.SaveTerminalStateAsync(build, VisualBriefingBuildStatus.FAILED, failure, CancellationToken.None);
+            
+            return FinishFailure(diagnostics, build, failure, canContinueAsRebuild: false);
+        }
+        finally
+        {
+            gate.Release();
+        }
+    }
+}

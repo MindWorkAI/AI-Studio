@@ -52,7 +52,12 @@ public sealed partial class VisualBriefingArtifactService
             throw new InvalidOperationException("Apache ECharts 6.1.0 common is not available in this AI Studio build.");
 
         var payloadHash = ComputePayloadHash(dataJson, template, css, runtime, echarts);
+        var exportMetadata = request.ExportMetadataSource;
+        var htmlLanguage = GetHtmlLanguage(
+            exportMetadata?.TargetLanguage ?? manifest.Settings.TargetLanguage,
+            exportMetadata?.CustomTargetLanguage ?? manifest.Settings.CustomTargetLanguage);
         
+        var briefingName = exportMetadata?.Name ?? manifest.Name;
         var exportManifest = CreateExportManifest(
             manifest,
             request,
@@ -65,13 +70,13 @@ public sealed partial class VisualBriefingArtifactService
 
         return Task.FromResult($"""
                                 <!doctype html>
-                                <html lang="{GetHtmlLanguage(manifest.Settings)}">
+                                <html lang="{htmlLanguage}">
                                 <head>
                                 <meta charset="utf-8">
                                 <meta name="viewport" content="width=device-width,initial-scale=1">
                                 <meta http-equiv="Content-Security-Policy" content="{csp}">
                                 <meta name="referrer" content="no-referrer">
-                                <title>{HtmlEncode(manifest.Name)}</title>
+                                <title>{HtmlEncode(briefingName)}</title>
                                 <style id="mwai-briefing-style">{css}
                                 {PROTECTED_FOOTER_CSS}</style>
                                 </head>
@@ -238,27 +243,31 @@ public sealed partial class VisualBriefingArtifactService
         VisualBriefingRevisionRequest request,
         string payloadHash,
         string aiStudioVersion,
-        string runtimeAIStudioVersion) => new()
+        string runtimeAIStudioVersion)
     {
-        BriefingId = manifest.BriefingId,
-        RevisionId = request.RevisionId ?? Guid.NewGuid(),
-        ParentRevisionId = request.ParentRevisionId,
-        Name = manifest.Name,
-        Author = manifest.Author,
-        CreatedAtUtc = request.CreatedAtUtc ?? DateTimeOffset.UtcNow,
-        TargetLanguage = manifest.Settings.TargetLanguage,
-        CustomTargetLanguage = manifest.Settings.CustomTargetLanguage,
-        AudienceProfile = manifest.Settings.AudienceProfile,
-        AudienceAgeGroup = manifest.Settings.AudienceAgeGroup,
-        AudienceOrganizationalLevel = manifest.Settings.AudienceOrganizationalLevel,
-        AudienceExpertise = manifest.Settings.AudienceExpertise,
-        ShowSourceReferences = manifest.Settings.ShowSourceReferences,
-        ProtectionLevel = manifest.Settings.ProtectionLevel,
-        CustomProtectionLevel = manifest.Settings.CustomProtectionLevel,
-        AIStudioVersion = aiStudioVersion,
-        RuntimeAIStudioVersion = runtimeAIStudioVersion,
-        PayloadHash = payloadHash,
-    };
+        var source = request.ExportMetadataSource;
+        return new()
+        {
+            BriefingId = manifest.BriefingId,
+            RevisionId = request.RevisionId ?? Guid.NewGuid(),
+            ParentRevisionId = request.ParentRevisionId,
+            Name = source?.Name ?? manifest.Name,
+            Author = source?.Author ?? manifest.Author,
+            CreatedAtUtc = request.CreatedAtUtc ?? DateTimeOffset.UtcNow,
+            TargetLanguage = source?.TargetLanguage ?? manifest.Settings.TargetLanguage,
+            CustomTargetLanguage = source?.CustomTargetLanguage ?? manifest.Settings.CustomTargetLanguage,
+            AudienceProfile = source?.AudienceProfile ?? manifest.Settings.AudienceProfile,
+            AudienceAgeGroup = source?.AudienceAgeGroup ?? manifest.Settings.AudienceAgeGroup,
+            AudienceOrganizationalLevel = source?.AudienceOrganizationalLevel ?? manifest.Settings.AudienceOrganizationalLevel,
+            AudienceExpertise = source?.AudienceExpertise ?? manifest.Settings.AudienceExpertise,
+            ShowSourceReferences = source?.ShowSourceReferences ?? manifest.Settings.ShowSourceReferences,
+            ProtectionLevel = source?.ProtectionLevel ?? manifest.Settings.ProtectionLevel,
+            CustomProtectionLevel = source?.CustomProtectionLevel ?? manifest.Settings.CustomProtectionLevel,
+            AIStudioVersion = aiStudioVersion,
+            RuntimeAIStudioVersion = runtimeAIStudioVersion,
+            PayloadHash = payloadHash,
+        };
+    }
 
     /// <summary>
     /// Defines <c>AddProtectedArtifactData</c> for the visual briefing feature.
@@ -292,12 +301,16 @@ public sealed partial class VisualBriefingArtifactService
     /// </summary>
     private static object BuildFooter(VisualBriefingManifest manifest, VisualBriefingRevisionRequest request)
     {
-        var protection = manifest.Settings.ProtectionLevel is VisualBriefingProtectionLevel.OTHER
-            ? manifest.Settings.CustomProtectionLevel
-            : manifest.Settings.ProtectionLevel.ToString().Replace('_', ' ').ToLowerInvariant();
+        var source = request.ExportMetadataSource;
+        var protectionLevel = source?.ProtectionLevel ?? manifest.Settings.ProtectionLevel;
+        var customProtectionLevel = source?.CustomProtectionLevel ?? manifest.Settings.CustomProtectionLevel;
+        var protection = protectionLevel is VisualBriefingProtectionLevel.OTHER
+            ? customProtectionLevel
+            : protectionLevel.ToString().Replace('_', ' ').ToLowerInvariant();
 
         var created = (request.CreatedAtUtc ?? DateTimeOffset.UtcNow).ToString("yyyy-MM-dd");
-        var author = string.IsNullOrWhiteSpace(manifest.Author) ? "—" : manifest.Author;
+        var sourceAuthor = source?.Author ?? manifest.Author;
+        var author = string.IsNullOrWhiteSpace(sourceAuthor) ? "—" : sourceAuthor;
         var version = Assembly.GetExecutingAssembly().GetCustomAttribute<MetaDataAttribute>()?.Version ?? "unknown";
         
         var contributions = request.ModelContributions?.Where(contribution => !string.IsNullOrWhiteSpace(contribution.Model))
