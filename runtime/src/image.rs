@@ -1,4 +1,8 @@
-//! Local visual-briefing image optimization and Data-URL preparation.
+//! Local image preparation: decode a file, apply the size policy, and return it as a Data URL.
+//!
+//! This module is deliberately free of any feature-specific behavior so that every part of
+//! AI Studio that needs an embeddable image can use it. The size policy is a single maximum edge
+//! length; callers that want the original bytes pass `optimize = false`.
 
 use std::io::Cursor;
 use std::path::Path;
@@ -11,26 +15,46 @@ use image::imageops::FilterType;
 use image::{DynamicImage, ImageFormat, ImageReader};
 use serde::{Deserialize, Serialize};
 
+/// The longest edge an optimized image may have. Larger images are scaled down proportionally.
 const MAX_EDGE_PIXELS: u32 = 2_560;
+
+/// The quality used when re-encoding JPEG images. Pinned so that repeated runs are byte-identical.
 const JPEG_QUALITY: u8 = 85;
 
+/// The request to prepare one local image file.
 #[derive(Debug, Deserialize)]
 pub struct PrepareImageRequest {
+    /// The absolute path of the image file to read.
     path: String,
+
+    /// Whether the size policy and re-encoding are applied. When false, the original bytes are used.
     optimize: bool,
 }
 
+/// The prepared image together with the dimensions the caller can lay out against.
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PrepareImageResponse {
+    /// The complete `data:` URL, ready to embed.
     data_url: String,
+
+    /// The MIME type matching the source format.
     mime_type: String,
+
+    /// The width of the prepared image in pixels.
     width: u32,
+
+    /// The height of the prepared image in pixels.
     height: u32,
+
+    /// Whether the size policy actually scaled the image down.
     was_resized: bool,
 }
 
-/// Decodes one supported image, applies the visual-briefing size policy, and returns a Data URL.
+/// Decodes one supported image, applies the size policy, and returns a Data URL.
+///
+/// Decoding runs on a blocking worker because it is CPU-bound and would otherwise stall the
+/// async runtime for large images.
 pub async fn prepare_image(
     Json(request): Json<PrepareImageRequest>,
 ) -> Result<Json<PrepareImageResponse>, (StatusCode, String)> {
@@ -45,6 +69,11 @@ pub async fn prepare_image(
         .map(Json)
 }
 
+/// Performs the blocking part of [`prepare_image`].
+///
+/// Only absolute paths to existing files are accepted, and the decoded format has to match the
+/// file extension. Rejecting a mismatch keeps a file that merely claims to be an image from being
+/// embedded under a MIME type derived from its name.
 fn prepare_image_sync(
     request: &PrepareImageRequest,
 ) -> Result<PrepareImageResponse, (StatusCode, String)> {
@@ -52,7 +81,7 @@ fn prepare_image_sync(
     if !path.is_absolute() || !path.is_file() {
         return Err((
             StatusCode::BAD_REQUEST,
-            "The visual asset path is not an accessible absolute file path.".to_string(),
+            "The image path is not an accessible absolute file path.".to_string(),
         ));
     }
 
@@ -62,21 +91,21 @@ fn prepare_image_sync(
         .map_err(|error| {
             (
                 StatusCode::BAD_REQUEST,
-                format!("The visual asset could not be opened: {error}"),
+                format!("The image could not be opened: {error}"),
             )
         })?;
         
     if reader.format() != Some(format) {
         return Err((
             StatusCode::BAD_REQUEST,
-            "The visual asset content does not match its file extension.".to_string(),
+            "The image content does not match its file extension.".to_string(),
         ));
     }
 
     let decoded = reader.decode().map_err(|error| {
         (
             StatusCode::BAD_REQUEST,
-            format!("The visual asset could not be decoded: {error}"),
+            format!("The image could not be decoded: {error}"),
         )
     })?;
     
@@ -99,7 +128,7 @@ fn prepare_image_sync(
         std::fs::read(path).map_err(|error| {
             (
                 StatusCode::BAD_REQUEST,
-                format!("The visual asset could not be read: {error}"),
+                format!("The image could not be read: {error}"),
             )
         })?
     };
@@ -124,6 +153,10 @@ fn prepare_image_sync(
     })
 }
 
+/// Maps a file extension to the one image format AI Studio embeds.
+///
+/// The result is only the expected format; [`prepare_image_sync`] still verifies it against the
+/// actual file content.
 fn supported_format(path: &Path) -> Result<ImageFormat, (StatusCode, String)> {
     match path
         .extension()
@@ -137,11 +170,14 @@ fn supported_format(path: &Path) -> Result<ImageFormat, (StatusCode, String)> {
         
         _ => Err((
             StatusCode::BAD_REQUEST,
-            "Visual assets must be PNG, JPEG, or WebP files.".to_string(),
+            "Images must be PNG, JPEG, or WebP files.".to_string(),
         )),
     }
 }
 
+/// Scales an image down so that its longest edge equals [`MAX_EDGE_PIXELS`].
+///
+/// The aspect ratio is preserved, and both edges stay at least one pixel wide.
 fn resize_to_max_edge(image: DynamicImage) -> DynamicImage {
     let width = image.width();
     let height = image.height();
@@ -151,6 +187,10 @@ fn resize_to_max_edge(image: DynamicImage) -> DynamicImage {
     image.resize_exact(target_width, target_height, FilterType::Lanczos3)
 }
 
+/// Encodes a prepared image back into its source format.
+///
+/// JPEG uses the pinned [`JPEG_QUALITY`] so that the same input always produces the same bytes,
+/// which keeps artifact hashes stable across runs.
 fn encode(image: &DynamicImage, format: ImageFormat) -> Result<Vec<u8>, (StatusCode, String)> {
     let mut bytes = Vec::new();
     match format {
@@ -159,7 +199,7 @@ fn encode(image: &DynamicImage, format: ImageFormat) -> Result<Vec<u8>, (StatusC
             .map_err(|error| {
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
-                    format!("The JPEG visual asset could not be encoded: {error}"),
+                    format!("The JPEG image could not be encoded: {error}"),
                 )
             })?,
             
@@ -168,7 +208,7 @@ fn encode(image: &DynamicImage, format: ImageFormat) -> Result<Vec<u8>, (StatusC
             .map_err(|error| {
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
-                    format!("The visual asset could not be encoded: {error}"),
+                    format!("The image could not be encoded: {error}"),
                 )
             })?,
             

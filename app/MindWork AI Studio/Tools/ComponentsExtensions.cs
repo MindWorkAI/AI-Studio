@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Tools;
@@ -8,7 +9,21 @@ namespace AIStudio.Tools;
 public static class ComponentsExtensions
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ComponentsExtensions).Namespace, nameof(ComponentsExtensions));
-    
+
+    /// <summary>
+    /// Gets the preview feature a component belongs to. Components that are generally available
+    /// return <see cref="PreviewFeatures.NONE"/>. This is the single place that maps a component to
+    /// its preview feature, so visibility checks never need to special-case one assistant.
+    /// </summary>
+    /// <param name="component">The component to look up.</param>
+    /// <returns>The required preview feature.</returns>
+    public static PreviewFeatures RequiredPreviewFeature(this Components component) => component switch
+    {
+        Components.VISUAL_BRIEFING_ASSISTANT => PreviewFeatures.PRE_VISUAL_BRIEFING_ASSISTANT_2026,
+
+        _ => PreviewFeatures.NONE,
+    };
+
     public static bool AllowSendTo(this Components component) => component switch
     {
         Components.NONE => false,

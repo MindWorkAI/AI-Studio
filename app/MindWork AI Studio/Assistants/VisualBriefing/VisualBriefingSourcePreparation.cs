@@ -4,26 +4,6 @@ using AIStudio.Tools.Services;
 namespace AIStudio.Assistants.VisualBriefing;
 
 /// <summary>
-/// Prepares current sources for content analysis and deterministic assembly.
-/// </summary>
-internal interface IVisualBriefingSourcePreparation
-{
-    /// <summary>
-    /// Prepares all current sources.
-    /// </summary>
-    /// <param name="manifest">The briefing manifest.</param>
-    /// <param name="operationId">The operation identifier.</param>
-    /// <param name="buildId">The build identifier.</param>
-    /// <param name="token">The cancellation token.</param>
-    /// <returns>The prepared source scope.</returns>
-    Task<VisualBriefingPreparedSources> PrepareAsync(
-        VisualBriefingManifest manifest,
-        Guid operationId,
-        Guid buildId,
-        CancellationToken token);
-}
-
-/// <summary>
 /// Describes one prepared visual asset while its Data URL remains outside persistent intermediate artifacts.
 /// </summary>
 /// <param name="AssetId">The stable asset identifier.</param>
@@ -94,7 +74,7 @@ internal sealed class VisualBriefingPreparedSources : IAsyncDisposable
 internal sealed class VisualBriefingSourcePreparationService(
     VisualBriefingStore store,
     RustService rustService,
-    ILogger<VisualBriefingSourcePreparationService> logger) : IVisualBriefingSourcePreparation
+    ILogger<VisualBriefingSourcePreparationService> logger)
 {
     /// <summary>
     /// Prepares all current sources without persisting embedded asset bytes.
@@ -149,7 +129,7 @@ internal sealed class VisualBriefingSourcePreparationService(
                 }
                 else if (source.Kind is VisualBriefingSourceKind.VISUAL_ASSET)
                 {
-                    var optimized = await rustService.PrepareVisualBriefingImageAsync(
+                    var optimized = await rustService.PrepareImageAsync(
                         source.Path,
                         manifest.Settings.OptimizeImages,
                         token);

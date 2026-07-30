@@ -6,32 +6,13 @@ using ProviderSettings = AIStudio.Settings.Provider;
 
 namespace AIStudio.Assistants.VisualBriefing;
 
-internal interface IVisualBriefingEvidenceStage
-{
-    Task<VisualBriefingEvidenceArtifact> ExecuteAsync(
-        VisualBriefingManifest manifest,
-        ProviderSettings provider,
-        Profile profile,
-        VisualBriefingPreparedSources preparedSources,
-        VisualBriefingBuildRecord build,
-        CancellationToken token);
-}
-
-internal interface IVisualBriefingPlanStage
-{
-    Task<VisualBriefingPlanArtifact> ExecuteAsync(
-        VisualBriefingManifest manifest,
-        ProviderSettings provider,
-        Profile profile,
-        VisualBriefingEvidenceArtifact evidence,
-        VisualBriefingBuildRecord build,
-        CancellationToken token);
-}
-
+/// <summary>
+/// Extracts the evidence a briefing may rely on from the prepared source material.
+/// </summary>
 internal sealed class VisualBriefingEvidenceStage(
-    IStructuredLlmStageRunner stageRunner,
+    StructuredLlmStageRunner stageRunner,
     VisualBriefingStore store,
-    VisualBriefingBuildProgressService progressService) : IVisualBriefingEvidenceStage
+    VisualBriefingBuildProgressService progressService)
 {
     public async Task<VisualBriefingEvidenceArtifact> ExecuteAsync(
         VisualBriefingManifest manifest,
@@ -240,9 +221,9 @@ internal sealed class VisualBriefingEvidenceStage(
 }
 
 internal sealed class VisualBriefingPlanStage(
-    IStructuredLlmStageRunner stageRunner,
+    StructuredLlmStageRunner stageRunner,
     VisualBriefingStore store,
-    VisualBriefingBuildProgressService progressService) : IVisualBriefingPlanStage
+    VisualBriefingBuildProgressService progressService)
 {
     public async Task<VisualBriefingPlanArtifact> ExecuteAsync(
         VisualBriefingManifest manifest,

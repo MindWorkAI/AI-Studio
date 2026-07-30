@@ -1,0 +1,353 @@
+using AIStudio.Tools.AssistantSessions;
+
+using ComponentKind = AIStudio.Tools.Components;
+using ProviderSettings = AIStudio.Settings.Provider;
+
+namespace AIStudio.Assistants.VisualBriefing;
+
+public partial class VisualBriefingAssistant
+{
+    /// <summary>
+    /// Defines <c>CannotGenerate</c> for the visual briefing feature.
+    /// </summary>
+    private bool CannotGenerate(VisualBriefingEditMode mode) =>
+        this.IsCurrentBusy ||
+        this.provider == ProviderSettings.NONE ||
+        string.IsNullOrWhiteSpace(this.projectName) ||
+        this.targetLanguage is CommonLanguages.OTHER && string.IsNullOrWhiteSpace(this.customTargetLanguage) ||
+        this.protectionLevel is VisualBriefingProtectionLevel.OTHER && string.IsNullOrWhiteSpace(this.customProtectionLevel) ||
+        mode is VisualBriefingEditMode.CHANGE_DESIGN or VisualBriefingEditMode.UPDATE_CONTENT &&
+        !this.SelectedVersionSupportsEdits ||
+        mode is not VisualBriefingEditMode.CHANGE_DESIGN &&
+        this.selectedBriefing?.Sources.Any(source =>
+            source.Status is VisualBriefingSourceStatus.UNREACHABLE or VisualBriefingSourceStatus.TRANSCRIPT_OUTDATED) == true;
+
+    /// <summary>Gets the active build stepper index.</summary>
+    private int BuildStepperIndex
+    {
+        get
+        {
+            if (this.latestBuild is null)
+                return 0;
+
+            var groups = BuildStageGroups();
+            for (var index = 0; index < groups.Length; index++)
+            {
+                var statuses = groups[index].Select(this.StageStatus).ToArray();
+                if (statuses.Any(status => status is VisualBriefingBuildStageStatus.RUNNING or
+                        VisualBriefingBuildStageStatus.FAILED or VisualBriefingBuildStageStatus.CANCELED))
+                    return index;
+
+                if (statuses.Any(status => status is VisualBriefingBuildStageStatus.NOT_STARTED))
+                    return index;
+            }
+
+            return groups.Length - 1;
+        }
+    }
+
+    /// <summary>
+    /// Gets the localized collapsed build-progress summary.
+    /// </summary>
+    private string BuildProgressTitle => this.latestBuild?.Status switch
+    {
+        VisualBriefingBuildStatus.COMPLETED => $"{T("Build progress")} · {T("Completed")}",
+        VisualBriefingBuildStatus.FAILED => $"{T("Build progress")} · {T("Failed")}",
+        VisualBriefingBuildStatus.CANCELED => $"{T("Build progress")} · {T("Canceled")}",
+        VisualBriefingBuildStatus.AWAITING_REBUILD => $"{T("Build progress")} · {T("Action required")}",
+
+        _ => $"{T("Build progress")} · {T("Running")}",
+    };
+
+    /// <summary>
+    /// Keeps the status stepper informational while allowing actions inside the active step.
+    /// </summary>
+    private static Task PreventBuildStepperInteractionAsync(StepperInteractionEventArgs args)
+    {
+        args.Cancel = true;
+        return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Defines <c>GenerateAsync</c> for the visual briefing feature.
+    /// </summary>
+    private async Task GenerateAsync(
+        VisualBriefingEditMode mode,
+        Guid? reusableBuildId = null,
+        Guid? parentRevisionOverride = null)
+    {
+        if (this.selectedBriefing is null || this.CannotGenerate(mode))
+            return;
+
+        await this.SaveCurrentAsync(reload: true);
+        var generationBriefing = this.selectedBriefing;
+        var briefingId = generationBriefing.BriefingId;
+        var parentRevisionId = parentRevisionOverride ??
+                               (generationBriefing.Versions.Count == 0 ? null : this.selectedRevisionId);
+
+        var generationProvider = this.provider;
+        var generationProfile = this.profile;
+
+        var sessionKey = new AssistantSessionKey(ComponentKind.VISUAL_BRIEFING_ASSISTANT, briefingId.ToString("D"));
+        if (this.AssistantSessionService.TryGetSnapshot(sessionKey)?.IsActive == true)
+            return;
+
+        var cancellation = new CancellationTokenSource();
+        var session = await this.AssistantSessionService.TryBeginAsync(
+            sessionKey,
+            this.selectedBriefing.Name,
+            cancellation,
+            null,
+            new(StringComparer.Ordinal),
+            this);
+
+        var terminalStatus = AssistantSessionStatus.FAILED;
+        var terminalIssue = string.Empty;
+        this.generatingBriefings.Add(briefingId);
+        this.StateHasChanged();
+        
+        try
+        {
+            var generation = await this.BuildOrchestrator.BuildAsync(
+                generationBriefing,
+                mode,
+                parentRevisionId,
+                generationProvider,
+                generationProfile,
+                reusableBuildId,
+                cancellation.Token);
+            this.lastBuildDiagnostics = generation.Diagnostics;
+            this.latestBuild = this.BuildProgressService.GetLatest(briefingId) ??
+                               (await this.Store.ListBuildsAsync(briefingId, cancellation.Token)).FirstOrDefault();
+            if (!generation.Success || generation.Version is null)
+            {
+                this.reusableContentBuildId = generation.CanContinueAsRebuild
+                    ? generation.Diagnostics.BuildId
+                    : null;
+
+                terminalIssue = generation.Issue;
+                this.Snackbar.Add(generation.Issue, Severity.Error);
+                return;
+            }
+
+            this.reusableContentBuildId = null;
+            var generatedBriefingIsSelected = this.selectedBriefing?.BriefingId == briefingId;
+            if (generatedBriefingIsSelected)
+            {
+                await this.ReloadListAsync(briefingId);
+                await this.SelectRevisionAsync(generation.Version.RevisionId);
+            }
+            else
+            {
+                var latest = await this.Store.LoadAsync(briefingId, cancellation.Token);
+                if (latest is not null)
+                    this.briefings =
+                    [
+                        .. this.briefings
+                            .Select(briefing => briefing.BriefingId == briefingId ? latest : briefing)
+                            .OrderByDescending(briefing => briefing.ModifiedAtUtc)
+                    ];
+            }
+
+            this.Snackbar.Add(T("A new visual briefing version was created."), Severity.Success);
+            terminalStatus = AssistantSessionStatus.COMPLETED;
+        }
+        catch (OperationCanceledException)
+        {
+            terminalStatus = AssistantSessionStatus.CANCELED;
+            terminalIssue = T("The visual briefing generation was canceled.");
+        }
+        catch (Exception exception)
+        {
+            terminalIssue = T("The visual briefing operation failed unexpectedly. Copy the technical details for support.");
+            this.Logger.LogError(
+                "Unexpected visual briefing UI failure. BriefingId={BriefingId} Mode={Mode} ExceptionType={ExceptionType}",
+                briefingId,
+                mode,
+                exception.GetType().Name);
+
+            this.Snackbar.Add(terminalIssue, Severity.Error);
+        }
+        finally
+        {
+            await this.AssistantSessionService.CompleteAsync(
+                sessionKey,
+                session.SessionId,
+                terminalStatus,
+                terminalIssue,
+                null,
+                new(StringComparer.Ordinal),
+                this);
+            this.generatingBriefings.Remove(briefingId);
+            this.StateHasChanged();
+        }
+    }
+
+    /// <summary>
+    /// Automatically resumes the selected build that was active when the app stopped.
+    /// </summary>
+    private async Task ResumeSelectedBuildAsync()
+    {
+        if (this.selectedBriefing is null ||
+            this.provider == ProviderSettings.NONE)
+            return;
+
+        var activeBuild = (await this.Store.ListBuildsAsync(this.selectedBriefing.BriefingId))
+            .FirstOrDefault(build => build.Status is VisualBriefingBuildStatus.ACTIVE);
+
+        if (activeBuild is null)
+            return;
+
+        await this.GenerateAsync(
+            activeBuild.Mode,
+            reusableBuildId: null,
+            parentRevisionOverride: activeBuild.ParentRevisionId);
+    }
+
+    /// <summary>
+    /// Applies a content-free live progress update for the selected project.
+    /// </summary>
+    private void BuildProgressChanged(Guid briefingId)
+    {
+        if (this.selectedBriefing?.BriefingId != briefingId)
+            return;
+
+        this.latestBuild = this.BuildProgressService.GetLatest(briefingId);
+        _ = this.InvokeAsync(this.StateHasChanged);
+    }
+
+    /// <summary>
+    /// Resumes the latest failed build with its persisted operation inputs.
+    /// </summary>
+    private async Task ResumeLatestBuildAsync()
+    {
+        if (this.latestBuild?.Status is not (VisualBriefingBuildStatus.FAILED or VisualBriefingBuildStatus.CANCELED))
+            return;
+
+        await this.GenerateAsync(
+            this.latestBuild.Mode,
+            parentRevisionOverride: this.latestBuild.ParentRevisionId);
+    }
+
+    /// <summary>
+    /// Gets the six UI groups for the eight durable build stages.
+    /// </summary>
+    private static VisualBriefingBuildStage[][] BuildStageGroups() =>
+    [
+        [VisualBriefingBuildStage.SOURCE_PREPARATION],
+        [VisualBriefingBuildStage.EVIDENCE],
+        [VisualBriefingBuildStage.PLAN],
+        [VisualBriefingBuildStage.CONTENT],
+        [VisualBriefingBuildStage.DESIGN],
+        [VisualBriefingBuildStage.COMPILATION, VisualBriefingBuildStage.ASSEMBLY, VisualBriefingBuildStage.COMMIT],
+    ];
+
+    /// <summary>
+    /// Gets a persistent stage status, defaulting to not started.
+    /// </summary>
+    private VisualBriefingBuildStageStatus StageStatus(VisualBriefingBuildStage stage) =>
+        this.latestBuild?.Stages.FirstOrDefault(item => item.Stage == stage)?.Status ??
+        VisualBriefingBuildStageStatus.NOT_STARTED;
+
+    /// <summary>
+    /// Gets whether one UI group completed or was reused.
+    /// </summary>
+    private bool BuildGroupCompleted(int index) =>
+        BuildStageGroups()[index].All(stage =>
+            this.StageStatus(stage) is VisualBriefingBuildStageStatus.COMPLETED or VisualBriefingBuildStageStatus.SKIPPED);
+
+    /// <summary>
+    /// Gets whether one UI group failed.
+    /// </summary>
+    private bool BuildGroupFailed(int index) =>
+        BuildStageGroups()[index].Any(stage => this.StageStatus(stage) is VisualBriefingBuildStageStatus.FAILED);
+
+    /// <summary>
+    /// Gets whether one UI group was canceled.
+    /// </summary>
+    private bool BuildGroupCanceled(int index) =>
+        BuildStageGroups()[index].Any(stage => this.StageStatus(stage) is VisualBriefingBuildStageStatus.CANCELED);
+
+    /// <summary>
+    /// Gets whether one UI group stopped with a failure or cancellation.
+    /// </summary>
+    private bool BuildGroupStopped(int index) =>
+        this.BuildGroupFailed(index) || this.BuildGroupCanceled(index);
+
+    /// <summary>
+    /// Gets whether one UI group is active.
+    /// </summary>
+    private bool BuildGroupRunning(int index) =>
+        BuildStageGroups()[index].Any(stage => this.StageStatus(stage) is VisualBriefingBuildStageStatus.RUNNING);
+
+    /// <summary>
+    /// Formats a safe localized status summary and duration.
+    /// </summary>
+    private string BuildGroupSummary(int index)
+    {
+        if (this.latestBuild is null)
+            return T("Not started");
+
+        var records = BuildStageGroups()[index]
+            .Select(stage => this.latestBuild.Stages.FirstOrDefault(item => item.Stage == stage))
+            .Where(record => record is not null)
+            .Cast<VisualBriefingBuildStageRecord>()
+            .ToArray();
+
+        var status = this.BuildGroupRunning(index)
+            ? T("Running")
+            : this.BuildGroupFailed(index)
+                ? T("Failed")
+                : this.BuildGroupCanceled(index)
+                    ? T("Canceled")
+                    : records.Length > 0 && records.All(record => record.Status is VisualBriefingBuildStageStatus.SKIPPED)
+                        ? T("Reused")
+                        : this.BuildGroupCompleted(index)
+                            ? T("Completed")
+                            : T("Not started");
+
+        var duration = records
+            .Where(record => record.StartedAtUtc is not null)
+            .Aggregate(TimeSpan.Zero, (total, record) =>
+                total + ((record.FinishedAtUtc ?? DateTimeOffset.UtcNow) - record.StartedAtUtc!.Value));
+
+        return duration > TimeSpan.Zero
+            ? $"{status} · {duration.TotalSeconds:0.0} s"
+            : status;
+    }
+
+    /// <summary>
+    /// Gets the safe failure reason for a UI group.
+    /// </summary>
+    private string BuildGroupFailure(int index) =>
+        BuildStageGroups()[index]
+            .Select(stage => this.latestBuild?.Stages.FirstOrDefault(item => item.Stage == stage)?.Failure)
+            .FirstOrDefault(failure => failure is not null)?.UserMessage ??
+        this.latestBuild?.Failure?.UserMessage ??
+        string.Empty;
+
+    /// <summary>
+    /// Defines <c>CopyTechnicalDetailsAsync</c> for the visual briefing feature.
+    /// </summary>
+    private async Task CopyTechnicalDetailsAsync()
+    {
+        if (this.lastBuildDiagnostics is null)
+            return;
+
+        await this.RustService.CopyText2Clipboard(
+            this.Snackbar,
+            this.lastBuildDiagnostics.ToClipboardText());
+    }
+
+    /// <summary>
+    /// Defines <c>IsGenerating</c> for the visual briefing feature.
+    /// </summary>
+    private bool IsGenerating(Guid briefingId)
+    {
+        if (this.generatingBriefings.Contains(briefingId))
+            return true;
+
+        var key = new AssistantSessionKey(ComponentKind.VISUAL_BRIEFING_ASSISTANT, briefingId.ToString("D"));
+        return this.AssistantSessionService.TryGetSnapshot(key)?.IsActive == true;
+    }
+}

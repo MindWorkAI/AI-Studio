@@ -128,12 +128,18 @@
                                         <MudChip T="string" Size="Size.Small" Color="@SourceStatusColor(context.Status)">@this.SourceStatusName(context.Status)</MudChip>
                                     </MudTd>
                                     <MudTd DataLabel="@T("Actions")">
-                                        <MudIconButton Icon="@Icons.Material.Filled.Link" Title="@T("Relink")" OnClick="@(() => this.RelinkAsync(context))" Disabled="@this.IsCurrentBusy"/>
+                                        <MudTooltip Text="@T("Relink")" Placement="Placement.Bottom">
+                                            <MudIconButton Icon="@Icons.Material.Filled.Link" OnClick="@(() => this.RelinkAsync(context))" Disabled="@this.IsCurrentBusy"/>
+                                        </MudTooltip>
                                         @if (context.IsMedia && context.Status is VisualBriefingSourceStatus.TRANSCRIPT_OUTDATED)
                                         {
-                                            <MudIconButton Icon="@Icons.Material.Filled.RecordVoiceOver" Title="@T("Transcribe again")" OnClick="@(() => this.RetranscribeAsync(context))" Disabled="@this.IsCurrentBusy"/>
+                                            <MudTooltip Text="@T("Transcribe again")" Placement="Placement.Bottom">
+                                                <MudIconButton Icon="@Icons.Material.Filled.RecordVoiceOver" OnClick="@(() => this.RetranscribeAsync(context))" Disabled="@this.IsCurrentBusy"/>
+                                            </MudTooltip>
                                         }
-                                        <MudIconButton Icon="@Icons.Material.Filled.RemoveCircle" Color="Color.Error" Title="@T("Remove")" OnClick="@(() => this.RemoveSourceAsync(context))" Disabled="@this.IsCurrentBusy"/>
+                                        <MudTooltip Text="@T("Remove")" Placement="Placement.Bottom">
+                                            <MudIconButton Icon="@Icons.Material.Filled.RemoveCircle" Color="Color.Error" OnClick="@(() => this.RemoveSourceAsync(context))" Disabled="@this.IsCurrentBusy"/>
+                                        </MudTooltip>
                                     </MudTd>
                                 </RowTemplate>
                             </MudTable>
@@ -268,9 +274,10 @@
                                 </MudStack>
                                 <MudStack Row="true" Spacing="1">
                                     <MudToggleGroup T="VisualBriefingPreviewDevice" @bind-Value="@this.previewDevice" SelectionMode="SelectionMode.SingleSelection" Color="Color.Primary">
-                                        <MudToggleItem Value="@VisualBriefingPreviewDevice.DESKTOP" Icon="@Icons.Material.Filled.DesktopWindows"/>
-                                        <MudToggleItem Value="@VisualBriefingPreviewDevice.TABLET" Icon="@Icons.Material.Filled.Tablet"/>
-                                        <MudToggleItem Value="@VisualBriefingPreviewDevice.MOBILE" Icon="@Icons.Material.Filled.PhoneIphone"/>
+                                        @* MudToggleItem has no Icon parameter; the icon has to be set for both states. *@
+                                        <MudToggleItem Value="@VisualBriefingPreviewDevice.DESKTOP" SelectedIcon="@Icons.Material.Filled.DesktopWindows" UnselectedIcon="@Icons.Material.Filled.DesktopWindows"/>
+                                        <MudToggleItem Value="@VisualBriefingPreviewDevice.TABLET" SelectedIcon="@Icons.Material.Filled.Tablet" UnselectedIcon="@Icons.Material.Filled.Tablet"/>
+                                        <MudToggleItem Value="@VisualBriefingPreviewDevice.MOBILE" SelectedIcon="@Icons.Material.Filled.PhoneIphone" UnselectedIcon="@Icons.Material.Filled.PhoneIphone"/>
                                     </MudToggleGroup>
                                     <MudButton StartIcon="@Icons.Material.Filled.SaveAlt" OnClick="@this.ExportAsync">@T("Export")</MudButton>
                                 </MudStack>

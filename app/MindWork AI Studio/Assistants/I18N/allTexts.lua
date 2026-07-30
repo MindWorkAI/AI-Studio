@@ -6961,9 +6961,6 @@ UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T578410699"] = "Chat"
 -- AI Studio does not recognize your settings-format version. Changes in this session will not be saved to avoid overwriting your settings. Please check for updates or contact support.
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T915412625"] = "AI Studio does not recognize your settings-format version. Changes in this session will not be saved to avoid overwriting your settings. Please check for updates or contact support."
 
--- Prototype
-UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1043365177"] = "Prototype"
-
 -- Get coding and debugging support from an LLM.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1243850917"] = "Get coding and debugging support from an LLM."
 
@@ -7251,9 +7248,6 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1126023000"] = "Qdrant Edge is a
 
 -- ID mismatch: the plugin ID differs from the enterprise configuration ID.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1137744461"] = "ID mismatch: the plugin ID differs from the enterprise configuration ID."
-
--- Apache ECharts 6.1.0 common is embedded only in exported visual briefings that use supported data-driven charts.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1156306394"] = "Apache ECharts 6.1.0 common is embedded only in exported visual briefings that use supported data-driven charts."
 
 -- This is a private AI Studio installation. It runs without an enterprise configuration.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1209549230"] = "This is a private AI Studio installation. It runs without an enterprise configuration."
@@ -7611,6 +7605,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4229014037"] = "When transferrin
 
 -- Copies the status to the clipboard
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4291960437"] = "Copies the status to the clipboard"
+
+-- Apache ECharts is embedded only in exported visual briefings that use supported data-driven charts.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T485678418"] = "Apache ECharts is embedded only in exported visual briefings that use supported data-driven charts."
 
 -- This is a library providing the foundations for asynchronous programming in Rust. It includes key trait definitions like Stream, as well as utilities like join!, select!, and various futures combinator methods which enable expressive asynchronous control flow.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T566998575"] = "This is a library providing the foundations for asynchronous programming in Rust. It includes key trait definitions like Stream, as well as utilities like join!, select!, and various futures combinator methods which enable expressive asynchronous control flow."

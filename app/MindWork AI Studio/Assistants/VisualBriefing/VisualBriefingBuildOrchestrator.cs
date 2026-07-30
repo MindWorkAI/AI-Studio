@@ -1,44 +1,65 @@
 using System.Collections.Concurrent;
 
-using AIStudio.Provider;
 using AIStudio.Settings;
-using AIStudio.Tools.Rust;
+using AIStudio.Tools.Services;
 
 using ProviderSettings = AIStudio.Settings.Provider;
 
 namespace AIStudio.Assistants.VisualBriefing;
 
 /// <summary>
-/// Contains the terminal result of one visual briefing build.
-/// </summary>
-/// <param name="Success">Whether a revision was committed.</param>
-/// <param name="Version">The committed immutable version.</param>
-/// <param name="Issue">The user-safe issue.</param>
-/// <param name="FailureCode">The stable failure code.</param>
-/// <param name="Diagnostics">Safe technical diagnostics.</param>
-/// <param name="CanContinueAsRebuild">Whether incompatible valid content can continue without another content call.</param>
-internal sealed record VisualBriefingBuildResult(
-    bool Success,
-    VisualBriefingVersion? Version,
-    string Issue,
-    VisualBriefingFailureCode FailureCode,
-    VisualBriefingOperationDiagnostics Diagnostics,
-    bool CanContinueAsRebuild);
-
-/// <summary>
 /// Coordinates the persistent, resumable visual briefing build pipeline.
 /// </summary>
-internal sealed class VisualBriefingBuildOrchestrator(
-    VisualBriefingStore store,
-    IVisualBriefingSourcePreparation sourcePreparation,
-    IVisualBriefingEvidenceStage evidenceStage,
-    IVisualBriefingPlanStage planStage,
-    IVisualBriefingContentStage contentStage,
-    IVisualBriefingPresentationStage presentationStage,
-    VisualBriefingLayoutCompiler layoutCompiler,
-    VisualBriefingBuildProgressService progressService,
-    ILogger<VisualBriefingBuildOrchestrator> logger)
+internal sealed partial class VisualBriefingBuildOrchestrator
 {
+    private readonly VisualBriefingStore store;
+    private readonly VisualBriefingBuildProgressService progressService;
+    private readonly ILogger<VisualBriefingBuildOrchestrator> logger;
+    private readonly VisualBriefingSourcePreparationService sourcePreparation;
+    private readonly VisualBriefingEvidenceStage evidenceStage;
+    private readonly VisualBriefingPlanStage planStage;
+    private readonly VisualBriefingContentStage contentStage;
+    private readonly VisualBriefingPresentationStage presentationStage;
+    private readonly VisualBriefingLayoutCompiler layoutCompiler;
+
+    /// <summary>
+    /// Initializes the pipeline. Only the collaborators that other parts of AI Studio also use come
+    /// from the service container. The stages and compilers below are implementation details of this
+    /// pipeline - one implementation and one caller each - so they are composed here instead of
+    /// being registered globally.
+    /// </summary>
+    /// <param name="store">The briefing store, also used by the preview endpoint and the UI.</param>
+    /// <param name="progressService">The progress channel the assistant UI subscribes to.</param>
+    /// <param name="rustService">The Rust runtime bridge used while preparing sources.</param>
+    /// <param name="loggerFactory">The factory for this pipeline's loggers.</param>
+    public VisualBriefingBuildOrchestrator(
+        VisualBriefingStore store,
+        VisualBriefingBuildProgressService progressService,
+        RustService rustService,
+        ILoggerFactory loggerFactory)
+    {
+        this.store = store;
+        this.progressService = progressService;
+        this.logger = loggerFactory.CreateLogger<VisualBriefingBuildOrchestrator>();
+
+        var stageRunner = new StructuredLlmStageRunner(loggerFactory.CreateLogger<StructuredLlmStageRunner>());
+        this.layoutCompiler = new(new VisualBriefingChartCompiler(), new VisualBriefingInteractionCompiler());
+        this.sourcePreparation = new(
+            store,
+            rustService,
+            loggerFactory.CreateLogger<VisualBriefingSourcePreparationService>());
+
+        this.evidenceStage = new(stageRunner, store, progressService);
+        this.planStage = new(stageRunner, store, progressService);
+        this.contentStage = new(stageRunner, store, this.layoutCompiler, progressService);
+        this.presentationStage = new(
+            stageRunner,
+            store,
+            this.layoutCompiler,
+            progressService,
+            loggerFactory.CreateLogger<VisualBriefingPresentationStage>());
+    }
+
     /// <summary>
     /// Prevents concurrent active builds for one briefing within the current app process.
     /// </summary>
@@ -167,14 +188,14 @@ internal sealed class VisualBriefingBuildOrchestrator(
                     .Select(stage => new VisualBriefingBuildStageRecord { Stage = stage })
                     .ToList(),
             };
-            var selectedBuild = await store.StartOrResumeBuildAsync(candidate, token);
+            var selectedBuild = await this.store.StartOrResumeBuildAsync(candidate, token);
             build = selectedBuild.Build;
             build.OperationId = operationId;
-            progressService.Publish(build);
+            this.progressService.Publish(build);
             diagnostics.BuildId = build.BuildId;
             if (selectedBuild.Resumed)
             {
-                logger.LogInformation(
+                this.logger.LogInformation(
                     Event(VisualBriefingLogEventId.BUILD_RESUMED),
                     "Visual briefing build resumed. OperationId={OperationId} BuildId={BuildId} Mode={Mode} ParentRevisionId={ParentRevisionId} InputFingerprint={InputFingerprint}",
                     operationId,
@@ -185,7 +206,7 @@ internal sealed class VisualBriefingBuildOrchestrator(
             }
             else
             {
-                logger.LogInformation(
+                this.logger.LogInformation(
                     Event(VisualBriefingLogEventId.BUILD_STARTED),
                     "Visual briefing build started. OperationId={OperationId} BuildId={BuildId} Mode={Mode} ParentRevisionId={ParentRevisionId} ProviderFamily={ProviderFamily} Model={Model} SourceCount={SourceCount} AssetCount={AssetCount} InputFingerprint={InputFingerprint}",
                     operationId,
@@ -210,7 +231,7 @@ internal sealed class VisualBriefingBuildOrchestrator(
             {
                 MarkSkipped(build, VisualBriefingBuildStage.SOURCE_PREPARATION, sourceFingerprint);
                 embeddedAssets = VisualBriefingData.ExtractAssets(parentContext.Parts!.Data);
-                await store.SaveBuildAsync(build, token);
+                await this.store.SaveBuildAsync(build, token);
             }
             else
             {
@@ -224,16 +245,16 @@ internal sealed class VisualBriefingBuildOrchestrator(
                         stage.StartedAtUtc = DateTimeOffset.UtcNow;
                         stage.Failure = null;
                         build.UpdatedAtUtc = DateTimeOffset.UtcNow;
-                        await store.SaveBuildAsync(build, stepToken);
-                        progressService.Publish(build);
-                        logger.LogInformation(
+                        await this.store.SaveBuildAsync(build, stepToken);
+                        this.progressService.Publish(build);
+                        this.logger.LogInformation(
                             Event(VisualBriefingLogEventId.SOURCE_PREPARATION_STARTED),
                             "Visual briefing source preparation started. OperationId={OperationId} BuildId={BuildId} SourceCount={SourceCount} AssetCount={AssetCount}",
                             build.OperationId,
                             build.BuildId,
                             manifest.Sources.Count,
                             manifest.Sources.Count(source => source.Kind is VisualBriefingSourceKind.VISUAL_ASSET));
-                        prepared = await sourcePreparation.PrepareAsync(
+                        prepared = await this.sourcePreparation.PrepareAsync(
                             manifest,
                             build.OperationId,
                             build.BuildId,
@@ -249,8 +270,8 @@ internal sealed class VisualBriefingBuildOrchestrator(
                         stage.OutputHash = prepared.SourceFingerprint;
                         stage.FinishedAtUtc = DateTimeOffset.UtcNow;
                         build.UpdatedAtUtc = DateTimeOffset.UtcNow;
-                        await store.SaveBuildAsync(build, stepToken);
-                        progressService.Publish(build);
+                        await this.store.SaveBuildAsync(build, stepToken);
+                        this.progressService.Publish(build);
                     });
                 await sourceStep.ExecuteAsync(token);
                 embeddedAssets = prepared!.Assets.ToDictionary(
@@ -275,7 +296,7 @@ internal sealed class VisualBriefingBuildOrchestrator(
             else
             {
                 diagnostics.Stage = VisualBriefingBuildStage.EVIDENCE;
-                evidence = await evidenceStage.ExecuteAsync(
+                evidence = await this.evidenceStage.ExecuteAsync(
                     manifest,
                     provider,
                     profile,
@@ -285,7 +306,7 @@ internal sealed class VisualBriefingBuildOrchestrator(
             }
             diagnostics.ContentHashes["evidence"] = evidence.PayloadHash;
             diagnostics.ArtifactIds["evidence"] = evidence.ArtifactId;
-            progressService.Publish(build);
+            this.progressService.Publish(build);
 
             VisualBriefingPlanArtifact plan;
             if (mode is VisualBriefingEditMode.CHANGE_DESIGN or VisualBriefingEditMode.UPDATE_CONTENT)
@@ -293,12 +314,12 @@ internal sealed class VisualBriefingBuildOrchestrator(
                 plan = parentContext.Plan!;
                 MarkSkipped(build, VisualBriefingBuildStage.PLAN, plan.PayloadHash);
                 build.PlanArtifactId = plan.ArtifactId;
-                await store.SaveBuildAsync(build, token);
+                await this.store.SaveBuildAsync(build, token);
             }
             else
             {
                 diagnostics.Stage = VisualBriefingBuildStage.PLAN;
-                plan = await planStage.ExecuteAsync(
+                plan = await this.planStage.ExecuteAsync(
                     manifest,
                     provider,
                     profile,
@@ -308,7 +329,7 @@ internal sealed class VisualBriefingBuildOrchestrator(
             }
             diagnostics.ContentHashes["plan"] = plan.PayloadHash;
             diagnostics.ArtifactIds["plan"] = plan.ArtifactId;
-            progressService.Publish(build);
+            this.progressService.Publish(build);
 
             VisualBriefingContentArtifact content;
             if (mode is VisualBriefingEditMode.CHANGE_DESIGN)
@@ -316,14 +337,14 @@ internal sealed class VisualBriefingBuildOrchestrator(
                 content = parentContext.Content!;
                 MarkSkipped(build, VisualBriefingBuildStage.CONTENT, content.PayloadHash);
                 build.ContentArtifactId = content.ArtifactId;
-                await store.SaveBuildAsync(build, token);
+                await this.store.SaveBuildAsync(build, token);
             }
             else
             {
                 diagnostics.Stage = VisualBriefingBuildStage.CONTENT;
                 try
                 {
-                    content = await contentStage.ExecuteAsync(
+                    content = await this.contentStage.ExecuteAsync(
                         manifest,
                         provider,
                         profile,
@@ -352,14 +373,14 @@ internal sealed class VisualBriefingBuildOrchestrator(
                     build.Status = VisualBriefingBuildStatus.AWAITING_REBUILD;
                     build.Failure = failure;
                     build.UpdatedAtUtc = DateTimeOffset.UtcNow;
-                    await store.SaveBuildAsync(build, token);
-                    progressService.Publish(build);
+                    await this.store.SaveBuildAsync(build, token);
+                    this.progressService.Publish(build);
                     return FinishFailure(diagnostics, build, failure, canContinueAsRebuild: true);
                 }
             }
             diagnostics.ContentHashes["content"] = content.PayloadHash;
             diagnostics.ArtifactIds["content"] = content.ArtifactId;
-            progressService.Publish(build);
+            this.progressService.Publish(build);
 
             VisualBriefingPresentationArtifact presentation;
             if (mode is VisualBriefingEditMode.UPDATE_CONTENT)
@@ -367,12 +388,12 @@ internal sealed class VisualBriefingBuildOrchestrator(
                 presentation = parentContext.Presentation!;
                 MarkSkipped(build, VisualBriefingBuildStage.DESIGN, presentation.PayloadHash);
                 build.PresentationArtifactId = presentation.ArtifactId;
-                await store.SaveBuildAsync(build, token);
+                await this.store.SaveBuildAsync(build, token);
             }
             else
             {
                 diagnostics.Stage = VisualBriefingBuildStage.DESIGN;
-                presentation = await presentationStage.ExecuteAsync(
+                presentation = await this.presentationStage.ExecuteAsync(
                     manifest,
                     provider,
                     profile,
@@ -384,7 +405,7 @@ internal sealed class VisualBriefingBuildOrchestrator(
             }
             diagnostics.ContentHashes["design"] = presentation.PayloadHash;
             diagnostics.ArtifactIds["design"] = presentation.ArtifactId;
-            progressService.Publish(build);
+            this.progressService.Publish(build);
 
             diagnostics.Stage = VisualBriefingBuildStage.COMPILATION;
             var compilationStage = GetStage(build, VisualBriefingBuildStage.COMPILATION);
@@ -396,9 +417,9 @@ internal sealed class VisualBriefingBuildOrchestrator(
                 presentation.PayloadHash,
                 VisualBriefingVersions.SCHEMA.ToString());
             build.UpdatedAtUtc = DateTimeOffset.UtcNow;
-            await store.SaveBuildAsync(build, token);
-            progressService.Publish(build);
-            var compiled = layoutCompiler.Compile(plan, content, presentation.Layout, presentation.Tokens);
+            await this.store.SaveBuildAsync(build, token);
+            this.progressService.Publish(build);
+            var compiled = this.layoutCompiler.Compile(plan, content, presentation.Layout, presentation.Tokens);
             if (!string.Equals(compiled.TemplateHash, presentation.TemplateHash, StringComparison.Ordinal) ||
                 !string.Equals(compiled.CssHash, presentation.CssHash, StringComparison.Ordinal))
                 throw new VisualBriefingBuildException(
@@ -412,8 +433,8 @@ internal sealed class VisualBriefingBuildOrchestrator(
                 VisualBriefingHashing.Compute(VisualBriefingHashing.CanonicalJson(compiled.Data)),
                 compiled.TemplateHash,
                 compiled.CssHash);
-            await store.SaveBuildAsync(build, token);
-            progressService.Publish(build);
+            await this.store.SaveBuildAsync(build, token);
+            this.progressService.Publish(build);
 
             diagnostics.Stage = VisualBriefingBuildStage.ASSEMBLY;
             var revisionId = build.RevisionId ?? Guid.NewGuid();
@@ -440,9 +461,9 @@ internal sealed class VisualBriefingBuildOrchestrator(
                 VisualBriefingVersions.RUNTIME.ToString());
             var commitStage = GetStage(build, VisualBriefingBuildStage.COMMIT);
             build.UpdatedAtUtc = DateTimeOffset.UtcNow;
-            await store.SaveBuildAsync(build, token);
-            progressService.Publish(build);
-            logger.LogInformation(
+            await this.store.SaveBuildAsync(build, token);
+            this.progressService.Publish(build);
+            this.logger.LogInformation(
                 Event(VisualBriefingLogEventId.ASSEMBLY_STARTED),
                 "Visual briefing assembly started. OperationId={OperationId} BuildId={BuildId} ContentHash={ContentHash} PresentationHash={PresentationHash} AssetCount={AssetCount}",
                 build.OperationId,
@@ -458,7 +479,7 @@ internal sealed class VisualBriefingBuildOrchestrator(
                 new(VisualBriefingModelRole.CONTENT, content.Model),
                 new(VisualBriefingModelRole.DESIGN, presentation.Model),
             };
-            var revision = await store.AddRevisionAsync(new(
+            var revision = await this.store.AddRevisionAsync(new(
                 manifest.BriefingId,
                 parentRevisionId,
                 mode,
@@ -476,7 +497,6 @@ internal sealed class VisualBriefingBuildOrchestrator(
                 revisionId,
                 revisionCreatedAt,
                 embeddedAssets,
-                content.CustomLanguageLabels,
                 content.AssetPlan,
                 evidence.ArtifactId,
                 plan.ArtifactId), token);
@@ -504,11 +524,11 @@ internal sealed class VisualBriefingBuildOrchestrator(
             build.Status = VisualBriefingBuildStatus.COMPLETED;
             build.Failure = null;
             build.UpdatedAtUtc = DateTimeOffset.UtcNow;
-            await store.SaveBuildAsync(build, token);
-            progressService.Publish(build);
+            await this.store.SaveBuildAsync(build, token);
+            this.progressService.Publish(build);
             diagnostics.ContentHashes["payload"] = revision.Version.PayloadHash;
             diagnostics.FinishedAtUtc = DateTimeOffset.UtcNow;
-            logger.LogInformation(
+            this.logger.LogInformation(
                 Event(VisualBriefingLogEventId.REVISION_COMMITTED),
                 "Visual briefing revision committed. OperationId={OperationId} BuildId={BuildId} VersionNumber={VersionNumber} RevisionId={RevisionId} PayloadHash={PayloadHash}",
                 build.OperationId,
@@ -559,7 +579,7 @@ internal sealed class VisualBriefingBuildOrchestrator(
             };
             if (build is not null)
                 await this.SaveTerminalStateAsync(build, VisualBriefingBuildStatus.FAILED, failure, CancellationToken.None);
-            logger.LogWarning(
+            this.logger.LogWarning(
                 Event(VisualBriefingLogEventId.VALIDATION_REJECTED),
                 "Visual briefing build rejected. OperationId={OperationId} BuildId={BuildId} Stage={Stage} FailureCode={FailureCode} ValidationRule={ValidationRule} TechnicalDetails={TechnicalDetails}",
                 operationId,
@@ -581,7 +601,7 @@ internal sealed class VisualBriefingBuildOrchestrator(
             };
             if (build is not null)
                 await this.SaveTerminalStateAsync(build, VisualBriefingBuildStatus.FAILED, failure, CancellationToken.None);
-            logger.LogError(
+            this.logger.LogError(
                 Event(VisualBriefingLogEventId.BUILD_FINISHED),
                 "Unexpected visual briefing build failure. OperationId={OperationId} BuildId={BuildId} Stage={Stage} FailureCode={FailureCode} ExceptionType={ExceptionType}",
                 operationId,
@@ -596,377 +616,6 @@ internal sealed class VisualBriefingBuildOrchestrator(
             gate.Release();
         }
     }
-
-    /// <summary>
-    /// Loads and verifies the selected parent revision and its intermediate artifacts.
-    /// </summary>
-    /// <param name="manifest">The briefing manifest.</param>
-    /// <param name="mode">The edit mode.</param>
-    /// <param name="parentRevisionId">The parent revision identifier.</param>
-    /// <param name="token">The cancellation token.</param>
-    /// <returns>The parent context.</returns>
-    private async Task<ParentContext> LoadParentContextAsync(
-        VisualBriefingManifest manifest,
-        VisualBriefingEditMode mode,
-        Guid? parentRevisionId,
-        CancellationToken token)
-    {
-        if (mode is VisualBriefingEditMode.INITIAL)
-            return new(null, null, null, null, null, null);
-        if (parentRevisionId is null)
-            throw new VisualBriefingBuildException(
-                VisualBriefingFailureCode.ARTIFACT_VALIDATION_FAILED,
-                VisualBriefingBuildStage.SOURCE_PREPARATION,
-                "The selected parent revision could not be loaded.",
-                "A non-initial build has no parent revision ID.");
-
-        var version = manifest.Versions.FirstOrDefault(candidate => candidate.RevisionId == parentRevisionId);
-        if (mode is VisualBriefingEditMode.REBUILD)
-            return version is not null
-                ? new(version, null, null, null, null, null)
-                : throw new VisualBriefingBuildException(
-                    VisualBriefingFailureCode.ARTIFACT_VALIDATION_FAILED,
-                    VisualBriefingBuildStage.SOURCE_PREPARATION,
-                    "The selected parent revision could not be loaded.",
-                    "The rebuild parent revision does not exist.");
-        var parts = await store.ReadVersionPartsAsync(manifest.BriefingId, parentRevisionId.Value, token);
-        if (version is null || parts is null ||
-            version.EvidenceArtifactId is null ||
-            version.PlanArtifactId is null ||
-            version.ContentArtifactId is null ||
-            version.PresentationArtifactId is null)
-            throw new VisualBriefingBuildException(
-                VisualBriefingFailureCode.ARTIFACT_VALIDATION_FAILED,
-                VisualBriefingBuildStage.SOURCE_PREPARATION,
-                "The selected parent revision is invalid or incomplete.",
-                "The parent revision or its intermediate artifact references are unavailable.");
-
-        var evidence = await store.ReadEvidenceArtifactAsync(
-            manifest.BriefingId,
-            version.EvidenceArtifactId.Value,
-            token);
-        var plan = await store.ReadPlanArtifactAsync(
-            manifest.BriefingId,
-            version.PlanArtifactId.Value,
-            token);
-        var content = await store.ReadContentArtifactAsync(
-            manifest.BriefingId,
-            version.ContentArtifactId.Value,
-            token);
-        var presentation = await store.ReadPresentationArtifactAsync(
-            manifest.BriefingId,
-            version.PresentationArtifactId.Value,
-            token);
-        if (evidence is null || plan is null || content is null || presentation is null)
-            throw new VisualBriefingBuildException(
-                VisualBriefingFailureCode.ARTIFACT_VALIDATION_FAILED,
-                VisualBriefingBuildStage.SOURCE_PREPARATION,
-                "The selected parent revision has damaged intermediate artifacts.",
-                "A referenced evidence, plan, content, or design artifact failed hash validation.");
-        return new(version, parts, evidence, plan, content, presentation);
-    }
-
-    /// <summary>
-    /// Loads validated evidence for the explicit continue-as-rebuild action.
-    /// </summary>
-    /// <param name="briefingId">The briefing identifier.</param>
-    /// <param name="buildId">The source build identifier.</param>
-    /// <param name="token">The cancellation token.</param>
-    /// <returns>The reusable evidence artifact.</returns>
-    private async Task<(VisualBriefingEvidenceArtifact Evidence, string SourceFingerprint, string InputFingerprint)> LoadReusableEvidenceAsync(
-        Guid briefingId,
-        Guid buildId,
-        CancellationToken token)
-    {
-        var sourceBuild = await store.LoadBuildAsync(briefingId, buildId, token);
-        if (sourceBuild is null ||
-            sourceBuild.Status is not VisualBriefingBuildStatus.AWAITING_REBUILD ||
-            sourceBuild.EvidenceArtifactId is null)
-            throw new VisualBriefingBuildException(
-                VisualBriefingFailureCode.CONTENT_SIGNATURE_INCOMPATIBLE,
-                VisualBriefingBuildStage.EVIDENCE,
-                "The validated evidence is no longer available to continue as a rebuild.",
-                "The source build is not awaiting rebuild or has no evidence artifact.");
-        var evidence = await store.ReadEvidenceArtifactAsync(
-                   briefingId,
-                   sourceBuild.EvidenceArtifactId.Value,
-                   token)
-               ?? throw new VisualBriefingBuildException(
-                   VisualBriefingFailureCode.ARTIFACT_VALIDATION_FAILED,
-                   VisualBriefingBuildStage.EVIDENCE,
-                   "The validated evidence artifact is damaged.",
-                   "The reusable evidence artifact failed hash validation.");
-        var persistedEvidenceStage = sourceBuild.Stages.FirstOrDefault(stage =>
-            stage.Stage is VisualBriefingBuildStage.EVIDENCE &&
-            stage.Status is VisualBriefingBuildStageStatus.COMPLETED);
-        if (persistedEvidenceStage is null || string.IsNullOrWhiteSpace(persistedEvidenceStage.InputFingerprint))
-            throw new VisualBriefingBuildException(
-                VisualBriefingFailureCode.ARTIFACT_VALIDATION_FAILED,
-                VisualBriefingBuildStage.EVIDENCE,
-                "The validated evidence dependencies are unavailable.",
-                "The reusable evidence stage has no validated input fingerprint.");
-        return (evidence, sourceBuild.SourceFingerprint, persistedEvidenceStage.InputFingerprint);
-    }
-
-    /// <summary>
-    /// Computes a current source fingerprint including persistent transcript hashes.
-    /// </summary>
-    /// <param name="manifest">The briefing manifest.</param>
-    /// <param name="token">The cancellation token.</param>
-    /// <returns>The current source fingerprint.</returns>
-    private async Task<string> ComputeCurrentSourceFingerprintAsync(
-        VisualBriefingManifest manifest,
-        CancellationToken token)
-    {
-        List<string> entries = [];
-        foreach (var source in manifest.Sources.OrderBy(source => source.SourceId))
-        {
-            token.ThrowIfCancellationRequested();
-            if (!File.Exists(source.Path))
-                throw new VisualBriefingBuildException(
-                    VisualBriefingFailureCode.SOURCE_UNREACHABLE,
-                    VisualBriefingBuildStage.SOURCE_PREPARATION,
-                    "A briefing source is no longer reachable.",
-                    $"Source {source.SourceId:D} failed the reachability check.");
-            var sourceHash = await VisualBriefingHashing.ComputeFileAsync(source.Path, token);
-            var transcriptHash = string.Empty;
-            if (source.IsMedia)
-            {
-                var transcript = await store.ReadTranscriptAsync(manifest.BriefingId, source.SourceId, token);
-                if (string.IsNullOrWhiteSpace(transcript) ||
-                    source.TranscriptStatus is not VisualBriefingTranscriptStatus.CURRENT)
-                    throw new VisualBriefingBuildException(
-                        VisualBriefingFailureCode.TRANSCRIPT_UNAVAILABLE,
-                        VisualBriefingBuildStage.SOURCE_PREPARATION,
-                        "A media transcript is missing or outdated.",
-                        $"Transcript status for source {source.SourceId:D} is {source.TranscriptStatus}.");
-                transcriptHash = VisualBriefingHashing.Compute(transcript);
-            }
-            entries.Add(string.Join(
-                '\u001f',
-                source.SourceId,
-                source.Kind,
-                source.AssetId,
-                sourceHash,
-                transcriptHash));
-        }
-        return VisualBriefingHashing.ComputeSections(
-            [manifest.Settings.OptimizeImages.ToString(), .. entries]);
-    }
-
-    /// <summary>
-    /// Computes the full safe build input fingerprint.
-    /// </summary>
-    /// <param name="manifest">The briefing manifest.</param>
-    /// <param name="mode">The edit mode.</param>
-    /// <param name="parentRevisionId">The parent revision.</param>
-    /// <param name="provider">The provider.</param>
-    /// <param name="profile">The profile.</param>
-    /// <param name="sourceFingerprint">The source fingerprint.</param>
-    /// <param name="reusedContentHash">The optional reused content hash.</param>
-    /// <returns>The build input fingerprint.</returns>
-    private static string ComputeBuildInputFingerprint(
-        VisualBriefingManifest manifest,
-        VisualBriefingEditMode mode,
-        Guid? parentRevisionId,
-        ProviderSettings provider,
-        Profile profile,
-        string sourceFingerprint,
-        string? reusedContentHash) =>
-        VisualBriefingHashing.ComputeSections(
-            mode.ToString(),
-            parentRevisionId?.ToString("D"),
-            provider.Id,
-            provider.Model.Id,
-            profile.Id,
-            sourceFingerprint,
-            VisualBriefingHashing.Compute(manifest.Settings.Instruction),
-            manifest.Settings.TargetLanguage.ToString(),
-            manifest.Settings.CustomTargetLanguage,
-            manifest.Settings.AudienceProfile.ToString(),
-            manifest.Settings.AudienceAgeGroup.ToString(),
-            manifest.Settings.AudienceOrganizationalLevel.ToString(),
-            manifest.Settings.AudienceExpertise.ToString(),
-            manifest.Settings.ShowSourceReferences.ToString(),
-            manifest.Settings.OptimizeImages.ToString(),
-            manifest.Settings.ProtectionLevel.ToString(),
-            VisualBriefingHashing.Compute(manifest.Settings.CustomProtectionLevel),
-            reusedContentHash,
-            VisualBriefingVersions.EVIDENCE_CONTRACT.ToString(),
-            VisualBriefingVersions.PLAN_CONTRACT.ToString(),
-            VisualBriefingVersions.CONTENT_CONTRACT.ToString(),
-            VisualBriefingVersions.DESIGN_CONTRACT.ToString(),
-            VisualBriefingVersions.SCHEMA.ToString(),
-            VisualBriefingVersions.RUNTIME.ToString());
-
-    /// <summary>
-    /// Validates the selected provider.
-    /// </summary>
-    /// <param name="provider">The provider.</param>
-    private static void ValidateProvider(ProviderSettings provider)
-    {
-        if (provider == ProviderSettings.NONE || provider.UsedLLMProvider is LLMProviders.NONE)
-            throw new VisualBriefingBuildException(
-                VisualBriefingFailureCode.PROVIDER_NOT_SELECTED,
-                VisualBriefingBuildStage.SOURCE_PREPARATION,
-                "Please select an LLM provider.",
-                "No provider is selected.");
-    }
-
-    /// <summary>
-    /// Validates image-input capabilities for content analysis.
-    /// </summary>
-    /// <param name="manifest">The briefing manifest.</param>
-    /// <param name="provider">The provider.</param>
-    private static void ValidateVisionCapabilities(
-        VisualBriefingManifest manifest,
-        ProviderSettings provider)
-    {
-        var imageSources = manifest.Sources.Where(source =>
-            source.Kind is VisualBriefingSourceKind.VISUAL_ASSET ||
-            FileTypes.IsAllowedPath(source.Path, FileTypes.IMAGE)).ToArray();
-        if (imageSources.Length == 0)
-            return;
-        var capabilities = provider.GetModelCapabilities();
-        var acceptsImages = imageSources.Length == 1
-            ? capabilities.Contains(Capability.SINGLE_IMAGE_INPUT) ||
-              capabilities.Contains(Capability.MULTIPLE_IMAGE_INPUT)
-            : capabilities.Contains(Capability.MULTIPLE_IMAGE_INPUT);
-        if (!acceptsImages)
-            throw new VisualBriefingBuildException(
-                VisualBriefingFailureCode.MODEL_CAPABILITY_MISSING,
-                VisualBriefingBuildStage.SOURCE_PREPARATION,
-                "The selected model cannot process the number of source images and visual assets.",
-                $"ImageCount={imageSources.Length}; SingleImage={capabilities.Contains(Capability.SINGLE_IMAGE_INPUT)}; MultipleImages={capabilities.Contains(Capability.MULTIPLE_IMAGE_INPUT)}.");
-    }
-
-    /// <summary>
-    /// Marks an intentionally reused stage as skipped.
-    /// </summary>
-    /// <param name="build">The build record.</param>
-    /// <param name="stage">The stage.</param>
-    /// <param name="outputHash">The reused output hash.</param>
-    private static void MarkSkipped(
-        VisualBriefingBuildRecord build,
-        VisualBriefingBuildStage stage,
-        string outputHash)
-    {
-        var record = GetStage(build, stage);
-        record.Status = VisualBriefingBuildStageStatus.SKIPPED;
-        record.StartedAtUtc ??= DateTimeOffset.UtcNow;
-        record.FinishedAtUtc = DateTimeOffset.UtcNow;
-        record.InputFingerprint = outputHash;
-        record.OutputHash = outputHash;
-        record.Failure = null;
-        build.UpdatedAtUtc = DateTimeOffset.UtcNow;
-    }
-
-    /// <summary>
-    /// Gets or creates one stage record.
-    /// </summary>
-    /// <param name="build">The build record.</param>
-    /// <param name="stage">The desired stage.</param>
-    /// <returns>The stage record.</returns>
-    private static VisualBriefingBuildStageRecord GetStage(
-        VisualBriefingBuildRecord build,
-        VisualBriefingBuildStage stage)
-    {
-        var record = build.Stages.FirstOrDefault(candidate => candidate.Stage == stage);
-        if (record is not null)
-            return record;
-        record = new() { Stage = stage };
-        build.Stages.Add(record);
-        return record;
-    }
-
-    /// <summary>
-    /// Persists a terminal build failure.
-    /// </summary>
-    /// <param name="build">The build record.</param>
-    /// <param name="status">The terminal status.</param>
-    /// <param name="failure">The safe failure.</param>
-    /// <param name="token">The cancellation token.</param>
-    private async Task SaveTerminalStateAsync(
-        VisualBriefingBuildRecord build,
-        VisualBriefingBuildStatus status,
-        VisualBriefingFailure failure,
-        CancellationToken token)
-    {
-        var stage = GetStage(build, failure.Stage);
-        var terminalStageStatus = status is VisualBriefingBuildStatus.CANCELED
-            ? VisualBriefingBuildStageStatus.CANCELED
-            : VisualBriefingBuildStageStatus.FAILED;
-        foreach (var runningStage in build.Stages.Where(item =>
-                     item.Status is VisualBriefingBuildStageStatus.RUNNING))
-        {
-            runningStage.Status = terminalStageStatus;
-            runningStage.FinishedAtUtc = DateTimeOffset.UtcNow;
-            runningStage.Failure = failure;
-        }
-        if (stage.Status is not (VisualBriefingBuildStageStatus.COMPLETED or VisualBriefingBuildStageStatus.SKIPPED))
-        {
-            stage.Status = terminalStageStatus;
-            stage.StartedAtUtc ??= DateTimeOffset.UtcNow;
-            stage.FinishedAtUtc = DateTimeOffset.UtcNow;
-            stage.Failure = failure;
-        }
-        build.Status = status;
-        build.Failure = failure;
-        build.UpdatedAtUtc = DateTimeOffset.UtcNow;
-        await store.SaveBuildAsync(build, token);
-        progressService.Publish(build);
-    }
-
-    /// <summary>
-    /// Finishes diagnostics and creates a failed result.
-    /// </summary>
-    /// <param name="diagnostics">The operation diagnostics.</param>
-    /// <param name="build">The optional persisted build.</param>
-    /// <param name="failure">The safe failure.</param>
-    /// <param name="canContinueAsRebuild">Whether content can continue as a rebuild.</param>
-    /// <returns>The failed result.</returns>
-    private static VisualBriefingBuildResult FinishFailure(
-        VisualBriefingOperationDiagnostics diagnostics,
-        VisualBriefingBuildRecord? build,
-        VisualBriefingFailure failure,
-        bool canContinueAsRebuild)
-    {
-        diagnostics.BuildId = build?.BuildId ?? diagnostics.BuildId;
-        diagnostics.Stage = failure.Stage;
-        diagnostics.FailureCode = failure.Code;
-        diagnostics.ValidationRule = failure.ValidationRule;
-        diagnostics.StructuredResponse = failure.StructuredResponse;
-        diagnostics.FinishedAtUtc = DateTimeOffset.UtcNow;
-        return new(
-            false,
-            null,
-            failure.UserMessage,
-            failure.Code,
-            diagnostics,
-            canContinueAsRebuild);
-    }
-
-    /// <summary>
-    /// Creates a logging event from a stable identifier.
-    /// </summary>
-    /// <param name="eventId">The stable event identifier.</param>
-    /// <returns>The logging event.</returns>
-    private static EventId Event(VisualBriefingLogEventId eventId) => new((int)eventId, eventId.ToString());
-
-    /// <summary>
-    /// Groups validated parent-revision inputs.
-    /// </summary>
-    /// <param name="ParentVersion">The local version metadata.</param>
-    /// <param name="Parts">The parsed standalone artifact.</param>
-    /// <param name="Content">The content artifact.</param>
-    /// <param name="Presentation">The presentation artifact.</param>
-    private sealed record ParentContext(
-        VisualBriefingVersion? ParentVersion,
-        VisualBriefingArtifactParts? Parts,
-        VisualBriefingEvidenceArtifact? Evidence,
-        VisualBriefingPlanArtifact? Plan,
-        VisualBriefingContentArtifact? Content,
-        VisualBriefingPresentationArtifact? Presentation);
 
     /// <summary>
     /// Adapts asynchronous cleanup to an await-using scope.

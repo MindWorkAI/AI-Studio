@@ -1,7 +1,6 @@
 using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
-using AIStudio.Settings.DataModel;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Tools.AIJobs;
 using AIStudio.Tools.AssistantSessions;
@@ -644,14 +643,10 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         if (!component.AllowSendTo())
             return false;
 
-        var requiredPreviewFeature = component is Tools.Components.VISUAL_BRIEFING_ASSISTANT
-            ? PreviewFeatures.PRE_VISUAL_BRIEFING_ASSISTANT_2026
-            : PreviewFeatures.NONE;
-        
         return this.SettingsManager.IsAssistantVisible(
             component,
             withLogging: false,
-            requiredPreviewFeature: requiredPreviewFeature);
+            requiredPreviewFeature: component.RequiredPreviewFeature());
     }
     
     private async Task InnerResetForm()

@@ -22,7 +22,6 @@ namespace AIStudio.Assistants.VisualBriefing;
 /// <param name="RevisionId">The reserved revision identifier.</param>
 /// <param name="CreatedAtUtc">The revision creation time.</param>
 /// <param name="EmbeddedAssets">The single protected embedded-asset map.</param>
-/// <param name="CustomLanguageLabels">Validated labels for a free-form language.</param>
 /// <param name="AssetPlan">The validated visual asset descriptions and alternatives.</param>
 public sealed record VisualBriefingRevisionRequest(
     Guid BriefingId,
@@ -42,7 +41,6 @@ public sealed record VisualBriefingRevisionRequest(
     Guid? RevisionId = null,
     DateTimeOffset? CreatedAtUtc = null,
     IReadOnlyDictionary<string, string>? EmbeddedAssets = null,
-    IReadOnlyDictionary<string, string>? CustomLanguageLabels = null,
     IReadOnlyList<VisualBriefingAssetPlanItem>? AssetPlan = null,
     Guid? EvidenceArtifactId = null,
     Guid? PlanArtifactId = null);

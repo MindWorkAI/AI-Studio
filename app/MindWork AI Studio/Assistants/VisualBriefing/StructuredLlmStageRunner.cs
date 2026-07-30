@@ -11,9 +11,23 @@ namespace AIStudio.Assistants.VisualBriefing;
 /// Implements structured model stages on the existing provider and hidden-chat primitives.
 /// </summary>
 internal sealed class StructuredLlmStageRunner(
-    ILogger<StructuredLlmStageRunner> logger) : IStructuredLlmStageRunner
+    ILogger<StructuredLlmStageRunner> logger)
 {
-    /// <inheritdoc />
+    /// <summary>
+    /// Runs one structured model stage with exactly one same-context repair attempt.
+    /// </summary>
+    /// <typeparam name="T">The strict response type.</typeparam>
+    /// <param name="provider">The selected provider configuration.</param>
+    /// <param name="profile">The selected user profile.</param>
+    /// <param name="systemContract">The stage-specific system contract.</param>
+    /// <param name="prompt">The user prompt containing stage inputs.</param>
+    /// <param name="attachments">The first-turn attachments.</param>
+    /// <param name="stage">The build stage.</param>
+    /// <param name="operationId">The operation identifier.</param>
+    /// <param name="buildId">The build identifier.</param>
+    /// <param name="validate">Strict semantic validation for a parsed response.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>The validated stage result.</returns>
     public async Task<StructuredLlmStageResult<T>> RunAsync<T>(
         ProviderSettings provider,
         Profile profile,

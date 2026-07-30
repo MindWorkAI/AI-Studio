@@ -453,6 +453,11 @@ public sealed class MediaTranscriptionService(
         var normalizedPath = Path.Combine(Path.GetTempPath(), "mindwork-ai-studio-media", $"{operation.Id:N}.webm");
         Directory.CreateDirectory(Path.GetDirectoryName(normalizedPath)!);
 
+        // Logged next to the operation ID: users recognize the file they picked, whereas an ID only
+        // helps when correlating log lines. The name alone is enough and keeps full paths out of
+        // logs that get shared in bug reports.
+        var fileName = Path.GetFileName(mediaPath);
+
         try
         {
             var normalized = await this.NormalizeAsync(mediaPath, normalizedPath, operation, updateImportState);
@@ -464,14 +469,19 @@ public sealed class MediaTranscriptionService(
             var uploadContractError = await ValidateNormalizedProviderUploadAsync(normalized.Result, normalizedPath, operation.Cancellation.Token);
             if (uploadContractError is not null)
             {
-                logger.LogError("Refusing the transcription provider upload because the normalized media contract validation failed: {Diagnostic}", uploadContractError);
+                logger.LogError(
+                    "Refusing the transcription provider upload for '{FileName}' (operation {OperationId}) because the normalized media contract validation failed: {Diagnostic}",
+                    fileName,
+                    operation.Id,
+                    uploadContractError);
                 return MediaTranscriptionResult.Failed(TB("The media pipeline ended without an output file."));
             }
 
             if (!normalized.Result.HasAudibleSignal)
             {
                 logger.LogInformation(
-                    "Skipping media transcription for operation {OperationId} because its maximum audio peak does not exceed the practical-silence threshold.",
+                    "Skipping media transcription for '{FileName}' (operation {OperationId}) because its maximum audio peak does not exceed the practical-silence threshold.",
+                    fileName,
                     operation.Id);
                 return MediaTranscriptionResult.NoAudibleSignal(TB("The audio track contains no audible signal, so there is nothing to transcribe."));
             }
@@ -492,7 +502,8 @@ public sealed class MediaTranscriptionService(
             var reductionPercent = sourceSize > 0
                 ? (1.0 - (double)normalizedSize / sourceSize) * 100.0
                 : 0.0;
-            logger.LogInformation("Transcribing normalized WebM/Opus media for operation {OperationId} ({NormalizedSize} bytes; source {SourceSize} bytes; size reduction {ReductionPercent:F1}%) with provider '{Provider}' and model '{Model}'.",
+            logger.LogInformation("Transcribing normalized WebM/Opus media '{FileName}' for operation {OperationId} ({NormalizedSize} bytes; source {SourceSize} bytes; size reduction {ReductionPercent:F1}%) with provider '{Provider}' and model '{Model}'.",
+                fileName,
                 operation.Id,
                 normalizedSize,
                 sourceSize,
@@ -505,7 +516,8 @@ public sealed class MediaTranscriptionService(
             if (!providerResult.Success)
             {
                 logger.LogWarning(
-                    "The transcription provider failed for operation {OperationId}: {Diagnostic}",
+                    "The transcription provider failed for '{FileName}' (operation {OperationId}): {Diagnostic}",
+                    fileName,
                     operation.Id,
                     providerResult.ErrorMessage);
                 return MediaTranscriptionResult.Failed(TB("The transcription provider could not transcribe the media file."));
@@ -520,7 +532,8 @@ public sealed class MediaTranscriptionService(
         catch (Exception exception)
         {
             logger.LogError(
-                "Media transcription failed for operation {OperationId}. ExceptionType={ExceptionType}",
+                "Media transcription failed for '{FileName}' (operation {OperationId}). ExceptionType={ExceptionType}",
+                fileName,
                 operation.Id,
                 exception.GetType().Name);
             return MediaTranscriptionResult.Failed(TB("The media file could not be transcribed."));

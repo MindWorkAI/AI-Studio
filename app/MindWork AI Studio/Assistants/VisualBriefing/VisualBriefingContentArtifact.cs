@@ -90,11 +90,6 @@ public sealed class VisualBriefingContentArtifact
     public List<VisualBriefingAssetPlanItem> AssetPlan { get; set; } = [];
 
     /// <summary>
-    /// Gets or sets app-required free-language labels.
-    /// </summary>
-    public Dictionary<string, string>? CustomLanguageLabels { get; set; }
-
-    /// <summary>
     /// Gets or sets the canonical structural signature.
     /// </summary>
     public string StructuralSignature { get; set; } = string.Empty;

@@ -6,29 +6,15 @@ using ProviderSettings = AIStudio.Settings.Provider;
 
 namespace AIStudio.Assistants.VisualBriefing;
 
-internal interface IVisualBriefingPresentationStage
-{
-    Task<VisualBriefingPresentationArtifact> ExecuteAsync(
-        VisualBriefingManifest manifest,
-        ProviderSettings provider,
-        Profile profile,
-        VisualBriefingPlanArtifact plan,
-        VisualBriefingContentArtifact content,
-        VisualBriefingPresentationArtifact? parentPresentation,
-        VisualBriefingBuildRecord build,
-        CancellationToken token);
-}
-
 /// <summary>
 /// Produces only a layout DSL and bounded tokens, then dry-runs deterministic compilation.
 /// </summary>
 internal sealed class VisualBriefingPresentationStage(
-    IStructuredLlmStageRunner stageRunner,
+    StructuredLlmStageRunner stageRunner,
     VisualBriefingStore store,
     VisualBriefingLayoutCompiler layoutCompiler,
-    VisualBriefingArtifactService artifactService,
     VisualBriefingBuildProgressService progressService,
-    ILogger<VisualBriefingPresentationStage> logger) : IVisualBriefingPresentationStage
+    ILogger<VisualBriefingPresentationStage> logger)
 {
     public async Task<VisualBriefingPresentationArtifact> ExecuteAsync(
         VisualBriefingManifest manifest,
