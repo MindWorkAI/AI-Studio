@@ -1,20 +1,8 @@
 .visual-briefing-shell {
-    display: grid;
-    grid-template-columns: minmax(16rem, 22rem) minmax(0, 1fr);
-    gap: 1rem;
-    align-content: start;
     height: 100%;
     min-height: 0;
     overflow-x: hidden;
     overflow-y: auto;
-}
-
-.visual-briefing-projects {
-    align-self: start;
-    max-height: calc(100vh - 7rem);
-    overflow-y: auto;
-    position: sticky;
-    top: 1rem;
 }
 
 .visual-briefing-main {
@@ -50,15 +38,4 @@
     display: block;
     height: 72vh;
     width: 100%;
-}
-
-@media (max-width: 960px) {
-    .visual-briefing-shell {
-        grid-template-columns: 1fr;
-    }
-
-    .visual-briefing-projects {
-        max-height: none;
-        position: static;
-    }
 }
