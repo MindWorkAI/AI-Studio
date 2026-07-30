@@ -63,7 +63,7 @@ internal sealed class VisualBriefingEvidenceStage(StructuredLlmStageRunner stage
             Tables = response.Tables,
             SourceCoverage = response.SourceCoverage,
             AssetPlan = response.AssetPlan,
-            Model = VisualBriefingModelNames.ExportLabel(provider.Model),
+            Model = VisualBriefingModelNames.ExportLabel(provider),
         };
         
         await store.WriteEvidenceArtifactAsync(manifest.BriefingId, artifact, token);

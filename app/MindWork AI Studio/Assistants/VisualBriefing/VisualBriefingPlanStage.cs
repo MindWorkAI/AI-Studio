@@ -64,7 +64,7 @@ internal sealed class VisualBriefingPlanStage(StructuredLlmStageRunner stageRunn
             PayloadHash = VisualBriefingHashing.ComputeSections(payload, structuralSignature),
             Sections = sections,
             StructuralSignature = structuralSignature,
-            Model = VisualBriefingModelNames.ExportLabel(provider.Model),
+            Model = VisualBriefingModelNames.ExportLabel(provider),
         };
 
         await store.WritePlanArtifactAsync(manifest.BriefingId, artifact, token);

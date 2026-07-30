@@ -382,7 +382,7 @@ internal sealed partial class VisualBriefingBuildOrchestrator
             };
             
             var revision = await this.store.AddRevisionAsync(new(manifest.BriefingId, parentRevisionId, mode, manifest.Settings.Instruction,
-                compiled.Data, compiled.TemplateHtml, compiled.Css, VisualBriefingModelNames.ExportLabel(provider.Model), "MindWork AI Studio",
+                compiled.Data, compiled.TemplateHtml, compiled.Css, VisualBriefingModelNames.ExportLabel(provider), "MindWork AI Studio",
                 content.ArtifactId, presentation.ArtifactId, build.BuildId, build.OperationId, contributions, revisionId, revisionCreatedAt, embeddedAssets,
                 content.AssetPlan, evidence.ArtifactId, plan.ArtifactId), token);
             

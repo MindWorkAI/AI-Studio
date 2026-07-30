@@ -194,18 +194,19 @@ public sealed partial class VisualBriefingStore
         if (build is null || string.IsNullOrWhiteSpace(build.Model))
             return [];
 
+        var model = VisualBriefingModelNames.ExportLabel(build.ProviderFamily, build.Model);
         List<VisualBriefingModelContribution> contributions = [];
         if (build.EvidenceArtifactId is not null)
-            contributions.Add(new(VisualBriefingModelRole.EVIDENCE, build.Model));
+            contributions.Add(new(VisualBriefingModelRole.EVIDENCE, model));
         
         if (build.PlanArtifactId is not null)
-            contributions.Add(new(VisualBriefingModelRole.PLAN, build.Model));
+            contributions.Add(new(VisualBriefingModelRole.PLAN, model));
         
         if (build.ContentArtifactId is not null)
-            contributions.Add(new(VisualBriefingModelRole.CONTENT, build.Model));
+            contributions.Add(new(VisualBriefingModelRole.CONTENT, model));
         
         if (build.PresentationArtifactId is not null)
-            contributions.Add(new(VisualBriefingModelRole.DESIGN, build.Model));
+            contributions.Add(new(VisualBriefingModelRole.DESIGN, model));
         
         return contributions;
     }

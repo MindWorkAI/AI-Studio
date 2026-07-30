@@ -97,7 +97,7 @@ internal sealed class VisualBriefingPresentationStage(StructuredLlmStageRunner s
             Css = compiled.Css,
             TemplateHash = compiled.TemplateHash,
             CssHash = compiled.CssHash,
-            Model = VisualBriefingModelNames.ExportLabel(provider.Model),
+            Model = VisualBriefingModelNames.ExportLabel(provider),
         };
         
         await store.WritePresentationArtifactAsync(manifest.BriefingId, artifact, token);

@@ -35,9 +35,17 @@ public static class LLMProvidersExtensions
     /// </remarks>
     /// <param name="llmProvider">The provider.</param>
     /// <returns>The human-readable name of the provider.</returns>
-    public static string ToName(this LLMProviders llmProvider) => llmProvider switch
+    public static string ToName(this LLMProviders llmProvider) => llmProvider.ToName(translate: true);
+
+    /// <summary>
+    /// Returns the human-readable name of the provider.
+    /// </summary>
+    /// <param name="llmProvider">The provider.</param>
+    /// <param name="translate">Whether generic provider names should be translated.</param>
+    /// <returns>The human-readable name of the provider.</returns>
+    public static string ToName(this LLMProviders llmProvider, bool translate) => llmProvider switch
     {
-        LLMProviders.NONE => TB("No provider selected"),
+        LLMProviders.NONE => translate ? TB("No provider selected") : "No provider selected",
         
         LLMProviders.OPEN_AI => "OpenAI",
         LLMProviders.ANTHROPIC => "Anthropic",
@@ -53,12 +61,12 @@ public static class LLMProvidersExtensions
         LLMProviders.FIREWORKS => "Fireworks.ai",
         LLMProviders.HUGGINGFACE => "Hugging Face",
         
-        LLMProviders.SELF_HOSTED => TB("Self-hosted"),
+        LLMProviders.SELF_HOSTED => translate ? TB("Self-hosted") : "Self-hosted",
         
         LLMProviders.HELMHOLTZ => "Helmholtz Blablador",
         LLMProviders.GWDG => "GWDG SAIA",
         
-        _ => TB("Unknown"),
+        _ => translate ? TB("Unknown") : "Unknown",
     };
 
     /// <summary>

@@ -51,7 +51,7 @@ internal sealed class VisualBriefingContentStage(StructuredLlmStageRunner stageR
         artifact.CreatedAtUtc = DateTimeOffset.UtcNow;
         artifact.SourceCoverage = evidence.SourceCoverage;
         artifact.StructuralSignature = plan.StructuralSignature;
-        artifact.Model = VisualBriefingModelNames.ExportLabel(provider.Model);
+        artifact.Model = VisualBriefingModelNames.ExportLabel(provider);
         artifact.Data = JsonSerializer.SerializeToElement(new
         {
             slots = artifact.Slots.ToDictionary(slot => slot.SlotId, slot => slot.Value, StringComparer.Ordinal),

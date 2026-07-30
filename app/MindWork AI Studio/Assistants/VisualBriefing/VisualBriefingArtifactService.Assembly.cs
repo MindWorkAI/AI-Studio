@@ -328,9 +328,7 @@ public sealed partial class VisualBriefingArtifactService
                     .GroupBy(contribution => contribution.Model, StringComparer.Ordinal)
                     .Select(group =>
                     {
-                        var roles = group.Select(contribution => contribution.Role)
-                            .Distinct()
-                            .Select(role => role is VisualBriefingModelRole.DESIGN ? "presentation" : "content");
+                        var roles = group.Select(contribution => contribution.Role is VisualBriefingModelRole.DESIGN ? "presentation" : "content").Distinct(StringComparer.Ordinal);
                         return $"{group.Key} ({string.Join(", ", roles)})";
                     }));
 
