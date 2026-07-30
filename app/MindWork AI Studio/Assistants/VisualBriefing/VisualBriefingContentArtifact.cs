@@ -65,11 +65,6 @@ public sealed class VisualBriefingContentArtifact
     public Dictionary<string, string> AccessibilityTexts { get; set; } = new(StringComparer.Ordinal);
 
     /// <summary>
-    /// Gets or sets visible component labels such as table captions and accordion summaries.
-    /// </summary>
-    public Dictionary<string, string> VisibleLabels { get; set; } = new(StringComparer.Ordinal);
-
-    /// <summary>
     /// Gets or sets visible source references keyed by component ID.
     /// </summary>
     public Dictionary<string, List<string>> SourceReferences { get; set; } = new(StringComparer.Ordinal);

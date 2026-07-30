@@ -278,7 +278,6 @@ public sealed partial class VisualBriefingStore
             JsonSerializer.Serialize(artifact.Controls, VisualBriefingJson.Compact),
             JsonSerializer.Serialize(artifact.Formulas, VisualBriefingJson.Compact),
             JsonSerializer.Serialize(artifact.AccessibilityTexts, VisualBriefingJson.Compact),
-            JsonSerializer.Serialize(artifact.VisibleLabels, VisualBriefingJson.Compact),
             JsonSerializer.Serialize(artifact.SourceReferences, VisualBriefingJson.Compact),
             artifact.ResetLabel,
             JsonSerializer.Serialize(artifact.SourceCoverage, VisualBriefingJson.Compact),
@@ -338,7 +337,7 @@ public sealed partial class VisualBriefingStore
 
         var payloadHash = VisualBriefingHashing.ComputeSections(
             JsonSerializer.Serialize(artifact.Layout, VisualBriefingJson.Compact),
-            JsonSerializer.Serialize(artifact.Tokens, VisualBriefingJson.Compact),
+            artifact.Profile.ToString(),
             artifact.TemplateHash,
             artifact.CssHash);
         

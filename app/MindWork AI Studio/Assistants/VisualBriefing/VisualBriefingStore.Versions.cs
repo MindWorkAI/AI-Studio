@@ -414,7 +414,6 @@ public sealed partial class VisualBriefingStore
             "[]",
             "{}",
             "{}",
-            "{}",
             "Reset",
             JsonSerializer.Serialize(coverage, VisualBriefingJson.Compact),
             JsonSerializer.Serialize(assetPlan, VisualBriefingJson.Compact),
@@ -437,7 +436,7 @@ public sealed partial class VisualBriefingStore
         var importedLayout = new VisualBriefingLayoutNode
         {
             NodeId = "imported",
-            Kind = VisualBriefingLayoutNodeKind.SECTION,
+            Kind = VisualBriefingLayoutNodeKind.STACK,
             Children =
             [
                 new()
@@ -449,7 +448,6 @@ public sealed partial class VisualBriefingStore
             ],
         };
         
-        var importedTokens = new VisualBriefingDesignTokens();
         var templateHash = VisualBriefingHashing.Compute(parts.TemplateHtml);
         var cssHash = VisualBriefingHashing.Compute(parts.Css);
         var presentation = new VisualBriefingPresentationArtifact
@@ -458,11 +456,11 @@ public sealed partial class VisualBriefingStore
             CreatedAtUtc = DateTimeOffset.UtcNow,
             PayloadHash = VisualBriefingHashing.ComputeSections(
                 JsonSerializer.Serialize(importedLayout, VisualBriefingJson.Compact),
-                JsonSerializer.Serialize(importedTokens, VisualBriefingJson.Compact),
+                VisualBriefingDesignProfile.EDITORIAL.ToString(),
                 templateHash,
                 cssHash),
             Layout = importedLayout,
-            Tokens = importedTokens,
+            Profile = VisualBriefingDesignProfile.EDITORIAL,
             TemplateHtml = parts.TemplateHtml,
             Css = parts.Css,
             TemplateHash = templateHash,

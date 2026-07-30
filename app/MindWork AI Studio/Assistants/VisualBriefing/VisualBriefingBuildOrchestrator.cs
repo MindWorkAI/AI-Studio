@@ -419,7 +419,7 @@ internal sealed partial class VisualBriefingBuildOrchestrator
             build.UpdatedAtUtc = DateTimeOffset.UtcNow;
             await this.store.SaveBuildAsync(build, token);
             this.progressService.Publish(build);
-            var compiled = this.layoutCompiler.Compile(plan, content, presentation.Layout, presentation.Tokens);
+            var compiled = this.layoutCompiler.Compile(plan, content, presentation.Layout, presentation.Profile);
             if (!string.Equals(compiled.TemplateHash, presentation.TemplateHash, StringComparison.Ordinal) ||
                 !string.Equals(compiled.CssHash, presentation.CssHash, StringComparison.Ordinal))
                 throw new VisualBriefingBuildException(

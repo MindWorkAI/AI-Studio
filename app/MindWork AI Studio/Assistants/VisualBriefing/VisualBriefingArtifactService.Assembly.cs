@@ -115,6 +115,15 @@ public sealed partial class VisualBriefingArtifactService
     /// Defines protected footer styles that model CSS cannot override.
     /// </summary>
     private const string PROTECTED_FOOTER_CSS = """
+                                                html {
+                                                  background: #f3f6f3 !important;
+                                                }
+                                                body {
+                                                  min-width: 0 !important;
+                                                  margin: 0 !important;
+                                                  background: #f3f6f3 !important;
+                                                  color: #172a24 !important;
+                                                }
                                                 #mwai-static-footer {
                                                   display: flex !important;
                                                   flex-wrap: wrap !important;
@@ -123,13 +132,27 @@ public sealed partial class VisualBriefingArtifactService
                                                   z-index: 2147483647 !important;
                                                   visibility: visible !important;
                                                   opacity: 1 !important;
-                                                  padding: 1rem !important;
-                                                  font: 13px/1.5 system-ui, sans-serif !important;
+                                                  max-width: 74rem !important;
+                                                  margin: 1rem auto 0 !important;
+                                                  padding: 1.25rem clamp(1rem, 3.5vw, 3rem) 2rem !important;
+                                                  border-top: 1px solid #d6e2dc !important;
+                                                  color: #5e7169 !important;
+                                                  font: 12px/1.55 system-ui, sans-serif !important;
                                                 }
                                                 #mwai-static-footer span {
                                                   display: inline !important;
                                                   visibility: visible !important;
                                                   opacity: 1 !important;
+                                                }
+                                                @media print {
+                                                  html, body {
+                                                    background: #fffefa !important;
+                                                  }
+                                                  #mwai-static-footer {
+                                                    max-width: none !important;
+                                                    margin-top: 6mm !important;
+                                                    padding: 4mm 0 0 !important;
+                                                  }
                                                 }
                                                 """;
 

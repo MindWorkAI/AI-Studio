@@ -68,6 +68,33 @@ public enum VisualBriefingLayoutNodeKind
     COMPONENT,
 }
 
+[JsonConverter(typeof(JsonStringEnumConverter<VisualBriefingSectionRole>))]
+public enum VisualBriefingSectionRole
+{
+    HERO,
+    EXECUTIVE_SUMMARY,
+    NARRATIVE,
+    EVIDENCE,
+    EXPLORATION,
+    CONCLUSION,
+}
+
+[JsonConverter(typeof(JsonStringEnumConverter<VisualBriefingSlotRole>))]
+public enum VisualBriefingSlotRole
+{
+    EYEBROW,
+    TITLE,
+    SUMMARY,
+    BODY,
+    LABEL,
+    VALUE,
+    CONTEXT,
+    CAPTION,
+    TABLE_DATA,
+    PANEL,
+    RESULT,
+}
+
 [JsonConverter(typeof(JsonStringEnumConverter<VisualBriefingAlignment>))]
 public enum VisualBriefingAlignment
 {
@@ -77,30 +104,12 @@ public enum VisualBriefingAlignment
     STRETCH,
 }
 
-[JsonConverter(typeof(JsonStringEnumConverter<VisualBriefingDensity>))]
-public enum VisualBriefingDensity
+[JsonConverter(typeof(JsonStringEnumConverter<VisualBriefingDesignProfile>))]
+public enum VisualBriefingDesignProfile
 {
-    COMPACT,
-    COMFORTABLE,
-    SPACIOUS,
-}
-
-[JsonConverter(typeof(JsonStringEnumConverter<VisualBriefingTypographyScale>))]
-public enum VisualBriefingTypographyScale
-{
-    COMPACT,
-    BALANCED,
     EDITORIAL,
-    DISPLAY,
-}
-
-[JsonConverter(typeof(JsonStringEnumConverter<VisualBriefingSurface>))]
-public enum VisualBriefingSurface
-{
-    PLAIN,
-    SUBTLE,
-    RAISED,
-    ACCENT,
+    EXECUTIVE,
+    ANALYTICAL,
 }
 
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
@@ -178,6 +187,15 @@ public sealed class VisualBriefingEvidenceArtifact
 }
 
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
+public sealed class VisualBriefingPlanSlot
+{
+    [JsonRequired]
+    public string SlotId { get; set; } = string.Empty;
+    [JsonRequired]
+    public VisualBriefingSlotRole Role { get; set; }
+}
+
+[JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
 public sealed class VisualBriefingPlanComponent
 {
     [JsonRequired]
@@ -187,7 +205,7 @@ public sealed class VisualBriefingPlanComponent
     [JsonRequired]
     public List<string> EvidenceIds { get; set; } = [];
     [JsonRequired]
-    public List<string> RequiredSlots { get; set; } = [];
+    public List<VisualBriefingPlanSlot> Slots { get; set; } = [];
     [JsonRequired]
     public string? AssetId { get; set; }
 }
@@ -198,7 +216,11 @@ public sealed class VisualBriefingPlanSection
     [JsonRequired]
     public string SectionId { get; set; } = string.Empty;
     [JsonRequired]
-    public string Purpose { get; set; } = string.Empty;
+    public VisualBriefingSectionRole Role { get; set; }
+    [JsonRequired]
+    public string TitleSlotId { get; set; } = string.Empty;
+    [JsonRequired]
+    public string SummarySlotId { get; set; } = string.Empty;
     [JsonRequired]
     public List<VisualBriefingPlanComponent> Components { get; set; } = [];
 }
@@ -250,8 +272,6 @@ public sealed class VisualBriefingChartSpec
     public string ComponentId { get; set; } = string.Empty;
     [JsonRequired]
     public VisualBriefingChartKind Kind { get; set; }
-    [JsonRequired]
-    public string Title { get; set; } = string.Empty;
     [JsonRequired]
     public List<string> Categories { get; set; } = [];
     [JsonRequired]
@@ -308,8 +328,6 @@ public sealed class VisualBriefingContentResponse
     public List<VisualBriefingFormulaSpec> Formulas { get; set; } = [];
     [JsonRequired]
     public Dictionary<string, string> AccessibilityTexts { get; set; } = new(StringComparer.Ordinal);
-    [JsonRequired]
-    public Dictionary<string, string> VisibleLabels { get; set; } = new(StringComparer.Ordinal);
 }
 
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
@@ -331,6 +349,8 @@ public sealed class VisualBriefingLayoutNode
     [JsonRequired]
     public VisualBriefingLayoutNodeKind Kind { get; set; }
     [JsonRequired]
+    public string? SectionId { get; set; }
+    [JsonRequired]
     public string? ComponentId { get; set; }
     [JsonRequired]
     public List<VisualBriefingLayoutNode> Children { get; set; } = [];
@@ -347,37 +367,16 @@ public sealed class VisualBriefingLayoutNode
 }
 
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
-public sealed class VisualBriefingDesignTokens
-{
-    [JsonRequired]
-    public string PrimaryColor { get; set; } = "#2563eb";
-    [JsonRequired]
-    public string AccentColor { get; set; } = "#7c3aed";
-    [JsonRequired]
-    public string TextColor { get; set; } = "#172033";
-    [JsonRequired]
-    public string BackgroundColor { get; set; } = "#ffffff";
-    [JsonRequired]
-    public int SpacingScale { get; set; } = 4;
-    [JsonRequired]
-    public int Radius { get; set; } = 12;
-    [JsonRequired]
-    public VisualBriefingTypographyScale TypographyScale { get; set; }
-    [JsonRequired]
-    public VisualBriefingDensity Density { get; set; }
-    [JsonRequired]
-    public VisualBriefingSurface Surface { get; set; }
-}
-
-[JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
 public sealed class VisualBriefingDesignResponse
 {
     [JsonRequired]
     public int ContractVersion { get; set; }
+    
+    [JsonRequired]
+    public VisualBriefingDesignProfile Profile { get; set; }
+    
     [JsonRequired]
     public VisualBriefingLayoutNode Layout { get; set; } = new();
-    [JsonRequired]
-    public VisualBriefingDesignTokens Tokens { get; set; } = new();
 }
 
 public sealed record VisualBriefingCompilationResult(
@@ -468,23 +467,11 @@ internal static class VisualBriefingSourceHandles
 }
 
 /// <summary>
-/// Derives which component texts the model has to supply. A component text is either an assistive
-/// alternative that never becomes visible, or a visible label that also acts as the accessible name.
-/// Validator, layout compiler, and the content prompt all read these roles from here.
+/// Derives which assistive component texts the model has to supply. Visible component copy is
+/// carried by semantic content slots instead.
 /// </summary>
 internal static class VisualBriefingComponentTexts
 {
-    /// <summary>
-    /// Determines whether a component renders a visible label. The caption of a table and the
-    /// summary of an accordion are visible and are the accessible name of their component.
-    /// </summary>
-    /// <param name="kind">The planned component kind.</param>
-    /// <returns>True when the component requires a visible label.</returns>
-    internal static bool RequiresVisibleLabel(VisualBriefingComponentKind kind) =>
-        kind is VisualBriefingComponentKind.TABLE or
-            VisualBriefingComponentKind.FILTERABLE_TABLE or
-            VisualBriefingComponentKind.ACCORDION;
-
     /// <summary>
     /// Determines whether a component requires an assistive alternative that never becomes visible.
     /// Charts bind it as an aria-label, and components with controls label those controls with it.
@@ -514,16 +501,6 @@ internal static class VisualBriefingComponentTexts
         components.Where(component => RequiresAccessibilityText(component.Kind))
             .Select(component => component.ComponentId)
             .ToArray();
-
-    /// <summary>
-    /// Lists the component IDs the model has to supply a visible label for.
-    /// </summary>
-    /// <param name="components">The planned components.</param>
-    /// <returns>The component IDs in plan order.</returns>
-    internal static string[] VisibleLabelKeys(IEnumerable<VisualBriefingPlanComponent> components) =>
-        components.Where(component => RequiresVisibleLabel(component.Kind))
-            .Select(component => component.ComponentId)
-            .ToArray();
 }
 
 /// <summary>
@@ -535,11 +512,10 @@ internal static class VisualBriefingSlotTypes
     /// <summary>
     /// Determines the slot type of one planned slot.
     /// </summary>
-    /// <param name="component">The planned component owning the slot.</param>
-    /// <param name="slotId">The planned slot ID.</param>
+    /// <param name="slot">The planned semantic slot.</param>
     /// <returns>The required slot type.</returns>
-    internal static VisualBriefingSlotType Expected(VisualBriefingPlanComponent component, string slotId) =>
-        IsTableDataSlot(component, slotId) ? VisualBriefingSlotType.TABLE : VisualBriefingSlotType.TEXT;
+    internal static VisualBriefingSlotType Expected(VisualBriefingPlanSlot slot) =>
+        slot.Role is VisualBriefingSlotRole.TABLE_DATA ? VisualBriefingSlotType.TABLE : VisualBriefingSlotType.TEXT;
 
     /// <summary>
     /// Determines whether a slot carries the tabular data of a table component.
@@ -548,9 +524,9 @@ internal static class VisualBriefingSlotTypes
     /// <param name="slotId">The planned slot ID.</param>
     /// <returns>True when the slot carries tabular data.</returns>
     internal static bool IsTableDataSlot(VisualBriefingPlanComponent component, string slotId) =>
-        component.Kind is VisualBriefingComponentKind.TABLE or VisualBriefingComponentKind.FILTERABLE_TABLE &&
-        component.RequiredSlots.Count > 0 &&
-        string.Equals(component.RequiredSlots[0], slotId, StringComparison.Ordinal);
+        component.Slots.Any(slot =>
+            slot.Role is VisualBriefingSlotRole.TABLE_DATA &&
+            string.Equals(slot.SlotId, slotId, StringComparison.Ordinal));
 
     /// <summary>
     /// Maps every planned slot to its required slot type.
@@ -560,9 +536,13 @@ internal static class VisualBriefingSlotTypes
     internal static Dictionary<string, VisualBriefingSlotType> Map(IReadOnlyList<VisualBriefingPlanSection> sections)
     {
         Dictionary<string, VisualBriefingSlotType> types = new(StringComparer.Ordinal);
-        foreach (var component in sections.SelectMany(section => section.Components))
-        foreach (var slotId in component.RequiredSlots)
-            types[slotId] = Expected(component, slotId);
+        foreach (var section in sections)
+        {
+            types[section.TitleSlotId] = VisualBriefingSlotType.TEXT;
+            types[section.SummarySlotId] = VisualBriefingSlotType.TEXT;
+        }
+        foreach (var slot in sections.SelectMany(section => section.Components).SelectMany(component => component.Slots))
+            types[slot.SlotId] = Expected(slot);
 
         return types;
     }

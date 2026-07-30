@@ -39,9 +39,9 @@ public sealed class VisualBriefingPresentationArtifact
     public VisualBriefingLayoutNode Layout { get; set; } = new();
 
     /// <summary>
-    /// Gets or sets the validated design tokens.
+    /// Gets or sets the bounded MindWork editorial design profile.
     /// </summary>
-    public VisualBriefingDesignTokens Tokens { get; set; } = new();
+    public VisualBriefingDesignProfile Profile { get; set; }
 
     /// <summary>
     /// Gets or sets the complete declarative HTML template.

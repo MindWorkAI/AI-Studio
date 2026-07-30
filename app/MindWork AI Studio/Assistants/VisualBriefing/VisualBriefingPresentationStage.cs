@@ -89,10 +89,10 @@ internal sealed class VisualBriefingPresentationStage(
             throw new VisualBriefingBuildException(failure.Code, failure.Stage, failure.UserMessage, failure.TechnicalDetails);
         }
 
-        var compiled = layoutCompiler.Compile(plan, content, run.Response.Layout, run.Response.Tokens);
+        var compiled = layoutCompiler.Compile(plan, content, run.Response.Layout, run.Response.Profile);
         var payloadHash = VisualBriefingHashing.ComputeSections(
             JsonSerializer.Serialize(run.Response.Layout, VisualBriefingJson.Compact),
-            JsonSerializer.Serialize(run.Response.Tokens, VisualBriefingJson.Compact),
+            run.Response.Profile.ToString(),
             compiled.TemplateHash,
             compiled.CssHash);
         var artifact = new VisualBriefingPresentationArtifact
@@ -101,7 +101,7 @@ internal sealed class VisualBriefingPresentationStage(
             CreatedAtUtc = DateTimeOffset.UtcNow,
             PayloadHash = payloadHash,
             Layout = run.Response.Layout,
-            Tokens = run.Response.Tokens,
+            Profile = run.Response.Profile,
             TemplateHtml = compiled.TemplateHtml,
             Css = compiled.Css,
             TemplateHash = compiled.TemplateHash,
@@ -143,7 +143,7 @@ internal sealed class VisualBriefingPresentationStage(
         // compiler output, see VisualBriefingCompilerInvariant:
         var compiled = VisualBriefingCompilerInvariant.Guard(
             VisualBriefingBuildStage.DESIGN,
-            () => layoutCompiler.Compile(plan, content, response.Layout, response.Tokens));
+            () => layoutCompiler.Compile(plan, content, response.Layout, response.Profile));
         var data = compiled.Data.EnumerateObject()
             .ToDictionary(property => property.Name, property => property.Value.Clone(), StringComparer.Ordinal);
         data["_mwai"] = JsonSerializer.SerializeToElement(new
@@ -185,16 +185,20 @@ internal sealed class VisualBriefingPresentationStage(
 
           The object has exactly:
           - "contractVersion": {{VisualBriefingVersions.DESIGN_CONTRACT}}
+          - "profile": EDITORIAL for narrative storytelling, EXECUTIVE for concise decision briefings,
+            or ANALYTICAL for dense evidence and data.
           - "layout": a recursive node with exactly nodeId, kind (SECTION, STACK, GRID, COMPONENT),
-            componentId (only for COMPONENT), children, columns (only for GRID with mobile/tablet/desktop),
+            sectionId (the planned section ID for SECTION, otherwise null),
+            componentId (the planned component ID for COMPONENT, otherwise null),
+            children, columns (mobile/tablet/desktop for GRID, otherwise null),
             span (1..12), order (0..1000), emphasized, and alignment (START, CENTER, END, STRETCH).
-            Every nodeId is a unique lowercase identifier and must differ from every component ID.
-          - "tokens": exactly primaryColor, accentColor, textColor, backgroundColor as six-digit hex colors,
-            spacingScale (2..12), radius (0..32), typographyScale (COMPACT, BALANCED, EDITORIAL, DISPLAY),
-            density (COMPACT, COMFORTABLE, SPACIOUS),
-            and surface (PLAIN, SUBTLE, RAISED, ACCENT).
+            Every nodeId is a unique lowercase identifier and must differ from every section and component ID.
 
-          Reference every supplied component exactly once. Layout is responsive and semantic; visual style never changes facts or data.
+          The layout root is one STACK. Its direct children are one SECTION for every planned section,
+          in plan order, with the matching sectionId. A section may contain STACK and GRID containers,
+          and must reference exactly its own components. Reference every supplied component exactly once.
+          Prefer editorial rhythm over a wall of cards. Use emphasis sparingly for decisive metrics or insights.
+          MindWork AI Studio owns all colors, typography, surfaces, and chart styling.
           """;
 
     private static string BuildPrompt(
@@ -204,7 +208,7 @@ internal sealed class VisualBriefingPresentationStage(
     {
         var parentJson = parent is null
             ? "none"
-            : JsonSerializer.Serialize(new { parent.Layout, parent.Tokens }, VisualBriefingJson.Compact);
+            : JsonSerializer.Serialize(new { parent.Layout, parent.Profile }, VisualBriefingJson.Compact);
         return $"""
                 Operation: {(parent is null ? "CREATE_DESIGN" : "CHANGE_DESIGN")}
                 Design instruction: {manifest.Settings.Instruction}

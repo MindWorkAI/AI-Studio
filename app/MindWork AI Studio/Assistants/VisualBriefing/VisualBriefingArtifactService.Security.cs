@@ -13,8 +13,8 @@ public sealed partial class VisualBriefingArtifactService
     private static readonly HashSet<string> ALLOWED_ELEMENTS = new(StringComparer.OrdinalIgnoreCase)
     {
         "a", "article", "aside", "button", "canvas", "caption", "dd", "details", "div", "dl", "dt",
-        "figcaption", "figure", "footer", "h1", "h2", "h3", "h4", "h5", "h6", "header", "img",
-        "input", "label", "li", "main", "nav", "ol", "option", "p", "progress", "section", "select",
+        "fieldset", "figcaption", "figure", "footer", "h1", "h2", "h3", "h4", "h5", "h6", "header", "i", "img",
+        "input", "label", "legend", "li", "main", "nav", "ol", "option", "output", "p", "progress", "section", "select",
         "small", "span", "strong", "summary", "table", "tbody", "td", "template", "tfoot", "th",
         "thead", "tr", "ul",
     };

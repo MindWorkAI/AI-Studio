@@ -279,10 +279,15 @@ internal sealed class VisualBriefingPlanStage(
 
         var sections = run.Response!.Sections;
         var payload = JsonSerializer.Serialize(sections, VisualBriefingJson.Compact);
+        
         var structuralSignature = VisualBriefingHashing.Compute(string.Join(
             '\u001f',
-            sections.SelectMany(section => section.Components)
-                .Select(component => $"{component.ComponentId}:{component.Kind}:{component.AssetId}:{string.Join(',', component.RequiredSlots)}")));
+            sections.Select(section =>
+                    $"{section.SectionId}:{section.Role}:{section.TitleSlotId}:{section.SummarySlotId}")
+                .Concat(sections.SelectMany(section => section.Components)
+                    .Select(component =>
+                        $"{component.ComponentId}:{component.Kind}:{component.AssetId}:{string.Join(',', component.Slots.Select(slot => $"{slot.SlotId}:{slot.Role}"))}"))));
+        
         var artifact = new VisualBriefingPlanArtifact
         {
             ArtifactId = Guid.NewGuid(),
@@ -292,11 +297,14 @@ internal sealed class VisualBriefingPlanStage(
             StructuralSignature = structuralSignature,
             Model = VisualBriefingModelNames.ExportLabel(provider.Model),
         };
+        
         await store.WritePlanArtifactAsync(manifest.BriefingId, artifact, token);
         build.PlanArtifactId = artifact.ArtifactId;
         VisualBriefingEvidenceStage.Complete(build, stage, artifact.PayloadHash);
+        
         await store.SaveBuildAsync(build, token);
         progressService.Publish(build);
+        
         return artifact;
     }
 
@@ -306,13 +314,25 @@ internal sealed class VisualBriefingPlanStage(
           Return exactly one JSON object without Markdown or commentary. Unknown fields are forbidden.
           Never return HTML, CSS, JavaScript, ECharts options, data-mwai attributes, visual layout, design tokens, or content values.
           The object has exactly contractVersion={{VisualBriefingVersions.PLAN_CONTRACT}} and ordered sections.
-          Each section has exactly sectionId, purpose, and components.
-          Each component has exactly componentId, kind, evidenceIds, requiredSlots, and assetId.
+          Each section has exactly sectionId, role, titleSlotId, summarySlotId, and components.
+          Every section contains at least one component.
+          Section roles are HERO, EXECUTIVE_SUMMARY, NARRATIVE, EVIDENCE, EXPLORATION, or CONCLUSION.
+          The first section is the only HERO. EXECUTIVE_SUMMARY may occur once directly after it. CONCLUSION may occur once as the final section.
+          Every titleSlotId and summarySlotId is a unique content slot ID.
+          Each component has exactly componentId, kind, evidenceIds, slots, and assetId.
+          Every slot has exactly slotId and role. Slot roles are EYEBROW, TITLE, SUMMARY, BODY, LABEL, VALUE, CONTEXT, CAPTION, TABLE_DATA, PANEL, or RESULT.
           Allowed kinds: TEXT, METRIC, TABLE, CHART, ASSET, CALLOUT, TABS, ACCORDION, FILTERABLE_TABLE, SIMULATION.
-          IDs are stable lowercase identifiers matching ^[a-z][a-z0-9_-]{0,63}$. Reference only supplied evidence IDs. Every component has at least one evidence ID and one required slot.
-          Slot IDs are unique across the whole briefing, not only within their component.
-          The first required slot of a TABLE or FILTERABLE_TABLE component carries the tabular data; any further slot of such a component carries leading text.
-          Every TABS component needs one required slot per tab panel. Every SIMULATION component needs at least one required slot for a computed result.
+          IDs are stable lowercase identifiers matching ^[a-z][a-z0-9_-]{0,63}$. Reference only supplied evidence IDs.
+          Slot IDs are unique across the whole briefing, including section title and summary slots.
+          Use these exact component slot patterns:
+          TEXT: TITLE, BODY.
+          METRIC: LABEL, VALUE, CONTEXT.
+          CALLOUT: EYEBROW, TITLE, BODY.
+          CHART and ASSET: TITLE, CAPTION.
+          TABLE and FILTERABLE_TABLE: TITLE, SUMMARY, TABLE_DATA.
+          TABS: TITLE, SUMMARY, then one or more PANEL slots.
+          ACCORDION: TITLE, BODY.
+          SIMULATION: TITLE, SUMMARY, then one or more RESULT slots.
           assetId is null except for ASSET components; include every supplied assetId in exactly one ASSET component.
           """;
 
