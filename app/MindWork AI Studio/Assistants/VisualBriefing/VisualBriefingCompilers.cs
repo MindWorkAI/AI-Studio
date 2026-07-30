@@ -9,7 +9,7 @@ namespace AIStudio.Assistants.VisualBriefing;
 /// </summary>
 internal sealed class VisualBriefingChartCompiler
 {
-    internal JsonElement Compile(VisualBriefingChartSpec chart)
+    internal static JsonElement Compile(VisualBriefingChartSpec chart)
     {
         object series = chart.Kind switch
         {
@@ -19,6 +19,7 @@ internal sealed class VisualBriefingChartCompiler
                     name = category,
                     value = chart.Series[0].Values[index],
                 }).ToArray(),
+            
             VisualBriefingChartKind.RADAR => chart.Series.Select(item => new
             {
                 name = item.Name,
@@ -32,6 +33,7 @@ internal sealed class VisualBriefingChartCompiler
                     },
                 },
             }).ToArray(),
+            
             _ => chart.Series.Select(item => new
             {
                 name = item.Name,
@@ -47,6 +49,7 @@ internal sealed class VisualBriefingChartCompiler
                 data = item.Values,
             }).ToArray(),
         };
+        
         var option = new
         {
             color = new[] { "#236A50", "#F2D264", "#79AE90", "#C97857", "#4E7894", "#9B6B8F" },
@@ -138,18 +141,18 @@ internal sealed class VisualBriefingChartCompiler
 /// </summary>
 internal sealed class VisualBriefingInteractionCompiler
 {
-    internal JsonElement Compile(
-        IReadOnlyList<VisualBriefingControlSpec> controls,
-        IReadOnlyList<VisualBriefingFormulaSpec> formulas)
+    internal static JsonElement Compile(IReadOnlyList<VisualBriefingControlSpec> controls, IReadOnlyList<VisualBriefingFormulaSpec> formulas)
     {
         var state = controls.ToDictionary(
             control => control.ControlId,
             control => control.InitialValue.Clone(),
             StringComparer.Ordinal);
+        
         var formulaMap = formulas.ToDictionary(
             formula => formula.OutputSlotId,
             formula => formula.Formula,
             StringComparer.Ordinal);
+        
         return JsonSerializer.SerializeToElement(new
         {
             controls,
@@ -158,45 +161,35 @@ internal sealed class VisualBriefingInteractionCompiler
         }, VisualBriefingJson.Compact);
     }
 
-    internal string CompileMarkup(string componentId, IReadOnlyList<VisualBriefingControlSpec> controls)
+    internal static string CompileMarkup(string componentId, IReadOnlyList<VisualBriefingControlSpec> controls)
     {
         var builder = new StringBuilder();
-        foreach (var indexed in controls.Select((control, index) => (Control: control, Index: index))
-                     .Where(item => item.Control.ComponentId == componentId))
+        foreach (var indexed in controls.Select((control, index) => (Control: control, Index: index)).Where(item => item.Control.ComponentId == componentId))
         {
             var control = indexed.Control;
             var id = HtmlEncoder.Default.Encode(control.ControlId);
             var accessibilityPath = $"accessibility.{HtmlEncoder.Default.Encode(componentId)}";
             builder.Append(control.Kind switch
             {
-                VisualBriefingControlKind.SELECT or VisualBriefingControlKind.FILTER =>
-                    $"<select data-mwai-model=\"interactions.state.{id}\" data-mwai-attr-aria-label=\"{accessibilityPath}\"><template data-mwai-each=\"interactions.controls.{indexed.Index}.options\"><option data-mwai-attr-value=\".value\" data-mwai-text=\".label\"></option></template></select>",
-                VisualBriefingControlKind.RANGE =>
-                    $"<input type=\"range\" data-mwai-model=\"interactions.state.{id}\" data-mwai-attr-aria-label=\"{accessibilityPath}\">",
-                VisualBriefingControlKind.NUMBER =>
-                    $"<input type=\"number\" data-mwai-model=\"interactions.state.{id}\" data-mwai-attr-aria-label=\"{accessibilityPath}\">",
+                VisualBriefingControlKind.SELECT or VisualBriefingControlKind.FILTER => $"<select data-mwai-model=\"interactions.state.{id}\" data-mwai-attr-aria-label=\"{accessibilityPath}\"><template data-mwai-each=\"interactions.controls.{indexed.Index}.options\"><option data-mwai-attr-value=\".value\" data-mwai-text=\".label\"></option></template></select>",
+                VisualBriefingControlKind.RANGE => $"<input type=\"range\" data-mwai-model=\"interactions.state.{id}\" data-mwai-attr-aria-label=\"{accessibilityPath}\">",
+                VisualBriefingControlKind.NUMBER => $"<input type=\"number\" data-mwai-model=\"interactions.state.{id}\" data-mwai-attr-aria-label=\"{accessibilityPath}\">",
                 _ => string.Empty,
             });
         }
+        
         return builder.ToString();
     }
 
-    internal static string CompileResetMarkup(string componentId) =>
-        $"<button type=\"button\" data-mwai-reset=\"{HtmlEncoder.Default.Encode(componentId)}\" data-mwai-text=\"labels.reset\"></button>";
+    internal static string CompileResetMarkup(string componentId) => $"<button type=\"button\" data-mwai-reset=\"{HtmlEncoder.Default.Encode(componentId)}\" data-mwai-text=\"labels.reset\"></button>";
 }
 
 /// <summary>
 /// Compiles validated content into the fixed MindWork editorial presentation system.
 /// </summary>
-internal sealed class VisualBriefingLayoutCompiler(
-    VisualBriefingChartCompiler chartCompiler,
-    VisualBriefingInteractionCompiler interactionCompiler)
+internal sealed class VisualBriefingLayoutCompiler(VisualBriefingChartCompiler chartCompiler, VisualBriefingInteractionCompiler interactionCompiler)
 {
-    internal VisualBriefingCompilationResult Compile(
-        VisualBriefingPlanArtifact plan,
-        VisualBriefingContentArtifact content,
-        VisualBriefingLayoutNode layout,
-        VisualBriefingDesignProfile profile)
+    internal VisualBriefingCompilationResult Compile(VisualBriefingPlanArtifact plan, VisualBriefingContentArtifact content, VisualBriefingLayoutNode layout, VisualBriefingDesignProfile profile)
     {
         var slots = content.Slots.ToDictionary(item => item.SlotId, item => item.Value.Clone(), StringComparer.Ordinal);
         var plannedSlotIds = plan.Sections
@@ -210,20 +203,23 @@ internal sealed class VisualBriefingLayoutCompiler(
 
         var components = plan.Sections.SelectMany(section => section.Components)
             .ToDictionary(item => item.ComponentId, StringComparer.Ordinal);
+        
         var sections = plan.Sections.ToDictionary(item => item.SectionId, StringComparer.Ordinal);
         var charts = content.Charts.ToDictionary(item => item.ComponentId, StringComparer.Ordinal);
         var missingChart = components.Values
             .Where(component => component.Kind is VisualBriefingComponentKind.CHART)
             .Select(component => component.ComponentId)
             .FirstOrDefault(componentId => !charts.ContainsKey(componentId));
+        
         if (missingChart is not null)
             throw new InvalidDataException("A planned chart is missing during compilation.");
 
         var chartOptions = content.Charts.ToDictionary(
             item => item.ComponentId,
-            item => chartCompiler.Compile(item),
+            item => VisualBriefingChartCompiler.Compile(item),
             StringComparer.Ordinal);
-        var interactions = interactionCompiler.Compile(content.Controls, content.Formulas);
+        
+        var interactions = VisualBriefingInteractionCompiler.Compile(content.Controls, content.Formulas);
         
         var data = JsonSerializer.SerializeToElement(new
         {
@@ -263,10 +259,8 @@ internal sealed class VisualBriefingLayoutCompiler(
                 throw new InvalidDataException("The layout references an unknown component.");
             
             var componentId = HtmlEncoder.Default.Encode(component.ComponentId);
-            var body = this.CompileComponent(component, content);
-            var componentClasses = CompileLayoutClasses(
-                node,
-                $"mwai-component mwai-{component.Kind.ToString().ToLowerInvariant()}");
+            var body = CompileComponent(component, content);
+            var componentClasses = CompileLayoutClasses(node, $"mwai-component mwai-{component.Kind.ToString().ToLowerInvariant()}");
             
             return $"<article id=\"{id}\" class=\"{componentClasses}\" data-mwai-region=\"{componentId}\">{body}</article>";
         }
@@ -304,12 +298,10 @@ internal sealed class VisualBriefingLayoutCompiler(
         $"{prefix} mwai-span-{node.Span} mwai-align-{node.Alignment.ToString().ToLowerInvariant()}" +
         (node.Emphasized ? " mwai-emphasized" : string.Empty);
 
-    private string CompileComponent(
-        VisualBriefingPlanComponent component,
-        VisualBriefingContentArtifact content)
+    private static string CompileComponent(VisualBriefingPlanComponent component, VisualBriefingContentArtifact content)
     {
         var componentId = HtmlEncoder.Default.Encode(component.ComponentId);
-        var controls = interactionCompiler.CompileMarkup(component.ComponentId, content.Controls);
+        var controls = VisualBriefingInteractionCompiler.CompileMarkup(component.ComponentId, content.Controls);
         var body = component.Kind switch
         {
             VisualBriefingComponentKind.TEXT => $"<header class=\"mwai-component-heading\"><h3 data-mwai-text=\"slots.{Slot(component, VisualBriefingSlotRole.TITLE)}\"></h3></header><p class=\"mwai-copy\" data-mwai-text=\"slots.{Slot(component, VisualBriefingSlotRole.BODY)}\"></p>",
