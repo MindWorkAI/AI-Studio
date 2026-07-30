@@ -86,7 +86,8 @@ public sealed partial class VisualBriefingStore
                      !string.Equals(parent.AssetHash, hashes.AssetHash, StringComparison.Ordinal)))
                     return VisualBriefingRevisionResult.Failure("A recompile attempted to modify semantic artifacts or embedded assets.");
 
-                if (string.Equals(parent.DataHash, hashes.DataHash, StringComparison.Ordinal) &&
+                if (request.EditMode is not VisualBriefingEditMode.RECOMPILE &&
+                    string.Equals(parent.DataHash, hashes.DataHash, StringComparison.Ordinal) &&
                     string.Equals(parent.AssetHash, hashes.AssetHash, StringComparison.Ordinal) &&
                     string.Equals(parent.TemplateHash, hashes.TemplateHash, StringComparison.Ordinal) &&
                     string.Equals(parent.CssHash, hashes.CssHash, StringComparison.Ordinal) &&

@@ -5,8 +5,8 @@ namespace AIStudio.Assistants.VisualBriefing;
 internal sealed partial class VisualBriefingBuildOrchestrator
 {
     /// <summary>
-    /// Recompiles one immutable revision with the current deterministic compiler and standalone
-    /// runtime without accessing sources or calling a model.
+    /// Recompiles one immutable revision with the current deterministic export pipeline without
+    /// accessing sources or calling a model.
     /// </summary>
     /// <param name="manifest">The current local briefing manifest.</param>
     /// <param name="parentRevisionId">The revision whose semantic artifacts are reused.</param>
@@ -144,6 +144,8 @@ internal sealed partial class VisualBriefingBuildOrchestrator
                     compiled.TemplateHtml, compiled.Css,
                     content.Charts.Count > 0));
 
+            var contributions = await this.ResolveRecompileModelContributionsAsync(manifest.BriefingId, parentVersion, evidence, plan, content, previousPresentation, token);
+            var presentationModel = contributions.First(contribution => contribution.Role is VisualBriefingModelRole.DESIGN).Model;
             var presentation = new VisualBriefingPresentationArtifact
             {
                 ArtifactId = Guid.NewGuid(),
@@ -160,7 +162,7 @@ internal sealed partial class VisualBriefingBuildOrchestrator
                 Css = compiled.Css,
                 TemplateHash = compiled.TemplateHash,
                 CssHash = compiled.CssHash,
-                Model = previousPresentation.Model,
+                Model = presentationModel,
             };
             
             await this.store.WritePresentationArtifactAsync(manifest.BriefingId, presentation, token);
@@ -204,7 +206,6 @@ internal sealed partial class VisualBriefingBuildOrchestrator
             await this.store.SaveBuildAsync(build, token);
             this.progressService.Publish(build);
 
-            var contributions = parentVersion.ModelContributions.ToList();
             var revision = await this.store.AddRevisionAsync(new(
                 manifest.BriefingId,
                 parentRevisionId,
@@ -230,35 +231,7 @@ internal sealed partial class VisualBriefingBuildOrchestrator
             
             var commitStage = GetStage(build, VisualBriefingBuildStage.COMMIT);
             if (!revision.Success || revision.Version is null)
-            {
-                if (revision.Issue.Contains("did not change", StringComparison.OrdinalIgnoreCase))
-                {
-                    assemblyStage.Status = VisualBriefingBuildStageStatus.COMPLETED;
-                    assemblyStage.FinishedAtUtc = DateTimeOffset.UtcNow;
-                    assemblyStage.OutputHash = parentVersion.PayloadHash;
-                    MarkSkipped(build, VisualBriefingBuildStage.COMMIT, parentVersion.PayloadHash);
-                    build.Status = VisualBriefingBuildStatus.COMPLETED;
-                    build.Failure = null;
-                    build.UpdatedAtUtc = DateTimeOffset.UtcNow;
-                    await this.store.SaveBuildAsync(build, token);
-                    this.progressService.Publish(build);
-                    diagnostics.FailureCode = VisualBriefingFailureCode.NO_CHANGES;
-                    diagnostics.FinishedAtUtc = DateTimeOffset.UtcNow;
-                    return new(
-                        false,
-                        null,
-                        "The selected briefing version already uses the current compiler and runtime.",
-                        VisualBriefingFailureCode.NO_CHANGES,
-                        diagnostics,
-                        false);
-                }
-
-                throw new VisualBriefingBuildException(
-                    VisualBriefingFailureCode.STORE_FAILED,
-                    VisualBriefingBuildStage.COMMIT,
-                    revision.Issue,
-                    "The immutable recompiled revision commit was rejected.");
-            }
+                throw new VisualBriefingBuildException(VisualBriefingFailureCode.STORE_FAILED, VisualBriefingBuildStage.COMMIT, revision.Issue, "The immutable recompiled revision commit was rejected.");
 
             assemblyStage.Status = VisualBriefingBuildStageStatus.COMPLETED;
             assemblyStage.FinishedAtUtc = DateTimeOffset.UtcNow;
@@ -340,5 +313,78 @@ internal sealed partial class VisualBriefingBuildOrchestrator
         {
             gate.Release();
         }
+    }
+
+    /// <summary>
+    /// Reconstructs the most specific model attribution available for each reused semantic artifact.
+    /// </summary>
+    private async Task<List<VisualBriefingModelContribution>> ResolveRecompileModelContributionsAsync(Guid briefingId, VisualBriefingVersion parentVersion,
+        VisualBriefingEvidenceArtifact evidence, VisualBriefingPlanArtifact plan, VisualBriefingContentArtifact content, VisualBriefingPresentationArtifact presentation,
+        CancellationToken token)
+    {
+        var builds = await this.store.ListBuildsAsync(briefingId, token);
+        
+        return
+        [
+            new(
+                VisualBriefingModelRole.EVIDENCE,
+                ResolveRecompileModelLabel(
+                    builds,
+                    build => build.EvidenceArtifactId,
+                    evidence.ArtifactId,
+                    VisualBriefingBuildStage.EVIDENCE,
+                    ExistingModelLabel(parentVersion, VisualBriefingModelRole.EVIDENCE, evidence.Model))),
+            
+            new(
+                VisualBriefingModelRole.PLAN,
+                ResolveRecompileModelLabel(
+                    builds,
+                    build => build.PlanArtifactId,
+                    plan.ArtifactId,
+                    VisualBriefingBuildStage.PLAN,
+                    ExistingModelLabel(parentVersion, VisualBriefingModelRole.PLAN, plan.Model))),
+            
+            new(
+                VisualBriefingModelRole.CONTENT,
+                ResolveRecompileModelLabel(
+                    builds,
+                    build => build.ContentArtifactId,
+                    content.ArtifactId,
+                    VisualBriefingBuildStage.CONTENT,
+                    ExistingModelLabel(parentVersion, VisualBriefingModelRole.CONTENT, content.Model))),
+            
+            new(
+                VisualBriefingModelRole.DESIGN,
+                ResolveRecompileModelLabel(
+                    builds,
+                    build => build.PresentationArtifactId,
+                    presentation.ArtifactId,
+                    VisualBriefingBuildStage.DESIGN,
+                    ExistingModelLabel(parentVersion, VisualBriefingModelRole.DESIGN, presentation.Model))),
+        ];
+    }
+
+    /// <summary>
+    /// Resolves the provider and model that originally produced one immutable artifact.
+    /// </summary>
+    private static string ResolveRecompileModelLabel(IReadOnlyList<VisualBriefingBuildRecord> builds, Func<VisualBriefingBuildRecord, Guid?> artifactId,
+        Guid expectedArtifactId, VisualBriefingBuildStage stage, string fallback)
+    {
+        var producingBuild = builds.FirstOrDefault(build =>
+            artifactId(build) == expectedArtifactId &&
+            !string.IsNullOrWhiteSpace(build.ProviderFamily) &&
+            !string.IsNullOrWhiteSpace(build.Model) &&
+            build.Stages.Any(candidate => candidate.Stage == stage && candidate.Status is VisualBriefingBuildStageStatus.COMPLETED));
+
+        return producingBuild is null ? fallback : VisualBriefingModelNames.ExportLabel(producingBuild.ProviderFamily, producingBuild.Model);
+    }
+
+    /// <summary>
+    /// Returns the persisted role attribution, falling back to the immutable artifact label.
+    /// </summary>
+    private static string ExistingModelLabel(VisualBriefingVersion parentVersion, VisualBriefingModelRole role, string artifactModel)
+    {
+        var contribution = parentVersion.ModelContributions.FirstOrDefault(candidate => candidate.Role == role && !string.IsNullOrWhiteSpace(candidate.Model));
+        return contribution?.Model ?? artifactModel;
     }
 }

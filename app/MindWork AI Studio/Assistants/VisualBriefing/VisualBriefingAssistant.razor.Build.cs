@@ -193,7 +193,7 @@ public partial class VisualBriefingAssistant
     }
 
     /// <summary>
-    /// Recompiles the selected immutable revision with the current compiler and runtime.
+    /// Recompiles the selected immutable revision with the current AI Studio export pipeline.
     /// </summary>
     /// <param name="parentRevisionOverride">An optional parent used while resuming a persisted operation.</param>
     private async Task RecompileAsync(Guid? parentRevisionOverride = null)
@@ -234,13 +234,6 @@ public partial class VisualBriefingAssistant
             this.lastBuildDiagnostics = result.Diagnostics;
             this.latestBuild = this.BuildProgressService.GetLatest(briefingId) ?? (await this.Store.ListBuildsAsync(briefingId, cancellation.Token)).FirstOrDefault();
 
-            if (result.FailureCode is VisualBriefingFailureCode.NO_CHANGES)
-            {
-                this.Snackbar.Add(T("The selected briefing version already uses the current compiler and runtime."), Severity.Info);
-                terminalStatus = AssistantSessionStatus.COMPLETED;
-                return;
-            }
-
             if (!result.Success || result.Version is null)
             {
                 terminalIssue = result.Issue;
@@ -265,7 +258,7 @@ public partial class VisualBriefingAssistant
                     ];
             }
 
-            this.Snackbar.Add(T("The briefing was recompiled with the current AI Studio runtime."), Severity.Success);
+            this.Snackbar.Add(T("The briefing was recompiled with the current AI Studio version."), Severity.Success);
             terminalStatus = AssistantSessionStatus.COMPLETED;
         }
         catch (OperationCanceledException)

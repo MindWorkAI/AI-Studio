@@ -182,7 +182,7 @@
                                 </span>
                             </MudTooltip>
                             <MudTooltip Text="@(this.SelectedVersionSupportsEdits
-                                                  ? T("Recompile this version with the current AI Studio compiler and runtime without model calls.")
+                                                  ? T("Recompile this version with the current AI Studio version without AI model calls.")
                                                   : T("This version has no compatible semantic artifacts. Rebuild the briefing instead."))">
                                 <span>
                                     <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Code" OnClick="@(() => this.RecompileAsync())" Disabled="@this.CannotRecompile">@T("Recompile briefing")</MudButton>
