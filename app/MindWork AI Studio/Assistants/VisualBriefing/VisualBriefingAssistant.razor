@@ -21,7 +21,7 @@
                                  Value="@briefing.BriefingId"
                                  Icon="@Icons.Material.Filled.Dashboard">
                         <MudStack Spacing="0">
-                            <MudText Typo="Typo.body1">@briefing.Name</MudText>
+                            <MudText Typo="Typo.body1">@(briefing.BriefingId == this.selectedBriefing?.BriefingId ? this.projectName : briefing.Name)</MudText>
                             <MudText Typo="Typo.caption">@briefing.ModifiedAtUtc.ToLocalTime().ToString("g")</MudText>
                             @if (this.IsGenerating(briefing.BriefingId))
                             {
@@ -50,7 +50,7 @@
                 else
                 {
                     <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Class="mb-3">
-                        <MudText Typo="Typo.h3">@this.selectedBriefing.Name</MudText>
+                        <MudText Typo="Typo.h3">@this.projectName</MudText>
                         <MudStack Row="true" Spacing="1">
                             <MudButton StartIcon="@Icons.Material.Filled.DriveFileRenameOutline" OnClick="@this.RenameAsync" Disabled="@this.IsCurrentBusy">@T("Rename")</MudButton>
                             <MudButton StartIcon="@Icons.Material.Filled.DeleteForever" Color="Color.Error" OnClick="@this.DeleteAsync" Disabled="@this.IsCurrentBusy">@T("Delete")</MudButton>
@@ -60,7 +60,7 @@
                     <MudPaper Outlined="true" Class="pa-4 mb-4">
                         <MudGrid>
                             <MudItem xs="12" md="7">
-                                <MudTextField T="string" @bind-Text="@this.projectName" Label="@T("Briefing name")" Required="true" Variant="Variant.Outlined" Disabled="@this.IsCurrentBusy"/>
+                                <MudTextField T="string" @bind-Text="@this.projectName" Label="@T("Briefing name")" Required="true" Immediate="@true" Variant="Variant.Outlined" Disabled="@this.IsCurrentBusy"/>
                             </MudItem>
                             <MudItem xs="12" md="5">
                                 <MudTextField T="string" @bind-Text="@this.author" Label="@T("Author (optional)")" Variant="Variant.Outlined" Disabled="@this.IsCurrentBusy"/>
