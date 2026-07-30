@@ -261,9 +261,6 @@ public partial class VisualBriefingAssistant
         VisualBriefingProtectionLevel.INTERNAL => T("internal"),
         VisualBriefingProtectionLevel.PRIVATE => T("private"),
         VisualBriefingProtectionLevel.CONFIDENTIAL => T("confidential"),
-        VisualBriefingProtectionLevel.STRICTLY_CONFIDENTIAL => T("strictly confidential"),
-        VisualBriefingProtectionLevel.SECRET => T("secret"),
-        VisualBriefingProtectionLevel.TOP_SECRET => T("top secret"),
         VisualBriefingProtectionLevel.OTHER => T("other"),
 
         _ => level.ToString(),
