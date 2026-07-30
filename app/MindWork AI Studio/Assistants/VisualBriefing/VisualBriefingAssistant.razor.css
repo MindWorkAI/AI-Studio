@@ -11,10 +11,10 @@
 }
 
 .visual-briefing-preview {
-    background: #404040;
+    border: .25rem solid #404040;
     border-radius: .5rem;
     margin-inline: auto;
-    padding: 1rem;
+    overflow: hidden;
     transition: max-width .2s ease;
     width: 100%;
 }
@@ -34,8 +34,9 @@
 .visual-briefing-preview-frame {
     background: white;
     border: 0;
-    border-radius: .25rem;
     display: block;
-    height: 72vh;
+    height: 60vh;
+    height: min(60dvh, 48rem);
+    min-height: 18rem;
     width: 100%;
 }
