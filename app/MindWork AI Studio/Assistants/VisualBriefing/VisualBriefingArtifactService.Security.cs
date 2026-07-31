@@ -310,7 +310,7 @@ public sealed partial class VisualBriefingArtifactService
     /// <returns><see langword="true"/> when the asset is hidden in the template.</returns>
     private static bool IsHiddenInTemplate(HtmlNode node, HtmlNode root, string css)
     {
-        for (var candidate = node; candidate is not null && candidate != root; candidate = candidate.ParentNode)
+        foreach (var candidate in node.AncestorsAndSelf().TakeWhile(candidate => candidate != root))
             if (FindAttribute(candidate, "hidden") is not null || string.Equals(candidate.GetAttributeValue("aria-hidden", string.Empty), "true", StringComparison.OrdinalIgnoreCase) || IsHiddenByCss(candidate, css))
                 return true;
 
