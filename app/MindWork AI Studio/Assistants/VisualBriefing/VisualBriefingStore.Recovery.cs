@@ -50,7 +50,7 @@ public sealed partial class VisualBriefingStore
                     
                     stage.Status = VisualBriefingBuildStageStatus.COMPLETED;
                     stage.FinishedAtUtc ??= committedVersion.CreatedAtUtc;
-                    stage.OutputHash = committedVersion.PayloadHash;
+                    stage.OutputHash = committedVersion.DocumentHash;
                     stage.Failure = null;
                 }
                 
@@ -126,15 +126,24 @@ public sealed partial class VisualBriefingStore
                     continue;
 
                 var matchingBuild = builds.FirstOrDefault(build => build.RevisionId == parts.ExportManifest.RevisionId);
+                var semanticallyCompatible = VisualBriefingArtifactService.TryParseForRecompile(html, out _, out _);
                 manifest.Versions.Add(new()
                 {
                     VersionNumber = versionNumber,
+                    SchemaVersion = parts.ExportManifest.SchemaVersion,
+                    IntermediateArtifactVersion = semanticallyCompatible && matchingBuild is not null
+                        ? VisualBriefingVersions.INTERMEDIATE_ARTIFACT
+                        : 0,
+                    EvidenceContractVersion = semanticallyCompatible ? matchingBuild?.EvidenceContractVersion ?? 0 : 0,
+                    PlanContractVersion = semanticallyCompatible ? matchingBuild?.PlanContractVersion ?? 0 : 0,
+                    ContentContractVersion = semanticallyCompatible ? matchingBuild?.ContentContractVersion ?? 0 : 0,
+                    DesignContractVersion = semanticallyCompatible ? matchingBuild?.DesignContractVersion ?? 0 : 0,
                     RevisionId = parts.ExportManifest.RevisionId,
                     ParentRevisionId = parts.ExportManifest.ParentRevisionId,
                     CreatedAtUtc = parts.ExportManifest.CreatedAtUtc,
                     EditMode = matchingBuild?.Mode ?? VisualBriefingEditMode.IMPORT,
                     Instruction = matchingBuild?.Instruction ?? string.Empty,
-                    PayloadHash = parts.PayloadHash,
+                    DocumentHash = parts.DocumentHash,
                     Origin = "Recovered from disk",
                     FileName = fileName,
                     DataHash = hashes.DataHash,
@@ -142,10 +151,10 @@ public sealed partial class VisualBriefingStore
                     TemplateHash = hashes.TemplateHash,
                     CssHash = hashes.CssHash,
                     RuntimeHash = hashes.RuntimeHash,
-                    EvidenceArtifactId = matchingBuild?.EvidenceArtifactId,
-                    PlanArtifactId = matchingBuild?.PlanArtifactId,
-                    ContentArtifactId = matchingBuild?.ContentArtifactId,
-                    PresentationArtifactId = matchingBuild?.PresentationArtifactId,
+                    EvidenceArtifactId = semanticallyCompatible ? matchingBuild?.EvidenceArtifactId : null,
+                    PlanArtifactId = semanticallyCompatible ? matchingBuild?.PlanArtifactId : null,
+                    ContentArtifactId = semanticallyCompatible ? matchingBuild?.ContentArtifactId : null,
+                    PresentationArtifactId = semanticallyCompatible ? matchingBuild?.PresentationArtifactId : null,
                     BuildId = matchingBuild?.BuildId,
                     OperationId = matchingBuild?.OperationId,
                     ModelContributions = BuildRecoveredContributions(matchingBuild),

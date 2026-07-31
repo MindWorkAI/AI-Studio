@@ -25,12 +25,7 @@ public sealed partial class VisualBriefingArtifactService
     /// <param name="lockedEChartsScript">An existing chart runtime to reuse, keeping a revision reproducible.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>The complete standalone HTML document.</returns>
-    public Task<string> BuildAsync(
-        VisualBriefingManifest manifest,
-        VisualBriefingRevisionRequest request,
-        string? lockedRuntimeScript = null,
-        string? lockedEChartsScript = null,
-        CancellationToken token = default)
+    public Task<string> BuildAsync(VisualBriefingManifest manifest, VisualBriefingRevisionRequest request, string? lockedRuntimeScript = null, string? lockedEChartsScript = null, CancellationToken token = default)
     {
         token.ThrowIfCancellationRequested();
         var data = AddProtectedArtifactData(manifest, request);
@@ -51,48 +46,58 @@ public sealed partial class VisualBriefingArtifactService
         if (usesCharts && string.IsNullOrWhiteSpace(echarts))
             throw new InvalidOperationException("Apache ECharts 6.1.0 common is not available in this AI Studio build.");
 
-        var payloadHash = ComputePayloadHash(dataJson, template, css, runtime, echarts);
         var exportMetadata = request.ExportMetadataSource;
         var htmlLanguage = GetHtmlLanguage(
             exportMetadata?.TargetLanguage ?? manifest.Settings.TargetLanguage,
             exportMetadata?.CustomTargetLanguage ?? manifest.Settings.CustomTargetLanguage);
         
         var briefingName = exportMetadata?.Name ?? manifest.Name;
-        var exportManifest = CreateExportManifest(
-            manifest,
-            request,
-            payloadHash,
-            this.AIStudioVersion,
-            runtimeAIStudioVersion);
-        
-        var encodedManifest = Convert.ToBase64String(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(exportManifest, JSON_OPTIONS)));
-        var csp = GetContentSecurityPolicy(new(exportManifest, data, template, css, runtime, echarts, payloadHash));
+        var exportManifest = CreateExportManifest(manifest, request, DOCUMENT_HASH_PLACEHOLDER, this.AIStudioVersion, runtimeAIStudioVersion);
 
-        return Task.FromResult($"""
-                                <!doctype html>
-                                <html lang="{htmlLanguage}">
-                                <head>
-                                <meta charset="utf-8">
-                                <meta name="viewport" content="width=device-width,initial-scale=1">
-                                <meta http-equiv="Content-Security-Policy" content="{csp}">
-                                <meta name="referrer" content="no-referrer">
-                                <title>{HtmlEncode(briefingName)}</title>
-                                <style id="mwai-briefing-style">{css}
-                                {PROTECTED_FOOTER_CSS}</style>
-                                </head>
-                                <body>
-                                <!--{MANIFEST_MARKER}{encodedManifest}-->
-                                <script id="{DATA_ELEMENT_ID}" type="application/json">{dataJson}</script>
-                                <div id="mwai-briefing-root">{template}</div>
-                                <footer id="mwai-static-footer" class="mwai-footer">
-                                {STATIC_FOOTER_TEMPLATE}
-                                </footer>
-                                {BuildScriptTag(echarts, "mwai-echarts-runtime")}
-                                <script id="mwai-briefing-runtime">{runtime}</script>
-                                </body>
-                                </html>
-                                """);
+        var parts = new VisualBriefingArtifactParts(exportManifest, data, template, css, runtime, echarts, DOCUMENT_HASH_PLACEHOLDER);
+        var csp = GetContentSecurityPolicy(parts);
+        var placeholderDocument = AssembleDocument(exportManifest, htmlLanguage, briefingName, dataJson, template, css, runtime, echarts, csp);
+
+        exportManifest.DocumentHash = VisualBriefingHashing.Compute(placeholderDocument);
+        return Task.FromResult(AssembleDocument(exportManifest, htmlLanguage, briefingName, dataJson, template, css, runtime, echarts, csp));
     }
+
+    /// <summary>
+    /// Assembles the deterministic document around a supplied artifact header.
+    /// </summary>
+    private static string AssembleDocument(VisualBriefingExportManifest exportManifest, string htmlLanguage, string briefingName, string dataJson, string template, string css, string runtime, string? echarts, string csp)
+    {
+        var encodedHeader = EncodeHeader(exportManifest);
+        return $"""
+                <!doctype html>
+                <!--{HEADER_MARKER}{encodedHeader}-->
+                <html lang="{htmlLanguage}">
+                <head>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width,initial-scale=1">
+                <meta http-equiv="Content-Security-Policy" content="{csp}">
+                <meta name="referrer" content="no-referrer">
+                <title>{HtmlEncode(briefingName)}</title>
+                <style id="mwai-briefing-style">{css}</style>
+                <style id="mwai-protected-style">{PROTECTED_FOOTER_CSS}</style>
+                </head>
+                <body>
+                <script id="{DATA_ELEMENT_ID}" type="application/json">{dataJson}</script>
+                <div id="mwai-briefing-root">{template}</div>
+                <footer id="mwai-static-footer" class="mwai-footer">
+                {STATIC_FOOTER_TEMPLATE}
+                </footer>
+                {BuildScriptTag(echarts, "mwai-echarts-runtime")}
+                <script id="mwai-briefing-runtime">{runtime}</script>
+                </body>
+                </html>
+                """;
+    }
+
+    /// <summary>
+    /// Encodes the stable JSON artifact header for embedding in an HTML comment.
+    /// </summary>
+    private static string EncodeHeader(VisualBriefingExportManifest exportManifest) => Convert.ToBase64String(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(exportManifest, JSON_OPTIONS)));
 
     /// <summary>
     /// Defines <c>RuntimeAIVersionRegex</c> for the visual briefing feature.
@@ -109,7 +114,7 @@ public sealed partial class VisualBriefingArtifactService
     /// Defines the protected, app-owned static footer template.
     /// </summary>
     private const string STATIC_FOOTER_TEMPLATE = """
-                                                  <span data-mwai-text="_mwai.footer.createdWith"></span>
+                                                  <span>Created with <a href="https://github.com/MindWorkAI/AI-Studio" target="_blank" rel="noopener noreferrer">MindWork AI Studio</a> v<span data-mwai-text="_mwai.aiStudioVersion"></span>.</span>
                                                   <span data-mwai-text="_mwai.footer.models"></span>
                                                   <span data-mwai-text="_mwai.footer.createdAt"></span>
                                                   <span data-mwai-text="_mwai.footer.authors"></span>
@@ -149,6 +154,15 @@ public sealed partial class VisualBriefingArtifactService
                                                   visibility: visible !important;
                                                   opacity: 1 !important;
                                                 }
+                                                #mwai-static-footer a {
+                                                  display: inline !important;
+                                                  visibility: visible !important;
+                                                  opacity: 1 !important;
+                                                  color: inherit !important;
+                                                  font: inherit !important;
+                                                  text-decoration: underline !important;
+                                                  text-underline-offset: .15em !important;
+                                                }
                                                 @media print {
                                                   html, body {
                                                     background: #fffefa !important;
@@ -169,12 +183,6 @@ public sealed partial class VisualBriefingArtifactService
         var echartsHash = string.IsNullOrWhiteSpace(parts.EChartsScript) ? string.Empty : $" {ScriptCspHash(parts.EChartsScript)}";
         return $"default-src 'none'; img-src data:; style-src 'unsafe-inline'; script-src {ScriptCspHash(parts.RuntimeScript)}{echartsHash}; font-src 'none'; media-src 'none'; frame-src 'none'; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'; frame-ancestors 'self'";
     }
-
-    /// <summary>
-    /// Defines <c>ComputePayloadHash</c> for the visual briefing feature.
-    /// </summary>
-    private static string ComputePayloadHash(string dataJson, string template, string css, string runtime, string? echarts) =>
-        VisualBriefingHashing.ComputeSections(dataJson, template, css, runtime, echarts);
 
     /// <summary>
     /// Defines <c>ScriptCspHash</c> for the visual briefing feature.
@@ -238,12 +246,7 @@ public sealed partial class VisualBriefingArtifactService
     /// <summary>
     /// Defines <c>CreateExportManifest</c> for the visual briefing feature.
     /// </summary>
-    private static VisualBriefingExportManifest CreateExportManifest(
-        VisualBriefingManifest manifest,
-        VisualBriefingRevisionRequest request,
-        string payloadHash,
-        string aiStudioVersion,
-        string runtimeAIStudioVersion)
+    private static VisualBriefingExportManifest CreateExportManifest(VisualBriefingManifest manifest, VisualBriefingRevisionRequest request, string documentHash, string aiStudioVersion, string runtimeAIStudioVersion)
     {
         var source = request.ExportMetadataSource;
         return new()
@@ -265,7 +268,7 @@ public sealed partial class VisualBriefingArtifactService
             CustomProtectionLevel = source?.CustomProtectionLevel ?? manifest.Settings.CustomProtectionLevel,
             AIStudioVersion = aiStudioVersion,
             RuntimeAIStudioVersion = runtimeAIStudioVersion,
-            PayloadHash = payloadHash,
+            DocumentHash = documentHash,
         };
     }
 

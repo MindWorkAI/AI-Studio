@@ -103,7 +103,7 @@ public sealed partial class VisualBriefingStore
                 CreatedAtUtc = parts.ExportManifest.CreatedAtUtc,
                 EditMode = request.EditMode,
                 Instruction = request.Instruction,
-                PayloadHash = parts.PayloadHash,
+                DocumentHash = parts.DocumentHash,
                 Origin = request.Origin,
                 DataHash = hashes.DataHash,
                 AssetHash = hashes.AssetHash,
@@ -186,10 +186,10 @@ public sealed partial class VisualBriefingStore
             return null;
 
         var html = await File.ReadAllTextAsync(path, token);
-        if (!VisualBriefingArtifactService.TryParse(html, out var parts, out _) ||
+        if (!VisualBriefingArtifactService.TryParseForRecompile(html, out var parts, out _) ||
             parts.ExportManifest.BriefingId != briefingId ||
             parts.ExportManifest.RevisionId != revisionId ||
-            !string.Equals(parts.PayloadHash, version.PayloadHash, StringComparison.OrdinalIgnoreCase))
+            !string.Equals(parts.DocumentHash, version.DocumentHash, StringComparison.OrdinalIgnoreCase))
             return null;
 
         return parts;
@@ -221,7 +221,7 @@ public sealed partial class VisualBriefingStore
         if (!VisualBriefingArtifactService.TryParseForRecompile(html, out var parts, out _) ||
             parts.ExportManifest.BriefingId != briefingId ||
             parts.ExportManifest.RevisionId != revisionId ||
-            !string.Equals(parts.PayloadHash, version.PayloadHash, StringComparison.OrdinalIgnoreCase))
+            !string.Equals(parts.DocumentHash, version.DocumentHash, StringComparison.OrdinalIgnoreCase))
             return null;
 
         var hashes = ComputeSectionHashes(parts);
@@ -241,10 +241,7 @@ public sealed partial class VisualBriefingStore
     /// <param name="revisionId">The revision identifier.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>The positioned stream and parsed artifact, or <see langword="null"/>.</returns>
-    public async Task<(FileStream Stream, VisualBriefingArtifactParts Parts)?> OpenValidatedVersionAsync(
-        Guid briefingId,
-        Guid revisionId,
-        CancellationToken token = default)
+    public async Task<(FileStream Stream, VisualBriefingArtifactParts Parts)?> OpenIntegrityCheckedVersionAsync(Guid briefingId, Guid revisionId, CancellationToken token = default)
     {
         var manifest = await this.LoadAsync(briefingId, token);
         var version = manifest?.Versions.FirstOrDefault(candidate => candidate.RevisionId == revisionId);
@@ -260,11 +257,17 @@ public sealed partial class VisualBriefingStore
         {
             using var reader = new StreamReader(stream, Encoding.UTF8, true, 65_536, leaveOpen: true);
             var html = await reader.ReadToEndAsync(token);
-            if (!VisualBriefingArtifactService.TryParse(html, out var parts, out _) ||
+            if (!VisualBriefingArtifactService.TryParse(html, out var parts, out var issue) ||
                 parts.ExportManifest.BriefingId != briefingId ||
                 parts.ExportManifest.RevisionId != revisionId ||
-                !string.Equals(parts.PayloadHash, version.PayloadHash, StringComparison.OrdinalIgnoreCase))
+                !string.Equals(parts.DocumentHash, version.DocumentHash, StringComparison.OrdinalIgnoreCase))
             {
+                logger.LogWarning(
+                    new EventId((int)VisualBriefingLogEventId.SECURITY_REJECTED, nameof(VisualBriefingLogEventId.SECURITY_REJECTED)),
+                    "Visual briefing document integrity check failed. BriefingId={BriefingId} RevisionId={RevisionId} Issue={Issue}",
+                    briefingId,
+                    revisionId,
+                    string.IsNullOrWhiteSpace(issue) ? "The stored header does not match the requested revision or project manifest." : issue);
                 await stream.DisposeAsync();
                 return null;
             }
@@ -296,7 +299,7 @@ public sealed partial class VisualBriefingStore
             if (!importNameConflictAsCopy)
                 return new(false, existing.BriefingId, export.RevisionId, true, false, "The briefing ID exists locally under a different name.");
 
-            return await this.ImportCopyAsync(parts, token);
+            return await this.ImportCopyAsync(html, parts, token);
         }
 
         if (existing is null)
@@ -317,9 +320,10 @@ public sealed partial class VisualBriefingStore
             var knownRevision = existing.Versions.FirstOrDefault(version => version.RevisionId == export.RevisionId);
             if (knownRevision is not null)
             {
-                if (string.Equals(knownRevision.PayloadHash, parts.PayloadHash, StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(knownRevision.DocumentHash, parts.DocumentHash, StringComparison.OrdinalIgnoreCase))
                 {
-                    if (await this.ReadVersionPartsAsync(existing.BriefingId, knownRevision.RevisionId, token) is null)
+                    var storedVersion = await this.OpenIntegrityCheckedVersionAsync(existing.BriefingId, knownRevision.RevisionId, token);
+                    if (storedVersion is null)
                     {
                         await WriteTextAtomicAsync(this.VersionPath(existing.BriefingId, knownRevision), html, token);
                         var restoredHashes = ComputeSectionHashes(parts);
@@ -331,41 +335,48 @@ public sealed partial class VisualBriefingStore
                         existing.ModifiedAtUtc = DateTimeOffset.UtcNow;
                         await this.StoreManifestAtomicAsync(existing, token);
                     }
+                    else
+                        await storedVersion.Value.Stream.DisposeAsync();
 
                     return new(true, existing.BriefingId, export.RevisionId, false, true, string.Empty);
                 }
 
-                return new(false, existing.BriefingId, export.RevisionId, false, false, "The revision ID exists with a different payload hash.");
+                return new(false, existing.BriefingId, export.RevisionId, false, false, "The revision ID exists with a different document hash.");
             }
 
             var hashes = ComputeSectionHashes(parts);
-            var importedArtifacts = await this.MaterializeImportedArtifactsAsync(
-                existing.BriefingId,
-                parts,
-                projectLockHeld: true,
-                token: token);
+            (VisualBriefingContentArtifact Content, VisualBriefingPresentationArtifact Presentation)? importedArtifacts = null;
+            
+            if (VisualBriefingArtifactService.TryParseForRecompile(html, out var compatibleParts, out _))
+                importedArtifacts = await this.MaterializeImportedArtifactsAsync(existing.BriefingId, compatibleParts, projectLockHeld: true, token: token);
             
             var version = new VisualBriefingVersion
             {
                 VersionNumber = this.NextVersionNumber(existing),
+                SchemaVersion = export.SchemaVersion,
+                IntermediateArtifactVersion = importedArtifacts is null ? 0 : VisualBriefingVersions.INTERMEDIATE_ARTIFACT,
+                EvidenceContractVersion = importedArtifacts is null ? 0 : VisualBriefingVersions.EVIDENCE_CONTRACT,
+                PlanContractVersion = importedArtifacts is null ? 0 : VisualBriefingVersions.PLAN_CONTRACT,
+                ContentContractVersion = importedArtifacts is null ? 0 : VisualBriefingVersions.CONTENT_CONTRACT,
+                DesignContractVersion = importedArtifacts is null ? 0 : VisualBriefingVersions.DESIGN_CONTRACT,
                 RevisionId = export.RevisionId,
                 ParentRevisionId = export.ParentRevisionId,
                 CreatedAtUtc = export.CreatedAtUtc,
                 EditMode = VisualBriefingEditMode.IMPORT,
-                PayloadHash = parts.PayloadHash,
+                DocumentHash = parts.DocumentHash,
                 Origin = Path.GetFileName(sourcePath),
                 DataHash = hashes.DataHash,
                 AssetHash = hashes.AssetHash,
                 TemplateHash = hashes.TemplateHash,
                 CssHash = hashes.CssHash,
                 RuntimeHash = hashes.RuntimeHash,
-                ContentArtifactId = importedArtifacts.Content.ArtifactId,
-                PresentationArtifactId = importedArtifacts.Presentation.ArtifactId,
-                ModelContributions =
+                ContentArtifactId = importedArtifacts?.Content.ArtifactId,
+                PresentationArtifactId = importedArtifacts?.Presentation.ArtifactId,
+                ModelContributions = importedArtifacts is { } artifacts ?
                 [
-                    new(VisualBriefingModelRole.CONTENT, importedArtifacts.Content.Model),
-                    new(VisualBriefingModelRole.DESIGN, importedArtifacts.Presentation.Model),
-                ],
+                    new(VisualBriefingModelRole.CONTENT, artifacts.Content.Model),
+                    new(VisualBriefingModelRole.DESIGN, artifacts.Presentation.Model),
+                ] : [],
             };
             
             version.FileName = $"{version.VersionNumber:000000}-{version.RevisionId:D}.html";
@@ -389,8 +400,11 @@ public sealed partial class VisualBriefingStore
     /// <summary>
     /// Defines <c>ImportCopyAsync</c> for the visual briefing feature.
     /// </summary>
-    private async Task<VisualBriefingImportResult> ImportCopyAsync(VisualBriefingArtifactParts parts, CancellationToken token)
+    private async Task<VisualBriefingImportResult> ImportCopyAsync(string html, VisualBriefingArtifactParts parts, CancellationToken token)
     {
+        if (!VisualBriefingArtifactService.TryParseForRecompile(html, out parts, out _))
+            return new(false, Guid.Empty, Guid.Empty, false, false, "This historical briefing can be imported under its original identity, but it cannot be rewritten as a copy with the current compiler.");
+
         var copyId = Guid.NewGuid();
         var manifest = await this.CreateAsync(
             parts.ExportManifest.Name,

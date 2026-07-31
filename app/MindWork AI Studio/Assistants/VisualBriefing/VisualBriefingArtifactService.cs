@@ -15,9 +15,14 @@ namespace AIStudio.Assistants.VisualBriefing;
 public sealed partial class VisualBriefingArtifactService
 {
     /// <summary>
-    /// Marks the Base64 compatibility manifest embedded in standalone HTML.
+    /// Marks the Base64 artifact header embedded at the start of standalone HTML.
     /// </summary>
-    private const string MANIFEST_MARKER = "MWAI_VISUAL_BRIEFING_MANIFEST:";
+    private const string HEADER_MARKER = "MWAI_VISUAL_BRIEFING_HEADER:";
+
+    /// <summary>
+    /// Breaks the circular dependency while hashing a document that carries its own hash.
+    /// </summary>
+    private const string DOCUMENT_HASH_PLACEHOLDER = "0000000000000000000000000000000000000000000000000000000000000000";
 
     /// <summary>
     /// Identifies the canonical JSON script element.
@@ -89,12 +94,6 @@ public sealed partial class VisualBriefingArtifactService
         document.LoadHtml($"<div id=\"mwai-canonical-root\">{NormalizeTemplate(template)}</div>");
         return NormalizeTemplate(FindElementById(document, "mwai-canonical-root")?.InnerHtml ?? string.Empty);
     }
-
-    /// <summary>
-    /// Defines <c>GetHtmlLanguage</c> for the visual briefing feature.
-    /// </summary>
-    private static string GetHtmlLanguage(VisualBriefingLocalSettings settings) =>
-        GetHtmlLanguage(settings.TargetLanguage, settings.CustomTargetLanguage);
 
     /// <summary>
     /// Defines <c>GetHtmlLanguage</c> for the visual briefing feature.

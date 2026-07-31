@@ -5,6 +5,24 @@ namespace AIStudio.Assistants.VisualBriefing;
 /// </summary>
 public sealed class VisualBriefingVersion
 {
+    /// <summary>Gets or sets the canonical data schema used by this revision.</summary>
+    public int SchemaVersion { get; set; } = VisualBriefingVersions.SCHEMA;
+
+    /// <summary>Gets or sets the semantic intermediate-artifact format.</summary>
+    public int IntermediateArtifactVersion { get; set; } = VisualBriefingVersions.INTERMEDIATE_ARTIFACT;
+
+    /// <summary>Gets or sets the evidence contract used by this revision.</summary>
+    public int EvidenceContractVersion { get; set; } = VisualBriefingVersions.EVIDENCE_CONTRACT;
+
+    /// <summary>Gets or sets the plan contract used by this revision.</summary>
+    public int PlanContractVersion { get; set; } = VisualBriefingVersions.PLAN_CONTRACT;
+
+    /// <summary>Gets or sets the content contract used by this revision.</summary>
+    public int ContentContractVersion { get; set; } = VisualBriefingVersions.CONTENT_CONTRACT;
+
+    /// <summary>Gets or sets the design contract used by this revision.</summary>
+    public int DesignContractVersion { get; set; } = VisualBriefingVersions.DESIGN_CONTRACT;
+
     /// <summary>
     /// Defines <c>VersionNumber</c> for the visual briefing feature.
     /// </summary>
@@ -36,9 +54,9 @@ public sealed class VisualBriefingVersion
     public string Instruction { get; set; } = string.Empty;
 
     /// <summary>
-    /// Defines <c>PayloadHash</c> for the visual briefing feature.
+    /// Gets or sets the SHA-256 hash of the complete standalone HTML document.
     /// </summary>
-    public string PayloadHash { get; set; } = string.Empty;
+    public string DocumentHash { get; set; } = string.Empty;
 
     /// <summary>
     /// Defines <c>Origin</c> for the visual briefing feature.

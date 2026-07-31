@@ -45,7 +45,7 @@ internal static class VisualBriefingPreviewEndpoint
 
             // The store re-validates the stored artifact before handing out a stream, so a manually
             // modified file on disk never reaches the preview:
-            var preview = await store.OpenValidatedVersionAsync(briefingId, revisionId, cancellationToken);
+            var preview = await store.OpenIntegrityCheckedVersionAsync(briefingId, revisionId, cancellationToken);
             if (preview is null)
             {
                 logger.LogWarning(

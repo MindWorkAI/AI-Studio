@@ -394,13 +394,13 @@ internal sealed partial class VisualBriefingBuildOrchestrator
 
             assemblyStage.Status = VisualBriefingBuildStageStatus.COMPLETED;
             assemblyStage.FinishedAtUtc = DateTimeOffset.UtcNow;
-            assemblyStage.OutputHash = revision.Version.PayloadHash;
+            assemblyStage.OutputHash = revision.Version.DocumentHash;
             
             commitStage.Status = VisualBriefingBuildStageStatus.COMPLETED;
             commitStage.StartedAtUtc ??= assemblyStage.FinishedAtUtc;
             commitStage.FinishedAtUtc = DateTimeOffset.UtcNow;
-            commitStage.InputFingerprint = revision.Version.PayloadHash;
-            commitStage.OutputHash = revision.Version.PayloadHash;
+            commitStage.InputFingerprint = revision.Version.DocumentHash;
+            commitStage.OutputHash = revision.Version.DocumentHash;
             
             build.CommittedRevisionId = revision.Version.RevisionId;
             build.Status = VisualBriefingBuildStatus.COMPLETED;
@@ -410,10 +410,10 @@ internal sealed partial class VisualBriefingBuildOrchestrator
             await this.store.SaveBuildAsync(build, token);
             this.progressService.Publish(build);
             
-            diagnostics.ContentHashes["payload"] = revision.Version.PayloadHash;
+            diagnostics.ContentHashes["document"] = revision.Version.DocumentHash;
             diagnostics.FinishedAtUtc = DateTimeOffset.UtcNow;
             
-            this.logger.LogInformation(Event(VisualBriefingLogEventId.REVISION_COMMITTED), "Visual briefing revision committed. OperationId={OperationId} BuildId={BuildId} VersionNumber={VersionNumber} RevisionId={RevisionId} PayloadHash={PayloadHash}", build.OperationId, build.BuildId, revision.Version.VersionNumber, revision.Version.RevisionId, revision.Version.PayloadHash);
+            this.logger.LogInformation(Event(VisualBriefingLogEventId.REVISION_COMMITTED), "Visual briefing revision committed. OperationId={OperationId} BuildId={BuildId} VersionNumber={VersionNumber} RevisionId={RevisionId} DocumentHash={DocumentHash}", build.OperationId, build.BuildId, revision.Version.VersionNumber, revision.Version.RevisionId, revision.Version.DocumentHash);
             return new(true, revision.Version, string.Empty, VisualBriefingFailureCode.NONE, diagnostics, false);
         }
         catch (OperationCanceledException)

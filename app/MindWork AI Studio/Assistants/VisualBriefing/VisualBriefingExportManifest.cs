@@ -108,7 +108,7 @@ public sealed class VisualBriefingExportManifest
     public string RuntimeAIStudioVersion { get; set; } = string.Empty;
 
     /// <summary>
-    /// Defines <c>PayloadHash</c> for the visual briefing feature.
+    /// Gets or sets the SHA-256 hash of the complete standalone HTML document.
     /// </summary>
-    public string PayloadHash { get; set; } = string.Empty;
+    public string DocumentHash { get; set; } = string.Empty;
 }

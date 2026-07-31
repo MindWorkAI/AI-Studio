@@ -11,7 +11,7 @@ namespace AIStudio.Assistants.VisualBriefing;
 /// <param name="Css">The safe presentation stylesheet.</param>
 /// <param name="RuntimeScript">The embedded AI Studio runtime.</param>
 /// <param name="EChartsScript">The optional embedded Apache ECharts runtime.</param>
-/// <param name="PayloadHash">The protected payload hash.</param>
+/// <param name="DocumentHash">The SHA-256 hash of the complete standalone document.</param>
 public sealed record VisualBriefingArtifactParts(
     VisualBriefingExportManifest ExportManifest,
     JsonElement Data,
@@ -19,4 +19,4 @@ public sealed record VisualBriefingArtifactParts(
     string Css,
     string RuntimeScript,
     string? EChartsScript,
-    string PayloadHash);
+    string DocumentHash);

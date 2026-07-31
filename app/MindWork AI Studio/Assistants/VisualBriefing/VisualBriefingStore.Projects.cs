@@ -373,9 +373,15 @@ public sealed partial class VisualBriefingStore
         {
             if (version.VersionNumber <= 0 ||
                 version.RevisionId == Guid.Empty ||
-                string.IsNullOrWhiteSpace(version.PayloadHash) ||
-                version.PayloadHash.Length != 64 ||
-                !version.PayloadHash.All(Uri.IsHexDigit) ||
+                version.SchemaVersion <= 0 ||
+                version.IntermediateArtifactVersion < 0 ||
+                version.EvidenceContractVersion < 0 ||
+                version.PlanContractVersion < 0 ||
+                version.ContentContractVersion < 0 ||
+                version.DesignContractVersion < 0 ||
+                string.IsNullOrWhiteSpace(version.DocumentHash) ||
+                version.DocumentHash.Length != 64 ||
+                !version.DocumentHash.All(Uri.IsHexDigit) ||
                 !string.Equals(
                     version.FileName,
                     $"{version.VersionNumber:000000}-{version.RevisionId:D}.html",

@@ -21,6 +21,12 @@ public partial class VisualBriefingAssistant
         this.selectedBriefing?.Versions.FirstOrDefault(version =>
             version.RevisionId == revisionId) is
         {
+            SchemaVersion: VisualBriefingVersions.SCHEMA,
+            IntermediateArtifactVersion: VisualBriefingVersions.INTERMEDIATE_ARTIFACT,
+            EvidenceContractVersion: VisualBriefingVersions.EVIDENCE_CONTRACT,
+            PlanContractVersion: VisualBriefingVersions.PLAN_CONTRACT,
+            ContentContractVersion: VisualBriefingVersions.CONTENT_CONTRACT,
+            DesignContractVersion: VisualBriefingVersions.DESIGN_CONTRACT,
             EvidenceArtifactId: not null,
             PlanArtifactId: not null,
             ContentArtifactId: not null,
@@ -99,12 +105,6 @@ public partial class VisualBriefingAssistant
         if (sourcePath is null)
             return;
 
-        if (await this.Store.ReadVersionPartsAsync(this.selectedBriefing.BriefingId, this.selectedRevisionId) is null)
-        {
-            this.Snackbar.Add(T("The selected briefing version failed validation and cannot be exported."), Severity.Error);
-            return;
-        }
-
         if (!await this.ConfirmLargeFileAsync(sourcePath, T("export")))
             return;
 
@@ -122,7 +122,14 @@ public partial class VisualBriefingAssistant
             return;
         }
 
-        await using var source = new FileStream(sourcePath, FileMode.Open, FileAccess.Read, FileShare.Read, 65_536, true);
+        var verified = await this.Store.OpenIntegrityCheckedVersionAsync(this.selectedBriefing.BriefingId, this.selectedRevisionId);
+        if (verified is null)
+        {
+            this.Snackbar.Add(T("The selected briefing version failed its integrity check and cannot be exported."), Severity.Error);
+            return;
+        }
+
+        await using var source = verified.Value.Stream;
         await using var destination = new FileStream(response.SaveFilePath, FileMode.Create, FileAccess.Write, FileShare.None, 65_536, true);
         await source.CopyToAsync(destination);
 
@@ -131,12 +138,12 @@ public partial class VisualBriefingAssistant
 
         this.Logger.LogInformation(
             new EventId((int)VisualBriefingLogEventId.EXPORT, VisualBriefingLogEventId.EXPORT.ToString()),
-            "Visual briefing version exported. OperationId={OperationId} BuildId={BuildId} BriefingId={BriefingId} RevisionId={RevisionId} PayloadHash={PayloadHash} Bytes={Bytes}",
+            "Visual briefing version exported. OperationId={OperationId} BuildId={BuildId} BriefingId={BriefingId} RevisionId={RevisionId} DocumentHash={DocumentHash} Bytes={Bytes}",
             exportedVersion.OperationId,
             exportedVersion.BuildId,
             this.selectedBriefing.BriefingId,
             exportedVersion.RevisionId,
-            exportedVersion.PayloadHash,
+            exportedVersion.DocumentHash,
             source.Length);
 
         this.Snackbar.Add(T("The visual briefing was exported."), Severity.Success);

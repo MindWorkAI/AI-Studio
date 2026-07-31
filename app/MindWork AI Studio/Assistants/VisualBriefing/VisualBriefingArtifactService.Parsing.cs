@@ -9,195 +9,147 @@ namespace AIStudio.Assistants.VisualBriefing;
 public sealed partial class VisualBriefingArtifactService
 {
     /// <summary>
-    /// Defines <c>ManifestRegex</c> for the visual briefing feature.
+    /// Matches the version-independent artifact header at the start of standalone HTML.
     /// </summary>
-    private static readonly Regex MANIFEST_REGEX = ManifestRegex();
+    private static readonly Regex HEADER_REGEX = HeaderRegex();
 
     /// <summary>
-    /// Defines <c>ManifestRegex</c> for the visual briefing feature.
+    /// Matches the version-independent artifact header at the start of standalone HTML.
     /// </summary>
-    [GeneratedRegex("<!--MWAI_VISUAL_BRIEFING_MANIFEST:(?<value>[A-Za-z0-9+/=]+)-->", RegexOptions.CultureInvariant)]
-    private static partial Regex ManifestRegex();
+    [GeneratedRegex(@"\A<!doctype html>\n<!--MWAI_VISUAL_BRIEFING_HEADER:(?<value>[A-Za-z0-9+/=]+)-->\n", RegexOptions.CultureInvariant)]
+    private static partial Regex HeaderRegex();
 
     /// <summary>
-    /// Defines <c>StyleRegex</c> for the visual briefing feature.
+    /// Matches the generated presentation stylesheet.
     /// </summary>
     private static readonly Regex STYLE_REGEX = StyleRegex();
 
     /// <summary>
-    /// Defines <c>StyleRegex</c> for the visual briefing feature.
+    /// Matches the generated presentation stylesheet.
     /// </summary>
     [GeneratedRegex("""<style\s+id="mwai-briefing-style">(?<value>[\s\S]*?)</style>""", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex StyleRegex();
 
     /// <summary>
-    /// Defines <c>RuntimeRegex</c> for the visual briefing feature.
+    /// Matches the embedded declarative runtime.
     /// </summary>
     private static readonly Regex RUNTIME_REGEX = RuntimeRegex();
 
     /// <summary>
-    /// Defines <c>RuntimeRegex</c> for the visual briefing feature.
+    /// Matches the embedded declarative runtime.
     /// </summary>
     [GeneratedRegex("""<script\s+id="mwai-briefing-runtime">(?<value>[\s\S]*?)</script>""", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex RuntimeRegex();
 
     /// <summary>
-    /// Defines <c>EChartsRegex</c> for the visual briefing feature.
+    /// Matches the optional embedded chart runtime.
     /// </summary>
     private static readonly Regex ECHARTS_REGEX = EChartsRegex();
 
     /// <summary>
-    /// Defines <c>EChartsRegex</c> for the visual briefing feature.
+    /// Matches the optional embedded chart runtime.
     /// </summary>
     [GeneratedRegex("""<script\s+id="mwai-echarts-runtime">(?<value>[\s\S]*?)</script>""", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex EChartsRegex();
 
     /// <summary>
-    /// Parses a standalone artifact using the current runtime contract.
+    /// Reads an intact standalone artifact without applying current compiler or runtime rules.
     /// </summary>
-    /// <param name="html">The complete standalone HTML document.</param>
-    /// <param name="parts">The validated artifact parts.</param>
-    /// <param name="issue">The user-safe validation issue.</param>
-    /// <returns>Whether the artifact is valid for the current runtime.</returns>
-    public static bool TryParse(string html, out VisualBriefingArtifactParts parts, out string issue) => TryParse(html, allowOutdatedRuntime: false, out parts, out issue);
-
-    /// <summary>
-    /// Parses a locally stored parent artifact for recompilation while allowing a previous runtime
-    /// bundle that will be discarded before the new revision is assembled.
-    /// </summary>
-    /// <param name="html">The complete standalone HTML document.</param>
-    /// <param name="parts">The validated artifact parts.</param>
-    /// <param name="issue">The user-safe validation issue.</param>
-    /// <returns>Whether the artifact is structurally valid for recompilation.</returns>
-    internal static bool TryParseForRecompile(string html, out VisualBriefingArtifactParts parts, out string issue) => TryParse(html, allowOutdatedRuntime: true, out parts, out issue);
-
-    /// <summary>
-    /// Parses and validates a standalone artifact under the selected runtime policy.
-    /// </summary>
-    /// <param name="html">The complete standalone HTML document.</param>
-    /// <param name="allowOutdatedRuntime">Whether a previous runtime bundle may be read but never reused.</param>
-    /// <param name="parts">The validated artifact parts.</param>
-    /// <param name="issue">The user-safe validation issue.</param>
-    /// <returns>Whether the artifact passed all applicable checks.</returns>
-    private static bool TryParse(string html, bool allowOutdatedRuntime, out VisualBriefingArtifactParts parts, out string issue)
+    public static bool TryParse(string html, out VisualBriefingArtifactParts parts, out string issue)
     {
         parts = null!;
         issue = string.Empty;
-        
+
         if (string.IsNullOrWhiteSpace(html))
         {
             issue = "The briefing file is empty.";
             return false;
         }
 
-        if (!html.StartsWith("<!doctype html>\n", StringComparison.Ordinal) ||
-            !html.EndsWith("</html>", StringComparison.Ordinal))
+        if (!html.EndsWith("</html>", StringComparison.Ordinal))
         {
-            issue = "The briefing document wrapper is invalid or modified.";
+            issue = "The briefing document wrapper is invalid or incomplete.";
             return false;
         }
 
-        var manifestMatch = MANIFEST_REGEX.Match(html);
-        if (!manifestMatch.Success)
+        var headerMatch = HEADER_REGEX.Match(html);
+        if (!headerMatch.Success)
         {
-            issue = "The briefing compatibility manifest is missing.";
+            issue = "The briefing artifact header is missing or misplaced.";
             return false;
         }
 
         VisualBriefingExportManifest? exportManifest;
         try
         {
-            var json = Encoding.UTF8.GetString(Convert.FromBase64String(manifestMatch.Groups["value"].Value));
-            using var manifestDocument = JsonDocument.Parse(json);
-            exportManifest = HasDuplicateProperties(manifestDocument.RootElement)
+            var json = Encoding.UTF8.GetString(Convert.FromBase64String(headerMatch.Groups["value"].Value));
+            using var headerDocument = JsonDocument.Parse(json);
+            exportManifest = HasDuplicateProperties(headerDocument.RootElement)
                 ? null
-                : manifestDocument.RootElement.Deserialize<VisualBriefingExportManifest>(JSON_OPTIONS);
+                : headerDocument.RootElement.Deserialize<VisualBriefingExportManifest>(JSON_OPTIONS);
         }
         catch (Exception exception) when (exception is FormatException or JsonException)
         {
-            issue = "The briefing compatibility manifest is invalid.";
+            issue = "The briefing artifact header is invalid.";
             return false;
         }
 
-        if (exportManifest is null ||
-            exportManifest.ArtifactVersion != VisualBriefingVersions.ARTIFACT ||
-            exportManifest.SchemaVersion != VisualBriefingVersions.SCHEMA ||
-            exportManifest.RuntimeVersion <= 0 ||
-            exportManifest.RuntimeVersion > VisualBriefingVersions.RUNTIME ||
-            (!allowOutdatedRuntime &&
-             exportManifest.RuntimeVersion != VisualBriefingVersions.RUNTIME) ||
-            exportManifest.BriefingId == Guid.Empty ||
-            exportManifest.RevisionId == Guid.Empty ||
-            string.IsNullOrWhiteSpace(exportManifest.Name) ||
-            string.IsNullOrWhiteSpace(exportManifest.AIStudioVersion) ||
-            string.IsNullOrWhiteSpace(exportManifest.RuntimeAIStudioVersion) ||
-            string.IsNullOrWhiteSpace(exportManifest.PayloadHash) ||
-            exportManifest.PayloadHash.Length != 64 ||
-            !exportManifest.PayloadHash.All(Uri.IsHexDigit) ||
-            exportManifest.TargetLanguage is CommonLanguages.OTHER &&
-            string.IsNullOrWhiteSpace(exportManifest.CustomTargetLanguage) ||
-            exportManifest.ProtectionLevel is VisualBriefingProtectionLevel.OTHER &&
-            string.IsNullOrWhiteSpace(exportManifest.CustomProtectionLevel))
+        if (!ValidateHeader(exportManifest, out issue))
+            return false;
+
+        var documentHash = exportManifest!.DocumentHash;
+        exportManifest.DocumentHash = DOCUMENT_HASH_PLACEHOLDER;
+        var placeholderHeader = $"<!doctype html>\n<!--{HEADER_MARKER}{EncodeHeader(exportManifest)}-->\n";
+        exportManifest.DocumentHash = documentHash;
+        var placeholderDocument = placeholderHeader + html[headerMatch.Length..];
+        var computedDocumentHash = VisualBriefingHashing.Compute(placeholderDocument);
+        if (!string.Equals(computedDocumentHash, documentHash, StringComparison.OrdinalIgnoreCase))
         {
-            issue = "The briefing uses an unsupported or invalid artifact version.";
+            issue = "The briefing document hash does not match its contents.";
             return false;
         }
 
         var document = new HtmlDocument();
         document.LoadHtml(html);
-        
-        var dataNode = FindElementById(document, DATA_ELEMENT_ID);
-        var rootNode = FindElementById(document, "mwai-briefing-root");
-        var footerNode = FindElementById(document, "mwai-static-footer");
-        var headNode = FindNode(document.DocumentNode, "//head");
-        var bodyNode = FindNode(document.DocumentNode, "//body");
-        var htmlNode = FindNode(document.DocumentNode, "//html");
+
+        var htmlNode = FindUniqueNode(document, "//html");
+        var headNode = FindUniqueNode(document, "//head");
+        var bodyNode = FindUniqueNode(document, "//body");
+        var dataNode = FindUniqueElementById(document, DATA_ELEMENT_ID);
+        var rootNode = FindUniqueElementById(document, "mwai-briefing-root");
+        var footerNode = FindUniqueElementById(document, "mwai-static-footer");
+        var generatedStyleNode = FindUniqueElementById(document, "mwai-briefing-style");
+        var protectedStyleNode = FindUniqueElementById(document, "mwai-protected-style");
+        var runtimeNode = FindUniqueElementById(document, "mwai-briefing-runtime");
+        var echartsNode = FindUniqueElementById(document, "mwai-echarts-runtime");
         var styleMatch = STYLE_REGEX.Match(html);
         var runtimeMatch = RUNTIME_REGEX.Match(html);
-        
-        if (dataNode is null || rootNode is null || footerNode is null || headNode is null || bodyNode is null ||
-            htmlNode is null || !styleMatch.Success || !runtimeMatch.Success)
+        var echartsMatch = ECHARTS_REGEX.Match(html);
+
+        if (htmlNode is null || headNode is null || bodyNode is null || dataNode is null || rootNode is null ||
+            footerNode is null || generatedStyleNode is null || protectedStyleNode is null || runtimeNode is null ||
+            !styleMatch.Success || !runtimeMatch.Success || (echartsNode is not null) != echartsMatch.Success)
         {
-            issue = "The briefing structure is incomplete.";
+            issue = "The briefing envelope is incomplete or ambiguous.";
             return false;
         }
 
-        var headChildren = headNode.ChildNodes.Where(node => node.NodeType is HtmlNodeType.Element).ToArray();
-        var metaNodes = headChildren.Where(node => node.Name.Equals("meta", StringComparison.OrdinalIgnoreCase)).ToArray();
-        var styleNodes = headChildren.Where(node => node.Name.Equals("style", StringComparison.OrdinalIgnoreCase)).ToArray();
-        var titleNodes = headChildren.Where(node => node.Name.Equals("title", StringComparison.OrdinalIgnoreCase)).ToArray();
-        
-        if (headChildren.Length != 6 ||
-            metaNodes.Length != 4 ||
-            styleNodes.Length != 1 ||
-            titleNodes.Length != 1 ||
-            metaNodes.Count(node => string.Equals(node.GetAttributeValue("charset", string.Empty), "utf-8", StringComparison.OrdinalIgnoreCase)) != 1 ||
-            metaNodes.Count(node => string.Equals(node.GetAttributeValue("name", string.Empty), "viewport", StringComparison.OrdinalIgnoreCase) &&
-                                    string.Equals(node.GetAttributeValue("content", string.Empty), "width=device-width,initial-scale=1", StringComparison.Ordinal)) != 1 ||
-            metaNodes.Count(node => string.Equals(node.GetAttributeValue("http-equiv", string.Empty), "Content-Security-Policy", StringComparison.OrdinalIgnoreCase)) != 1 ||
-            metaNodes.Count(node => string.Equals(node.GetAttributeValue("name", string.Empty), "referrer", StringComparison.OrdinalIgnoreCase) &&
-                                    string.Equals(node.GetAttributeValue("content", string.Empty), "no-referrer", StringComparison.OrdinalIgnoreCase)) != 1 ||
-            metaNodes.Any(node => FindAttribute(node, "charset") is not null
-                ? !HasExactAttributes(node, "charset")
-                : !HasExactAttributes(node, FindAttribute(node, "http-equiv") is not null ? "http-equiv" : "name", "content")) ||
-            styleNodes[0].Id != "mwai-briefing-style" ||
-            !HasExactAttributes(styleNodes[0], "id") ||
-            !HasExactAttributes(titleNodes[0]) ||
-            !string.Equals(titleNodes[0].InnerText, exportManifest.Name, StringComparison.Ordinal) ||
-            !HasExactAttributes(headNode) ||
-            !HasExactAttributes(bodyNode) ||
-            !HasExactAttributes(htmlNode, "lang") ||
-            !string.Equals(
-                htmlNode.GetAttributeValue("lang", string.Empty),
-                GetHtmlLanguage(exportManifest.TargetLanguage, exportManifest.CustomTargetLanguage),
-                StringComparison.Ordinal))
+        var scriptNodes = FindNodes(document.DocumentNode, "//script")?.ToArray() ?? [];
+        var styleNodes = FindNodes(document.DocumentNode, "//style")?.ToArray() ?? [];
+        if (scriptNodes.Any(node => node.Id is not DATA_ELEMENT_ID and not "mwai-echarts-runtime" and not "mwai-briefing-runtime") ||
+            scriptNodes.Count(node => node.Id == DATA_ELEMENT_ID) != 1 ||
+            scriptNodes.Count(node => node.Id == "mwai-briefing-runtime") != 1 ||
+            scriptNodes.Count(node => node.Id == "mwai-echarts-runtime") > 1 ||
+            styleNodes.Length != 2 ||
+            styleNodes.Count(node => node.Id == "mwai-briefing-style") != 1 ||
+            styleNodes.Count(node => node.Id == "mwai-protected-style") != 1 ||
+            !string.Equals(dataNode.GetAttributeValue("type", string.Empty), "application/json", StringComparison.OrdinalIgnoreCase))
         {
-            issue = "The briefing head or document structure was modified.";
+            issue = "The briefing contains unknown or duplicated executable resources.";
             return false;
         }
 
         var bodyChildren = FindNodes(document.DocumentNode, "//body/*")?.ToArray() ?? [];
-        var bodyComments = bodyNode.ChildNodes.Where(node => node.NodeType is HtmlNodeType.Comment).ToArray();
         var allowedBodyIds = new HashSet<string>(StringComparer.Ordinal)
         {
             DATA_ELEMENT_ID,
@@ -206,34 +158,10 @@ public sealed partial class VisualBriefingArtifactService
             "mwai-echarts-runtime",
             "mwai-briefing-runtime",
         };
-        
         if (bodyChildren.Any(node => !allowedBodyIds.Contains(node.Id)) ||
-            bodyChildren.Select(node => node.Id).Distinct(StringComparer.Ordinal).Count() != bodyChildren.Length ||
-            bodyComments.Length != 1 ||
-            !string.Equals(
-                bodyComments[0].OuterHtml,
-                $"<!--{MANIFEST_MARKER}{manifestMatch.Groups["value"].Value}-->",
-                StringComparison.Ordinal) ||
-            bodyNode.ChildNodes.Any(node =>
-                node.NodeType is HtmlNodeType.Text && !string.IsNullOrWhiteSpace(node.InnerText)) ||
-            CanonicalizeTemplate(footerNode.InnerHtml) != CanonicalizeTemplate(STATIC_FOOTER_TEMPLATE) ||
-            !HasExactAttributes(dataNode, "id", "type") ||
-            !HasExactAttributes(rootNode, "id") ||
-            !HasExactAttributes(footerNode, "id", "class") ||
-            !string.Equals(footerNode.GetAttributeValue("class", string.Empty), "mwai-footer", StringComparison.Ordinal))
+            bodyChildren.Select(node => node.Id).Distinct(StringComparer.Ordinal).Count() != bodyChildren.Length)
         {
-            issue = "The briefing body or static footer structure was modified.";
-            return false;
-        }
-
-        var scriptNodes = FindNodes(document.DocumentNode, "//script")?.ToArray() ?? [];
-        if (scriptNodes.Any(node => node.Id is not DATA_ELEMENT_ID and not "mwai-echarts-runtime" and not "mwai-briefing-runtime") ||
-            scriptNodes.Count(node => node.Id == DATA_ELEMENT_ID) != 1 ||
-            scriptNodes.Count(node => node.Id == "mwai-briefing-runtime") != 1 ||
-            scriptNodes.Any(node => node.Id != DATA_ELEMENT_ID && !HasExactAttributes(node, "id")) ||
-            !string.Equals(dataNode.GetAttributeValue("type", string.Empty), "application/json", StringComparison.OrdinalIgnoreCase))
-        {
-            issue = "The briefing contains an unknown or duplicated script element.";
+            issue = "The briefing body contains elements outside the stable artifact envelope.";
             return false;
         }
 
@@ -249,88 +177,110 @@ public sealed partial class VisualBriefingArtifactService
             return false;
         }
 
-        var protectedDataIssue = ValidateProtectedData(exportManifest, data);
-        if (!string.IsNullOrEmpty(protectedDataIssue))
-        {
-            issue = protectedDataIssue;
-            return false;
-        }
-
         var template = CanonicalizeTemplate(rootNode.InnerHtml);
-        var combinedCss = styleMatch.Groups["value"].Value.Trim();
-        const string PROTECTED_CSS_SUFFIX = $"\n{PROTECTED_FOOTER_CSS}";
-        
-        if (!combinedCss.EndsWith(PROTECTED_CSS_SUFFIX, StringComparison.Ordinal))
-        {
-            issue = "The protected briefing footer stylesheet is missing or modified.";
-            return false;
-        }
-        
-        var css = combinedCss[..^PROTECTED_CSS_SUFFIX.Length].Trim();
+        var css = styleMatch.Groups["value"].Value.Trim();
         var runtime = runtimeMatch.Groups["value"].Value;
-        var echartsMatch = ECHARTS_REGEX.Match(html);
         var echarts = echartsMatch.Success ? echartsMatch.Groups["value"].Value : null;
-        
-        var usesCurrentRuntime = exportManifest.RuntimeVersion == VisualBriefingVersions.RUNTIME;
-        if (echarts is not null && usesCurrentRuntime && !string.Equals(echarts, ECHARTS_SCRIPT.Value, StringComparison.Ordinal))
+        parts = new(exportManifest, data, template, css, runtime, echarts, documentHash);
+
+        var cspNodes = FindNodes(document.DocumentNode, "//meta[@http-equiv='Content-Security-Policy']")?.ToArray() ?? [];
+        var actualCsp = cspNodes.Length == 1
+            ? cspNodes[0].GetAttributeValue("content", string.Empty)
+            : string.Empty;
+        if (!string.Equals(actualCsp, GetContentSecurityPolicy(parts), StringComparison.Ordinal))
         {
-            issue = "The briefing contains an unknown or modified ECharts runtime.";
-            return false;
-        }
-        
-        var validationIssue = ValidateGeneratedParts(null, data, template, css, !string.IsNullOrWhiteSpace(echarts));
-        if (!string.IsNullOrEmpty(validationIssue))
-        {
-            issue = validationIssue;
-            return false;
-        }
-        
-        if (usesCurrentRuntime && !string.Equals(runtime, BuildRuntimeScript(exportManifest.RuntimeAIStudioVersion), StringComparison.Ordinal))
-        {
-            issue = "The briefing contains an unknown or modified AI Studio runtime.";
+            parts = null!;
+            issue = "The briefing Content Security Policy is missing or inconsistent with its embedded scripts.";
             return false;
         }
 
-        // A previous runtime is never executed or copied by the recompile path. Its payload, CSP,
-        // and locally persisted section hashes are still verified before semantic artifacts are read.
-
-        var dataJson = JsonSerializer.Serialize(data, JSON_OPTIONS);
-        var payloadHash = ComputePayloadHash(dataJson, template, css, runtime, echarts);
-        
-        if (!string.Equals(payloadHash, exportManifest.PayloadHash, StringComparison.OrdinalIgnoreCase))
-        {
-            issue = "The briefing payload hash does not match its manifest.";
-            return false;
-        }
-
-        var expectedCsp = GetContentSecurityPolicy(new(exportManifest, data, template, css, runtime, echarts, payloadHash));
-        var actualCsp = FindNode(document.DocumentNode, "//meta[@http-equiv='Content-Security-Policy']")
-            ?.GetAttributeValue("content", string.Empty);
-        
-        if (!string.Equals(actualCsp, expectedCsp, StringComparison.Ordinal))
-        {
-            issue = "The briefing Content Security Policy is missing or modified.";
-            return false;
-        }
-
-        parts = new(exportManifest, data, template, css, runtime, echarts, payloadHash);
         return true;
     }
 
     /// <summary>
-    /// Defines <c>HasExactAttributes</c> for the visual briefing feature.
+    /// Reads an intact artifact and additionally applies the current semantic compiler contract.
     /// </summary>
-    private static bool HasExactAttributes(HtmlNode node, params string[] expectedNames)
+    internal static bool TryParseForRecompile(string html, out VisualBriefingArtifactParts parts, out string issue)
     {
-        if (node.Attributes.Count != expectedNames.Length)
+        if (!TryParse(html, out parts, out issue))
             return false;
 
-        return expectedNames.All(expectedName =>
-            node.Attributes.Any(attribute => attribute.Name.Equals(expectedName, StringComparison.OrdinalIgnoreCase)));
+        if (parts.ExportManifest.SchemaVersion != VisualBriefingVersions.SCHEMA)
+        {
+            parts = null!;
+            issue = "The briefing data schema is not compatible with the current compiler.";
+            return false;
+        }
+
+        issue = ValidateProtectedData(parts.ExportManifest, parts.Data);
+        if (!string.IsNullOrEmpty(issue))
+        {
+            parts = null!;
+            return false;
+        }
+
+        issue = ValidateGeneratedParts(
+            null,
+            parts.Data,
+            parts.TemplateHtml,
+            parts.Css,
+            !string.IsNullOrWhiteSpace(parts.EChartsScript));
+        if (!string.IsNullOrEmpty(issue))
+        {
+            parts = null!;
+            return false;
+        }
+
+        return true;
     }
 
     /// <summary>
-    /// Defines <c>ValidateProtectedData</c> for the visual briefing feature.
+    /// Validates stable artifact-header fields without imposing current runtime or schema versions.
+    /// </summary>
+    private static bool ValidateHeader(VisualBriefingExportManifest? exportManifest, out string issue)
+    {
+        issue = string.Empty;
+        if (exportManifest is null ||
+            exportManifest.ArtifactVersion != VisualBriefingVersions.ARTIFACT ||
+            exportManifest.SchemaVersion <= 0 ||
+            exportManifest.RuntimeVersion <= 0 ||
+            exportManifest.BriefingId == Guid.Empty ||
+            exportManifest.RevisionId == Guid.Empty ||
+            string.IsNullOrWhiteSpace(exportManifest.Name) ||
+            string.IsNullOrWhiteSpace(exportManifest.AIStudioVersion) ||
+            string.IsNullOrWhiteSpace(exportManifest.RuntimeAIStudioVersion) ||
+            exportManifest.DocumentHash.Length != 64 ||
+            !exportManifest.DocumentHash.All(Uri.IsHexDigit) ||
+            exportManifest.TargetLanguage is CommonLanguages.OTHER && string.IsNullOrWhiteSpace(exportManifest.CustomTargetLanguage) ||
+            exportManifest.ProtectionLevel is VisualBriefingProtectionLevel.OTHER && string.IsNullOrWhiteSpace(exportManifest.CustomProtectionLevel))
+        {
+            issue = "The briefing artifact header contains invalid or unsupported metadata.";
+            return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Finds exactly one node for an XPath expression.
+    /// </summary>
+    private static HtmlNode? FindUniqueNode(HtmlDocument document, string xpath)
+    {
+        var nodes = FindNodes(document.DocumentNode, xpath)?.ToArray() ?? [];
+        return nodes.Length == 1 ? nodes[0] : null;
+    }
+
+    /// <summary>
+    /// Finds exactly one element by ID.
+    /// </summary>
+    private static HtmlNode? FindUniqueElementById(HtmlDocument document, string id)
+    {
+        var nodes = FindNodes(document.DocumentNode, $"//*[@id='{id}']")?.ToArray() ?? [];
+        return nodes.Length == 1 ? nodes[0] : null;
+    }
+
+    /// <summary>
+    /// Validates current protected data needed for recompilation.
     /// </summary>
     private static string ValidateProtectedData(VisualBriefingExportManifest exportManifest, JsonElement data)
     {
@@ -362,7 +312,7 @@ public sealed partial class VisualBriefingArtifactService
         if (!protectedData.TryGetProperty("assetMetadata", out var assetMetadata) ||
             assetMetadata.ValueKind is not JsonValueKind.Object)
             return "The protected visual asset metadata is missing.";
-        
+
         var metadataProperties = assetMetadata.EnumerateObject().ToArray();
         if (metadataProperties.Length != protectedAssetProperties.Length ||
             metadataProperties.Any(property =>
