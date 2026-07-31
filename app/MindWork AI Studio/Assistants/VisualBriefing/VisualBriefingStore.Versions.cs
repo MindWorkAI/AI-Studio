@@ -299,7 +299,7 @@ public sealed partial class VisualBriefingStore
             if (!importNameConflictAsCopy)
                 return new(false, existing.BriefingId, export.RevisionId, true, false, "The briefing ID exists locally under a different name.");
 
-            return await this.ImportCopyAsync(html, parts, token);
+            return await this.ImportCopyAsync(html, token);
         }
 
         if (existing is null)
@@ -400,9 +400,9 @@ public sealed partial class VisualBriefingStore
     /// <summary>
     /// Defines <c>ImportCopyAsync</c> for the visual briefing feature.
     /// </summary>
-    private async Task<VisualBriefingImportResult> ImportCopyAsync(string html, VisualBriefingArtifactParts parts, CancellationToken token)
+    private async Task<VisualBriefingImportResult> ImportCopyAsync(string html, CancellationToken token)
     {
-        if (!VisualBriefingArtifactService.TryParseForRecompile(html, out parts, out _))
+        if (!VisualBriefingArtifactService.TryParseForRecompile(html, out var parts, out _))
             return new(false, Guid.Empty, Guid.Empty, false, false, "This historical briefing can be imported under its original identity, but it cannot be rewritten as a copy with the current compiler.");
 
         var copyId = Guid.NewGuid();
