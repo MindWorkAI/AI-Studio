@@ -33,7 +33,7 @@ pub struct PrepareImageRequest {
 
 /// The prepared image together with the dimensions the caller can lay out against.
 #[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "snake_case")]
 pub struct PrepareImageResponse {
     /// The complete `data:` URL, ready to embed.
     data_url: String,
@@ -250,6 +250,26 @@ mod tests {
             supported_format(Path::new("/tmp/asset.webp")).unwrap(),
             ImageFormat::WebP
         );
+    }
+
+    #[test]
+    fn serializes_response_in_snake_case_for_the_rust_service_contract() {
+        let response = PrepareImageResponse {
+            data_url: "data:image/jpeg;base64,/9j/".to_string(),
+            mime_type: "image/jpeg".to_string(),
+            width: 17,
+            height: 11,
+            was_resized: false,
+        };
+        let json = serde_json::to_value(response).unwrap();
+        assert_eq!(json["data_url"], "data:image/jpeg;base64,/9j/");
+        assert_eq!(json["mime_type"], "image/jpeg");
+        assert_eq!(json["width"], 17);
+        assert_eq!(json["height"], 11);
+        assert_eq!(json["was_resized"], false);
+        assert!(json.get("dataUrl").is_none());
+        assert!(json.get("mimeType").is_none());
+        assert!(json.get("wasResized").is_none());
     }
 
     #[test]
