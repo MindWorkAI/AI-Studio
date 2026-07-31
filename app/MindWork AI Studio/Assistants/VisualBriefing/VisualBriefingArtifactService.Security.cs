@@ -216,22 +216,7 @@ public sealed partial class VisualBriefingArtifactService
                 
                 if (string.IsNullOrWhiteSpace(asset.AssetId) ||
                     assetNode is null ||
-                    FindAttribute(assetNode, "hidden") is not null ||
-                    string.Equals(
-                        assetNode.GetAttributeValue("aria-hidden", string.Empty),
-                        "true",
-                        StringComparison.OrdinalIgnoreCase) ||
-                    assetNode.Ancestors().TakeWhile(ancestor => ancestor != root)
-                        .Take(1)
-                        .Any(ancestor =>
-                            FindAttribute(ancestor, "hidden") is not null ||
-                            string.Equals(
-                                ancestor.GetAttributeValue("aria-hidden", string.Empty),
-                                "true",
-                                StringComparison.OrdinalIgnoreCase)) ||
-                    IsHiddenByCss(assetNode, css) ||
-                    assetNode.ParentNode != root &&
-                    IsHiddenByCss(assetNode.ParentNode, css))
+                    IsHiddenInTemplate(assetNode, root, css))
                     return $"The visual asset '{asset.AssetId}' is not visibly bound in the template.";
             }
         }
@@ -317,6 +302,22 @@ public sealed partial class VisualBriefingArtifactService
     }
 
     /// <summary>
+    /// Determines whether an element or one of its template ancestors is hidden.
+    /// </summary>
+    /// <param name="node">The bound asset element.</param>
+    /// <param name="root">The validation root that encloses the model template.</param>
+    /// <param name="css">The validated model stylesheet.</param>
+    /// <returns><see langword="true"/> when the asset is hidden in the template.</returns>
+    private static bool IsHiddenInTemplate(HtmlNode node, HtmlNode root, string css)
+    {
+        for (var candidate = node; candidate is not null && candidate != root; candidate = candidate.ParentNode)
+            if (FindAttribute(candidate, "hidden") is not null || string.Equals(candidate.GetAttributeValue("aria-hidden", string.Empty), "true", StringComparison.OrdinalIgnoreCase) || IsHiddenByCss(candidate, css))
+                return true;
+
+        return false;
+    }
+
+    /// <summary>
     /// Determines whether a simple stylesheet rule hides an element.
     /// </summary>
     /// <param name="node">The element to inspect.</param>
@@ -328,12 +329,9 @@ public sealed partial class VisualBriefingArtifactService
         {
             if (!CssHiddenDeclarationRegex().IsMatch(rule.Groups["declarations"].Value))
                 continue;
-            
-            foreach (var selector in rule.Groups["selectors"].Value.Split(','))
-            {
-                if (SimpleSelectorMatches(node, selector))
-                    return true;
-            }
+
+            if (rule.Groups["selectors"].Value.Split(',').Any(selector => SimpleSelectorMatches(node, selector)))
+                return true;
         }
         
         return false;
@@ -347,24 +345,24 @@ public sealed partial class VisualBriefingArtifactService
     /// <returns>Whether the selector targets the element.</returns>
     private static bool SimpleSelectorMatches(HtmlNode node, string selector)
     {
-        var candidate = selector.Trim();
+        var candidate = FinalSimpleSelector(selector);
         if (candidate.Length == 0)
             return false;
-        
-        var finalSeparator = candidate.LastIndexOfAny([' ', '>', '+', '~']);
-        if (finalSeparator >= 0)
-            candidate = candidate[(finalSeparator + 1)..].Trim();
-        
-        var pseudo = candidate.IndexOf(':');
+
+        var pseudo = FindPseudoStart(candidate);
         if (pseudo >= 0)
             candidate = candidate[..pseudo];
-        
-        if (candidate.Contains("[data-mwai-asset", StringComparison.OrdinalIgnoreCase))
-            return FindAttribute(node, "data-mwai-asset") is not null;
 
-        var idMatch = IdRegex().Match(candidate);
-        if (idMatch.Success &&
-            !string.Equals(node.Id, idMatch.Groups["id"].Value, StringComparison.Ordinal))
+        // A pseudo-only selector cannot safely be evaluated by this deliberately small matcher.
+        // Treating it as a match is conservative for the visibility invariant.
+        if (candidate.Length == 0)
+            return true;
+
+        foreach (Match attributeSelector in AttributeSelectorRegex().Matches(candidate))
+            if (!AttributeSelectorMatches(node, attributeSelector))
+                return false;
+
+        if (IdRegex().Matches(candidate).Any(idMatch => !string.Equals(node.Id, idMatch.Groups["id"].Value, StringComparison.Ordinal)))
             return false;
         
         var requiredClasses = RequiredClassRegex().Matches(candidate)
@@ -380,8 +378,132 @@ public sealed partial class VisualBriefingArtifactService
         
         var tag = TagRegex().Match(candidate);
         
-        return !tag.Success ||
-               string.Equals(node.Name, tag.Groups["tag"].Value, StringComparison.OrdinalIgnoreCase);
+        return !tag.Success || string.Equals(node.Name, tag.Groups["tag"].Value, StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// Extracts the final simple selector while ignoring combinators inside attribute values and pseudo functions.
+    /// </summary>
+    private static string FinalSimpleSelector(string selector)
+    {
+        var candidate = selector.Trim();
+        var bracketDepth = 0;
+        var parenthesisDepth = 0;
+        var quote = '\0';
+
+        for (var index = candidate.Length - 1; index >= 0; index--)
+        {
+            var character = candidate[index];
+            if (quote != '\0')
+            {
+                if (character == quote && (index == 0 || candidate[index - 1] != '\\'))
+                    quote = '\0';
+
+                continue;
+            }
+
+            if (character is '\'' or '"')
+            {
+                quote = character;
+                continue;
+            }
+
+            switch (character)
+            {
+                case ']':
+                    bracketDepth++;
+                    continue;
+                
+                case '[':
+                    bracketDepth = Math.Max(0, bracketDepth - 1);
+                    continue;
+                
+                case ')':
+                    parenthesisDepth++;
+                    continue;
+                
+                case '(':
+                    parenthesisDepth = Math.Max(0, parenthesisDepth - 1);
+                    continue;
+            }
+
+            if (bracketDepth == 0 && parenthesisDepth == 0 && (char.IsWhiteSpace(character) || character is '>' or '+' or '~'))
+                return candidate[(index + 1)..].Trim();
+        }
+
+        return candidate;
+    }
+
+    /// <summary>
+    /// Finds the first pseudo selector outside an attribute selector.
+    /// </summary>
+    private static int FindPseudoStart(string selector)
+    {
+        var bracketDepth = 0;
+        var quote = '\0';
+
+        for (var index = 0; index < selector.Length; index++)
+        {
+            var character = selector[index];
+            if (quote != '\0')
+            {
+                if (character == quote && (index == 0 || selector[index - 1] != '\\'))
+                    quote = '\0';
+
+                continue;
+            }
+
+            if (character is '\'' or '"')
+            {
+                quote = character;
+                continue;
+            }
+
+            if (character == '[')
+                bracketDepth++;
+            else if (character == ']')
+                bracketDepth = Math.Max(0, bracketDepth - 1);
+            else if (character == ':' && bracketDepth == 0)
+                return index;
+        }
+
+        return -1;
+    }
+
+    /// <summary>
+    /// Matches one CSS attribute selector against an element.
+    /// </summary>
+    private static bool AttributeSelectorMatches(HtmlNode node, Match selector)
+    {
+        var attribute = FindAttribute(node, selector.Groups["name"].Value);
+        if (attribute is null)
+            return false;
+
+        var operation = selector.Groups["operator"].Value;
+        if (operation.Length == 0)
+            return true;
+
+        var expected = selector.Groups["double"].Success
+            ? selector.Groups["double"].Value
+            : selector.Groups["single"].Success
+                ? selector.Groups["single"].Value
+                : selector.Groups["unquoted"].Value;
+
+        var comparison = selector.Groups["modifier"].Value.Equals("i", StringComparison.OrdinalIgnoreCase)
+            ? StringComparison.OrdinalIgnoreCase
+            : StringComparison.Ordinal;
+
+        return operation switch
+        {
+            "=" => string.Equals(attribute.Value, expected, comparison),
+            "~=" => attribute.Value.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Any(value => string.Equals(value, expected, comparison)),
+            "|=" => string.Equals(attribute.Value, expected, comparison) || attribute.Value.StartsWith($"{expected}-", comparison),
+            "^=" => attribute.Value.StartsWith(expected, comparison),
+            "$=" => attribute.Value.EndsWith(expected, comparison),
+            "*=" => attribute.Value.Contains(expected, comparison),
+            
+            _ => true,
+        };
     }
 
     /// <summary>
@@ -406,4 +528,7 @@ public sealed partial class VisualBriefingArtifactService
 
     [GeneratedRegex(@"^(?<tag>[A-Za-z][A-Za-z0-9-]*)", RegexOptions.CultureInvariant)]
     private static partial Regex TagRegex();
+
+    [GeneratedRegex("""\[\s*(?<name>[A-Za-z_:][A-Za-z0-9_:.-]*)\s*(?:(?<operator>[~|^$*]?=)\s*(?:"(?<double>[^"]*)"|'(?<single>[^']*)'|(?<unquoted>[^\]\s]+))\s*(?<modifier>[iIsS])?\s*)?\]""", RegexOptions.CultureInvariant)]
+    private static partial Regex AttributeSelectorRegex();
 }

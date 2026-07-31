@@ -183,6 +183,7 @@ public sealed partial class VisualBriefingStore
         {
             logger.LogError(
                 new EventId((int)VisualBriefingLogEventId.STORE_RECOVERY, VisualBriefingLogEventId.STORE_RECOVERY.ToString()),
+                exception,
                 "Could not reconcile visual briefing. BriefingId={BriefingId} ExceptionType={ExceptionType}",
                 briefingId,
                 exception.GetType().Name);

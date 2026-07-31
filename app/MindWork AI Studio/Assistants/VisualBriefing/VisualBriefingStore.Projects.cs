@@ -162,6 +162,7 @@ public sealed partial class VisualBriefingStore
         {
             logger.LogWarning(
                 new EventId((int)VisualBriefingLogEventId.STORE_REJECTED, VisualBriefingLogEventId.STORE_REJECTED.ToString()),
+                exception,
                 "Could not load visual briefing manifest. BriefingId={BriefingId} ExceptionType={ExceptionType}",
                 briefingId,
                 exception.GetType().Name);
