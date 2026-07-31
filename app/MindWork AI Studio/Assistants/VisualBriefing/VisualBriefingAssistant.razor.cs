@@ -91,6 +91,9 @@ public partial class VisualBriefingAssistant : MSGComponentBase
     /// <summary>Stops the background source-status monitor.</summary>
     private readonly CancellationTokenSource sourceMonitorCancellation = new();
 
+    /// <summary>Stops the live build-duration monitor.</summary>
+    private readonly CancellationTokenSource buildDurationMonitorCancellation = new();
+
     /// <summary>Stores available and recoverable projects ordered by most recent modification.</summary>
     private IReadOnlyList<VisualBriefingProjectEntry> projects = [];
 
@@ -169,6 +172,9 @@ public partial class VisualBriefingAssistant : MSGComponentBase
     /// <summary>Stores the latest persistent or live build shown in the stepper.</summary>
     private VisualBriefingBuildRecord? latestBuild;
 
+    /// <summary>Stores the shared timestamp used to render consistent live build durations.</summary>
+    private DateTimeOffset buildDurationReferenceUtc = DateTimeOffset.UtcNow;
+
     /// <summary>Stores incompatible validated content offered for rebuild continuation.</summary>
     private Guid? reusableContentBuildId;
 
@@ -199,6 +205,7 @@ public partial class VisualBriefingAssistant : MSGComponentBase
         this.BuildProgressService.Changed += this.BuildProgressChanged;
         await this.ReloadListAsync();
         _ = this.MonitorSourceStatusAsync(this.sourceMonitorCancellation.Token);
+        _ = this.MonitorBuildDurationAsync(this.buildDurationMonitorCancellation.Token);
         var deferredInstruction = this.MessageBus.CheckDeferredMessages<string>(Event.SEND_TO_VISUAL_BRIEFING_ASSISTANT).FirstOrDefault();
 
         if (!string.IsNullOrWhiteSpace(deferredInstruction))
@@ -220,6 +227,8 @@ public partial class VisualBriefingAssistant : MSGComponentBase
     {
         this.sourceMonitorCancellation.Cancel();
         this.sourceMonitorCancellation.Dispose();
+        this.buildDurationMonitorCancellation.Cancel();
+        this.buildDurationMonitorCancellation.Dispose();
         this.MediaTranscriptionService.StateChanged -= this.MediaStateChanged;
         this.BuildProgressService.Changed -= this.BuildProgressChanged;
         base.DisposeResources();

@@ -57,15 +57,24 @@ public partial class VisualBriefingAssistant
     /// <summary>
     /// Gets the localized collapsed build-progress summary.
     /// </summary>
-    private string BuildProgressTitle => this.latestBuild?.Status switch
+    private string BuildProgressTitle
     {
-        VisualBriefingBuildStatus.COMPLETED => $"{T("Build progress")} · {T("Completed")}",
-        VisualBriefingBuildStatus.FAILED => $"{T("Build progress")} · {T("Failed")}",
-        VisualBriefingBuildStatus.CANCELED => $"{T("Build progress")} · {T("Canceled")}",
-        VisualBriefingBuildStatus.AWAITING_REBUILD => $"{T("Build progress")} · {T("Action required")}",
+        get
+        {
+            var title = this.latestBuild?.Status switch
+            {
+                VisualBriefingBuildStatus.COMPLETED => $"{T("Build progress")} · {T("Completed")}",
+                VisualBriefingBuildStatus.FAILED => $"{T("Build progress")} · {T("Failed")}",
+                VisualBriefingBuildStatus.CANCELED => $"{T("Build progress")} · {T("Canceled")}",
+                VisualBriefingBuildStatus.AWAITING_REBUILD => $"{T("Build progress")} · {T("Action required")}",
 
-        _ => $"{T("Build progress")} · {T("Running")}",
-    };
+                _ => $"{T("Build progress")} · {T("Running")}",
+            };
+
+            var duration = this.CalculateBuildDuration(this.latestBuild?.Stages ?? []);
+            return duration > TimeSpan.Zero ? $"{title} · {FormatBuildDuration(duration)}" : title;
+        }
+    }
 
     /// <summary>
     /// Keeps the status stepper informational while allowing actions inside the active step.
@@ -311,8 +320,38 @@ public partial class VisualBriefingAssistant
         if (this.selectedBriefing?.BriefingId != briefingId)
             return;
 
-        this.latestBuild = this.BuildProgressService.GetLatest(briefingId);
-        _ = this.InvokeAsync(this.StateHasChanged);
+        _ = this.InvokeAsync(() =>
+        {
+            if (this.selectedBriefing?.BriefingId != briefingId)
+                return;
+
+            this.latestBuild = this.BuildProgressService.GetLatest(briefingId);
+            this.buildDurationReferenceUtc = DateTimeOffset.UtcNow;
+            this.StateHasChanged();
+        });
+    }
+
+    /// <summary>
+    /// Refreshes live build durations at most once per second while a selected stage is running.
+    /// </summary>
+    private async Task MonitorBuildDurationAsync(CancellationToken token)
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(1));
+        try
+        {
+            while (await timer.WaitForNextTickAsync(token))
+                await this.InvokeAsync(() =>
+                {
+                    if (this.latestBuild?.Stages.Any(stage => stage.Status is VisualBriefingBuildStageStatus.RUNNING) != true)
+                        return;
+
+                    this.buildDurationReferenceUtc = DateTimeOffset.UtcNow;
+                    this.StateHasChanged();
+                });
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
+        {
+        }
     }
 
     /// <summary>
@@ -408,15 +447,34 @@ public partial class VisualBriefingAssistant
                             ? T("Completed")
                             : T("Not started");
 
-        var duration = records
-            .Where(record => record.StartedAtUtc is not null)
-            .Aggregate(TimeSpan.Zero, (total, record) =>
-                total + ((record.FinishedAtUtc ?? DateTimeOffset.UtcNow) - record.StartedAtUtc!.Value));
-
-        return duration > TimeSpan.Zero
-            ? $"{status} · {duration.TotalSeconds:0.0} s"
-            : status;
+        var duration = this.CalculateBuildDuration(records);
+        return duration > TimeSpan.Zero ? $"{status} · {FormatBuildDuration(duration)}" : status;
     }
+
+    /// <summary>
+    /// Calculates active processing time without counting reused stages or time between resume attempts.
+    /// </summary>
+    private TimeSpan CalculateBuildDuration(IEnumerable<VisualBriefingBuildStageRecord> records) => records
+            .Where(record => record.StartedAtUtc is not null && record.Status is not VisualBriefingBuildStageStatus.SKIPPED)
+            .Aggregate(TimeSpan.Zero, (total, record) => total + this.CalculateStageDuration(record));
+
+    /// <summary>
+    /// Calculates one stage duration against the shared live timestamp.
+    /// </summary>
+    private TimeSpan CalculateStageDuration(VisualBriefingBuildStageRecord record)
+    {
+        var finishedAtUtc = record.Status is VisualBriefingBuildStageStatus.RUNNING ? this.buildDurationReferenceUtc : record.FinishedAtUtc;
+        if (record.StartedAtUtc is null || finishedAtUtc is null)
+            return TimeSpan.Zero;
+
+        var duration = finishedAtUtc.Value - record.StartedAtUtc.Value;
+        return duration > TimeSpan.Zero ? duration : TimeSpan.Zero;
+    }
+
+    /// <summary>
+    /// Formats a build duration using the current UI culture.
+    /// </summary>
+    private static string FormatBuildDuration(TimeSpan duration) => $"{duration.TotalSeconds:0.0} s";
 
     /// <summary>
     /// Gets the safe failure reason for a UI group.
