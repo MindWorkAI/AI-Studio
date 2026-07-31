@@ -17,7 +17,7 @@
                      SelectedValueChanged="@this.SelectBriefingAsync">
                 @foreach (var project in this.projects)
                 {
-                    <MudListItem T="Guid" Value="@project.BriefingId" Icon="@(project.IsAvailable ? Icons.Material.Filled.Dashboard : Icons.Material.Filled.WarningAmber)">
+                    <MudListItem T="Guid" @key="project.BriefingId" Value="@project.BriefingId" Icon="@(project.IsAvailable ? Icons.Material.Filled.Dashboard : Icons.Material.Filled.WarningAmber)">
                         <MudStack Spacing="0">
                             <MudText Typo="Typo.body1">@this.ProjectDisplayName(project)</MudText>
                             <MudText Typo="Typo.caption">@project.ModifiedAtUtc.ToLocalTime().ToString("g")</MudText>
