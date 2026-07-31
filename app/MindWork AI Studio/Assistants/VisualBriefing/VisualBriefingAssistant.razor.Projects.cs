@@ -5,6 +5,7 @@ using AIStudio.Dialogs;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Tools.Media;
+using AIStudio.Tools.Rust;
 
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
 using ComponentKind = AIStudio.Tools.Components;
@@ -24,19 +25,21 @@ public partial class VisualBriefingAssistant
     /// </summary>
     private async Task ReloadListAsync(Guid? selectId = null)
     {
-        this.briefings = await this.Store.ListAsync();
+        this.projects = await this.Store.ListProjectsAsync();
         var id = selectId ??
-                 this.selectedBriefing?.BriefingId ??
+                 this.selectedProject?.BriefingId ??
                  this.Store.LastSelectedBriefingId ??
-                 this.briefings.FirstOrDefault()?.BriefingId;
+                 this.projects.FirstOrDefault()?.BriefingId;
 
         var selected = id is null
             ? null
-            : this.briefings.FirstOrDefault(briefing => briefing.BriefingId == id);
+            : this.projects.FirstOrDefault(project => project.BriefingId == id);
 
-        selected ??= this.briefings.FirstOrDefault();
+        selected ??= this.projects.FirstOrDefault();
         if (selected is not null)
-            await this.ApplySelectedBriefingAsync(selected);
+            await this.ApplySelectedProjectAsync(selected);
+        else
+            this.ClearSelectedProject();
     }
 
     /// <summary>
@@ -44,15 +47,15 @@ public partial class VisualBriefingAssistant
     /// </summary>
     private async Task SelectBriefingAsync(Guid briefingId)
     {
-        if (this.selectedBriefing?.BriefingId == briefingId)
+        if (this.selectedProject?.BriefingId == briefingId)
             return;
 
         if (this.selectedBriefing is not null)
             await this.SaveCurrentAsync();
 
-        var briefing = this.briefings.FirstOrDefault(candidate => candidate.BriefingId == briefingId);
-        if (briefing is not null)
-            await this.ApplySelectedBriefingAsync(briefing);
+        var project = this.projects.FirstOrDefault(candidate => candidate.BriefingId == briefingId);
+        if (project is not null)
+            await this.ApplySelectedProjectAsync(project);
     }
 
     /// <summary>
@@ -116,27 +119,68 @@ public partial class VisualBriefingAssistant
     /// </summary>
     private async Task DeleteAsync()
     {
-        if (this.selectedBriefing is null)
+        if (this.selectedProject is null)
             return;
 
-        var parameters = new DialogParameters<ConfirmDialog>
+        var parameters = new DialogParameters<ConfirmDialog>();
+        if (this.selectedProject.IsAvailable)
+            parameters.Add(dialog => dialog.Message, string.Format(T("Permanently delete the visual briefing '{0}' and all of its versions and transcripts?"), this.selectedProject.Name));
+        else
         {
-            { dialog => dialog.Message, string.Format(T("Permanently delete the visual briefing '{0}' and all of its versions and transcripts?"), this.selectedBriefing.Name) },
-        };
+            var reportingWarning = T("This visual briefing cannot currently be opened. Consider reporting the problem in the [MindWork AI Studio issue tracker](https://github.com/MindWorkAI/AI-Studio), because a future update may make the briefing accessible again.");
+            var deletionWarning = T("Permanently delete this visual briefing and all of its versions and transcripts?");
+            parameters.Add(dialog => dialog.MarkdownBody, $"{reportingWarning}\n\n{deletionWarning}");
+        }
 
         var reference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete visual briefing permanently"), parameters, DialogOptions.FULLSCREEN);
         var result = await reference.Result;
         if (result is null || result.Canceled)
             return;
 
-        var id = this.selectedBriefing.BriefingId;
+        var id = this.selectedProject.BriefingId;
         this.MediaTranscriptionService.ClearOwnerState(MediaImportOwner.ForVisualBriefing(id));
         await this.Store.DeleteAsync(id);
         await this.Store.ForgetSelectionAsync(id);
-        this.selectedBriefing = null;
-        this.previewUrl = string.Empty;
+        this.ClearSelectedProject();
 
         await this.ReloadListAsync();
+    }
+
+    /// <summary>
+    /// Opens the selected project directory without attempting to read or repair its contents.
+    /// </summary>
+    private async Task OpenSelectedProjectDirectoryAsync()
+    {
+        if (this.selectedProject is null)
+            return;
+
+        var path = await this.Store.GetProjectDirectoryPathAsync(this.selectedProject.BriefingId);
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            this.Snackbar.Add(T("The visual briefing project folder is not available."), Severity.Warning);
+            return;
+        }
+
+        OpenPathResponse response;
+        try
+        {
+            response = await this.RustService.TryOpenPathInRuntimeFileManager(path);
+        }
+        catch (Exception exception)
+        {
+            this.Logger.LogWarning(exception, "Could not open the visual briefing project folder. BriefingId={BriefingId}", this.selectedProject.BriefingId);
+            this.Snackbar.Add(T("Could not open the visual briefing project folder."), Severity.Error);
+            return;
+        }
+
+        if (response.Success)
+        {
+            this.Snackbar.Add(T("Opened the visual briefing project folder."), Severity.Success);
+            return;
+        }
+
+        var issue = string.IsNullOrWhiteSpace(response.Issue) ? T("Unknown error") : response.Issue;
+        this.Snackbar.Add(string.Format(T("Could not open the visual briefing project folder: {0}"), issue), Severity.Error);
     }
 
     /// <summary>
@@ -188,6 +232,7 @@ public partial class VisualBriefingAssistant
     private async Task ApplySelectedBriefingAsync(VisualBriefingManifest briefing)
     {
         await this.Store.RememberSelectionAsync(briefing.BriefingId);
+        this.selectedProject = VisualBriefingProjectEntry.FromManifest(briefing);
         this.selectedBriefing = briefing;
         var resumableBuilds = await this.Store.ListBuildsAsync(briefing.BriefingId);
         var persistedDiagnostics = resumableBuilds.FirstOrDefault() is { } latestPersistedBuild
@@ -251,6 +296,80 @@ public partial class VisualBriefingAssistant
 
         this.lastPersistedState = this.BuildPersistenceFingerprint();
     }
+
+    /// <summary>
+    /// Applies either a normal editor project or a content-free recovery entry.
+    /// </summary>
+    private async Task ApplySelectedProjectAsync(VisualBriefingProjectEntry project)
+    {
+        if (project.IsAvailable)
+        {
+            await this.ApplySelectedBriefingAsync(project.Manifest!);
+            return;
+        }
+
+        await this.Store.RememberSelectionAsync(project.BriefingId);
+        this.ClearSelectedProject();
+        this.selectedProject = project;
+    }
+
+    /// <summary>
+    /// Clears editor-only state so an unavailable project cannot trigger saves or background work.
+    /// </summary>
+    private void ClearSelectedProject()
+    {
+        this.selectedProject = null;
+        this.selectedBriefing = null;
+        this.sourceMaterial = [];
+        this.visualAssets = [];
+        this.selectedRevisionId = Guid.Empty;
+        this.previewUrl = string.Empty;
+        this.latestBuild = null;
+        this.lastBuildDiagnostics = null;
+        this.reusableContentBuildId = null;
+        this.lastPersistedState = string.Empty;
+    }
+
+    /// <summary>
+    /// Replaces an available list entry after a background operation updates its manifest.
+    /// </summary>
+    private void UpdateProject(VisualBriefingManifest briefing)
+    {
+        var updated = VisualBriefingProjectEntry.FromManifest(briefing);
+        this.projects = [.. this.projects.Select(project => project.BriefingId == briefing.BriefingId ? updated : project).OrderByDescending(project => project.ModifiedAtUtc)];
+
+        if (this.selectedProject?.BriefingId == briefing.BriefingId)
+            this.selectedProject = updated;
+    }
+
+    /// <summary>
+    /// Gets a safe list and recovery-view title.
+    /// </summary>
+    private string ProjectDisplayName(VisualBriefingProjectEntry project)
+    {
+        if (project.BriefingId == this.selectedBriefing?.BriefingId)
+            return this.projectName;
+
+        return string.IsNullOrWhiteSpace(project.Name) ? T("Unavailable visual briefing") : project.Name;
+    }
+
+    /// <summary>
+    /// Gets the concise project-list status.
+    /// </summary>
+    private string ProjectStatusName(VisualBriefingProjectLoadStatus status) => status switch
+    {
+        VisualBriefingProjectLoadStatus.NEWER_VERSION => T("Requires a newer AI Studio version"),
+        _ => T("Cannot be opened"),
+    };
+
+    /// <summary>
+    /// Gets the recovery explanation for an unavailable project.
+    /// </summary>
+    private string ProjectRecoveryMessage(VisualBriefingProjectLoadStatus status) => status switch
+    {
+        VisualBriefingProjectLoadStatus.NEWER_VERSION => T("This visual briefing was created by a newer AI Studio version and cannot be opened by this version."),
+        _ => T("AI Studio cannot read this visual briefing. Its files may be incompatible or damaged."),
+    };
 
     /// <summary>
     /// Defines <c>ProtectionLevelName</c> for the visual briefing feature.

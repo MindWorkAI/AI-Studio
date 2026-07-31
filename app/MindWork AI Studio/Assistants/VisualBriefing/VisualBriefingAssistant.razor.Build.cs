@@ -150,12 +150,7 @@ public partial class VisualBriefingAssistant
             {
                 var latest = await this.Store.LoadAsync(briefingId, cancellation.Token);
                 if (latest is not null)
-                    this.briefings =
-                    [
-                        .. this.briefings
-                            .Select(briefing => briefing.BriefingId == briefingId ? latest : briefing)
-                            .OrderByDescending(briefing => briefing.ModifiedAtUtc)
-                    ];
+                    this.UpdateProject(latest);
             }
 
             this.Snackbar.Add(T("A new visual briefing version was created."), Severity.Success);
@@ -250,12 +245,7 @@ public partial class VisualBriefingAssistant
             {
                 var latest = await this.Store.LoadAsync(briefingId, cancellation.Token);
                 if (latest is not null)
-                    this.briefings =
-                    [
-                        .. this.briefings
-                            .Select(briefing => briefing.BriefingId == briefingId ? latest : briefing)
-                            .OrderByDescending(briefing => briefing.ModifiedAtUtc)
-                    ];
+                    this.UpdateProject(latest);
             }
 
             this.Snackbar.Add(T("The briefing was recompiled with the current AI Studio version."), Severity.Success);

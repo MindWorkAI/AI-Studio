@@ -13,21 +13,26 @@
             <MudList T="Guid"
                      Color="Color.Primary"
                      Class="mb-1"
-                     SelectedValue="@(this.selectedBriefing?.BriefingId ?? Guid.Empty)"
+                     SelectedValue="@(this.selectedProject?.BriefingId ?? Guid.Empty)"
                      SelectedValueChanged="@this.SelectBriefingAsync">
-                @foreach (var briefing in this.briefings)
+                @foreach (var project in this.projects)
                 {
-                    <MudListItem T="Guid"
-                                 Value="@briefing.BriefingId"
-                                 Icon="@Icons.Material.Filled.Dashboard">
+                    <MudListItem T="Guid" Value="@project.BriefingId" Icon="@(project.IsAvailable ? Icons.Material.Filled.Dashboard : Icons.Material.Filled.WarningAmber)">
                         <MudStack Spacing="0">
-                            <MudText Typo="Typo.body1">@(briefing.BriefingId == this.selectedBriefing?.BriefingId ? this.projectName : briefing.Name)</MudText>
-                            <MudText Typo="Typo.caption">@briefing.ModifiedAtUtc.ToLocalTime().ToString("g")</MudText>
-                            @if (this.IsGenerating(briefing.BriefingId))
+                            <MudText Typo="Typo.body1">@this.ProjectDisplayName(project)</MudText>
+                            <MudText Typo="Typo.caption">@project.ModifiedAtUtc.ToLocalTime().ToString("g")</MudText>
+                            @if (!project.IsAvailable)
+                            {
+                                <MudText Typo="Typo.caption" Color="Color.Error">@this.ProjectStatusName(project.Status)</MudText>
+                            }
+                            @if (project.IsAvailable && this.IsGenerating(project.BriefingId))
                             {
                                 <MudProgressLinear Indeterminate="true" Color="Color.Primary" Class="mt-1"/>
                             }
-                            <MediaTranscriptionStatus Owner="@MediaImportOwner.ForVisualBriefing(briefing.BriefingId)" Compact="true"/>
+                            @if (project.IsAvailable)
+                            {
+                                <MediaTranscriptionStatus Owner="@MediaImportOwner.ForVisualBriefing(project.BriefingId)" Compact="true"/>
+                            }
                         </MudStack>
                     </MudListItem>
                 }
@@ -41,7 +46,31 @@
             <MudDivider Style="height: 0.25ch; margin: 1rem 0;" Class="mt-6"/>
 
             <main class="visual-briefing-main">
-                @if (this.selectedBriefing is null)
+                @if (this.selectedProject is not null && !this.selectedProject.IsAvailable)
+                {
+                    <MudPaper Outlined="true" Class="pa-6">
+                        <MudStack Spacing="3">
+                            <MudText Typo="Typo.h4">@this.ProjectDisplayName(this.selectedProject)</MudText>
+                            <MudAlert Severity="Severity.Error" Variant="Variant.Outlined">
+                                @this.ProjectRecoveryMessage(this.selectedProject.Status)
+                            </MudAlert>
+                            <MudText Typo="Typo.body1">@T("AI Studio has left the project files unchanged. A future update may make this visual briefing accessible again.")</MudText>
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Wrap="Wrap.Wrap">
+                                <MudText Typo="Typo.body2"><strong>@T("Project ID"):</strong> @this.selectedProject.BriefingId.ToString("D")</MudText>
+                                <MudCopyClipboardButton TooltipMessage="@T("Copy project ID")" StringContent="@this.selectedProject.BriefingId.ToString("D")"/>
+                            </MudStack>
+                            <MudText Typo="Typo.body2">
+                                @T("If you need help, report the problem and include the project ID.")
+                                <MudLink Href="https://github.com/MindWorkAI/AI-Studio" Target="_blank">@T("Report a problem?")</MudLink>
+                            </MudText>
+                            <MudStack Row="true" Spacing="1" Wrap="Wrap.Wrap">
+                                <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.FolderOpen" OnClick="@this.OpenSelectedProjectDirectoryAsync">@T("Open project folder")</MudButton>
+                                <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.DeleteForever" Color="Color.Error" OnClick="@this.DeleteAsync">@T("Delete")</MudButton>
+                            </MudStack>
+                        </MudStack>
+                    </MudPaper>
+                }
+                else if (this.selectedBriefing is null)
                 {
                     <MudPaper Outlined="true" Class="pa-6">
                         <MudText Typo="Typo.h5">@T("Create or import a visual briefing to begin.")</MudText>

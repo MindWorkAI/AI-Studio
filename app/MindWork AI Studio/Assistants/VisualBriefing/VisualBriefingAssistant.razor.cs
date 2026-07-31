@@ -91,8 +91,11 @@ public partial class VisualBriefingAssistant : MSGComponentBase
     /// <summary>Stops the background source-status monitor.</summary>
     private readonly CancellationTokenSource sourceMonitorCancellation = new();
 
-    /// <summary>Stores projects ordered by most recent modification.</summary>
-    private IReadOnlyList<VisualBriefingManifest> briefings = [];
+    /// <summary>Stores available and recoverable projects ordered by most recent modification.</summary>
+    private IReadOnlyList<VisualBriefingProjectEntry> projects = [];
+
+    /// <summary>Stores the project entry currently selected in the list.</summary>
+    private VisualBriefingProjectEntry? selectedProject;
 
     /// <summary>Stores the project currently displayed by the editor.</summary>
     private VisualBriefingManifest? selectedBriefing;

@@ -135,12 +135,7 @@ public partial class VisualBriefingAssistant
                 var latest = await this.Store.LoadAsync(briefingId);
                 if (latest is not null)
                 {
-                    this.briefings =
-                    [
-                        .. this.briefings
-                            .Select(briefing => briefing.BriefingId == briefingId ? latest : briefing)
-                            .OrderByDescending(briefing => briefing.ModifiedAtUtc)
-                    ];
+                    this.UpdateProject(latest);
 
                     if (this.selectedBriefing?.BriefingId == briefingId)
                         await this.ApplySelectedBriefingAsync(latest);
