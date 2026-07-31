@@ -46,7 +46,7 @@ pub struct SelectFileOptions {
 #[derive(Clone, Deserialize)]
 pub struct SaveFileOptions {
     title: String,
-    name_file: Option<PreviousFile>,
+    previous_file: Option<PreviousFile>,
     filter: Option<FileTypeFilter>,
 }
 
@@ -275,10 +275,15 @@ pub async fn save_file(_token: APIToken, payload: Json<SaveFileOptions>) -> Json
     // Set the file type filter if provided:
     file_dialog = apply_filter(file_dialog, &payload.filter);
 
-    // Set the previous file path if provided:
-    if let Some(previous) = &payload.name_file {
-        let previous_path = previous.file_path.as_str();
-        file_dialog = file_dialog.set_directory(previous_path);
+    // Set the initial directory and file name if provided:
+    if let Some(previous) = &payload.previous_file {
+        let (directory, file_name) = split_save_file_path(&previous.file_path);
+        if let Some(directory) = directory {
+            file_dialog = file_dialog.set_directory(directory);
+        }
+        if let Some(file_name) = file_name {
+            file_dialog = file_dialog.set_file_name(file_name);
+        }
     }
 
     // Displays the file dialogue box and select the file:
@@ -394,6 +399,21 @@ fn apply_filter<R: tauri::Runtime>(file_dialog: FileDialogBuilder<R>, filter: &O
 
         None => file_dialog,
     }
+}
+
+fn split_save_file_path(file_path: &str) -> (Option<PathBuf>, Option<String>) {
+    let path = Path::new(file_path);
+    let directory = path
+        .parent()
+        .filter(|parent| !parent.as_os_str().is_empty())
+        .map(Path::to_path_buf);
+        
+    let file_name = path
+        .file_name()
+        .map(|name| name.to_string_lossy().into_owned())
+        .filter(|name| !name.is_empty());
+
+    (directory, file_name)
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -528,6 +548,39 @@ fn create_file_manager_command(target: &FileManagerTarget) -> Command {
 mod tests {
     use super::*;
     use std::fs;
+
+    #[test]
+    fn save_file_options_accept_the_previous_file_contract() {
+        let options: SaveFileOptions = serde_json::from_str(
+            r#"{"title":"Export visual briefing","previous_file":{"file_path":"Quarterly briefing.html"}}"#,
+        )
+        .unwrap();
+
+        assert_eq!(options.title, "Export visual briefing");
+        assert_eq!(
+            options.previous_file.unwrap().file_path,
+            "Quarterly briefing.html",
+        );
+    }
+
+    #[test]
+    fn save_file_name_without_directory_is_preserved() {
+        let (directory, file_name) = split_save_file_path("Quarterly briefing.html");
+
+        assert_eq!(directory, None);
+        assert_eq!(file_name.as_deref(), Some("Quarterly briefing.html"));
+    }
+
+    #[test]
+    fn save_file_path_is_split_into_directory_and_name() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let initial_path = temp_dir.path().join("Quarterly briefing.html");
+
+        let (directory, file_name) = split_save_file_path(initial_path.to_str().unwrap());
+
+        assert_eq!(directory.as_deref(), Some(temp_dir.path()));
+        assert_eq!(file_name.as_deref(), Some("Quarterly briefing.html"));
+    }
 
     #[test]
     fn existing_file_is_revealed_and_falls_back_to_its_parent() {

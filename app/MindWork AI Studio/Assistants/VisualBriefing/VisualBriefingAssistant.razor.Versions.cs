@@ -111,7 +111,7 @@ public partial class VisualBriefingAssistant
         var response = await this.RustService.SaveFile(
             T("Export visual briefing"),
             [FileTypes.VISUAL_BRIEFING_HTML],
-            $"{SafeFileName(this.selectedBriefing.Name)}.html");
+            $"{SafeFileName(this.projectName)}.html");
 
         if (response.UserCancelled)
             return;
