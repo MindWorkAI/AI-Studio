@@ -13,6 +13,11 @@ namespace AIStudio.Assistants.VisualBriefing;
 public sealed partial class VisualBriefingArtifactService
 {
     /// <summary>
+    /// Lazily loads the official MindWork AI Studio icon for self-contained exports.
+    /// </summary>
+    private static readonly Lazy<string> BRAND_ICON_DATA_URI = new(LoadBrandIconDataUri);
+
+    /// <summary>
     /// Assembles one self-contained briefing HTML file from validated parts.
     /// </summary>
     /// <remarks>
@@ -79,10 +84,13 @@ public sealed partial class VisualBriefingArtifactService
                 <meta name="referrer" content="no-referrer">
                 <title>{HtmlEncode(briefingName)}</title>
                 <style id="mwai-briefing-style">{css}</style>
-                <style id="mwai-protected-style">{PROTECTED_FOOTER_CSS}</style>
+                <style id="mwai-protected-style">{PROTECTED_STATIC_CSS}</style>
                 </head>
                 <body>
                 <script id="{DATA_ELEMENT_ID}" type="application/json">{dataJson}</script>
+                <header id="mwai-static-header">
+                {BuildStaticHeaderTemplate()}
+                </header>
                 <div id="mwai-briefing-root">{template}</div>
                 <footer id="mwai-static-footer" class="mwai-footer">
                 {STATIC_FOOTER_TEMPLATE}
@@ -111,10 +119,38 @@ public sealed partial class VisualBriefingArtifactService
     private static partial Regex RuntimeAIVersionRegex();
 
     /// <summary>
+    /// Builds the protected, app-owned static header template.
+    /// </summary>
+    private static string BuildStaticHeaderTemplate() => $"""
+                                                          <img src="{BRAND_ICON_DATA_URI.Value}" width="32" height="32" alt="" aria-hidden="true">
+                                                          <a href="{PROJECT_URL}" target="_blank" rel="noopener noreferrer">MINDWORK AI STUDIO</a>
+                                                          """;
+
+    /// <summary>
+    /// Loads the official app icon as a Data URL so exported briefings remain self-contained.
+    /// </summary>
+    private static string LoadBrandIconDataUri()
+    {
+        var assembly = Assembly.GetExecutingAssembly();
+        using var stream = assembly.GetManifestResourceStream("AIStudio.Assistants.VisualBriefing.Runtime.mindwork-ai-studio-icon.png") ??
+                           throw new InvalidOperationException("The official MindWork AI Studio icon is not available in this build.");
+        
+        using var buffer = new MemoryStream();
+        stream.CopyTo(buffer);
+        
+        return $"data:image/png;base64,{Convert.ToBase64String(buffer.ToArray())}";
+    }
+
+    /// <summary>
+    /// Links exported MindWork AI Studio branding to the project repository.
+    /// </summary>
+    private const string PROJECT_URL = "https://github.com/MindWorkAI/AI-Studio";
+
+    /// <summary>
     /// Defines the protected, app-owned static footer template.
     /// </summary>
-    private const string STATIC_FOOTER_TEMPLATE = """
-                                                  <span>Created with <a href="https://github.com/MindWorkAI/AI-Studio" target="_blank" rel="noopener noreferrer">MindWork AI Studio</a> v<span data-mwai-text="_mwai.aiStudioVersion"></span>.</span>
+    private const string STATIC_FOOTER_TEMPLATE = $"""
+                                                  <span>Created with <a href="{PROJECT_URL}" target="_blank" rel="noopener noreferrer">MindWork AI Studio</a> v<span data-mwai-text="_mwai.aiStudioVersion"></span>.</span>
                                                   <span data-mwai-text="_mwai.footer.models"></span>
                                                   <span data-mwai-text="_mwai.footer.createdAt"></span>
                                                   <span data-mwai-text="_mwai.footer.authors"></span>
@@ -122,9 +158,9 @@ public sealed partial class VisualBriefingArtifactService
                                                   """;
 
     /// <summary>
-    /// Defines protected footer styles that model CSS cannot override.
+    /// Defines protected static header and footer styles that model CSS cannot override.
     /// </summary>
-    private const string PROTECTED_FOOTER_CSS = """
+    private const string PROTECTED_STATIC_CSS = """
                                                 html {
                                                   background: #f3f6f3 !important;
                                                 }
@@ -133,6 +169,50 @@ public sealed partial class VisualBriefingArtifactService
                                                   margin: 0 !important;
                                                   background: #f3f6f3 !important;
                                                   color: #172a24 !important;
+                                                }
+                                                #mwai-static-header {
+                                                  display: flex !important;
+                                                  align-items: center !important;
+                                                  gap: .75rem !important;
+                                                  position: relative !important;
+                                                  z-index: 2147483647 !important;
+                                                  visibility: visible !important;
+                                                  opacity: 1 !important;
+                                                  max-width: 80rem !important;
+                                                  margin: 0 auto !important;
+                                                  padding: clamp(1rem, 3.5vw, 3rem) clamp(1rem, 3.5vw, 3rem) 0 !important;
+                                                  color: #164b3b !important;
+                                                  font: 700 .82rem/1.4 system-ui, sans-serif !important;
+                                                  letter-spacing: .08em !important;
+                                                  text-transform: uppercase !important;
+                                                }
+                                                #mwai-static-header img {
+                                                  box-sizing: border-box !important;
+                                                  display: block !important;
+                                                  flex: 0 0 auto !important;
+                                                  visibility: visible !important;
+                                                  opacity: 1 !important;
+                                                  width: 2rem !important;
+                                                  height: 2rem !important;
+                                                  border-radius: .5rem !important;
+                                                  object-fit: cover !important;
+                                                }
+                                                #mwai-static-header a {
+                                                  display: inline !important;
+                                                  visibility: visible !important;
+                                                  opacity: 1 !important;
+                                                  color: inherit !important;
+                                                  font: inherit !important;
+                                                  letter-spacing: inherit !important;
+                                                  text-decoration: none !important;
+                                                }
+                                                #mwai-static-header a:hover {
+                                                  text-decoration: underline !important;
+                                                  text-underline-offset: .2em !important;
+                                                }
+                                                #mwai-static-header a:focus-visible {
+                                                  outline: 3px solid #f2d264 !important;
+                                                  outline-offset: 3px !important;
                                                 }
                                                 #mwai-static-footer {
                                                   display: flex !important;
@@ -163,9 +243,18 @@ public sealed partial class VisualBriefingArtifactService
                                                   text-decoration: underline !important;
                                                   text-underline-offset: .15em !important;
                                                 }
+                                                @media (max-width: 47.99rem) {
+                                                  #mwai-static-header {
+                                                    padding: .75rem .75rem 0 !important;
+                                                  }
+                                                }
                                                 @media print {
                                                   html, body {
                                                     background: #fffefa !important;
+                                                  }
+                                                  #mwai-static-header {
+                                                    max-width: none !important;
+                                                    padding: 0 0 12mm !important;
                                                   }
                                                   #mwai-static-footer {
                                                     max-width: none !important;

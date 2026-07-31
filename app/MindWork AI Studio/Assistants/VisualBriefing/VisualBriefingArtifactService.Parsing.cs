@@ -118,6 +118,7 @@ public sealed partial class VisualBriefingArtifactService
         var dataNode = FindUniqueElementById(document, DATA_ELEMENT_ID);
         var rootNode = FindUniqueElementById(document, "mwai-briefing-root");
         var footerNode = FindUniqueElementById(document, "mwai-static-footer");
+        var headerNodes = FindNodes(document.DocumentNode, "//*[@id='mwai-static-header']")?.ToArray() ?? [];
         var generatedStyleNode = FindUniqueElementById(document, "mwai-briefing-style");
         var protectedStyleNode = FindUniqueElementById(document, "mwai-protected-style");
         var runtimeNode = FindUniqueElementById(document, "mwai-briefing-runtime");
@@ -128,6 +129,9 @@ public sealed partial class VisualBriefingArtifactService
 
         if (htmlNode is null || headNode is null || bodyNode is null || dataNode is null || rootNode is null ||
             footerNode is null || generatedStyleNode is null || protectedStyleNode is null || runtimeNode is null ||
+            headerNodes.Length > 1 ||
+            (headerNodes.Length == 1 &&
+             (!headerNodes[0].Name.Equals("header", StringComparison.OrdinalIgnoreCase) || headerNodes[0].ParentNode != bodyNode)) ||
             !styleMatch.Success || !runtimeMatch.Success || (echartsNode is not null) != echartsMatch.Success)
         {
             issue = "The briefing envelope is incomplete or ambiguous.";
@@ -153,6 +157,7 @@ public sealed partial class VisualBriefingArtifactService
         var allowedBodyIds = new HashSet<string>(StringComparer.Ordinal)
         {
             DATA_ELEMENT_ID,
+            "mwai-static-header",
             "mwai-briefing-root",
             "mwai-static-footer",
             "mwai-echarts-runtime",

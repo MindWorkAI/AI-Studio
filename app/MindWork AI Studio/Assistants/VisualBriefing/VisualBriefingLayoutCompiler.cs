@@ -120,10 +120,7 @@ internal sealed class VisualBriefingLayoutCompiler
         var layoutClasses = CompileLayoutClasses(node, $"mwai-layout mwai-{kind}");
         
         if (isRoot)
-        {
-            var masthead = "<header class=\"mwai-masthead\"><div class=\"mwai-brand-mark\" aria-hidden=\"true\"><span></span><span></span><span></span><i></i></div><strong data-mwai-text=\"labels.brand\"></strong></header>";
-            return $"<main id=\"{id}\" class=\"{layoutClasses} mwai-document\">{masthead}{children}</main>";
-        }
+            return $"<main id=\"{id}\" class=\"{layoutClasses} mwai-document\">{children}</main>";
         
         return $"<div id=\"{id}\" class=\"{layoutClasses}\">{children}</div>";
     }
@@ -248,13 +245,9 @@ internal sealed class VisualBriefingLayoutCompiler
         };
         
         var css = new StringBuilder($$"""
-                                    #mwai-briefing-root{--mwai-ink:#172A24;--mwai-forest:#164B3B;--mwai-pine:#236A50;--mwai-sage:#79AE90;--mwai-cream:#F7F1DC;--mwai-paper:#FFFEFA;--mwai-sun:#F2D264;--mwai-mist:#EAF1EC;--mwai-clay:#C97857;--mwai-line:#D6E2DC;--mwai-muted:#5E7169;--mwai-type-scale:{{typeScale}};--mwai-rhythm:{{rhythm}};--mwai-section-space:{{sectionSpace}};max-width:80rem;margin-inline:auto;padding:clamp(1rem,3.5vw,3rem);font:calc(1rem*var(--mwai-type-scale))/1.65 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;color:var(--mwai-ink);}
+                                    #mwai-briefing-root{--mwai-ink:#172A24;--mwai-forest:#164B3B;--mwai-pine:#236A50;--mwai-sage:#79AE90;--mwai-cream:#F7F1DC;--mwai-paper:#FFFEFA;--mwai-sun:#F2D264;--mwai-mist:#EAF1EC;--mwai-clay:#C97857;--mwai-line:#D6E2DC;--mwai-muted:#5E7169;--mwai-type-scale:{{typeScale}};--mwai-rhythm:{{rhythm}};--mwai-section-space:{{sectionSpace}};max-width:80rem;margin-inline:auto;padding:clamp(1rem,2.5vw,2rem) clamp(1rem,3.5vw,3rem) clamp(1rem,3.5vw,3rem);font:calc(1rem*var(--mwai-type-scale))/1.65 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;color:var(--mwai-ink);}
                                     #mwai-briefing-root *{box-sizing:border-box;}
                                     .mwai-document{display:flex;flex-direction:column;gap:clamp(1rem,2.5vw,2rem);}
-                                    .mwai-masthead{display:flex;align-items:center;gap:.75rem;padding:.35rem .25rem;color:var(--mwai-forest);font-size:.82rem;letter-spacing:.08em;text-transform:uppercase;}
-                                    .mwai-brand-mark{position:relative;display:flex;align-items:center;gap:3px;width:2rem;height:1.55rem;padding-inline:.42rem;border-radius:.55rem;background:var(--mwai-cream);border:1px solid color-mix(in srgb,var(--mwai-pine),transparent 70%);}
-                                    .mwai-brand-mark span{display:block;width:4px;height:4px;border-radius:50%;background:var(--mwai-pine);}
-                                    .mwai-brand-mark i{position:absolute;left:.35rem;bottom:-.22rem;width:.45rem;height:.45rem;background:var(--mwai-cream);border-inline-start:1px solid color-mix(in srgb,var(--mwai-pine),transparent 70%);transform:skewY(-35deg);}
                                     .mwai-section{display:block;border-radius:clamp(1.25rem,2.5vw,2rem);}
                                     .mwai-section-inner{padding:clamp(2rem,5vw,var(--mwai-section-space));}
                                     .mwai-section-heading{max-width:52rem;margin-block-end:clamp(1.75rem,4vw,3.25rem);}
@@ -356,8 +349,8 @@ internal sealed class VisualBriefingLayoutCompiler
         
         css.Append("""
                    @media screen and (min-width:48rem){.mwai-timeline-horizontal .mwai-timeline-track{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(13rem,1fr);overflow-x:auto;padding:.55rem 0 .5rem;padding-inline-start:.55rem}.mwai-timeline-horizontal .mwai-timeline-item{padding:0;padding-block-start:1.5rem;padding-inline-end:1rem;border-block-start:2px solid var(--mwai-line);border-inline-start:0}.mwai-timeline-horizontal .mwai-timeline-marker{inset-block-start:-.52rem;inset-inline-start:-.52rem}}
-                   @media(max-width:47.99rem){#mwai-briefing-root{padding:.75rem}.mwai-section-inner{padding:1.5rem}.mwai-section-hero .mwai-section-inner{min-height:34rem}.mwai-metric,.mwai-chart,.mwai-asset,.mwai-table,.mwai-filterable_table,.mwai-tabs,.mwai-accordion,.mwai-simulation,.mwai-timeline{padding:1rem}[data-mwai-chart]{min-height:19rem}th,td{padding:.7rem .75rem}}
-                   @media print{@page{margin:14mm}#mwai-briefing-root{max-width:none;padding:0;font-size:10pt}.mwai-document{gap:8mm}.mwai-masthead{padding:0 0 4mm}.mwai-section{border:0;box-shadow:none;background:transparent;color:var(--mwai-ink);break-inside:auto}.mwai-section-inner{padding:6mm 0}.mwai-section-heading{margin-block-end:5mm}.mwai-section-heading h1{font-size:28pt}.mwai-section-heading h2{font-size:21pt}.mwai-section-heading p,.mwai-section-hero .mwai-section-heading p,.mwai-section-conclusion .mwai-section-heading p{color:var(--mwai-muted)}.mwai-component,.mwai-component figure,.mwai-table-wrap{break-inside:avoid}.mwai-timeline{break-inside:auto}.mwai-timeline-item{break-inside:avoid}.mwai-metric,.mwai-chart,.mwai-asset,.mwai-table,.mwai-filterable_table,.mwai-tabs,.mwai-accordion,.mwai-simulation,.mwai-timeline{box-shadow:none;background:var(--mwai-paper)}[data-mwai-tab-panel][hidden]{display:block!important}details:not([open])>.mwai-accordion-body{display:block!important}[data-mwai-reset]{display:none!important}thead th{position:static}*{print-color-adjust:exact}}
+                   @media(max-width:47.99rem){#mwai-briefing-root{padding:1rem .75rem .75rem}.mwai-section-inner{padding:1.5rem}.mwai-section-hero .mwai-section-inner{min-height:34rem}.mwai-metric,.mwai-chart,.mwai-asset,.mwai-table,.mwai-filterable_table,.mwai-tabs,.mwai-accordion,.mwai-simulation,.mwai-timeline{padding:1rem}[data-mwai-chart]{min-height:19rem}th,td{padding:.7rem .75rem}}
+                   @media print{@page{margin:14mm}#mwai-briefing-root{max-width:none;padding:0;font-size:10pt}.mwai-document{gap:8mm}.mwai-section{border:0;box-shadow:none;background:transparent;color:var(--mwai-ink);break-inside:auto}.mwai-section-inner{padding:6mm 0}.mwai-section-heading{margin-block-end:5mm}.mwai-section-heading h1{font-size:28pt}.mwai-section-heading h2{font-size:21pt}.mwai-section-heading p,.mwai-section-hero .mwai-section-heading p,.mwai-section-conclusion .mwai-section-heading p{color:var(--mwai-muted)}.mwai-component,.mwai-component figure,.mwai-table-wrap{break-inside:avoid}.mwai-timeline{break-inside:auto}.mwai-timeline-item{break-inside:avoid}.mwai-metric,.mwai-chart,.mwai-asset,.mwai-table,.mwai-filterable_table,.mwai-tabs,.mwai-accordion,.mwai-simulation,.mwai-timeline{box-shadow:none;background:var(--mwai-paper)}[data-mwai-tab-panel][hidden]{display:block!important}details:not([open])>.mwai-accordion-body{display:block!important}[data-mwai-reset]{display:none!important}thead th{position:static}*{print-color-adjust:exact}}
                    """);
         
         return css.ToString();
