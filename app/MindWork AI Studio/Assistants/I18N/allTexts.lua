@@ -2290,11 +2290,17 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::
 -- This briefing is larger than 50 MB. Continue with the {0}?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T128099486"] = "This briefing is larger than 50 MB. Continue with the {0}?"
 
+-- Recompile this version with the current AI Studio version without AI model calls.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T1281232891"] = "Recompile this version with the current AI Studio version without AI model calls."
+
 -- Rebuild briefing
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T1282252432"] = "Rebuild briefing"
 
 -- The visual briefing settings could not be saved.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T131371789"] = "The visual briefing settings could not be saved."
+
+-- AI Studio cannot read this visual briefing. Its files may be incompatible or damaged.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T138425430"] = "AI Studio cannot read this visual briefing. Its files may be incompatible or damaged."
 
 -- Permanently delete the visual briefing '{0}' and all of its versions and transcripts?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T1404635329"] = "Permanently delete the visual briefing '{0}' and all of its versions and transcripts?"
@@ -2323,23 +2329,26 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::
 -- private
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T1657474316"] = "private"
 
+-- Creates a new version with a different design while keeping the current structure, content, and visual assets.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T1692528853"] = "Creates a new version with a different design while keeping the current structure, content, and visual assets."
+
 -- Source material
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T1697755825"] = "Source material"
-
--- secret
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T1719429393"] = "secret"
 
 -- This briefing revision was already imported.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T1732858483"] = "This briefing revision was already imported."
 
--- The selected briefing version failed validation and cannot be exported.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T2007468657"] = "The selected briefing version failed validation and cannot be exported."
+-- Cannot be opened
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T1981873292"] = "Cannot be opened"
 
 -- Refresh status
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T2035829510"] = "Refresh status"
 
 -- Analyze material
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T204596900"] = "Analyze material"
+
+-- Unavailable visual briefing
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T2068761945"] = "Unavailable visual briefing"
 
 -- Copy technical details
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T208428325"] = "Copy technical details"
@@ -2353,8 +2362,14 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::
 -- Target language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T237828418"] = "Target language"
 
+-- Could not open the visual briefing project folder: {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T2493826535"] = "Could not open the visual briefing project folder: {0}"
+
 -- Audience age group
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T2496533563"] = "Audience age group"
+
+-- Copy project ID
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T2510385342"] = "Copy project ID"
 
 -- New briefing
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T2550941963"] = "New briefing"
@@ -2368,14 +2383,32 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::
 -- Audience organizational level
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T2599228833"] = "Audience organizational level"
 
+-- This version has no compatible semantic artifacts. Rebuild the briefing instead.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T2614687249"] = "This version has no compatible semantic artifacts. Rebuild the briefing instead."
+
 -- The visual briefing was exported.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T2629277950"] = "The visual briefing was exported."
+
+-- Report a problem?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T2641710088"] = "Report a problem?"
 
 -- A new visual briefing version was created.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T2642092015"] = "A new visual briefing version was created."
 
+-- Creates a new version from the current sources and instructions. The structure, content, and design may all change.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T2656796593"] = "Creates a new version from the current sources and instructions. The structure, content, and design may all change."
+
 -- Update content
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T266242921"] = "Update content"
+
+-- This visual briefing was created by a newer AI Studio version and cannot be opened by this version.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T2679042270"] = "This visual briefing was created by a newer AI Studio version and cannot be opened by this version."
+
+-- Project ID
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T2694019927"] = "Project ID"
+
+-- Creates a new version from the current sources and instructions while keeping the current structure and design.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T2703645157"] = "Creates a new version from the current sources and instructions while keeping the current structure and design."
 
 -- Import as copy
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T2745663129"] = "Import as copy"
@@ -2398,11 +2431,14 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::
 -- import
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T288002260"] = "import"
 
+-- This visual briefing cannot currently be opened. Consider reporting the problem in the [MindWork AI Studio issue tracker](https://github.com/MindWorkAI/AI-Studio), because a future update may make the briefing accessible again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T2915805354"] = "This visual briefing cannot currently be opened. Consider reporting the problem in the [MindWork AI Studio issue tracker](https://github.com/MindWorkAI/AI-Studio), because a future update may make the briefing accessible again."
+
 -- Delete visual briefing permanently
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T294572739"] = "Delete visual briefing permanently"
 
--- top secret
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3010261272"] = "top secret"
+-- Opened the visual briefing project folder.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T2964042492"] = "Opened the visual briefing project folder."
 
 -- Resume build
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3016389190"] = "Resume build"
@@ -2410,8 +2446,14 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::
 -- Visual assets
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3226971402"] = "Visual assets"
 
+-- AI Studio has left the project files unchanged. A future update may make this visual briefing accessible again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3232700570"] = "AI Studio has left the project files unchanged. A future update may make this visual briefing accessible again."
+
 -- Export visual briefing
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3261790455"] = "Export visual briefing"
+
+-- Could not open the visual briefing project folder.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3290777125"] = "Could not open the visual briefing project folder."
 
 -- {0} in progress...
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3291403991"] = "{0} in progress..."
@@ -2434,6 +2476,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::
 -- Briefing {0}
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3435387639"] = "Briefing {0}"
 
+-- Unknown error
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3461425987"] = "Unknown error"
+
 -- Custom protection level
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3498106091"] = "Custom protection level"
 
@@ -2446,14 +2491,23 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::
 -- Not started
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3531294543"] = "Not started"
 
+-- The visual briefing project folder is not available.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3564616779"] = "The visual briefing project folder is not available."
+
 -- Plan briefing
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3576809882"] = "Plan briefing"
+
+-- The visual briefing recompilation failed unexpectedly. Copy the technical details for support.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3614047460"] = "The visual briefing recompilation failed unexpectedly. Copy the technical details for support."
 
 -- unreachable
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3634242033"] = "unreachable"
 
 -- Audience profile
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3649769130"] = "Audience profile"
+
+-- Recompile briefing
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3656894343"] = "Recompile briefing"
 
 -- The visual briefing generation was canceled.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3696523032"] = "The visual briefing generation was canceled."
@@ -2494,6 +2548,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::
 -- Create or import a visual briefing to begin.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T4062672222"] = "Create or import a visual briefing to begin."
 
+-- Requires a newer AI Studio version
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T4087140083"] = "Requires a newer AI Studio version"
+
+-- Permanently delete this visual briefing and all of its versions and transcripts?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T4088814972"] = "Permanently delete this visual briefing and all of its versions and transcripts?"
+
 -- transcript outdated
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T4158473953"] = "transcript outdated"
 
@@ -2518,6 +2578,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::
 -- Audience expertise
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T4279519256"] = "Audience expertise"
 
+-- If you need help, report the problem and include the project ID.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T4292361710"] = "If you need help, report the problem and include the project ID."
+
+-- The briefing was recompiled with the current AI Studio version.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T453632597"] = "The briefing was recompiled with the current AI Studio version."
+
 -- Reused
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T48113973"] = "Reused"
 
@@ -2527,11 +2593,11 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::
 -- Import visual briefing
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T516399136"] = "Import visual briefing"
 
+-- The visual briefing recompilation was canceled.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T525668186"] = "The visual briefing recompilation was canceled."
+
 -- Remove
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T564498461"] = "Remove"
-
--- strictly confidential
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T578968331"] = "strictly confidential"
 
 -- PNG, JPEG, and WebP assets are analyzed and must appear visibly in the briefing.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T589522135"] = "PNG, JPEG, and WebP assets are analyzed and must appear visibly in the briefing."
@@ -2541,6 +2607,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::
 
 -- Briefing scope, notes, or current change instruction (optional)
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T622749317"] = "Briefing scope, notes, or current change instruction (optional)"
+
+-- Open project folder
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T644587884"] = "Open project folder"
+
+-- The selected briefing version failed its integrity check and cannot be exported.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T655684371"] = "The selected briefing version failed its integrity check and cannot be exported."
 
 -- Transcribe media again
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T66182990"] = "Transcribe media again"
