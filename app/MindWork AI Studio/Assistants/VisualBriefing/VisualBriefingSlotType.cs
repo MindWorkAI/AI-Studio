@@ -13,4 +13,7 @@ public enum VisualBriefingSlotType
     
     /// <summary>A tabular object with columns and rows.</summary>
     TABLE,
+
+    /// <summary>An ordered object containing chronological timeline items.</summary>
+    TIMELINE,
 }

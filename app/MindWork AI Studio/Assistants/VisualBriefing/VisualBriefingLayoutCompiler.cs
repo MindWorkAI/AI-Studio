@@ -83,7 +83,18 @@ internal sealed class VisualBriefingLayoutCompiler
             
             var componentId = HtmlEncoder.Default.Encode(component.ComponentId);
             var body = CompileComponent(component, content);
-            var componentClasses = CompileLayoutClasses(node, $"mwai-component mwai-{component.Kind.ToString().ToLowerInvariant()}");
+            var semanticClasses = $"mwai-component mwai-{component.Kind.ToString().ToLowerInvariant()}";
+            if (component.Kind is VisualBriefingComponentKind.TIMELINE)
+            {
+                semanticClasses += component.TimelineOrientation switch
+                {
+                    VisualBriefingTimelineOrientation.HORIZONTAL => " mwai-timeline-horizontal",
+                    VisualBriefingTimelineOrientation.VERTICAL => " mwai-timeline-vertical",
+                    _ => throw new InvalidDataException("A timeline component has an invalid orientation."),
+                };
+            }
+
+            var componentClasses = CompileLayoutClasses(node, semanticClasses);
             
             return $"<article id=\"{id}\" class=\"{componentClasses}\" data-mwai-region=\"{componentId}\">{body}</article>";
         }
@@ -136,6 +147,7 @@ internal sealed class VisualBriefingLayoutCompiler
             VisualBriefingComponentKind.TABS => CompileTabs(component, content.Controls),
             VisualBriefingComponentKind.ACCORDION => $"<details><summary><span data-mwai-text=\"slots.{Slot(component, VisualBriefingSlotRole.TITLE)}\"></span></summary><div class=\"mwai-accordion-body\"><p data-mwai-text=\"slots.{Slot(component, VisualBriefingSlotRole.BODY)}\"></p></div></details>",
             VisualBriefingComponentKind.SIMULATION => CompileSimulation(component, controls, content),
+            VisualBriefingComponentKind.TIMELINE => CompileTimeline(component),
             
             _ => string.Empty,
         };
@@ -207,6 +219,19 @@ internal sealed class VisualBriefingLayoutCompiler
         return $"<fieldset><legend data-mwai-text=\"slots.{title}\"></legend><p data-mwai-text=\"slots.{summary}\"></p><div class=\"mwai-control-grid\">{controls}</div><div class=\"mwai-results\">{outputs}</div>{VisualBriefingInteractionCompiler.CompileResetMarkup(component.ComponentId)}</fieldset>";
     }
 
+    private static string CompileTimeline(VisualBriefingPlanComponent component)
+    {
+        var title = Slot(component, VisualBriefingSlotRole.TITLE);
+        var summary = Slot(component, VisualBriefingSlotRole.SUMMARY);
+        var dataSlot = Slot(component, VisualBriefingSlotRole.TIMELINE_DATA);
+
+        return $"<header class=\"mwai-component-heading\"><h3 data-mwai-text=\"slots.{title}\"></h3><p data-mwai-text=\"slots.{summary}\"></p></header>" +
+               $"<ol class=\"mwai-timeline-track\" role=\"list\"><template data-mwai-each=\"slots.{dataSlot}.items\"><li class=\"mwai-timeline-item\">" +
+               "<span class=\"mwai-timeline-marker\" aria-hidden=\"true\"></span><div class=\"mwai-timeline-content\">" +
+               "<p class=\"mwai-timeline-period\" data-mwai-text=\".period\"></p><h4 data-mwai-text=\".title\"></h4>" +
+               "<p class=\"mwai-timeline-description\" data-mwai-text=\".description\"></p></div></li></template></ol>";
+    }
+
     private static string Slot(VisualBriefingPlanComponent component, VisualBriefingSlotRole role, int occurrence = 0)
     {
         var slot = component.Slots.Where(candidate => candidate.Role == role).ElementAtOrDefault(occurrence) ?? throw new InvalidDataException($"A {component.Kind} component is missing its {role} slot.");
@@ -255,7 +280,7 @@ internal sealed class VisualBriefingLayoutCompiler
                                     .mwai-component-heading h3,.mwai-callout h3{font-size:clamp(1.3rem,2.2vw,1.75rem);}
                                     .mwai-component-heading p,.mwai-copy,.mwai-context,.mwai-callout p{margin:0;max-width:70ch;}
                                     .mwai-text{max-width:72ch;padding-block:.5rem;}
-                                    .mwai-metric,.mwai-chart,.mwai-asset,.mwai-table,.mwai-filterable_table,.mwai-tabs,.mwai-accordion,.mwai-simulation{padding:clamp(1.25rem,2.5vw,2rem);border:1px solid var(--mwai-line);border-radius:1.25rem;background:color-mix(in srgb,var(--mwai-paper),transparent 3%);box-shadow:0 18px 55px rgba(22,75,59,.07);}
+                                    .mwai-metric,.mwai-chart,.mwai-asset,.mwai-table,.mwai-filterable_table,.mwai-tabs,.mwai-accordion,.mwai-simulation,.mwai-timeline{padding:clamp(1.25rem,2.5vw,2rem);border:1px solid var(--mwai-line);border-radius:1.25rem;background:color-mix(in srgb,var(--mwai-paper),transparent 3%);box-shadow:0 18px 55px rgba(22,75,59,.07);}
                                     .mwai-metric{position:relative;overflow:hidden;border-block-start:5px solid var(--mwai-sun);box-shadow:none;}
                                     .mwai-metric-body{display:flex;flex-direction:column;margin:0;}
                                     .mwai-metric dt{order:2;color:var(--mwai-muted);font-size:.82rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;}
@@ -295,6 +320,15 @@ internal sealed class VisualBriefingLayoutCompiler
                                     .mwai-control-grid{display:flex;flex-wrap:wrap;gap:1rem;margin-block:1.25rem;}
                                     .mwai-results{display:flex;flex-wrap:wrap;gap:.75rem;margin-block:1rem;}
                                     .mwai-results output{display:block;min-width:8rem;padding:1rem;border-radius:.8rem;background:var(--mwai-cream);color:var(--mwai-forest);font-size:1.45rem;font-weight:750;}
+                                    .mwai-timeline-track{display:flex;flex-direction:column;list-style:none;margin:0;padding:0;padding-inline-start:.55rem;}
+                                    .mwai-timeline-item{position:relative;min-width:0;padding:0;padding-block-end:1.75rem;padding-inline-start:1.75rem;border-inline-start:2px solid var(--mwai-line);}
+                                    .mwai-timeline-item:last-child{padding-block-end:0;}
+                                    .mwai-timeline-marker{position:absolute;inset-block-start:.18rem;inset-inline-start:-.52rem;width:.95rem;height:.95rem;border:3px solid var(--mwai-paper);border-radius:50%;background:var(--mwai-pine);box-shadow:0 0 0 2px var(--mwai-sage);}
+                                    .mwai-timeline-content{display:flex;flex-direction:column;gap:.4rem;}
+                                    .mwai-timeline-period,.mwai-timeline-description{margin:0;}
+                                    .mwai-timeline-period{color:var(--mwai-pine);font-size:.78rem;font-weight:760;letter-spacing:.07em;text-transform:uppercase;}
+                                    .mwai-timeline-content h4{margin:0;color:var(--mwai-forest);font-size:1.08rem;line-height:1.25;}
+                                    .mwai-timeline-description{color:var(--mwai-muted);line-height:1.55;}
                                     .mwai-sources{display:block;padding-block-start:.8rem;border-block-start:1px solid var(--mwai-line);color:var(--mwai-muted);font-size:.76rem;line-height:1.5;}
                                     .mwai-emphasized{border-color:var(--mwai-sun);box-shadow:0 18px 55px rgba(22,75,59,.12);}
                                     .mwai-align-start{align-items:start;}.mwai-align-center{align-items:center;}.mwai-align-end{align-items:end;}.mwai-align-stretch{align-items:stretch;}
@@ -321,8 +355,9 @@ internal sealed class VisualBriefingLayoutCompiler
         }
         
         css.Append("""
-                   @media(max-width:47.99rem){#mwai-briefing-root{padding:.75rem}.mwai-section-inner{padding:1.5rem}.mwai-section-hero .mwai-section-inner{min-height:34rem}.mwai-metric,.mwai-chart,.mwai-asset,.mwai-table,.mwai-filterable_table,.mwai-tabs,.mwai-accordion,.mwai-simulation{padding:1rem}[data-mwai-chart]{min-height:19rem}th,td{padding:.7rem .75rem}}
-                   @media print{@page{margin:14mm}#mwai-briefing-root{max-width:none;padding:0;font-size:10pt}.mwai-document{gap:8mm}.mwai-masthead{padding:0 0 4mm}.mwai-section{border:0;box-shadow:none;background:transparent;color:var(--mwai-ink);break-inside:auto}.mwai-section-inner{padding:6mm 0}.mwai-section-heading{margin-block-end:5mm}.mwai-section-heading h1{font-size:28pt}.mwai-section-heading h2{font-size:21pt}.mwai-section-heading p,.mwai-section-hero .mwai-section-heading p,.mwai-section-conclusion .mwai-section-heading p{color:var(--mwai-muted)}.mwai-component,.mwai-component figure,.mwai-table-wrap{break-inside:avoid}.mwai-metric,.mwai-chart,.mwai-asset,.mwai-table,.mwai-filterable_table,.mwai-tabs,.mwai-accordion,.mwai-simulation{box-shadow:none;background:var(--mwai-paper)}[data-mwai-tab-panel][hidden]{display:block!important}details:not([open])>.mwai-accordion-body{display:block!important}[data-mwai-reset]{display:none!important}thead th{position:static}*{print-color-adjust:exact}}
+                   @media screen and (min-width:48rem){.mwai-timeline-horizontal .mwai-timeline-track{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(13rem,1fr);overflow-x:auto;padding:.55rem 0 .5rem;padding-inline-start:.55rem}.mwai-timeline-horizontal .mwai-timeline-item{padding:0;padding-block-start:1.5rem;padding-inline-end:1rem;border-block-start:2px solid var(--mwai-line);border-inline-start:0}.mwai-timeline-horizontal .mwai-timeline-marker{inset-block-start:-.52rem;inset-inline-start:-.52rem}}
+                   @media(max-width:47.99rem){#mwai-briefing-root{padding:.75rem}.mwai-section-inner{padding:1.5rem}.mwai-section-hero .mwai-section-inner{min-height:34rem}.mwai-metric,.mwai-chart,.mwai-asset,.mwai-table,.mwai-filterable_table,.mwai-tabs,.mwai-accordion,.mwai-simulation,.mwai-timeline{padding:1rem}[data-mwai-chart]{min-height:19rem}th,td{padding:.7rem .75rem}}
+                   @media print{@page{margin:14mm}#mwai-briefing-root{max-width:none;padding:0;font-size:10pt}.mwai-document{gap:8mm}.mwai-masthead{padding:0 0 4mm}.mwai-section{border:0;box-shadow:none;background:transparent;color:var(--mwai-ink);break-inside:auto}.mwai-section-inner{padding:6mm 0}.mwai-section-heading{margin-block-end:5mm}.mwai-section-heading h1{font-size:28pt}.mwai-section-heading h2{font-size:21pt}.mwai-section-heading p,.mwai-section-hero .mwai-section-heading p,.mwai-section-conclusion .mwai-section-heading p{color:var(--mwai-muted)}.mwai-component,.mwai-component figure,.mwai-table-wrap{break-inside:avoid}.mwai-timeline{break-inside:auto}.mwai-timeline-item{break-inside:avoid}.mwai-metric,.mwai-chart,.mwai-asset,.mwai-table,.mwai-filterable_table,.mwai-tabs,.mwai-accordion,.mwai-simulation,.mwai-timeline{box-shadow:none;background:var(--mwai-paper)}[data-mwai-tab-panel][hidden]{display:block!important}details:not([open])>.mwai-accordion-body{display:block!important}[data-mwai-reset]{display:none!important}thead th{position:static}*{print-color-adjust:exact}}
                    """);
         
         return css.ToString();

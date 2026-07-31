@@ -40,4 +40,7 @@ public enum VisualBriefingSlotRole
     
     /// <summary>Provides a calculated simulation result.</summary>
     RESULT,
+
+    /// <summary>Provides the ordered entries of a chronological timeline.</summary>
+    TIMELINE_DATA,
 }

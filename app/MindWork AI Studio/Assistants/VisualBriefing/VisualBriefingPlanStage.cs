@@ -55,7 +55,7 @@ internal sealed class VisualBriefingPlanStage(StructuredLlmStageRunner stageRunn
         var structuralSignature = VisualBriefingHashing.Compute(string.Join('\u001f', sections.Select(section => $"{section.SectionId}:{section.Role}:{section.TitleSlotId}:{section.SummarySlotId}")
             .Concat(sections.SelectMany(section => section.Components)
                 .Select(component =>
-                    $"{component.ComponentId}:{component.Kind}:{component.AssetId}:{string.Join(',', component.Slots.Select(slot => $"{slot.SlotId}:{slot.Role}"))}"))));
+                    $"{component.ComponentId}:{component.Kind}:{component.AssetId}:{component.TimelineOrientation}:{string.Join(',', component.Slots.Select(slot => $"{slot.SlotId}:{slot.Role}"))}"))));
 
         var artifact = new VisualBriefingPlanArtifact
         {
@@ -88,9 +88,9 @@ internal sealed class VisualBriefingPlanStage(StructuredLlmStageRunner stageRunn
           Section roles are HERO, EXECUTIVE_SUMMARY, NARRATIVE, EVIDENCE, EXPLORATION, or CONCLUSION.
           The first section is the only HERO. EXECUTIVE_SUMMARY may occur once directly after it. CONCLUSION may occur once as the final section.
           Every titleSlotId and summarySlotId is a unique content slot ID.
-          Each component has exactly componentId, kind, evidenceIds, slots, and assetId.
-          Every slot has exactly slotId and role. Slot roles are EYEBROW, TITLE, SUMMARY, BODY, LABEL, VALUE, CONTEXT, CAPTION, TABLE_DATA, PANEL, or RESULT.
-          Allowed kinds: TEXT, METRIC, TABLE, CHART, ASSET, CALLOUT, TABS, ACCORDION, FILTERABLE_TABLE, SIMULATION.
+          Each component has exactly componentId, kind, evidenceIds, slots, assetId, and timelineOrientation.
+          Every slot has exactly slotId and role. Slot roles are EYEBROW, TITLE, SUMMARY, BODY, LABEL, VALUE, CONTEXT, CAPTION, TABLE_DATA, PANEL, RESULT, or TIMELINE_DATA.
+          Allowed kinds: TEXT, METRIC, TABLE, CHART, ASSET, CALLOUT, TABS, ACCORDION, FILTERABLE_TABLE, SIMULATION, TIMELINE.
           IDs are stable lowercase identifiers matching ^[a-z][a-z0-9_-]{0,63}$. Reference only supplied evidence IDs.
           Slot IDs are unique across the whole briefing, including section title and summary slots.
           Use these exact component slot patterns:
@@ -102,7 +102,11 @@ internal sealed class VisualBriefingPlanStage(StructuredLlmStageRunner stageRunn
           TABS: TITLE, SUMMARY, then one or more PANEL slots.
           ACCORDION: TITLE, BODY.
           SIMULATION: TITLE, SUMMARY, then one or more RESULT slots.
+          TIMELINE: TITLE, SUMMARY, TIMELINE_DATA.
           assetId is null except for ASSET components; include every supplied assetId in exactly one ASSET component.
+          timelineOrientation is null except for TIMELINE components, where it is HORIZONTAL or VERTICAL.
+          Use TIMELINE for sourced events, milestones, phases, or historical developments whose sequence matters; use CHART instead for quantitative trends over time.
+          Choose HORIZONTAL for a concise overview with few milestones and VERTICAL for longer or explanation-rich chronological narratives.
           """;
 
     private static string BuildPrompt(VisualBriefingManifest manifest, VisualBriefingEvidenceArtifact evidence) =>

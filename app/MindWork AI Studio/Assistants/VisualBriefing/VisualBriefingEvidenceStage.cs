@@ -97,6 +97,7 @@ internal sealed class VisualBriefingEvidenceStage(StructuredLlmStageRunner stage
           tables contain evidenceId, title, columns, rows, sourceIds; every row has exactly the column count.
           sourceCoverage contains each supplied source exactly once with coverage USED, CONTEXTUAL, or OUT_OF_SCOPE and a short reason.
           assetPlan contains each supplied visual asset exactly once with assetId, description, and target-language altText.
+          Preserve material dates, periods, phases, milestones, durations, and their chronological order in the facts or tables that best represent them.
           Include only facts supported by the supplied material.
           """;
 

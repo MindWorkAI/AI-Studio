@@ -37,4 +37,7 @@ public enum VisualBriefingComponentKind
     
     /// <summary>Provides deterministic interactive controls and calculated results.</summary>
     SIMULATION,
+
+    /// <summary>Displays an ordered chronological sequence without a chart runtime.</summary>
+    TIMELINE,
 }

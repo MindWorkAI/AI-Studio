@@ -197,9 +197,12 @@ internal static partial class VisualBriefingValidation
                 item.EvidenceIds.Count == 0 ||
                 item.EvidenceIds.Distinct(StringComparer.Ordinal).Count() != item.EvidenceIds.Count ||
                 item.EvidenceIds.Any(id => !evidenceIds.Contains(id)) ||
-                !HasValidSlotPattern(item)))
+                !HasValidSlotPattern(item) ||
+                item.Kind is VisualBriefingComponentKind.TIMELINE &&
+                item.TimelineOrientation is not (VisualBriefingTimelineOrientation.HORIZONTAL or VisualBriefingTimelineOrientation.VERTICAL) ||
+                item.Kind is not VisualBriefingComponentKind.TIMELINE && item.TimelineOrientation is not null))
             return Invalid(
-                "Every component must reference valid evidence and use the exact slot roles for its kind.",
+                "Every component must reference valid evidence and use the exact slots and orientation for its kind.",
                 VisualBriefingValidationRule.REFERENCE_INVALID);
         
         var plannedAssetIds = components
@@ -674,6 +677,7 @@ internal static partial class VisualBriefingValidation
             VisualBriefingComponentKind.TABS => roles is [VisualBriefingSlotRole.TITLE, VisualBriefingSlotRole.SUMMARY, _, ..] && roles.Skip(2).All(role => role is VisualBriefingSlotRole.PANEL),
             VisualBriefingComponentKind.ACCORDION => roles.SequenceEqual([VisualBriefingSlotRole.TITLE, VisualBriefingSlotRole.BODY]),
             VisualBriefingComponentKind.SIMULATION => roles is [VisualBriefingSlotRole.TITLE, VisualBriefingSlotRole.SUMMARY, _, ..] && roles.Skip(2).All(role => role is VisualBriefingSlotRole.RESULT),
+            VisualBriefingComponentKind.TIMELINE => roles.SequenceEqual([VisualBriefingSlotRole.TITLE, VisualBriefingSlotRole.SUMMARY, VisualBriefingSlotRole.TIMELINE_DATA]),
             
             _ => false,
         };

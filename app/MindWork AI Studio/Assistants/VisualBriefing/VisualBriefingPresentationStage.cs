@@ -180,6 +180,7 @@ internal sealed class VisualBriefingPresentationStage(StructuredLlmStageRunner s
           The layout root is one STACK. Its direct children are one SECTION for every planned section,
           in plan order, with the matching sectionId. A section may contain STACK and GRID containers,
           and must reference exactly its own components. Reference every supplied component exactly once.
+          Give a HORIZONTAL TIMELINE enough width for its ordered track; do not place it in a narrow grid column.
           Prefer editorial rhythm over a wall of cards. Use emphasis sparingly for decisive metrics or insights.
           MindWork AI Studio owns all colors, typography, surfaces, and chart styling.
           """;

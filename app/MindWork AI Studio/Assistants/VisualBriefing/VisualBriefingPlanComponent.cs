@@ -27,4 +27,8 @@ public sealed class VisualBriefingPlanComponent
     /// <summary>Gets or sets the optional embedded asset identifier.</summary>
     [JsonRequired]
     public string? AssetId { get; set; }
+
+    /// <summary>Gets or sets the orientation used only by timeline components.</summary>
+    [JsonRequired]
+    public VisualBriefingTimelineOrientation? TimelineOrientation { get; set; }
 }

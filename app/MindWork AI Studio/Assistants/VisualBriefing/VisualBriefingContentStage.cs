@@ -101,6 +101,7 @@ internal sealed class VisualBriefingContentStage(StructuredLlmStageRunner stageR
           Fulfil every required slot from the plan exactly once and add no other slots. Every slot has a declared type in the user message.
           A TEXT slot value is a JSON string, number, or boolean. Write plain prose without markup, without angle brackets, and without programming syntax.
           A TABLE slot value is the object {"columns": ["..."], "rows": [{"cells": ["..."]}]}. It has no other properties, every row has exactly one cell per column, and every cell is a string, number, or boolean.
+          A TIMELINE slot value is the object {"items": [{"period": "...", "title": "...", "description": "..."}]}. It has no other properties, contains at least two items in chronological order, and every item has exactly those three non-empty target-language strings.
           For a FILTERABLE_TABLE component the first column is what readers filter by, so make it a repeating text category and give every row a string in that column.
           Charts contain componentId, kind (LINE, AREA, BAR, STACKED_BAR, SCATTER, PIE, DONUT, RADAR), categories, and series. Never return chart-library options.
           Controls contain controlId, componentId, kind (TAB, NUMBER, RANGE, SELECT), initialValue, and typed options with value and label. controlId is a unique lowercase identifier. An option value is the short unique value the control selects, and the option label is its visible target-language text.
@@ -112,6 +113,7 @@ internal sealed class VisualBriefingContentStage(StructuredLlmStageRunner stageR
           An accessibilityTexts entry is never shown on screen. It reaches people who cannot see the component, so it states what the component conveys: for a chart the trend and the decisive numbers, for a component with controls what those controls change.
           Section TITLE and SUMMARY slots and component TITLE, LABEL, EYEBROW, and CAPTION slots are concise display copy. BODY and SUMMARY slots use short paragraphs suitable for screen reading.
           For ACCORDION components, the TITLE slot supplies the visible summary and the BODY slot supplies the expandable content.
+          For TIMELINE components, preserve the evidence-backed chronology and express dates, ranges, or named phases in period without inventing precision.
           Do not return source references, reset controls, filter controls, or entries for ASSET components; AI Studio creates all of them deterministically.
           """;
 
