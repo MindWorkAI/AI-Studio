@@ -389,7 +389,7 @@ internal sealed partial class VisualBriefingBuildOrchestrator
             if (!revision.Success || revision.Version is null)
             {
                 var code = revision.Issue.Contains("did not change", StringComparison.OrdinalIgnoreCase) ? VisualBriefingFailureCode.NO_CHANGES : VisualBriefingFailureCode.STORE_FAILED;
-                throw new VisualBriefingBuildException(code, VisualBriefingBuildStage.COMMIT, revision.Issue, "The immutable revision commit was rejected.");
+                throw new VisualBriefingBuildException(code, VisualBriefingBuildStage.COMMIT, revision.Issue, $"The immutable revision commit was rejected. StoreIssue={revision.Issue}");
             }
 
             assemblyStage.Status = VisualBriefingBuildStageStatus.COMPLETED;

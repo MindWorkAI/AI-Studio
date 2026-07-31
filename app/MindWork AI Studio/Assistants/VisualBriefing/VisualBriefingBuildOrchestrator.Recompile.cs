@@ -231,7 +231,7 @@ internal sealed partial class VisualBriefingBuildOrchestrator
             
             var commitStage = GetStage(build, VisualBriefingBuildStage.COMMIT);
             if (!revision.Success || revision.Version is null)
-                throw new VisualBriefingBuildException(VisualBriefingFailureCode.STORE_FAILED, VisualBriefingBuildStage.COMMIT, revision.Issue, "The immutable recompiled revision commit was rejected.");
+                throw new VisualBriefingBuildException(VisualBriefingFailureCode.STORE_FAILED, VisualBriefingBuildStage.COMMIT, revision.Issue, $"The immutable recompiled revision commit was rejected. StoreIssue={revision.Issue}");
 
             assemblyStage.Status = VisualBriefingBuildStageStatus.COMPLETED;
             assemblyStage.FinishedAtUtc = DateTimeOffset.UtcNow;

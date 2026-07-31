@@ -38,9 +38,12 @@ public sealed partial class VisualBriefingStore
             VisualBriefingArtifactParts? parentParts = null;
             if (parent is not null)
             {
-                parentParts = request.EditMode is VisualBriefingEditMode.RECOMPILE
-                    ? await this.ReadVersionPartsForRecompileAsync(manifest.BriefingId, parent.RevisionId, token)
-                    : await this.ReadVersionPartsAsync(manifest.BriefingId, parent.RevisionId, token);
+                parentParts = request.EditMode switch
+                {
+                    VisualBriefingEditMode.RECOMPILE => await this.ReadVersionPartsForRecompileAsync(manifest.BriefingId, parent.RevisionId, token),
+                    VisualBriefingEditMode.REBUILD => await this.ReadVersionPartsForRebuildAsync(manifest.BriefingId, parent.RevisionId, token),
+                    _ => await this.ReadVersionPartsAsync(manifest.BriefingId, parent.RevisionId, token),
+                };
                 if (parentParts is null)
                     return VisualBriefingRevisionResult.Failure("The selected parent revision is invalid or damaged.");
 
@@ -172,9 +175,31 @@ public sealed partial class VisualBriefingStore
     }
 
     /// <summary>
-    /// Defines <c>ReadVersionPartsAsync</c> for the visual briefing feature.
+    /// Reads a local immutable version that is compatible with the current semantic schema.
     /// </summary>
-    public async Task<VisualBriefingArtifactParts?> ReadVersionPartsAsync(Guid briefingId, Guid revisionId, CancellationToken token = default)
+    public Task<VisualBriefingArtifactParts?> ReadVersionPartsAsync(Guid briefingId, Guid revisionId, CancellationToken token = default) =>
+        this.ReadVersionPartsCoreAsync(briefingId, revisionId, requireCurrentSchema: true, token: token);
+
+    /// <summary>
+    /// Reads an intact historical parent for rebuild lineage without requiring its semantic schema
+    /// to match the newly generated revision.
+    /// </summary>
+    /// <param name="briefingId">The briefing identifier.</param>
+    /// <param name="revisionId">The historical parent revision identifier.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>The verified parent artifact parts, or <see langword="null"/>.</returns>
+    private Task<VisualBriefingArtifactParts?> ReadVersionPartsForRebuildAsync(Guid briefingId, Guid revisionId, CancellationToken token) =>
+        this.ReadVersionPartsCoreAsync(briefingId, revisionId, requireCurrentSchema: false, token: token);
+
+    /// <summary>
+    /// Reads and integrity-checks one local immutable version with the requested schema policy.
+    /// </summary>
+    /// <param name="briefingId">The briefing identifier.</param>
+    /// <param name="revisionId">The revision identifier.</param>
+    /// <param name="requireCurrentSchema">Whether the current semantic schema is required.</param>
+    /// <param name="token">The cancellation token.</param>
+    /// <returns>The verified artifact parts, or <see langword="null"/>.</returns>
+    private async Task<VisualBriefingArtifactParts?> ReadVersionPartsCoreAsync(Guid briefingId, Guid revisionId, bool requireCurrentSchema, CancellationToken token)
     {
         var manifest = await this.LoadAsync(briefingId, token);
         var version = manifest?.Versions.FirstOrDefault(candidate => candidate.RevisionId == revisionId);
@@ -186,10 +211,11 @@ public sealed partial class VisualBriefingStore
             return null;
 
         var html = await File.ReadAllTextAsync(path, token);
-        if (!VisualBriefingArtifactService.TryParseForRecompile(html, out var parts, out _) ||
-            parts.ExportManifest.BriefingId != briefingId ||
-            parts.ExportManifest.RevisionId != revisionId ||
-            !string.Equals(parts.DocumentHash, version.DocumentHash, StringComparison.OrdinalIgnoreCase))
+        var parsed = requireCurrentSchema
+            ? VisualBriefingArtifactService.TryParseForRecompile(html, out var parts, out _)
+            : VisualBriefingArtifactService.TryParse(html, out parts, out _);
+
+        if (!parsed || parts.ExportManifest.BriefingId != briefingId || parts.ExportManifest.RevisionId != revisionId || !string.Equals(parts.DocumentHash, version.DocumentHash, StringComparison.OrdinalIgnoreCase))
             return null;
 
         return parts;
