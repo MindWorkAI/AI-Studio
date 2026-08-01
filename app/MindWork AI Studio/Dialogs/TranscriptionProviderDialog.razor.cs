@@ -312,7 +312,7 @@ public partial class TranscriptionProviderDialog : MSGComponentBase, ISecretId
         }
         catch (Exception e)
         {
-            this.Logger.LogError($"Failed to load models from provider '{this.DataLLMProvider}' (host={this.DataHost}, hostname='{this.DataHostname}'): {e.Message}");;
+            this.Logger.LogError($"Failed to load models from provider '{this.DataLLMProvider}' (host={this.DataHost}, hostname='{this.DataHostname}'): {e.Message}");
             this.dataLoadingModelsIssue = T("We are currently unable to communicate with the provider to load models. Please try again later.");
         }
     }
