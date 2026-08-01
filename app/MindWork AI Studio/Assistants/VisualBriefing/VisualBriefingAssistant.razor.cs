@@ -178,6 +178,18 @@ public partial class VisualBriefingAssistant : MSGComponentBase
     /// <summary>Stores incompatible validated content offered for rebuild continuation.</summary>
     private Guid? reusableContentBuildId;
 
+    /// <summary>Owns MudBlazor validation for the selected briefing editor.</summary>
+    private MudForm? visualBriefingForm;
+
+    /// <summary>Stores whether all MudBlazor fields in the editor are currently valid.</summary>
+    private bool formIsValid;
+
+    /// <summary>Stores the current MudBlazor validation messages.</summary>
+    private string[] formIssues = [];
+
+    /// <summary>Requests validation after conditional form controls have rendered.</summary>
+    private bool formValidationPending;
+
     /// <summary>
     /// Defines <c>IsCurrentBusy</c> for the visual briefing feature.
     /// </summary>
@@ -240,6 +252,12 @@ public partial class VisualBriefingAssistant : MSGComponentBase
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         await base.OnAfterRenderAsync(firstRender);
+        if (this.formValidationPending && this.visualBriefingForm is not null)
+        {
+            this.formValidationPending = false;
+            await this.visualBriefingForm.Validate();
+        }
+
         if (this.selectedBriefing is null || this.IsCurrentBusy)
             return;
 

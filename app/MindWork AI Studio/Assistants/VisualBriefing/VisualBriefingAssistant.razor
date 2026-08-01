@@ -78,152 +78,160 @@
                 }
                 else
                 {
-                    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Class="mb-3">
-                        <MudText Typo="Typo.h3">@this.projectName</MudText>
-                        <MudStack Row="true" Spacing="1">
-                            <MudButton StartIcon="@Icons.Material.Filled.DriveFileRenameOutline" OnClick="@this.RenameAsync" Disabled="@this.IsCurrentBusy">@T("Rename")</MudButton>
-                            <MudButton StartIcon="@Icons.Material.Filled.DeleteForever" Color="Color.Error" OnClick="@this.DeleteAsync" Disabled="@this.IsCurrentBusy">@T("Delete")</MudButton>
+                    <MudForm @ref="@(this.visualBriefingForm)"
+                             @bind-IsValid="@(this.formIsValid)"
+                             @bind-Errors="@(this.formIssues)">
+                        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Class="mb-3">
+                            <MudText Typo="Typo.h3">@this.projectName</MudText>
+                            <MudStack Row="true" Spacing="1">
+                                <MudButton StartIcon="@Icons.Material.Filled.DriveFileRenameOutline" OnClick="@this.RenameAsync" Disabled="@this.IsCurrentBusy">@T("Rename")</MudButton>
+                                <MudButton StartIcon="@Icons.Material.Filled.DeleteForever" Color="Color.Error" OnClick="@this.DeleteAsync" Disabled="@this.IsCurrentBusy">@T("Delete")</MudButton>
+                            </MudStack>
                         </MudStack>
-                    </MudStack>
 
-                    <MudPaper Outlined="true" Class="pa-4 mb-4">
-                        <MudGrid>
-                            <MudItem xs="12" md="7">
-                                <MudTextField T="string" @bind-Text="@this.projectName" Label="@T("Briefing name")" Required="true" Immediate="@true" Variant="Variant.Outlined" Disabled="@this.IsCurrentBusy"/>
+                        <MudPaper Outlined="true" Class="pa-4 mb-4">
+                            <MudGrid>
+                                <MudItem xs="12" md="7">
+                                    <MudTextField T="string" @bind-Text="@this.projectName" Label="@T("Briefing name")" Validation="@this.ValidateProjectName" Immediate="@true" Variant="Variant.Outlined" Disabled="@this.IsCurrentBusy"/>
+                                </MudItem>
+                                <MudItem xs="12" md="5">
+                                    <MudTextField T="string" @bind-Text="@this.author" Label="@T("Author (optional)")" Variant="Variant.Outlined" Disabled="@this.IsCurrentBusy"/>
+                                </MudItem>
+                            </MudGrid>
+                            <MudTextField T="string" @bind-Text="@this.instruction" Label="@T("Briefing scope, notes, or current change instruction (optional)")" Variant="Variant.Outlined" AutoGrow="true" Lines="3" Class="mt-3" Disabled="@this.IsCurrentBusy"/>
+
+                            <EnumSelection T="VisualBriefingProtectionLevel"
+                                           NameFunc="@(level => this.ProtectionLevelName(level))"
+                                           @bind-Value="@this.protectionLevel"
+                                           Icon="@Icons.Material.Filled.Security"
+                                           Label="@T("Protection level")"
+                                           AllowOther="true"
+                                           OtherValue="VisualBriefingProtectionLevel.OTHER"
+                                           @bind-OtherInput="@this.customProtectionLevel"
+                                           ValidateOther="@this.ValidateCustomProtectionLevel"
+                                           SelectionUpdated="@(_ => this.ScheduleFormValidation())"
+                                           LabelOther="@T("Custom protection level")"
+                                           Disabled="@this.IsCurrentBusy"/>
+                        </MudPaper>
+
+                        <MudGrid Class="mb-4">
+                            <MudItem xs="12" lg="6">
+                                <MudPaper Outlined="true" Class="pa-4 h-100">
+                                    <MudText Typo="Typo.h5">@T("Source material")</MudText>
+                                    <MudText Typo="Typo.body2" Class="mb-2">@T("Documents, spreadsheets, images, audio, and video are considered as source context.")</MudText>
+                                    <AttachDocuments Name="Visual briefing source material"
+                                                     Layer="@DropLayers.ASSISTANTS"
+                                                     @bind-DocumentPaths="@this.sourceMaterial"
+                                                     OnChange="@this.SourceMaterialChangedAsync"
+                                                     CatchAllDocuments="true"
+                                                     UseSmallForm="false"
+                                                     Provider="@this.provider"
+                                                     Disabled="@this.IsCurrentBusy"/>
+                                </MudPaper>
                             </MudItem>
-                            <MudItem xs="12" md="5">
-                                <MudTextField T="string" @bind-Text="@this.author" Label="@T("Author (optional)")" Variant="Variant.Outlined" Disabled="@this.IsCurrentBusy"/>
+                            <MudItem xs="12" lg="6">
+                                <MudPaper Outlined="true" Class="pa-4 h-100">
+                                    <MudText Typo="Typo.h5">@T("Visual assets")</MudText>
+                                    <MudText Typo="Typo.body2" Class="mb-2">@T("PNG, JPEG, and WebP assets are analyzed and must appear visibly in the briefing.")</MudText>
+                                    <AttachDocuments Name="Visual briefing visual assets"
+                                                     Layer="@DropLayers.ASSISTANTS"
+                                                     @bind-DocumentPaths="@this.visualAssets"
+                                                     OnChange="@this.VisualAssetsChangedAsync"
+                                                     CatchAllDocuments="false"
+                                                     UseSmallForm="false"
+                                                     AllowedFileTypes="@(new[] { FileTypes.VISUAL_BRIEFING_IMAGE })"
+                                                     Provider="@this.provider"
+                                                     Disabled="@this.IsCurrentBusy"/>
+                                </MudPaper>
                             </MudItem>
                         </MudGrid>
-                        <MudTextField T="string" @bind-Text="@this.instruction" Label="@T("Briefing scope, notes, or current change instruction (optional)")" Variant="Variant.Outlined" AutoGrow="true" Lines="3" Class="mt-3" Disabled="@this.IsCurrentBusy"/>
 
-                        <EnumSelection T="VisualBriefingProtectionLevel"
-                                       NameFunc="@(level => this.ProtectionLevelName(level))"
-                                       @bind-Value="@this.protectionLevel"
-                                       Icon="@Icons.Material.Filled.Security"
-                                       Label="@T("Protection level")"
-                                       AllowOther="true"
-                                       OtherValue="VisualBriefingProtectionLevel.OTHER"
-                                       @bind-OtherInput="@this.customProtectionLevel"
-                                       LabelOther="@T("Custom protection level")"
-                                       Disabled="@this.IsCurrentBusy"/>
-                    </MudPaper>
-
-                    <MudGrid Class="mb-4">
-                        <MudItem xs="12" lg="6">
-                            <MudPaper Outlined="true" Class="pa-4 h-100">
-                                <MudText Typo="Typo.h5">@T("Source material")</MudText>
-                                <MudText Typo="Typo.body2" Class="mb-2">@T("Documents, spreadsheets, images, audio, and video are considered as source context.")</MudText>
-                                <AttachDocuments Name="Visual briefing source material"
-                                                 Layer="@DropLayers.ASSISTANTS"
-                                                 @bind-DocumentPaths="@this.sourceMaterial"
-                                                 OnChange="@this.SourceMaterialChangedAsync"
-                                                 CatchAllDocuments="true"
-                                                 UseSmallForm="false"
-                                                 Provider="@this.provider"
-                                                 Disabled="@this.IsCurrentBusy"/>
-                            </MudPaper>
-                        </MudItem>
-                        <MudItem xs="12" lg="6">
-                            <MudPaper Outlined="true" Class="pa-4 h-100">
-                                <MudText Typo="Typo.h5">@T("Visual assets")</MudText>
-                                <MudText Typo="Typo.body2" Class="mb-2">@T("PNG, JPEG, and WebP assets are analyzed and must appear visibly in the briefing.")</MudText>
-                                <AttachDocuments Name="Visual briefing visual assets"
-                                                 Layer="@DropLayers.ASSISTANTS"
-                                                 @bind-DocumentPaths="@this.visualAssets"
-                                                 OnChange="@this.VisualAssetsChangedAsync"
-                                                 CatchAllDocuments="false"
-                                                 UseSmallForm="false"
-                                                 AllowedFileTypes="@(new[] { FileTypes.VISUAL_BRIEFING_IMAGE })"
-                                                 Provider="@this.provider"
-                                                 Disabled="@this.IsCurrentBusy"/>
-                            </MudPaper>
-                        </MudItem>
-                    </MudGrid>
-
-                    @if (this.selectedBriefing.Sources.Count > 0)
-                    {
-                        <MudPaper Outlined="true" Class="pa-4 mb-4">
-                            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-2">
-                                <MudText Typo="Typo.h5">@T("Linked sources")</MudText>
-                                <MudButton StartIcon="@Icons.Material.Filled.Refresh" OnClick="@this.RefreshSourceStatusAsync" Disabled="@this.IsCurrentBusy">@T("Refresh status")</MudButton>
-                            </MudStack>
-                            <MudTable Items="@this.selectedBriefing.Sources" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm">
-                                <HeaderContent>
-                                    <MudTh>@T("File")</MudTh>
-                                    <MudTh>@T("Kind")</MudTh>
-                                    <MudTh>@T("Status")</MudTh>
-                                    <MudTh>@T("Actions")</MudTh>
-                                </HeaderContent>
-                                <RowTemplate>
-                                    <MudTd DataLabel="@T("File")">@Path.GetFileName(context.Path)</MudTd>
-                                    <MudTd DataLabel="@T("Kind")">@context.Kind</MudTd>
-                                    <MudTd DataLabel="@T("Status")">
-                                        <MudChip T="string" Size="Size.Small" Color="@SourceStatusColor(context.Status)">@this.SourceStatusName(context.Status)</MudChip>
-                                    </MudTd>
-                                    <MudTd DataLabel="@T("Actions")">
-                                        <MudTooltip Text="@T("Relink")" Placement="Placement.Bottom">
-                                            <MudIconButton Icon="@Icons.Material.Filled.Link" OnClick="@(() => this.RelinkAsync(context))" Disabled="@this.IsCurrentBusy"/>
-                                        </MudTooltip>
-                                        @if (context.IsMedia && context.Status is VisualBriefingSourceStatus.TRANSCRIPT_OUTDATED)
-                                        {
-                                            <MudTooltip Text="@T("Transcribe again")" Placement="Placement.Bottom">
-                                                <MudIconButton Icon="@Icons.Material.Filled.RecordVoiceOver" OnClick="@(() => this.RetranscribeAsync(context))" Disabled="@this.IsCurrentBusy"/>
+                        @if (this.selectedBriefing.Sources.Count > 0)
+                        {
+                            <MudPaper Outlined="true" Class="pa-4 mb-4">
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-2">
+                                    <MudText Typo="Typo.h5">@T("Linked sources")</MudText>
+                                    <MudButton StartIcon="@Icons.Material.Filled.Refresh" OnClick="@this.RefreshSourceStatusAsync" Disabled="@this.IsCurrentBusy">@T("Refresh status")</MudButton>
+                                </MudStack>
+                                <MudTable Items="@this.selectedBriefing.Sources" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm">
+                                    <HeaderContent>
+                                        <MudTh>@T("File")</MudTh>
+                                        <MudTh>@T("Kind")</MudTh>
+                                        <MudTh>@T("Status")</MudTh>
+                                        <MudTh>@T("Actions")</MudTh>
+                                    </HeaderContent>
+                                    <RowTemplate>
+                                        <MudTd DataLabel="@T("File")">@Path.GetFileName(context.Path)</MudTd>
+                                        <MudTd DataLabel="@T("Kind")">@context.Kind</MudTd>
+                                        <MudTd DataLabel="@T("Status")">
+                                            <MudChip T="string" Size="Size.Small" Color="@SourceStatusColor(context.Status)">@this.SourceStatusName(context.Status)</MudChip>
+                                        </MudTd>
+                                        <MudTd DataLabel="@T("Actions")">
+                                            <MudTooltip Text="@T("Relink")" Placement="Placement.Bottom">
+                                                <MudIconButton Icon="@Icons.Material.Filled.Link" OnClick="@(() => this.RelinkAsync(context))" Disabled="@this.IsCurrentBusy"/>
                                             </MudTooltip>
-                                        }
-                                        <MudTooltip Text="@T("Remove")" Placement="Placement.Bottom">
-                                            <MudIconButton Icon="@Icons.Material.Filled.RemoveCircle" Color="Color.Error" OnClick="@(() => this.RemoveSourceAsync(context))" Disabled="@this.IsCurrentBusy"/>
-                                        </MudTooltip>
-                                    </MudTd>
-                                </RowTemplate>
-                            </MudTable>
+                                            @if (context.IsMedia && context.Status is VisualBriefingSourceStatus.TRANSCRIPT_OUTDATED)
+                                            {
+                                                <MudTooltip Text="@T("Transcribe again")" Placement="Placement.Bottom">
+                                                    <MudIconButton Icon="@Icons.Material.Filled.RecordVoiceOver" OnClick="@(() => this.RetranscribeAsync(context))" Disabled="@this.IsCurrentBusy"/>
+                                                </MudTooltip>
+                                            }
+                                            <MudTooltip Text="@T("Remove")" Placement="Placement.Bottom">
+                                                <MudIconButton Icon="@Icons.Material.Filled.RemoveCircle" Color="Color.Error" OnClick="@(() => this.RemoveSourceAsync(context))" Disabled="@this.IsCurrentBusy"/>
+                                            </MudTooltip>
+                                        </MudTd>
+                                    </RowTemplate>
+                                </MudTable>
+                            </MudPaper>
+                        }
+
+                        <MudPaper Outlined="true" Class="pa-4 mb-4">
+                            <MudText Typo="Typo.h5" Class="mb-3">@T("Briefing settings")</MudText>
+                            <ProviderSelection @bind-ProviderSettings="@this.provider" ValidateProvider="@this.ValidateProvider" ExplicitMinimumConfidence="@this.MinimumProviderConfidence" Disabled="@this.IsCurrentBusy"/>
+                            <ProfileSelection @bind-CurrentProfile="@this.profile" MarginLeft="" Disabled="@this.IsCurrentBusy"/>
+                            <EnumSelection T="CommonLanguages" NameFunc="@(language => language.Name())" @bind-Value="@this.targetLanguage" Icon="@Icons.Material.Filled.Translate" Label="@T("Target language")" AllowOther="true" @bind-OtherInput="@this.customTargetLanguage" OtherValue="CommonLanguages.OTHER" LabelOther="@T("Custom target language")" ValidateOther="@this.ValidateCustomTargetLanguage" SelectionUpdated="@(_ => this.ScheduleFormValidation())" Disabled="@this.IsCurrentBusy"/>
+                            <EnumSelection T="AudienceProfile" NameFunc="@(value => value.Name())" @bind-Value="@this.audienceProfile" Label="@T("Audience profile")" Disabled="@this.IsCurrentBusy"/>
+                            <EnumSelection T="AudienceAgeGroup" NameFunc="@(value => value.Name())" @bind-Value="@this.audienceAgeGroup" Label="@T("Audience age group")" Disabled="@this.IsCurrentBusy"/>
+                            <EnumSelection T="AudienceOrganizationalLevel" NameFunc="@(value => value.Name())" @bind-Value="@this.audienceOrganizationalLevel" Label="@T("Audience organizational level")" Disabled="@this.IsCurrentBusy"/>
+                            <EnumSelection T="AudienceExpertise" NameFunc="@(value => value.Name())" @bind-Value="@this.audienceExpertise" Label="@T("Audience expertise")" Disabled="@this.IsCurrentBusy"/>
+                            <MudSwitch T="bool" @bind-Value="@this.showSourceReferences" Color="Color.Primary" Disabled="@this.IsCurrentBusy">@T("Show source references")</MudSwitch>
+                            <MudSwitch T="bool" @bind-Value="@this.optimizeImages" Color="Color.Primary" Disabled="@this.IsCurrentBusy">@T("Optimize large visual assets")</MudSwitch>
                         </MudPaper>
-                    }
 
-                    <MudPaper Outlined="true" Class="pa-4 mb-4">
-                        <MudText Typo="Typo.h5" Class="mb-3">@T("Briefing settings")</MudText>
-                        <ProviderSelection @bind-ProviderSettings="@this.provider" ExplicitMinimumConfidence="@this.MinimumProviderConfidence" Disabled="@this.IsCurrentBusy"/>
-                        <ProfileSelection @bind-CurrentProfile="@this.profile" MarginLeft="" Disabled="@this.IsCurrentBusy"/>
-                        <EnumSelection T="CommonLanguages" NameFunc="@(language => language.Name())" @bind-Value="@this.targetLanguage" Icon="@Icons.Material.Filled.Translate" Label="@T("Target language")" AllowOther="true" @bind-OtherInput="@this.customTargetLanguage" OtherValue="CommonLanguages.OTHER" LabelOther="@T("Custom target language")" Disabled="@this.IsCurrentBusy"/>
-                        <EnumSelection T="AudienceProfile" NameFunc="@(value => value.Name())" @bind-Value="@this.audienceProfile" Label="@T("Audience profile")" Disabled="@this.IsCurrentBusy"/>
-                        <EnumSelection T="AudienceAgeGroup" NameFunc="@(value => value.Name())" @bind-Value="@this.audienceAgeGroup" Label="@T("Audience age group")" Disabled="@this.IsCurrentBusy"/>
-                        <EnumSelection T="AudienceOrganizationalLevel" NameFunc="@(value => value.Name())" @bind-Value="@this.audienceOrganizationalLevel" Label="@T("Audience organizational level")" Disabled="@this.IsCurrentBusy"/>
-                        <EnumSelection T="AudienceExpertise" NameFunc="@(value => value.Name())" @bind-Value="@this.audienceExpertise" Label="@T("Audience expertise")" Disabled="@this.IsCurrentBusy"/>
-                        <MudSwitch T="bool" @bind-Value="@this.showSourceReferences" Color="Color.Primary" Disabled="@this.IsCurrentBusy">@T("Show source references")</MudSwitch>
-                        <MudSwitch T="bool" @bind-Value="@this.optimizeImages" Color="Color.Primary" Disabled="@this.IsCurrentBusy">@T("Optimize large visual assets")</MudSwitch>
-                    </MudPaper>
+                        <MudStack Row="true" Spacing="2" Wrap="Wrap.Wrap" Class="mb-4">
+                            @if (this.selectedBriefing.Versions.Count == 0)
+                            {
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AutoAwesome" OnClick="@(() => this.GenerateAsync(VisualBriefingEditMode.INITIAL))" Disabled="@this.CannotGenerate(VisualBriefingEditMode.INITIAL)">@T("Create briefing")</MudButton>
+                            }
+                            else
+                            {
+                                <MudTooltip Text="@T("Creates a new version with a different design while keeping the current structure, content, and visual assets.")">
+                                    <span>
+                                        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Palette" OnClick="@(() => this.GenerateAsync(VisualBriefingEditMode.CHANGE_DESIGN))" Disabled="@this.CannotGenerate(VisualBriefingEditMode.CHANGE_DESIGN)">@T("Change design")</MudButton>
+                                    </span>
+                                </MudTooltip>
+                                <MudTooltip Text="@T("Creates a new version from the current sources and instructions while keeping the current structure and design.")">
+                                    <span>
+                                        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Update" OnClick="@(() => this.GenerateAsync(VisualBriefingEditMode.UPDATE_CONTENT))" Disabled="@this.CannotGenerate(VisualBriefingEditMode.UPDATE_CONTENT)">@T("Update content")</MudButton>
+                                    </span>
+                                </MudTooltip>
+                                <MudTooltip Text="@(this.SelectedVersionSupportsEdits
+                                                      ? T("Recompile this version with the current AI Studio version without AI model calls.")
+                                                      : T("This version has no compatible semantic artifacts. Rebuild the briefing instead."))">
+                                    <span>
+                                        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Code" OnClick="@(() => this.RecompileAsync())" Disabled="@this.CannotRecompile">@T("Recompile briefing")</MudButton>
+                                    </span>
+                                </MudTooltip>
+                                <MudTooltip Text="@T("Creates a new version from the current sources and instructions. The structure, content, and design may all change.")">
+                                    <span>
+                                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AutoAwesome" OnClick="@(() => this.GenerateAsync(VisualBriefingEditMode.REBUILD))" Disabled="@this.CannotGenerate(VisualBriefingEditMode.REBUILD)">@T("Rebuild briefing")</MudButton>
+                                    </span>
+                                </MudTooltip>
+                            }
+                        </MudStack>
+                    </MudForm>
 
-                    <MudStack Row="true" Spacing="2" Wrap="Wrap.Wrap" Class="mb-4">
-                        @if (this.selectedBriefing.Versions.Count == 0)
-                        {
-                            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AutoAwesome" OnClick="@(() => this.GenerateAsync(VisualBriefingEditMode.INITIAL))" Disabled="@this.CannotGenerate(VisualBriefingEditMode.INITIAL)">@T("Create briefing")</MudButton>
-                        }
-                        else
-                        {
-                            <MudTooltip Text="@T("Creates a new version with a different design while keeping the current structure, content, and visual assets.")">
-                                <span>
-                                    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Palette" OnClick="@(() => this.GenerateAsync(VisualBriefingEditMode.CHANGE_DESIGN))" Disabled="@this.CannotGenerate(VisualBriefingEditMode.CHANGE_DESIGN)">@T("Change design")</MudButton>
-                                </span>
-                            </MudTooltip>
-                            <MudTooltip Text="@T("Creates a new version from the current sources and instructions while keeping the current structure and design.")">
-                                <span>
-                                    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Update" OnClick="@(() => this.GenerateAsync(VisualBriefingEditMode.UPDATE_CONTENT))" Disabled="@this.CannotGenerate(VisualBriefingEditMode.UPDATE_CONTENT)">@T("Update content")</MudButton>
-                                </span>
-                            </MudTooltip>
-                            <MudTooltip Text="@(this.SelectedVersionSupportsEdits
-                                                  ? T("Recompile this version with the current AI Studio version without AI model calls.")
-                                                  : T("This version has no compatible semantic artifacts. Rebuild the briefing instead."))">
-                                <span>
-                                    <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Code" OnClick="@(() => this.RecompileAsync())" Disabled="@this.CannotRecompile">@T("Recompile briefing")</MudButton>
-                                </span>
-                            </MudTooltip>
-                            <MudTooltip Text="@T("Creates a new version from the current sources and instructions. The structure, content, and design may all change.")">
-                                <span>
-                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AutoAwesome" OnClick="@(() => this.GenerateAsync(VisualBriefingEditMode.REBUILD))" Disabled="@this.CannotGenerate(VisualBriefingEditMode.REBUILD)">@T("Rebuild briefing")</MudButton>
-                                </span>
-                            </MudTooltip>
-                        }
-                    </MudStack>
+                    <Issues IssuesData="@this.ValidationIssues"/>
 
                     @if (this.latestBuild is not null)
                     {
@@ -294,7 +302,7 @@
                                            Color="Color.Warning"
                                            StartIcon="@Icons.Material.Filled.Refresh"
                                            OnClick="@(() => this.GenerateAsync(VisualBriefingEditMode.REBUILD, reusableBuildId))"
-                                           Disabled="@this.IsCurrentBusy">
+                                           Disabled="@this.CannotGenerate(VisualBriefingEditMode.REBUILD)">
                                     @T("Continue as rebuild")
                                 </MudButton>
                             </MudStack>

@@ -295,6 +295,9 @@ public partial class VisualBriefingAssistant
         }
 
         this.lastPersistedState = this.BuildPersistenceFingerprint();
+        this.formIssues = [];
+        this.formIsValid = false;
+        this.formValidationPending = true;
     }
 
     /// <summary>
@@ -328,6 +331,10 @@ public partial class VisualBriefingAssistant
         this.lastBuildDiagnostics = null;
         this.reusableContentBuildId = null;
         this.lastPersistedState = string.Empty;
+        this.formIssues = [];
+        this.formIsValid = false;
+        this.formValidationPending = false;
+        this.visualBriefingForm?.ResetValidation();
     }
 
     /// <summary>

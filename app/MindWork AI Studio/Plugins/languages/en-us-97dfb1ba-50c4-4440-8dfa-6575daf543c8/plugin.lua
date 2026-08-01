@@ -2301,6 +2301,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::
 -- The visual briefing settings could not be saved.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T131371789"] = "The visual briefing settings could not be saved."
 
+-- Please provide a custom target language.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T1330607941"] = "Please provide a custom target language."
+
 -- AI Studio cannot read this visual briefing. Its files may be incompatible or damaged.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T138425430"] = "AI Studio cannot read this visual briefing. Its files may be incompatible or damaged."
 
@@ -2339,6 +2342,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::
 
 -- This briefing revision was already imported.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T1732858483"] = "This briefing revision was already imported."
+
+-- Please select a provider.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T1809312323"] = "Please select a provider."
 
 -- Cannot be opened
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T1981873292"] = "Cannot be opened"
@@ -2454,6 +2460,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::
 -- Export visual briefing
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3261790455"] = "Export visual briefing"
 
+-- The source '{0}' is no longer reachable. Restore or relink it.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3270802829"] = "The source '{0}' is no longer reachable. Restore or relink it."
+
 -- Could not open the visual briefing project folder.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3290777125"] = "Could not open the visual briefing project folder."
 
@@ -2519,6 +2528,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::
 
 -- Actions
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3865031940"] = "Actions"
+
+-- The transcript for '{0}' is missing or outdated. Transcribe the media source again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3882911085"] = "The transcript for '{0}' is missing or outdated. Transcribe the media source again."
 
 -- Export
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T3898821075"] = "Export"
@@ -2624,6 +2636,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::
 
 -- Visual briefing preview
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T740269027"] = "Visual briefing preview"
+
+-- Please provide a custom protection level.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T799692129"] = "Please provide a custom protection level."
+
+-- Please provide a briefing name.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T902674552"] = "Please provide a briefing name."
 
 -- Build progress
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T909046610"] = "Build progress"
