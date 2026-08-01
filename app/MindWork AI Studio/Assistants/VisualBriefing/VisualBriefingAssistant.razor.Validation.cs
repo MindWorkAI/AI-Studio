@@ -6,6 +6,9 @@ namespace AIStudio.Assistants.VisualBriefing;
 
 public partial class VisualBriefingAssistant
 {
+    /// <summary>Gets whether the briefing contains at least one actual source-material file.</summary>
+    private bool HasSourceMaterial => this.selectedBriefing?.Sources.Any(source => source.Kind is VisualBriefingSourceKind.SOURCE_MATERIAL) == true;
+
     /// <summary>Gets all current field, source, and revision issues shown below the actions.</summary>
     private IReadOnlyList<string> ValidationIssues
     {
@@ -20,6 +23,9 @@ public partial class VisualBriefingAssistant
 
             if (this.selectedBriefing is not null)
             {
+                if (!this.HasSourceMaterial)
+                    issues.Add(T("Please add at least one source material file."));
+
                 foreach (var source in this.selectedBriefing.Sources)
                 {
                     var fileName = Path.GetFileName(source.Path);

@@ -234,6 +234,26 @@ internal sealed partial class VisualBriefingBuildOrchestrator
     }
 
     /// <summary>
+    /// Ensures content-generating builds have at least one source-material file.
+    /// </summary>
+    /// <param name="manifest">The briefing manifest.</param>
+    /// <param name="mode">The requested edit mode.</param>
+    private static void ValidateSourceMaterial(VisualBriefingManifest manifest, VisualBriefingEditMode mode)
+    {
+        if (mode is VisualBriefingEditMode.CHANGE_DESIGN or VisualBriefingEditMode.RECOMPILE ||
+            manifest.Sources.Any(source => source.Kind is VisualBriefingSourceKind.SOURCE_MATERIAL))
+        {
+            return;
+        }
+
+        throw new VisualBriefingBuildException(
+            VisualBriefingFailureCode.SOURCE_PREPARATION_FAILED,
+            VisualBriefingBuildStage.SOURCE_PREPARATION,
+            "Please add at least one source material file.",
+            "The briefing has no SOURCE_MATERIAL source.");
+    }
+
+    /// <summary>
     /// Validates image-input capabilities for content analysis.
     /// </summary>
     /// <param name="manifest">The briefing manifest.</param>

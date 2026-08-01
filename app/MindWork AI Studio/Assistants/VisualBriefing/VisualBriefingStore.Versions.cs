@@ -20,6 +20,12 @@ public sealed partial class VisualBriefingStore
         {
             var manifest = await this.LoadRequiredWithoutInitializeAsync(request.BriefingId, token);
             RefreshSourceStatuses(manifest);
+            if (request.EditMode is not (VisualBriefingEditMode.CHANGE_DESIGN or VisualBriefingEditMode.RECOMPILE) &&
+                manifest.Sources.All(source => source.Kind is not VisualBriefingSourceKind.SOURCE_MATERIAL))
+            {
+                return VisualBriefingRevisionResult.Failure("Please add at least one source material file.");
+            }
+
             var blockingSources = manifest.Sources
                 .Where(source => source.Status is VisualBriefingSourceStatus.UNREACHABLE or VisualBriefingSourceStatus.TRANSCRIPT_OUTDATED)
                 .ToArray();

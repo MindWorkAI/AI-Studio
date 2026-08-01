@@ -24,6 +24,7 @@ public partial class VisualBriefingAssistant
         string.IsNullOrWhiteSpace(this.projectName) ||
         this.targetLanguage is CommonLanguages.OTHER && string.IsNullOrWhiteSpace(this.customTargetLanguage) ||
         this.protectionLevel is VisualBriefingProtectionLevel.OTHER && string.IsNullOrWhiteSpace(this.customProtectionLevel) ||
+        mode is not VisualBriefingEditMode.CHANGE_DESIGN && !this.HasSourceMaterial ||
         mode is VisualBriefingEditMode.CHANGE_DESIGN or VisualBriefingEditMode.UPDATE_CONTENT &&
         !this.SelectedVersionSupportsEdits ||
         mode is not VisualBriefingEditMode.CHANGE_DESIGN &&
