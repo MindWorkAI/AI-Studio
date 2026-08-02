@@ -12,6 +12,9 @@ namespace AIStudio.Assistants.VisualBriefing;
 /// that never change, persistence wants output that stays readable as the app evolves. One shared
 /// configuration cannot serve both: improving the readability of stored files would rewrite the very
 /// bytes that older briefings were hashed with, and every one of them would fail its integrity check.
+/// For the same reason both configurations are written out in full instead of sharing a factory, which
+/// is what <see cref="CanonicalJsonConfigurationAttribute"/> and the rule MWAIS0010 enforce: a shared
+/// factory lets a change intended for the persistence side reach the hashed side unnoticed.
 /// </remarks>
 internal static class VisualBriefingJson
 {
@@ -27,45 +30,35 @@ internal static class VisualBriefingJson
     /// surfaces as a failed integrity check rather than as a build error. This is why enums stay numeric
     /// here even though the persisted manifest writes their member names.
     /// </remarks>
-    internal static JsonSerializerOptions Canonical { get; } = Create(writeIndented: false, enumsAsText: false);
+    [CanonicalJsonConfiguration]
+    internal static JsonSerializerOptions Canonical { get; } = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        PropertyNameCaseInsensitive = false,
+        WriteIndented = false,
+        Encoder = JavaScriptEncoder.Default,
+        UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
+    };
 
     /// <summary>
     /// Gets the options for files that are read back by name rather than by hash.
     /// </summary>
     /// <remarks>
     /// These options are free to evolve, because nothing hashes their output. They write the briefing
-    /// manifest and the diagnostics clipboard text, where readable enum names are worth having.
-    /// </remarks>
-    internal static JsonSerializerOptions Persistence { get; } = Create(writeIndented: true, enumsAsText: true);
-
-    /// <summary>
-    /// Creates the shared JSON configuration.
-    /// </summary>
-    /// <remarks>
-    /// Wherever the output is not hashed, enums are written as their member names instead of numbers:
-    /// stored briefings outlive many releases, so a numeric value would silently change meaning as soon
-    /// as somebody inserts or reorders an enum member. Most visual briefing enums carry the converter as
-    /// an attribute already, which applies to both configurations; this option only covers the ones
+    /// manifest and the diagnostics clipboard text, where readable enum names are worth having: stored
+    /// briefings outlive many releases, so a numeric value would silently change meaning as soon as
+    /// somebody inserts or reorders an enum member. Most visual briefing enums carry the converter as an
+    /// attribute already, which applies to both configurations; the converter below only covers the ones
     /// defined outside the feature, such as the target language and the audience enums. Reading accepts
     /// numbers as well, so manifests written before this distinction existed keep loading.
     /// </remarks>
-    /// <param name="writeIndented">Whether serialized JSON should be indented.</param>
-    /// <param name="enumsAsText">Whether enums without their own converter are written as member names.</param>
-    /// <returns>The configured serializer options.</returns>
-    private static JsonSerializerOptions Create(bool writeIndented, bool enumsAsText)
+    internal static JsonSerializerOptions Persistence { get; } = new()
     {
-        var options = new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            PropertyNameCaseInsensitive = false,
-            WriteIndented = writeIndented,
-            Encoder = JavaScriptEncoder.Default,
-            UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
-        };
-
-        if (enumsAsText)
-            options.Converters.Add(new JsonStringEnumConverter());
-
-        return options;
-    }
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        PropertyNameCaseInsensitive = false,
+        WriteIndented = true,
+        Encoder = JavaScriptEncoder.Default,
+        UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
+        Converters = { new JsonStringEnumConverter() },
+    };
 }
