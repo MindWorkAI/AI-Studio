@@ -67,18 +67,8 @@ internal sealed class VisualBriefingContentStage(StructuredLlmStageRunner stageR
             },
         }, VisualBriefingJson.Canonical);
 
-        // Keep in sync with the verification in VisualBriefingStore.ReadContentArtifactAsync:
-        artifact.PayloadHash = VisualBriefingHashing.ComputeSections(
-            JsonSerializer.Serialize(artifact.Slots, VisualBriefingJson.Canonical),
-            JsonSerializer.Serialize(artifact.Charts, VisualBriefingJson.Canonical),
-            JsonSerializer.Serialize(artifact.Controls, VisualBriefingJson.Canonical),
-            JsonSerializer.Serialize(artifact.Formulas, VisualBriefingJson.Canonical),
-            JsonSerializer.Serialize(artifact.AccessibilityTexts, VisualBriefingJson.Canonical),
-            JsonSerializer.Serialize(artifact.SourceReferences, VisualBriefingJson.Canonical),
-            artifact.ResetLabel,
-            JsonSerializer.Serialize(artifact.SourceCoverage, VisualBriefingJson.Canonical),
-            JsonSerializer.Serialize(artifact.AssetPlan, VisualBriefingJson.Canonical),
-            artifact.StructuralSignature);
+        artifact.PayloadHash = VisualBriefingPayloadHash.ForContent(artifact.Slots, artifact.Charts, artifact.Controls, artifact.Formulas, artifact.AccessibilityTexts,
+            artifact.SourceReferences, artifact.ResetLabel, artifact.SourceCoverage, artifact.AssetPlan, artifact.StructuralSignature);
         
         await store.WriteContentArtifactAsync(manifest.BriefingId, artifact, token);
         build.ContentArtifactId = artifact.ArtifactId;

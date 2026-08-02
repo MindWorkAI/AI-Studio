@@ -43,6 +43,20 @@ internal static class VisualBriefingHashing
     }
 
     /// <summary>
+    /// Returns canonical JSON for one value, with ordinally sorted object properties.
+    /// </summary>
+    /// <remarks>
+    /// Hashed values go through here instead of being serialized directly. Plain serialization writes
+    /// properties in declaration order, which would tie every stored hash to the order in which the
+    /// members happen to appear in the C# file: reordering two properties would invalidate every
+    /// briefing already on disk, without any visible change to the data.
+    /// </remarks>
+    /// <typeparam name="T">The type of the value to canonicalize.</typeparam>
+    /// <param name="value">The value to canonicalize.</param>
+    /// <returns>Compact canonical JSON.</returns>
+    internal static string CanonicalJson<T>(T value) => CanonicalJson(JsonSerializer.SerializeToElement(value, VisualBriefingJson.Canonical));
+
+    /// <summary>
     /// Returns canonical JSON with ordinally sorted object properties.
     /// </summary>
     /// <param name="value">The JSON value to canonicalize.</param>

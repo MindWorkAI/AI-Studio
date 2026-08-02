@@ -502,24 +502,10 @@ public sealed partial class VisualBriefingStore
             new() { SlotId = "imported_data", Value = businessData },
         };
         
-        // Section order and count must match ReadContentArtifactAsync exactly:
-        var contentHash = VisualBriefingHashing.ComputeSections(
-            JsonSerializer.Serialize(importedSlots, VisualBriefingJson.Canonical),
-            "[]",
-            "[]",
-            "[]",
-            "{}",
-            "{}",
-            "Reset",
-            JsonSerializer.Serialize(coverage, VisualBriefingJson.Canonical),
-            JsonSerializer.Serialize(assetPlan, VisualBriefingJson.Canonical),
-            structuralSignature);
-        
         var content = new VisualBriefingContentArtifact
         {
             ArtifactId = Guid.NewGuid(),
             CreatedAtUtc = DateTimeOffset.UtcNow,
-            PayloadHash = contentHash,
             Data = businessData,
             Slots = importedSlots,
             ResetLabel = "Reset",
@@ -528,6 +514,12 @@ public sealed partial class VisualBriefingStore
             StructuralSignature = structuralSignature,
             Model = "Imported artifact",
         };
+
+        // An imported briefing carries no charts, controls, formulas, accessibility texts, or source
+        // references. Hashing the artifact itself keeps those empty sections in the right places
+        // without spelling them out as literals here.
+        content.PayloadHash = VisualBriefingPayloadHash.ForContent(content.Slots, content.Charts, content.Controls, content.Formulas, content.AccessibilityTexts,
+            content.SourceReferences, content.ResetLabel, content.SourceCoverage, content.AssetPlan, content.StructuralSignature);
         
         var importedLayout = new VisualBriefingLayoutNode
         {
@@ -550,11 +542,7 @@ public sealed partial class VisualBriefingStore
         {
             ArtifactId = Guid.NewGuid(),
             CreatedAtUtc = DateTimeOffset.UtcNow,
-            PayloadHash = VisualBriefingHashing.ComputeSections(
-                JsonSerializer.Serialize(importedLayout, VisualBriefingJson.Canonical),
-                VisualBriefingDesignProfile.EDITORIAL.ToString(),
-                templateHash,
-                cssHash),
+            PayloadHash = VisualBriefingPayloadHash.ForPresentation(importedLayout, VisualBriefingDesignProfile.EDITORIAL, templateHash, cssHash),
             Layout = importedLayout,
             Profile = VisualBriefingDesignProfile.EDITORIAL,
             TemplateHtml = parts.TemplateHtml,

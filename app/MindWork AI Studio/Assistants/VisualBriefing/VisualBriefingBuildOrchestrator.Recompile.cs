@@ -150,12 +150,7 @@ internal sealed partial class VisualBriefingBuildOrchestrator
             {
                 ArtifactId = Guid.NewGuid(),
                 CreatedAtUtc = DateTimeOffset.UtcNow,
-                PayloadHash = VisualBriefingHashing.ComputeSections(
-                    JsonSerializer.Serialize(previousPresentation.Layout, VisualBriefingJson.Canonical),
-                    previousPresentation.Profile.ToString(),
-                    compiled.TemplateHash,
-                    compiled.CssHash),
-                
+                PayloadHash = VisualBriefingPayloadHash.ForPresentation(previousPresentation.Layout, previousPresentation.Profile, compiled.TemplateHash, compiled.CssHash),
                 Layout = previousPresentation.Layout,
                 Profile = previousPresentation.Profile,
                 TemplateHtml = compiled.TemplateHtml,

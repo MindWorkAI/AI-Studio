@@ -80,11 +80,7 @@ internal sealed class VisualBriefingPresentationStage(StructuredLlmStageRunner s
         }
 
         var compiled = VisualBriefingLayoutCompiler.Compile(plan, content, run.Response.Layout, run.Response.Profile);
-        var payloadHash = VisualBriefingHashing.ComputeSections(
-            JsonSerializer.Serialize(run.Response.Layout, VisualBriefingJson.Canonical),
-            run.Response.Profile.ToString(),
-            compiled.TemplateHash,
-            compiled.CssHash);
+        var payloadHash = VisualBriefingPayloadHash.ForPresentation(run.Response.Layout, run.Response.Profile, compiled.TemplateHash, compiled.CssHash);
         
         var artifact = new VisualBriefingPresentationArtifact
         {

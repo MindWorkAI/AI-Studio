@@ -105,7 +105,13 @@ public sealed partial class VisualBriefingArtifactService
     /// <summary>
     /// Encodes the stable JSON artifact header for embedding in an HTML comment.
     /// </summary>
-    private static string EncodeHeader(VisualBriefingExportManifest exportManifest) => Convert.ToBase64String(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(exportManifest, JSON_OPTIONS)));
+    /// <remarks>
+    /// The header is canonical JSON because verifying a stored briefing encodes it again and compares
+    /// the document hash. Plain serialization would tie every stored document to the order in which the
+    /// manifest properties happen to be declared, so moving one property would reject every briefing
+    /// ever exported.
+    /// </remarks>
+    private static string EncodeHeader(VisualBriefingExportManifest exportManifest) => Convert.ToBase64String(Encoding.UTF8.GetBytes(VisualBriefingHashing.CanonicalJson(exportManifest)));
 
     /// <summary>
     /// Defines <c>RuntimeAIVersionRegex</c> for the visual briefing feature.

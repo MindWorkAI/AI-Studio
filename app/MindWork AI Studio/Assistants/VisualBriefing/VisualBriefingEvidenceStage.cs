@@ -46,12 +46,7 @@ internal sealed class VisualBriefingEvidenceStage(StructuredLlmStageRunner stage
             await FailAsync(store, build, stage, run, VisualBriefingValidationRule.REFERENCE_INVALID, token);
 
         var response = run.Response!;
-        var payloadHash = VisualBriefingHashing.ComputeSections(
-            JsonSerializer.Serialize(response.Facts, VisualBriefingJson.Canonical),
-            JsonSerializer.Serialize(response.Metrics, VisualBriefingJson.Canonical),
-            JsonSerializer.Serialize(response.Tables, VisualBriefingJson.Canonical),
-            JsonSerializer.Serialize(response.SourceCoverage, VisualBriefingJson.Canonical),
-            JsonSerializer.Serialize(response.AssetPlan, VisualBriefingJson.Canonical));
+        var payloadHash = VisualBriefingPayloadHash.ForEvidence(response.Facts, response.Metrics, response.Tables, response.SourceCoverage, response.AssetPlan);
         
         var artifact = new VisualBriefingEvidenceArtifact
         {

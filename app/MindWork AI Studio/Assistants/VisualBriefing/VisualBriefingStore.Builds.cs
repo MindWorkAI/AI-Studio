@@ -163,13 +163,7 @@ public sealed partial class VisualBriefingStore
             artifact.ArtifactId != artifactId)
             return null;
         
-        var hash = VisualBriefingHashing.ComputeSections(
-            JsonSerializer.Serialize(artifact.Facts, VisualBriefingJson.Canonical),
-            JsonSerializer.Serialize(artifact.Metrics, VisualBriefingJson.Canonical),
-            JsonSerializer.Serialize(artifact.Tables, VisualBriefingJson.Canonical),
-            JsonSerializer.Serialize(artifact.SourceCoverage, VisualBriefingJson.Canonical),
-            JsonSerializer.Serialize(artifact.AssetPlan, VisualBriefingJson.Canonical));
-        
+        var hash = VisualBriefingPayloadHash.ForEvidence(artifact.Facts, artifact.Metrics, artifact.Tables, artifact.SourceCoverage, artifact.AssetPlan);
         return string.Equals(hash, artifact.PayloadHash, StringComparison.Ordinal) ? artifact : null;
     }
 
@@ -216,10 +210,8 @@ public sealed partial class VisualBriefingStore
             artifact.ArtifactId != artifactId)
             return null;
         
-        var hash = VisualBriefingHashing.ComputeSections(
-            JsonSerializer.Serialize(artifact.Sections, VisualBriefingJson.Canonical),
-            artifact.StructuralSignature);
-        
+        var hash = VisualBriefingPayloadHash.ForPlan(artifact.Sections, artifact.StructuralSignature);
+
         return string.Equals(hash, artifact.PayloadHash, StringComparison.Ordinal) ? artifact : null;
     }
 
@@ -272,18 +264,9 @@ public sealed partial class VisualBriefingStore
             string.IsNullOrWhiteSpace(artifact.ResetLabel))
             return null;
 
-        var payloadHash = VisualBriefingHashing.ComputeSections(
-            JsonSerializer.Serialize(artifact.Slots, VisualBriefingJson.Canonical),
-            JsonSerializer.Serialize(artifact.Charts, VisualBriefingJson.Canonical),
-            JsonSerializer.Serialize(artifact.Controls, VisualBriefingJson.Canonical),
-            JsonSerializer.Serialize(artifact.Formulas, VisualBriefingJson.Canonical),
-            JsonSerializer.Serialize(artifact.AccessibilityTexts, VisualBriefingJson.Canonical),
-            JsonSerializer.Serialize(artifact.SourceReferences, VisualBriefingJson.Canonical),
-            artifact.ResetLabel,
-            JsonSerializer.Serialize(artifact.SourceCoverage, VisualBriefingJson.Canonical),
-            JsonSerializer.Serialize(artifact.AssetPlan, VisualBriefingJson.Canonical),
-            artifact.StructuralSignature);
-        
+        var payloadHash = VisualBriefingPayloadHash.ForContent(artifact.Slots, artifact.Charts, artifact.Controls, artifact.Formulas, artifact.AccessibilityTexts,
+            artifact.SourceReferences, artifact.ResetLabel, artifact.SourceCoverage, artifact.AssetPlan, artifact.StructuralSignature);
+
         return string.Equals(payloadHash, artifact.PayloadHash, StringComparison.Ordinal) ? artifact : null;
     }
 
@@ -335,12 +318,7 @@ public sealed partial class VisualBriefingStore
             artifact.ArtifactId != artifactId)
             return null;
 
-        var payloadHash = VisualBriefingHashing.ComputeSections(
-            JsonSerializer.Serialize(artifact.Layout, VisualBriefingJson.Canonical),
-            artifact.Profile.ToString(),
-            artifact.TemplateHash,
-            artifact.CssHash);
-        
+        var payloadHash = VisualBriefingPayloadHash.ForPresentation(artifact.Layout, artifact.Profile, artifact.TemplateHash, artifact.CssHash);
         return string.Equals(payloadHash, artifact.PayloadHash, StringComparison.Ordinal) &&
                string.Equals(
                    VisualBriefingHashing.Compute(artifact.TemplateHtml),
