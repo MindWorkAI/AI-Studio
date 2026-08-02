@@ -7,6 +7,12 @@ namespace AIStudio.Assistants.VisualBriefing;
 public partial class VisualBriefingAssistant
 {
     /// <summary>Gets whether the briefing contains at least one actual source-material file.</summary>
+    /// <remarks>
+    /// This deliberately reads the stored manifest instead of the editor state: a build always runs
+    /// against what the store accepted, and the store drops attachments whose file disappeared before
+    /// the save. Every path that changes sources therefore has to save with a reload, otherwise this
+    /// check keeps reporting the state from before the change.
+    /// </remarks>
     private bool HasSourceMaterial => this.selectedBriefing?.Sources.Any(source => source.Kind is VisualBriefingSourceKind.SOURCE_MATERIAL) == true;
 
     /// <summary>Gets all current field, source, and revision issues shown below the actions.</summary>

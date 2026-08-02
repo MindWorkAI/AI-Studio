@@ -2358,6 +2358,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::
 -- Documents, spreadsheets, images, audio, and video are considered as source context.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T2228157968"] = "Dokumente, Tabellenkalkulationen, Bilder, Audio- und Videodateien werden als Ausgangsmaterial berücksichtigt."
 
+-- These files are already attached as visual assets and were removed from the source material: {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T2271225937"] = "Diese Dateien sind bereits als visuelle Elemente angehängt und wurden aus dem Ausgangsmaterial entfernt: {0}"
+
 -- Target language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T237828418"] = "Zielsprache"
 

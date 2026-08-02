@@ -16,22 +16,32 @@ public partial class VisualBriefingAssistant
         : MediaImportOwner.ForVisualBriefing(this.selectedBriefing.BriefingId);
 
     /// <summary>
-    /// Defines <c>SourceMaterialChangedAsync</c> for the visual briefing feature.
+    /// Keeps source material and visual assets mutually exclusive after either list changed.
     /// </summary>
-    private async Task SourceMaterialChangedAsync(HashSet<FileAttachment> _)
+    /// <remarks>
+    /// A file is either source material or a visual asset, never both: visual assets have to appear in
+    /// the briefing, while source material only feeds the analysis. Visual assets win, so the overlap is
+    /// always resolved on the source-material side. Both attachment controls route here because either
+    /// one can create the overlap — the source-material control catches all document kinds, including
+    /// the image types the visual-asset control is limited to. The warning matters because the file
+    /// would otherwise vanish from the source-material list without any explanation, possibly leaving
+    /// the briefing without the source material it requires.
+    /// </remarks>
+    /// <param name="_">The changed attachment set. It is ignored because both lists are inspected anyway.</param>
+    private async Task EnforceSourceExclusivityAsync(HashSet<FileAttachment> _)
     {
         var visualPaths = this.editor.VisualAssets.Select(attachment => attachment.FilePath).ToHashSet(PathComparer());
-        this.editor.SourceMaterial.RemoveWhere(attachment => visualPaths.Contains(attachment.FilePath));
-        await this.SaveCurrentAsync(reload: true);
-    }
+        var displaced = this.editor.SourceMaterial.Where(attachment => visualPaths.Contains(attachment.FilePath)).ToArray();
+        if (displaced.Length > 0)
+        {
+            this.editor.SourceMaterial.ExceptWith(displaced);
+            await this.MessageBus.SendWarning(new(
+                Icons.Material.Filled.Warning,
+                string.Format(
+                    T("These files are already attached as visual assets and were removed from the source material: {0}"),
+                    string.Join(", ", displaced.Select(attachment => Path.GetFileName(attachment.FilePath))))));
+        }
 
-    /// <summary>
-    /// Defines <c>VisualAssetsChangedAsync</c> for the visual briefing feature.
-    /// </summary>
-    private async Task VisualAssetsChangedAsync(HashSet<FileAttachment> _)
-    {
-        var visualPaths = this.editor.VisualAssets.Select(attachment => attachment.FilePath).ToHashSet(PathComparer());
-        this.editor.SourceMaterial.RemoveWhere(attachment => visualPaths.Contains(attachment.FilePath));
         await this.SaveCurrentAsync(reload: true);
     }
 
