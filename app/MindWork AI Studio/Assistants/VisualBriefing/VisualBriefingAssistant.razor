@@ -189,11 +189,25 @@
 
                         <MudPaper Outlined="true" Class="pa-4 mb-4">
                             <MudText Typo="Typo.h5" Class="mb-3">@T("Briefing settings")</MudText>
-                            <ProviderSelection @bind-ProviderSettings="@this.editor.Provider" ValidateProvider="@this.ValidateProvider" ExplicitMinimumConfidence="@this.MinimumProviderConfidence" Disabled="@this.IsCurrentBusy"/>
-                            @if (this.SettingsManager.ConfigurationData.Confidence.ShowProviderConfidence)
-                            {
-                                <ConfidenceInfo Mode="PopoverTriggerMode.BUTTON" LLMProvider="@this.editor.Provider.UsedLLMProvider"/>
-                            }
+                            @*
+                                The confidence belongs to the provider chosen right next to it, so both share one row.
+                                Do not add a margin to the button to "correct" its height: a dense outlined select with
+                                a label carries margin-top 8px and margin-bottom 4px of its own, so centring the boxes
+                                already lands within a few pixels of the visible frame, and any added margin makes it
+                                worse. Baseline alignment does not work here either, because the wrapper below takes
+                                its baseline from its last line box, which sits under the input.
+                            *@
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Wrap="Wrap.NoWrap">
+                                @* ProviderSelection marks its select as flex-grow-0, and that utility is declared
+                                   !important, so StretchItems cannot widen it. The width has to come from here. *@
+                                <div class="flex-grow-1">
+                                    <ProviderSelection @bind-ProviderSettings="@this.editor.Provider" ValidateProvider="@this.ValidateProvider" ExplicitMinimumConfidence="@this.MinimumProviderConfidence" Disabled="@this.IsCurrentBusy"/>
+                                </div>
+                                @if (this.SettingsManager.ConfigurationData.Confidence.ShowProviderConfidence)
+                                {
+                                    <ConfidenceInfo Mode="PopoverTriggerMode.BUTTON" LLMProvider="@this.editor.Provider.UsedLLMProvider"/>
+                                }
+                            </MudStack>
 
                             <ProfileSelection @bind-CurrentProfile="@this.editor.Profile" MarginLeft="" Disabled="@this.IsCurrentBusy"/>
                             <EnumSelection T="CommonLanguages" NameFunc="@(language => language.Name())" @bind-Value="@this.editor.TargetLanguage" Icon="@Icons.Material.Filled.Translate" Label="@T("Target language")" AllowOther="true" @bind-OtherInput="@this.editor.CustomTargetLanguage" OtherValue="CommonLanguages.OTHER" LabelOther="@T("Custom target language")" ValidateOther="@this.ValidateCustomTargetLanguage" SelectionUpdated="@(_ => this.ScheduleFormValidation())" Disabled="@this.IsCurrentBusy"/>
