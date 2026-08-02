@@ -6,6 +6,7 @@ namespace AIStudio.Assistants.VisualBriefing;
 /// Plans one semantic component and its evidence and content dependencies.
 /// </summary>
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
+[CanonicalJsonShape("bdafbeaf")]
 public sealed class VisualBriefingPlanComponent
 {
     /// <summary>Gets or sets the globally unique component identifier.</summary>

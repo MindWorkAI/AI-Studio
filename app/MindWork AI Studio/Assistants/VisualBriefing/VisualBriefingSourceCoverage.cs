@@ -6,6 +6,7 @@ namespace AIStudio.Assistants.VisualBriefing;
 /// Records how one source contributed to canonical content.
 /// </summary>
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
+[CanonicalJsonShape("b1535c0e")]
 public sealed class VisualBriefingSourceCoverage
 {
     /// <summary>

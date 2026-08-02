@@ -6,6 +6,7 @@ namespace AIStudio.Assistants.VisualBriefing;
 /// Defines one node in the validated bounded presentation layout tree.
 /// </summary>
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
+[CanonicalJsonShape("14064835")]
 public sealed class VisualBriefingLayoutNode
 {
     /// <summary>Gets or sets the globally unique layout node identifier.</summary>

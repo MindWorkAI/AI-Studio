@@ -6,6 +6,7 @@ namespace AIStudio.Assistants.VisualBriefing;
 /// <summary>
 /// Defines <c>VisualBriefingFormulaNode</c> for the visual briefing feature.
 /// </summary>
+[CanonicalJsonShape("aa29e015")]
 public sealed class VisualBriefingFormulaNode
 {
     /// <summary>

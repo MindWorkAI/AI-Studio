@@ -7,6 +7,7 @@ namespace AIStudio.Assistants.VisualBriefing;
 /// Describes one sourced table extracted during evidence analysis.
 /// </summary>
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
+[CanonicalJsonShape("ad23c5b0")]
 public sealed class VisualBriefingEvidenceTable
 {
     /// <summary>Gets or sets the stable evidence identifier.</summary>

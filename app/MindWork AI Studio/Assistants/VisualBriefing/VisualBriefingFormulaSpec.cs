@@ -6,6 +6,7 @@ namespace AIStudio.Assistants.VisualBriefing;
 /// Connects one deterministic formula tree to a component result slot.
 /// </summary>
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
+[CanonicalJsonShape("b644b191")]
 public sealed class VisualBriefingFormulaSpec
 {
     /// <summary>Gets or sets the owning component identifier.</summary>

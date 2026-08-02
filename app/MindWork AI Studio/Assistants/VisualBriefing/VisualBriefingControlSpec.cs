@@ -7,6 +7,7 @@ namespace AIStudio.Assistants.VisualBriefing;
 /// Defines one bounded declarative interaction control.
 /// </summary>
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
+[CanonicalJsonShape("42306121")]
 public sealed class VisualBriefingControlSpec
 {
     /// <summary>Gets or sets the globally unique control identifier.</summary>

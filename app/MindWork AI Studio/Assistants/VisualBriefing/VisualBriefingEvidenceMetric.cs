@@ -6,6 +6,7 @@ namespace AIStudio.Assistants.VisualBriefing;
 /// Describes one sourced numeric metric extracted during evidence analysis.
 /// </summary>
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
+[CanonicalJsonShape("08d12050")]
 public sealed class VisualBriefingEvidenceMetric
 {
     /// <summary>Gets or sets the stable evidence identifier.</summary>

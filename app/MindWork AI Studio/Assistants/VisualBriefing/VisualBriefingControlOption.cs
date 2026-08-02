@@ -6,6 +6,7 @@ namespace AIStudio.Assistants.VisualBriefing;
 /// Defines one value and visible label offered by an interaction control.
 /// </summary>
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
+[CanonicalJsonShape("08092336")]
 public sealed class VisualBriefingControlOption
 {
     /// <summary>Gets or sets the stored option value.</summary>

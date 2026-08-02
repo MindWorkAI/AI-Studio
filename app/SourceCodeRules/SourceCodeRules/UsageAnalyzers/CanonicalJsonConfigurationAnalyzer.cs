@@ -35,13 +35,13 @@ public sealed class CanonicalJsonConfigurationAnalyzer : DiagnosticAnalyzer
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
         context.EnableConcurrentExecution();
-        context.RegisterSyntaxNodeAction(this.AnalyzeProperty, SyntaxKind.PropertyDeclaration);
-        context.RegisterSyntaxNodeAction(this.AnalyzeField, SyntaxKind.FieldDeclaration);
+        context.RegisterSyntaxNodeAction(AnalyzeProperty, SyntaxKind.PropertyDeclaration);
+        context.RegisterSyntaxNodeAction(AnalyzeField, SyntaxKind.FieldDeclaration);
         context.RegisterSyntaxNodeAction(AnalyzeMemberAccess, SyntaxKind.SimpleMemberAccessExpression);
-        context.RegisterSyntaxNodeAction(this.AnalyzeAssignment, SyntaxKind.SimpleAssignmentExpression);
+        context.RegisterSyntaxNodeAction(AnalyzeAssignment, SyntaxKind.SimpleAssignmentExpression);
     }
 
-    private void AnalyzeProperty(SyntaxNodeAnalysisContext context)
+    private static void AnalyzeProperty(SyntaxNodeAnalysisContext context)
     {
         var declaration = (PropertyDeclarationSyntax)context.Node;
         if (context.SemanticModel.GetDeclaredSymbol(declaration) is not { } symbol || !IsMarked(symbol))
@@ -50,7 +50,7 @@ public sealed class CanonicalJsonConfigurationAnalyzer : DiagnosticAnalyzer
         AnalyzeInitializer(context, declaration.Initializer?.Value, declaration.Identifier.GetLocation());
     }
 
-    private void AnalyzeField(SyntaxNodeAnalysisContext context)
+    private static void AnalyzeField(SyntaxNodeAnalysisContext context)
     {
         var declaration = (FieldDeclarationSyntax)context.Node;
         foreach (var variable in declaration.Declaration.Variables)
@@ -122,7 +122,7 @@ public sealed class CanonicalJsonConfigurationAnalyzer : DiagnosticAnalyzer
     /// <summary>
     /// Reports assigning any setting of already declared canonical options.
     /// </summary>
-    private void AnalyzeAssignment(SyntaxNodeAnalysisContext context)
+    private static void AnalyzeAssignment(SyntaxNodeAnalysisContext context)
     {
         var assignment = (AssignmentExpressionSyntax)context.Node;
         if (assignment.Left is not MemberAccessExpressionSyntax memberAccess)

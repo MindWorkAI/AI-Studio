@@ -6,6 +6,7 @@ namespace AIStudio.Assistants.VisualBriefing;
 /// Defines bounded responsive column counts for one grid layout node.
 /// </summary>
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
+[CanonicalJsonShape("92c96e68")]
 public sealed class VisualBriefingResponsiveColumns
 {
     /// <summary>Gets or sets the mobile column count.</summary>

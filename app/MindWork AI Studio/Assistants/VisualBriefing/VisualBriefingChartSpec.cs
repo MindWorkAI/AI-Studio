@@ -6,6 +6,7 @@ namespace AIStudio.Assistants.VisualBriefing;
 /// Defines the bounded semantic input for one compiled chart.
 /// </summary>
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
+[CanonicalJsonShape("68b2ff45")]
 public sealed class VisualBriefingChartSpec
 {
     /// <summary>Gets or sets the owning component identifier.</summary>

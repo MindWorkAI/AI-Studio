@@ -14,3 +14,4 @@
  MWAIS0008 | Naming   | Error    | LocalConstantsAnalyzer         
  MWAIS0009 | Usage    | Error    | StaticServiceProviderCacheAnalyzer
  MWAIS0010 | Usage    | Error    | CanonicalJsonConfigurationAnalyzer
+ MWAIS0011 | Usage    | Error    | CanonicalJsonShapeAnalyzer

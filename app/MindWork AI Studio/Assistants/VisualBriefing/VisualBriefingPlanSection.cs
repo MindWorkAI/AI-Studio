@@ -6,6 +6,7 @@ namespace AIStudio.Assistants.VisualBriefing;
 /// Plans one narrative section and its ordered components.
 /// </summary>
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
+[CanonicalJsonShape("91d1394d")]
 public sealed class VisualBriefingPlanSection
 {
     /// <summary>Gets or sets the globally unique section identifier.</summary>

@@ -6,6 +6,7 @@ namespace AIStudio.Assistants.VisualBriefing;
 /// Describes one sourced factual statement extracted during evidence analysis.
 /// </summary>
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]
+[CanonicalJsonShape("7857e7da")]
 public sealed class VisualBriefingEvidenceFact
 {
     /// <summary>Gets or sets the stable evidence identifier.</summary>
