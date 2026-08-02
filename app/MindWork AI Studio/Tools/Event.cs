@@ -74,6 +74,11 @@ public enum Event
     SHOW_SUCCESS,
 
     /// <summary>
+    /// Requests display of an informational notification.
+    /// </summary>
+    SHOW_INFO,
+
+    /// <summary>
     /// Carries an event received from the Tauri runtime.
     /// </summary>
     TAURI_EVENT_RECEIVED,

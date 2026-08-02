@@ -118,14 +118,14 @@ public partial class VisualBriefingAssistant
 
         if (PathComparer().Equals(Path.GetFullPath(sourcePath), Path.GetFullPath(response.SaveFilePath)))
         {
-            this.Snackbar.Add(T("Choose a different export location so the immutable briefing version is not overwritten."), Severity.Error);
+            await this.MessageBus.SendError(new(Icons.Material.Filled.SaveAs, T("Choose a different export location so the immutable briefing version is not overwritten.")));
             return;
         }
 
         var verified = await this.Store.OpenIntegrityCheckedVersionAsync(this.selectedBriefing.BriefingId, this.selectedRevisionId);
         if (verified is null)
         {
-            this.Snackbar.Add(T("The selected briefing version failed its integrity check and cannot be exported."), Severity.Error);
+            await this.MessageBus.SendError(new(Icons.Material.Filled.GppBad, T("The selected briefing version failed its integrity check and cannot be exported.")));
             return;
         }
 
@@ -146,7 +146,7 @@ public partial class VisualBriefingAssistant
             exportedVersion.DocumentHash,
             source.Length);
 
-        this.Snackbar.Add(T("The visual briefing was exported."), Severity.Success);
+        await this.MessageBus.SendSuccess(new(Icons.Material.Filled.FileDownload, T("The visual briefing was exported.")));
     }
 
     /// <summary>
@@ -176,7 +176,7 @@ public partial class VisualBriefingAssistant
 
         if (!imported.Success)
         {
-            this.Snackbar.Add(imported.Issue, Severity.Error);
+            await this.MessageBus.SendError(new(Icons.Material.Filled.FileUpload, imported.Issue));
             return;
         }
 
@@ -190,7 +190,7 @@ public partial class VisualBriefingAssistant
             imported.RevisionId,
             imported.WasDeduplicated);
 
-        this.Snackbar.Add(imported.WasDeduplicated ? T("This briefing revision was already imported.") : T("The visual briefing was imported."), Severity.Success);
+        await this.MessageBus.SendSuccess(new(Icons.Material.Filled.FileUpload, imported.WasDeduplicated ? T("This briefing revision was already imported.") : T("The visual briefing was imported.")));
     }
 
     /// <summary>

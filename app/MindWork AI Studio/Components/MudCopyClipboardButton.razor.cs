@@ -77,12 +77,9 @@ public partial class MudCopyClipboardButton : ComponentBase
                 break;
             
             default:
-                this.Snackbar.Add(TB("Cannot copy this content type to clipboard."), Severity.Error, config =>
-                {
-                    config.Icon = Icons.Material.Filled.ContentCopy;
-                    config.IconSize = Size.Large;
-                    config.IconColor = Color.Error;
-                });
+                // This component is no MSGComponentBase, so it uses the shared bus instance the same
+                // way FileExtensionValidation does:
+                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.ContentCopy, TB("Cannot copy this content type to clipboard.")));
                 break;
         }
     }

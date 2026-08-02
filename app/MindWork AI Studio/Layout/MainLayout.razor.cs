@@ -112,7 +112,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         this.MessageBus.ApplyFilters(this, [],
         [
             Event.UPDATE_AVAILABLE, Event.CONFIGURATION_CHANGED, Event.COLOR_THEME_CHANGED, Event.SHOW_ERROR,
-            Event.SHOW_WARNING, Event.SHOW_SUCCESS, Event.STARTUP_PLUGIN_SYSTEM, Event.PLUGINS_RELOADED,
+            Event.SHOW_WARNING, Event.SHOW_SUCCESS, Event.SHOW_INFO, Event.STARTUP_PLUGIN_SYSTEM, Event.PLUGINS_RELOADED,
             Event.INSTALL_UPDATE, Event.STARTUP_COMPLETED, Event.AI_JOB_CHANGED, Event.AI_JOB_FINISHED,
             Event.CHAT_GENERATION_CHANGED, Event.ASSISTANT_SESSION_CHANGED, Event.ASSISTANT_SESSION_FINISHED,
         ]);
@@ -263,6 +263,12 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
                 case Event.SHOW_WARNING:
                     if (data is DataWarningMessage warning)
                         warning.Show(this.Snackbar);
+
+                    break;
+
+                case Event.SHOW_INFO:
+                    if (data is DataInfoMessage info)
+                        info.Show(this.Snackbar);
 
                     break;
 

@@ -89,7 +89,7 @@ public partial class VisualBriefingAssistant
 
                 terminalIssue = result.Issue;
                 if (terminalStatus is not AssistantSessionStatus.CANCELED)
-                    this.Snackbar.Add(result.Issue, Severity.Error);
+                    await this.MessageBus.SendError(new(Icons.Material.Filled.AutoAwesome, result.Issue));
 
                 return;
             }
@@ -107,7 +107,7 @@ public partial class VisualBriefingAssistant
                     this.UpdateProject(latest);
             }
 
-            this.Snackbar.Add(successMessage, Severity.Success);
+            await this.MessageBus.SendSuccess(new(Icons.Material.Filled.AutoAwesome, successMessage));
             terminalStatus = AssistantSessionStatus.COMPLETED;
         }
         catch (OperationCanceledException)
@@ -119,7 +119,7 @@ public partial class VisualBriefingAssistant
         {
             terminalIssue = unexpectedFailureMessage;
             this.Logger.LogError("Unexpected visual briefing UI failure. BriefingId={BriefingId} Mode={Mode} ExceptionType={ExceptionType}", briefingId, mode, exception.GetType().Name);
-            this.Snackbar.Add(terminalIssue, Severity.Error);
+            await this.MessageBus.SendError(new(Icons.Material.Filled.AutoAwesome, terminalIssue));
         }
         finally
         {
