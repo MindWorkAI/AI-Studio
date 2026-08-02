@@ -18,7 +18,7 @@ public static class VisualBriefingVersions
     /// Gets the deterministic HTML, CSS, chart, and interaction compiler version. Increment this
     /// whenever compiler behavior changes so interrupted recompiles cannot resume across versions.
     /// </summary>
-    public const int COMPILER = 3;
+    public const int COMPILER = 4;
     
     /// <summary>
     /// Gets the embedded AI Studio runtime bundle version. Increment this for changes to the
