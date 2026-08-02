@@ -1,3 +1,21 @@
+/*
+ * This file is meant for global styling only: font faces, custom properties, and the overrides that
+ * reach into markup we do not render ourselves, such as MudBlazor internals or third-party output.
+ * Styling that belongs to a single component belongs next to that component in a `.razor.css` file,
+ * the way `Assistants/VisualBriefing/VisualBriefingAssistant.razor.css` does it.
+ *
+ * A number of component-specific blocks below do not follow that rule yet, the log viewer and the code
+ * editor being the largest. Moving them is not a matter of cutting and pasting: Blazor only adds the
+ * scope attribute to elements a component writes in its own markup, and it appends that attribute to
+ * the last part of a selector. Rules that target a MudBlazor component, markup injected through a
+ * `MarkupString`, rendered Markdown, or nodes created by JavaScript therefore stop matching once they
+ * are scoped. They have to be rewritten with `::deep`, which in turn needs an ancestor element the
+ * component itself renders. The log viewer has no such element at all today.
+ *
+ * So please do not add component-specific rules here just because a neighbouring one is already here.
+ * Nothing about a broken selector fails the build; it only looks wrong at runtime.
+ */
+
 /* roboto-300 - latin */
 @font-face {
     font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
