@@ -27,9 +27,6 @@ public partial class Information : MSGComponentBase
     private IDialogService DialogService { get; init; } = null!;
 
     [Inject]
-    private ISnackbar Snackbar { get; init; } = null!;
-
-    [Inject]
     private UpdatePolicy UpdatePolicy { get; init; } = null!;
 
     [Inject]
@@ -488,12 +485,12 @@ public partial class Information : MSGComponentBase
 
     private async Task CopyStartupLogPath()
     {
-        await this.RustService.CopyText2Clipboard(this.Snackbar, this.logPaths.LogStartupPath);
+        await this.RustService.CopyText2Clipboard(this.logPaths.LogStartupPath);
     }
     
     private async Task CopyAppLogPath()
     {
-        await this.RustService.CopyText2Clipboard(this.Snackbar, this.logPaths.LogAppPath);
+        await this.RustService.CopyText2Clipboard(this.logPaths.LogAppPath);
     }
     
     private const string LICENSE = """

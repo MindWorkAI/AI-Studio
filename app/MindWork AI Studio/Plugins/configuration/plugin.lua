@@ -325,9 +325,68 @@ CONFIG["SETTINGS"] = {}
 --   CODING_ASSISTANT, TEXT_SUMMARIZER_ASSISTANT, EMAIL_ASSISTANT,
 --   LEGAL_CHECK_ASSISTANT, SYNONYMS_ASSISTANT, MY_TASKS_ASSISTANT,
 --   JOB_POSTING_ASSISTANT, BIAS_DAY_ASSISTANT, ERI_ASSISTANT,
---   DOCUMENT_ANALYSIS_ASSISTANT, SLIDE_BUILDER_ASSISTANT, I18N_ASSISTANT,
+--   DOCUMENT_ANALYSIS_ASSISTANT, SLIDE_BUILDER_ASSISTANT, VISUAL_BRIEFING_ASSISTANT, I18N_ASSISTANT,
 --   LOG_VIEWER_ASSISTANT
 -- CONFIG["SETTINGS"]["DataApp.HiddenAssistants"] = { "ERI_ASSISTANT", "I18N_ASSISTANT" }
+
+-- Configure organization defaults for the Visual Briefing Assistant.
+-- The assistant turns documents, images, audio, and video into a self-contained interactive
+-- briefing. All settings below are defaults for new briefings; users can change them per briefing.
+--
+-- Configure the preselected provider for briefing builds.
+-- It must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"].
+-- CONFIG["SETTINGS"]["DataVisualBriefing.PreselectedProvider"] = "00000000-0000-0000-0000-000000000000"
+--
+-- Configure the preselected profile for briefing builds.
+-- It must be one of the profile IDs defined in CONFIG["PROFILES"].
+-- CONFIG["SETTINGS"]["DataVisualBriefing.PreselectedProfile"] = "00000000-0000-0000-0000-000000000000"
+--
+-- Configure the language the briefing content is written in.
+-- Allowed values are: AS_IS, EN_US, EN_GB, ZH_CN, HI_IN, ES_ES, FR_FR, DE_DE, DE_CH, DE_AT,
+--   JA_JP, RU_RU, OTHER
+-- AS_IS keeps the language of the source material.
+-- Please note: AI Studio's own texts inside an exported briefing, such as the footer and the
+-- reset button, are always US English regardless of this setting.
+-- CONFIG["SETTINGS"]["DataVisualBriefing.PreselectedTargetLanguage"] = "EN_US"
+--
+-- Configure a free-form language, used only when PreselectedTargetLanguage is "OTHER".
+-- Any language name is allowed, for example "Swiss German" or "Brazilian Portuguese".
+-- CONFIG["SETTINGS"]["DataVisualBriefing.PreselectedOtherLanguage"] = ""
+--
+-- Configure the audience the briefing is written for. These four settings steer wording,
+-- level of detail, and which evidence is emphasized.
+--
+-- Allowed values are: UNSPECIFIED, STUDENTS, SCIENTISTS, LAWYERS, INVESTORS, ENGINEERS,
+--   SOFTWARE_DEVELOPERS, JOURNALISTS, HEALTHCARE_PROFESSIONALS, PUBLIC_OFFICIALS,
+--   BUSINESS_PROFESSIONALS
+-- CONFIG["SETTINGS"]["DataVisualBriefing.PreselectedAudienceProfile"] = "UNSPECIFIED"
+--
+-- Allowed values are: UNSPECIFIED, CHILDREN, TEENAGERS, ADULTS
+-- CONFIG["SETTINGS"]["DataVisualBriefing.PreselectedAudienceAgeGroup"] = "UNSPECIFIED"
+--
+-- Allowed values are: UNSPECIFIED, TRAINEES, INDIVIDUAL_CONTRIBUTORS, TEAM_LEADS, MANAGERS,
+--   EXECUTIVES, BOARD_MEMBERS
+-- CONFIG["SETTINGS"]["DataVisualBriefing.PreselectedAudienceOrganizationalLevel"] = "UNSPECIFIED"
+--
+-- Allowed values are: UNSPECIFIED, NON_EXPERTS, BASIC, INTERMEDIATE, EXPERTS
+-- CONFIG["SETTINGS"]["DataVisualBriefing.PreselectedAudienceExpertise"] = "UNSPECIFIED"
+--
+-- Configure whether each briefing component lists the source files it was derived from.
+-- Allowed values are: true, false
+-- CONFIG["SETTINGS"]["DataVisualBriefing.ShowSourceReferences"] = true
+--
+-- Configure whether images are downscaled and re-encoded before they are embedded.
+-- Allowed values are: true, false
+-- Images are always embedded in the exported file. With true, images larger than 2560 pixels on
+-- their longest edge are scaled down, which keeps exported briefings substantially smaller.
+-- With false, the original image bytes are embedded unchanged.
+-- CONFIG["SETTINGS"]["DataVisualBriefing.OptimizeImages"] = true
+--
+-- Configure the minimum provider confidence required to build a briefing.
+-- Allowed values are: NONE, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
+-- Source material is sent to the selected provider, so this acts as a guard for confidential
+-- documents. Providers below this level cannot be selected in the assistant.
+-- CONFIG["SETTINGS"]["DataVisualBriefing.MinimumProviderConfidence"] = "NONE"
 
 -- Configure enterprise approvals for assistant plugins.
 -- Each approval is matched only by the current SHA-256 hash over all Lua files

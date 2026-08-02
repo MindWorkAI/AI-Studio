@@ -73,6 +73,12 @@ public partial class AttachDocuments : MSGComponentBase
     [Parameter]
     public AIStudio.Settings.Provider? Provider { get; set; }
 
+    /// <summary>
+    /// Gets or sets the optional picker and drop filter applied before standard attachment validation.
+    /// </summary>
+    [Parameter]
+    public FileTypeFilter[]? AllowedFileTypes { get; set; }
+
     /// <summary>Optional persisted chat that can own transcript files immediately.</summary>
     [Parameter]
     public ChatThread? OwnerChat { get; set; }
@@ -178,7 +184,11 @@ public partial class AttachDocuments : MSGComponentBase
     private async Task SyncCompletedMediaAttachmentsAsync()
     {
         var delivery = this.MediaTranscriptionService.GetPendingDelivery(this.EffectiveMediaImportTarget);
-        var completed = delivery?.Attachments ?? [];
+        // Owners that persist their own sources have already taken the media over when the batch
+        // started, so re-adding the delivered transcripts here would duplicate them.
+        var completed = this.EffectiveImportOwner.Kind.PersistsOwnSources()
+            ? Array.Empty<FileAttachment>()
+            : delivery?.Attachments ?? [];
         var pending = this.OwnerChat?.PendingMediaTranscripts ?? [];
         var changed = false;
         var ownerPendingChanged = false;
@@ -314,7 +324,7 @@ public partial class AttachDocuments : MSGComponentBase
         this.isFileDialogOpen = true;
         try
         {
-            var selectFiles = await this.RustService.SelectFiles(T("Select files to attach"));
+            var selectFiles = await this.RustService.SelectFiles(T("Select files to attach"), this.AllowedFileTypes);
             if (selectFiles.UserCancelled)
                 return;
 
@@ -407,6 +417,14 @@ public partial class AttachDocuments : MSGComponentBase
     private async Task AddFileBatchAsync(IEnumerable<string> paths)
     {
         var pathList = paths.ToList();
+        if (this.AllowedFileTypes is { Length: > 0 })
+        {
+            var rejectedPaths = pathList.Where(path => !FileTypes.IsAllowedPath(path, this.AllowedFileTypes)).ToArray();
+            pathList.RemoveAll(path => rejectedPaths.Contains(path, StringComparer.Ordinal));
+            if (rejectedPaths.Length > 0)
+                await this.MessageBus.SendWarning(new(Icons.Material.Filled.Warning, this.T("Some files do not use an allowed format and were not attached.")));
+        }
+
         var inaccessiblePaths = pathList.Where(path => !File.Exists(path)).ToList();
         if (inaccessiblePaths.Count > 0)
         {
@@ -434,12 +452,9 @@ public partial class AttachDocuments : MSGComponentBase
             if (!canAddRegularFiles)
                 break;
 
-            if (!await FileExtensionValidation.IsExtensionValidWithNotifyAsync(
-                    FileExtensionValidation.UseCase.ATTACHING_CONTENT,
-                    path,
-                    this.ValidateMediaFileTypes,
-                    this.Provider))
+            if (!await FileExtensionValidation.IsExtensionValidWithNotifyAsync(FileExtensionValidation.UseCase.ATTACHING_CONTENT, path, this.ValidateMediaFileTypes, this.Provider))
                 continue;
+            
             this.DocumentPaths.Add(FileAttachment.FromPath(path));
         }
 
@@ -479,6 +494,17 @@ public partial class AttachDocuments : MSGComponentBase
 
         if (this.OwnerChat is null)
             this.OwnerChat = await this.EnsureOwnerChatAsync(mediaPaths[0]);
+
+        // Owners that persist their own sources show the file right away and keep it next to the
+        // stored document, instead of waiting for the transcription to be delivered back.
+        if (this.EffectiveImportOwner.Kind.PersistsOwnSources())
+        {
+            foreach (var mediaPath in mediaPaths)
+                this.DocumentPaths.Add(FileAttachment.FromPath(mediaPath));
+            
+            await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
+            await this.OnChange(this.DocumentPaths);
+        }
 
         this.MediaTranscriptionService.TryStartAttachmentBatch(mediaPaths, this.EffectiveMediaImportTarget, this.OwnerChat);
     }

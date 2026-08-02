@@ -12,10 +12,7 @@ public partial class AssistantPluginEditorDialog : MSGComponentBase
 {
     [Inject]
     protected RustService RustService { get; init; } = null!;
-    
-    [Inject]
-    protected ISnackbar Snackbar { get; init; } = null!;
-    
+
     private const string PLUGIN_FILE_NAME = "plugin.lua";
     private static readonly ILogger LOGGER = Program.LOGGER_FACTORY.CreateLogger(nameof(AssistantPluginEditorDialog));
     
@@ -134,7 +131,7 @@ public partial class AssistantPluginEditorDialog : MSGComponentBase
 
     private void Cancel() => this.MudDialog.Cancel();
     
-    private async Task CopyToClipboard() => await this.RustService.CopyText2Clipboard(this.Snackbar, this.Result2Copy());
+    private async Task CopyToClipboard() => await this.RustService.CopyText2Clipboard(this.Result2Copy());
 
     private static bool AreSamePath(string left, string right)
     {
