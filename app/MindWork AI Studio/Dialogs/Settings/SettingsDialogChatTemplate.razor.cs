@@ -172,7 +172,7 @@ public partial class SettingsDialogChatTemplate : SettingsDialogBase
         }
 
         if (!string.IsNullOrWhiteSpace(luaCode))
-            await this.RustService.CopyText2Clipboard(this.Snackbar, luaCode);
+            await this.RustService.CopyText2Clipboard(luaCode);
     }
 
     private async Task CopyPackagedChatTemplateLuaToClipboard(ChatTemplate chatTemplate, string pluginDirectory)
@@ -187,6 +187,6 @@ public partial class SettingsDialogChatTemplate : SettingsDialogBase
         }
 
         if (!string.IsNullOrWhiteSpace(luaCode))
-            await this.RustService.CopyText2Clipboard(this.Snackbar, luaCode);
+            await this.RustService.CopyText2Clipboard(luaCode);
     }
 }

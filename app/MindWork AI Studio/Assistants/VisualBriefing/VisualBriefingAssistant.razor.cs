@@ -58,12 +58,6 @@ public partial class VisualBriefingAssistant : MSGComponentBase
     private IDialogService DialogService { get; init; } = null!;
 
     /// <summary>
-    /// Defines <c>Snackbar</c> for the visual briefing feature.
-    /// </summary>
-    [Inject]
-    private ISnackbar Snackbar { get; init; } = null!;
-
-    /// <summary>
     /// Defines <c>AssistantSessionService</c> for the visual briefing feature.
     /// </summary>
     [Inject]

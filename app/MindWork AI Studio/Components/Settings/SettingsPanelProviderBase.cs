@@ -56,6 +56,6 @@ public abstract class SettingsPanelProviderBase : SettingsPanelBase
         if (string.IsNullOrWhiteSpace(luaCode))
             return;
 
-        await this.RustService.CopyText2Clipboard(this.Snackbar, luaCode);
+        await this.RustService.CopyText2Clipboard(luaCode);
     }
 }

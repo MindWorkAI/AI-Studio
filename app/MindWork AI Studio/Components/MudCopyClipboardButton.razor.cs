@@ -38,10 +38,7 @@ public partial class MudCopyClipboardButton : ComponentBase
     /// </summary>
     [Parameter]
     public Size Size { get; set; } = Size.Small;
-    
-    [Inject]
-    private ISnackbar Snackbar { get; init; } = null!;
-    
+
     [Inject]
     private RustService RustService { get; init; } = null!;
     
@@ -58,7 +55,7 @@ public partial class MudCopyClipboardButton : ComponentBase
     /// </summary>
     private async Task CopyToClipboard(string textContent)
     {
-        await this.RustService.CopyText2Clipboard(this.Snackbar, textContent);
+        await this.RustService.CopyText2Clipboard(textContent);
     }
     
     /// <summary>
@@ -73,7 +70,7 @@ public partial class MudCopyClipboardButton : ComponentBase
         {
             case ContentType.TEXT:
                 var textContent = (ContentText) contentToCopy;
-                await this.RustService.CopyText2Clipboard(this.Snackbar, textContent.Text);
+                await this.RustService.CopyText2Clipboard(textContent.Text);
                 break;
             
             default:

@@ -280,9 +280,7 @@ public partial class VisualBriefingAssistant
         if (this.lastBuildDiagnostics is null)
             return;
 
-        await this.RustService.CopyText2Clipboard(
-            this.Snackbar,
-            this.lastBuildDiagnostics.ToClipboardText());
+        await this.RustService.CopyText2Clipboard(this.lastBuildDiagnostics.ToClipboardText());
     }
 
     /// <summary>

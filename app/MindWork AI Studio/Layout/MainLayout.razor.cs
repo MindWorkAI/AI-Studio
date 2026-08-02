@@ -118,7 +118,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         ]);
         
         // Set the snackbar for the update service:
-        UpdateService.SetBlazorDependencies(this.Snackbar);
+        UpdateService.MarkBlazorReady();
         TemporaryChatService.Initialize();
         
         // Should the navigation bar be open by default?

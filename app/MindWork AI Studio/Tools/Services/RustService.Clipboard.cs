@@ -7,13 +7,16 @@ public sealed partial class RustService
     /// <summary>
     /// Tries to copy the given text to the clipboard.
     /// </summary>
-    /// <param name="snackbar">The snackbar to show the result.</param>
+    /// <remarks>
+    /// The outcome is reported through the message bus. Callers used to hand in their snackbar, which
+    /// was the reason most components injected one at all, and it meant this notification was styled
+    /// here instead of together with every other notification of the app.
+    /// </remarks>
     /// <param name="text">The text to copy to the clipboard.</param>
-    public async Task CopyText2Clipboard(ISnackbar snackbar, string text)
+    public async Task CopyText2Clipboard(string text)
     {
         var message = TB("Successfully copied the text to your clipboard");
-        var iconColor = Color.Error;
-        var severity = Severity.Error;
+        var succeeded = false;
         try
         {
             var encryptedText = await text.Encrypt(this.encryptor!);
@@ -32,19 +35,16 @@ public sealed partial class RustService
                 message = TB("Failed to copy the text to your clipboard.");
                 return;
             }
-            
-            iconColor = Color.Success;
-            severity = Severity.Success;
+
+            succeeded = true;
             this.logger!.LogDebug("Successfully copied the text to the clipboard.");
         }
         finally
         {
-            snackbar.Add(message, severity, config =>
-            {
-                config.Icon = Icons.Material.Filled.ContentCopy;
-                config.IconSize = Size.Large;
-                config.IconColor = iconColor;
-            });
+            if (succeeded)
+                await MessageBus.INSTANCE.SendSuccess(new(Icons.Material.Filled.ContentCopy, message));
+            else
+                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.ContentCopy, message));
         }
     }
 }

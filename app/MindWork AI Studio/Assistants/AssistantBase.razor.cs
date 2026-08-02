@@ -24,10 +24,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     
     [Inject]
     protected IJSRuntime JsRuntime { get; init; } = null!;
-    
-    [Inject]
-    protected ISnackbar Snackbar { get; init; } = null!;
-    
+
     [Inject]
     protected RustService RustService { get; init; } = null!;
     
@@ -529,7 +526,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     
     protected async Task CopyToClipboard()
     {
-        await this.RustService.CopyText2Clipboard(this.Snackbar, this.Result2Copy());
+        await this.RustService.CopyText2Clipboard(this.Result2Copy());
     }
 
     private ChatThread CreateSendToChatThread()

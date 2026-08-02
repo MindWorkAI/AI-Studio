@@ -67,7 +67,7 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
             #if DEBUG
             AsyncAction = async () => await this.WriteToPluginFile(),
             #else
-            AsyncAction = async () => await this.RustService.CopyText2Clipboard(this.Snackbar, this.finalLuaCode.ToString()),
+            AsyncAction = async () => await this.RustService.CopyText2Clipboard(this.finalLuaCode.ToString()),
             #endif
             DisabledActionParam = () => this.finalLuaCode.Length == 0,
         },

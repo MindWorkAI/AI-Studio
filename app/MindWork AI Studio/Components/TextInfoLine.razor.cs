@@ -23,9 +23,6 @@ public partial class TextInfoLine : MSGComponentBase
     
     [Inject]
     private RustService RustService { get; init; } = null!;
-    
-    [Inject]
-    private ISnackbar Snackbar { get; init; } = null!;
 
     #region Overrides of ComponentBase
 
@@ -43,5 +40,5 @@ public partial class TextInfoLine : MSGComponentBase
     
     private string ClipboardTooltip => string.Format(T("Copy {0} to the clipboard"), this.ClipboardTooltipSubject);
     
-    private async Task CopyToClipboard(string content) => await this.RustService.CopyText2Clipboard(this.Snackbar, content);
+    private async Task CopyToClipboard(string content) => await this.RustService.CopyText2Clipboard(content);
 }

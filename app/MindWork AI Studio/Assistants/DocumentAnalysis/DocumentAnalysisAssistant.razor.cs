@@ -795,7 +795,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         }
 
         var luaCode = this.GenerateLuaPolicyExport();
-        await this.RustService.CopyText2Clipboard(this.Snackbar, luaCode);
+        await this.RustService.CopyText2Clipboard(luaCode);
     }
 
     private string GenerateLuaPolicyExport()
