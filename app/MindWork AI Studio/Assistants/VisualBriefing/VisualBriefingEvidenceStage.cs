@@ -47,11 +47,11 @@ internal sealed class VisualBriefingEvidenceStage(StructuredLlmStageRunner stage
 
         var response = run.Response!;
         var payloadHash = VisualBriefingHashing.ComputeSections(
-            JsonSerializer.Serialize(response.Facts, VisualBriefingJson.Compact),
-            JsonSerializer.Serialize(response.Metrics, VisualBriefingJson.Compact),
-            JsonSerializer.Serialize(response.Tables, VisualBriefingJson.Compact),
-            JsonSerializer.Serialize(response.SourceCoverage, VisualBriefingJson.Compact),
-            JsonSerializer.Serialize(response.AssetPlan, VisualBriefingJson.Compact));
+            JsonSerializer.Serialize(response.Facts, VisualBriefingJson.Canonical),
+            JsonSerializer.Serialize(response.Metrics, VisualBriefingJson.Canonical),
+            JsonSerializer.Serialize(response.Tables, VisualBriefingJson.Canonical),
+            JsonSerializer.Serialize(response.SourceCoverage, VisualBriefingJson.Canonical),
+            JsonSerializer.Serialize(response.AssetPlan, VisualBriefingJson.Canonical));
         
         var artifact = new VisualBriefingEvidenceArtifact
         {
@@ -124,8 +124,8 @@ internal sealed class VisualBriefingEvidenceStage(StructuredLlmStageRunner stage
         return $"""
                 Target language: {manifest.Settings.TargetLanguage.PromptGeneralPurpose(manifest.Settings.CustomTargetLanguage)}
                 Scope instruction: {manifest.Settings.Instruction}
-                Sources, in the same order as the attached files: {JsonSerializer.Serialize(sources, VisualBriefingJson.Compact)}
-                Media transcripts: {JsonSerializer.Serialize(transcripts, VisualBriefingJson.Compact)}
+                Sources, in the same order as the attached files: {JsonSerializer.Serialize(sources, VisualBriefingJson.Canonical)}
+                Media transcripts: {JsonSerializer.Serialize(transcripts, VisualBriefingJson.Canonical)}
                 """;
     }
 

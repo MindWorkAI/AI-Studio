@@ -45,7 +45,7 @@ public sealed partial class VisualBriefingStore(
     private const string TRANSCRIPTS_DIRECTORY_NAME = "transcripts";
     
     /// <summary>Gets the shared persistence JSON options.</summary>
-    private static readonly JsonSerializerOptions JSON_OPTIONS = VisualBriefingJson.Indented;
+    private static readonly JsonSerializerOptions JSON_OPTIONS = VisualBriefingJson.Persistence;
     
     /// <summary>Stores per-project process locks.</summary>
     private readonly ConcurrentDictionary<Guid, SemaphoreSlim> briefingLocks = [];

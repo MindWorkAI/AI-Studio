@@ -50,7 +50,7 @@ internal sealed class VisualBriefingPlanStage(StructuredLlmStageRunner stageRunn
             await VisualBriefingEvidenceStage.FailAsync(store, build, stage, run, VisualBriefingValidationRule.REFERENCE_INVALID, token);
 
         var sections = run.Response!.Sections;
-        var payload = JsonSerializer.Serialize(sections, VisualBriefingJson.Compact);
+        var payload = JsonSerializer.Serialize(sections, VisualBriefingJson.Canonical);
 
         var structuralSignature = VisualBriefingHashing.Compute(string.Join('\u001f', sections.Select(section => $"{section.SectionId}:{section.Role}:{section.TitleSlotId}:{section.SummarySlotId}")
             .Concat(sections.SelectMany(section => section.Components)
@@ -113,6 +113,6 @@ internal sealed class VisualBriefingPlanStage(StructuredLlmStageRunner stageRunn
         $"""
          Audience: {manifest.Settings.AudienceProfile}; {manifest.Settings.AudienceAgeGroup}; {manifest.Settings.AudienceOrganizationalLevel}; {manifest.Settings.AudienceExpertise}
          Scope instruction: {manifest.Settings.Instruction}
-         Evidence: {JsonSerializer.Serialize(new { evidence.Facts, evidence.Metrics, evidence.Tables, evidence.AssetPlan }, VisualBriefingJson.Compact)}
+         Evidence: {JsonSerializer.Serialize(new { evidence.Facts, evidence.Metrics, evidence.Tables, evidence.AssetPlan }, VisualBriefingJson.Canonical)}
          """;
 }

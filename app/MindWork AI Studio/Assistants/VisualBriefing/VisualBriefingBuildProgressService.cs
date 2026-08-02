@@ -21,8 +21,8 @@ public sealed class VisualBriefingBuildProgressService
     public void Publish(VisualBriefingBuildRecord build)
     {
         var snapshot = JsonSerializer.Deserialize<VisualBriefingBuildRecord>(
-            JsonSerializer.Serialize(build, VisualBriefingJson.Compact),
-            VisualBriefingJson.Compact)!;
+            JsonSerializer.Serialize(build, VisualBriefingJson.Canonical),
+            VisualBriefingJson.Canonical)!;
         snapshot.Instruction = string.Empty;
         this.latest[build.BriefingId] = snapshot;
         this.Changed?.Invoke(build.BriefingId);

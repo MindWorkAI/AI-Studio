@@ -164,11 +164,11 @@ public sealed partial class VisualBriefingStore
             return null;
         
         var hash = VisualBriefingHashing.ComputeSections(
-            JsonSerializer.Serialize(artifact.Facts, VisualBriefingJson.Compact),
-            JsonSerializer.Serialize(artifact.Metrics, VisualBriefingJson.Compact),
-            JsonSerializer.Serialize(artifact.Tables, VisualBriefingJson.Compact),
-            JsonSerializer.Serialize(artifact.SourceCoverage, VisualBriefingJson.Compact),
-            JsonSerializer.Serialize(artifact.AssetPlan, VisualBriefingJson.Compact));
+            JsonSerializer.Serialize(artifact.Facts, VisualBriefingJson.Canonical),
+            JsonSerializer.Serialize(artifact.Metrics, VisualBriefingJson.Canonical),
+            JsonSerializer.Serialize(artifact.Tables, VisualBriefingJson.Canonical),
+            JsonSerializer.Serialize(artifact.SourceCoverage, VisualBriefingJson.Canonical),
+            JsonSerializer.Serialize(artifact.AssetPlan, VisualBriefingJson.Canonical));
         
         return string.Equals(hash, artifact.PayloadHash, StringComparison.Ordinal) ? artifact : null;
     }
@@ -217,7 +217,7 @@ public sealed partial class VisualBriefingStore
             return null;
         
         var hash = VisualBriefingHashing.ComputeSections(
-            JsonSerializer.Serialize(artifact.Sections, VisualBriefingJson.Compact),
+            JsonSerializer.Serialize(artifact.Sections, VisualBriefingJson.Canonical),
             artifact.StructuralSignature);
         
         return string.Equals(hash, artifact.PayloadHash, StringComparison.Ordinal) ? artifact : null;
@@ -273,15 +273,15 @@ public sealed partial class VisualBriefingStore
             return null;
 
         var payloadHash = VisualBriefingHashing.ComputeSections(
-            JsonSerializer.Serialize(artifact.Slots, VisualBriefingJson.Compact),
-            JsonSerializer.Serialize(artifact.Charts, VisualBriefingJson.Compact),
-            JsonSerializer.Serialize(artifact.Controls, VisualBriefingJson.Compact),
-            JsonSerializer.Serialize(artifact.Formulas, VisualBriefingJson.Compact),
-            JsonSerializer.Serialize(artifact.AccessibilityTexts, VisualBriefingJson.Compact),
-            JsonSerializer.Serialize(artifact.SourceReferences, VisualBriefingJson.Compact),
+            JsonSerializer.Serialize(artifact.Slots, VisualBriefingJson.Canonical),
+            JsonSerializer.Serialize(artifact.Charts, VisualBriefingJson.Canonical),
+            JsonSerializer.Serialize(artifact.Controls, VisualBriefingJson.Canonical),
+            JsonSerializer.Serialize(artifact.Formulas, VisualBriefingJson.Canonical),
+            JsonSerializer.Serialize(artifact.AccessibilityTexts, VisualBriefingJson.Canonical),
+            JsonSerializer.Serialize(artifact.SourceReferences, VisualBriefingJson.Canonical),
             artifact.ResetLabel,
-            JsonSerializer.Serialize(artifact.SourceCoverage, VisualBriefingJson.Compact),
-            JsonSerializer.Serialize(artifact.AssetPlan, VisualBriefingJson.Compact),
+            JsonSerializer.Serialize(artifact.SourceCoverage, VisualBriefingJson.Canonical),
+            JsonSerializer.Serialize(artifact.AssetPlan, VisualBriefingJson.Canonical),
             artifact.StructuralSignature);
         
         return string.Equals(payloadHash, artifact.PayloadHash, StringComparison.Ordinal) ? artifact : null;
@@ -336,7 +336,7 @@ public sealed partial class VisualBriefingStore
             return null;
 
         var payloadHash = VisualBriefingHashing.ComputeSections(
-            JsonSerializer.Serialize(artifact.Layout, VisualBriefingJson.Compact),
+            JsonSerializer.Serialize(artifact.Layout, VisualBriefingJson.Canonical),
             artifact.Profile.ToString(),
             artifact.TemplateHash,
             artifact.CssHash);

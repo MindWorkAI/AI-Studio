@@ -132,5 +132,5 @@ public sealed class VisualBriefingOperationDiagnostics
     /// Serializes the diagnostics without user content.
     /// </summary>
     /// <returns>A compact JSON document suitable for the clipboard.</returns>
-    public string ToClipboardText() => JsonSerializer.Serialize(this, VisualBriefingJson.Indented);
+    public string ToClipboardText() => JsonSerializer.Serialize(this, VisualBriefingJson.Persistence);
 }

@@ -685,7 +685,7 @@ internal static partial class VisualBriefingValidation
 
     private static bool ContainsForbidden<T>(T value)
     {
-        var json = JsonSerializer.SerializeToElement(value, VisualBriefingJson.Compact);
+        var json = JsonSerializer.SerializeToElement(value, VisualBriefingJson.Canonical);
         return ContainsForbiddenElement(json);
     }
 

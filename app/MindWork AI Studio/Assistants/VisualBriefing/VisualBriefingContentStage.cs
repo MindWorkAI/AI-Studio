@@ -65,19 +65,19 @@ internal sealed class VisualBriefingContentStage(StructuredLlmStageRunner stageR
                 reset = artifact.ResetLabel,
                 brand = "MindWork AI Studio",
             },
-        }, VisualBriefingJson.Compact);
+        }, VisualBriefingJson.Canonical);
 
         // Keep in sync with the verification in VisualBriefingStore.ReadContentArtifactAsync:
         artifact.PayloadHash = VisualBriefingHashing.ComputeSections(
-            JsonSerializer.Serialize(artifact.Slots, VisualBriefingJson.Compact),
-            JsonSerializer.Serialize(artifact.Charts, VisualBriefingJson.Compact),
-            JsonSerializer.Serialize(artifact.Controls, VisualBriefingJson.Compact),
-            JsonSerializer.Serialize(artifact.Formulas, VisualBriefingJson.Compact),
-            JsonSerializer.Serialize(artifact.AccessibilityTexts, VisualBriefingJson.Compact),
-            JsonSerializer.Serialize(artifact.SourceReferences, VisualBriefingJson.Compact),
+            JsonSerializer.Serialize(artifact.Slots, VisualBriefingJson.Canonical),
+            JsonSerializer.Serialize(artifact.Charts, VisualBriefingJson.Canonical),
+            JsonSerializer.Serialize(artifact.Controls, VisualBriefingJson.Canonical),
+            JsonSerializer.Serialize(artifact.Formulas, VisualBriefingJson.Canonical),
+            JsonSerializer.Serialize(artifact.AccessibilityTexts, VisualBriefingJson.Canonical),
+            JsonSerializer.Serialize(artifact.SourceReferences, VisualBriefingJson.Canonical),
             artifact.ResetLabel,
-            JsonSerializer.Serialize(artifact.SourceCoverage, VisualBriefingJson.Compact),
-            JsonSerializer.Serialize(artifact.AssetPlan, VisualBriefingJson.Compact),
+            JsonSerializer.Serialize(artifact.SourceCoverage, VisualBriefingJson.Canonical),
+            JsonSerializer.Serialize(artifact.AssetPlan, VisualBriefingJson.Canonical),
             artifact.StructuralSignature);
         
         await store.WriteContentArtifactAsync(manifest.BriefingId, artifact, token);
@@ -170,13 +170,13 @@ internal sealed class VisualBriefingContentStage(StructuredLlmStageRunner stageR
                 Target language: {manifest.Settings.TargetLanguage.PromptGeneralPurpose(manifest.Settings.CustomTargetLanguage)}
                 Audience: {manifest.Settings.AudienceProfile}; {manifest.Settings.AudienceAgeGroup}; {manifest.Settings.AudienceOrganizationalLevel}; {manifest.Settings.AudienceExpertise}
                 Scope instruction: {manifest.Settings.Instruction}
-                Exact planned component IDs: {JsonSerializer.Serialize(componentIds, VisualBriefingJson.Compact)}
-                Exact keys of accessibilityTexts, no others: {JsonSerializer.Serialize(accessibilityTextKeys, VisualBriefingJson.Compact)}
-                Exact required slot IDs with their semantic role and declared type, each to be returned exactly once: {JsonSerializer.Serialize(requiredSlots, VisualBriefingJson.Compact)}
-                Exact chart component IDs, each to receive exactly one chart: {JsonSerializer.Serialize(chartComponentIds, VisualBriefingJson.Compact)}
-                Exact control and formula requirements, no controls for any other component: {JsonSerializer.Serialize(controlRequirements, VisualBriefingJson.Compact)}
-                Plan: {JsonSerializer.Serialize(plan.Sections, VisualBriefingJson.Compact)}
-                Evidence: {JsonSerializer.Serialize(new { evidence.Facts, evidence.Metrics, evidence.Tables, evidence.AssetPlan }, VisualBriefingJson.Compact)}
+                Exact planned component IDs: {JsonSerializer.Serialize(componentIds, VisualBriefingJson.Canonical)}
+                Exact keys of accessibilityTexts, no others: {JsonSerializer.Serialize(accessibilityTextKeys, VisualBriefingJson.Canonical)}
+                Exact required slot IDs with their semantic role and declared type, each to be returned exactly once: {JsonSerializer.Serialize(requiredSlots, VisualBriefingJson.Canonical)}
+                Exact chart component IDs, each to receive exactly one chart: {JsonSerializer.Serialize(chartComponentIds, VisualBriefingJson.Canonical)}
+                Exact control and formula requirements, no controls for any other component: {JsonSerializer.Serialize(controlRequirements, VisualBriefingJson.Canonical)}
+                Plan: {JsonSerializer.Serialize(plan.Sections, VisualBriefingJson.Canonical)}
+                Evidence: {JsonSerializer.Serialize(new { evidence.Facts, evidence.Metrics, evidence.Tables, evidence.AssetPlan }, VisualBriefingJson.Canonical)}
                 """;
     }
 
@@ -257,9 +257,9 @@ internal sealed class VisualBriefingContentStage(StructuredLlmStageRunner stageR
                 authors = "validation",
                 protection = "validation",
             },
-        }, VisualBriefingJson.Compact);
+        }, VisualBriefingJson.Canonical);
         
-        var validationData = JsonSerializer.SerializeToElement(data, VisualBriefingJson.Compact);
+        var validationData = JsonSerializer.SerializeToElement(data, VisualBriefingJson.Canonical);
         VisualBriefingCompilerInvariant.Guard(VisualBriefingBuildStage.CONTENT,
             VisualBriefingArtifactService.ValidateGeneratedParts(
                 manifest,
@@ -353,7 +353,7 @@ internal sealed class VisualBriefingContentStage(StructuredLlmStageRunner stageR
             ControlId = $"mwai-filter-{index}",
             ComponentId = component.ComponentId,
             Kind = VisualBriefingControlKind.FILTER,
-            InitialValue = JsonSerializer.SerializeToElement(SHOW_ALL_VALUE, VisualBriefingJson.Compact),
+            InitialValue = JsonSerializer.SerializeToElement(SHOW_ALL_VALUE, VisualBriefingJson.Canonical),
             Options = options,
         };
     }

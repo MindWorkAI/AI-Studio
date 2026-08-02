@@ -17,7 +17,7 @@ internal static class VisualBriefingData
         var dictionary = data.EnumerateObject()
             .Where(property => property.Name is not "_mwai")
             .ToDictionary(property => property.Name, property => property.Value.Clone(), StringComparer.Ordinal);
-        return JsonSerializer.SerializeToElement(dictionary, VisualBriefingJson.Compact);
+        return JsonSerializer.SerializeToElement(dictionary, VisualBriefingJson.Canonical);
     }
 
     /// <summary>

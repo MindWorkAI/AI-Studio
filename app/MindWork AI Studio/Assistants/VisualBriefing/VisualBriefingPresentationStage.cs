@@ -81,7 +81,7 @@ internal sealed class VisualBriefingPresentationStage(StructuredLlmStageRunner s
 
         var compiled = VisualBriefingLayoutCompiler.Compile(plan, content, run.Response.Layout, run.Response.Profile);
         var payloadHash = VisualBriefingHashing.ComputeSections(
-            JsonSerializer.Serialize(run.Response.Layout, VisualBriefingJson.Compact),
+            JsonSerializer.Serialize(run.Response.Layout, VisualBriefingJson.Canonical),
             run.Response.Profile.ToString(),
             compiled.TemplateHash,
             compiled.CssHash);
@@ -114,7 +114,7 @@ internal sealed class VisualBriefingPresentationStage(StructuredLlmStageRunner s
         
         await store.SaveBuildAsync(build, token);
         progressService.Publish(build);
-        logger.LogInformation("Visual briefing design completed. OperationId={OperationId} BuildId={BuildId} LayoutHash={LayoutHash} TemplateHash={TemplateHash} CssHash={CssHash}", build.OperationId, build.BuildId, VisualBriefingHashing.Compute(JsonSerializer.Serialize(artifact.Layout, VisualBriefingJson.Compact)), artifact.TemplateHash, artifact.CssHash);
+        logger.LogInformation("Visual briefing design completed. OperationId={OperationId} BuildId={BuildId} LayoutHash={LayoutHash} TemplateHash={TemplateHash} CssHash={CssHash}", build.OperationId, build.BuildId, VisualBriefingHashing.Compute(JsonSerializer.Serialize(artifact.Layout, VisualBriefingJson.Canonical)), artifact.TemplateHash, artifact.CssHash);
         
         return artifact;
     }
@@ -150,9 +150,9 @@ internal sealed class VisualBriefingPresentationStage(StructuredLlmStageRunner s
                 authors = "validation",
                 protection = "validation",
             },
-        }, VisualBriefingJson.Compact);
+        }, VisualBriefingJson.Canonical);
         
-        var validationData = JsonSerializer.SerializeToElement(data, VisualBriefingJson.Compact);
+        var validationData = JsonSerializer.SerializeToElement(data, VisualBriefingJson.Canonical);
         VisualBriefingCompilerInvariant.Guard(VisualBriefingBuildStage.DESIGN,
             VisualBriefingArtifactService.ValidateGeneratedParts(manifest, validationData, compiled.TemplateHtml, compiled.Css, content.Charts.Count > 0));
         
@@ -187,12 +187,12 @@ internal sealed class VisualBriefingPresentationStage(StructuredLlmStageRunner s
 
     private static string BuildPrompt(VisualBriefingManifest manifest, VisualBriefingPlanArtifact plan, VisualBriefingPresentationArtifact? parent)
     {
-        var parentJson = parent is null ? "none" : JsonSerializer.Serialize(new { parent.Layout, parent.Profile }, VisualBriefingJson.Compact);
+        var parentJson = parent is null ? "none" : JsonSerializer.Serialize(new { parent.Layout, parent.Profile }, VisualBriefingJson.Canonical);
         return $"""
                 Operation: {(parent is null ? "CREATE_DESIGN" : "CHANGE_DESIGN")}
                 Design instruction: {manifest.Settings.Instruction}
                 Planned sections and components:
-                {JsonSerializer.Serialize(plan.Sections, VisualBriefingJson.Compact)}
+                {JsonSerializer.Serialize(plan.Sections, VisualBriefingJson.Canonical)}
                 Parent design:
                 {parentJson}
                 """;

@@ -125,7 +125,7 @@ internal static class VisualBriefingChartCompiler
                 : series,
         };
 
-        return JsonSerializer.SerializeToElement(option, VisualBriefingJson.Compact);
+        return JsonSerializer.SerializeToElement(option, VisualBriefingJson.Canonical);
     }
 
     /// <summary>

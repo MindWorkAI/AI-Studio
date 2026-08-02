@@ -135,12 +135,12 @@ internal sealed partial class VisualBriefingBuildOrchestrator
                     authors = "validation",
                     protection = "validation",
                 },
-            }, VisualBriefingJson.Compact);
+            }, VisualBriefingJson.Canonical);
             
             VisualBriefingCompilerInvariant.Guard(
                 VisualBriefingBuildStage.COMPILATION,
                 VisualBriefingArtifactService.ValidateGeneratedParts(manifest,
-                    JsonSerializer.SerializeToElement(validationDataProperties, VisualBriefingJson.Compact),
+                    JsonSerializer.SerializeToElement(validationDataProperties, VisualBriefingJson.Canonical),
                     compiled.TemplateHtml, compiled.Css,
                     content.Charts.Count > 0));
 
@@ -151,7 +151,7 @@ internal sealed partial class VisualBriefingBuildOrchestrator
                 ArtifactId = Guid.NewGuid(),
                 CreatedAtUtc = DateTimeOffset.UtcNow,
                 PayloadHash = VisualBriefingHashing.ComputeSections(
-                    JsonSerializer.Serialize(previousPresentation.Layout, VisualBriefingJson.Compact),
+                    JsonSerializer.Serialize(previousPresentation.Layout, VisualBriefingJson.Canonical),
                     previousPresentation.Profile.ToString(),
                     compiled.TemplateHash,
                     compiled.CssHash),

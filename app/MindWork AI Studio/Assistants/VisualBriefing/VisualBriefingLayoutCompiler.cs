@@ -61,7 +61,7 @@ internal sealed class VisualBriefingLayoutCompiler
                 reset = content.ResetLabel,
                 brand = "MindWork AI Studio",
             },
-        }, VisualBriefingJson.Compact);
+        }, VisualBriefingJson.Canonical);
         
         var html = CompileNode(layout, sections, components, content, true);
         var css = CompileCss(profile, layout);

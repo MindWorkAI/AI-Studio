@@ -504,15 +504,15 @@ public sealed partial class VisualBriefingStore
         
         // Section order and count must match ReadContentArtifactAsync exactly:
         var contentHash = VisualBriefingHashing.ComputeSections(
-            JsonSerializer.Serialize(importedSlots, VisualBriefingJson.Compact),
+            JsonSerializer.Serialize(importedSlots, VisualBriefingJson.Canonical),
             "[]",
             "[]",
             "[]",
             "{}",
             "{}",
             "Reset",
-            JsonSerializer.Serialize(coverage, VisualBriefingJson.Compact),
-            JsonSerializer.Serialize(assetPlan, VisualBriefingJson.Compact),
+            JsonSerializer.Serialize(coverage, VisualBriefingJson.Canonical),
+            JsonSerializer.Serialize(assetPlan, VisualBriefingJson.Canonical),
             structuralSignature);
         
         var content = new VisualBriefingContentArtifact
@@ -551,7 +551,7 @@ public sealed partial class VisualBriefingStore
             ArtifactId = Guid.NewGuid(),
             CreatedAtUtc = DateTimeOffset.UtcNow,
             PayloadHash = VisualBriefingHashing.ComputeSections(
-                JsonSerializer.Serialize(importedLayout, VisualBriefingJson.Compact),
+                JsonSerializer.Serialize(importedLayout, VisualBriefingJson.Canonical),
                 VisualBriefingDesignProfile.EDITORIAL.ToString(),
                 templateHash,
                 cssHash),
@@ -607,7 +607,7 @@ public sealed partial class VisualBriefingStore
         var businessData = VisualBriefingHashing.CanonicalJson(VisualBriefingData.RemoveProtectedData(parts.Data));
         var assets = JsonSerializer.Serialize(
             VisualBriefingData.ExtractAssets(parts.Data),
-            VisualBriefingJson.Compact);
+            VisualBriefingJson.Canonical);
         
         return new(
             VisualBriefingHashing.Compute(businessData),

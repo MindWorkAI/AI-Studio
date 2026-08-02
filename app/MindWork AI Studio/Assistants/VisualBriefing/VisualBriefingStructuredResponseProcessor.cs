@@ -184,7 +184,7 @@ internal static partial class VisualBriefingStructuredResponseProcessor
         T? parsed;
         try
         {
-            parsed = JsonSerializer.Deserialize<T>(candidate.Json, VisualBriefingJson.Compact);
+            parsed = JsonSerializer.Deserialize<T>(candidate.Json, VisualBriefingJson.Canonical);
         }
         catch (JsonException exception)
         {

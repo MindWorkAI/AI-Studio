@@ -380,5 +380,5 @@ public partial class VisualBriefingAssistant
             this.editor.Author,
             Settings = this.editor.ToSettings(),
             Sources = this.editor.ToSources().Select(source => new { source.Path, source.Kind }).ToArray(),
-        }, VisualBriefingJson.Compact);
+        }, VisualBriefingJson.Canonical);
 }

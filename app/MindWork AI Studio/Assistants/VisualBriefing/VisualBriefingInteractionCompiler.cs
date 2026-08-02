@@ -32,7 +32,7 @@ internal static class VisualBriefingInteractionCompiler
             controls,
             state,
             formulas = formulaMap,
-        }, VisualBriefingJson.Compact);
+        }, VisualBriefingJson.Canonical);
     }
 
     /// <summary>

@@ -30,9 +30,9 @@ public sealed partial class VisualBriefingArtifactService
     private const string DATA_ELEMENT_ID = "mwai-briefing-data";
 
     /// <summary>
-    /// Gets the shared compact JSON configuration.
+    /// Gets the frozen JSON configuration whose bytes the document hash covers.
     /// </summary>
-    private static readonly JsonSerializerOptions JSON_OPTIONS = VisualBriefingJson.Compact;
+    private static readonly JsonSerializerOptions JSON_OPTIONS = VisualBriefingJson.Canonical;
 
     /// <summary>
     /// Defines <c>HtmlLanguageTagRegex</c> for the visual briefing feature.

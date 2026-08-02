@@ -16,27 +16,27 @@ namespace AIStudio.Assistants.VisualBriefing;
 internal static class VisualBriefingJson
 {
     /// <summary>
-    /// Gets compact canonical JSON options.
+    /// Gets the frozen options whose byte output is hashed into stored briefings.
     /// </summary>
     /// <remarks>
     /// Treat these options as frozen. Their exact bytes are hashed into stored briefings: the artifact
     /// header is serialized into the briefing document, and reading that document back re-serializes the
-    /// header to recompute the document hash. Every build stage likewise hashes its serialized output to
-    /// decide what a later build may reuse. Any change here — a converter, a naming policy, an encoder —
-    /// therefore invalidates every briefing that was ever written, which surfaces as a failed integrity
-    /// check rather than as a build error. This is why enums stay numeric here even though the persisted
-    /// manifest writes their member names.
+    /// header to recompute the document hash. Every build stage likewise hashes its serialized output,
+    /// and a mismatch makes the store discard the stored artifact. Any change here — a converter, a
+    /// naming policy, an encoder — therefore invalidates every briefing that was ever written, which
+    /// surfaces as a failed integrity check rather than as a build error. This is why enums stay numeric
+    /// here even though the persisted manifest writes their member names.
     /// </remarks>
-    internal static JsonSerializerOptions Compact { get; } = Create(writeIndented: false, enumsAsText: false);
+    internal static JsonSerializerOptions Canonical { get; } = Create(writeIndented: false, enumsAsText: false);
 
     /// <summary>
-    /// Gets indented persistence JSON options.
+    /// Gets the options for files that are read back by name rather than by hash.
     /// </summary>
     /// <remarks>
     /// These options are free to evolve, because nothing hashes their output. They write the briefing
     /// manifest and the diagnostics clipboard text, where readable enum names are worth having.
     /// </remarks>
-    internal static JsonSerializerOptions Indented { get; } = Create(writeIndented: true, enumsAsText: true);
+    internal static JsonSerializerOptions Persistence { get; } = Create(writeIndented: true, enumsAsText: true);
 
     /// <summary>
     /// Creates the shared JSON configuration.
