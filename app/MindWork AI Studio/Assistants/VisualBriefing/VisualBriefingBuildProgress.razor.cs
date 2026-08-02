@@ -90,14 +90,21 @@ public partial class VisualBriefingBuildProgress : MSGComponentBase
         try
         {
             while (await timer.WaitForNextTickAsync(token))
+            {
+                // This panel stays on screen for as long as the briefing has any build, so most of the
+                // time there is no running stage and nothing to refresh. The check happens here rather
+                // than inside the callback below, because otherwise every second would still cost a hop
+                // onto the renderer just to find that out. Reading the build here is safe: the progress
+                // service publishes snapshots, so this record is never the one the build mutates.
+                if (this.Build?.Stages.Any(stage => stage.Status is VisualBriefingBuildStageStatus.RUNNING) != true)
+                    continue;
+
                 await this.InvokeAsync(() =>
                 {
-                    if (this.Build?.Stages.Any(stage => stage.Status is VisualBriefingBuildStageStatus.RUNNING) != true)
-                        return;
-
                     this.durationReferenceUtc = DateTimeOffset.UtcNow;
                     this.StateHasChanged();
                 });
+            }
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested)
         {
