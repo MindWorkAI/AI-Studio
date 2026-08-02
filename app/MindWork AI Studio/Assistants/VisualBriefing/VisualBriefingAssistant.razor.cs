@@ -1,8 +1,5 @@
-using AIStudio.Assistants.SlideBuilder;
-using AIStudio.Chat;
 using AIStudio.Components;
 using AIStudio.Dialogs;
-using AIStudio.Settings;
 using AIStudio.Tools.AssistantSessions;
 using AIStudio.Tools.Services;
 
@@ -10,7 +7,6 @@ using Microsoft.AspNetCore.Components;
 
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
 using ComponentKind = AIStudio.Tools.Components;
-using ProviderSettings = AIStudio.Settings.Provider;
 
 namespace AIStudio.Assistants.VisualBriefing;
 
@@ -100,56 +96,8 @@ public partial class VisualBriefingAssistant : MSGComponentBase
     /// <summary>Stores the project currently displayed by the editor.</summary>
     private VisualBriefingManifest? selectedBriefing;
 
-    /// <summary>Stores source-material attachments for the selected project.</summary>
-    private HashSet<FileAttachment> sourceMaterial = [];
-
-    /// <summary>Stores visible visual-asset attachments for the selected project.</summary>
-    private HashSet<FileAttachment> visualAssets = [];
-
-    /// <summary>Stores the editable project name.</summary>
-    private string projectName = string.Empty;
-
-    /// <summary>Stores the optional author.</summary>
-    private string author = string.Empty;
-
-    /// <summary>Stores the current scope or change instruction.</summary>
-    private string instruction = string.Empty;
-
-    /// <summary>Stores the selected provider and model.</summary>
-    private ProviderSettings provider = ProviderSettings.NONE;
-
-    /// <summary>Stores the selected profile.</summary>
-    private Profile profile = Profile.NO_PROFILE;
-
-    /// <summary>Stores the selected target language.</summary>
-    private CommonLanguages targetLanguage = CommonLanguages.EN_US;
-
-    /// <summary>Stores a free-form target language.</summary>
-    private string customTargetLanguage = string.Empty;
-
-    /// <summary>Stores the audience profile.</summary>
-    private AudienceProfile audienceProfile;
-
-    /// <summary>Stores the audience age group.</summary>
-    private AudienceAgeGroup audienceAgeGroup;
-
-    /// <summary>Stores the audience organizational level.</summary>
-    private AudienceOrganizationalLevel audienceOrganizationalLevel;
-
-    /// <summary>Stores the audience expertise.</summary>
-    private AudienceExpertise audienceExpertise;
-
-    /// <summary>Stores whether visible source references are requested.</summary>
-    private bool showSourceReferences = true;
-
-    /// <summary>Stores whether large visual assets are optimized.</summary>
-    private bool optimizeImages = true;
-
-    /// <summary>Stores the selected protection level.</summary>
-    private VisualBriefingProtectionLevel protectionLevel = VisualBriefingProtectionLevel.INTERNAL;
-
-    /// <summary>Stores the free-form protection level.</summary>
-    private string customProtectionLevel = string.Empty;
+    /// <summary>Stores every editable value of the selected briefing.</summary>
+    private VisualBriefingEditorState editor = new();
 
     /// <summary>Stores the selected immutable revision.</summary>
     private Guid selectedRevisionId;
@@ -221,7 +169,7 @@ public partial class VisualBriefingAssistant : MSGComponentBase
             if (this.selectedBriefing is null)
                 await this.CreateBriefingAsync();
 
-            this.instruction = deferredInstruction;
+            this.editor.Instruction = deferredInstruction;
             await this.SaveCurrentAsync();
         }
 
@@ -286,7 +234,7 @@ public partial class VisualBriefingAssistant : MSGComponentBase
             if (this.selectedBriefing is null)
                 await this.CreateBriefingAsync();
 
-            this.instruction = text;
+            this.editor.Instruction = text;
             await this.SaveCurrentAsync();
             this.StateHasChanged();
             return;

@@ -82,7 +82,7 @@
                              @bind-IsValid="@(this.formIsValid)"
                              @bind-Errors="@(this.formIssues)">
                         <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Class="mb-3">
-                            <MudText Typo="Typo.h3">@this.projectName</MudText>
+                            <MudText Typo="Typo.h3">@this.editor.Name</MudText>
                             <MudStack Row="true" Spacing="1">
                                 <MudButton StartIcon="@Icons.Material.Filled.DriveFileRenameOutline" OnClick="@this.RenameAsync" Disabled="@this.IsCurrentBusy">@T("Rename")</MudButton>
                                 <MudButton StartIcon="@Icons.Material.Filled.DeleteForever" Color="Color.Error" OnClick="@this.DeleteAsync" Disabled="@this.IsCurrentBusy">@T("Delete")</MudButton>
@@ -92,22 +92,22 @@
                         <MudPaper Outlined="true" Class="pa-4 mb-4">
                             <MudGrid>
                                 <MudItem xs="12" md="7">
-                                    <MudTextField T="string" @bind-Text="@this.projectName" Label="@T("Briefing name")" Validation="@this.ValidateProjectName" Immediate="@true" Variant="Variant.Outlined" Disabled="@this.IsCurrentBusy"/>
+                                    <MudTextField T="string" @bind-Text="@this.editor.Name" Label="@T("Briefing name")" Validation="@this.ValidateProjectName" Immediate="@true" Variant="Variant.Outlined" Disabled="@this.IsCurrentBusy"/>
                                 </MudItem>
                                 <MudItem xs="12" md="5">
-                                    <MudTextField T="string" @bind-Text="@this.author" Label="@T("Author (optional)")" Variant="Variant.Outlined" Disabled="@this.IsCurrentBusy"/>
+                                    <MudTextField T="string" @bind-Text="@this.editor.Author" Label="@T("Author (optional)")" Variant="Variant.Outlined" Disabled="@this.IsCurrentBusy"/>
                                 </MudItem>
                             </MudGrid>
-                            <MudTextField T="string" @bind-Text="@this.instruction" Label="@T("Briefing scope, notes, or current change instruction (optional)")" Variant="Variant.Outlined" AutoGrow="true" Lines="3" Class="mt-3" Disabled="@this.IsCurrentBusy"/>
+                            <MudTextField T="string" @bind-Text="@this.editor.Instruction" Label="@T("Briefing scope, notes, or current change instruction (optional)")" Variant="Variant.Outlined" AutoGrow="true" Lines="3" Class="mt-3" Disabled="@this.IsCurrentBusy"/>
 
                             <EnumSelection T="VisualBriefingProtectionLevel"
                                            NameFunc="@(level => this.ProtectionLevelName(level))"
-                                           @bind-Value="@this.protectionLevel"
+                                           @bind-Value="@this.editor.ProtectionLevel"
                                            Icon="@Icons.Material.Filled.Security"
                                            Label="@T("Protection level")"
                                            AllowOther="true"
                                            OtherValue="VisualBriefingProtectionLevel.OTHER"
-                                           @bind-OtherInput="@this.customProtectionLevel"
+                                           @bind-OtherInput="@this.editor.CustomProtectionLevel"
                                            ValidateOther="@this.ValidateCustomProtectionLevel"
                                            SelectionUpdated="@(_ => this.ScheduleFormValidation())"
                                            LabelOther="@T("Custom protection level")"
@@ -121,11 +121,11 @@
                                     <MudText Typo="Typo.body2" Class="mb-2">@T("Documents, spreadsheets, images, audio, and video are considered as source context.")</MudText>
                                     <AttachDocuments Name="Visual briefing source material"
                                                      Layer="@DropLayers.ASSISTANTS"
-                                                     @bind-DocumentPaths="@this.sourceMaterial"
+                                                     @bind-DocumentPaths="@this.editor.SourceMaterial"
                                                      OnChange="@this.SourceMaterialChangedAsync"
                                                      CatchAllDocuments="true"
                                                      UseSmallForm="false"
-                                                     Provider="@this.provider"
+                                                     Provider="@this.editor.Provider"
                                                      Disabled="@this.IsCurrentBusy"/>
                                 </MudPaper>
                             </MudItem>
@@ -135,12 +135,12 @@
                                     <MudText Typo="Typo.body2" Class="mb-2">@T("PNG, JPEG, and WebP assets are analyzed and must appear visibly in the briefing.")</MudText>
                                     <AttachDocuments Name="Visual briefing visual assets"
                                                      Layer="@DropLayers.ASSISTANTS"
-                                                     @bind-DocumentPaths="@this.visualAssets"
+                                                     @bind-DocumentPaths="@this.editor.VisualAssets"
                                                      OnChange="@this.VisualAssetsChangedAsync"
                                                      CatchAllDocuments="false"
                                                      UseSmallForm="false"
                                                      AllowedFileTypes="@(new[] { FileTypes.VISUAL_BRIEFING_IMAGE })"
-                                                     Provider="@this.provider"
+                                                     Provider="@this.editor.Provider"
                                                      Disabled="@this.IsCurrentBusy"/>
                                 </MudPaper>
                             </MudItem>
@@ -187,15 +187,15 @@
 
                         <MudPaper Outlined="true" Class="pa-4 mb-4">
                             <MudText Typo="Typo.h5" Class="mb-3">@T("Briefing settings")</MudText>
-                            <ProviderSelection @bind-ProviderSettings="@this.provider" ValidateProvider="@this.ValidateProvider" ExplicitMinimumConfidence="@this.MinimumProviderConfidence" Disabled="@this.IsCurrentBusy"/>
-                            <ProfileSelection @bind-CurrentProfile="@this.profile" MarginLeft="" Disabled="@this.IsCurrentBusy"/>
-                            <EnumSelection T="CommonLanguages" NameFunc="@(language => language.Name())" @bind-Value="@this.targetLanguage" Icon="@Icons.Material.Filled.Translate" Label="@T("Target language")" AllowOther="true" @bind-OtherInput="@this.customTargetLanguage" OtherValue="CommonLanguages.OTHER" LabelOther="@T("Custom target language")" ValidateOther="@this.ValidateCustomTargetLanguage" SelectionUpdated="@(_ => this.ScheduleFormValidation())" Disabled="@this.IsCurrentBusy"/>
-                            <EnumSelection T="AudienceProfile" NameFunc="@(value => value.Name())" @bind-Value="@this.audienceProfile" Label="@T("Audience profile")" Disabled="@this.IsCurrentBusy"/>
-                            <EnumSelection T="AudienceAgeGroup" NameFunc="@(value => value.Name())" @bind-Value="@this.audienceAgeGroup" Label="@T("Audience age group")" Disabled="@this.IsCurrentBusy"/>
-                            <EnumSelection T="AudienceOrganizationalLevel" NameFunc="@(value => value.Name())" @bind-Value="@this.audienceOrganizationalLevel" Label="@T("Audience organizational level")" Disabled="@this.IsCurrentBusy"/>
-                            <EnumSelection T="AudienceExpertise" NameFunc="@(value => value.Name())" @bind-Value="@this.audienceExpertise" Label="@T("Audience expertise")" Disabled="@this.IsCurrentBusy"/>
-                            <MudSwitch T="bool" @bind-Value="@this.showSourceReferences" Color="Color.Primary" Disabled="@this.IsCurrentBusy">@T("Show source references")</MudSwitch>
-                            <MudSwitch T="bool" @bind-Value="@this.optimizeImages" Color="Color.Primary" Disabled="@this.IsCurrentBusy">@T("Optimize large visual assets")</MudSwitch>
+                            <ProviderSelection @bind-ProviderSettings="@this.editor.Provider" ValidateProvider="@this.ValidateProvider" ExplicitMinimumConfidence="@this.MinimumProviderConfidence" Disabled="@this.IsCurrentBusy"/>
+                            <ProfileSelection @bind-CurrentProfile="@this.editor.Profile" MarginLeft="" Disabled="@this.IsCurrentBusy"/>
+                            <EnumSelection T="CommonLanguages" NameFunc="@(language => language.Name())" @bind-Value="@this.editor.TargetLanguage" Icon="@Icons.Material.Filled.Translate" Label="@T("Target language")" AllowOther="true" @bind-OtherInput="@this.editor.CustomTargetLanguage" OtherValue="CommonLanguages.OTHER" LabelOther="@T("Custom target language")" ValidateOther="@this.ValidateCustomTargetLanguage" SelectionUpdated="@(_ => this.ScheduleFormValidation())" Disabled="@this.IsCurrentBusy"/>
+                            <EnumSelection T="AudienceProfile" NameFunc="@(value => value.Name())" @bind-Value="@this.editor.AudienceProfile" Label="@T("Audience profile")" Disabled="@this.IsCurrentBusy"/>
+                            <EnumSelection T="AudienceAgeGroup" NameFunc="@(value => value.Name())" @bind-Value="@this.editor.AudienceAgeGroup" Label="@T("Audience age group")" Disabled="@this.IsCurrentBusy"/>
+                            <EnumSelection T="AudienceOrganizationalLevel" NameFunc="@(value => value.Name())" @bind-Value="@this.editor.AudienceOrganizationalLevel" Label="@T("Audience organizational level")" Disabled="@this.IsCurrentBusy"/>
+                            <EnumSelection T="AudienceExpertise" NameFunc="@(value => value.Name())" @bind-Value="@this.editor.AudienceExpertise" Label="@T("Audience expertise")" Disabled="@this.IsCurrentBusy"/>
+                            <MudSwitch T="bool" @bind-Value="@this.editor.ShowSourceReferences" Color="Color.Primary" Disabled="@this.IsCurrentBusy">@T("Show source references")</MudSwitch>
+                            <MudSwitch T="bool" @bind-Value="@this.editor.OptimizeImages" Color="Color.Primary" Disabled="@this.IsCurrentBusy">@T("Optimize large visual assets")</MudSwitch>
                         </MudPaper>
 
                         <MudStack Row="true" Spacing="2" Wrap="Wrap.Wrap" Class="mb-4">

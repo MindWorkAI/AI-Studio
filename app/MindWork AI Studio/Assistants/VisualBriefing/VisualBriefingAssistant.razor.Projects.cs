@@ -1,15 +1,12 @@
-using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
 
-using AIStudio.Chat;
 using AIStudio.Dialogs;
 using AIStudio.Provider;
-using AIStudio.Settings;
 using AIStudio.Tools.Media;
 using AIStudio.Tools.Rust;
 
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
 using ComponentKind = AIStudio.Tools.Components;
-using ProviderSettings = AIStudio.Settings.Provider;
 
 namespace AIStudio.Assistants.VisualBriefing;
 
@@ -98,7 +95,7 @@ public partial class VisualBriefingAssistant
         {
             { dialog => dialog.Message, T("Enter a new name for this visual briefing.") },
             { dialog => dialog.InputHeaderText, T("Briefing name") },
-            { dialog => dialog.UserInput, this.projectName },
+            { dialog => dialog.UserInput, this.editor.Name },
             { dialog => dialog.ConfirmText, T("Rename") },
             { dialog => dialog.ConfirmColor, Color.Info },
             { dialog => dialog.AllowEmptyInput, false },
@@ -188,36 +185,15 @@ public partial class VisualBriefingAssistant
     /// </summary>
     private async Task SaveCurrentAsync(bool reload = false)
     {
-        if (this.selectedBriefing is null || string.IsNullOrWhiteSpace(this.projectName))
+        if (this.selectedBriefing is null || string.IsNullOrWhiteSpace(this.editor.Name))
             return;
-
-        var settings = new VisualBriefingLocalSettings
-        {
-            ProviderId = this.provider.Id,
-            ModelId = this.provider.Model.Id,
-            ProfileId = this.profile.Id,
-            TargetLanguage = this.targetLanguage,
-            CustomTargetLanguage = this.customTargetLanguage,
-            AudienceProfile = this.audienceProfile,
-            AudienceAgeGroup = this.audienceAgeGroup,
-            AudienceOrganizationalLevel = this.audienceOrganizationalLevel,
-            AudienceExpertise = this.audienceExpertise,
-            ShowSourceReferences = this.showSourceReferences,
-            OptimizeImages = this.optimizeImages,
-            Instruction = this.instruction,
-            ProtectionLevel = this.protectionLevel,
-            CustomProtectionLevel = this.customProtectionLevel,
-        };
-
-        var sources = this.sourceMaterial.Select(attachment => (attachment.FilePath, VisualBriefingSourceKind.SOURCE_MATERIAL))
-            .Concat(this.visualAssets.Select(attachment => (attachment.FilePath, VisualBriefingSourceKind.VISUAL_ASSET)));
 
         await this.Store.SaveProjectAsync(
             this.selectedBriefing.BriefingId,
-            this.projectName,
-            this.author,
-            settings,
-            sources);
+            this.editor.Name,
+            this.editor.Author,
+            this.editor.ToSettings(),
+            this.editor.ToSources());
 
         this.lastPersistedState = this.BuildPersistenceFingerprint();
 
@@ -228,7 +204,6 @@ public partial class VisualBriefingAssistant
     /// <summary>
     /// Defines <c>ApplySelectedBriefingAsync</c> for the visual briefing feature.
     /// </summary>
-    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
     private async Task ApplySelectedBriefingAsync(VisualBriefingManifest briefing)
     {
         await this.Store.RememberSelectionAsync(briefing.BriefingId);
@@ -246,41 +221,7 @@ public partial class VisualBriefingAssistant
             .FirstOrDefault(build => build.Status is VisualBriefingBuildStatus.AWAITING_REBUILD)
             ?.BuildId;
 
-        this.projectName = briefing.Name;
-        this.author = briefing.Author;
-        this.instruction = briefing.Settings.Instruction;
-        this.targetLanguage = briefing.Settings.TargetLanguage;
-        this.customTargetLanguage = briefing.Settings.CustomTargetLanguage;
-        this.audienceProfile = briefing.Settings.AudienceProfile;
-        this.audienceAgeGroup = briefing.Settings.AudienceAgeGroup;
-        this.audienceOrganizationalLevel = briefing.Settings.AudienceOrganizationalLevel;
-        this.audienceExpertise = briefing.Settings.AudienceExpertise;
-        this.showSourceReferences = briefing.Settings.ShowSourceReferences;
-        this.optimizeImages = briefing.Settings.OptimizeImages;
-        this.protectionLevel = briefing.Settings.ProtectionLevel;
-        this.customProtectionLevel = briefing.Settings.CustomProtectionLevel;
-
-        this.provider = this.SettingsManager.ConfigurationData.Providers
-            .FirstOrDefault(candidate =>
-                candidate.Id == briefing.Settings.ProviderId &&
-                candidate.Model.Id == briefing.Settings.ModelId) ?? ProviderSettings.NONE;
-
-        this.profile = this.SettingsManager.ConfigurationData.Profiles
-            .FirstOrDefault(candidate => candidate.Id == briefing.Settings.ProfileId) ?? Profile.NO_PROFILE;
-
-        this.sourceMaterial =
-        [
-            .. briefing.Sources
-                .Where(source => source.Kind is VisualBriefingSourceKind.SOURCE_MATERIAL)
-                .Select(source => FileAttachment.FromPath(source.Path))
-        ];
-
-        this.visualAssets =
-        [
-            .. briefing.Sources
-                .Where(source => source.Kind is VisualBriefingSourceKind.VISUAL_ASSET)
-                .Select(source => FileAttachment.FromPath(source.Path))
-        ];
+        this.editor = VisualBriefingEditorState.FromManifest(briefing, this.SettingsManager);
 
         var revisionId = briefing.Versions.Any(version => version.RevisionId == this.selectedRevisionId)
             ? this.selectedRevisionId
@@ -323,8 +264,7 @@ public partial class VisualBriefingAssistant
     {
         this.selectedProject = null;
         this.selectedBriefing = null;
-        this.sourceMaterial = [];
-        this.visualAssets = [];
+        this.editor = new();
         this.selectedRevisionId = Guid.Empty;
         this.previewUrl = string.Empty;
         this.latestBuild = null;
@@ -355,7 +295,7 @@ public partial class VisualBriefingAssistant
     private string ProjectDisplayName(VisualBriefingProjectEntry project)
     {
         if (project.BriefingId == this.selectedBriefing?.BriefingId)
-            return this.projectName;
+            return this.editor.Name;
 
         return string.IsNullOrWhiteSpace(project.Name) ? T("Unavailable visual briefing") : project.Name;
     }
@@ -393,25 +333,22 @@ public partial class VisualBriefingAssistant
     };
 
     /// <summary>
-    /// Defines <c>BuildPersistenceFingerprint</c> for the visual briefing feature.
+    /// Builds the fingerprint that decides whether the editor holds unsaved changes.
     /// </summary>
-    private string BuildPersistenceFingerprint() => string.Join('\u001f',
-        this.projectName,
-        this.author,
-        this.instruction,
-        this.provider.Id,
-        this.provider.Model.Id,
-        this.profile.Id,
-        this.targetLanguage,
-        this.customTargetLanguage,
-        this.audienceProfile,
-        this.audienceAgeGroup,
-        this.audienceOrganizationalLevel,
-        this.audienceExpertise,
-        this.showSourceReferences,
-        this.optimizeImages,
-        this.protectionLevel,
-        this.customProtectionLevel,
-        string.Join('\u001e', this.sourceMaterial.Select(attachment => attachment.FilePath).Order(StringComparer.Ordinal)),
-        string.Join('\u001e', this.visualAssets.Select(attachment => attachment.FilePath).Order(StringComparer.Ordinal)));
+    /// <remarks>
+    /// The fingerprint is serialized from exactly the values that SaveCurrentAsync
+    /// hands to the store. That is deliberate: a handwritten field list would silently stop
+    /// auto-saving whenever a new setting is added and someone forgets to list it here. Sources are
+    /// projected into a named shape because <c>System.Text.Json</c> ignores tuple fields and would
+    /// otherwise serialize every source list into the same empty object.
+    /// </remarks>
+    /// <returns>The fingerprint of the current editor state.</returns>
+    private string BuildPersistenceFingerprint() => JsonSerializer.Serialize(
+        new
+        {
+            this.editor.Name,
+            this.editor.Author,
+            Settings = this.editor.ToSettings(),
+            Sources = this.editor.ToSources().Select(source => new { source.Path, source.Kind }).ToArray(),
+        }, VisualBriefingJson.Compact);
 }

@@ -20,8 +20,8 @@ public partial class VisualBriefingAssistant
     /// </summary>
     private async Task SourceMaterialChangedAsync(HashSet<FileAttachment> _)
     {
-        var visualPaths = this.visualAssets.Select(attachment => attachment.FilePath).ToHashSet(PathComparer());
-        this.sourceMaterial.RemoveWhere(attachment => visualPaths.Contains(attachment.FilePath));
+        var visualPaths = this.editor.VisualAssets.Select(attachment => attachment.FilePath).ToHashSet(PathComparer());
+        this.editor.SourceMaterial.RemoveWhere(attachment => visualPaths.Contains(attachment.FilePath));
         await this.SaveCurrentAsync(reload: true);
     }
 
@@ -30,8 +30,8 @@ public partial class VisualBriefingAssistant
     /// </summary>
     private async Task VisualAssetsChangedAsync(HashSet<FileAttachment> _)
     {
-        var visualPaths = this.visualAssets.Select(attachment => attachment.FilePath).ToHashSet(PathComparer());
-        this.sourceMaterial.RemoveWhere(attachment => visualPaths.Contains(attachment.FilePath));
+        var visualPaths = this.editor.VisualAssets.Select(attachment => attachment.FilePath).ToHashSet(PathComparer());
+        this.editor.SourceMaterial.RemoveWhere(attachment => visualPaths.Contains(attachment.FilePath));
         await this.SaveCurrentAsync(reload: true);
     }
 

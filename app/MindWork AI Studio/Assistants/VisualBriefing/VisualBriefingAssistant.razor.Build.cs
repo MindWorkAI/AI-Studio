@@ -27,10 +27,10 @@ public partial class VisualBriefingAssistant
     /// </summary>
     private bool CannotGenerate(VisualBriefingEditMode mode) =>
         this.IsCurrentBusy ||
-        this.provider == ProviderSettings.NONE ||
-        string.IsNullOrWhiteSpace(this.projectName) ||
-        this.targetLanguage is CommonLanguages.OTHER && string.IsNullOrWhiteSpace(this.customTargetLanguage) ||
-        this.protectionLevel is VisualBriefingProtectionLevel.OTHER && string.IsNullOrWhiteSpace(this.customProtectionLevel) ||
+        this.editor.Provider == ProviderSettings.NONE ||
+        string.IsNullOrWhiteSpace(this.editor.Name) ||
+        this.editor.TargetLanguage is CommonLanguages.OTHER && string.IsNullOrWhiteSpace(this.editor.CustomTargetLanguage) ||
+        this.editor.ProtectionLevel is VisualBriefingProtectionLevel.OTHER && string.IsNullOrWhiteSpace(this.editor.CustomProtectionLevel) ||
         mode is not VisualBriefingEditMode.CHANGE_DESIGN && !this.HasSourceMaterial ||
         mode is VisualBriefingEditMode.CHANGE_DESIGN or VisualBriefingEditMode.UPDATE_CONTENT &&
         !this.SelectedVersionSupportsEdits ||
@@ -55,8 +55,8 @@ public partial class VisualBriefingAssistant
         var parentRevisionId = parentRevisionOverride ??
                                (generationBriefing.Versions.Count == 0 ? null : this.selectedRevisionId);
 
-        var generationProvider = this.provider;
-        var generationProfile = this.profile;
+        var generationProvider = this.editor.Provider;
+        var generationProfile = this.editor.Profile;
 
         var sessionKey = CreateBuildSessionKey(briefingId);
         if (this.AssistantSessionService.TryGetSnapshot(sessionKey)?.IsActive == true)
@@ -280,7 +280,7 @@ public partial class VisualBriefingAssistant
             return;
         }
 
-        if (this.provider == ProviderSettings.NONE)
+        if (this.editor.Provider == ProviderSettings.NONE)
             return;
 
         await this.GenerateAsync(

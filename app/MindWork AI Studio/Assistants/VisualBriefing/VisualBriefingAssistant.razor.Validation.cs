@@ -16,10 +16,10 @@ public partial class VisualBriefingAssistant
         {
             List<string> issues = [.. this.formIssues];
 
-            AddIssue(issues, this.ValidateProjectName(this.projectName));
-            AddIssue(issues, this.ValidateProvider(this.provider));
-            AddIssue(issues, this.ValidateCustomTargetLanguage(this.customTargetLanguage));
-            AddIssue(issues, this.ValidateCustomProtectionLevel(this.customProtectionLevel));
+            AddIssue(issues, this.ValidateProjectName(this.editor.Name));
+            AddIssue(issues, this.ValidateProvider(this.editor.Provider));
+            AddIssue(issues, this.ValidateCustomTargetLanguage(this.editor.CustomTargetLanguage));
+            AddIssue(issues, this.ValidateCustomProtectionLevel(this.editor.CustomProtectionLevel));
 
             if (this.selectedBriefing is not null)
             {
@@ -60,13 +60,13 @@ public partial class VisualBriefingAssistant
 
     /// <summary>Validates the free-form target language when Other is selected.</summary>
     private string? ValidateCustomTargetLanguage(string language) =>
-        this.targetLanguage is CommonLanguages.OTHER && string.IsNullOrWhiteSpace(language)
+        this.editor.TargetLanguage is CommonLanguages.OTHER && string.IsNullOrWhiteSpace(language)
             ? T("Please provide a custom target language.")
             : null;
 
     /// <summary>Validates the free-form protection level when Other is selected.</summary>
     private string? ValidateCustomProtectionLevel(string level) =>
-        this.protectionLevel is VisualBriefingProtectionLevel.OTHER && string.IsNullOrWhiteSpace(level)
+        this.editor.ProtectionLevel is VisualBriefingProtectionLevel.OTHER && string.IsNullOrWhiteSpace(level)
             ? T("Please provide a custom protection level.")
             : null;
 
