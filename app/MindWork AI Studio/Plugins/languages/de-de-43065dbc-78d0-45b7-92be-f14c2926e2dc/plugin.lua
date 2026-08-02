@@ -2412,6 +2412,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::
 -- Creates a new version from the current sources and instructions while keeping the current structure and design.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T2703645157"] = "Erstellt eine neue Version aus dem aktuellen Ausgangsmaterial und Anweisungen, wobei die bestehende Struktur und das Design beibehalten werden."
 
+-- Images are not supported by the selected provider and model. Select a model with image support, or remove the image sources.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T2720475627"] = "Bilder werden vom ausgewählten Anbieter und Modell nicht unterstützt. Wählen Sie ein Modell mit Bildunterstützung aus oder entfernen Sie die Bildquellen."
+
 -- Import as copy
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGASSISTANT::T2745663129"] = "Als Kopie importieren"
 

@@ -16,6 +16,23 @@ public static partial class ProviderExtensions
     }
     
     /// <summary>
+    /// Get whether the model used by the configured provider accepts images as input.
+    /// </summary>
+    /// <remarks>
+    /// Two capabilities express image input, one for a single image and one for several. Anything that
+    /// wants to know whether an image may be sent has to accept both, which is why the question is asked
+    /// here instead of at each call site: attaching a file and validating an already attached file must
+    /// never disagree about it.
+    /// </remarks>
+    /// <param name="provider">The configured provider.</param>
+    /// <returns><c>true</c> when the model accepts image input.</returns>
+    public static bool SupportsImageInput(this Provider provider)
+    {
+        var capabilities = provider.GetModelCapabilities();
+        return capabilities.Contains(Capability.SINGLE_IMAGE_INPUT) || capabilities.Contains(Capability.MULTIPLE_IMAGE_INPUT);
+    }
+
+    /// <summary>
     /// Get the capabilities of a model for a specific provider.
     /// </summary>
     /// <param name="provider">The LLM provider.</param>

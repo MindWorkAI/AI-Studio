@@ -1,4 +1,6 @@
 using AIStudio.Provider;
+using AIStudio.Settings;
+using AIStudio.Tools.Rust;
 
 using ProviderSettings = AIStudio.Settings.Provider;
 
@@ -14,6 +16,15 @@ public partial class VisualBriefingAssistant
     /// check keeps reporting the state from before the change.
     /// </remarks>
     private bool HasSourceMaterial => this.selectedBriefing?.Sources.Any(source => source.Kind is VisualBriefingSourceKind.SOURCE_MATERIAL) == true;
+
+    /// <summary>Gets whether any stored source reaches the model as an image.</summary>
+    /// <remarks>
+    /// Both source kinds can end up as an image: source preparation converts every visual asset into an
+    /// image attachment, and a source material file is attached as it is, where the attachment type is
+    /// derived from the file extension alone. Checking the extension therefore covers both, and it
+    /// matches the rule the attachment control already applies while a file is being added.
+    /// </remarks>
+    private bool HasImageSources => this.selectedBriefing?.Sources.Any(source => FileTypes.IsAllowedPath(source.Path, FileTypes.IMAGE)) == true;
 
     /// <summary>Gets all current field, source, and revision issues shown below the actions.</summary>
     /// <remarks>
@@ -53,6 +64,12 @@ public partial class VisualBriefingAssistant
     }
 
     /// <summary>Gets the issues with the stored sources, which block only the modes that read them.</summary>
+    /// <remarks>
+    /// The image check belongs here rather than to the fields, even though it depends on the selected
+    /// model: it only matters for the modes that hand the sources to the model at all. Changing just the
+    /// design reuses the stored evidence and sends no attachments, which is the same distinction the
+    /// build orchestrator makes before it runs source preparation.
+    /// </remarks>
     private IReadOnlyList<string> SourceIssues
     {
         get
@@ -63,6 +80,11 @@ public partial class VisualBriefingAssistant
             List<string> issues = [];
             if (!this.HasSourceMaterial)
                 issues.Add(T("Please add at least one source material file."));
+
+            // A model can be selected long after the images were attached, so the capability that was
+            // checked while attaching them has to be checked again here:
+            if (this.HasImageSources && this.editor.Provider != ProviderSettings.NONE && !this.editor.Provider.SupportsImageInput())
+                issues.Add(T("Images are not supported by the selected provider and model. Select a model with image support, or remove the image sources."));
 
             foreach (var source in this.selectedBriefing.Sources)
             {
