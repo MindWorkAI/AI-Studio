@@ -103,6 +103,13 @@
     display: initial !important;
 }
 
+/* The visual briefing build stepper only reports progress, so its actions are overridden with empty
+   content. MudBlazor still renders the surrounding action bar, which would leave an empty padded row.
+   Scoped on purpose: the Assistant Builder uses an interactive stepper that needs its buttons. */
+.visual-briefing-build-progress .mud-stepper-actions {
+    display: none;
+}
+
 /* Context div for inner scrolling component */
 .inner-scrolling-context {
     display: flex;
