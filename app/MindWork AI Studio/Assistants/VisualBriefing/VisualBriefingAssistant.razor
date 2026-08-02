@@ -8,7 +8,11 @@
     <CascadingValue Value="@this.CurrentMediaOwner">
         <div class="visual-briefing-shell">
             <PreviewPrototype ApplyInnerScrollingFix="true"/>
-            <MudText Typo="Typo.h4" Class="mb-3">@T("Visual Briefings")</MudText>
+            <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3 mr-3" StretchItems="StretchItems.Start">
+                <MudText Typo="Typo.h3">@T("Visual Briefings")</MudText>
+                <MudSpacer/>
+                <MudIconButton Variant="Variant.Text" Icon="@Icons.Material.Filled.Settings" OnClick="@this.OpenSettingsDialogAsync"/>
+            </MudStack>
 
             <MudList T="Guid"
                      Color="Color.Primary"

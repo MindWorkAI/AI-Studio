@@ -1,5 +1,6 @@
 using AIStudio.Components;
 using AIStudio.Dialogs;
+using AIStudio.Dialogs.Settings;
 using AIStudio.Tools.AssistantSessions;
 using AIStudio.Tools.Services;
 
@@ -254,6 +255,15 @@ public partial class VisualBriefingAssistant : MSGComponentBase
         var result = await reference.Result;
         return result is not null && !result.Canceled;
     }
+
+    /// <summary>
+    /// Opens the visual briefing settings.
+    /// </summary>
+    /// <remarks>
+    /// Every assistant derived from <see cref="AssistantBaseCore{TSettings}"/> offers this next to its
+    /// title. This one has to wire it up itself, because it does not use that base component.
+    /// </remarks>
+    private async Task OpenSettingsDialogAsync() => await this.DialogService.ShowAsync<SettingsDialogVisualBriefing>(null, new DialogParameters(), DialogOptions.FULLSCREEN);
 
     /// <summary>
     /// Defines <c>PathComparer</c> for the visual briefing feature.
