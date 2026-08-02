@@ -200,6 +200,8 @@ public partial class VisualBriefingAssistant
                 null,
                 new(StringComparer.Ordinal),
                 this);
+
+            this.RetireFinishedSession(sessionKey);
             this.generatingBriefings.Remove(briefingId);
             this.StateHasChanged();
         }
@@ -290,9 +292,27 @@ public partial class VisualBriefingAssistant
         finally
         {
             await this.AssistantSessionService.CompleteAsync(sessionKey, session.SessionId, terminalStatus, terminalIssue, null, new(StringComparer.Ordinal), this);
+            this.RetireFinishedSession(sessionKey);
             this.generatingBriefings.Remove(briefingId);
             this.StateHasChanged();
         }
+    }
+
+    /// <summary>
+    /// Consumes the finished session of one briefing while this component is still showing it.
+    /// </summary>
+    /// <remarks>
+    /// A briefing session carries no state, because the briefing itself is stored on disk. Its only
+    /// remaining purpose after completion is the indicator on the assistant overview. When the user
+    /// is still on this page, that indicator would be stale, so we retire the session the same way
+    /// <c>AssistantBase</c> does. When the user has navigated away, we keep it so the overview can
+    /// report that a background build has finished.
+    /// </remarks>
+    /// <param name="sessionKey">The session key of the briefing that just finished.</param>
+    private void RetireFinishedSession(AssistantSessionKey sessionKey)
+    {
+        if (!this.isDisposed)
+            _ = this.AssistantSessionService.TryTakeInactiveSnapshot(sessionKey);
     }
 
     /// <summary>

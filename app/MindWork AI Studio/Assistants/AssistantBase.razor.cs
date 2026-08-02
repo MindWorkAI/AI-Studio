@@ -606,15 +606,17 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         };
 
         var sendToData = destination.GetData();
-        if (destination is not Tools.Components.CHAT and not Tools.Components.VISUAL_BRIEFING_ASSISTANT &&
-            this.AssistantSessionService.GetSnapshots().Any(snapshot => snapshot.IsActive && snapshot.Key.Component == destination))
+        if (destination.HasSingleSessionSlot() && this.AssistantSessionService.GetSnapshots().Any(snapshot => snapshot.IsActive && snapshot.Key.Component == destination))
         {
             await this.MessageBus.SendWarning(new(Icons.Material.Filled.Apps, this.TB("This assistant is already running. AI Studio opens the running session instead.")));
             this.NavigationManager.NavigateTo(sendToData.Route);
             return;
         }
 
-        if (destination is not Tools.Components.CHAT)
+        // Only components with a single session slot may be cleared as a group. The visual briefing
+        // assistant keys its sessions per briefing, so clearing by component would discard the
+        // status of every stored briefing instead of the one we are about to open.
+        if (destination.HasSingleSessionSlot())
             await this.AssistantSessionService.ClearInactiveSessionsForComponentAsync(destination);
 
         switch (destination)

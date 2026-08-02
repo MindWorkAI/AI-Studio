@@ -184,7 +184,9 @@ public partial class AttachDocuments : MSGComponentBase
     private async Task SyncCompletedMediaAttachmentsAsync()
     {
         var delivery = this.MediaTranscriptionService.GetPendingDelivery(this.EffectiveMediaImportTarget);
-        var completed = this.EffectiveImportOwner.Kind is MediaImportOwnerKind.VISUAL_BRIEFING
+        // Owners that persist their own sources have already taken the media over when the batch
+        // started, so re-adding the delivered transcripts here would duplicate them.
+        var completed = this.EffectiveImportOwner.Kind.PersistsOwnSources()
             ? Array.Empty<FileAttachment>()
             : delivery?.Attachments ?? [];
         var pending = this.OwnerChat?.PendingMediaTranscripts ?? [];
@@ -493,7 +495,9 @@ public partial class AttachDocuments : MSGComponentBase
         if (this.OwnerChat is null)
             this.OwnerChat = await this.EnsureOwnerChatAsync(mediaPaths[0]);
 
-        if (this.EffectiveImportOwner.Kind is MediaImportOwnerKind.VISUAL_BRIEFING)
+        // Owners that persist their own sources show the file right away and keep it next to the
+        // stored document, instead of waiting for the transcription to be delivered back.
+        if (this.EffectiveImportOwner.Kind.PersistsOwnSources())
         {
             foreach (var mediaPath in mediaPaths)
                 this.DocumentPaths.Add(FileAttachment.FromPath(mediaPath));

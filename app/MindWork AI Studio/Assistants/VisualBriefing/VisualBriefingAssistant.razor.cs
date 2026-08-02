@@ -190,6 +190,9 @@ public partial class VisualBriefingAssistant : MSGComponentBase
     /// <summary>Requests validation after conditional form controls have rendered.</summary>
     private bool formValidationPending;
 
+    /// <summary>Stores whether this component instance has already left the renderer.</summary>
+    private bool isDisposed;
+
     /// <summary>
     /// Defines <c>IsCurrentBusy</c> for the visual briefing feature.
     /// </summary>
@@ -237,6 +240,7 @@ public partial class VisualBriefingAssistant : MSGComponentBase
     /// </summary>
     protected override void DisposeResources()
     {
+        this.isDisposed = true;
         this.sourceMonitorCancellation.Cancel();
         this.sourceMonitorCancellation.Dispose();
         this.buildDurationMonitorCancellation.Cancel();

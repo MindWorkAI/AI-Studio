@@ -2,6 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.Media;
 using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Tools;
@@ -22,6 +23,38 @@ public static class ComponentsExtensions
         Components.VISUAL_BRIEFING_ASSISTANT => PreviewFeatures.PRE_VISUAL_BRIEFING_ASSISTANT_2026,
 
         _ => PreviewFeatures.NONE,
+    };
+
+    /// <summary>
+    /// Gets whether a component owns exactly one assistant session slot, so that a running session
+    /// blocks starting another one and inactive sessions can be cleared as a group.
+    /// </summary>
+    /// <remarks>
+    /// Components return <c>false</c> for two different reasons. The chat has no assistant sessions
+    /// at all. The visual briefing assistant keys its sessions per briefing, so it owns one slot per
+    /// stored briefing rather than one per component. Both must be excluded from the single-slot
+    /// checks, which is why this is a capability and not a component comparison.
+    /// </remarks>
+    /// <param name="component">The component to look up.</param>
+    /// <returns><c>true</c> when the component owns exactly one session slot.</returns>
+    public static bool HasSingleSessionSlot(this Components component) => component switch
+    {
+        Components.CHAT => false,
+        Components.VISUAL_BRIEFING_ASSISTANT => false,
+
+        _ => true,
+    };
+
+    /// <summary>
+    /// Gets the kind of media-import owner a component creates for its attachments.
+    /// </summary>
+    /// <param name="component">The component to look up.</param>
+    /// <returns>The media-import owner kind.</returns>
+    public static MediaImportOwnerKind MediaOwnerKind(this Components component) => component switch
+    {
+        Components.VISUAL_BRIEFING_ASSISTANT => MediaImportOwnerKind.VISUAL_BRIEFING,
+
+        _ => MediaImportOwnerKind.ASSISTANT,
     };
 
     public static bool AllowSendTo(this Components component) => component switch
