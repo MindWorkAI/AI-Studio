@@ -39,146 +39,35 @@ public partial class VisualBriefingAssistant
             source.Status is VisualBriefingSourceStatus.UNREACHABLE or VisualBriefingSourceStatus.TRANSCRIPT_OUTDATED) == true;
 
     /// <summary>
-    /// Defines <c>GenerateAsync</c> for the visual briefing feature.
+    /// Runs one long-running briefing operation inside the shared session, progress, and error envelope.
     /// </summary>
-    private async Task GenerateAsync(
-        VisualBriefingEditMode mode,
-        Guid? reusableBuildId = null,
-        Guid? parentRevisionOverride = null)
+    /// <remarks>
+    /// Generating a new version and recompiling an existing one differ only in the guard, the call they
+    /// make, and the messages they show. Everything around that is identical: the per-briefing session,
+    /// the busy marker, the diagnostics, the reload of either the editor or the background list entry,
+    /// and the terminal status. Keeping that envelope in one place is what makes both paths behave the
+    /// same when an operation is canceled or fails unexpectedly.
+    /// </remarks>
+    /// <param name="briefing">The briefing the operation runs on.</param>
+    /// <param name="mode">The edit mode, used for diagnostics.</param>
+    /// <param name="operation">The orchestrator call to run.</param>
+    /// <param name="successMessage">The message shown after a new version was committed.</param>
+    /// <param name="canceledMessage">The issue recorded when the user canceled the operation.</param>
+    /// <param name="unexpectedFailureMessage">The issue recorded when the operation threw.</param>
+    /// <returns>A task that completes once the operation reached a terminal state.</returns>
+    private async Task RunBriefingOperationAsync(VisualBriefingManifest briefing, VisualBriefingEditMode mode, Func<CancellationToken, Task<VisualBriefingBuildResult>> operation,
+        string successMessage, string canceledMessage, string unexpectedFailureMessage)
     {
-        if (this.selectedBriefing is null || this.CannotGenerate(mode))
-            return;
-
-        await this.SaveCurrentAsync(reload: true);
-        var generationBriefing = this.selectedBriefing;
-        var briefingId = generationBriefing.BriefingId;
-        var parentRevisionId = parentRevisionOverride ??
-                               (generationBriefing.Versions.Count == 0 ? null : this.selectedRevisionId);
-
-        var generationProvider = this.editor.Provider;
-        var generationProfile = this.editor.Profile;
-
+        var briefingId = briefing.BriefingId;
         var sessionKey = CreateBuildSessionKey(briefingId);
         if (this.AssistantSessionService.TryGetSnapshot(sessionKey)?.IsActive == true)
             return;
 
+        // The session service disposes this token source when the session completes:
         var cancellation = new CancellationTokenSource();
-        var session = await this.AssistantSessionService.TryBeginAsync(
-            sessionKey,
-            this.selectedBriefing.Name,
-            cancellation,
-            null,
-            new(StringComparer.Ordinal),
-            this);
+        var session = await this.AssistantSessionService.TryBeginAsync(sessionKey, briefing.Name, cancellation, null,
+            new(StringComparer.Ordinal), this);
 
-        var terminalStatus = AssistantSessionStatus.FAILED;
-        var terminalIssue = string.Empty;
-        this.generatingBriefings.Add(briefingId);
-        this.StateHasChanged();
-        
-        try
-        {
-            var generation = await this.BuildOrchestrator.BuildAsync(
-                generationBriefing,
-                mode,
-                parentRevisionId,
-                generationProvider,
-                generationProfile,
-                reusableBuildId,
-                cancellation.Token);
-            this.lastBuildDiagnostics = generation.Diagnostics;
-            this.latestBuild = this.BuildProgressService.GetLatest(briefingId) ??
-                               (await this.Store.ListBuildsAsync(briefingId, cancellation.Token)).FirstOrDefault();
-            
-            if (!generation.Success || generation.Version is null)
-            {
-                terminalStatus = generation.FailureCode is VisualBriefingFailureCode.CANCELED ? AssistantSessionStatus.CANCELED : AssistantSessionStatus.FAILED;
-                this.reusableContentBuildId = generation.CanContinueAsRebuild ? generation.Diagnostics.BuildId : null;
-
-                terminalIssue = generation.Issue;
-                if (terminalStatus is not AssistantSessionStatus.CANCELED)
-                    this.Snackbar.Add(generation.Issue, Severity.Error);
-                
-                return;
-            }
-
-            this.reusableContentBuildId = null;
-            var generatedBriefingIsSelected = this.selectedBriefing?.BriefingId == briefingId;
-            if (generatedBriefingIsSelected)
-            {
-                await this.ReloadListAsync(briefingId);
-                await this.SelectRevisionAsync(generation.Version.RevisionId);
-            }
-            else
-            {
-                var latest = await this.Store.LoadAsync(briefingId, cancellation.Token);
-                if (latest is not null)
-                    this.UpdateProject(latest);
-            }
-
-            this.Snackbar.Add(T("A new visual briefing version was created."), Severity.Success);
-            terminalStatus = AssistantSessionStatus.COMPLETED;
-        }
-        catch (OperationCanceledException)
-        {
-            terminalStatus = AssistantSessionStatus.CANCELED;
-            terminalIssue = T("The visual briefing generation was canceled.");
-        }
-        catch (Exception exception)
-        {
-            terminalIssue = T("The visual briefing operation failed unexpectedly. Copy the technical details for support.");
-            this.Logger.LogError(
-                "Unexpected visual briefing UI failure. BriefingId={BriefingId} Mode={Mode} ExceptionType={ExceptionType}",
-                briefingId,
-                mode,
-                exception.GetType().Name);
-
-            this.Snackbar.Add(terminalIssue, Severity.Error);
-        }
-        finally
-        {
-            await this.AssistantSessionService.CompleteAsync(
-                sessionKey,
-                session.SessionId,
-                terminalStatus,
-                terminalIssue,
-                null,
-                new(StringComparer.Ordinal),
-                this);
-
-            this.RetireFinishedSession(sessionKey);
-            this.generatingBriefings.Remove(briefingId);
-            this.StateHasChanged();
-        }
-    }
-
-    /// <summary>
-    /// Recompiles the selected immutable revision with the current AI Studio export pipeline.
-    /// </summary>
-    /// <param name="parentRevisionOverride">An optional parent used while resuming a persisted operation.</param>
-    private async Task RecompileAsync(Guid? parentRevisionOverride = null)
-    {
-        var parentRevisionId = parentRevisionOverride ?? this.selectedRevisionId;
-        if (this.selectedBriefing is null ||
-            this.IsCurrentBusy ||
-            !this.VersionSupportsSemanticEdits(parentRevisionId))
-            return;
-
-        var recompileBriefing = this.selectedBriefing;
-        var briefingId = recompileBriefing.BriefingId;
-        var sessionKey = CreateBuildSessionKey(briefingId);
-        if (this.AssistantSessionService.TryGetSnapshot(sessionKey)?.IsActive == true)
-            return;
-
-        var cancellation = new CancellationTokenSource();
-        var session = await this.AssistantSessionService.TryBeginAsync(
-            sessionKey,
-            recompileBriefing.Name,
-            cancellation,
-            null,
-            new(StringComparer.Ordinal),
-            this);
-        
         var terminalStatus = AssistantSessionStatus.FAILED;
         var terminalIssue = string.Empty;
         this.generatingBriefings.Add(briefingId);
@@ -186,24 +75,23 @@ public partial class VisualBriefingAssistant
 
         try
         {
-            var result = await this.BuildOrchestrator.RecompileAsync(
-                recompileBriefing,
-                parentRevisionId,
-                cancellation.Token);
-            
+            var result = await operation(cancellation.Token);
             this.lastBuildDiagnostics = result.Diagnostics;
             this.latestBuild = this.BuildProgressService.GetLatest(briefingId) ?? (await this.Store.ListBuildsAsync(briefingId, cancellation.Token)).FirstOrDefault();
 
             if (!result.Success || result.Version is null)
             {
                 terminalStatus = result.FailureCode is VisualBriefingFailureCode.CANCELED ? AssistantSessionStatus.CANCELED : AssistantSessionStatus.FAILED;
+                this.reusableContentBuildId = result.CanContinueAsRebuild ? result.Diagnostics.BuildId : null;
+
                 terminalIssue = result.Issue;
                 if (terminalStatus is not AssistantSessionStatus.CANCELED)
                     this.Snackbar.Add(result.Issue, Severity.Error);
-                
+
                 return;
             }
 
+            this.reusableContentBuildId = null;
             if (this.selectedBriefing?.BriefingId == briefingId)
             {
                 await this.ReloadListAsync(briefingId);
@@ -216,22 +104,18 @@ public partial class VisualBriefingAssistant
                     this.UpdateProject(latest);
             }
 
-            this.Snackbar.Add(T("The briefing was recompiled with the current AI Studio version."), Severity.Success);
+            this.Snackbar.Add(successMessage, Severity.Success);
             terminalStatus = AssistantSessionStatus.COMPLETED;
         }
         catch (OperationCanceledException)
         {
             terminalStatus = AssistantSessionStatus.CANCELED;
-            terminalIssue = T("The visual briefing recompilation was canceled.");
+            terminalIssue = canceledMessage;
         }
         catch (Exception exception)
         {
-            terminalIssue = T("The visual briefing recompilation failed unexpectedly. Copy the technical details for support.");
-            this.Logger.LogError(
-                "Unexpected visual briefing UI failure. BriefingId={BriefingId} Mode={Mode} ExceptionType={ExceptionType}",
-                briefingId,
-                VisualBriefingEditMode.RECOMPILE,
-                exception.GetType().Name);
+            terminalIssue = unexpectedFailureMessage;
+            this.Logger.LogError("Unexpected visual briefing UI failure. BriefingId={BriefingId} Mode={Mode} ExceptionType={ExceptionType}", briefingId, mode, exception.GetType().Name);
             this.Snackbar.Add(terminalIssue, Severity.Error);
         }
         finally
@@ -241,6 +125,52 @@ public partial class VisualBriefingAssistant
             this.generatingBriefings.Remove(briefingId);
             this.StateHasChanged();
         }
+    }
+
+    /// <summary>
+    /// Generates a new immutable version of the selected briefing.
+    /// </summary>
+    /// <param name="mode">The edit mode to run.</param>
+    /// <param name="reusableBuildId">An optional build whose validated content is reused.</param>
+    /// <param name="parentRevisionOverride">An optional parent used while resuming a persisted operation.</param>
+    private async Task GenerateAsync(VisualBriefingEditMode mode, Guid? reusableBuildId = null, Guid? parentRevisionOverride = null)
+    {
+        if (this.selectedBriefing is null || this.CannotGenerate(mode))
+            return;
+
+        // Saving reloads the list, which replaces the selected manifest. Everything below must use the
+        // reloaded instance, so the briefing is captured only after the save:
+        await this.SaveCurrentAsync(reload: true);
+        var generationBriefing = this.selectedBriefing;
+        var parentRevisionId = parentRevisionOverride ?? (generationBriefing.Versions.Count == 0 ? null : this.selectedRevisionId);
+        var generationProvider = this.editor.Provider;
+        var generationProfile = this.editor.Profile;
+
+        await this.RunBriefingOperationAsync(generationBriefing, mode, token => this.BuildOrchestrator.BuildAsync(generationBriefing, mode,
+                parentRevisionId, generationProvider, generationProfile, reusableBuildId, token),
+            T("A new visual briefing version was created."),
+            T("The visual briefing generation was canceled."),
+            T("The visual briefing operation failed unexpectedly. Copy the technical details for support."));
+    }
+
+    /// <summary>
+    /// Recompiles the selected immutable revision with the current AI Studio export pipeline.
+    /// </summary>
+    /// <param name="parentRevisionOverride">An optional parent used while resuming a persisted operation.</param>
+    private async Task RecompileAsync(Guid? parentRevisionOverride = null)
+    {
+        var parentRevisionId = parentRevisionOverride ?? this.selectedRevisionId;
+        if (this.selectedBriefing is null || this.IsCurrentBusy || !this.VersionSupportsSemanticEdits(parentRevisionId))
+            return;
+
+        var recompileBriefing = this.selectedBriefing;
+        await this.RunBriefingOperationAsync(
+            recompileBriefing,
+            VisualBriefingEditMode.RECOMPILE,
+            token => this.BuildOrchestrator.RecompileAsync(recompileBriefing, parentRevisionId, token),
+            T("The briefing was recompiled with the current AI Studio version."),
+            T("The visual briefing recompilation was canceled."),
+            T("The visual briefing recompilation failed unexpectedly. Copy the technical details for support."));
     }
 
     /// <summary>
