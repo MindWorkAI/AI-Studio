@@ -22,6 +22,14 @@ internal static class VisualBriefingJson
     /// <summary>
     /// Creates the shared JSON configuration.
     /// </summary>
+    /// <remarks>
+    /// Enums are written as their member names instead of numbers. Stored briefings outlive many
+    /// releases, so a numeric value would silently change meaning as soon as somebody inserts or
+    /// reorders an enum member. Most visual briefing enums carry the converter as an attribute
+    /// already; this option covers the ones defined outside the feature, such as the target language
+    /// and the audience enums. Reading still accepts numbers, so briefings written before this
+    /// change keep loading.
+    /// </remarks>
     /// <param name="writeIndented">Whether serialized JSON should be indented.</param>
     /// <returns>The configured serializer options.</returns>
     private static JsonSerializerOptions Create(bool writeIndented) => new()
@@ -31,5 +39,6 @@ internal static class VisualBriefingJson
         WriteIndented = writeIndented,
         Encoder = JavaScriptEncoder.Default,
         UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
+        Converters = { new JsonStringEnumConverter() },
     };
 }
