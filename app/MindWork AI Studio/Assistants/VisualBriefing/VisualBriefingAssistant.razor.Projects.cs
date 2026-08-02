@@ -199,6 +199,38 @@ public partial class VisualBriefingAssistant
 
         if (reload)
             await this.ReloadListAsync(this.selectedBriefing.BriefingId);
+        else
+            await this.RefreshSavedBriefingAsync(this.selectedBriefing.BriefingId);
+    }
+
+    /// <summary>
+    /// Refreshes the in-memory manifest copies of one briefing after it was written to disk.
+    /// </summary>
+    /// <remarks>
+    /// The store re-reads and rewrites the manifest file, so the copies this component holds are
+    /// stale after every save. They must be refreshed, because selecting a briefing restores the
+    /// editor from the stored manifest: a stale copy would first show the values from before the
+    /// save and would then be written back over the saved ones on the next save.
+    /// The list order is deliberately left untouched. Auto-saving happens while the user is typing,
+    /// and re-sorting by modification date would make the edited briefing jump within the list on
+    /// every change. Explicit actions re-sort through ReloadListAsync instead.
+    /// </remarks>
+    /// <param name="briefingId">The briefing that was just saved.</param>
+    /// <returns>A task that completes once the in-memory copies match the stored manifest.</returns>
+    private async Task RefreshSavedBriefingAsync(Guid briefingId)
+    {
+        var saved = await this.Store.LoadAsync(briefingId);
+        if (saved is null)
+            return;
+
+        if (this.selectedBriefing?.BriefingId == briefingId)
+            this.selectedBriefing = saved;
+
+        var refreshed = VisualBriefingProjectEntry.FromManifest(saved);
+        this.projects = [.. this.projects.Select(project => project.BriefingId == briefingId ? refreshed : project)];
+
+        if (this.selectedProject?.BriefingId == briefingId)
+            this.selectedProject = refreshed;
     }
 
     /// <summary>
