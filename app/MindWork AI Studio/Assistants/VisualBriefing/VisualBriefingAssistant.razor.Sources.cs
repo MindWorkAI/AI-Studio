@@ -124,9 +124,7 @@ public partial class VisualBriefingAssistant
         if (result is null || result.Canceled)
             return;
 
-        this.MediaTranscriptionService.TryStartAttachmentBatch(
-            [source.Path],
-            new(this.CurrentMediaOwner, source.SourceId.ToString("D")));
+        this.MediaTranscriptionService.TryStartAttachmentBatch([source.Path], new(this.CurrentMediaOwner, source.SourceId.ToString("D")));
     }
 
     /// <summary>
@@ -140,6 +138,7 @@ public partial class VisualBriefingAssistant
 
         _ = this.InvokeAsync(async () =>
         {
+            await this.ConsumeMediaOutcomeAsync(owner);
             if (!this.MediaTranscriptionService.IsBusy(owner))
             {
                 var latest = await this.Store.LoadAsync(briefingId);
@@ -154,6 +153,51 @@ public partial class VisualBriefingAssistant
 
             this.StateHasChanged();
         });
+    }
+
+    /// <summary>
+    /// Reports media imports that finished while this page was not open.
+    /// </summary>
+    /// <remarks>
+    /// The transcription service outlives this page, so an import that ends after the user navigated
+    /// away raises its state change with nobody listening. Its outcome then waits in the import lane
+    /// until somebody consumes it, which without this would only happen once that same briefing starts
+    /// another import.
+    /// </remarks>
+    private async Task ConsumePendingMediaOutcomesAsync()
+    {
+        foreach (var project in this.projects)
+            await this.ConsumeMediaOutcomeAsync(MediaImportOwner.ForVisualBriefing(project.BriefingId));
+    }
+
+    /// <summary>
+    /// Reports how a media import of one briefing ended, and clears it from the shared import lane.
+    /// </summary>
+    /// <remarks>
+    /// Without this, a failed or canceled transcription stays silent: the source is simply marked as
+    /// outdated and the user is left to guess why. The outcome would also never leave the import lane,
+    /// because consuming it is what removes it. Every assistant built on the assistant base does the
+    /// same for its own single owner; here it happens per briefing, so an import that finishes while a
+    /// different briefing is open still gets reported.
+    /// </remarks>
+    /// <param name="owner">The briefing whose media import finished.</param>
+    private async Task ConsumeMediaOutcomeAsync(MediaImportOwner owner)
+    {
+        var outcome = this.MediaTranscriptionService.TryConsumeOutcome(owner);
+        if (outcome is null)
+            return;
+
+        if (outcome.Failures.Count > 0)
+            await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, string.Join(Environment.NewLine, outcome.Failures.Select(failure => $"{failure.FileName}: {failure.UserMessage}"))));
+
+        else if (outcome.Status is MediaImportStatus.FAILED)
+            await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, T("The media file could not be transcribed.")));
+
+        if (outcome.Warnings.Count > 0)
+            await this.MessageBus.SendWarning(new(Icons.Material.Filled.VoiceChat, string.Join(Environment.NewLine, outcome.Warnings.Select(warning => $"{warning.FileName}: {warning.UserMessage}"))));
+
+        if (outcome.Status is MediaImportStatus.CANCELLED)
+            await this.MessageBus.SendWarning(new(Icons.Material.Filled.VoiceChat, T("The media transcription was canceled.")));
     }
 
     /// <summary>
