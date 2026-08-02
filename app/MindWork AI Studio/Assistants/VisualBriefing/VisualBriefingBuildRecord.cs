@@ -8,12 +8,12 @@ public sealed class VisualBriefingBuildRecord
     /// <summary>
     /// Gets or sets the build-record schema version.
     /// </summary>
-    public int BuildVersion { get; set; } = VisualBriefingVersions.BUILD;
+    public int BuildVersion { get; init; } = VisualBriefingVersions.BUILD;
 
     /// <summary>
     /// Gets or sets the build identifier.
     /// </summary>
-    public Guid BuildId { get; set; }
+    public Guid BuildId { get; init; }
 
     /// <summary>
     /// Gets or sets the operation identifier shown in diagnostics and logs.
@@ -23,17 +23,17 @@ public sealed class VisualBriefingBuildRecord
     /// <summary>
     /// Gets or sets the owning briefing identifier.
     /// </summary>
-    public Guid BriefingId { get; set; }
+    public Guid BriefingId { get; init; }
 
     /// <summary>
     /// Gets or sets the requested edit mode.
     /// </summary>
-    public VisualBriefingEditMode Mode { get; set; }
+    public VisualBriefingEditMode Mode { get; init; }
 
     /// <summary>
     /// Gets or sets the parent revision identifier.
     /// </summary>
-    public Guid? ParentRevisionId { get; set; }
+    public Guid? ParentRevisionId { get; init; }
 
     /// <summary>
     /// Gets or sets the local revision instruction used for recovery.
@@ -48,7 +48,7 @@ public sealed class VisualBriefingBuildRecord
     /// <summary>
     /// Gets or sets durable stage progress.
     /// </summary>
-    public List<VisualBriefingBuildStageRecord> Stages { get; set; } = [];
+    public List<VisualBriefingBuildStageRecord> Stages { get; init; } = [];
 
     /// <summary>
     /// Gets or sets the content artifact identifier.
@@ -83,47 +83,47 @@ public sealed class VisualBriefingBuildRecord
     /// <summary>
     /// Gets or sets the complete safe input fingerprint.
     /// </summary>
-    public string InputFingerprint { get; set; } = string.Empty;
+    public string InputFingerprint { get; init; } = string.Empty;
 
     /// <summary>
     /// Gets or sets the source and transcript fingerprint.
     /// </summary>
-    public string SourceFingerprint { get; set; } = string.Empty;
+    public string SourceFingerprint { get; init; } = string.Empty;
 
     /// <summary>
     /// Gets or sets the content prompt contract version.
     /// </summary>
-    public int ContentContractVersion { get; set; } = VisualBriefingVersions.CONTENT_CONTRACT;
+    public int ContentContractVersion { get; init; } = VisualBriefingVersions.CONTENT_CONTRACT;
 
     /// <summary>
     /// Gets or sets the evidence prompt contract version.
     /// </summary>
-    public int EvidenceContractVersion { get; set; } = VisualBriefingVersions.EVIDENCE_CONTRACT;
+    public int EvidenceContractVersion { get; init; } = VisualBriefingVersions.EVIDENCE_CONTRACT;
 
     /// <summary>
     /// Gets or sets the plan prompt contract version.
     /// </summary>
-    public int PlanContractVersion { get; set; } = VisualBriefingVersions.PLAN_CONTRACT;
+    public int PlanContractVersion { get; init; } = VisualBriefingVersions.PLAN_CONTRACT;
 
     /// <summary>
     /// Gets or sets the design prompt contract version.
     /// </summary>
-    public int DesignContractVersion { get; set; } = VisualBriefingVersions.DESIGN_CONTRACT;
+    public int DesignContractVersion { get; init; } = VisualBriefingVersions.DESIGN_CONTRACT;
 
     /// <summary>
     /// Gets or sets the selected provider family.
     /// </summary>
-    public string ProviderFamily { get; set; } = string.Empty;
+    public string ProviderFamily { get; init; } = string.Empty;
 
     /// <summary>
     /// Gets or sets the selected model name.
     /// </summary>
-    public string Model { get; set; } = string.Empty;
+    public string Model { get; init; } = string.Empty;
 
     /// <summary>
     /// Gets or sets the build creation time.
     /// </summary>
-    public DateTimeOffset CreatedAtUtc { get; set; }
+    public DateTimeOffset CreatedAtUtc { get; init; }
 
     /// <summary>
     /// Gets or sets the most recent build update time.

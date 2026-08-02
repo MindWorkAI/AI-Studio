@@ -245,62 +245,7 @@
 
                     @if (this.latestBuild is not null)
                     {
-                        string[] buildStepTitles =
-                        [
-                            T("Prepare sources"),
-                            T("Analyze material"),
-                            T("Plan briefing"),
-                            T("Curate content"),
-                            T("Design presentation"),
-                            T("Compile and save"),
-                        ];
-                        <MudExpansionPanels Class="mb-4 visual-briefing-build-progress" Elevation="0">
-                            <MudExpansionPanel Text="@this.BuildProgressTitle"
-                                               Expanded="@(this.latestBuild.Status is not VisualBriefingBuildStatus.COMPLETED)">
-                                <MudStepper ActiveIndex="@this.BuildStepperIndex"
-                                            CompletedStepColor="Color.Primary"
-                                            CurrentStepColor="Color.Primary"
-                                            ErrorStepColor="Color.Error"
-                                            NonLinear="@false"
-                                            OnPreviewInteraction="@PreventBuildStepperInteractionAsync"
-                                            ShowResetButton="@false">
-                                    <ChildContent>
-                                        @for (var index = 0; index < buildStepTitles.Length; index++)
-                                        {
-                                            var stepIndex = index;
-                                            <MudStep Title="@buildStepTitles[stepIndex]"
-                                                     Completed="@this.BuildGroupCompleted(stepIndex)"
-                                                     HasError="@this.BuildGroupStopped(stepIndex)">
-                                                <MudStack Spacing="1" Class="mt-2">
-                                                    <MudText Typo="Typo.body2">@this.BuildGroupSummary(stepIndex)</MudText>
-                                                    @if (this.BuildGroupRunning(stepIndex))
-                                                    {
-                                                        <MudProgressLinear Color="Color.Primary" Indeterminate="true"/>
-                                                        <MudText Typo="Typo.body2">@string.Format(T("{0} in progress..."), buildStepTitles[stepIndex])</MudText>
-                                                    }
-                                                    @if (this.BuildGroupStopped(stepIndex))
-                                                    {
-                                                        <MudAlert Severity="Severity.Error" Dense="true">
-                                                            @this.BuildGroupFailure(stepIndex)
-                                                        </MudAlert>
-                                                        @if (this.latestBuild.Status is VisualBriefingBuildStatus.FAILED or VisualBriefingBuildStatus.CANCELED)
-                                                        {
-                                                            <MudButton Variant="Variant.Filled"
-                                                                       Color="Color.Primary"
-                                                                       StartIcon="@Icons.Material.Filled.PlayArrow"
-                                                                       Disabled="@this.IsCurrentBusy"
-                                                                       OnClick="@this.ResumeLatestBuildAsync">
-                                                                @T("Resume build")
-                                                            </MudButton>
-                                                        }
-                                                    }
-                                                </MudStack>
-                                            </MudStep>
-                                        }
-                                    </ChildContent>
-                                </MudStepper>
-                            </MudExpansionPanel>
-                        </MudExpansionPanels>
+                        <VisualBriefingBuildProgress Build="@this.latestBuild" Disabled="@this.IsCurrentBusy" OnResume="@this.ResumeLatestBuildAsync"/>
                     }
 
                     @if (this.reusableContentBuildId is { } reusableBuildId)

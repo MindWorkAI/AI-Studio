@@ -38,61 +38,6 @@ public partial class VisualBriefingAssistant
         this.selectedBriefing?.Sources.Any(source =>
             source.Status is VisualBriefingSourceStatus.UNREACHABLE or VisualBriefingSourceStatus.TRANSCRIPT_OUTDATED) == true;
 
-    /// <summary>Gets the active build stepper index.</summary>
-    private int BuildStepperIndex
-    {
-        get
-        {
-            if (this.latestBuild is null)
-                return 0;
-
-            var groups = BuildStageGroups();
-            for (var index = 0; index < groups.Length; index++)
-            {
-                var statuses = groups[index].Select(this.StageStatus).ToArray();
-                if (statuses.Any(status => status is VisualBriefingBuildStageStatus.RUNNING or
-                        VisualBriefingBuildStageStatus.FAILED or VisualBriefingBuildStageStatus.CANCELED))
-                    return index;
-
-                if (statuses.Any(status => status is VisualBriefingBuildStageStatus.NOT_STARTED))
-                    return index;
-            }
-
-            return groups.Length - 1;
-        }
-    }
-
-    /// <summary>
-    /// Gets the localized collapsed build-progress summary.
-    /// </summary>
-    private string BuildProgressTitle
-    {
-        get
-        {
-            var title = this.latestBuild?.Status switch
-            {
-                VisualBriefingBuildStatus.COMPLETED => $"{T("Build progress")} · {T("Completed")}",
-                VisualBriefingBuildStatus.FAILED => $"{T("Build progress")} · {T("Failed")}",
-                VisualBriefingBuildStatus.CANCELED => $"{T("Build progress")} · {T("Canceled")}",
-                VisualBriefingBuildStatus.AWAITING_REBUILD => $"{T("Build progress")} · {T("Action required")}",
-
-                _ => $"{T("Build progress")} · {T("Running")}",
-            };
-
-            var duration = this.CalculateBuildDuration(this.latestBuild?.Stages ?? []);
-            return duration > TimeSpan.Zero ? $"{title} · {FormatBuildDuration(duration)}" : title;
-        }
-    }
-
-    /// <summary>
-    /// Keeps the status stepper informational while allowing actions inside the active step.
-    /// </summary>
-    private static Task PreventBuildStepperInteractionAsync(StepperInteractionEventArgs args)
-    {
-        args.Cancel = true;
-        return Task.CompletedTask;
-    }
-
     /// <summary>
     /// Defines <c>GenerateAsync</c> for the visual briefing feature.
     /// </summary>
@@ -358,32 +303,8 @@ public partial class VisualBriefingAssistant
                 return;
 
             this.latestBuild = this.BuildProgressService.GetLatest(briefingId);
-            this.buildDurationReferenceUtc = DateTimeOffset.UtcNow;
             this.StateHasChanged();
         });
-    }
-
-    /// <summary>
-    /// Refreshes live build durations at most once per second while a selected stage is running.
-    /// </summary>
-    private async Task MonitorBuildDurationAsync(CancellationToken token)
-    {
-        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(1));
-        try
-        {
-            while (await timer.WaitForNextTickAsync(token))
-                await this.InvokeAsync(() =>
-                {
-                    if (this.latestBuild?.Stages.Any(stage => stage.Status is VisualBriefingBuildStageStatus.RUNNING) != true)
-                        return;
-
-                    this.buildDurationReferenceUtc = DateTimeOffset.UtcNow;
-                    this.StateHasChanged();
-                });
-        }
-        catch (OperationCanceledException) when (token.IsCancellationRequested)
-        {
-        }
     }
 
     /// <summary>
@@ -417,120 +338,6 @@ public partial class VisualBriefingAssistant
         await this.AssistantSessionService.CancelAsync(sessionKey, this);
         this.StateHasChanged();
     }
-
-    /// <summary>
-    /// Gets the six UI groups for the eight durable build stages.
-    /// </summary>
-    private static VisualBriefingBuildStage[][] BuildStageGroups() =>
-    [
-        [VisualBriefingBuildStage.SOURCE_PREPARATION],
-        [VisualBriefingBuildStage.EVIDENCE],
-        [VisualBriefingBuildStage.PLAN],
-        [VisualBriefingBuildStage.CONTENT],
-        [VisualBriefingBuildStage.DESIGN],
-        [VisualBriefingBuildStage.COMPILATION, VisualBriefingBuildStage.ASSEMBLY, VisualBriefingBuildStage.COMMIT],
-    ];
-
-    /// <summary>
-    /// Gets a persistent stage status, defaulting to not started.
-    /// </summary>
-    private VisualBriefingBuildStageStatus StageStatus(VisualBriefingBuildStage stage) =>
-        this.latestBuild?.Stages.FirstOrDefault(item => item.Stage == stage)?.Status ??
-        VisualBriefingBuildStageStatus.NOT_STARTED;
-
-    /// <summary>
-    /// Gets whether one UI group completed or was reused.
-    /// </summary>
-    private bool BuildGroupCompleted(int index) =>
-        BuildStageGroups()[index].All(stage =>
-            this.StageStatus(stage) is VisualBriefingBuildStageStatus.COMPLETED or VisualBriefingBuildStageStatus.SKIPPED);
-
-    /// <summary>
-    /// Gets whether one UI group failed.
-    /// </summary>
-    private bool BuildGroupFailed(int index) =>
-        BuildStageGroups()[index].Any(stage => this.StageStatus(stage) is VisualBriefingBuildStageStatus.FAILED);
-
-    /// <summary>
-    /// Gets whether one UI group was canceled.
-    /// </summary>
-    private bool BuildGroupCanceled(int index) =>
-        BuildStageGroups()[index].Any(stage => this.StageStatus(stage) is VisualBriefingBuildStageStatus.CANCELED);
-
-    /// <summary>
-    /// Gets whether one UI group stopped with a failure or cancellation.
-    /// </summary>
-    private bool BuildGroupStopped(int index) =>
-        this.BuildGroupFailed(index) || this.BuildGroupCanceled(index);
-
-    /// <summary>
-    /// Gets whether one UI group is active.
-    /// </summary>
-    private bool BuildGroupRunning(int index) =>
-        BuildStageGroups()[index].Any(stage => this.StageStatus(stage) is VisualBriefingBuildStageStatus.RUNNING);
-
-    /// <summary>
-    /// Formats a safe localized status summary and duration.
-    /// </summary>
-    private string BuildGroupSummary(int index)
-    {
-        if (this.latestBuild is null)
-            return T("Not started");
-
-        var records = BuildStageGroups()[index]
-            .Select(stage => this.latestBuild.Stages.FirstOrDefault(item => item.Stage == stage))
-            .Where(record => record is not null)
-            .Cast<VisualBriefingBuildStageRecord>()
-            .ToArray();
-
-        var status = this.BuildGroupRunning(index)
-            ? T("Running")
-            : this.BuildGroupFailed(index)
-                ? T("Failed")
-                : this.BuildGroupCanceled(index)
-                    ? T("Canceled")
-                    : records.Length > 0 && records.All(record => record.Status is VisualBriefingBuildStageStatus.SKIPPED)
-                        ? T("Reused")
-                        : this.BuildGroupCompleted(index)
-                            ? T("Completed")
-                            : T("Not started");
-
-        var duration = this.CalculateBuildDuration(records);
-        return duration > TimeSpan.Zero ? $"{status} · {FormatBuildDuration(duration)}" : status;
-    }
-
-    /// <summary>
-    /// Calculates active processing time without counting reused stages or time between resume attempts.
-    /// </summary>
-    private TimeSpan CalculateBuildDuration(IEnumerable<VisualBriefingBuildStageRecord> records) => records
-            .Where(record => record.StartedAtUtc is not null && record.Status is not VisualBriefingBuildStageStatus.SKIPPED)
-            .Aggregate(TimeSpan.Zero, (total, record) => total + this.CalculateStageDuration(record));
-
-    /// <summary>
-    /// Calculates one stage duration against the shared live timestamp.
-    /// </summary>
-    private TimeSpan CalculateStageDuration(VisualBriefingBuildStageRecord record)
-    {
-        var finishedAtUtc = record.Status is VisualBriefingBuildStageStatus.RUNNING ? this.buildDurationReferenceUtc : record.FinishedAtUtc;
-        if (record.StartedAtUtc is null || finishedAtUtc is null)
-            return TimeSpan.Zero;
-
-        var duration = finishedAtUtc.Value - record.StartedAtUtc.Value;
-        return duration > TimeSpan.Zero ? duration : TimeSpan.Zero;
-    }
-
-    /// <summary>
-    /// Formats a build duration using the current UI culture.
-    /// </summary>
-    private static string FormatBuildDuration(TimeSpan duration) => $"{duration.TotalSeconds:0.0} s";
-
-    /// <summary>
-    /// Gets the safe failure reason for a UI group.
-    /// </summary>
-    private string BuildGroupFailure(int index) =>
-        BuildStageGroups()[index]
-            .Select(stage => this.latestBuild?.Stages.FirstOrDefault(item => item.Stage == stage)?.Failure)
-            .FirstOrDefault(failure => failure is not null)?.UserMessage ?? this.latestBuild?.Failure?.UserMessage ?? string.Empty;
 
     /// <summary>
     /// Defines <c>CopyTechnicalDetailsAsync</c> for the visual briefing feature.
