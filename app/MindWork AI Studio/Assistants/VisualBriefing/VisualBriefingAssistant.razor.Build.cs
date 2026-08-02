@@ -8,12 +8,19 @@ namespace AIStudio.Assistants.VisualBriefing;
 public partial class VisualBriefingAssistant
 {
     /// <summary>
+    /// Gets the active or canceling build session for the selected briefing.
+    /// </summary>
+    private AssistantSessionSnapshot? CurrentBuildSession => this.selectedBriefing is null ? null : this.AssistantSessionService.TryGetSnapshot(CreateBuildSessionKey(this.selectedBriefing.BriefingId));
+
+    /// <summary>
+    /// Gets whether cancellation was already requested for the selected briefing build.
+    /// </summary>
+    private bool IsCurrentBuildCanceling => this.CurrentBuildSession?.Status is AssistantSessionStatus.CANCELING;
+
+    /// <summary>
     /// Gets whether the selected revision cannot be recompiled without model calls.
     /// </summary>
-    private bool CannotRecompile => this.IsCurrentBusy ||
-                                    this.selectedBriefing is null ||
-                                    this.selectedRevisionId == Guid.Empty ||
-                                    !this.SelectedVersionSupportsEdits;
+    private bool CannotRecompile => this.IsCurrentBusy || this.selectedBriefing is null || this.selectedRevisionId == Guid.Empty || !this.SelectedVersionSupportsEdits;
 
     /// <summary>
     /// Defines <c>CannotGenerate</c> for the visual briefing feature.
@@ -106,7 +113,7 @@ public partial class VisualBriefingAssistant
         var generationProvider = this.provider;
         var generationProfile = this.profile;
 
-        var sessionKey = new AssistantSessionKey(ComponentKind.VISUAL_BRIEFING_ASSISTANT, briefingId.ToString("D"));
+        var sessionKey = CreateBuildSessionKey(briefingId);
         if (this.AssistantSessionService.TryGetSnapshot(sessionKey)?.IsActive == true)
             return;
 
@@ -140,12 +147,13 @@ public partial class VisualBriefingAssistant
             
             if (!generation.Success || generation.Version is null)
             {
-                this.reusableContentBuildId = generation.CanContinueAsRebuild
-                    ? generation.Diagnostics.BuildId
-                    : null;
+                terminalStatus = generation.FailureCode is VisualBriefingFailureCode.CANCELED ? AssistantSessionStatus.CANCELED : AssistantSessionStatus.FAILED;
+                this.reusableContentBuildId = generation.CanContinueAsRebuild ? generation.Diagnostics.BuildId : null;
 
                 terminalIssue = generation.Issue;
-                this.Snackbar.Add(generation.Issue, Severity.Error);
+                if (terminalStatus is not AssistantSessionStatus.CANCELED)
+                    this.Snackbar.Add(generation.Issue, Severity.Error);
+                
                 return;
             }
 
@@ -211,7 +219,7 @@ public partial class VisualBriefingAssistant
 
         var recompileBriefing = this.selectedBriefing;
         var briefingId = recompileBriefing.BriefingId;
-        var sessionKey = new AssistantSessionKey(ComponentKind.VISUAL_BRIEFING_ASSISTANT, briefingId.ToString("D"));
+        var sessionKey = CreateBuildSessionKey(briefingId);
         if (this.AssistantSessionService.TryGetSnapshot(sessionKey)?.IsActive == true)
             return;
 
@@ -241,8 +249,11 @@ public partial class VisualBriefingAssistant
 
             if (!result.Success || result.Version is null)
             {
+                terminalStatus = result.FailureCode is VisualBriefingFailureCode.CANCELED ? AssistantSessionStatus.CANCELED : AssistantSessionStatus.FAILED;
                 terminalIssue = result.Issue;
-                this.Snackbar.Add(result.Issue, Severity.Error);
+                if (terminalStatus is not AssistantSessionStatus.CANCELED)
+                    this.Snackbar.Add(result.Issue, Severity.Error);
+                
                 return;
             }
 
@@ -369,6 +380,22 @@ public partial class VisualBriefingAssistant
             await this.GenerateAsync(
                 this.latestBuild.Mode,
                 parentRevisionOverride: this.latestBuild.ParentRevisionId);
+    }
+
+    /// <summary>
+    /// Requests cancellation for the build running on the selected briefing.
+    /// </summary>
+    private async Task CancelCurrentBuildAsync()
+    {
+        if (this.selectedBriefing is null)
+            return;
+
+        var sessionKey = CreateBuildSessionKey(this.selectedBriefing.BriefingId);
+        if (this.AssistantSessionService.TryGetSnapshot(sessionKey)?.Status is not AssistantSessionStatus.RUNNING)
+            return;
+
+        await this.AssistantSessionService.CancelAsync(sessionKey, this);
+        this.StateHasChanged();
     }
 
     /// <summary>
@@ -506,7 +533,11 @@ public partial class VisualBriefingAssistant
         if (this.generatingBriefings.Contains(briefingId))
             return true;
 
-        var key = new AssistantSessionKey(ComponentKind.VISUAL_BRIEFING_ASSISTANT, briefingId.ToString("D"));
-        return this.AssistantSessionService.TryGetSnapshot(key)?.IsActive == true;
+        return this.AssistantSessionService.TryGetSnapshot(CreateBuildSessionKey(briefingId))?.IsActive == true;
     }
+
+    /// <summary>
+    /// Creates the assistant-session key used by a visual briefing build.
+    /// </summary>
+    private static AssistantSessionKey CreateBuildSessionKey(Guid briefingId) => new(ComponentKind.VISUAL_BRIEFING_ASSISTANT, briefingId.ToString("D"));
 }

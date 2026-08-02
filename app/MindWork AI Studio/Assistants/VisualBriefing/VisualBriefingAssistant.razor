@@ -228,6 +228,16 @@
                                     </span>
                                 </MudTooltip>
                             }
+                            @if (this.CurrentBuildSession?.IsActive == true)
+                            {
+                                <MudButton Variant="Variant.Filled"
+                                           Color="Color.Error"
+                                           StartIcon="@Icons.Material.Filled.Stop"
+                                           OnClick="@this.CancelCurrentBuildAsync"
+                                           Disabled="@this.IsCurrentBuildCanceling">
+                                    @(this.IsCurrentBuildCanceling ? T("Stopping build...") : T("Stop build"))
+                                </MudButton>
+                            }
                         </MudStack>
                     </MudForm>
 
