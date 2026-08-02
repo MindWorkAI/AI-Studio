@@ -16,42 +16,70 @@ public partial class VisualBriefingAssistant
     private bool HasSourceMaterial => this.selectedBriefing?.Sources.Any(source => source.Kind is VisualBriefingSourceKind.SOURCE_MATERIAL) == true;
 
     /// <summary>Gets all current field, source, and revision issues shown below the actions.</summary>
+    /// <remarks>
+    /// This is the complete list for the user. The generate buttons disable themselves from the same
+    /// two building blocks, so a listed issue and a blocked button can no longer contradict each other.
+    /// Only the MudBlazor field messages stay out of that gate: they arrive one validation pass late,
+    /// which would make the buttons flicker, and the validators behind them are evaluated directly by
+    /// FieldIssues anyway.
+    /// </remarks>
     private IReadOnlyList<string> ValidationIssues
     {
         get
         {
-            List<string> issues = [.. this.formIssues];
+            List<string> issues = [.. this.formIssues, .. this.FieldIssues, .. this.SourceIssues];
+
+            if (this.selectedBriefing is { Versions.Count: > 0 } && !this.SelectedVersionSupportsEdits)
+                issues.Add(T("This version has no compatible semantic artifacts. Rebuild the briefing instead."));
+
+            return [.. issues.Where(issue => !string.IsNullOrWhiteSpace(issue)).Distinct(StringComparer.Ordinal)];
+        }
+    }
+
+    /// <summary>Gets the field issues that block generation regardless of the edit mode.</summary>
+    private IReadOnlyList<string> FieldIssues
+    {
+        get
+        {
+            List<string> issues = [];
 
             AddIssue(issues, this.ValidateProjectName(this.editor.Name));
             AddIssue(issues, this.ValidateProvider(this.editor.Provider));
             AddIssue(issues, this.ValidateCustomTargetLanguage(this.editor.CustomTargetLanguage));
             AddIssue(issues, this.ValidateCustomProtectionLevel(this.editor.CustomProtectionLevel));
 
-            if (this.selectedBriefing is not null)
+            return issues;
+        }
+    }
+
+    /// <summary>Gets the issues with the stored sources, which block only the modes that read them.</summary>
+    private IReadOnlyList<string> SourceIssues
+    {
+        get
+        {
+            if (this.selectedBriefing is null)
+                return [];
+
+            List<string> issues = [];
+            if (!this.HasSourceMaterial)
+                issues.Add(T("Please add at least one source material file."));
+
+            foreach (var source in this.selectedBriefing.Sources)
             {
-                if (!this.HasSourceMaterial)
-                    issues.Add(T("Please add at least one source material file."));
-
-                foreach (var source in this.selectedBriefing.Sources)
+                var fileName = Path.GetFileName(source.Path);
+                switch (source.Status)
                 {
-                    var fileName = Path.GetFileName(source.Path);
-                    switch (source.Status)
-                    {
-                        case VisualBriefingSourceStatus.UNREACHABLE:
-                            issues.Add(string.Format(T("The source '{0}' is no longer reachable. Restore or relink it."), fileName));
-                            break;
+                    case VisualBriefingSourceStatus.UNREACHABLE:
+                        issues.Add(string.Format(T("The source '{0}' is no longer reachable. Restore or relink it."), fileName));
+                        break;
 
-                        case VisualBriefingSourceStatus.TRANSCRIPT_OUTDATED:
-                            issues.Add(string.Format(T("The transcript for '{0}' is missing or outdated. Transcribe the media source again."), fileName));
-                            break;
-                    }
+                    case VisualBriefingSourceStatus.TRANSCRIPT_OUTDATED:
+                        issues.Add(string.Format(T("The transcript for '{0}' is missing or outdated. Transcribe the media source again."), fileName));
+                        break;
                 }
-
-                if (this.selectedBriefing.Versions.Count > 0 && !this.SelectedVersionSupportsEdits)
-                    issues.Add(T("This version has no compatible semantic artifacts. Rebuild the briefing instead."));
             }
 
-            return [.. issues.Where(issue => !string.IsNullOrWhiteSpace(issue)).Distinct(StringComparer.Ordinal)];
+            return issues;
         }
     }
 

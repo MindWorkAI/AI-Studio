@@ -23,20 +23,23 @@ public partial class VisualBriefingAssistant
     private bool CannotRecompile => this.IsCurrentBusy || this.selectedBriefing is null || this.selectedRevisionId == Guid.Empty || !this.SelectedVersionSupportsEdits;
 
     /// <summary>
-    /// Defines <c>CannotGenerate</c> for the visual briefing feature.
+    /// Gets whether one edit mode is currently blocked.
     /// </summary>
+    /// <remarks>
+    /// A mode is blocked by the very issues listed below the buttons, minus the ones that do not apply
+    /// to it. Changing only the design rebuilds the presentation from the validated content of a stored
+    /// version, so it neither needs source material nor cares whether a source file moved away in the
+    /// meantime. The two modes that edit a stored version instead require that version to still carry
+    /// its semantic artifacts.
+    /// </remarks>
+    /// <param name="mode">The edit mode the user asked for.</param>
+    /// <returns><c>true</c> when the mode must stay disabled.</returns>
     private bool CannotGenerate(VisualBriefingEditMode mode) =>
         this.IsCurrentBusy ||
-        this.editor.Provider == ProviderSettings.NONE ||
-        string.IsNullOrWhiteSpace(this.editor.Name) ||
-        this.editor.TargetLanguage is CommonLanguages.OTHER && string.IsNullOrWhiteSpace(this.editor.CustomTargetLanguage) ||
-        this.editor.ProtectionLevel is VisualBriefingProtectionLevel.OTHER && string.IsNullOrWhiteSpace(this.editor.CustomProtectionLevel) ||
-        mode is not VisualBriefingEditMode.CHANGE_DESIGN && !this.HasSourceMaterial ||
-        mode is VisualBriefingEditMode.CHANGE_DESIGN or VisualBriefingEditMode.UPDATE_CONTENT &&
-        !this.SelectedVersionSupportsEdits ||
-        mode is not VisualBriefingEditMode.CHANGE_DESIGN &&
-        this.selectedBriefing?.Sources.Any(source =>
-            source.Status is VisualBriefingSourceStatus.UNREACHABLE or VisualBriefingSourceStatus.TRANSCRIPT_OUTDATED) == true;
+        this.selectedBriefing is null ||
+        this.FieldIssues.Count > 0 ||
+        mode is not VisualBriefingEditMode.CHANGE_DESIGN && this.SourceIssues.Count > 0 ||
+        mode is VisualBriefingEditMode.CHANGE_DESIGN or VisualBriefingEditMode.UPDATE_CONTENT && !this.SelectedVersionSupportsEdits;
 
     /// <summary>
     /// Runs one long-running briefing operation inside the shared session, progress, and error envelope.

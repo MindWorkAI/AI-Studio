@@ -123,9 +123,6 @@ public partial class VisualBriefingAssistant : MSGComponentBase
     /// <summary>Owns MudBlazor validation for the selected briefing editor.</summary>
     private MudForm? visualBriefingForm;
 
-    /// <summary>Stores whether all MudBlazor fields in the editor are currently valid.</summary>
-    private bool formIsValid;
-
     /// <summary>Stores the current MudBlazor validation messages.</summary>
     private string[] formIssues = [];
 

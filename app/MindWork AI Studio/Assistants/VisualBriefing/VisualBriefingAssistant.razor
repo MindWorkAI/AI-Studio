@@ -79,7 +79,6 @@
                 else
                 {
                     <MudForm @ref="@(this.visualBriefingForm)"
-                             @bind-IsValid="@(this.formIsValid)"
                              @bind-Errors="@(this.formIssues)">
                         <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Class="mb-3">
                             <MudText Typo="Typo.h3">@this.editor.Name</MudText>
