@@ -82,10 +82,9 @@
                 }
                 else
                 {
-                    <MudForm @ref="@(this.visualBriefingForm)"
-                             @bind-Errors="@(this.formIssues)">
+                    <MudForm @ref="@(this.visualBriefingForm)" @bind-Errors="@(this.formIssues)">
                         <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Class="mb-3">
-                            <MudText Typo="Typo.h3">@this.editor.Name</MudText>
+                            <MudText Typo="Typo.h4">@this.editor.Name</MudText>
                             <MudStack Row="true" Spacing="1">
                                 <MudButton StartIcon="@Icons.Material.Filled.DriveFileRenameOutline" OnClick="@this.RenameAsync" Disabled="@this.IsCurrentBusy">@T("Rename")</MudButton>
                                 <MudButton StartIcon="@Icons.Material.Filled.DeleteForever" Color="Color.Error" OnClick="@this.DeleteAsync" Disabled="@this.IsCurrentBusy">@T("Delete")</MudButton>
@@ -104,7 +103,7 @@
                             <MudTextField T="string" @bind-Text="@this.editor.Instruction" Label="@T("Briefing scope, notes, or current change instruction (optional)")" Variant="Variant.Outlined" AutoGrow="true" Lines="3" Class="mt-3" Disabled="@this.IsCurrentBusy"/>
 
                             <EnumSelection T="VisualBriefingProtectionLevel"
-                                           NameFunc="@(level => this.ProtectionLevelName(level))"
+                                           NameFunc="@this.ProtectionLevelName"
                                            @bind-Value="@this.editor.ProtectionLevel"
                                            Icon="@Icons.Material.Filled.Security"
                                            Label="@T("Protection level")"
