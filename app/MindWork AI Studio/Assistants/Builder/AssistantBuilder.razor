@@ -96,7 +96,7 @@ else
                   </MudExpansionPanel>
               </MudExpansionPanels>
 
-              <MudStepper @bind-ActiveIndex="@this.stepperIndex" CompletedStepColor="Color.Primary" CurrentStepColor="Color.Primary" ErrorStepColor="Color.Error" NonLinear="@false" ShowResetButton="@false" Class="mb-3">
+              <MudStepperWithoutActions @bind-ActiveIndex="@this.stepperIndex" Class="mb-3">
                   <ChildContent>
                       <MudStep Title="@T("Validate plugin")" Completed="@this.PluginCheckCompleted" HasError="@this.IsInstallStepFailed(BuilderInstallStep.CHECK_PLUGIN)">
                           <MudStack Spacing="2" Class="mt-2">
@@ -249,9 +249,7 @@ else
                           </MudStack>
                       </MudStep>
                   </ChildContent>
-                  <ActionContent Context="_">
-                  </ActionContent>
-              </MudStepper>
+              </MudStepperWithoutActions>
           </MudStack>
         : null;
 

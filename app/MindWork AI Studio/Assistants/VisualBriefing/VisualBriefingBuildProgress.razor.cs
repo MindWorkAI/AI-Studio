@@ -165,17 +165,6 @@ public partial class VisualBriefingBuildProgress : MSGComponentBase
     }
 
     /// <summary>
-    /// Keeps the status stepper informational while allowing actions inside the active step.
-    /// </summary>
-    /// <param name="args">The interaction to cancel.</param>
-    /// <returns>A completed task.</returns>
-    private static Task PreventBuildStepperInteractionAsync(StepperInteractionEventArgs args)
-    {
-        args.Cancel = true;
-        return Task.CompletedTask;
-    }
-
-    /// <summary>
     /// Gets a persistent stage status, defaulting to not started.
     /// </summary>
     /// <param name="stage">The stage to look up.</param>

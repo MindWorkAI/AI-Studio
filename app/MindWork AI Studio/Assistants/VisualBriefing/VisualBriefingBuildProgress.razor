@@ -1,14 +1,8 @@
 @inherits MSGComponentBase
 
-<MudExpansionPanels Class="mb-4 visual-briefing-build-progress" Elevation="0">
+<MudExpansionPanels Class="mb-4" Elevation="0">
     <MudExpansionPanel Text="@this.BuildProgressTitle" Expanded="@(this.Build?.Status is not VisualBriefingBuildStatus.COMPLETED)">
-        <MudStepper ActiveIndex="@this.BuildStepperIndex"
-                    CompletedStepColor="Color.Primary"
-                    CurrentStepColor="Color.Primary"
-                    ErrorStepColor="Color.Error"
-                    NonLinear="@false"
-                    OnPreviewInteraction="@PreventBuildStepperInteractionAsync"
-                    ShowResetButton="@false">
+        <MudStepperWithoutActions ActiveIndex="@this.BuildStepperIndex" ReadOnly="@true">
             <ChildContent>
                 @for (var index = 0; index < STAGE_GROUPS.Length; index++)
                 {
@@ -43,9 +37,6 @@
                     </MudStep>
                 }
             </ChildContent>
-            @* The build runs on its own. Overriding the actions with empty content keeps MudBlazor from
-               rendering its Previous, Next, Skip, and Complete buttons, which have nothing to do here. *@
-            <ActionContent></ActionContent>
-        </MudStepper>
+        </MudStepperWithoutActions>
     </MudExpansionPanel>
 </MudExpansionPanels>
