@@ -191,7 +191,9 @@
                             <MudText Typo="Typo.h5" Class="mb-3">@T("Briefing settings")</MudText>
                             @*
                                 The confidence belongs to the provider chosen right next to it, so both share one row.
-                                Do not add a margin to the button to "correct" its height: a dense outlined select with
+                                It uses the icon trigger, like the chat does, so this row ends the same way the profile
+                                row below it does: a field followed by one compact icon button.
+                                Do not add a margin to that button to "correct" its height: a dense outlined select with
                                 a label carries margin-top 8px and margin-bottom 4px of its own, so centring the boxes
                                 already lands within a few pixels of the visible frame, and any added margin makes it
                                 worse. Baseline alignment does not work here either, because the wrapper below takes
@@ -205,11 +207,11 @@
                                 </div>
                                 @if (this.SettingsManager.ConfigurationData.Confidence.ShowProviderConfidence)
                                 {
-                                    <ConfidenceInfo Mode="PopoverTriggerMode.BUTTON" LLMProvider="@this.editor.Provider.UsedLLMProvider"/>
+                                    <ConfidenceInfo Mode="PopoverTriggerMode.ICON" LLMProvider="@this.editor.Provider.UsedLLMProvider"/>
                                 }
                             </MudStack>
 
-                            <ProfileSelection @bind-CurrentProfile="@this.editor.Profile" MarginLeft="" Disabled="@this.IsCurrentBusy"/>
+                            <ProfileFormSelection @bind-Profile="@this.editor.Profile" Disabled="@this.IsCurrentBusy"/>
                             <EnumSelection T="CommonLanguages" NameFunc="@(language => language.Name())" @bind-Value="@this.editor.TargetLanguage" Icon="@Icons.Material.Filled.Translate" Label="@T("Target language")" AllowOther="true" @bind-OtherInput="@this.editor.CustomTargetLanguage" OtherValue="CommonLanguages.OTHER" LabelOther="@T("Custom target language")" ValidateOther="@this.ValidateCustomTargetLanguage" SelectionUpdated="@(_ => this.ScheduleFormValidation())" Disabled="@this.IsCurrentBusy"/>
                             <EnumSelection T="AudienceProfile" NameFunc="@(value => value.Name())" @bind-Value="@this.editor.AudienceProfile" Label="@T("Audience profile")" Disabled="@this.IsCurrentBusy"/>
                             <EnumSelection T="AudienceAgeGroup" NameFunc="@(value => value.Name())" @bind-Value="@this.editor.AudienceAgeGroup" Label="@T("Audience age group")" Disabled="@this.IsCurrentBusy"/>
