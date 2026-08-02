@@ -1,3 +1,4 @@
+using AIStudio.Provider;
 using AIStudio.Tools.AssistantSessions;
 
 using ComponentKind = AIStudio.Tools.Components;
@@ -21,6 +22,18 @@ public partial class VisualBriefingAssistant
     /// Gets whether the selected revision cannot be recompiled without model calls.
     /// </summary>
     private bool CannotRecompile => this.IsCurrentBusy || this.selectedBriefing is null || this.selectedRevisionId == Guid.Empty || !this.SelectedVersionSupportsEdits;
+
+    /// <summary>
+    /// Gets the border that marks an action with the confidence of the selected provider.
+    /// </summary>
+    /// <remarks>
+    /// Only the actions that actually hand briefing data to a provider carry this border. Recompiling
+    /// reuses the stored artifacts and calls no model at all, so marking it would announce a transfer
+    /// that never happens, and stopping a build sends nothing either.
+    /// </remarks>
+    private string ConfidenceBorderStyle => this.SettingsManager.ConfigurationData.Confidence.ShowProviderConfidence
+        ? this.editor.Provider.UsedLLMProvider.GetConfidence(this.SettingsManager).StyleBorder(this.SettingsManager)
+        : string.Empty;
 
     /// <summary>
     /// Gets whether one edit mode is currently blocked.

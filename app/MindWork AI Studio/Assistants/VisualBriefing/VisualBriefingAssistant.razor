@@ -190,6 +190,11 @@
                         <MudPaper Outlined="true" Class="pa-4 mb-4">
                             <MudText Typo="Typo.h5" Class="mb-3">@T("Briefing settings")</MudText>
                             <ProviderSelection @bind-ProviderSettings="@this.editor.Provider" ValidateProvider="@this.ValidateProvider" ExplicitMinimumConfidence="@this.MinimumProviderConfidence" Disabled="@this.IsCurrentBusy"/>
+                            @if (this.SettingsManager.ConfigurationData.Confidence.ShowProviderConfidence)
+                            {
+                                <ConfidenceInfo Mode="PopoverTriggerMode.BUTTON" LLMProvider="@this.editor.Provider.UsedLLMProvider"/>
+                            }
+
                             <ProfileSelection @bind-CurrentProfile="@this.editor.Profile" MarginLeft="" Disabled="@this.IsCurrentBusy"/>
                             <EnumSelection T="CommonLanguages" NameFunc="@(language => language.Name())" @bind-Value="@this.editor.TargetLanguage" Icon="@Icons.Material.Filled.Translate" Label="@T("Target language")" AllowOther="true" @bind-OtherInput="@this.editor.CustomTargetLanguage" OtherValue="CommonLanguages.OTHER" LabelOther="@T("Custom target language")" ValidateOther="@this.ValidateCustomTargetLanguage" SelectionUpdated="@(_ => this.ScheduleFormValidation())" Disabled="@this.IsCurrentBusy"/>
                             <EnumSelection T="AudienceProfile" NameFunc="@(value => value.Name())" @bind-Value="@this.editor.AudienceProfile" Label="@T("Audience profile")" Disabled="@this.IsCurrentBusy"/>
@@ -203,18 +208,23 @@
                         <MudStack Row="true" Spacing="2" Wrap="Wrap.Wrap" Class="mb-4">
                             @if (this.selectedBriefing.Versions.Count == 0)
                             {
-                                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AutoAwesome" OnClick="@(() => this.GenerateAsync(VisualBriefingEditMode.INITIAL))" Disabled="@this.CannotGenerate(VisualBriefingEditMode.INITIAL)">@T("Create briefing")</MudButton>
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AutoAwesome" OnClick="@(() => this.GenerateAsync(VisualBriefingEditMode.INITIAL))" Disabled="@this.CannotGenerate(VisualBriefingEditMode.INITIAL)" Style="@this.ConfidenceBorderStyle">@T("Create briefing")</MudButton>
                             }
                             else
                             {
                                 <MudTooltip Text="@T("Creates a new version with a different design while keeping the current structure, content, and visual assets.")">
                                     <span>
-                                        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Palette" OnClick="@(() => this.GenerateAsync(VisualBriefingEditMode.CHANGE_DESIGN))" Disabled="@this.CannotGenerate(VisualBriefingEditMode.CHANGE_DESIGN)">@T("Change design")</MudButton>
+                                        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Palette" OnClick="@(() => this.GenerateAsync(VisualBriefingEditMode.CHANGE_DESIGN))" Disabled="@this.CannotGenerate(VisualBriefingEditMode.CHANGE_DESIGN)" Style="@this.ConfidenceBorderStyle">@T("Change design")</MudButton>
                                     </span>
                                 </MudTooltip>
                                 <MudTooltip Text="@T("Creates a new version from the current sources and instructions while keeping the current structure and design.")">
                                     <span>
-                                        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Update" OnClick="@(() => this.GenerateAsync(VisualBriefingEditMode.UPDATE_CONTENT))" Disabled="@this.CannotGenerate(VisualBriefingEditMode.UPDATE_CONTENT)">@T("Update content")</MudButton>
+                                        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Update" OnClick="@(() => this.GenerateAsync(VisualBriefingEditMode.UPDATE_CONTENT))" Disabled="@this.CannotGenerate(VisualBriefingEditMode.UPDATE_CONTENT)" Style="@this.ConfidenceBorderStyle">@T("Update content")</MudButton>
+                                    </span>
+                                </MudTooltip>
+                                <MudTooltip Text="@T("Creates a new version from the current sources and instructions. The structure, content, and design may all change.")">
+                                    <span>
+                                        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AutoAwesome" OnClick="@(() => this.GenerateAsync(VisualBriefingEditMode.REBUILD))" Disabled="@this.CannotGenerate(VisualBriefingEditMode.REBUILD)" Style="@this.ConfidenceBorderStyle">@T("Rebuild briefing")</MudButton>
                                     </span>
                                 </MudTooltip>
                                 <MudTooltip Text="@(this.SelectedVersionSupportsEdits
@@ -222,11 +232,6 @@
                                                       : T("This version has no compatible semantic artifacts. Rebuild the briefing instead."))">
                                     <span>
                                         <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Code" OnClick="@(() => this.RecompileAsync())" Disabled="@this.CannotRecompile">@T("Recompile briefing")</MudButton>
-                                    </span>
-                                </MudTooltip>
-                                <MudTooltip Text="@T("Creates a new version from the current sources and instructions. The structure, content, and design may all change.")">
-                                    <span>
-                                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AutoAwesome" OnClick="@(() => this.GenerateAsync(VisualBriefingEditMode.REBUILD))" Disabled="@this.CannotGenerate(VisualBriefingEditMode.REBUILD)">@T("Rebuild briefing")</MudButton>
                                     </span>
                                 </MudTooltip>
                             }
