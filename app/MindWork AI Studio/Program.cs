@@ -1,9 +1,11 @@
 using AIStudio.Agents;
 using AIStudio.Agents.AssistantAudit;
+using AIStudio.Assistants.VisualBriefing;
 using AIStudio.Settings;
 using AIStudio.Tools.Databases;
 using AIStudio.Tools.AIJobs;
 using AIStudio.Tools.AssistantSessions;
+using AIStudio.Tools.Media;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.PluginSystem.Assistants;
 using AIStudio.Tools.Rust;
@@ -165,6 +167,12 @@ internal sealed class Program
         builder.Services.AddSingleton<VoiceRecordingAvailabilityService>();
         builder.Services.AddSingleton<GlobalShortcutService>();
         builder.Services.AddSingleton<MediaTranscriptionService>();
+        builder.Services.AddSingleton<VisualBriefingArtifactService>();
+        builder.Services.AddSingleton<VisualBriefingStore>();
+        builder.Services.AddSingleton<VisualBriefingBuildProgressService>();
+        builder.Services.AddSingleton<VisualBriefingBuildOrchestrator>();
+        builder.Services.AddSingleton<VisualBriefingPreviewTokenService>();
+        builder.Services.AddSingleton<IMediaTranscriptStorage, VisualBriefingTranscriptStorage>();
         builder.Services.AddSingleton<AssistantPluginInstallService>();
         builder.Services.AddSingleton<UpdatePolicy>();
         builder.Services.AddSingleton<AssistantPluginGenerationService>();
@@ -263,6 +271,10 @@ internal sealed class Program
 #endif
 
         app.UseAntiforgery();
+
+        // Serves committed briefing revisions to the assistant's live preview iframe:
+        app.MapVisualBriefingPreview();
+
         app.MapRazorComponents<App>()
             .AddInteractiveServerRenderMode();
 

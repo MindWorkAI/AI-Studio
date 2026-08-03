@@ -112,13 +112,13 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         this.MessageBus.ApplyFilters(this, [],
         [
             Event.UPDATE_AVAILABLE, Event.CONFIGURATION_CHANGED, Event.COLOR_THEME_CHANGED, Event.SHOW_ERROR,
-            Event.SHOW_WARNING, Event.SHOW_SUCCESS, Event.STARTUP_PLUGIN_SYSTEM, Event.PLUGINS_RELOADED,
+            Event.SHOW_WARNING, Event.SHOW_SUCCESS, Event.SHOW_INFO, Event.STARTUP_PLUGIN_SYSTEM, Event.PLUGINS_RELOADED,
             Event.INSTALL_UPDATE, Event.STARTUP_COMPLETED, Event.AI_JOB_CHANGED, Event.AI_JOB_FINISHED,
             Event.CHAT_GENERATION_CHANGED, Event.ASSISTANT_SESSION_CHANGED, Event.ASSISTANT_SESSION_FINISHED,
         ]);
         
         // Set the snackbar for the update service:
-        UpdateService.SetBlazorDependencies(this.Snackbar);
+        UpdateService.MarkBlazorReady();
         TemporaryChatService.Initialize();
         
         // Should the navigation bar be open by default?
@@ -266,6 +266,12 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
 
                     break;
 
+                case Event.SHOW_INFO:
+                    if (data is DataInfoMessage info)
+                        info.Show(this.Snackbar);
+
+                    break;
+
                 case Event.STARTUP_PLUGIN_SYSTEM:
                     _ = Task.Run(async () =>
                     {
@@ -372,8 +378,8 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         var defaultLightColor = palette.DarkLighten;
         var defaultDarkColor = palette.GrayLight;
         var mediaSnapshots = this.MediaTranscriptionService.GetSnapshots();
-        var hasActiveChatMedia = mediaSnapshots.Any(snapshot => snapshot.IsBusy && snapshot.Owner.Kind is MediaImportOwnerKind.CHAT);
-        var hasActiveAssistantMedia = mediaSnapshots.Any(snapshot => snapshot.IsBusy && snapshot.Owner.Kind is MediaImportOwnerKind.ASSISTANT);
+        var hasActiveChatMedia = mediaSnapshots.Any(snapshot => snapshot is { IsBusy: true, Owner.Kind: MediaImportOwnerKind.CHAT });
+        var hasActiveAssistantMedia = mediaSnapshots.Any(snapshot => snapshot is { IsBusy: true, Owner.Kind: MediaImportOwnerKind.ASSISTANT or MediaImportOwnerKind.VISUAL_BRIEFING });
         var hasActiveChatWork = this.AIJobService.HasActiveJobs || hasActiveChatMedia;
         var hasActiveAssistantWork = this.AssistantSessionService.HasActiveSessions || hasActiveAssistantMedia;
         var chatLightColor = hasActiveChatWork ? activityIndicatorLightColor : defaultLightColor;

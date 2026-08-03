@@ -142,6 +142,11 @@ public sealed class Data
     public DataEMail EMail { get; init; } = new();
     
     public DataSlideBuilder SlideBuilder { get; init; } = new();
+
+    /// <summary>
+    /// Gets the managed Visual Briefing Assistant defaults.
+    /// </summary>
+    public DataVisualBriefing VisualBriefing { get; init; } = new(x => x.VisualBriefing);
     
     public DataLegalCheck LegalCheck { get; init; } = new();
     

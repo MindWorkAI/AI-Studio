@@ -11,8 +11,7 @@ public sealed class UpdateService : BackgroundService, IMessageBusReceiver
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(UpdateService).Namespace, nameof(UpdateService));
     
     private static bool IS_INITIALIZED;
-    private static ISnackbar? SNACKBAR;
-    
+
     private readonly SettingsManager settingsManager;
     private readonly MessageBus messageBus;
     private readonly RustService rust;
@@ -101,12 +100,7 @@ public sealed class UpdateService : BackgroundService, IMessageBusReceiver
 
             if (notifyUserWhenNoUpdate)
             {
-                SNACKBAR!.Add(TB("Failed to check for updates. Please try again later."), Severity.Error, config =>
-                {
-                    config.Icon = Icons.Material.Filled.Error;
-                    config.IconSize = Size.Large;
-                    config.IconColor = Color.Error;
-                });
+                await this.messageBus.SendError(new(Icons.Material.Filled.Error, TB("Failed to check for updates. Please try again later.")));
             }
 
             return;
@@ -133,12 +127,7 @@ public sealed class UpdateService : BackgroundService, IMessageBusReceiver
                 }
                 catch (Exception)
                 {
-                    SNACKBAR!.Add(TB("Failed to install update automatically. Please try again manually."), Severity.Error, config =>
-                    {
-                        config.Icon = Icons.Material.Filled.Error;
-                        config.IconSize = Size.Large;
-                        config.IconColor = Color.Error;
-                    });
+                    await this.messageBus.SendError(new(Icons.Material.Filled.Error, TB("Failed to install update automatically. Please try again manually.")));
                 }
             }
             else
@@ -148,12 +137,7 @@ public sealed class UpdateService : BackgroundService, IMessageBusReceiver
         {
             if (notifyUserWhenNoUpdate)
             {
-                SNACKBAR!.Add(TB("No update found."), Severity.Normal, config =>
-                {
-                    config.Icon = Icons.Material.Filled.Update;
-                    config.IconSize = Size.Large;
-                    config.IconColor = Color.Primary;
-                });
+                await this.messageBus.SendInfo(new(Icons.Material.Filled.Update, TB("No update found.")));
             }
         }
     }
@@ -168,9 +152,8 @@ public sealed class UpdateService : BackgroundService, IMessageBusReceiver
         _ => Timeout.InfiniteTimeSpan
     };
     
-    public static void SetBlazorDependencies(ISnackbar snackbar)
-    {
-        SNACKBAR = snackbar;
-        IS_INITIALIZED = true;
-    }
+    /// <summary>
+    /// Signals that the Blazor UI is ready, so queued update notifications can be shown.
+    /// </summary>
+    public static void MarkBlazorReady() => IS_INITIALIZED = true;
 }
