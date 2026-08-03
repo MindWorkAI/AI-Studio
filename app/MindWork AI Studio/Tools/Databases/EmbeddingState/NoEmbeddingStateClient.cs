@@ -32,10 +32,13 @@ public sealed class NoEmbeddingStateClient(string name, string? unavailableReaso
         string dataSourceType,
         string embeddingProviderId,
         string embeddingSignature,
+        string sourceHash,
         int vectorSize,
         CancellationToken token) => Task.CompletedTask;
 
     public override Task UpdateVectorSizeAsync(string dataSourceId, int vectorSize, CancellationToken token) => Task.CompletedTask;
+
+    public override Task UpdateDataSourceHashAsync(string dataSourceId, string sourceHash, CancellationToken token) => Task.CompletedTask;
 
     public override Task UpsertFileAsync(string dataSourceId, EmbeddingStateFile file, CancellationToken token) => Task.CompletedTask;
 

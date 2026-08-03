@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
+using System.Threading;
 using System.Threading.Channels;
 
 using AIStudio.Provider;
@@ -15,12 +16,15 @@ namespace AIStudio.Tools.Services;
 public sealed partial class DataSourceEmbeddingService(SettingsManager settingsManager, RustService rustService, DatabaseClientProvider databaseClientProvider, ILogger<DataSourceEmbeddingService> logger)
     : BackgroundService
 {
-    private readonly Channel<string> queue = Channel.CreateUnbounded<string>();
+    private readonly Channel<DataSourceEmbeddingQueueItem> queue = Channel.CreateUnbounded<DataSourceEmbeddingQueueItem>();
     private readonly ConcurrentDictionary<string, byte> queuedIds = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, byte> runningIds = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, byte> pendingQueueIds = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, DataSourceRunControl> activeRuns = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, DataSourceEmbeddingStatus> statuses = new(StringComparer.OrdinalIgnoreCase);
     private readonly object queueStateLock = new();
+    private int startupHashCheckStarted;
+    private int startupHashCheckCompleted;
 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(DataSourceEmbeddingService).Namespace, nameof(DataSourceEmbeddingService));
 
@@ -31,6 +35,18 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         RUNNING,
         RUNNING_MARKED_PENDING,
     }
+
+    private enum DataSourceEmbeddingRefreshMode
+    {
+        STARTUP_HASH_CHECK,
+        HASH_CHECK,
+        WATCHER_HASH_CHECK,
+        MANUAL_RETRY,
+    }
+
+    private sealed record DataSourceEmbeddingQueueItem(string DataSourceId, DataSourceEmbeddingRefreshMode RefreshMode);
+
+    private sealed record DataSourceRunControl(CancellationTokenSource TokenSource, TaskCompletionSource<object?> Completion);
 
     public IReadOnlyList<DataSourceEmbeddingStatus> GetStatuses()
     {
@@ -75,9 +91,16 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     {
         this.RefreshWatchers();
 
-        var tasks = settingsManager.ConfigurationData.DataSources
+        var supportedDataSources = settingsManager.ConfigurationData.DataSources
             .Where(this.IsSupportedInternalDataSource)
-            .Select(dataSource => this.QueueDataSourceAsync(dataSource, queueAfterCurrentRun));
+            .ToList();
+
+        logger.LogInformation(
+            "Queueing {DataSourceCount} supported internal data source(s) for background embedding hash checks. QueueAfterCurrentRun={QueueAfterCurrentRun}.",
+            supportedDataSources.Count,
+            queueAfterCurrentRun);
+
+        var tasks = supportedDataSources.Select(dataSource => this.QueueDataSourceAsync(dataSource, queueAfterCurrentRun, DataSourceEmbeddingRefreshMode.HASH_CHECK));
 
         return Task.WhenAll(tasks);
     }
@@ -90,11 +113,36 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             return Task.CompletedTask;
         }
 
-        return this.QueueAllInternalDataSourcesAsync(false);
+        logger.LogDebug("Automatic startup embedding hash check is handled by the background service. Ignoring duplicate startup queue request.");
+        return Task.CompletedTask;
     }
 
     public void RefreshAutomaticWatchers()
     {
+        if (!settingsManager.ConfigurationData.DataSourceIndexing.AutomaticRefresh)
+        {
+            Volatile.Write(ref this.startupHashCheckCompleted, 0);
+            Interlocked.Exchange(ref this.startupHashCheckStarted, 0);
+            this.RemoveAllWatchers();
+            return;
+        }
+
+        if (Volatile.Read(ref this.startupHashCheckCompleted) == 0)
+        {
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await this.RunInitialDataSourceHashCheckAsync(CancellationToken.None);
+                }
+                catch (Exception exception)
+                {
+                    logger.LogWarning(exception, "Failed to run the initial data source hash check after automatic refresh was enabled.");
+                }
+            });
+            return;
+        }
+
         this.RefreshWatchers();
     }
 
@@ -109,9 +157,26 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             this.CanRefreshDataSource(dataSource);
     }
 
+    public async Task<bool> ShouldLockDataSourceIdentityAsync(string dataSourceId, CancellationToken token = default)
+    {
+        var embeddingState = await databaseClientProvider.GetEmbeddingStateAsync(token);
+        if (!embeddingState.IsAvailable)
+        {
+            logger.LogWarning("Locking identity settings for data source '{DataSourceId}' because the embedding state database '{DatabaseName}' is unavailable.", dataSourceId, embeddingState.Name);
+            return true;
+        }
+
+        var manifest = await embeddingState.GetManifestAsync(dataSourceId, token);
+        return !string.IsNullOrWhiteSpace(manifest.EmbeddingProviderId)
+               || !string.IsNullOrWhiteSpace(manifest.EmbeddingSignature)
+               || !string.IsNullOrWhiteSpace(manifest.SourceHash)
+               || manifest.VectorSize > 0
+               || manifest.Files.Count > 0;
+    }
+
     public Task QueueDataSourceAsync(IDataSource dataSource)
     {
-        return this.QueueDataSourceAsync(dataSource, true);
+        return this.QueueDataSourceAsync(dataSource, true, DataSourceEmbeddingRefreshMode.HASH_CHECK);
     }
 
     public Task QueueDataSourceAsync(string dataSourceId)
@@ -121,13 +186,20 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             : Task.CompletedTask;
     }
 
-    private async Task QueueDataSourceAsync(IDataSource dataSource, bool queueAfterCurrentRun)
+    public Task RetryDataSourceAsync(string dataSourceId)
+    {
+        return this.TryGetConfiguredDataSource(dataSourceId, out var dataSource)
+            ? this.QueueDataSourceAsync(dataSource, true, DataSourceEmbeddingRefreshMode.MANUAL_RETRY)
+            : Task.CompletedTask;
+    }
+
+    private async Task QueueDataSourceAsync(IDataSource dataSource, bool queueAfterCurrentRun, DataSourceEmbeddingRefreshMode refreshMode)
     {
         if (!this.IsSupportedInternalDataSource(dataSource))
             return;
 
         this.RefreshWatchers();
-        logger.LogDebug("Ensured watcher for data source '{DataSourceName}' ({DataSourceId}).", dataSource.Name, dataSource.Id);
+        logger.LogDebug("Refreshed watcher state for data source '{DataSourceName}' ({DataSourceId}).", dataSource.Name, dataSource.Id);
 
         var queueRequestResult = this.TryReserveDataSourceQueueSlot(dataSource.Id, queueAfterCurrentRun);
         switch (queueRequestResult)
@@ -145,7 +217,11 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                 return;
         }
 
-        logger.LogInformation("Queueing data source '{DataSourceName}' ({DataSourceId}) for background embeddings.", dataSource.Name, dataSource.Id);
+        logger.LogInformation(
+            "Queueing data source '{DataSourceName}' ({DataSourceId}) for background embedding hash check. RefreshMode={RefreshMode}.",
+            dataSource.Name,
+            dataSource.Id,
+            refreshMode);
         if (!this.statuses.TryGetValue(dataSource.Id, out var currentStatus) || currentStatus.State is not DataSourceEmbeddingState.RUNNING)
         {
             this.UpsertStatus(this.CreateStatus(
@@ -157,7 +233,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                 failures: currentStatus?.Failures ?? []));
         }
         logger.LogDebug("Upserting status for data source '{DataSourceName}' ({DataSourceId}).", dataSource.Name, dataSource.Id);
-        await this.queue.Writer.WriteAsync(dataSource.Id);
+        await this.queue.Writer.WriteAsync(new DataSourceEmbeddingQueueItem(dataSource.Id, refreshMode));
         logger.LogDebug("Queued data source '{DataSourceName}' ({DataSourceId}).", dataSource.Name, dataSource.Id);
     }
 
@@ -167,8 +243,21 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             return;
 
         this.RemoveWatcher(dataSource.Id);
+        var activeRun = this.CancelActiveDataSourceRun(dataSource);
+        this.ClearQueuedDataSourceState(dataSource.Id);
+        this.statuses.TryRemove(dataSource.Id, out _);
+        if (activeRun is not null)
+        {
+            logger.LogInformation(
+                "Waiting for the active embedding run for deleted data source '{DataSourceName}' ({DataSourceId}) to stop before deleting persisted embeddings.",
+                dataSource.Name,
+                dataSource.Id);
+            await activeRun.Completion.Task;
+        }
+
         this.statuses.TryRemove(dataSource.Id, out _);
         await this.ResetPersistedStateAsync(dataSource.Name, dataSource.Id, null, null, CancellationToken.None);
+        this.statuses.TryRemove(dataSource.Id, out _);
         this.PublishStatusChanged();
     }
 
@@ -178,7 +267,8 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
 
         while (!stoppingToken.IsCancellationRequested)
         {
-            var dataSourceId = await this.queue.Reader.ReadAsync(stoppingToken);
+            var queueItem = await this.queue.Reader.ReadAsync(stoppingToken);
+            var dataSourceId = queueItem.DataSourceId;
             this.MarkDataSourceRunStarted(dataSourceId);
 
             IDataSource? dataSource = null;
@@ -191,7 +281,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                 if (dataSource is null || !this.IsSupportedInternalDataSource(dataSource))
                     continue;
 
-                await this.ProcessDataSourceAsync(dataSource, stoppingToken);
+                await this.ProcessDataSourceRunAsync(dataSource, queueItem.RefreshMode, stoppingToken);
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
@@ -222,12 +312,68 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         base.Dispose();
     }
 
-    private async Task ProcessDataSourceAsync(IDataSource dataSource, CancellationToken token)
+    private async Task ProcessDataSourceRunAsync(IDataSource dataSource, DataSourceEmbeddingRefreshMode refreshMode, CancellationToken parentToken)
     {
-        logger.LogInformation("Starting background embeddings for data source '{DataSourceName}' ({DataSourceId}).", dataSource.Name, dataSource.Id);
+        if (!this.TryGetConfiguredDataSource(dataSource.Id, out var configuredDataSource) ||
+            !this.IsSupportedInternalDataSource(configuredDataSource))
+        {
+            logger.LogDebug(
+                "Skipping embedding run for data source '{DataSourceName}' ({DataSourceId}) because it is no longer configured. RefreshMode={RefreshMode}.",
+                dataSource.Name,
+                dataSource.Id,
+                refreshMode);
+            return;
+        }
+
+        dataSource = configuredDataSource;
+        var runTokenSource = CancellationTokenSource.CreateLinkedTokenSource(parentToken);
+        var runControl = new DataSourceRunControl(
+            runTokenSource,
+            new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously));
+
+        if (!this.activeRuns.TryAdd(dataSource.Id, runControl))
+        {
+            runTokenSource.Dispose();
+            logger.LogDebug(
+                "Data source '{DataSourceName}' ({DataSourceId}) already has an active embedding run. Skipping duplicate process request. RefreshMode={RefreshMode}.",
+                dataSource.Name,
+                dataSource.Id,
+                refreshMode);
+            return;
+        }
+
+        try
+        {
+            await this.ProcessDataSourceAsync(dataSource, refreshMode, runTokenSource.Token);
+        }
+        catch (OperationCanceledException) when (!parentToken.IsCancellationRequested && runTokenSource.IsCancellationRequested)
+        {
+            logger.LogInformation(
+                "Stopped background embeddings for data source '{DataSourceName}' ({DataSourceId}) because the data source was removed or canceled. RefreshMode={RefreshMode}.",
+                dataSource.Name,
+                dataSource.Id,
+                refreshMode);
+        }
+        finally
+        {
+            this.activeRuns.TryRemove(dataSource.Id, out _);
+            runControl.Completion.TrySetResult(null);
+            runTokenSource.Dispose();
+        }
+    }
+
+    private async Task ProcessDataSourceAsync(IDataSource dataSource, DataSourceEmbeddingRefreshMode refreshMode, CancellationToken token)
+    {
+        logger.LogInformation(
+            "Starting background embedding hash check for data source '{DataSourceName}' ({DataSourceId}). RefreshMode={RefreshMode}.",
+            dataSource.Name,
+            dataSource.Id,
+            refreshMode);
+        token.ThrowIfCancellationRequested();
 
         var vectorStore = await databaseClientProvider.GetVectorStoreAsync(token);
         var embeddingState = await databaseClientProvider.GetEmbeddingStateAsync(token);
+        token.ThrowIfCancellationRequested();
 
         if (!vectorStore.IsAvailable)
         {
@@ -236,6 +382,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                 dataSource.Name,
                 dataSource.Id,
                 vectorStore.Name);
+            token.ThrowIfCancellationRequested();
             this.UpsertStatus(this.GetFallbackStatus(dataSource, "The vector database is not available."));
             return;
         }
@@ -247,12 +394,14 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                 dataSource.Name,
                 dataSource.Id,
                 embeddingState.Name);
+            token.ThrowIfCancellationRequested();
             this.UpsertStatus(this.GetFallbackStatus(dataSource, "The SQLite embedding state database is not available."));
             return;
         }
 
         if (!this.TryResolveEmbeddingProvider(dataSource, out var embeddingProvider))
         {
+            token.ThrowIfCancellationRequested();
             this.UpsertStatus(this.GetFallbackStatus(dataSource, "The selected embedding provider is not available."));
             return;
         }
@@ -267,6 +416,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
 
         var collectionName = this.GetCollectionName(dataSource.Name, dataSource.Id);
         var manifest = await this.EnsureCompatibleManifestAsync(dataSource, embeddingProvider, collectionName, vectorStore, embeddingState, token);
+        token.ThrowIfCancellationRequested();
         var inputFiles = this.GetInputFiles(dataSource);
         var indexedFiles = inputFiles.Files;
         var totalFiles = indexedFiles.Count + inputFiles.FailedFiles;
@@ -279,8 +429,35 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             inputFiles.FailedFiles,
             collectionName);
 
-        await this.RemoveMissingFileEmbeddingsAsync(vectorStore, embeddingState, dataSource, collectionName, manifest, indexedFiles, token);
+        var metadataSnapshot = this.BuildDataSourceMetadataSnapshot(dataSource, indexedFiles);
+        var removedMissingFiles = await this.RemoveMissingFileEmbeddingsAsync(vectorStore, embeddingState, dataSource, collectionName, manifest, indexedFiles, token);
+        token.ThrowIfCancellationRequested();
 
+        logger.LogInformation(
+            "Compared data source hash for '{DataSourceName}' ({DataSourceId}). StoredSourceHashPrefix={StoredSourceHashPrefix}, CurrentSourceHashPrefix={CurrentSourceHashPrefix}, StoredFileRecords={StoredFileRecords}, CurrentFiles={CurrentFiles}, RemovedMissingFiles={RemovedMissingFiles}.",
+            dataSource.Name,
+            dataSource.Id,
+            ShortHash(manifest.SourceHash),
+            ShortHash(metadataSnapshot.SourceHash),
+            manifest.Files.Count,
+            indexedFiles.Count,
+            removedMissingFiles);
+
+        if (this.CanSkipDataSourceByHash(manifest, metadataSnapshot, indexedFiles))
+        {
+            logger.LogInformation(
+                "Skipping data source '{DataSourceName}' ({DataSourceId}) because the persisted data source hash and all persisted file hashes match. RefreshMode={RefreshMode}.",
+                dataSource.Name,
+                dataSource.Id,
+                refreshMode);
+
+            token.ThrowIfCancellationRequested();
+            await embeddingState.UpdateDataSourceHashAsync(dataSource.Id, metadataSnapshot.SourceHash, token);
+            this.UpsertStatus(this.CreateCompletedStatus(dataSource, totalFiles, indexedFiles.Count, inputFiles.FailedFiles, inputFiles.LastError, inputFiles.Failures));
+            return;
+        }
+
+        token.ThrowIfCancellationRequested();
         this.UpsertStatus(this.CreateStatus(
             dataSource,
             DataSourceEmbeddingState.RUNNING,
@@ -293,6 +470,8 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         var provider = embeddingProvider.CreateProvider();
         var skippedFiles = 0;
         var completedFiles = 0;
+        var newFiles = 0;
+        var changedFiles = 0;
         var failedFiles = inputFiles.FailedFiles;
         var lastError = inputFiles.LastError;
         var failureDetails = inputFiles.Failures.ToList();
@@ -301,15 +480,18 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         {
             token.ThrowIfCancellationRequested();
 
-            var fingerprint = await this.BuildFingerprintAsync(file, token);
+            var fingerprint = metadataSnapshot.FileHashes[file.FullName];
             if (manifest.Files.TryGetValue(file.FullName, out var existingRecord) &&
                 string.Equals(existingRecord.Fingerprint, fingerprint, StringComparison.Ordinal))
             {
                 logger.LogDebug(
-                    "Skipping unchanged file '{FilePath}' for data source '{DataSourceName}' ({DataSourceId}).",
+                    "Skipping unchanged file '{FilePath}' for data source '{DataSourceName}' ({DataSourceId}) because the persisted metadata hash matches. MetadataHashPrefix={MetadataHashPrefix}, LastWriteUtc={LastWriteUtc:O}, FileSize={FileSize}.",
                     file.FullName,
                     dataSource.Name,
-                    dataSource.Id);
+                    dataSource.Id,
+                    ShortHash(fingerprint),
+                    file.LastWriteTimeUtc,
+                    file.Length);
                 skippedFiles++;
                 this.UpsertStatus(this.CreateStatus(dataSource, DataSourceEmbeddingState.RUNNING, totalFiles, skippedFiles + completedFiles, failedFiles, lastError: lastError, failures: failureDetails));
                 continue;
@@ -320,14 +502,17 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             try
             {
                 logger.LogInformation(
-                    "Embedding file '{FilePath}' for data source '{DataSourceName}' ({DataSourceId}). Progress={CompletedFiles}/{TotalFiles}.",
+                    "Embedding file '{FilePath}' for data source '{DataSourceName}' ({DataSourceId}) because {EmbeddingReason}. CurrentMetadataHashPrefix={CurrentMetadataHashPrefix}. Progress={CompletedFiles}/{TotalFiles}.",
                     file.FullName,
                     dataSource.Name,
                     dataSource.Id,
+                    GetFileEmbeddingReason(file, fingerprint, existingRecord),
+                    ShortHash(fingerprint),
                     skippedFiles + completedFiles + 1,
                     totalFiles);
                 var startedAtUtc = DateTime.UtcNow;
                 var chunkCount = await this.IndexOneFileAsync(embeddingState, vectorStore, dataSource, file, fingerprint, embeddingProvider, provider, manifest, token);
+                token.ThrowIfCancellationRequested();
                 var embeddedAtUtc = DateTime.UtcNow;
                 var record = new EmbeddedFileRecord(
                     fingerprint,
@@ -349,6 +534,11 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                     token);
                 manifest.Files[file.FullName] = record;
                 completedFiles++;
+                if (existingRecord is null)
+                    newFiles++;
+                else
+                    changedFiles++;
+
                 logger.LogInformation(
                     "Embedded file '{FilePath}' for data source '{DataSourceName}' ({DataSourceId}) successfully. Chunks={ChunkCount}, DurationMs={DurationMs}.",
                     file.FullName,
@@ -356,6 +546,10 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                     dataSource.Id,
                     chunkCount,
                     (DateTime.UtcNow - startedAtUtc).TotalMilliseconds);
+            }
+            catch (OperationCanceledException) when (token.IsCancellationRequested)
+            {
+                throw;
             }
             catch (Exception exception)
             {
@@ -371,14 +565,25 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             }
         }
 
+        manifest.SourceHash = metadataSnapshot.SourceHash;
+        token.ThrowIfCancellationRequested();
+        await embeddingState.UpdateDataSourceHashAsync(dataSource.Id, metadataSnapshot.SourceHash, token);
+        token.ThrowIfCancellationRequested();
+
         this.UpsertStatus(this.CreateCompletedStatus(dataSource, totalFiles, skippedFiles + completedFiles, failedFiles, lastError, failureDetails));
         logger.LogInformation(
-            "Finished background embeddings for data source '{DataSourceName}' ({DataSourceId}). Indexed={IndexedFiles}, Failed={FailedFiles}, Total={TotalFiles}.",
+            "Finished background embeddings for data source '{DataSourceName}' ({DataSourceId}). RefreshMode={RefreshMode}, Embedded={EmbeddedFiles}, New={NewFiles}, Changed={ChangedFiles}, Skipped={SkippedFiles}, RemovedMissing={RemovedMissingFiles}, Failed={FailedFiles}, Total={TotalFiles}, SourceHashPrefix={SourceHashPrefix}.",
             dataSource.Name,
             dataSource.Id,
-            skippedFiles + completedFiles,
+            refreshMode,
+            completedFiles,
+            newFiles,
+            changedFiles,
+            skippedFiles,
+            removedMissingFiles,
             failedFiles,
-            totalFiles);
+            totalFiles,
+            ShortHash(metadataSnapshot.SourceHash));
     }
 
     private async Task<int> IndexOneFileAsync(
@@ -453,6 +658,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         try
         {
             vectors = await provider.EmbedTextAsync(embeddingProvider.Model, settingsManager, token, texts);
+            token.ThrowIfCancellationRequested();
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested)
         {
@@ -475,6 +681,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
 
         if (manifest.VectorSize == 0)
         {
+            token.ThrowIfCancellationRequested();
             manifest.VectorSize = vectorSize;
             await this.EnsureCollectionExistsAsync(vectorStore, collectionName, vectorSize, token);
             await embeddingState.UpdateVectorSizeAsync(dataSource.Id, vectorSize, token);
@@ -486,6 +693,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                 dataSource.Id);
         }
 
+        token.ThrowIfCancellationRequested();
         await this.UpsertPointsAsync(
             vectorStore,
             collectionName,
@@ -574,8 +782,62 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
 
         token.ThrowIfCancellationRequested();
 
-        logger.LogInformation("Embedding background service is ready. Checking whether automatic data source refresh is enabled.");
-        await this.QueueAllInternalDataSourcesIfAutomaticRefreshAsync();
+        logger.LogInformation("Embedding background service is ready. Running the initial persisted hash check before activating file watchers.");
+        await this.RunInitialDataSourceHashCheckAsync(token);
+    }
+
+    private async Task RunInitialDataSourceHashCheckAsync(CancellationToken token)
+    {
+        if (!settingsManager.ConfigurationData.DataSourceIndexing.AutomaticRefresh)
+        {
+            logger.LogInformation("Automatic local data source refresh is disabled. Startup hash checks and file watchers are disabled.");
+            this.RemoveAllWatchers();
+            return;
+        }
+
+        if (Interlocked.Exchange(ref this.startupHashCheckStarted, 1) == 1)
+            return;
+
+        this.RemoveAllWatchers();
+
+        var supportedDataSources = settingsManager.ConfigurationData.DataSources
+            .Where(this.IsSupportedInternalDataSource)
+            .ToList();
+
+        logger.LogInformation(
+            "Starting initial persisted hash check for {DataSourceCount} supported internal data source(s). Incomplete or failed embedding state will be retried during this pass. File watchers will be activated after this check completes.",
+            supportedDataSources.Count);
+
+        foreach (var dataSource in supportedDataSources)
+        {
+            token.ThrowIfCancellationRequested();
+            try
+            {
+                await this.ProcessDataSourceRunAsync(dataSource, DataSourceEmbeddingRefreshMode.STARTUP_HASH_CHECK, token);
+            }
+            catch (OperationCanceledException) when (token.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception exception)
+            {
+                logger.LogError(exception, "Initial embedding hash check failed for data source '{DataSourceName}' ({DataSourceId}).", dataSource.Name, dataSource.Id);
+                this.UpsertStatus(this.GetFallbackStatus(dataSource, exception.Message));
+            }
+        }
+
+        if (!settingsManager.ConfigurationData.DataSourceIndexing.AutomaticRefresh)
+        {
+            Volatile.Write(ref this.startupHashCheckCompleted, 0);
+            Interlocked.Exchange(ref this.startupHashCheckStarted, 0);
+            logger.LogInformation("Automatic local data source refresh was disabled before the initial hash check completed. File watchers remain inactive.");
+            this.RemoveAllWatchers();
+            return;
+        }
+
+        Volatile.Write(ref this.startupHashCheckCompleted, 1);
+        logger.LogInformation("Completed initial persisted hash check. Activating file watchers for automatic local data source refresh.");
+        this.RefreshWatchers();
     }
 
     private bool IsSupportedInternalDataSource(IDataSource dataSource)
@@ -612,6 +874,15 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         var embeddingSignature = this.BuildEmbeddingSignature(dataSource, embeddingProvider, chunkingOptions);
         var manifest = await embeddingState.GetManifestAsync(dataSource.Id, token);
 
+        logger.LogInformation(
+            "Loaded persisted embedding manifest for data source '{DataSourceName}' ({DataSourceId}). StoredFiles={StoredFiles}, StoredSourceHashPrefix={StoredSourceHashPrefix}, StoredSignaturePrefix={StoredSignaturePrefix}, CurrentSignaturePrefix={CurrentSignaturePrefix}.",
+            dataSource.Name,
+            dataSource.Id,
+            manifest.Files.Count,
+            ShortHash(manifest.SourceHash),
+            ShortHash(manifest.EmbeddingSignature),
+            ShortHash(embeddingSignature));
+
         if (!string.Equals(manifest.EmbeddingSignature, embeddingSignature, StringComparison.Ordinal))
         {
             logger.LogInformation(
@@ -642,13 +913,14 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             dataSource.Type.ToString(),
             manifest.EmbeddingProviderId,
             manifest.EmbeddingSignature,
+            manifest.SourceHash,
             manifest.VectorSize,
             token);
 
         return manifest;
     }
 
-    private async Task RemoveMissingFileEmbeddingsAsync(
+    private async Task<int> RemoveMissingFileEmbeddingsAsync(
         VectorStoreClient vectorStore,
         EmbeddingStateClient embeddingState,
         IDataSource dataSource,
@@ -661,17 +933,72 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             .Select(file => file.FullName)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
+        var removedFiles = 0;
         foreach (var removedFilePath in manifest.Files.Keys.Except(existingPaths, StringComparer.OrdinalIgnoreCase).ToList())
         {
             await this.DeleteFilePointsAsync(vectorStore, collectionName, removedFilePath, token);
             await embeddingState.DeleteFileAsync(dataSource.Id, removedFilePath, token);
             manifest.Files.Remove(removedFilePath);
+            removedFiles++;
             logger.LogInformation(
                 "Removed stale embeddings for deleted file '{FilePath}' from data source '{DataSourceName}' ({DataSourceId}).",
                 removedFilePath,
                 dataSource.Name,
                 dataSource.Id);
         }
+
+        return removedFiles;
+    }
+
+    private bool CanSkipDataSourceByHash(DataSourceEmbeddingManifest manifest, DataSourceMetadataSnapshot metadataSnapshot, IReadOnlyCollection<FileInfo> indexedFiles)
+    {
+        if (!string.Equals(manifest.SourceHash, metadataSnapshot.SourceHash, StringComparison.Ordinal))
+            return false;
+
+        if (manifest.Files.Count != indexedFiles.Count)
+            return false;
+
+        foreach (var file in indexedFiles)
+        {
+            if (!metadataSnapshot.FileHashes.TryGetValue(file.FullName, out var currentHash))
+                return false;
+
+            if (!manifest.Files.TryGetValue(file.FullName, out var existingRecord))
+                return false;
+
+            if (!string.Equals(existingRecord.Fingerprint, currentHash, StringComparison.Ordinal))
+                return false;
+        }
+
+        return true;
+    }
+
+    private static string GetFileEmbeddingReason(FileInfo file, string currentHash, EmbeddedFileRecord? existingRecord)
+    {
+        if (existingRecord is null)
+            return "no stored file hash exists";
+
+        var reasons = new List<string>();
+        if (!string.Equals(existingRecord.Fingerprint, currentHash, StringComparison.Ordinal))
+            reasons.Add($"stored hash {ShortHash(existingRecord.Fingerprint)} differs from current hash {ShortHash(currentHash)}");
+
+        if (existingRecord.FileSize != file.Length)
+            reasons.Add($"file size changed from {existingRecord.FileSize} to {file.Length} bytes");
+
+        if (existingRecord.LastWriteUtc != file.LastWriteTimeUtc)
+            reasons.Add($"last modified time changed from {existingRecord.LastWriteUtc:O} to {file.LastWriteTimeUtc:O}");
+
+        return reasons.Count == 0
+            ? "the file hash changed"
+            : string.Join("; ", reasons);
+    }
+
+    private static string ShortHash(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return "<empty>";
+
+        return value.Length <= 12 ? value : value[..12];
     }
 
     private DataSourceEmbeddingStatus CreateStatus(
@@ -774,6 +1101,36 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         }
     }
 
+    private void ClearQueuedDataSourceState(string dataSourceId)
+    {
+        lock (this.queueStateLock)
+        {
+            this.queuedIds.TryRemove(dataSourceId, out _);
+            this.pendingQueueIds.TryRemove(dataSourceId, out _);
+        }
+    }
+
+    private DataSourceRunControl? CancelActiveDataSourceRun(IDataSource dataSource)
+    {
+        if (!this.activeRuns.TryGetValue(dataSource.Id, out var activeRun))
+            return null;
+
+        logger.LogInformation(
+            "Canceling active embedding run for deleted data source '{DataSourceName}' ({DataSourceId}).",
+            dataSource.Name,
+            dataSource.Id);
+        try
+        {
+            activeRun.TokenSource.Cancel();
+        }
+        catch (ObjectDisposedException)
+        {
+            return null;
+        }
+
+        return activeRun;
+    }
+
     private async Task QueuePendingDataSourceRunAsync(string dataSourceId, CancellationToken token)
     {
         var dataSource = token.IsCancellationRequested
@@ -804,7 +1161,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
 
         try
         {
-            await this.queue.Writer.WriteAsync(dataSourceId, token);
+            await this.queue.Writer.WriteAsync(new DataSourceEmbeddingQueueItem(dataSourceId, DataSourceEmbeddingRefreshMode.HASH_CHECK), token);
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested)
         {

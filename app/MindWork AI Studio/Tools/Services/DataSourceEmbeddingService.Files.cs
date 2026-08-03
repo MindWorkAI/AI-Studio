@@ -33,6 +33,8 @@ public sealed partial class DataSourceEmbeddingService
 
     private sealed record ChunkingRule(string Name, Func<string, IReadOnlyList<string>, IReadOnlyList<string>>? Split);
 
+    private sealed record DataSourceMetadataSnapshot(string SourceHash, IReadOnlyDictionary<string, string> FileHashes);
+
     private async IAsyncEnumerable<string> StreamEmbeddingChunksAsync(string filePath, IDataSource dataSource, EmbeddingProvider embeddingProvider, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken token)
     {
         var options = this.GetChunkingOptions(dataSource, embeddingProvider);
@@ -752,18 +754,96 @@ public sealed partial class DataSourceEmbeddingService
             chunkingOptions.OverlapTokenLength);
     }
 
-    private async Task<string> BuildFingerprintAsync(FileInfo file, CancellationToken token)
+    private DataSourceMetadataSnapshot BuildDataSourceMetadataSnapshot(IDataSource dataSource, IReadOnlyList<FileInfo> indexedFiles)
     {
-        await using var stream = new FileStream(
+        var fileHashes = indexedFiles
+            .OrderBy(file => file.FullName, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(file => file.FullName, BuildFileMetadataHash, StringComparer.OrdinalIgnoreCase);
+
+        var sourceHash = dataSource switch
+        {
+            DataSourceLocalFile localFile => indexedFiles.Count > 0
+                ? fileHashes[indexedFiles[0].FullName]
+                : BuildMetadataHash("file", localFile.FilePath, Path.GetFileName(localFile.FilePath) ?? string.Empty, "missing", "0"),
+
+            DataSourceLocalDirectory localDirectory => this.BuildDirectoryMetadataHash(localDirectory, indexedFiles, fileHashes),
+
+            _ => BuildMetadataHash(dataSource.Type.ToString(), dataSource.Id, dataSource.Name)
+        };
+
+        return new(sourceHash, fileHashes);
+    }
+
+    private string BuildDirectoryMetadataHash(DataSourceLocalDirectory dataSource, IReadOnlyList<FileInfo> indexedFiles, IReadOnlyDictionary<string, string> fileHashes)
+    {
+        var directory = new DirectoryInfo(dataSource.Path);
+        directory.Refresh();
+
+        var totalSize = 0L;
+        var latestFileWriteTicks = 0L;
+        foreach (var file in indexedFiles)
+        {
+            file.Refresh();
+            if (!file.Exists)
+                continue;
+
+            totalSize += file.Length;
+            latestFileWriteTicks = Math.Max(latestFileWriteTicks, file.LastWriteTimeUtc.Ticks);
+        }
+
+        var latestWriteTicks = Math.Max(directory.LastWriteTimeUtc.Ticks, latestFileWriteTicks);
+        var parts = new List<string>
+        {
+            "directory",
+            directory.FullName,
+            directory.Name,
+            latestWriteTicks.ToString(),
+            totalSize.ToString(),
+            indexedFiles.Count.ToString()
+        };
+
+        foreach (var file in indexedFiles.OrderBy(file => file.FullName, StringComparer.OrdinalIgnoreCase))
+        {
+            parts.Add(this.TryGetRelativePath(dataSource, file));
+            parts.Add(fileHashes[file.FullName]);
+        }
+
+        return BuildMetadataHash(parts);
+    }
+
+    private static string BuildFileMetadataHash(FileInfo file)
+    {
+        file.Refresh();
+        if (!file.Exists)
+        {
+            return BuildMetadataHash(
+                "file",
+                file.FullName,
+                file.Name,
+                "missing",
+                "0");
+        }
+
+        return BuildMetadataHash(
+            "file",
             file.FullName,
-            FileMode.Open,
-            FileAccess.Read,
-            FileShare.ReadWrite | FileShare.Delete,
-            1024 * 128,
-            FileOptions.Asynchronous | FileOptions.SequentialScan);
-        var contentHash = await SHA256.HashDataAsync(stream, token);
-        var fingerprintSource = $"{file.FullName}|{Convert.ToHexString(contentHash)}";
-        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(fingerprintSource));
+            file.Name,
+            file.LastWriteTimeUtc.Ticks.ToString(),
+            file.Length.ToString());
+    }
+
+    private static string BuildMetadataHash(params string[] parts)
+    {
+        return BuildMetadataHash((IEnumerable<string>)parts);
+    }
+
+    private static string BuildMetadataHash(IEnumerable<string> parts)
+    {
+        var fingerprintSource = new StringBuilder();
+        foreach (var part in parts)
+            fingerprintSource.Append(part.Length).Append(':').Append(part).Append('|');
+
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(fingerprintSource.ToString()));
         return Convert.ToHexString(bytes);
     }
 

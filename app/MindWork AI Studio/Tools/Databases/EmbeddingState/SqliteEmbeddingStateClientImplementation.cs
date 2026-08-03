@@ -77,7 +77,7 @@ public sealed class SqliteEmbeddingStateClientImplementation(
         var manifest = new DataSourceEmbeddingManifest();
 
         await using (var command = CreateCommand(connection, """
-                                                            SELECT embedding_provider_id, embedding_signature, vector_size
+                                                            SELECT embedding_provider_id, embedding_signature, source_hash, vector_size
                                                             FROM data_sources
                                                             WHERE data_source_id = $dataSourceId
                                                             """))
@@ -88,7 +88,8 @@ public sealed class SqliteEmbeddingStateClientImplementation(
             {
                 manifest.EmbeddingProviderId = reader.GetString(0);
                 manifest.EmbeddingSignature = reader.GetString(1);
-                manifest.VectorSize = reader.GetInt32(2);
+                manifest.SourceHash = reader.GetString(2);
+                manifest.VectorSize = reader.GetInt32(3);
             }
         }
 
@@ -120,6 +121,7 @@ public sealed class SqliteEmbeddingStateClientImplementation(
         string dataSourceType,
         string embeddingProviderId,
         string embeddingSignature,
+        string sourceHash,
         int vectorSize,
         CancellationToken token)
     {
@@ -131,6 +133,7 @@ public sealed class SqliteEmbeddingStateClientImplementation(
                                                   data_source_type,
                                                   embedding_provider_id,
                                                   embedding_signature,
+                                                  source_hash,
                                                   vector_size,
                                                   updated_at_utc)
                                               VALUES (
@@ -139,6 +142,7 @@ public sealed class SqliteEmbeddingStateClientImplementation(
                                                   $dataSourceType,
                                                   $embeddingProviderId,
                                                   $embeddingSignature,
+                                                  $sourceHash,
                                                   $vectorSize,
                                                   $updatedAtUtc)
                                               ON CONFLICT(data_source_id) DO UPDATE SET
@@ -146,6 +150,7 @@ public sealed class SqliteEmbeddingStateClientImplementation(
                                                   data_source_type = excluded.data_source_type,
                                                   embedding_provider_id = excluded.embedding_provider_id,
                                                   embedding_signature = excluded.embedding_signature,
+                                                  source_hash = excluded.source_hash,
                                                   vector_size = excluded.vector_size,
                                                   updated_at_utc = excluded.updated_at_utc
                                               """, token,
@@ -154,6 +159,7 @@ public sealed class SqliteEmbeddingStateClientImplementation(
             ("$dataSourceType", dataSourceType),
             ("$embeddingProviderId", embeddingProviderId),
             ("$embeddingSignature", embeddingSignature),
+            ("$sourceHash", sourceHash),
             ("$vectorSize", vectorSize),
             ("$updatedAtUtc", ToUtcText(DateTime.UtcNow)));
     }
@@ -169,6 +175,20 @@ public sealed class SqliteEmbeddingStateClientImplementation(
                                               """, token,
             ("$dataSourceId", dataSourceId),
             ("$vectorSize", vectorSize),
+            ("$updatedAtUtc", ToUtcText(DateTime.UtcNow)));
+    }
+
+    public override async Task UpdateDataSourceHashAsync(string dataSourceId, string sourceHash, CancellationToken token)
+    {
+        await using var connection = await this.OpenConnectionAsync(token);
+        await ExecuteNonQueryAsync(connection, """
+                                              UPDATE data_sources
+                                              SET source_hash = $sourceHash,
+                                                  updated_at_utc = $updatedAtUtc
+                                              WHERE data_source_id = $dataSourceId
+                                              """, token,
+            ("$dataSourceId", dataSourceId),
+            ("$sourceHash", sourceHash),
             ("$updatedAtUtc", ToUtcText(DateTime.UtcNow)));
     }
 
@@ -255,6 +275,7 @@ public sealed class SqliteEmbeddingStateClientImplementation(
                                                   data_source_type TEXT NOT NULL,
                                                   embedding_provider_id TEXT NOT NULL,
                                                   embedding_signature TEXT NOT NULL,
+                                                  source_hash TEXT NOT NULL DEFAULT '',
                                                   vector_size INTEGER NOT NULL DEFAULT 0,
                                                   updated_at_utc TEXT NOT NULL
                                               );
@@ -278,6 +299,8 @@ public sealed class SqliteEmbeddingStateClientImplementation(
                                               CREATE INDEX IF NOT EXISTS idx_embedded_files_data_source
                                                   ON embedded_files(data_source_id);
                                               """, token);
+
+        await EnsureColumnAsync(connection, "data_sources", "source_hash", "TEXT NOT NULL DEFAULT ''", token);
     }
 
     private async Task<string> GetSqliteVersionAsync(CancellationToken token)
@@ -294,6 +317,21 @@ public sealed class SqliteEmbeddingStateClientImplementation(
         await using var command = CreateCommand(connection, $"SELECT COUNT(*) FROM {tableName}");
         var countObject = await command.ExecuteScalarAsync(token);
         return Convert.ToInt64(countObject, CultureInfo.InvariantCulture);
+    }
+
+    private static async Task EnsureColumnAsync(SqliteConnection connection, string tableName, string columnName, string columnDefinition, CancellationToken token)
+    {
+        await using (var command = CreateCommand(connection, $"PRAGMA table_info({tableName})"))
+        {
+            await using var reader = await command.ExecuteReaderAsync(token);
+            while (await reader.ReadAsync(token))
+            {
+                if (string.Equals(reader.GetString(1), columnName, StringComparison.OrdinalIgnoreCase))
+                    return;
+            }
+        }
+
+        await ExecuteNonQueryAsync(connection, $"ALTER TABLE {tableName} ADD COLUMN {columnName} {columnDefinition}", token);
     }
 
     private async Task<SqliteConnection> OpenConnectionAsync(CancellationToken token)

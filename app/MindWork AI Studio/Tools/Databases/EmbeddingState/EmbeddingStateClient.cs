@@ -12,10 +12,13 @@ public abstract class EmbeddingStateClient(string name, string path) : DatabaseC
         string dataSourceType,
         string embeddingProviderId,
         string embeddingSignature,
+        string sourceHash,
         int vectorSize,
         CancellationToken token);
 
     public abstract Task UpdateVectorSizeAsync(string dataSourceId, int vectorSize, CancellationToken token);
+
+    public abstract Task UpdateDataSourceHashAsync(string dataSourceId, string sourceHash, CancellationToken token);
 
     public abstract Task UpsertFileAsync(string dataSourceId, EmbeddingStateFile file, CancellationToken token);
 

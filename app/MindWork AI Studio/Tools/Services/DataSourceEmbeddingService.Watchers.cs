@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Threading;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 
@@ -16,6 +17,13 @@ public sealed partial class DataSourceEmbeddingService
     {
         if (!settingsManager.ConfigurationData.DataSourceIndexing.AutomaticRefresh)
         {
+            this.RemoveAllWatchers();
+            return;
+        }
+
+        if (Volatile.Read(ref this.startupHashCheckCompleted) == 0)
+        {
+            logger.LogDebug("File watchers are not activated yet because the startup persisted hash check has not completed.");
             this.RemoveAllWatchers();
             return;
         }
@@ -161,8 +169,8 @@ public sealed partial class DataSourceEmbeddingService
 
                 if (dataSource is not null)
                 {
-                    logger.LogInformation("Queueing data source '{DataSourceName}' ({DataSourceId}) after file system changes settled.", dataSource.Name, dataSource.Id);
-                    await this.QueueDataSourceAsync(dataSource, true);
+                    logger.LogInformation("Queueing data source '{DataSourceName}' ({DataSourceId}) after file system changes settled. The hash pipeline will reindex only changed files.", dataSource.Name, dataSource.Id);
+                    await this.QueueDataSourceAsync(dataSource, true, DataSourceEmbeddingRefreshMode.WATCHER_HASH_CHECK);
                 }
             }
             catch (OperationCanceledException)

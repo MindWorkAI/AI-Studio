@@ -64,7 +64,7 @@ public partial class Embeddings : MSGComponentBase
 
     private async Task RefreshDataSource(DataSourceEmbeddingStatus status)
     {
-        await this.DataSourceEmbeddingService.QueueDataSourceAsync(status.DataSourceId);
+        await this.DataSourceEmbeddingService.RetryDataSourceAsync(status.DataSourceId);
         this.ReloadStatuses();
         await this.InvokeAsync(this.StateHasChanged);
     }

@@ -227,6 +227,8 @@ public partial class SettingsDialogDataSources : SettingsDialogBase
             return;
 
         IDataSource? editedDataSource = null;
+        var lockDataSourceIdentity = dataSource is IInternalDataSource
+            && await this.DataSourceEmbeddingService.ShouldLockDataSourceIdentityAsync(dataSource.Id);
         switch (dataSource)
         {
             case DataSourceLocalFile localFile:
@@ -234,6 +236,7 @@ public partial class SettingsDialogDataSources : SettingsDialogBase
                 {
                     { x => x.IsEditing, true },
                     { x => x.DataSource, localFile },
+                    { x => x.LockSourceAndEmbedding, lockDataSourceIdentity },
                     { x => x.AvailableEmbeddings, this.AvailableEmbeddingProviders }
                 };
         
@@ -250,6 +253,7 @@ public partial class SettingsDialogDataSources : SettingsDialogBase
                 {
                     { x => x.IsEditing, true },
                     { x => x.DataSource, localDirectory },
+                    { x => x.LockSourceAndEmbedding, lockDataSourceIdentity },
                     { x => x.AvailableEmbeddings, this.AvailableEmbeddingProviders }
                 };
         

@@ -19,6 +19,9 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
     public DataSourceLocalDirectory DataSource { get; set; }
 
     [Parameter]
+    public bool LockSourceAndEmbedding { get; set; }
+
+    [Parameter]
     public IReadOnlyList<ConfigurationSelectData<string>> AvailableEmbeddings { get; set; } = [];
     
     private static readonly Dictionary<string, object?> SPELLCHECK_ATTRIBUTES = new();
@@ -107,6 +110,14 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
 
     private bool SelectedCloudEmbedding => this.SelectedEmbedding is { IsSelfHosted: false };
 
+    private bool CanChangeSourceAndEmbedding => !this.IsEditing || !this.LockSourceAndEmbedding;
+
+    private string SelectedEmbeddingTokenizerText => this.SelectedEmbedding is null
+        ? T("No embedding selected")
+        : string.IsNullOrWhiteSpace(this.SelectedEmbedding.TokenizerPath)
+            ? T("Default tokenizer")
+            : System.IO.Path.GetFileName(this.SelectedEmbedding.TokenizerPath);
+
     private DataSourceLocalDirectory CreateDataSource() => new()
     {
         Id = this.dataId,
@@ -114,8 +125,8 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
         Name = this.dataName,
         Description = this.dataDescription,
         Type = DataSourceType.LOCAL_DIRECTORY,
-        EmbeddingId = this.dataEmbeddingId,
-        Path = this.dataPath,
+        EmbeddingId = this.CanChangeSourceAndEmbedding ? this.dataEmbeddingId : this.DataSource.EmbeddingId,
+        Path = this.CanChangeSourceAndEmbedding ? this.dataPath : this.DataSource.Path,
         MaxChunkTokenLength = this.dataMaxChunkTokenLength,
         ChunkOverlapTokenLength = this.dataChunkOverlapTokenLength,
         SecurityPolicy = this.dataSecurityPolicy,
@@ -139,11 +150,11 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
     private string? ValidateMaxChunkTokenLength(int maxChunkTokenLength)
     {
         if (maxChunkTokenLength < 0)
-            return T("Please enter 0 or a positive max chunk length.");
+            return T("Please enter 0 or a positive token limit.");
 
         var providerMaxChunkTokenLength = this.SelectedEmbedding?.EffectiveTokenLimit ?? EmbeddingProvider.DEFAULT_TOKEN_LIMIT;
-        if (maxChunkTokenLength > providerMaxChunkTokenLength)
-            return string.Format(T("The data source max chunk length must be less than or equal to the embedding provider limit ({0})."), providerMaxChunkTokenLength);
+        if (maxChunkTokenLength > 0 && maxChunkTokenLength >= providerMaxChunkTokenLength)
+            return string.Format(T("The data source token limit must be smaller than the embedding provider token limit ({0}). Use 0 to use the provider setting."), providerMaxChunkTokenLength);
 
         return null;
     }
@@ -157,7 +168,7 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
             ? this.dataMaxChunkTokenLength
             : this.SelectedEmbedding?.EffectiveTokenLimit ?? EmbeddingProvider.DEFAULT_TOKEN_LIMIT;
         if (chunkOverlapTokenLength >= effectiveMaxChunkTokenLength)
-            return T("The overlap must be smaller than the effective max chunk length.");
+            return T("The overlap must be smaller than the effective token limit.");
 
         return null;
     }

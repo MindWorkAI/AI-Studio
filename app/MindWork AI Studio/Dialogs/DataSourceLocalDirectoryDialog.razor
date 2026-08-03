@@ -41,12 +41,18 @@
             <MudJustifiedText Typo="Typo.body1" Class="mb-3">
                 @T("Select a root directory for this data source. All data in this directory and all its subdirectories will be processed for this data source.")
             </MudJustifiedText>
-            <SelectDirectory @bind-Directory="@this.dataPath" Label="@T("Selected base directory for this data source")" DirectoryDialogTitle="@T("Select the base directory")" Validation="@this.dataSourceValidation.ValidatePath" />
+            @if (!this.CanChangeSourceAndEmbedding)
+            {
+                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mb-3">
+                    @T("This data source already has indexed embeddings. Delete and recreate it to change the folder path or embedding model.")
+                </MudAlert>
+            }
+            <SelectDirectory @bind-Directory="@this.dataPath" Label="@T("Selected base directory for this data source")" DirectoryDialogTitle="@T("Select the base directory")" Validation="@this.dataSourceValidation.ValidatePath" Disabled="@(!this.CanChangeSourceAndEmbedding)" />
 
             <MudJustifiedText Typo="Typo.body1" Class="mb-3">
                 @T("In order for the AI to be able to determine the appropriate data at any time, you must choose an embedding method.")
             </MudJustifiedText>
-            <MudSelect @bind-Value="@this.dataEmbeddingId" Label="@T("Embedding")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateEmbeddingId">
+            <MudSelect @bind-Value="@this.dataEmbeddingId" Label="@T("Embedding")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateEmbeddingId" Disabled="@(!this.CanChangeSourceAndEmbedding)">
                 @foreach (var embedding in this.AvailableEmbeddings)
                 {
                     <MudSelectItem Value="@embedding.Value">
@@ -57,6 +63,18 @@
             
             @if (!string.IsNullOrWhiteSpace(this.dataEmbeddingId))
             {
+                <MudTextField
+                    T="string"
+                    Text="@this.SelectedEmbeddingTokenizerText"
+                    Label="@T("Tokenizer")"
+                    Class="mb-3"
+                    ReadOnly="@true"
+                    Variant="Variant.Outlined"
+                    Adornment="Adornment.Start"
+                    AdornmentIcon="@Icons.Material.Filled.DataObject"
+                    AdornmentColor="Color.Info"
+                />
+
                 if (this.SelectedCloudEmbedding)
                 {
                     <DataSourceCloudEmbeddingWarning DataSourceType="DataSourceType.LOCAL_DIRECTORY" SourcePath="@this.dataPath" @bind-UserAcknowledged="@this.dataUserAcknowledgedCloudEmbedding" Validation="@this.dataSourceValidation.ValidateUserAcknowledgedCloudEmbedding"/>
@@ -80,7 +98,7 @@
                         <MudNumericField
                             T="int"
                             @bind-Value="@this.dataMaxChunkTokenLength"
-                            Label="@T("Max chunk length")"
+                            Label="@T("Token limit")"
                             Class="mb-3"
                             Min="0"
                             Immediate="@true"
@@ -94,7 +112,7 @@
                         <MudNumericField
                             T="int"
                             @bind-Value="@this.dataChunkOverlapTokenLength"
-                            Label="@T("Chunk overlap length")"
+                            Label="@T("Token overlap")"
                             Min="0"
                             Immediate="@true"
                             Validation="@this.ValidateChunkOverlapTokenLength"
