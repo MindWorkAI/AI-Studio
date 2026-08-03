@@ -162,7 +162,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         var embeddingState = await databaseClientProvider.GetEmbeddingStateAsync(token);
         if (!embeddingState.IsAvailable)
         {
-            logger.LogWarning("Locking identity settings for data source '{DataSourceId}' because the embedding state database '{DatabaseName}' is unavailable.", dataSourceId, embeddingState.Name);
+            logger.LogWarning("Locking identity settings for data source '{DataSourceId}' because the local RAG index database '{DatabaseName}' is unavailable.", dataSourceId, embeddingState.Name);
             return true;
         }
 
@@ -395,7 +395,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                 dataSource.Id,
                 embeddingState.Name);
             token.ThrowIfCancellationRequested();
-            this.UpsertStatus(this.GetFallbackStatus(dataSource, "The SQLite embedding state database is not available."));
+            this.UpsertStatus(this.GetFallbackStatus(dataSource, "The local RAG index database is not available."));
             return;
         }
 
@@ -522,15 +522,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                     chunkCount);
                 await embeddingState.UpsertFileAsync(
                     dataSource.Id,
-                    new EmbeddingStateFile(
-                        file.FullName,
-                        file.Name,
-                        this.TryGetRelativePath(dataSource, file),
-                        fingerprint,
-                        file.Length,
-                        file.LastWriteTimeUtc,
-                        embeddedAtUtc,
-                        chunkCount),
+                    this.CreateEmbeddingStateFile(dataSource, file, fingerprint, chunkCount, embeddedAtUtc),
                     token);
                 manifest.Files[file.FullName] = record;
                 completedFiles++;
@@ -603,22 +595,26 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             file.FullName,
             collectionName);
         await this.DeleteFilePointsAsync(vectorStore, collectionName, file.FullName, token);
+        await embeddingState.DeleteFileAsync(dataSource.Id, file.FullName, token);
+
+        var parentFile = this.CreateEmbeddingStateFile(dataSource, file, fingerprint, 0, DateTime.UtcNow);
+        await embeddingState.UpsertFileAsync(dataSource.Id, parentFile, token);
 
         var embeddingBatchSize = embeddingProvider.EffectiveEmbeddingBatchSize;
-        var batch = new List<(string Text, int ChunkIndex)>(embeddingBatchSize);
+        var batch = new List<EmbeddingChunkDraft>(embeddingBatchSize);
         var totalChunkCount = 0;
 
         await foreach (var chunk in this.StreamEmbeddingChunksAsync(file.FullName, dataSource, embeddingProvider, token))
         {
-            batch.Add((chunk, totalChunkCount));
+            batch.Add(new(this.CreatePointId(dataSource.Id, fingerprint, totalChunkCount), chunk, totalChunkCount, TryExtractPageNumber(chunk)));
             totalChunkCount++;
 
             if (batch.Count >= embeddingBatchSize)
-                await this.FlushBatchAsync(embeddingState, vectorStore, dataSource, file, fingerprint, embeddingProvider, provider, manifest, collectionName, batch, token);
+                await this.FlushBatchAsync(embeddingState, vectorStore, dataSource, file, fingerprint, parentFile, embeddingProvider, provider, manifest, collectionName, batch, token);
         }
 
         if (batch.Count > 0)
-            await this.FlushBatchAsync(embeddingState, vectorStore, dataSource, file, fingerprint, embeddingProvider, provider, manifest, collectionName, batch, token);
+            await this.FlushBatchAsync(embeddingState, vectorStore, dataSource, file, fingerprint, parentFile, embeddingProvider, provider, manifest, collectionName, batch, token);
 
         if (totalChunkCount == 0)
             throw new InvalidOperationException($"The file '{file.Name}' did not yield any text chunks.");
@@ -639,11 +635,12 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         IDataSource dataSource,
         FileInfo file,
         string fingerprint,
+        EmbeddingStateFile parentFile,
         EmbeddingProvider embeddingProvider,
         IProvider provider,
         DataSourceEmbeddingManifest manifest,
         string collectionName,
-        List<(string Text, int ChunkIndex)> batch,
+        List<EmbeddingChunkDraft> batch,
         CancellationToken token)
     {
         logger.LogDebug(
@@ -694,15 +691,22 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         }
 
         token.ThrowIfCancellationRequested();
+        var embeddedAtUtc = DateTime.UtcNow;
         await this.UpsertPointsAsync(
             vectorStore,
             collectionName,
             dataSource,
             file,
             fingerprint,
+            parentFile,
             batch,
             vectors,
-            this.TryGetRelativePath(dataSource, file),
+            embeddedAtUtc,
+            token);
+        token.ThrowIfCancellationRequested();
+        await embeddingState.UpsertChunksAsync(
+            dataSource.Id,
+            this.CreateEmbeddingStateChunks(parentFile, batch, embeddedAtUtc),
             token);
 
         logger.LogDebug(
@@ -725,26 +729,34 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         IDataSource dataSource,
         FileInfo file,
         string fingerprint,
-        IReadOnlyList<(string Text, int ChunkIndex)> batch,
+        EmbeddingStateFile parentFile,
+        IReadOnlyList<EmbeddingChunkDraft> batch,
         IReadOnlyList<IReadOnlyList<float>> vectors,
-        string relativePath,
+        DateTime embeddedAtUtc,
         CancellationToken token)
     {
-        var embeddedAtUtc = DateTime.UtcNow;
         var points = batch.Select((item, index) => new VectorStoragePoint(
-            this.CreatePointId(dataSource.Id, fingerprint, item.ChunkIndex),
+            item.ChunkId,
             vectors[index],
             dataSource.Id,
             dataSource.Name,
             dataSource.Type.ToString(),
+            item.ChunkId,
+            parentFile.ParentFileId,
             file.FullName,
-            file.Name,
-            relativePath,
+            parentFile.AbsolutePath,
+            parentFile.FileName,
+            parentFile.RelativePath,
+            parentFile.FileType,
+            item.PageNumber,
             item.ChunkIndex,
             item.Text,
             fingerprint,
-            file.LastWriteTimeUtc,
-            embeddedAtUtc)).ToList();
+            parentFile.CreationUtc,
+            parentFile.LastWriteUtc,
+            embeddedAtUtc,
+            parentFile.ComplianceLevel,
+            parentFile.ComplianceLevelRank)).ToList();
 
         await vectorStore.InsertEmbedding(collectionName, points, token);
     }
@@ -805,7 +817,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             .ToList();
 
         logger.LogInformation(
-            "Starting initial persisted hash check for {DataSourceCount} supported internal data source(s). Incomplete or failed embedding state will be retried during this pass. File watchers will be activated after this check completes.",
+            "Starting initial persisted hash check for {DataSourceCount} supported internal data source(s). Incomplete or failed local RAG index state will be retried during this pass. File watchers will be activated after this check completes.",
             supportedDataSources.Count);
 
         foreach (var dataSource in supportedDataSources)
@@ -875,7 +887,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         var manifest = await embeddingState.GetManifestAsync(dataSource.Id, token);
 
         logger.LogInformation(
-            "Loaded persisted embedding manifest for data source '{DataSourceName}' ({DataSourceId}). StoredFiles={StoredFiles}, StoredSourceHashPrefix={StoredSourceHashPrefix}, StoredSignaturePrefix={StoredSignaturePrefix}, CurrentSignaturePrefix={CurrentSignaturePrefix}.",
+            "Loaded persisted local RAG index manifest for data source '{DataSourceName}' ({DataSourceId}). StoredFiles={StoredFiles}, StoredSourceHashPrefix={StoredSourceHashPrefix}, StoredSignaturePrefix={StoredSignaturePrefix}, CurrentSignaturePrefix={CurrentSignaturePrefix}.",
             dataSource.Name,
             dataSource.Id,
             manifest.Files.Count,

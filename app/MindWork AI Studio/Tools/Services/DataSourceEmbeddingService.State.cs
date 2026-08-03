@@ -17,11 +17,11 @@ public sealed partial class DataSourceEmbeddingService
         embeddingState ??= await databaseClientProvider.GetEmbeddingStateAsync(token);
         if (!embeddingState.IsAvailable)
         {
-            logger.LogWarning("Could not delete SQLite embedding state for data source '{DataSourceId}' because the embedding state database '{DatabaseName}' is unavailable.", dataSourceId, embeddingState.Name);
+            logger.LogWarning("Could not delete local RAG index state for data source '{DataSourceId}' because the database '{DatabaseName}' is unavailable.", dataSourceId, embeddingState.Name);
             return;
         }
 
         await embeddingState.DeleteDataSourceAsync(dataSourceId, token);
-        logger.LogInformation("Reset persisted embedding state for data source '{DataSourceId}'.", dataSourceId);
+        logger.LogInformation("Reset persisted local RAG index state for data source '{DataSourceId}'.", dataSourceId);
     }
 }

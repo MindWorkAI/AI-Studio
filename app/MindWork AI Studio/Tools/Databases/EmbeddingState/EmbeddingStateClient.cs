@@ -24,15 +24,30 @@ public abstract class EmbeddingStateClient(string name, string path) : DatabaseC
 
     public abstract Task DeleteFileAsync(string dataSourceId, string filePath, CancellationToken token);
 
+    public abstract Task UpsertChunksAsync(string dataSourceId, IReadOnlyList<EmbeddingStateChunk> chunks, CancellationToken token);
+
     public abstract Task DeleteDataSourceAsync(string dataSourceId, CancellationToken token);
 }
 
 public sealed record EmbeddingStateFile(
-    string FilePath,
+    string ParentFileId,
+    string AbsolutePath,
     string FileName,
     string RelativePath,
+    string FileType,
     string Fingerprint,
     long FileSize,
+    DateTime CreationUtc,
     DateTime LastWriteUtc,
     DateTime EmbeddedAtUtc,
-    int ChunkCount);
+    int ChunkCount,
+    string ComplianceLevel,
+    int ComplianceLevelRank);
+
+public sealed record EmbeddingStateChunk(
+    string ChunkId,
+    string ParentFileId,
+    int? PageNumber,
+    int ChunkIndex,
+    string ChunkText,
+    DateTime EmbeddedAtUtc);

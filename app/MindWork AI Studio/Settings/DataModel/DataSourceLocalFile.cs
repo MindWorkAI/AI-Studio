@@ -1,4 +1,5 @@
 using AIStudio.Chat;
+using AIStudio.Provider;
 using AIStudio.Tools.RAG;
 
 namespace AIStudio.Settings.DataModel;
@@ -41,6 +42,9 @@ public readonly record struct DataSourceLocalFile : IInternalDataSource
     
     /// <inheritdoc />
     public DataSourceSecurity SecurityPolicy { get; init; } = DataSourceSecurity.NOT_SPECIFIED;
+
+    /// <inheritdoc />
+    public ConfidenceLevel ComplianceLevel { get; init; } = ConfidenceLevel.UNKNOWN;
 
     /// <inheritdoc />
     public bool IsEnterpriseConfiguration { get; init; }

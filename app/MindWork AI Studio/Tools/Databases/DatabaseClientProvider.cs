@@ -65,7 +65,7 @@ public sealed partial class DatabaseClientProvider(RustService rustService, ILog
 
         return new NoEmbeddingStateClient(
             client.Name,
-            "The configured database client does not support embedding state operations.",
+            "The configured database client does not support local RAG index operations.",
             client.Status);
     }
 

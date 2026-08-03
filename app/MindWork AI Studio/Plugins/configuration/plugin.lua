@@ -150,6 +150,7 @@ CONFIG["EMBEDDING_PROVIDERS"] = {}
 
 -- ERI v1 data sources for retrieval-augmented generation:
 CONFIG["DATA_SOURCES"] = {}
+-- Allowed compliance levels are: UNTRUSTED, UNKNOWN, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
 
 -- Example: ERI v1 data source with a shared access token.
 -- CONFIG["DATA_SOURCES"][#CONFIG["DATA_SOURCES"]+1] = {
@@ -161,6 +162,7 @@ CONFIG["DATA_SOURCES"] = {}
 --     ["AuthMethod"] = "TOKEN",
 --     ["Token"] = "ENC:v1:<base64-encoded encrypted token>",
 --     ["SecurityPolicy"] = "SELF_HOSTED",
+--     ["ComplianceLevel"] = "UNKNOWN",
 --     ["SelectedRetrievalId"] = "<retrieval process ID from the ERI server>",
 --     ["MaxMatches"] = 10,
 -- }
@@ -177,6 +179,7 @@ CONFIG["DATA_SOURCES"] = {}
 --     ["Username"] = "<shared username>",
 --     ["Password"] = "ENC:v1:<base64-encoded encrypted password>",
 --     ["SecurityPolicy"] = "SELF_HOSTED",
+--     ["ComplianceLevel"] = "UNKNOWN",
 --     ["SelectedRetrievalId"] = "<retrieval process ID from the ERI server>",
 --     ["MaxMatches"] = 10,
 -- }
@@ -192,6 +195,7 @@ CONFIG["DATA_SOURCES"] = {}
 --     ["UsernamePasswordMode"] = "OS_USERNAME_SHARED_PASSWORD",
 --     ["Password"] = "ENC:v1:<base64-encoded encrypted password>",
 --     ["SecurityPolicy"] = "SELF_HOSTED",
+--     ["ComplianceLevel"] = "UNKNOWN",
 --     ["SelectedRetrievalId"] = "<retrieval process ID from the ERI server>",
 --     ["MaxMatches"] = 10,
 -- }

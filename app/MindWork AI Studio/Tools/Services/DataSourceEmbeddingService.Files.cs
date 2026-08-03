@@ -2,8 +2,10 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 
+using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.Databases.EmbeddingState;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
 
@@ -26,6 +28,8 @@ public sealed partial class DataSourceEmbeddingService
     }
 
     private sealed record ExtractedFileContent(string Text, IReadOnlyList<string> SourceSegments);
+
+    private sealed record EmbeddingChunkDraft(string ChunkId, string Text, int ChunkIndex, int? PageNumber);
 
     private sealed record ChunkingOptions(int MaxChunkTokenLength, int OverlapTokenLength);
 
@@ -748,6 +752,7 @@ public sealed partial class DataSourceEmbeddingService
             embeddingProvider.Hostname,
             embeddingProvider.TokenizerPath,
             embeddingProvider.EffectiveTokenLimit,
+            GetDataSourceComplianceLevel(dataSource).ToString(),
             dataSource is IInternalDataSource internalDataSource ? internalDataSource.MaxChunkTokenLength : 0,
             dataSource is IInternalDataSource overlapDataSource ? overlapDataSource.ChunkOverlapTokenLength : 0,
             chunkingOptions.MaxChunkTokenLength,
@@ -847,6 +852,59 @@ public sealed partial class DataSourceEmbeddingService
         return Convert.ToHexString(bytes);
     }
 
+    private EmbeddingStateFile CreateEmbeddingStateFile(IDataSource dataSource, FileInfo file, string fingerprint, int chunkCount, DateTime embeddedAtUtc)
+    {
+        file.Refresh();
+        var absolutePath = Path.GetFullPath(file.FullName);
+        var complianceLevel = GetDataSourceComplianceLevel(dataSource);
+        return new(
+            this.CreateParentFileId(dataSource.Id, absolutePath),
+            absolutePath,
+            file.Name,
+            this.TryGetRelativePath(dataSource, file),
+            GetFileType(file),
+            fingerprint,
+            file.Exists ? file.Length : 0,
+            file.Exists ? file.CreationTimeUtc : DateTime.UnixEpoch,
+            file.Exists ? file.LastWriteTimeUtc : DateTime.UnixEpoch,
+            embeddedAtUtc,
+            chunkCount,
+            complianceLevel.ToString(),
+            (int)complianceLevel);
+    }
+
+    private IReadOnlyList<EmbeddingStateChunk> CreateEmbeddingStateChunks(EmbeddingStateFile parentFile, IReadOnlyList<EmbeddingChunkDraft> batch, DateTime embeddedAtUtc)
+    {
+        return batch
+            .Select(chunk => new EmbeddingStateChunk(
+                chunk.ChunkId,
+                parentFile.ParentFileId,
+                chunk.PageNumber,
+                chunk.ChunkIndex,
+                chunk.Text,
+                embeddedAtUtc))
+            .ToList();
+    }
+
+    private static ConfidenceLevel GetDataSourceComplianceLevel(IDataSource dataSource) =>
+        dataSource.ComplianceLevel is ConfidenceLevel.NONE
+            ? ConfidenceLevel.UNKNOWN
+            : dataSource.ComplianceLevel;
+
+    private static string GetFileType(FileInfo file)
+    {
+        var extension = file.Extension.TrimStart('.').ToLowerInvariant();
+        return string.IsNullOrWhiteSpace(extension) ? "unknown" : extension;
+    }
+
+    private static int? TryExtractPageNumber(string chunk)
+    {
+        var match = Regex.Match(chunk, @"^\s*#\s+Page\s+(\d+)\b", RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
+        return match.Success && int.TryParse(match.Groups[1].Value, out var pageNumber) && pageNumber > 0
+            ? pageNumber
+            : null;
+    }
+
     private string GetCollectionName(string dataSourceName, string dataSourceId)
     {
         var safeId = dataSourceId
@@ -864,9 +922,14 @@ public sealed partial class DataSourceEmbeddingService
         return $"rag_{safeName}_{safeId}";
     }
 
-    private string CreatePointId(string dataSourceId, string fingerprint, int chunkIndex)
+    private string CreatePointId(string dataSourceId, string fingerprint, int chunkIndex) =>
+        CreateStableGuid($"{dataSourceId}:chunk:{fingerprint}:{chunkIndex}");
+
+    private string CreateParentFileId(string dataSourceId, string absolutePath) =>
+        CreateStableGuid($"{dataSourceId}:parent-file:{absolutePath}");
+
+    private static string CreateStableGuid(string source)
     {
-        var source = $"{dataSourceId}:{fingerprint}:{chunkIndex}";
         var hash = SHA256.HashData(Encoding.UTF8.GetBytes(source));
         var guidBytes = hash[..16].ToArray();
 

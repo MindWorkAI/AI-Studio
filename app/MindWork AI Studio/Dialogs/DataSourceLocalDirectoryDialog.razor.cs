@@ -1,4 +1,5 @@
 using AIStudio.Components;
+using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Validation;
@@ -49,6 +50,7 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
     private ushort dataMaxMatches = 10;
     private bool showExpertSettings;
     private DataSourceSecurity dataSecurityPolicy;
+    private ConfidenceLevel dataComplianceLevel = ConfidenceLevel.UNKNOWN;
     
     // We get the form reference from Blazor code to validate it manually:
     private MudForm form = null!;
@@ -86,6 +88,7 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
             this.dataMaxChunkTokenLength = this.DataSource.MaxChunkTokenLength;
             this.dataChunkOverlapTokenLength = this.DataSource.ChunkOverlapTokenLength;
             this.dataSecurityPolicy = this.DataSource.SecurityPolicy;
+            this.dataComplianceLevel = this.DataSource.ComplianceLevel;
             this.dataMaxMatches = this.DataSource.MaxMatches;
             this.showExpertSettings = this.dataMaxChunkTokenLength > 0 || this.dataChunkOverlapTokenLength > 0;
         }
@@ -112,6 +115,8 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
 
     private bool CanChangeSourceAndEmbedding => !this.IsEditing || !this.LockSourceAndEmbedding;
 
+    private IEnumerable<ConfigurationSelectData<ConfidenceLevel>> ComplianceLevels => ConfigurationSelectDataFactory.GetDataSourceComplianceLevelsData();
+
     private string SelectedEmbeddingTokenizerText => this.SelectedEmbedding is null
         ? T("No embedding selected")
         : string.IsNullOrWhiteSpace(this.SelectedEmbedding.TokenizerPath)
@@ -130,6 +135,7 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
         MaxChunkTokenLength = this.dataMaxChunkTokenLength,
         ChunkOverlapTokenLength = this.dataChunkOverlapTokenLength,
         SecurityPolicy = this.dataSecurityPolicy,
+        ComplianceLevel = this.dataComplianceLevel,
         MaxMatches = this.dataMaxMatches,
     };
 

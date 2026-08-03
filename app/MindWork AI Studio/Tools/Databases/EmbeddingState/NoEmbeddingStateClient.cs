@@ -44,6 +44,8 @@ public sealed class NoEmbeddingStateClient(string name, string? unavailableReaso
 
     public override Task DeleteFileAsync(string dataSourceId, string filePath, CancellationToken token) => Task.CompletedTask;
 
+    public override Task UpsertChunksAsync(string dataSourceId, IReadOnlyList<EmbeddingStateChunk> chunks, CancellationToken token) => Task.CompletedTask;
+
     public override Task DeleteDataSourceAsync(string dataSourceId, CancellationToken token) => Task.CompletedTask;
 
     public override void Dispose()
