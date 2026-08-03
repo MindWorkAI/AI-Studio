@@ -133,6 +133,7 @@ internal sealed class Program
         builder.Services.AddSingleton<VoiceRecordingAvailabilityService>();
         builder.Services.AddSingleton<DataSourceService>();
         builder.Services.AddSingleton<DataSourceEmbeddingService>();
+        builder.Services.AddSingleton<DataSourceLocalRetrievalService>();
         builder.Services.AddScoped<PandocAvailabilityService>();
         builder.Services.AddTransient<HTMLParser>();
         builder.Services.AddTransient<AgentDataSourceSelection>();

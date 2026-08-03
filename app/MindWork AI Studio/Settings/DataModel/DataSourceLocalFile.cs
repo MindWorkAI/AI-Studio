@@ -1,6 +1,7 @@
 using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Tools.RAG;
+using AIStudio.Tools.Services;
 
 namespace AIStudio.Settings.DataModel;
 
@@ -56,11 +57,8 @@ public readonly record struct DataSourceLocalFile : IInternalDataSource
     public ushort MaxMatches { get; init; } = 10;
     
     /// <inheritdoc />
-    public Task<IReadOnlyList<IRetrievalContext>> RetrieveDataAsync(IContent lastUserPrompt, ChatThread thread, CancellationToken token = default)
-    {
-        IReadOnlyList<IRetrievalContext> retrievalContext = new List<IRetrievalContext>();
-        return Task.FromResult(retrievalContext);
-    }
+    public Task<IReadOnlyList<IRetrievalContext>> RetrieveDataAsync(IContent lastUserPrompt, ChatThread thread, CancellationToken token = default) =>
+        Program.SERVICE_PROVIDER.GetRequiredService<DataSourceLocalRetrievalService>().RetrieveDataAsync(this, lastUserPrompt, thread, token);
     
     /// <summary>
     /// The path to the file.

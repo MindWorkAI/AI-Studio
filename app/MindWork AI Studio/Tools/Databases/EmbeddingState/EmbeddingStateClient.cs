@@ -26,6 +26,8 @@ public abstract class EmbeddingStateClient(string name, string path) : DatabaseC
 
     public abstract Task UpsertChunksAsync(string dataSourceId, IReadOnlyList<EmbeddingStateChunk> chunks, CancellationToken token);
 
+    public abstract Task<IReadOnlyList<EmbeddingStateSearchResult>> SearchChunksAsync(string dataSourceId, string query, int maxMatches, CancellationToken token);
+
     public abstract Task DeleteDataSourceAsync(string dataSourceId, CancellationToken token);
 }
 
@@ -51,3 +53,26 @@ public sealed record EmbeddingStateChunk(
     int ChunkIndex,
     string ChunkText,
     DateTime EmbeddedAtUtc);
+
+public sealed record EmbeddingStateSearchResult(
+    string ChunkId,
+    string ParentFileId,
+    string DataSourceId,
+    string DataSourceName,
+    string DataSourceType,
+    string AbsolutePath,
+    string FileName,
+    string RelativePath,
+    string FileType,
+    int? PageNumber,
+    int ChunkIndex,
+    string ChunkText,
+    double Score,
+    string Fingerprint,
+    long FileSize,
+    DateTime CreationUtc,
+    DateTime LastWriteUtc,
+    DateTime EmbeddedAtUtc,
+    int ChunkCount,
+    string ComplianceLevel,
+    int ComplianceLevelRank);

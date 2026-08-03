@@ -866,13 +866,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     }
 
     private bool TryResolveEmbeddingProvider(IDataSource dataSource, [NotNullWhen(true)] out EmbeddingProvider? embeddingProvider)
-    {
-        embeddingProvider = settingsManager.ConfigurationData.EmbeddingProviders.FirstOrDefault(provider =>
-            dataSource is IInternalDataSource internalDataSource &&
-            provider.Id.Equals(internalDataSource.EmbeddingId, StringComparison.OrdinalIgnoreCase));
-
-        return embeddingProvider != default && embeddingProvider.UsedLLMProvider is not LLMProviders.NONE;
-    }
+        => DataSourceEmbeddingProviders.TryResolve(settingsManager, dataSource, out embeddingProvider);
 
     private async Task<DataSourceEmbeddingManifest> EnsureCompatibleManifestAsync(
         IDataSource dataSource,

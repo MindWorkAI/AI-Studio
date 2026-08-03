@@ -40,4 +40,14 @@ public sealed class RetrievalTextContext : IRetrievalContext
     /// For example, one sentence or paragraph before and after the matched text.
     /// </remarks>
     public IReadOnlyList<string> SurroundingContent { get; set; } = [];
+
+    /// <summary>
+    /// Optional title used when this context is displayed as a source reference.
+    /// </summary>
+    public string ReferenceTitle { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Optional link used when this context is displayed as a source reference.
+    /// </summary>
+    public string ReferenceLink { get; init; } = string.Empty;
 }

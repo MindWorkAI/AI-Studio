@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text.RegularExpressions;
 
 using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem;
@@ -16,6 +17,9 @@ public sealed class SqliteEmbeddingStateClientImplementation(
 {
     private const string DATABASE_NAME = "Local RAG Index";
     private const string DATABASE_FILENAME = "rag-index.sqlite3";
+    private const int MAX_FTS_QUERY_TERMS = 32;
+
+    private static readonly Regex FTS_TOKEN_REGEX = new(@"[\p{L}\p{Nd}_]+", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
     private readonly string databasePath = databasePath;
     private readonly string connectionString = new SqliteConnectionStringBuilder
@@ -316,6 +320,84 @@ public sealed class SqliteEmbeddingStateClientImplementation(
         await transaction.CommitAsync(token);
     }
 
+    public override async Task<IReadOnlyList<EmbeddingStateSearchResult>> SearchChunksAsync(string dataSourceId, string query, int maxMatches, CancellationToken token)
+    {
+        if (maxMatches <= 0)
+            return [];
+
+        var ftsQuery = BuildFtsQuery(query);
+        if (string.IsNullOrWhiteSpace(ftsQuery))
+            return [];
+
+        var results = new List<EmbeddingStateSearchResult>(maxMatches);
+        await using var connection = await this.OpenConnectionAsync(token);
+        await using var command = CreateCommand(connection, """
+                                                           SELECT
+                                                               c.chunk_id,
+                                                               c.parent_file_id,
+                                                               ds.data_source_id,
+                                                               ds.data_source_name,
+                                                               ds.data_source_type,
+                                                               f.absolute_path,
+                                                               f.file_name,
+                                                               f.relative_path,
+                                                               f.file_type,
+                                                               c.page_number,
+                                                               c.chunk_index,
+                                                               c.chunk_text,
+                                                               bm25(embedding_chunks_fts) AS score,
+                                                               f.fingerprint,
+                                                               f.file_size,
+                                                               f.creation_utc,
+                                                               f.last_write_utc,
+                                                               c.embedded_at_utc,
+                                                               f.chunk_count,
+                                                               f.compliance_level,
+                                                               f.compliance_level_rank
+                                                           FROM embedding_chunks_fts
+                                                           JOIN embedding_chunks c ON c.id = embedding_chunks_fts.rowid
+                                                           JOIN embedded_files f ON f.parent_file_id = c.parent_file_id
+                                                           JOIN data_sources ds ON ds.data_source_id = f.data_source_id
+                                                           WHERE ds.data_source_id = $dataSourceId
+                                                             AND embedding_chunks_fts MATCH $query
+                                                           ORDER BY score
+                                                           LIMIT $maxMatches
+                                                           """);
+
+        command.Parameters.AddWithValue("$dataSourceId", dataSourceId);
+        command.Parameters.AddWithValue("$query", ftsQuery);
+        command.Parameters.AddWithValue("$maxMatches", maxMatches);
+
+        await using var reader = await command.ExecuteReaderAsync(token);
+        while (await reader.ReadAsync(token))
+        {
+            results.Add(new EmbeddingStateSearchResult(
+                reader.GetString(0),
+                reader.GetString(1),
+                reader.GetString(2),
+                reader.GetString(3),
+                reader.GetString(4),
+                reader.GetString(5),
+                reader.GetString(6),
+                reader.GetString(7),
+                reader.GetString(8),
+                reader.IsDBNull(9) ? null : reader.GetInt32(9),
+                reader.GetInt32(10),
+                reader.GetString(11),
+                reader.GetDouble(12),
+                reader.GetString(13),
+                reader.GetInt64(14),
+                ParseUtc(reader.GetString(15)),
+                ParseUtc(reader.GetString(16)),
+                ParseUtc(reader.GetString(17)),
+                reader.GetInt32(18),
+                reader.GetString(19),
+                reader.GetInt32(20)));
+        }
+
+        return results;
+    }
+
     public override async Task DeleteDataSourceAsync(string dataSourceId, CancellationToken token)
     {
         await using var connection = await this.OpenConnectionAsync(token);
@@ -523,6 +605,20 @@ public sealed class SqliteEmbeddingStateClientImplementation(
         return DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var dateTime)
             ? dateTime.ToUniversalTime()
             : DateTime.UnixEpoch;
+    }
+
+    private static string BuildFtsQuery(string query)
+    {
+        var terms = FTS_TOKEN_REGEX
+            .Matches(query)
+            .Select(match => match.Value)
+            .Where(term => !string.IsNullOrWhiteSpace(term))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Take(MAX_FTS_QUERY_TERMS)
+            .Select(term => $"\"{term.Replace("\"", "\"\"", StringComparison.Ordinal)}\"")
+            .ToList();
+
+        return terms.Count == 0 ? string.Empty : string.Join(" OR ", terms);
     }
 
     private static NoEmbeddingStateClient CreateNoEmbeddingStateClient(string name, string? unavailableReason, DatabaseClientStatus status, ILogger<DatabaseClient> databaseClientLogger)

@@ -15,6 +15,7 @@ public sealed class QdrantEdgeClientImplementation(
     private const string INFO_PATH = "/system/qdrant-edge/info";
     private const string ENSURE_PATH = "/system/qdrant-edge/ensure";
     private const string INSERT_PATH = "/system/qdrant-edge/insert";
+    private const string SEARCH_PATH = "/system/qdrant-edge/search";
     private const string DELETE_FILE_PATH = "/system/qdrant-edge/delete-file";
     private const string DELETE_STORE_PATH = "/system/qdrant-edge/delete-store";
     
@@ -86,6 +87,18 @@ public sealed class QdrantEdgeClientImplementation(
     public override Task InsertEmbedding(string storeName, IReadOnlyList<VectorStoragePoint> points, CancellationToken token) =>
         rustService.ExecuteDatabaseOperation(DATABASE_NAME, INSERT_PATH, new InsertEmbeddingRequest(storeName, points), token);
 
+    public override async Task<IReadOnlyList<VectorSearchResult>> SearchEmbeddingAsync(string storeName, IReadOnlyList<float> vector, int maxMatches, CancellationToken token)
+    {
+        if (maxMatches <= 0)
+            return [];
+
+        return await rustService.ExecuteDatabaseQuery<SearchEmbeddingRequest, List<VectorSearchResult>>(
+            DATABASE_NAME,
+            SEARCH_PATH,
+            new SearchEmbeddingRequest(storeName, vector, maxMatches),
+            token) ?? [];
+    }
+
     public override Task DeleteEmbeddingByFile(string storeName, string filePath, CancellationToken token) =>
         rustService.ExecuteDatabaseOperation(DATABASE_NAME, DELETE_FILE_PATH, new DeleteEmbeddingByFileRequest(storeName, filePath), token);
 
@@ -107,6 +120,8 @@ public sealed class QdrantEdgeClientImplementation(
     private sealed record EnsureVectorStoreRequest(string StoreName, int VectorSize);
 
     private sealed record InsertEmbeddingRequest(string StoreName, IReadOnlyList<VectorStoragePoint> Points);
+
+    private sealed record SearchEmbeddingRequest(string StoreName, IReadOnlyList<float> Vector, int MaxMatches);
 
     private sealed record DeleteEmbeddingByFileRequest(string StoreName, string FilePath);
     

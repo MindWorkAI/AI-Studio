@@ -46,6 +46,9 @@ public sealed class NoEmbeddingStateClient(string name, string? unavailableReaso
 
     public override Task UpsertChunksAsync(string dataSourceId, IReadOnlyList<EmbeddingStateChunk> chunks, CancellationToken token) => Task.CompletedTask;
 
+    public override Task<IReadOnlyList<EmbeddingStateSearchResult>> SearchChunksAsync(string dataSourceId, string query, int maxMatches, CancellationToken token) =>
+        Task.FromResult<IReadOnlyList<EmbeddingStateSearchResult>>([]);
+
     public override Task DeleteDataSourceAsync(string dataSourceId, CancellationToken token) => Task.CompletedTask;
 
     public override void Dispose()

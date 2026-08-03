@@ -73,7 +73,7 @@ public static class SourceExtensions
     public static void MergeSources(this IList<Source> sources, IList<ISource> addedSources)
     {
         foreach (var addedSource in addedSources)
-            if (sources.All(s => s.URL != addedSource.URL && s.Title != addedSource.Title))
+            if (sources.All(s => s.URL != addedSource.URL || s.Title != addedSource.Title))
                 sources.Add((Source)addedSource);
     }
 }
