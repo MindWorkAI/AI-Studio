@@ -14,6 +14,7 @@ namespace AIStudio.Tools.Services;
 public sealed partial class DataSourceEmbeddingService
 {
     private const string OFFICE_LOCK_FILE_PREFIX = "~$";
+    private const int DEFAULT_CHUNK_OVERLAP_TOKEN_LENGTH = 300;
 
     private static readonly string[] RAG_DELIMITED_TABLE_FILE_EXTENSIONS = ["csv", "tsv"];
     private static readonly string[] RAG_SPREADSHEET_FILE_EXTENSIONS = ["ods", "xlsm", "xlsb"];
@@ -86,22 +87,23 @@ public sealed partial class DataSourceEmbeddingService
         int ruleIndex,
         ChunkingOptions options,
         EmbeddingProvider embeddingProvider,
-        [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken token)
+        [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken token,
+        string requiredOverlapPrefix = "")
     {
         text = text.Trim();
         if (string.IsNullOrWhiteSpace(text))
             yield break;
 
-        var tokenCount = await this.GetEmbeddingTokenCountAsync(embeddingProvider, text, token);
+        var tokenCount = await this.GetEmbeddingTokenCountAsync(embeddingProvider, AddOverlapPrefix(text, requiredOverlapPrefix), token);
         if (tokenCount <= options.MaxChunkTokenLength)
         {
-            yield return text;
+            yield return AddOverlapPrefix(text, requiredOverlapPrefix);
             yield break;
         }
 
         if (ruleIndex >= strategy.Rules.Count)
         {
-            await foreach (var hardChunk in this.SplitTextByHardCutAsync(text, options, embeddingProvider, token))
+            await foreach (var hardChunk in this.SplitTextByHardCutAsync(text, options, embeddingProvider, token, requiredOverlapPrefix))
                 yield return hardChunk;
 
             yield break;
@@ -110,7 +112,7 @@ public sealed partial class DataSourceEmbeddingService
         var rule = strategy.Rules[ruleIndex];
         if (rule.Split is null)
         {
-            await foreach (var hardChunk in this.SplitTextByHardCutAsync(text, options, embeddingProvider, token))
+            await foreach (var hardChunk in this.SplitTextByHardCutAsync(text, options, embeddingProvider, token, requiredOverlapPrefix))
                 yield return hardChunk;
 
             yield break;
@@ -119,30 +121,34 @@ public sealed partial class DataSourceEmbeddingService
         var units = NormalizeSplitUnits(rule.Split(text, sourceSegments), text);
         if (units.Count <= 1)
         {
-            await foreach (var chunk in this.SplitTextByRulesAsync(text, sourceSegments, strategy, ruleIndex + 1, options, embeddingProvider, token))
+            await foreach (var chunk in this.SplitTextByRulesAsync(text, sourceSegments, strategy, ruleIndex + 1, options, embeddingProvider, token, requiredOverlapPrefix))
                 yield return chunk;
 
             yield break;
         }
 
         logger.LogDebug(
-            "Splitting content for embedding provider '{EmbeddingProviderName}' with strategy '{ChunkingStrategy}' and rule '{ChunkingRule}'. TokenCount={TokenCount}, MaxChunkTokenLength={MaxChunkTokenLength}.",
+            "Splitting content for embedding provider '{EmbeddingProviderName}' with strategy '{ChunkingStrategy}' and rule '{ChunkingRule}'. TokenCount={TokenCount}, MaxChunkTokenLength={MaxChunkTokenLength}, OverlapTokenLength={OverlapTokenLength}.",
             embeddingProvider.Name,
             strategy.Name,
             rule.Name,
             tokenCount,
-            options.MaxChunkTokenLength);
+            options.MaxChunkTokenLength,
+            options.OverlapTokenLength);
 
         var index = 0;
+        var overlapPrefix = requiredOverlapPrefix;
 
         while (index < units.Count)
         {
             token.ThrowIfCancellationRequested();
 
-            var unitCount = await this.FindLargestUnitCountWithinMaxChunkLengthAsync(units, index, embeddingProvider, options.MaxChunkTokenLength, token);
+            var unitCount = await this.FindLargestUnitCountWithinMaxChunkLengthAsync(units, index, embeddingProvider, options.MaxChunkTokenLength, token, overlapPrefix);
             if (unitCount > 0)
             {
-                var chunk = string.Concat(units.Skip(index).Take(unitCount)).Trim();
+                var rawChunk = string.Concat(units.Skip(index).Take(unitCount)).Trim();
+                var chunk = AddOverlapPrefix(rawChunk, overlapPrefix);
+                overlapPrefix = string.Empty;
                 if (!string.IsNullOrWhiteSpace(chunk))
                     yield return chunk;
 
@@ -150,18 +156,45 @@ public sealed partial class DataSourceEmbeddingService
                 if (nextIndex >= units.Count)
                     yield break;
 
-                index = await this.CalculateNextStartIndexAsync(units, index, nextIndex, options, embeddingProvider, token);
+                var nextStartIndex = await this.CalculateNextStartIndexAsync(units, index, nextIndex, options, embeddingProvider, token);
+                if (nextStartIndex < nextIndex)
+                {
+                    logger.LogDebug(
+                        "Applied delimiter overlap while chunking. Strategy='{ChunkingStrategy}', Rule='{ChunkingRule}', PreviousStartUnitIndex={PreviousStartUnitIndex}, PreviousEndUnitIndex={PreviousEndUnitIndex}, NextStartUnitIndex={NextStartUnitIndex}, OverlapUnits={OverlapUnits}, OverlapTokenLength={OverlapTokenLength}.",
+                        strategy.Name,
+                        rule.Name,
+                        index,
+                        nextIndex,
+                        nextStartIndex,
+                        nextIndex - nextStartIndex,
+                        options.OverlapTokenLength);
+
+                    index = nextStartIndex;
+                }
+                else
+                {
+                    overlapPrefix = await this.CreateOverlapPrefixAsync(chunk, strategy, rule, options, embeddingProvider, token);
+                    index = nextIndex;
+                }
+
                 continue;
             }
 
-            await foreach (var splitUnit in this.SplitTextByRulesAsync(units[index], [units[index]], strategy, ruleIndex + 1, options, embeddingProvider, token))
+            string? lastSplitUnit = null;
+            await foreach (var splitUnit in this.SplitTextByRulesAsync(units[index], [units[index]], strategy, ruleIndex + 1, options, embeddingProvider, token, overlapPrefix))
+            {
+                lastSplitUnit = splitUnit;
                 yield return splitUnit;
+            }
 
+            overlapPrefix = lastSplitUnit is null
+                ? string.Empty
+                : await this.CreateOverlapPrefixAsync(lastSplitUnit, strategy, rule, options, embeddingProvider, token);
             index++;
         }
     }
 
-    private async Task<int> FindLargestUnitCountWithinMaxChunkLengthAsync(IReadOnlyList<string> units, int startIndex, EmbeddingProvider embeddingProvider, int maxChunkTokenLength, CancellationToken token)
+    private async Task<int> FindLargestUnitCountWithinMaxChunkLengthAsync(IReadOnlyList<string> units, int startIndex, EmbeddingProvider embeddingProvider, int maxChunkTokenLength, CancellationToken token, string overlapPrefix = "")
     {
         var low = 1;
         var high = units.Count - startIndex;
@@ -172,7 +205,7 @@ public sealed partial class DataSourceEmbeddingService
             token.ThrowIfCancellationRequested();
 
             var mid = low + (high - low) / 2;
-            var candidate = string.Concat(units.Skip(startIndex).Take(mid)).Trim();
+            var candidate = AddOverlapPrefix(string.Concat(units.Skip(startIndex).Take(mid)).Trim(), overlapPrefix);
             var tokenCount = await this.GetEmbeddingTokenCountAsync(embeddingProvider, candidate, token);
             if (tokenCount <= maxChunkTokenLength)
             {
@@ -184,6 +217,55 @@ public sealed partial class DataSourceEmbeddingService
         }
 
         return best;
+    }
+
+    private async Task<string> CreateOverlapPrefixAsync(string chunk, ChunkingStrategy strategy, ChunkingRule rule, ChunkingOptions options, EmbeddingProvider embeddingProvider, CancellationToken token)
+    {
+        return await this.CreateOverlapPrefixAsync(chunk, strategy.Name, rule.Name, options, embeddingProvider, token);
+    }
+
+    private async Task<string> CreateOverlapPrefixAsync(string chunk, string strategyName, string ruleName, ChunkingOptions options, EmbeddingProvider embeddingProvider, CancellationToken token)
+    {
+        if (options.OverlapTokenLength <= 0)
+            return string.Empty;
+
+        chunk = chunk.Trim();
+        if (string.IsNullOrWhiteSpace(chunk))
+            return string.Empty;
+
+        var chunkTokenCount = await this.GetEmbeddingTokenCountAsync(embeddingProvider, chunk, token);
+        if (chunkTokenCount <= options.OverlapTokenLength)
+        {
+            logger.LogDebug(
+                "Applied whole-chunk overlap while chunking because the previous chunk is smaller than the requested overlap. Strategy='{ChunkingStrategy}', Rule='{ChunkingRule}', RequestedOverlapTokenLength={RequestedOverlapTokenLength}, ActualOverlapTokenCount={ActualOverlapTokenCount}.",
+                strategyName,
+                ruleName,
+                options.OverlapTokenLength,
+                chunkTokenCount);
+
+            return chunk;
+        }
+
+        var overlapStartIndex = await this.CalculateHardCutOverlapStartIndexAsync(chunk, 0, chunk.Length, options, embeddingProvider, token);
+        if (overlapStartIndex >= chunk.Length)
+            overlapStartIndex = FindLastNonWhitespaceStartIndex(chunk);
+
+        if (overlapStartIndex >= chunk.Length)
+            return string.Empty;
+
+        var overlapPrefix = chunk[overlapStartIndex..].Trim();
+        if (string.IsNullOrWhiteSpace(overlapPrefix))
+            return string.Empty;
+
+        var tokenCount = await this.GetEmbeddingTokenCountAsync(embeddingProvider, overlapPrefix, token);
+        logger.LogDebug(
+            "Applied hard-cut overlap while chunking because delimiter overlap was not available. Strategy='{ChunkingStrategy}', Rule='{ChunkingRule}', RequestedOverlapTokenLength={RequestedOverlapTokenLength}, ActualOverlapTokenCount={ActualOverlapTokenCount}.",
+            strategyName,
+            ruleName,
+            options.OverlapTokenLength,
+            tokenCount);
+
+        return overlapPrefix;
     }
 
     private async Task<int> CalculateNextStartIndexAsync(IReadOnlyList<string> units, int chunkStartIndex, int chunkEndIndex, ChunkingOptions options, EmbeddingProvider embeddingProvider, CancellationToken token)
@@ -217,12 +299,25 @@ public sealed partial class DataSourceEmbeddingService
         return bestStartIndex <= chunkStartIndex ? chunkEndIndex : bestStartIndex;
     }
 
-    private async IAsyncEnumerable<string> SplitTextByHardCutAsync(string text, ChunkingOptions options, EmbeddingProvider embeddingProvider, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken token)
+    private async IAsyncEnumerable<string> SplitTextByHardCutAsync(
+        string text,
+        ChunkingOptions options,
+        EmbeddingProvider embeddingProvider,
+        [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken token,
+        string requiredOverlapPrefix = "")
     {
+        text = text.Trim();
         var startIndex = 0;
+        var overlapPrefix = requiredOverlapPrefix;
         while (startIndex < text.Length)
         {
             token.ThrowIfCancellationRequested();
+
+            while (startIndex < text.Length && char.IsWhiteSpace(text[startIndex]))
+                startIndex++;
+
+            if (startIndex >= text.Length)
+                yield break;
 
             var low = startIndex + 1;
             var high = text.Length;
@@ -231,7 +326,7 @@ public sealed partial class DataSourceEmbeddingService
             while (low <= high)
             {
                 var mid = low + (high - low) / 2;
-                var candidate = text[startIndex..mid].Trim();
+                var candidate = AddOverlapPrefix(text[startIndex..mid].Trim(), overlapPrefix);
                 var tokenCount = await this.GetEmbeddingTokenCountAsync(embeddingProvider, candidate, token);
                 if (tokenCount <= options.MaxChunkTokenLength)
                 {
@@ -244,19 +339,36 @@ public sealed partial class DataSourceEmbeddingService
 
             if (bestEndIndex == startIndex)
             {
-                var smallestCandidate = text[startIndex..Math.Min(startIndex + 1, text.Length)].Trim();
+                if (!string.IsNullOrWhiteSpace(overlapPrefix))
+                {
+                    var smallestOverlapPrefix = GetSmallestOverlapPrefix(overlapPrefix);
+                    if (!string.IsNullOrWhiteSpace(smallestOverlapPrefix) && !string.Equals(smallestOverlapPrefix, overlapPrefix, StringComparison.Ordinal))
+                    {
+                        logger.LogDebug(
+                            "Reduced hard-cut overlap because the configured overlap leaves no room for new content. RequestedOverlapTokenLength={RequestedOverlapTokenLength}, MaxChunkTokenLength={MaxChunkTokenLength}.",
+                            options.OverlapTokenLength,
+                            options.MaxChunkTokenLength);
+
+                        overlapPrefix = smallestOverlapPrefix;
+                        continue;
+                    }
+                }
+
+                var smallestCandidate = AddOverlapPrefix(text[startIndex..Math.Min(startIndex + 1, text.Length)].Trim(), overlapPrefix);
                 var smallestCandidateTokenCount = await this.GetEmbeddingTokenCountAsync(embeddingProvider, smallestCandidate, token);
                 throw new InvalidOperationException($"The max chunk length for embedding provider '{embeddingProvider.Name}' is too low. The smallest possible split still has {smallestCandidateTokenCount} tokens, but the configured limit is {options.MaxChunkTokenLength}.");
             }
 
-            var chunk = text[startIndex..bestEndIndex].Trim();
+            var chunk = AddOverlapPrefix(text[startIndex..bestEndIndex].Trim(), overlapPrefix);
+            overlapPrefix = string.Empty;
             if (!string.IsNullOrWhiteSpace(chunk))
                 yield return chunk;
 
             if (bestEndIndex >= text.Length)
                 yield break;
 
-            startIndex = await this.CalculateHardCutOverlapStartIndexAsync(text, startIndex, bestEndIndex, options, embeddingProvider, token);
+            overlapPrefix = await this.CreateOverlapPrefixAsync(chunk, "hard-cut", "Hard cut", options, embeddingProvider, token);
+            startIndex = bestEndIndex;
         }
     }
 
@@ -288,6 +400,31 @@ public sealed partial class DataSourceEmbeddingService
         return bestStartIndex <= chunkStartIndex ? chunkEndIndex : bestStartIndex;
     }
 
+    private static int FindLastNonWhitespaceStartIndex(string text)
+    {
+        for (var index = text.Length - 1; index >= 0; index--)
+        {
+            if (!char.IsWhiteSpace(text[index]))
+                return index;
+        }
+
+        return text.Length;
+    }
+
+    private static string GetSmallestOverlapPrefix(string text)
+    {
+        var index = FindLastNonWhitespaceStartIndex(text);
+        return index >= text.Length ? string.Empty : text[index..].Trim();
+    }
+
+    private static string AddOverlapPrefix(string chunk, string overlapPrefix)
+    {
+        if (string.IsNullOrWhiteSpace(overlapPrefix))
+            return chunk.Trim();
+
+        return $"{overlapPrefix.TrimEnd()}\n{chunk.TrimStart()}".Trim();
+    }
+
     private async Task<int> GetEmbeddingTokenCountAsync(EmbeddingProvider embeddingProvider, string text, CancellationToken token)
     {
         var response = await rustService.GetTokenCount(embeddingProvider.Name, embeddingProvider.TokenizerPath, text, token);
@@ -311,7 +448,10 @@ public sealed partial class DataSourceEmbeddingService
         var configuredOverlapTokenLength = dataSource is IInternalDataSource overlapDataSource
             ? overlapDataSource.ChunkOverlapTokenLength
             : 0;
-        var overlapTokenLength = Math.Clamp(configuredOverlapTokenLength, 0, Math.Max(0, maxChunkTokenLength - 1));
+        var requestedOverlapTokenLength = configuredOverlapTokenLength > 0
+            ? configuredOverlapTokenLength
+            : DEFAULT_CHUNK_OVERLAP_TOKEN_LENGTH;
+        var overlapTokenLength = Math.Clamp(requestedOverlapTokenLength, 0, Math.Max(0, maxChunkTokenLength - 1));
 
         return new(maxChunkTokenLength, overlapTokenLength);
     }

@@ -58,10 +58,9 @@ public sealed class DataSourceLocalRetrievalService(
         if (maxMatches == 0)
             return [];
 
-        var candidateLimit = maxMatches * 2;
         var collectionName = DataSourceEmbeddingNames.GetCollectionName(dataSource.Name, dataSource.Id);
-        var vectorTask = this.SearchVectorAsync(dataSource, query, candidateLimit, collectionName, token);
-        var bm25Task = this.SearchBm25Async(dataSource, query, candidateLimit, token);
+        var vectorTask = this.SearchVectorAsync(dataSource, query, maxMatches, collectionName, token);
+        var bm25Task = this.SearchBm25Async(dataSource, query, maxMatches, token);
 
         await Task.WhenAll(vectorTask, bm25Task);
         token.ThrowIfCancellationRequested();
@@ -118,7 +117,13 @@ public sealed class DataSourceLocalRetrievalService(
                 return [];
             }
 
-            return await vectorStore.SearchEmbeddingAsync(collectionName, vector, maxMatches, token);
+            var results = this.LimitSearchResults(
+                dataSource,
+                "vector",
+                await vectorStore.SearchEmbeddingAsync(collectionName, vector, maxMatches, token),
+                maxMatches);
+            this.LogVectorResults(dataSource, results);
+            return results;
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested)
         {
@@ -146,7 +151,13 @@ public sealed class DataSourceLocalRetrievalService(
                 return [];
             }
 
-            return await embeddingState.SearchChunksAsync(dataSource.Id, query, maxMatches, token);
+            var results = this.LimitSearchResults(
+                dataSource,
+                "BM25",
+                await embeddingState.SearchChunksAsync(dataSource.Id, query, maxMatches, token),
+                maxMatches);
+            this.LogBm25Results(dataSource, results);
+            return results;
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested)
         {
@@ -157,6 +168,22 @@ public sealed class DataSourceLocalRetrievalService(
             logger.LogWarning(exception, "BM25 retrieval failed for data source '{DataSourceName}' ({DataSourceId}).", dataSource.Name, dataSource.Id);
             return [];
         }
+    }
+
+    private IReadOnlyList<T> LimitSearchResults<T>(IInternalDataSource dataSource, string searchName, IReadOnlyList<T> results, int maxMatches)
+    {
+        if (results.Count <= maxMatches)
+            return results;
+
+        logger.LogWarning(
+            "Local RAG {SearchName} search returned {ReturnedHits} chunks for data source '{DataSourceName}' ({DataSourceId}), which exceeds the configured maximum {MaxMatches}. Truncating to the datasource limit.",
+            searchName,
+            results.Count,
+            dataSource.Name,
+            dataSource.Id,
+            maxMatches);
+
+        return results.Take(maxMatches).ToList();
     }
 
     private static IReadOnlyList<LocalRetrievalHit> MergeResults(
@@ -263,8 +290,13 @@ public sealed class DataSourceLocalRetrievalService(
     private static string BuildReferenceTitle(LocalRetrievalHit hit)
     {
         var sourceName = FirstNonEmpty(hit.FileName, hit.DataSourceName);
-        var page = hit.PageNumber is > 0 ? $", page {hit.PageNumber}" : string.Empty;
-        return $"{sourceName} (chunk {hit.ChunkIndex + 1}{page})";
+        return BuildChunkTitle(sourceName, hit.ChunkIndex, hit.PageNumber);
+    }
+
+    private static string BuildChunkTitle(string sourceName, int chunkIndex, int? pageNumber)
+    {
+        var page = pageNumber is > 0 ? $", page {pageNumber}" : string.Empty;
+        return $"{sourceName} (chunk {chunkIndex + 1}{page})";
     }
 
     private static string BuildReferenceLink(string path, LocalRetrievalHit hit)
@@ -304,4 +336,52 @@ public sealed class DataSourceLocalRetrievalService(
 
     private static string FirstNonEmpty(params string[] values) =>
         values.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value)) ?? string.Empty;
+
+    private void LogVectorResults(IInternalDataSource dataSource, IReadOnlyList<VectorSearchResult> results)
+    {
+        if (results.Count == 0)
+        {
+            logger.LogInformation("Local RAG vector search found no chunks for data source '{DataSourceName}' ({DataSourceId}).", dataSource.Name, dataSource.Id);
+            return;
+        }
+
+        foreach (var result in results.Select((result, index) => (Result: result, Rank: index + 1)))
+        {
+            logger.LogInformation(
+                "Local RAG vector search found chunk for data source '{DataSourceName}' ({DataSourceId}). Rank={Rank}, Score={Score}, ChunkId='{ChunkId}', ParentFileId='{ParentFileId}', File='{FileName}', Path='{Path}', Title='{Title}'.",
+                dataSource.Name,
+                dataSource.Id,
+                result.Rank,
+                result.Result.Score,
+                result.Result.ChunkId,
+                result.Result.ParentFileId,
+                result.Result.FileName,
+                FirstNonEmpty(result.Result.AbsolutePath, result.Result.FilePath),
+                BuildChunkTitle(FirstNonEmpty(result.Result.FileName, dataSource.Name), result.Result.ChunkIndex, result.Result.PageNumber));
+        }
+    }
+
+    private void LogBm25Results(IInternalDataSource dataSource, IReadOnlyList<EmbeddingStateSearchResult> results)
+    {
+        if (results.Count == 0)
+        {
+            logger.LogInformation("Local RAG BM25 search found no chunks for data source '{DataSourceName}' ({DataSourceId}).", dataSource.Name, dataSource.Id);
+            return;
+        }
+
+        foreach (var result in results.Select((result, index) => (Result: result, Rank: index + 1)))
+        {
+            logger.LogInformation(
+                "Local RAG BM25 search found chunk for data source '{DataSourceName}' ({DataSourceId}). Rank={Rank}, Score={Score}, ChunkId='{ChunkId}', ParentFileId='{ParentFileId}', File='{FileName}', Path='{Path}', Title='{Title}'.",
+                dataSource.Name,
+                dataSource.Id,
+                result.Rank,
+                result.Result.Score,
+                result.Result.ChunkId,
+                result.Result.ParentFileId,
+                result.Result.FileName,
+                result.Result.AbsolutePath,
+                BuildChunkTitle(FirstNonEmpty(result.Result.FileName, dataSource.Name), result.Result.ChunkIndex, result.Result.PageNumber));
+        }
+    }
 }
