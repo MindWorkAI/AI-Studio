@@ -2677,6 +2677,126 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGBUILDPROGRE
 -- Build progress
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGBUILDPROGRESS::T909046610"] = "Build progress"
 
+-- The model did not fill every planned content slot exactly once. Please try again or select another model.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGFAILUREEXTENSIONS::T1003911239"] = "The model did not fill every planned content slot exactly once. Please try again or select another model."
+
+-- The sources of this briefing could not be prepared.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGFAILUREEXTENSIONS::T1034452233"] = "The sources of this briefing could not be prepared."
+
+-- This operation did not change the briefing, so no new version was created.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGFAILUREEXTENSIONS::T1058618049"] = "This operation did not change the briefing, so no new version was created."
+
+-- The model filled a content slot with the wrong kind of value. Please try again or select another model.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGFAILUREEXTENSIONS::T1099589813"] = "The model filled a content slot with the wrong kind of value. Please try again or select another model."
+
+-- The model response contained an empty, malformed, or duplicated identifier. Please try again or select another model.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGFAILUREEXTENSIONS::T1198458597"] = "The model response contained an empty, malformed, or duplicated identifier. Please try again or select another model."
+
+-- The model did not cover every source of this briefing exactly once. Please try again or select another model.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGFAILUREEXTENSIONS::T1209705994"] = "The model did not cover every source of this briefing exactly once. Please try again or select another model."
+
+-- An accessibility text of the model response was empty or invalid. Please try again or select another model.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGFAILUREEXTENSIONS::T1437512295"] = "An accessibility text of the model response was empty or invalid. Please try again or select another model."
+
+-- The model response used a prohibited attribute. Please try again or select another model.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGFAILUREEXTENSIONS::T1677678770"] = "The model response used a prohibited attribute. Please try again or select another model."
+
+-- A chart of the model response contained invalid categories or data series. Please try again or select another model.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGFAILUREEXTENSIONS::T181588270"] = "A chart of the model response contained invalid categories or data series. Please try again or select another model."
+
+-- A source of this briefing can no longer be reached. Please relink or remove the affected source.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGFAILUREEXTENSIONS::T1878061605"] = "A source of this briefing can no longer be reached. Please relink or remove the affected source."
+
+-- The selected provider could not complete this briefing stage.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGFAILUREEXTENSIONS::T1905087799"] = "The selected provider could not complete this briefing stage."
+
+-- A calculation of the model response used an invalid operation. Please try again or select another model.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGFAILUREEXTENSIONS::T1992964953"] = "A calculation of the model response used an invalid operation. Please try again or select another model."
+
+-- The model response did not match the required contract. Please try again or select another model.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGFAILUREEXTENSIONS::T214297315"] = "The model response did not match the required contract. Please try again or select another model."
+
+-- The model response contained unexpected fields. Please try again or select another model.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGFAILUREEXTENSIONS::T2192261405"] = "The model response contained unexpected fields. Please try again or select another model."
+
+-- AI Studio was closed while this briefing was being built. You can resume the build.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGFAILUREEXTENSIONS::T2197645770"] = "AI Studio was closed while this briefing was being built. You can resume the build."
+
+-- The presentation of the model response did not match the briefing contract. Please try again or select another model.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGFAILUREEXTENSIONS::T2376983148"] = "The presentation of the model response did not match the briefing contract. Please try again or select another model."
+
+-- This visual briefing operation was canceled.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGFAILUREEXTENSIONS::T240791538"] = "This visual briefing operation was canceled."
+
+-- The model response contained markup or code, which this briefing does not allow. Please try again or select another model.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGFAILUREEXTENSIONS::T2529598303"] = "The model response contained markup or code, which this briefing does not allow. Please try again or select another model."
+
+-- AI Studio compiled this briefing into an inconsistent result. Please copy the technical details and report this issue.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGFAILUREEXTENSIONS::T2668127220"] = "AI Studio compiled this briefing into an inconsistent result. Please copy the technical details and report this issue."
+
+-- This briefing could not be assembled.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGFAILUREEXTENSIONS::T2678882954"] = "This briefing could not be assembled."
+
+-- An interactive control of the model response targeted an invalid briefing element. Please try again or select another model.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGFAILUREEXTENSIONS::T2714042531"] = "An interactive control of the model response targeted an invalid briefing element. Please try again or select another model."
+
+-- The model did not return valid JSON. Please try again or select another model.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGFAILUREEXTENSIONS::T2784808603"] = "The model did not return valid JSON. Please try again or select another model."
+
+-- A calculation of the model response targeted an invalid briefing element. Please try again or select another model.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGFAILUREEXTENSIONS::T2795934353"] = "A calculation of the model response targeted an invalid briefing element. Please try again or select another model."
+
+-- An interactive control of the model response used an invalid initial state. Please try again or select another model.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGFAILUREEXTENSIONS::T2796279475"] = "An interactive control of the model response used an invalid initial state. Please try again or select another model."
+
+-- The accessibility texts of the model response did not match the briefing elements. Please try again or select another model.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGFAILUREEXTENSIONS::T2815870761"] = "The accessibility texts of the model response did not match the briefing elements. Please try again or select another model."
+
+-- The new version of this briefing could not be saved.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGFAILUREEXTENSIONS::T2818947691"] = "The new version of this briefing could not be saved."
+
+-- The model did not plan every visual asset of this briefing exactly once. Please try again or select another model.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGFAILUREEXTENSIONS::T2853629903"] = "The model did not plan every visual asset of this briefing exactly once. Please try again or select another model."
+
+-- The assembled briefing did not pass the security validation.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGFAILUREEXTENSIONS::T295498807"] = "The assembled briefing did not pass the security validation."
+
+-- The charts of the model response did not match the planned briefing elements. Please try again or select another model.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGFAILUREEXTENSIONS::T3326200304"] = "The charts of the model response did not match the planned briefing elements. Please try again or select another model."
+
+-- An interactive control of the model response used an invalid identifier. Please try again or select another model.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGFAILUREEXTENSIONS::T3412185985"] = "An interactive control of the model response used an invalid identifier. Please try again or select another model."
+
+-- The model response referenced content that does not exist. Please try again or select another model.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGFAILUREEXTENSIONS::T344215744"] = "The model response referenced content that does not exist. Please try again or select another model."
+
+-- The updated content no longer fits the current presentation. You can continue as a rebuild.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGFAILUREEXTENSIONS::T3515116214"] = "The updated content no longer fits the current presentation. You can continue as a rebuild."
+
+-- The model response contained a value of the wrong type. Please try again or select another model.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGFAILUREEXTENSIONS::T3668896836"] = "The model response contained a value of the wrong type. Please try again or select another model."
+
+-- This briefing has no provider selected. Please select a provider before you generate a briefing.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGFAILUREEXTENSIONS::T3834145318"] = "This briefing has no provider selected. Please select a provider before you generate a briefing."
+
+-- The selected model lacks a capability this briefing needs. Please select another model.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGFAILUREEXTENSIONS::T4066127340"] = "The selected model lacks a capability this briefing needs. Please select another model."
+
+-- A media transcript of this briefing is missing or outdated. Please transcribe the affected media again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGFAILUREEXTENSIONS::T449544952"] = "A media transcript of this briefing is missing or outdated. Please transcribe the affected media again."
+
+-- The model response used an invalid briefing layout. Please try again or select another model.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGFAILUREEXTENSIONS::T686008237"] = "The model response used an invalid briefing layout. Please try again or select another model."
+
+-- A briefing element of the model response was missing its required interactive controls. Please try again or select another model.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGFAILUREEXTENSIONS::T762236598"] = "A briefing element of the model response was missing its required interactive controls. Please try again or select another model."
+
+-- This visual briefing operation failed because of an unexpected internal error. Please copy the technical details for support.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGFAILUREEXTENSIONS::T875151112"] = "This visual briefing operation failed because of an unexpected internal error. Please copy the technical details for support."
+
+-- The model response used an unsupported contract version. Please try again or select another model.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGFAILUREEXTENSIONS::T921285247"] = "The model response used an unsupported contract version. Please try again or select another model."
+
 -- System
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CHATROLEEXTENSIONS::T2402387132"] = "System"
 

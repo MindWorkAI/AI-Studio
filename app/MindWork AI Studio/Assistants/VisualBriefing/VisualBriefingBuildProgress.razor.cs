@@ -279,9 +279,14 @@ public partial class VisualBriefingBuildProgress : MSGComponentBase
     /// <summary>
     /// Gets the safe failure reason for a UI group.
     /// </summary>
+    /// <remarks>
+    /// The recorded issue text of a failure is stable English contract language, because it also goes
+    /// back to the model and into the persisted build record. The text shown here is therefore derived
+    /// from the stable enums in the current language instead.
+    /// </remarks>
     /// <param name="index">The zero-based index of the group.</param>
     /// <returns>The user-facing failure message.</returns>
     private string BuildGroupFailure(int index) => this.Build is null ? string.Empty : STAGE_GROUPS[index]
             .Select(stage => this.Build.Stages.FirstOrDefault(item => item.Stage == stage)?.Failure)
-            .FirstOrDefault(failure => failure is not null)?.UserMessage ?? this.Build.Failure?.UserMessage ?? string.Empty;
+            .FirstOrDefault(failure => failure is not null)?.ToUserMessage() ?? this.Build.Failure?.ToUserMessage() ?? string.Empty;
 }
