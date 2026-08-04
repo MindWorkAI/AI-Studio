@@ -87,6 +87,38 @@ Each assistant plugin lives in its own directory under the assistants plugin roo
   - `LaunchBehavior = "OPEN_WORKSPACE_CHAT_BY_NAME"`
   - `WorkspaceName = "<target workspace name>"`
 - `UI.Type` is always `"FORM"` and `UI.Children` is a list of component tables.
+
+### Chart output
+
+When an assistant is expected to return a chart, include the following instructions in `ASSISTANT.SystemPrompt`. AI Studio validates and renders the block locally; Lua does not generate or render the chart itself.
+
+````text
+When a chart is useful or explicitly requested, you may include one or more complete chart blocks in your normal response. Use exactly this fenced JSON format:
+```aistudio-chart
+{
+  "schema_version": 1,
+  "type": "bar",
+  "title": "Chart title",
+  "caption": "Contextual interpretation of the diagram",
+  "data": {
+    "categories": ["A", "B"],
+    "series": [
+      {
+        "name": "Series",
+        "values": [1, 2]
+      }
+    ]
+  }
+}
+```
+
+- Supported types are `bar`, `stacked_bar`, `line`, `pie`, and `donut`.
+- Every series needs exactly one finite numeric value per category.
+- Pie and donut charts need exactly one series and non-negative values.
+- Add a concise caption that correctly contextualizes the diagram and may explain the chart's main finding.
+- Use only the fields shown above.
+- Keep other explanatory text outside the chart block.
+````
 - Each component table declares `Type`, an optional `Children` array, and a `Props` table that feeds the component’s parameters.
 
 ### Example: Minimal Requirements Assistant Table
@@ -96,7 +128,7 @@ DEPLOYED_USING_CONFIG_SERVER = false
 ASSISTANT = {
     ["Title"] = "",
     ["Description"] = "",
-    ["SystemPrompt"] = "",
+    ["SystemPrompt"] = "", -- request an aistudio-chart block here when the expected result is a chart
     ["SubmitText"] = "",
     ["AllowProfiles"] = true,
     ["LaunchBehavior"] = "OPEN_WORKSPACE_CHAT_BY_NAME",

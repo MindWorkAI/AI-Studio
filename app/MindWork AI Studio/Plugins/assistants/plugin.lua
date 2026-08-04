@@ -63,11 +63,39 @@ ASSISTANT = {
     },
 }
 
+--[[
+When a chart is useful or explicitly requested, you may include one or more complete chart blocks in your normal response. Use exactly this fenced JSON format:
+```aistudio-chart
+{
+  "schema_version": 1,
+  "type": "bar",
+  "title": "Chart title",
+  "caption": "Contextual interpretation of the diagram",
+  "data": {
+    "categories": ["A", "B"],
+    "series": [
+      {
+        "name": "Series",
+        "values": [1, 2]
+      }
+    ]
+  }
+}
+```
+
+- Supported types are `bar`, `stacked_bar`, `line`, `pie`, and `donut`.
+- Every series needs exactly one finite numeric value per category.
+- Pie and donut charts need exactly one series and non-negative values.
+- Add a concise caption that correctly contextualizes the diagram and may explain the chart's main finding.
+- Use only the fields shown above.
+- Keep other explanatory text outside the chart block.
+]]
+
 -- usage example with the full feature set:
 ASSISTANT = {
     ["Title"] = "<main title of assistant>", -- required
     ["Description"] = "<assistant description>", -- required
-    ["SystemPrompt"] = "<prompt that fundamentally changes behaviour, personality and task focus of your assistant. Invisible to the user>", -- required
+    ["SystemPrompt"] = "<prompt that fundamentally changes behaviour, personality and task focus of your assistant. If the expected result is a chart, include the chart-output instructions above. Invisible to the user>", -- required
     ["SubmitText"] = "<label for submit button>", -- required
     ["AllowProfiles"] = true, -- if true, allows AiStudios profiles; required
     ["LaunchBehavior"] = "<NONE|OPEN_WORKSPACE_CHAT_BY_NAME>", -- optional; when set to OPEN_WORKSPACE_CHAT_BY_NAME the tile opens a chat directly
