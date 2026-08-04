@@ -13,6 +13,34 @@ namespace AIStudio.Chat;
 public sealed record ChatThread
 {
     private static readonly ILogger<ChatThread> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ChatThread>();
+
+    private const string CHART_OUTPUT_INSTRUCTIONS = """
+        When a chart is useful or explicitly requested, you may include one or more complete chart blocks in your normal response. Use exactly this fenced JSON format:
+        ```aistudio-chart
+        {
+          "schema_version": 1,
+          "type": "bar",
+          "title": "Chart title",
+          "caption": "Contextual interpretation of the chart",
+          "data": {
+            "categories": ["A", "B"],
+            "series": [
+              {
+                "name": "Series",
+                "values": [1, 2]
+              }
+            ]
+          }
+        }
+        ```
+        
+        - Supported types are `bar`, `stacked_bar`, `line`, `pie`, and `donut`.
+        - Every series needs exactly one finite numeric value per category.
+        - Pie and donut charts need exactly one series and non-negative values.
+        - Add a concise caption that correctly contextualizes the chart and may explain the chart's main finding.
+        - Use only the fields shown above.
+        - Keep other explanatory text outside the chart block.
+        """;
     
     /// <summary>
     /// The unique identifier of the chat thread.
@@ -55,6 +83,12 @@ public sealed record ChatThread
     /// False by default for backward compatibility.
     /// </summary>
     public bool IncludeDateTime { get; set; } = false;
+
+    /// <summary>
+    /// Indicates whether the model may emit locally rendered chart blocks.
+    /// False by default so internal structured model requests remain unchanged.
+    /// </summary>
+    public bool AllowChartOutput { get; set; } = false;
 
     /// <summary>
     /// The data source options for this chat thread.
@@ -198,23 +232,32 @@ public sealed record ChatThread
         }
         
         LOGGER.LogInformation(logMessage);
-        if(!this.IncludeDateTime)
+        if(this.IncludeDateTime)
+        {
+            //
+            // Prepend the current date and time to the system prompt:
+            //
+            var nowUtc = DateTime.UtcNow;
+            var nowLocal = DateTime.Now;
+            var currentDateTime = string.Create(
+                new CultureInfo("en-US"),
+                $"Today is {nowUtc:dddd, MMMM d, yyyy h:mm tt} (UTC) and {nowLocal:dddd, MMMM d, yyyy h:mm tt} (local time)."
+            );
+
+            systemPromptText = $"""
+                               {currentDateTime}
+
+                               {systemPromptText}
+                               """;
+        }
+
+        if (!this.AllowChartOutput)
             return systemPromptText;
-        
-        //
-        // Prepend the current date and time to the system prompt:
-        //
-        var nowUtc = DateTime.UtcNow;
-        var nowLocal = DateTime.Now;
-        var currentDateTime = string.Create(
-            new CultureInfo("en-US"),
-            $"Today is {nowUtc:dddd, MMMM d, yyyy h:mm tt} (UTC) and {nowLocal:dddd, MMMM d, yyyy h:mm tt} (local time)."
-        );
 
         return $"""
-                {currentDateTime}
-
                 {systemPromptText}
+
+                {CHART_OUTPUT_INSTRUCTIONS}
                 """;
     }
 
