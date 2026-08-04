@@ -4,36 +4,40 @@
 
 @if (this.Result.Chart is { } chart)
 {
-    <MudPaper Class="pa-4 my-3" Outlined="false" Elevation="4">
-        <MudText Typo="Typo.h6" Class="mb-3">@chart.Title</MudText>
-        @if (chart.Type is ChartDefinitionType.PIE or ChartDefinitionType.DONUT)
-        {
-            <div class="d-flex justify-center">
-                <MudChart ChartType="@this.ChartType"
-                          InputData="@chart.Series[0].Values.ToArray()"
-                          InputLabels="@chart.Categories.ToArray()"
-                          Width="50%"
-                          Height="200px" />
-            </div>
-        }
-        else
-        {
-            <div class="d-flex justify-center">
-                <MudChart ChartType="@this.ChartType"
-                          ChartSeries="@this.ChartSeries"
-                          XAxisLabels="@chart.Categories.ToArray()"
-                          AxisChartOptions="@this.AxisChartOptions"
-                          Width="75%"
-                          Height="350px" />
-            </div>
-        }
-        @if (chart.Caption is not null)
-        {
-            <MudText Typo="Typo.caption" Align="Align.Center" Class="d-block">
-                <em>@chart.Caption</em>
-            </MudText>
-        }
-    </MudPaper>
+    <div class="chart-block-shell my-3">
+        <MudPaper Class="chart-block" Outlined="true">
+            <MudText Typo="Typo.h6" Class="chart-block-title">@chart.Title</MudText>
+            @if (chart.Type is ChartDefinitionType.PIE or ChartDefinitionType.DONUT)
+            {
+                <div class="chart-block-plot chart-block-plot-circular">
+                    <MudChart ChartType="@this.ChartType"
+                              InputData="@chart.Series[0].Values.ToArray()"
+                              InputLabels="@chart.Categories.ToArray()"
+                              ChartOptions="@this.ChartOptions"
+                              Width="100%"
+                              Height="200px" />
+                </div>
+            }
+            else
+            {
+                <div class="chart-block-plot chart-block-plot-axis">
+                    <MudChart ChartType="@this.ChartType"
+                              ChartSeries="@this.ChartSeries"
+                              XAxisLabels="@chart.Categories.ToArray()"
+                              ChartOptions="@this.ChartOptions"
+                              AxisChartOptions="@this.AxisChartOptions"
+                              Width="100%"
+                              Height="350px" />
+                </div>
+            }
+            @if (chart.Caption is not null)
+            {
+                <MudText Typo="Typo.caption" Align="Align.Center" Class="chart-block-caption d-block">
+                    <em>@chart.Caption</em>
+                </MudText>
+            }
+        </MudPaper>
+    </div>
 }
 else
 {
