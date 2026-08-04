@@ -127,6 +127,9 @@ public partial class VisualBriefingAssistant : MSGComponentBase
     /// <summary>Stores whether this component instance has already left the renderer.</summary>
     private bool isDisposed;
 
+    /// <summary>Carries the spellchecking configuration to every text input of this assistant.</summary>
+    private static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
+
     /// <summary>
     /// Defines <c>IsCurrentBusy</c> for the visual briefing feature.
     /// </summary>
@@ -167,6 +170,16 @@ public partial class VisualBriefingAssistant : MSGComponentBase
         }
 
         await this.ResumeSelectedBuildAsync();
+    }
+
+    /// <summary>
+    /// Defines <c>OnParametersSetAsync</c> for the visual briefing feature.
+    /// </summary>
+    protected override async Task OnParametersSetAsync()
+    {
+        // Configure the spellchecking for the user input:
+        this.SettingsManager.InjectSpellchecking(USER_INPUT_ATTRIBUTES);
+        await base.OnParametersSetAsync();
     }
 
     /// <summary>
@@ -234,7 +247,12 @@ public partial class VisualBriefingAssistant : MSGComponentBase
         }
 
         if (triggeredEvent is Event.CONFIGURATION_CHANGED)
+        {
+            // The spellchecking setting might have changed. Since this page is not re-parameterized
+            // while the user stays on it, we have to read the setting again here:
+            this.SettingsManager.InjectSpellchecking(USER_INPUT_ATTRIBUTES);
             this.StateHasChanged();
+        }
 
         await base.ProcessIncomingMessage(sendingComponent, triggeredEvent, data);
     }
