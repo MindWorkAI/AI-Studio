@@ -5,7 +5,7 @@ using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Services;
 
-using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
 
 namespace AIStudio.Tools.Databases.EmbeddingState;
 
@@ -18,18 +18,12 @@ public sealed class SqliteEmbeddingStateClientImplementation(
     private const string DATABASE_NAME = "Local RAG Index";
     private const string DATABASE_FILENAME = "rag-index.sqlite3";
     private const int MAX_FTS_QUERY_TERMS = 32;
+    private const int CHUNK_UPSERT_BATCH_SIZE = 500;
 
     private static readonly Regex FTS_TOKEN_REGEX = new(@"[\p{L}\p{Nd}_]+", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
     private readonly string databasePath = databasePath;
-    private readonly string connectionString = new SqliteConnectionStringBuilder
-    {
-        DataSource = databasePath,
-        Mode = SqliteOpenMode.ReadWriteCreate,
-        Cache = SqliteCacheMode.Shared,
-        ForeignKeys = true,
-        DefaultTimeout = 30,
-    }.ToString();
+    private readonly DbContextOptions<EmbeddingStateDbContext> dbContextOptions = EmbeddingStateDbContext.CreateOptions(databasePath);
 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(SqliteEmbeddingStateClientImplementation).Namespace, nameof(SqliteEmbeddingStateClientImplementation));
 
@@ -68,54 +62,45 @@ public sealed class SqliteEmbeddingStateClientImplementation(
 
     public override async IAsyncEnumerable<(string Label, string Value)> GetDisplayInfo()
     {
+        await using var context = this.CreateContext();
+
         yield return (TB("Reported version"), version);
         yield return (TB("Database path"), this.databasePath);
         yield return (TB("Storage size"), this.GetStorageSize());
-        yield return (TB("Indexed data sources"), (await this.CountAsync("data_sources", CancellationToken.None)).ToString(CultureInfo.InvariantCulture));
-        yield return (TB("Indexed files"), (await this.CountAsync("embedded_files", CancellationToken.None)).ToString(CultureInfo.InvariantCulture));
-        yield return (TB("Search chunks"), (await this.CountAsync("embedding_chunks", CancellationToken.None)).ToString(CultureInfo.InvariantCulture));
+        yield return (TB("Indexed data sources"), (await context.DataSources.CountAsync(CancellationToken.None)).ToString(CultureInfo.InvariantCulture));
+        yield return (TB("Indexed files"), (await context.EmbeddedFiles.CountAsync(CancellationToken.None)).ToString(CultureInfo.InvariantCulture));
+        yield return (TB("Search chunks"), (await context.EmbeddingChunks.CountAsync(CancellationToken.None)).ToString(CultureInfo.InvariantCulture));
     }
 
     public override async Task<DataSourceEmbeddingManifest> GetManifestAsync(string dataSourceId, CancellationToken token)
     {
-        await using var connection = await this.OpenConnectionAsync(token);
+        await using var context = this.CreateContext();
         var manifest = new DataSourceEmbeddingManifest();
 
-        await using (var command = CreateCommand(connection, """
-                                                            SELECT embedding_provider_id, embedding_signature, source_hash, vector_size
-                                                            FROM data_sources
-                                                            WHERE data_source_id = $dataSourceId
-                                                            """))
-        {
-            command.Parameters.AddWithValue("$dataSourceId", dataSourceId);
-            await using var reader = await command.ExecuteReaderAsync(token);
-            if (await reader.ReadAsync(token))
-            {
-                manifest.EmbeddingProviderId = reader.GetString(0);
-                manifest.EmbeddingSignature = reader.GetString(1);
-                manifest.SourceHash = reader.GetString(2);
-                manifest.VectorSize = reader.GetInt32(3);
-            }
-        }
+        var dataSource = await context.DataSources
+            .AsNoTracking()
+            .FirstOrDefaultAsync(source => source.DataSourceId == dataSourceId, token);
 
-        await using (var command = CreateCommand(connection, """
-                                                            SELECT absolute_path, fingerprint, file_size, last_write_utc, embedded_at_utc, chunk_count
-                                                            FROM embedded_files
-                                                            WHERE data_source_id = $dataSourceId
-                                                              AND chunk_count > 0
-                                                            """))
+        if (dataSource is null)
+            return manifest;
+
+        manifest.EmbeddingProviderId = dataSource.EmbeddingProviderId;
+        manifest.EmbeddingSignature = dataSource.EmbeddingSignature;
+        manifest.SourceHash = dataSource.SourceHash;
+        manifest.VectorSize = dataSource.VectorSize;
+
+        var files = await context.EmbeddedFiles
+            .AsNoTracking()
+            .Where(file => file.DataSourceId == dataSourceId && file.ChunkCount > 0)
+            .ToListAsync(token);
+        foreach (var file in files)
         {
-            command.Parameters.AddWithValue("$dataSourceId", dataSourceId);
-            await using var reader = await command.ExecuteReaderAsync(token);
-            while (await reader.ReadAsync(token))
-            {
-                manifest.Files[reader.GetString(0)] = new EmbeddedFileRecord(
-                    reader.GetString(1),
-                    reader.GetInt64(2),
-                    ParseUtc(reader.GetString(3)),
-                    ParseUtc(reader.GetString(4)),
-                    reader.GetInt32(5));
-            }
+            manifest.Files[file.AbsolutePath] = new EmbeddedFileRecord(
+                file.Fingerprint,
+                file.FileSize,
+                file.LastWriteUtc,
+                file.EmbeddedAtUtc,
+                file.ChunkCount);
         }
 
         return manifest;
@@ -131,148 +116,82 @@ public sealed class SqliteEmbeddingStateClientImplementation(
         int vectorSize,
         CancellationToken token)
     {
-        await using var connection = await this.OpenConnectionAsync(token);
-        await ExecuteNonQueryAsync(connection, """
-                                              INSERT INTO data_sources (
-                                                  data_source_id,
-                                                  data_source_name,
-                                                  data_source_type,
-                                                  embedding_provider_id,
-                                                  embedding_signature,
-                                                  source_hash,
-                                                  vector_size,
-                                                  updated_at_utc)
-                                              VALUES (
-                                                  $dataSourceId,
-                                                  $dataSourceName,
-                                                  $dataSourceType,
-                                                  $embeddingProviderId,
-                                                  $embeddingSignature,
-                                                  $sourceHash,
-                                                  $vectorSize,
-                                                  $updatedAtUtc)
-                                              ON CONFLICT(data_source_id) DO UPDATE SET
-                                                  data_source_name = excluded.data_source_name,
-                                                  data_source_type = excluded.data_source_type,
-                                                  embedding_provider_id = excluded.embedding_provider_id,
-                                                  embedding_signature = excluded.embedding_signature,
-                                                  source_hash = excluded.source_hash,
-                                                  vector_size = excluded.vector_size,
-                                                  updated_at_utc = excluded.updated_at_utc
-                                              """, token,
-            ("$dataSourceId", dataSourceId),
-            ("$dataSourceName", dataSourceName),
-            ("$dataSourceType", dataSourceType),
-            ("$embeddingProviderId", embeddingProviderId),
-            ("$embeddingSignature", embeddingSignature),
-            ("$sourceHash", sourceHash),
-            ("$vectorSize", vectorSize),
-            ("$updatedAtUtc", ToUtcText(DateTime.UtcNow)));
+        await using var context = this.CreateContext();
+        var dataSource = await context.DataSources.FirstOrDefaultAsync(source => source.DataSourceId == dataSourceId, token);
+        if (dataSource is null)
+        {
+            dataSource = new EmbeddingStateDataSourceEntity
+            {
+                DataSourceId = dataSourceId,
+            };
+            context.DataSources.Add(dataSource);
+        }
+
+        ApplyDataSource(dataSource, dataSourceName, dataSourceType, embeddingProviderId, embeddingSignature, sourceHash, vectorSize);
+        await context.SaveChangesAsync(token);
     }
 
     public override async Task UpdateVectorSizeAsync(string dataSourceId, int vectorSize, CancellationToken token)
     {
-        await using var connection = await this.OpenConnectionAsync(token);
-        await ExecuteNonQueryAsync(connection, """
-                                              UPDATE data_sources
-                                              SET vector_size = $vectorSize,
-                                                  updated_at_utc = $updatedAtUtc
-                                              WHERE data_source_id = $dataSourceId
-                                              """, token,
-            ("$dataSourceId", dataSourceId),
-            ("$vectorSize", vectorSize),
-            ("$updatedAtUtc", ToUtcText(DateTime.UtcNow)));
+        await using var context = this.CreateContext();
+        var dataSource = await context.DataSources.FirstOrDefaultAsync(source => source.DataSourceId == dataSourceId, token);
+        if (dataSource is null)
+            return;
+
+        dataSource.VectorSize = vectorSize;
+        dataSource.UpdatedAtUtc = DateTime.UtcNow;
+        await context.SaveChangesAsync(token);
     }
 
     public override async Task UpdateDataSourceHashAsync(string dataSourceId, string sourceHash, CancellationToken token)
     {
-        await using var connection = await this.OpenConnectionAsync(token);
-        await ExecuteNonQueryAsync(connection, """
-                                              UPDATE data_sources
-                                              SET source_hash = $sourceHash,
-                                                  updated_at_utc = $updatedAtUtc
-                                              WHERE data_source_id = $dataSourceId
-                                              """, token,
-            ("$dataSourceId", dataSourceId),
-            ("$sourceHash", sourceHash),
-            ("$updatedAtUtc", ToUtcText(DateTime.UtcNow)));
+        await using var context = this.CreateContext();
+        var dataSource = await context.DataSources.FirstOrDefaultAsync(source => source.DataSourceId == dataSourceId, token);
+        if (dataSource is null)
+            return;
+
+        dataSource.SourceHash = sourceHash;
+        dataSource.UpdatedAtUtc = DateTime.UtcNow;
+        await context.SaveChangesAsync(token);
     }
 
     public override async Task UpsertFileAsync(string dataSourceId, EmbeddingStateFile file, CancellationToken token)
     {
-        await using var connection = await this.OpenConnectionAsync(token);
-        await ExecuteNonQueryAsync(connection, """
-                                              INSERT INTO embedded_files (
-                                                  parent_file_id,
-                                                  data_source_id,
-                                                  absolute_path,
-                                                  file_name,
-                                                  relative_path,
-                                                  file_type,
-                                                  fingerprint,
-                                                  file_size,
-                                                  creation_utc,
-                                                  last_write_utc,
-                                                  embedded_at_utc,
-                                                  chunk_count,
-                                                  compliance_level,
-                                                  compliance_level_rank)
-                                              VALUES (
-                                                  $parentFileId,
-                                                  $dataSourceId,
-                                                  $absolutePath,
-                                                  $fileName,
-                                                  $relativePath,
-                                                  $fileType,
-                                                  $fingerprint,
-                                                  $fileSize,
-                                                  $creationUtc,
-                                                  $lastWriteUtc,
-                                                  $embeddedAtUtc,
-                                                  $chunkCount,
-                                                  $complianceLevel,
-                                                  $complianceLevelRank)
-                                              ON CONFLICT(parent_file_id) DO UPDATE SET
-                                                  data_source_id = excluded.data_source_id,
-                                                  absolute_path = excluded.absolute_path,
-                                                  file_name = excluded.file_name,
-                                                  relative_path = excluded.relative_path,
-                                                  file_type = excluded.file_type,
-                                                  fingerprint = excluded.fingerprint,
-                                                  file_size = excluded.file_size,
-                                                  creation_utc = excluded.creation_utc,
-                                                  last_write_utc = excluded.last_write_utc,
-                                                  embedded_at_utc = excluded.embedded_at_utc,
-                                                  chunk_count = excluded.chunk_count,
-                                                  compliance_level = excluded.compliance_level,
-                                                  compliance_level_rank = excluded.compliance_level_rank
-                                              """, token,
-            ("$parentFileId", file.ParentFileId),
-            ("$dataSourceId", dataSourceId),
-            ("$absolutePath", file.AbsolutePath),
-            ("$fileName", file.FileName),
-            ("$relativePath", file.RelativePath),
-            ("$fileType", file.FileType),
-            ("$fingerprint", file.Fingerprint),
-            ("$fileSize", file.FileSize),
-            ("$creationUtc", ToUtcText(file.CreationUtc)),
-            ("$lastWriteUtc", ToUtcText(file.LastWriteUtc)),
-            ("$embeddedAtUtc", ToUtcText(file.EmbeddedAtUtc)),
-            ("$chunkCount", file.ChunkCount),
-            ("$complianceLevel", file.ComplianceLevel),
-            ("$complianceLevelRank", file.ComplianceLevelRank));
+        await using var context = this.CreateContext();
+        var fileEntity = await context.EmbeddedFiles.FirstOrDefaultAsync(entity => entity.ParentFileId == file.ParentFileId, token);
+        if (fileEntity is null)
+        {
+            fileEntity = new EmbeddingStateFileEntity
+            {
+                ParentFileId = file.ParentFileId,
+            };
+            context.EmbeddedFiles.Add(fileEntity);
+        }
+
+        ApplyFile(fileEntity, dataSourceId, file);
+        await context.SaveChangesAsync(token);
     }
 
     public override async Task DeleteFileAsync(string dataSourceId, string filePath, CancellationToken token)
     {
-        await using var connection = await this.OpenConnectionAsync(token);
-        await ExecuteNonQueryAsync(connection, """
-                                              DELETE FROM embedded_files
-                                              WHERE data_source_id = $dataSourceId
-                                                AND absolute_path = $filePath
-                                              """, token,
-            ("$dataSourceId", dataSourceId),
-            ("$filePath", filePath));
+        await using var context = this.CreateContext();
+        await using var transaction = await context.Database.BeginTransactionAsync(token);
+
+        var parentFileIds = await context.EmbeddedFiles
+            .Where(file => file.DataSourceId == dataSourceId && file.AbsolutePath == filePath)
+            .Select(file => file.ParentFileId)
+            .ToListAsync(token);
+
+        foreach (var parentFileIdBatch in parentFileIds.Chunk(CHUNK_UPSERT_BATCH_SIZE))
+            await context.EmbeddingChunks
+                .Where(chunk => parentFileIdBatch.Contains(chunk.ParentFileId))
+                .ExecuteDeleteAsync(token);
+
+        await context.EmbeddedFiles
+            .Where(file => file.DataSourceId == dataSourceId && file.AbsolutePath == filePath)
+            .ExecuteDeleteAsync(token);
+
+        await transaction.CommitAsync(token);
     }
 
     public override async Task UpsertChunksAsync(string dataSourceId, IReadOnlyList<EmbeddingStateChunk> chunks, CancellationToken token)
@@ -280,41 +199,38 @@ public sealed class SqliteEmbeddingStateClientImplementation(
         if (chunks.Count == 0)
             return;
 
-        await using var connection = await this.OpenConnectionAsync(token);
-        await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(token);
+        await using var context = this.CreateContext();
+        await using var transaction = await context.Database.BeginTransactionAsync(token);
 
-        foreach (var chunk in chunks)
+        foreach (var chunkBatch in chunks.Chunk(CHUNK_UPSERT_BATCH_SIZE))
         {
             token.ThrowIfCancellationRequested();
 
-            await ExecuteNonQueryAsync(connection, transaction, """
-                                                               INSERT INTO embedding_chunks (
-                                                                   chunk_id,
-                                                                   parent_file_id,
-                                                                   page_number,
-                                                                   chunk_index,
-                                                                   chunk_text,
-                                                                   embedded_at_utc)
-                                                               VALUES (
-                                                                   $chunkId,
-                                                                   $parentFileId,
-                                                                   $pageNumber,
-                                                                   $chunkIndex,
-                                                                   $chunkText,
-                                                                   $embeddedAtUtc)
-                                                               ON CONFLICT(chunk_id) DO UPDATE SET
-                                                                   parent_file_id = excluded.parent_file_id,
-                                                                   page_number = excluded.page_number,
-                                                                   chunk_index = excluded.chunk_index,
-                                                                   chunk_text = excluded.chunk_text,
-                                                                   embedded_at_utc = excluded.embedded_at_utc
-                                                               """, token,
-                ("$chunkId", chunk.ChunkId),
-                ("$parentFileId", chunk.ParentFileId),
-                ("$pageNumber", chunk.PageNumber),
-                ("$chunkIndex", chunk.ChunkIndex),
-                ("$chunkText", chunk.ChunkText),
-                ("$embeddedAtUtc", ToUtcText(chunk.EmbeddedAtUtc)));
+            var chunkIds = chunkBatch
+                .Select(chunk => chunk.ChunkId)
+                .Distinct(StringComparer.Ordinal)
+                .ToArray();
+            var existingChunks = await context.EmbeddingChunks
+                .Where(chunk => chunkIds.Contains(chunk.ChunkId))
+                .ToDictionaryAsync(chunk => chunk.ChunkId, StringComparer.Ordinal, token);
+
+            foreach (var chunk in chunkBatch)
+            {
+                if (!existingChunks.TryGetValue(chunk.ChunkId, out var chunkEntity))
+                {
+                    chunkEntity = new EmbeddingStateChunkEntity
+                    {
+                        ChunkId = chunk.ChunkId,
+                    };
+                    context.EmbeddingChunks.Add(chunkEntity);
+                    existingChunks[chunk.ChunkId] = chunkEntity;
+                }
+
+                ApplyChunk(chunkEntity, chunk);
+            }
+
+            await context.SaveChangesAsync(token);
+            context.ChangeTracker.Clear();
         }
 
         await transaction.CommitAsync(token);
@@ -329,83 +245,66 @@ public sealed class SqliteEmbeddingStateClientImplementation(
         if (string.IsNullOrWhiteSpace(ftsQuery))
             return [];
 
-        var results = new List<EmbeddingStateSearchResult>(maxMatches);
-        await using var connection = await this.OpenConnectionAsync(token);
-        await using var command = CreateCommand(connection, """
-                                                           SELECT
-                                                               c.chunk_id,
-                                                               c.parent_file_id,
-                                                               ds.data_source_id,
-                                                               ds.data_source_name,
-                                                               ds.data_source_type,
-                                                               f.absolute_path,
-                                                               f.file_name,
-                                                               f.relative_path,
-                                                               f.file_type,
-                                                               c.page_number,
-                                                               c.chunk_index,
-                                                               c.chunk_text,
-                                                               bm25(embedding_chunks_fts) AS score,
-                                                               f.fingerprint,
-                                                               f.file_size,
-                                                               f.creation_utc,
-                                                               f.last_write_utc,
-                                                               c.embedded_at_utc,
-                                                               f.chunk_count,
-                                                               f.compliance_level,
-                                                               f.compliance_level_rank
-                                                           FROM embedding_chunks_fts
-                                                           JOIN embedding_chunks c ON c.id = embedding_chunks_fts.rowid
-                                                           JOIN embedded_files f ON f.parent_file_id = c.parent_file_id
-                                                           JOIN data_sources ds ON ds.data_source_id = f.data_source_id
-                                                           WHERE ds.data_source_id = $dataSourceId
-                                                             AND embedding_chunks_fts MATCH $query
-                                                           ORDER BY score
-                                                           LIMIT $maxMatches
-                                                           """);
+        await using var context = this.CreateContext();
+        var results = await context.SearchResults
+            .FromSqlInterpolated($"""
+                                  SELECT
+                                      c.chunk_id AS ChunkId,
+                                      c.parent_file_id AS ParentFileId,
+                                      ds.data_source_id AS DataSourceId,
+                                      ds.data_source_name AS DataSourceName,
+                                      ds.data_source_type AS DataSourceType,
+                                      f.absolute_path AS AbsolutePath,
+                                      f.file_name AS FileName,
+                                      f.relative_path AS RelativePath,
+                                      f.file_type AS FileType,
+                                      c.page_number AS PageNumber,
+                                      c.chunk_index AS ChunkIndex,
+                                      c.chunk_text AS ChunkText,
+                                      bm25(embedding_chunks_fts) AS Score,
+                                      f.fingerprint AS Fingerprint,
+                                      f.file_size AS FileSize,
+                                      f.creation_utc AS CreationUtc,
+                                      f.last_write_utc AS LastWriteUtc,
+                                      c.embedded_at_utc AS EmbeddedAtUtc,
+                                      f.chunk_count AS ChunkCount,
+                                      f.compliance_level AS ComplianceLevel,
+                                      f.compliance_level_rank AS ComplianceLevelRank
+                                  FROM embedding_chunks_fts
+                                  JOIN embedding_chunks c ON c.id = embedding_chunks_fts.rowid
+                                  JOIN embedded_files f ON f.parent_file_id = c.parent_file_id
+                                  JOIN data_sources ds ON ds.data_source_id = f.data_source_id
+                                  WHERE ds.data_source_id = {dataSourceId}
+                                    AND embedding_chunks_fts MATCH {ftsQuery}
+                                  ORDER BY Score
+                                  LIMIT {maxMatches}
+                                  """)
+            .AsNoTracking()
+            .ToListAsync(token);
 
-        command.Parameters.AddWithValue("$dataSourceId", dataSourceId);
-        command.Parameters.AddWithValue("$query", ftsQuery);
-        command.Parameters.AddWithValue("$maxMatches", maxMatches);
-
-        await using var reader = await command.ExecuteReaderAsync(token);
-        while (await reader.ReadAsync(token))
-        {
-            results.Add(new EmbeddingStateSearchResult(
-                reader.GetString(0),
-                reader.GetString(1),
-                reader.GetString(2),
-                reader.GetString(3),
-                reader.GetString(4),
-                reader.GetString(5),
-                reader.GetString(6),
-                reader.GetString(7),
-                reader.GetString(8),
-                reader.IsDBNull(9) ? null : reader.GetInt32(9),
-                reader.GetInt32(10),
-                reader.GetString(11),
-                reader.GetDouble(12),
-                reader.GetString(13),
-                reader.GetInt64(14),
-                ParseUtc(reader.GetString(15)),
-                ParseUtc(reader.GetString(16)),
-                ParseUtc(reader.GetString(17)),
-                reader.GetInt32(18),
-                reader.GetString(19),
-                reader.GetInt32(20)));
-        }
-
-        return results;
+        return results.Select(ToSearchResult).ToList();
     }
 
     public override async Task DeleteDataSourceAsync(string dataSourceId, CancellationToken token)
     {
-        await using var connection = await this.OpenConnectionAsync(token);
-        await ExecuteNonQueryAsync(connection, """
-                                              DELETE FROM data_sources
-                                              WHERE data_source_id = $dataSourceId
-                                              """, token,
-            ("$dataSourceId", dataSourceId));
+        await using var context = this.CreateContext();
+        await using var transaction = await context.Database.BeginTransactionAsync(token);
+
+        var parentFileIds = await context.EmbeddedFiles
+            .Where(file => file.DataSourceId == dataSourceId)
+            .Select(file => file.ParentFileId)
+            .ToListAsync(token);
+
+        foreach (var parentFileIdBatch in parentFileIds.Chunk(CHUNK_UPSERT_BATCH_SIZE))
+            await context.EmbeddingChunks
+                .Where(chunk => parentFileIdBatch.Contains(chunk.ParentFileId))
+                .ExecuteDeleteAsync(token);
+
+        await context.DataSources
+            .Where(source => source.DataSourceId == dataSourceId)
+            .ExecuteDeleteAsync(token);
+
+        await transaction.CommitAsync(token);
     }
 
     public override void Dispose()
@@ -414,198 +313,88 @@ public sealed class SqliteEmbeddingStateClientImplementation(
 
     private async Task InitializeAsync(CancellationToken token)
     {
-        await using var connection = await this.OpenConnectionAsync(token);
-        await ExecuteNonQueryAsync(connection, """
-                                              PRAGMA journal_mode=WAL;
-                                              PRAGMA foreign_keys=ON;
-
-                                              CREATE TABLE IF NOT EXISTS data_sources (
-                                                  data_source_id TEXT PRIMARY KEY,
-                                                  data_source_name TEXT NOT NULL,
-                                                  data_source_type TEXT NOT NULL,
-                                                  embedding_provider_id TEXT NOT NULL,
-                                                  embedding_signature TEXT NOT NULL,
-                                                  source_hash TEXT NOT NULL DEFAULT '',
-                                                  vector_size INTEGER NOT NULL DEFAULT 0,
-                                                  updated_at_utc TEXT NOT NULL
-                                              );
-
-                                              CREATE TABLE IF NOT EXISTS embedded_files (
-                                                  parent_file_id TEXT PRIMARY KEY,
-                                                  data_source_id TEXT NOT NULL,
-                                                  absolute_path TEXT COLLATE NOCASE NOT NULL,
-                                                  file_name TEXT NOT NULL,
-                                                  relative_path TEXT NOT NULL,
-                                                  file_type TEXT NOT NULL,
-                                                  fingerprint TEXT NOT NULL,
-                                                  file_size INTEGER NOT NULL,
-                                                  creation_utc TEXT NOT NULL,
-                                                  last_write_utc TEXT NOT NULL,
-                                                  embedded_at_utc TEXT NOT NULL,
-                                                  chunk_count INTEGER NOT NULL,
-                                                  compliance_level TEXT NOT NULL,
-                                                  compliance_level_rank INTEGER NOT NULL,
-                                                  FOREIGN KEY (data_source_id)
-                                                      REFERENCES data_sources(data_source_id)
-                                                      ON DELETE CASCADE,
-                                                  UNIQUE(data_source_id, absolute_path)
-                                              );
-
-                                              CREATE TABLE IF NOT EXISTS embedding_chunks (
-                                                  id INTEGER PRIMARY KEY AUTOINCREMENT,
-                                                  chunk_id TEXT NOT NULL UNIQUE,
-                                                  parent_file_id TEXT NOT NULL,
-                                                  page_number INTEGER NULL,
-                                                  chunk_index INTEGER NOT NULL,
-                                                  chunk_text TEXT NOT NULL,
-                                                  embedded_at_utc TEXT NOT NULL,
-                                                  FOREIGN KEY (parent_file_id)
-                                                      REFERENCES embedded_files(parent_file_id)
-                                                      ON DELETE CASCADE,
-                                                  UNIQUE(parent_file_id, chunk_index)
-                                              );
-
-                                              CREATE INDEX IF NOT EXISTS idx_embedded_files_data_source
-                                                  ON embedded_files(data_source_id);
-
-                                              CREATE INDEX IF NOT EXISTS idx_embedded_files_absolute_path
-                                                  ON embedded_files(absolute_path);
-
-                                              CREATE INDEX IF NOT EXISTS idx_embedded_files_file_type
-                                                  ON embedded_files(file_type);
-
-                                              CREATE INDEX IF NOT EXISTS idx_embedded_files_compliance
-                                                  ON embedded_files(compliance_level_rank);
-
-                                              CREATE INDEX IF NOT EXISTS idx_embedding_chunks_parent_file
-                                                  ON embedding_chunks(parent_file_id);
-
-                                              CREATE INDEX IF NOT EXISTS idx_embedding_chunks_page
-                                                  ON embedding_chunks(page_number);
-
-                                              CREATE VIRTUAL TABLE IF NOT EXISTS embedding_chunks_fts
-                                                  USING fts5(chunk_id UNINDEXED, file_name, chunk_text);
-
-                                              CREATE TRIGGER IF NOT EXISTS embedding_chunks_ai
-                                                  AFTER INSERT ON embedding_chunks
-                                              BEGIN
-                                                  INSERT INTO embedding_chunks_fts(rowid, chunk_id, file_name, chunk_text)
-                                                  VALUES (
-                                                      new.id,
-                                                      new.chunk_id,
-                                                      (SELECT file_name FROM embedded_files WHERE parent_file_id = new.parent_file_id),
-                                                      new.chunk_text);
-                                              END;
-
-                                              CREATE TRIGGER IF NOT EXISTS embedding_chunks_ad
-                                                  AFTER DELETE ON embedding_chunks
-                                              BEGIN
-                                                  DELETE FROM embedding_chunks_fts
-                                                  WHERE rowid = old.id;
-                                              END;
-
-                                              CREATE TRIGGER IF NOT EXISTS embedding_chunks_au
-                                                  AFTER UPDATE ON embedding_chunks
-                                              BEGIN
-                                                  DELETE FROM embedding_chunks_fts
-                                                  WHERE rowid = old.id;
-
-                                                  INSERT INTO embedding_chunks_fts(rowid, chunk_id, file_name, chunk_text)
-                                                  VALUES (
-                                                      new.id,
-                                                      new.chunk_id,
-                                                      (SELECT file_name FROM embedded_files WHERE parent_file_id = new.parent_file_id),
-                                                      new.chunk_text);
-                                              END;
-
-                                              CREATE TRIGGER IF NOT EXISTS embedded_files_file_name_au
-                                                  AFTER UPDATE OF file_name ON embedded_files
-                                              BEGIN
-                                                  DELETE FROM embedding_chunks_fts
-                                                  WHERE rowid IN (
-                                                      SELECT id
-                                                      FROM embedding_chunks
-                                                      WHERE parent_file_id = new.parent_file_id
-                                                  );
-
-                                                  INSERT INTO embedding_chunks_fts(rowid, chunk_id, file_name, chunk_text)
-                                                  SELECT id, chunk_id, new.file_name, chunk_text
-                                                  FROM embedding_chunks
-                                                  WHERE parent_file_id = new.parent_file_id;
-                                              END;
-                                              """, token);
+        await using var context = this.CreateContext();
+        await EmbeddingStateSchemaMigrator.MigrateAsync(context, token);
     }
 
     private async Task<string> GetSqliteVersionAsync(CancellationToken token)
     {
-        await using var connection = await this.OpenConnectionAsync(token);
-        await using var command = CreateCommand(connection, "SELECT sqlite_version()");
-        var versionObject = await command.ExecuteScalarAsync(token);
-        return Convert.ToString(versionObject, CultureInfo.InvariantCulture) ?? string.Empty;
+        await using var context = this.CreateContext();
+        var versions = await context.Database
+            .SqlQueryRaw<string>("SELECT sqlite_version() AS Value")
+            .ToListAsync(token);
+        return versions.FirstOrDefault() ?? string.Empty;
     }
 
-    private async Task<long> CountAsync(string tableName, CancellationToken token)
+    private EmbeddingStateDbContext CreateContext() => new(this.dbContextOptions);
+
+    private static void ApplyDataSource(
+        EmbeddingStateDataSourceEntity dataSource,
+        string dataSourceName,
+        string dataSourceType,
+        string embeddingProviderId,
+        string embeddingSignature,
+        string sourceHash,
+        int vectorSize)
     {
-        await using var connection = await this.OpenConnectionAsync(token);
-        await using var command = CreateCommand(connection, $"SELECT COUNT(*) FROM {tableName}");
-        var countObject = await command.ExecuteScalarAsync(token);
-        return Convert.ToInt64(countObject, CultureInfo.InvariantCulture);
+        dataSource.DataSourceName = dataSourceName;
+        dataSource.DataSourceType = dataSourceType;
+        dataSource.EmbeddingProviderId = embeddingProviderId;
+        dataSource.EmbeddingSignature = embeddingSignature;
+        dataSource.SourceHash = sourceHash;
+        dataSource.VectorSize = vectorSize;
+        dataSource.UpdatedAtUtc = DateTime.UtcNow;
     }
 
-    private async Task<SqliteConnection> OpenConnectionAsync(CancellationToken token)
+    private static void ApplyFile(EmbeddingStateFileEntity fileEntity, string dataSourceId, EmbeddingStateFile file)
     {
-        var connection = new SqliteConnection(this.connectionString);
-        await connection.OpenAsync(token);
-        return connection;
+        fileEntity.DataSourceId = dataSourceId;
+        fileEntity.AbsolutePath = file.AbsolutePath;
+        fileEntity.FileName = file.FileName;
+        fileEntity.RelativePath = file.RelativePath;
+        fileEntity.FileType = file.FileType;
+        fileEntity.Fingerprint = file.Fingerprint;
+        fileEntity.FileSize = file.FileSize;
+        fileEntity.CreationUtc = file.CreationUtc;
+        fileEntity.LastWriteUtc = file.LastWriteUtc;
+        fileEntity.EmbeddedAtUtc = file.EmbeddedAtUtc;
+        fileEntity.ChunkCount = file.ChunkCount;
+        fileEntity.ComplianceLevel = file.ComplianceLevel;
+        fileEntity.ComplianceLevelRank = file.ComplianceLevelRank;
     }
 
-    private static SqliteCommand CreateCommand(SqliteConnection connection, string commandText)
+    private static void ApplyChunk(EmbeddingStateChunkEntity chunkEntity, EmbeddingStateChunk chunk)
     {
-        var command = connection.CreateCommand();
-        command.CommandText = commandText;
-        return command;
+        chunkEntity.ChunkId = chunk.ChunkId;
+        chunkEntity.ParentFileId = chunk.ParentFileId;
+        chunkEntity.PageNumber = chunk.PageNumber;
+        chunkEntity.ChunkIndex = chunk.ChunkIndex;
+        chunkEntity.ChunkText = chunk.ChunkText;
+        chunkEntity.EmbeddedAtUtc = chunk.EmbeddedAtUtc;
     }
 
-    private static async Task ExecuteNonQueryAsync(
-        SqliteConnection connection,
-        string commandText,
-        CancellationToken token,
-        params (string Name, object? Value)[] parameters)
-    {
-        await using var command = CreateCommand(connection, commandText);
-        foreach (var (name, value) in parameters)
-            command.Parameters.AddWithValue(name, value ?? DBNull.Value);
-
-        await command.ExecuteNonQueryAsync(token);
-    }
-
-    private static async Task ExecuteNonQueryAsync(
-        SqliteConnection connection,
-        SqliteTransaction transaction,
-        string commandText,
-        CancellationToken token,
-        params (string Name, object? Value)[] parameters)
-    {
-        await using var command = CreateCommand(connection, commandText);
-        command.Transaction = transaction;
-        foreach (var (name, value) in parameters)
-            command.Parameters.AddWithValue(name, value ?? DBNull.Value);
-
-        await command.ExecuteNonQueryAsync(token);
-    }
-
-    private static string ToUtcText(DateTime dateTime)
-    {
-        var utc = dateTime.Kind is DateTimeKind.Utc ? dateTime : dateTime.ToUniversalTime();
-        return utc.ToString("O", CultureInfo.InvariantCulture);
-    }
-
-    private static DateTime ParseUtc(string value)
-    {
-        return DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var dateTime)
-            ? dateTime.ToUniversalTime()
-            : DateTime.UnixEpoch;
-    }
+    private static EmbeddingStateSearchResult ToSearchResult(EmbeddingStateSearchResultEntity result) => new(
+        result.ChunkId,
+        result.ParentFileId,
+        result.DataSourceId,
+        result.DataSourceName,
+        result.DataSourceType,
+        result.AbsolutePath,
+        result.FileName,
+        result.RelativePath,
+        result.FileType,
+        result.PageNumber,
+        result.ChunkIndex,
+        result.ChunkText,
+        result.Score,
+        result.Fingerprint,
+        result.FileSize,
+        result.CreationUtc,
+        result.LastWriteUtc,
+        result.EmbeddedAtUtc,
+        result.ChunkCount,
+        result.ComplianceLevel,
+        result.ComplianceLevelRank);
 
     private static string BuildFtsQuery(string query)
     {
