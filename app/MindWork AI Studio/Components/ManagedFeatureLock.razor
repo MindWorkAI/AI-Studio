@@ -1,0 +1,9 @@
+@inherits MSGComponentBase
+
+@if (this.IsLocked())
+{
+    @* MudTooltip.RootStyle is set as a workaround for issue -> https://github.com/MudBlazor/MudBlazor/issues/10882 *@
+    <MudTooltip Text="@this.LockTextOrDefault" Arrow="true" Placement="@this.Placement" RootStyle="display:inline-flex;">
+        <MudIcon Icon="@Icons.Material.Filled.Lock" Color="Color.Error" Size="Size.Small" Class="@this.Class"/>
+    </MudTooltip>
+}

@@ -148,7 +148,17 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     /// Should the user be allowed to add providers?
     /// </summary>
     public bool AllowUserToAddProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToAddProvider, true);
-    
+
+    /// <summary>
+    /// Should the user be allowed to import plugin archives from disk?
+    /// </summary>
+    public bool AllowUserToImportPlugins { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportPlugins, true);
+
+    /// <summary>
+    /// Should the user be allowed to share or export plugins as archives?
+    /// </summary>
+    public bool AllowUserToSharePlugins { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToSharePlugins, true);
+
     /// <summary>
     /// Should administration settings be visible in the UI?
     /// </summary>

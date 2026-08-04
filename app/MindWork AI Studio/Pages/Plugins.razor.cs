@@ -53,7 +53,7 @@ public partial class Plugins : MSGComponentBase
 
     protected override async Task OnInitializedAsync()
     {
-        this.ApplyFilters([], [ Event.PLUGINS_RELOADED ]);
+        this.ApplyFilters([], [ Event.PLUGINS_RELOADED, Event.CONFIGURATION_CHANGED ]);
         
         this.groupConfig = new TableGroupDefinition<IPluginMetadata>
         {
@@ -215,12 +215,24 @@ public partial class Plugins : MSGComponentBase
     private static bool CanSharePlugin(IAvailablePlugin plugin) => plugin is { IsInternal: false, IsManagedByConfigServer: false } && !string.IsNullOrWhiteSpace(plugin.LocalPath) && !IS_SHARING_PLUGIN;
 
     /// <summary>
+    /// Organizations may disable importing plugin archives by using a configuration plugin.
+    /// </summary>
+    private bool AllowPluginImport => this.SettingsManager.ConfigurationData.App.AllowUserToImportPlugins;
+
+    /// <summary>
+    /// Organizations may disable sharing and exporting plugins by using a configuration plugin.
+    /// </summary>
+    private bool AllowPluginSharing => this.SettingsManager.ConfigurationData.App.AllowUserToSharePlugins;
+
+    /// <summary>
     /// Linux has no native share sheet, hence the plugin archive is exported to a location of the
     /// user's choice there. The action must be labeled accordingly.
     /// </summary>
     private static string SharePluginIcon => OperatingSystem.IsLinux() ? Icons.Material.Filled.FileDownload : Icons.Material.Filled.IosShare;
 
     private string SharePluginTooltip => OperatingSystem.IsLinux() ? this.T("Export plugin archive") : this.T("Share plugin archive");
+
+    private string SharePluginLockText => OperatingSystem.IsLinux() ? this.T("Your organization has disabled exporting plugins.") : this.T("Your organization has disabled sharing plugins.");
 
     private async Task OpenAssistantPluginEditorDialogAsync(IAvailablePlugin plugin)
     {
@@ -297,6 +309,9 @@ public partial class Plugins : MSGComponentBase
     private async Task ImportAssistantPluginAsync()
     {
         if (this.isImportingAssistantPlugin)
+            return;
+
+        if (!this.AllowPluginImport)
             return;
 
         this.isImportingAssistantPlugin = true;

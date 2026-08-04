@@ -265,6 +265,14 @@ public static partial class PluginFactory
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.AllowUserToAddProvider, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;
 
+        // Check for the plugin import permission:
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.AllowUserToImportPlugins, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        // Check for the plugin sharing permission:
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.AllowUserToSharePlugins, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
         // Check for admin settings visibility:
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.ShowAdminSettings, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;

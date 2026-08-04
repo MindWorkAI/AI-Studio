@@ -3282,6 +3282,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::HALLUZINATIONREMINDER::T3528806904"] = "L
 -- Issues
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ISSUES::T3229841001"] = "Issues"
 
+-- This feature is managed by your organization and has therefore been disabled.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEDFEATURELOCK::T1416426626"] = "This feature is managed by your organization and has therefore been disabled."
+
 -- Your Pandoc installation meets the requirements.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEPANDOCDEPENDENCY::T1167365374"] = "Your Pandoc installation meets the requirements."
 
@@ -7950,11 +7953,20 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3143506997"] = "The assistant plugin
 -- An error occurred while sharing the plugin.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3184210266"] = "An error occurred while sharing the plugin."
 
+-- Your organization has disabled importing plugins.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3212529834"] = "Your organization has disabled importing plugins."
+
 -- Import assistant plugin
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3246593895"] = "Import assistant plugin"
 
+-- Your organization has disabled exporting plugins.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3342440765"] = "Your organization has disabled exporting plugins."
+
 -- Share plugin archive
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3355474457"] = "Share plugin archive"
+
+-- Your organization has disabled sharing plugins.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3379469503"] = "Your organization has disabled sharing plugins."
 
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3448155331"] = "Close"
@@ -9564,6 +9576,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T2955
 -- The generated assistant plugin uses the ID of an internal AI Studio plugin.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T3162363526"] = "The generated assistant plugin uses the ID of an internal AI Studio plugin."
 
+-- Your organization has disabled importing plugins.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T3212529834"] = "Your organization has disabled importing plugins."
+
 -- The plugin archive must contain exactly one plugin.lua file.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T3355918609"] = "The plugin archive must contain exactly one plugin.lua file."
 
@@ -9665,6 +9680,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGINSHARESERVICE::T2350673880"] = 
 
 -- The plugin has no local directory.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGINSHARESERVICE::T3284289028"] = "The plugin has no local directory."
+
+-- Your organization has disabled sharing plugins.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGINSHARESERVICE::T3379469503"] = "Your organization has disabled sharing plugins."
 
 -- The plugin directory is invalid: {0}
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGINSHARESERVICE::T3774594541"] = "The plugin directory is invalid: {0}"

@@ -1,10 +1,11 @@
 ﻿using System.IO.Compression;
+using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
 
 namespace AIStudio.Tools.Services;
 
-public sealed class PluginShareService(NativeShareService nativeShareService, RustService rustService, ILogger<PluginShareService> logger)
+public sealed class PluginShareService(NativeShareService nativeShareService, RustService rustService, SettingsManager settingsManager, ILogger<PluginShareService> logger)
 {
     private static PluginShareResult ShareError(IAvailablePlugin plugin, string issue) => new(false, plugin.Name, string.Empty, issue);
     
@@ -35,6 +36,9 @@ public sealed class PluginShareService(NativeShareService nativeShareService, Ru
 
         if (plugin.IsManagedByConfigServer)
             return ShareError(plugin, TB("Config Server managed plugins cannot be shared."));
+
+        if (!settingsManager.ConfigurationData.App.AllowUserToSharePlugins)
+            return ShareError(plugin, TB("Your organization has disabled sharing plugins."));
 
         if (!TryGetPluginRoot(plugin, out var pluginRoot, out var issue))
             return ShareError(plugin, issue);

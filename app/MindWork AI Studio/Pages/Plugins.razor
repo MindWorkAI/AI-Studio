@@ -10,8 +10,9 @@
             @T("Plugins")
         </MudText>
         <MudSpacer />
+        <ManagedFeatureLock IsLocked="@(() => !this.AllowPluginImport)" LockText="@T("Your organization has disabled importing plugins.")"/>
         <MudTooltip Text="@T("Import assistant plugin")">
-            <MudButton Variant="Variant.Outlined" StartIcon="@IMPORT_ICON" OnClick="@this.ImportAssistantPluginAsync" Disabled="@this.isImportingAssistantPlugin">
+            <MudButton Variant="Variant.Outlined" StartIcon="@IMPORT_ICON" OnClick="@this.ImportAssistantPluginAsync" Disabled="@(this.isImportingAssistantPlugin || !this.AllowPluginImport)">
                 @T("Import")
             </MudButton>
         </MudTooltip>
@@ -118,8 +119,9 @@
                             
                             @if (context is IAvailablePlugin shareablePlugin && CanSharePlugin(shareablePlugin))
                             {
+                                <ManagedFeatureLock IsLocked="@(() => !this.AllowPluginSharing)" LockText="@this.SharePluginLockText"/>
                                 <MudTooltip Text="@this.SharePluginTooltip">
-                                    <MudIconButton Icon="@SharePluginIcon" Size="Size.Medium" OnClick="@(() => this.SharePluginAsync(shareablePlugin))" Disabled="@(!CanSharePlugin(shareablePlugin))"/>
+                                    <MudIconButton Icon="@SharePluginIcon" Size="Size.Medium" OnClick="@(() => this.SharePluginAsync(shareablePlugin))" Disabled="@(!this.AllowPluginSharing || !CanSharePlugin(shareablePlugin))"/>
                                 </MudTooltip>
                             }
 

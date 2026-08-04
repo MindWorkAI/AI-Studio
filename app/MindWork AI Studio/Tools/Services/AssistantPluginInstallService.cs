@@ -152,6 +152,9 @@ public sealed class AssistantPluginInstallService
     /// <returns>Installation result that contains success state, installed plugin metadata, and a user-facing issue when installation failed.</returns>
     public async Task<AssistantPluginInstallResult> InstallArchiveAsync(string archivePath, CancellationToken token)
     {
+        if (!this.settingsManager.ConfigurationData.App.AllowUserToImportPlugins)
+            return Error(TB("Your organization has disabled importing plugins."));
+
         if (!FileTypes.IsAllowedPath(archivePath, FileTypes.PLUGIN_ARCHIVE))
             return Error(TB("Please select a plugin archive with the extension .mwplugin or .zip."));
 
