@@ -817,6 +817,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             //
         }
 
+        // This is a user-visible chat request. Internal structured LLM requests keep the default disabled.
+        this.ChatThread.AllowChartOutput = true;
+
         var time = DateTimeOffset.Now;
         IContent? lastUserPrompt;
         if (!reuseLastUserPrompt)
