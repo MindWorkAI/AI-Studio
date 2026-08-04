@@ -213,7 +213,15 @@ public partial class Plugins : MSGComponentBase
     }
     
     private static bool CanSharePlugin(IAvailablePlugin plugin) => plugin is { IsInternal: false, IsManagedByConfigServer: false } && !string.IsNullOrWhiteSpace(plugin.LocalPath) && !IS_SHARING_PLUGIN;
-    
+
+    /// <summary>
+    /// Linux has no native share sheet, hence the plugin archive is exported to a location of the
+    /// user's choice there. The action must be labeled accordingly.
+    /// </summary>
+    private static string SharePluginIcon => OperatingSystem.IsLinux() ? Icons.Material.Filled.FileDownload : Icons.Material.Filled.IosShare;
+
+    private string SharePluginTooltip => OperatingSystem.IsLinux() ? this.T("Export plugin archive") : this.T("Share plugin archive");
+
     private async Task OpenAssistantPluginEditorDialogAsync(IAvailablePlugin plugin)
     {
         var parameters = new DialogParameters<AssistantPluginEditorDialog>
@@ -265,12 +273,19 @@ public partial class Plugins : MSGComponentBase
         try
         {
             var shareResult = await this.PluginShareService.ShareAsync(plugin, CancellationToken.None);
+            if (shareResult.Cancelled)
+                return;
+
             if (!shareResult.Success)
             {
                 LOG.LogError($"Sharing the plugin '{shareResult.PluginName}' from archive '{shareResult.ArchivePath}' failed with Issue: '{shareResult.Issue}'.");
-                await this.MessageBus.SendError(new(Icons.Material.Filled.ReportProblem, T("An error occurred while sharing the plugin.")));
+                await this.MessageBus.SendError(new(Icons.Material.Filled.ReportProblem, OperatingSystem.IsLinux() ? T("An error occurred while exporting the plugin.") : T("An error occurred while sharing the plugin.")));
                 return;
             }
+
+            // On Linux, the user chose the target location, so we confirm where the archive was stored:
+            if (OperatingSystem.IsLinux())
+                await this.MessageBus.SendSuccess(new(Icons.Material.Filled.FileDownload, string.Format(T("The plugin archive was exported to '{0}'."), shareResult.ArchivePath)));
         }
         finally
         {

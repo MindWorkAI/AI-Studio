@@ -344,15 +344,6 @@ pub async fn open_path_in_file_manager(
     }
 }
 
-#[cfg(target_os = "linux")]
-pub(crate) async fn open_existing_file_in_file_manager(path: PathBuf) -> Result<(), String> {
-    if !path.is_file() {
-        return Err(format!("The requested path is not an existing file: {}", path.to_string_lossy()));
-    }
-
-    open_file_manager_target(&path).await
-}
-
 async fn open_file_manager_target(requested_path: &Path) -> Result<(), String> {
     let Some(target) = resolve_file_manager_target(requested_path) else {
         let issue = format!(

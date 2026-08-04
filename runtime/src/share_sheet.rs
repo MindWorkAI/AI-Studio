@@ -49,9 +49,11 @@ fn failure(issue: impl Into<String>) -> Json<ShareFileResponse> {
     })
 }
 
+// Linux has no native share sheet: the XDG desktop portals do not provide a share interface. The
+// app exports the file through the save dialog instead, hence this endpoint is not used on Linux:
 #[cfg(target_os = "linux")]
-async fn share_file_on_platform(path: PathBuf) -> Result<(), String> {
-    crate::file_actions::open_existing_file_in_file_manager(path).await
+async fn share_file_on_platform(_path: PathBuf) -> Result<(), String> {
+    Err(String::from("The native share sheet is not available on Linux."))
 }
 
 #[cfg(windows)]

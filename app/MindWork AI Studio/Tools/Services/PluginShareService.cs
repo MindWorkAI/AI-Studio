@@ -1,11 +1,12 @@
 ﻿using System.IO.Compression;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Rust;
 
 namespace AIStudio.Tools.Services;
 
-public sealed record PluginShareResult(bool Success, string PluginName, string ArchivePath, string Issue);
+public sealed record PluginShareResult(bool Success, string PluginName, string ArchivePath, string Issue, bool Cancelled = false);
 
-public sealed class PluginShareService(NativeShareService nativeShareService, ILogger<PluginShareService> logger)
+public sealed class PluginShareService(NativeShareService nativeShareService, RustService rustService, ILogger<PluginShareService> logger)
 {
     private static PluginShareResult ShareError(IAvailablePlugin plugin, string issue) => new(false, plugin.Name, string.Empty, issue);
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(PluginShareService).Namespace, nameof(PluginShareService));
@@ -19,12 +20,17 @@ public sealed class PluginShareService(NativeShareService nativeShareService, IL
 
 
     /// <summary>
-    /// Creates a shareable plugin archive from a local plugin and opens the native share sheet.
+    /// Creates a shareable plugin archive from a local plugin and hands it over to the user.
     /// The archive contains the plugin root contents, so <c>plugin.lua</c> is located at the archive root.
     /// </summary>
+    /// <remarks>
+    /// On Windows and macOS, the archive is created in a temporary directory and handed over to the
+    /// native share sheet. Linux has no such share sheet, since the XDG desktop portals do not provide
+    /// a share interface. Thus, the archive is exported to a location of the user's choice there.
+    /// </remarks>
     /// <param name="plugin">The local plugin to archive and share.</param>
     /// <param name="token">Cancellation token for archive creation.</param>
-    /// <returns>The share result, including the retained temporary archive path when successful.</returns>
+    /// <returns>The share result, including the archive path when successful.</returns>
     public async Task<PluginShareResult> ShareAsync(IAvailablePlugin plugin, CancellationToken token)
     {
         if (plugin.IsInternal)
@@ -36,6 +42,67 @@ public sealed class PluginShareService(NativeShareService nativeShareService, IL
         if (!TryGetPluginRoot(plugin, out var pluginRoot, out var issue))
             return ShareError(plugin, issue);
 
+        if (OperatingSystem.IsLinux())
+            return await this.ExportAsync(plugin, pluginRoot, token);
+
+        return await this.ShareViaNativeSheetAsync(plugin, pluginRoot, token);
+    }
+
+    /// <summary>
+    /// Asks the user for a target location and writes the plugin archive to it.
+    /// </summary>
+    /// <param name="plugin">The local plugin to archive.</param>
+    /// <param name="pluginRoot">The validated plugin root directory.</param>
+    /// <param name="token">Cancellation token for archive creation.</param>
+    /// <returns>The share result, including the chosen archive path when successful.</returns>
+    private async Task<PluginShareResult> ExportAsync(IAvailablePlugin plugin, string pluginRoot, CancellationToken token)
+    {
+        var suggestedFileName = $"{CreateSafeFileNamePrefix(plugin.Name)}{PLUGIN_FILE_EXTENSION}";
+        var saveResponse = await rustService.SaveFile(TB("Export plugin archive"), [FileTypes.PLUGIN_ARCHIVE], suggestedFileName);
+        if (saveResponse.UserCancelled)
+            return new(false, plugin.Name, string.Empty, string.Empty, true);
+
+        var archivePath = saveResponse.SaveFilePath;
+        try
+        {
+            token.ThrowIfCancellationRequested();
+            await Task.Run(() =>
+            {
+                token.ThrowIfCancellationRequested();
+
+                // The save dialog already asked the user about overwriting an existing file.
+                // ZipFile.CreateFromDirectory would fail on an existing file, though:
+                if (File.Exists(archivePath))
+                    File.Delete(archivePath);
+
+                ZipFile.CreateFromDirectory(pluginRoot, archivePath, CompressionLevel.Optimal, false);
+            }, token);
+
+            logger.LogInformation("Exported plugin '{PluginName}' ({PluginId}) to the archive '{ArchivePath}'.", plugin.Name, plugin.Id, archivePath);
+            return new(true, plugin.Name, archivePath, string.Empty);
+        }
+        catch (OperationCanceledException)
+        {
+            this.TryDeleteArchive(archivePath);
+            throw;
+        }
+        catch (Exception exception)
+        {
+            this.TryDeleteArchive(archivePath);
+            logger.LogError(exception, "Failed to export plugin '{PluginName}' ({PluginId}).", plugin.Name, plugin.Id);
+            return ShareError(plugin, string.Format(TB("Unexpected error: {0}"), exception.Message));
+        }
+    }
+
+    /// <summary>
+    /// Creates the plugin archive in a temporary directory and opens the native share sheet for it.
+    /// </summary>
+    /// <param name="plugin">The local plugin to archive and share.</param>
+    /// <param name="pluginRoot">The validated plugin root directory.</param>
+    /// <param name="token">Cancellation token for archive creation.</param>
+    /// <returns>The share result, including the retained temporary archive path when successful.</returns>
+    private async Task<PluginShareResult> ShareViaNativeSheetAsync(IAvailablePlugin plugin, string pluginRoot, CancellationToken token)
+    {
         var archiveDirectory = Path.Join(Path.GetTempPath(), TEMPORARY_ARCHIVE_DIRECTORY);
         var archivePath = Path.Join(archiveDirectory, $"{CreateSafeFileNamePrefix(plugin.Name)}-{plugin.Id:N}-{Guid.NewGuid():N}{PLUGIN_FILE_EXTENSION}");
 

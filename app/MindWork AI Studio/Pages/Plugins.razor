@@ -118,8 +118,8 @@
                             
                             @if (context is IAvailablePlugin shareablePlugin && CanSharePlugin(shareablePlugin))
                             {
-                                <MudTooltip Text="@T("Share plugin archive")">
-                                    <MudIconButton Icon="@Icons.Material.Filled.IosShare" Size="Size.Medium" OnClick="@(() => this.SharePluginAsync(shareablePlugin))" Disabled="@(!CanSharePlugin(shareablePlugin))"/>
+                                <MudTooltip Text="@this.SharePluginTooltip">
+                                    <MudIconButton Icon="@SharePluginIcon" Size="Size.Medium" OnClick="@(() => this.SharePluginAsync(shareablePlugin))" Disabled="@(!CanSharePlugin(shareablePlugin))"/>
                                 </MudTooltip>
                             }
 
