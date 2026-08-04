@@ -10,5 +10,7 @@ public abstract class VectorStoreClient(string name, string path): DatabaseClien
 
     public abstract Task DeleteEmbeddingByFile(string storeName, string filePath, CancellationToken token);
 
+    public abstract Task OptimizeVectorStore(string storeName, CancellationToken token);
+
     public abstract Task DeleteVectorStore(string storeName, CancellationToken token);
 }

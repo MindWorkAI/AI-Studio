@@ -112,6 +112,11 @@ pub struct DeleteQdrantEdgeEmbeddingByFileRequest {
 }
 
 #[derive(Deserialize)]
+pub struct OptimizeQdrantEdgeStoreRequest {
+    pub store_name: String,
+}
+
+#[derive(Deserialize)]
 pub struct DeleteQdrantEdgeStoreRequest {
     pub store_name: String,
 }
@@ -305,6 +310,19 @@ impl QdrantEdgeDatabase {
         Ok(())
     }
 
+    fn optimize_store(&mut self, store_name: &str) -> QdrantEdgeResult<()> {
+        let Some(shard) = self.get_existing_store(store_name)? else {
+            return Ok(());
+        };
+
+        let optimized = shard.optimize()?;
+        if optimized {
+            info!(Source = "Qdrant Edge"; "Optimized vector store '{}'.", store_name);
+        }
+        shard.flush();
+        Ok(())
+    }
+
     fn delete_store(&mut self, store_name: &str) -> QdrantEdgeResult<()> {
         self.shards.remove(store_name);
 
@@ -375,6 +393,12 @@ pub async fn search_qdrant_edge_embeddings(_token: APIToken, Json(request): Json
 pub async fn delete_qdrant_edge_embedding_by_file(_token: APIToken, Json(request): Json<DeleteQdrantEdgeEmbeddingByFileRequest>) -> Json<QdrantEdgeOperationResponse> {
     execute_qdrant_edge_operation(|database| {
         database.delete_embedding_by_file(&request.store_name, &request.file_path)
+    })
+}
+
+pub async fn optimize_qdrant_edge_store(_token: APIToken, Json(request): Json<OptimizeQdrantEdgeStoreRequest>) -> Json<QdrantEdgeOperationResponse> {
+    execute_qdrant_edge_operation(|database| {
+        database.optimize_store(&request.store_name)
     })
 }
 

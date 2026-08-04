@@ -17,6 +17,7 @@ public sealed class QdrantEdgeClientImplementation(
     private const string INSERT_PATH = "/system/qdrant-edge/insert";
     private const string SEARCH_PATH = "/system/qdrant-edge/search";
     private const string DELETE_FILE_PATH = "/system/qdrant-edge/delete-file";
+    private const string OPTIMIZE_PATH = "/system/qdrant-edge/optimize";
     private const string DELETE_STORE_PATH = "/system/qdrant-edge/delete-store";
     
     private readonly string path = path;
@@ -102,6 +103,9 @@ public sealed class QdrantEdgeClientImplementation(
     public override Task DeleteEmbeddingByFile(string storeName, string filePath, CancellationToken token) =>
         rustService.ExecuteDatabaseOperation(DATABASE_NAME, DELETE_FILE_PATH, new DeleteEmbeddingByFileRequest(storeName, filePath), token);
 
+    public override Task OptimizeVectorStore(string storeName, CancellationToken token) =>
+        rustService.ExecuteDatabaseOperation(DATABASE_NAME, OPTIMIZE_PATH, new OptimizeVectorStoreRequest(storeName), token);
+
     public override Task DeleteVectorStore(string storeName, CancellationToken token) =>
         rustService.ExecuteDatabaseOperation(DATABASE_NAME, DELETE_STORE_PATH, new DeleteVectorStoreRequest(storeName), token);
 
@@ -124,6 +128,8 @@ public sealed class QdrantEdgeClientImplementation(
     private sealed record SearchEmbeddingRequest(string StoreName, IReadOnlyList<float> Vector, int MaxMatches);
 
     private sealed record DeleteEmbeddingByFileRequest(string StoreName, string FilePath);
+
+    private sealed record OptimizeVectorStoreRequest(string StoreName);
     
     private sealed record DeleteVectorStoreRequest(string StoreName);
     // ReSharper restore NotAccessedPositionalProperty.Local

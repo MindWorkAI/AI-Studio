@@ -34,6 +34,9 @@ public sealed class NoVectorStoreClient(string name, string? unavailableReason, 
     public override Task DeleteEmbeddingByFile(string storeName, string filePath, CancellationToken token) =>
         Task.FromException(this.CreateUnavailableException());
 
+    public override Task OptimizeVectorStore(string storeName, CancellationToken token) =>
+        Task.FromException(this.CreateUnavailableException());
+
     public override Task DeleteVectorStore(string storeName, CancellationToken token) =>
         Task.FromException(this.CreateUnavailableException());
 

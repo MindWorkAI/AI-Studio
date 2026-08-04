@@ -16,6 +16,8 @@ namespace AIStudio.Tools.Services;
 public sealed partial class DataSourceEmbeddingService(SettingsManager settingsManager, RustService rustService, DatabaseClientProvider databaseClientProvider, ILogger<DataSourceEmbeddingService> logger)
     : BackgroundService
 {
+    private const int VECTOR_STORE_OPTIMIZATION_CHUNK_THRESHOLD = 100_000;
+
     private readonly Channel<DataSourceEmbeddingQueueItem> queue = Channel.CreateUnbounded<DataSourceEmbeddingQueueItem>();
     private readonly ConcurrentDictionary<string, byte> queuedIds = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, byte> runningIds = new(StringComparer.OrdinalIgnoreCase);
@@ -47,6 +49,33 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     private sealed record DataSourceEmbeddingQueueItem(string DataSourceId, DataSourceEmbeddingRefreshMode RefreshMode);
 
     private sealed record DataSourceRunControl(CancellationTokenSource TokenSource, TaskCompletionSource<object?> Completion);
+
+    private sealed class VectorStoreOptimizationTracker
+    {
+        public long StoredChunksSinceLastOptimization { get; private set; }
+
+        public bool HasPendingChanges { get; private set; }
+
+        public void MarkChanged()
+        {
+            this.HasPendingChanges = true;
+        }
+
+        public void RecordStoredChunks(int chunkCount)
+        {
+            if (chunkCount <= 0)
+                return;
+
+            this.HasPendingChanges = true;
+            this.StoredChunksSinceLastOptimization += chunkCount;
+        }
+
+        public void Reset()
+        {
+            this.StoredChunksSinceLastOptimization = 0;
+            this.HasPendingChanges = false;
+        }
+    }
 
     public IReadOnlyList<DataSourceEmbeddingStatus> GetStatuses()
     {
@@ -431,6 +460,9 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
 
         var metadataSnapshot = this.BuildDataSourceMetadataSnapshot(dataSource, indexedFiles);
         var removedMissingFiles = await this.RemoveMissingFileEmbeddingsAsync(vectorStore, embeddingState, dataSource, collectionName, manifest, indexedFiles, token);
+        var optimizationTracker = new VectorStoreOptimizationTracker();
+        if (removedMissingFiles > 0)
+            optimizationTracker.MarkChanged();
         token.ThrowIfCancellationRequested();
 
         logger.LogInformation(
@@ -450,6 +482,14 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                 dataSource.Name,
                 dataSource.Id,
                 refreshMode);
+
+            await this.OptimizeCollectionIfNeededAsync(
+                optimizationTracker,
+                vectorStore,
+                collectionName,
+                dataSource,
+                "data source finished after removing missing files",
+                token);
 
             token.ThrowIfCancellationRequested();
             await embeddingState.UpdateDataSourceHashAsync(dataSource.Id, metadataSnapshot.SourceHash, token);
@@ -511,7 +551,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                     skippedFiles + completedFiles + 1,
                     totalFiles);
                 var startedAtUtc = DateTime.UtcNow;
-                var chunkCount = await this.IndexOneFileAsync(embeddingState, vectorStore, dataSource, file, fingerprint, embeddingProvider, provider, manifest, token);
+                var chunkCount = await this.IndexOneFileAsync(embeddingState, vectorStore, dataSource, file, fingerprint, embeddingProvider, provider, manifest, optimizationTracker, token);
                 token.ThrowIfCancellationRequested();
                 var embeddedAtUtc = DateTime.UtcNow;
                 var record = new EmbeddedFileRecord(
@@ -550,6 +590,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                 failureDetails.Add(new DataSourceEmbeddingFailure(file.FullName, exception.Message));
                 manifest.Files.Remove(file.FullName);
                 await this.DeleteFilePointsAsync(vectorStore, collectionName, file.FullName, token);
+                optimizationTracker.MarkChanged();
                 await embeddingState.DeleteFileAsync(dataSource.Id, file.FullName, token);
 
                 logger.LogWarning(exception, "Failed to embed file '{FilePath}' for data source '{DataSourceName}'.", file.FullName, dataSource.Name);
@@ -558,6 +599,15 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         }
 
         manifest.SourceHash = metadataSnapshot.SourceHash;
+        token.ThrowIfCancellationRequested();
+        await this.OptimizeCollectionIfNeededAsync(
+            optimizationTracker,
+            vectorStore,
+            collectionName,
+            dataSource,
+            "data source embedding run finished",
+            token);
+
         token.ThrowIfCancellationRequested();
         await embeddingState.UpdateDataSourceHashAsync(dataSource.Id, metadataSnapshot.SourceHash, token);
         token.ThrowIfCancellationRequested();
@@ -587,6 +637,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         EmbeddingProvider embeddingProvider,
         IProvider provider,
         DataSourceEmbeddingManifest manifest,
+        VectorStoreOptimizationTracker optimizationTracker,
         CancellationToken token)
     {
         var collectionName = this.GetCollectionName(dataSource.Name, dataSource.Id);
@@ -595,6 +646,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             file.FullName,
             collectionName);
         await this.DeleteFilePointsAsync(vectorStore, collectionName, file.FullName, token);
+        optimizationTracker.MarkChanged();
         await embeddingState.DeleteFileAsync(dataSource.Id, file.FullName, token);
 
         var parentFile = this.CreateEmbeddingStateFile(dataSource, file, fingerprint, 0, DateTime.UtcNow);
@@ -610,11 +662,11 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             totalChunkCount++;
 
             if (batch.Count >= embeddingBatchSize)
-                await this.FlushBatchAsync(embeddingState, vectorStore, dataSource, file, fingerprint, parentFile, embeddingProvider, provider, manifest, collectionName, batch, token);
+                await this.FlushBatchAsync(embeddingState, vectorStore, dataSource, file, fingerprint, parentFile, embeddingProvider, provider, manifest, optimizationTracker, collectionName, batch, token);
         }
 
         if (batch.Count > 0)
-            await this.FlushBatchAsync(embeddingState, vectorStore, dataSource, file, fingerprint, parentFile, embeddingProvider, provider, manifest, collectionName, batch, token);
+            await this.FlushBatchAsync(embeddingState, vectorStore, dataSource, file, fingerprint, parentFile, embeddingProvider, provider, manifest, optimizationTracker, collectionName, batch, token);
 
         if (totalChunkCount == 0)
             throw new InvalidOperationException($"The file '{file.Name}' did not yield any text chunks.");
@@ -639,6 +691,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         EmbeddingProvider embeddingProvider,
         IProvider provider,
         DataSourceEmbeddingManifest manifest,
+        VectorStoreOptimizationTracker optimizationTracker,
         string collectionName,
         List<EmbeddingChunkDraft> batch,
         CancellationToken token)
@@ -709,6 +762,16 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             this.CreateEmbeddingStateChunks(parentFile, batch, embeddedAtUtc),
             token);
 
+        optimizationTracker.RecordStoredChunks(batch.Count);
+        if (optimizationTracker.StoredChunksSinceLastOptimization >= VECTOR_STORE_OPTIMIZATION_CHUNK_THRESHOLD)
+            await this.OptimizeCollectionIfNeededAsync(
+                optimizationTracker,
+                vectorStore,
+                collectionName,
+                dataSource,
+                "stored chunk threshold reached",
+                token);
+
         logger.LogDebug(
             "Stored {ChunkCount} embedded chunks for file '{FilePath}' in collection '{CollectionName}'.",
             batch.Count,
@@ -764,6 +827,30 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     private async Task DeleteFilePointsAsync(VectorStoreClient vectorStore, string collectionName, string filePath, CancellationToken token)
     {
         await vectorStore.DeleteEmbeddingByFile(collectionName, filePath, token);
+    }
+
+    private async Task OptimizeCollectionIfNeededAsync(
+        VectorStoreOptimizationTracker optimizationTracker,
+        VectorStoreClient vectorStore,
+        string collectionName,
+        IDataSource dataSource,
+        string reason,
+        CancellationToken token)
+    {
+        if (!optimizationTracker.HasPendingChanges)
+            return;
+
+        logger.LogInformation(
+            "Optimizing embedding collection '{CollectionName}' for data source '{DataSourceName}' ({DataSourceId}). Reason='{Reason}', StoredChunksSinceLastOptimization={StoredChunksSinceLastOptimization}, ChunkThreshold={ChunkThreshold}.",
+            collectionName,
+            dataSource.Name,
+            dataSource.Id,
+            reason,
+            optimizationTracker.StoredChunksSinceLastOptimization,
+            VECTOR_STORE_OPTIMIZATION_CHUNK_THRESHOLD);
+
+        await vectorStore.OptimizeVectorStore(collectionName, token);
+        optimizationTracker.Reset();
     }
 
     private async Task DeleteCollectionAsync(string collectionName, VectorStoreClient? vectorStore, CancellationToken token)
