@@ -1,0 +1,44 @@
+@namespace AIStudio.Chat
+@using MudBlazor
+@inherits AIStudio.Components.MSGComponentBase
+
+@if (this.Result.Chart is { } chart)
+{
+    <MudPaper Class="pa-4 my-3" Outlined="false" Elevation="4">
+        <MudText Typo="Typo.h6" Class="mb-3">@chart.Title</MudText>
+        @if (chart.Type is ChartDefinitionType.PIE or ChartDefinitionType.DONUT)
+        {
+            <div class="d-flex justify-center">
+                <MudChart ChartType="@this.ChartType"
+                          InputData="@chart.Series[0].Values.ToArray()"
+                          InputLabels="@chart.Categories.ToArray()"
+                          Width="50%"
+                          Height="200px" />
+            </div>
+        }
+        else
+        {
+            <div class="d-flex justify-center">
+                <MudChart ChartType="@this.ChartType"
+                          ChartSeries="@this.ChartSeries"
+                          XAxisLabels="@chart.Categories.ToArray()"
+                          AxisChartOptions="@this.AxisChartOptions"
+                          Width="75%"
+                          Height="350px" />
+            </div>
+        }
+        @if (chart.Caption is not null)
+        {
+            <MudText Typo="Typo.caption" Align="Align.Center" Class="d-block">
+                <em>@chart.Caption</em>
+            </MudText>
+        }
+    </MudPaper>
+}
+else
+{
+    <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="my-3">
+        @string.Format(T("This chart cannot be displayed: {0}"), this.Result.Error)
+    </MudAlert>
+    <pre class="overflow-auto"><code>@this.Result.RawJson</code></pre>
+}
