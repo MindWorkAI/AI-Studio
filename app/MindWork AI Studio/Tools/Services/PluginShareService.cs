@@ -4,20 +4,17 @@ using AIStudio.Tools.Rust;
 
 namespace AIStudio.Tools.Services;
 
-public sealed record PluginShareResult(bool Success, string PluginName, string ArchivePath, string Issue, bool Cancelled = false);
-
 public sealed class PluginShareService(NativeShareService nativeShareService, RustService rustService, ILogger<PluginShareService> logger)
 {
     private static PluginShareResult ShareError(IAvailablePlugin plugin, string issue) => new(false, plugin.Name, string.Empty, issue);
+    
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(PluginShareService).Namespace, nameof(PluginShareService));
 
     public const string PLUGIN_FILE_EXTENSION = ".mwplugin";
-
     private const string PLUGIN_FILE_NAME = "plugin.lua";
     private const string TEMPORARY_ARCHIVE_DIRECTORY = "mindwork-ai-studio-plugin-shares";
     private const int TEMPORARY_ARCHIVE_RETENTION_HOURS = 24;
     private const int FILE_NAME_PREFIX_MAX_LEN = 80;
-
 
     /// <summary>
     /// Creates a shareable plugin archive from a local plugin and hands it over to the user.
