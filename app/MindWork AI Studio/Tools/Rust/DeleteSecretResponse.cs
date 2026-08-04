@@ -6,4 +6,5 @@ namespace AIStudio.Tools.Rust;
 /// <param name="Success">True, when the secret was successfully deleted or not found.</param>
 /// <param name="Issue">The issue, when the secret could not be deleted.</param>
 /// <param name="WasEntryFound">True, when the entry was found and deleted.</param>
-public readonly record struct DeleteSecretResponse(bool Success, string Issue, bool WasEntryFound);
+/// <param name="IssueCode">The structured issue reported by the native credential store.</param>
+public readonly record struct DeleteSecretResponse(bool Success, string Issue, bool WasEntryFound, SecretStoreIssueCode IssueCode = SecretStoreIssueCode.NONE);

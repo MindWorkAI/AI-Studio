@@ -5,6 +5,46 @@ use serde::{Deserialize, Serialize};
 use crate::api_token::APIToken;
 use crate::encryption::{EncryptedText, ENCRYPTION};
 
+/// A structured issue reported by the native credential store.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize)]
+pub enum SecretStoreIssueCode {
+    None,
+    SecretNotFound,
+    NoDefaultCollection,
+    CollectionLocked,
+    PromptDismissed,
+    ServiceUnavailable,
+    Unknown,
+}
+
+fn issue_code(error: &KeyringError) -> SecretStoreIssueCode {
+    if matches!(error, KeyringError::NoEntry) {
+        return SecretStoreIssueCode::SecretNotFound;
+    }
+
+    #[cfg(target_os = "linux")]
+    if let KeyringError::PlatformFailure(error) | KeyringError::NoStorageAccess(error) = error {
+        if let Some(error) = error.downcast_ref::<dbus_secret_service::Error>() {
+            return secret_service_issue_code(error);
+        }
+    }
+
+    SecretStoreIssueCode::Unknown
+}
+
+#[cfg(target_os = "linux")]
+fn secret_service_issue_code(error: &dbus_secret_service::Error) -> SecretStoreIssueCode {
+    use dbus_secret_service::Error;
+
+    match error {
+        Error::NoResult => SecretStoreIssueCode::NoDefaultCollection,
+        Error::Locked => SecretStoreIssueCode::CollectionLocked,
+        Error::Prompt => SecretStoreIssueCode::PromptDismissed,
+        Error::Unavailable => SecretStoreIssueCode::ServiceUnavailable,
+        _ => SecretStoreIssueCode::Unknown,
+    }
+}
+
 /// Initializes the native credential store used by keyring-core.
 pub fn init_secret_store() {
     cfg_if::cfg_if! {
@@ -48,6 +88,7 @@ pub async fn store_secret(_token: APIToken, request: Json<StoreSecret>) -> Json<
             return Json(StoreSecretResponse {
                 success: false,
                 issue: format!("Failed to decrypt the text: {e}"),
+                issue_code: SecretStoreIssueCode::Unknown,
             })
         },
     };
@@ -60,6 +101,7 @@ pub async fn store_secret(_token: APIToken, request: Json<StoreSecret>) -> Json<
             return Json(StoreSecretResponse {
                 success: false,
                 issue: e.to_string(),
+                issue_code: issue_code(&e),
             });
         },
     };
@@ -70,6 +112,7 @@ pub async fn store_secret(_token: APIToken, request: Json<StoreSecret>) -> Json<
             Json(StoreSecretResponse {
                 success: true,
                 issue: String::from(""),
+                issue_code: SecretStoreIssueCode::None,
             })
         },
 
@@ -78,6 +121,7 @@ pub async fn store_secret(_token: APIToken, request: Json<StoreSecret>) -> Json<
             Json(StoreSecretResponse {
                 success: false,
                 issue: e.to_string(),
+                issue_code: issue_code(&e),
             })
         },
     }
@@ -96,6 +140,7 @@ pub struct StoreSecret {
 pub struct StoreSecretResponse {
     success: bool,
     issue: String,
+    issue_code: SecretStoreIssueCode,
 }
 
 /// Retrieves a secret from the secret store using the operating system's keyring.
@@ -113,6 +158,7 @@ pub async fn get_secret(_token: APIToken, request: Json<RequestSecret>) -> Json<
                 success: false,
                 secret: EncryptedText::new(String::from("")),
                 issue: format!("Failed to create secret entry for '{service}' and user '{user_name}': {e}"),
+                issue_code: issue_code(&e),
             });
         },
     };
@@ -130,6 +176,7 @@ pub async fn get_secret(_token: APIToken, request: Json<RequestSecret>) -> Json<
                         success: false,
                         secret: EncryptedText::new(String::from("")),
                         issue: format!("Failed to encrypt the secret: {e}"),
+                        issue_code: SecretStoreIssueCode::Unknown,
                     });
                 },
             };
@@ -138,6 +185,7 @@ pub async fn get_secret(_token: APIToken, request: Json<RequestSecret>) -> Json<
                 success: true,
                 secret: encrypted_secret,
                 issue: String::from(""),
+                issue_code: SecretStoreIssueCode::None,
             })
         },
 
@@ -150,6 +198,7 @@ pub async fn get_secret(_token: APIToken, request: Json<RequestSecret>) -> Json<
                 success: false,
                 secret: EncryptedText::new(String::from("")),
                 issue: format!("Failed to retrieve secret for '{service}' and user '{user_name}': {e}"),
+                issue_code: issue_code(&e),
             })
         },
     }
@@ -169,6 +218,7 @@ pub struct RequestedSecret {
     success: bool,
     secret: EncryptedText,
     issue: String,
+    issue_code: SecretStoreIssueCode,
 }
 
 /// Deletes a secret from the secret store using the operating system's keyring.
@@ -183,6 +233,7 @@ pub async fn delete_secret(_token: APIToken, request: Json<RequestSecret>) -> Js
                 success: false,
                 was_entry_found: false,
                 issue: e.to_string(),
+                issue_code: issue_code(&e),
             });
         },
     };
@@ -195,6 +246,7 @@ pub async fn delete_secret(_token: APIToken, request: Json<RequestSecret>) -> Js
                 success: true,
                 was_entry_found: true,
                 issue: String::from(""),
+                issue_code: SecretStoreIssueCode::None,
             })
         },
 
@@ -204,6 +256,7 @@ pub async fn delete_secret(_token: APIToken, request: Json<RequestSecret>) -> Js
                 success: true,
                 was_entry_found: false,
                 issue: String::from(""),
+                issue_code: SecretStoreIssueCode::SecretNotFound,
             })
         }
 
@@ -213,6 +266,7 @@ pub async fn delete_secret(_token: APIToken, request: Json<RequestSecret>) -> Js
                 success: false,
                 was_entry_found: false,
                 issue: e.to_string(),
+                issue_code: issue_code(&e),
             })
         },
     }
@@ -224,4 +278,46 @@ pub struct DeleteSecretResponse {
     success: bool,
     was_entry_found: bool,
     issue: String,
+    issue_code: SecretStoreIssueCode,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn no_entry_is_reported_as_secret_not_found() {
+        assert_eq!(issue_code(&KeyringError::NoEntry), SecretStoreIssueCode::SecretNotFound);
+    }
+
+    #[test]
+    fn unrelated_keyring_error_uses_unknown_fallback() {
+        let error = KeyringError::Invalid("service".to_string(), "invalid".to_string());
+        assert_eq!(issue_code(&error), SecretStoreIssueCode::Unknown);
+    }
+
+    #[test]
+    fn issue_code_is_included_in_json() {
+        let response = StoreSecretResponse {
+            success: false,
+            issue: "technical details".to_string(),
+            issue_code: SecretStoreIssueCode::NoDefaultCollection,
+        };
+        let json = serde_json::to_value(response).unwrap();
+
+        assert_eq!(json["issue_code"], "NoDefaultCollection");
+        assert_eq!(json["issue"], "technical details");
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn secret_service_errors_are_mapped_to_issue_codes() {
+        use dbus_secret_service::Error;
+
+        assert_eq!(secret_service_issue_code(&Error::NoResult), SecretStoreIssueCode::NoDefaultCollection);
+        assert_eq!(secret_service_issue_code(&Error::Locked), SecretStoreIssueCode::CollectionLocked);
+        assert_eq!(secret_service_issue_code(&Error::Prompt), SecretStoreIssueCode::PromptDismissed);
+        assert_eq!(secret_service_issue_code(&Error::Unavailable), SecretStoreIssueCode::ServiceUnavailable);
+        assert_eq!(secret_service_issue_code(&Error::Parse), SecretStoreIssueCode::Unknown);
+    }
 }

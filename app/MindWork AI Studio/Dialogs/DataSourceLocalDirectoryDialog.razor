@@ -48,19 +48,54 @@
                     @T("This data source already has indexed embeddings. Delete and recreate it to change the folder path or embedding model.")
                 </MudAlert>
             }
-            <SelectDirectory @bind-Directory="@this.dataPath" Label="@T("Selected base directory for this data source")" DirectoryDialogTitle="@T("Select the base directory")" Validation="@this.dataSourceValidation.ValidatePath" Disabled="@(!this.CanChangeSourceAndEmbedding)" />
+            @if (this.CanChangeSourceAndEmbedding)
+            {
+                <SelectDirectory @bind-Directory="@this.dataPath" Label="@T("Selected base directory for this data source")" DirectoryDialogTitle="@T("Select the base directory")" Validation="@this.dataSourceValidation.ValidatePath" />
+            }
+            else
+            {
+                <MudTextField
+                    T="string"
+                    Text="@this.dataPath"
+                    Label="@T("Selected base directory for this data source")"
+                    Class="mb-3"
+                    ReadOnly="@true"
+                    Validation="@this.dataSourceValidation.ValidatePath"
+                    Adornment="Adornment.Start"
+                    AdornmentIcon="@Icons.Material.Filled.Folder"
+                    UserAttributes="@SPELLCHECK_ATTRIBUTES"
+                    Variant="Variant.Outlined"
+                />
+            }
 
             <MudJustifiedText Typo="Typo.body1" Class="mb-3">
                 @T("In order for the AI to be able to determine the appropriate data at any time, you must choose an embedding method.")
             </MudJustifiedText>
-            <MudSelect @bind-Value="@this.dataEmbeddingId" Label="@T("Embedding")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateEmbeddingId" Disabled="@(!this.CanChangeSourceAndEmbedding)">
-                @foreach (var embedding in this.AvailableEmbeddings)
-                {
-                    <MudSelectItem Value="@embedding.Value">
-                        @embedding.Name
-                    </MudSelectItem>
-                }
-            </MudSelect>
+            @if (this.CanChangeSourceAndEmbedding)
+            {
+                <MudSelect @bind-Value="@this.dataEmbeddingId" Label="@T("Embedding")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateEmbeddingId">
+                    @foreach (var embedding in this.AvailableEmbeddings)
+                    {
+                        <MudSelectItem Value="@embedding.Value">
+                            @embedding.Name
+                        </MudSelectItem>
+                    }
+                </MudSelect>
+            }
+            else
+            {
+                <MudTextField
+                    T="string"
+                    Text="@this.SelectedEmbeddingNameText"
+                    Label="@T("Embedding")"
+                    Class="mb-3"
+                    ReadOnly="@true"
+                    Adornment="Adornment.Start"
+                    AdornmentIcon="@Icons.Material.Filled.DataObject"
+                    AdornmentColor="Color.Info"
+                    Variant="Variant.Outlined"
+                />
+            }
             
             @if (!string.IsNullOrWhiteSpace(this.dataEmbeddingId))
             {

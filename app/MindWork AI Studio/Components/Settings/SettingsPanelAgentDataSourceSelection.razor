@@ -1,3 +1,4 @@
+@using AIStudio.Settings
 @inherits SettingsPanelBase
 
 <ExpansionPanel HeaderIcon="@Icons.Material.Filled.SelectAll" HeaderText="@T("Agent: Data Source Selection Options")">
@@ -5,7 +6,7 @@
         <MudJustifiedText Typo="Typo.body1" Class="mb-3">
             @T("Use Case: this agent is used to select the appropriate data sources for the current prompt.")
         </MudJustifiedText>
-        <ConfigurationOption OptionDescription="@T("Preselect data source selection options?")" LabelOn="@T("Options are preselected")" LabelOff="@T("No options are preselected")" State="@(() => this.SettingsManager.ConfigurationData.AgentDataSourceSelection.PreselectAgentOptions)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.AgentDataSourceSelection.PreselectAgentOptions = updatedState)" OptionHelp="@T("When enabled, you can preselect some agent options. This is might be useful when you prefer an LLM.")"/>
-        <ConfigurationProviderSelection Data="@this.AvailableLLMProvidersFunc()" Disabled="@(() => !this.SettingsManager.ConfigurationData.AgentDataSourceSelection.PreselectAgentOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.AgentDataSourceSelection.PreselectedAgentProvider)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.AgentDataSourceSelection.PreselectedAgentProvider = selectedValue)"/>
+        <ConfigurationOption OptionDescription="@T("Preselect data source selection options?")" LabelOn="@T("Options are preselected")" LabelOff="@T("No options are preselected")" State="@(() => this.SettingsManager.ConfigurationData.AgentDataSourceSelection.PreselectAgentOptions)" StateUpdate="@(updatedState => this.SettingsManager.ConfigurationData.AgentDataSourceSelection.PreselectAgentOptions = updatedState)" OptionHelp="@T("When enabled, you can preselect some agent options. This is might be useful when you prefer an LLM.")" IsLocked="() => ManagedConfiguration.TryGet(x => x.AgentDataSourceSelection, x => x.PreselectAgentOptions, out var meta) && meta.IsLocked"/>
+        <ConfigurationProviderSelection Data="@this.AvailableLLMProvidersFunc()" Disabled="@(() => !this.SettingsManager.ConfigurationData.AgentDataSourceSelection.PreselectAgentOptions)" SelectedValue="@(() => this.SettingsManager.ConfigurationData.AgentDataSourceSelection.PreselectedAgentProvider)" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.AgentDataSourceSelection.PreselectedAgentProvider = selectedValue)" IsLocked="() => ManagedConfiguration.TryGet(x => x.AgentDataSourceSelection, x => x.PreselectedAgentProvider, out var meta) && meta.IsLocked"/>
     </MudPaper>
 </ExpansionPanel>

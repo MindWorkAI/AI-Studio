@@ -6,7 +6,7 @@
     <ReadWebContent @bind-Content="@this.inputText" ProviderSettings="@this.ProviderSettings" @bind-AgentIsRunning="@this.isAgentRunning" @bind-Preselect="@this.showWebContentReader" @bind-PreselectContentCleanerAgent="@this.useContentCleanerAgent"/>
 }
 
-<ReadFileContent @bind-FileContent="@this.inputText"/>
+<ReadFileContent @bind-FileContent="@this.inputText" EnableDragDrop="true" Layer="@DropLayers.ASSISTANTS" CatchAllDocuments="true"/>
 
 <MudTextSwitch Label="@T("Live translation")" @bind-Value="@this.liveTranslation" LabelOn="@T("Live translation")" LabelOff="@T("No live translation")"/>
 @if (this.liveTranslation)

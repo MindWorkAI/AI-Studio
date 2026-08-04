@@ -57,9 +57,6 @@ public sealed partial class RustService
             return legacySecret;
         }
 
-        if (!isTrying)
-            this.logger!.LogError($"Failed to get the API key for '{secretKey}': '{secret.Issue}'");
-
         return secret;
     }
 
@@ -79,8 +76,10 @@ public sealed partial class RustService
             this.logger!.LogDebug($"Successfully retrieved the API key for '{secretKey}'.");
         else if (isTrying)
             this.logger!.LogDebug($"No API key configured for '{secretKey}' (try mode): '{secret.Issue}'");
+        else
+            this.logger!.LogError($"Failed to get the API key for '{secretKey}': '{secret.Issue}'");
 
-        return secret;
+        return TranslateSecretStoreIssue(secret);
     }
 
     /// <summary>
@@ -101,7 +100,7 @@ public sealed partial class RustService
                 await this.DeleteAPIKeyByKey(legacySecretKey, isTrying: true);
         }
 
-        return state;
+        return TranslateSecretStoreIssue(state);
     }
 
     private async Task<StoreSecretResponse> StoreEncryptedAPIKeyByKey(string secretKey, EncryptedText encryptedKey)
@@ -161,6 +160,6 @@ public sealed partial class RustService
         if (!state.Success && !isTrying)
             this.logger!.LogError($"Failed to delete the API key for '{secretKey}': '{state.Issue}'");
 
-        return state;
+        return TranslateSecretStoreIssue(state);
     }
 }

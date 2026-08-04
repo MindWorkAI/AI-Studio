@@ -49,6 +49,7 @@ public partial class ConfigurationFile : ConfigurationBaseCore
     private RustService RustService { get; init; } = null!;
 
     private string internalText = string.Empty;
+    private bool isFileDialogOpen;
     private readonly Timer timer = new(TimeSpan.FromMilliseconds(500))
     {
         AutoReset = false
@@ -90,13 +91,24 @@ public partial class ConfigurationFile : ConfigurationBaseCore
 
     private async Task OpenFileDialog()
     {
-        var response = await this.RustService.SelectFile(this.FileDialogTitle, this.Filter, string.IsNullOrWhiteSpace(this.internalText) ? null : this.internalText);
-        if (response.UserCancelled)
+        if (this.isFileDialogOpen)
             return;
 
-        this.timer.Stop();
-        this.internalText = response.SelectedFilePath;
-        await this.OptionChanged(response.SelectedFilePath);
+        this.isFileDialogOpen = true;
+        try
+        {
+            var response = await this.RustService.SelectFile(this.FileDialogTitle, this.Filter, string.IsNullOrWhiteSpace(this.internalText) ? null : this.internalText);
+            if (response.UserCancelled)
+                return;
+
+            this.timer.Stop();
+            this.internalText = response.SelectedFilePath;
+            await this.OptionChanged(response.SelectedFilePath);
+        }
+        finally
+        {
+            this.isFileDialogOpen = false;
+        }
     }
 
     private async Task OptionChanged(string updatedText)

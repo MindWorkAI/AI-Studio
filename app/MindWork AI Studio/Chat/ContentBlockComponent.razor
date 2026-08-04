@@ -103,7 +103,7 @@
                                         var segmentContent = segment.GetContent(renderPlan.Source);
                                         if (segment.Type is MarkdownRenderSegmentType.MARKDOWN)
                                         {
-                                            <MudMarkdown @key="@segment.RenderKey" Value="@segmentContent" Props="Markdown.DefaultConfig" Styling="@this.MarkdownStyling" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE" />
+                                            <MudMarkdown @key="@segment.RenderKey" Value="@segmentContent" Props="Markdown.DefaultConfig" Styling="@this.MarkdownStyling" MarkdownPipeline="Markdown.CHAT_MARKDOWN_PIPELINE" />
                                         }
                                         else
                                         {

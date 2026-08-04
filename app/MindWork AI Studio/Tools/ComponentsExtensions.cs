@@ -1,6 +1,8 @@
 using System.Diagnostics.CodeAnalysis;
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Settings.DataModel;
+using AIStudio.Tools.Media;
 using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Tools;
@@ -8,7 +10,53 @@ namespace AIStudio.Tools;
 public static class ComponentsExtensions
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ComponentsExtensions).Namespace, nameof(ComponentsExtensions));
-    
+
+    /// <summary>
+    /// Gets the preview feature a component belongs to. Components that are generally available
+    /// return <see cref="PreviewFeatures.NONE"/>. This is the single place that maps a component to
+    /// its preview feature, so visibility checks never need to special-case one assistant.
+    /// </summary>
+    /// <param name="component">The component to look up.</param>
+    /// <returns>The required preview feature.</returns>
+    public static PreviewFeatures RequiredPreviewFeature(this Components component) => component switch
+    {
+        Components.VISUAL_BRIEFING_ASSISTANT => PreviewFeatures.PRE_VISUAL_BRIEFING_ASSISTANT_2026,
+
+        _ => PreviewFeatures.NONE,
+    };
+
+    /// <summary>
+    /// Gets whether a component owns exactly one assistant session slot, so that a running session
+    /// blocks starting another one and inactive sessions can be cleared as a group.
+    /// </summary>
+    /// <remarks>
+    /// Components return <c>false</c> for two different reasons. The chat has no assistant sessions
+    /// at all. The visual briefing assistant keys its sessions per briefing, so it owns one slot per
+    /// stored briefing rather than one per component. Both must be excluded from the single-slot
+    /// checks, which is why this is a capability and not a component comparison.
+    /// </remarks>
+    /// <param name="component">The component to look up.</param>
+    /// <returns><c>true</c> when the component owns exactly one session slot.</returns>
+    public static bool HasSingleSessionSlot(this Components component) => component switch
+    {
+        Components.CHAT => false,
+        Components.VISUAL_BRIEFING_ASSISTANT => false,
+
+        _ => true,
+    };
+
+    /// <summary>
+    /// Gets the kind of media-import owner a component creates for its attachments.
+    /// </summary>
+    /// <param name="component">The component to look up.</param>
+    /// <returns>The media-import owner kind.</returns>
+    public static MediaImportOwnerKind MediaOwnerKind(this Components component) => component switch
+    {
+        Components.VISUAL_BRIEFING_ASSISTANT => MediaImportOwnerKind.VISUAL_BRIEFING,
+
+        _ => MediaImportOwnerKind.ASSISTANT,
+    };
+
     public static bool AllowSendTo(this Components component) => component switch
     {
         Components.NONE => false,
@@ -17,6 +65,7 @@ public static class ComponentsExtensions
         Components.BIAS_DAY_ASSISTANT => false,
         Components.I18N_ASSISTANT => false,
         Components.DOCUMENT_ANALYSIS_ASSISTANT => false,
+        Components.LOG_VIEWER_ASSISTANT => false,
         
         Components.APP_SETTINGS => false,
         Components.WRITER => false,
@@ -25,6 +74,7 @@ public static class ComponentsExtensions
         Components.AGENT_DATA_SOURCE_SELECTION => false,
         Components.AGENT_RETRIEVAL_CONTEXT_VALIDATION => false,
         Components.AGENT_ASSISTANT_PLUGIN_AUDIT => false,
+        Components.META_ASSISTANT => false,
         
         _ => true,
     };
@@ -48,6 +98,9 @@ public static class ComponentsExtensions
         Components.I18N_ASSISTANT => TB("Localization Assistant"),
         Components.DOCUMENT_ANALYSIS_ASSISTANT => TB("Document Analysis Assistant"),
         Components.SLIDE_BUILDER_ASSISTANT => TB("Slide Planner Assistant"),
+        Components.VISUAL_BRIEFING_ASSISTANT => TB("Visual Briefing Assistant"),
+        Components.META_ASSISTANT => TB("Assistant Builder"),
+        Components.LOG_VIEWER_ASSISTANT => TB("Log Viewer Assistant"),
         
         Components.CHAT => TB("New Chat"),
         
@@ -71,6 +124,7 @@ public static class ComponentsExtensions
         Components.JOB_POSTING_ASSISTANT => new(Event.SEND_TO_JOB_POSTING_ASSISTANT, Routes.ASSISTANT_JOB_POSTING),
         Components.DOCUMENT_ANALYSIS_ASSISTANT => new(Event.SEND_TO_DOCUMENT_ANALYSIS_ASSISTANT, Routes.ASSISTANT_DOCUMENT_ANALYSIS),
         Components.SLIDE_BUILDER_ASSISTANT => new(Event.SEND_TO_SLIDE_BUILDER_ASSISTANT, Routes.ASSISTANT_SLIDE_BUILDER),
+        Components.VISUAL_BRIEFING_ASSISTANT => new(Event.SEND_TO_VISUAL_BRIEFING_ASSISTANT, Routes.ASSISTANT_VISUAL_BRIEFING),
         
         Components.CHAT => new(Event.SEND_TO_CHAT, Routes.CHAT),
         
@@ -95,6 +149,7 @@ public static class ComponentsExtensions
         Components.BIAS_DAY_ASSISTANT => settingsManager.ConfigurationData.BiasOfTheDay.PreselectOptions ? settingsManager.ConfigurationData.BiasOfTheDay.MinimumProviderConfidence : default,
         Components.ERI_ASSISTANT => settingsManager.ConfigurationData.ERI.PreselectOptions ? settingsManager.ConfigurationData.ERI.MinimumProviderConfidence : default,
         Components.SLIDE_BUILDER_ASSISTANT => settingsManager.ConfigurationData.SlideBuilder.PreselectOptions ? settingsManager.ConfigurationData.SlideBuilder.MinimumProviderConfidence : default,
+        Components.VISUAL_BRIEFING_ASSISTANT => settingsManager.ConfigurationData.VisualBriefing.MinimumProviderConfidence,
         
         // The minimum confidence for the Document Analysis Assistant is set per policy.
         // We do this inside the Document Analysis Assistant component:
@@ -125,6 +180,7 @@ public static class ComponentsExtensions
             Components.ERI_ASSISTANT => settingsManager.ConfigurationData.ERI.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.ERI.PreselectedProvider) : null,
             Components.I18N_ASSISTANT => settingsManager.ConfigurationData.I18N.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.I18N.PreselectedProvider) : null,
             Components.SLIDE_BUILDER_ASSISTANT => settingsManager.ConfigurationData.SlideBuilder.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.SlideBuilder.PreselectedProvider) : null,
+            Components.VISUAL_BRIEFING_ASSISTANT => settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.VisualBriefing.PreselectedProvider),
             
             // The Document Analysis Assistant does not have a preselected provider at the component level.
             // The provider is selected per policy instead. We do this inside the Document Analysis Assistant component.
@@ -155,6 +211,7 @@ public static class ComponentsExtensions
             Components.BIAS_DAY_ASSISTANT => settingsManager.ConfigurationData.BiasOfTheDay.PreselectOptions ? settingsManager.ConfigurationData.BiasOfTheDay.PreselectedProfile : string.Empty,
             Components.ERI_ASSISTANT => settingsManager.ConfigurationData.ERI.PreselectOptions ? settingsManager.ConfigurationData.ERI.PreselectedProfile : string.Empty,
             Components.SLIDE_BUILDER_ASSISTANT => settingsManager.ConfigurationData.SlideBuilder.PreselectOptions ? settingsManager.ConfigurationData.SlideBuilder.PreselectedProfile : string.Empty,
+            Components.VISUAL_BRIEFING_ASSISTANT => settingsManager.ConfigurationData.VisualBriefing.PreselectedProfile,
             Components.CHAT => settingsManager.ConfigurationData.Chat.PreselectOptions ? settingsManager.ConfigurationData.Chat.PreselectedProfile : string.Empty,
 
             // The Document Analysis Assistant does not have a preselected profile at the component level.

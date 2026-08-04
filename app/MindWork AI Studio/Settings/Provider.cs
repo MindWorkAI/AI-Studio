@@ -35,6 +35,7 @@ public sealed record Provider(
     HFInferenceProvider HFInferenceProvider = HFInferenceProvider.NONE,
     string AdditionalJsonApiParameters = "",
     string TokenizerPath = "") : ConfigurationBaseObject, ISecretId
+    ProviderCapabilityOverrides? CapabilityOverrides = null) : ConfigurationBaseObject, ISecretId
 {
     private static readonly ILogger<Provider> LOGGER = Program.LOGGER_FACTORY.CreateLogger<Provider>();
     
@@ -159,6 +160,7 @@ public sealed record Provider(
             LOGGER.LogWarning($"The configured provider {idx} does not contain a valid tokenizer path. (Plugin ID: {configPluginId})");
             tokenizerPath = string.Empty;
         }
+        var capabilityOverrides = ProviderCapabilityOverrides.TryParseFromLuaTable(idx, table, configPluginId, LOGGER);
 
         provider = new Provider
         {
@@ -175,6 +177,7 @@ public sealed record Provider(
             HFInferenceProvider = hfInferenceProvider,
             AdditionalJsonApiParameters = additionalJsonApiParameters,
             TokenizerPath = tokenizerPath,
+            CapabilityOverrides = capabilityOverrides,
         };
 
         // Handle encrypted API key if present:
@@ -250,6 +253,8 @@ public sealed record Provider(
                           """;
         }
 
+        var capabilityOverridesLine = this.CapabilityOverrides?.ExportAsLuaTable("    ") ?? string.Empty;
+
         return $$"""
                 CONFIG["LLM_PROVIDERS"][#CONFIG["LLM_PROVIDERS"]+1] = {
                     ["Id"] = "{{Guid.NewGuid().ToString()}}",
@@ -263,6 +268,7 @@ public sealed record Provider(
                     {{hfInferenceProviderLine}}
                     {{apiKeyLine}}
                     ["AdditionalJsonApiParameters"] = "{{LuaTools.EscapeLuaString(this.AdditionalJsonApiParameters)}}",
+                    {{capabilityOverridesLine}}
                     ["Model"] = {
                         ["Id"] = "{{LuaTools.EscapeLuaString(this.Model.Id)}}",
                         ["DisplayName"] = "{{LuaTools.EscapeLuaString(this.Model.DisplayName ?? this.Model.Id)}}",

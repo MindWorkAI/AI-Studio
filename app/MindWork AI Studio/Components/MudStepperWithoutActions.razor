@@ -1,0 +1,17 @@
+<MudStepper ActiveIndex="@this.ActiveIndex"
+            ActiveIndexChanged="@this.ActiveIndexChanged"
+            CompletedStepColor="Color.Primary"
+            CurrentStepColor="Color.Primary"
+            ErrorStepColor="Color.Error"
+            NonLinear="@false"
+            ShowResetButton="@false"
+            OnPreviewInteraction="@this.PreviewInteractionAsync"
+            Class="@this.Classname">
+    <ChildContent>
+        @this.ChildContent
+    </ChildContent>
+    @* Empty on purpose: this is what keeps MudBlazor from rendering its Previous, Next, Skip, and
+       Complete buttons. The surrounding action bar still renders and is hidden through app.css. *@
+    <ActionContent Context="_">
+    </ActionContent>
+</MudStepper>

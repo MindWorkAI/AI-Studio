@@ -4,6 +4,8 @@ using System.Text.Json;
 using AIStudio.Chat;
 using AIStudio.Dialogs;
 using AIStudio.Tools.AIJobs;
+using AIStudio.Tools.Media;
+using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
 
@@ -21,6 +23,9 @@ public partial class Workspaces : MSGComponentBase
 
     [Inject]
     private AIJobService AIJobService { get; init; } = null!;
+
+    [Inject]
+    private MediaTranscriptionService MediaTranscriptionService { get; init; } = null!;
     
     [Parameter]
     public ChatThread? CurrentChatThread { get; set; }
@@ -55,6 +60,7 @@ public partial class Workspaces : MSGComponentBase
 
     protected override async Task OnInitializedAsync()
     {
+        this.MediaTranscriptionService.StateChanged += this.OnMediaImportStateChanged;
         await base.OnInitializedAsync();
         this.ApplyFilters([], [ Event.AI_JOB_CHANGED, Event.AI_JOB_FINISHED, Event.CHAT_GENERATION_CHANGED, Event.WORKSPACE_CREATED ]);
         _ = this.LoadTreeItemsAsync(startPrefetch: true);
@@ -376,12 +382,26 @@ public partial class Workspaces : MSGComponentBase
 
     private bool IsChatTreeItemBusy(TreeItemData treeItem)
     {
-        return treeItem.Type is TreeItemType.CHAT && this.AIJobService.IsChatGenerationActive(treeItem.ChatId);
+        return treeItem.Type is TreeItemType.CHAT
+               && (this.AIJobService.IsChatGenerationActive(treeItem.ChatId)
+                   || this.MediaTranscriptionService.IsBusy(MediaImportOwner.ForChat(treeItem.ChatId)));
     }
 
     private string GetChatTreeItemTextStyle(TreeItemData treeItem)
     {
-        return this.IsCurrentChatTreeItem(treeItem) ? "justify-self: start; font-weight: 700;" : "justify-self: start;";
+        var status = this.MediaTranscriptionService.GetSnapshot(MediaImportOwner.ForChat(treeItem.ChatId))?.Status;
+        var color = status switch
+        {
+            MediaImportStatus.QUEUED or MediaImportStatus.RUNNING or MediaImportStatus.CANCELING => " color: var(--mud-palette-info);",
+            MediaImportStatus.SUCCEEDED => " color: var(--mud-palette-success);",
+            MediaImportStatus.WARNING => " color: var(--mud-palette-warning);",
+            MediaImportStatus.FAILED => " color: var(--mud-palette-error);",
+            MediaImportStatus.CANCELLED => " color: var(--mud-palette-warning);",
+            _ => string.Empty,
+        };
+        
+        var weight = this.IsCurrentChatTreeItem(treeItem) ? " font-weight: 700;" : string.Empty;
+        return $"justify-self: start;{weight}{color}";
     }
 
     private bool IsCurrentChatTreeItem(TreeItemData treeItem)
@@ -394,6 +414,22 @@ public partial class Workspaces : MSGComponentBase
 
     private string GetChatTreeIcon(Guid chatId, string defaultIcon)
     {
+        var mediaStatus = this.MediaTranscriptionService.GetSnapshot(MediaImportOwner.ForChat(chatId))?.Status;
+        if (mediaStatus is not null)
+        {
+            return mediaStatus switch
+            {
+                MediaImportStatus.QUEUED => Icons.Material.Filled.HourglassTop,
+                MediaImportStatus.RUNNING or MediaImportStatus.CANCELING => Icons.Material.Filled.ChangeCircle,
+                MediaImportStatus.SUCCEEDED => Icons.Material.Filled.TaskAlt,
+                MediaImportStatus.WARNING => Icons.Material.Filled.WarningAmber,
+                MediaImportStatus.FAILED => Icons.Material.Filled.Error,
+                MediaImportStatus.CANCELLED => Icons.Material.Filled.Cancel,
+                
+                _ => defaultIcon,
+            };
+        }
+
         var snapshot = this.AIJobService.TryGetChatSnapshot(chatId);
         if (snapshot is null || !snapshot.IsActive)
             return defaultIcon;
@@ -404,6 +440,12 @@ public partial class Workspaces : MSGComponentBase
             AIJobStatus.RUNNING => Icons.Material.Filled.ChangeCircle,
             _ => defaultIcon,
         };
+    }
+
+    private void OnMediaImportStateChanged(MediaImportOwner owner)
+    {
+        if (owner.Kind is MediaImportOwnerKind.CHAT)
+            _ = this.SafeStateHasChanged();
     }
 
     private async Task SafeStateHasChanged()
@@ -668,7 +710,8 @@ public partial class Workspaces : MSGComponentBase
         if (chat is null)
             return;
 
-        if (this.AIJobService.IsChatGenerationActive(chat.ChatId))
+        var mediaOwner = MediaImportOwner.ForChat(chat.ChatId);
+        if (this.AIJobService.IsChatGenerationActive(chat.ChatId) || this.MediaTranscriptionService.IsBusy(mediaOwner))
             return;
 
         if (askForConfirmation)
@@ -692,6 +735,7 @@ public partial class Workspaces : MSGComponentBase
         }
 
         await WorkspaceBehaviour.DeleteChatAsync(this.DialogService, chat.WorkspaceId, chat.ChatId, askForConfirmation: false);
+        this.MediaTranscriptionService.ClearOwnerState(mediaOwner);
         await this.LoadTreeItemsAsync(startPrefetch: false);
         
         if (unloadChat && this.CurrentChatThread?.ChatId == chat.ChatId)
@@ -845,16 +889,13 @@ public partial class Workspaces : MSGComponentBase
         if (workspaceId == Guid.Empty)
             return;
         
-        await WorkspaceBehaviour.DeleteChatAsync(this.DialogService, chat.WorkspaceId, chat.ChatId, askForConfirmation: false);
-        
-        chat.WorkspaceId = workspaceId;
+        await WorkspaceBehaviour.MoveChatAsync(chat, workspaceId);
         if (this.CurrentChatThread?.ChatId == chat.ChatId)
         {
             this.CurrentChatThread = chat;
             await this.CurrentChatThreadChanged.InvokeAsync(this.CurrentChatThread);
         }
-        
-        await WorkspaceBehaviour.StoreChatAsync(chat);
+
         await this.LoadTreeItemsAsync(startPrefetch: false);
     }
     
@@ -914,6 +955,7 @@ public partial class Workspaces : MSGComponentBase
 
     protected override void DisposeResources()
     {
+        this.MediaTranscriptionService.StateChanged -= this.OnMediaImportStateChanged;
         this.isDisposed = true;
         this.prefetchCancellationTokenSource?.Cancel();
         this.prefetchCancellationTokenSource?.Dispose();

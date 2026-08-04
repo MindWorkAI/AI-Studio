@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Version=1.5
+Name=MindWork AI Studio
+GenericName=AI Studio
+Comment=MindWork AI Studio is a free, independent cross-platform desktop app for local and cloud LLMs across providers, built to democratize AI access.
+Keywords=AI;LLM;Assistant;
+Exec=mind-work-ai-studio
+TryExec=mind-work-ai-studio
+Icon=org.mindworkai.AIStudio
+Categories=Science;Utility;Office;
+SingleMainWindow=true
+DBusActivatable=false
+StartupWMClass=org.mindworkai.AIStudio

@@ -3,5 +3,12 @@
 
 <ProfileFormSelection Validation="@this.ValidateProfile" @bind-Profile="@this.CurrentProfile"/>
 <MudTextField T="string" @bind-Text="@this.inputText" Validation="@this.ValidatingText" AdornmentIcon="@Icons.Material.Filled.DocumentScanner" Adornment="Adornment.Start" Label="@T("Text or email")" Variant="Variant.Outlined" Lines="12" AutoGrow="@true" MaxLines="24" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+<MudText Typo="Typo.h6" Class="mb-1 mt-1">@T("Attach documents")</MudText>
+<MudJustifiedText Typo="Typo.body1" Class="mb-2">
+    @T("You can enter text, attach one or more documents, or use both. At least one input is required.")
+</MudJustifiedText>
+<div class="mb-3">
+    <AttachDocuments Name="My Tasks Documents" Layer="@DropLayers.ASSISTANTS" @bind-DocumentPaths="@this.loadedDocumentPaths" OnChange="@this.OnDocumentsChanged" CatchAllDocuments="true" UseSmallForm="false" Provider="@this.ProviderSettings"/>
+</div>
 <EnumSelection T="CommonLanguages" NameFunc="@(language => language.NameSelectingOptional())" @bind-Value="@this.selectedTargetLanguage" Icon="@Icons.Material.Filled.Translate" Label="@T("Target language")" AllowOther="@true" OtherValue="CommonLanguages.OTHER" @bind-OtherInput="@this.customTargetLanguage" ValidateOther="@this.ValidateCustomLanguage" LabelOther="@T("Custom target language")" />
 <ProviderSelection @bind-ProviderSettings="@this.ProviderSettings" ValidateProvider="@this.ValidatingProvider"/>

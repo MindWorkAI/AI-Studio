@@ -1,4 +1,7 @@
 using System.Text;
+using AIStudio.Settings;
+using AIStudio.Settings.DataModel;
+using AIStudio.Tools.PluginSystem.Assistants;
 
 namespace AIStudio.Tools.PluginSystem;
 
@@ -78,10 +81,35 @@ public static partial class PluginFactory
                 LOG.LogError(e, $"An error occurred while starting the plugin: Id='{availablePlugin.Id}', Type='{availablePlugin.Type}', Name='{availablePlugin.Name}', Version='{availablePlugin.Version}'.");
             }
         }
+
+        LogAssistantPluginStartupState();
         
         // Inform all components that the plugins have been reloaded or started:
         await MessageBus.INSTANCE.SendMessage<bool>(null, Event.PLUGINS_RELOADED);
         return configObjects;
+    }
+
+    private static void LogAssistantPluginStartupState()
+    {
+        ManagedConfiguration.TryGet(x => x.AssistantPluginAudit, x => x.EnterpriseApprovedPlugins, out ConfigMeta<DataAssistantPluginAudit, IList<DataAssistantPluginEnterpriseApproval>> configMeta);
+        var approvedByConfigPluginId = configMeta is { IsLocked: true } ? configMeta.LockedByConfigPluginId : Guid.Empty;
+        var approvedByConfigPluginName = approvedByConfigPluginId == Guid.Empty
+            ? string.Empty
+            : AVAILABLE_PLUGINS.FirstOrDefault(x => x.Id == approvedByConfigPluginId)?.Name ?? string.Empty;
+
+        foreach (var assistantPlugin in RUNNING_PLUGINS.OfType<PluginAssistants>())
+        {
+            var securityState = PluginAssistantSecurityResolver.Resolve(SettingsManagerAccess, assistantPlugin);
+            if (securityState.IsEnterpriseApproved)
+            {
+                LOG.LogInformation(
+                    $"Successfully started assistant plugin: Id='{assistantPlugin.Id}', Type='{assistantPlugin.Type}', Name='{assistantPlugin.Name}', Version='{assistantPlugin.Version}', SecuritySource='EnterpriseApproval', ApprovedByConfigPluginId='{approvedByConfigPluginId}', ApprovedByConfigPluginName='{approvedByConfigPluginName}'");
+                continue;
+            }
+
+            LOG.LogInformation(
+                $"Successfully started assistant plugin: Id='{assistantPlugin.Id}', Type='{assistantPlugin.Type}', Name='{assistantPlugin.Name}', Version='{assistantPlugin.Version}'");
+        }
     }
     
     private static async Task<PluginBase> Start(IAvailablePlugin meta, CancellationToken cancellationToken = default)

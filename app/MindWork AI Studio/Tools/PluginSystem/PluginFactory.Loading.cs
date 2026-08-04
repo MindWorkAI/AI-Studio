@@ -35,8 +35,9 @@ public static partial class PluginFactory
             return;
         }
         
-        if (!await PLUGIN_LOAD_SEMAPHORE.WaitAsync(0, cancellationToken))
-            return;
+        // Wait for ongoing reloads instead of silently skipping this request.
+        // This caller must return only after its reload has run.
+        await PLUGIN_LOAD_SEMAPHORE.WaitAsync(cancellationToken);
 
         var configObjectList = new List<PluginConfigurationObject>();
         
@@ -120,6 +121,8 @@ public static partial class PluginFactory
                             LOG.LogWarning($"The configuration plugin '{plugin.Id}' does not define 'DEPLOYED_USING_CONFIG_SERVER'. Falling back to the plugin path and treating it as managed because it is stored under '{CONFIGURATION_PLUGINS_ROOT}'.");
                         }
                     }
+                    else if (plugin is PluginAssistants assistantPlugin)
+                        isManagedByConfigServer = assistantPlugin.IsManagedByConfigServer;
 
                     // For configuration plugins, validate that the plugin ID matches the enterprise config ID
                     // (the directory name under which the plugin was downloaded):
@@ -214,6 +217,21 @@ public static partial class PluginFactory
 
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Chat, x => x.PreselectedChatTemplate, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;
+
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Chat, x => x.PreselectedDataSourcesDisabled, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Chat, x => x.PreselectedDataSourcesAutomaticSelection, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Chat, x => x.PreselectedDataSourcesAutomaticValidation, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Chat, x => x.PreselectedDataSourceIds, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Chat, x => x.SendToChatDataSourceBehavior, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
         
         // Check for the update interval:
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.UpdateInterval, AVAILABLE_PLUGINS))
@@ -234,7 +252,15 @@ public static partial class PluginFactory
         // Check for the quick start guide visibility:
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.ShowQuickStartGuide, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;
-        
+
+        // Check for the last changelog visibility:
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.ShowLastChangelog, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        // Check for the vision panel visibility:
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.ShowVision, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
         // Check for users allowed to added providers:
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.AllowUserToAddProvider, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;
@@ -300,6 +326,26 @@ public static partial class PluginFactory
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.DataSourceSecurity, x => x.TrustedProviderIds, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;
 
+        // Check data source selection agent settings:
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.AgentDataSourceSelection, x => x.PreselectAgentOptions, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.AgentDataSourceSelection, x => x.PreselectedAgentProvider, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        // Check retrieval context validation agent settings:
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.AgentRetrievalContextValidation, x => x.EnableRetrievalContextValidation, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.AgentRetrievalContextValidation, x => x.PreselectAgentOptions, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.AgentRetrievalContextValidation, x => x.PreselectedAgentProvider, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.AgentRetrievalContextValidation, x => x.NumParallelValidations, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
         // Check if audit is required before it can be activated
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.AssistantPluginAudit, x => x.RequireAuditBeforeActivation, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;
@@ -318,6 +364,10 @@ public static partial class PluginFactory
         
         // Check if security audits are invoked automatically and transparent for the user
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.AssistantPluginAudit, x => x.AutomaticallyAuditAssistants, AVAILABLE_PLUGINS))
+            wasConfigurationChanged = true;
+
+        // Check enterprise-managed assistant plugin approvals
+        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.AssistantPluginAudit, x => x.EnterpriseApprovedPlugins, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;
         
         if (wasConfigurationChanged)

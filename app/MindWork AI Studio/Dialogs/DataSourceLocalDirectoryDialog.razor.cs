@@ -117,6 +117,15 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
 
     private IEnumerable<ConfigurationSelectData<ConfidenceLevel>> ComplianceLevels => ConfigurationSelectDataFactory.GetDataSourceComplianceLevelsData();
 
+    private string SelectedEmbeddingNameText
+    {
+        get
+        {
+            var selectedEmbedding = this.AvailableEmbeddings.FirstOrDefault(x => x.Value == this.dataEmbeddingId);
+            return string.IsNullOrWhiteSpace(selectedEmbedding.Name) ? T("Unknown") : selectedEmbedding.Name;
+        }
+    }
+
     private string SelectedEmbeddingTokenizerText => this.SelectedEmbedding is null
         ? T("No embedding selected")
         : string.IsNullOrWhiteSpace(this.SelectedEmbedding.TokenizerPath)

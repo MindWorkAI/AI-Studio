@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using AIStudio.Chat;
 using AIStudio.Dialogs.Settings;
+using AIStudio.Tools.AssistantSessions;
 
 namespace AIStudio.Assistants.SlideBuilder;
 
@@ -197,6 +198,58 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
     private int calculatedNumberOfSlides;
     private string importantAspects = string.Empty;
     private HashSet<FileAttachment> loadedDocumentPaths = [];
+    private static readonly AssistantSessionStateKey<string> INPUT_TITLE_STATE_KEY = new(nameof(inputTitle));
+    private static readonly AssistantSessionStateKey<string> INPUT_CONTENT_STATE_KEY = new(nameof(inputContent));
+    private static readonly AssistantSessionStateKey<string> CUSTOM_TARGET_LANGUAGE_STATE_KEY = new(nameof(customTargetLanguage));
+    private static readonly AssistantSessionStateKey<AudienceProfile> SELECTED_AUDIENCE_PROFILE_STATE_KEY = new(nameof(selectedAudienceProfile));
+    private static readonly AssistantSessionStateKey<AudienceAgeGroup> SELECTED_AUDIENCE_AGE_GROUP_STATE_KEY = new(nameof(selectedAudienceAgeGroup));
+    private static readonly AssistantSessionStateKey<AudienceOrganizationalLevel> SELECTED_AUDIENCE_ORGANIZATIONAL_LEVEL_STATE_KEY = new(nameof(selectedAudienceOrganizationalLevel));
+    private static readonly AssistantSessionStateKey<AudienceExpertise> SELECTED_AUDIENCE_EXPERTISE_STATE_KEY = new(nameof(selectedAudienceExpertise));
+    private static readonly AssistantSessionStateKey<CommonLanguages> SELECTED_TARGET_LANGUAGE_STATE_KEY = new(nameof(selectedTargetLanguage));
+    private static readonly AssistantSessionStateKey<int> NUMBER_OF_SHEETS_STATE_KEY = new(nameof(numberOfSheets));
+    private static readonly AssistantSessionStateKey<int> NUMBER_OF_BULLET_POINTS_STATE_KEY = new(nameof(numberOfBulletPoints));
+    private static readonly AssistantSessionStateKey<int> TIME_SPECIFICATION_STATE_KEY = new(nameof(timeSpecification));
+    private static readonly AssistantSessionStateKey<int> CALCULATED_NUMBER_OF_SLIDES_STATE_KEY = new(nameof(calculatedNumberOfSlides));
+    private static readonly AssistantSessionStateKey<string> IMPORTANT_ASPECTS_STATE_KEY = new(nameof(importantAspects));
+    private static readonly AssistantSessionStateKey<HashSet<FileAttachment>> LOADED_DOCUMENT_PATHS_STATE_KEY = new(nameof(loadedDocumentPaths));
+
+    /// <inheritdoc />
+    protected override void CaptureCustomAssistantSessionState(AssistantSessionStateWriter state)
+    {
+        state.Set(INPUT_TITLE_STATE_KEY, this.inputTitle);
+        state.Set(INPUT_CONTENT_STATE_KEY, this.inputContent);
+        state.Set(CUSTOM_TARGET_LANGUAGE_STATE_KEY, this.customTargetLanguage);
+        state.Set(SELECTED_AUDIENCE_PROFILE_STATE_KEY, this.selectedAudienceProfile);
+        state.Set(SELECTED_AUDIENCE_AGE_GROUP_STATE_KEY, this.selectedAudienceAgeGroup);
+        state.Set(SELECTED_AUDIENCE_ORGANIZATIONAL_LEVEL_STATE_KEY, this.selectedAudienceOrganizationalLevel);
+        state.Set(SELECTED_AUDIENCE_EXPERTISE_STATE_KEY, this.selectedAudienceExpertise);
+        state.Set(SELECTED_TARGET_LANGUAGE_STATE_KEY, this.selectedTargetLanguage);
+        state.Set(NUMBER_OF_SHEETS_STATE_KEY, this.numberOfSheets);
+        state.Set(NUMBER_OF_BULLET_POINTS_STATE_KEY, this.numberOfBulletPoints);
+        state.Set(TIME_SPECIFICATION_STATE_KEY, this.timeSpecification);
+        state.Set(CALCULATED_NUMBER_OF_SLIDES_STATE_KEY, this.calculatedNumberOfSlides);
+        state.Set(IMPORTANT_ASPECTS_STATE_KEY, this.importantAspects);
+        state.SetHashSet(LOADED_DOCUMENT_PATHS_STATE_KEY, this.loadedDocumentPaths);
+    }
+
+    /// <inheritdoc />
+    protected override void RestoreCustomAssistantSessionState(AssistantSessionStateReader state)
+    {
+        state.Restore(INPUT_TITLE_STATE_KEY, value => this.inputTitle = value);
+        state.Restore(INPUT_CONTENT_STATE_KEY, value => this.inputContent = value);
+        state.Restore(CUSTOM_TARGET_LANGUAGE_STATE_KEY, value => this.customTargetLanguage = value);
+        state.Restore(SELECTED_AUDIENCE_PROFILE_STATE_KEY, value => this.selectedAudienceProfile = value);
+        state.Restore(SELECTED_AUDIENCE_AGE_GROUP_STATE_KEY, value => this.selectedAudienceAgeGroup = value);
+        state.Restore(SELECTED_AUDIENCE_ORGANIZATIONAL_LEVEL_STATE_KEY, value => this.selectedAudienceOrganizationalLevel = value);
+        state.Restore(SELECTED_AUDIENCE_EXPERTISE_STATE_KEY, value => this.selectedAudienceExpertise = value);
+        state.Restore(SELECTED_TARGET_LANGUAGE_STATE_KEY, value => this.selectedTargetLanguage = value);
+        state.Restore(NUMBER_OF_SHEETS_STATE_KEY, value => this.numberOfSheets = value);
+        state.Restore(NUMBER_OF_BULLET_POINTS_STATE_KEY, value => this.numberOfBulletPoints = value);
+        state.Restore(TIME_SPECIFICATION_STATE_KEY, value => this.timeSpecification = value);
+        state.Restore(CALCULATED_NUMBER_OF_SLIDES_STATE_KEY, value => this.calculatedNumberOfSlides = value);
+        state.Restore(IMPORTANT_ASPECTS_STATE_KEY, value => this.importantAspects = value);
+        state.RestoreHashSet(LOADED_DOCUMENT_PATHS_STATE_KEY, this.loadedDocumentPaths);
+    }
 
     #region Overrides of ComponentBase
 

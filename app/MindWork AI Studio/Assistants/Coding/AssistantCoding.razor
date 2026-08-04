@@ -1,19 +1,13 @@
 ﻿@attribute [Route(Routes.ASSISTANT_CODING)]
 @inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogCoding>
 
-<MudExpansionPanels Class="mb-3">
-    @for (var contextIndex = 0; contextIndex < this.codingContexts.Count; contextIndex++)
-    {
-        var codingContext = this.codingContexts[contextIndex];
-        var index = contextIndex;
-        <ExpansionPanel HeaderText="@codingContext.Id" HeaderIcon="@Icons.Material.Filled.Code" ShowEndButton="@true" EndButtonColor="Color.Error" EndButtonIcon="@Icons.Material.Filled.Delete" EndButtonTooltip="@T("Delete context")" EndButtonClickAsync="@(() => this.DeleteContext(index))">
-            <CodingContextItem @bind-CodingContext="@codingContext"/>
-        </ExpansionPanel>
-    }
-</MudExpansionPanels>
-<MudButton Variant="Variant.Filled" OnClick="() => this.AddCodingContext()" Class="mb-3">
-    @T("Add context")
-</MudButton>
+<MudText Typo="Typo.h5" Class="mb-1 mt-3">@T("Context")</MudText>
+<MudJustifiedText Typo="Typo.body1" Class="mb-2">
+    @T("You can attach source files as optional context for your coding question.")
+</MudJustifiedText>
+<div class="mb-3">
+    <AttachDocuments Name="Coding Source Files" Layer="@DropLayers.ASSISTANTS" @bind-DocumentPaths="@this.loadedDocumentPaths" CatchAllDocuments="true" UseSmallForm="false" Provider="@this.ProviderSettings"/>
+</div>
 
 <MudStack Row="@false" Class="mb-3">
     <MudTextSwitch Label="@T("Do you want to provide compiler messages?")" @bind-Value="@this.provideCompilerMessages" LabelOn="@T("Yes, provide compiler messages")" LabelOff="@T("No, there are no compiler messages")" />

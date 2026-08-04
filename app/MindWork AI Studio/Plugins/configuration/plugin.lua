@@ -70,11 +70,23 @@ CONFIG["LLM_PROVIDERS"] = {}
 --     -- Please refer to the documentation of the selected host for details.
 --     -- Might be something like ... \"temperature\": 0.5 ... for one parameter.
 --     -- Could be something like ... \"temperature\": 0.5, \"max_tokens\": 1000 ... for multiple parameters.
+--     -- Recognized reasoning parameters, such as reasoning_effort, thinking, think, and chat_template_kwargs.enable_thinking, may affect whether AI Studio shows the reasoning icon for this provider.
 --     -- Please do not add the enclosing curly braces {} here. Also, no trailing comma is allowed.
 --     ["AdditionalJsonApiParameters"] = "",
 --
 --     -- Optional: tokenizer path for this provider relative to the plugin directory.
 --     -- ["TokenizerPath"] = "",
+--     -- Optional: expert capability overrides.
+--     -- Allowed keys are exactly:
+--     -- AUDIO_INPUT, MULTIPLE_IMAGE_INPUT, SPEECH_INPUT, VIDEO_INPUT,
+--     -- OPTIONAL_REASONING, ALWAYS_REASONING, REASONING_BY_DEFAULT
+--     -- Allowed values are booleans only.
+--     -- For default-on reasoning (rhinking), set OPTIONAL_REASONING and REASONING_BY_DEFAULT to true.
+--     -- ALWAYS_REASONING means the model cannot disable reasoning (thinking).
+--     -- Missing keys keep the automatic capability detection result.
+--     -- ["CapabilityOverrides"] = {
+--     --     ["VIDEO_INPUT"] = false,
+--     -- },
 --
 --     -- Optional: Hugging Face inference provider. Only relevant for UsedLLMProvider = HUGGINGFACE.
 --     -- Allowed values are: CEREBRAS, NEBIUS_AI_STUDIO, SAMBANOVA, NOVITA, HYPERBOLIC, TOGETHER_AI, FIREWORKS, HF_INFERENCE_API
@@ -203,7 +215,10 @@ CONFIG["DATA_SOURCES"] = {}
 CONFIG["SETTINGS"] = {}
 
 -- Configure the update check interval:
--- Allowed values are: NO_CHECK, ONCE_STARTUP, HOURLY, DAILY, WEEKLY
+-- Allowed values are: NO_CHECK, DISABLE_UPDATES, ONCE_STARTUP, HOURLY, DAILY, WEEKLY
+-- NO_CHECK disables automatic checks, but users can still check and install updates manually.
+-- DISABLE_UPDATES is intended for enterprise configurations and disables all update checks
+-- and installations. It is not offered as a selectable option in the normal app settings.
 -- CONFIG["SETTINGS"]["DataApp.UpdateInterval"] = "NO_CHECK"
 
 -- Configure how updates are installed:
@@ -225,6 +240,12 @@ CONFIG["SETTINGS"] = {}
 
 -- Configure whether the built-in introduction is shown on the welcome page.
 -- CONFIG["SETTINGS"]["DataApp.ShowIntroduction"] = false
+
+-- Configure whether the last changelog is shown on the welcome page.
+-- CONFIG["SETTINGS"]["DataApp.ShowLastChangelog"] = false
+
+-- Configure whether the vision panel is shown on the welcome page.
+-- CONFIG["SETTINGS"]["DataApp.ShowVision"] = false
 
 -- Configure the user permission to add providers:
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToAddProvider"] = false
@@ -273,12 +294,38 @@ CONFIG["SETTINGS"] = {}
 -- Please note: using an empty string ("") or "00000000-0000-0000-0000-000000000000" means chats will use no chat template.
 -- CONFIG["SETTINGS"]["DataChat.PreselectedChatTemplate"] = "00000000-0000-0000-0000-000000000000"
 --
+--
+-- Configure default data source options for new chats.
+--
+-- Controls whether data sources are off by default:
+-- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesDisabled"] = false
+
+-- Controls whether AI Studio asks an agent to choose data sources:
+-- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesAutomaticSelection"] = true
+
+-- Controls whether retrieved data is validated by an agent:
+-- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesAutomaticValidation"] = true
+
+-- Must contain IDs from CONFIG["DATA_SOURCES"] or user-configured data sources.
+-- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourceIds"] = {
+--     "00000000-0000-0000-0000-000000000000",
+-- }
+--
+-- Configure whether default chat data source options are applied when assistant results are sent to chat.
+-- Allowed values are: NO_DATA_SOURCES, APPLY_STANDARD_CHAT_DATA_SOURCE_OPTIONS
+-- CONFIG["SETTINGS"]["DataChat.SendToChatDataSourceBehavior"] = "APPLY_STANDARD_CHAT_DATA_SOURCE_OPTIONS"
+--
 -- Allow users to change any configured chat default locally.
 -- Allowed values are: true, false
 -- CONFIG["SETTINGS"]["DataChat.PreselectOptions.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataChat.PreselectedProvider.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataChat.PreselectedProfile.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataChat.PreselectedChatTemplate.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesDisabled.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesAutomaticSelection.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesAutomaticValidation.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourceIds.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataChat.SendToChatDataSourceBehavior.AllowUserOverride"] = true
 
 -- Configure the transcription provider for voice-to-text functionality.
 -- It must be one of the transcription provider IDs defined in CONFIG["TRANSCRIPTION_PROVIDERS"].
@@ -293,8 +340,85 @@ CONFIG["SETTINGS"] = {}
 --   CODING_ASSISTANT, TEXT_SUMMARIZER_ASSISTANT, EMAIL_ASSISTANT,
 --   LEGAL_CHECK_ASSISTANT, SYNONYMS_ASSISTANT, MY_TASKS_ASSISTANT,
 --   JOB_POSTING_ASSISTANT, BIAS_DAY_ASSISTANT, ERI_ASSISTANT,
---   DOCUMENT_ANALYSIS_ASSISTANT, SLIDE_BUILDER_ASSISTANT, I18N_ASSISTANT
+--   DOCUMENT_ANALYSIS_ASSISTANT, SLIDE_BUILDER_ASSISTANT, VISUAL_BRIEFING_ASSISTANT, I18N_ASSISTANT,
+--   LOG_VIEWER_ASSISTANT
 -- CONFIG["SETTINGS"]["DataApp.HiddenAssistants"] = { "ERI_ASSISTANT", "I18N_ASSISTANT" }
+
+-- Configure organization defaults for the Visual Briefing Assistant.
+-- The assistant turns documents, images, audio, and video into a self-contained interactive
+-- briefing. All settings below are defaults for new briefings; users can change them per briefing.
+--
+-- Configure the preselected provider for briefing builds.
+-- It must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"].
+-- CONFIG["SETTINGS"]["DataVisualBriefing.PreselectedProvider"] = "00000000-0000-0000-0000-000000000000"
+--
+-- Configure the preselected profile for briefing builds.
+-- It must be one of the profile IDs defined in CONFIG["PROFILES"].
+-- CONFIG["SETTINGS"]["DataVisualBriefing.PreselectedProfile"] = "00000000-0000-0000-0000-000000000000"
+--
+-- Configure the language the briefing content is written in.
+-- Allowed values are: AS_IS, EN_US, EN_GB, ZH_CN, HI_IN, ES_ES, FR_FR, DE_DE, DE_CH, DE_AT,
+--   JA_JP, RU_RU, OTHER
+-- AS_IS keeps the language of the source material.
+-- Please note: AI Studio's own texts inside an exported briefing, such as the footer and the
+-- reset button, are always US English regardless of this setting.
+-- CONFIG["SETTINGS"]["DataVisualBriefing.PreselectedTargetLanguage"] = "EN_US"
+--
+-- Configure a free-form language, used only when PreselectedTargetLanguage is "OTHER".
+-- Any language name is allowed, for example "Swiss German" or "Brazilian Portuguese".
+-- CONFIG["SETTINGS"]["DataVisualBriefing.PreselectedOtherLanguage"] = ""
+--
+-- Configure the audience the briefing is written for. These four settings steer wording,
+-- level of detail, and which evidence is emphasized.
+--
+-- Allowed values are: UNSPECIFIED, STUDENTS, SCIENTISTS, LAWYERS, INVESTORS, ENGINEERS,
+--   SOFTWARE_DEVELOPERS, JOURNALISTS, HEALTHCARE_PROFESSIONALS, PUBLIC_OFFICIALS,
+--   BUSINESS_PROFESSIONALS
+-- CONFIG["SETTINGS"]["DataVisualBriefing.PreselectedAudienceProfile"] = "UNSPECIFIED"
+--
+-- Allowed values are: UNSPECIFIED, CHILDREN, TEENAGERS, ADULTS
+-- CONFIG["SETTINGS"]["DataVisualBriefing.PreselectedAudienceAgeGroup"] = "UNSPECIFIED"
+--
+-- Allowed values are: UNSPECIFIED, TRAINEES, INDIVIDUAL_CONTRIBUTORS, TEAM_LEADS, MANAGERS,
+--   EXECUTIVES, BOARD_MEMBERS
+-- CONFIG["SETTINGS"]["DataVisualBriefing.PreselectedAudienceOrganizationalLevel"] = "UNSPECIFIED"
+--
+-- Allowed values are: UNSPECIFIED, NON_EXPERTS, BASIC, INTERMEDIATE, EXPERTS
+-- CONFIG["SETTINGS"]["DataVisualBriefing.PreselectedAudienceExpertise"] = "UNSPECIFIED"
+--
+-- Configure whether each briefing component lists the source files it was derived from.
+-- Allowed values are: true, false
+-- CONFIG["SETTINGS"]["DataVisualBriefing.ShowSourceReferences"] = true
+--
+-- Configure whether images are downscaled and re-encoded before they are embedded.
+-- Allowed values are: true, false
+-- Images are always embedded in the exported file. With true, images larger than 2560 pixels on
+-- their longest edge are scaled down, which keeps exported briefings substantially smaller.
+-- With false, the original image bytes are embedded unchanged.
+-- CONFIG["SETTINGS"]["DataVisualBriefing.OptimizeImages"] = true
+--
+-- Configure the minimum provider confidence required to build a briefing.
+-- Allowed values are: NONE, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
+-- Source material is sent to the selected provider, so this acts as a guard for confidential
+-- documents. Providers below this level cannot be selected in the assistant.
+-- CONFIG["SETTINGS"]["DataVisualBriefing.MinimumProviderConfidence"] = "NONE"
+
+-- Configure enterprise approvals for assistant plugins.
+-- Each approval is matched only by the current SHA-256 hash over all Lua files
+-- in the assistant plugin folder, in canonical sorted order.
+-- When the hash matches, the assistant plugin is treated as SAFE immediately and
+-- no user-run security audit is required.
+-- You can generate the exact hash with the build-script command:
+--   dotnet run --project app/Build -- assistant-plugin-hash "<plugin-dir>" --lua-snippet
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.EnterpriseApprovedPlugins"] = {
+--     {
+--         ["PluginHash"] = "0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF",
+--         ["DisplayName"] = "Name of Plugin",
+--         ["Comment"] = "Optional comment",
+--         ["ApprovedBy"] = "Optional Approver",
+--         ["ApprovedAtUtc"] = "2026-07-02T09:30:00Z",
+--     }
+-- }
 
 -- Configure a global shortcut for starting and stopping dictation.
 -- 
@@ -388,6 +512,53 @@ CONFIG["SETTINGS"] = {}
 --     "00000000-0000-0000-0000-000000000000",
 --     "00000000-0000-0000-0000-000000000001",
 -- }
+
+-- Configure the data source selection agent.
+-- This agent is used when chat data source options enable AI-based data source selection.
+-- The provider must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"].
+-- CONFIG["SETTINGS"]["DataAgentDataSourceSelection.PreselectAgentOptions"] = true
+-- CONFIG["SETTINGS"]["DataAgentDataSourceSelection.PreselectedAgentProvider"] = "00000000-0000-0000-0000-000000000000"
+-- CONFIG["SETTINGS"]["DataAgentDataSourceSelection.PreselectAgentOptions.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataAgentDataSourceSelection.PreselectedAgentProvider.AllowUserOverride"] = true
+
+-- Configure the retrieval context validation agent.
+-- This agent is used when retrieval context validation is enabled globally and chat data source options enable AI-based validation.
+-- The provider must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"].
+-- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.EnableRetrievalContextValidation"] = true
+-- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.PreselectAgentOptions"] = true
+-- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.PreselectedAgentProvider"] = "00000000-0000-0000-0000-000000000000"
+-- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.NumParallelValidations"] = 3
+-- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.EnableRetrievalContextValidation.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.PreselectAgentOptions.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.PreselectedAgentProvider.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataAgentRetrievalContextValidation.NumParallelValidations.AllowUserOverride"] = true
+
+-- Configure assistant plugin security audits.
+--
+-- Configure whether assistant plugins must be audited before users can activate them.
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.RequireAuditBeforeActivation"] = true
+--
+-- Configure a dedicated provider for assistant plugin audits.
+-- It must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"].
+-- Without a selected audit provider, AI Studio uses the app-wide default provider.
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.PreselectedAgentProvider"] = "00000000-0000-0000-0000-000000000000"
+--
+-- Configure the minimum audit level assistant plugins must meet.
+-- Allowed values are: UNKNOWN, DANGEROUS, CAUTION, SAFE
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.MinimumLevel"] = "CAUTION"
+--
+-- Configure whether activation is blocked when the audit result is below the minimum level.
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.BlockActivationBelowMinimum"] = true
+--
+-- Configure whether new or changed assistant plugins are audited automatically in the background.
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.AutomaticallyAuditAssistants"] = false
+--
+-- Configure whether users can change assistant plugin audit settings locally.
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.RequireAuditBeforeActivation.AllowUserOverride"] = false
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.PreselectedAgentProvider.AllowUserOverride"] = false
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.MinimumLevel.AllowUserOverride"] = false
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.BlockActivationBelowMinimum.AllowUserOverride"] = false
+-- CONFIG["SETTINGS"]["DataAssistantPluginAudit.AutomaticallyAuditAssistants.AllowUserOverride"] = false
 
 -- Example chat templates for this configuration:
 CONFIG["CHAT_TEMPLATES"] = {}

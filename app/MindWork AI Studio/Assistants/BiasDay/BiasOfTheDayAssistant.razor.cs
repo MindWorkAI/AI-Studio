@@ -3,6 +3,7 @@ using System.Text;
 using AIStudio.Chat;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.AssistantSessions;
 
 namespace AIStudio.Assistants.BiasDay;
 
@@ -66,6 +67,25 @@ public partial class BiasOfTheDayAssistant : AssistantBaseCore<SettingsDialogAss
     private Bias biasOfTheDay = BiasCatalog.NONE;
     private CommonLanguages selectedTargetLanguage = CommonLanguages.AS_IS;
     private string customTargetLanguage = string.Empty;
+    private static readonly AssistantSessionStateKey<Bias> BIAS_OF_THE_DAY_STATE_KEY = new(nameof(biasOfTheDay));
+    private static readonly AssistantSessionStateKey<CommonLanguages> SELECTED_TARGET_LANGUAGE_STATE_KEY = new(nameof(selectedTargetLanguage));
+    private static readonly AssistantSessionStateKey<string> CUSTOM_TARGET_LANGUAGE_STATE_KEY = new(nameof(customTargetLanguage));
+
+    /// <inheritdoc />
+    protected override void CaptureCustomAssistantSessionState(AssistantSessionStateWriter state)
+    {
+        state.Set(BIAS_OF_THE_DAY_STATE_KEY, this.biasOfTheDay);
+        state.Set(SELECTED_TARGET_LANGUAGE_STATE_KEY, this.selectedTargetLanguage);
+        state.Set(CUSTOM_TARGET_LANGUAGE_STATE_KEY, this.customTargetLanguage);
+    }
+
+    /// <inheritdoc />
+    protected override void RestoreCustomAssistantSessionState(AssistantSessionStateReader state)
+    {
+        state.Restore(BIAS_OF_THE_DAY_STATE_KEY, value => this.biasOfTheDay = value);
+        state.Restore(SELECTED_TARGET_LANGUAGE_STATE_KEY, value => this.selectedTargetLanguage = value);
+        state.Restore(CUSTOM_TARGET_LANGUAGE_STATE_KEY, value => this.customTargetLanguage = value);
+    }
     
     private string? ValidateTargetLanguage(CommonLanguages language)
     {
@@ -149,8 +169,7 @@ public partial class BiasOfTheDayAssistant : AssistantBaseCore<SettingsDialogAss
              Please tell me about the bias of the day.
              """, true);
 
-        // Start the AI response without waiting for it to finish:
-        _ = this.AddAIResponseAsync(time);
+        await this.StartChatGenerationJobAsync(time);
         await this.SendToAssistant(Tools.Components.CHAT, default);
     }
 }

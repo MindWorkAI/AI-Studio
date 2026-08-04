@@ -1,4 +1,5 @@
 using AIStudio.Assistants.Dynamic;
+using AIStudio.Chat;
 using Lua;
 
 namespace AIStudio.Tools.PluginSystem.Assistants.DataModel;
@@ -11,6 +12,7 @@ public sealed class AssistantState
     public readonly Dictionary<string, bool> Booleans = new(StringComparer.Ordinal);
     public readonly Dictionary<string, WebContentState> WebContent = new(StringComparer.Ordinal);
     public readonly Dictionary<string, FileContentState> FileContent = new(StringComparer.Ordinal);
+    public readonly Dictionary<string, FileAttachmentState> FileAttachments = new(StringComparer.Ordinal);
     public readonly Dictionary<string, string> Colors = new(StringComparer.Ordinal);
     public readonly Dictionary<string, string> Dates = new(StringComparer.Ordinal);
     public readonly Dictionary<string, string> DateRanges = new(StringComparer.Ordinal);
@@ -24,10 +26,55 @@ public sealed class AssistantState
         this.Booleans.Clear();
         this.WebContent.Clear();
         this.FileContent.Clear();
+        this.FileAttachments.Clear();
         this.Colors.Clear();
         this.Dates.Clear();
         this.DateRanges.Clear();
         this.Times.Clear();
+    }
+
+    /// <summary>
+    /// Copies all dynamic assistant state values from another state instance.
+    /// </summary>
+    /// <param name="other">The state instance to copy from.</param>
+    public void CopyFrom(AssistantState other)
+    {
+        this.Clear();
+        CopyDictionary(other.Text, this.Text);
+        CopyDictionary(other.SingleSelect, this.SingleSelect);
+        CopyDictionary(other.MultiSelect, this.MultiSelect);
+        CopyDictionary(other.Booleans, this.Booleans);
+        CopyDictionary(other.WebContent, this.WebContent);
+        CopyDictionary(other.FileContent, this.FileContent);
+        CopyDictionary(other.FileAttachments, this.FileAttachments);
+        CopyDictionary(other.Colors, this.Colors);
+        CopyDictionary(other.Dates, this.Dates);
+        CopyDictionary(other.DateRanges, this.DateRanges);
+        CopyDictionary(other.Times, this.Times);
+    }
+
+    /// <summary>
+    /// Creates a copy of the dynamic assistant state.
+    /// </summary>
+    /// <returns>A copied assistant state instance.</returns>
+    public AssistantState Clone()
+    {
+        var clone = new AssistantState();
+        clone.CopyFrom(this);
+        return clone;
+    }
+
+    /// <summary>
+    /// Copies all entries from one dictionary into another dictionary.
+    /// </summary>
+    /// <typeparam name="TKey">The dictionary key type.</typeparam>
+    /// <typeparam name="TValue">The dictionary value type.</typeparam>
+    /// <param name="source">The source dictionary.</param>
+    /// <param name="target">The target dictionary.</param>
+    private static void CopyDictionary<TKey, TValue>(Dictionary<TKey, TValue> source, Dictionary<TKey, TValue> target) where TKey : notnull
+    {
+        foreach (var (key, value) in source)
+            target[key] = value;
     }
 
     public bool TryApplyValue(string fieldName, LuaValue value, out string expectedType)
@@ -97,6 +144,22 @@ public sealed class AssistantState
                 return false;
 
             fileContentState.Content = fileContentValue;
+            return true;
+        }
+
+        if (this.FileAttachments.TryGetValue(fieldName, out var fileAttachmentState))
+        {
+            expectedType = "string[]";
+            if (value.TryRead<LuaTable>(out var fileAttachmentTable))
+            {
+                fileAttachmentState.DocumentPaths = ReadFileAttachmentValues(fileAttachmentTable);
+                return true;
+            }
+
+            if (!value.TryRead<string>(out var fileAttachmentValue))
+                return false;
+
+            fileAttachmentState.DocumentPaths = string.IsNullOrWhiteSpace(fileAttachmentValue) ? [] : [FileAttachment.FromPath(fileAttachmentValue)];
             return true;
         }
 
@@ -188,6 +251,11 @@ public sealed class AssistantState
             return webContentValue.Content;
         if (this.FileContent.TryGetValue(name, out var fileContentValue))
             return fileContentValue.Content;
+        if (this.FileAttachments.TryGetValue(name, out var fileAttachmentsValue))
+            return AssistantLuaConversion.CreateLuaArray(
+                fileAttachmentsValue.DocumentPaths
+                    .OrderBy(static attachment => attachment.FilePath, StringComparer.Ordinal)
+                    .Select(static attachment => attachment.FilePath));
         if (this.Colors.TryGetValue(name, out var colorValue))
             return colorValue;
         if (this.Dates.TryGetValue(name, out var dateValue))
@@ -252,6 +320,19 @@ public sealed class AssistantState
         {
             if (entry.Value.TryRead<string>(out var value) && !string.IsNullOrWhiteSpace(value))
                 parsedValues.Add(value);
+        }
+
+        return parsedValues;
+    }
+
+    private static HashSet<FileAttachment> ReadFileAttachmentValues(LuaTable values)
+    {
+        var parsedValues = new HashSet<FileAttachment>();
+
+        foreach (var entry in values)
+        {
+            if (entry.Value.TryRead<string>(out var value) && !string.IsNullOrWhiteSpace(value))
+                parsedValues.Add(FileAttachment.FromPath(value));
         }
 
         return parsedValues;

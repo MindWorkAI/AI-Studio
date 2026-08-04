@@ -40,6 +40,8 @@ public class AssistantComponentFactory
                 return new AssistantWebContentReader { Props = props, Children = children };
             case AssistantComponentType.FILE_CONTENT_READER:
                 return new AssistantFileContentReader { Props = props, Children = children };
+            case AssistantComponentType.FILE_ATTACHMENTS:
+                return new AssistantFileAttachment { Props = props, Children = children };
             case AssistantComponentType.IMAGE:
                 return new AssistantImage { Props = props, Children = children };
             case AssistantComponentType.COLOR_PICKER:

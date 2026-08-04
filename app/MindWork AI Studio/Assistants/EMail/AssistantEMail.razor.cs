@@ -1,6 +1,7 @@
 using System.Text;
 
 using AIStudio.Dialogs.Settings;
+using AIStudio.Tools.AssistantSessions;
 
 namespace AIStudio.Assistants.EMail;
 
@@ -78,6 +79,46 @@ public partial class AssistantEMail : AssistantBaseCore<SettingsDialogWritingEMa
     private string customTargetLanguage = string.Empty;
     private bool provideHistory;
     private string inputHistory = string.Empty;
+    private static readonly AssistantSessionStateKey<WritingStyles> SELECTED_WRITING_STYLE_STATE_KEY = new(nameof(selectedWritingStyle));
+    private static readonly AssistantSessionStateKey<string> INPUT_GREETING_STATE_KEY = new(nameof(inputGreeting));
+    private static readonly AssistantSessionStateKey<string> INPUT_BULLET_POINTS_STATE_KEY = new(nameof(inputBulletPoints));
+    private static readonly AssistantSessionStateKey<List<string>> BULLET_POINTS_LINES_STATE_KEY = new(nameof(bulletPointsLines));
+    private static readonly AssistantSessionStateKey<HashSet<string>> SELECTED_FOCI_STATE_KEY = new(nameof(selectedFoci));
+    private static readonly AssistantSessionStateKey<string> INPUT_NAME_STATE_KEY = new(nameof(inputName));
+    private static readonly AssistantSessionStateKey<CommonLanguages> SELECTED_TARGET_LANGUAGE_STATE_KEY = new(nameof(selectedTargetLanguage));
+    private static readonly AssistantSessionStateKey<string> CUSTOM_TARGET_LANGUAGE_STATE_KEY = new(nameof(customTargetLanguage));
+    private static readonly AssistantSessionStateKey<bool> PROVIDE_HISTORY_STATE_KEY = new(nameof(provideHistory));
+    private static readonly AssistantSessionStateKey<string> INPUT_HISTORY_STATE_KEY = new(nameof(inputHistory));
+
+    /// <inheritdoc />
+    protected override void CaptureCustomAssistantSessionState(AssistantSessionStateWriter state)
+    {
+        state.Set(SELECTED_WRITING_STYLE_STATE_KEY, this.selectedWritingStyle);
+        state.Set(INPUT_GREETING_STATE_KEY, this.inputGreeting);
+        state.Set(INPUT_BULLET_POINTS_STATE_KEY, this.inputBulletPoints);
+        state.SetList(BULLET_POINTS_LINES_STATE_KEY, this.bulletPointsLines);
+        state.SetHashSet(SELECTED_FOCI_STATE_KEY, this.selectedFoci);
+        state.Set(INPUT_NAME_STATE_KEY, this.inputName);
+        state.Set(SELECTED_TARGET_LANGUAGE_STATE_KEY, this.selectedTargetLanguage);
+        state.Set(CUSTOM_TARGET_LANGUAGE_STATE_KEY, this.customTargetLanguage);
+        state.Set(PROVIDE_HISTORY_STATE_KEY, this.provideHistory);
+        state.Set(INPUT_HISTORY_STATE_KEY, this.inputHistory);
+    }
+
+    /// <inheritdoc />
+    protected override void RestoreCustomAssistantSessionState(AssistantSessionStateReader state)
+    {
+        state.Restore(SELECTED_WRITING_STYLE_STATE_KEY, value => this.selectedWritingStyle = value);
+        state.Restore(INPUT_GREETING_STATE_KEY, value => this.inputGreeting = value);
+        state.Restore(INPUT_BULLET_POINTS_STATE_KEY, value => this.inputBulletPoints = value);
+        state.RestoreList(BULLET_POINTS_LINES_STATE_KEY, this.bulletPointsLines);
+        state.Restore(SELECTED_FOCI_STATE_KEY, value => this.selectedFoci = value);
+        state.Restore(INPUT_NAME_STATE_KEY, value => this.inputName = value);
+        state.Restore(SELECTED_TARGET_LANGUAGE_STATE_KEY, value => this.selectedTargetLanguage = value);
+        state.Restore(CUSTOM_TARGET_LANGUAGE_STATE_KEY, value => this.customTargetLanguage = value);
+        state.Restore(PROVIDE_HISTORY_STATE_KEY, value => this.provideHistory = value);
+        state.Restore(INPUT_HISTORY_STATE_KEY, value => this.inputHistory = value);
+    }
     
     #region Overrides of ComponentBase
 

@@ -1,4 +1,5 @@
 using AIStudio.Dialogs.Settings;
+using AIStudio.Tools.AssistantSessions;
 
 namespace AIStudio.Assistants.TextSummarizer;
 
@@ -72,6 +73,43 @@ public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogT
     private Complexity selectedComplexity;
     private string expertInField = string.Empty;
     private string importantAspects = string.Empty;
+    private static readonly AssistantSessionStateKey<bool> SHOW_WEB_CONTENT_READER_STATE_KEY = new(nameof(showWebContentReader));
+    private static readonly AssistantSessionStateKey<bool> USE_CONTENT_CLEANER_AGENT_STATE_KEY = new(nameof(useContentCleanerAgent));
+    private static readonly AssistantSessionStateKey<string> INPUT_TEXT_STATE_KEY = new(nameof(inputText));
+    private static readonly AssistantSessionStateKey<bool> IS_AGENT_RUNNING_STATE_KEY = new(nameof(isAgentRunning));
+    private static readonly AssistantSessionStateKey<CommonLanguages> SELECTED_TARGET_LANGUAGE_STATE_KEY = new(nameof(selectedTargetLanguage));
+    private static readonly AssistantSessionStateKey<string> CUSTOM_TARGET_LANGUAGE_STATE_KEY = new(nameof(customTargetLanguage));
+    private static readonly AssistantSessionStateKey<Complexity> SELECTED_COMPLEXITY_STATE_KEY = new(nameof(selectedComplexity));
+    private static readonly AssistantSessionStateKey<string> EXPERT_IN_FIELD_STATE_KEY = new(nameof(expertInField));
+    private static readonly AssistantSessionStateKey<string> IMPORTANT_ASPECTS_STATE_KEY = new(nameof(importantAspects));
+
+    /// <inheritdoc />
+    protected override void CaptureCustomAssistantSessionState(AssistantSessionStateWriter state)
+    {
+        state.Set(SHOW_WEB_CONTENT_READER_STATE_KEY, this.showWebContentReader);
+        state.Set(USE_CONTENT_CLEANER_AGENT_STATE_KEY, this.useContentCleanerAgent);
+        state.Set(INPUT_TEXT_STATE_KEY, this.inputText);
+        state.Set(IS_AGENT_RUNNING_STATE_KEY, this.isAgentRunning);
+        state.Set(SELECTED_TARGET_LANGUAGE_STATE_KEY, this.selectedTargetLanguage);
+        state.Set(CUSTOM_TARGET_LANGUAGE_STATE_KEY, this.customTargetLanguage);
+        state.Set(SELECTED_COMPLEXITY_STATE_KEY, this.selectedComplexity);
+        state.Set(EXPERT_IN_FIELD_STATE_KEY, this.expertInField);
+        state.Set(IMPORTANT_ASPECTS_STATE_KEY, this.importantAspects);
+    }
+
+    /// <inheritdoc />
+    protected override void RestoreCustomAssistantSessionState(AssistantSessionStateReader state)
+    {
+        state.Restore(SHOW_WEB_CONTENT_READER_STATE_KEY, value => this.showWebContentReader = value);
+        state.Restore(USE_CONTENT_CLEANER_AGENT_STATE_KEY, value => this.useContentCleanerAgent = value);
+        state.Restore(INPUT_TEXT_STATE_KEY, value => this.inputText = value);
+        state.Restore(IS_AGENT_RUNNING_STATE_KEY, value => this.isAgentRunning = value);
+        state.Restore(SELECTED_TARGET_LANGUAGE_STATE_KEY, value => this.selectedTargetLanguage = value);
+        state.Restore(CUSTOM_TARGET_LANGUAGE_STATE_KEY, value => this.customTargetLanguage = value);
+        state.Restore(SELECTED_COMPLEXITY_STATE_KEY, value => this.selectedComplexity = value);
+        state.Restore(EXPERT_IN_FIELD_STATE_KEY, value => this.expertInField = value);
+        state.Restore(IMPORTANT_ASPECTS_STATE_KEY, value => this.importantAspects = value);
+    }
 
     #region Overrides of ComponentBase
 

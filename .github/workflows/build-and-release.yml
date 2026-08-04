@@ -19,6 +19,13 @@ concurrency:
 env:
   RETENTION_INTERMEDIATE_ASSETS: 1
   RETENTION_RELEASE_ASSETS: 30
+  FLATPAK_REPOSITORY: MindWorkAI/Flatpak
+  FLATPAK_WORKFLOW: flatpak.yml
+  FLATPAK_YQ_VERSION: 4.44.6
+  FLATPAK_YQ_SHA256: 0c2b24e645b57d8e7c0566d18643a6d4f5580feeea3878127354a46f2a1e4598
+  FLATPAK_UV_VERSION: 0.11.28
+  FLATPAK_UV_SHA256: e490a6464492183c5d4534a5527fb4440f7f2bb2f228162ad7e4afe076dc0224
+  FLATPAK_FREEDESKTOP_VERSION: "25.08"
     
 jobs:
   determine_run_mode:
@@ -165,6 +172,8 @@ jobs:
       formatted_build_time: ${{ steps.format_metadata.outputs.formatted_build_time }}
       changelog: ${{ steps.read_changelog.outputs.changelog }}
       version: ${{ steps.format_metadata.outputs.version }}
+      source_commit: ${{ steps.format_metadata.outputs.source_commit }}
+      pdfium_chromium_revision: ${{ steps.format_metadata.outputs.pdfium_chromium_revision }}
 
     steps:
       - name: Checkout repository
@@ -176,6 +185,9 @@ jobs:
           # Read the first two lines of the metadata file:
           version=$(sed -n '1p' metadata.txt)
           build_time=$(sed -n '2p' metadata.txt)
+          pdfium_full_version=$(sed -n '11p' metadata.txt)
+          pdfium_chromium_revision=$(echo "$pdfium_full_version" | cut -d'.' -f3)
+          source_commit=$(git rev-parse HEAD)
 
           # Format the version:
           formatted_version="v${version}"
@@ -186,12 +198,16 @@ jobs:
           # Log the formatted metadata:
           echo "Formatted version: '${formatted_version}'"
           echo "Formatted build time: '${formatted_build_time}'"
+          echo "Source commit: '${source_commit}'"
+          echo "PDFium Chromium revision: '${pdfium_chromium_revision}'"
 
           # Set the outputs:
           echo "formatted_version=${formatted_version}" >> "$GITHUB_OUTPUT"
           echo "FORMATTED_VERSION=${formatted_version}" >> $GITHUB_ENV
           echo "formatted_build_time=${formatted_build_time}" >> "$GITHUB_OUTPUT"
           echo "version=${version}" >> "$GITHUB_OUTPUT"
+          echo "source_commit=${source_commit}" >> "$GITHUB_OUTPUT"
+          echo "pdfium_chromium_revision=${pdfium_chromium_revision}" >> "$GITHUB_OUTPUT"
           
       - name: Check tag vs. metadata version
         if: startsWith(github.ref, 'refs/tags/v')
@@ -223,6 +239,490 @@ jobs:
           echo "changelog<<EOOOF" >> "$GITHUB_OUTPUT"
           echo "${changelog}" >> "$GITHUB_OUTPUT"
           echo "EOOOF" >> "$GITHUB_OUTPUT"
+
+  sync_flatpak_repo:
+    name: Sync Flatpak repo
+    runs-on: ubuntu-latest
+    needs: [determine_run_mode, read_metadata]
+    if: needs.determine_run_mode.outputs.is_release == 'true'
+    permissions:
+      contents: read
+    outputs:
+      flatpak_commit: ${{ steps.sync.outputs.flatpak_commit }}
+
+    env:
+      AI_STUDIO_TAG: ${{ needs.read_metadata.outputs.formatted_version }}
+      AI_STUDIO_COMMIT: ${{ needs.read_metadata.outputs.source_commit }}
+      PDFIUM_CHROMIUM_REVISION: ${{ needs.read_metadata.outputs.pdfium_chromium_revision }}
+
+    steps:
+      - name: Checkout AI Studio release metadata
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.AI_STUDIO_COMMIT }}
+          path: ai-studio
+          sparse-checkout: |
+            metadata.txt
+            runtime/packaging/linux/org.mindworkai.AIStudio.desktop
+            runtime/packaging/linux/org.mindworkai.AIStudio.metainfo.xml
+          sparse-checkout-cone-mode: false
+
+      - name: Checkout Flatpak repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.FLATPAK_REPOSITORY }}
+          token: ${{ secrets.FLATPAK_WORKFLOW_TOKEN }}
+          ref: main
+          path: flatpak
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install Flatpak sync tools and SDK
+        run: |
+          set -euo pipefail
+
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y flatpak
+
+          flatpak remote-add \
+            --user \
+            --if-not-exists \
+            flathub \
+            https://flathub.org/repo/flathub.flatpakrepo
+          flatpak install \
+            --user \
+            --noninteractive \
+            -y \
+            flathub \
+            "org.freedesktop.Sdk//${FLATPAK_FREEDESKTOP_VERSION}" \
+            "org.freedesktop.Sdk.Extension.dotnet9//${FLATPAK_FREEDESKTOP_VERSION}"
+
+          tools_dir="$RUNNER_TEMP/flatpak-sync-tools"
+          mkdir -p "$tools_dir"
+
+          curl -fsSL \
+            -o "$tools_dir/yq" \
+            "https://github.com/mikefarah/yq/releases/download/v${FLATPAK_YQ_VERSION}/yq_linux_amd64"
+          echo "${FLATPAK_YQ_SHA256}  ${tools_dir}/yq" | sha256sum --check --strict
+          chmod +x "$tools_dir/yq"
+
+          uv_archive="$RUNNER_TEMP/uv-x86_64-unknown-linux-gnu.tar.gz"
+          curl -fsSL \
+            -o "$uv_archive" \
+            "https://github.com/astral-sh/uv/releases/download/${FLATPAK_UV_VERSION}/uv-x86_64-unknown-linux-gnu.tar.gz"
+          echo "${FLATPAK_UV_SHA256}  ${uv_archive}" | sha256sum --check --strict
+          tar -xzf "$uv_archive" -C "$tools_dir"
+          install -m 0755 "$tools_dir/uv-x86_64-unknown-linux-gnu/uv" "$tools_dir/uv"
+
+          echo "$tools_dir" >> "$GITHUB_PATH"
+          "$tools_dir/uv" --version
+          "$tools_dir/yq" --version
+
+      - name: Update Flatpak release sources
+        working-directory: flatpak
+        env:
+          PDFIUM_X64_ARCHIVE: ${{ runner.temp }}/pdfium-linux-x64.tgz
+          PDFIUM_ARM64_ARCHIVE: ${{ runner.temp }}/pdfium-linux-arm64.tgz
+        run: |
+          set -euo pipefail
+
+          release_version=$(sed -n '1p' ../ai-studio/metadata.txt)
+          release_timestamp=$(sed -n '2p' ../ai-studio/metadata.txt)
+          release_date=${release_timestamp%% *}
+
+          test "$release_version" = "${AI_STUDIO_TAG#v}"
+          [[ "$release_timestamp" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}[[:space:]][0-9]{2}:[0-9]{2}:[0-9]{2}[[:space:]]UTC$ ]]
+          test -s ../ai-studio/runtime/packaging/linux/org.mindworkai.AIStudio.desktop
+          python3 ./update-metainfo.py \
+            --check \
+            --metainfo ../ai-studio/runtime/packaging/linux/org.mindworkai.AIStudio.metainfo.xml \
+            "$release_version" \
+            "$release_date"
+
+          pdfium_base_url="https://github.com/bblanchon/pdfium-binaries/releases/download/chromium%2F${PDFIUM_CHROMIUM_REVISION}"
+          pdfium_x64_url="${pdfium_base_url}/pdfium-linux-x64.tgz"
+          pdfium_arm64_url="${pdfium_base_url}/pdfium-linux-arm64.tgz"
+
+          curl -fsSL -o "$PDFIUM_X64_ARCHIVE" "$pdfium_x64_url"
+          curl -fsSL -o "$PDFIUM_ARM64_ARCHIVE" "$pdfium_arm64_url"
+
+          export PDFIUM_X64_URL="$pdfium_x64_url"
+          export PDFIUM_ARM64_URL="$pdfium_arm64_url"
+          export PDFIUM_X64_SHA256
+          export PDFIUM_ARM64_SHA256
+          PDFIUM_X64_SHA256=$(sha256sum "$PDFIUM_X64_ARCHIVE" | awk '{print $1}')
+          PDFIUM_ARM64_SHA256=$(sha256sum "$PDFIUM_ARM64_ARCHIVE" | awk '{print $1}')
+
+          yq -i '
+            (.modules[] | select(.name == "mind-work-ai-studio").sources[0].tag) = strenv(AI_STUDIO_TAG) |
+            (.modules[] | select(.name == "mind-work-ai-studio").sources[0].commit) = strenv(AI_STUDIO_COMMIT) |
+            (.modules[] | select(.name == "mind-work-ai-studio").sources[] | select(.type == "archive" and .only-arches[0] == "x86_64").url) = strenv(PDFIUM_X64_URL) |
+            (.modules[] | select(.name == "mind-work-ai-studio").sources[] | select(.type == "archive" and .only-arches[0] == "x86_64").sha256) = strenv(PDFIUM_X64_SHA256) |
+            (.modules[] | select(.name == "mind-work-ai-studio").sources[] | select(.type == "archive" and .only-arches[0] == "aarch64").url) = strenv(PDFIUM_ARM64_URL) |
+            (.modules[] | select(.name == "mind-work-ai-studio").sources[] | select(.type == "archive" and .only-arches[0] == "aarch64").sha256) = strenv(PDFIUM_ARM64_SHA256)
+          ' org.mindworkai.AIStudio.yml
+
+          ./update-dependencies
+
+          test "$(yq -r '(.modules[] | select(.name == "mind-work-ai-studio")).sources[0].tag' org.mindworkai.AIStudio.yml)" = "$AI_STUDIO_TAG"
+          test "$(yq -r '(.modules[] | select(.name == "mind-work-ai-studio")).sources[0].commit' org.mindworkai.AIStudio.yml)" = "$AI_STUDIO_COMMIT"
+          test "$(yq -r '(.modules[] | select(.name == "mind-work-ai-studio")).sources[] | select(.type == "archive" and .only-arches[0] == "x86_64").url' org.mindworkai.AIStudio.yml)" = "$PDFIUM_X64_URL"
+          test "$(yq -r '(.modules[] | select(.name == "mind-work-ai-studio")).sources[] | select(.type == "archive" and .only-arches[0] == "x86_64").sha256' org.mindworkai.AIStudio.yml)" = "$PDFIUM_X64_SHA256"
+          test "$(yq -r '(.modules[] | select(.name == "mind-work-ai-studio")).sources[] | select(.type == "archive" and .only-arches[0] == "aarch64").url' org.mindworkai.AIStudio.yml)" = "$PDFIUM_ARM64_URL"
+          test "$(yq -r '(.modules[] | select(.name == "mind-work-ai-studio")).sources[] | select(.type == "archive" and .only-arches[0] == "aarch64").sha256' org.mindworkai.AIStudio.yml)" = "$PDFIUM_ARM64_SHA256"
+
+          for generated_source in cargo-sources.json dotnet-sources.json tauri-cli-sources.json; do
+            test -s "$generated_source"
+            jq -e 'type == "array" and length > 0' "$generated_source" > /dev/null
+          done
+
+          git diff --check
+          git diff --stat
+
+      - name: Commit and merge Flatpak sync
+        id: sync
+        working-directory: flatpak
+        env:
+          GH_TOKEN: ${{ secrets.FLATPAK_WORKFLOW_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          branch="sync/ai-studio-${AI_STUDIO_TAG}"
+          git checkout -B "$branch"
+          git add org.mindworkai.AIStudio.yml cargo-sources.json dotnet-sources.json tauri-cli-sources.json
+
+          if git diff --cached --quiet; then
+            echo "Flatpak repository is already synced for ${AI_STUDIO_TAG}."
+            flatpak_commit=$(git rev-parse HEAD)
+            remote_main=$(git ls-remote origin refs/heads/main | awk '{print $1}')
+            if [ "$remote_main" != "$flatpak_commit" ]; then
+              echo "Flatpak main advanced from ${flatpak_commit} to ${remote_main} during synchronization."
+              exit 1
+            fi
+
+            echo "flatpak_commit=${flatpak_commit}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          git commit -m "Sync AI Studio ${AI_STUDIO_TAG}"
+          sync_commit=$(git rev-parse HEAD)
+
+          basic_auth=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w 0)
+          git config --local http.https://github.com/.extraheader "AUTHORIZATION: basic ${basic_auth}"
+          trap 'git config --local --unset-all http.https://github.com/.extraheader || true' EXIT
+
+          remote_branch_sha=$(git ls-remote --heads origin "$branch" | awk '{print $1}')
+          if [ -n "$remote_branch_sha" ]; then
+            git push --force-with-lease="refs/heads/${branch}:${remote_branch_sha}" origin "HEAD:${branch}"
+          else
+            git push origin "HEAD:${branch}"
+          fi
+
+          pr_number=$(gh pr list \
+            --repo "$FLATPAK_REPOSITORY" \
+            --head "$branch" \
+            --state open \
+            --json number \
+            --jq '.[0].number // empty')
+
+          if [ -z "$pr_number" ]; then
+            pr_url=$(gh pr create \
+              --repo "$FLATPAK_REPOSITORY" \
+              --base main \
+              --head "$branch" \
+              --title "Sync AI Studio ${AI_STUDIO_TAG}" \
+              --body "Synchronizes the Flatpak manifest and generated dependency sources for MindWork AI Studio ${AI_STUDIO_TAG}.")
+            pr_number="${pr_url##*/}"
+          fi
+
+          mergeable="UNKNOWN"
+          for attempt in {1..30}; do
+            pr_state=$(gh pr view "$pr_number" --repo "$FLATPAK_REPOSITORY" --json mergeable,mergeStateStatus)
+            mergeable=$(echo "$pr_state" | jq -r '.mergeable')
+            merge_state_status=$(echo "$pr_state" | jq -r '.mergeStateStatus')
+
+            echo "PR #${pr_number}: mergeable=${mergeable}, mergeStateStatus=${merge_state_status}"
+
+            if [ "$mergeable" = "MERGEABLE" ]; then
+              break
+            fi
+
+            if [ "$mergeable" = "CONFLICTING" ]; then
+              echo "Flatpak sync PR #${pr_number} has merge conflicts."
+              exit 1
+            fi
+
+            sleep 5
+          done
+
+          if [ "$mergeable" != "MERGEABLE" ]; then
+            echo "Timed out waiting for Flatpak sync PR #${pr_number} to become mergeable."
+            exit 1
+          fi
+
+          gh pr merge "$pr_number" \
+            --repo "$FLATPAK_REPOSITORY" \
+            --squash \
+            --delete-branch \
+            --match-head-commit "$sync_commit"
+
+          for attempt in {1..120}; do
+            pr_state=$(gh pr view "$pr_number" \
+              --repo "$FLATPAK_REPOSITORY" \
+              --json state,mergedAt,mergeCommit)
+            state=$(echo "$pr_state" | jq -r '.state')
+            merged_at=$(echo "$pr_state" | jq -r '.mergedAt // empty')
+            merge_commit=$(echo "$pr_state" | jq -r '.mergeCommit.oid // empty')
+
+            echo "PR #${pr_number}: state=${state}, mergedAt=${merged_at:-pending}, mergeCommit=${merge_commit:-pending}"
+
+            if [ -n "$merged_at" ] && [ -n "$merge_commit" ]; then
+              echo "flatpak_commit=${merge_commit}" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+
+            if [ "$state" = "CLOSED" ]; then
+              echo "Flatpak sync PR #${pr_number} was closed without being merged."
+              exit 1
+            fi
+
+            sleep 5
+          done
+
+          echo "Timed out waiting for Flatpak sync PR #${pr_number} to be merged."
+          exit 1
+
+  collect_flatpak_artifacts:
+    name: Collect Flatpak artifacts
+    runs-on: ubuntu-latest
+    needs: [determine_run_mode, read_metadata, sync_flatpak_repo]
+    if: needs.determine_run_mode.outputs.is_release == 'true'
+    permissions:
+      contents: read
+
+    env:
+      FLATPAK_COMMIT: ${{ needs.sync_flatpak_repo.outputs.flatpak_commit }}
+
+    steps:
+      - name: Dispatch and wait for Flatpak build
+        id: flatpak_run
+        env:
+          GH_TOKEN: ${{ secrets.FLATPAK_WORKFLOW_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          find_run_id() {
+            local created_after="$1"
+            local runs
+
+            runs=$(gh run list \
+              --repo "$FLATPAK_REPOSITORY" \
+              --workflow "$FLATPAK_WORKFLOW" \
+              --branch main \
+              --commit "$FLATPAK_COMMIT" \
+              --limit 20 \
+              --json databaseId,event,headSha,createdAt)
+
+            echo "$runs" | jq -r \
+              --arg commit "$FLATPAK_COMMIT" \
+              --arg created_after "$created_after" \
+              '[.[] | select(.headSha == $commit and .event == "workflow_dispatch" and .createdAt >= $created_after)][0].databaseId // empty'
+          }
+
+          validate_required_artifacts() {
+            local run_id="$1"
+            local artifacts
+            local expected_name
+            local match_count
+            local custom_count
+
+            artifacts=$(gh api "repos/${FLATPAK_REPOSITORY}/actions/runs/${run_id}/artifacts?per_page=100")
+            custom_count=$(echo "$artifacts" | jq \
+              '[.artifacts[] | select(.name | startswith("MindWork AI Studio Flatpak ("))] | length')
+
+            if [ "$custom_count" -ne 2 ]; then
+              echo "Flatpak run ${run_id} contains ${custom_count} release artifacts; expected 2."
+              return 1
+            fi
+
+            for expected_name in \
+              "MindWork AI Studio Flatpak (x86_64)" \
+              "MindWork AI Studio Flatpak (aarch64)"; do
+              match_count=$(echo "$artifacts" | jq \
+                --arg name "$expected_name" \
+                '[.artifacts[] | select(.name == $name and .expired == false)] | length')
+
+              if [ "$match_count" -ne 1 ]; then
+                echo "Flatpak run ${run_id} does not contain one active '${expected_name}' artifact."
+                return 1
+              fi
+            done
+          }
+
+          wait_for_run() {
+            local run_id="$1"
+            local run_json
+            local status
+            local conclusion
+            local head_sha
+            local url
+
+            for attempt in {1..180}; do
+              run_json=$(gh run view "$run_id" \
+                --repo "$FLATPAK_REPOSITORY" \
+                --json status,conclusion,headSha,url)
+              status=$(echo "$run_json" | jq -r '.status')
+              conclusion=$(echo "$run_json" | jq -r '.conclusion // empty')
+              head_sha=$(echo "$run_json" | jq -r '.headSha')
+              url=$(echo "$run_json" | jq -r '.url')
+
+              echo "Flatpak run ${run_id}: status=${status}, conclusion=${conclusion:-pending}, url=${url}"
+
+              if [ "$head_sha" != "$FLATPAK_COMMIT" ]; then
+                echo "Flatpak run ${run_id} targets '${head_sha}', expected '${FLATPAK_COMMIT}'."
+                return 1
+              fi
+
+              if [ "$status" = "completed" ]; then
+                if [ "$conclusion" = "success" ] && validate_required_artifacts "$run_id"; then
+                  return 0
+                fi
+
+                echo "Flatpak run ${run_id} completed without usable release artifacts."
+                return 1
+              fi
+
+              sleep 20
+            done
+
+            echo "Timed out waiting for Flatpak run ${run_id}."
+            return 2
+          }
+
+          current_main=$(gh api "repos/${FLATPAK_REPOSITORY}/commits/main" --jq .sha)
+          if [ "$current_main" != "$FLATPAK_COMMIT" ]; then
+            echo "Flatpak main advanced from ${FLATPAK_COMMIT} to ${current_main} before the build could be dispatched."
+            exit 1
+          fi
+
+          dispatch_started_at=$(date --utc +'%Y-%m-%dT%H:%M:%SZ')
+          gh workflow run "$FLATPAK_WORKFLOW" \
+            --repo "$FLATPAK_REPOSITORY" \
+            --ref main \
+            -f "artifact_retention_days=${RETENTION_INTERMEDIATE_ASSETS}"
+
+          run_id=""
+          for attempt in {1..15}; do
+            run_id=$(find_run_id "$dispatch_started_at")
+            if [ -n "$run_id" ]; then
+              break
+            fi
+
+            echo "Waiting for the dispatched Flatpak workflow on commit ${FLATPAK_COMMIT}..."
+            sleep 20
+          done
+
+          if [ -z "$run_id" ]; then
+            echo "Timed out waiting for a Flatpak workflow to start on commit ${FLATPAK_COMMIT}."
+            exit 1
+          fi
+
+          set +e
+          wait_for_run "$run_id"
+          wait_result=$?
+          set -e
+
+          if [ "$wait_result" -eq 0 ]; then
+            echo "run_id=${run_id}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [ "$wait_result" -eq 2 ]; then
+            exit 1
+          fi
+
+          echo "Re-running Flatpak run ${run_id} once."
+          previous_attempt=$(gh api "repos/${FLATPAK_REPOSITORY}/actions/runs/${run_id}" --jq .run_attempt)
+          gh run rerun "$run_id" --repo "$FLATPAK_REPOSITORY"
+
+          rerun_started=false
+          for attempt in {1..60}; do
+            rerun_state=$(gh api "repos/${FLATPAK_REPOSITORY}/actions/runs/${run_id}")
+            current_attempt=$(echo "$rerun_state" | jq -r '.run_attempt')
+            current_status=$(echo "$rerun_state" | jq -r '.status')
+
+            if [ "$current_attempt" -gt "$previous_attempt" ] || [ "$current_status" != "completed" ]; then
+              rerun_started=true
+              break
+            fi
+
+            sleep 2
+          done
+
+          if [ "$rerun_started" != "true" ]; then
+            echo "Timed out waiting for Flatpak run ${run_id} to start its retry."
+            exit 1
+          fi
+
+          if ! wait_for_run "$run_id"; then
+            echo "Flatpak run ${run_id} did not succeed after one retry."
+            exit 1
+          fi
+
+          echo "run_id=${run_id}" >> "$GITHUB_OUTPUT"
+
+      - name: Download Flatpak artifacts
+        env:
+          GH_TOKEN: ${{ secrets.FLATPAK_WORKFLOW_TOKEN }}
+          RUN_ID: ${{ steps.flatpak_run.outputs.run_id }}
+        run: |
+          set -euo pipefail
+
+          mkdir -p flatpak-artifacts
+          gh run download "$RUN_ID" \
+            --repo "$FLATPAK_REPOSITORY" \
+            --name "MindWork AI Studio Flatpak (x86_64)" \
+            --name "MindWork AI Studio Flatpak (aarch64)" \
+            --dir flatpak-artifacts
+
+          expected_files=(
+            "MindWork AI Studio_x86_64.flatpak"
+            "MindWork AI Studio Plugin Pandoc_x86_64.flatpak"
+            "MindWork AI Studio_aarch64.flatpak"
+            "MindWork AI Studio Plugin Pandoc_aarch64.flatpak"
+          )
+
+          flatpak_count=$(find flatpak-artifacts -type f -name '*.flatpak' | wc -l | tr -d ' ')
+          if [ "$flatpak_count" -ne 4 ]; then
+            echo "Downloaded ${flatpak_count} Flatpak files; expected 4."
+            find flatpak-artifacts -type f -print
+            exit 1
+          fi
+
+          for expected_file in "${expected_files[@]}"; do
+            match_count=$(find flatpak-artifacts -type f -name "$expected_file" | wc -l | tr -d ' ')
+            if [ "$match_count" -ne 1 ]; then
+              echo "Expected exactly one '${expected_file}', found ${match_count}."
+              exit 1
+            fi
+
+            matched_file=$(find flatpak-artifacts -type f -name "$expected_file" -print -quit)
+            test -s "$matched_file"
+          done
+
+          find flatpak-artifacts -type f -name '*.flatpak' -print
+
+      - name: Upload Flatpak artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: MindWork AI Studio Flatpak Release
+          path: flatpak-artifacts/**/*.flatpak
+          if-no-files-found: error
+          overwrite: true
+          retention-days: ${{ env.RETENTION_INTERMEDIATE_ASSETS }}
 
   build_main:
     name: Build app (${{ matrix.dotnet_runtime }})
@@ -789,7 +1289,7 @@ jobs:
   create_release:
     name: Prepare & create release
     runs-on: ubuntu-latest
-    needs: [build_main, read_metadata]
+    needs: [build_main, collect_flatpak_artifacts, read_metadata]
     if: startsWith(github.ref, 'refs/tags/v')
     permissions: {}
     steps:
@@ -808,16 +1308,19 @@ jobs:
       - name: Prepare release assets
         env:
           VERSION: ${{ needs.read_metadata.outputs.version }}
-          
+
         run: |
+          set -euo pipefail
+
           RELEASE_DIR="$GITHUB_WORKSPACE/release/assets"
-          
+          declare -A release_asset_sources
+
           # Ensure the release directory exists:
           mkdir -p "$RELEASE_DIR"
-          
+
           # Find and process files in the artifacts directory:
-          find "$GITHUB_WORKSPACE/artifacts" -type f | while read -r FILE; do
-          
+          while IFS= read -r -d '' FILE; do
+
             if [[ "$FILE" == *"osx-x64"* && "$FILE" == *".tar.gz.sig" ]]; then
               TARGET_NAME="MindWork AI Studio_x64.app.tar.gz.sig"
             elif [[ "$FILE" == *"osx-x64"* && "$FILE" == *".tar.gz" ]]; then
@@ -830,10 +1333,36 @@ jobs:
               TARGET_NAME="$(basename "$FILE")"
               TARGET_NAME=$(echo "$TARGET_NAME" | sed "s/_${VERSION}//")
             fi
-          
+
+            if [ -n "${release_asset_sources[$TARGET_NAME]+x}" ]; then
+              echo "Duplicate release asset name '${TARGET_NAME}':"
+              echo "  ${release_asset_sources[$TARGET_NAME]}"
+              echo "  ${FILE}"
+              exit 1
+            fi
+
+            release_asset_sources[$TARGET_NAME]="$FILE"
+
             cp "$FILE" "${RELEASE_DIR}/${TARGET_NAME}"
+          done < <(find "$GITHUB_WORKSPACE/artifacts" -type f -print0)
+
+          expected_flatpaks=(
+            "MindWork AI Studio_x86_64.flatpak"
+            "MindWork AI Studio Plugin Pandoc_x86_64.flatpak"
+            "MindWork AI Studio_aarch64.flatpak"
+            "MindWork AI Studio Plugin Pandoc_aarch64.flatpak"
+          )
+
+          flatpak_count=$(find "$RELEASE_DIR" -maxdepth 1 -type f -name '*.flatpak' | wc -l | tr -d ' ')
+          if [ "$flatpak_count" -ne 4 ]; then
+            echo "Prepared ${flatpak_count} Flatpak release assets; expected 4."
+            exit 1
+          fi
+
+          for expected_flatpak in "${expected_flatpaks[@]}"; do
+            test -s "${RELEASE_DIR}/${expected_flatpak}"
           done
-          
+
           # Display the structure of the release directory:
           ls -Rlhat $GITHUB_WORKSPACE/release/assets
           

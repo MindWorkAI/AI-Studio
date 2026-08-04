@@ -1,4 +1,5 @@
 using AIStudio.Dialogs.Settings;
+using AIStudio.Tools.AssistantSessions;
 
 namespace AIStudio.Assistants.IconFinder;
 
@@ -56,6 +57,22 @@ public partial class AssistantIconFinder : AssistantBaseCore<SettingsDialogIconF
     
     private string inputContext = string.Empty;
     private IconSources selectedIconSource;
+    private static readonly AssistantSessionStateKey<string> INPUT_CONTEXT_STATE_KEY = new(nameof(inputContext));
+    private static readonly AssistantSessionStateKey<IconSources> SELECTED_ICON_SOURCE_STATE_KEY = new(nameof(selectedIconSource));
+
+    /// <inheritdoc />
+    protected override void CaptureCustomAssistantSessionState(AssistantSessionStateWriter state)
+    {
+        state.Set(INPUT_CONTEXT_STATE_KEY, this.inputContext);
+        state.Set(SELECTED_ICON_SOURCE_STATE_KEY, this.selectedIconSource);
+    }
+
+    /// <inheritdoc />
+    protected override void RestoreCustomAssistantSessionState(AssistantSessionStateReader state)
+    {
+        state.Restore(INPUT_CONTEXT_STATE_KEY, value => this.inputContext = value);
+        state.Restore(SELECTED_ICON_SOURCE_STATE_KEY, value => this.selectedIconSource = value);
+    }
     
     #region Overrides of ComponentBase
 

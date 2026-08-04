@@ -435,7 +435,9 @@ public static partial class ManagedConfiguration
         if(dryRun)
             return successful;
 
-        return HandleParsedValue(configPluginId, dryRun, successful, configMeta, configuredValue);
+        var settingName = SettingName(propertyExpression);
+        var managedMode = ReadManagedConfigurationMode(propertyExpression, settings);
+        return HandleParsedScalarValue(configPluginId, dryRun, successful, configMeta, configuredValue, managedMode, settingName);
     }
 
     /// <summary>
@@ -1026,6 +1028,10 @@ public static partial class ManagedConfiguration
             .Cast<object>()
             .OrderBy(key => key.ToString(), StringComparer.Ordinal)
             .Select(key => $"{key}:{dictionary[key]}")),
+        System.Collections.IEnumerable enumerable => string.Join(";", enumerable
+            .Cast<object>()
+            .Select(item => item.ToString() ?? string.Empty)
+            .Order(StringComparer.Ordinal)),
         IFormattable formattable => formattable.ToString(null, CultureInfo.InvariantCulture),
 
         _ => value.ToString() ?? string.Empty,

@@ -4,13 +4,22 @@
 Do you want to manage MindWork AI Studio in a corporate environment or within an organization? This documentation explains what you need to do and how it works. First, here's an overview of the entire process:
 
 - You can distribute MindWork AI Studio to employees' devices using tools like Microsoft System Center Configuration Manager (SCCM).
-- Employees can get updates through the built-in update feature. If you want, you can disable automatic updates and control which version gets distributed.
+- Employees can get updates through the built-in update feature. Enterprise configuration can disable automatic checks or the entire built-in update feature so that the IT department controls which version gets distributed.
 - AI Studio checks about every 16 minutes to see where and which configuration it should load. This information is loaded from the local system. On Windows, you might use the registry, for example.
 - If it finds the necessary metadata, AI Studio downloads the configuration as a ZIP file from the specified server.
 - The configuration is an AI Studio plugin written in Lua.
 - Any changes to the configuration apply live while the software is running, so employees don’t need to restart it.
 
 AI Studio checks about every 16 minutes to see if the configuration ID, the server for the configuration, or the configuration itself has changed. If it finds any changes, it loads the updated configuration from the server and applies it right away.
+
+### Manage app updates
+
+Set `CONFIG["SETTINGS"]["DataApp.UpdateInterval"]` in the configuration plugin to control update checks:
+
+- `NO_CHECK` disables automatic update checks. Users can still check for and install updates manually.
+- `DISABLE_UPDATES` disables automatic and manual update checks and installations. AI Studio tells users that updates are managed by their organization and directs questions to their IT department. This policy takes effect immediately when the enterprise configuration changes.
+
+Use `DISABLE_UPDATES` when your organization distributes approved versions through its own software-management process.
 
 ## Configure the devices
 So that MindWork AI Studio knows where to load which configuration, this information must be provided as metadata on employees' devices. Currently, the following options are available:
@@ -89,15 +98,15 @@ This path is intended for a Flatpak provisioning extension like:
 
 ```yaml
 add-extensions:
-  org.MindWorkAI.AIStudio.provisioning:
+  org.mindworkai.AIStudio.provisioning:
     directory: etc/MindWorkAI
     no-autodownload: true
 ```
 
 Policy files can then be provided on the host through the extension directories. For example:
 
-- System-wide, read-only: `/var/lib/flatpak/extension/org.MindWorkAI.AIStudio.provisioning/x86_64/stable/`
-- User-specific: `$XDG_DATA_HOME/flatpak/extension/org.MindWorkAI.AIStudio.provisioning/x86_64/stable/`
+- System-wide, read-only: `/var/lib/flatpak/extension/org.mindworkai.AIStudio.provisioning/x86_64/stable/`
+- User-specific: `$XDG_DATA_HOME/flatpak/extension/org.mindworkai.AIStudio.provisioning/x86_64/stable/`
 
 Files placed there are mounted into the sandbox at `/app/etc/MindWorkAI/`. Use the same policy file names and YAML format described below.
 
@@ -287,10 +296,52 @@ Currently, you can configure the following things:
 - Any number of LLM providers (self-hosted or cloud providers with encrypted API keys)
 - Any number of transcription providers for voice-to-text functionality
 - Any number of embedding providers for RAG
+- Enterprise hash approvals for assistant plugins
 - The update behavior of AI Studio
 - Various UI and feature settings (see the example configuration for details)
 
 All other settings can be made by the user themselves. If you need additional settings, feel free to create an issue in our planning repository: https://github.com/MindWorkAI/Planning/issues
+
+## Enterprise approval for assistant plugins
+
+Enterprise configurations can approve assistant plugins by hash so that users do not need to run a local assistant audit before activation. The approval is based only on the current plugin content, not on the plugin GUID.
+
+AI Studio computes the approval hash as a SHA-256 digest over all `.lua` files in the assistant plugin directory:
+
+- recursively
+- sorted by relative path in ordinal order
+- using canonical `/` path separators
+- hashing relative-path length, relative path, content length, and file content for each Lua file
+
+If any Lua file changes, the hash changes automatically and the enterprise approval no longer applies.
+
+### Configuration example
+
+Add the approval list to `CONFIG["SETTINGS"]` in your configuration plugin:
+
+```lua
+CONFIG["SETTINGS"]["DataAssistantPluginAudit.EnterpriseApprovedPlugins"] = {
+    {
+        ["PluginHash"] = "0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF",
+        ["DisplayName"] = "Corporate Translation Assistant",
+        ["Comment"] = "Approved for internal rollout",
+        ["ApprovedBy"] = "AI Governance Board",
+        ["ApprovedAtUtc"] = "2026-07-02T09:30:00Z",
+    }
+}
+```
+
+`PluginHash` is required. All other fields are optional and are shown in the UI as approval metadata.
+
+### Generating the hash
+
+Use the build-script command from the repository root:
+
+```bash
+dotnet run --project app/Build -- assistant-plugin-hash "<plugin-dir>" --lua-snippet
+```
+
+This prints the canonical hash and, with `--lua-snippet`, also prints a ready-to-paste Lua snippet for `CONFIG["SETTINGS"]`.
 
 ## Encrypted API Keys
 

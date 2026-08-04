@@ -31,6 +31,11 @@ public static class FileTypes
     public static readonly FileTypeFilter LUA        = FileTypeFilter.Leaf("Lua", "lua");
     public static readonly FileTypeFilter PHP        = FileTypeFilter.Leaf("PHP", "php");
     public static readonly FileTypeFilter WEB        = FileTypeFilter.Leaf("HTML/CSS", "html", "css");
+
+    /// <summary>
+    /// Gets the standalone HTML filter used for visual briefing import and export.
+    /// </summary>
+    public static readonly FileTypeFilter VISUAL_BRIEFING_HTML = FileTypeFilter.Leaf(TB("Visual briefing"), "html");
     public static readonly FileTypeFilter APP        = FileTypeFilter.Leaf("Swift/Kotlin", "swift", "kt");
     public static readonly FileTypeFilter SHELL      = FileTypeFilter.Leaf("Shell", "sh", "bash", "zsh");
     public static readonly FileTypeFilter LOG        = FileTypeFilter.Leaf("Log", "log");
@@ -48,7 +53,7 @@ public static class FileTypes
     public static readonly FileTypeFilter MS_WORD     = FileTypeFilter.Leaf("Microsoft Word", "docx");
     public static readonly FileTypeFilter WORD        = FileTypeFilter.Composite("Word", ["odt"], MS_WORD);
     public static readonly FileTypeFilter EXCEL       = FileTypeFilter.Leaf("Excel", "xls", "xlsx");
-    public static readonly FileTypeFilter POWER_POINT = FileTypeFilter.Leaf("PowerPoint", "ppt", "pptx");
+    public static readonly FileTypeFilter POWER_POINT = FileTypeFilter.Leaf("PowerPoint", "ppt", "pptx", "odp");
     public static readonly FileTypeFilter MAIL        = FileTypeFilter.Leaf(TB("Mail"), "eml", "msg", "mbox");
     public static readonly FileTypeFilter LATEX       = FileTypeFilter.Leaf("LaTeX", "tex", "bib", "sty", "cls", "log");
 
@@ -60,8 +65,14 @@ public static class FileTypes
     // Media hierarchy
     public static readonly FileTypeFilter IMAGE = FileTypeFilter.Leaf(TB("Image"),
         "jpg", "jpeg", "png", "gif", "bmp", "tiff", "svg", "webp", "heic", "avif");
+
+    /// <summary>
+    /// Gets the prototype visual-asset image formats.
+    /// </summary>
+    public static readonly FileTypeFilter VISUAL_BRIEFING_IMAGE = FileTypeFilter.Leaf(TB("Visual briefing image"),
+        "jpg", "jpeg", "png", "webp");
     public static readonly FileTypeFilter AUDIO = FileTypeFilter.Leaf(TB("Audio"),
-        "mp3", "wav", "wave", "aac", "flac", "ogg", "m4a", "wma", "alac", "aiff", "m4b");
+        "mp3", "wav", "wave", "aac", "flac", "ogg", "opus", "m4a", "m4b", "wma", "alac", "aif", "aiff", "caf");
     public static readonly FileTypeFilter VIDEO = FileTypeFilter.Leaf(TB("Video"),
         "mp4", "m4v", "avi", "mkv", "mov", "wmv", "flv", "webm");
 
@@ -117,7 +128,7 @@ public static class FileTypes
 
         if (types.Any(t => t.ContainsType(SOURCE_LIKE_FILE_NAMES)))
         { 
-            if (SOURCE_LIKE_FILE_NAMES.FilterExtensions.Contains(fileName))
+            if (SOURCE_LIKE_FILE_NAMES.FilterExtensions.Contains(fileName, StringComparer.OrdinalIgnoreCase))
                 return true;
         }
         

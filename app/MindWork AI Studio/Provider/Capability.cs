@@ -71,15 +71,20 @@ public enum Capability
     VIDEO_OUTPUT,
     
     /// <summary>
-    /// The AI model can perform reasoning tasks.
+    /// The AI model can perform reasoning tasks. You can enable reasoning optionally, but it is disabled by default.
     /// </summary>
     OPTIONAL_REASONING,
     
     /// <summary>
-    /// The AI model always performs reasoning.
+    /// The AI model always performs reasoning. There is no option to disable reasoning.
     /// </summary>
     ALWAYS_REASONING,
-    
+
+    /// <summary>
+    /// The AI model performs optional reasoning, but it is enabled by default.
+    /// </summary>
+    REASONING_BY_DEFAULT,
+
     /// <summary>
     /// The AI model can embed information or data.
     /// </summary>

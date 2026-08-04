@@ -5,6 +5,7 @@ using AIStudio.Chat;
 using AIStudio.Dialogs;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.AssistantSessions;
 
 using Microsoft.AspNetCore.Components;
 
@@ -291,7 +292,17 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
         }
     }
 
-    protected override IReadOnlyList<IButtonData> FooterButtons => [];
+    protected override IReadOnlyList<IButtonData> FooterButtons =>
+    [
+        new ButtonData
+        {
+            Text = T("Open in chat"),
+            Icon = Icons.Material.Filled.Chat,
+            Color = Color.Default,
+            AsyncAction = this.OpenInChat,
+            DisabledActionParam = () => !this.CanOpenInChat,
+        },
+    ];
     
     protected override bool ShowEntireChatThread => true;
     
@@ -307,6 +318,22 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
     {
         SystemPrompt = this.SystemPrompt,
     };
+
+    /// <summary>
+    /// Indicates whether the generated ERI conversation can be opened in the chat view.
+    /// </summary>
+    private bool CanOpenInChat => !this.IsProcessing && this.ChatThread is { Blocks.Count: > 0 };
+
+    /// <summary>
+    /// Opens the generated ERI conversation in the chat view when a finished conversation is available.
+    /// </summary>
+    private async Task OpenInChat()
+    {
+        if (!this.CanOpenInChat)
+            return;
+
+        await this.SendToAssistant(Tools.Components.CHAT, default);
+    }
     
     protected override void ResetForm()
     {
@@ -449,17 +476,110 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
     private bool writeToFilesystem;
     private string baseDirectory = string.Empty;
     private List<string> previouslyGeneratedFiles = new();
+    private static readonly AssistantSessionStateKey<DataERIServer?> SELECTED_ERI_SERVER_STATE_KEY = new(nameof(selectedERIServer));
+    private static readonly AssistantSessionStateKey<bool> AUTO_SAVE_STATE_KEY = new(nameof(autoSave));
+    private static readonly AssistantSessionStateKey<string> SERVER_NAME_STATE_KEY = new(nameof(serverName));
+    private static readonly AssistantSessionStateKey<string> SERVER_DESCRIPTION_STATE_KEY = new(nameof(serverDescription));
+    private static readonly AssistantSessionStateKey<ERIVersion> SELECTED_ERI_VERSION_STATE_KEY = new(nameof(selectedERIVersion));
+    private static readonly AssistantSessionStateKey<string?> ERI_SPECIFICATION_STATE_KEY = new(nameof(eriSpecification));
+    private static readonly AssistantSessionStateKey<ProgrammingLanguages> SELECTED_PROGRAMMING_LANGUAGE_STATE_KEY = new(nameof(selectedProgrammingLanguage));
+    private static readonly AssistantSessionStateKey<string> OTHER_PROGRAMMING_LANGUAGE_STATE_KEY = new(nameof(otherProgrammingLanguage));
+    private static readonly AssistantSessionStateKey<DataSources> SELECTED_DATA_SOURCE_STATE_KEY = new(nameof(selectedDataSource));
+    private static readonly AssistantSessionStateKey<string> OTHER_DATA_SOURCE_STATE_KEY = new(nameof(otherDataSource));
+    private static readonly AssistantSessionStateKey<string> DATA_SOURCE_PRODUCT_NAME_STATE_KEY = new(nameof(dataSourceProductName));
+    private static readonly AssistantSessionStateKey<string> DATA_SOURCE_HOSTNAME_STATE_KEY = new(nameof(dataSourceHostname));
+    private static readonly AssistantSessionStateKey<int?> DATA_SOURCE_PORT_STATE_KEY = new(nameof(dataSourcePort));
+    private static readonly AssistantSessionStateKey<bool> USER_TYPED_PORT_STATE_KEY = new(nameof(userTypedPort));
+    private static readonly AssistantSessionStateKey<HashSet<Auth>> SELECTED_AUTHENTICATION_METHODS_STATE_KEY = new(nameof(selectedAuthenticationMethods));
+    private static readonly AssistantSessionStateKey<string> AUTH_DESCRIPTION_STATE_KEY = new(nameof(authDescription));
+    private static readonly AssistantSessionStateKey<OperatingSystem> SELECTED_OPERATING_SYSTEM_STATE_KEY = new(nameof(selectedOperatingSystem));
+    private static readonly AssistantSessionStateKey<AllowedLLMProviders> ALLOWED_LLM_PROVIDERS_STATE_KEY = new(nameof(allowedLLMProviders));
+    private static readonly AssistantSessionStateKey<List<EmbeddingInfo>> EMBEDDINGS_STATE_KEY = new(nameof(embeddings));
+    private static readonly AssistantSessionStateKey<List<RetrievalInfo>> RETRIEVAL_PROCESSES_STATE_KEY = new(nameof(retrievalProcesses));
+    private static readonly AssistantSessionStateKey<string> ADDITIONAL_LIBRARIES_STATE_KEY = new(nameof(additionalLibraries));
+    private static readonly AssistantSessionStateKey<bool> WRITE_TO_FILESYSTEM_STATE_KEY = new(nameof(writeToFilesystem));
+    private static readonly AssistantSessionStateKey<string> BASE_DIRECTORY_STATE_KEY = new(nameof(baseDirectory));
+    private static readonly AssistantSessionStateKey<List<string>> PREVIOUSLY_GENERATED_FILES_STATE_KEY = new(nameof(previouslyGeneratedFiles));
+
+    /// <inheritdoc />
+    protected override void CaptureCustomAssistantSessionState(AssistantSessionStateWriter state)
+    {
+        state.Set(SELECTED_ERI_SERVER_STATE_KEY, this.selectedERIServer);
+        state.Set(AUTO_SAVE_STATE_KEY, this.autoSave);
+        state.Set(SERVER_NAME_STATE_KEY, this.serverName);
+        state.Set(SERVER_DESCRIPTION_STATE_KEY, this.serverDescription);
+        state.Set(SELECTED_ERI_VERSION_STATE_KEY, this.selectedERIVersion);
+        state.Set(ERI_SPECIFICATION_STATE_KEY, this.eriSpecification);
+        state.Set(SELECTED_PROGRAMMING_LANGUAGE_STATE_KEY, this.selectedProgrammingLanguage);
+        state.Set(OTHER_PROGRAMMING_LANGUAGE_STATE_KEY, this.otherProgrammingLanguage);
+        state.Set(SELECTED_DATA_SOURCE_STATE_KEY, this.selectedDataSource);
+        state.Set(OTHER_DATA_SOURCE_STATE_KEY, this.otherDataSource);
+        state.Set(DATA_SOURCE_PRODUCT_NAME_STATE_KEY, this.dataSourceProductName);
+        state.Set(DATA_SOURCE_HOSTNAME_STATE_KEY, this.dataSourceHostname);
+        state.Set(DATA_SOURCE_PORT_STATE_KEY, this.dataSourcePort);
+        state.Set(USER_TYPED_PORT_STATE_KEY, this.userTypedPort);
+        state.SetHashSet(SELECTED_AUTHENTICATION_METHODS_STATE_KEY, this.selectedAuthenticationMethods);
+        state.Set(AUTH_DESCRIPTION_STATE_KEY, this.authDescription);
+        state.Set(SELECTED_OPERATING_SYSTEM_STATE_KEY, this.selectedOperatingSystem);
+        state.Set(ALLOWED_LLM_PROVIDERS_STATE_KEY, this.allowedLLMProviders);
+        state.SetList(EMBEDDINGS_STATE_KEY, this.embeddings);
+        state.SetList(RETRIEVAL_PROCESSES_STATE_KEY, this.retrievalProcesses);
+        state.Set(ADDITIONAL_LIBRARIES_STATE_KEY, this.additionalLibraries);
+        state.Set(WRITE_TO_FILESYSTEM_STATE_KEY, this.writeToFilesystem);
+        state.Set(BASE_DIRECTORY_STATE_KEY, this.baseDirectory);
+        state.SetList(PREVIOUSLY_GENERATED_FILES_STATE_KEY, this.previouslyGeneratedFiles);
+    }
+
+    /// <inheritdoc />
+    protected override void RestoreCustomAssistantSessionState(AssistantSessionStateReader state)
+    {
+        state.Restore(SELECTED_ERI_SERVER_STATE_KEY, value => this.selectedERIServer = value);
+        state.Restore(AUTO_SAVE_STATE_KEY, value => this.autoSave = value);
+        state.Restore(SERVER_NAME_STATE_KEY, value => this.serverName = value);
+        state.Restore(SERVER_DESCRIPTION_STATE_KEY, value => this.serverDescription = value);
+        state.Restore(SELECTED_ERI_VERSION_STATE_KEY, value => this.selectedERIVersion = value);
+        state.Restore(ERI_SPECIFICATION_STATE_KEY, value => this.eriSpecification = value);
+        state.Restore(SELECTED_PROGRAMMING_LANGUAGE_STATE_KEY, value => this.selectedProgrammingLanguage = value);
+        state.Restore(OTHER_PROGRAMMING_LANGUAGE_STATE_KEY, value => this.otherProgrammingLanguage = value);
+        state.Restore(SELECTED_DATA_SOURCE_STATE_KEY, value => this.selectedDataSource = value);
+        state.Restore(OTHER_DATA_SOURCE_STATE_KEY, value => this.otherDataSource = value);
+        state.Restore(DATA_SOURCE_PRODUCT_NAME_STATE_KEY, value => this.dataSourceProductName = value);
+        state.Restore(DATA_SOURCE_HOSTNAME_STATE_KEY, value => this.dataSourceHostname = value);
+        state.Restore(DATA_SOURCE_PORT_STATE_KEY, value => this.dataSourcePort = value);
+        state.Restore(USER_TYPED_PORT_STATE_KEY, value => this.userTypedPort = value);
+        state.Restore(SELECTED_AUTHENTICATION_METHODS_STATE_KEY, value => this.selectedAuthenticationMethods = value);
+        state.Restore(AUTH_DESCRIPTION_STATE_KEY, value => this.authDescription = value);
+        state.Restore(SELECTED_OPERATING_SYSTEM_STATE_KEY, value => this.selectedOperatingSystem = value);
+        state.Restore(ALLOWED_LLM_PROVIDERS_STATE_KEY, value => this.allowedLLMProviders = value);
+        state.RestoreList(EMBEDDINGS_STATE_KEY, this.embeddings);
+        state.RestoreList(RETRIEVAL_PROCESSES_STATE_KEY, this.retrievalProcesses);
+        state.Restore(ADDITIONAL_LIBRARIES_STATE_KEY, value => this.additionalLibraries = value);
+        state.Restore(WRITE_TO_FILESYSTEM_STATE_KEY, value => this.writeToFilesystem = value);
+        state.Restore(BASE_DIRECTORY_STATE_KEY, value => this.baseDirectory = value);
+        state.RestoreList(PREVIOUSLY_GENERATED_FILES_STATE_KEY, this.previouslyGeneratedFiles);
+    }
 
     private bool AreServerPresetsBlocked => !this.SettingsManager.ConfigurationData.ERI.PreselectOptions;
+
+    /// <summary>
+    /// Gets whether ERI server preset controls should be disabled.
+    /// </summary>
+    private bool AreServerPresetControlsDisabled => this.AreServerPresetsBlocked || this.IsProcessing;
     
     private void SelectedERIServerChanged(DataERIServer? server)
     {
+        if (this.IsProcessing)
+            return;
+
         this.selectedERIServer = server;
         this.ResetForm();
     }
     
     private async Task AddERIServer()
     {
+        if (this.IsProcessing)
+            return;
+
         this.SettingsManager.ConfigurationData.ERI.ERIServers.Add(new ()
         {
             ServerName = string.Format(T("ERI Server {0}"), DateTimeOffset.UtcNow),
@@ -470,6 +590,9 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
 
     private async Task RemoveERIServer()
     {
+        if (this.IsProcessing)
+            return;
+
         if(this.selectedERIServer is null)
             return;
         
@@ -492,6 +615,31 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
     }
     
     private bool IsNoneERIServerSelected => this.selectedERIServer is null;
+
+    /// <summary>
+    /// Gets whether ERI configuration input controls should be disabled.
+    /// </summary>
+    private bool IsERIInputDisabled => this.IsNoneERIServerSelected || this.IsProcessing;
+
+    /// <summary>
+    /// Gets whether the selected ERI specification cannot be downloaded.
+    /// </summary>
+    private bool IsSpecificationDownloadDisabled => !this.selectedERIVersion.WasSpecificationSelected() || this.IsERIInputDisabled;
+
+    /// <summary>
+    /// Gets whether the generated-code target directory selection should be disabled.
+    /// </summary>
+    private bool IsBaseDirectorySelectionDisabled => this.IsERIInputDisabled || !this.writeToFilesystem;
+
+    /// <summary>
+    /// Gets a stable row snapshot for the embedding-method table.
+    /// </summary>
+    private EmbeddingInfo[] EmbeddingRows => this.embeddings.ToArray();
+
+    /// <summary>
+    /// Gets a stable row snapshot for the retrieval-process table.
+    /// </summary>
+    private RetrievalInfo[] RetrievalProcessRows => this.retrievalProcesses.ToArray();
 
     /// <summary>
     /// Gets called when the server name was changed by typing.
@@ -780,6 +928,9 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
     
     private async Task AddEmbedding()
     {
+        if (this.IsProcessing)
+            return;
+
         var dialogParameters = new DialogParameters<EmbeddingMethodDialog>
         {
             { x => x.IsEditing, false },
@@ -798,6 +949,9 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
     
     private async Task EditEmbedding(EmbeddingInfo embeddingInfo)
     {
+        if (this.IsProcessing)
+            return;
+
         var dialogParameters = new DialogParameters<EmbeddingMethodDialog>
         {
             { x => x.DataEmbeddingName, embeddingInfo.EmbeddingName },
@@ -823,6 +977,9 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
     
     private async Task DeleteEmbedding(EmbeddingInfo embeddingInfo)
     {
+        if (this.IsProcessing)
+            return;
+
         var message = this.retrievalProcesses.Any(n => n.Embeddings?.Contains(embeddingInfo) is true)
             ? string.Format(T("The embedding '{0}' is used in one or more retrieval processes. Are you sure you want to delete it?"), embeddingInfo.EmbeddingName)
             : string.Format(T("Are you sure you want to delete the embedding '{0}'?"), embeddingInfo.EmbeddingName);
@@ -845,6 +1002,9 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
     
     private async Task AddRetrievalProcess()
     {
+        if (this.IsProcessing)
+            return;
+
         var dialogParameters = new DialogParameters<RetrievalProcessDialog>
         {
             { x => x.IsEditing, false },
@@ -864,6 +1024,9 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
     
     private async Task EditRetrievalProcess(RetrievalInfo retrievalInfo)
     {
+        if (this.IsProcessing)
+            return;
+
         var dialogParameters = new DialogParameters<RetrievalProcessDialog>
         {
             { x => x.DataName, retrievalInfo.Name },
@@ -890,6 +1053,9 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
     
     private async Task DeleteRetrievalProcess(RetrievalInfo retrievalInfo)
     {
+        if (this.IsProcessing)
+            return;
+
         var dialogParameters = new DialogParameters<ConfirmDialog>
         {
             { x => x.Message, string.Format(T("Are you sure you want to delete the retrieval process '{0}'?"), retrievalInfo.Name) },
@@ -949,6 +1115,10 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
             this.AddInputIssue(T("Please describe at least one retrieval process."));
             return;
         }
+
+        var writeToFilesystemSnapshot = this.writeToFilesystem;
+        var baseDirectorySnapshot = this.baseDirectory;
+        var previouslyGeneratedFilesSnapshot = this.previouslyGeneratedFiles.ToArray();
         
         this.eriSpecification = await this.selectedERIVersion.ReadSpecification(this.HttpClient);
         if (string.IsNullOrWhiteSpace(this.eriSpecification))
@@ -990,9 +1160,9 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
         var fileListAnswer = await this.AddAIResponseAsync(time, true);
 
         // Is this an update of the ERI server? If so, we need to delete the previously generated files:
-        if (this.writeToFilesystem && this.previouslyGeneratedFiles.Count > 0 && !string.IsNullOrWhiteSpace(fileListAnswer))
+        if (writeToFilesystemSnapshot && previouslyGeneratedFilesSnapshot.Length > 0 && !string.IsNullOrWhiteSpace(fileListAnswer))
         {
-            foreach (var file in this.previouslyGeneratedFiles)
+            foreach (var file in previouslyGeneratedFilesSnapshot)
             {
                 try
                 {
@@ -1014,7 +1184,8 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
         }
         
         var generatedFiles = new List<string>();
-        foreach (var file in this.ExtractFiles(fileListAnswer))
+        var filesToGenerate = this.ExtractFiles(fileListAnswer).ToArray();
+        foreach (var file in filesToGenerate)
         {
             this.Logger.LogInformation($"The LLM want to create the file: '{file}'");
 
@@ -1034,15 +1205,15 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
                                         ```
                                         """, true);
             var generatedCodeMarkdown = await this.AddAIResponseAsync(time);
-            if (this.writeToFilesystem)
+            if (writeToFilesystemSnapshot)
             {
-                var desiredFilePath = Path.Join(this.baseDirectory, file);
+                var desiredFilePath = Path.Join(baseDirectorySnapshot, file);
                 
                 // Security check: ensure that the desired file path is inside the base directory.
                 // We cannot trust the beginning of the file path because it would be possible
                 // to escape by using `..` in the file path.
-                if (!desiredFilePath.StartsWith(this.baseDirectory, StringComparison.InvariantCultureIgnoreCase) || desiredFilePath.Contains(".."))
-                    this.Logger.LogWarning($"The file path '{desiredFilePath}' is may not inside the base directory '{this.baseDirectory}'.");
+                if (!desiredFilePath.StartsWith(baseDirectorySnapshot, StringComparison.InvariantCultureIgnoreCase) || desiredFilePath.Contains(".."))
+                    this.Logger.LogWarning($"The file path '{desiredFilePath}' is may not inside the base directory '{baseDirectorySnapshot}'.");
                 
                 else
                 {
@@ -1077,7 +1248,7 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
             }
         }
         
-        if(this.writeToFilesystem)
+        if(writeToFilesystemSnapshot)
         {
             this.previouslyGeneratedFiles = generatedFiles;
             this.selectedERIServer!.PreviouslyGeneratedFiles = generatedFiles;
@@ -1096,6 +1267,5 @@ public partial class AssistantERI : AssistantBaseCore<SettingsDialogERIServer>
                                    like Docker.
                                    """, true);
         await this.AddAIResponseAsync(time);
-        await this.SendToAssistant(Tools.Components.CHAT, default);
     }
 }

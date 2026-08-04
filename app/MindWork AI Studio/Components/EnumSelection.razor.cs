@@ -38,6 +38,15 @@ public partial class EnumSelection<T> : EnumSelectionBase where T : struct, Enum
     
     [Parameter]
     public string Icon { get; set; } = Icons.Material.Filled.ArrowDropDown;
+
+    /// <summary>
+    /// Gets or sets whether the selection controls are disabled.
+    /// </summary>
+    [Parameter]
+    public bool Disabled { get; set; }
+    
+    [Parameter]
+    public Size IconSize { get; set; } = Size.Medium;
     
     /// <summary>
     /// Gets or sets the custom name function for selecting the display name of an enum value.

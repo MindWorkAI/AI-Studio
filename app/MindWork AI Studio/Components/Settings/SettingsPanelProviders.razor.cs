@@ -75,6 +75,7 @@ public partial class SettingsPanelProviders : SettingsPanelProviderBase
             { x => x.HFInferenceProviderId, provider.HFInferenceProvider },
             { x => x.AdditionalJsonApiParameters, provider.AdditionalJsonApiParameters },
             { x => x.DataTokenizerPath, provider.TokenizerPath },
+            { x => x.DataCapabilityOverrides, provider.CapabilityOverrides },
         };
 
         var dialogReference = await this.DialogService.ShowAsync<ProviderDialog>(T("Edit LLM Provider"), dialogParameters, DialogOptions.FULLSCREEN);

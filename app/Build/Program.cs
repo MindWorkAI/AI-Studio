@@ -6,4 +6,5 @@ app.AddCommands<CheckRidsCommand>();
 app.AddCommands<UpdateMetadataCommands>();
 app.AddCommands<UpdateWebAssetsCommand>();
 app.AddCommands<CollectI18NKeysCommand>();
+app.AddCommands<AssistantPluginHashCommand>();
 app.Run();

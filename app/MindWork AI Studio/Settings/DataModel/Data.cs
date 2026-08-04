@@ -125,9 +125,9 @@ public sealed class Data
 
     public DataTextContentCleaner TextContentCleaner { get; init; } = new();
     
-    public DataAgentDataSourceSelection AgentDataSourceSelection { get; init; } = new();
+    public DataAgentDataSourceSelection AgentDataSourceSelection { get; init; } = new(x => x.AgentDataSourceSelection);
     
-    public DataAgentRetrievalContextValidation AgentRetrievalContextValidation { get; init; } = new();
+    public DataAgentRetrievalContextValidation AgentRetrievalContextValidation { get; init; } = new(x => x.AgentRetrievalContextValidation);
 
     public DataDataSourceIndexing DataSourceIndexing { get; init; } = new();
 
@@ -144,6 +144,11 @@ public sealed class Data
     public DataEMail EMail { get; init; } = new();
     
     public DataSlideBuilder SlideBuilder { get; init; } = new();
+
+    /// <summary>
+    /// Gets the managed Visual Briefing Assistant defaults.
+    /// </summary>
+    public DataVisualBriefing VisualBriefing { get; init; } = new(x => x.VisualBriefing);
     
     public DataLegalCheck LegalCheck { get; init; } = new();
     

@@ -25,7 +25,7 @@
         @if (PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager))
         {
             <DataSourceSelection SelectionMode="DataSourceSelectionMode.CONFIGURATION_MODE" AutoSaveAppSettings="@true" @bind-DataSourceOptions="@this.SettingsManager.ConfigurationData.Chat.PreselectedDataSourceOptions" ConfigurationHeaderMessage="@T("You can set default data sources and options for new chats. You can change these settings later for each individual chat.")"/>
-            <ConfigurationSelect OptionDescription="@T("Apply default data source option when sending assistant results to chat")" SelectedValue="@(() => this.SettingsManager.ConfigurationData.Chat.SendToChatDataSourceBehavior)" Data="@ConfigurationSelectDataFactory.GetSendToChatDataSourceBehaviorData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.Chat.SendToChatDataSourceBehavior = selectedValue)" OptionHelp="@T("Do you want to apply the default data source options when sending assistant results to chat?")"/>
+            <ConfigurationSelect OptionDescription="@T("Apply default data source option when sending assistant results to chat")" SelectedValue="@(() => this.SettingsManager.ConfigurationData.Chat.SendToChatDataSourceBehavior)" Data="@ConfigurationSelectDataFactory.GetSendToChatDataSourceBehaviorData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.Chat.SendToChatDataSourceBehavior = selectedValue)" OptionHelp="@T("Do you want to apply the default data source options when sending assistant results to chat?")" IsLocked="() => ManagedConfiguration.TryGet(x => x.Chat, x => x.SendToChatDataSourceBehavior, out var meta) && meta.IsLocked"/>
         }
     </DialogContent>
     <DialogActions>

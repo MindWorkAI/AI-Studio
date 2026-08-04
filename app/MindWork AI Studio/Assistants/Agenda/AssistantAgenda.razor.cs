@@ -1,6 +1,7 @@
 using System.Text;
 
 using AIStudio.Dialogs.Settings;
+using AIStudio.Tools.AssistantSessions;
 
 namespace AIStudio.Assistants.Agenda;
 
@@ -185,6 +186,85 @@ public partial class AssistantAgenda : AssistantBaseCore<SettingsDialogAgenda>
     private string inputWhoIsPresenting = string.Empty;
     
     private readonly List<string> contentLines = [];
+    private static readonly AssistantSessionStateKey<string> INPUT_TOPIC_STATE_KEY = new(nameof(inputTopic));
+    private static readonly AssistantSessionStateKey<string> INPUT_NAME_STATE_KEY = new(nameof(inputName));
+    private static readonly AssistantSessionStateKey<string> INPUT_CONTENT_STATE_KEY = new(nameof(inputContent));
+    private static readonly AssistantSessionStateKey<string> INPUT_DURATION_STATE_KEY = new(nameof(inputDuration));
+    private static readonly AssistantSessionStateKey<string> INPUT_START_TIME_STATE_KEY = new(nameof(inputStartTime));
+    private static readonly AssistantSessionStateKey<HashSet<string>> SELECTED_FOCI_STATE_KEY = new(nameof(selectedFoci));
+    private static readonly AssistantSessionStateKey<HashSet<string>> JUST_BRIEFLY_STATE_KEY = new(nameof(justBriefly));
+    private static readonly AssistantSessionStateKey<string> INPUT_OBJECTIVE_STATE_KEY = new(nameof(inputObjective));
+    private static readonly AssistantSessionStateKey<string> INPUT_MODERATOR_STATE_KEY = new(nameof(inputModerator));
+    private static readonly AssistantSessionStateKey<CommonLanguages> SELECTED_TARGET_LANGUAGE_STATE_KEY = new(nameof(selectedTargetLanguage));
+    private static readonly AssistantSessionStateKey<string> CUSTOM_TARGET_LANGUAGE_STATE_KEY = new(nameof(customTargetLanguage));
+    private static readonly AssistantSessionStateKey<bool> INTRODUCE_PARTICIPANTS_STATE_KEY = new(nameof(introduceParticipants));
+    private static readonly AssistantSessionStateKey<bool> IS_MEETING_VIRTUAL_STATE_KEY = new(nameof(isMeetingVirtual));
+    private static readonly AssistantSessionStateKey<string> INPUT_LOCATION_STATE_KEY = new(nameof(inputLocation));
+    private static readonly AssistantSessionStateKey<bool> GOING_TO_DINNER_STATE_KEY = new(nameof(goingToDinner));
+    private static readonly AssistantSessionStateKey<bool> DOING_SOCIAL_ACTIVITY_STATE_KEY = new(nameof(doingSocialActivity));
+    private static readonly AssistantSessionStateKey<bool> NEED_TO_ARRIVE_AND_DEPART_STATE_KEY = new(nameof(needToArriveAndDepart));
+    private static readonly AssistantSessionStateKey<int> DURATION_LUNCH_BREAK_STATE_KEY = new(nameof(durationLunchBreak));
+    private static readonly AssistantSessionStateKey<int> DURATION_BREAKS_STATE_KEY = new(nameof(durationBreaks));
+    private static readonly AssistantSessionStateKey<bool> ACTIVE_PARTICIPATION_STATE_KEY = new(nameof(activeParticipation));
+    private static readonly AssistantSessionStateKey<NumberParticipants> NUMBER_PARTICIPANTS_STATE_KEY = new(nameof(numberParticipants));
+    private static readonly AssistantSessionStateKey<string> INPUT_WHO_IS_PRESENTING_STATE_KEY = new(nameof(inputWhoIsPresenting));
+    private static readonly AssistantSessionStateKey<List<string>> CONTENT_LINES_STATE_KEY = new(nameof(contentLines));
+
+    /// <inheritdoc />
+    protected override void CaptureCustomAssistantSessionState(AssistantSessionStateWriter state)
+    {
+        state.Set(INPUT_TOPIC_STATE_KEY, this.inputTopic);
+        state.Set(INPUT_NAME_STATE_KEY, this.inputName);
+        state.Set(INPUT_CONTENT_STATE_KEY, this.inputContent);
+        state.Set(INPUT_DURATION_STATE_KEY, this.inputDuration);
+        state.Set(INPUT_START_TIME_STATE_KEY, this.inputStartTime);
+        state.SetHashSet(SELECTED_FOCI_STATE_KEY, this.selectedFoci);
+        state.SetHashSet(JUST_BRIEFLY_STATE_KEY, this.justBriefly);
+        state.Set(INPUT_OBJECTIVE_STATE_KEY, this.inputObjective);
+        state.Set(INPUT_MODERATOR_STATE_KEY, this.inputModerator);
+        state.Set(SELECTED_TARGET_LANGUAGE_STATE_KEY, this.selectedTargetLanguage);
+        state.Set(CUSTOM_TARGET_LANGUAGE_STATE_KEY, this.customTargetLanguage);
+        state.Set(INTRODUCE_PARTICIPANTS_STATE_KEY, this.introduceParticipants);
+        state.Set(IS_MEETING_VIRTUAL_STATE_KEY, this.isMeetingVirtual);
+        state.Set(INPUT_LOCATION_STATE_KEY, this.inputLocation);
+        state.Set(GOING_TO_DINNER_STATE_KEY, this.goingToDinner);
+        state.Set(DOING_SOCIAL_ACTIVITY_STATE_KEY, this.doingSocialActivity);
+        state.Set(NEED_TO_ARRIVE_AND_DEPART_STATE_KEY, this.needToArriveAndDepart);
+        state.Set(DURATION_LUNCH_BREAK_STATE_KEY, this.durationLunchBreak);
+        state.Set(DURATION_BREAKS_STATE_KEY, this.durationBreaks);
+        state.Set(ACTIVE_PARTICIPATION_STATE_KEY, this.activeParticipation);
+        state.Set(NUMBER_PARTICIPANTS_STATE_KEY, this.numberParticipants);
+        state.Set(INPUT_WHO_IS_PRESENTING_STATE_KEY, this.inputWhoIsPresenting);
+        state.SetList(CONTENT_LINES_STATE_KEY, this.contentLines);
+    }
+
+    /// <inheritdoc />
+    protected override void RestoreCustomAssistantSessionState(AssistantSessionStateReader state)
+    {
+        state.Restore(INPUT_TOPIC_STATE_KEY, value => this.inputTopic = value);
+        state.Restore(INPUT_NAME_STATE_KEY, value => this.inputName = value);
+        state.Restore(INPUT_CONTENT_STATE_KEY, value => this.inputContent = value);
+        state.Restore(INPUT_DURATION_STATE_KEY, value => this.inputDuration = value);
+        state.Restore(INPUT_START_TIME_STATE_KEY, value => this.inputStartTime = value);
+        state.Restore(SELECTED_FOCI_STATE_KEY, value => this.selectedFoci = value);
+        state.Restore(JUST_BRIEFLY_STATE_KEY, value => this.justBriefly = value);
+        state.Restore(INPUT_OBJECTIVE_STATE_KEY, value => this.inputObjective = value);
+        state.Restore(INPUT_MODERATOR_STATE_KEY, value => this.inputModerator = value);
+        state.Restore(SELECTED_TARGET_LANGUAGE_STATE_KEY, value => this.selectedTargetLanguage = value);
+        state.Restore(CUSTOM_TARGET_LANGUAGE_STATE_KEY, value => this.customTargetLanguage = value);
+        state.Restore(INTRODUCE_PARTICIPANTS_STATE_KEY, value => this.introduceParticipants = value);
+        state.Restore(IS_MEETING_VIRTUAL_STATE_KEY, value => this.isMeetingVirtual = value);
+        state.Restore(INPUT_LOCATION_STATE_KEY, value => this.inputLocation = value);
+        state.Restore(GOING_TO_DINNER_STATE_KEY, value => this.goingToDinner = value);
+        state.Restore(DOING_SOCIAL_ACTIVITY_STATE_KEY, value => this.doingSocialActivity = value);
+        state.Restore(NEED_TO_ARRIVE_AND_DEPART_STATE_KEY, value => this.needToArriveAndDepart = value);
+        state.Restore(DURATION_LUNCH_BREAK_STATE_KEY, value => this.durationLunchBreak = value);
+        state.Restore(DURATION_BREAKS_STATE_KEY, value => this.durationBreaks = value);
+        state.Restore(ACTIVE_PARTICIPATION_STATE_KEY, value => this.activeParticipation = value);
+        state.Restore(NUMBER_PARTICIPANTS_STATE_KEY, value => this.numberParticipants = value);
+        state.Restore(INPUT_WHO_IS_PRESENTING_STATE_KEY, value => this.inputWhoIsPresenting = value);
+        state.RestoreList(CONTENT_LINES_STATE_KEY, this.contentLines);
+    }
 
     #region Overrides of ComponentBase
 

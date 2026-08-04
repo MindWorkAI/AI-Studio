@@ -1,4 +1,3 @@
-using AIStudio.Chat;
 using AIStudio.Components;
 using AIStudio.Provider;
 using AIStudio.Settings;
@@ -104,6 +103,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
     private string dataCustomTokenizerValidationIssue = string.Empty;
     private Task dataTokenizerValidationTask = Task.CompletedTask;
     private bool dataStoreWasAttempted;
+    private bool isTokenizerFileDialogOpen;
     private bool showExpertSettings;
     private int dataTokenizerValidationRevision;
 
@@ -314,6 +314,24 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
         {
             this.dataAPIKeyStorageIssue = string.Empty;
             await this.form.Validate();
+        }
+    }
+
+    private async Task OpenTokenizerFileDialog()
+    {
+        if (this.isTokenizerFileDialogOpen)
+            return;
+
+        this.isTokenizerFileDialogOpen = true;
+        try
+        {
+            var response = await this.RustService.SelectFile(T("Choose a custom tokenizer here"), [ FileTypes.JSON ], string.IsNullOrWhiteSpace(this.dataFilePath) ? null : this.dataFilePath);
+            if (!response.UserCancelled)
+                await this.OnDataFilePathChanged(response.SelectedFilePath);
+        }
+        finally
+        {
+            this.isTokenizerFileDialogOpen = false;
         }
     }
 

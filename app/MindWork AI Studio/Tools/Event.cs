@@ -74,6 +74,11 @@ public enum Event
     SHOW_SUCCESS,
 
     /// <summary>
+    /// Requests display of an informational notification.
+    /// </summary>
+    SHOW_INFO,
+
+    /// <summary>
     /// Carries an event received from the Tauri runtime.
     /// </summary>
     TAURI_EVENT_RECEIVED,
@@ -87,6 +92,11 @@ public enum Event
     /// Notifies receivers that voice recording availability changed.
     /// </summary>
     VOICE_RECORDING_AVAILABILITY_CHANGED,
+
+    /// <summary>
+    /// Notifies settings UI receivers that a portal changed the effective global shortcut label.
+    /// </summary>
+    GLOBAL_SHORTCUT_CHANGED,
     
     // Update events:
     /// <summary>
@@ -144,6 +154,16 @@ public enum Event
     /// Notifies receivers that chat generation state changed.
     /// </summary>
     CHAT_GENERATION_CHANGED,
+
+    /// <summary>
+    /// Notifies receivers that an assistant session changed.
+    /// </summary>
+    ASSISTANT_SESSION_CHANGED,
+
+    /// <summary>
+    /// Notifies receivers that an assistant session finished.
+    /// </summary>
+    ASSISTANT_SESSION_FINISHED,
     
     // Workspace events:
     /// <summary>
@@ -288,5 +308,10 @@ public enum Event
     /// <summary>
     /// Sends content to the slide builder assistant.
     /// </summary>
-    SEND_TO_SLIDE_BUILDER_ASSISTANT
+    SEND_TO_SLIDE_BUILDER_ASSISTANT,
+
+    /// <summary>
+    /// Sends content to the Visual Briefing Assistant.
+    /// </summary>
+    SEND_TO_VISUAL_BRIEFING_ASSISTANT
 }

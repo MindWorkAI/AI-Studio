@@ -45,6 +45,9 @@
         <EmbeddedResource Include="Plugins\**" CopyToOutputDirectory="PreserveNewest" />
         <EmbeddedResource Include="Assistants\I18N\allTexts.lua" CopyToOutputDirectory="PreserveNewest" />
         <EmbeddedResource Include="Assistants\PromptOptimizer\prompting_guideline.md" CopyToOutputDirectory="PreserveNewest" />
+        <EmbeddedResource Include="Assistants\Builder\AssistantBuilderLuaResponse.schema.json" CopyToOutputDirectory="PreserveNewest" />
+        <EmbeddedResource Include="Assistants\VisualBriefing\Runtime\echarts.common.min.js" CopyToOutputDirectory="PreserveNewest" />
+        <EmbeddedResource Include="..\..\runtime\icons\128x128.png" LogicalName="AIStudio.Assistants.VisualBriefing.Runtime.mindwork-ai-studio-icon.png" />
     </ItemGroup>
 
     <ItemGroup>
