@@ -1,0 +1,51 @@
+.chart-block-shell {
+    --chart-pine: #236a50;
+    --chart-sage: #79ae90;
+    --chart-sun: #f2d264;
+    --chart-mist: #eaf1ec;
+    padding: 0 1.5rem;
+}
+
+.chart-block-shell ::deep .chart-block {
+    position: relative;
+    overflow: hidden;
+    padding: clamp(1rem, 2.5vw, 1.5rem);
+    border-color: color-mix(in srgb, var(--mud-palette-lines-default) 85%, var(--chart-pine));
+    border-radius: 1.25rem;
+    background: var(--mud-palette-surface);
+    background: color-mix(in srgb, var(--mud-palette-surface) 96%, var(--chart-mist));
+    box-shadow: 0 18px 55px rgba(22, 75, 59, .07);
+}
+
+.chart-block-shell ::deep .chart-block::before {
+    position: absolute;
+    inset: 0 0 auto;
+    height: .25rem;
+    background: linear-gradient(90deg, var(--chart-pine), var(--chart-sage), var(--chart-sun));
+    content: "";
+}
+
+.chart-block-shell ::deep .chart-block-title {
+    margin-block-end: 1rem;
+    font-weight: 700;
+    letter-spacing: -.02em;
+}
+
+.chart-block-plot {
+    width: 100%;
+    margin-inline: auto;
+}
+
+.chart-block-plot-circular {
+    max-width: 30rem;
+}
+
+.chart-block-plot-axis {
+    max-width: 56rem;
+}
+
+.chart-block-shell ::deep .chart-block-caption {
+    margin-block-start: .75rem;
+    color: var(--mud-palette-text-secondary);
+    line-height: 1.5;
+}
