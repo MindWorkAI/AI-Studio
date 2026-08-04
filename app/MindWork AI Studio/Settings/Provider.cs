@@ -34,7 +34,7 @@ public sealed record Provider(
     Host Host = Host.NONE,
     HFInferenceProvider HFInferenceProvider = HFInferenceProvider.NONE,
     string AdditionalJsonApiParameters = "",
-    string TokenizerPath = "") : ConfigurationBaseObject, ISecretId
+    string TokenizerPath = "",
     ProviderCapabilityOverrides? CapabilityOverrides = null) : ConfigurationBaseObject, ISecretId
 {
     private static readonly ILogger<Provider> LOGGER = Program.LOGGER_FACTORY.CreateLogger<Provider>();
