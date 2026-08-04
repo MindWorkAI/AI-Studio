@@ -103,9 +103,20 @@ async fn share_file_on_platform(path: PathBuf) -> Result<(), String> {
 
 #[cfg(target_os = "macos")]
 async fn share_file_on_platform(path: PathBuf) -> Result<(), String> {
-    use objc2::MainThreadMarker;
-    use objc2_app_kit::{NSRectEdge, NSSharingServicePicker, NSView};
-    use objc2_foundation::{NSArray, NSRect, NSString, NSURL};
+    use std::cell::RefCell;
+    use objc2::rc::Retained;
+    use objc2::runtime::AnyObject;
+    use objc2::{AnyThread, MainThreadMarker};
+    use objc2_app_kit::{NSSharingServicePicker, NSView};
+    use objc2_foundation::{NSArray, NSRect, NSRectEdge, NSString, NSURL};
+
+    // AppKit does not retain the picker while its UI is shown. Without a strong reference of our
+    // own, the picker would be deallocated right after showRelativeToRect and the share sheet
+    // would close immediately. We create and replace the picker on the main thread only, hence a
+    // thread-local reference is sufficient:
+    thread_local! {
+        static CURRENT_PICKER: RefCell<Option<Retained<NSSharingServicePicker>>> = const { RefCell::new(None) };
+    }
 
     let window = crate::app_window::MAIN_WINDOW.lock().unwrap().clone()
         .ok_or_else(|| String::from("The main window is not available."))?;
@@ -115,13 +126,19 @@ async fn share_file_on_platform(path: PathBuf) -> Result<(), String> {
 
     window.run_on_main_thread(move || {
         let result = (|| -> Result<(), String> {
-            let mtm = MainThreadMarker::new().ok_or_else(|| String::from("The macOS share sheet must run on the main thread."))?;
+            // We create the NSView reference from a raw pointer below, which bypasses the
+            // main-thread guarantee of objc2. Thus, we assert the main thread ourselves:
+            let _mtm = MainThreadMarker::new().ok_or_else(|| String::from("The macOS share sheet must run on the main thread."))?;
             let path = NSString::from_str(&path);
             let url = NSURL::fileURLWithPath(&path);
-            let items = NSArray::from_retained_slice(&[url]);
-            let picker = NSSharingServicePicker::alloc(mtm).initWithItems(&items);
+            let item: Retained<AnyObject> = Retained::into_super(Retained::into_super(url));
+            let items = NSArray::from_retained_slice(&[item]);
+
+            // Safety: the items are NSURL instances, which conform to NSPasteboardWriting.
+            let picker = unsafe { NSSharingServicePicker::initWithItems(NSSharingServicePicker::alloc(), &items) };
             let view = unsafe { &*ui_window.ns_view().map_err(|error| format!("Failed to get the native view: {error}"))?.cast::<NSView>() };
             picker.showRelativeToRect_ofView_preferredEdge(NSRect::ZERO, view, NSRectEdge::MinY);
+            CURRENT_PICKER.with(|current| current.replace(Some(picker)));
             Ok(())
         })();
         let _ = sender.send(result);
