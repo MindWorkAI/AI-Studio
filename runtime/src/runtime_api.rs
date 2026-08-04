@@ -64,6 +64,7 @@ pub fn start_runtime_api() {
         .route("/media/jobs", post(crate::media::create_job))
         .route("/media/jobs/{id}/events", get(crate::media::get_job_events))
         .route("/media/jobs/{id}", delete(crate::media::cancel_job))
+        .route("/image/prepare", post(crate::image::prepare_image))
         .route("/log/paths", get(crate::log::get_log_paths))
         .route("/log/event", post(crate::log::log_event))
         .route("/shortcuts/register", post(crate::app_window::register_shortcut))

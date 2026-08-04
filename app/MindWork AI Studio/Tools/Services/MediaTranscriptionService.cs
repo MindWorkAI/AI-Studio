@@ -10,7 +10,11 @@ namespace AIStudio.Tools.Services;
 /// <summary>
 /// Coordinates serialized visible media imports and independent voice transcriptions.
 /// </summary>
-public sealed class MediaTranscriptionService(RustService rustService, SettingsManager settingsManager, ILogger<MediaTranscriptionService> logger) : IDisposable
+public sealed class MediaTranscriptionService(
+    RustService rustService,
+    SettingsManager settingsManager,
+    IEnumerable<IMediaTranscriptStorage> transcriptStorages,
+    ILogger<MediaTranscriptionService> logger) : IDisposable
 {
     private const string NORMALIZED_OUTPUT_EXTENSION = ".webm";
     private const string NORMALIZED_OUTPUT_FORMAT = "webm";
@@ -294,12 +298,18 @@ public sealed class MediaTranscriptionService(RustService rustService, SettingsM
                     continue;
                 }
 
-                var isPersistedChat = ownerChat is not null && WorkspaceBehaviour.IsChatExisting(new LoadChat(ownerChat.WorkspaceId, ownerChat.ChatId));
-                var attachment = isPersistedChat
-                    ? await WorkspaceBehaviour.CreateManagedTranscriptAsync(ownerChat!, mediaPath, result.Text)
-                    : await ManagedTranscriptAttachment.CreateStagedAsync(mediaPath, result.Text);
+                var persistentStorage = transcriptStorages.FirstOrDefault(storage => storage.CanStore(target.Owner));
+                var isPersistedChat = persistentStorage is null &&
+                                      ownerChat is not null &&
+                                      WorkspaceBehaviour.IsChatExisting(new LoadChat(ownerChat.WorkspaceId, ownerChat.ChatId));
+                
+                var attachment = persistentStorage is not null
+                    ? await persistentStorage.StoreAsync(target, mediaPath, result.Text, batchToken)
+                    : isPersistedChat
+                        ? await WorkspaceBehaviour.CreateManagedTranscriptAsync(ownerChat!, mediaPath, result.Text)
+                        : await ManagedTranscriptAttachment.CreateStagedAsync(mediaPath, result.Text);
 
-                if (ownerChat is not null && attachment is { } managed
+                if (persistentStorage is null && ownerChat is not null && attachment is ManagedTranscriptAttachment managed
                     && ownerChat.PendingMediaTranscripts.All(existing => existing.FilePath != managed.FilePath))
                     ownerChat.PendingMediaTranscripts.Add(managed);
 
@@ -443,6 +453,11 @@ public sealed class MediaTranscriptionService(RustService rustService, SettingsM
         var normalizedPath = Path.Combine(Path.GetTempPath(), "mindwork-ai-studio-media", $"{operation.Id:N}.webm");
         Directory.CreateDirectory(Path.GetDirectoryName(normalizedPath)!);
 
+        // Logged next to the operation ID: users recognize the file they picked, whereas an ID only
+        // helps when correlating log lines. The name alone is enough and keeps full paths out of
+        // logs that get shared in bug reports.
+        var fileName = Path.GetFileName(mediaPath);
+
         try
         {
             var normalized = await this.NormalizeAsync(mediaPath, normalizedPath, operation, updateImportState);
@@ -454,13 +469,20 @@ public sealed class MediaTranscriptionService(RustService rustService, SettingsM
             var uploadContractError = await ValidateNormalizedProviderUploadAsync(normalized.Result, normalizedPath, operation.Cancellation.Token);
             if (uploadContractError is not null)
             {
-                logger.LogError("Refusing the transcription provider upload because the normalized media contract validation failed: {Diagnostic}", uploadContractError);
+                logger.LogError(
+                    "Refusing the transcription provider upload for '{FileName}' (operation {OperationId}) because the normalized media contract validation failed: {Diagnostic}",
+                    fileName,
+                    operation.Id,
+                    uploadContractError);
                 return MediaTranscriptionResult.Failed(TB("The media pipeline ended without an output file."));
             }
 
             if (!normalized.Result.HasAudibleSignal)
             {
-                logger.LogInformation("Skipping transcription for '{MediaPath}' because its maximum audio peak does not exceed the practical-silence threshold.", mediaPath);
+                logger.LogInformation(
+                    "Skipping media transcription for '{FileName}' (operation {OperationId}) because its maximum audio peak does not exceed the practical-silence threshold.",
+                    fileName,
+                    operation.Id);
                 return MediaTranscriptionResult.NoAudibleSignal(TB("The audio track contains no audible signal, so there is nothing to transcribe."));
             }
 
@@ -480,10 +502,10 @@ public sealed class MediaTranscriptionService(RustService rustService, SettingsM
             var reductionPercent = sourceSize > 0
                 ? (1.0 - (double)normalizedSize / sourceSize) * 100.0
                 : 0.0;
-            logger.LogInformation("Transcribing normalized WebM/Opus media '{NormalizedPath}' ({NormalizedSize} bytes; source '{SourcePath}' {SourceSize} bytes; size reduction {ReductionPercent:F1}%) with provider '{Provider}' and model '{Model}'.",
-                normalizedPath,
+            logger.LogInformation("Transcribing normalized WebM/Opus media '{FileName}' for operation {OperationId} ({NormalizedSize} bytes; source {SourceSize} bytes; size reduction {ReductionPercent:F1}%) with provider '{Provider}' and model '{Model}'.",
+                fileName,
+                operation.Id,
                 normalizedSize,
-                mediaPath,
                 sourceSize,
                 reductionPercent,
                 providerSettings.UsedLLMProvider,
@@ -493,7 +515,11 @@ public sealed class MediaTranscriptionService(RustService rustService, SettingsM
             operation.Cancellation.Token.ThrowIfCancellationRequested();
             if (!providerResult.Success)
             {
-                logger.LogWarning("The transcription provider failed for '{MediaPath}': {Diagnostic}", mediaPath, providerResult.ErrorMessage);
+                logger.LogWarning(
+                    "The transcription provider failed for '{FileName}' (operation {OperationId}): {Diagnostic}",
+                    fileName,
+                    operation.Id,
+                    providerResult.ErrorMessage);
                 return MediaTranscriptionResult.Failed(TB("The transcription provider could not transcribe the media file."));
             }
 
@@ -505,7 +531,11 @@ public sealed class MediaTranscriptionService(RustService rustService, SettingsM
         }
         catch (Exception exception)
         {
-            logger.LogError(exception, "Media transcription failed for '{MediaPath}'.", mediaPath);
+            logger.LogError(
+                "Media transcription failed for '{FileName}' (operation {OperationId}). ExceptionType={ExceptionType}",
+                fileName,
+                operation.Id,
+                exception.GetType().Name);
             return MediaTranscriptionResult.Failed(TB("The media file could not be transcribed."));
         }
         finally
@@ -622,7 +652,11 @@ public sealed class MediaTranscriptionService(RustService rustService, SettingsM
                     
                     case MediaJobPhase.FAILED:
                         if (mediaEvent.Error is not null)
-                            logger.LogWarning("Rust media normalization failed for '{MediaPath}' with {Code}: {Diagnostic}", mediaPath, mediaEvent.Error.Code, mediaEvent.Error.Message);
+                            logger.LogWarning(
+                                "Rust media normalization failed for operation {OperationId} with {Code}: {Diagnostic}",
+                                operation.Id,
+                                mediaEvent.Error.Code,
+                                mediaEvent.Error.Message);
                         
                         return (null, mediaEvent.Error);
                     
@@ -785,7 +819,9 @@ public sealed class MediaTranscriptionService(RustService rustService, SettingsM
         }
         catch (Exception exception)
         {
-            logger.LogWarning(exception, "Could not delete operation-owned temporary media file '{Path}'.", path);
+            logger.LogWarning(
+                "Could not delete an operation-owned temporary media file. ExceptionType={ExceptionType}",
+                exception.GetType().Name);
         }
     }
 
@@ -807,12 +843,15 @@ public sealed class MediaTranscriptionService(RustService rustService, SettingsM
             foreach (var oldPath in new DirectoryInfo(diagnosticDirectory).EnumerateFiles("*.webm").OrderByDescending(file => file.LastWriteTimeUtc).Skip(10))
                 oldPath.Delete();
 
-            logger.LogInformation("Retained normalized media diagnostic '{DiagnosticPath}'.", diagnosticPath);
+            logger.LogInformation("Retained normalized media diagnostic for operation {OperationId}.", operationId);
             return true;
         }
         catch (Exception exception)
         {
-            logger.LogWarning(exception, "Could not retain normalized media diagnostic for operation '{OperationId}'.", operationId);
+            logger.LogWarning(
+                "Could not retain normalized media diagnostic for operation {OperationId}. ExceptionType={ExceptionType}",
+                operationId,
+                exception.GetType().Name);
         }
 #endif
         return false;

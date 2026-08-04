@@ -33,6 +33,11 @@ public static class FileTypes
     public static readonly FileTypeFilter LUA        = FileTypeFilter.Leaf("Lua", "lua");
     public static readonly FileTypeFilter PHP        = FileTypeFilter.Leaf("PHP", "php");
     public static readonly FileTypeFilter WEB        = FileTypeFilter.Leaf("HTML/CSS", "html", "css");
+
+    /// <summary>
+    /// Gets the standalone HTML filter used for visual briefing import and export.
+    /// </summary>
+    public static readonly FileTypeFilter VISUAL_BRIEFING_HTML = FileTypeFilter.Leaf(TB("Visual briefing"), "html");
     public static readonly FileTypeFilter APP        = FileTypeFilter.Leaf("Swift/Kotlin", "swift", "kt");
     public static readonly FileTypeFilter SHELL      = FileTypeFilter.Leaf("Shell", "sh", "bash", "zsh");
     public static readonly FileTypeFilter LOG        = FileTypeFilter.Leaf("Log", "log");
@@ -62,6 +67,12 @@ public static class FileTypes
     // Media hierarchy
     public static readonly FileTypeFilter IMAGE = FileTypeFilter.Leaf(TB("Image"),
         "jpg", "jpeg", "png", "gif", "bmp", "tiff", "svg", "webp", "heic");
+
+    /// <summary>
+    /// Gets the prototype visual-asset image formats.
+    /// </summary>
+    public static readonly FileTypeFilter VISUAL_BRIEFING_IMAGE = FileTypeFilter.Leaf(TB("Visual briefing image"),
+        "jpg", "jpeg", "png", "webp");
     public static readonly FileTypeFilter AUDIO = FileTypeFilter.Leaf(TB("Audio"),
         "mp3", "wav", "wave", "aac", "flac", "ogg", "opus", "m4a", "m4b", "wma", "alac", "aif", "aiff", "caf");
     public static readonly FileTypeFilter VIDEO = FileTypeFilter.Leaf(TB("Video"),

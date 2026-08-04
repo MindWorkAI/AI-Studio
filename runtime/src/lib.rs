@@ -12,6 +12,7 @@ pub mod runtime_certificate;
 pub mod file_data;
 pub mod metadata;
 pub mod media;
+pub mod image;
 pub mod pdfium;
 pub mod pandoc;
 pub mod qdrant_edge_database;
