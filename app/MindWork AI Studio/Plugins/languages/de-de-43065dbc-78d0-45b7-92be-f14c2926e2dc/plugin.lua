@@ -7554,6 +7554,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1924365263"] = "Diese Bibliothek
 -- Encryption secret: is configured
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1931141322"] = "Geheimnis für die Verschlüsselung: ist konfiguriert"
 
+-- The objc2 project provides access to Apple's Objective-C frameworks from Rust. On macOS, we use the libraries objc2, objc2-app-kit, and objc2-foundation to open the native macOS share sheet, e.g., when you share a plugin with others.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1985806792"] = "Das Projekt objc2 ermöglicht den Zugriff auf die Objective-C-Frameworks von Apple aus Rust. Unter macOS verwenden wir die Bibliotheken objc2, objc2-app-kit und objc2-foundation, um den nativen macOS-Teilen-Dialog zu öffnen, beispielsweise wenn Sie ein Plugin mit anderen teilen."
+
 -- Copies the number of loaded root certificates to the clipboard
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2015329654"] = "Kopiert die Anzahl der geladenen Stammzertifikate in die Zwischenablage"
 
@@ -7562,6 +7565,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2029659664"] = "Kopiert Folgende
 
 -- Copies the server URL to the clipboard
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2037899437"] = "Kopiert die Server-URL in die Zwischenablage"
+
+-- The windows-rs project provides access to Windows APIs from Rust. We use several libraries from this project: windows-registry is used to read the desired configuration in Windows enterprise environments. The windows and windows-collections libraries are used to open the native Windows share dialog, e.g., when you share a plugin with others.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2146481269"] = "Das Projekt windows-rs ermöglicht den Zugriff auf Windows-APIs aus Rust. Wir verwenden mehrere Bibliotheken aus diesem Projekt: windows-registry wird verwendet, um die gewünschte Konfiguration in Windows-Unternehmensumgebungen auszulesen. Die Bibliotheken windows und windows-collections werden verwendet, um den nativen Windows-Dialog zum Teilen zu öffnen, zum Beispiel wenn Sie ein Plugin mit anderen teilen."
 
 -- This library is used to create temporary folders in runtime tests and supporting filesystem operations.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2160280545"] = "Diese Bibliothek wird verwendet, um temporäre Ordner bei Laufzeittests zu erstellen und Dateisystemoperationen zu unterstützen."
@@ -7779,9 +7785,6 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3813932670"] = "diese Version er
 -- On Linux, ashpd provides access to desktop portals, allowing AI Studio to open folders and files for the user.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3871176264"] = "Unter Linux ermöglicht ashpd den Zugriff auf Desktop-Portale, sodass AI Studio Ordner und Dateien für den Nutzer öffnen kann."
 
--- This library is used to access the Windows registry. We use this for Windows enterprise environments to read the desired configuration.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3874337003"] = "Diese Bibliothek wird verwendet, um auf die Windows-Registry zuzugreifen. Wir nutzen sie in Windows-Unternehmensumgebungen, um die gewünschte Konfiguration auszulesen."
-
 -- Now we have multiple systems, some developed in .NET and others in Rust. The data format JSON is responsible for translating data between both worlds (called data serialization and deserialization). Serde takes on this task in the Rust world. The counterpart in the .NET world is an integral part of .NET and is located in System.Text.Json.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3908558992"] = "Jetzt haben wir mehrere Systeme, einige entwickelt in .NET und andere in Rust. Das Datenformat JSON ist dafür zuständig, Daten zwischen beiden Welten zu übersetzen (dies nennt man Serialisierung und Deserialisierung von Daten). In der Rust-Welt übernimmt Serde diese Aufgabe. Das Pendant in der .NET-Welt ist ein fester Bestandteil von .NET und findet sich in System.Text.Json."
 
@@ -7965,6 +7968,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3801095542"] = "Assistenten-Plugin m
 -- Actions
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3865031940"] = "Aktionen"
 
+-- Export plugin archive
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3872669664"] = "Plugin-Archiv exportieren"
+
 -- Assistant updated.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T40397082"] = "Assistent aktualisiert."
 
@@ -7979,6 +7985,12 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T4239378936"] = "Website öffnen"
 
 -- The assistant plugin '{0}' was audited with the level '{1}', which is below the required minimum level '{2}'. Your current settings allow activation anyway, but this may be potentially dangerous. Do you really want to enable this plugin?
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T448946658"] = "Das Assistenten-Plugin „{0}“ wurde mit der Stufe „{1}“ geprüft, die unter der erforderlichen Mindeststufe „{2}“ liegt. Ihre aktuellen Einstellungen erlauben die Aktivierung dennoch, dies kann jedoch potenziell gefährlich sein. Möchten Sie dieses Plugin wirklich aktivieren?"
+
+-- The plugin archive was exported to '{0}'.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T659549952"] = "Das Plugin-Archiv wurde nach „{0}“ exportiert."
+
+-- An error occurred while exporting the plugin.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T759681732"] = "Beim Exportieren des Plugins ist ein Fehler aufgetreten."
 
 -- Settings
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SETTINGS::T1258653480"] = "Einstellungen"
@@ -9656,6 +9668,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGINSHARESERVICE::T3284289028"] = 
 
 -- The plugin directory is invalid: {0}
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGINSHARESERVICE::T3774594541"] = "Das Plugin-Verzeichnis ist ungültig: {0}"
+
+-- Export plugin archive
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGINSHARESERVICE::T3872669664"] = "Plugin-Archiv exportieren"
 
 -- The plugin directory does not contain a plugin.lua file.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGINSHARESERVICE::T409411078"] = "Das Plugin-Verzeichnis enthält keine Datei `plugin.lua`."
