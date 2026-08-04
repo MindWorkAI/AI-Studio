@@ -1,4 +1,4 @@
-# Enterprise Configuration ZIP Backslashes
+# Plugin Archive ZIP Backslashes
 
 - Status: Active
 - Introduced: 2026-07-09
@@ -14,9 +14,11 @@ Some enterprise administrators create configuration plugin ZIP files on Windows.
 
 Without this shim, Unix systems extract those entries as files whose names contain literal backslash characters. The plugin loader then cannot find `plugin.lua`, so the enterprise configuration plugin is not activated.
 
+The same applies to plugin archives that users import from their disk. Archives created by AI Studio itself always use forward slashes. However, users may import archives that were packaged by hand or with another tool on Windows, so the import path needs the same tolerance. Otherwise, importing such an archive fails because `plugin.lua` cannot be found.
+
 ## Compatibility Behavior
 
-AI Studio manually extracts configuration and imported assistant-plugin archives/ ZIP files. During extraction, entry names are normalized so both `/` and `\` are treated as archive path separators.
+AI Studio manually extracts enterprise configuration plugin archives and plugin archives imported by users. During extraction, entry names are normalized so both `/` and `\` are treated as archive path separators.
 
 The extraction still preserves the archive structure and validates each entry before writing it to disk. Rooted paths, drive-qualified paths, and parent-directory traversal paths are rejected.
 

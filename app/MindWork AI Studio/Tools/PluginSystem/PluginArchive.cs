@@ -4,8 +4,9 @@ namespace AIStudio.Tools.PluginSystem;
 
 public static class PluginArchive
 {
-    // Compatibility shim for Windows-created ZIPs with backslashes in entry names (dotnet/runtime#27620).
-    // See documentation/compatibility-shims/2026-07-enterprise-config-zip-backslashes.md.
+    // Compatibility shim for Windows-created ZIPs with backslashes in entry names (dotnet/runtime#27620);
+    // remove after dotnet/runtime#27620 and #41914 are fixed.
+    // See documentation/compatibility-shims/2026-07-plugin-archive-zip-backslashes.md.
     public static void Extract(string sourceArchiveFileName, string destinationDirectory)
     {
         using var archive = ZipFile.OpenRead(sourceArchiveFileName);
