@@ -40,7 +40,7 @@ public partial class Plugins : MSGComponentBase
 
     private static readonly ILogger LOG = Program.LOGGER_FACTORY.CreateLogger(nameof(Plugins));
     
-    private static bool IS_SHARING_PLUGIN;
+    private bool isSharingPlugin;
 
     private const string IMPORT_ICON =
         @"<svg class=""mud-icon-root mud-svg-icon mud-dark-text mud-icon-size-medium"" focusable=""false"" viewBox=""0 0 24 24"" aria-hidden=""true"" role=""img"">
@@ -204,15 +204,20 @@ public partial class Plugins : MSGComponentBase
             : this.T("Enable plugin");
     }
 
-    private static bool CanEditAssistantPlugin(IAvailablePlugin plugin) => plugin is { IsInternal: false, Type: PluginType.ASSISTANT } && !string.IsNullOrWhiteSpace(plugin.LocalPath) && !IS_SHARING_PLUGIN;
+    //
+    // These methods decide whether an action exists for a plugin at all. They must not depend on
+    // transient state like an ongoing share: they gate the markup, so a transient value would make
+    // the action buttons disappear and reappear. Transient state belongs into the buttons' Disabled.
+    //
+    private static bool CanEditAssistantPlugin(IAvailablePlugin plugin) => plugin is { IsInternal: false, Type: PluginType.ASSISTANT } && !string.IsNullOrWhiteSpace(plugin.LocalPath);
 
     private static bool CanReviseAssistantPlugin(IAvailablePlugin plugin)
     {
         var assistantPlugin = PluginFactory.RunningPlugins.OfType<PluginAssistants>().FirstOrDefault(x => x.Id == plugin.Id);
-        return plugin is { IsInternal: false, IsManagedByConfigServer: false, Type: PluginType.ASSISTANT } && !string.IsNullOrWhiteSpace(plugin.LocalPath) && assistantPlugin?.IsManagedByConfigServer is false && !IS_SHARING_PLUGIN;
+        return plugin is { IsInternal: false, IsManagedByConfigServer: false, Type: PluginType.ASSISTANT } && !string.IsNullOrWhiteSpace(plugin.LocalPath) && assistantPlugin?.IsManagedByConfigServer is false;
     }
-    
-    private static bool CanSharePlugin(IAvailablePlugin plugin) => plugin is { IsInternal: false, IsManagedByConfigServer: false } && !string.IsNullOrWhiteSpace(plugin.LocalPath) && !IS_SHARING_PLUGIN;
+
+    private static bool CanSharePlugin(IAvailablePlugin plugin) => plugin is { IsInternal: false, IsManagedByConfigServer: false } && !string.IsNullOrWhiteSpace(plugin.LocalPath);
 
     /// <summary>
     /// Organizations may disable importing plugin archives by using a configuration plugin.
@@ -275,10 +280,10 @@ public partial class Plugins : MSGComponentBase
 
     private async Task SharePluginAsync(IAvailablePlugin plugin)
     {
-        if (IS_SHARING_PLUGIN)
+        if (this.isSharingPlugin)
             return;
 
-        IS_SHARING_PLUGIN = true;
+        this.isSharingPlugin = true;
         // invoke a state change right away to guard action buttons
         await this.InvokeAsync(this.StateHasChanged);
 
@@ -301,7 +306,7 @@ public partial class Plugins : MSGComponentBase
         }
         finally
         {
-            IS_SHARING_PLUGIN = false;
+            this.isSharingPlugin = false;
             await this.InvokeAsync(this.StateHasChanged);
         }
     }
