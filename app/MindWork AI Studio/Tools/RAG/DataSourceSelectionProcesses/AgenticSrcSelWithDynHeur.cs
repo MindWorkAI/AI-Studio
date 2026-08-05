@@ -31,11 +31,9 @@ public class AgenticSrcSelWithDynHeur : IDataSourceSelectionProcess
         IReadOnlyList<IDataSource> selectedDataSources = [];
         IReadOnlyList<DataSourceAgentSelected> finalAISelection = [];
         
-        // Get the settings manager:
-        var settings = Program.SERVICE_PROVIDER.GetService<SettingsManager>()!;
-        
         // Get the agent for the data source selection:
         var selectionAgent = Program.SERVICE_PROVIDER.GetService<AgentDataSourceSelection>()!;
+        var allowedDataSources = dataSources.AllowedDataSources.ToDictionary(ds => ds.Id, StringComparer.Ordinal);
 
         try
         {
@@ -61,14 +59,14 @@ public class AgenticSrcSelWithDynHeur : IDataSourceSelectionProcess
             var totalAISelectedDataSources = aiSelectedDataSources.Count;
 
             // Filter out the data sources that are not available:
-            aiSelectedDataSources = aiSelectedDataSources.Where(x => settings.ConfigurationData.DataSources.FirstOrDefault(ds => ds.Id == x.Id) is not null).ToList();
+            aiSelectedDataSources = aiSelectedDataSources.Where(x => allowedDataSources.ContainsKey(x.Id)).ToList();
 
             // Store the real AI-selected data sources:
-            finalAISelection = aiSelectedDataSources.Select(x => new DataSourceAgentSelected { DataSource = settings.ConfigurationData.DataSources.First(ds => ds.Id == x.Id), AIDecision = x, Selected = false }).ToList();
+            finalAISelection = aiSelectedDataSources.Select(x => new DataSourceAgentSelected { DataSource = allowedDataSources[x.Id], AIDecision = x, Selected = false }).ToList();
 
             var numHallucinatedSources = totalAISelectedDataSources - aiSelectedDataSources.Count;
             if (numHallucinatedSources > 0)
-                LOGGER.LogWarning($"The AI hallucinated {numHallucinatedSources} data source(s). We ignore them.");
+                LOGGER.LogWarning($"The AI selected {numHallucinatedSources} unavailable data source(s). We ignore them.");
 
             if (aiSelectedDataSources.Count > 3)
             {
@@ -87,7 +85,7 @@ public class AgenticSrcSelWithDynHeur : IDataSourceSelectionProcess
                 LOGGER.LogInformation($"The AI selected {aiSelectedDataSources.Count} data source(s) with a confidence of at least {threshold}.");
 
                 // Transform the final data sources to the actual data sources:
-                selectedDataSources = aiSelectedDataSources.Select(x => settings.ConfigurationData.DataSources.FirstOrDefault(ds => ds.Id == x.Id)).Where(ds => ds is not null).ToList()!;
+                selectedDataSources = aiSelectedDataSources.Select(x => allowedDataSources[x.Id]).ToList();
                 return new(proceedWithRAG, selectedDataSources);
             }
 
@@ -96,7 +94,7 @@ public class AgenticSrcSelWithDynHeur : IDataSourceSelectionProcess
             //
 
             // Transform the selected data sources to the actual data sources:
-            selectedDataSources = aiSelectedDataSources.Select(x => settings.ConfigurationData.DataSources.FirstOrDefault(ds => ds.Id == x.Id)).Where(ds => ds is not null).ToList()!;
+            selectedDataSources = aiSelectedDataSources.Select(x => allowedDataSources[x.Id]).ToList();
 
             // Mark the data sources as selected:
             foreach (var dataSource in finalAISelection)

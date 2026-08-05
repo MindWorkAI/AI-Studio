@@ -1,4 +1,5 @@
 using AIStudio.Provider;
+using AIStudio.Settings.DataModel;
 
 namespace AIStudio.Settings;
 
@@ -34,6 +35,97 @@ public static class DataSourceSecurityTrustExtensions
             return false;
 
         return provider.Provider is LLMProviders.SELF_HOSTED || IsTrustedProviderId(provider.ConfiguredProviderId, settingsManager);
+    }
+
+    public static ConfidenceLevel GetConfidenceLevel(this Provider provider, SettingsManager settingsManager)
+    {
+        if (provider == Provider.NONE)
+            return ConfidenceLevel.NONE;
+
+        return provider.UsedLLMProvider.GetConfidence(settingsManager).Level;
+    }
+
+    public static ConfidenceLevel GetConfidenceLevel(this EmbeddingProvider provider, SettingsManager settingsManager)
+    {
+        if (provider == EmbeddingProvider.NONE)
+            return ConfidenceLevel.NONE;
+
+        return provider.UsedLLMProvider.GetConfidence(settingsManager).Level;
+    }
+
+    public static ConfidenceLevel GetConfidenceLevel(this IProvider provider, SettingsManager settingsManager)
+    {
+        if (provider is NoProvider)
+            return ConfidenceLevel.NONE;
+
+        return provider.Provider.GetConfidence(settingsManager).Level;
+    }
+
+    public static bool AllowsDataSourceAccess(this Provider provider, SettingsManager settingsManager, DataSourceSecurity dataSourceSecurity, ConfidenceLevel dataSourceComplianceLevel)
+    {
+        return provider.AllowsDataSourceSecurity(dataSourceSecurity, settingsManager)
+            && provider.GetConfidenceLevel(settingsManager).AllowsDataSourceComplianceLevel(dataSourceComplianceLevel);
+    }
+
+    public static bool AllowsDataSourceAccess(this EmbeddingProvider provider, SettingsManager settingsManager, DataSourceSecurity dataSourceSecurity, ConfidenceLevel dataSourceComplianceLevel)
+    {
+        return provider.AllowsDataSourceSecurity(dataSourceSecurity, settingsManager)
+            && provider.GetConfidenceLevel(settingsManager).AllowsDataSourceComplianceLevel(dataSourceComplianceLevel);
+    }
+
+    public static bool AllowsDataSourceAccess(this IProvider provider, SettingsManager settingsManager, DataSourceSecurity dataSourceSecurity, ConfidenceLevel dataSourceComplianceLevel)
+    {
+        return provider.AllowsDataSourceSecurity(dataSourceSecurity, settingsManager)
+            && provider.GetConfidenceLevel(settingsManager).AllowsDataSourceComplianceLevel(dataSourceComplianceLevel);
+    }
+
+    public static bool AllowsDataSourceSecurity(this Provider provider, DataSourceSecurity dataSourceSecurity, SettingsManager settingsManager)
+        => provider.IsTrustedForDataSourceSecurityChecks(settingsManager).AllowsDataSourceSecurity(dataSourceSecurity);
+
+    public static bool AllowsDataSourceSecurity(this EmbeddingProvider provider, DataSourceSecurity dataSourceSecurity, SettingsManager settingsManager)
+        => provider.IsTrustedForDataSourceSecurityChecks(settingsManager).AllowsDataSourceSecurity(dataSourceSecurity);
+
+    public static bool AllowsDataSourceSecurity(this IProvider provider, DataSourceSecurity dataSourceSecurity, SettingsManager settingsManager)
+        => provider.IsTrustedForDataSourceSecurityChecks(settingsManager).AllowsDataSourceSecurity(dataSourceSecurity);
+
+    public static bool AllowsDataSourceSecurity(this bool usingTrustedProvider, DataSourceSecurity dataSourceSecurity) => dataSourceSecurity switch
+    {
+        DataSourceSecurity.ALLOW_ANY => true,
+        DataSourceSecurity.SELF_HOSTED => usingTrustedProvider,
+        _ => false,
+    };
+
+    public static bool AllowsDataSourceComplianceLevel(this ConfidenceLevel providerConfidenceLevel, ConfidenceLevel dataSourceComplianceLevel)
+    {
+        if (dataSourceComplianceLevel is ConfidenceLevel.NONE)
+            return true;
+
+        return providerConfidenceLevel >= dataSourceComplianceLevel;
+    }
+
+    public static ConfidenceLevel GetRequiredComplianceLevel(this IEnumerable<IDataSource> dataSources)
+    {
+        var requiredComplianceLevel = ConfidenceLevel.NONE;
+        foreach (var dataSource in dataSources)
+            if (dataSource.ComplianceLevel > requiredComplianceLevel)
+                requiredComplianceLevel = dataSource.ComplianceLevel;
+
+        return requiredComplianceLevel;
+    }
+
+    public static DataSourceSecurity GetRequiredSecurityPolicy(this IEnumerable<IDataSource> dataSources)
+    {
+        var requiredSecurityPolicy = DataSourceSecurity.ALLOW_ANY;
+        foreach (var dataSource in dataSources)
+        {
+            if (dataSource.SecurityPolicy is DataSourceSecurity.NOT_SPECIFIED)
+                return DataSourceSecurity.NOT_SPECIFIED;
+
+            if (dataSource.SecurityPolicy is DataSourceSecurity.SELF_HOSTED)
+                requiredSecurityPolicy = DataSourceSecurity.SELF_HOSTED;
+        }
+
+        return requiredSecurityPolicy;
     }
 
     public static bool IsTrustedByConfiguration(this Provider provider, SettingsManager settingsManager) => IsTrustedProviderId(provider.Id, settingsManager);

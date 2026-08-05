@@ -43,19 +43,22 @@ public sealed class AugmentationOne : IAugmentationProcess
         {
             // Let's get the validation agent & set up its provider:
             var validationAgent = Program.SERVICE_PROVIDER.GetService<AgentRetrievalContextValidation>()!;
-            validationAgent.SetLLMProvider(provider);
+            if (validationAgent.SetLLMProvider(provider, chatThread.DataSecurity, chatThread.DataComplianceLevel))
+            {
+                // Let's validate all retrieval contexts:
+                var validationResults = await validationAgent.ValidateRetrievalContextsAsync(lastUserPrompt, chatThread, retrievalContexts, token);
+
+                //
+                // Now, filter the retrieval contexts to the most relevant ones:
+                //
+                var targetWindow = validationResults.DetermineTargetWindow(TargetWindowStrategy.TOP10_BETTER_THAN_GUESSING);
+                var threshold = validationResults.GetConfidenceThreshold(targetWindow);
             
-            // Let's validate all retrieval contexts:
-            var validationResults = await validationAgent.ValidateRetrievalContextsAsync(lastUserPrompt, chatThread, retrievalContexts, token);
-         
-            //
-            // Now, filter the retrieval contexts to the most relevant ones:
-            //
-            var targetWindow = validationResults.DetermineTargetWindow(TargetWindowStrategy.TOP10_BETTER_THAN_GUESSING);
-            var threshold = validationResults.GetConfidenceThreshold(targetWindow);
-            
-            // Filter the retrieval contexts:
-            retrievalContexts = validationResults.Where(x => x.RetrievalContext is not null && x.Confidence >= threshold).Select(x => x.RetrievalContext!).ToList();
+                // Filter the retrieval contexts:
+                retrievalContexts = validationResults.Where(x => x.RetrievalContext is not null && x.Confidence >= threshold).Select(x => x.RetrievalContext!).ToList();
+            }
+            else
+                LOGGER.LogWarning("Skipping retrieval context validation because no compliant validation agent provider is available.");
         }
         
         LOGGER.LogInformation($"Starting the augmentation process over {numTotalRetrievalContexts:###,###,###,###} retrieval contexts.");

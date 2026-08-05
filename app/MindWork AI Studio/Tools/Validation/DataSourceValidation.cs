@@ -1,3 +1,5 @@
+using AIStudio.Provider;
+using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.ERIClient.DataModel;
 using AIStudio.Tools.PluginSystem;
@@ -19,6 +21,14 @@ public sealed class DataSourceValidation
     public Func<SecurityRequirements?> GetSecurityRequirements { get; init; } = () => null;
     
     public Func<bool> GetSelectedCloudEmbedding { get; init; } = () => false;
+
+    public Func<EmbeddingProvider?> GetSelectedEmbeddingProvider { get; init; } = () => null;
+
+    public Func<DataSourceSecurity> GetSecurityPolicy { get; init; } = () => DataSourceSecurity.ALLOW_ANY;
+
+    public Func<ConfidenceLevel> GetComplianceLevel { get; init; } = () => ConfidenceLevel.NONE;
+
+    public Func<SettingsManager?> GetSettingsManager { get; init; } = () => null;
     
     public Func<bool> GetTestedConnection { get; init; } = () => false;
     
@@ -149,6 +159,20 @@ public sealed class DataSourceValidation
         return null;
     }
 
+    public string? ValidateEmbeddingProviderAccess(string embeddingId)
+    {
+        var embeddingIssue = this.ValidateEmbeddingId(embeddingId);
+        return embeddingIssue ?? this.ValidateSelectedEmbeddingProviderAccess();
+    }
+
+    public string? ValidateDataSourceComplianceLevel(ConfidenceLevel complianceLevel)
+    {
+        if(complianceLevel is ConfidenceLevel.NONE)
+            return TB("Please select a compliance level.");
+
+        return this.ValidateSelectedEmbeddingProviderAccess();
+    }
+
     public string? ValidateUserAcknowledgedCloudEmbedding(bool value)
     {
         if(this.GetSelectedCloudEmbedding() && !value)
@@ -174,5 +198,26 @@ public sealed class DataSourceValidation
             return TB("Please select one valid authentication method.");
         
         return null;
+    }
+
+    private string? ValidateSelectedEmbeddingProviderAccess()
+    {
+        var selectedEmbedding = this.GetSelectedEmbeddingProvider();
+        var settingsManager = this.GetSettingsManager();
+        if(selectedEmbedding is null || settingsManager is null)
+            return null;
+
+        var dataSecurity = this.GetSecurityPolicy();
+        var complianceLevel = this.GetComplianceLevel();
+        if(selectedEmbedding.AllowsDataSourceAccess(settingsManager, dataSecurity, complianceLevel))
+            return null;
+
+        if(!selectedEmbedding.AllowsDataSourceSecurity(dataSecurity, settingsManager))
+            return TB("The selected embedding provider is not allowed to process this data source due to its data security policy. Select a self-hosted or organization-trusted embedding provider.");
+
+        return string.Format(
+            TB("The selected embedding provider has confidence '{0}', but this data source requires provider confidence '{1}'. Select an embedding provider with equal or higher confidence or lower the compliance level."),
+            selectedEmbedding.GetConfidenceLevel(settingsManager).GetName(),
+            complianceLevel.GetName());
     }
 }

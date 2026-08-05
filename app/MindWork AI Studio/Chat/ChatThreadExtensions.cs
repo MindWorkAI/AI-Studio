@@ -11,12 +11,12 @@ public static class ChatThreadExtensions
     /// </summary>
     /// <remarks>
     /// We don't check if the provider is allowed to use the data sources of the chat thread.
-    /// That kind of check is done in the RAG process itself.<br/><br/>
+    /// That kind of check is done when the available data sources are resolved.<br/><br/>
     /// 
     /// One thing which is not so obvious: after RAG was used on this thread, the entire chat
     /// thread is kind of a data source by itself. Why? Because the augmentation data collected
     /// from the data sources is stored in the chat thread. This means we must check if the
-    /// selected provider is allowed to use this thread's data.
+    /// selected provider is allowed to use this thread's data security and compliance level.
     /// </remarks>
     /// <param name="chatThread">The chat thread to check.</param>
     /// <param name="provider">The provider to check.</param>
@@ -26,7 +26,19 @@ public static class ChatThreadExtensions
         // No chat thread available means we have a new chat. That's fine:
         if (chatThread is null)
             return true;
-        
+
+        var settingsManager = Program.SERVICE_PROVIDER.GetRequiredService<SettingsManager>();
+        var providerConfidenceLevel = provider switch
+        {
+            IProvider p => p.GetConfidenceLevel(settingsManager),
+            AIStudio.Settings.Provider p => p.GetConfidenceLevel(settingsManager),
+
+            _ => ConfidenceLevel.NONE,
+        };
+
+        if (!providerConfidenceLevel.AllowsDataSourceComplianceLevel(chatThread.DataComplianceLevel))
+            return false;
+
         // The chat thread is available, but the data security is not specified.
         // Means, we never used RAG or RAG was enabled, but no data sources were selected.
         // That's fine as well:
@@ -36,7 +48,6 @@ public static class ChatThreadExtensions
         //
         // Is the provider trusted for data-source security checks?
         //
-        var settingsManager = Program.SERVICE_PROVIDER.GetRequiredService<SettingsManager>();
         var isTrustedProvider = provider switch
         {
             IProvider p => p.IsTrustedForDataSourceSecurityChecks(settingsManager),

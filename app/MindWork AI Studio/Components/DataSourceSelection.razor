@@ -70,7 +70,7 @@
                             {
                                 case true when this.availableDataSources.Count == 0:
                                     <MudText Typo="Typo.body1" Class="mb-3">
-                                        @T("Your data sources cannot be used with the LLM provider you selected due to data privacy, or they are currently unavailable.")
+                                        @T("Your data sources cannot be used with the LLM provider you selected due to data privacy or compliance requirements, or they are currently unavailable.")
                                     </MudText>
                                     break; 
                                     
@@ -82,7 +82,7 @@
                                     
                                 case false when this.availableDataSources.Count == 0:
                                     <MudText Typo="Typo.body1" Class="mb-3">
-                                        @T("Your data sources cannot be used with the LLM provider you selected due to data privacy, or they are currently unavailable.")
+                                        @T("Your data sources cannot be used with the LLM provider you selected due to data privacy or compliance requirements, or they are currently unavailable.")
                                     </MudText>
                                     break;
                                     

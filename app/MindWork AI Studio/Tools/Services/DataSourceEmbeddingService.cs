@@ -434,7 +434,24 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             this.UpsertStatus(this.GetFallbackStatus(dataSource, "The selected embedding provider is not available."));
             return;
         }
-        
+
+        if (!embeddingProvider.AllowsDataSourceAccess(settingsManager, dataSource.SecurityPolicy, dataSource.ComplianceLevel))
+        {
+            var errorMessage = $"The selected embedding provider is not allowed to embed this data source. The data source requires provider confidence '{dataSource.ComplianceLevel.GetName()}'. The embedding provider has confidence '{embeddingProvider.GetConfidenceLevel(settingsManager).GetName()}'.";
+            logger.LogWarning(
+                "Skipping background embeddings for data source '{DataSourceName}' ({DataSourceId}) because embedding provider '{EmbeddingProviderName}' ({EmbeddingProviderId}) is not allowed. RequiredDataSecurity={RequiredDataSecurity}, RequiredCompliance={RequiredCompliance}, EmbeddingProviderConfidence={EmbeddingProviderConfidence}.",
+                dataSource.Name,
+                dataSource.Id,
+                embeddingProvider.Name,
+                embeddingProvider.Id,
+                dataSource.SecurityPolicy,
+                dataSource.ComplianceLevel.GetName(),
+                embeddingProvider.GetConfidenceLevel(settingsManager).GetName());
+
+            token.ThrowIfCancellationRequested();
+            this.UpsertStatus(this.GetFallbackStatus(dataSource, errorMessage));
+            return;
+        }
 
         logger.LogInformation(
             "Using embedding provider '{EmbeddingProviderId}' with model '{EmbeddingModelId}' for data source '{DataSourceName}' ({DataSourceId}).",

@@ -42,7 +42,10 @@ public sealed class DataSourceService
             return new([], []);
         }
         
-        return await this.GetDataSources(selectedLLMProvider.IsTrustedForDataSourceSecurityChecks(this.settingsManager), previousSelectedDataSources);
+        return await this.GetDataSources(
+            selectedLLMProvider.IsTrustedForDataSourceSecurityChecks(this.settingsManager),
+            selectedLLMProvider.GetConfidenceLevel(this.settingsManager),
+            previousSelectedDataSources);
     }
     
     /// <summary>
@@ -65,10 +68,13 @@ public sealed class DataSourceService
             return new([], []);
         }
         
-        return await this.GetDataSources(selectedLLMProvider.IsTrustedForDataSourceSecurityChecks(this.settingsManager), previousSelectedDataSources);
+        return await this.GetDataSources(
+            selectedLLMProvider.IsTrustedForDataSourceSecurityChecks(this.settingsManager),
+            selectedLLMProvider.GetConfidenceLevel(this.settingsManager),
+            previousSelectedDataSources);
     }
     
-    private async Task<AllowedSelectedDataSources> GetDataSources(bool usingTrustedProvider, IReadOnlyCollection<IDataSource>? previousSelectedDataSources = null)
+    private async Task<AllowedSelectedDataSources> GetDataSources(bool usingTrustedProvider, ConfidenceLevel providerConfidenceLevel, IReadOnlyCollection<IDataSource>? previousSelectedDataSources = null)
     {
         var allDataSources = this.settingsManager.ConfigurationData.DataSources.ToList();
         var previousSelectedDataSourceIds = previousSelectedDataSources?.Select(source => source.Id).ToHashSet(StringComparer.Ordinal) ?? [];
@@ -78,7 +84,7 @@ public sealed class DataSourceService
         
         // Start all checks in parallel:
         foreach (var source in allDataSources)
-            tasks.Add(this.CheckOneDataSource(source, usingTrustedProvider));
+            tasks.Add(this.CheckOneDataSource(source, usingTrustedProvider, providerConfidenceLevel));
         
         // Wait for all checks and collect the results:
         foreach (var task in tasks)
@@ -95,8 +101,17 @@ public sealed class DataSourceService
         return new(filteredDataSources, filteredSelectedDataSources);
     }
     
-    private async Task<IDataSource?> CheckOneDataSource(IDataSource source, bool usingTrustedProvider)
+    private async Task<IDataSource?> CheckOneDataSource(IDataSource source, bool usingTrustedProvider, ConfidenceLevel providerConfidenceLevel)
     {
+        if (!providerConfidenceLevel.AllowsDataSourceComplianceLevel(source.ComplianceLevel))
+        {
+            this.logger.LogWarning($"The data source '{source.Name}' (id={source.Id}) requires provider confidence '{source.ComplianceLevel.GetName()}'. The selected provider only has confidence '{providerConfidenceLevel.GetName()}'. We skip this source.");
+            return null;
+        }
+
+        if (source is IInternalDataSource)
+            return source;
+
         //
         // Unfortunately, we have to live-check any ERI source for its security requirements.
         // Because the ERI server operator might change the security requirements at any time.

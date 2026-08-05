@@ -92,7 +92,7 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
                 //
                 // No, the user made the choice manually:
                 //
-                var selectedDataSourceInfo = selectedDataSources.Select(ds => ds.Name).Aggregate((a, b) => $"'{a}', '{b}'");
+                var selectedDataSourceInfo = string.Join(", ", selectedDataSources.Select(ds => $"'{ds.Name}'"));
                 LOGGER.LogInformation($"The user selected the data sources manually. {selectedDataSources.Count} data source(s) are selected: {selectedDataSourceInfo}.");
             }
 
@@ -104,12 +104,13 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
             else
             {
                 var previousDataSecurity = chatThread.DataSecurity;
+                var previousDataComplianceLevel = chatThread.DataComplianceLevel;
                 
                 //
                 // Update the data security of the chat thread. We consider the current data security
                 // of the chat thread and the data security of the selected data sources:
                 //
-                var dataSecurityRestrictedToSelfHosted = selectedDataSources.Any(x => x.SecurityPolicy is DataSourceSecurity.SELF_HOSTED);
+                var dataSecurityRestrictedToSelfHosted = selectedDataSources.Any(x => x is not IInternalDataSource && x.SecurityPolicy is DataSourceSecurity.SELF_HOSTED);
                 chatThread.DataSecurity = dataSecurityRestrictedToSelfHosted switch
                 {
                     //
@@ -150,6 +151,13 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
                 
                 if (previousDataSecurity != chatThread.DataSecurity)
                     LOGGER.LogInformation($"The data security of the chat thread was updated from '{previousDataSecurity}' to '{chatThread.DataSecurity}'.");
+
+                foreach (var dataSource in selectedDataSources)
+                    if (dataSource.ComplianceLevel > chatThread.DataComplianceLevel)
+                        chatThread.DataComplianceLevel = dataSource.ComplianceLevel;
+
+                if (previousDataComplianceLevel != chatThread.DataComplianceLevel)
+                    LOGGER.LogInformation($"The data compliance level of the chat thread was updated from '{previousDataComplianceLevel.GetName()}' to '{chatThread.DataComplianceLevel.GetName()}'.");
             }
             
             //
