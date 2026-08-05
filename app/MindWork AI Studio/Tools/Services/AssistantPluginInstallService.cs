@@ -23,6 +23,7 @@ public sealed class AssistantPluginInstallService
     private const string PLUGIN_FILE_NAME = "plugin.lua";
     private const string ASSISTANT_BUILDER_DIRECTORY_PREFIX = "assistant-builder";
     private const string DELETE_BACKUP_DIRECTORY = ".plugin-delete-backups";
+    private const string INSTALL_BACKUP_DIRECTORY = ".plugin-install-backups";
     private const int DIRECTORY_PREFIX_MAX_LEN = 80;
     
     private readonly ILogger<AssistantPluginInstallService> logger;
@@ -439,7 +440,12 @@ public sealed class AssistantPluginInstallService
             if (Directory.Exists(finalDirectory))
             {
                 replacedExisting = true;
-                backupDirectory = Path.Join(assistantPluginsRoot, $".{Path.GetFileName(finalDirectory)}.backup-{Guid.NewGuid():N}");
+
+                // The backup goes to a directory outside the plugin root, so the plugin loader
+                // cannot discover it during the reload below. Otherwise, the previous version
+                // would be loaded a second time, next to the version we are installing:
+                backupDirectory = CreateInstallBackupDirectory(assistantPlugin);
+                Directory.CreateDirectory(Path.GetDirectoryName(backupDirectory)!);
                 Directory.Move(finalDirectory, backupDirectory);
             }
 
@@ -697,6 +703,12 @@ public sealed class AssistantPluginInstallService
     private static string CreateDeleteBackupDirectory(IAvailablePlugin plugin)
     {
         var backupRoot = Path.Join(SettingsManager.DataDirectory, DELETE_BACKUP_DIRECTORY);
+        return Path.Join(backupRoot, $"assistant-{plugin.Id:N}-{Guid.NewGuid():N}");
+    }
+
+    private static string CreateInstallBackupDirectory(IPluginMetadata plugin)
+    {
+        var backupRoot = Path.Join(SettingsManager.DataDirectory, INSTALL_BACKUP_DIRECTORY);
         return Path.Join(backupRoot, $"assistant-{plugin.Id:N}-{Guid.NewGuid():N}");
     }
 
