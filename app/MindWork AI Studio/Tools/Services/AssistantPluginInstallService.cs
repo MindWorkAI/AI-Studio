@@ -195,6 +195,12 @@ public sealed class AssistantPluginInstallService
                 if (!validation.Success || validation.AssistantPlugin is null)
                     return Error(validation.Issue);
 
+                // A plugin the user imports by hand never comes from a config server. We reject such
+                // archives because AI Studio trusts this self-declared flag: an imported plugin
+                // claiming it would be neither replaceable nor deletable through the user interface:
+                if (validation.AssistantPlugin.IsManagedByConfigServer)
+                    return Error(TB("This plugin archive declares itself as managed by a config server. Only the IT department of your organization might deploy such plugins."));
+
                 return await this.InstallStagedAssistantAsync(assistantPluginsRoot, validation with { StagingDirectory = pluginDirectory }, token);
             }
             catch (Exception e) when (e is not OperationCanceledException)
