@@ -437,6 +437,10 @@ public sealed class AssistantPluginInstallService
             if (!IsPathInsideDirectory(assistantPluginsRoot, finalDirectory))
                 return Error(TB("The resolved plugin directory is outside the assistant plugin directory."));
 
+            var replacementIssue = GetAssistantReplacementIssue(assistantPlugin.Id);
+            if (!string.IsNullOrWhiteSpace(replacementIssue))
+                return Error(replacementIssue);
+
             if (Directory.Exists(finalDirectory))
             {
                 replacedExisting = true;
@@ -632,13 +636,49 @@ public sealed class AssistantPluginInstallService
     
     private static string DetermineFinalDirectory(string assistantPluginsRoot, PluginAssistants assistantPlugin)
     {
-        var existingPlugin = PluginFactory.AvailablePlugins
-            .OfType<IAvailablePlugin>()
-            .FirstOrDefault(plugin => plugin.Type is PluginType.ASSISTANT && plugin.Id == assistantPlugin.Id && !plugin.IsInternal);
-
+        var existingPlugin = FindReplaceableAssistantPlugin(assistantPlugin.Id);
         return existingPlugin is not null
             ? existingPlugin.LocalPath
             : Path.Join(assistantPluginsRoot, CreatePluginDirectoryName(assistantPlugin));
+    }
+
+    /// <summary>
+    /// Finds the local assistant plugin that an installation with the given ID would replace.
+    /// </summary>
+    /// <param name="pluginId">The ID of the assistant plugin about to be installed.</param>
+    /// <returns>The plugin that would be replaced, or null when the installation adds a new plugin.</returns>
+    private static IAvailablePlugin? FindReplaceableAssistantPlugin(Guid pluginId) => PluginFactory.AvailablePlugins
+        .OfType<IAvailablePlugin>()
+        .FirstOrDefault(plugin => plugin.Type is PluginType.ASSISTANT && plugin.Id == pluginId && !plugin.IsInternal);
+
+    /// <summary>
+    /// Checks whether an installation may replace the assistant plugin that currently uses the given ID.
+    /// Plugins deployed by a Config Server belong to the organization's IT, so neither an import nor
+    /// the Assistant Builder may overwrite them.
+    /// </summary>
+    /// <param name="pluginId">The ID of the assistant plugin about to be installed.</param>
+    /// <returns>A user-facing issue when the existing plugin must not be replaced, an empty string otherwise.</returns>
+    private static string GetAssistantReplacementIssue(Guid pluginId)
+    {
+        var existingPlugin = FindReplaceableAssistantPlugin(pluginId);
+        if (existingPlugin is null)
+            return string.Empty;
+
+        if (existingPlugin.IsManagedByConfigServer)
+            return TB("Config server managed assistant plugins cannot be replaced.");
+
+        if (string.IsNullOrWhiteSpace(existingPlugin.LocalPath))
+            return string.Empty;
+
+        // The metadata above and the running plugin read the same Lua field. We check both, though,
+        // just like the deletion path does:
+        var runningPlugin = PluginFactory.RunningPlugins
+            .OfType<PluginAssistants>()
+            .FirstOrDefault(candidate => candidate.Id == pluginId && IsSameDirectory(candidate.PluginPath, existingPlugin.LocalPath));
+
+        return runningPlugin?.IsManagedByConfigServer is true
+            ? TB("Config server managed assistant plugins cannot be replaced.")
+            : string.Empty;
     }
 
     private static string CreatePluginDirectoryName(PluginAssistants assistantPlugin)
