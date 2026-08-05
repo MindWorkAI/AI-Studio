@@ -10,12 +10,16 @@
             @T("Plugins")
         </MudText>
         <MudSpacer />
-        <ManagedFeatureLock IsLocked="@(() => !this.AllowPluginImport)" LockText="@T("Your organization has disabled importing plugins.")"/>
-        <MudTooltip Text="@T("Import assistant plugin")">
-            <MudButton Variant="Variant.Outlined" StartIcon="@IMPORT_ICON" OnClick="@this.ImportAssistantPluginAsync" Disabled="@(this.isImportingAssistantPlugin || !this.AllowPluginImport)">
-                @T("Import")
-            </MudButton>
-        </MudTooltip>
+        <LockableButton Text="@T("Import")"
+                        Tooltip="@T("Import assistant plugin")"
+                        Icon="@IMPORT_ICON"
+                        ButtonVariant="Variant.Outlined"
+                        ButtonColor="Color.Default"
+                        NoMargin="@true"
+                        Class="flex-none"
+                        Disabled="@(() => this.isImportingAssistantPlugin)"
+                        IsLocked="@(() => !this.AllowPluginImport)"
+                        OnClickAsync="@this.ImportAssistantPluginAsync"/>
     </MudStack>
     
     <InnerScrolling>
@@ -74,12 +78,13 @@
                     </MudStack>
                 </MudTd>
                 <MudTd>
-                    <MudStack Row="true" Spacing="0" AlignItems="AlignItems.Center">
+                    <MudStack Row="true" Spacing="0" AlignItems="AlignItems.Center" Justify="Justify.FlexEnd">
                         @if (context.Type is PluginType.ASSISTANT)
                         {
                             var assistantPlugin = PluginFactory.RunningPlugins.OfType<PluginAssistants>().FirstOrDefault(x => x.Id == context.Id);
                             <AssistantPluginSecurityCard Plugin="@assistantPlugin" Compact="@true"/>
                         }
+                        
                         @if (context is { IsInternal: false, Type: not PluginType.CONFIGURATION })
                         {
                             var isEnabled = this.SettingsManager.IsPluginEnabled(context);
@@ -89,7 +94,7 @@
                             </MudTooltip>
                         }
 
-                        <MudButtonGroup Class="ms-3">
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="0" Class="ms-3" Style="gap: 4px;">
                             @if (context is { IsInternal: false } && !string.IsNullOrWhiteSpace(context.SourceURL))
                             {
                                 var sourceUrl = context.SourceURL;
@@ -119,8 +124,7 @@
                             
                             @if (context is IAvailablePlugin shareablePlugin && CanSharePlugin(shareablePlugin))
                             {
-                                <ManagedFeatureLock IsLocked="@(() => !this.AllowPluginSharing)" LockText="@this.SharePluginLockText"/>
-                                <MudTooltip Text="@this.SharePluginTooltip">
+                                <MudTooltip Text="@(this.AllowPluginSharing ? this.SharePluginTooltip : this.SharePluginLockText)">
                                     <MudIconButton Icon="@SharePluginIcon" Size="Size.Medium" OnClick="@(() => this.SharePluginAsync(shareablePlugin))" Disabled="@(!this.AllowPluginSharing || !CanSharePlugin(shareablePlugin))"/>
                                 </MudTooltip>
                             }
@@ -136,7 +140,7 @@
                             {
                                 <AssistantPluginDeleteAction Plugin="@availablePlugin" />
                             }
-                        </MudButtonGroup>
+                        </MudStack>
                     </MudStack>
                 </MudTd>
             </RowTemplate>
