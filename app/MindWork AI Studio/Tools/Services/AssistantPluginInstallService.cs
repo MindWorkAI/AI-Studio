@@ -427,6 +427,7 @@ public sealed class AssistantPluginInstallService
         string? backupDirectory = null;
         string? finalDirectory = null;
         var replacedExisting = false;
+        var movedIntoPlace = false;
 
         try
         {
@@ -443,6 +444,7 @@ public sealed class AssistantPluginInstallService
             }
 
             Directory.Move(stagingDirectory, finalDirectory);
+            movedIntoPlace = true;
             await PluginFactory.LoadAll(token);
 
             if (!string.IsNullOrWhiteSpace(backupDirectory))
@@ -455,7 +457,10 @@ public sealed class AssistantPluginInstallService
         {
             this.logger.LogError(e, "Failed to install assistant plugin.");
 
-            if (!string.IsNullOrWhiteSpace(finalDirectory) && Directory.Exists(finalDirectory))
+            // Only remove the target directory when this installation actually moved the plugin
+            // there. Otherwise, when moving the previous plugin into the backup directory failed,
+            // we would delete the still intact previous plugin:
+            if (movedIntoPlace && !string.IsNullOrWhiteSpace(finalDirectory) && Directory.Exists(finalDirectory))
                 TryDeleteDirectory(finalDirectory, "failed assistant plugin installation", this.logger);
 
             if (!string.IsNullOrWhiteSpace(backupDirectory) && Directory.Exists(backupDirectory) && !string.IsNullOrWhiteSpace(finalDirectory) && !Directory.Exists(finalDirectory))
