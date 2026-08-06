@@ -1,5 +1,7 @@
+using System.Linq.Expressions;
 using System.Text;
 using AIStudio.Settings;
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools.PluginSystem.Assistants;
 using Lua;
 using Lua.Standard;
@@ -44,19 +46,23 @@ public static partial class PluginFactory
         try
         {
             LOG.LogInformation("Start loading plugins.");
-            if (!Directory.Exists(PLUGINS_ROOT))
-            {
-                LOG.LogInformation("No plugins found.");
-                return;
-            }
-        
+
+            //
+            // Without the plugins directory, we cannot load or start any plugin. Still, we must not
+            // stop here: the clean-up at the end of this method has to run. Otherwise, settings which
+            // a configuration plugin has locked would stay locked forever.
+            //
+            var pluginsDirectoryExists = Directory.Exists(PLUGINS_ROOT);
+            if (!pluginsDirectoryExists)
+                LOG.LogWarning("No plugins found. Checking for left-over configurations of removed configuration plugins.");
+
             AVAILABLE_PLUGINS.Clear();
-        
+
             //
             // The easiest way to load all plugins is to find all `plugin.lua` files and load them.
             // By convention, each plugin is enforced to have a `plugin.lua` file.
             //
-            var pluginMainFiles = Directory.EnumerateFiles(PLUGINS_ROOT, "plugin.lua", SearchOption.AllDirectories);
+            IEnumerable<string> pluginMainFiles = pluginsDirectoryExists ? Directory.EnumerateFiles(PLUGINS_ROOT, "plugin.lua", SearchOption.AllDirectories) : [];
             foreach (var pluginMainFile in pluginMainFiles)
             {
                 try
@@ -149,8 +155,11 @@ public static partial class PluginFactory
             }
         
             // Start or restart all plugins:
-            var configObjects = await RestartAllPlugins(cancellationToken);
-            configObjectList.AddRange(configObjects);
+            if (pluginsDirectoryExists)
+            {
+                var configObjects = await RestartAllPlugins(cancellationToken);
+                configObjectList.AddRange(configObjects);
+            }
         }
         finally
         {
@@ -166,223 +175,93 @@ public static partial class PluginFactory
         // =========================================================
         //
         
+        //
+        // Configuration plugins which are deployed but could not be loaded count as present: they
+        // were not removed, so everything they manage must stay as it is. Otherwise, one broken
+        // configuration plugin would wipe the entire organization configuration:
+        //
+        var deployedConfigPluginIds = GetDeployedConfigPluginIds();
+        var unloadedConfigPluginIds = deployedConfigPluginIds.Where(x => AVAILABLE_PLUGINS.All(plugin => plugin.Id != x)).ToList();
+        foreach (var unloadedConfigPluginId in unloadedConfigPluginIds)
+            LOG.LogWarning($"The configuration plugin '{unloadedConfigPluginId}' is deployed, but was not loaded. Everything it manages stays unchanged, because the plugin was not removed. Please check the errors above and fix the plugin.");
+
         // Check LLM providers:
-        var wasConfigurationChanged = await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.LLM_PROVIDER, x => x.Providers, AVAILABLE_PLUGINS, configObjectList, SecretStoreType.LLM_PROVIDER);
+        var wasConfigurationChanged = await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.LLM_PROVIDER, x => x.Providers, AVAILABLE_PLUGINS, deployedConfigPluginIds, configObjectList, SecretStoreType.LLM_PROVIDER);
 
         // Check transcription providers:
-        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER, x => x.TranscriptionProviders, AVAILABLE_PLUGINS, configObjectList, SecretStoreType.TRANSCRIPTION_PROVIDER))
+        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER, x => x.TranscriptionProviders, AVAILABLE_PLUGINS, deployedConfigPluginIds, configObjectList, SecretStoreType.TRANSCRIPTION_PROVIDER))
             wasConfigurationChanged = true;
 
         // Check embedding providers:
-        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.EMBEDDING_PROVIDER, x => x.EmbeddingProviders, AVAILABLE_PLUGINS, configObjectList, SecretStoreType.EMBEDDING_PROVIDER))
+        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.EMBEDDING_PROVIDER, x => x.EmbeddingProviders, AVAILABLE_PLUGINS, deployedConfigPluginIds, configObjectList, SecretStoreType.EMBEDDING_PROVIDER))
             wasConfigurationChanged = true;
 
         // Check data sources:
-        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.DATA_SOURCE, x => x.DataSources, AVAILABLE_PLUGINS, configObjectList, SecretStoreType.DATA_SOURCE, deleteSecret: true))
+        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.DATA_SOURCE, x => x.DataSources, AVAILABLE_PLUGINS, deployedConfigPluginIds, configObjectList, SecretStoreType.DATA_SOURCE, deleteSecret: true))
             wasConfigurationChanged = true;
 
         // Check chat templates:
-        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.CHAT_TEMPLATE, x => x.ChatTemplates, AVAILABLE_PLUGINS, configObjectList))
+        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.CHAT_TEMPLATE, x => x.ChatTemplates, AVAILABLE_PLUGINS, deployedConfigPluginIds, configObjectList))
             wasConfigurationChanged = true;
 
         // Check profiles:
-        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.PROFILE, x => x.Profiles, AVAILABLE_PLUGINS, configObjectList))
+        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.PROFILE, x => x.Profiles, AVAILABLE_PLUGINS, deployedConfigPluginIds, configObjectList))
             wasConfigurationChanged = true;
 
         // Check document analysis policies:
-        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY, x => x.DocumentAnalysis.Policies, AVAILABLE_PLUGINS, configObjectList))
+        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY, x => x.DocumentAnalysis.Policies, AVAILABLE_PLUGINS, deployedConfigPluginIds, configObjectList))
             wasConfigurationChanged = true;
 
         // Check left-over mandatory info acceptances:
         if (SettingsManagerAccess.ConfigurationData.MandatoryInformation.RemoveLeftOverAcceptances(GetMandatoryInfos()))
             wasConfigurationChanged = true;
         
-        // Check for a preselected provider:
-        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.PreselectedProvider, AVAILABLE_PLUGINS))
+        // Check all managed settings, i.e. settings which a configuration plugin can lock,
+        // provide as an editable default, or contribute to:
+        if(ManagedConfiguration.CleanupLeftOverManagedConfigurations(AVAILABLE_PLUGINS, deployedConfigPluginIds))
             wasConfigurationChanged = true;
 
-        // Check for a preselected profile:
-        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.PreselectedProfile, AVAILABLE_PLUGINS))
+        // Compatibility shim, see documentation/compatibility-shims/2026-08-orphaned-config-locks.md (remove after 2027-08-06):
+        if (RepairLegacyConfigOnlySettings(unloadedConfigPluginIds.Count > 0))
             wasConfigurationChanged = true;
 
-        // Check for preselected chat options:
-        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Chat, x => x.PreselectOptions, AVAILABLE_PLUGINS))
-            wasConfigurationChanged = true;
-
-        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Chat, x => x.PreselectedProvider, AVAILABLE_PLUGINS))
-            wasConfigurationChanged = true;
-
-        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Chat, x => x.PreselectedProfile, AVAILABLE_PLUGINS))
-            wasConfigurationChanged = true;
-
-        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Chat, x => x.PreselectedChatTemplate, AVAILABLE_PLUGINS))
-            wasConfigurationChanged = true;
-
-        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Chat, x => x.PreselectedDataSourcesDisabled, AVAILABLE_PLUGINS))
-            wasConfigurationChanged = true;
-
-        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Chat, x => x.PreselectedDataSourcesAutomaticSelection, AVAILABLE_PLUGINS))
-            wasConfigurationChanged = true;
-
-        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Chat, x => x.PreselectedDataSourcesAutomaticValidation, AVAILABLE_PLUGINS))
-            wasConfigurationChanged = true;
-
-        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Chat, x => x.PreselectedDataSourceIds, AVAILABLE_PLUGINS))
-            wasConfigurationChanged = true;
-
-        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Chat, x => x.SendToChatDataSourceBehavior, AVAILABLE_PLUGINS))
-            wasConfigurationChanged = true;
-        
-        // Check for the update interval:
-        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.UpdateInterval, AVAILABLE_PLUGINS))
-            wasConfigurationChanged = true;
-        
-        // Check for the update installation method:
-        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.UpdateInstallation, AVAILABLE_PLUGINS))
-            wasConfigurationChanged = true;
-
-        // Check for the start page:
-        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.StartPage, AVAILABLE_PLUGINS))
-            wasConfigurationChanged = true;
-
-        // Check for the built-in introduction visibility:
-        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.ShowIntroduction, AVAILABLE_PLUGINS))
-            wasConfigurationChanged = true;
-
-        // Check for the quick start guide visibility:
-        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.ShowQuickStartGuide, AVAILABLE_PLUGINS))
-            wasConfigurationChanged = true;
-
-        // Check for the last changelog visibility:
-        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.ShowLastChangelog, AVAILABLE_PLUGINS))
-            wasConfigurationChanged = true;
-
-        // Check for the vision panel visibility:
-        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.ShowVision, AVAILABLE_PLUGINS))
-            wasConfigurationChanged = true;
-
-        // Check for users allowed to added providers:
-        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.AllowUserToAddProvider, AVAILABLE_PLUGINS))
-            wasConfigurationChanged = true;
-
-        // Check for the plugin import permission:
-        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.AllowUserToImportPlugins, AVAILABLE_PLUGINS))
-            wasConfigurationChanged = true;
-
-        // Check for the plugin sharing permission:
-        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.AllowUserToSharePlugins, AVAILABLE_PLUGINS))
-            wasConfigurationChanged = true;
-
-        // Check for admin settings visibility:
-        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.ShowAdminSettings, AVAILABLE_PLUGINS))
-            wasConfigurationChanged = true;
-        
-        // Check for preview visibility:
-        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.PreviewVisibility, AVAILABLE_PLUGINS))
-            wasConfigurationChanged = true;
-        
-        // Check for enabled preview features:
-        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.EnabledPreviewFeatures, AVAILABLE_PLUGINS))
-            wasConfigurationChanged = true;
-        
-        if(ManagedConfiguration.IsPluginContributionLeftOver(x => x.App, x => x.EnabledPreviewFeatures, AVAILABLE_PLUGINS))
-            wasConfigurationChanged = true;
-        
-        // Check for the transcription provider:
-        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.UseTranscriptionProvider, AVAILABLE_PLUGINS))
-            wasConfigurationChanged = true;
-        
-        // Check for hidden assistants:
-        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.HiddenAssistants, AVAILABLE_PLUGINS))
-            wasConfigurationChanged = true;
-        
-        // Check for the voice recording shortcut:
-        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.ShortcutVoiceRecording, AVAILABLE_PLUGINS))
-            wasConfigurationChanged = true;
-
-        // Check for the external HTTP client timeout:
-        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.HttpClientTimeoutSeconds, AVAILABLE_PLUGINS))
-            wasConfigurationChanged = true;
-
-        // Check for custom root certificates for external HTTP requests:
-        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.ExternalHttpCustomRootCertificatesEnabled, AVAILABLE_PLUGINS))
-            wasConfigurationChanged = true;
-
-        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.ExternalHttpCustomRootCertificateBundlePath, AVAILABLE_PLUGINS))
-            wasConfigurationChanged = true;
-
-        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.App, x => x.ExternalHttpCustomRootCertificateAllowedHosts, AVAILABLE_PLUGINS))
-            wasConfigurationChanged = true;
-
-        // Check provider confidence settings:
-        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Confidence, x => x.EnforceGlobalMinimumConfidence, AVAILABLE_PLUGINS))
-            wasConfigurationChanged = true;
-
-        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Confidence, x => x.GlobalMinimumConfidence, AVAILABLE_PLUGINS))
-            wasConfigurationChanged = true;
-
-        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Confidence, x => x.ShowProviderConfidence, AVAILABLE_PLUGINS))
-            wasConfigurationChanged = true;
-
-        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Confidence, x => x.ConfidenceScheme, AVAILABLE_PLUGINS))
-            wasConfigurationChanged = true;
-
-        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.Confidence, x => x.CustomConfidenceScheme, AVAILABLE_PLUGINS))
-            wasConfigurationChanged = true;
-
-        // Check data source security settings:
-        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.DataSourceSecurity, x => x.TrustedProviderIds, AVAILABLE_PLUGINS))
-            wasConfigurationChanged = true;
-
-        // Check data source selection agent settings:
-        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.AgentDataSourceSelection, x => x.PreselectAgentOptions, AVAILABLE_PLUGINS))
-            wasConfigurationChanged = true;
-
-        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.AgentDataSourceSelection, x => x.PreselectedAgentProvider, AVAILABLE_PLUGINS))
-            wasConfigurationChanged = true;
-
-        // Check retrieval context validation agent settings:
-        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.AgentRetrievalContextValidation, x => x.EnableRetrievalContextValidation, AVAILABLE_PLUGINS))
-            wasConfigurationChanged = true;
-
-        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.AgentRetrievalContextValidation, x => x.PreselectAgentOptions, AVAILABLE_PLUGINS))
-            wasConfigurationChanged = true;
-
-        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.AgentRetrievalContextValidation, x => x.PreselectedAgentProvider, AVAILABLE_PLUGINS))
-            wasConfigurationChanged = true;
-
-        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.AgentRetrievalContextValidation, x => x.NumParallelValidations, AVAILABLE_PLUGINS))
-            wasConfigurationChanged = true;
-
-        // Check if audit is required before it can be activated
-        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.AssistantPluginAudit, x => x.RequireAuditBeforeActivation, AVAILABLE_PLUGINS))
-            wasConfigurationChanged = true;
-
-        // Register new preselected provider for the security audit
-        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.AssistantPluginAudit, x => x.PreselectedAgentProvider, AVAILABLE_PLUGINS))
-            wasConfigurationChanged = true;
-
-        // Change the minimum required audit level that is required for the allowance of assistants
-        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.AssistantPluginAudit, x => x.MinimumLevel, AVAILABLE_PLUGINS))
-            wasConfigurationChanged = true;
-
-        // Check if external plugins are strictly forbidden, when the minimum audit level is fell below
-        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.AssistantPluginAudit, x => x.BlockActivationBelowMinimum, AVAILABLE_PLUGINS))
-            wasConfigurationChanged = true;
-        
-        // Check if security audits are invoked automatically and transparent for the user
-        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.AssistantPluginAudit, x => x.AutomaticallyAuditAssistants, AVAILABLE_PLUGINS))
-            wasConfigurationChanged = true;
-
-        // Check enterprise-managed assistant plugin approvals
-        if(ManagedConfiguration.IsConfigurationLeftOver(x => x.AssistantPluginAudit, x => x.EnterpriseApprovedPlugins, AVAILABLE_PLUGINS))
-            wasConfigurationChanged = true;
-        
         if (wasConfigurationChanged)
         {
             await SettingsManagerAccess.StoreSettings();
             await MessageBus.INSTANCE.SendMessage<bool>(null, Event.CONFIGURATION_CHANGED);
         }
+    }
+
+    /// <summary>
+    /// Determines the IDs of all configuration plugins which are deployed on this machine.
+    /// </summary>
+    /// <remarks>
+    /// We read these IDs from the file system instead of taking them from the loaded plugins. A
+    /// configuration plugin might be present but not loadable, e.g. due to invalid Lua code, a
+    /// missing `plugin.lua`, or an incomplete download. Such a plugin still manages this AI Studio
+    /// instance, so we must not treat its settings as left over. Configuration plugins deployed by a
+    /// configuration server live in a directory named after their ID, which is the only information
+    /// left when the plugin itself cannot be read.
+    /// </remarks>
+    private static HashSet<Guid> GetDeployedConfigPluginIds()
+    {
+        var deployedConfigPluginIds = new HashSet<Guid>();
+        if (!Directory.Exists(CONFIGURATION_PLUGINS_ROOT))
+            return deployedConfigPluginIds;
+
+        foreach (var configPluginDirectory in Directory.EnumerateDirectories(CONFIGURATION_PLUGINS_ROOT))
+        {
+            if (!Guid.TryParse(Path.GetFileName(configPluginDirectory), out var configPluginId) || configPluginId == Guid.Empty)
+                continue;
+
+            // An empty directory is a left-over of a removed plugin, not a deployed plugin:
+            if (!Directory.EnumerateFileSystemEntries(configPluginDirectory).Any())
+                continue;
+
+            deployedConfigPluginIds.Add(configPluginId);
+        }
+
+        return deployedConfigPluginIds;
     }
 
     /// <param name="pluginPath">The directory the plugin is located in, or null when the code has no directory yet.</param>
@@ -459,5 +338,112 @@ public static partial class PluginFactory
             default:
                 return new NoPlugin("This plugin type is not supported yet. Please try again with a future version of AI Studio.");
         }
+    }
+
+    //
+    // =========================================================
+    // Compatibility shim. Please read the related document
+    // before you change anything here:
+    //
+    //   documentation/compatibility-shims/2026-08-orphaned-config-locks.md
+    //
+    // Remove after 2027-08-06. Everything from here down to the
+    // end of this file belongs to the shim and can be deleted
+    // in one piece.
+    // =========================================================
+    //
+
+    /// <summary>
+    /// Repairs settings that were configured by a configuration plugin which was removed before
+    /// AI Studio started to persist the configuration ownership.
+    /// </summary>
+    /// <remarks>
+    /// All settings listed here share two properties: a configuration plugin can set them, and
+    /// there is no user interface to change them back. Therefore, any value that differs from the
+    /// default must originate from a configuration plugin. When such a setting is not managed
+    /// anymore, its plugin is gone and we restore the default value.<br/><br/>
+    /// This is only valid as long as none of these settings gets a user interface. When you add
+    /// one, remove the setting from this method and from the shim's document.
+    /// </remarks>
+    /// <param name="hasUnloadedConfigPlugins" >
+    /// True when at least one configuration plugin is deployed but could not be loaded. In that case,
+    /// we cannot tell whether a value comes from that plugin or from a removed one, so we repair
+    /// nothing at all.
+    /// </param>
+    /// <returns>True when at least one setting was repaired, otherwise false.</returns>
+    private static bool RepairLegacyConfigOnlySettings(bool hasUnloadedConfigPlugins)
+    {
+        if (hasUnloadedConfigPlugins)
+        {
+            LOG.LogWarning("Skipping the repair of configuration-only settings: at least one configuration plugin is deployed, but could not be loaded. We try again the next time AI Studio starts.");
+            return false;
+        }
+
+        var data = SettingsManagerAccess.ConfigurationData;
+        var wasRepaired = false;
+
+        // Settings which are enabled by default and which only a configuration plugin can switch off:
+        wasRepaired |= RepairLegacyConfigOnlyFlag(x => x.App, x => x.ShowIntroduction, data.App.ShowIntroduction);
+        wasRepaired |= RepairLegacyConfigOnlyFlag(x => x.App, x => x.ShowQuickStartGuide, data.App.ShowQuickStartGuide);
+        wasRepaired |= RepairLegacyConfigOnlyFlag(x => x.App, x => x.ShowLastChangelog, data.App.ShowLastChangelog);
+        wasRepaired |= RepairLegacyConfigOnlyFlag(x => x.App, x => x.ShowVision, data.App.ShowVision);
+        wasRepaired |= RepairLegacyConfigOnlyFlag(x => x.App, x => x.AllowUserToAddProvider, data.App.AllowUserToAddProvider);
+        wasRepaired |= RepairLegacyConfigOnlyFlag(x => x.App, x => x.AllowUserToImportPlugins, data.App.AllowUserToImportPlugins);
+        wasRepaired |= RepairLegacyConfigOnlyFlag(x => x.App, x => x.AllowUserToSharePlugins, data.App.AllowUserToSharePlugins);
+
+        // Collections which stay empty unless a configuration plugin fills them:
+        wasRepaired |= RepairLegacyConfigOnlyCollection(x => x.App, x => x.HiddenAssistants, data.App.HiddenAssistants.Count);
+        wasRepaired |= RepairLegacyConfigOnlyCollection(x => x.DataSourceSecurity, x => x.TrustedProviderIds, data.DataSourceSecurity.TrustedProviderIds.Count);
+        wasRepaired |= RepairLegacyConfigOnlyCollection(x => x.AssistantPluginAudit, x => x.EnterpriseApprovedPlugins, data.AssistantPluginAudit.EnterpriseApprovedPlugins.Count);
+
+        return wasRepaired;
+    }
+
+    /// <summary>
+    /// Restores the default of a boolean setting when it is switched off without being managed.
+    /// </summary>
+    private static bool RepairLegacyConfigOnlyFlag<TClass>(Expression<Func<Data, TClass>> configSelection, Expression<Func<TClass, bool>> propertyExpression, bool currentValue)
+    {
+        if (currentValue)
+            return false;
+
+        if (!ManagedConfiguration.TryGet(configSelection, propertyExpression, out var configMeta) || configMeta.ManagedMode is not null)
+            return false;
+
+        LOG.LogWarning($"Repairing the setting '{configMeta.SettingName}': it was switched off by a configuration plugin which is not available anymore.");
+        configMeta.ResetLockedConfiguration();
+        return true;
+    }
+
+    /// <summary>
+    /// Clears a set-based setting when it contains entries without being managed.
+    /// </summary>
+    private static bool RepairLegacyConfigOnlyCollection<TClass, TValue>(Expression<Func<Data, TClass>> configSelection, Expression<Func<TClass, ISet<TValue>>> propertyExpression, int currentCount)
+    {
+        if (currentCount is 0)
+            return false;
+
+        if (!ManagedConfiguration.TryGet(configSelection, propertyExpression, out var configMeta) || configMeta.ManagedMode is not null)
+            return false;
+
+        LOG.LogWarning($"Repairing the setting '{configMeta.SettingName}': it was filled by a configuration plugin which is not available anymore.");
+        configMeta.ResetLockedConfiguration();
+        return true;
+    }
+
+    /// <summary>
+    /// Clears a list-based setting when it contains entries without being managed.
+    /// </summary>
+    private static bool RepairLegacyConfigOnlyCollection<TClass, TValue>(Expression<Func<Data, TClass>> configSelection, Expression<Func<TClass, IList<TValue>>> propertyExpression, int currentCount)
+    {
+        if (currentCount is 0)
+            return false;
+
+        if (!ManagedConfiguration.TryGet(configSelection, propertyExpression, out var configMeta) || configMeta.ManagedMode is not null)
+            return false;
+
+        LOG.LogWarning($"Repairing the setting '{configMeta.SettingName}': it was filled by a configuration plugin which is not available anymore.");
+        configMeta.ResetLockedConfiguration();
+        return true;
     }
 }

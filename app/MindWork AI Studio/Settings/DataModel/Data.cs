@@ -64,6 +64,11 @@ public sealed class Data
     public Dictionary<string, ManagedEditableDefaultState> ManagedEditableDefaults { get; set; } = [];
 
     /// <summary>
+    /// The configuration plugin that owns each locked managed setting.
+    /// </summary>
+    public Dictionary<string, Guid> ManagedLockedConfigurations { get; set; } = [];
+
+    /// <summary>
     /// Cached audit results for assistant plugins.
     /// </summary>
     public List<PluginAssistantAudit> AssistantPluginAudits { get; set; } = [];

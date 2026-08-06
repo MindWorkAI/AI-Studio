@@ -255,6 +255,11 @@ public sealed record PluginConfigurationObject
     /// <param name="configObjectType">The type of configuration object to process.</param>
     /// <param name="configObjectSelection">A selection expression to retrieve the configuration objects from the main configuration.</param>
     /// <param name="availablePlugins">A list of currently available plugins.</param>
+    /// <param name="deployedConfigPluginIds">
+    /// The IDs of all configuration plugins which are deployed on this machine, including those which
+    /// could not be loaded. Objects of a deployed plugin are never removed, because the plugin was not
+    /// removed either.
+    /// </param>
     /// <param name="configObjectList">A list of all existing configuration objects.</param>
     /// <param name="secretStoreType">An optional parameter specifying the type of secret store to use for deleting associated API keys from the OS keyring, if applicable.</param>
     /// <param name="deleteSecret">When true, delete the associated non-API-key secret from the OS keyring.</param>
@@ -263,6 +268,7 @@ public sealed record PluginConfigurationObject
         PluginConfigurationObjectType configObjectType,
         Expression<Func<Data, List<TClass>>> configObjectSelection,
         IList<IAvailablePlugin> availablePlugins,
+        IReadOnlySet<Guid> deployedConfigPluginIds,
         IList<PluginConfigurationObject> configObjectList,
         SecretStoreType? secretStoreType = null,
         bool deleteSecret = false) where TClass : IConfigurationObject
@@ -281,7 +287,17 @@ public sealed record PluginConfigurationObject
             var configObjectSourcePluginId = configuredObject.EnterpriseConfigurationPluginId;
             if(configObjectSourcePluginId == Guid.Empty)
                 continue;
-            
+
+            //
+            // Is the source plugin deployed, but could not be loaded? Then we must not touch any of
+            // its objects. The plugin was not removed, it is broken: it might be invalid Lua code,
+            // a missing `plugin.lua`, or an incomplete download. Removing the objects would delete
+            // the organization's providers and data sources, including their secrets, although the
+            // organization still manages this AI Studio instance:
+            //
+            if(deployedConfigPluginIds.Contains(configObjectSourcePluginId) && availablePlugins.All(plugin => plugin.Id != configObjectSourcePluginId))
+                continue;
+
             // Is the source plugin still available? If not, we can be pretty sure that this configuration object is left
             // over and should be removed:
             var templateSourcePlugin = availablePlugins.FirstOrDefault(plugin => plugin.Id == configObjectSourcePluginId);

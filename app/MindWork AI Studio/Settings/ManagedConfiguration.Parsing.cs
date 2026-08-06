@@ -924,8 +924,8 @@ public static partial class ManagedConfiguration
                 // case only when the setting was locked and managed by the same configuration plugin.
                 //
                 // The other case, when the setting was locked and managed by a different configuration plugin,
-                // is handled by the IsConfigurationLeftOver method, which checks if the configuration plugin
-                // is still available. If it is not available, it resets the locked state of the
+                // is handled by the CleanupLeftOverManagedConfigurations method, which checks if the configuration
+                // plugin is still available. If it is not available, it resets the locked state of the
                 // configuration setting, allowing it to be reconfigured by a different plugin or left unchanged.
                 //
                 configMeta.ResetLockedConfiguration();

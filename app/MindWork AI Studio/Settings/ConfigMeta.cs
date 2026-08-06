@@ -11,7 +11,7 @@ namespace AIStudio.Settings;
 /// <typeparam name="TValue">The type of the configuration property value.</typeparam>
 public record ConfigMeta<TClass, TValue> : ConfigMetaBase
 {
-    public ConfigMeta(Expression<Func<Data, TClass>> configSelection, Expression<Func<TClass, TValue>> propertyExpression)
+    public ConfigMeta(Expression<Func<Data, TClass>> configSelection, Expression<Func<TClass, TValue>> propertyExpression) : base(SettingsManager.ToSettingName(propertyExpression))
     {
         this.ConfigSelection = configSelection;
         this.PropertyExpression = propertyExpression;
@@ -26,105 +26,16 @@ public record ConfigMeta<TClass, TValue> : ConfigMetaBase
     /// The expression to select the property within the configuration class.
     /// </summary>
     private Expression<Func<TClass, TValue>> PropertyExpression { get; }
-	
-    /// <summary>
-    /// Indicates whether the configuration is locked by a configuration plugin.
-    /// </summary>
-    public bool IsLocked { get; private set; }
 
-    /// <summary>
-    /// The ID of the plugin that locked this configuration.
-    /// </summary>
-    public Guid LockedByConfigPluginId { get; private set; }
-
-    /// <summary>
-    /// How this setting is managed by a configuration plugin, if at all.
-    /// </summary>
-    public ManagedConfigurationMode? ManagedMode { get; private set; }
-
-    /// <summary>
-    /// The ID of the plugin that currently provides an editable default value.
-    /// </summary>
-    public Guid EditableDefaultByConfigPluginId { get; private set; }
-    
     /// <summary>
     /// The default value for the configuration property. This is used when resetting the property to its default state.
     /// </summary>
     public required TValue Default { get; init; }
 
     /// <summary>
-    /// Indicates whether a plugin contribution is available.
-    /// </summary>
-    public bool HasPluginContribution { get; private set; }
-
-    /// <summary>
     /// The additive value contribution provided by a configuration plugin.
     /// </summary>
     public TValue PluginContribution { get; private set; } = default!;
-
-    /// <summary>
-    /// The ID of the plugin that provided the additive value contribution.
-    /// </summary>
-    public Guid PluginContributionByConfigPluginId { get; private set; }
-
-    /// <summary>
-    /// Locks the configuration state, indicating that it is controlled by a specific plugin.
-    /// </summary>
-    /// <param name="pluginId">The ID of the plugin that is locking this configuration.</param>
-    public void LockConfiguration(Guid pluginId)
-    {
-        this.IsLocked = true;
-        this.LockedByConfigPluginId = pluginId;
-        this.ManagedMode = ManagedConfigurationMode.LOCKED;
-        this.EditableDefaultByConfigPluginId = Guid.Empty;
-    }
-    
-    /// <summary>
-    /// Resets the locked state of the configuration, allowing it to be modified again.
-    /// This will also reset the property to its default value.
-    /// </summary>
-    public void ResetLockedConfiguration()
-    {
-        this.IsLocked = false;
-        this.LockedByConfigPluginId = Guid.Empty;
-        if (this.ManagedMode is ManagedConfigurationMode.LOCKED)
-            this.ManagedMode = null;
-
-        this.Reset();
-    }
-
-    /// <summary>
-    /// Unlocks the configuration state without changing the current value.
-    /// </summary>
-    public void UnlockConfiguration()
-    {
-        this.IsLocked = false;
-        this.LockedByConfigPluginId = Guid.Empty;
-        if (this.ManagedMode is ManagedConfigurationMode.LOCKED)
-            this.ManagedMode = null;
-    }
-
-    /// <summary>
-    /// Marks the setting as having an editable default provided by a configuration plugin.
-    /// </summary>
-    public void SetEditableDefaultConfiguration(Guid pluginId)
-    {
-        this.IsLocked = false;
-        this.LockedByConfigPluginId = Guid.Empty;
-        this.ManagedMode = ManagedConfigurationMode.EDITABLE_DEFAULT;
-        this.EditableDefaultByConfigPluginId = pluginId;
-    }
-
-    /// <summary>
-    /// Clears the editable-default state without changing the current value.
-    /// </summary>
-    public void ClearEditableDefaultConfiguration()
-    {
-        if (this.ManagedMode is ManagedConfigurationMode.EDITABLE_DEFAULT)
-            this.ManagedMode = null;
-
-        this.EditableDefaultByConfigPluginId = Guid.Empty;
-    }
 
     /// <summary>
     /// Stores an additive plugin contribution.
@@ -136,20 +47,15 @@ public record ConfigMeta<TClass, TValue> : ConfigMetaBase
         this.HasPluginContribution = true;
     }
 
-    /// <summary>
-    /// Clears the additive plugin contribution without changing the current value.
-    /// </summary>
-    public void ClearPluginContribution()
+    /// <inheritdoc/>
+    public override void ClearPluginContribution()
     {
         this.PluginContribution = default!;
-        this.PluginContributionByConfigPluginId = Guid.Empty;
-        this.HasPluginContribution = false;
+        base.ClearPluginContribution();
     }
-    
-    /// <summary>
-    /// Resets the configuration property to its default value.
-    /// </summary>
-    private void Reset()
+
+    /// <inheritdoc/>
+    protected override void Reset()
     {
         var configInstance = this.ConfigSelection.Compile().Invoke(SettingsManagerAccess.ConfigurationData);
         var memberExpression = this.PropertyExpression.GetMemberExpression();
