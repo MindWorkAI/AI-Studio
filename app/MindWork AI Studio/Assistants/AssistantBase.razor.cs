@@ -662,6 +662,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         this.ResultingContentBlock = null;
         this.ProviderSettings = Settings.Provider.NONE;
         
+        await this.JsRuntime.ClearDiv(BEFORE_RESULT_DIV_ID);
         await this.JsRuntime.ClearDiv(RESULT_DIV_ID);
         await this.JsRuntime.ClearDiv(AFTER_RESULT_DIV_ID);
         
