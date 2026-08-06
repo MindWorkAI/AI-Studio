@@ -8,14 +8,6 @@ using AIStudio.Tools.Rust;
 
 namespace AIStudio.Tools.Services;
 
-public sealed record AssistantPluginInstallResult(bool Success, Guid PluginId, string PluginName, string PluginDirectory, bool ReplacedExisting, string Issue);
-
-public sealed record AssistantPluginCheckResult(bool Success, Guid PluginId, string PluginName, string Issue);
-
-public sealed record AssistantPluginDeleteResult(bool Success, Guid PluginId, string PluginName, string PluginDirectory, string Issue);
-
-public sealed record AssistantPluginUpdateResult(bool Success, Guid PluginId, string PluginName, string PluginDirectory, string Issue);
-
 public sealed class AssistantPluginInstallService
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(AssistantPluginInstallService).Namespace, nameof(AssistantPluginInstallService));
@@ -33,6 +25,8 @@ public sealed class AssistantPluginInstallService
     private readonly SemaphoreSlim installSemaphore = new(1, 1);
     
     private static AssistantPluginInstallResult Error(string issue) => new(false, Guid.Empty, string.Empty, string.Empty, false, issue);
+
+    private static AssistantPluginInstallResult CancelledByUser() => new(false, Guid.Empty, string.Empty, string.Empty, false, string.Empty, true);
     
     private static AssistantPluginCheckResult CheckError(string issue) => new(false, Guid.Empty, string.Empty, issue);
     
@@ -40,11 +34,7 @@ public sealed class AssistantPluginInstallService
 
     private static AssistantPluginUpdateResult UpdateError(IPluginMetadata plugin, string pluginDirectory, string issue) => new(false, plugin.Id, plugin.Name, pluginDirectory, issue);
 
-    public AssistantPluginInstallService(
-        ILogger<AssistantPluginInstallService> logger,
-        SettingsManager settingsManager,
-        AssistantSessionService assistantSessionService,
-        MediaTranscriptionService mediaTranscriptionService)
+    public AssistantPluginInstallService(ILogger<AssistantPluginInstallService> logger, SettingsManager settingsManager, AssistantSessionService assistantSessionService, MediaTranscriptionService mediaTranscriptionService)
     {
         this.logger = logger;
         this.settingsManager = settingsManager;
@@ -129,10 +119,9 @@ public sealed class AssistantPluginInstallService
             return Error(rootIssue);
 
         await this.installSemaphore.WaitAsync(token);
-        AssistantPluginValidationResult validation;
         try
         {
-            validation = await this.ValidateIntoStagingAsync(lua, token);
+            var validation = await this.ValidateIntoStagingAsync(lua, token);
             if (!validation.Success || validation.AssistantPlugin is null)
                 return Error(validation.Issue);
 
@@ -149,9 +138,13 @@ public sealed class AssistantPluginInstallService
     /// Companion files are validated from and moved with the same staging directory.
     /// </summary>
     /// <param name="archivePath">The local <c>.mwplugin</c> or <c>.zip</c> archive path.</param>
+    /// <param name="confirmAsync">
+    /// Asks the user whether the validated archive may be installed. It is called after all checks
+    /// passed and before anything gets written. Returning false aborts the installation.
+    /// </param>
     /// <param name="token">Cancellation token for extraction, validation, file IO, and plugin reload.</param>
     /// <returns>Installation result that contains success state, installed plugin metadata, and a user-facing issue when installation failed.</returns>
-    public async Task<AssistantPluginInstallResult> InstallArchiveAsync(string archivePath, CancellationToken token)
+    public async Task<AssistantPluginInstallResult> InstallArchiveAsync(string archivePath, Func<PluginImportPreview, Task<bool>> confirmAsync, CancellationToken token)
     {
         if (!this.settingsManager.ConfigurationData.App.AllowUserToImportPlugins)
             return Error(TB("Your organization has disabled importing plugins."));
@@ -184,7 +177,7 @@ public sealed class AssistantPluginInstallService
                 var pluginFile = pluginFiles[0];
                 var pluginDirectory = Path.GetDirectoryName(pluginFile)!;
                 var pluginCode = await File.ReadAllTextAsync(pluginFile, Encoding.UTF8, token);
-                var validation = await this.ValidateAssistantPluginCodeAsync(
+                var validation = await ValidateAssistantPluginCodeAsync(
                     pluginDirectory,
                     pluginCode.Trim(),
                     TB("The imported plugin is not an assistant plugin. Issue: {0}"),
@@ -200,6 +193,18 @@ public sealed class AssistantPluginInstallService
                 // claiming it would be neither replaceable nor deletable through the user interface:
                 if (validation.AssistantPlugin.IsManagedByConfigServer)
                     return Error(TB("This plugin archive declares itself as managed by a config server. Only the IT department of your organization might deploy such plugins."));
+
+                // The archive would replace an existing plugin: reject it when that plugin belongs
+                // to the IT department. We check this before asking the user, so that the
+                // confirmation never offers something we would refuse afterwards anyway:
+                var replacementIssue = GetAssistantReplacementIssue(validation.AssistantPlugin.Id);
+                if (!string.IsNullOrEmpty(replacementIssue))
+                    return Error(replacementIssue);
+
+                // Everything is validated, but nothing was written yet. This is the point where the
+                // user decides, because the plugin code comes from an untrusted source:
+                if (!await confirmAsync(CreateImportPreview(validation.AssistantPlugin)))
+                    return CancelledByUser();
 
                 return await this.InstallStagedAssistantAsync(assistantPluginsRoot, validation with { StagingDirectory = pluginDirectory }, token);
             }
@@ -304,9 +309,10 @@ public sealed class AssistantPluginInstallService
             Directory.Move(pluginDirectory, backupDirectory);
 
             wasEnabled = this.settingsManager.ConfigurationData.EnabledPlugins.Remove(plugin.Id);
-            removedAudits = this.settingsManager.ConfigurationData.AssistantPluginAudits
-                .Where(audit => audit.PluginId == plugin.Id)
-                .ToList();
+            removedAudits =
+            [
+                .. this.settingsManager.ConfigurationData.AssistantPluginAudits.Where(audit => audit.PluginId == plugin.Id)
+            ];
 
             if (removedAudits.Count > 0)
                 this.settingsManager.ConfigurationData.AssistantPluginAudits.RemoveAll(audit => audit.PluginId == plugin.Id);
@@ -517,7 +523,7 @@ public sealed class AssistantPluginInstallService
             var stagedPluginFile = Path.Join(stagingDirectory, PLUGIN_FILE_NAME);
             await File.WriteAllTextAsync(stagedPluginFile, pluginCode, Encoding.UTF8, token);
 
-            var validation = await this.ValidateAssistantPluginCodeAsync(
+            var validation = await ValidateAssistantPluginCodeAsync(
                 stagingDirectory,
                 pluginCode,
                 TB("The generated plugin is not an assistant plugin. Issue: {0}"),
@@ -548,7 +554,7 @@ public sealed class AssistantPluginInstallService
 
         try
         {
-            return await this.ValidateAssistantPluginCodeAsync(
+            return await ValidateAssistantPluginCodeAsync(
                 pluginDirectory,
                 lua.Trim(),
                 TB("The edited plugin is not an assistant plugin. Issue: {0}"),
@@ -563,13 +569,8 @@ public sealed class AssistantPluginInstallService
         }
     }
 
-    private async Task<AssistantPluginValidationResult> ValidateAssistantPluginCodeAsync(
-        string pluginDirectory,
-        string pluginCode,
-        string notAssistantIssue,
-        string invalidAssistantIssue,
-        string internalPluginIdIssue,
-        CancellationToken token)
+    private static async Task<AssistantPluginValidationResult> ValidateAssistantPluginCodeAsync(string pluginDirectory, string pluginCode,
+        string notAssistantIssue, string invalidAssistantIssue, string internalPluginIdIssue, CancellationToken token)
     {
         var plugin = await PluginFactory.Load(pluginDirectory, pluginCode, token);
         if (plugin is not PluginAssistants assistantPlugin)
@@ -635,11 +636,8 @@ public sealed class AssistantPluginInstallService
             : TB("The assistant plugin directory does not exist.");
     }
 
-    private void TryDeleteStagingDirectory(string stagingDirectory)
-    {
-        TryDeleteDirectory(stagingDirectory, "assistant plugin staging", this.logger);
-    }
-    
+    private void TryDeleteStagingDirectory(string stagingDirectory) => TryDeleteDirectory(stagingDirectory, "assistant plugin staging", this.logger);
+
     private static string DetermineFinalDirectory(string assistantPluginsRoot, PluginAssistants assistantPlugin)
     {
         var existingPlugin = FindReplaceableAssistantPlugin(assistantPlugin.Id);
@@ -656,6 +654,14 @@ public sealed class AssistantPluginInstallService
     private static IAvailablePlugin? FindReplaceableAssistantPlugin(Guid pluginId) => PluginFactory.AvailablePlugins
         .OfType<IAvailablePlugin>()
         .FirstOrDefault(plugin => plugin.Type is PluginType.ASSISTANT && plugin.Id == pluginId && !plugin.IsInternal);
+
+    /// <summary>
+    /// Collects the metadata an archive declares about itself, together with the information about
+    /// the installed plugin it would replace.
+    /// </summary>
+    /// <param name="assistantPlugin">The validated assistant plugin from the archive.</param>
+    /// <returns>The preview shown to the user before the installation starts.</returns>
+    private static PluginImportPreview CreateImportPreview(PluginAssistants assistantPlugin) => new(assistantPlugin, FindReplaceableAssistantPlugin(assistantPlugin.Id));
 
     /// <summary>
     /// Checks whether an installation may replace the assistant plugin that currently uses the given ID.

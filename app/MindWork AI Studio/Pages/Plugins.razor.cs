@@ -328,11 +328,17 @@ public partial class Plugins : MSGComponentBase
             if (selection.UserCancelled)
                 return;
 
-            var result = await this.AssistantPluginInstallService.InstallArchiveAsync(selection.SelectedFilePath, CancellationToken.None);
+            var result = await this.AssistantPluginInstallService.InstallArchiveAsync(selection.SelectedFilePath, this.ConfirmPluginImportAsync, CancellationToken.None);
+            if (result.Cancelled)
+                return;
+
             if (!result.Success)
             {
                 LOG.LogError("Failed to import assistant plugin archive '{ArchivePath}': {Issue}", selection.SelectedFilePath, result.Issue);
-                await this.MessageBus.SendError(new(Icons.Material.Filled.ReportProblem, string.Format(this.T("The assistant plugin could not be imported: {0}"), result.Issue)));
+
+                // The user actively started this import, so we report the reason in a dialog
+                // instead of a snackbar. Refused imports must not be missed:
+                await this.ShowImportRefusedDialogAsync(result.Issue);
                 return;
             }
 
@@ -348,6 +354,36 @@ public partial class Plugins : MSGComponentBase
             this.isImportingAssistantPlugin = false;
             await this.InvokeAsync(this.StateHasChanged);
         }
+    }
+
+    /// <summary>
+    /// Shows the metadata of a validated plugin archive and asks whether it may be installed.
+    /// </summary>
+    /// <param name="preview">The metadata the archive declares about itself.</param>
+    /// <returns>True when the user confirmed the installation.</returns>
+    private async Task<bool> ConfirmPluginImportAsync(PluginImportPreview preview)
+    {
+        var dialogParameters = new DialogParameters<PluginImportDialog>
+        {
+            { x => x.Preview, preview },
+        };
+
+        var dialogReference = await this.DialogService.ShowAsync<PluginImportDialog>(this.T("Install Plugin"), dialogParameters, DialogOptions.FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        return dialogResult is { Canceled: false };
+    }
+
+    private async Task ShowImportRefusedDialogAsync(string issue)
+    {
+        var dialogParameters = new DialogParameters<InformationDialog>
+        {
+            { x => x.Message, string.Format(this.T("The assistant plugin could not be imported: {0}"), issue) },
+            { x => x.Icon, Icons.Material.Filled.ReportProblem },
+            { x => x.IconColor, Color.Error },
+        };
+
+        var dialogReference = await this.DialogService.ShowAsync<InformationDialog>(this.T("Import not possible"), dialogParameters, DialogOptions.FULLSCREEN);
+        await dialogReference.Result;
     }
 
     private static bool IsSendingMail(string sourceUrl) => sourceUrl.TrimStart().StartsWith("mailto:", StringComparison.OrdinalIgnoreCase);
