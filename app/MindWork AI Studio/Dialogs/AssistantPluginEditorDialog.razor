@@ -3,13 +3,6 @@
 <MudDialog DefaultFocus="DefaultFocus.None">
     <DialogContent>
         <MudStack Spacing="2">
-            @if (!string.IsNullOrWhiteSpace(this.issue))
-            {
-                <MudAlert Severity="Severity.Error" Dense="true">
-                    @this.issue
-                </MudAlert>
-            }
-
             @if (this.isLoading)
             {
                 <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
@@ -35,6 +28,12 @@
         </MudStack>
     </DialogContent>
     <DialogActions>
+        @if (!string.IsNullOrWhiteSpace(this.issue))
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" Class="mx-3">
+                @this.issue
+            </MudAlert>
+        }
         <MudButton OnClick="@this.Cancel" Disabled="@this.isSaving" Size="Size.Small">
             @T("Cancel")
         </MudButton>

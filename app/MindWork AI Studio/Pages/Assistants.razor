@@ -77,7 +77,8 @@
             (Components.JOB_POSTING_ASSISTANT, PreviewFeatures.NONE),
             (Components.LEGAL_CHECK_ASSISTANT, PreviewFeatures.NONE),
             (Components.ICON_FINDER_ASSISTANT, PreviewFeatures.NONE),
-            (Components.SLIDE_BUILDER_ASSISTANT, PreviewFeatures.NONE)
+            (Components.SLIDE_BUILDER_ASSISTANT, PreviewFeatures.NONE),
+            (Components.VISUAL_BRIEFING_ASSISTANT, Components.VISUAL_BRIEFING_ASSISTANT.RequiredPreviewFeature())
             ))
         {
             <MudText Typo="Typo.h4" Class="mb-2 mr-3 mt-6">
@@ -92,6 +93,7 @@
                 <AssistantBlock TSettings="SettingsDialogLegalCheck" Component="Components.LEGAL_CHECK_ASSISTANT" Name="@T("Legal Check")" Description="@T("Ask a question about a legal document.")" Icon="@Icons.Material.Filled.Gavel" Link="@Routes.ASSISTANT_LEGAL_CHECK"/>
                 <AssistantBlock TSettings="SettingsDialogIconFinder" Component="Components.ICON_FINDER_ASSISTANT" Name="@T("Icon Finder")" Description="@T("Use an LLM to find an icon for a given context.")" Icon="@Icons.Material.Filled.FindInPage" Link="@Routes.ASSISTANT_ICON_FINDER"/>
                 <AssistantBlock TSettings="SettingsDialogSlideBuilder" Component="Components.SLIDE_BUILDER_ASSISTANT" Name="@T("Slide Planner Assistant")" Description="@T("Develop slide content based on a given topic and content.")" Icon="@Icons.Material.Filled.Slideshow" Link="@Routes.ASSISTANT_SLIDE_BUILDER"/>
+                <AssistantBlock TSettings="SettingsDialogVisualBriefing" Component="Components.VISUAL_BRIEFING_ASSISTANT" RequiredPreviewFeature="Components.VISUAL_BRIEFING_ASSISTANT.RequiredPreviewFeature()" Name="@T("Visual Briefing Assistant")" Description="@T("Turn documents, data, images, audio, and video into an audience-ready interactive briefing.")" Icon="@Icons.Material.Filled.DashboardCustomize" Link="@Routes.ASSISTANT_VISUAL_BRIEFING" />
             </MudStack>
         }
 
