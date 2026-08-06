@@ -9,7 +9,10 @@ namespace AIStudio.Settings;
 public static partial class ManagedConfiguration
 {
     private static readonly ConcurrentDictionary<string, IConfig> METADATA = new();
+    
     private static SettingsManager SettingsManagerAccess => Program.SERVICE_PROVIDER.GetRequiredService<SettingsManager>();
+    
+    private static ILogger Log => Program.LOGGER_FACTORY.CreateLogger(nameof(ManagedConfiguration));
 
     /// <summary>
     /// Attempts to retrieve the configuration metadata for a given configuration selection and
@@ -28,10 +31,7 @@ public static partial class ManagedConfiguration
     /// <typeparam name="TClass">The type of the configuration class.</typeparam>
     /// <typeparam name="TValue">The type of the property within the configuration class.</typeparam>
     /// <returns>True if the configuration metadata was found, otherwise false.</returns>
-    public static bool TryGet<TClass, TValue>(
-        Expression<Func<Data, TClass>> configSelection,
-        Expression<Func<TClass, TValue>> propertyExpression,
-        out ConfigMeta<TClass, TValue> configMeta)
+    public static bool TryGet<TClass, TValue>(Expression<Func<Data, TClass>> configSelection, Expression<Func<TClass, TValue>> propertyExpression, out ConfigMeta<TClass, TValue> configMeta)
         where TValue : Enum
     {
         var configPath = Path(configSelection, propertyExpression);
@@ -66,10 +66,7 @@ public static partial class ManagedConfiguration
     /// if found.</param>
     /// <typeparam name="TClass">The type of the configuration class.</typeparam>
     /// <returns>True if the configuration metadata was found, otherwise false.</returns>
-    public static bool TryGet<TClass>(
-        Expression<Func<Data, TClass>> configSelection,
-        Expression<Func<TClass, string>> propertyExpression,
-        out ConfigMeta<TClass, string> configMeta)
+    public static bool TryGet<TClass>(Expression<Func<Data, TClass>> configSelection, Expression<Func<TClass, string>> propertyExpression, out ConfigMeta<TClass, string> configMeta)
     {
         var configPath = Path(configSelection, propertyExpression);
         if (METADATA.TryGetValue(configPath, out var value) && value is ConfigMeta<TClass, string> meta)
@@ -106,11 +103,7 @@ public static partial class ManagedConfiguration
     /// <returns>True if the configuration metadata was found, otherwise false.</returns>
 
     // ReSharper disable MethodOverloadWithOptionalParameter
-    public static bool TryGet<TClass, TValue>(
-        Expression<Func<Data, TClass>> configSelection,
-        Expression<Func<TClass, TValue>> propertyExpression,
-        out ConfigMeta<TClass, TValue> configMeta,
-        ISpanParsable<TValue>? _ = null)
+    public static bool TryGet<TClass, TValue>(Expression<Func<Data, TClass>> configSelection, Expression<Func<TClass, TValue>> propertyExpression, out ConfigMeta<TClass, TValue> configMeta, ISpanParsable<TValue>? _ = null)
         where TValue : struct, ISpanParsable<TValue>
     {
         var configPath = Path(configSelection, propertyExpression);
@@ -146,10 +139,7 @@ public static partial class ManagedConfiguration
     /// <typeparam name="TClass">The type of the configuration class.</typeparam>
     /// <typeparam name="TValue">The type of the property within the configuration class.</typeparam>
     /// <returns>True if the configuration metadata was found, otherwise false.</returns>
-    public static bool TryGet<TClass, TValue>(
-        Expression<Func<Data, TClass>> configSelection,
-        Expression<Func<TClass, IList<TValue>>> propertyExpression,
-        out ConfigMeta<TClass, IList<TValue>> configMeta)
+    public static bool TryGet<TClass, TValue>(Expression<Func<Data, TClass>> configSelection, Expression<Func<TClass, IList<TValue>>> propertyExpression, out ConfigMeta<TClass, IList<TValue>> configMeta)
     {
         var configPath = Path(configSelection, propertyExpression);
         if (METADATA.TryGetValue(configPath, out var value) && value is ConfigMeta<TClass, IList<TValue>> meta)
@@ -182,10 +172,7 @@ public static partial class ManagedConfiguration
     /// <typeparam name="TClass">The type of the configuration class.</typeparam>
     /// <typeparam name="TValue">The type of the property within the configuration class.</typeparam>
     /// <returns>True if the configuration metadata was found, otherwise false.</returns>
-    public static bool TryGet<TClass, TValue>(
-        Expression<Func<Data, TClass>> configSelection,
-        Expression<Func<TClass, ISet<TValue>>> propertyExpression,
-        out ConfigMeta<TClass, ISet<TValue>> configMeta)
+    public static bool TryGet<TClass, TValue>(Expression<Func<Data, TClass>> configSelection, Expression<Func<TClass, ISet<TValue>>> propertyExpression, out ConfigMeta<TClass, ISet<TValue>> configMeta)
     {
         var configPath = Path(configSelection, propertyExpression);
         if (METADATA.TryGetValue(configPath, out var value) && value is ConfigMeta<TClass, ISet<TValue>> meta)
@@ -217,10 +204,7 @@ public static partial class ManagedConfiguration
     /// if found.</param>
     /// <typeparam name="TClass">The type of the configuration class.</typeparam>
     /// <returns>True if the configuration metadata was found, otherwise false.</returns>
-    public static bool TryGet<TClass>(
-        Expression<Func<Data, TClass>> configSelection,
-        Expression<Func<TClass, IDictionary<string, string>>> propertyExpression,
-        out ConfigMeta<TClass, IDictionary<string, string>> configMeta)
+    public static bool TryGet<TClass>(Expression<Func<Data, TClass>> configSelection, Expression<Func<TClass, IDictionary<string, string>>> propertyExpression, out ConfigMeta<TClass, IDictionary<string, string>> configMeta)
     {
         var configPath = Path(configSelection, propertyExpression);
         if (METADATA.TryGetValue(configPath, out var value) && value is ConfigMeta<TClass, IDictionary<string, string>> meta)
@@ -254,10 +238,7 @@ public static partial class ManagedConfiguration
     /// <typeparam name="TKey">The enum type of the dictionary keys.</typeparam>
     /// <typeparam name="TValue">The enum type of the dictionary values.</typeparam>
     /// <returns>True if the configuration metadata was found, otherwise false.</returns>
-    public static bool TryGet<TClass, TKey, TValue>(
-        Expression<Func<Data, TClass>> configSelection,
-        Expression<Func<TClass, Dictionary<TKey, TValue>>> propertyExpression,
-        out ConfigMeta<TClass, Dictionary<TKey, TValue>> configMeta)
+    public static bool TryGet<TClass, TKey, TValue>(Expression<Func<Data, TClass>> configSelection, Expression<Func<TClass, Dictionary<TKey, TValue>>> propertyExpression, out ConfigMeta<TClass, Dictionary<TKey, TValue>> configMeta)
         where TKey : struct, Enum
         where TValue : struct, Enum
     {
@@ -277,211 +258,94 @@ public static partial class ManagedConfiguration
     }
 
     /// <summary>
-    /// Checks if a configuration setting is left over from a configuration plugin that is no longer available.
-    /// If the configuration setting is locked and managed by a configuration plugin that is not available,
-    /// it resets the managed state of the configuration setting and returns true.
-    /// Otherwise, it returns false.
+    /// Removes all managed states whose configuration plugin is not available anymore.
     /// </summary>
-    /// <param name="configSelection">The expression to select the configuration class.</param>
-    /// <param name="propertyExpression">The expression to select the property within the configuration class.</param>
+    /// <remarks>
+    /// This covers every registered setting, regardless of its type: locked settings, editable
+    /// defaults, and additive plugin contributions. Settings do not need to be listed anywhere for
+    /// this cleanup to work, so adding a new managed setting cannot be forgotten here.<br/><br/>
+    /// A locked setting whose plugin is gone is reset to its default value. That is intended: the
+    /// value belonged to the organization, not to the user, and the user might not be able to
+    /// change it at all.
+    /// </remarks>
     /// <param name="availablePlugins">The collection of available plugins to check against.</param>
-    /// <typeparam name="TClass">The type of the configuration class.</typeparam>
-    /// <typeparam name="TValue">The type of the property within the configuration class.</typeparam>
-    /// <returns>True if the configuration setting is left over and was reset, otherwise false.</returns>
-    public static bool IsConfigurationLeftOver<TClass, TValue>(
-        Expression<Func<Data, TClass>> configSelection,
-        Expression<Func<TClass, TValue>> propertyExpression,
-        IReadOnlyList<IAvailablePlugin> availablePlugins)
-        where TValue : Enum
+    /// <returns>True when at least one setting was changed, otherwise false.</returns>
+    public static bool CleanupLeftOverManagedConfigurations(IReadOnlyCollection<IAvailablePlugin> availablePlugins)
     {
-        if (!TryGet(configSelection, propertyExpression, out var configMeta))
-            return false;
+        var wasChanged = false;
+        var registeredSettingNames = new HashSet<string>(StringComparer.Ordinal);
 
-        if (configMeta.LockedByConfigPluginId != Guid.Empty && configMeta.IsLocked)
+        foreach (var config in METADATA.Values)
         {
-            var plugin = availablePlugins.FirstOrDefault(x => x.Id == configMeta.LockedByConfigPluginId);
-            if (plugin is null)
+            if (config is not ConfigMetaBase configMeta)
+                continue;
+
+            registeredSettingNames.Add(configMeta.SettingName);
+
+            //
+            // Restore the persisted ownership first. Otherwise, we would not recognize a left-over
+            // lock when nobody has read this setting since the settings were loaded:
+            //
+            configMeta.RestoreLockedConfiguration();
+
+            // Check the locked state:
+            if (configMeta.IsLocked && configMeta.LockedByConfigPluginId != Guid.Empty && !IsPluginAvailable(configMeta.LockedByConfigPluginId, availablePlugins))
             {
+                Log.LogInformation($"Resetting the setting '{configMeta.SettingName}': it was locked by the configuration plugin '{configMeta.LockedByConfigPluginId}', which is not available anymore.");
                 configMeta.ResetLockedConfiguration();
-                return true;
+                wasChanged = true;
+            }
+
+            // Check the editable default state:
+            if (CleanupEditableDefaultState(configMeta, availablePlugins))
+                wasChanged = true;
+
+            // Check the additive plugin contribution:
+            if (configMeta.HasPluginContribution && configMeta.PluginContributionByConfigPluginId != Guid.Empty && !IsPluginAvailable(configMeta.PluginContributionByConfigPluginId, availablePlugins))
+            {
+                Log.LogInformation($"Clearing the plugin contribution for the setting '{configMeta.SettingName}': the configuration plugin '{configMeta.PluginContributionByConfigPluginId}' is not available anymore.");
+                configMeta.ClearPluginContribution();
+                wasChanged = true;
             }
         }
 
-        return CleanupEditableDefaultState(configMeta, SettingName(propertyExpression), availablePlugins);
+        // Remove persisted states which belong to settings that do not exist anymore:
+        if (RemoveUnknownManagedStates(registeredSettingNames))
+            wasChanged = true;
+
+        return wasChanged;
     }
 
-    public static bool IsConfigurationLeftOver<TClass>(
-        Expression<Func<Data, TClass>> configSelection,
-        Expression<Func<TClass, string>> propertyExpression,
-        IReadOnlyList<IAvailablePlugin> availablePlugins)
-    {
-        if (!TryGet(configSelection, propertyExpression, out var configMeta))
-            return false;
-
-        if (configMeta.LockedByConfigPluginId != Guid.Empty && configMeta.IsLocked)
-        {
-            var plugin = availablePlugins.FirstOrDefault(x => x.Id == configMeta.LockedByConfigPluginId);
-            if (plugin is null)
-            {
-                configMeta.ResetLockedConfiguration();
-                return true;
-            }
-        }
-
-        return CleanupEditableDefaultState(configMeta, SettingName(propertyExpression), availablePlugins);
-    }
-
-    // ReSharper disable MethodOverloadWithOptionalParameter
-    public static bool IsConfigurationLeftOver<TClass, TValue>(
-        Expression<Func<Data, TClass>> configSelection,
-        Expression<Func<TClass, TValue>> propertyExpression,
-        IReadOnlyList<IAvailablePlugin> availablePlugins,
-        ISpanParsable<TValue>? _ = null)
-        where TValue : struct, ISpanParsable<TValue>
-    {
-        if (!TryGet(configSelection, propertyExpression, out var configMeta))
-            return false;
-
-        if (configMeta.LockedByConfigPluginId != Guid.Empty && configMeta.IsLocked)
-        {
-            var plugin = availablePlugins.FirstOrDefault(x => x.Id == configMeta.LockedByConfigPluginId);
-            if (plugin is null)
-            {
-                configMeta.ResetLockedConfiguration();
-                return true;
-            }
-        }
-
-        return CleanupEditableDefaultState(configMeta, SettingName(propertyExpression), availablePlugins);
-    }
-
-    // ReSharper restore MethodOverloadWithOptionalParameter
-
-    public static bool IsConfigurationLeftOver<TClass, TValue>(
-        Expression<Func<Data, TClass>> configSelection,
-        Expression<Func<TClass, IList<TValue>>> propertyExpression,
-        IEnumerable<IAvailablePlugin> availablePlugins)
-    {
-        if (!TryGet(configSelection, propertyExpression, out var configMeta))
-            return false;
-
-        if (configMeta.ManagedMode is ManagedConfigurationMode.EDITABLE_DEFAULT)
-            return CleanupEditableDefaultState(configMeta, SettingName(propertyExpression), availablePlugins.ToList());
-
-        if (configMeta.LockedByConfigPluginId == Guid.Empty || !configMeta.IsLocked)
-            return false;
-
-        var plugin = availablePlugins.FirstOrDefault(x => x.Id == configMeta.LockedByConfigPluginId);
-        if (plugin is not null)
-            return false;
-
-        configMeta.ResetLockedConfiguration();
-        return true;
-    }
-
-    public static bool IsConfigurationLeftOver<TClass, TValue>(
-        Expression<Func<Data, TClass>> configSelection,
-        Expression<Func<TClass, ISet<TValue>>> propertyExpression,
-        IEnumerable<IAvailablePlugin> availablePlugins)
-    {
-        if (!TryGet(configSelection, propertyExpression, out var configMeta))
-            return false;
-
-        if (configMeta.LockedByConfigPluginId == Guid.Empty || !configMeta.IsLocked)
-            return false;
-
-        var plugin = availablePlugins.FirstOrDefault(x => x.Id == configMeta.LockedByConfigPluginId);
-        if (plugin is null)
-        {
-            configMeta.ResetLockedConfiguration();
-            return true;
-        }
-
-        return false;
-    }
+    private static bool IsPluginAvailable(Guid configPluginId, IReadOnlyCollection<IAvailablePlugin> availablePlugins) => availablePlugins.Any(x => x.Id == configPluginId);
 
     /// <summary>
-    /// Checks if a plugin contribution is left over from a configuration plugin that is no longer available.
-    /// If so, it clears the contribution and returns true.
+    /// Removes persisted managed states which belong to settings that are not registered anymore.
     /// </summary>
-    public static bool IsPluginContributionLeftOver<TClass, TValue>(
-        Expression<Func<Data, TClass>> configSelection,
-        Expression<Func<TClass, ISet<TValue>>> propertyExpression,
-        IEnumerable<IAvailablePlugin> availablePlugins)
+    /// <remarks>
+    /// Without this, states of removed or renamed settings would stay in the settings file forever.
+    /// </remarks>
+    private static bool RemoveUnknownManagedStates(IReadOnlySet<string> registeredSettingNames)
     {
-        if (!TryGet(configSelection, propertyExpression, out var configMeta))
-            return false;
+        var wasChanged = false;
+        var configurationData = SettingsManagerAccess.ConfigurationData;
 
-        if (!configMeta.HasPluginContribution || configMeta.PluginContributionByConfigPluginId == Guid.Empty)
-            return false;
-
-        var plugin = availablePlugins.FirstOrDefault(x => x.Id == configMeta.PluginContributionByConfigPluginId);
-        if (plugin is null)
+        foreach (var settingName in configurationData.ManagedLockedConfigurations.Keys.Where(x => !registeredSettingNames.Contains(x)).ToList())
         {
-            configMeta.ClearPluginContribution();
-            return true;
+            Log.LogInformation($"Removing the persisted lock of the setting '{settingName}': this setting does not exist anymore.");
+            configurationData.ManagedLockedConfigurations.Remove(settingName);
+            wasChanged = true;
         }
 
-        return false;
+        foreach (var settingName in configurationData.ManagedEditableDefaults.Keys.Where(x => !registeredSettingNames.Contains(x)).ToList())
+        {
+            Log.LogInformation($"Removing the persisted editable default of the setting '{settingName}': this setting does not exist anymore.");
+            configurationData.ManagedEditableDefaults.Remove(settingName);
+            wasChanged = true;
+        }
+
+        return wasChanged;
     }
 
-    public static bool IsConfigurationLeftOver<TClass>(
-        Expression<Func<Data, TClass>> configSelection,
-        Expression<Func<TClass, IDictionary<string, string>>> propertyExpression,
-        IEnumerable<IAvailablePlugin> availablePlugins)
-    {
-        if (!TryGet(configSelection, propertyExpression, out var configMeta))
-            return false;
-
-        if (configMeta.LockedByConfigPluginId == Guid.Empty || !configMeta.IsLocked)
-            return false;
-
-        var plugin = availablePlugins.FirstOrDefault(x => x.Id == configMeta.LockedByConfigPluginId);
-        if (plugin is null)
-        {
-            configMeta.ResetLockedConfiguration();
-            return true;
-        }
-
-        return false;
-    }
-
-    public static bool IsConfigurationLeftOver<TClass, TKey, TValue>(
-        Expression<Func<Data, TClass>> configSelection,
-        Expression<Func<TClass, Dictionary<TKey, TValue>>> propertyExpression,
-        IEnumerable<IAvailablePlugin> availablePlugins)
-        where TKey : struct, Enum
-        where TValue : struct, Enum
-    {
-        if (!TryGet(configSelection, propertyExpression, out var configMeta))
-            return false;
-
-        if (configMeta.ManagedMode is ManagedConfigurationMode.EDITABLE_DEFAULT)
-        {
-            var plugin = availablePlugins.FirstOrDefault(x => x.Id == configMeta.EditableDefaultByConfigPluginId);
-            if (plugin is null)
-            {
-                configMeta.ClearEditableDefaultConfiguration();
-                ClearEditableDefaultState(SettingName(propertyExpression));
-                return true;
-            }
-
-            return false;
-        }
-
-        if (configMeta.LockedByConfigPluginId == Guid.Empty || !configMeta.IsLocked)
-            return false;
-
-        var lockedPlugin = availablePlugins.FirstOrDefault(x => x.Id == configMeta.LockedByConfigPluginId);
-        if (lockedPlugin is null)
-        {
-            configMeta.ResetLockedConfiguration();
-            return true;
-        }
-
-        return false;
-    }
-    
     private static string Path<TClass, TValue>(Expression<Func<Data, TClass>> configSelection, Expression<Func<TClass, TValue>> propertyExpression)
     {
         var className = typeof(TClass).Name;
@@ -514,12 +378,9 @@ public static partial class ManagedConfiguration
 
     private static bool ClearEditableDefaultState(string settingName) => SettingsManagerAccess.ConfigurationData.ManagedEditableDefaults.Remove(settingName);
 
-    private static bool CleanupEditableDefaultState<TClass, TValue>(
-        ConfigMeta<TClass, TValue> configMeta,
-        string settingName,
-        IReadOnlyList<IAvailablePlugin> availablePlugins)
+    private static bool CleanupEditableDefaultState(ConfigMetaBase configMeta, IReadOnlyCollection<IAvailablePlugin> availablePlugins)
     {
-        if (!TryGetEditableDefaultState(settingName, out var editableDefaultState))
+        if (!TryGetEditableDefaultState(configMeta.SettingName, out var editableDefaultState))
         {
             if (configMeta.ManagedMode is not ManagedConfigurationMode.EDITABLE_DEFAULT)
                 return false;
@@ -528,11 +389,11 @@ public static partial class ManagedConfiguration
             return true;
         }
 
-        var plugin = availablePlugins.FirstOrDefault(x => x.Id == editableDefaultState.ConfigPluginId);
-        if (plugin is not null)
+        if (IsPluginAvailable(editableDefaultState.ConfigPluginId, availablePlugins))
             return false;
 
+        Log.LogInformation($"Clearing the editable default of the setting '{configMeta.SettingName}': the configuration plugin '{editableDefaultState.ConfigPluginId}' is not available anymore.");
         configMeta.ClearEditableDefaultConfiguration();
-        return ClearEditableDefaultState(settingName);
+        return ClearEditableDefaultState(configMeta.SettingName);
     }
 }
