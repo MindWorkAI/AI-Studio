@@ -1,8 +1,16 @@
 use axum::Json;
 use log::{error, info};
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use crate::api_token::APIToken;
+
+/// The directory the app creates its shareable plugin archives in. Keep in sync with
+/// PluginShareService.TEMPORARY_ARCHIVE_DIRECTORY on the .NET side.
+const SHARE_DIRECTORY_NAME: &str = "mindwork-ai-studio-plugin-shares";
+
+/// The file extension of plugin archives, without the leading dot. Keep in sync with
+/// PluginShareService.PLUGIN_FILE_EXTENSION on the .NET side.
+const SHARE_FILE_EXTENSION: &str = "mwplugin";
 
 #[derive(Deserialize)]
 pub struct ShareFileRequest {
@@ -25,6 +33,18 @@ pub async fn share_file(_token: APIToken, Json(request): Json<ShareFileRequest>)
         return failure(format!("The requested path is not an existing file: {}", path.to_string_lossy()));
     }
 
+    // Resolve the path before validating it, so a symlink with a matching name cannot point at an
+    // arbitrary file. We share the original path afterwards, though: on Windows, canonicalize
+    // returns a \\?\ path, which the WinRT storage APIs do not accept.
+    let resolved_path = match std::fs::canonicalize(&path) {
+        Ok(resolved_path) => resolved_path,
+        Err(error) => return failure(format!("The requested path could not be resolved: {error}")),
+    };
+
+    if !is_shareable_archive(&resolved_path) {
+        return failure(format!("The requested path is not a plugin archive created by AI Studio: {}", path.to_string_lossy()));
+    }
+
     let result = share_file_on_platform(path).await;
     match result {
         Ok(()) => {
@@ -40,6 +60,22 @@ pub async fn share_file(_token: APIToken, Json(request): Json<ShareFileRequest>)
             failure(issue)
         }
     }
+}
+
+/// Checks that a path points to a plugin archive the app itself created for sharing. This keeps the
+/// endpoint from handing arbitrary readable files to the operating system's share UI.
+///
+/// We match the directory by name instead of comparing it against the temporary directory: Rust and
+/// .NET do not have to agree on where that is, and a mismatch would break sharing entirely.
+fn is_shareable_archive(path: &Path) -> bool {
+    let has_archive_extension = path.extension().is_some_and(|extension| extension.eq_ignore_ascii_case(SHARE_FILE_EXTENSION));
+    if !has_archive_extension {
+        return false;
+    }
+
+    path.parent()
+        .and_then(|parent| parent.file_name())
+        .is_some_and(|directory_name| directory_name == SHARE_DIRECTORY_NAME)
 }
 
 fn failure(issue: impl Into<String>) -> Json<ShareFileResponse> {

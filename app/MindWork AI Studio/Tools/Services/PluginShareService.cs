@@ -11,9 +11,20 @@ public sealed class PluginShareService(NativeShareService nativeShareService, Ru
     
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(PluginShareService).Namespace, nameof(PluginShareService));
 
+    /// <remarks>
+    /// Keep in sync with SHARE_FILE_EXTENSION in runtime/src/share_sheet.rs: the runtime only hands
+    /// archives with this extension to the native share sheet.
+    /// </remarks>
     public const string PLUGIN_FILE_EXTENSION = ".mwplugin";
+
     private const string PLUGIN_FILE_NAME = "plugin.lua";
+
+    /// <remarks>
+    /// Keep in sync with SHARE_DIRECTORY_NAME in runtime/src/share_sheet.rs: the runtime only hands
+    /// archives from a directory with this name to the native share sheet.
+    /// </remarks>
     private const string TEMPORARY_ARCHIVE_DIRECTORY = "mindwork-ai-studio-plugin-shares";
+
     private const int TEMPORARY_ARCHIVE_RETENTION_HOURS = 24;
     private const int FILE_NAME_PREFIX_MAX_LEN = 80;
 
