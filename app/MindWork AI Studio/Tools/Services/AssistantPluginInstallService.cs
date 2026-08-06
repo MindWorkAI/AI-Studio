@@ -4,16 +4,9 @@ using AIStudio.Tools.AssistantSessions;
 using AIStudio.Tools.Media;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.PluginSystem.Assistants;
+using AIStudio.Tools.Rust;
 
 namespace AIStudio.Tools.Services;
-
-public sealed record AssistantPluginInstallResult(bool Success, Guid PluginId, string PluginName, string PluginDirectory, bool ReplacedExisting, string Issue);
-
-public sealed record AssistantPluginCheckResult(bool Success, Guid PluginId, string PluginName, string Issue);
-
-public sealed record AssistantPluginDeleteResult(bool Success, Guid PluginId, string PluginName, string PluginDirectory, string Issue);
-
-public sealed record AssistantPluginUpdateResult(bool Success, Guid PluginId, string PluginName, string PluginDirectory, string Issue);
 
 public sealed class AssistantPluginInstallService
 {
@@ -22,6 +15,7 @@ public sealed class AssistantPluginInstallService
     private const string PLUGIN_FILE_NAME = "plugin.lua";
     private const string ASSISTANT_BUILDER_DIRECTORY_PREFIX = "assistant-builder";
     private const string DELETE_BACKUP_DIRECTORY = ".plugin-delete-backups";
+    private const string INSTALL_BACKUP_DIRECTORY = ".plugin-install-backups";
     private const int DIRECTORY_PREFIX_MAX_LEN = 80;
     
     private readonly ILogger<AssistantPluginInstallService> logger;
@@ -31,6 +25,8 @@ public sealed class AssistantPluginInstallService
     private readonly SemaphoreSlim installSemaphore = new(1, 1);
     
     private static AssistantPluginInstallResult Error(string issue) => new(false, Guid.Empty, string.Empty, string.Empty, false, issue);
+
+    private static AssistantPluginInstallResult CancelledByUser() => new(false, Guid.Empty, string.Empty, string.Empty, false, string.Empty, true);
     
     private static AssistantPluginCheckResult CheckError(string issue) => new(false, Guid.Empty, string.Empty, issue);
     
@@ -38,11 +34,7 @@ public sealed class AssistantPluginInstallService
 
     private static AssistantPluginUpdateResult UpdateError(IPluginMetadata plugin, string pluginDirectory, string issue) => new(false, plugin.Id, plugin.Name, pluginDirectory, issue);
 
-    public AssistantPluginInstallService(
-        ILogger<AssistantPluginInstallService> logger,
-        SettingsManager settingsManager,
-        AssistantSessionService assistantSessionService,
-        MediaTranscriptionService mediaTranscriptionService)
+    public AssistantPluginInstallService(ILogger<AssistantPluginInstallService> logger, SettingsManager settingsManager, AssistantSessionService assistantSessionService, MediaTranscriptionService mediaTranscriptionService)
     {
         this.logger = logger;
         this.settingsManager = settingsManager;
@@ -127,76 +119,104 @@ public sealed class AssistantPluginInstallService
             return Error(rootIssue);
 
         await this.installSemaphore.WaitAsync(token);
-        AssistantPluginValidationResult validation;
         try
         {
-            validation = await this.ValidateIntoStagingAsync(lua, token);
+            var validation = await this.ValidateIntoStagingAsync(lua, token);
             if (!validation.Success || validation.AssistantPlugin is null)
                 return Error(validation.Issue);
 
-            Directory.CreateDirectory(assistantPluginsRoot);
+            return await this.InstallStagedAssistantAsync(assistantPluginsRoot, validation, token);
+        }
+        finally
+        {
+            this.installSemaphore.Release();
+        }
+    }
 
-            var stagingDirectory = validation.StagingDirectory;
-            var assistantPlugin = validation.AssistantPlugin;
-            string? backupDirectory = null;
-            string? finalDirectory = null;
-            var replacedExisting = false;
+    /// <summary>
+    /// Installs an assistant plugin archive that contains exactly one <c>plugin.lua</c> file.
+    /// Companion files are validated from and moved with the same staging directory.
+    /// </summary>
+    /// <param name="archivePath">The local <c>.mwplugin</c> or <c>.zip</c> archive path.</param>
+    /// <param name="confirmAsync">
+    /// Asks the user whether the validated archive may be installed. It is called after all checks
+    /// passed and before anything gets written. Returning false aborts the installation.
+    /// </param>
+    /// <param name="token">Cancellation token for extraction, validation, file IO, and plugin reload.</param>
+    /// <returns>Installation result that contains success state, installed plugin metadata, and a user-facing issue when installation failed.</returns>
+    public async Task<AssistantPluginInstallResult> InstallArchiveAsync(string archivePath, Func<PluginImportPreview, Task<bool>> confirmAsync, CancellationToken token)
+    {
+        if (!this.settingsManager.ConfigurationData.App.AllowUserToImportPlugins)
+            return Error(TB("Your organization has disabled importing plugins."));
 
+        if (!FileTypes.IsAllowedPath(archivePath, FileTypes.PLUGIN_ARCHIVE))
+            return Error(TB("Please select a plugin archive with the extension .mwplugin or .zip."));
+
+        if (!File.Exists(archivePath))
+            return Error(TB("The selected plugin archive does not exist."));
+
+        if (!TryGetAssistantPluginsRoot(out var assistantPluginsRoot, out var rootIssue))
+            return Error(rootIssue);
+
+        if (!PluginFactory.IsInitialized)
+            return Error(TB("The plugin system is not initialized yet."));
+
+        await this.installSemaphore.WaitAsync(token);
+        var stagingDirectory = Path.Join(Path.GetTempPath(), $"assistant-plugin-import.staging-{Guid.NewGuid():N}");
+        try
+        {
             try
             {
-                finalDirectory = DetermineFinalDirectory(assistantPluginsRoot, assistantPlugin);
-                if (!IsPathInsideDirectory(assistantPluginsRoot, finalDirectory))
-                    return Error(TB("The resolved plugin directory is outside the assistant plugin directory."));
+                token.ThrowIfCancellationRequested();
+                PluginArchive.Extract(archivePath, stagingDirectory);
 
-                if (Directory.Exists(finalDirectory))
-                {
-                    replacedExisting = true;
-                    backupDirectory = Path.Join(assistantPluginsRoot, $".{Path.GetFileName(finalDirectory)}.backup-{Guid.NewGuid():N}");
-                    Directory.Move(finalDirectory, backupDirectory);
-                }
+                var pluginFiles = Directory.EnumerateFiles(stagingDirectory, PLUGIN_FILE_NAME, SearchOption.AllDirectories).ToArray();
+                if (pluginFiles.Length != 1)
+                    return Error(TB("The plugin archive must contain exactly one plugin.lua file."));
 
-                Directory.Move(stagingDirectory, finalDirectory);
-                if (!string.IsNullOrWhiteSpace(backupDirectory) && Directory.Exists(backupDirectory))
-                {
-                    try
-                    {
-                        Directory.Delete(backupDirectory, true);
-                    }
-                    catch (Exception e)
-                    {
-                        this.logger.LogError(e, $"Failed to delete assistant plugin backup directory '{backupDirectory}'.");
-                    }
-                }
+                var pluginFile = pluginFiles[0];
+                var pluginDirectory = Path.GetDirectoryName(pluginFile)!;
+                var pluginCode = await File.ReadAllTextAsync(pluginFile, Encoding.UTF8, token);
+                var validation = await ValidateAssistantPluginCodeAsync(
+                    pluginDirectory,
+                    pluginCode.Trim(),
+                    TB("Currently, only assistant plugins can be imported."),
+                    TB("The imported assistant plugin is invalid. Issue: {0}"),
+                    TB("The imported assistant plugin uses the ID of another installed plugin."),
+                    token);
 
-                await PluginFactory.LoadAll(token);
-                this.logger.LogInformation($"Installed assistant plugin '{assistantPlugin.Name}' ({assistantPlugin.Id}) to '{finalDirectory}'.");
-                return new(true, assistantPlugin.Id, assistantPlugin.Name, finalDirectory, replacedExisting, string.Empty);
+                if (!validation.Success || validation.AssistantPlugin is null)
+                    return Error(validation.Issue);
+
+                // A plugin the user imports by hand never comes from a config server. We reject such
+                // archives because AI Studio trusts this self-declared flag: an imported plugin
+                // claiming it would be neither replaceable nor deletable through the user interface:
+                if (validation.AssistantPlugin.IsManagedByConfigServer)
+                    return Error(TB("This plugin archive declares itself as managed by a config server. Only the IT department of your organization might deploy such plugins."));
+
+                // The archive would replace an existing plugin: reject it when that plugin belongs
+                // to the IT department. We check this before asking the user, so that the
+                // confirmation never offers something we would refuse afterwards anyway:
+                var replacementIssue = GetAssistantReplacementIssue(validation.AssistantPlugin.Id);
+                if (!string.IsNullOrEmpty(replacementIssue))
+                    return Error(replacementIssue);
+
+                // Everything is validated, but nothing was written yet. This is the point where the
+                // user decides, because the plugin code comes from an untrusted source:
+                if (!await confirmAsync(CreateImportPreview(validation.AssistantPlugin)))
+                    return CancelledByUser();
+
+                return await this.InstallStagedAssistantAsync(assistantPluginsRoot, validation with { StagingDirectory = pluginDirectory }, token);
             }
-            catch (Exception e)
+            catch (Exception e) when (e is not OperationCanceledException)
             {
-                this.logger.LogError(e, "Failed to install assistant plugin.");
-
-                if (!string.IsNullOrWhiteSpace(backupDirectory) && Directory.Exists(backupDirectory) && !string.IsNullOrWhiteSpace(finalDirectory) && !Directory.Exists(finalDirectory))
-                {
-                    try
-                    {
-                        Directory.Move(backupDirectory, finalDirectory);
-                    }
-                    catch (Exception restoreException)
-                    {
-                        this.logger.LogError(restoreException, "Failed to restore the previous assistant plugin after a failed installation.");
-                    }
-                }
-
+                this.logger.LogError(e, "Failed to extract or validate assistant plugin archive '{ArchivePath}'.", archivePath);
                 return Error(string.Format(TB("Unexpected error: {0}"), e.Message));
-            }
-            finally
-            {
-                this.TryDeleteStagingDirectory(stagingDirectory);
             }
         }
         finally
         {
+            this.TryDeleteStagingDirectory(stagingDirectory);
             this.installSemaphore.Release();
         }
     }
@@ -289,9 +309,10 @@ public sealed class AssistantPluginInstallService
             Directory.Move(pluginDirectory, backupDirectory);
 
             wasEnabled = this.settingsManager.ConfigurationData.EnabledPlugins.Remove(plugin.Id);
-            removedAudits = this.settingsManager.ConfigurationData.AssistantPluginAudits
-                .Where(audit => audit.PluginId == plugin.Id)
-                .ToList();
+            removedAudits =
+            [
+                .. this.settingsManager.ConfigurationData.AssistantPluginAudits.Where(audit => audit.PluginId == plugin.Id)
+            ];
 
             if (removedAudits.Count > 0)
                 this.settingsManager.ConfigurationData.AssistantPluginAudits.RemoveAll(audit => audit.PluginId == plugin.Id);
@@ -412,6 +433,79 @@ public sealed class AssistantPluginInstallService
         }
     }
 
+    private async Task<AssistantPluginInstallResult> InstallStagedAssistantAsync(string assistantPluginsRoot, AssistantPluginValidationResult validation, CancellationToken token)
+    {
+        var stagingDirectory = validation.StagingDirectory;
+        var assistantPlugin = validation.AssistantPlugin!;
+        string? backupDirectory = null;
+        string? finalDirectory = null;
+        var replacedExisting = false;
+        var movedIntoPlace = false;
+
+        try
+        {
+            Directory.CreateDirectory(assistantPluginsRoot);
+            finalDirectory = DetermineFinalDirectory(assistantPluginsRoot, assistantPlugin);
+            if (!IsPathInsideDirectory(assistantPluginsRoot, finalDirectory))
+                return Error(TB("The resolved plugin directory is outside the assistant plugin directory."));
+
+            var replacementIssue = GetAssistantReplacementIssue(assistantPlugin.Id);
+            if (!string.IsNullOrWhiteSpace(replacementIssue))
+                return Error(replacementIssue);
+
+            if (Directory.Exists(finalDirectory))
+            {
+                replacedExisting = true;
+
+                // The backup goes to a directory outside the plugin root, so the plugin loader
+                // cannot discover it during the reload below. Otherwise, the previous version
+                // would be loaded a second time, next to the version we are installing:
+                backupDirectory = CreateInstallBackupDirectory(assistantPlugin);
+                Directory.CreateDirectory(Path.GetDirectoryName(backupDirectory)!);
+                Directory.Move(finalDirectory, backupDirectory);
+            }
+
+            Directory.Move(stagingDirectory, finalDirectory);
+            movedIntoPlace = true;
+            await PluginFactory.LoadAll(token);
+
+            if (!string.IsNullOrWhiteSpace(backupDirectory))
+                TryDeleteDirectory(backupDirectory, "assistant plugin backup", this.logger);
+
+            this.logger.LogInformation("Installed assistant plugin '{PluginName}' ({PluginId}) to '{PluginDirectory}'.", assistantPlugin.Name, assistantPlugin.Id, finalDirectory);
+            return new(true, assistantPlugin.Id, assistantPlugin.Name, finalDirectory, replacedExisting, string.Empty);
+        }
+        catch (Exception e)
+        {
+            this.logger.LogError(e, "Failed to install assistant plugin.");
+
+            // Only remove the target directory when this installation actually moved the plugin
+            // there. Otherwise, when moving the previous plugin into the backup directory failed,
+            // we would delete the still intact previous plugin:
+            if (movedIntoPlace && !string.IsNullOrWhiteSpace(finalDirectory) && Directory.Exists(finalDirectory))
+                TryDeleteDirectory(finalDirectory, "failed assistant plugin installation", this.logger);
+
+            if (!string.IsNullOrWhiteSpace(backupDirectory) && Directory.Exists(backupDirectory) && !string.IsNullOrWhiteSpace(finalDirectory) && !Directory.Exists(finalDirectory))
+            {
+                try
+                {
+                    Directory.Move(backupDirectory, finalDirectory);
+                    await PluginFactory.LoadAll(CancellationToken.None);
+                }
+                catch (Exception restoreException)
+                {
+                    this.logger.LogError(restoreException, "Failed to restore the previous assistant plugin after a failed installation.");
+                }
+            }
+
+            return Error(string.Format(TB("Unexpected error: {0}"), e.Message));
+        }
+        finally
+        {
+            this.TryDeleteStagingDirectory(stagingDirectory);
+        }
+    }
+
     private async Task<AssistantPluginValidationResult> ValidateIntoStagingAsync(string lua, CancellationToken token)
     {
         if (string.IsNullOrWhiteSpace(lua))
@@ -429,12 +523,12 @@ public sealed class AssistantPluginInstallService
             var stagedPluginFile = Path.Join(stagingDirectory, PLUGIN_FILE_NAME);
             await File.WriteAllTextAsync(stagedPluginFile, pluginCode, Encoding.UTF8, token);
 
-            var validation = await this.ValidateAssistantPluginCodeAsync(
+            var validation = await ValidateAssistantPluginCodeAsync(
                 stagingDirectory,
                 pluginCode,
                 TB("The generated plugin is not an assistant plugin. Issue: {0}"),
                 TB("The generated assistant plugin is invalid. Issue: {0}"),
-                TB("The generated assistant plugin uses the ID of an internal AI Studio plugin."),
+                TB("The generated assistant plugin uses the ID of another installed plugin."),
                 token);
 
             if (!validation.Success || validation.AssistantPlugin is null)
@@ -460,12 +554,12 @@ public sealed class AssistantPluginInstallService
 
         try
         {
-            return await this.ValidateAssistantPluginCodeAsync(
+            return await ValidateAssistantPluginCodeAsync(
                 pluginDirectory,
                 lua.Trim(),
                 TB("The edited plugin is not an assistant plugin. Issue: {0}"),
                 TB("The edited assistant plugin is invalid. Issue: {0}"),
-                TB("The edited assistant plugin uses the ID of an internal AI Studio plugin."),
+                TB("The edited assistant plugin uses the ID of another installed plugin."),
                 token);
         }
         catch (Exception e)
@@ -475,23 +569,25 @@ public sealed class AssistantPluginInstallService
         }
     }
 
-    private async Task<AssistantPluginValidationResult> ValidateAssistantPluginCodeAsync(
-        string pluginDirectory,
-        string pluginCode,
-        string notAssistantIssue,
-        string invalidAssistantIssue,
-        string internalPluginIdIssue,
-        CancellationToken token)
+    private static async Task<AssistantPluginValidationResult> ValidateAssistantPluginCodeAsync(string pluginDirectory, string pluginCode,
+        string notAssistantIssue, string invalidAssistantIssue, string conflictingPluginIdIssue, CancellationToken token)
     {
-        var plugin = await PluginFactory.Load(pluginDirectory, pluginCode, token);
+        // The plugin is not installed yet: it sits in a staging directory outside the installed
+        // plugins directory. We allow that directory as the module base, so the plugin can load its
+        // own Lua modules, e.g., an icon.lua, while we validate it:
+        var plugin = await PluginFactory.Load(pluginDirectory, pluginCode, token, pluginDirectory);
         if (plugin is not PluginAssistants assistantPlugin)
             return AssistantPluginValidationResult.Failure(string.Format(notAssistantIssue, string.Join("; ", plugin.Issues)));
 
         if (!assistantPlugin.IsValid)
             return AssistantPluginValidationResult.Failure(string.Format(invalidAssistantIssue, string.Join("; ", assistantPlugin.Issues)));
 
-        if (PluginFactory.AvailablePlugins.Any(availablePlugin => availablePlugin.Type is PluginType.ASSISTANT && availablePlugin.Id == assistantPlugin.Id && availablePlugin.IsInternal))
-            return AssistantPluginValidationResult.Failure(internalPluginIdIssue);
+        // Plugin IDs must be unique across all plugin types: several lookups resolve a plugin by its
+        // ID alone, e.g., the base language plugin in PluginFactory.Starting. An assistant plugin
+        // carrying the ID of a language or configuration plugin would break those lookups. Reusing
+        // the ID of another local assistant plugin stays allowed: that is how updating one works.
+        if (PluginFactory.AvailablePlugins.Any(availablePlugin => availablePlugin.Id == assistantPlugin.Id && (availablePlugin.IsInternal || availablePlugin.Type is not PluginType.ASSISTANT)))
+            return AssistantPluginValidationResult.Failure(conflictingPluginIdIssue);
 
         return new(true, string.Empty, assistantPlugin, string.Empty);
     }
@@ -547,20 +643,61 @@ public sealed class AssistantPluginInstallService
             : TB("The assistant plugin directory does not exist.");
     }
 
-    private void TryDeleteStagingDirectory(string stagingDirectory)
-    {
-        TryDeleteDirectory(stagingDirectory, "assistant plugin staging", this.logger);
-    }
-    
+    private void TryDeleteStagingDirectory(string stagingDirectory) => TryDeleteDirectory(stagingDirectory, "assistant plugin staging", this.logger);
+
     private static string DetermineFinalDirectory(string assistantPluginsRoot, PluginAssistants assistantPlugin)
     {
-        var existingPlugin = PluginFactory.AvailablePlugins
-            .OfType<IAvailablePlugin>()
-            .FirstOrDefault(plugin => plugin.Type is PluginType.ASSISTANT && plugin.Id == assistantPlugin.Id && !plugin.IsInternal);
-
+        var existingPlugin = FindReplaceableAssistantPlugin(assistantPlugin.Id);
         return existingPlugin is not null
             ? existingPlugin.LocalPath
             : Path.Join(assistantPluginsRoot, CreatePluginDirectoryName(assistantPlugin));
+    }
+
+    /// <summary>
+    /// Finds the local assistant plugin that an installation with the given ID would replace.
+    /// </summary>
+    /// <param name="pluginId">The ID of the assistant plugin about to be installed.</param>
+    /// <returns>The plugin that would be replaced, or null when the installation adds a new plugin.</returns>
+    private static IAvailablePlugin? FindReplaceableAssistantPlugin(Guid pluginId) => PluginFactory.AvailablePlugins
+        .OfType<IAvailablePlugin>()
+        .FirstOrDefault(plugin => plugin.Type is PluginType.ASSISTANT && plugin.Id == pluginId && !plugin.IsInternal);
+
+    /// <summary>
+    /// Collects the metadata an archive declares about itself, together with the information about
+    /// the installed plugin it would replace.
+    /// </summary>
+    /// <param name="assistantPlugin">The validated assistant plugin from the archive.</param>
+    /// <returns>The preview shown to the user before the installation starts.</returns>
+    private static PluginImportPreview CreateImportPreview(PluginAssistants assistantPlugin) => new(assistantPlugin, FindReplaceableAssistantPlugin(assistantPlugin.Id));
+
+    /// <summary>
+    /// Checks whether an installation may replace the assistant plugin that currently uses the given ID.
+    /// Plugins deployed by a Config Server belong to the organization's IT, so neither an import nor
+    /// the Assistant Builder may overwrite them.
+    /// </summary>
+    /// <param name="pluginId">The ID of the assistant plugin about to be installed.</param>
+    /// <returns>A user-facing issue when the existing plugin must not be replaced, an empty string otherwise.</returns>
+    private static string GetAssistantReplacementIssue(Guid pluginId)
+    {
+        var existingPlugin = FindReplaceableAssistantPlugin(pluginId);
+        if (existingPlugin is null)
+            return string.Empty;
+
+        if (existingPlugin.IsManagedByConfigServer)
+            return TB("Config server managed assistant plugins cannot be replaced.");
+
+        if (string.IsNullOrWhiteSpace(existingPlugin.LocalPath))
+            return string.Empty;
+
+        // The metadata above and the running plugin read the same Lua field. We check both, though,
+        // just like the deletion path does:
+        var runningPlugin = PluginFactory.RunningPlugins
+            .OfType<PluginAssistants>()
+            .FirstOrDefault(candidate => candidate.Id == pluginId && IsSameDirectory(candidate.PluginPath, existingPlugin.LocalPath));
+
+        return runningPlugin?.IsManagedByConfigServer is true
+            ? TB("Config server managed assistant plugins cannot be replaced.")
+            : string.Empty;
     }
 
     private static string CreatePluginDirectoryName(PluginAssistants assistantPlugin)
@@ -625,6 +762,12 @@ public sealed class AssistantPluginInstallService
     private static string CreateDeleteBackupDirectory(IAvailablePlugin plugin)
     {
         var backupRoot = Path.Join(SettingsManager.DataDirectory, DELETE_BACKUP_DIRECTORY);
+        return Path.Join(backupRoot, $"assistant-{plugin.Id:N}-{Guid.NewGuid():N}");
+    }
+
+    private static string CreateInstallBackupDirectory(IPluginMetadata plugin)
+    {
+        var backupRoot = Path.Join(SettingsManager.DataDirectory, INSTALL_BACKUP_DIRECTORY);
         return Path.Join(backupRoot, $"assistant-{plugin.Id:N}-{Guid.NewGuid():N}");
     }
 

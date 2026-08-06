@@ -11,4 +11,6 @@ public static class Identifier
     public const string EMPTY_STRING_ANALYZER = $"{Tools.ID_PREFIX}0007";
     public const string LOCAL_CONSTANTS_ANALYZER = $"{Tools.ID_PREFIX}0008";
     public const string STATIC_SERVICE_PROVIDER_CACHE_ANALYZER = $"{Tools.ID_PREFIX}0009";
+    public const string CANONICAL_JSON_CONFIGURATION_ANALYZER = $"{Tools.ID_PREFIX}0010";
+    public const string CANONICAL_JSON_SHAPE_ANALYZER = $"{Tools.ID_PREFIX}0011";
 }

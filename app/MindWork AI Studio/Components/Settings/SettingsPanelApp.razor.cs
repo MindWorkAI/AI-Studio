@@ -74,7 +74,7 @@ public partial class SettingsPanelApp : SettingsPanelBase
     private async Task GenerateEncryptionSecret()
     {
         var secret = EnterpriseEncryption.GenerateSecret();
-        await this.RustService.CopyText2Clipboard(this.Snackbar, secret);
+        await this.RustService.CopyText2Clipboard(secret);
     }
     
     private string GetStartPageHelpText()

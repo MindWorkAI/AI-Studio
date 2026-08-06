@@ -110,7 +110,7 @@ public partial class SettingsDialogDataSources : SettingsDialogBase
         {
             var publicLuaCode = eriDataSource.ExportAsConfigurationSection();
             if (!string.IsNullOrWhiteSpace(publicLuaCode))
-                await this.RustService.CopyText2Clipboard(this.Snackbar, publicLuaCode);
+                await this.RustService.CopyText2Clipboard(publicLuaCode);
 
             return;
         }
@@ -179,7 +179,7 @@ public partial class SettingsDialogDataSources : SettingsDialogBase
         if (string.IsNullOrWhiteSpace(luaCode))
             return;
 
-        await this.RustService.CopyText2Clipboard(this.Snackbar, luaCode);
+        await this.RustService.CopyText2Clipboard(luaCode);
     }
     
     private async Task EditDataSource(IDataSource dataSource)
