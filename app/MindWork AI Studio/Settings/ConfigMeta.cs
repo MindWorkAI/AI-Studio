@@ -31,7 +31,7 @@ public record ConfigMeta<TClass, TValue> : ConfigMetaBase
     /// <summary>
     /// The persisted name of the configuration setting.
     /// </summary>
-    private string SettingName { get; }
+    public string SettingName { get; }
 	
     /// <summary>
     /// Indicates whether the configuration is locked by a configuration plugin.

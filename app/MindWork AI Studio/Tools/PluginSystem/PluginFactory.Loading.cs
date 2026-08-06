@@ -1,5 +1,7 @@
+using System.Linq.Expressions;
 using System.Text;
 using AIStudio.Settings;
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools.PluginSystem.Assistants;
 using Lua;
 using Lua.Standard;
@@ -378,72 +380,10 @@ public static partial class PluginFactory
         if(ManagedConfiguration.IsConfigurationLeftOver(x => x.AssistantPluginAudit, x => x.EnterpriseApprovedPlugins, AVAILABLE_PLUGINS))
             wasConfigurationChanged = true;
 
-        // Compatibility shim: repair config-only values that may predate persisted lock ownership.
-        // these values can only be set by a config plugin and therefore cause the biggest problem, since the user can not change them himself
-        if (ManagedConfiguration.TryGet(x => x.App, x => x.ShowIntroduction, out var showIntroductionMeta)
-            && showIntroductionMeta.ManagedMode is null
-            && !SettingsManagerAccess.ConfigurationData.App.ShowIntroduction)
-        {
-            showIntroductionMeta.ResetLockedConfiguration();
+        // Compatibility shim, see documentation/compatibility-shims/2026-08-orphaned-config-locks.md (remove after 2027-08-06):
+        if (RepairLegacyConfigOnlySettings())
             wasConfigurationChanged = true;
-        }
 
-        if (ManagedConfiguration.TryGet(x => x.App, x => x.ShowQuickStartGuide, out var showQuickStartGuideMeta)
-            && showQuickStartGuideMeta.ManagedMode is null
-            && !SettingsManagerAccess.ConfigurationData.App.ShowQuickStartGuide)
-        {
-            showQuickStartGuideMeta.ResetLockedConfiguration();
-            wasConfigurationChanged = true;
-        }
-
-        if (ManagedConfiguration.TryGet(x => x.App, x => x.ShowLastChangelog, out var showLastChangelogMeta)
-            && showLastChangelogMeta.ManagedMode is null
-            && !SettingsManagerAccess.ConfigurationData.App.ShowLastChangelog)
-        {
-            showLastChangelogMeta.ResetLockedConfiguration();
-            wasConfigurationChanged = true;
-        }
-
-        if (ManagedConfiguration.TryGet(x => x.App, x => x.ShowVision, out var showVisionMeta)
-            && showVisionMeta.ManagedMode is null
-            && !SettingsManagerAccess.ConfigurationData.App.ShowVision)
-        {
-            showVisionMeta.ResetLockedConfiguration();
-            wasConfigurationChanged = true;
-        }
-
-        if (ManagedConfiguration.TryGet(x => x.App, x => x.AllowUserToAddProvider, out var allowUserToAddProviderMeta)
-            && allowUserToAddProviderMeta.ManagedMode is null
-            && !SettingsManagerAccess.ConfigurationData.App.AllowUserToAddProvider)
-        {
-            allowUserToAddProviderMeta.ResetLockedConfiguration();
-            wasConfigurationChanged = true;
-        }
-
-        if (ManagedConfiguration.TryGet(x => x.App, x => x.HiddenAssistants, out var hiddenAssistantsMeta)
-            && hiddenAssistantsMeta.ManagedMode is null
-            && SettingsManagerAccess.ConfigurationData.App.HiddenAssistants.Count > 0)
-        {
-            hiddenAssistantsMeta.ResetLockedConfiguration();
-            wasConfigurationChanged = true;
-        }
-
-        if (ManagedConfiguration.TryGet(x => x.DataSourceSecurity, x => x.TrustedProviderIds, out var trustedProviderIdsMeta)
-            && trustedProviderIdsMeta.ManagedMode is null
-            && SettingsManagerAccess.ConfigurationData.DataSourceSecurity.TrustedProviderIds.Count > 0)
-        {
-            trustedProviderIdsMeta.ResetLockedConfiguration();
-            wasConfigurationChanged = true;
-        }
-
-        if (ManagedConfiguration.TryGet(x => x.AssistantPluginAudit, x => x.EnterpriseApprovedPlugins, out var enterpriseApprovedPluginsMeta)
-            && enterpriseApprovedPluginsMeta.ManagedMode is null
-            && SettingsManagerAccess.ConfigurationData.AssistantPluginAudit.EnterpriseApprovedPlugins.Count > 0)
-        {
-            enterpriseApprovedPluginsMeta.ResetLockedConfiguration();
-            wasConfigurationChanged = true;
-        }
-        
         if (wasConfigurationChanged)
         {
             await SettingsManagerAccess.StoreSettings();
@@ -525,5 +465,101 @@ public static partial class PluginFactory
             default:
                 return new NoPlugin("This plugin type is not supported yet. Please try again with a future version of AI Studio.");
         }
+    }
+
+    //
+    // =========================================================
+    // Compatibility shim. Please read the related document
+    // before you change anything here:
+    //
+    //   documentation/compatibility-shims/2026-08-orphaned-config-locks.md
+    //
+    // Remove after 2027-08-06. Everything from here down to the
+    // end of this file belongs to the shim and can be deleted
+    // in one piece.
+    // =========================================================
+    //
+
+    /// <summary>
+    /// Repairs settings that were configured by a configuration plugin which was removed before
+    /// AI Studio started to persist the configuration ownership.
+    /// </summary>
+    /// <remarks>
+    /// All settings listed here share two properties: a configuration plugin can set them, and
+    /// there is no user interface to change them back. Therefore, any value that differs from the
+    /// default must originate from a configuration plugin. When such a setting is not managed
+    /// anymore, its plugin is gone and we restore the default value.<br/><br/>
+    /// This is only valid as long as none of these settings gets a user interface. When you add
+    /// one, remove the setting from this method and from the shim's document.
+    /// </remarks>
+    /// <returns>True when at least one setting was repaired, otherwise false.</returns>
+    private static bool RepairLegacyConfigOnlySettings()
+    {
+        var data = SettingsManagerAccess.ConfigurationData;
+        var wasRepaired = false;
+
+        // Settings which are enabled by default and which only a configuration plugin can switch off:
+        wasRepaired |= RepairLegacyConfigOnlyFlag(x => x.App, x => x.ShowIntroduction, data.App.ShowIntroduction);
+        wasRepaired |= RepairLegacyConfigOnlyFlag(x => x.App, x => x.ShowQuickStartGuide, data.App.ShowQuickStartGuide);
+        wasRepaired |= RepairLegacyConfigOnlyFlag(x => x.App, x => x.ShowLastChangelog, data.App.ShowLastChangelog);
+        wasRepaired |= RepairLegacyConfigOnlyFlag(x => x.App, x => x.ShowVision, data.App.ShowVision);
+        wasRepaired |= RepairLegacyConfigOnlyFlag(x => x.App, x => x.AllowUserToAddProvider, data.App.AllowUserToAddProvider);
+        wasRepaired |= RepairLegacyConfigOnlyFlag(x => x.App, x => x.AllowUserToImportPlugins, data.App.AllowUserToImportPlugins);
+        wasRepaired |= RepairLegacyConfigOnlyFlag(x => x.App, x => x.AllowUserToSharePlugins, data.App.AllowUserToSharePlugins);
+
+        // Collections which stay empty unless a configuration plugin fills them:
+        wasRepaired |= RepairLegacyConfigOnlyCollection(x => x.App, x => x.HiddenAssistants, data.App.HiddenAssistants.Count);
+        wasRepaired |= RepairLegacyConfigOnlyCollection(x => x.DataSourceSecurity, x => x.TrustedProviderIds, data.DataSourceSecurity.TrustedProviderIds.Count);
+        wasRepaired |= RepairLegacyConfigOnlyCollection(x => x.AssistantPluginAudit, x => x.EnterpriseApprovedPlugins, data.AssistantPluginAudit.EnterpriseApprovedPlugins.Count);
+
+        return wasRepaired;
+    }
+
+    /// <summary>
+    /// Restores the default of a boolean setting when it is switched off without being managed.
+    /// </summary>
+    private static bool RepairLegacyConfigOnlyFlag<TClass>(Expression<Func<Data, TClass>> configSelection, Expression<Func<TClass, bool>> propertyExpression, bool currentValue)
+    {
+        if (currentValue)
+            return false;
+
+        if (!ManagedConfiguration.TryGet(configSelection, propertyExpression, out var configMeta) || configMeta.ManagedMode is not null)
+            return false;
+
+        LOG.LogWarning($"Repairing the setting '{configMeta.SettingName}': it was switched off by a configuration plugin which is not available anymore.");
+        configMeta.ResetLockedConfiguration();
+        return true;
+    }
+
+    /// <summary>
+    /// Clears a set-based setting when it contains entries without being managed.
+    /// </summary>
+    private static bool RepairLegacyConfigOnlyCollection<TClass, TValue>(Expression<Func<Data, TClass>> configSelection, Expression<Func<TClass, ISet<TValue>>> propertyExpression, int currentCount)
+    {
+        if (currentCount is 0)
+            return false;
+
+        if (!ManagedConfiguration.TryGet(configSelection, propertyExpression, out var configMeta) || configMeta.ManagedMode is not null)
+            return false;
+
+        LOG.LogWarning($"Repairing the setting '{configMeta.SettingName}': it was filled by a configuration plugin which is not available anymore.");
+        configMeta.ResetLockedConfiguration();
+        return true;
+    }
+
+    /// <summary>
+    /// Clears a list-based setting when it contains entries without being managed.
+    /// </summary>
+    private static bool RepairLegacyConfigOnlyCollection<TClass, TValue>(Expression<Func<Data, TClass>> configSelection, Expression<Func<TClass, IList<TValue>>> propertyExpression, int currentCount)
+    {
+        if (currentCount is 0)
+            return false;
+
+        if (!ManagedConfiguration.TryGet(configSelection, propertyExpression, out var configMeta) || configMeta.ManagedMode is not null)
+            return false;
+
+        LOG.LogWarning($"Repairing the setting '{configMeta.SettingName}': it was filled by a configuration plugin which is not available anymore.");
+        configMeta.ResetLockedConfiguration();
+        return true;
     }
 }
