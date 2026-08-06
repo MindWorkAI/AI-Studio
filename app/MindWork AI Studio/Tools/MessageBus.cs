@@ -91,6 +91,8 @@ public sealed class MessageBus
     
     public Task SendSuccess(DataSuccessMessage dataSuccessMessage) => this.SendMessage(null, Event.SHOW_SUCCESS, dataSuccessMessage);
 
+    public Task SendInfo(DataInfoMessage dataInfoMessage) => this.SendMessage(null, Event.SHOW_INFO, dataInfoMessage);
+
     public void DeferMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data = default)
     {
         if (this.deferredMessages.TryGetValue(triggeredEvent, out var queue))

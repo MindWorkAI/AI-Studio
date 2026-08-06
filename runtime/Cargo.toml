@@ -55,6 +55,7 @@ strum_macros = "0.28.0"
 sysinfo = "0.39.6"
 bytes = "1.12.1"
 qdrant-edge = "0.7.2"
+image = { version = "0.25.10", default-features = false, features = ["jpeg", "png", "webp"] }
 
 [patch.crates-io]
 # Issue: It was not possible to build qdrant-edge for macOS. See PR 9312: https://github.com/qdrant/qdrant/pull/9312
@@ -68,9 +69,14 @@ permutation_iterator = { git = "https://github.com/SommerEngineering/permutation
 [target.'cfg(target_os = "windows")'.dependencies]
 windows-registry = "0.6.1"
 windows-native-keyring-store = "1.1.0"
+windows = { version = "=0.61.3", features = ["ApplicationModel_DataTransfer", "Foundation", "Foundation_Collections", "Storage", "Storage_Streams", "Win32_Foundation", "Win32_System_WinRT", "Win32_UI_Shell"] }
+windows-collections = "=0.2.0"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 apple-native-keyring-store = { version = "1.0.0", features = ["keychain"] }
+objc2 = "0.6.3"
+objc2-app-kit = { version = "0.3.2", features = ["NSResponder", "NSSharingService", "NSView"] }
+objc2-foundation = { version = "0.3.2", features = ["NSArray", "NSGeometry", "NSString", "NSURL"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 ashpd = { version = "0.13.12", default-features = false, features = ["tokio", "open_uri", "global_shortcuts"] }

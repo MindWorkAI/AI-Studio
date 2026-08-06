@@ -26,9 +26,6 @@ public partial class VoiceRecorder : MSGComponentBase
     private GlobalShortcutService GlobalShortcutService { get; init; } = null!;
 
     [Inject]
-    private ISnackbar Snackbar { get; init; } = null!;
-
-    [Inject]
     private VoiceRecordingAvailabilityService VoiceRecordingAvailabilityService { get; init; } = null!;
 
     [Inject]
@@ -448,7 +445,7 @@ public partial class VoiceRecorder : MSGComponentBase
             }
 
             // Copy the transcribed text to the clipboard:
-            await this.RustService.CopyText2Clipboard(this.Snackbar, transcribedText);
+            await this.RustService.CopyText2Clipboard(transcribedText);
 
         }
         catch (Exception ex)

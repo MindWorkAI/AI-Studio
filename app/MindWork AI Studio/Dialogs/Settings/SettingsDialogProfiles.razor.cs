@@ -75,7 +75,7 @@ public partial class SettingsDialogProfiles : SettingsDialogBase
 
         var luaCode = profile.ExportAsConfigurationSection();
         if (!string.IsNullOrWhiteSpace(luaCode))
-            await this.RustService.CopyText2Clipboard(this.Snackbar, luaCode);
+            await this.RustService.CopyText2Clipboard(luaCode);
     }
 
     private async Task DeleteProfile(Profile profile)
