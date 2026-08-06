@@ -377,7 +377,7 @@ public partial class Plugins : MSGComponentBase
     {
         var dialogParameters = new DialogParameters<InformationDialog>
         {
-            { x => x.Message, string.Format(this.T("The assistant plugin could not be imported: {0}"), issue) },
+            { x => x.Message, string.Format(this.T("The plugin could not be imported: {0}"), issue) },
             { x => x.Icon, Icons.Material.Filled.ReportProblem },
             { x => x.IconColor, Color.Error },
         };

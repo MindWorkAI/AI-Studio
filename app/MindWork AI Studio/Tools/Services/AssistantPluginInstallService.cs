@@ -180,7 +180,7 @@ public sealed class AssistantPluginInstallService
                 var validation = await ValidateAssistantPluginCodeAsync(
                     pluginDirectory,
                     pluginCode.Trim(),
-                    TB("The imported plugin is not an assistant plugin. Issue: {0}"),
+                    TB("Currently, only assistant plugins can be imported."),
                     TB("The imported assistant plugin is invalid. Issue: {0}"),
                     TB("The imported assistant plugin uses the ID of an internal AI Studio plugin."),
                     token);

@@ -8022,9 +8022,6 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3379469503"] = "Your organization ha
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3448155331"] = "Close"
 
--- The assistant plugin could not be imported: {0}
-UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3786117800"] = "The assistant plugin could not be imported: {0}"
-
 -- Revise assistant plugin with AI
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3801095542"] = "Revise assistant plugin with AI"
 
@@ -8057,6 +8054,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T659549952"] = "The plugin archive wa
 
 -- An error occurred while exporting the plugin.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T759681732"] = "An error occurred while exporting the plugin."
+
+-- The plugin could not be imported: {0}
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T837269472"] = "The plugin could not be imported: {0}"
 
 -- Settings
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SETTINGS::T1258653480"] = "Settings"
@@ -9591,8 +9591,8 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T1288
 -- The assistant cannot be deleted while background work is still running.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T1318944584"] = "The assistant cannot be deleted while background work is still running."
 
--- The imported plugin is not an assistant plugin. Issue: {0}
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T1593813237"] = "The imported plugin is not an assistant plugin. Issue: {0}"
+-- Currently, only assistant plugins can be imported.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T139615196"] = "Currently, only assistant plugins can be imported."
 
 -- Please select a plugin archive with the extension .mwplugin or .zip.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T1809137998"] = "Please select a plugin archive with the extension .mwplugin or .zip."
