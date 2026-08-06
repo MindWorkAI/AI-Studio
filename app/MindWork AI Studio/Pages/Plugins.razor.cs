@@ -285,7 +285,9 @@ public partial class Plugins : MSGComponentBase
 
         await this.MessageBus.SendSuccess(new(Icons.Material.Filled.Save, string.Format(this.T("The assistant plugin '{0}' has been successfully saved."), result.PluginName)));
         LOG.LogInformation($"The assistant plugin '{result.PluginName}' ({result.PluginId}) has been successfully updated.");
-        await this.MessageBus.SendMessage<bool>(this, Event.PLUGINS_RELOADED);
+
+        // Saving the plugin ran LoadAll, which already sent PLUGINS_RELOADED. Editing the plugin
+        // code changes no settings, so there is nothing else to announce:
         await this.InvokeAsync(this.StateHasChanged);
     }
 
@@ -304,7 +306,9 @@ public partial class Plugins : MSGComponentBase
 
         await this.MessageBus.SendSuccess(new(Icons.Material.Filled.AutoFixHigh, string.Format(this.T("The assistant plugin '{0}' has been successfully revised."), result.PluginName)));
         LOG.LogInformation($"The assistant plugin '{result.PluginName}' ({result.PluginId}) has been successfully revised.");
-        await this.MessageBus.SendMessage<bool>(this, Event.PLUGINS_RELOADED);
+
+        // Saving the revision ran LoadAll, which already sent PLUGINS_RELOADED. We still announce the
+        // configuration change: with automatic audits enabled, the dialog stored an audit result:
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
         await this.InvokeAsync(this.StateHasChanged);
     }
@@ -392,9 +396,11 @@ public partial class Plugins : MSGComponentBase
             var message = result.ReplacedExisting
                 ? this.T("Assistant updated.")
                 : this.T("Assistant installed.");
+
+            // We do not announce the reload ourselves: a successful installation ran LoadAll, which
+            // already sent PLUGINS_RELOADED. The import changes no settings either, so there is
+            // nothing to report as a configuration change:
             await this.MessageBus.SendSuccess(new(Icons.Material.Filled.Extension, message));
-            await this.MessageBus.SendMessage<bool>(this, Event.PLUGINS_RELOADED);
-            await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
         }
         finally
         {
