@@ -42,6 +42,14 @@ public partial class Plugins : MSGComponentBase
     
     private bool isSharingPlugin;
 
+    /// <summary>
+    /// Number of active drop areas above this page. While there is any, another component owns the
+    /// dropped files and this page must not catch them.
+    /// </summary>
+    private uint numDropAreasAboveThis;
+
+    private bool isDraggingOverPage;
+
     private const string IMPORT_ICON =
         @"<svg class=""mud-icon-root mud-svg-icon mud-dark-text mud-icon-size-medium"" focusable=""false"" viewBox=""0 0 24 24"" aria-hidden=""true"" role=""img"">
     <path d=""M0 0h24v24H0V0z"" fill=""none""></path>
@@ -53,8 +61,11 @@ public partial class Plugins : MSGComponentBase
 
     protected override async Task OnInitializedAsync()
     {
-        this.ApplyFilters([], [ Event.PLUGINS_RELOADED, Event.CONFIGURATION_CHANGED ]);
-        
+        this.ApplyFilters([], [ Event.PLUGINS_RELOADED, Event.CONFIGURATION_CHANGED, Event.TAURI_EVENT_RECEIVED, Event.REGISTER_FILE_DROP_AREA, Event.UNREGISTER_FILE_DROP_AREA ]);
+
+        // Register the whole page as a drop area, so users can drop a plugin archive anywhere on it:
+        await this.MessageBus.SendMessage(this, Event.REGISTER_FILE_DROP_AREA, DropLayers.PAGES);
+
         this.groupConfig = new TableGroupDefinition<IPluginMetadata>
         {
             Expandable = true,
@@ -77,6 +88,13 @@ public partial class Plugins : MSGComponentBase
     {
         if (firstRender)
             await this.TryAutoAuditAssistantsAsync();
+    }
+
+    protected override void DisposeResources()
+    {
+        // Release the drop area again, so lower layers can catch dropped files:
+        _ = this.MessageBus.SendMessage(this, Event.UNREGISTER_FILE_DROP_AREA, DropLayers.PAGES);
+        base.DisposeResources();
     }
 
     #endregion
@@ -225,6 +243,14 @@ public partial class Plugins : MSGComponentBase
     private static bool CanSharePlugin(IAvailablePlugin plugin) => plugin is { IsInternal: false, IsManagedByConfigServer: false, Type: PluginType.ASSISTANT } && !string.IsNullOrWhiteSpace(plugin.LocalPath);
 
     /// <summary>
+    /// Highlights the plugin table while the user drags a file over the page, so it is visible
+    /// where the file would land.
+    /// </summary>
+    private string PluginTableClass => this.isDraggingOverPage
+        ? "border-dashed border rounded-lg mud-border-primary border-4"
+        : "border-dashed border rounded-lg";
+
+    /// <summary>
     /// Organizations may disable importing plugin archives by using a configuration plugin.
     /// </summary>
     private bool AllowPluginImport => this.SettingsManager.ConfigurationData.App.AllowUserToImportPlugins;
@@ -324,22 +350,38 @@ public partial class Plugins : MSGComponentBase
         if (!this.AllowPluginImport)
             return;
 
+        var selection = await this.RustService.SelectFile(this.T("Import assistant plugin"), [FileTypes.PLUGIN_ARCHIVE]);
+        if (selection.UserCancelled)
+            return;
+
+        await this.ImportPluginArchiveAsync(selection.SelectedFilePath);
+    }
+
+    /// <summary>
+    /// Installs a plugin archive, no matter whether the user picked it through the import button or
+    /// dropped it onto the page.
+    /// </summary>
+    /// <param name="archivePath">The local plugin archive to install.</param>
+    private async Task ImportPluginArchiveAsync(string archivePath)
+    {
+        if (this.isImportingAssistantPlugin)
+            return;
+
+        if (!this.AllowPluginImport)
+            return;
+
         this.isImportingAssistantPlugin = true;
         await this.InvokeAsync(this.StateHasChanged);
 
         try
         {
-            var selection = await this.RustService.SelectFile(this.T("Import assistant plugin"), [FileTypes.PLUGIN_ARCHIVE]);
-            if (selection.UserCancelled)
-                return;
-
-            var result = await this.AssistantPluginInstallService.InstallArchiveAsync(selection.SelectedFilePath, this.ConfirmPluginImportAsync, CancellationToken.None);
+            var result = await this.AssistantPluginInstallService.InstallArchiveAsync(archivePath, this.ConfirmPluginImportAsync, CancellationToken.None);
             if (result.Cancelled)
                 return;
 
             if (!result.Success)
             {
-                LOG.LogError("Failed to import assistant plugin archive '{ArchivePath}': {Issue}", selection.SelectedFilePath, result.Issue);
+                LOG.LogError("Failed to import assistant plugin archive '{ArchivePath}': {Issue}", archivePath, result.Issue);
 
                 // The user actively started this import, so we report the reason in a dialog
                 // instead of a snackbar. Refused imports must not be missed:
@@ -460,8 +502,71 @@ public partial class Plugins : MSGComponentBase
             case Event.CONFIGURATION_CHANGED:
                 await this.InvokeAsync(this.StateHasChanged);
                 break;
+
+            case Event.REGISTER_FILE_DROP_AREA when sendingComponent != this:
+                if (data is int registeredLayer && registeredLayer > DropLayers.PAGES)
+                    this.numDropAreasAboveThis++;
+
+                break;
+
+            case Event.UNREGISTER_FILE_DROP_AREA when sendingComponent != this:
+                if (data is int unregisteredLayer && unregisteredLayer > DropLayers.PAGES && this.numDropAreasAboveThis > 0)
+                    this.numDropAreasAboveThis--;
+
+                break;
+
+            case Event.TAURI_EVENT_RECEIVED when data is TauriEvent { EventType: TauriEventType.FILE_DROP_HOVERED }:
+                if (!this.CanCatchDroppedFile())
+                    return;
+
+                this.isDraggingOverPage = true;
+                await this.InvokeAsync(this.StateHasChanged);
+                break;
+
+            case Event.TAURI_EVENT_RECEIVED when data is TauriEvent { EventType: TauriEventType.FILE_DROP_CANCELED }:
+            case Event.TAURI_EVENT_RECEIVED when data is TauriEvent { EventType: TauriEventType.WINDOW_NOT_FOCUSED }:
+                this.isDraggingOverPage = false;
+                await this.InvokeAsync(this.StateHasChanged);
+                break;
+
+            case Event.TAURI_EVENT_RECEIVED when data is TauriEvent { EventType: TauriEventType.FILE_DROP_DROPPED, Payload: var droppedPaths }:
+                this.isDraggingOverPage = false;
+                await this.InvokeAsync(this.StateHasChanged);
+                if (!this.CanCatchDroppedFile())
+                    return;
+
+                await this.ImportDroppedPluginArchiveAsync(droppedPaths);
+                break;
         }
     }
 
     #endregion
+
+    /// <summary>
+    /// Decides whether this page may process dropped files: only when no drop area above it is
+    /// active and when the organization allows importing plugins at all.
+    /// </summary>
+    private bool CanCatchDroppedFile() => this.numDropAreasAboveThis is 0 && this.AllowPluginImport && !this.isImportingAssistantPlugin;
+
+    /// <summary>
+    /// Imports a plugin archive the user dropped onto the page. Anything that is not exactly one
+    /// plugin archive is reported instead of guessing what the user meant.
+    /// </summary>
+    /// <param name="droppedPaths">The paths of the dropped files.</param>
+    private async Task ImportDroppedPluginArchiveAsync(IReadOnlyList<string> droppedPaths)
+    {
+        var archivePaths = droppedPaths.Where(path => FileTypes.IsAllowedPath(path, FileTypes.PLUGIN_ARCHIVE)).ToList();
+        switch (archivePaths.Count)
+        {
+            case 0:
+                await this.MessageBus.SendWarning(new(Icons.Material.Filled.ReportProblem, string.Format(this.T("Please drop a plugin archive with the extension {0} or .zip."), PluginShareService.PLUGIN_FILE_EXTENSION)));
+                return;
+
+            case > 1:
+                await this.MessageBus.SendWarning(new(Icons.Material.Filled.ReportProblem, this.T("Please drop only one plugin archive at a time.")));
+                return;
+        }
+
+        await this.ImportPluginArchiveAsync(archivePaths[0]);
+    }
 }

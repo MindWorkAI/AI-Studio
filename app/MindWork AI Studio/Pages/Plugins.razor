@@ -24,7 +24,7 @@
     
     <InnerScrolling>
         
-        <MudTable Items="@PluginFactory.AvailablePlugins" Hover="@true" GroupBy="@this.groupConfig" Class="border-dashed border rounded-lg">
+        <MudTable Items="@PluginFactory.AvailablePlugins" Hover="@true" GroupBy="@this.groupConfig" Class="@this.PluginTableClass">
             <ColGroup>
                 <col style="width: 2em;" />
                 <col style="width: 2.1em; "/>
