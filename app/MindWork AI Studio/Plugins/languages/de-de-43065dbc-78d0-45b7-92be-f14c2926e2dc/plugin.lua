@@ -5361,6 +5361,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGRESULTDIALOG::T1173984541"] = "Einb
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGRESULTDIALOG::T3448155331"] = "Schließen"
 
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::INFORMATIONDIALOG::T3448155331"] = "Schließen"
+
 -- Unfortunately, Pandoc's GPL license isn't compatible with the AI Studios licenses. However, software under the GPL is free to use and free of charge. You'll need to accept the GPL license before we can download and install Pandoc for you automatically (recommended). Alternatively, you might download it yourself using the instructions below or install it otherwise, e.g., by using a package manager of your operating system.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T1001483402"] = "Leider ist die GPL-Lizenz von Pandoc nicht mit der Lizenz von AI Studio kompatibel. Software unter der GPL-Lizenz ist jedoch kostenlos und frei nutzbar. Sie müssen die GPL-Lizenz akzeptieren, bevor wir Pandoc automatisch für Sie herunterladen und installieren können (empfohlen). Alternativ können Sie Pandoc auch selbst herunterladen – entweder mit den untenstehenden Anweisungen oder auf anderem Weg, zum Beispiel über den Paketmanager Ihres Betriebssystems."
 
@@ -5450,6 +5453,57 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T504404155"] = "Akzeptieren Si
 
 -- Pandoc is distributed under the GNU General Public License v2 (GPL). By clicking "Accept the GPL and download the archive," you agree to the terms of the GPL license. Software under GPL is free of charge and free to use.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T523908375"] = "Pandoc wird unter der GNU General Public License v2 (GPL) vertrieben. Wenn Sie auf „GPL akzeptieren und Archiv herunterladen“ klicken, stimmen Sie den Bedingungen der GPL-Lizenz zu. Software unter der GPL ist kostenlos und frei nutzbar."
+
+-- Install plugin
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T1525735539"] = "Plugin installieren"
+
+-- Version
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T1573770551"] = "Version"
+
+-- Source
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T1642243064"] = "Quelle"
+
+-- You are about to install a language plugin from a file.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T1974491324"] = "Sie sind dabei, ein Sprach-Plugin aus einer Datei zu installieren."
+
+-- Authors
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T1985367263"] = "Autor:innen"
+
+-- Plugins contain code that runs inside AI Studio. Install plugins only when you trust their source.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T2053517490"] = "Plugins enthalten Code, der innerhalb von AI Studio ausgeführt wird. Installieren Sie Plugins nur, wenn Sie der Quelle vertrauen."
+
+-- You are about to install an assistant plugin from a file.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T2063808316"] = "Sie sind dabei, ein Assistenten-Plugin aus einer Datei zu installieren."
+
+-- You are about to install a configuration plugin from a file.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T21052500"] = "Sie sind dabei, ein Konfigurations-Plugin aus einer Datei zu installieren."
+
+-- You are about to install a theme plugin from a file.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T2163853103"] = "Sie sind dabei, ein Design-Plugin aus einer Datei zu installieren."
+
+-- Support contact
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T2434966596"] = "Supportkontakt"
+
+-- This replaces the already installed plugin '{0}'. Version {1} gets replaced by version {2}.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T3415610475"] = "Dies ersetzt das bereits installierte Plugin „{0}“. Version {1} wird durch Version {2} ersetzt."
+
+-- Unknown
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T3424652889"] = "Unbekannt"
+
+-- Type
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T3512062061"] = "Typ"
+
+-- Replace plugin
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T4068580334"] = "Plugin ersetzen"
+
+-- The authors marked this plugin as deprecated: {0}
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T497068698"] = "Die Autoren haben dieses Plugin als veraltet gekennzeichnet: {0}"
+
+-- You are about to install a plugin from a file.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T841685558"] = "Sie sind dabei, ein Plugin aus einer Datei zu installieren."
+
+-- Cancel
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T900713019"] = "Abbrechen"
 
 -- Tell the AI what you want it to do for you. What are your goals or are you trying to achieve? Like having the AI address you informally.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T1458195391"] = "Teilen Sie der KI mit, was sie machen soll. Was sind ihre Ziele oder was möchten Sie erreichen? Zum Beispiel, dass die KI Sie duzt."
@@ -7554,6 +7608,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1924365263"] = "Diese Bibliothek
 -- Encryption secret: is configured
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1931141322"] = "Geheimnis für die Verschlüsselung: ist konfiguriert"
 
+-- The objc2 project provides access to Apple's Objective-C frameworks from Rust. On macOS, we use the libraries objc2, objc2-app-kit, and objc2-foundation to open the native macOS share sheet, e.g., when you share a plugin with others.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1985806792"] = "Das Projekt objc2 ermöglicht den Zugriff auf die Objective-C-Frameworks von Apple aus Rust. Unter macOS verwenden wir die Bibliotheken objc2, objc2-app-kit und objc2-foundation, um den nativen macOS-Teilen-Dialog zu öffnen, beispielsweise wenn Sie ein Plugin mit anderen teilen."
+
 -- Copies the number of loaded root certificates to the clipboard
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2015329654"] = "Kopiert die Anzahl der geladenen Stammzertifikate in die Zwischenablage"
 
@@ -7562,6 +7619,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2029659664"] = "Kopiert Folgende
 
 -- Copies the server URL to the clipboard
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2037899437"] = "Kopiert die Server-URL in die Zwischenablage"
+
+-- The windows-rs project provides access to Windows APIs from Rust. We use several libraries from this project: windows-registry is used to read the desired configuration in Windows enterprise environments. The windows and windows-collections libraries are used to open the native Windows share dialog, e.g., when you share a plugin with others.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2146481269"] = "Das Projekt windows-rs ermöglicht den Zugriff auf Windows-APIs aus Rust. Wir verwenden mehrere Bibliotheken aus diesem Projekt: windows-registry wird verwendet, um die gewünschte Konfiguration in Windows-Unternehmensumgebungen auszulesen. Die Bibliotheken windows und windows-collections werden verwendet, um den nativen Windows-Dialog zum Teilen zu öffnen, zum Beispiel wenn Sie ein Plugin mit anderen teilen."
 
 -- This library is used to create temporary folders in runtime tests and supporting filesystem operations.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2160280545"] = "Diese Bibliothek wird verwendet, um temporäre Ordner bei Laufzeittests zu erstellen und Dateisystemoperationen zu unterstützen."
@@ -7779,9 +7839,6 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3813932670"] = "diese Version er
 -- On Linux, ashpd provides access to desktop portals, allowing AI Studio to open folders and files for the user.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3871176264"] = "Unter Linux ermöglicht ashpd den Zugriff auf Desktop-Portale, sodass AI Studio Ordner und Dateien für den Nutzer öffnen kann."
 
--- This library is used to access the Windows registry. We use this for Windows enterprise environments to read the desired configuration.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3874337003"] = "Diese Bibliothek wird verwendet, um auf die Windows-Registry zuzugreifen. Wir nutzen sie in Windows-Unternehmensumgebungen, um die gewünschte Konfiguration auszulesen."
-
 -- Now we have multiple systems, some developed in .NET and others in Rust. The data format JSON is responsible for translating data between both worlds (called data serialization and deserialization). Serde takes on this task in the Rust world. The counterpart in the .NET world is an integral part of .NET and is located in System.Text.Json.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3908558992"] = "Jetzt haben wir mehrere Systeme, einige entwickelt in .NET und andere in Rust. Das Datenformat JSON ist dafür zuständig, Daten zwischen beiden Welten zu übersetzen (dies nennt man Serialisierung und Deserialisierung von Daten). In der Rust-Welt übernimmt Serde diese Aufgabe. Das Pendant in der .NET-Welt ist ein fester Bestandteil von .NET und findet sich in System.Text.Json."
 
@@ -7902,6 +7959,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T1229643769"] = "Potenziell gefährli
 -- Disable plugin
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T1430375822"] = "Plugin deaktivieren"
 
+-- Import
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T1463683828"] = "Importieren"
+
 -- Assistant Audit
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T1506922856"] = "Assistentenprüfung"
 
@@ -7923,6 +7983,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2057806005"] = "Plugin aktivieren"
 -- No source url available
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2058912565"] = "Keine Quell-URL verfügbar"
 
+-- Assistant installed.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2069785341"] = "Assistent installiert."
+
 -- Plugins
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2222816203"] = "Plugins"
 
@@ -7935,17 +7998,50 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2738444034"] = "Aktivierte Plugins"
 -- Revise Assistant Plugin
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T284393424"] = "Assistenten-Plugin überarbeiten"
 
+-- Import not possible
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3051566124"] = "Import nicht möglich"
+
 -- The assistant plugin '{0}' has been successfully saved.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3143506997"] = "Das Assistent-Plugin „{0}“ wurde erfolgreich gespeichert."
 
+-- An error occurred while sharing the plugin.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3184210266"] = "Beim Teilen des Plugins ist ein Fehler aufgetreten."
+
+-- Import assistant plugin
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3246593895"] = "Assistenten-Plugin importieren"
+
+-- Your organization has disabled exporting plugins.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3342440765"] = "Ihre Organisation hat das Exportieren von Plugins deaktiviert."
+
+-- Share plugin archive
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3355474457"] = "Plugin-Archiv teilen"
+
+-- Your organization has disabled sharing plugins
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3379469503"] = "Ihre Organisation hat das Teilen von Plugins deaktiviert"
+
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3448155331"] = "Schließen"
+
+-- Please drop a plugin archive with the extension {0} or .zip.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3785427568"] = "Bitte legen Sie ein Plugin-Archiv mit der Erweiterung {0} oder .zip hier ab."
 
 -- Revise assistant plugin with AI
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3801095542"] = "Assistenten-Plugin mit KI überarbeiten"
 
 -- Actions
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3865031940"] = "Aktionen"
+
+-- Export plugin archive
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3872669664"] = "Plugin-Archiv exportieren"
+
+-- Install Plugin
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3902690643"] = "Plugin installieren"
+
+-- Please drop only one plugin archive at a time.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3974628410"] = "Bitte legen Sie jeweils nur ein Plugin-Archiv gleichzeitig ab."
+
+-- Assistant updated.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T40397082"] = "Assistent aktualisiert."
 
 -- The automatic security audit for the assistant plugin '{0}' failed. Please run it manually.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T4066679817"] = "Die automatische Sicherheitsprüfung für das Assistenten-Plugin „{0}“ ist fehlgeschlagen. Bitte führen Sie sie manuell aus."
@@ -7958,6 +8054,15 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T4239378936"] = "Website öffnen"
 
 -- The assistant plugin '{0}' was audited with the level '{1}', which is below the required minimum level '{2}'. Your current settings allow activation anyway, but this may be potentially dangerous. Do you really want to enable this plugin?
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T448946658"] = "Das Assistenten-Plugin „{0}“ wurde mit der Stufe „{1}“ geprüft, die unter der erforderlichen Mindeststufe „{2}“ liegt. Ihre aktuellen Einstellungen erlauben die Aktivierung dennoch, dies kann jedoch potenziell gefährlich sein. Möchten Sie dieses Plugin wirklich aktivieren?"
+
+-- The plugin archive was exported to '{0}'.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T659549952"] = "Das Plugin-Archiv wurde nach „{0}“ exportiert."
+
+-- An error occurred while exporting the plugin.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T759681732"] = "Beim Exportieren des Plugins ist ein Fehler aufgetreten."
+
+-- The plugin could not be imported: {0}
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T837269472"] = "Das Plugin konnte nicht importiert werden: {0}"
 
 -- Settings
 UI_TEXT_CONTENT["AISTUDIO::PAGES::SETTINGS::T1258653480"] = "Einstellungen"
@@ -9372,6 +9477,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T378481461"] = "Source Code �
 -- Document
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T4165204724"] = "Dokument"
 
+-- Plugin archive
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T927001356"] = "Plugin-Archiv"
+
 -- The Assistant Builder context could not be loaded.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T108292972"] = "Der Kontext des Assistenten-Builders konnte nicht geladen werden."
 
@@ -9477,6 +9585,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T4
 -- Internal assistant plugins cannot be deleted.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T1084244321"] = "Interne Assistenten-Plugins können nicht gelöscht werden."
 
+-- This plugin archive declares itself as managed by a config server. Only the IT department of your organization might deploy such plugins.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T1138181282"] = "Dieses Plugin-Archiv gibt an, von einem Konfigurationsserver verwaltet zu werden. Nur die IT-Abteilung Ihrer Organisation kann solche Plugins bereitstellen."
+
 -- The assistant plugin directory is outside the local assistant plugin directory.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T1211881977"] = "Das Assistenten-Plugin-Verzeichnis befindet sich außerhalb des lokalen Assistenten-Plugin-Verzeichnisses."
 
@@ -9486,11 +9597,17 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T1288
 -- The assistant cannot be deleted while background work is still running.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T1318944584"] = "Der Assistent kann nicht gelöscht werden, solange noch Hintergrundaktivitäten ausgeführt werden."
 
+-- Currently, only assistant plugins can be imported.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T139615196"] = "Derzeit können nur Assistenten-Plugins importiert werden."
+
+-- Please select a plugin archive with the extension .mwplugin or .zip.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T1809137998"] = "Bitte wählen Sie ein Plugin-Archiv mit der Dateiendung .mwplugin oder .zip aus."
+
+-- The selected plugin archive does not exist.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T1821013825"] = "Das ausgewählte Plugin-Archiv existiert nicht."
+
 -- No Lua plugin code was generated.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T1839013358"] = "Es wurde kein Lua-Plugin-Code generiert."
-
--- The edited assistant plugin uses the ID of an internal AI Studio plugin.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T2061233834"] = "Das bearbeitete Assistenten-Plugin verwendet die ID eines internen AI-Studio-Plugins."
 
 -- The assistant plugin directory does not exist.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T2148384567"] = "Das Verzeichnis für das Assistenten-Plugin existiert nicht."
@@ -9501,11 +9618,20 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T2223
 -- Unexpected error: {0}
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T2350673880"] = "Unerwarteter Fehler: {0}"
 
+-- The generated assistant plugin uses the ID of another installed plugin.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T2441747251"] = "Das generierte Assistenten-Plugin verwendet die ID eines anderen installierten Plugins."
+
+-- Config server managed assistant plugins cannot be replaced.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T2594571117"] = "Vom Konfigurationsserver verwaltete Assistenten-Plugins können nicht ersetzt werden."
+
 -- The assistant plugin has no local directory.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T2682912892"] = "Das Assistenten-Plugin hat kein lokales Verzeichnis."
 
 -- The AI Studio data directory is not initialized yet.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T2712481762"] = "Das Datenverzeichnis von AI Studio ist noch nicht initialisiert."
+
+-- The imported assistant plugin is invalid. Issue: {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T2777304537"] = "Das importierte Assistenten-Plugin ist ungültig. Problem: {0}"
 
 -- Only assistant plugins can be deleted.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T2864597027"] = "Nur Assistant-Plugins können gelöscht werden."
@@ -9513,8 +9639,14 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T2864
 -- The generated plugin is not an assistant plugin. Issue: {0}
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T2955055168"] = "Das generierte Plugin ist kein Assistenten-Plugin. Problem: {0}"
 
--- The generated assistant plugin uses the ID of an internal AI Studio plugin.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T3162363526"] = "Das generierte Assistent-Plugin verwendet die ID eines internen AI-Studio-Plugins."
+-- The imported assistant plugin uses the ID of another installed plugin.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T2971411166"] = "Das importierte Assistenten-Plugin verwendet die ID eines anderen installierten Plugins."
+
+-- Your organization has disabled importing plugins.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T3212529834"] = "Ihre Organisation hat das Importieren von Plugins deaktiviert."
+
+-- The plugin archive must contain exactly one plugin.lua file.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T3355918609"] = "Das Plugin-Archiv muss genau eine plugin.lua-Datei enthalten."
 
 -- Config Server managed assistant plugins cannot be deleted.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T3751820312"] = "Von einem Config-Server verwaltete Assistenten-Plugins können nicht gelöscht werden."
@@ -9533,6 +9665,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T4062
 
 -- The edited assistant plugin is invalid. Issue: {0}
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T554567780"] = "Das bearbeitete Assistenten-Plugin ist ungültig. Problem: {0}"
+
+-- The edited assistant plugin uses the ID of another installed plugin.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T584770023"] = "Das bearbeitete Assistenten-Plugin verwendet die ID eines anderen installierten Plugins."
 
 -- The edited assistant plugin must keep the same plugin ID.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGININSTALLSERVICE::T693124809"] = "Das bearbeitete Assistant-Plugin muss dieselbe Plugin-ID beibehalten."
@@ -9593,6 +9728,36 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PANDOCAVAILABILITYSERVICE::T18544701
 
 -- Pandoc may be required for importing files.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PANDOCAVAILABILITYSERVICE::T2596465560"] = "Zum Importieren von Dateien kann Pandoc erforderlich sein."
+
+-- Internal plugins cannot be shared.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGINSHARESERVICE::T1668534561"] = "Interne Plugins können nicht geteilt werden."
+
+-- Config Server managed plugins cannot be shared.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGINSHARESERVICE::T2077776546"] = "Vom Konfigurationsserver verwaltete Plugins können nicht geteilt werden."
+
+-- The native share dialog could not be opened.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGINSHARESERVICE::T2101116016"] = "Der systemeigene Dialog zum Teilen konnte nicht geöffnet werden."
+
+-- The plugin directory does not exist.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGINSHARESERVICE::T2221093487"] = "Das Plugin-Verzeichnis existiert nicht."
+
+-- Unexpected error: {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGINSHARESERVICE::T2350673880"] = "Unerwarteter Fehler: {0}"
+
+-- The plugin has no local directory.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGINSHARESERVICE::T3284289028"] = "Das Plugin hat kein lokales Verzeichnis."
+
+-- Your organization has disabled sharing plugins.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGINSHARESERVICE::T3379469503"] = "Ihre Organisation hat das Teilen von Plugins deaktiviert."
+
+-- The plugin directory is invalid: {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGINSHARESERVICE::T3774594541"] = "Das Plugin-Verzeichnis ist ungültig: {0}"
+
+-- Export plugin archive
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGINSHARESERVICE::T3872669664"] = "Plugin-Archiv exportieren"
+
+-- The plugin directory does not contain a plugin.lua file.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGINSHARESERVICE::T409411078"] = "Das Plugin-Verzeichnis enthält keine Datei `plugin.lua`."
 
 -- Failed to store the secret data due to an API issue.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::RUSTSERVICE::T1110203516"] = "Fehler beim Speichern der geheimen Daten aufgrund eines API-Problems."

@@ -1,0 +1,60 @@
+@inherits MSGComponentBase
+<MudDialog>
+    <DialogContent>
+        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+            @this.IntroductionText @T("Plugins contain code that runs inside AI Studio. Install plugins only when you trust their source.")
+        </MudJustifiedText>
+
+        <MudPaper Class="pa-3 mb-3 border-dashed border rounded-lg">
+            <MudText Typo="Typo.h6">
+                @this.Preview.Plugin.Name
+            </MudText>
+            <MudText Typo="Typo.body2" Class="mb-2">
+                @this.Preview.Plugin.Description
+            </MudText>
+            <MudText Typo="Typo.body2">
+                @T("Type"): <strong>@this.TypeLabel</strong>
+            </MudText>
+            <MudText Typo="Typo.body2">
+                @T("Version"): <strong>@this.Preview.Plugin.Version</strong>
+            </MudText>
+            <MudText Typo="Typo.body2">
+                @T("Authors"): <strong>@this.AuthorsLabel</strong>
+            </MudText>
+            @if (!string.IsNullOrWhiteSpace(this.Preview.Plugin.SourceURL))
+            {
+                <MudText Typo="Typo.body2">
+                    @T("Source"): <strong>@this.Preview.Plugin.SourceURL</strong>
+                </MudText>
+            }
+            @if (!string.IsNullOrWhiteSpace(this.Preview.Plugin.SupportContact))
+            {
+                <MudText Typo="Typo.body2">
+                    @T("Support contact"): <strong>@this.Preview.Plugin.SupportContact</strong>
+                </MudText>
+            }
+        </MudPaper>
+
+        @if (!string.IsNullOrWhiteSpace(this.Preview.Plugin.DeprecationMessage))
+        {
+            <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mb-3">
+                @string.Format(T("The authors marked this plugin as deprecated: {0}"), this.Preview.Plugin.DeprecationMessage)
+            </MudAlert>
+        }
+
+        @if (this.Preview.ExistingPlugin is { } existingPlugin)
+        {
+            <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mb-3">
+                @string.Format(T("This replaces the already installed plugin '{0}'. Version {1} gets replaced by version {2}."), existingPlugin.Name, existingPlugin.Version, this.Preview.Plugin.Version)
+            </MudAlert>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Cancel" Variant="Variant.Filled">
+            @T("Cancel")
+        </MudButton>
+        <MudButton OnClick="@this.Confirm" Variant="Variant.Filled" Color="Color.Warning">
+            @(this.Preview.ReplacesExisting ? T("Replace plugin") : T("Install plugin"))
+        </MudButton>
+    </DialogActions>
+</MudDialog>

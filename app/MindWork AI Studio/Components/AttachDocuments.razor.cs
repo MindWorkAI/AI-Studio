@@ -222,6 +222,11 @@ public partial class AttachDocuments : MSGComponentBase
     protected override void DisposeResources()
     {
         this.MediaTranscriptionService.StateChanged -= this.OnMediaImportStateChanged;
+
+        // Release the drop area. Without this, drop areas below this one would count this component
+        // forever and would stop catching dropped files:
+        _ = this.MessageBus.SendMessage(this, Event.UNREGISTER_FILE_DROP_AREA, this.Layer);
+
         base.DisposeResources();
     }
 

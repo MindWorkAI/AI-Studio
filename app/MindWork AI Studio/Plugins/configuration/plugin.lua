@@ -235,6 +235,15 @@ CONFIG["SETTINGS"] = {}
 -- Configure the user permission to add providers:
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToAddProvider"] = false
 
+-- Configure the user permission to import plugin archives from disk.
+-- When set to false, the import button on the plugins page stays visible but is disabled.
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToImportPlugins"] = false
+
+-- Configure the user permission to share or export plugins as archives.
+-- When set to false, the share button on the plugins page stays visible but is disabled.
+-- On Linux, this button exports the plugin archive instead of using a native share sheet.
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToSharePlugins"] = false
+
 -- Configure whether administration settings are visible in the UI:
 -- CONFIG["SETTINGS"]["DataApp.ShowAdminSettings"] = true
 

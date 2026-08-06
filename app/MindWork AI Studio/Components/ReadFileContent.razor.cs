@@ -174,10 +174,16 @@ public partial class ReadFileContent : MSGComponentBase
         this.MediaTranscriptionService.AcknowledgeDelivery(delivery);
     }
 
-    /// <summary>Unsubscribes from the singleton media service.</summary>
+    /// <summary>Unsubscribes from the singleton media service and releases the drop area.</summary>
     protected override void DisposeResources()
     {
         this.MediaTranscriptionService.StateChanged -= this.OnMediaImportStateChanged;
+
+        // Release the drop area. Without this, drop areas below this one would count this component
+        // forever and would stop catching dropped files:
+        if (this.EnableDragDrop)
+            _ = this.MessageBus.SendMessage(this, Event.UNREGISTER_FILE_DROP_AREA, this.Layer);
+
         base.DisposeResources();
     }
 
