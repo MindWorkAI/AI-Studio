@@ -78,6 +78,7 @@ Since March 2025: We have started developing the plugin system. There will be la
     </h3>
     </summary>
 
+- v26.7.3: Added support for the latest OpenAI, Anthropic, and Google models; introduced audio and video transcription, a log viewer assistant, and AI-assisted editing and code management in the Assistant Builder; expanded presentation support with OpenDocument files, speaker notes, comments, and metadata; and improved Linux integration, enterprise update controls, and reliability after waking from sleep.
 - v26.7.1: Added the assistant builder as a beta preview for creating assistant plugins without coding; assistants can now keep running in the background; improved provider capability visibility and expert overrides, expanded enterprise controls for data source behavior and trusted assistant plugins, and made chats, assistants, and source links more reliable.
 - v26.6.2: Expanded enterprise configuration options with chat defaults, custom introduction panels, trust settings for data security, and managed confidence levels; added auto-backups for app settings & the possibility to view managed profiles and chat templates.
 - v26.6.1: Increased enterprise configuration capacity for large organizations, broader Flatpak deployment support, startup and Linux package diagnostics, chat search across all workspaces, improved workspace workflows, better model discovery for self-hosted llama.cpp providers, and fixes for profile and chat template updates, workspace naming, and startup behavior.
@@ -89,7 +90,6 @@ Since March 2025: We have started developing the plugin system. There will be la
 - v0.9.51: Added support for [Perplexity](https://www.perplexity.ai/); citations added so that LLMs can provide source references (e.g., some OpenAI models, Perplexity); added support for OpenAI's Responses API so that all text LLMs from OpenAI now work in MindWork AI Studio, including Deep Research models; web searches are now possible (some OpenAI models, Perplexity).
 - v0.9.50: Added support for self-hosted LLMs using [vLLM](https://blog.vllm.ai/2023/06/20/vllm.html).
 - v0.9.46: Released our plugin system, a German language plugin, early support for enterprise environments, and configuration plugins. Additionally, we added the Pandoc integration for future data processing and file generation.
-- v0.9.45: Added chat templates to AI Studio, allowing you to create and use a library of system prompts for your chats.
  
 </details>
 
