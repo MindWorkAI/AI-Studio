@@ -11,12 +11,6 @@ public sealed class PluginShareService(NativeShareService nativeShareService, Ru
     
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(PluginShareService).Namespace, nameof(PluginShareService));
 
-    /// <remarks>
-    /// Keep in sync with SHARE_FILE_EXTENSION in runtime/src/share_sheet.rs: the runtime only hands
-    /// archives with this extension to the native share sheet.
-    /// </remarks>
-    public const string PLUGIN_FILE_EXTENSION = ".mwplugin";
-
     private const string PLUGIN_FILE_NAME = "plugin.lua";
 
     /// <remarks>
@@ -69,7 +63,7 @@ public sealed class PluginShareService(NativeShareService nativeShareService, Ru
     /// <returns>The share result, including the chosen archive path when successful.</returns>
     private async Task<PluginShareResult> ExportAsync(IAvailablePlugin plugin, string pluginRoot, CancellationToken token)
     {
-        var suggestedFileName = $"{CreateSafeFileNamePrefix(plugin.Name)}{PLUGIN_FILE_EXTENSION}";
+        var suggestedFileName = $"{CreateSafeFileNamePrefix(plugin.Name)}{PluginArchive.PLUGIN_FILE_EXTENSION}";
         var saveResponse = await rustService.SaveFile(TB("Export plugin archive"), [FileTypes.PLUGIN_ARCHIVE], suggestedFileName);
         if (saveResponse.UserCancelled)
             return new(false, plugin.Name, string.Empty, string.Empty, true);
@@ -116,7 +110,7 @@ public sealed class PluginShareService(NativeShareService nativeShareService, Ru
     private async Task<PluginShareResult> ShareViaNativeSheetAsync(IAvailablePlugin plugin, string pluginRoot, CancellationToken token)
     {
         var archiveDirectory = Path.Join(Path.GetTempPath(), TEMPORARY_ARCHIVE_DIRECTORY);
-        var archivePath = Path.Join(archiveDirectory, $"{CreateSafeFileNamePrefix(plugin.Name)}-{plugin.Id:N}-{Guid.NewGuid():N}{PLUGIN_FILE_EXTENSION}");
+        var archivePath = Path.Join(archiveDirectory, $"{CreateSafeFileNamePrefix(plugin.Name)}-{plugin.Id:N}-{Guid.NewGuid():N}{PluginArchive.PLUGIN_FILE_EXTENSION}");
 
         try
         {
@@ -193,7 +187,7 @@ public sealed class PluginShareService(NativeShareService nativeShareService, Ru
     private void CleanUpExpiredArchives(string archiveDirectory)
     {
         var expiry = DateTime.UtcNow.AddHours(-TEMPORARY_ARCHIVE_RETENTION_HOURS);
-        foreach (var archivePath in Directory.EnumerateFiles(archiveDirectory, $"*{PLUGIN_FILE_EXTENSION}", SearchOption.TopDirectoryOnly))
+        foreach (var archivePath in Directory.EnumerateFiles(archiveDirectory, $"*{PluginArchive.PLUGIN_FILE_EXTENSION}", SearchOption.TopDirectoryOnly))
         {
             try
             {

@@ -559,7 +559,7 @@ public partial class Plugins : MSGComponentBase
         switch (archivePaths.Count)
         {
             case 0:
-                await this.MessageBus.SendWarning(new(Icons.Material.Filled.ReportProblem, string.Format(this.T("Please drop a plugin archive with the extension {0} or .zip."), PluginShareService.PLUGIN_FILE_EXTENSION)));
+                await this.MessageBus.SendWarning(new(Icons.Material.Filled.ReportProblem, string.Format(this.T("Please drop a plugin archive with the extension {0} or .zip."), PluginArchive.PLUGIN_FILE_EXTENSION)));
                 return;
 
             case > 1:
