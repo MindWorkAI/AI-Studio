@@ -96,7 +96,7 @@ async fn share_file_on_platform(_path: PathBuf) -> Result<(), String> {
 async fn share_file_on_platform(path: PathBuf) -> Result<(), String> {
     use std::cell::RefCell;
     use windows::ApplicationModel::DataTransfer::{DataRequestedEventArgs, DataTransferManager};
-    use windows::Foundation::{EventRegistrationToken, TypedEventHandler};
+    use windows::Foundation::TypedEventHandler;
     use windows::Storage::{IStorageItem, StorageFile};
     use windows::Win32::UI::Shell::IDataTransferManagerInterop;
     use windows::core::{factory, HSTRING, Interface};
@@ -108,7 +108,7 @@ async fn share_file_on_platform(path: PathBuf) -> Result<(), String> {
     // and remove the previous handler before adding a new one. We only ever register on the main
     // thread, hence a thread-local reference is sufficient:
     thread_local! {
-        static DATA_REQUESTED_TOKEN: RefCell<Option<EventRegistrationToken>> = const { RefCell::new(None) };
+        static DATA_REQUESTED_TOKEN: RefCell<Option<i64>> = const { RefCell::new(None) };
     }
 
     let window = crate::app_window::MAIN_WINDOW.lock().unwrap().clone()
