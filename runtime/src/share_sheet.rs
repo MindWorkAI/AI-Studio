@@ -58,12 +58,22 @@ async fn share_file_on_platform(_path: PathBuf) -> Result<(), String> {
 
 #[cfg(windows)]
 async fn share_file_on_platform(path: PathBuf) -> Result<(), String> {
+    use std::cell::RefCell;
     use windows::ApplicationModel::DataTransfer::{DataRequestedEventArgs, DataTransferManager};
-    use windows::Foundation::TypedEventHandler;
+    use windows::Foundation::{EventRegistrationToken, TypedEventHandler};
     use windows::Storage::{IStorageItem, StorageFile};
     use windows::Win32::UI::Shell::IDataTransferManagerInterop;
     use windows::core::{factory, HSTRING, Interface};
     use windows_collections::IIterable;
+
+    // The DataTransferManager belongs to the window, not to a single share. Registering a handler
+    // for every share would stack them up, and each stale handler keeps pointing at the archive of
+    // its own share, which gets cleaned up after a while. We therefore remember the registration
+    // and remove the previous handler before adding a new one. We only ever register on the main
+    // thread, hence a thread-local reference is sufficient:
+    thread_local! {
+        static DATA_REQUESTED_TOKEN: RefCell<Option<EventRegistrationToken>> = const { RefCell::new(None) };
+    }
 
     let window = crate::app_window::MAIN_WINDOW.lock().unwrap().clone()
         .ok_or_else(|| String::from("The main window is not available."))?;
@@ -91,8 +101,13 @@ async fn share_file_on_platform(path: PathBuf) -> Result<(), String> {
                 request.Data()?.SetStorageItemsReadOnly(&items)?;
                 Ok(())
             });
-            manager.DataRequested(&handler)
+            if let Some(previous_token) = DATA_REQUESTED_TOKEN.with(|token| token.borrow_mut().take()) {
+                let _ = manager.RemoveDataRequested(previous_token);
+            }
+
+            let token = manager.DataRequested(&handler)
                 .map_err(|error| format!("Failed to provide the shared file: {error}"))?;
+            DATA_REQUESTED_TOKEN.with(|current| current.replace(Some(token)));
             unsafe { interop.ShowShareUIForWindow(hwnd) }
                 .map_err(|error| format!("Failed to open the Windows share sheet: {error}"))?;
             Ok(())
