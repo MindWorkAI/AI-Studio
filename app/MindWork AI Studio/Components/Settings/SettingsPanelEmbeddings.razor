@@ -40,9 +40,9 @@
 
                 <MudTd>
                     <MudStack Row="true" Class="mb-2 mt-2" Spacing="1" Wrap="Wrap.Wrap">
-                        @if (context.IsTrustedByConfiguration(this.SettingsManager))
+                        @if (context.IsTrustedForDataSourceSecurityChecks(this.SettingsManager))
                         {
-                            <MudTooltip Text="@T("This embedding provider is trusted by your organization for data source security checks. Local data can be sent to it without security warnings.")">
+                            <MudTooltip Text="@(context.IsSelfHosted ? T("This self-hosted embedding provider is trusted for data source security checks. Local data can be sent to it without security warnings.") : T("This embedding provider is trusted by your organization for data source security checks. Local data can be sent to it without security warnings."))">
                                 <MudIconButton Color="Color.Success" Icon="@Icons.Material.Filled.VerifiedUser" Disabled="true"/>
                             </MudTooltip>
                         }
