@@ -182,7 +182,7 @@ public sealed class AssistantPluginInstallService
                     pluginCode.Trim(),
                     TB("Currently, only assistant plugins can be imported."),
                     TB("The imported assistant plugin is invalid. Issue: {0}"),
-                    TB("The imported assistant plugin uses the ID of an internal AI Studio plugin."),
+                    TB("The imported assistant plugin uses the ID of another installed plugin."),
                     token);
 
                 if (!validation.Success || validation.AssistantPlugin is null)
@@ -528,7 +528,7 @@ public sealed class AssistantPluginInstallService
                 pluginCode,
                 TB("The generated plugin is not an assistant plugin. Issue: {0}"),
                 TB("The generated assistant plugin is invalid. Issue: {0}"),
-                TB("The generated assistant plugin uses the ID of an internal AI Studio plugin."),
+                TB("The generated assistant plugin uses the ID of another installed plugin."),
                 token);
 
             if (!validation.Success || validation.AssistantPlugin is null)
@@ -559,7 +559,7 @@ public sealed class AssistantPluginInstallService
                 lua.Trim(),
                 TB("The edited plugin is not an assistant plugin. Issue: {0}"),
                 TB("The edited assistant plugin is invalid. Issue: {0}"),
-                TB("The edited assistant plugin uses the ID of an internal AI Studio plugin."),
+                TB("The edited assistant plugin uses the ID of another installed plugin."),
                 token);
         }
         catch (Exception e)
@@ -570,7 +570,7 @@ public sealed class AssistantPluginInstallService
     }
 
     private static async Task<AssistantPluginValidationResult> ValidateAssistantPluginCodeAsync(string pluginDirectory, string pluginCode,
-        string notAssistantIssue, string invalidAssistantIssue, string internalPluginIdIssue, CancellationToken token)
+        string notAssistantIssue, string invalidAssistantIssue, string conflictingPluginIdIssue, CancellationToken token)
     {
         // The plugin is not installed yet: it sits in a staging directory outside the installed
         // plugins directory. We allow that directory as the module base, so the plugin can load its
@@ -582,8 +582,12 @@ public sealed class AssistantPluginInstallService
         if (!assistantPlugin.IsValid)
             return AssistantPluginValidationResult.Failure(string.Format(invalidAssistantIssue, string.Join("; ", assistantPlugin.Issues)));
 
-        if (PluginFactory.AvailablePlugins.Any(availablePlugin => availablePlugin.Type is PluginType.ASSISTANT && availablePlugin.Id == assistantPlugin.Id && availablePlugin.IsInternal))
-            return AssistantPluginValidationResult.Failure(internalPluginIdIssue);
+        // Plugin IDs must be unique across all plugin types: several lookups resolve a plugin by its
+        // ID alone, e.g., the base language plugin in PluginFactory.Starting. An assistant plugin
+        // carrying the ID of a language or configuration plugin would break those lookups. Reusing
+        // the ID of another local assistant plugin stays allowed: that is how updating one works.
+        if (PluginFactory.AvailablePlugins.Any(availablePlugin => availablePlugin.Id == assistantPlugin.Id && (availablePlugin.IsInternal || availablePlugin.Type is not PluginType.ASSISTANT)))
+            return AssistantPluginValidationResult.Failure(conflictingPluginIdIssue);
 
         return new(true, string.Empty, assistantPlugin, string.Empty);
     }
