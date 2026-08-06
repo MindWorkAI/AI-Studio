@@ -217,7 +217,12 @@ public partial class Plugins : MSGComponentBase
         return plugin is { IsInternal: false, IsManagedByConfigServer: false, Type: PluginType.ASSISTANT } && !string.IsNullOrWhiteSpace(plugin.LocalPath) && assistantPlugin?.IsManagedByConfigServer is false;
     }
 
-    private static bool CanSharePlugin(IAvailablePlugin plugin) => plugin is { IsInternal: false, IsManagedByConfigServer: false } && !string.IsNullOrWhiteSpace(plugin.LocalPath);
+    /// <summary>
+    /// Sharing is limited to assistant plugins because the import accepts only those. Otherwise,
+    /// users would create archives nobody can install. Widen this once the import supports more
+    /// plugin types.
+    /// </summary>
+    private static bool CanSharePlugin(IAvailablePlugin plugin) => plugin is { IsInternal: false, IsManagedByConfigServer: false, Type: PluginType.ASSISTANT } && !string.IsNullOrWhiteSpace(plugin.LocalPath);
 
     /// <summary>
     /// Organizations may disable importing plugin archives by using a configuration plugin.
