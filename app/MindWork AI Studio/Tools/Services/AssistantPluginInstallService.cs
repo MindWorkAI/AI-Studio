@@ -572,7 +572,10 @@ public sealed class AssistantPluginInstallService
     private static async Task<AssistantPluginValidationResult> ValidateAssistantPluginCodeAsync(string pluginDirectory, string pluginCode,
         string notAssistantIssue, string invalidAssistantIssue, string internalPluginIdIssue, CancellationToken token)
     {
-        var plugin = await PluginFactory.Load(pluginDirectory, pluginCode, token);
+        // The plugin is not installed yet: it sits in a staging directory outside the installed
+        // plugins directory. We allow that directory as the module base, so the plugin can load its
+        // own Lua modules, e.g., an icon.lua, while we validate it:
+        var plugin = await PluginFactory.Load(pluginDirectory, pluginCode, token, pluginDirectory);
         if (plugin is not PluginAssistants assistantPlugin)
             return AssistantPluginValidationResult.Failure(string.Format(notAssistantIssue, string.Join("; ", plugin.Issues)));
 
