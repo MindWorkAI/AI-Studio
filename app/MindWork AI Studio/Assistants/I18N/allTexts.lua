@@ -5575,8 +5575,20 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINGGUIDELINEDIALOG::T4250996615"] = "P
 -- Chat attachment
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T1071345316"] = "Chat attachment"
 
--- Danger detected
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T1081126836"] = "Danger detected"
+-- The file '{0}' could not be checked for prompt injection and was not attached.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T2404630365"] = "The file '{0}' could not be checked for prompt injection and was not attached."
+
+-- Security warning
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T1862129203"] = "Security warning"
+
+-- AI Studio has reliably detected and blocked the suspicious content. Your applications and data remain protected. Please review the content you uploaded.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T3661810823"] = "AI Studio has reliably detected and blocked the suspicious content. Your applications and data remain protected. Please review the content you uploaded."
+
+-- Security active
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T4212328947"] = "Security active"
+
+-- Security notice
+UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T4004397997"] = "Security notice"
 
 -- Content source
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T1129278507"] = "Content source"
@@ -7338,9 +7350,6 @@ UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T2936083926"] = "AI Studio could 
 
 -- Writer
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T2979224202"] = "Writer"
-
--- Prompt Injection Detected
-UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T3580322580"] = "Prompt Injection Detected"
 
 -- Show details
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T3692372066"] = "Show details"

@@ -9,7 +9,7 @@ public sealed class PromptInjectionScanner(ILogger<PromptInjectionScanner> logge
     private const int MAX_DECODED_CANDIDATES_PER_ENCODING = 12;
     private const int MAX_DECODED_TEXT_LENGTH = 12_000;
     private const int MAX_FINDINGS = 8;
-    private const int SNIPPET_RADIUS = 80;
+    private const int MAX_SNIPPET_LENGTH = 240;
 
     private static readonly IReadOnlyDictionary<(int Length, char First, char Last), string[]> TYPOGLYCEMIA_KEYWORDS =
         CreateTypoglycemiaKeywordIndex();
@@ -70,8 +70,8 @@ public sealed class PromptInjectionScanner(ILogger<PromptInjectionScanner> logge
             if (!match.Success)
                 continue;
 
-            var snippet = ExtractSnippet(text, match.Index, match.Length, SNIPPET_RADIUS);
-            AddFinding(findings, findingKeys, new(rule.Id, rule.Category, stage, snippet));
+            var snippet = ExtractSnippet(text, match.Index, match.Length);
+            AddFinding(findings, findingKeys, new(rule.Id, rule.Category, snippet));
         }
     }
 
@@ -131,8 +131,8 @@ public sealed class PromptInjectionScanner(ILogger<PromptInjectionScanner> logge
                 if (!IsTypoglycemiaVariant(token, keyword))
                     continue;
 
-                var snippet = ExtractSnippet(text, match.Index, match.Length, SNIPPET_RADIUS);
-                AddFinding(findings, findingKeys, new($"typoglycemia:{keyword}", "evasion", "typoglycemia", snippet));
+                var snippet = ExtractSnippet(text, match.Index, match.Length);
+                AddFinding(findings, findingKeys, new($"typoglycemia:{keyword}", "evasion", snippet));
                 break;
             }
         }
@@ -265,17 +265,94 @@ public sealed class PromptInjectionScanner(ILogger<PromptInjectionScanner> logge
 
     private static void AddFinding(List<PromptInjectionFinding> findings, HashSet<string> findingKeys, PromptInjectionFinding finding)
     {
-        var key = $"{finding.RuleId}|{finding.DetectionStage}|{finding.Snippet}";
+        var key = $"{finding.Category}|{finding.Snippet}";
         if (findingKeys.Add(key))
             findings.Add(finding);
     }
 
-    private static string ExtractSnippet(string text, int index, int length, int radius)
+    private static string ExtractSnippet(string text, int index, int length)
     {
-        var start = Math.Max(0, index - radius);
-        var end = Math.Min(text.Length, index + length + radius);
-        var snippet = text[start..end].Replace('\r', ' ').Replace('\n', ' ').Trim();
-        return snippet.Length > radius * 2 ? $"{snippet[..(radius * 2)]}..." : snippet;
+        var matchStart = Math.Clamp(index, 0, text.Length);
+        var matchEnd = Math.Clamp(index + length, matchStart, text.Length);
+        var sentenceStart = FindSentenceStart(text, matchStart);
+        var sentenceEnd = FindSentenceEnd(text, matchEnd);
+
+        while (sentenceStart < matchStart && char.IsWhiteSpace(text[sentenceStart]))
+            sentenceStart++;
+
+        while (sentenceEnd > matchEnd && char.IsWhiteSpace(text[sentenceEnd - 1]))
+            sentenceEnd--;
+
+        if (sentenceEnd - sentenceStart <= MAX_SNIPPET_LENGTH)
+            return NormalizeSnippet(text[sentenceStart..sentenceEnd]);
+
+        var matchLength = matchEnd - matchStart;
+        if (matchLength >= MAX_SNIPPET_LENGTH - 6)
+            return NormalizeSnippet(text[matchStart..matchEnd]);
+
+        var contextBudget = MAX_SNIPPET_LENGTH - 6 - matchLength;
+        var leftAvailable = matchStart - sentenceStart;
+        var rightAvailable = sentenceEnd - matchEnd;
+        var leftLength = Math.Min(leftAvailable, contextBudget / 2);
+        var rightLength = Math.Min(rightAvailable, contextBudget - leftLength);
+        var remainingBudget = contextBudget - leftLength - rightLength;
+
+        leftLength += Math.Min(leftAvailable - leftLength, remainingBudget);
+        remainingBudget = contextBudget - leftLength - rightLength;
+        rightLength += Math.Min(rightAvailable - rightLength, remainingBudget);
+
+        var snippetStart = matchStart - leftLength;
+        var snippetEnd = matchEnd + rightLength;
+        var snippet = NormalizeSnippet(text[snippetStart..snippetEnd]);
+        var prefix = snippetStart > sentenceStart ? "..." : string.Empty;
+        var suffix = snippetEnd < sentenceEnd ? "..." : string.Empty;
+        return $"{prefix}{snippet}{suffix}";
+    }
+
+    private static int FindSentenceStart(string text, int matchStart)
+    {
+        for (var index = matchStart - 1; index >= 0; index--)
+        {
+            if (IsSentenceBoundary(text[index]))
+                return index + 1;
+        }
+
+        return matchStart;
+    }
+
+    private static int FindSentenceEnd(string text, int matchEnd)
+    {
+        for (var index = matchEnd; index < text.Length; index++)
+        {
+            if (IsSentenceBoundary(text[index]))
+                return index + 1;
+        }
+
+        return matchEnd;
+    }
+
+    private static bool IsSentenceBoundary(char character) => character is '.' or '!' or '?' or '\r' or '\n';
+
+    private static string NormalizeSnippet(ReadOnlySpan<char> snippet)
+    {
+        var normalized = new StringBuilder(snippet.Length);
+        var previousCharacterWasWhitespace = false;
+        foreach (var character in snippet)
+        {
+            if (char.IsWhiteSpace(character))
+            {
+                if (normalized.Length > 0 && !previousCharacterWasWhitespace)
+                    normalized.Append(' ');
+
+                previousCharacterWasWhitespace = true;
+                continue;
+            }
+
+            normalized.Append(character);
+            previousCharacterWasWhitespace = false;
+        }
+
+        return normalized.ToString().Trim();
     }
 
     private static IReadOnlyDictionary<(int Length, char First, char Last), string[]> CreateTypoglycemiaKeywordIndex()

@@ -5,6 +5,7 @@ using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 using AIStudio.Tools.Validation;
+using AIStudio.Tools.Security;
 
 using Microsoft.AspNetCore.Components;
 
@@ -86,7 +87,10 @@ public partial class AttachDocuments : MSGComponentBase
     /// <summary>Creates and persists a draft owner after media import confirmation.</summary>
     [Parameter]
     public Func<string, Task<ChatThread?>> EnsureOwnerChatAsync { get; set; } = _ => Task.FromResult<ChatThread?>(null);
-
+    
+    [Inject]
+    private PromptInjectionGuardService PromptInjectionGuardService { get; init; } = null!;
+    
     [Inject]
     private ILogger<AttachDocuments> Logger { get; set; } = null!;
 
@@ -457,10 +461,7 @@ public partial class AttachDocuments : MSGComponentBase
             if (!canAddRegularFiles)
                 break;
 
-            if (!await FileExtensionValidation.IsExtensionValidWithNotifyAsync(FileExtensionValidation.UseCase.ATTACHING_CONTENT, path, this.ValidateMediaFileTypes, this.Provider))
-                continue;
-            
-            this.DocumentPaths.Add(FileAttachment.FromPath(path));
+            await this.TryAddFileAsync(path);
         }
 
         if (mediaPaths.Count is 0)
@@ -528,5 +529,35 @@ public partial class AttachDocuments : MSGComponentBase
         };
 
         await this.DialogService.ShowAsync<DocumentCheckDialog>(T("Document Preview"), dialogParameters, DialogOptions.FULLSCREEN);
+    }
+    
+    private async Task<bool> TryAddFileAsync(string filePath)
+    {
+        if (!await FileExtensionValidation.IsExtensionValidWithNotifyAsync(FileExtensionValidation.UseCase.ATTACHING_CONTENT, filePath, this.ValidateMediaFileTypes, this.Provider))
+            return false;
+
+        var attachment = FileAttachment.FromPath(filePath);
+        if (attachment.Type is FileAttachmentType.DOCUMENT && this.PromptInjectionGuardService.IsProtectionEnabled)
+        {
+            try
+            {
+                var fileContent = await this.RustService.ReadArbitraryFileData(filePath, int.MaxValue);
+                await this.PromptInjectionGuardService.EnsureSafeForLlmAsync(fileContent, PromptInjectionSource.ChatAttachment(filePath));
+            }
+            catch (PromptInjectionBlockedException)
+            {
+                return false;
+            }
+            catch (Exception exception)
+            {
+                this.Logger.LogError(exception, "File attachment '{FilePath}' could not be checked for prompt injection and will not be attached.", filePath);
+                await this.MessageBus.SendError(new(
+                    Icons.Material.Filled.Cancel,
+                    string.Format(T("The file '{0}' could not be checked for prompt injection and was not attached."), attachment.FileName)));
+                return false;
+            }
+        }
+
+        return this.DocumentPaths.Add(attachment);
     }
 }

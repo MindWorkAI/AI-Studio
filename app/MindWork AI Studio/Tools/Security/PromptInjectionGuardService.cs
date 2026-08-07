@@ -12,9 +12,11 @@ public sealed class PromptInjectionGuardService(
 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(PromptInjectionGuardService).Namespace, nameof(PromptInjectionGuardService));
 
+    public bool IsProtectionEnabled => settingsManager.ConfigurationData.Chat.EnablePromptInjectionProtection;
+
     public async Task<string> EnsureSafeForLlmAsync(string text, PromptInjectionSource source)
     {
-        if (!settingsManager.ConfigurationData.Chat.EnablePromptInjectionProtection || string.IsNullOrWhiteSpace(text))
+        if (!this.IsProtectionEnabled || string.IsNullOrWhiteSpace(text))
             return text;
 
         var result = scanner.Scan(text, source);

@@ -4278,14 +4278,27 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1016188706"] = "Möchten Sie
 -- Chat attachment
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T1071345316"] = "Dateianhang"
 
--- Danger detected
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T1081126836"] = "Gefahr erkannt"
+-- The file '{0}' could not be checked for prompt injection and was not attached.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T2404630365"] = "Die Datei '{0}' konnte nicht auf Prompt-Injection überprüft werden und wurde nicht angehängt."
+
+-- Security warning
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T1862129203"] = "Sicherheitswarnung"
+
+
+-- AI Studio has reliably detected and blocked the suspicious content. Your applications and data remain protected. Please review the content you uploaded.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T3661810823"] = "AI Studio hat den verdächtigen Inhalt zuverlässig erkannt und blockiert. Ihre Anwendungen und Daten bleiben geschützt. Bitte überprüfen Sie den von Ihnen hochgeladenen Inhalt."
+
+-- Security active
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T4212328947"] = "Sicherheit aktiv"
+
+-- Typical attacks on AI systems
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T4221674400"] = "Typische Angriffe auf KI-Systeme (z.B. Prompt Injection) verbergen Anweisungen in nicht vertrauenswürdigen Inhalten, um ein KI-Modell dazu zu bringen, seine vorgesehenen Regeln zu ignorieren oder ungewollte Aktionen auszuführen."
+
+-- Security notice
+UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T4004397997"] = "Sicherheitshinweis"
 
 -- Content source
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T1129278507"] = "Datei"
-
--- Prompt injection hides instructions in untrusted content to make an AI model ignore its intended rules or perform unintended actions.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T4221674400"] = "Typische Angriffe auf KI-Systeme (z.B. Prompt Injection) verbergen Anweisungen in nicht vertrauenswürdigen Inhalten, um ein KI-Modell dazu zu bringen, seine vorgesehenen Regeln zu ignorieren oder ungewollte Aktionen auszuführen."
 
 -- Attempt to override instructions
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T161976090"] = "Versuch, Anweisungen zu überschreiben"
@@ -4371,8 +4384,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T4245463281"] 
 -- Checks web content, file attachments, retrieval context, and similar external input for prompt-injection patterns before it is sent to a model or agent.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T69192586"] = "Prüft Webinhalte, Dateianhänge, Abrufkontext und ähnliche externe Eingaben auf Prompt-Injection-Muster, bevor sie an ein Modell oder einen Agenten gesendet werden."
 
--- Prompt Injection Detected
-UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T3580322580"] = "Prompt-Injection erkannt"
 
 -- AI Studio blocked content from '{0}' because it looks like a prompt-injection attempt.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONGUARDSERVICE::T3560909296"] = "AI Studio hat Inhalte von '{0}' blockiert, da es sich um einen möglichen Prompt-Injection-Versuch handelt."
