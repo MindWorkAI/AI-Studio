@@ -8,7 +8,7 @@ public sealed class PromptInjectionGuardService(
     SettingsManager settingsManager,
     ILogger<PromptInjectionGuardService> logger)
 {
-    public const string WIKI_URL = "https://de.wikipedia.org/wiki/Prompt-Engineering#Prompt_Injection";
+    public const string WIKI_URL = "https://en.wikipedia.org/wiki/Prompt_engineering#Prompt_injection";
 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(PromptInjectionGuardService).Namespace, nameof(PromptInjectionGuardService));
 

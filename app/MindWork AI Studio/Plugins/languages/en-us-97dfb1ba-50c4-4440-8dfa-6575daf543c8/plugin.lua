@@ -4176,6 +4176,73 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T1061000046"] = "We hope this vis
 -- Integration of enterprise data
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T1127694951"] = "Integration of enterprise data"
 
+-- Danger detected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T1081126836"] = "Danger detected"
+
+-- More Information
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T1266371726"] = "More Information"
+
+-- Prompt injection is an attempt to hide instructions in untrusted content so that an AI model ignores its intended rules or performs unintended actions.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T163682410"] = "Prompt injection is an attempt to hide instructions in untrusted content so that an AI model ignores its intended rules or performs unintended actions."
+
+-- Source
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T1642243064"] = "Source"
+
+-- Hide More Information
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T1648537896"] = "Hide More Information"
+
+-- AI Studio blocked this content before it reached a model or agent.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T2378027194"] = "AI Studio blocked this content before it reached a model or agent."
+
+-- Prompt Injection detected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T3052247348"] = "Prompt Injection detected"
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T3448155331"] = "Close"
+
+-- Prompt injection is a trick used to manipulate AI systems like chatbots. Normally, these systems follow the rules set by their developers—such as being helpful and safe. But with prompt injection, an attacker crafts a clever input that makes the AI think it’s receiving a new, legitimate instruction. This can cause the AI to ignore its usual safeguards and do something unintended, like sharing private information or generating harmful content. The issue arises because the AI can’t always tell the difference between a trusted command and a deceptive one.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T3548442822"] = "Prompt injection is a trick used to manipulate AI systems like chatbots. Normally, these systems follow the rules set by their developers—such as being helpful and safe. But with prompt injection, an attacker crafts a clever input that makes the AI think it’s receiving a new, legitimate instruction. This can cause the AI to ignore its usual safeguards and do something unintended, like sharing private information or generating harmful content. The issue arises because the AI can’t always tell the difference between a trusted command and a deceptive one."
+
+-- Source kind
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T47437466"] = "Source kind"
+
+-- More information
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T475337262"] = "More information"
+
+-- Detected signals
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T556618402"] = "Detected signals"
+
+
+-- Protect against prompt injection in external content?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T1040385578"] = "Protect against prompt injection in external content?"
+
+-- A blocking alert explains the detected attack pattern
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T2341755932"] = "A blocking alert explains the detected attack pattern"
+
+-- Show a learning alert when prompt injection is detected?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T2754886869"] = "Show a learning alert when prompt injection is detected?"
+
+-- Shows an explanation dialog with an external reference when AI Studio blocks suspicious content.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3129787554"] = "Shows an explanation dialog with an external reference when AI Studio blocks suspicious content."
+
+-- Only the block notification is shown
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3491678837"] = "Only the block notification is shown"
+
+-- Potential prompt injections are blocked before they reach an LLM
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3982766677"] = "Potential prompt injections are blocked before they reach an LLM"
+
+-- External content is passed through without prompt-injection checks
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T4245463281"] = "External content is passed through without prompt-injection checks"
+
+-- Checks web content, file attachments, retrieval context, and similar external input for prompt-injection patterns before it is sent to a model or agent.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T69192586"] = "Checks web content, file attachments, retrieval context, and similar external input for prompt-injection patterns before it is sent to a model or agent."
+
+-- Prompt Injection Detected
+UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T3580322580"] = "Prompt Injection Detected"
+
+-- AI Studio blocked content from '{0}' because it looks like a prompt-injection attempt.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONGUARDSERVICE::T3560909296"] = "AI Studio blocked content from '{0}' because it looks like a prompt-injection attempt."
+
 -- Meet your needs
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VISION::T127032776"] = "Meet your needs"
 

@@ -4275,6 +4275,108 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::VOICERECORDER::T974954792"] = "Das Ergebn
 -- Are you sure you want to delete the chat '{0}' in the workspace '{1}'?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1016188706"] = "Möchten Sie den Chat „{0}“ im Arbeitsbereich „{1}“ wirklich löschen?"
 
+-- Chat attachment
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T1071345316"] = "Dateianhang"
+
+-- Danger detected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T1081126836"] = "Gefahr erkannt"
+
+-- Content source
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T1129278507"] = "Datei"
+
+-- Prompt injection hides instructions in untrusted content to make an AI model ignore its intended rules or perform unintended actions.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T4221674400"] = "Typische Angriffe auf KI-Systeme (z.B. Prompt Injection) verbergen Anweisungen in nicht vertrauenswürdigen Inhalten, um ein KI-Modell dazu zu bringen, seine vorgesehenen Regeln zu ignorieren oder ungewollte Aktionen auszuführen."
+
+-- Attempt to override instructions
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T161976090"] = "Versuch, Anweisungen zu überschreiben"
+
+-- Attempt to expose protected data
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T2050274293"] = "Versuch, geschützte Daten offenzulegen"
+
+-- Attempt to bypass safeguards
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T2260642992"] = "Versuch, Sicherheitsvorkehrungen zu umgehen"
+
+-- Attempt to change the AI's role
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T2340508370"] = "Versuch, die Rolle der KI zu ändern"
+
+-- AI Studio blocked this content before it reached a model or agent.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T2378027194"] = "AI Studio hat diesen Inhalt blockiert, bevor er ein Modell oder einen Agenten erreicht hat."
+
+-- Hidden instructions using markup
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T2526538070"] = "Versteckte Anweisungen mit Markup"
+
+-- Web content
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T2626468388"] = "Web-Inhalt"
+
+-- Source type
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T280442848"] = "Quelle"
+
+-- Prompt injection is a method used to manipulate AI systems such as chatbots. An attacker places misleading instructions in content so that the AI treats them as legitimate. This can cause the AI to ignore safeguards, expose private information, or generate harmful content.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T3122726298"] = "Prompt Injection ist eine Methode, um KI-Systeme wie Chatbots zu manipulieren. Dabei platziert ein Angreifer irreführende Anweisungen in Inhalten, sodass die KI diese als legitim betrachtet. Dadurch kann die KI Sicherheitsvorkehrungen ignorieren, private Informationen preisgeben oder schädliche Inhalte erzeugen."
+
+-- Hidden instructions using delimiters
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T329656456"] = "Versteckte Anweisungen mit Trennzeichen"
+
+-- Retrieved context
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T3347144620"] = "Es scheint, dass der Kontext bereits bereitgestellt wurde. Bitte geben Sie den Text an, den Sie aus dem Englischen (US) ins Deutsche (Deutschland) übersetzen möchten. Ich werde sicherstellen, dass die Übersetzung präzise, natürlich klingt und für die Zielgruppe leicht verständlich ist."
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T3448155331"] = "Schließen"
+
+-- Attempt to manipulate an agent
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T355252317"] = "Versuch, einen Agenten zu manipulieren"
+
+-- File content
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T3788064862"] = "Inhalt der Datei"
+
+-- Persistent or delayed instruction
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T4169123215"] = "Dauerhafte oder verzögerte Anweisung"
+
+-- Detected content
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T4223810750"] = "Erkannter Inhalt"
+
+-- More information
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T475337262"] = "Weitere Informationen"
+
+-- Hidden instructions using encoding
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T49495195"] = "Versteckte Anweisungen mit Kodierung"
+
+-- Hide more information
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T808738984"] = "Weniger Informationen anzeigen"
+
+-- Obfuscated instruction
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T87316699"] = "Verschleierte Anweisung"
+
+-- Protect against prompt injection in external content?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T1040385578"] = "Soll der Zugriff auf externe Inhalte vor Prompt-Injection geschützt werden?"
+
+-- A blocking alert explains the detected attack pattern
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T2341755932"] = "Eine blockierende Warnung erklärt das erkannte Angriffsmuster."
+
+-- Show a learning alert when prompt injection is detected?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T2754886869"] = "Lernwarnung anzeigen, wenn Prompt-Injection erkannt wird?"
+
+-- Shows an explanation dialog with an external reference when AI Studio blocks suspicious content.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3129787554"] = "Zeigt einen Erklärungsdialog mit einem externen Verweis an, wenn AI Studio verdächtige Inhalte blockiert."
+
+-- Only the block notification is shown
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3491678837"] = "Nur die Blockbenachrichtigung wird angezeigt"
+
+-- Potential prompt injections are blocked before they reach an LLM
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T3982766677"] = "Potenzielle Prompt-Injections werden blockiert, bevor sie ein LLM erreichen."
+
+-- External content is passed through without prompt-injection checks
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T4245463281"] = "Externer Inhalt wird ohne Prompt-Injection-Prüfungen durchgereicht"
+
+-- Checks web content, file attachments, retrieval context, and similar external input for prompt-injection patterns before it is sent to a model or agent.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T69192586"] = "Prüft Webinhalte, Dateianhänge, Abrufkontext und ähnliche externe Eingaben auf Prompt-Injection-Muster, bevor sie an ein Modell oder einen Agenten gesendet werden."
+
+-- Prompt Injection Detected
+UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T3580322580"] = "Prompt-Injection erkannt"
+
+-- AI Studio blocked content from '{0}' because it looks like a prompt-injection attempt.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONGUARDSERVICE::T3560909296"] = "AI Studio hat Inhalte von '{0}' blockiert, da es sich um einen möglichen Prompt-Injection-Versuch handelt."
+
 -- Move chat
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::WORKSPACES::T1133040906"] = "Chat verschieben"
 
