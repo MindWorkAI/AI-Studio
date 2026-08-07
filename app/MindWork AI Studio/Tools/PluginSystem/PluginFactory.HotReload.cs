@@ -19,7 +19,6 @@ public static partial class PluginFactory
             HOT_RELOAD_WATCHER.NotifyFilter = NotifyFilters.CreationTime
                                               | NotifyFilters.DirectoryName
                                               | NotifyFilters.FileName
-                                              | NotifyFilters.LastAccess
                                               | NotifyFilters.LastWrite
                                               | NotifyFilters.Size;
             

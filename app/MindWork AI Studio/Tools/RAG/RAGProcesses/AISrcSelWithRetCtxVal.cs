@@ -205,17 +205,7 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
             
             var ragSources = new List<ISource>();
             foreach (var retrievalContext in dataContexts)
-            {
-                var title = retrievalContext.DataSourceName;
-                if(string.IsNullOrWhiteSpace(title))
-                    continue;
-                
-                var link = retrievalContext.Path;
-                if(!link.StartsWith("http", StringComparison.OrdinalIgnoreCase))
-                    continue;
-
-                ragSources.Add(new Source(title, link, SourceOrigin.RAG));
-            }
+                ragSources.AddRange(CreateSources(retrievalContext));
 
             // Merge the sources, avoiding duplicates:
             aiAnswerSources.MergeSources(ragSources);
@@ -225,4 +215,63 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
     }
 
     #endregion
+
+    private static IReadOnlyList<ISource> CreateSources(IRetrievalContext retrievalContext)
+    {
+        var sources = new List<ISource>();
+        AddSource(sources, GetReferenceTitle(retrievalContext), GetReferenceLink(retrievalContext));
+        foreach (var link in retrievalContext.Links)
+            AddSource(sources, retrievalContext.DataSourceName, link);
+
+        return sources;
+    }
+
+    private static void AddSource(ICollection<ISource> sources, string title, string link)
+    {
+        if (string.IsNullOrWhiteSpace(title) || !TryNormalizeSourceLink(link, out var normalizedLink))
+            return;
+
+        sources.Add(new Source(title, normalizedLink, SourceOrigin.RAG));
+    }
+
+    private static string GetReferenceTitle(IRetrievalContext retrievalContext) =>
+        retrievalContext is RetrievalTextContext { ReferenceTitle: { Length: > 0 } referenceTitle }
+            ? referenceTitle
+            : retrievalContext.DataSourceName;
+
+    private static string GetReferenceLink(IRetrievalContext retrievalContext) =>
+        retrievalContext is RetrievalTextContext { ReferenceLink: { Length: > 0 } referenceLink }
+            ? referenceLink
+            : retrievalContext.Path;
+
+    private static bool TryNormalizeSourceLink(string link, out string normalizedLink)
+    {
+        normalizedLink = string.Empty;
+        if (string.IsNullOrWhiteSpace(link))
+            return false;
+
+        if (Uri.TryCreate(link, UriKind.Absolute, out var absoluteUri) && IsSupportedSourceUri(absoluteUri))
+        {
+            normalizedLink = absoluteUri.AbsoluteUri;
+            return true;
+        }
+
+        try
+        {
+            if (!Path.IsPathRooted(link))
+                return false;
+
+            normalizedLink = new Uri(Path.GetFullPath(link)).AbsoluteUri;
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static bool IsSupportedSourceUri(Uri uri) =>
+        string.Equals(uri.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase)
+        || string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase)
+        || string.Equals(uri.Scheme, Uri.UriSchemeFile, StringComparison.OrdinalIgnoreCase);
 }

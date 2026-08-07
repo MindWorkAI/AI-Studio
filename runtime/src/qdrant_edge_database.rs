@@ -6,12 +6,13 @@ use std::sync::Mutex;
 use axum::Json;
 use log::{error, info, warn};
 use once_cell::sync::Lazy;
-use qdrant_edge::external::serde_json::json;
+use qdrant_edge::external::serde_json::{json, Value};
 use qdrant_edge::external::uuid::Uuid;
 use qdrant_edge::{
     Condition, Distance, EdgeConfig, EdgeOptimizersConfig, EdgeShard, EdgeVectorParams,
-    FieldCondition, Filter, HnswIndexConfig, Match, MatchValue, PointId, PointInsertOperations,
-    PointOperations, PointStruct, UpdateOperation, ValueVariants, Vectors,
+    FieldCondition, Filter, HnswIndexConfig, Match, MatchValue, NamedQuery, Payload, PointId,
+    PointInsertOperations, PointOperations, PointStruct, QueryEnum, ScoredPoint, SearchRequest,
+    UpdateOperation, ValueVariants, VectorInternal, Vectors, WithPayloadInterface, WithVector,
 };
 use serde::{Deserialize, Serialize};
 use tauri::Manager;
@@ -67,14 +68,22 @@ pub struct QdrantEdgeStoragePoint {
     pub data_source_id: String,
     pub data_source_name: String,
     pub data_source_type: String,
+    pub chunk_id: String,
+    pub parent_file_id: String,
     pub file_path: String,
+    pub absolute_path: String,
     pub file_name: String,
     pub relative_path: String,
+    pub file_type: String,
+    pub page_number: Option<i32>,
     pub chunk_index: i32,
     pub text: String,
     pub fingerprint: String,
+    pub creation_utc: String,
     pub last_write_utc: String,
     pub embedded_at_utc: String,
+    pub compliance_level: String,
+    pub compliance_level_rank: i32,
 }
 
 #[derive(Deserialize)]
@@ -90,9 +99,21 @@ pub struct InsertQdrantEdgeEmbeddingRequest {
 }
 
 #[derive(Deserialize)]
+pub struct SearchQdrantEdgeEmbeddingRequest {
+    pub store_name: String,
+    pub vector: Vec<f32>,
+    pub max_matches: usize,
+}
+
+#[derive(Deserialize)]
 pub struct DeleteQdrantEdgeEmbeddingByFileRequest {
     pub store_name: String,
     pub file_path: String,
+}
+
+#[derive(Deserialize)]
+pub struct OptimizeQdrantEdgeStoreRequest {
+    pub store_name: String,
 }
 
 #[derive(Deserialize)]
@@ -104,6 +125,38 @@ pub struct DeleteQdrantEdgeStoreRequest {
 pub struct QdrantEdgeOperationResponse {
     pub success: bool,
     pub issue: String,
+}
+
+#[derive(Serialize)]
+pub struct QdrantEdgeSearchResponse {
+    pub success: bool,
+    pub issue: String,
+    pub data: Vec<QdrantEdgeSearchResult>,
+}
+
+#[derive(Serialize)]
+pub struct QdrantEdgeSearchResult {
+    pub point_id: String,
+    pub score: f32,
+    pub data_source_id: String,
+    pub data_source_name: String,
+    pub data_source_type: String,
+    pub chunk_id: String,
+    pub parent_file_id: String,
+    pub file_path: String,
+    pub absolute_path: String,
+    pub file_name: String,
+    pub relative_path: String,
+    pub file_type: String,
+    pub page_number: Option<i32>,
+    pub chunk_index: i32,
+    pub text: String,
+    pub fingerprint: String,
+    pub creation_utc: String,
+    pub last_write_utc: String,
+    pub embedded_at_utc: String,
+    pub compliance_level: String,
+    pub compliance_level_rank: i32,
 }
 
 #[derive(Clone, Serialize)]
@@ -215,6 +268,36 @@ impl QdrantEdgeDatabase {
         Ok(())
     }
 
+    fn search_embedding(&mut self, store_name: &str, vector: Vec<f32>, max_matches: usize) -> QdrantEdgeResult<Vec<QdrantEdgeSearchResult>> {
+        if max_matches == 0 {
+            return Ok(vec![]);
+        }
+
+        validate_vector_size(vector.len())?;
+        let Some(shard) = self.get_existing_store(store_name)? else {
+            return Ok(vec![]);
+        };
+
+        let search_results = shard.search(SearchRequest {
+            query: QueryEnum::Nearest(NamedQuery::new(
+                VectorInternal::Dense(vector),
+                VECTOR_NAME,
+            )),
+            filter: None,
+            params: None,
+            limit: max_matches,
+            offset: 0,
+            with_payload: Some(WithPayloadInterface::Bool(true)),
+            with_vector: Some(WithVector::Bool(false)),
+            score_threshold: None,
+        })?;
+
+        Ok(search_results
+            .into_iter()
+            .map(to_qdrant_edge_search_result)
+            .collect())
+    }
+
     fn delete_embedding_by_file(&mut self, store_name: &str, file_path: &str) -> QdrantEdgeResult<()> {
         let Some(shard) = self.get_existing_store(store_name)? else {
             return Ok(());
@@ -223,6 +306,19 @@ impl QdrantEdgeDatabase {
         shard.update(UpdateOperation::PointOperation(
             PointOperations::DeletePointsByFilter(match_keyword_filter("file_path", file_path)?),
         ))?;
+        shard.flush();
+        Ok(())
+    }
+
+    fn optimize_store(&mut self, store_name: &str) -> QdrantEdgeResult<()> {
+        let Some(shard) = self.get_existing_store(store_name)? else {
+            return Ok(());
+        };
+
+        let optimized = shard.optimize()?;
+        if optimized {
+            info!(Source = "Qdrant Edge"; "Optimized vector store '{}'.", store_name);
+        }
         shard.flush();
         Ok(())
     }
@@ -288,9 +384,21 @@ pub async fn insert_qdrant_edge_embedding(_token: APIToken, Json(request): Json<
     })
 }
 
+pub async fn search_qdrant_edge_embeddings(_token: APIToken, Json(request): Json<SearchQdrantEdgeEmbeddingRequest>) -> Json<QdrantEdgeSearchResponse> {
+    execute_qdrant_edge_query(|database| {
+        database.search_embedding(&request.store_name, request.vector, request.max_matches)
+    })
+}
+
 pub async fn delete_qdrant_edge_embedding_by_file(_token: APIToken, Json(request): Json<DeleteQdrantEdgeEmbeddingByFileRequest>) -> Json<QdrantEdgeOperationResponse> {
     execute_qdrant_edge_operation(|database| {
         database.delete_embedding_by_file(&request.store_name, &request.file_path)
+    })
+}
+
+pub async fn optimize_qdrant_edge_store(_token: APIToken, Json(request): Json<OptimizeQdrantEdgeStoreRequest>) -> Json<QdrantEdgeOperationResponse> {
+    execute_qdrant_edge_operation(|database| {
+        database.optimize_store(&request.store_name)
     })
 }
 
@@ -361,6 +469,37 @@ where
             Json(QdrantEdgeOperationResponse {
                 success: false,
                 issue,
+            })
+        },
+    }
+}
+
+fn execute_qdrant_edge_query<F>(operation: F) -> Json<QdrantEdgeSearchResponse>
+where
+    F: FnOnce(&mut QdrantEdgeDatabase) -> QdrantEdgeResult<Vec<QdrantEdgeSearchResult>>,
+{
+    let mut database_guard = QDRANT_EDGE_DATABASE.lock().unwrap();
+    let Some(database) = database_guard.as_mut() else {
+        return Json(QdrantEdgeSearchResponse {
+            success: false,
+            issue: "Qdrant Edge is not available.".to_string(),
+            data: vec![],
+        });
+    };
+
+    match operation(database) {
+        Ok(data) => Json(QdrantEdgeSearchResponse {
+            success: true,
+            issue: String::new(),
+            data,
+        }),
+        Err(e) => {
+            let issue = e.to_string();
+            error!(Source = "Qdrant Edge"; "Qdrant Edge query failed: {issue}");
+            Json(QdrantEdgeSearchResponse {
+                success: false,
+                issue,
+                data: vec![],
             })
         },
     }
@@ -508,23 +647,82 @@ fn to_qdrant_edge_point(point: QdrantEdgeStoragePoint) -> qdrant_edge::PointStru
             "data_source_id": point.data_source_id,
             "data_source_name": point.data_source_name,
             "data_source_type": point.data_source_type,
+            "chunk_id": point.chunk_id,
+            "parent_file_id": point.parent_file_id,
             "file_path": point.file_path,
+            "absolute_path": point.absolute_path,
             "file_name": point.file_name,
             "relative_path": point.relative_path,
+            "file_type": point.file_type,
+            "page_number": point.page_number,
             "chunk_index": point.chunk_index,
             "text": point.text,
             "fingerprint": point.fingerprint,
+            "creation_utc": point.creation_utc,
             "last_write_utc": point.last_write_utc,
             "embedded_at_utc": point.embedded_at_utc,
+            "compliance_level": point.compliance_level,
+            "compliance_level_rank": point.compliance_level_rank,
         }),
     )
     .into()
+}
+
+fn to_qdrant_edge_search_result(point: ScoredPoint) -> QdrantEdgeSearchResult {
+    let payload = point.payload.unwrap_or_default();
+    QdrantEdgeSearchResult {
+        point_id: point_id_to_string(point.id),
+        score: point.score,
+        data_source_id: payload_string(&payload, "data_source_id"),
+        data_source_name: payload_string(&payload, "data_source_name"),
+        data_source_type: payload_string(&payload, "data_source_type"),
+        chunk_id: payload_string(&payload, "chunk_id"),
+        parent_file_id: payload_string(&payload, "parent_file_id"),
+        file_path: payload_string(&payload, "file_path"),
+        absolute_path: payload_string(&payload, "absolute_path"),
+        file_name: payload_string(&payload, "file_name"),
+        relative_path: payload_string(&payload, "relative_path"),
+        file_type: payload_string(&payload, "file_type"),
+        page_number: payload_i32(&payload, "page_number"),
+        chunk_index: payload_i32(&payload, "chunk_index").unwrap_or_default(),
+        text: payload_string(&payload, "text"),
+        fingerprint: payload_string(&payload, "fingerprint"),
+        creation_utc: payload_string(&payload, "creation_utc"),
+        last_write_utc: payload_string(&payload, "last_write_utc"),
+        embedded_at_utc: payload_string(&payload, "embedded_at_utc"),
+        compliance_level: payload_string(&payload, "compliance_level"),
+        compliance_level_rank: payload_i32(&payload, "compliance_level_rank").unwrap_or_default(),
+    }
 }
 
 fn to_point_id(point_id: &str) -> PointId {
     Uuid::parse_str(point_id)
         .map(PointId::Uuid)
         .unwrap_or_else(|_| PointId::NumId(stable_u64(point_id)))
+}
+
+fn point_id_to_string(point_id: PointId) -> String {
+    match point_id {
+        PointId::NumId(id) => id.to_string(),
+        PointId::Uuid(uuid) => uuid.to_string(),
+    }
+}
+
+fn payload_string(payload: &Payload, key: &str) -> String {
+    payload
+        .0
+        .get(key)
+        .and_then(Value::as_str)
+        .unwrap_or_default()
+        .to_string()
+}
+
+fn payload_i32(payload: &Payload, key: &str) -> Option<i32> {
+    payload
+        .0
+        .get(key)
+        .and_then(Value::as_i64)
+        .and_then(|value| i32::try_from(value).ok())
 }
 
 fn stable_u64(value: &str) -> u64 {

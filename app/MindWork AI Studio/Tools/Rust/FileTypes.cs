@@ -65,7 +65,7 @@ public static class FileTypes
 
     // Media hierarchy
     public static readonly FileTypeFilter IMAGE = FileTypeFilter.Leaf(TB("Image"),
-        "jpg", "jpeg", "png", "gif", "bmp", "tiff", "svg", "webp", "heic");
+        "jpg", "jpeg", "png", "gif", "bmp", "tiff", "svg", "webp", "heic", "avif");
 
     /// <summary>
     /// Gets the prototype visual-asset image formats.

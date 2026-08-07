@@ -51,6 +51,8 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
     
+    [Inject] 
+    private RustService RustService { get; init; } = null!;
     [Inject]
     private IJSRuntime JsRuntime { get; init; } = null!;
 
@@ -86,12 +88,18 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private Guid loadedParameterWorkspaceId = Guid.Empty;
     private Guid foregroundChatId = Guid.Empty;
     private int workspaceHeaderSyncVersion;
+    private HashSet<FileAttachment> chatDocumentPaths = [];
+    private string tokenCount = "0";
+    private bool HasCustomTokenizer => !string.IsNullOrWhiteSpace(this.Provider.TokenizerPath);
+    private string TokenCountMessage => this.HasCustomTokenizer
+        ? $"{this.T("Estimated amount of tokens:")} {this.tokenCount}"
+        : string.Empty;
 
     private MediaImportOwner CurrentMediaImportOwner => MediaImportOwner.ForChat(this.ChatThread?.ChatId ?? this.draftMediaOwnerId);
 
     // Unfortunately, we need the input field reference to blur the focus away. Without
     // this, we cannot clear the input field.
-    private MudTextField<string> inputField = null!;
+    private UserPromptComponent<string> inputField = null!;
 
     /// <summary>
     /// Represents the user's input in the chat interface.
@@ -356,15 +364,22 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     protected override async Task OnParametersSetAsync()
     {
         var incomingChatId = this.ChatThread?.ChatId ?? Guid.Empty;
+        var providerChanged = this.Provider != this.lastSeenProvider;
         if (incomingChatId != this.lastSeenChatId || this.Provider != this.lastSeenProvider)
         {
             this.lastSeenChatId = incomingChatId;
             this.lastSeenProvider = this.Provider;
+            if (providerChanged)
+                this.tokenCount = "0";
+
             this.previousInputForbidden = true;
         }
 
         await this.ApplyLoadedChatParameterAsync();
         await this.SyncForegroundChatAsync();
+        if (providerChanged && this.HasCustomTokenizer && this.inputField is not null)
+            await this.CalculateTokenCount();
+
         await this.ConsumeMediaOutcomeAsync();
         await base.OnParametersSetAsync();
     }
@@ -697,6 +712,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         // Was a modifier key pressed as well?
         var isModifier = keyEvent.AltKey || keyEvent.CtrlKey || keyEvent.MetaKey || keyEvent.ShiftKey;
         
+        if (isEnter)
+            await this.CalculateTokenCount();
+        
         // Depending on the user's settings, might react to shortcuts:
         switch (this.SettingsManager.ConfigurationData.Chat.ShortcutSendBehavior)
         {
@@ -879,6 +897,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         this.ComposerState.Clear();
 
         await this.inputField.BlurAsync();
+        this.tokenCount = "0";
         
         // Enable the stream state for the chat component:
         this.hasUnsavedChanges = true;
@@ -1219,6 +1238,37 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private void RestoreComposerFromTextBlock(ContentText textBlock)
     {
         this.ComposerState.RestoreFromTextBlock(textBlock);
+    }
+    
+    private async Task CalculateTokenCount()
+    {
+        if (!this.HasCustomTokenizer)
+        {
+            if (this.tokenCount != "0")
+            {
+                this.tokenCount = "0";
+                this.StateHasChanged();
+            }
+
+            return;
+        }
+
+        if (this.inputField.Value is null)
+        {
+            this.tokenCount = "0";
+            return;
+        }
+
+        var response = await this.RustService.GetTokenCount(this.Provider.InstanceName, this.Provider.TokenizerPath, this.inputField.Value);
+        if (response is null)
+            return;
+        if (!response.Value.Success)
+        {
+            this.Logger.LogWarning($"Failed to calculate token count: status='{response.Value.Status}', reason='{response.Value.Message}'");
+            return;
+        }
+        this.tokenCount = response.Value.TokenCount.ToString();
+        this.StateHasChanged();
     }
     
     #region Overrides of MSGComponentBase

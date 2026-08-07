@@ -303,6 +303,17 @@ public static class ConfigurationSelectDataFactory
             }
         }
     }
+
+    public static IEnumerable<ConfigurationSelectData<ConfidenceLevel>> GetDataSourceComplianceLevelsData()
+    {
+        foreach (var level in Enum.GetValues<ConfidenceLevel>())
+        {
+            if (level is ConfidenceLevel.NONE)
+                continue;
+
+            yield return new(level.GetName(), level);
+        }
+    }
     
     public static IEnumerable<ConfigurationSelectData<Themes>> GetThemesData()
     {

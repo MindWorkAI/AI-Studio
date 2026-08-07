@@ -12,6 +12,7 @@ public static class ConfidenceLevelExtensions
         ConfidenceLevel.NONE => TB("No provider selected"),
         
         ConfidenceLevel.UNTRUSTED => TB("Untrusted"),
+        ConfidenceLevel.UNKNOWN => TB("Unknown"),
         ConfidenceLevel.VERY_LOW => TB("Very Low"),
         ConfidenceLevel.LOW => TB("Low"),
         ConfidenceLevel.MODERATE => TB("Moderate"),

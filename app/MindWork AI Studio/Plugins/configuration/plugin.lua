@@ -74,6 +74,8 @@ CONFIG["LLM_PROVIDERS"] = {}
 --     -- Please do not add the enclosing curly braces {} here. Also, no trailing comma is allowed.
 --     ["AdditionalJsonApiParameters"] = "",
 --
+--     -- Optional: tokenizer path for this provider relative to the plugin directory.
+--     -- ["TokenizerPath"] = "",
 --     -- Optional: expert capability overrides.
 --     -- Allowed keys are exactly:
 --     -- AUDIO_INPUT, MULTIPLE_IMAGE_INPUT, SPEECH_INPUT, VIDEO_INPUT,
@@ -142,6 +144,15 @@ CONFIG["EMBEDDING_PROVIDERS"] = {}
 --
 --     -- Optional: Encrypted API key (see LLM_PROVIDERS example for details)
 --     -- ["APIKey"] = "ENC:v1:<base64-encoded encrypted data>",
+
+--     -- Optional: tokenizer path for this provider relative to the plugin directory.
+--     -- ["TokenizerPath"] = "",
+--
+--     -- Optional: maximum number of tokens per embedding chunk. If omitted, AI Studio uses its default.
+--     -- ["TokenLimit"] = 16384,
+--
+--     -- Optional: number of chunks sent to the embedding provider in one request. If omitted, AI Studio sends one chunk per request.
+--     -- ["EmbeddingBatchSize"] = 1,
 --
 --     ["Model"] = {
 --         ["Id"] = "<the model ID, e.g., nomic-embed-text>",
@@ -151,6 +162,7 @@ CONFIG["EMBEDDING_PROVIDERS"] = {}
 
 -- ERI v1 data sources for retrieval-augmented generation:
 CONFIG["DATA_SOURCES"] = {}
+-- Allowed compliance levels are: UNTRUSTED, UNKNOWN, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
 
 -- Example: ERI v1 data source with a shared access token.
 -- CONFIG["DATA_SOURCES"][#CONFIG["DATA_SOURCES"]+1] = {
@@ -162,6 +174,7 @@ CONFIG["DATA_SOURCES"] = {}
 --     ["AuthMethod"] = "TOKEN",
 --     ["Token"] = "ENC:v1:<base64-encoded encrypted token>",
 --     ["SecurityPolicy"] = "SELF_HOSTED",
+--     ["ComplianceLevel"] = "UNKNOWN",
 --     ["SelectedRetrievalId"] = "<retrieval process ID from the ERI server>",
 --     ["MaxMatches"] = 10,
 -- }
@@ -178,6 +191,7 @@ CONFIG["DATA_SOURCES"] = {}
 --     ["Username"] = "<shared username>",
 --     ["Password"] = "ENC:v1:<base64-encoded encrypted password>",
 --     ["SecurityPolicy"] = "SELF_HOSTED",
+--     ["ComplianceLevel"] = "UNKNOWN",
 --     ["SelectedRetrievalId"] = "<retrieval process ID from the ERI server>",
 --     ["MaxMatches"] = 10,
 -- }
@@ -193,6 +207,7 @@ CONFIG["DATA_SOURCES"] = {}
 --     ["UsernamePasswordMode"] = "OS_USERNAME_SHARED_PASSWORD",
 --     ["Password"] = "ENC:v1:<base64-encoded encrypted password>",
 --     ["SecurityPolicy"] = "SELF_HOSTED",
+--     ["ComplianceLevel"] = "UNKNOWN",
 --     ["SelectedRetrievalId"] = "<retrieval process ID from the ERI server>",
 --     ["MaxMatches"] = 10,
 -- }

@@ -1,5 +1,7 @@
 using AIStudio.Assistants.ERI;
 using AIStudio.Components;
+using AIStudio.Provider;
+using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.ERIClient;
 using AIStudio.Tools.ERIClient.DataModel;
@@ -46,6 +48,7 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
     private string dataEditingPreviousInstanceName = string.Empty;
     private List<AuthMethod> availableAuthMethods = [];
     private DataSourceSecurity dataSecurityPolicy;
+    private ConfidenceLevel dataComplianceLevel = ConfidenceLevel.UNKNOWN;
     private SecurityRequirements dataSourceSecurityRequirements;
     private ushort dataMaxMatches = 10;
     private bool connectionTested;
@@ -105,6 +108,7 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
             this.dataAuthMethod = this.DataSource.AuthMethod;
             this.dataUsername = this.DataSource.Username;
             this.dataSecurityPolicy = this.DataSource.SecurityPolicy;
+            this.dataComplianceLevel = this.DataSource.ComplianceLevel;
             this.dataMaxMatches = this.DataSource.MaxMatches;
             
             // We cannot load the retrieval processes now, since we have
@@ -157,6 +161,8 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
 
     #endregion
     
+    private IEnumerable<ConfigurationSelectData<ConfidenceLevel>> ComplianceLevels => ConfigurationSelectDataFactory.GetDataSourceComplianceLevelsData();
+
     private DataSourceERI_V1 CreateDataSource()
     {
         var cleanedHostname = this.dataHostname.Trim();
@@ -172,6 +178,7 @@ public partial class DataSourceERI_V1Dialog : MSGComponentBase, ISecretId
             UsernamePasswordMode = DataSourceERIUsernamePasswordMode.USER_MANAGED,
             Type = DataSourceType.ERI_V1,
             SecurityPolicy = this.dataSecurityPolicy,
+            ComplianceLevel = this.dataComplianceLevel,
             SelectedRetrievalId = this.dataSelectedRetrievalProcess.Id,
             MaxMatches = this.dataMaxMatches,
         };

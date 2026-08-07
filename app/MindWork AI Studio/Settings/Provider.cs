@@ -34,6 +34,7 @@ public sealed record Provider(
     Host Host = Host.NONE,
     HFInferenceProvider HFInferenceProvider = HFInferenceProvider.NONE,
     string AdditionalJsonApiParameters = "",
+    string TokenizerPath = "",
     ProviderCapabilityOverrides? CapabilityOverrides = null) : ConfigurationBaseObject, ISecretId
 {
     private static readonly ILogger<Provider> LOGGER = Program.LOGGER_FACTORY.CreateLogger<Provider>();
@@ -153,6 +154,12 @@ public sealed record Provider(
             additionalJsonApiParameters = string.Empty;
         }
 
+        var tokenizerPath = string.Empty;
+        if (table.TryGetValue("TokenizerPath", out var tokenizerPathValue) && !tokenizerPathValue.TryRead<string>(out tokenizerPath))
+        {
+            LOGGER.LogWarning($"The configured provider {idx} does not contain a valid tokenizer path. (Plugin ID: {configPluginId})");
+            tokenizerPath = string.Empty;
+        }
         var capabilityOverrides = ProviderCapabilityOverrides.TryParseFromLuaTable(idx, table, configPluginId, LOGGER);
 
         provider = new Provider
@@ -169,6 +176,7 @@ public sealed record Provider(
             Host = host,
             HFInferenceProvider = hfInferenceProvider,
             AdditionalJsonApiParameters = additionalJsonApiParameters,
+            TokenizerPath = tokenizerPath,
             CapabilityOverrides = capabilityOverrides,
         };
 
@@ -252,6 +260,8 @@ public sealed record Provider(
                     ["Id"] = "{{Guid.NewGuid().ToString()}}",
                     ["InstanceName"] = "{{LuaTools.EscapeLuaString(this.InstanceName)}}",
                     ["UsedLLMProvider"] = "{{this.UsedLLMProvider}}",
+                    
+                    ["TokenizerPath"] = "{{this.TokenizerPath}}",
 
                     ["Host"] = "{{this.Host}}",
                     ["Hostname"] = "{{LuaTools.EscapeLuaString(this.Hostname)}}",

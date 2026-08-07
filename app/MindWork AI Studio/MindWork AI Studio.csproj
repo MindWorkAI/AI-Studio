@@ -53,10 +53,13 @@
     <ItemGroup>
       <PackageReference Include="CodeBeam.MudBlazor.Extensions" Version="8.3.0" />
       <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
+      <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="9.0.18" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.18" />
       <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="9.0.18" />
       <PackageReference Include="MudBlazor" Version="8.15.0" />
       <PackageReference Include="MudBlazor.Markdown" Version="8.11.0" />
       <PackageReference Include="ReverseMarkdown" Version="5.0.0" />
+      <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.5" />
       <PackageReference Include="LuaCSharp" Version="0.5.5" />
     </ItemGroup>
 

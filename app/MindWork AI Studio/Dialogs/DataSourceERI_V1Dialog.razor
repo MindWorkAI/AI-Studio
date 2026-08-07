@@ -1,4 +1,5 @@
 @using AIStudio.Settings.DataModel
+@using AIStudio.Provider
 @using AIStudio.Tools.ERIClient.DataModel
 @inherits MSGComponentBase
 
@@ -116,6 +117,15 @@
                 {
                     <MudSelectItem Value="@policy">
                         @policy.ToSelectionText()
+                    </MudSelectItem>
+                }
+            </MudSelect>
+
+            <MudSelect @bind-Value="@this.dataComplianceLevel" Text="@this.dataComplianceLevel.GetName()" Label="@T("Compliance level")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start">
+                @foreach (var level in this.ComplianceLevels)
+                {
+                    <MudSelectItem Value="@level.Value">
+                        @level.Name
                     </MudSelectItem>
                 }
             </MudSelect>
