@@ -4,7 +4,6 @@ using AIStudio.Dialogs;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
-
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Tools;
@@ -12,19 +11,34 @@ namespace AIStudio.Tools;
 public static class PandocExport
 {
     private static readonly ILogger LOGGER = Program.LOGGER_FACTORY.CreateLogger(nameof(PandocExport)); 
+    private sealed record ExportTarget(string DisplayName, string PandocOutputFormat, FileTypeFilter FileType);
+
+    private static readonly ExportTarget MICROSOFT_WORD = new("Microsoft Word (.docx)", "docx", FileTypes.MS_WORD);
+    private static readonly ExportTarget OPEN_DOCUMENT_TEXT = new("OpenDocument Text (.odt)", "odt", FileTypes.OPEN_DOCUMENT_TEXT);
+    private static readonly ExportTarget HTML = new("Hypertext (.html)", "html", FileTypes.HYPERTEXT);
+    private static readonly ExportTarget LATEX = new("LaTeX (.tex)", "latex", FileTypes.LATEX);
     
     private static string TB(string fallbackEn) => I18N.I.T(fallbackEn, typeof(PandocExport).Namespace, nameof(PandocExport));
     
-    public static async Task<bool> ToMicrosoftWord(RustService rustService, IDialogService dialogService, string dialogTitle, IContent markdownContent)
+    public static async Task<bool> ToDocument(RustService rustService, IDialogService dialogService, FileExportFormat format, IContent markdownContent)
     {
-        var response = await rustService.SaveFile(dialogTitle, [FileTypes.MS_WORD]);
+        var exportTarget = format switch
+        {
+            FileExportFormat.MICROSOFT_WORD => MICROSOFT_WORD,
+            FileExportFormat.OPEN_DOCUMENT_TEXT => OPEN_DOCUMENT_TEXT,
+            FileExportFormat.HTML => HTML,
+            FileExportFormat.LATEX => LATEX,
+            _ => throw new ArgumentOutOfRangeException(nameof(format), format, null),
+        };
+
+        var response = await rustService.SaveFile(TB("Export chat"), [exportTarget.FileType]);
         if (response.UserCancelled)
         {
             LOGGER.LogInformation("User cancelled the save dialog.");
             return false;
         }
 
-        LOGGER.LogInformation($"The user chose the path '{response.SaveFilePath}' for the Microsoft Word export.");
+        LOGGER.LogInformation("The user chose the path '{SaveFilePath}' for the {ExportFormat} export.", response.SaveFilePath, exportTarget.DisplayName);
 
         var tempMarkdownFilePath = string.Empty;
         try
@@ -36,9 +50,9 @@ public static class PandocExport
             var markdownText = markdownContent switch
             {
                 ContentText text => text.Text,
-                ContentImage _ => "Image export to Microsoft Word not yet possible",
+                ContentImage _ => "Image export is not yet possible.",
 
-                _ => "Unknown content type. Cannot export to Word."
+                _ => "Unknown content type. Cannot export document."
             };
 
             // Write text content to a temporary file:
@@ -60,17 +74,17 @@ public static class PandocExport
                 if (!pandocState.IsAvailable)
                 {
                     LOGGER.LogError("Pandoc is not available after installation attempt.");
-                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Cancel, TB("Pandoc is required for Microsoft Word export.")));
+                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Cancel, TB("Pandoc is required for document export.")));
                     return false;
                 }
             }
 
-            // Call Pandoc to create the Word file:
+            // Call Pandoc to create the document:
             var pandoc = await PandocProcessBuilder
                 .Create()
                 .UseStandaloneMode()
                 .WithInputFormat("gfm+emoji+tex_math_dollars")
-                .WithOutputFormat("docx")
+                .WithOutputFormat(exportTarget.PandocOutputFormat)
                 .WithOutputFile(response.SaveFilePath)
                 .WithInputFile(tempMarkdownFilePath)
                 .BuildAsync(rustService);
@@ -94,19 +108,19 @@ public static class PandocExport
             if (process.ExitCode is not 0)
             {
                 LOGGER.LogError("Pandoc failed with exit code {ProcessExitCode}: '{ErrorText}'", process.ExitCode, error);
-                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Cancel, TB("Error during Microsoft Word export")));
+                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Cancel, TB("Error during document export")));
                 return false;
             }
 
             LOGGER.LogInformation("Pandoc conversion successful.");
-            await MessageBus.INSTANCE.SendSuccess(new(Icons.Material.Filled.CheckCircle, TB("Microsoft Word export successful")));
+            await MessageBus.INSTANCE.SendSuccess(new(Icons.Material.Filled.CheckCircle, TB("Document export successful")));
             
             return true;
         }
         catch (Exception ex)
         {
-            LOGGER.LogError(ex, "Error during Word export.");
-            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Cancel, TB("Error during Microsoft Word export")));
+            LOGGER.LogError(ex, "Error during {ExportFormat} export.", exportTarget.DisplayName);
+            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Cancel, TB("Error during document export")));
             return false;
         }
         finally

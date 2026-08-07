@@ -2826,6 +2826,9 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1347427447"] = "Do you 
 -- Yes, remove the AI response and edit it
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1350385882"] = "Yes, remove the AI response and edit it"
 
+-- Webpage
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1578631058"] = "Webpage"
+
 -- Yes, regenerate it
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1603883875"] = "Yes, regenerate it"
 
@@ -2841,17 +2844,38 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2018431076"] = "Do you 
 -- Removes this block
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2093355991"] = "Removes this block"
 
+-- LaTeX (.tex)
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2233607007"] = "LaTeX (.tex)"
+
+-- OpenDocument Text (.odt)
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2253393351"] = "OpenDocument Text (.odt)"
+
 -- Regenerate Message
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2308444540"] = "Regenerate Message"
 
+-- Markdown (.md)
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2319970170"] = "Markdown (.md)"
+
+-- Hypertext (.html)
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2504486680"] = "Hypertext (.html)"
+
+-- CSV (.csv)
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2853636652"] = "CSV (.csv)"
+
 -- Number of attachments
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3018847255"] = "Number of attachments"
+
+-- Microsoft Word (.docx)
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3054800422"] = "Microsoft Word (.docx)"
 
 -- Cannot render content of type {0} yet.
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3175548294"] = "Cannot render content of type {0} yet."
 
 -- Edit
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3267849393"] = "Edit"
+
+-- Failed to export document to unknown file format '{0}'.
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3566938024"] = "Failed to export document to unknown file format '{0}'."
 
 -- Regenerate
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3587744975"] = "Regenerate"
@@ -2865,8 +2889,11 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T4070211974"] = "Remove 
 -- No, keep it
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T4188329028"] = "No, keep it"
 
--- Export Chat to Microsoft Word
-UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T861873672"] = "Export Chat to Microsoft Word"
+-- LibreOffice / OpenOffice
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T4258507172"] = "LibreOffice / OpenOffice"
+
+-- Export chat
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T72398679"] = "Export chat"
 
 -- The selected model '{0}' is no longer available from '{1}' (provider={2}). Please adapt your provider settings.
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTTEXT::T3267850764"] = "The selected model '{0}' is no longer available from '{1}' (provider={2}). Please adapt your provider settings."
@@ -8955,17 +8982,29 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T695293525"] = "AI Studio couldn't fin
 -- AI Studio couldn't install Pandoc.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T932858631"] = "AI Studio couldn't install Pandoc."
 
--- Pandoc is required for Microsoft Word export.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOCEXPORT::T1473115556"] = "Pandoc is required for Microsoft Word export."
+-- Error during document export
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOCEXPORT::T1606201199"] = "Error during document export"
 
 -- Pandoc Installation
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOCEXPORT::T185447014"] = "Pandoc Installation"
 
--- Error during Microsoft Word export
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOCEXPORT::T3290596792"] = "Error during Microsoft Word export"
+-- Document export successful
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOCEXPORT::T2074749452"] = "Document export successful"
 
--- Microsoft Word export successful
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOCEXPORT::T4256043333"] = "Microsoft Word export successful"
+-- Pandoc is required for document export.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOCEXPORT::T274234461"] = "Pandoc is required for document export."
+
+-- Export chat
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOCEXPORT::T72398679"] = "Export chat"
+
+-- Error during document export
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLAINFILEEXPORT::T1606201199"] = "Error during document export"
+
+-- Document export successful
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLAINFILEEXPORT::T2074749452"] = "Document export successful"
+
+-- Export chat
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLAINFILEEXPORT::T72398679"] = "Export chat"
 
 -- Text
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T1041509726"] = "Text"
@@ -9482,6 +9521,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T3543954504"] = "Certificate 
 
 -- Source like prefix
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T378481461"] = "Source like prefix"
+
+-- Markdown
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T4132508012"] = "Markdown"
 
 -- Document
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T4165204724"] = "Document"

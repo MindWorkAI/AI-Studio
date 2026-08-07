@@ -16,55 +16,84 @@
             </MudText>
         </CardHeaderContent>
         <CardHeaderActions>
-            @if (this.Content.FileAttachments.Count > 0)
-            {
-                <MudTooltip Text="@T("Number of attachments")" Placement="Placement.Bottom">
-                    <MudBadge Content="@this.Content.FileAttachments.Count" Color="Color.Primary" Overlap="true" BadgeClass="sources-card-header">
-                        <MudIconButton Icon="@Icons.Material.Filled.AttachFile"
-                                       OnClick="@this.OpenAttachmentsDialog"/>
-                    </MudBadge>
-                </MudTooltip>
-            }
-            @if (this.Content.Sources.Count > 0)
-            {
-                <MudTooltip Text="@T("Number of sources")" Placement="Placement.Bottom">
-                    <MudBadge Content="@this.Content.Sources.Count" Color="Color.Primary" Overlap="true" BadgeClass="sources-card-header">
-                        <MudIconButton Icon="@Icons.Material.Filled.Link"/>
-                    </MudBadge>
-                </MudTooltip>
-            }
-            @if (this.IsSecondToLastBlock && this.Role is ChatRole.USER && this.EditLastUserBlockFunc is not null)
-            {
-                <MudTooltip Text="@T("Edit")" Placement="Placement.Bottom">
-                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Default" OnClick="@this.EditLastUserBlock"/>
-                </MudTooltip>
-            }
-            @if (this.IsLastContentBlock && this.Role is ChatRole.USER && this.EditLastBlockFunc is not null)
-            {
-                <MudTooltip Text="@T("Edit")" Placement="Placement.Bottom">
-                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Default" OnClick="@this.EditLastBlock"/>
-                </MudTooltip>
-            }
-            @if (this.IsLastContentBlock && this.Role is ChatRole.AI && this.RegenerateFunc is not null)
-            {
-                <MudTooltip Text="@T("Regenerate")" Placement="Placement.Bottom">
-                    <MudIconButton Icon="@Icons.Material.Filled.Recycling" Color="Color.Default" Disabled="@(!this.RegenerateEnabled())" OnClick="@this.RegenerateBlock"/>
-                </MudTooltip>
-            }
-            @if (this.RemoveBlockFunc is not null)
-            {
-                <MudTooltip Text="@T("Removes this block")" Placement="Placement.Bottom">
-                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@this.RemoveBlock"/>
-                </MudTooltip>
-            }
+            <div class="d-flex">
+                @if (this.Content.FileAttachments.Count > 0)
+                {
+                    <MudTooltip Text="@T("Number of attachments")" Placement="Placement.Bottom">
+                        <MudBadge Content="@this.Content.FileAttachments.Count" Color="Color.Primary" Overlap="true" BadgeClass="sources-card-header">
+                            <MudIconButton Icon="@Icons.Material.Filled.AttachFile"
+                                           OnClick="@this.OpenAttachmentsDialog"/>
+                        </MudBadge>
+                    </MudTooltip>
+                }
+                @if (this.Content.Sources.Count > 0)
+                {
+                    <MudTooltip Text="@T("Number of sources")" Placement="Placement.Bottom">
+                        <MudBadge Content="@this.Content.Sources.Count" Color="Color.Primary" Overlap="true" BadgeClass="sources-card-header">
+                            <MudIconButton Icon="@Icons.Material.Filled.Link"/>
+                        </MudBadge>
+                    </MudTooltip>
+                }
+                @if (this.IsSecondToLastBlock && this.Role is ChatRole.USER && this.EditLastUserBlockFunc is not null)
+                {
+                    <MudTooltip Text="@T("Edit")" Placement="Placement.Bottom">
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Default" OnClick="@this.EditLastUserBlock"/>
+                    </MudTooltip>
+                }
+                @if (this.IsLastContentBlock && this.Role is ChatRole.USER && this.EditLastBlockFunc is not null)
+                {
+                    <MudTooltip Text="@T("Edit")" Placement="Placement.Bottom">
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Default" OnClick="@this.EditLastBlock"/>
+                    </MudTooltip>
+                }
+                @if (this.IsLastContentBlock && this.Role is ChatRole.AI && this.RegenerateFunc is not null)
+                {
+                    <MudTooltip Text="@T("Regenerate")" Placement="Placement.Bottom">
+                        <MudIconButton Icon="@Icons.Material.Filled.Recycling" Color="Color.Default" Disabled="@(!this.RegenerateEnabled())" OnClick="@this.RegenerateBlock"/>
+                    </MudTooltip>
+                }
+                @if (this.RemoveBlockFunc is not null)
+                {
+                    <MudTooltip Text="@T("Removes this block")" Placement="Placement.Bottom">
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@this.RemoveBlock"/>
+                    </MudTooltip>
+                }
 
-            @if (this.Role is ChatRole.AI)
-            {
-                <MudTooltip Text="@T("Export Chat to Microsoft Word")" Placement="Placement.Bottom">
-                    <MudIconButton Icon="@Icons.Material.Filled.Save" OnClick="@this.ExportToWord"/>
-                </MudTooltip>
-            }
-            <MudCopyClipboardButton Content="@this.Content" Type="@this.Type" Size="Size.Medium"/>
+                @if (this.Role is ChatRole.AI)
+                {
+                    <MudTooltip Text="@T("Export chat")" Placement="Placement.Bottom">
+                        <MudMenu Icon="@Icons.Material.Filled.Save">
+                            <MudMenuItem OnClick="@(() => this.ExportDocument(FileExportFormat.MICROSOFT_WORD))" Icon="@Icons.Custom.FileFormats.FileWord">
+                                @T("Microsoft Word (.docx)")
+                            </MudMenuItem>
+                            <MudMenuItem OnClick="@(() => this.ExportDocument(FileExportFormat.OPEN_DOCUMENT_TEXT))" Icon="@Icons.Custom.FileFormats.FileDocument">
+                                <MudTooltip Text="@T("LibreOffice / OpenOffice")">
+                                    @T("OpenDocument Text (.odt)")
+                                </MudTooltip>
+                            </MudMenuItem>
+                            <MudMenuItem OnClick="@(() => this.ExportDocument(FileExportFormat.LATEX))" Icon="@Icons.Material.Filled.Functions">
+                                @T("LaTeX (.tex)")
+                            </MudMenuItem>
+                            @if (this.HasCsv)
+                            {
+                                <MudDivider />
+                                <MudMenuItem OnClick="@(() => this.ExportDocument(FileExportFormat.CSV))" Icon="@Icons.Material.Filled.TableChart">
+                                    @T("CSV (.csv)")
+                                </MudMenuItem>
+                            }
+                            <MudDivider />
+                            <MudMenuItem OnClick="@(() => this.ExportDocument(FileExportFormat.MARKDOWN))" Icon="@Icons.Material.Filled.TextFields">
+                                @T("Markdown (.md)")
+                            </MudMenuItem>
+                            <MudMenuItem OnClick="@(() => this.ExportDocument(FileExportFormat.HTML))" Icon="@Icons.Material.Filled.Html">
+                                <MudTooltip Text="@T("Webpage")">
+                                    @T("Hypertext (.html)")
+                                </MudTooltip>
+                            </MudMenuItem>
+                        </MudMenu>
+                    </MudTooltip>
+                }
+                <MudCopyClipboardButton Content="@this.Content" Type="@this.Type" Size="Size.Medium"/></div>
         </CardHeaderActions>
     </MudCardHeader>
     <MudCardContent>
