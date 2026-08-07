@@ -3040,6 +3040,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T2250917004"] = "Some fi
 -- Drag and drop files into the marked area or click here to attach documents:
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T230755331"] = "Drag and drop files into the marked area or click here to attach documents:"
 
+-- The file '{0}' could not be checked for prompt injection and was not attached.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T2404630365"] = "The file '{0}' could not be checked for prompt injection and was not attached."
+
 -- The media transcription was canceled.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T241403726"] = "The media transcription was canceled."
 
@@ -5575,26 +5578,14 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINGGUIDELINEDIALOG::T4250996615"] = "P
 -- Chat attachment
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T1071345316"] = "Chat attachment"
 
--- The file '{0}' could not be checked for prompt injection and was not attached.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T2404630365"] = "The file '{0}' could not be checked for prompt injection and was not attached."
-
--- Security warning
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T1862129203"] = "Security warning"
-
--- AI Studio has reliably detected and blocked the suspicious content. Your applications and data remain protected. Please review the content you uploaded.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T3661810823"] = "AI Studio has reliably detected and blocked the suspicious content. Your applications and data remain protected. Please review the content you uploaded."
-
--- Security active
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T4212328947"] = "Security active"
-
--- Security notice
-UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T4004397997"] = "Security notice"
-
 -- Content source
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T1129278507"] = "Content source"
 
 -- Attempt to override instructions
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T161976090"] = "Attempt to override instructions"
+
+-- Security warning
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T1862129203"] = "Security warning"
 
 -- Attempt to expose protected data
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T2050274293"] = "Attempt to expose protected data"
@@ -5604,9 +5595,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T2260642992"] = 
 
 -- Attempt to change the AI's role
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T2340508370"] = "Attempt to change the AI's role"
-
--- AI Studio blocked this content before it reached a model or agent.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T2378027194"] = "AI Studio blocked this content before it reached a model or agent."
 
 -- Hidden instructions using markup
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T2526538070"] = "Hidden instructions using markup"
@@ -5631,6 +5619,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T3448155331"] = 
 
 -- Attempt to manipulate an agent
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T355252317"] = "Attempt to manipulate an agent"
+
+-- AI Studio has reliably detected and blocked the suspicious content. Your applications and data remain protected. Please review the content you uploaded.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T3661810823"] = "AI Studio has reliably detected and blocked the suspicious content. Your applications and data remain protected. Please review the content you uploaded."
 
 -- File content
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T3788064862"] = "File content"
@@ -7353,6 +7344,9 @@ UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T2979224202"] = "Writer"
 
 -- Show details
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T3692372066"] = "Show details"
+
+-- Security notice
+UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T4004397997"] = "Security notice"
 
 -- Information
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T4256323669"] = "Information"
