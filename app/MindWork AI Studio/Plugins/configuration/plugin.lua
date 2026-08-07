@@ -259,6 +259,14 @@ CONFIG["SETTINGS"] = {}
 -- Examples are PRE_WRITER_MODE_2024 and PRE_RAG_2024.
 -- CONFIG["SETTINGS"]["DataApp.EnabledPreviewFeatures"] = { "PRE_RAG_2024" }
 
+-- Configure prompt-injection protection for external content such as webpages,
+-- retrieved context, and file attachments before it is sent to an LLM.
+-- CONFIG["SETTINGS"]["DataChat.EnablePromptInjectionProtection"] = true
+
+-- Configure whether AI Studio shows a blocking explanation dialog when
+-- suspicious content is detected and blocked.
+-- CONFIG["SETTINGS"]["DataChat.ShowPromptInjectionAlert"] = true
+
 -- Configure the preselected provider.
 -- It must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"].
 -- Please note: using an empty string ("") will lock the preselected provider selection, even though no valid preselected provider is found.

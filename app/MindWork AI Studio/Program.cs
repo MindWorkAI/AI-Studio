@@ -10,6 +10,7 @@ using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.PluginSystem.Assistants;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
+using AIStudio.Tools.Security;
 
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
@@ -193,6 +194,8 @@ internal sealed class Program
         builder.Services.AddHostedService<RustAvailabilityMonitorService>();
         builder.Services.AddScoped<NativeShareService>();
         builder.Services.AddScoped<PluginShareService>();
+        builder.Services.AddSingleton<PromptInjectionScanner>();
+        builder.Services.AddSingleton<PromptInjectionGuardService>();
         
         // ReSharper disable AccessToDisposedClosure
         builder.Services.AddHostedService<RustService>(_ => rust);

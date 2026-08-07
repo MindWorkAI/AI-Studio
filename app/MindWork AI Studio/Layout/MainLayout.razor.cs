@@ -7,6 +7,7 @@ using AIStudio.Tools.Media;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
+using AIStudio.Tools.Security;
 
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Routing;
@@ -71,6 +72,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     private bool startupCompleted;
     private bool settingsWriteProtectionWarningShown;
     private readonly SemaphoreSlim mandatoryInfoDialogSemaphore = new(1, 1);
+    private readonly SemaphoreSlim promptInjectionDialogSemaphore = new(1, 1);
 
     private IReadOnlyCollection<NavBarItem> navItems = [];
     
@@ -112,7 +114,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         this.MessageBus.ApplyFilters(this, [],
         [
             Event.UPDATE_AVAILABLE, Event.CONFIGURATION_CHANGED, Event.COLOR_THEME_CHANGED, Event.SHOW_ERROR,
-            Event.SHOW_WARNING, Event.SHOW_SUCCESS, Event.SHOW_INFO, Event.STARTUP_PLUGIN_SYSTEM, Event.PLUGINS_RELOADED,
+            Event.SHOW_WARNING, Event.SHOW_SUCCESS, Event.SHOW_PROMPT_INJECTION_ALERT, Event.STARTUP_PLUGIN_SYSTEM, Event.PLUGINS_RELOADED,
             Event.INSTALL_UPDATE, Event.STARTUP_COMPLETED, Event.AI_JOB_CHANGED, Event.AI_JOB_FINISHED,
             Event.CHAT_GENERATION_CHANGED, Event.ASSISTANT_SESSION_CHANGED, Event.ASSISTANT_SESSION_FINISHED,
         ]);
@@ -253,6 +255,12 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
                         success.Show(this.Snackbar);
 
                     break;
+                
+                case Event.SHOW_PROMPT_INJECTION_ALERT:
+                    if (data is PromptInjectionAlertMessage promptInjectionAlert)
+                        await this.ShowPromptInjectionAlertAsync(promptInjectionAlert);
+
+                    break;
 
                 case Event.SHOW_ERROR:
                     if (data is DataErrorMessage error)
@@ -346,6 +354,29 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
                     break;
             }
         });
+    }
+    
+    private async Task ShowPromptInjectionAlertAsync(PromptInjectionAlertMessage alert)
+    {
+        await this.promptInjectionDialogSemaphore.WaitAsync();
+        try
+        {
+            var dialogParameters = new DialogParameters<PromptInjectionAlertDialog>
+            {
+                { x => x.Result, alert.Result },
+            };
+
+            var dialogReference = await this.DialogService.ShowAsync<PromptInjectionAlertDialog>(
+                T("Prompt Injection Detected"),
+                dialogParameters,
+                DialogOptions.BLOCKING_FULLSCREEN);
+
+            await dialogReference.Result;
+        }
+        finally
+        {
+            this.promptInjectionDialogSemaphore.Release();
+        }
     }
 
     public Task<TResult?> ProcessMessageWithResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data)

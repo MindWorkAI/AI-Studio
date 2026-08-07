@@ -2,6 +2,7 @@
 using AIStudio.Components;
 using AIStudio.Tools.Services;
 using Microsoft.AspNetCore.Components;
+using AIStudio.Tools.Security;
 
 namespace AIStudio.Dialogs;
 
@@ -41,6 +42,11 @@ public partial class DocumentCheckDialog : MSGComponentBase
                     var fileContent = await UserFile.LoadFileData(this.Document.FilePath, this.RustService, this.DialogService);
                     this.FileContent = fileContent;
                 }
+            }
+            catch (PromptInjectionBlockedException exception)
+            {
+                this.Logger.LogWarning(exception, "Blocked suspected prompt injection while previewing '{FilePath}'", this.Document?.FilePath);
+                this.FileContent = string.Empty;
             }
             catch (Exception ex)
             {

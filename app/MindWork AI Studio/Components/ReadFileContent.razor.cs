@@ -3,6 +3,7 @@ using AIStudio.Tools.Media;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 using AIStudio.Tools.Validation;
+using AIStudio.Tools.Security;
 
 using Microsoft.AspNetCore.Components;
 
@@ -328,6 +329,11 @@ public partial class ReadFileContent : MSGComponentBase
             await this.ApplyFileContentAsync(fileContent, filePath);
             this.Logger.LogInformation("Successfully loaded file content: {FilePath}", filePath);
             return true;
+        }
+        catch (PromptInjectionBlockedException)
+        {
+            this.Logger.LogWarning("Blocked suspected prompt injection while loading file content: {FilePath}", filePath);
+            return false;
         }
         catch (Exception ex)
         {

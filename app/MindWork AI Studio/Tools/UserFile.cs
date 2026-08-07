@@ -2,6 +2,7 @@
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Services;
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
+using AIStudio.Tools.Security;
 
 namespace AIStudio.Tools;
 
@@ -46,6 +47,7 @@ public static class UserFile
         }
         
         var fileContent = await rustService.ReadArbitraryFileData(filePath, int.MaxValue);
-        return fileContent;
+        var guardService = Program.SERVICE_PROVIDER.GetRequiredService<PromptInjectionGuardService>();
+        return await guardService.EnsureSafeForLlmAsync(fileContent, PromptInjectionSource.FileContent(filePath));
     }
 }

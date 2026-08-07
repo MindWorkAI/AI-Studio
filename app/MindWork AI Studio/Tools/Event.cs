@@ -72,6 +72,11 @@ public enum Event
     /// Requests display of a success notification.
     /// </summary>
     SHOW_SUCCESS,
+    
+    /// <summary>
+    /// Requests display of a prompt-injection alert dialog.
+    /// </summary>
+    SHOW_PROMPT_INJECTION_ALERT,
 
     /// <summary>
     /// Requests display of an informational notification.
