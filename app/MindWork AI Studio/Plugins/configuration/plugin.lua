@@ -278,6 +278,13 @@ CONFIG["SETTINGS"] = {}
 -- When set to false, the import button on the plugins page stays visible but is disabled.
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToImportPlugins"] = false
 
+-- Configure the user permission to import configuration plugin archives from disk.
+-- This is a second gate on top of DataApp.AllowUserToImportPlugins: both must allow the
+-- import. Configuration plugins get their own switch because they can do far more than an
+-- assistant: they define LLM providers and data sources, and they lock settings. You may
+-- therefore let users import assistants while keeping configurations to your IT department.
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToImportConfigurationPlugins"] = false
+
 -- Configure the user permission to share or export plugins as archives.
 -- When set to false, the share button on the plugins page stays visible but is disabled.
 -- On Linux, this button exports the plugin archive instead of using a native share sheet.

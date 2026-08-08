@@ -201,6 +201,9 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         // Config: allow the user to import plugin archives?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToImportPlugins, this.Id, settingsTable, dryRun);
 
+        // Config: allow the user to import configuration plugin archives?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToImportConfigurationPlugins, this.Id, settingsTable, dryRun);
+
         // Config: allow the user to share or export plugins?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToSharePlugins, this.Id, settingsTable, dryRun);
 
