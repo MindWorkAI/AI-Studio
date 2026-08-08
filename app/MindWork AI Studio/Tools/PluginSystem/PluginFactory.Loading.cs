@@ -110,10 +110,26 @@ public static partial class PluginFactory
             
                     LOG.LogInformation($"Successfully loaded plugin: '{pluginMainFile}' (Id='{plugin.Id}', Type='{plugin.Type}', Name='{plugin.Name}', Version='{plugin.Version}', Authors='{string.Join(", ", plugin.Authors)}')");
 
-                    var isConfigurationPluginInConfigDirectory =
-                        plugin.Type is PluginType.CONFIGURATION &&
-                        pluginPath.StartsWith(CONFIGURATION_PLUGINS_ROOT, StringComparison.OrdinalIgnoreCase);
+                    //
+                    // Plugin IDs must be unique: many lookups resolve a plugin by its ID alone, e.g.
+                    // the base language plugin in PluginFactory.Starting or the owner of a locked
+                    // setting. When two plugins share an ID, the one deployed by the organization's
+                    // IT wins. Otherwise, a manually placed copy could outrank the enterprise
+                    // configuration, which is the exact opposite of what an organization expects:
+                    //
+                    if (AVAILABLE_PLUGINS.FirstOrDefault(candidate => candidate.Id == plugin.Id) is { } duplicatePlugin)
+                    {
+                        if (!IsEnterpriseConfigurationPath(pluginPath) || IsEnterpriseConfigurationPath(duplicatePlugin.LocalPath))
+                        {
+                            LOG.LogWarning($"Ignoring the plugin '{pluginMainFile}': its ID ('{plugin.Id}') is already used by the plugin at '{duplicatePlugin.LocalPath}'. Plugin IDs must be unique. Please remove one of these plugins.");
+                            continue;
+                        }
 
+                        LOG.LogWarning($"Ignoring the plugin at '{duplicatePlugin.LocalPath}': it uses the ID ('{plugin.Id}') of the enterprise configuration plugin at '{pluginPath}'. Plugins deployed by your organization's IT take precedence.");
+                        AVAILABLE_PLUGINS.Remove(duplicatePlugin);
+                    }
+
+                    var isConfigurationPluginInConfigDirectory = plugin.Type is PluginType.CONFIGURATION && IsEnterpriseConfigurationPath(pluginPath);
                     var isManagedByConfigServer = false;
                     Guid? managedConfigurationId = null;
                     if (plugin is PluginConfiguration configPlugin)

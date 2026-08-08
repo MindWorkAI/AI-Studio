@@ -76,6 +76,35 @@ public static partial class PluginFactory
         return true;
     }
 
+    /// <summary>
+    /// Checks whether a plugin directory belongs to the enterprise configuration area.
+    /// </summary>
+    /// <remarks>
+    /// Only the IT department of an organization deploys plugins there: the config server downloads
+    /// them into a directory named after their configuration ID. We decide by path on purpose. The
+    /// Lua field DEPLOYED_USING_CONFIG_SERVER is self-declared, so any plugin could claim to be
+    /// deployed by an organization.
+    /// </remarks>
+    /// <param name="pluginPath">The directory of the plugin.</param>
+    /// <returns>True when the directory is nested in the enterprise configuration directory.</returns>
+    private static bool IsEnterpriseConfigurationPath(string? pluginPath)
+    {
+        if (string.IsNullOrWhiteSpace(pluginPath) || string.IsNullOrWhiteSpace(CONFIGURATION_PLUGINS_ROOT))
+            return false;
+
+        try
+        {
+            var configurationRoot = Path.GetFullPath(CONFIGURATION_PLUGINS_ROOT).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
+            var pluginDirectory = Path.GetFullPath(pluginPath).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
+            return pluginDirectory.StartsWith(configurationRoot, StringComparison.OrdinalIgnoreCase);
+        }
+        catch (Exception e)
+        {
+            LOG.LogWarning(e, $"Was not able to check whether the plugin directory '{pluginPath}' belongs to the enterprise configuration directory. Treating it as a local plugin.");
+            return false;
+        }
+    }
+
     private static async Task LockHotReloadAsync()
     {
         if (!IsInitialized)
