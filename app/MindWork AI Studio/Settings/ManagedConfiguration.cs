@@ -350,11 +350,15 @@ public static partial class ManagedConfiguration
             if (CleanupEditableDefaultState(configMeta, availablePlugins, deployedEnterpriseConfigPluginIds))
                 wasChanged = true;
 
-            // Check the additive plugin contribution:
-            if (configMeta.HasPluginContribution && configMeta.PluginContributionByConfigPluginId != Guid.Empty && !IsPluginPresent(configMeta.PluginContributionByConfigPluginId, availablePlugins, deployedEnterpriseConfigPluginIds))
+            // Check the additive plugin contributions. Every contributing plugin is checked on its
+            // own, so one removed plugin does not take the contributions of the others with it:
+            foreach (var contributingConfigPluginId in configMeta.ContributingConfigPluginIds.ToList())
             {
-                Log.LogInformation($"Clearing the plugin contribution for the setting '{configMeta.SettingName}': the configuration plugin '{configMeta.PluginContributionByConfigPluginId}' is not available anymore.");
-                configMeta.ClearPluginContribution();
+                if (contributingConfigPluginId != Guid.Empty && IsPluginPresent(contributingConfigPluginId, availablePlugins, deployedEnterpriseConfigPluginIds))
+                    continue;
+
+                Log.LogInformation($"Clearing the contribution of the configuration plugin '{contributingConfigPluginId}' to the setting '{configMeta.SettingName}': the plugin is not available anymore.");
+                configMeta.RemovePluginContribution(contributingConfigPluginId);
                 wasChanged = true;
             }
         }

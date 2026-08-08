@@ -2,7 +2,6 @@ using System.Globalization;
 using System.Linq.Expressions;
 
 using AIStudio.Settings.DataModel;
-using AIStudio.Tools.PluginSystem;
 
 using Lua;
 
@@ -655,17 +654,11 @@ public static partial class ManagedConfiguration
         if (dryRun)
             return successful;
 
-        // The contribution is additive, but its ownership is not: taking it over from a
-        // configuration plugin of an organization would hand the whole setting to a local plugin:
-        if (configMeta.HasPluginContribution
-            && configMeta.PluginContributionByConfigPluginId != configPluginId
-            && PluginFactory.IsEnterpriseConfigurationPlugin(configMeta.PluginContributionByConfigPluginId)
-            && !PluginFactory.IsEnterpriseConfigurationPlugin(configPluginId))
-        {
-            Log.LogWarning($"The configuration plugin '{configPluginId}' tried to contribute to the setting '{configMeta.SettingName}', which the configuration plugin '{configMeta.PluginContributionByConfigPluginId}' of your organization contributes to. Ignoring the attempt: configurations deployed by your organization's IT take precedence.");
-            return false;
-        }
-
+        //
+        // Contributions need no protection against a takeover: every configuration plugin has its
+        // own contribution, so no plugin can replace or drop the contribution of another one. This
+        // is also why a local configuration plugin may contribute next to one of an organization.
+        //
         if (successful)
         {
             var configInstance = configSelection.Compile().Invoke(SettingsManagerAccess.ConfigurationData);
@@ -675,10 +668,8 @@ public static partial class ManagedConfiguration
             configMeta.SetValue(merged);
             configMeta.SetPluginContribution(new HashSet<TValue>(configuredValue), configPluginId);
         }
-        else if (configMeta.HasPluginContribution && configMeta.PluginContributionByConfigPluginId == configPluginId)
-        {
-            configMeta.ClearPluginContribution();
-        }
+        else
+            configMeta.RemovePluginContribution(configPluginId);
 
         if (configMeta.IsLocked && configMeta.LockedByConfigPluginId == configPluginId)
             configMeta.UnlockConfiguration();
