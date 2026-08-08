@@ -52,9 +52,18 @@ public static partial class PluginFactory
         }
         
         //
-        // Iterate over all available plugins and try to start them.
+        // Iterate over all available plugins and try to start them. We do that in a deterministic
+        // order, starting with the configuration plugins of the organization. Two reasons:
         //
-        foreach (var availablePlugin in AVAILABLE_PLUGINS)
+        // - Configuration plugins write settings and configuration objects. Whoever writes one
+        //   first owns it, so the organization has to come first: its configuration is the baseline
+        //   every other plugin has to respect.
+        //
+        // - Without an explicit order, the sequence is the one Directory.EnumerateFiles produced in
+        //   LoadAll. That order is not guaranteed, so the same installation could behave
+        //   differently on two machines.
+        //
+        foreach (var availablePlugin in AVAILABLE_PLUGINS.OrderBy(GetStartupRank).ThenBy(plugin => plugin.LocalPath, StringComparer.OrdinalIgnoreCase))
         {
             if(cancellationToken.IsCancellationRequested)
             {
@@ -88,6 +97,25 @@ public static partial class PluginFactory
         await MessageBus.INSTANCE.SendMessage<bool>(null, Event.PLUGINS_RELOADED);
         return configObjects;
     }
+
+    /// <summary>
+    /// Determines the position of a plugin in the startup sequence. Plugins with a lower rank start earlier.
+    /// </summary>
+    /// <remarks>
+    /// The configuration plugins an organization deployed go first: they are the baseline for
+    /// everything else. Local configuration plugins follow, so they can add to that baseline instead
+    /// of replacing parts of it. All remaining plugin types write no settings at all, so their rank
+    /// is irrelevant for the outcome.
+    /// </remarks>
+    /// <param name="plugin">The plugin about to be started.</param>
+    /// <returns>The startup rank of the plugin.</returns>
+    private static int GetStartupRank(IAvailablePlugin plugin) => plugin.Type switch
+    {
+        PluginType.CONFIGURATION when IsEnterpriseConfigurationPath(plugin.LocalPath) => 0,
+        PluginType.CONFIGURATION => 1,
+
+        _ => 2,
+    };
 
     private static void LogAssistantPluginStartupState()
     {
