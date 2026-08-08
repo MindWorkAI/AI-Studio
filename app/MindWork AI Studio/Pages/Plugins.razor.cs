@@ -36,7 +36,7 @@ public partial class Plugins : MSGComponentBase
     private RustService RustService { get; init; } = null!;
 
     [Inject]
-    private AssistantPluginInstallService AssistantPluginInstallService { get; init; } = null!;
+    private PluginInstallService PluginInstallService { get; init; } = null!;
 
     private static readonly ILogger LOG = Program.LOGGER_FACTORY.CreateLogger(nameof(Plugins));
     
@@ -379,7 +379,7 @@ public partial class Plugins : MSGComponentBase
 
         try
         {
-            var result = await this.AssistantPluginInstallService.InstallArchiveAsync(archivePath, this.ConfirmPluginImportAsync, CancellationToken.None);
+            var result = await this.PluginInstallService.InstallArchiveAsync(archivePath, this.ConfirmPluginImportAsync, CancellationToken.None);
             if (result.Cancelled)
                 return;
 

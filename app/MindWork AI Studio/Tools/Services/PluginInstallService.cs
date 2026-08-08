@@ -8,9 +8,9 @@ using AIStudio.Tools.Rust;
 
 namespace AIStudio.Tools.Services;
 
-public sealed class AssistantPluginInstallService
+public sealed class PluginInstallService
 {
-    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(AssistantPluginInstallService).Namespace, nameof(AssistantPluginInstallService));
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(PluginInstallService).Namespace, nameof(PluginInstallService));
     
     private const string PLUGIN_FILE_NAME = "plugin.lua";
     private const string ASSISTANT_BUILDER_DIRECTORY_PREFIX = "assistant-builder";
@@ -18,7 +18,7 @@ public sealed class AssistantPluginInstallService
     private const string INSTALL_BACKUP_DIRECTORY = ".plugin-install-backups";
     private const int DIRECTORY_PREFIX_MAX_LEN = 80;
     
-    private readonly ILogger<AssistantPluginInstallService> logger;
+    private readonly ILogger<PluginInstallService> logger;
     private readonly SettingsManager settingsManager;
     private readonly AssistantSessionService assistantSessionService;
     private readonly MediaTranscriptionService mediaTranscriptionService;
@@ -34,13 +34,13 @@ public sealed class AssistantPluginInstallService
 
     private static AssistantPluginUpdateResult UpdateError(IPluginMetadata plugin, string pluginDirectory, string issue) => new(false, plugin.Id, plugin.Name, pluginDirectory, issue);
 
-    public AssistantPluginInstallService(ILogger<AssistantPluginInstallService> logger, SettingsManager settingsManager, AssistantSessionService assistantSessionService, MediaTranscriptionService mediaTranscriptionService)
+    public PluginInstallService(ILogger<PluginInstallService> logger, SettingsManager settingsManager, AssistantSessionService assistantSessionService, MediaTranscriptionService mediaTranscriptionService)
     {
         this.logger = logger;
         this.settingsManager = settingsManager;
         this.assistantSessionService = assistantSessionService;
         this.mediaTranscriptionService = mediaTranscriptionService;
-        this.logger.LogInformation("The assistant plugin install service has been initialized.");
+        this.logger.LogInformation("The plugin install service has been initialized.");
     }
 
     /// <summary>

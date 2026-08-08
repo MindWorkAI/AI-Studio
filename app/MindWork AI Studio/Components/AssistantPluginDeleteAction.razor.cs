@@ -16,7 +16,7 @@ public partial class AssistantPluginDeleteAction : MSGComponentBase
     private IDialogService DialogService { get; init; } = null!;
 
     [Inject]
-    private AssistantPluginInstallService AssistantPluginInstallService { get; init; } = null!;
+    private PluginInstallService PluginInstallService { get; init; } = null!;
 
     [Inject]
     private MediaTranscriptionService MediaTranscriptionService { get; init; } = null!;
@@ -24,9 +24,9 @@ public partial class AssistantPluginDeleteAction : MSGComponentBase
     [Inject]
     private ILogger<AssistantPluginDeleteAction> Logger { get; init; } = null!;
 
-    private bool CanDelete => AssistantPluginInstallService.CanDeleteInstalledAssistant(this.Plugin);
+    private bool CanDelete => PluginInstallService.CanDeleteInstalledAssistant(this.Plugin);
 
-    private bool IsBlockedByActiveWork => this.AssistantPluginInstallService.HasActiveAssistantWork(this.Plugin.Id);
+    private bool IsBlockedByActiveWork => this.PluginInstallService.HasActiveAssistantWork(this.Plugin.Id);
 
     private string Tooltip => this.IsBlockedByActiveWork
         ? this.T("The assistant cannot be deleted while background work is still running.")
@@ -57,7 +57,7 @@ public partial class AssistantPluginDeleteAction : MSGComponentBase
         if (dialogResult is null || dialogResult.Canceled)
             return;
 
-        var result = await this.AssistantPluginInstallService.DeleteInstalledAssistantAsync(this.Plugin, CancellationToken.None);
+        var result = await this.PluginInstallService.DeleteInstalledAssistantAsync(this.Plugin, CancellationToken.None);
         if (!result.Success)
         {
             this.Logger.LogError("Failed to delete assistant plugin '{PluginName}' ({PluginId}) from '{PluginDirectory}' with issue '{Issue}'.", result.PluginName, result.PluginId, result.PluginDirectory, result.Issue);
