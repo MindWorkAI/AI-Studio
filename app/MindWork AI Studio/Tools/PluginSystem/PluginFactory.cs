@@ -11,7 +11,16 @@ public static partial class PluginFactory
     private static string DATA_DIR = string.Empty;
     private static string PLUGINS_ROOT = string.Empty;
     private static string INTERNAL_PLUGINS_ROOT = string.Empty;
-    private static string CONFIGURATION_PLUGINS_ROOT = string.Empty;
+
+    /// <summary>
+    /// The directory the config server downloads the configuration plugins of an organization into.
+    /// </summary>
+    /// <remarks>
+    /// This is not the home of configuration plugins in general: a local configuration plugin can
+    /// live in any directory below the plugins root. Only the IT department of an organization
+    /// deploys plugins here, each in a directory named after its configuration ID.
+    /// </remarks>
+    private static string ENTERPRISE_CONFIGURATION_PLUGINS_ROOT = string.Empty;
     private static string HOT_RELOAD_LOCK_FILE = string.Empty;
     private static FileSystemWatcher HOT_RELOAD_WATCHER = null!;
 
@@ -65,7 +74,7 @@ public static partial class PluginFactory
         PLUGINS_ROOT = Path.Join(DATA_DIR, "plugins");
         HOT_RELOAD_LOCK_FILE = Path.Join(PLUGINS_ROOT, ".lock");
         INTERNAL_PLUGINS_ROOT = Path.Join(PLUGINS_ROOT, ".internal");
-        CONFIGURATION_PLUGINS_ROOT = Path.Join(PLUGINS_ROOT, ".config");
+        ENTERPRISE_CONFIGURATION_PLUGINS_ROOT = Path.Join(PLUGINS_ROOT, ".config");
         
         if (!Directory.Exists(PLUGINS_ROOT))
             Directory.CreateDirectory(PLUGINS_ROOT);
@@ -89,12 +98,12 @@ public static partial class PluginFactory
     /// <returns>True when the directory is nested in the enterprise configuration directory.</returns>
     private static bool IsEnterpriseConfigurationPath(string? pluginPath)
     {
-        if (string.IsNullOrWhiteSpace(pluginPath) || string.IsNullOrWhiteSpace(CONFIGURATION_PLUGINS_ROOT))
+        if (string.IsNullOrWhiteSpace(pluginPath) || string.IsNullOrWhiteSpace(ENTERPRISE_CONFIGURATION_PLUGINS_ROOT))
             return false;
 
         try
         {
-            var configurationRoot = Path.GetFullPath(CONFIGURATION_PLUGINS_ROOT).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
+            var configurationRoot = Path.GetFullPath(ENTERPRISE_CONFIGURATION_PLUGINS_ROOT).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
             var pluginDirectory = Path.GetFullPath(pluginPath).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
             return pluginDirectory.StartsWith(configurationRoot, StringComparison.OrdinalIgnoreCase);
         }
