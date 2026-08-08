@@ -239,6 +239,16 @@ public static partial class PluginFactory
         if(ManagedConfiguration.CleanupLeftOverManagedConfigurations(AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds))
             wasConfigurationChanged = true;
 
+        //
+        // The enterprise approvals of all configuration plugins add up. Now that every plugin has
+        // contributed and the clean-up above has dropped the removed ones, we rebuild the effective
+        // list. We skip that while a configuration plugin is deployed but could not be loaded: its
+        // approvals are missing from the contributions, and withdrawing them would demand a new
+        // security audit for assistant plugins the organization has approved:
+        //
+        if(unloadedEnterpriseConfigPluginIds.Count == 0 && PluginConfiguration.RefreshEnterpriseApprovedAssistantPlugins())
+            wasConfigurationChanged = true;
+
         // Compatibility shim, see documentation/compatibility-shims/2026-08-orphaned-config-locks.md (remove after 2027-08-06):
         if (RepairLegacyConfigOnlySettings(unloadedEnterpriseConfigPluginIds.Count > 0))
             wasConfigurationChanged = true;

@@ -322,7 +322,6 @@ Plan for it in these settings:
 | Setting | What a partial list costs you |
 |---|---|
 | `DataApp.HiddenAssistants` | Assistants hidden by the base configuration become **visible** again |
-| `DataAssistantPluginAudit.EnterpriseApprovedPlugins` | Approvals of the base configuration are withdrawn, so those assistant plugins require a security audit again |
 | `DataSourceSecuritySettings.TrustedProviderIds` | Providers trusted by the base configuration lose that status |
 | `DataApp.ExternalHttpCustomRootCertificateAllowedHosts` | Hosts of the base configuration stop trusting your root certificates |
 | `DataConfidence.CustomConfidenceScheme` | Providers left out fall back to the AI Studio default confidence |
@@ -330,7 +329,12 @@ Plan for it in these settings:
 
 The rule of thumb: whenever a configuration with a higher priority touches one of these settings, it has to repeat every entry it wants to keep. Watch `DataApp.HiddenAssistants` in particular, because it is the only one in this list that opens something up instead of restricting it.
 
-`DataApp.EnabledPreviewFeatures` is the exception. Preview features add up: enable one for the whole organization and another one for a single department, and users of that department get both. Each configuration keeps its own contribution, so removing one of them only withdraws the features that this configuration had enabled.
+Two settings are the exception and add up instead of replacing:
+
+- `DataApp.EnabledPreviewFeatures` — enable one preview feature for the whole organization and another one for a single department, and users of that department get both.
+- `DataAssistantPluginAudit.EnterpriseApprovedPlugins` — a department configuration can approve additional assistant plugins without repeating the approvals of the base configuration. Approving is a pure allowlist over hashes, so there is nothing a replacing list could express that adding does not.
+
+In both cases each configuration keeps its own contribution, so removing one of them only withdraws what this configuration had granted. While a configuration plugin is deployed but cannot be loaded, its approvals are kept: AI Studio does not withdraw approvals it cannot currently read.
 
 One clarification for `DataChat.PreselectedDataSourceIds`: the IDs are not limited to the data sources of the same configuration. They are resolved against every known data source, including those of your other configurations and the ones a user configured. IDs that resolve to nothing are ignored.
 

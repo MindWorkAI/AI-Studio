@@ -358,14 +358,65 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         switch (successful)
         {
             case true:
-                configMeta.SetValue(configuredApprovals);
+                //
+                // Approvals of several configuration plugins add up. An approval list is a pure
+                // allowlist over hashes: not listing a plugin already means "not approved", so
+                // replacing the list would only ever withdraw the approvals of another
+                // configuration without expressing anything new.
+                //
+                configMeta.SetPluginContribution(configuredApprovals, this.Id);
+
+                // Merge into the stored list right away, so the approvals of this plugin take
+                // effect immediately. PluginFactory.LoadAll recomputes the authoritative list once
+                // every configuration plugin has contributed:
+                var mergedApprovals = new List<DataAssistantPluginEnterpriseApproval>(configMeta.GetValue());
+                var knownHashes = mergedApprovals.Select(approval => approval.PluginHash).ToHashSet(StringComparer.Ordinal);
+                mergedApprovals.AddRange(configuredApprovals.Where(approval => knownHashes.Add(approval.PluginHash)));
+
+                configMeta.SetValue(mergedApprovals);
                 configMeta.LockConfiguration(this.Id);
                 break;
 
             case false when configMeta.IsLocked && configMeta.LockedByConfigPluginId == this.Id:
+                configMeta.RemovePluginContribution(this.Id);
                 configMeta.ResetLockedConfiguration();
                 break;
+
+            case false:
+                configMeta.RemovePluginContribution(this.Id);
+                break;
         }
+    }
+
+    /// <summary>
+    /// Recomputes the effective enterprise approvals from the contributions of all configuration plugins.
+    /// </summary>
+    /// <remarks>
+    /// Every configuration plugin merges its own approvals into the stored list while it starts, but
+    /// nothing there can withdraw the approvals of a plugin which was removed in the meantime. This
+    /// method rebuilds the list from the remaining contributions and is therefore called once all
+    /// configuration plugins have been started.
+    /// </remarks>
+    /// <returns>True when the effective approvals changed, otherwise false.</returns>
+    public static bool RefreshEnterpriseApprovedAssistantPlugins()
+    {
+        if (!ManagedConfiguration.TryGet(x => x.AssistantPluginAudit, x => x.EnterpriseApprovedPlugins, out ConfigMeta<DataAssistantPluginAudit, IList<DataAssistantPluginEnterpriseApproval>> configMeta))
+            return false;
+
+        var effectiveApprovals = new List<DataAssistantPluginEnterpriseApproval>();
+        var effectiveHashes = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var approval in configMeta.PluginContributions.Values.SelectMany(contribution => contribution))
+            if (effectiveHashes.Add(approval.PluginHash))
+                effectiveApprovals.Add(approval);
+
+        // Compare by hash, so a different order alone does not rewrite the settings on every start:
+        var currentApprovals = configMeta.GetValue();
+        if (currentApprovals.Count == effectiveApprovals.Count && effectiveHashes.SetEquals(currentApprovals.Select(approval => approval.PluginHash)))
+            return false;
+
+        LOG.LogInformation($"The enterprise approvals for assistant plugins changed from {currentApprovals.Count} to {effectiveApprovals.Count} entries, contributed by {configMeta.PluginContributions.Count} configuration plugin(s).");
+        configMeta.SetValue(effectiveApprovals);
+        return true;
     }
 
     private static bool TryParseEnterpriseApprovedAssistantPlugin(int index, LuaTable table, Guid configPluginId, out DataAssistantPluginEnterpriseApproval approval)

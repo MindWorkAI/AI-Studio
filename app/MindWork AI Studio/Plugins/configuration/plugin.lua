@@ -233,8 +233,9 @@ CONFIG["SETTINGS"] = {}
 -- that setting. That is intentional: replacing is the only way a department can take
 -- something back that the base configuration has set.
 --
--- The affected settings below carry a note. The one exception is
--- DataApp.EnabledPreviewFeatures, which adds up across configurations.
+-- The affected settings below carry a note. Two settings are the exception and add up
+-- across configurations instead: DataApp.EnabledPreviewFeatures and
+-- DataAssistantPluginAudit.EnterpriseApprovedPlugins.
 -- ------
 
 -- Configure the update check interval:
@@ -460,10 +461,10 @@ CONFIG["SETTINGS"] = {}
 -- You can generate the exact hash with the build-script command:
 --   dotnet run --project app/Build -- assistant-plugin-hash "<plugin-dir>" --lua-snippet
 --
--- Replaces, does not merge: a configuration with a higher priority replaces this list
--- completely, so a department configuration listing two approvals withdraws every
--- approval of the base configuration. Those assistant plugins then require a security
--- audit again. Repeat the approvals of the base configuration here to keep them.
+-- Adds up, does not replace: approvals of all your configurations are combined, so a
+-- department configuration can approve additional assistant plugins without repeating
+-- the approvals of the base configuration. Each configuration keeps its own approvals,
+-- so removing one of them only withdraws the approvals it had granted.
 -- CONFIG["SETTINGS"]["DataAssistantPluginAudit.EnterpriseApprovedPlugins"] = {
 --     {
 --         ["PluginHash"] = "0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF",

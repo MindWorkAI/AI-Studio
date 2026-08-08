@@ -129,16 +129,25 @@ public static partial class PluginFactory
     private static void LogAssistantPluginStartupState()
     {
         ManagedConfiguration.TryGet(x => x.AssistantPluginAudit, x => x.EnterpriseApprovedPlugins, out ConfigMeta<DataAssistantPluginAudit, IList<DataAssistantPluginEnterpriseApproval>> configMeta);
-        var approvedByConfigPluginId = configMeta is { IsLocked: true } ? configMeta.LockedByConfigPluginId : Guid.Empty;
-        var approvedByConfigPluginName = approvedByConfigPluginId == Guid.Empty
-            ? string.Empty
-            : AVAILABLE_PLUGINS.FirstOrDefault(x => x.Id == approvedByConfigPluginId)?.Name ?? string.Empty;
 
         foreach (var assistantPlugin in RUNNING_PLUGINS.OfType<PluginAssistants>())
         {
             var securityState = PluginAssistantSecurityResolver.Resolve(SettingsManagerAccess, assistantPlugin);
             if (securityState.IsEnterpriseApproved)
             {
+                //
+                // Several configuration plugins may approve assistant plugins. We look up the one
+                // which approved this particular plugin instead of naming an arbitrary contributor:
+                //
+                var approvedByConfigPluginId = configMeta.PluginContributions
+                    .Where(contribution => contribution.Value.Any(approval => string.Equals(approval.PluginHash, securityState.CurrentHash, StringComparison.Ordinal)))
+                    .Select(contribution => contribution.Key)
+                    .FirstOrDefault();
+
+                var approvedByConfigPluginName = approvedByConfigPluginId == Guid.Empty
+                    ? string.Empty
+                    : AVAILABLE_PLUGINS.FirstOrDefault(x => x.Id == approvedByConfigPluginId)?.Name ?? string.Empty;
+
                 LOG.LogInformation(
                     $"Successfully started assistant plugin: Id='{assistantPlugin.Id}', Type='{assistantPlugin.Type}', Name='{assistantPlugin.Name}', Version='{assistantPlugin.Version}', SecuritySource='EnterpriseApproval', ApprovedByConfigPluginId='{approvedByConfigPluginId}', ApprovedByConfigPluginName='{approvedByConfigPluginName}'");
                 continue;
