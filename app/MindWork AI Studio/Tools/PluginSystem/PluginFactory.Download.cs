@@ -45,7 +45,7 @@ public static partial class PluginFactory
         
         LOG.LogInformation($"Try to download configuration plugin with ID='{configPlugId}' from server='{configServerUrl}' (GET {downloadUrl})");
         var tempDownloadFile = Path.GetTempFileName();
-        var stagedDirectory = Path.Join(CONFIGURATION_PLUGINS_ROOT, $"{configPlugId}.staging-{Guid.NewGuid():N}");
+        var stagedDirectory = Path.Join(ENTERPRISE_CONFIGURATION_PLUGINS_ROOT, $"{configPlugId}.staging-{Guid.NewGuid():N}");
         string? backupDirectory = null;
         var wasSuccessful = false;
         try
@@ -66,10 +66,10 @@ public static partial class PluginFactory
 
             ExtractConfigPluginArchive(tempDownloadFile, stagedDirectory);
 
-            var configDirectory = Path.Join(CONFIGURATION_PLUGINS_ROOT, configPlugId.ToString());
+            var configDirectory = Path.Join(ENTERPRISE_CONFIGURATION_PLUGINS_ROOT, configPlugId.ToString());
             if (Directory.Exists(configDirectory))
             {
-                backupDirectory = Path.Join(CONFIGURATION_PLUGINS_ROOT, $"{configPlugId}.backup-{Guid.NewGuid():N}");
+                backupDirectory = Path.Join(ENTERPRISE_CONFIGURATION_PLUGINS_ROOT, $"{configPlugId}.backup-{Guid.NewGuid():N}");
                 Directory.Move(configDirectory, backupDirectory);
             }
 
@@ -84,7 +84,7 @@ public static partial class PluginFactory
         {
             LOG.LogError(e, "An error occurred while downloading or extracting the enterprise configuration plugin.");
 
-            var configDirectory = Path.Join(CONFIGURATION_PLUGINS_ROOT, configPlugId.ToString());
+            var configDirectory = Path.Join(ENTERPRISE_CONFIGURATION_PLUGINS_ROOT, configPlugId.ToString());
             if (!string.IsNullOrWhiteSpace(backupDirectory) && Directory.Exists(backupDirectory) && !Directory.Exists(configDirectory))
             {
                 try

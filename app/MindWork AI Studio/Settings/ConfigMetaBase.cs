@@ -38,14 +38,19 @@ public abstract record ConfigMetaBase(string SettingName) : IConfig
     public Guid EditableDefaultByConfigPluginId { get; private set; }
 
     /// <summary>
-    /// Indicates whether a plugin contribution is available.
+    /// The configuration plugins which contribute to this setting.
     /// </summary>
-    public bool HasPluginContribution { get; protected set; }
+    /// <remarks>
+    /// Contributions are additive, so several configuration plugins may contribute at the same time
+    /// and each of them keeps its own contribution. An organization might enable one preview feature
+    /// for everybody and another one for a single department, for example.
+    /// </remarks>
+    public abstract IReadOnlyCollection<Guid> ContributingConfigPluginIds { get; }
 
     /// <summary>
-    /// The ID of the plugin that provided the additive value contribution.
+    /// Indicates whether at least one configuration plugin contributes to this setting.
     /// </summary>
-    public Guid PluginContributionByConfigPluginId { get; protected set; }
+    public bool HasPluginContribution => this.ContributingConfigPluginIds.Count > 0;
 
     /// <summary>
     /// Locks the configuration state, indicating that it is controlled by a specific plugin.
@@ -133,13 +138,11 @@ public abstract record ConfigMetaBase(string SettingName) : IConfig
     }
 
     /// <summary>
-    /// Clears the additive plugin contribution without changing the current value.
+    /// Removes the contribution of one configuration plugin without changing the current value.
     /// </summary>
-    public virtual void ClearPluginContribution()
-    {
-        this.PluginContributionByConfigPluginId = Guid.Empty;
-        this.HasPluginContribution = false;
-    }
+    /// <param name="configPluginId">The configuration plugin whose contribution is removed.</param>
+    /// <returns>True when that plugin had a contribution, otherwise false.</returns>
+    public abstract bool RemovePluginContribution(Guid configPluginId);
 
     /// <summary>
     /// Resets the configuration property to its default value.

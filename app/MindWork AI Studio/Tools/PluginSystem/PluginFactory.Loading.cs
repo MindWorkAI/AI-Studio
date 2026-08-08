@@ -110,21 +110,39 @@ public static partial class PluginFactory
             
                     LOG.LogInformation($"Successfully loaded plugin: '{pluginMainFile}' (Id='{plugin.Id}', Type='{plugin.Type}', Name='{plugin.Name}', Version='{plugin.Version}', Authors='{string.Join(", ", plugin.Authors)}')");
 
-                    var isConfigurationPluginInConfigDirectory =
-                        plugin.Type is PluginType.CONFIGURATION &&
-                        pluginPath.StartsWith(CONFIGURATION_PLUGINS_ROOT, StringComparison.OrdinalIgnoreCase);
+                    //
+                    // Plugin IDs must be unique: many lookups resolve a plugin by its ID alone, e.g.
+                    // the base language plugin in PluginFactory.Starting or the owner of a locked
+                    // setting. When two plugins share an ID, the one deployed by the organization's
+                    // IT wins. Otherwise, a manually placed copy could outrank the enterprise
+                    // configuration, which is the exact opposite of what an organization expects:
+                    //
+                    if (AVAILABLE_PLUGINS.FirstOrDefault(candidate => candidate.Id == plugin.Id) is { } duplicatePlugin)
+                    {
+                        if (!IsEnterpriseConfigurationPath(pluginPath) || IsEnterpriseConfigurationPath(duplicatePlugin.LocalPath))
+                        {
+                            LOG.LogWarning($"Ignoring the plugin '{pluginMainFile}': its ID ('{plugin.Id}') is already used by the plugin at '{duplicatePlugin.LocalPath}'. Plugin IDs must be unique. Please remove one of these plugins.");
+                            continue;
+                        }
 
+                        LOG.LogWarning($"Ignoring the plugin at '{duplicatePlugin.LocalPath}': it uses the ID ('{plugin.Id}') of the enterprise configuration plugin at '{pluginPath}'. Plugins deployed by your organization's IT take precedence.");
+                        AVAILABLE_PLUGINS.Remove(duplicatePlugin);
+                    }
+
+                    var isConfigurationPluginInConfigDirectory = plugin.Type is PluginType.CONFIGURATION && IsEnterpriseConfigurationPath(pluginPath);
                     var isManagedByConfigServer = false;
                     Guid? managedConfigurationId = null;
+                    var configurationPriority = 0;
                     if (plugin is PluginConfiguration configPlugin)
                     {
+                        configurationPriority = configPlugin.Priority;
                         if (configPlugin.DeployedUsingConfigServer.HasValue)
                             isManagedByConfigServer = configPlugin.DeployedUsingConfigServer.Value;
-                        
+
                         else if (isConfigurationPluginInConfigDirectory)
                         {
                             isManagedByConfigServer = true;
-                            LOG.LogWarning($"The configuration plugin '{plugin.Id}' does not define 'DEPLOYED_USING_CONFIG_SERVER'. Falling back to the plugin path and treating it as managed because it is stored under '{CONFIGURATION_PLUGINS_ROOT}'.");
+                            LOG.LogWarning($"The configuration plugin '{plugin.Id}' does not define 'DEPLOYED_USING_CONFIG_SERVER'. Falling back to the plugin path and treating it as managed because it is stored under '{ENTERPRISE_CONFIGURATION_PLUGINS_ROOT}'.");
                         }
                     }
                     else if (plugin is PluginAssistants assistantPlugin)
@@ -145,7 +163,7 @@ public static partial class PluginFactory
                             LOG.LogWarning($"Could not determine the managed configuration ID for configuration plugin '{plugin.Id}'. The plugin directory '{pluginPath}' does not end with a valid GUID.");
                     }
 
-                    AVAILABLE_PLUGINS.Add(new PluginMetadata(plugin, pluginPath, isManagedByConfigServer, managedConfigurationId));
+                    AVAILABLE_PLUGINS.Add(new PluginMetadata(plugin, pluginPath, isManagedByConfigServer, managedConfigurationId, configurationPriority));
                 }
                 catch (Exception e)
                 {
@@ -176,40 +194,40 @@ public static partial class PluginFactory
         //
         
         //
-        // Configuration plugins which are deployed but could not be loaded count as present: they
-        // were not removed, so everything they manage must stay as it is. Otherwise, one broken
-        // configuration plugin would wipe the entire organization configuration:
+        // Enterprise configuration plugins which are deployed but could not be loaded count as
+        // present: they were not removed, so everything they manage must stay as it is. Otherwise,
+        // one broken configuration plugin would wipe the entire organization configuration:
         //
-        var deployedConfigPluginIds = GetDeployedConfigPluginIds();
-        var unloadedConfigPluginIds = deployedConfigPluginIds.Where(x => AVAILABLE_PLUGINS.All(plugin => plugin.Id != x)).ToList();
-        foreach (var unloadedConfigPluginId in unloadedConfigPluginIds)
-            LOG.LogWarning($"The configuration plugin '{unloadedConfigPluginId}' is deployed, but was not loaded. Everything it manages stays unchanged, because the plugin was not removed. Please check the errors above and fix the plugin.");
+        var deployedEnterpriseConfigPluginIds = GetDeployedEnterpriseConfigPluginIds();
+        var unloadedEnterpriseConfigPluginIds = deployedEnterpriseConfigPluginIds.Where(x => AVAILABLE_PLUGINS.All(plugin => plugin.Id != x)).ToList();
+        foreach (var unloadedEnterpriseConfigPluginId in unloadedEnterpriseConfigPluginIds)
+            LOG.LogWarning($"The configuration plugin '{unloadedEnterpriseConfigPluginId}' is deployed, but was not loaded. Everything it manages stays unchanged, because the plugin was not removed. Please check the errors above and fix the plugin.");
 
         // Check LLM providers:
-        var wasConfigurationChanged = await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.LLM_PROVIDER, x => x.Providers, AVAILABLE_PLUGINS, deployedConfigPluginIds, configObjectList, SecretStoreType.LLM_PROVIDER);
+        var wasConfigurationChanged = await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.LLM_PROVIDER, x => x.Providers, AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds, configObjectList, SecretStoreType.LLM_PROVIDER);
 
         // Check transcription providers:
-        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER, x => x.TranscriptionProviders, AVAILABLE_PLUGINS, deployedConfigPluginIds, configObjectList, SecretStoreType.TRANSCRIPTION_PROVIDER))
+        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER, x => x.TranscriptionProviders, AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds, configObjectList, SecretStoreType.TRANSCRIPTION_PROVIDER))
             wasConfigurationChanged = true;
 
         // Check embedding providers:
-        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.EMBEDDING_PROVIDER, x => x.EmbeddingProviders, AVAILABLE_PLUGINS, deployedConfigPluginIds, configObjectList, SecretStoreType.EMBEDDING_PROVIDER))
+        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.EMBEDDING_PROVIDER, x => x.EmbeddingProviders, AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds, configObjectList, SecretStoreType.EMBEDDING_PROVIDER))
             wasConfigurationChanged = true;
 
         // Check data sources:
-        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.DATA_SOURCE, x => x.DataSources, AVAILABLE_PLUGINS, deployedConfigPluginIds, configObjectList, SecretStoreType.DATA_SOURCE, deleteSecret: true))
+        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.DATA_SOURCE, x => x.DataSources, AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds, configObjectList, SecretStoreType.DATA_SOURCE, deleteSecret: true))
             wasConfigurationChanged = true;
 
         // Check chat templates:
-        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.CHAT_TEMPLATE, x => x.ChatTemplates, AVAILABLE_PLUGINS, deployedConfigPluginIds, configObjectList))
+        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.CHAT_TEMPLATE, x => x.ChatTemplates, AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds, configObjectList))
             wasConfigurationChanged = true;
 
         // Check profiles:
-        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.PROFILE, x => x.Profiles, AVAILABLE_PLUGINS, deployedConfigPluginIds, configObjectList))
+        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.PROFILE, x => x.Profiles, AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds, configObjectList))
             wasConfigurationChanged = true;
 
         // Check document analysis policies:
-        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY, x => x.DocumentAnalysis.Policies, AVAILABLE_PLUGINS, deployedConfigPluginIds, configObjectList))
+        if(await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY, x => x.DocumentAnalysis.Policies, AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds, configObjectList))
             wasConfigurationChanged = true;
 
         // Check left-over mandatory info acceptances:
@@ -218,11 +236,21 @@ public static partial class PluginFactory
         
         // Check all managed settings, i.e. settings which a configuration plugin can lock,
         // provide as an editable default, or contribute to:
-        if(ManagedConfiguration.CleanupLeftOverManagedConfigurations(AVAILABLE_PLUGINS, deployedConfigPluginIds))
+        if(ManagedConfiguration.CleanupLeftOverManagedConfigurations(AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds))
+            wasConfigurationChanged = true;
+
+        //
+        // The enterprise approvals of all configuration plugins add up. Now that every plugin has
+        // contributed and the clean-up above has dropped the removed ones, we rebuild the effective
+        // list. We skip that while a configuration plugin is deployed but could not be loaded: its
+        // approvals are missing from the contributions, and withdrawing them would demand a new
+        // security audit for assistant plugins the organization has approved:
+        //
+        if(unloadedEnterpriseConfigPluginIds.Count == 0 && PluginConfiguration.RefreshEnterpriseApprovedAssistantPlugins())
             wasConfigurationChanged = true;
 
         // Compatibility shim, see documentation/compatibility-shims/2026-08-orphaned-config-locks.md (remove after 2027-08-06):
-        if (RepairLegacyConfigOnlySettings(unloadedConfigPluginIds.Count > 0))
+        if (RepairLegacyConfigOnlySettings(unloadedEnterpriseConfigPluginIds.Count > 0))
             wasConfigurationChanged = true;
 
         if (wasConfigurationChanged)
@@ -233,9 +261,11 @@ public static partial class PluginFactory
     }
 
     /// <summary>
-    /// Determines the IDs of all configuration plugins which are deployed on this machine.
+    /// Determines the IDs of all configuration plugins which an organization deployed on this machine.
     /// </summary>
     /// <remarks>
+    /// Local configuration plugins are not part of this: they belong to the user, not to an
+    /// organization, and they can live in any directory below the plugins root.<br/><br/>
     /// We read these IDs from the file system instead of taking them from the loaded plugins. A
     /// configuration plugin might be present but not loadable, e.g. due to invalid Lua code, a
     /// missing `plugin.lua`, or an incomplete download. Such a plugin still manages this AI Studio
@@ -243,13 +273,13 @@ public static partial class PluginFactory
     /// configuration server live in a directory named after their ID, which is the only information
     /// left when the plugin itself cannot be read.
     /// </remarks>
-    private static HashSet<Guid> GetDeployedConfigPluginIds()
+    private static HashSet<Guid> GetDeployedEnterpriseConfigPluginIds()
     {
-        var deployedConfigPluginIds = new HashSet<Guid>();
-        if (!Directory.Exists(CONFIGURATION_PLUGINS_ROOT))
-            return deployedConfigPluginIds;
+        var deployedEnterpriseConfigPluginIds = new HashSet<Guid>();
+        if (!Directory.Exists(ENTERPRISE_CONFIGURATION_PLUGINS_ROOT))
+            return deployedEnterpriseConfigPluginIds;
 
-        foreach (var configPluginDirectory in Directory.EnumerateDirectories(CONFIGURATION_PLUGINS_ROOT))
+        foreach (var configPluginDirectory in Directory.EnumerateDirectories(ENTERPRISE_CONFIGURATION_PLUGINS_ROOT))
         {
             if (!Guid.TryParse(Path.GetFileName(configPluginDirectory), out var configPluginId) || configPluginId == Guid.Empty)
                 continue;
@@ -258,10 +288,10 @@ public static partial class PluginFactory
             if (!Directory.EnumerateFileSystemEntries(configPluginDirectory).Any())
                 continue;
 
-            deployedConfigPluginIds.Add(configPluginId);
+            deployedEnterpriseConfigPluginIds.Add(configPluginId);
         }
 
-        return deployedConfigPluginIds;
+        return deployedEnterpriseConfigPluginIds;
     }
 
     /// <param name="pluginPath">The directory the plugin is located in, or null when the code has no directory yet.</param>

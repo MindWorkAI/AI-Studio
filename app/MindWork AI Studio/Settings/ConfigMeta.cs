@@ -33,26 +33,29 @@ public record ConfigMeta<TClass, TValue> : ConfigMetaBase
     public required TValue Default { get; init; }
 
     /// <summary>
-    /// The additive value contribution provided by a configuration plugin.
+    /// The additive value contributions, one per contributing configuration plugin.
     /// </summary>
-    public TValue PluginContribution { get; private set; } = default!;
-
-    /// <summary>
-    /// Stores an additive plugin contribution.
-    /// </summary>
-    public void SetPluginContribution(TValue value, Guid pluginId)
-    {
-        this.PluginContribution = value;
-        this.PluginContributionByConfigPluginId = pluginId;
-        this.HasPluginContribution = true;
-    }
+    /// <remarks>
+    /// Every configuration plugin keeps its own contribution, so removing one of them leaves the
+    /// contributions of the others intact. Callers that need the overall contribution combine the
+    /// values themselves: only they know how to combine the concrete type.
+    /// </remarks>
+    public IReadOnlyDictionary<Guid, TValue> PluginContributions => this.pluginContributions;
 
     /// <inheritdoc/>
-    public override void ClearPluginContribution()
-    {
-        this.PluginContribution = default!;
-        base.ClearPluginContribution();
-    }
+    public override IReadOnlyCollection<Guid> ContributingConfigPluginIds => this.pluginContributions.Keys;
+
+    private readonly Dictionary<Guid, TValue> pluginContributions = [];
+
+    /// <summary>
+    /// Stores the additive contribution of one configuration plugin, replacing its previous one.
+    /// </summary>
+    /// <param name="value">The contributed value.</param>
+    /// <param name="pluginId">The contributing configuration plugin.</param>
+    public void SetPluginContribution(TValue value, Guid pluginId) => this.pluginContributions[pluginId] = value;
+
+    /// <inheritdoc/>
+    public override bool RemovePluginContribution(Guid configPluginId) => this.pluginContributions.Remove(configPluginId);
 
     /// <inheritdoc/>
     protected override void Reset()

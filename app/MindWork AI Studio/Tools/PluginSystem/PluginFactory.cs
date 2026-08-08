@@ -11,7 +11,16 @@ public static partial class PluginFactory
     private static string DATA_DIR = string.Empty;
     private static string PLUGINS_ROOT = string.Empty;
     private static string INTERNAL_PLUGINS_ROOT = string.Empty;
-    private static string CONFIGURATION_PLUGINS_ROOT = string.Empty;
+
+    /// <summary>
+    /// The directory the config server downloads the configuration plugins of an organization into.
+    /// </summary>
+    /// <remarks>
+    /// This is not the home of configuration plugins in general: a local configuration plugin can
+    /// live in any directory below the plugins root. Only the IT department of an organization
+    /// deploys plugins here, each in a directory named after its configuration ID.
+    /// </remarks>
+    private static string ENTERPRISE_CONFIGURATION_PLUGINS_ROOT = string.Empty;
     private static string HOT_RELOAD_LOCK_FILE = string.Empty;
     private static FileSystemWatcher HOT_RELOAD_WATCHER = null!;
 
@@ -65,7 +74,7 @@ public static partial class PluginFactory
         PLUGINS_ROOT = Path.Join(DATA_DIR, "plugins");
         HOT_RELOAD_LOCK_FILE = Path.Join(PLUGINS_ROOT, ".lock");
         INTERNAL_PLUGINS_ROOT = Path.Join(PLUGINS_ROOT, ".internal");
-        CONFIGURATION_PLUGINS_ROOT = Path.Join(PLUGINS_ROOT, ".config");
+        ENTERPRISE_CONFIGURATION_PLUGINS_ROOT = Path.Join(PLUGINS_ROOT, ".config");
         
         if (!Directory.Exists(PLUGINS_ROOT))
             Directory.CreateDirectory(PLUGINS_ROOT);
@@ -74,6 +83,56 @@ public static partial class PluginFactory
         IsInitialized = true;
         LOG.LogInformation("Plugin factory initialized successfully.");
         return true;
+    }
+
+    /// <summary>
+    /// Checks whether a plugin directory belongs to the enterprise configuration area.
+    /// </summary>
+    /// <remarks>
+    /// Only the IT department of an organization deploys plugins there: the config server downloads
+    /// them into a directory named after their configuration ID. We decide by path on purpose. The
+    /// Lua field DEPLOYED_USING_CONFIG_SERVER is self-declared, so any plugin could claim to be
+    /// deployed by an organization.
+    /// </remarks>
+    /// <param name="pluginPath">The directory of the plugin.</param>
+    /// <returns>True when the directory is nested in the enterprise configuration directory.</returns>
+    private static bool IsEnterpriseConfigurationPath(string? pluginPath)
+    {
+        if (string.IsNullOrWhiteSpace(pluginPath) || string.IsNullOrWhiteSpace(ENTERPRISE_CONFIGURATION_PLUGINS_ROOT))
+            return false;
+
+        try
+        {
+            var configurationRoot = Path.GetFullPath(ENTERPRISE_CONFIGURATION_PLUGINS_ROOT).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
+            var pluginDirectory = Path.GetFullPath(pluginPath).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
+            return pluginDirectory.StartsWith(configurationRoot, StringComparison.OrdinalIgnoreCase);
+        }
+        catch (Exception e)
+        {
+            LOG.LogWarning(e, $"Was not able to check whether the plugin directory '{pluginPath}' belongs to the enterprise configuration directory. Treating it as a local plugin.");
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Checks whether a configuration plugin was deployed by the IT department of an organization.
+    /// </summary>
+    /// <remarks>
+    /// A plugin which is deployed but could not be loaded still counts: it might be broken, e.g. due
+    /// to invalid Lua code or an incomplete download, but it was not removed. Everything it manages
+    /// stays under the control of the organization until the plugin is gone for good.
+    /// </remarks>
+    /// <param name="configPluginId">The ID of the configuration plugin.</param>
+    /// <returns>True when the plugin belongs to an organization, false when it is local or unknown.</returns>
+    public static bool IsEnterpriseConfigurationPlugin(Guid configPluginId)
+    {
+        if (configPluginId == Guid.Empty || !IsInitialized)
+            return false;
+
+        if (AVAILABLE_PLUGINS.Any(plugin => plugin.Id == configPluginId && plugin.Type is PluginType.CONFIGURATION && IsEnterpriseConfigurationPath(plugin.LocalPath)))
+            return true;
+
+        return Directory.Exists(Path.Join(ENTERPRISE_CONFIGURATION_PLUGINS_ROOT, configPluginId.ToString()));
     }
 
     private static async Task LockHotReloadAsync()

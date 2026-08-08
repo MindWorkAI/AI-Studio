@@ -654,6 +654,11 @@ public static partial class ManagedConfiguration
         if (dryRun)
             return successful;
 
+        //
+        // Contributions need no protection against a takeover: every configuration plugin has its
+        // own contribution, so no plugin can replace or drop the contribution of another one. This
+        // is also why a local configuration plugin may contribute next to one of an organization.
+        //
         if (successful)
         {
             var configInstance = configSelection.Compile().Invoke(SettingsManagerAccess.ConfigurationData);
@@ -663,10 +668,8 @@ public static partial class ManagedConfiguration
             configMeta.SetValue(merged);
             configMeta.SetPluginContribution(new HashSet<TValue>(configuredValue), configPluginId);
         }
-        else if (configMeta.HasPluginContribution && configMeta.PluginContributionByConfigPluginId == configPluginId)
-        {
-            configMeta.ClearPluginContribution();
-        }
+        else
+            configMeta.RemovePluginContribution(configPluginId);
 
         if (configMeta.IsLocked && configMeta.LockedByConfigPluginId == configPluginId)
             configMeta.UnlockConfiguration();
@@ -905,6 +908,11 @@ public static partial class ManagedConfiguration
         if(dryRun)
             return successful;
 
+        // The setting might belong to the IT department of an organization. In that case, no local
+        // configuration plugin may touch it, no matter what it declares:
+        if (!MayManageSetting(configPluginId, configMeta))
+            return false;
+
         switch (successful)
         {
             case true:
@@ -953,6 +961,11 @@ public static partial class ManagedConfiguration
     {
         if (dryRun)
             return successful;
+
+        // The setting might belong to the IT department of an organization. In that case, no local
+        // configuration plugin may touch it, no matter what it declares:
+        if (!MayManageSetting(configPluginId, configMeta))
+            return false;
 
         switch (successful)
         {

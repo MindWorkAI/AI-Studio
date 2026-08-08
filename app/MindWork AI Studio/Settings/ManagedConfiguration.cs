@@ -258,6 +258,51 @@ public static partial class ManagedConfiguration
     }
 
     /// <summary>
+    /// Checks whether a configuration plugin may manage a setting, or whether that setting belongs
+    /// to the IT department of an organization.
+    /// </summary>
+    /// <remarks>
+    /// A local configuration plugin must not take over a setting an organization manages. Otherwise,
+    /// anyone could hand out a configuration plugin that quietly replaces parts of the organization
+    /// configuration, e.g. the address of a self-hosted provider.<br/><br/>
+    /// Between two configuration plugins of the same organization, we do not interfere: both belong
+    /// to the IT department, so the one processed later wins, as before.
+    /// </remarks>
+    /// <param name="configPluginId">The configuration plugin which wants to manage the setting.</param>
+    /// <param name="configMeta">The configuration metadata of the setting.</param>
+    /// <returns>True when the plugin may manage this setting, otherwise false.</returns>
+    private static bool MayManageSetting(Guid configPluginId, ConfigMetaBase configMeta)
+    {
+        var owningConfigPluginId = GetSettingOwner(configMeta);
+        if (owningConfigPluginId == Guid.Empty || owningConfigPluginId == configPluginId)
+            return true;
+
+        if (!PluginFactory.IsEnterpriseConfigurationPlugin(owningConfigPluginId))
+            return true;
+
+        if (PluginFactory.IsEnterpriseConfigurationPlugin(configPluginId))
+            return true;
+
+        Log.LogWarning($"The configuration plugin '{configPluginId}' tried to manage the setting '{configMeta.SettingName}', which is managed by the configuration plugin '{owningConfigPluginId}' of your organization. Ignoring the attempt: configurations deployed by your organization's IT take precedence.");
+        return false;
+    }
+
+    /// <summary>
+    /// Determines the configuration plugin which currently manages a setting, if any.
+    /// </summary>
+    private static Guid GetSettingOwner(ConfigMetaBase configMeta)
+    {
+        if (configMeta.IsLocked && configMeta.LockedByConfigPluginId != Guid.Empty)
+            return configMeta.LockedByConfigPluginId;
+
+        // The editable default is persisted as well, so we prefer it over the in-memory state:
+        if (TryGetEditableDefaultState(configMeta.SettingName, out var editableDefaultState) && editableDefaultState.ConfigPluginId != Guid.Empty)
+            return editableDefaultState.ConfigPluginId;
+
+        return configMeta.EditableDefaultByConfigPluginId;
+    }
+
+    /// <summary>
     /// Removes all managed states whose configuration plugin is not available anymore.
     /// </summary>
     /// <remarks>
@@ -269,12 +314,13 @@ public static partial class ManagedConfiguration
     /// change it at all.
     /// </remarks>
     /// <param name="availablePlugins">The collection of available plugins to check against.</param>
-    /// <param name="deployedConfigPluginIds">
-    /// The IDs of all configuration plugins which are deployed on this machine, including those which
-    /// could not be loaded. A deployed plugin was not removed, so its settings must stay untouched.
+    /// <param name="deployedEnterpriseConfigPluginIds">
+    /// The IDs of the configuration plugins which an organization deployed on this machine, including
+    /// those which could not be loaded. A deployed plugin was not removed, so its settings must stay
+    /// untouched.
     /// </param>
     /// <returns>True when at least one setting was changed, otherwise false.</returns>
-    public static bool CleanupLeftOverManagedConfigurations(IReadOnlyCollection<IAvailablePlugin> availablePlugins, IReadOnlySet<Guid> deployedConfigPluginIds)
+    public static bool CleanupLeftOverManagedConfigurations(IReadOnlyCollection<IAvailablePlugin> availablePlugins, IReadOnlySet<Guid> deployedEnterpriseConfigPluginIds)
     {
         var wasChanged = false;
         var registeredSettingNames = new HashSet<string>(StringComparer.Ordinal);
@@ -293,7 +339,7 @@ public static partial class ManagedConfiguration
             configMeta.RestoreLockedConfiguration();
 
             // Check the locked state:
-            if (configMeta.IsLocked && configMeta.LockedByConfigPluginId != Guid.Empty && !IsPluginPresent(configMeta.LockedByConfigPluginId, availablePlugins, deployedConfigPluginIds))
+            if (configMeta.IsLocked && configMeta.LockedByConfigPluginId != Guid.Empty && !IsPluginPresent(configMeta.LockedByConfigPluginId, availablePlugins, deployedEnterpriseConfigPluginIds))
             {
                 Log.LogInformation($"Resetting the setting '{configMeta.SettingName}': it was locked by the configuration plugin '{configMeta.LockedByConfigPluginId}', which is not available anymore.");
                 configMeta.ResetLockedConfiguration();
@@ -301,14 +347,18 @@ public static partial class ManagedConfiguration
             }
 
             // Check the editable default state:
-            if (CleanupEditableDefaultState(configMeta, availablePlugins, deployedConfigPluginIds))
+            if (CleanupEditableDefaultState(configMeta, availablePlugins, deployedEnterpriseConfigPluginIds))
                 wasChanged = true;
 
-            // Check the additive plugin contribution:
-            if (configMeta.HasPluginContribution && configMeta.PluginContributionByConfigPluginId != Guid.Empty && !IsPluginPresent(configMeta.PluginContributionByConfigPluginId, availablePlugins, deployedConfigPluginIds))
+            // Check the additive plugin contributions. Every contributing plugin is checked on its
+            // own, so one removed plugin does not take the contributions of the others with it:
+            foreach (var contributingConfigPluginId in configMeta.ContributingConfigPluginIds.ToList())
             {
-                Log.LogInformation($"Clearing the plugin contribution for the setting '{configMeta.SettingName}': the configuration plugin '{configMeta.PluginContributionByConfigPluginId}' is not available anymore.");
-                configMeta.ClearPluginContribution();
+                if (contributingConfigPluginId != Guid.Empty && IsPluginPresent(contributingConfigPluginId, availablePlugins, deployedEnterpriseConfigPluginIds))
+                    continue;
+
+                Log.LogInformation($"Clearing the contribution of the configuration plugin '{contributingConfigPluginId}' to the setting '{configMeta.SettingName}': the plugin is not available anymore.");
+                configMeta.RemovePluginContribution(contributingConfigPluginId);
                 wasChanged = true;
             }
         }
@@ -328,7 +378,7 @@ public static partial class ManagedConfiguration
     /// The latter matters for organizations: a broken configuration plugin is still in charge, so we
     /// must not treat its settings as left over.
     /// </remarks>
-    private static bool IsPluginPresent(Guid configPluginId, IReadOnlyCollection<IAvailablePlugin> availablePlugins, IReadOnlySet<Guid> deployedConfigPluginIds) => deployedConfigPluginIds.Contains(configPluginId) || availablePlugins.Any(x => x.Id == configPluginId);
+    private static bool IsPluginPresent(Guid configPluginId, IReadOnlyCollection<IAvailablePlugin> availablePlugins, IReadOnlySet<Guid> deployedEnterpriseConfigPluginIds) => deployedEnterpriseConfigPluginIds.Contains(configPluginId) || availablePlugins.Any(x => x.Id == configPluginId);
 
     /// <summary>
     /// Removes persisted managed states which belong to settings that are not registered anymore.
@@ -390,7 +440,7 @@ public static partial class ManagedConfiguration
 
     private static bool ClearEditableDefaultState(string settingName) => SettingsManagerAccess.ConfigurationData.ManagedEditableDefaults.Remove(settingName);
 
-    private static bool CleanupEditableDefaultState(ConfigMetaBase configMeta, IReadOnlyCollection<IAvailablePlugin> availablePlugins, IReadOnlySet<Guid> deployedConfigPluginIds)
+    private static bool CleanupEditableDefaultState(ConfigMetaBase configMeta, IReadOnlyCollection<IAvailablePlugin> availablePlugins, IReadOnlySet<Guid> deployedEnterpriseConfigPluginIds)
     {
         if (!TryGetEditableDefaultState(configMeta.SettingName, out var editableDefaultState))
         {
@@ -401,7 +451,7 @@ public static partial class ManagedConfiguration
             return true;
         }
 
-        if (IsPluginPresent(editableDefaultState.ConfigPluginId, availablePlugins, deployedConfigPluginIds))
+        if (IsPluginPresent(editableDefaultState.ConfigPluginId, availablePlugins, deployedEnterpriseConfigPluginIds))
             return false;
 
         Log.LogInformation($"Clearing the editable default of the setting '{configMeta.SettingName}': the configuration plugin '{editableDefaultState.ConfigPluginId}' is not available anymore.");

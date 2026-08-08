@@ -52,9 +52,25 @@ public static partial class PluginFactory
         }
         
         //
-        // Iterate over all available plugins and try to start them.
+        // Iterate over all available plugins and try to start them. We do that in a deterministic
+        // order, starting with the configuration plugins of the organization. Three reasons:
         //
-        foreach (var availablePlugin in AVAILABLE_PLUGINS)
+        // - Configuration plugins write settings and configuration objects. Whoever writes one
+        //   first owns it, so the organization has to come first: its configuration is the baseline
+        //   every other plugin has to respect.
+        //
+        // - Within one origin, the declared priority decides. An organization can deploy a base
+        //   configuration for everybody and refine it, e.g. per department: the higher priority is
+        //   applied later and therefore wins.
+        //
+        // - Without an explicit order, the sequence is the one Directory.EnumerateFiles produced in
+        //   LoadAll. That order is not guaranteed, so the same installation could behave
+        //   differently on two machines. The plugin directory breaks any remaining tie.
+        //
+        foreach (var availablePlugin in AVAILABLE_PLUGINS
+                     .OrderBy(GetStartupRank)
+                     .ThenBy(plugin => plugin.ConfigurationPriority)
+                     .ThenBy(plugin => plugin.LocalPath, StringComparer.OrdinalIgnoreCase))
         {
             if(cancellationToken.IsCancellationRequested)
             {
@@ -89,19 +105,49 @@ public static partial class PluginFactory
         return configObjects;
     }
 
+    /// <summary>
+    /// Determines the position of a plugin in the startup sequence. Plugins with a lower rank start earlier.
+    /// </summary>
+    /// <remarks>
+    /// The configuration plugins an organization deployed go first: they are the baseline for
+    /// everything else. Local configuration plugins follow, so they can add to that baseline instead
+    /// of replacing parts of it. All remaining plugin types write no settings at all, so their rank
+    /// is irrelevant for the outcome.<br/><br/>
+    /// The rank comes before the declared priority on purpose: a local configuration plugin must not
+    /// be able to jump ahead of an organization by declaring a high priority.
+    /// </remarks>
+    /// <param name="plugin">The plugin about to be started.</param>
+    /// <returns>The startup rank of the plugin.</returns>
+    private static int GetStartupRank(IAvailablePlugin plugin) => plugin.Type switch
+    {
+        PluginType.CONFIGURATION when IsEnterpriseConfigurationPath(plugin.LocalPath) => 0,
+        PluginType.CONFIGURATION => 1,
+
+        _ => 2,
+    };
+
     private static void LogAssistantPluginStartupState()
     {
         ManagedConfiguration.TryGet(x => x.AssistantPluginAudit, x => x.EnterpriseApprovedPlugins, out ConfigMeta<DataAssistantPluginAudit, IList<DataAssistantPluginEnterpriseApproval>> configMeta);
-        var approvedByConfigPluginId = configMeta is { IsLocked: true } ? configMeta.LockedByConfigPluginId : Guid.Empty;
-        var approvedByConfigPluginName = approvedByConfigPluginId == Guid.Empty
-            ? string.Empty
-            : AVAILABLE_PLUGINS.FirstOrDefault(x => x.Id == approvedByConfigPluginId)?.Name ?? string.Empty;
 
         foreach (var assistantPlugin in RUNNING_PLUGINS.OfType<PluginAssistants>())
         {
             var securityState = PluginAssistantSecurityResolver.Resolve(SettingsManagerAccess, assistantPlugin);
             if (securityState.IsEnterpriseApproved)
             {
+                //
+                // Several configuration plugins may approve assistant plugins. We look up the one
+                // which approved this particular plugin instead of naming an arbitrary contributor:
+                //
+                var approvedByConfigPluginId = configMeta.PluginContributions
+                    .Where(contribution => contribution.Value.Any(approval => string.Equals(approval.PluginHash, securityState.CurrentHash, StringComparison.Ordinal)))
+                    .Select(contribution => contribution.Key)
+                    .FirstOrDefault();
+
+                var approvedByConfigPluginName = approvedByConfigPluginId == Guid.Empty
+                    ? string.Empty
+                    : AVAILABLE_PLUGINS.FirstOrDefault(x => x.Id == approvedByConfigPluginId)?.Name ?? string.Empty;
+
                 LOG.LogInformation(
                     $"Successfully started assistant plugin: Id='{assistantPlugin.Id}', Type='{assistantPlugin.Type}', Name='{assistantPlugin.Name}', Version='{assistantPlugin.Version}', SecuritySource='EnterpriseApproval', ApprovedByConfigPluginId='{approvedByConfigPluginId}', ApprovedByConfigPluginName='{approvedByConfigPluginName}'");
                 continue;

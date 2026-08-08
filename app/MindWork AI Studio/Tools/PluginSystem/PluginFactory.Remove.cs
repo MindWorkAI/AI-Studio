@@ -22,9 +22,9 @@ public static partial class PluginFactory
 
         // Case 2: Startup cleanup before the initial plugin load.
         // In this case, we inspect the .config directories directly.
-        if (Directory.Exists(CONFIGURATION_PLUGINS_ROOT))
+        if (Directory.Exists(ENTERPRISE_CONFIGURATION_PLUGINS_ROOT))
         {
-            foreach (var pluginDirectory in Directory.EnumerateDirectories(CONFIGURATION_PLUGINS_ROOT))
+            foreach (var pluginDirectory in Directory.EnumerateDirectories(ENTERPRISE_CONFIGURATION_PLUGINS_ROOT))
             {
                 var directoryName = Path.GetFileName(pluginDirectory);
                 if (!Guid.TryParse(directoryName, out var pluginId))
@@ -36,7 +36,7 @@ public static partial class PluginFactory
                 var deployFlag = ReadDeployFlagFromPluginFile(pluginDirectory);
                 var isManagedByConfigServer = deployFlag ?? true;
                 if (!deployFlag.HasValue)
-                    LOG.LogWarning($"Configuration plugin '{pluginId}' does not define 'DEPLOYED_USING_CONFIG_SERVER'. Falling back to the plugin path and treating it as managed because it is stored under '{CONFIGURATION_PLUGINS_ROOT}'.");
+                    LOG.LogWarning($"Configuration plugin '{pluginId}' does not define 'DEPLOYED_USING_CONFIG_SERVER'. Falling back to the plugin path and treating it as managed because it is stored under '{ENTERPRISE_CONFIGURATION_PLUGINS_ROOT}'.");
 
                 if (isManagedByConfigServer)
                     pluginIdsToRemove.Add(pluginId);
@@ -106,7 +106,7 @@ public static partial class PluginFactory
 
     private static void DeleteConfigurationPluginDirectory(Guid pluginId)
     {
-        var pluginDirectory = Path.Join(CONFIGURATION_PLUGINS_ROOT, pluginId.ToString());
+        var pluginDirectory = Path.Join(ENTERPRISE_CONFIGURATION_PLUGINS_ROOT, pluginId.ToString());
         if (!Directory.Exists(pluginDirectory))
         {
             LOG.LogWarning($"Plugin directory '{pluginDirectory}' does not exist.");

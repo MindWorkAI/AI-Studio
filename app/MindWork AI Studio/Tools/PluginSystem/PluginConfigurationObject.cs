@@ -131,11 +131,14 @@ public sealed record PluginConfigurationObject
                     continue;
 
                 var objectIndex = storedObjects.FindIndex(t => t.Id == configObject.Id);
-                
+
                 // Case: The object already exists, we update it:
                 if (objectIndex > -1)
                 {
                     var existingObject = storedObjects[objectIndex];
+                    if (!MayReplaceConfigurationObject(existingObject, configPluginId))
+                        continue;
+
                     configObject = configObject with { Num = existingObject.Num };
                     storedObjects[objectIndex] = (TClass)configObject;
                 }
@@ -220,6 +223,9 @@ public sealed record PluginConfigurationObject
             if (objectIndex > -1)
             {
                 var existingObject = storedObjects[objectIndex];
+                if (!MayReplaceConfigurationObject(existingObject, configPluginId))
+                    continue;
+
                 configObject = configObject with { Num = existingObject.Num };
                 storedObjects[objectIndex] = configObject;
             }
@@ -249,16 +255,45 @@ public sealed record PluginConfigurationObject
     }
 
     /// <summary>
+    /// Checks whether a configuration plugin may replace a stored configuration object, or whether
+    /// that object belongs to the IT department of an organization.
+    /// </summary>
+    /// <remarks>
+    /// Configuration objects are matched by their ID alone. Without this check, a local configuration
+    /// plugin could claim the ID of an object an organization deployed and replace it, e.g. to point
+    /// a self-hosted LLM provider at a different host.<br/><br/>
+    /// Between two configuration plugins of the same organization, we do not interfere: both belong
+    /// to the IT department, so the one processed later wins, as before.
+    /// </remarks>
+    /// <param name="existingObject">The configuration object which is stored already.</param>
+    /// <param name="configPluginId">The configuration plugin which wants to replace that object.</param>
+    /// <returns>True when the plugin may replace the object, otherwise false.</returns>
+    private static bool MayReplaceConfigurationObject(IConfigurationObject existingObject, Guid configPluginId)
+    {
+        if (!existingObject.IsEnterpriseConfiguration || existingObject.EnterpriseConfigurationPluginId == configPluginId)
+            return true;
+
+        if (!PluginFactory.IsEnterpriseConfigurationPlugin(existingObject.EnterpriseConfigurationPluginId))
+            return true;
+
+        if (PluginFactory.IsEnterpriseConfigurationPlugin(configPluginId))
+            return true;
+
+        LOG.LogWarning("The configuration plugin '{ConfigPluginId}' tried to replace the object '{ConfigObjectName}' (id={ConfigObjectId}), which belongs to the configuration plugin '{OwningConfigPluginId}' of your organization. Ignoring the attempt: configurations deployed by your organization's IT take precedence.", configPluginId, existingObject.Name, existingObject.Id, existingObject.EnterpriseConfigurationPluginId);
+        return false;
+    }
+
+    /// <summary>
     /// Cleans up configuration objects of a specified type that are no longer associated with any available plugin.
     /// </summary>
     /// <typeparam name="TClass">The type of configuration object to clean up.</typeparam>
     /// <param name="configObjectType">The type of configuration object to process.</param>
     /// <param name="configObjectSelection">A selection expression to retrieve the configuration objects from the main configuration.</param>
     /// <param name="availablePlugins">A list of currently available plugins.</param>
-    /// <param name="deployedConfigPluginIds">
-    /// The IDs of all configuration plugins which are deployed on this machine, including those which
-    /// could not be loaded. Objects of a deployed plugin are never removed, because the plugin was not
-    /// removed either.
+    /// <param name="deployedEnterpriseConfigPluginIds">
+    /// The IDs of the configuration plugins which an organization deployed on this machine, including
+    /// those which could not be loaded. Objects of a deployed plugin are never removed, because the
+    /// plugin was not removed either.
     /// </param>
     /// <param name="configObjectList">A list of all existing configuration objects.</param>
     /// <param name="secretStoreType">An optional parameter specifying the type of secret store to use for deleting associated API keys from the OS keyring, if applicable.</param>
@@ -268,7 +303,7 @@ public sealed record PluginConfigurationObject
         PluginConfigurationObjectType configObjectType,
         Expression<Func<Data, List<TClass>>> configObjectSelection,
         IList<IAvailablePlugin> availablePlugins,
-        IReadOnlySet<Guid> deployedConfigPluginIds,
+        IReadOnlySet<Guid> deployedEnterpriseConfigPluginIds,
         IList<PluginConfigurationObject> configObjectList,
         SecretStoreType? secretStoreType = null,
         bool deleteSecret = false) where TClass : IConfigurationObject
@@ -295,7 +330,7 @@ public sealed record PluginConfigurationObject
             // the organization's providers and data sources, including their secrets, although the
             // organization still manages this AI Studio instance:
             //
-            if(deployedConfigPluginIds.Contains(configObjectSourcePluginId) && availablePlugins.All(plugin => plugin.Id != configObjectSourcePluginId))
+            if(deployedEnterpriseConfigPluginIds.Contains(configObjectSourcePluginId) && availablePlugins.All(plugin => plugin.Id != configObjectSourcePluginId))
                 continue;
 
             // Is the source plugin still available? If not, we can be pretty sure that this configuration object is left

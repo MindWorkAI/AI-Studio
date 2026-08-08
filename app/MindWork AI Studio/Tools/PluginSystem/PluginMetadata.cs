@@ -1,6 +1,6 @@
 namespace AIStudio.Tools.PluginSystem;
 
-public sealed class PluginMetadata(PluginBase plugin, string localPath, bool isManagedByConfigServer = false, Guid? managedConfigurationId = null) : IAvailablePlugin
+public sealed class PluginMetadata(PluginBase plugin, string localPath, bool isManagedByConfigServer = false, Guid? managedConfigurationId = null, int configurationPriority = 0) : IAvailablePlugin
 {
     #region Implementation of IPluginMetadata
 
@@ -53,8 +53,11 @@ public sealed class PluginMetadata(PluginBase plugin, string localPath, bool isM
     public string LocalPath { get; } = localPath;
     
     public bool IsManagedByConfigServer { get; } = isManagedByConfigServer;
-    
+
     public Guid? ManagedConfigurationId { get; } = managedConfigurationId;
+
+    /// <inheritdoc />
+    public int ConfigurationPriority { get; } = configurationPriority;
 
     #endregion
 }
