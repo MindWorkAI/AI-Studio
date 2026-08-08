@@ -27,6 +27,26 @@ TYPE = "CONFIGURATION"
 -- True when this plugin is deployed by an enterprise configuration server:
 DEPLOYED_USING_CONFIG_SERVER = false
 
+-- The priority of this configuration plugin. Optional, defaults to 0.
+--
+-- It only matters when your organization deploys more than one configuration
+-- plugin. A plugin with a higher priority is applied later and therefore wins
+-- whenever two of your configuration plugins manage the same setting or define
+-- the same object, e.g. the same LLM provider.
+--
+-- A typical setup: deploy one base configuration for everybody with PRIORITY = 0
+-- and one configuration per department with PRIORITY = 100. The department
+-- configuration may then override the default model, while everything it does
+-- not mention stays at the values of the base configuration.
+--
+-- Give two plugins that must override each other different priorities. With an
+-- equal priority, the order is stable but arbitrary.
+--
+-- The priority never lifts a local configuration plugin above one of your
+-- organization: configuration plugins your IT department deployed are always
+-- applied first, whatever a local plugin declares.
+PRIORITY = 0
+
 -- The authors of the plugin:
 AUTHORS = {"<Company Name>"}
 

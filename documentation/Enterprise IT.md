@@ -54,7 +54,7 @@ The preferred format is a fixed set of indexed pairs:
 
 Each configuration ID must be a valid [GUID](https://en.wikipedia.org/wiki/Universally_unique_identifier#Globally_unique_identifier). Up to 100,000 indexed configuration slots are supported per device.
 
-If multiple configurations define the same setting, the first definition wins. For indexed pairs and policy files, the order is slot `00000`, then `00001`, and so on up to `99999`.
+The slot order determines which configurations are downloaded, not which one wins a conflict. When two of your configuration plugins define the same setting or the same object, the declared priority decides. See [Priority of configuration plugins](#priority-of-configuration-plugins).
 
 For backwards compatibility, the older slot names `0` to `9` without an underscore are still supported. AI Studio also accepts other numeric slot suffixes with up to five digits. Slot suffixes are matched exactly, so `config_id_1`, `config_id_01`, and `config_id_00001` are treated as separate slots. Use the five-digit format with an underscore for new deployments.
 
@@ -283,6 +283,33 @@ DEPLOYED_USING_CONFIG_SERVER = true
 ```
 
 Local, manually managed configuration plugins should set this to `false`. If the field is missing, AI Studio falls back to the plugin path (`.config`) to determine whether the plugin is managed and logs a warning.
+
+## Priority of configuration plugins
+
+When you deploy more than one configuration, two of your configuration plugins may manage the same setting or define the same object, e.g. the same LLM provider. The optional `PRIORITY` field decides which one wins:
+
+```lua
+PRIORITY = 100
+```
+
+A configuration plugin with a higher priority is applied later and therefore wins. The field is optional and defaults to `0`.
+
+A typical layered setup:
+
+| Configuration | `PRIORITY` | Role |
+|---|---|---|
+| Organization-wide base | `0` | Providers, update behavior, and security settings for everybody |
+| Department | `100` | Refines the base, e.g. a different default model |
+| Project or lab | `200` | Refines the department configuration |
+
+A configuration only overrides what it actually defines. Everything it does not mention keeps the value of the configuration below it. The same applies when you remove a configuration later: its settings fall back to the configuration below, not to the AI Studio defaults.
+
+Give two configurations that must override each other different priorities. With an equal priority, the order is stable across restarts but arbitrary, so the outcome is not the one you designed.
+
+Two guarantees are independent of the priority:
+
+- A local configuration plugin never wins against one your IT department deployed, whatever priority it declares. Local plugins are always applied afterwards, and they may not take over a setting or an object that belongs to one of your configurations.
+- Two plugins must not share the same plugin ID. If that happens, AI Studio keeps the one your IT department deployed and logs a warning for the other.
 
 ## Example AI Studio configuration
 The latest example of an AI Studio configuration via configuration plugin can always be found in the repository in the `app/MindWork AI Studio/Plugins/configuration` folder. Here are the links to the files:

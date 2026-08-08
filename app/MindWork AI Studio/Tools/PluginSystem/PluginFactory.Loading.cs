@@ -132,11 +132,13 @@ public static partial class PluginFactory
                     var isConfigurationPluginInConfigDirectory = plugin.Type is PluginType.CONFIGURATION && IsEnterpriseConfigurationPath(pluginPath);
                     var isManagedByConfigServer = false;
                     Guid? managedConfigurationId = null;
+                    var configurationPriority = 0;
                     if (plugin is PluginConfiguration configPlugin)
                     {
+                        configurationPriority = configPlugin.Priority;
                         if (configPlugin.DeployedUsingConfigServer.HasValue)
                             isManagedByConfigServer = configPlugin.DeployedUsingConfigServer.Value;
-                        
+
                         else if (isConfigurationPluginInConfigDirectory)
                         {
                             isManagedByConfigServer = true;
@@ -161,7 +163,7 @@ public static partial class PluginFactory
                             LOG.LogWarning($"Could not determine the managed configuration ID for configuration plugin '{plugin.Id}'. The plugin directory '{pluginPath}' does not end with a valid GUID.");
                     }
 
-                    AVAILABLE_PLUGINS.Add(new PluginMetadata(plugin, pluginPath, isManagedByConfigServer, managedConfigurationId));
+                    AVAILABLE_PLUGINS.Add(new PluginMetadata(plugin, pluginPath, isManagedByConfigServer, managedConfigurationId, configurationPriority));
                 }
                 catch (Exception e)
                 {

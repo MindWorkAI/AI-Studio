@@ -38,6 +38,17 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
     /// True/false when explicitly configured in the plugin, otherwise null.
     /// </summary>
     public bool? DeployedUsingConfigServer { get; } = ReadDeployedUsingConfigServer(state);
+
+    /// <summary>
+    /// The priority of this configuration plugin. Defaults to zero when the plugin declares none.
+    /// </summary>
+    /// <remarks>
+    /// Configuration plugins with a higher priority are applied later and therefore win when two of
+    /// them manage the same setting or define the same configuration object. This lets an
+    /// organization deploy one base configuration for everybody and additional configurations which
+    /// refine it, e.g. per department.
+    /// </remarks>
+    public int Priority { get; } = ReadPriority(state);
     
     public async Task InitializeAsync(bool dryRun)
     {
@@ -127,6 +138,14 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
             return deployedUsingConfigServer;
 
         return null;
+    }
+
+    private static int ReadPriority(LuaState state)
+    {
+        if (state.Environment["PRIORITY"].TryRead<int>(out var priority))
+            return priority;
+
+        return 0;
     }
 
     /// <summary>
