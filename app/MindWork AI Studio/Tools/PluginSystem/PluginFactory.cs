@@ -96,20 +96,33 @@ public static partial class PluginFactory
     /// </remarks>
     /// <param name="pluginPath">The directory of the plugin.</param>
     /// <returns>True when the directory is nested in the enterprise configuration directory.</returns>
-    public static bool IsEnterpriseConfigurationPath(string? pluginPath)
+    public static bool IsEnterpriseConfigurationPath(string? pluginPath) => IsPathInside(ENTERPRISE_CONFIGURATION_PLUGINS_ROOT, pluginPath);
+
+    /// <summary>
+    /// Checks whether a plugin directory is stored below the plugins directory of AI Studio.
+    /// </summary>
+    /// <remarks>
+    /// Everything that removes or replaces plugin files checks this first, so a plugin directory
+    /// which points somewhere else can never be touched.
+    /// </remarks>
+    /// <param name="pluginPath">The directory of the plugin.</param>
+    /// <returns>True when the directory is nested in the plugins directory.</returns>
+    public static bool IsInsidePluginsRoot(string? pluginPath) => IsPathInside(PLUGINS_ROOT, pluginPath);
+
+    private static bool IsPathInside(string rootDirectory, string? pluginPath)
     {
-        if (string.IsNullOrWhiteSpace(pluginPath) || string.IsNullOrWhiteSpace(ENTERPRISE_CONFIGURATION_PLUGINS_ROOT))
+        if (string.IsNullOrWhiteSpace(pluginPath) || string.IsNullOrWhiteSpace(rootDirectory))
             return false;
 
         try
         {
-            var configurationRoot = Path.GetFullPath(ENTERPRISE_CONFIGURATION_PLUGINS_ROOT).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
+            var root = Path.GetFullPath(rootDirectory).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
             var pluginDirectory = Path.GetFullPath(pluginPath).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
-            return pluginDirectory.StartsWith(configurationRoot, StringComparison.OrdinalIgnoreCase);
+            return pluginDirectory.StartsWith(root, StringComparison.OrdinalIgnoreCase);
         }
         catch (Exception e)
         {
-            LOG.LogWarning(e, $"Was not able to check whether the plugin directory '{pluginPath}' belongs to the enterprise configuration directory. Treating it as a local plugin.");
+            LOG.LogWarning(e, $"Was not able to check whether the plugin directory '{pluginPath}' is nested in '{rootDirectory}'. Treating it as unrelated.");
             return false;
         }
     }

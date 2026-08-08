@@ -3193,6 +3193,18 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONMULTISELECT::T2809641588"] =
 -- You have selected {0} preview features.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONMULTISELECT::T3513450626"] = "You have selected {0} preview features."
 
+-- The '{0}' configuration plugin has been successfully removed.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONPLUGINDELETEACTION::T2048783766"] = "The '{0}' configuration plugin has been successfully removed."
+
+-- Delete Configuration Plugin
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONPLUGINDELETEACTION::T3395354991"] = "Delete Configuration Plugin"
+
+-- The configuration plugin '{0}' could not be deleted: {1}
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONPLUGINDELETEACTION::T4140893414"] = "The configuration plugin '{0}' could not be deleted: {1}"
+
+-- Delete configuration plugin
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONPLUGINDELETEACTION::T459830575"] = "Delete configuration plugin"
+
 -- Preselected provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONPROVIDERSELECTION::T1469984996"] = "Preselected provider"
 
@@ -4749,6 +4761,84 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T823785464"] = "Allow th
 
 -- Cancel
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T900713019"] = "Cancel"
+
+-- {0} LLM providers
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T121235760"] = "{0} LLM providers"
+
+-- {0} profiles
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T1238255445"] = "{0} profiles"
+
+-- No
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T1642511898"] = "No"
+
+-- {0} introductions on the welcome page
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T2107991661"] = "{0} introductions on the welcome page"
+
+-- {0} mandatory information
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T2150386772"] = "{0} mandatory information"
+
+-- You can install the plugin again later, but any changes you made to its settings are lost.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T2156367745"] = "You can install the plugin again later, but any changes you made to its settings are lost."
+
+-- {0} profile
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T2342765572"] = "{0} profile"
+
+-- {0} introduction on the welcome page
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T2426110502"] = "{0} introduction on the welcome page"
+
+-- {0} embedding providers
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T2438407498"] = "{0} embedding providers"
+
+-- Yes, delete it
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T2466176832"] = "Yes, delete it"
+
+-- This also removes everything the configuration plugin had set up:
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T264970454"] = "This also removes everything the configuration plugin had set up:"
+
+-- {0} transcription provider
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T2681055470"] = "{0} transcription provider"
+
+-- {0} chat templates
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T3235448458"] = "{0} chat templates"
+
+-- {0} document analysis policy
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T3278137746"] = "{0} document analysis policy"
+
+-- The configuration plugin is not running, so we cannot tell what it had set up. Anything it configured will be removed as well.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T330559934"] = "The configuration plugin is not running, so we cannot tell what it had set up. Anything it configured will be removed as well."
+
+-- {0} LLM provider
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T3410030691"] = "{0} LLM provider"
+
+-- Do you really want to delete the configuration plugin '{0}'? This permanently deletes its local plugin files.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T3616855807"] = "Do you really want to delete the configuration plugin '{0}'? This permanently deletes its local plugin files."
+
+-- {0} settings return to their default values
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T3841220170"] = "{0} settings return to their default values"
+
+-- {0} setting returns to its default value
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T384701293"] = "{0} setting returns to its default value"
+
+-- {0} mandatory informations
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T3971735909"] = "{0} mandatory informations"
+
+-- {0} chat template
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T4147879421"] = "{0} chat template"
+
+-- {0} data sources, including their credentials in your operating system's keychain
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T4193757254"] = "{0} data sources, including their credentials in your operating system's keychain"
+
+-- {0} document analysis policies
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T449490978"] = "{0} document analysis policies"
+
+-- {0} data source, including its credentials in your operating system's keychain
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T511418335"] = "{0} data source, including its credentials in your operating system's keychain"
+
+-- {0} transcription providers
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T767586087"] = "{0} transcription providers"
+
+-- {0} embedding provider
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIGURATIONPLUGINDELETEDIALOG::T818101181"] = "{0} embedding provider"
 
 -- No
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CONFIRMDIALOG::T1642511898"] = "No"
@@ -9649,6 +9739,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T1138181282"] 
 -- The assistant plugin directory is outside the local assistant plugin directory.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T1211881977"] = "The assistant plugin directory is outside the local assistant plugin directory."
 
+-- Only configuration plugins can be deleted this way.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T1214012118"] = "Only configuration plugins can be deleted this way."
+
 -- Only assistant plugins can be edited.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T1288328479"] = "Only assistant plugins can be edited."
 
@@ -9660,6 +9753,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T139615196"] =
 
 -- Please select a plugin archive with the extension .mwplugin or .zip.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T1809137998"] = "Please select a plugin archive with the extension .mwplugin or .zip."
+
+-- Internal configuration plugins cannot be deleted.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T1811106891"] = "Internal configuration plugins cannot be deleted."
 
 -- The selected plugin archive does not exist.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T1821013825"] = "The selected plugin archive does not exist."
@@ -9682,6 +9778,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T2441747251"] 
 -- Config server managed assistant plugins cannot be replaced.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T2594571117"] = "Config server managed assistant plugins cannot be replaced."
 
+-- The configuration plugin directory is outside the plugins directory.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T2613041269"] = "The configuration plugin directory is outside the plugins directory."
+
 -- The assistant plugin has no local directory.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T2682912892"] = "The assistant plugin has no local directory."
 
@@ -9699,6 +9798,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T2955055168"] 
 
 -- The imported assistant plugin uses the ID of another installed plugin.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T2971411166"] = "The imported assistant plugin uses the ID of another installed plugin."
+
+-- The configuration plugin directory does not exist.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T3073748821"] = "The configuration plugin directory does not exist."
 
 -- Your organization has disabled importing plugins.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T3212529834"] = "Your organization has disabled importing plugins."
@@ -9729,6 +9831,12 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T584770023"] =
 
 -- The edited assistant plugin must keep the same plugin ID.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T693124809"] = "The edited assistant plugin must keep the same plugin ID."
+
+-- The configuration plugin has no local directory.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T719938122"] = "The configuration plugin has no local directory."
+
+-- Configuration plugins deployed by your organization cannot be deleted.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T75764577"] = "Configuration plugins deployed by your organization cannot be deleted."
 
 -- Internal assistant plugins cannot be edited.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T816339833"] = "Internal assistant plugins cannot be edited."
