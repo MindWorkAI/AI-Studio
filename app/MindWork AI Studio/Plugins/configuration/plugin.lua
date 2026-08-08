@@ -461,6 +461,12 @@ CONFIG["SETTINGS"] = {}
 -- You can generate the exact hash with the build-script command:
 --   dotnet run --project app/Build -- assistant-plugin-hash "<plugin-dir>" --lua-snippet
 --
+-- Only works in configurations your configuration server deploys. An approval marks an
+-- assistant plugin as safe without any audit, and AI Studio then tells users that their
+-- organization approved it. A configuration plugin that a user placed locally therefore
+-- cannot approve anything: AI Studio ignores its approvals and writes a warning to the
+-- log. This is decided by where the plugin is stored, not by DEPLOYED_USING_CONFIG_SERVER.
+--
 -- Adds up, does not replace: approvals of all your configurations are combined, so a
 -- department configuration can approve additional assistant plugins without repeating
 -- the approvals of the base configuration. Each configuration keeps its own approvals,

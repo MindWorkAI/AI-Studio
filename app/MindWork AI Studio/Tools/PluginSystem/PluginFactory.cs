@@ -96,7 +96,7 @@ public static partial class PluginFactory
     /// </remarks>
     /// <param name="pluginPath">The directory of the plugin.</param>
     /// <returns>True when the directory is nested in the enterprise configuration directory.</returns>
-    private static bool IsEnterpriseConfigurationPath(string? pluginPath)
+    public static bool IsEnterpriseConfigurationPath(string? pluginPath)
     {
         if (string.IsNullOrWhiteSpace(pluginPath) || string.IsNullOrWhiteSpace(ENTERPRISE_CONFIGURATION_PLUGINS_ROOT))
             return false;

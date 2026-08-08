@@ -369,6 +369,14 @@ AI Studio computes the approval hash as a SHA-256 digest over all `.lua` files i
 
 If any Lua file changes, the hash changes automatically and the enterprise approval no longer applies.
 
+### Only your configurations may approve
+
+Approvals are honored only in configuration plugins that a configuration server deployed, meaning plugins stored under the `.config` directory. AI Studio ignores the approvals of a locally placed configuration plugin and writes a warning to the log.
+
+The reason is what an approval does: it marks an assistant plugin as safe without any security audit, and AI Studio then tells the user that their organization approved it. Anyone who can drop a file into the plugin directory could otherwise disable the security audit for an assistant plugin of their choosing while the app vouches for it in your name.
+
+This is decided by where the plugin is stored, not by its `DEPLOYED_USING_CONFIG_SERVER` field. That field is part of the plugin itself, so any plugin could claim it.
+
 ### Configuration example
 
 Add the approval list to `CONFIG["SETTINGS"]` in your configuration plugin:

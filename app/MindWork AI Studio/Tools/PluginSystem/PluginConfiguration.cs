@@ -355,6 +355,24 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         if (dryRun)
             return;
 
+        //
+        // Only the IT department of an organization may approve assistant plugins. An approval
+        // marks a plugin as safe without any security audit, and the user interface states that the
+        // organization approved it. No local configuration plugin may make that claim: it would
+        // disable the security audit for arbitrary assistant plugins while telling the user that
+        // their organization vouched for them.
+        //
+        // We decide by the plugin path. The self-declared DEPLOYED_USING_CONFIG_SERVER field would
+        // not do, because any plugin can set it to true.
+        //
+        if (!PluginFactory.IsEnterpriseConfigurationPath(this.PluginPath))
+        {
+            if (successful)
+                LOG.LogWarning("The configuration plugin '{ConfigPluginId}' at '{PluginPath}' declares enterprise approvals for assistant plugins, but your organization's IT did not deploy it. Ignoring these approvals: only configuration plugins from a configuration server may approve assistant plugins.", this.Id, this.PluginPath);
+
+            return;
+        }
+
         switch (successful)
         {
             case true:
