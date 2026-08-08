@@ -311,6 +311,29 @@ Two guarantees are independent of the priority:
 - A local configuration plugin never wins against one your IT department deployed, whatever priority it declares. Local plugins are always applied afterwards, and they may not take over a setting or an object that belongs to one of your configurations.
 - Two plugins must not share the same plugin ID. If that happens, AI Studio keeps the one your IT department deployed and logs a warning for the other.
 
+### Settings that hold a list or a table
+
+For a setting that holds a list or a table, the winning configuration replaces the whole collection. It does not merge the entries. A department configuration that lists a single entry drops every entry the base configuration had set for that setting.
+
+This is intentional: replacing is the only way a department can take something back. A department that wants an assistant to be visible again can only achieve that by not listing it.
+
+Plan for it in these settings:
+
+| Setting | What a partial list costs you |
+|---|---|
+| `DataApp.HiddenAssistants` | Assistants hidden by the base configuration become **visible** again |
+| `DataAssistantPluginAudit.EnterpriseApprovedPlugins` | Approvals of the base configuration are withdrawn, so those assistant plugins require a security audit again |
+| `DataSourceSecuritySettings.TrustedProviderIds` | Providers trusted by the base configuration lose that status |
+| `DataApp.ExternalHttpCustomRootCertificateAllowedHosts` | Hosts of the base configuration stop trusting your root certificates |
+| `DataConfidence.CustomConfidenceScheme` | Providers left out fall back to the AI Studio default confidence |
+| `DataChat.PreselectedDataSourceIds` | Data sources preselected by the base configuration are no longer preselected |
+
+The rule of thumb: whenever a configuration with a higher priority touches one of these settings, it has to repeat every entry it wants to keep. Watch `DataApp.HiddenAssistants` in particular, because it is the only one in this list that opens something up instead of restricting it.
+
+`DataApp.EnabledPreviewFeatures` is the exception. Preview features add up: enable one for the whole organization and another one for a single department, and users of that department get both. Each configuration keeps its own contribution, so removing one of them only withdraws the features that this configuration had enabled.
+
+One clarification for `DataChat.PreselectedDataSourceIds`: the IDs are not limited to the data sources of the same configuration. They are resolved against every known data source, including those of your other configurations and the ones a user configured. IDs that resolve to nothing are ignored.
+
 ## Example AI Studio configuration
 The latest example of an AI Studio configuration via configuration plugin can always be found in the repository in the `app/MindWork AI Studio/Plugins/configuration` folder. Here are the links to the files:
 
