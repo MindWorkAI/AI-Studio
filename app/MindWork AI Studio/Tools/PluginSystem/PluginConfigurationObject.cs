@@ -131,11 +131,14 @@ public sealed record PluginConfigurationObject
                     continue;
 
                 var objectIndex = storedObjects.FindIndex(t => t.Id == configObject.Id);
-                
+
                 // Case: The object already exists, we update it:
                 if (objectIndex > -1)
                 {
                     var existingObject = storedObjects[objectIndex];
+                    if (!MayReplaceConfigurationObject(existingObject, configPluginId))
+                        continue;
+
                     configObject = configObject with { Num = existingObject.Num };
                     storedObjects[objectIndex] = (TClass)configObject;
                 }
@@ -220,6 +223,9 @@ public sealed record PluginConfigurationObject
             if (objectIndex > -1)
             {
                 var existingObject = storedObjects[objectIndex];
+                if (!MayReplaceConfigurationObject(existingObject, configPluginId))
+                    continue;
+
                 configObject = configObject with { Num = existingObject.Num };
                 storedObjects[objectIndex] = configObject;
             }
@@ -246,6 +252,35 @@ public sealed record PluginConfigurationObject
         {
             return ((Expression<Func<Data, uint>>)(x => x.NextDataSourceNum)).TryIncrement(data, IncrementType.POST);
         }
+    }
+
+    /// <summary>
+    /// Checks whether a configuration plugin may replace a stored configuration object, or whether
+    /// that object belongs to the IT department of an organization.
+    /// </summary>
+    /// <remarks>
+    /// Configuration objects are matched by their ID alone. Without this check, a local configuration
+    /// plugin could claim the ID of an object an organization deployed and replace it, e.g. to point
+    /// a self-hosted LLM provider at a different host.<br/><br/>
+    /// Between two configuration plugins of the same organization, we do not interfere: both belong
+    /// to the IT department, so the one processed later wins, as before.
+    /// </remarks>
+    /// <param name="existingObject">The configuration object which is stored already.</param>
+    /// <param name="configPluginId">The configuration plugin which wants to replace that object.</param>
+    /// <returns>True when the plugin may replace the object, otherwise false.</returns>
+    private static bool MayReplaceConfigurationObject(IConfigurationObject existingObject, Guid configPluginId)
+    {
+        if (!existingObject.IsEnterpriseConfiguration || existingObject.EnterpriseConfigurationPluginId == configPluginId)
+            return true;
+
+        if (!PluginFactory.IsEnterpriseConfigurationPlugin(existingObject.EnterpriseConfigurationPluginId))
+            return true;
+
+        if (PluginFactory.IsEnterpriseConfigurationPlugin(configPluginId))
+            return true;
+
+        LOG.LogWarning("The configuration plugin '{ConfigPluginId}' tried to replace the object '{ConfigObjectName}' (id={ConfigObjectId}), which belongs to the configuration plugin '{OwningConfigPluginId}' of your organization. Ignoring the attempt: configurations deployed by your organization's IT take precedence.", configPluginId, existingObject.Name, existingObject.Id, existingObject.EnterpriseConfigurationPluginId);
+        return false;
     }
 
     /// <summary>

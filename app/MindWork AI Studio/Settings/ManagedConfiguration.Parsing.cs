@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Linq.Expressions;
 
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.PluginSystem;
 
 using Lua;
 
@@ -654,6 +655,17 @@ public static partial class ManagedConfiguration
         if (dryRun)
             return successful;
 
+        // The contribution is additive, but its ownership is not: taking it over from a
+        // configuration plugin of an organization would hand the whole setting to a local plugin:
+        if (configMeta.HasPluginContribution
+            && configMeta.PluginContributionByConfigPluginId != configPluginId
+            && PluginFactory.IsEnterpriseConfigurationPlugin(configMeta.PluginContributionByConfigPluginId)
+            && !PluginFactory.IsEnterpriseConfigurationPlugin(configPluginId))
+        {
+            Log.LogWarning($"The configuration plugin '{configPluginId}' tried to contribute to the setting '{configMeta.SettingName}', which the configuration plugin '{configMeta.PluginContributionByConfigPluginId}' of your organization contributes to. Ignoring the attempt: configurations deployed by your organization's IT take precedence.");
+            return false;
+        }
+
         if (successful)
         {
             var configInstance = configSelection.Compile().Invoke(SettingsManagerAccess.ConfigurationData);
@@ -905,6 +917,11 @@ public static partial class ManagedConfiguration
         if(dryRun)
             return successful;
 
+        // The setting might belong to the IT department of an organization. In that case, no local
+        // configuration plugin may touch it, no matter what it declares:
+        if (!MayManageSetting(configPluginId, configMeta))
+            return false;
+
         switch (successful)
         {
             case true:
@@ -953,6 +970,11 @@ public static partial class ManagedConfiguration
     {
         if (dryRun)
             return successful;
+
+        // The setting might belong to the IT department of an organization. In that case, no local
+        // configuration plugin may touch it, no matter what it declares:
+        if (!MayManageSetting(configPluginId, configMeta))
+            return false;
 
         switch (successful)
         {

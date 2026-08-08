@@ -114,6 +114,27 @@ public static partial class PluginFactory
         }
     }
 
+    /// <summary>
+    /// Checks whether a configuration plugin was deployed by the IT department of an organization.
+    /// </summary>
+    /// <remarks>
+    /// A plugin which is deployed but could not be loaded still counts: it might be broken, e.g. due
+    /// to invalid Lua code or an incomplete download, but it was not removed. Everything it manages
+    /// stays under the control of the organization until the plugin is gone for good.
+    /// </remarks>
+    /// <param name="configPluginId">The ID of the configuration plugin.</param>
+    /// <returns>True when the plugin belongs to an organization, false when it is local or unknown.</returns>
+    public static bool IsEnterpriseConfigurationPlugin(Guid configPluginId)
+    {
+        if (configPluginId == Guid.Empty || !IsInitialized)
+            return false;
+
+        if (AVAILABLE_PLUGINS.Any(plugin => plugin.Id == configPluginId && plugin.Type is PluginType.CONFIGURATION && IsEnterpriseConfigurationPath(plugin.LocalPath)))
+            return true;
+
+        return Directory.Exists(Path.Join(ENTERPRISE_CONFIGURATION_PLUGINS_ROOT, configPluginId.ToString()));
+    }
+
     private static async Task LockHotReloadAsync()
     {
         if (!IsInitialized)

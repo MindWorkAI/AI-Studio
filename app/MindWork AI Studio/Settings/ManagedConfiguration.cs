@@ -258,6 +258,51 @@ public static partial class ManagedConfiguration
     }
 
     /// <summary>
+    /// Checks whether a configuration plugin may manage a setting, or whether that setting belongs
+    /// to the IT department of an organization.
+    /// </summary>
+    /// <remarks>
+    /// A local configuration plugin must not take over a setting an organization manages. Otherwise,
+    /// anyone could hand out a configuration plugin that quietly replaces parts of the organization
+    /// configuration, e.g. the address of a self-hosted provider.<br/><br/>
+    /// Between two configuration plugins of the same organization, we do not interfere: both belong
+    /// to the IT department, so the one processed later wins, as before.
+    /// </remarks>
+    /// <param name="configPluginId">The configuration plugin which wants to manage the setting.</param>
+    /// <param name="configMeta">The configuration metadata of the setting.</param>
+    /// <returns>True when the plugin may manage this setting, otherwise false.</returns>
+    private static bool MayManageSetting(Guid configPluginId, ConfigMetaBase configMeta)
+    {
+        var owningConfigPluginId = GetSettingOwner(configMeta);
+        if (owningConfigPluginId == Guid.Empty || owningConfigPluginId == configPluginId)
+            return true;
+
+        if (!PluginFactory.IsEnterpriseConfigurationPlugin(owningConfigPluginId))
+            return true;
+
+        if (PluginFactory.IsEnterpriseConfigurationPlugin(configPluginId))
+            return true;
+
+        Log.LogWarning($"The configuration plugin '{configPluginId}' tried to manage the setting '{configMeta.SettingName}', which is managed by the configuration plugin '{owningConfigPluginId}' of your organization. Ignoring the attempt: configurations deployed by your organization's IT take precedence.");
+        return false;
+    }
+
+    /// <summary>
+    /// Determines the configuration plugin which currently manages a setting, if any.
+    /// </summary>
+    private static Guid GetSettingOwner(ConfigMetaBase configMeta)
+    {
+        if (configMeta.IsLocked && configMeta.LockedByConfigPluginId != Guid.Empty)
+            return configMeta.LockedByConfigPluginId;
+
+        // The editable default is persisted as well, so we prefer it over the in-memory state:
+        if (TryGetEditableDefaultState(configMeta.SettingName, out var editableDefaultState) && editableDefaultState.ConfigPluginId != Guid.Empty)
+            return editableDefaultState.ConfigPluginId;
+
+        return configMeta.EditableDefaultByConfigPluginId;
+    }
+
+    /// <summary>
     /// Removes all managed states whose configuration plugin is not available anymore.
     /// </summary>
     /// <remarks>
