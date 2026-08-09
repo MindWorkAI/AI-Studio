@@ -312,7 +312,15 @@ async fn stream_data(file_path: &str, extract_images: bool) -> Result<ChunkStrea
         .and_then(|extension| extension.to_str())
         .map(str::to_ascii_lowercase)
         .unwrap_or_default();
-    debug!("Extracting data from file: '{file_path}', format: '{fmt:?}', extension: '{ext}'");
+    
+    // The size is part of the diagnostics: a truncated or not-yet-available file on a network
+    // share is what tells a broken extraction apart from a document without text.
+    let file_size = match tokio::fs::metadata(file_path).await {
+        Ok(metadata) => format!("{} bytes", metadata.len()),
+        Err(error) => format!("unknown size ({error})"),
+    };
+
+    debug!("Extracting data from file: '{file_path}', {file_size}, format: '{fmt:?}', extension: '{ext}'");
 
     let stream = match ext.as_str() {
         //
@@ -509,26 +517,68 @@ async fn stream_pdf(file_path: &str) -> Result<ChunkStream> {
             }
         };
 
+        let mut number_of_pages = 0;
+        let mut number_of_characters = 0;
+        let mut number_of_failed_pages = 0;
+        let mut receiver_gone = false;
+
         for (num_page, page) in doc.pages().iter().enumerate() {
             let page_number = num_page + 1;
+            number_of_pages = page_number;
+
             let content = match page.text().map(|t| t.all()) {
                 Ok(text_content) => text_content,
                 Err(e) => {
-                    let _ = tx.blocking_send(Err(ExtractionError::on_page(
+                    //
+                    // A single unreadable page must not end the document: we report it as a
+                    // non-fatal error chunk and continue with the next page. Sending it as an
+                    // `Err` would stop the consumer and silently truncate everything after it.
+                    //
+                    number_of_failed_pages += 1;
+                    warn!("The text of page {page_number} of '{path}' could not be extracted: {e}");
+
+                    if tx.blocking_send(Ok(Chunk::from_error(&ExtractionError::on_page(
                         ExtractionErrorCode::PageExtractionFailed,
                         format!("The text of page {page_number} could not be extracted: {e}"),
                         page_number,
-                    ).into()));
+                    )))).is_err() {
+                        receiver_gone = true;
+                        break;
+                    }
+
                     continue;
                 }
             };
 
+            number_of_characters += content.chars().count();
+
             if tx.blocking_send(Ok(Chunk::new(
-                content, 
+                content,
                 Metadata::Pdf { page_number }
             ))).is_err() {
+                receiver_gone = true;
                 break;
             }
+        }
+
+        if receiver_gone {
+            debug!("The consumer stopped reading the PDF stream of '{path}' after {number_of_pages} page(s).");
+            return;
+        }
+
+        debug!("Extracted {number_of_characters} character(s) from {number_of_pages} page(s) of '{path}'; failed pages: {number_of_failed_pages}.");
+
+        //
+        // Without this marker, a PDF without a text layer and a broken extraction both arrive as
+        // an empty document, and the AI would answer as if the file had no content at all.
+        //
+        if number_of_characters == 0 {
+            warn!("No text could be extracted from '{path}': {number_of_pages} page(s), {number_of_failed_pages} failed page(s). The PDF may consist of scanned images without a text layer.");
+
+            let _ = tx.blocking_send(Ok(Chunk::from_error(&ExtractionError::new(
+                ExtractionErrorCode::NoTextExtracted,
+                format!("No text could be extracted from {number_of_pages} page(s). The PDF may consist of scanned images without a text layer."),
+            ))));
         }
     });
 
