@@ -10,7 +10,7 @@ public sealed partial class PluginInstallService
     /// <summary>
     /// The plugin types a user may import from an archive.
     /// </summary>
-    private static readonly PluginType[] IMPORTABLE_PLUGIN_TYPES = [PluginType.ASSISTANT, PluginType.CONFIGURATION];
+    private static readonly PluginType[] IMPORTABLE_PLUGIN_TYPES = [PluginType.ASSISTANT, PluginType.CONFIGURATION, PluginType.LANGUAGE];
 
     /// <summary>
     /// Installs a plugin archive that contains exactly one <c>plugin.lua</c> file.
@@ -55,7 +55,7 @@ public sealed partial class PluginInstallService
                 pluginDirectory,
                 pluginCode.Trim(),
                 IMPORTABLE_PLUGIN_TYPES,
-                TB("Only assistant and configuration plugins can be imported."),
+                TB("Only assistant, configuration, and language plugins can be imported."),
                 TB("The imported plugin is invalid. Issue: {0}"),
                 TB("The imported plugin uses the ID of another installed plugin."),
                 token);

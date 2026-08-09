@@ -2,12 +2,12 @@
 
 @if (this.CanDelete)
 {
-    <MudTooltip Text="@T("Delete configuration plugin")">
+    <MudTooltip Text="@this.Tooltip">
         <MudIconButton Icon="@Icons.Material.Filled.DeleteOutline"
                        Color="Color.Error"
                        Variant="Variant.Text"
                        Size="Size.Medium"
                        Disabled="@this.isDeleting"
-                       OnClick="@this.DeleteConfigurationPluginAsync" />
+                       OnClick="@this.DeleteLocalPluginAsync" />
     </MudTooltip>
 }

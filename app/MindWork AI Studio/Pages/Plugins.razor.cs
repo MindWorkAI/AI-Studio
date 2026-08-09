@@ -236,11 +236,16 @@ public partial class Plugins : MSGComponentBase
     }
 
     /// <summary>
-    /// Sharing is limited to assistant plugins because the import accepts only those. Otherwise,
-    /// users would create archives nobody can install. Widen this once the import supports more
-    /// plugin types.
+    /// The plugin types users may share. This list has to match what the import accepts, otherwise
+    /// users would create archives nobody can install.
     /// </summary>
-    private static bool CanSharePlugin(IAvailablePlugin plugin) => plugin is { IsInternal: false, IsManagedByConfigServer: false, Type: PluginType.ASSISTANT } && !string.IsNullOrWhiteSpace(plugin.LocalPath);
+    private static readonly PluginType[] SHAREABLE_PLUGIN_TYPES = [PluginType.ASSISTANT, PluginType.CONFIGURATION, PluginType.LANGUAGE];
+
+    /// <summary>
+    /// Checks whether a plugin may be shared or exported as an archive. Plugins shipped with
+    /// AI Studio and plugins deployed by an organization stay with their owner.
+    /// </summary>
+    private static bool CanSharePlugin(IAvailablePlugin plugin) => plugin is { IsInternal: false, IsManagedByConfigServer: false } && SHAREABLE_PLUGIN_TYPES.Contains(plugin.Type) && !string.IsNullOrWhiteSpace(plugin.LocalPath);
 
     /// <summary>
     /// Highlights the plugin table while the user drags a file over the page, so it is visible
