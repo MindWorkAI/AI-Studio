@@ -439,6 +439,8 @@ Place the files **while AI Studio is running**: the test directory is emptied wh
 3. Place the assistant plugin you want to test in `<data directory>/plugins/assistants/<any name>/`.
 4. AI Studio watches the plugin directory and picks both up without a restart. The security card of the assistant then states that your organization approved it, exactly as it will after the rollout.
 
+While a test configuration is loaded, the Information page reports it, including the directory it was staged in. After a restart, that same page tells you that a test configuration was removed, so nobody has to wonder where the directory went.
+
 What behaves like the later rollout:
 
 - The approvals for assistant plugins are honored.
