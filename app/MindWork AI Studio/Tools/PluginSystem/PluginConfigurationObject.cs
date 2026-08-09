@@ -312,10 +312,10 @@ public sealed record PluginConfigurationObject
         if (!existingObject.IsEnterpriseConfiguration || existingObject.EnterpriseConfigurationPluginId == configPluginId)
             return true;
 
-        if (!PluginFactory.IsEnterpriseConfigurationPlugin(existingObject.EnterpriseConfigurationPluginId))
+        if (!PluginFactory.IsOrganizationConfigurationPlugin(existingObject.EnterpriseConfigurationPluginId))
             return true;
 
-        if (PluginFactory.IsEnterpriseConfigurationPlugin(configPluginId))
+        if (PluginFactory.IsOrganizationConfigurationPlugin(configPluginId))
             return true;
 
         LOG.LogWarning("The configuration plugin '{ConfigPluginId}' tried to replace the object '{ConfigObjectName}' (id={ConfigObjectId}), which belongs to the configuration plugin '{OwningConfigPluginId}' of your organization. Ignoring the attempt: configurations deployed by your organization's IT take precedence.", configPluginId, existingObject.Name, existingObject.Id, existingObject.EnterpriseConfigurationPluginId);

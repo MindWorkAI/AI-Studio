@@ -119,13 +119,17 @@ public static partial class PluginFactory
                     //
                     if (AVAILABLE_PLUGINS.FirstOrDefault(candidate => candidate.Id == plugin.Id) is { } duplicatePlugin)
                     {
-                        if (!IsEnterpriseConfigurationPath(pluginPath) || IsEnterpriseConfigurationPath(duplicatePlugin.LocalPath))
+                        if (GetConfigurationAuthority(pluginPath) <= GetConfigurationAuthority(duplicatePlugin.LocalPath))
                         {
                             LOG.LogWarning($"Ignoring the plugin '{pluginMainFile}': its ID ('{plugin.Id}') is already used by the plugin at '{duplicatePlugin.LocalPath}'. Plugin IDs must be unique. Please remove one of these plugins.");
                             continue;
                         }
 
-                        LOG.LogWarning($"Ignoring the plugin at '{duplicatePlugin.LocalPath}': it uses the ID ('{plugin.Id}') of the enterprise configuration plugin at '{pluginPath}'. Plugins deployed by your organization's IT take precedence.");
+                        if (IsEnterpriseTestConfigurationPath(pluginPath))
+                            LOG.LogWarning($"Ignoring the plugin at '{duplicatePlugin.LocalPath}': it uses the ID ('{plugin.Id}') of the test configuration plugin at '{pluginPath}'. A test configuration takes precedence until AI Studio is restarted.");
+                        else
+                            LOG.LogWarning($"Ignoring the plugin at '{duplicatePlugin.LocalPath}': it uses the ID ('{plugin.Id}') of the enterprise configuration plugin at '{pluginPath}'. Plugins deployed by your organization's IT take precedence.");
+
                         AVAILABLE_PLUGINS.Remove(duplicatePlugin);
                     }
 
@@ -199,6 +203,15 @@ public static partial class PluginFactory
         // one broken configuration plugin would wipe the entire organization configuration:
         //
         var deployedEnterpriseConfigPluginIds = GetDeployedEnterpriseConfigPluginIds();
+
+        //
+        // Test configurations manage settings and objects like a deployed configuration, so those must
+        // not be treated as left over while the test runs. They are only ever loaded, never merely
+        // present: the test directory is emptied on every start.
+        //
+        foreach (var testConfigurationPlugin in AVAILABLE_PLUGINS.Where(plugin => plugin.Type is PluginType.CONFIGURATION && IsEnterpriseTestConfigurationPath(plugin.LocalPath)))
+            deployedEnterpriseConfigPluginIds.Add(testConfigurationPlugin.Id);
+
         var unloadedEnterpriseConfigPluginIds = deployedEnterpriseConfigPluginIds.Where(x => AVAILABLE_PLUGINS.All(plugin => plugin.Id != x)).ToList();
         foreach (var unloadedEnterpriseConfigPluginId in unloadedEnterpriseConfigPluginIds)
             LOG.LogWarning($"The configuration plugin '{unloadedEnterpriseConfigPluginId}' is deployed, but was not loaded. Everything it manages stays unchanged, because the plugin was not removed. Please check the errors above and fix the plugin.");

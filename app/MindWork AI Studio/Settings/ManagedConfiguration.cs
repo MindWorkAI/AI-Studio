@@ -277,10 +277,10 @@ public static partial class ManagedConfiguration
         if (owningConfigPluginId == Guid.Empty || owningConfigPluginId == configPluginId)
             return true;
 
-        if (!PluginFactory.IsEnterpriseConfigurationPlugin(owningConfigPluginId))
+        if (!PluginFactory.IsOrganizationConfigurationPlugin(owningConfigPluginId))
             return true;
 
-        if (PluginFactory.IsEnterpriseConfigurationPlugin(configPluginId))
+        if (PluginFactory.IsOrganizationConfigurationPlugin(configPluginId))
             return true;
 
         Log.LogWarning($"The configuration plugin '{configPluginId}' tried to manage the setting '{configMeta.SettingName}', which is managed by the configuration plugin '{owningConfigPluginId}' of your organization. Ignoring the attempt: configurations deployed by your organization's IT take precedence.");
