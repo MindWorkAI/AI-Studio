@@ -158,7 +158,10 @@ public sealed partial class PluginInstallService
     /// For a configuration plugin, we do not remove its providers, data sources, chat templates,
     /// profiles, or locked settings ourselves. The reload does that: it recognizes them as left over
     /// once their configuration plugin is gone, and it also deletes the related secrets from the OS
-    /// keyring.
+    /// keyring.<br/><br/>
+    /// What the reload cannot recognize as left over is everything the user decided about the plugin
+    /// itself: its activation state and, for a language plugin, the language choice. Those are
+    /// removed here.
     /// </remarks>
     /// <param name="plugin">Plugin metadata of the configuration or language plugin.</param>
     /// <param name="token">Cancellation token for settings storage and plugin reload.</param>
@@ -175,6 +178,7 @@ public sealed partial class PluginInstallService
         await this.installSemaphore.WaitAsync(token);
         var pluginDirectory = plugin.LocalPath;
         var backupDirectory = string.Empty;
+        var wasEnabled = false;
         var wasChosenLanguage = false;
 
         try
@@ -190,6 +194,14 @@ public sealed partial class PluginInstallService
             Directory.Move(pluginDirectory, backupDirectory);
 
             //
+            // Nothing removes the activation state of a plugin which is gone. Should the user install
+            // a plugin with the same ID again later, it would start enabled without ever having been
+            // switched on. We ask for removal regardless of the plugin type: a configuration plugin
+            // is never listed there, so this simply does nothing for it:
+            //
+            wasEnabled = this.settingsManager.ConfigurationData.EnabledPlugins.Remove(plugin.Id);
+
+            //
             // When the user had chosen this language plugin, the app would silently fall back to
             // English while the settings still point to the deleted plugin. We return the language
             // choice to automatic instead, so the settings stay truthful:
@@ -199,8 +211,10 @@ public sealed partial class PluginInstallService
             {
                 this.settingsManager.ConfigurationData.App.LanguageBehavior = LangBehavior.AUTO;
                 this.settingsManager.ConfigurationData.App.LanguagePluginId = Guid.Empty;
-                await this.settingsManager.StoreSettings();
             }
+
+            if (wasEnabled || wasChosenLanguage)
+                await this.settingsManager.StoreSettings();
 
             await PluginFactory.LoadAll(token);
 
@@ -212,7 +226,7 @@ public sealed partial class PluginInstallService
         {
             this.logger.LogError(e, $"Failed to delete {plugin.Type} plugin '{plugin.Name}' ({plugin.Id}) from '{pluginDirectory}'.");
 
-            await this.TryRestoreDeletedLocalPluginAsync(plugin, pluginDirectory, backupDirectory, wasChosenLanguage, token);
+            await this.TryRestoreDeletedLocalPluginAsync(plugin, pluginDirectory, backupDirectory, wasEnabled, wasChosenLanguage, token);
             return DeleteError(plugin, pluginDirectory, string.Format(TB("Unexpected error: {0}"), e.Message));
         }
         finally
@@ -310,19 +324,24 @@ public sealed partial class PluginInstallService
         }
     }
 
-    private async Task TryRestoreDeletedLocalPluginAsync(IAvailablePlugin plugin, string pluginDirectory, string backupDirectory, bool wasChosenLanguage, CancellationToken token)
+    private async Task TryRestoreDeletedLocalPluginAsync(IAvailablePlugin plugin, string pluginDirectory, string backupDirectory, bool wasEnabled, bool wasChosenLanguage, CancellationToken token)
     {
         try
         {
             if (!Directory.Exists(pluginDirectory) && Directory.Exists(backupDirectory))
                 Directory.Move(backupDirectory, pluginDirectory);
 
+            if (wasEnabled && !this.settingsManager.ConfigurationData.EnabledPlugins.Contains(plugin.Id))
+                this.settingsManager.ConfigurationData.EnabledPlugins.Add(plugin.Id);
+
             if (wasChosenLanguage)
             {
                 this.settingsManager.ConfigurationData.App.LanguageBehavior = LangBehavior.MANUAL;
                 this.settingsManager.ConfigurationData.App.LanguagePluginId = plugin.Id;
-                await this.settingsManager.StoreSettings();
             }
+
+            if (wasEnabled || wasChosenLanguage)
+                await this.settingsManager.StoreSettings();
 
             // The reload restores everything the plugin configured, because it is back in place:
             await PluginFactory.LoadAll(token);
