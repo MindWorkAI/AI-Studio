@@ -29,14 +29,44 @@ dotnet run build
 ```
 This builds the .NET app as a Tauri "sidecar" binary, which is required even for development.
 
-### Running .NET builds from an agent
-- Do not run `.NET` builds such as `dotnet run build`, `dotnet build`, or similar build commands from an agent. Codex agents can hit a known sandbox issue during `.NET` builds, typically surfacing as `CSSM_ModuleLoad()` or other sandbox-related failures.
-- Instead, ask the user to run the `.NET` build locally in their IDE and report the result back.
-- Recommend the canonical repo build flow for the user: open an IDE terminal in the repository and run `cd app/Build && dotnet run build`.
-- If the context fits better, it is also acceptable to ask the user to start the build using their IDE's built-in build action, as long as it is clear the build must be run locally by the user.
-- After asking for the build, wait for the user's feedback before diagnosing issues, making follow-up changes, or suggesting the next step.
-- Treat the user's build output, error messages, or success confirmation as the source of truth for further troubleshooting.
-- For reference: https://github.com/openai/codex/issues/4915
+### Running builds from an agent
+Agents must not start builds through their own shell: agent shells run sandboxed, and `.NET` builds
+hit a known sandbox issue there, typically surfacing as `CSSM_ModuleLoad()` or other sandbox-related
+failures (for reference: https://github.com/openai/codex/issues/4915). This applies to `dotnet run build`,
+`dotnet build`, `cargo build`, and similar commands.
+
+Instead, use the JetBrains IDE MCP servers. They execute in the IDE process, which runs outside the
+agent sandbox:
+
+- `rider` for the .NET solution at `app/MindWork AI Studio.sln`
+- `rustrover` for the Rust runtime at `runtime/`
+
+Pass the `rootFolder` parameter on every call, e.g. the absolute path of the `app` directory for Rider
+and of `runtime` for RustRover. It avoids ambiguous calls when several IDE windows are open.
+
+**Compile check of the .NET code:** start `mcp__rider__build_solution_start`, then poll
+`mcp__rider__build_solution_state` until its state is `Completed` and read `buildIsSuccess` plus the
+collected problems. `mcp__rider__get_project_problems` reports the current Problems View without
+triggering a new build.
+
+**Build script commands** such as the canonical build or the I18N collection run through the IDE
+terminal, because they are more than a solution build:
+
+```
+mcp__rider__execute_terminal_command  command: "cd app/Build && dotnet run build"
+mcp__rider__execute_terminal_command  command: "cd app/Build && dotnet run collect-i18n"
+```
+
+**Rust builds** work the same way through the matching `rustrover` tools.
+
+Notes:
+- The IDE may ask the user to confirm a terminal command. Wait for the result instead of retrying the
+  command in the agent shell.
+- When the IDE is not running or its MCP server is unavailable, fall back to asking the user to run
+  `cd app/Build && dotnet run build` locally, and wait for their feedback before diagnosing issues or
+  making follow-up changes.
+- Treat the build output, error messages, or success confirmation as the source of truth for further
+  troubleshooting, no matter whether it came from the MCP server or from the user.
 
 ### Running Tests
 Currently, no automated test suite exists in the repository.
@@ -193,7 +223,7 @@ Multi-level confidence scheme allows users to control which providers see which 
 - **No automated formatting for Rust or .NET files** - Never run automated formatters on Rust files (`.rs`) or .NET files (`.cs`, `.razor`, `.csproj`, etc.). Only make the minimal manual formatting changes required for the specific edit.
 - **I18N resources are generated** - Do not manually edit `app/MindWork AI Studio/Assistants/I18N/allTexts.lua`, `app/MindWork AI Studio/Plugins/languages/en-us-97dfb1ba-50c4-4440-8dfa-6575daf543c8/plugin.lua`, or `app/MindWork AI Studio/Plugins/languages/de-de-43065dbc-78d0-45b7-92be-f14c2926e2dc/plugin.lua`. These files are updated automatically by the I18N process.
 - **Spaces in paths** - Always quote paths with spaces in bash commands
-- **Agent-run .NET builds** - Do not run `.NET` builds from an agent. Ask the user to run the build locally in their IDE, preferably via `cd app/Build && dotnet run build` in an IDE terminal, then wait for their feedback before continuing.
+- **Agent-run builds** - Never start `.NET` or Rust builds in the agent's own shell; it is sandboxed. Use the `rider` and `rustrover` MCP servers instead, which build in the IDE outside that sandbox. See "Running builds from an agent" above.
 - **Debug environment** - Reads `startup.env` file with IPC credentials
 - **Production environment** - Runtime launches .NET sidecar with environment variables
 - **MudBlazor** - Component library requires DI setup in Program.cs
