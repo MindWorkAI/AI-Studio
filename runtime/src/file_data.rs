@@ -34,7 +34,22 @@ impl Chunk {
     pub fn new(content: String, metadata: Metadata) -> Self {
         Chunk { content, stream_id: String::new(), metadata }
     }
-    
+
+    /// Creates a chunk which reports a failed extraction. Errors travel through the same
+    /// schema as content chunks, so the .NET app is able to deserialize and surface them
+    /// instead of silently treating a failure as empty file content.
+    pub fn from_error(error: &ExtractionError) -> Self {
+        Chunk {
+            content: String::new(),
+            stream_id: String::new(),
+            metadata: Metadata::Error {
+                code: error.code,
+                message: error.message.clone(),
+                page_number: error.page_number,
+            },
+        }
+    }
+
     pub fn set_stream_id(&mut self, stream_id: &str) { self.stream_id = stream_id.to_string(); }
 }
 
@@ -60,7 +75,76 @@ pub enum Metadata {
         slide_number: u32,
         image: Option<Base64Image>,
     },
+
+    Error {
+        code: ExtractionErrorCode,
+        message: String,
+        page_number: Option<usize>,
+    },
 }
+
+/// Classifies why an extraction failed, so the .NET app can tell the user what happened
+/// instead of showing an empty document.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+pub enum ExtractionErrorCode {
+    /// The request itself was malformed, e.g. a missing query parameter.
+    InvalidRequest,
+
+    FileNotFound,
+    FileNotReadable,
+    FormatDetectionFailed,
+    NotAValidPdf,
+    PdfiumUnavailable,
+    PdfEncrypted,
+    PageExtractionFailed,
+    NoTextExtracted,
+    Unsupported,
+
+    /// Any failure which does not carry a code of its own yet.
+    Internal,
+}
+
+/// An extraction failure with a machine-readable code. It implements `std::error::Error`,
+/// so it travels through the existing boxed error channel and `?` keeps working for the
+/// error types of the underlying crates.
+#[derive(Debug, Clone)]
+pub struct ExtractionError {
+    pub code: ExtractionErrorCode,
+    pub message: String,
+    pub page_number: Option<usize>,
+}
+
+impl ExtractionError {
+    pub fn new(code: ExtractionErrorCode, message: impl Into<String>) -> Self {
+        Self { code, message: message.into(), page_number: None }
+    }
+
+    pub fn on_page(code: ExtractionErrorCode, message: impl Into<String>, page_number: usize) -> Self {
+        Self { code, message: message.into(), page_number: Some(page_number) }
+    }
+
+    /// Recovers the structured error from a boxed error. Errors which do not carry a code
+    /// yet are reported as `Internal`, so every failure reaches the .NET app through the
+    /// same schema.
+    fn from_boxed(error: &(dyn std::error::Error + Send + Sync)) -> Self {
+        match error.downcast_ref::<ExtractionError>() {
+            Some(extraction_error) => extraction_error.clone(),
+            None => Self::new(ExtractionErrorCode::Internal, error.to_string()),
+        }
+    }
+}
+
+impl fmt::Display for ExtractionError {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        match self.page_number {
+            Some(page_number) => write!(formatter, "[{:?}] page {page_number}: {}", self.code, self.message),
+            None => write!(formatter, "[{:?}] {}", self.code, self.message),
+        }
+    }
+}
+
+impl std::error::Error for ExtractionError {}
 
 #[derive(Debug, Serialize)]
 pub struct Base64Image {
@@ -80,6 +164,10 @@ const TO_MARKDOWN: &str = "markdown";
 const DOCX: &str = "docx";
 const ODT: &str = "odt";
 const IMAGE_SEGMENT_SIZE_IN_CHARS: usize = 8_192; // equivalent to ~ 5500 token
+
+/// Last-resort payload used when even an error event cannot be serialized. It keeps the
+/// chunk schema intact, so the .NET app never has to parse a bare string.
+const FALLBACK_ERROR_EVENT_JSON: &str = r#"{"content":"","stream_id":"","metadata":{"Error":{"code":"INTERNAL","message":"The extraction error could not be serialized.","page_number":null}}}"#;
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 type ChunkStream = Pin<Box<dyn Stream<Item = Result<Chunk>> + Send>>;
@@ -124,6 +212,20 @@ where
     deserializer.deserialize_any(BoolVisitor)
 }
 
+/// Reports an extraction failure as a schema-conformant SSE event, so the .NET app is able
+/// to deserialize it like any other chunk.
+fn error_event(error: &ExtractionError, stream_id: Option<&str>) -> Event {
+    let mut chunk = Chunk::from_error(error);
+    if let Some(stream_id) = stream_id {
+        chunk.set_stream_id(stream_id);
+    }
+
+    Event::default().json_data(&chunk).unwrap_or_else(|serialization_error| {
+        error!("Failed to serialize an extraction error event: {serialization_error}");
+        Event::default().data(FALLBACK_ERROR_EVENT_JSON)
+    })
+}
+
 pub async fn extract_data(
     _token: APIToken,
     query: std::result::Result<Query<ExtractDataQuery>, QueryRejection>,
@@ -133,7 +235,7 @@ pub async fn extract_data(
         Err(e) => {
             let message = format!("Invalid query for '/retrieval/fs/extract': {e}");
             warn!("{message}");
-            Err(message)
+            Err(ExtractionError::new(ExtractionErrorCode::InvalidRequest, message))
         },
     };
 
@@ -142,6 +244,7 @@ pub async fn extract_data(
             Ok(query) => {
                 let stream_result = stream_data(&query.path, query.extract_images).await;
                 let id_ref = &query.stream_id;
+                let path_ref = &query.path;
 
                 match stream_result {
                     Ok(mut stream) => {
@@ -149,11 +252,16 @@ pub async fn extract_data(
                             match chunk {
                                 Ok(mut chunk) => {
                                     chunk.set_stream_id(id_ref);
-                                    yield Ok(Event::default().json_data(&chunk).unwrap_or_else(|e| Event::default().data(format!("Error: {e}"))));
+                                    yield Ok(Event::default().json_data(&chunk).unwrap_or_else(|e| {
+                                        error!("Failed to serialize a content chunk for '{path_ref}': {e}");
+                                        error_event(&ExtractionError::new(ExtractionErrorCode::Internal, format!("Failed to serialize a content chunk: {e}")), Some(id_ref))
+                                    }));
                                 },
 
                                 Err(e) => {
-                                    yield Ok(Event::default().json_data(format!("Error: {e}")).unwrap_or_else(|_| Event::default().data(format!("Error: {e}"))));
+                                    let extraction_error = ExtractionError::from_boxed(e.as_ref());
+                                    error!("Extraction failed for '{path_ref}': {extraction_error}");
+                                    yield Ok(error_event(&extraction_error, Some(id_ref)));
                                     break;
                                 },
                             }
@@ -161,13 +269,15 @@ pub async fn extract_data(
                     },
 
                     Err(e) => {
-                        yield Ok(Event::default().json_data(format!("Error starting stream: {e}")).unwrap_or_else(|_| Event::default().data(format!("Error starting stream: {e}"))));
+                        let extraction_error = ExtractionError::from_boxed(e.as_ref());
+                        error!("Could not start the extraction stream for '{path_ref}': {extraction_error}");
+                        yield Ok(error_event(&extraction_error, Some(id_ref)));
                     }
                 };
             },
 
-            Err(e) => {
-                yield Ok(Event::default().json_data(format!("Error starting stream: {e}")).unwrap_or_else(|_| Event::default().data(format!("Error starting stream: {e}"))));
+            Err(extraction_error) => {
+                yield Ok(error_event(&extraction_error, None));
             },
         }
     };
@@ -178,7 +288,7 @@ pub async fn extract_data(
 async fn stream_data(file_path: &str, extract_images: bool) -> Result<ChunkStream> {
     if !Path::new(file_path).exists() {
         error!("File does not exist: '{file_path}'");
-        return Err("File does not exist.".into());
+        return Err(ExtractionError::new(ExtractionErrorCode::FileNotFound, format!("The file does not exist: '{file_path}'.")).into());
     }
 
     let file_path_clone = file_path.to_owned();
@@ -186,7 +296,7 @@ async fn stream_data(file_path: &str, extract_images: bool) -> Result<ChunkStrea
         Ok(format) => format,
         Err(error) => {
             error!("Failed to determine file format for '{file_path}': {error}");
-            return Err(format!("Failed to determine file format for '{file_path}': {error}").into());
+            return Err(ExtractionError::new(ExtractionErrorCode::FormatDetectionFailed, format!("Failed to determine the file format for '{file_path}': {error}")).into());
         },
     };
 
@@ -229,11 +339,11 @@ async fn stream_data(file_path: &str, extract_images: bool) -> Result<ChunkStrea
                 _ => stream_text_file(file_path, false, None).await?,
             },
             
-            Kind::Ebook => return Err("Ebooks not yet supported".into()),
+            Kind::Ebook => return Err(ExtractionError::new(ExtractionErrorCode::Unsupported, "Ebooks are not supported yet.").into()),
 
             Kind::Image => {
                 if !extract_images {
-                    return Err("Image extraction is disabled.".into());
+                    return Err(ExtractionError::new(ExtractionErrorCode::Unsupported, "Image extraction is disabled.").into());
                 }
 
                 chunk_image(file_path).await?
@@ -315,30 +425,41 @@ async fn stream_pdf(file_path: &str) -> Result<ChunkStream> {
         let pdfium = match Pdfium::ai_studio_init() {
             Ok(pdfium) => pdfium,
             Err(e) => {
-                let _ = tx.blocking_send(Err(e));
+                let _ = tx.blocking_send(Err(ExtractionError::new(
+                    ExtractionErrorCode::PdfiumUnavailable,
+                    format!("The PDF engine could not be initialized: {e}"),
+                ).into()));
                 return;
             }
         };
         let doc = match pdfium.load_pdf_from_file(&path, None) {
             Ok(document) => document,
             Err(e) => {
-                let _ = tx.blocking_send(Err(e.into()));
+                let _ = tx.blocking_send(Err(ExtractionError::new(
+                    ExtractionErrorCode::NotAValidPdf,
+                    format!("The PDF could not be opened: {e}"),
+                ).into()));
                 return;
             }
         };
 
         for (num_page, page) in doc.pages().iter().enumerate() {
+            let page_number = num_page + 1;
             let content = match page.text().map(|t| t.all()) {
                 Ok(text_content) => text_content,
                 Err(e) => {
-                    let _ = tx.blocking_send(Err(e.into()));
+                    let _ = tx.blocking_send(Err(ExtractionError::on_page(
+                        ExtractionErrorCode::PageExtractionFailed,
+                        format!("The text of page {page_number} could not be extracted: {e}"),
+                        page_number,
+                    ).into()));
                     continue;
                 }
             };
 
             if tx.blocking_send(Ok(Chunk::new(
                 content, 
-                Metadata::Pdf { page_number: num_page + 1 }
+                Metadata::Pdf { page_number }
             ))).is_err() {
                 break;
             }
