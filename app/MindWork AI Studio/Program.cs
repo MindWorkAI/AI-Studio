@@ -173,7 +173,7 @@ internal sealed class Program
         builder.Services.AddSingleton<VisualBriefingBuildOrchestrator>();
         builder.Services.AddSingleton<VisualBriefingPreviewTokenService>();
         builder.Services.AddSingleton<IMediaTranscriptStorage, VisualBriefingTranscriptStorage>();
-        builder.Services.AddSingleton<AssistantPluginInstallService>();
+        builder.Services.AddSingleton<PluginInstallService>();
         builder.Services.AddSingleton<UpdatePolicy>();
         builder.Services.AddSingleton<AssistantPluginGenerationService>();
         builder.Services.AddSingleton<DataSourceService>();

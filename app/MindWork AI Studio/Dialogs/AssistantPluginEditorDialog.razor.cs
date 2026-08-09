@@ -29,7 +29,7 @@ public partial class AssistantPluginEditorDialog : MSGComponentBase
     private IMudDialogInstance MudDialog { get; set; } = null!;
 
     [Inject]
-    private AssistantPluginInstallService AssistantPluginInstallService { get; init; } = null!;
+    private PluginInstallService PluginInstallService { get; init; } = null!;
 
     [Parameter]
     public Guid PluginId { get; set; }
@@ -105,7 +105,7 @@ public partial class AssistantPluginEditorDialog : MSGComponentBase
         try
         {
             var editedLua = await this.codeEditor.GetCodeAsync();
-            var result = await this.AssistantPluginInstallService.UpdateInstalledAssistantAsync(this.plugin, editedLua, CancellationToken.None);
+            var result = await this.PluginInstallService.UpdateInstalledAssistantAsync(this.plugin, editedLua, CancellationToken.None);
             if (!result.Success)
             {
                 LOGGER.LogError($"Failed to update assistant plugin '{result.PluginName}' ({result.PluginId}) in '{result.PluginDirectory}' with issue '{result.Issue}'.");

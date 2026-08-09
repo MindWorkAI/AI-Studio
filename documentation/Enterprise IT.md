@@ -284,6 +284,8 @@ DEPLOYED_USING_CONFIG_SERVER = true
 
 Local, manually managed configuration plugins should set this to `false`. If the field is missing, AI Studio falls back to the plugin path (`.config`) to determine whether the plugin is managed and logs a warning.
 
+The field describes a plugin, it does not grant it anything. Which configurations belong to your organization is always decided by the plugin path: which approvals for assistant plugins are honored, which configuration wins a conflict, and which configuration AI Studio withdraws once you stop referencing it. A configuration stored under `.config` is therefore removed when your organization no longer references its ID, whatever this field says.
+
 ## Priority of configuration plugins
 
 When you deploy more than one configuration, two of your configuration plugins may manage the same setting or define the same object, e.g. the same LLM provider. The optional `PRIORITY` field decides which one wins:
@@ -310,6 +312,8 @@ Two guarantees are independent of the priority:
 
 - A local configuration plugin never wins against one your IT department deployed, whatever priority it declares. Local plugins are always applied afterwards, and they may not take over a setting or an object that belongs to one of your configurations.
 - Two plugins must not share the same plugin ID. If that happens, AI Studio keeps the one your IT department deployed and logs a warning for the other.
+
+The single exception is a configuration you stage for a test under `.config-tests`. It is applied after your deployed configurations and wins a shared plugin ID, so that you can try out the next version of a configuration under its final ID. See [Local staging and testing](#local-staging-and-testing).
 
 ### Settings that hold a list or a table
 
@@ -369,6 +373,16 @@ AI Studio computes the approval hash as a SHA-256 digest over all `.lua` files i
 
 If any Lua file changes, the hash changes automatically and the enterprise approval no longer applies.
 
+### Only your configurations may approve
+
+Approvals are honored only in configuration plugins that speak for your organization: plugins a configuration server deployed, meaning plugins stored under the `.config` directory, and plugins you staged for a test under `.config-tests`. AI Studio ignores the approvals of any other locally placed configuration plugin and writes a warning to the log.
+
+The reason is what an approval does: it marks an assistant plugin as safe without any security audit, and AI Studio then tells the user that their organization approved it. Anyone who can drop a file into the plugin directory could otherwise disable the security audit for an assistant plugin of their choosing while the app vouches for it in your name.
+
+This is decided by where the plugin is stored, not by its `DEPLOYED_USING_CONFIG_SERVER` field. That field is part of the plugin itself, so any plugin could claim it.
+
+If you want to test approvals before rolling a configuration out, see [Local staging and testing](#local-staging-and-testing).
+
 ### Configuration example
 
 Add the approval list to `CONFIG["SETTINGS"]` in your configuration plugin:
@@ -396,6 +410,66 @@ dotnet run --project app/Build -- assistant-plugin-hash "<plugin-dir>" --lua-sni
 ```
 
 This prints the canonical hash and, with `--lua-snippet`, also prints a ready-to-paste Lua snippet for `CONFIG["SETTINGS"]`.
+
+## Local staging and testing
+
+Before you roll a configuration out through a configuration web server, you can stage it on a device and test it end to end, including the enterprise approvals for assistant plugins described above. This needs no configuration web server, no registry, policy, or environment entry, and no encryption secret.
+
+AI Studio has a dedicated directory for this: `.config-tests`. A configuration stored there speaks for your organization exactly like a deployed one. In exchange, AI Studio empties the directory on every start, so a test configuration is valid for one session.
+
+Do not use the `.config` directory for this. It belongs to your configuration web server, and AI Studio removes everything there that your organization does not reference anymore.
+
+### The data directory
+
+Plugins live in the data directory of AI Studio:
+
+| Platform | Data directory |
+| --- | --- |
+| Windows | `%LOCALAPPDATA%\com.github.mindwork-ai.ai-studio\data` |
+| macOS | `~/Library/Application Support/com.github.mindwork-ai.ai-studio/data` |
+| Linux | `$XDG_DATA_HOME/com.github.mindwork-ai.ai-studio/data`, usually `~/.local/share/com.github.mindwork-ai.ai-studio/data` |
+| Linux (Flatpak) | `~/.var/app/org.mindworkai.AIStudio/data/com.github.mindwork-ai.ai-studio/data` |
+
+### Staging a configuration
+
+Place the files **while AI Studio is running**: the test directory is emptied whenever the app starts.
+
+1. Start AI Studio. It creates `<data directory>/plugins/.config-tests/` if it does not exist yet.
+2. Create a directory below it and place your `plugin.lua` there, e.g. `.config-tests/my-department-draft/`. The directory name is up to you here: a test configuration is identified by the `ID` field inside the plugin, not by the directory it lives in.
+3. Place the assistant plugin you want to test in `<data directory>/plugins/assistants/<any name>/`.
+4. AI Studio watches the plugin directory and picks both up without a restart. The security card of the assistant then states that your organization approved it, exactly as it will after the rollout.
+
+While a test configuration is loaded, the Information page reports it, including the directory it was staged in. After a restart, that same page tells you that a test configuration was removed, so nobody has to wonder where the directory went.
+
+What behaves like the later rollout:
+
+- The approvals for assistant plugins are honored.
+- Settings and configuration objects the test configuration manages are protected against local configuration plugins.
+- When the test configuration declares the same plugin `ID` as one your organization deployed, the test configuration wins. This is how you try out the next version of an existing configuration under its final ID.
+
+What deliberately does not:
+
+- A test configuration has no protection against the user. You can remove it on the plugin page and replace it by importing a new version.
+- It does not survive a restart.
+
+### Testing with a small group
+
+To let colleagues take part in the test, place the same two directories on each of their devices while AI Studio runs, for example through a script, your MDM solution, or a login script. A configuration web server is not involved, and nothing has to be enabled inside AI Studio. Ordinary user accounts can take part: the data directory belongs to the user, so no administrator rights are needed to place the files.
+
+Keep in mind that everybody in the group loses the test configuration the next time they start AI Studio. Either repeat the step, or let your script place the files at every login.
+
+### Cleaning up
+
+Restart AI Studio: the test directory is emptied, the approvals are gone, and the assistant requires a security audit again. To end a test without restarting, delete the configuration on the plugin page.
+
+### Security note
+
+A test configuration carries the rights of an organization configuration without anybody having deployed it. Two properties keep that in check, and you should not work around either of them:
+
+- The directory is emptied on every start, so nothing staged for a test can settle in unnoticed.
+- No feature inside AI Studio writes into that directory. Importing, sharing, and deleting plugins never touch it, so a user cannot be talked into staging a configuration by opening a file.
+
+The data directory belongs to the user account, so whoever can write there can approve assistant plugins in the name of your organization until the next restart. Treat write access to the data directory as equivalent to deploying a configuration, and protect it accordingly on managed devices.
 
 ## Encrypted API Keys
 

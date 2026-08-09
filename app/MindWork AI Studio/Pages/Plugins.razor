@@ -11,7 +11,7 @@
         </MudText>
         <MudSpacer />
         <LockableButton Text="@T("Import")"
-                        Tooltip="@T("Import assistant plugin")"
+                        Tooltip="@T("Import plugin from a file")"
                         Icon="@IMPORT_ICON"
                         ButtonVariant="Variant.Outlined"
                         ButtonColor="Color.Default"
@@ -138,7 +138,7 @@
 
                             @if (context is IAvailablePlugin availablePlugin)
                             {
-                                <AssistantPluginDeleteAction Plugin="@availablePlugin" />
+                                <PluginDeleteAction Plugin="@availablePlugin" />
                             }
                         </MudStack>
                     </MudStack>

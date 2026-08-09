@@ -158,6 +158,31 @@
                                 break;
                         }
 
+                        @*
+                            A staged test configuration speaks for the organization without anybody
+                            having deployed it. We report it without the details having to be expanded:
+                        *@
+                        @if (this.testConfigPlugins.Count > 0)
+                        {
+                            <MudText Typo="Typo.body1" Class="mt-2">
+                                @T("A test configuration is active. It acts like a configuration of your organization and may, for example, approve assistant plugins. AI Studio removes it the next time you start the app.")
+                            </MudText>
+                            @foreach (var testConfigPlugin in this.testConfigPlugins)
+                            {
+                                <ConfigPluginInfoCard HeaderIcon="@Icons.Material.Filled.Science"
+                                                      HeaderText="@testConfigPlugin.Name"
+                                                      Items="@this.BuildTestConfigurationItems(testConfigPlugin)"
+                                                      ShowWarning="@true"
+                                                      WarningText="@T("Test configuration: nobody deployed this configuration. It is valid until you restart AI Studio.")"/>
+                            }
+                        }
+                        else if (PluginFactory.RemovedTestConfigurationsAtStartup > 0)
+                        {
+                            <MudText Typo="Typo.body1" Class="mt-2">
+                                @string.Format(T("AI Studio removed {0} test configuration(s) while starting. A test configuration is valid for one session: place it again while AI Studio is running."), PluginFactory.RemovedTestConfigurationsAtStartup)
+                            </MudText>
+                        }
+
                         @if (this.HasEnterpriseConfigurationDetails)
                         {
                             <MudButton StartIcon="@(this.showEnterpriseConfigDetails ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)"

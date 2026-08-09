@@ -110,9 +110,10 @@ public static partial class PluginFactory
     /// </summary>
     /// <remarks>
     /// The configuration plugins an organization deployed go first: they are the baseline for
-    /// everything else. Local configuration plugins follow, so they can add to that baseline instead
-    /// of replacing parts of it. All remaining plugin types write no settings at all, so their rank
-    /// is irrelevant for the outcome.<br/><br/>
+    /// everything else. A test configuration follows, so that an administrator sees their draft take
+    /// effect over the deployed baseline. Local configuration plugins come last, so they can add to
+    /// that baseline instead of replacing parts of it. All remaining plugin types write no settings at
+    /// all, so their rank is irrelevant for the outcome.<br/><br/>
     /// The rank comes before the declared priority on purpose: a local configuration plugin must not
     /// be able to jump ahead of an organization by declaring a high priority.
     /// </remarks>
@@ -121,9 +122,10 @@ public static partial class PluginFactory
     private static int GetStartupRank(IAvailablePlugin plugin) => plugin.Type switch
     {
         PluginType.CONFIGURATION when IsEnterpriseConfigurationPath(plugin.LocalPath) => 0,
-        PluginType.CONFIGURATION => 1,
+        PluginType.CONFIGURATION when IsEnterpriseTestConfigurationPath(plugin.LocalPath) => 1,
+        PluginType.CONFIGURATION => 2,
 
-        _ => 2,
+        _ => 3,
     };
 
     private static void LogAssistantPluginStartupState()
