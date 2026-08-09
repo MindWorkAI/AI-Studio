@@ -9,23 +9,18 @@ namespace AIStudio.Tools.Services;
 public sealed partial class PluginInstallService
 {
     /// <summary>
-    /// Checks whether an assistant plugin is one that users may delete.
+    /// The plugin types users may remove through the user interface.
     /// </summary>
-    public static bool CanDeleteInstalledAssistant(IAvailablePlugin plugin) => string.IsNullOrWhiteSpace(GetAssistantDeletionEligibilityIssue(plugin));
+    private static readonly PluginType[] DELETABLE_PLUGIN_TYPES = [PluginType.ASSISTANT, PluginType.CONFIGURATION, PluginType.LANGUAGE];
 
     /// <summary>
-    /// The plugin types users may remove through the user interface, besides assistants.
+    /// Checks whether a plugin is one that users may delete.
     /// </summary>
     /// <remarks>
-    /// Assistants have their own path, because a running assistant must not be pulled away from
-    /// under a user and because removing one also removes its security audit.
+    /// This decides whether the delete action is offered at all. Whether it may run right now is a
+    /// different question: an assistant with running background work stays visible but blocked.
     /// </remarks>
-    private static readonly PluginType[] DELETABLE_LOCAL_PLUGIN_TYPES = [PluginType.CONFIGURATION, PluginType.LANGUAGE];
-
-    /// <summary>
-    /// Checks whether a plugin is a local configuration or language plugin that users may delete.
-    /// </summary>
-    public static bool CanDeleteLocalPlugin(IAvailablePlugin plugin) => string.IsNullOrWhiteSpace(GetLocalPluginDeletionEligibilityIssue(plugin));
+    public static bool CanDeletePlugin(IAvailablePlugin plugin) => string.IsNullOrWhiteSpace(GetDeletionEligibilityIssue(plugin));
 
     /// <summary>
     /// Collects what deleting a local configuration plugin removes besides the plugin directory.
@@ -81,66 +76,63 @@ public sealed partial class PluginInstallService
     }
 
     /// <summary>
-    /// Deletes installed local assistant plugin directories.
-    /// The directory gets moved to a backup dir outside the plugin root so the
-    /// plugin loader cannot discover it during reload. On failure, the directory
-    /// and related assistant settings are restored.
+    /// Deletes the directory of a plugin the user installed or placed themselves.
+    /// The directory gets moved to a backup dir outside the plugin root so the plugin loader cannot
+    /// discover it during reload. On failure, the directory and the related settings are restored.
     /// </summary>
-    /// <param name="plugin">Assistant plugin metadata</param>
-    /// <param name="token">Cancellation token for settings storage and plugin reload</param>
+    /// <remarks>
+    /// For a configuration plugin, we do not remove its providers, data sources, chat templates,
+    /// profiles, or locked settings ourselves. The reload does that: it recognizes them as left over
+    /// once their configuration plugin is gone, and it also deletes the related secrets from the OS
+    /// keyring.<br/><br/>
+    /// What the reload cannot recognize as left over is everything the user decided about the plugin
+    /// itself: its activation state, the language choice of a language plugin, and the security audit
+    /// of an assistant. Those are removed here, see ApplyDeleteSideEffects.
+    /// </remarks>
+    /// <param name="plugin">Metadata of the plugin to delete.</param>
+    /// <param name="token">Cancellation token for settings storage and plugin reload.</param>
     /// <returns>
-    /// Delete result that contains success state, deleted plugin metadata, the original plugin directory,
+    /// Delete result that contains a success state, deleted plugin metadata, the original plugin directory,
     /// and a user-facing issue when deletion failed.
     /// </returns>
-    public async Task<PluginDeleteResult> DeleteInstalledAssistantAsync(IAvailablePlugin plugin, CancellationToken token)
+    public async Task<PluginDeleteResult> DeletePluginAsync(IAvailablePlugin plugin, CancellationToken token)
     {
-        var eligibilityIssue = GetAssistantDeletionEligibilityIssue(plugin);
-        if (!string.IsNullOrEmpty(eligibilityIssue))
-            return DeleteError(plugin, plugin.LocalPath, eligibilityIssue);
-
-        if (this.HasActiveAssistantWork(plugin.Id))
-            return DeleteError(plugin, plugin.LocalPath, TB("The assistant cannot be deleted while background work is still running."));
+        var deletionIssue = this.GetDeletionIssue(plugin);
+        if (!string.IsNullOrWhiteSpace(deletionIssue))
+            return DeleteError(plugin, plugin.LocalPath, deletionIssue);
 
         await this.installSemaphore.WaitAsync(token);
         var pluginDirectory = plugin.LocalPath;
         var backupDirectory = string.Empty;
-        var wasEnabled = false;
-        var removedAudits = new List<PluginAssistantAudit>();
+        var sideEffects = PluginDeleteSideEffects.NONE;
 
         try
         {
-            eligibilityIssue = GetAssistantDeletionEligibilityIssue(plugin);
-            if (!string.IsNullOrEmpty(eligibilityIssue))
-                return DeleteError(plugin, pluginDirectory, eligibilityIssue);
+            // Check again under the semaphore: another operation might have changed the plugin state
+            // while we were waiting:
+            deletionIssue = this.GetDeletionIssue(plugin);
+            if (!string.IsNullOrWhiteSpace(deletionIssue))
+                return DeleteError(plugin, pluginDirectory, deletionIssue);
 
-            if (this.HasActiveAssistantWork(plugin.Id))
-                return DeleteError(plugin, pluginDirectory, TB("The assistant cannot be deleted while background work is still running."));
-
-            backupDirectory = CreateDeleteBackupDirectory(plugin, "assistant");
+            backupDirectory = CreateDeleteBackupDirectory(plugin);
             Directory.CreateDirectory(Path.GetDirectoryName(backupDirectory)!);
             Directory.Move(pluginDirectory, backupDirectory);
 
-            wasEnabled = this.settingsManager.ConfigurationData.EnabledPlugins.Remove(plugin.Id);
-            removedAudits =
-            [
-                .. this.settingsManager.ConfigurationData.AssistantPluginAudits.Where(audit => audit.PluginId == plugin.Id)
-            ];
+            sideEffects = this.ApplyDeleteSideEffects(plugin);
+            if (sideEffects.HasChanges)
+                await this.settingsManager.StoreSettings();
 
-            if (removedAudits.Count > 0)
-                this.settingsManager.ConfigurationData.AssistantPluginAudits.RemoveAll(audit => audit.PluginId == plugin.Id);
-
-            await this.settingsManager.StoreSettings();
             await PluginFactory.LoadAll(token);
 
-            TryDeleteDirectory(backupDirectory, "assistant plugin delete backup", this.logger);
-            this.logger.LogInformation($"Deleted assistant plugin '{plugin.Name}' ({plugin.Id}) from '{pluginDirectory}'.");
+            TryDeleteDirectory(backupDirectory, "plugin delete backup", this.logger);
+            this.logger.LogInformation($"Deleted {plugin.Type} plugin '{plugin.Name}' ({plugin.Id}) from '{pluginDirectory}'.");
             return new(true, plugin.Id, plugin.Name, pluginDirectory, string.Empty);
         }
         catch (Exception e)
         {
-            this.logger.LogError(e, $"Failed to delete assistant plugin '{plugin.Name}' ({plugin.Id}) from '{pluginDirectory}'.");
+            this.logger.LogError(e, $"Failed to delete {plugin.Type} plugin '{plugin.Name}' ({plugin.Id}) from '{pluginDirectory}'.");
 
-            await this.TryRestoreDeletedAssistantPluginAsync(plugin, pluginDirectory, backupDirectory, wasEnabled, removedAudits, token);
+            await this.TryRestoreDeletedPluginAsync(plugin, pluginDirectory, backupDirectory, sideEffects, token);
             return DeleteError(plugin, pluginDirectory, string.Format(TB("Unexpected error: {0}"), e.Message));
         }
         finally
@@ -150,125 +142,28 @@ public sealed partial class PluginInstallService
     }
 
     /// <summary>
-    /// Deletes a local configuration or language plugin directory.
-    /// The directory gets moved to a backup dir outside the plugin root so the plugin loader cannot
-    /// discover it during reload. On failure, the directory is restored.
+    /// Checks everything that prevents deleting a plugin right now.
     /// </summary>
-    /// <remarks>
-    /// For a configuration plugin, we do not remove its providers, data sources, chat templates,
-    /// profiles, or locked settings ourselves. The reload does that: it recognizes them as left over
-    /// once their configuration plugin is gone, and it also deletes the related secrets from the OS
-    /// keyring.<br/><br/>
-    /// What the reload cannot recognize as left over is everything the user decided about the plugin
-    /// itself: its activation state and, for a language plugin, the language choice. Those are
-    /// removed here.
-    /// </remarks>
-    /// <param name="plugin">Plugin metadata of the configuration or language plugin.</param>
-    /// <param name="token">Cancellation token for settings storage and plugin reload.</param>
-    /// <returns>
-    /// Delete result that contains success state, deleted plugin metadata, the original plugin directory,
-    /// and a user-facing issue when deletion failed.
-    /// </returns>
-    public async Task<PluginDeleteResult> DeleteLocalPluginAsync(IAvailablePlugin plugin, CancellationToken token)
+    private string GetDeletionIssue(IAvailablePlugin plugin)
     {
-        var eligibilityIssue = GetLocalPluginDeletionEligibilityIssue(plugin);
-        if (!string.IsNullOrEmpty(eligibilityIssue))
-            return DeleteError(plugin, plugin.LocalPath, eligibilityIssue);
+        var eligibilityIssue = GetDeletionEligibilityIssue(plugin);
+        if (!string.IsNullOrWhiteSpace(eligibilityIssue))
+            return eligibilityIssue;
 
-        await this.installSemaphore.WaitAsync(token);
-        var pluginDirectory = plugin.LocalPath;
-        var backupDirectory = string.Empty;
-        var wasEnabled = false;
-        var wasChosenLanguage = false;
+        // An assistant must not be pulled away from under a user while it is still working:
+        if (plugin.Type is PluginType.ASSISTANT && this.HasActiveAssistantWork(plugin.Id))
+            return TB("The assistant cannot be deleted while background work is still running.");
 
-        try
-        {
-            // Check again under the semaphore: another operation might have changed the plugin state
-            // while we were waiting:
-            eligibilityIssue = GetLocalPluginDeletionEligibilityIssue(plugin);
-            if (!string.IsNullOrEmpty(eligibilityIssue))
-                return DeleteError(plugin, pluginDirectory, eligibilityIssue);
-
-            backupDirectory = CreateDeleteBackupDirectory(plugin, plugin.Type is PluginType.LANGUAGE ? "language" : "configuration");
-            Directory.CreateDirectory(Path.GetDirectoryName(backupDirectory)!);
-            Directory.Move(pluginDirectory, backupDirectory);
-
-            //
-            // Nothing removes the activation state of a plugin which is gone. Should the user install
-            // a plugin with the same ID again later, it would start enabled without ever having been
-            // switched on. We ask for removal regardless of the plugin type: a configuration plugin
-            // is never listed there, so this simply does nothing for it:
-            //
-            wasEnabled = this.settingsManager.ConfigurationData.EnabledPlugins.Remove(plugin.Id);
-
-            //
-            // When the user had chosen this language plugin, the app would silently fall back to
-            // English while the settings still point to the deleted plugin. We return the language
-            // choice to automatic instead, so the settings stay truthful:
-            //
-            wasChosenLanguage = plugin.Type is PluginType.LANGUAGE && this.settingsManager.ConfigurationData.App.LanguagePluginId == plugin.Id;
-            if (wasChosenLanguage)
-            {
-                this.settingsManager.ConfigurationData.App.LanguageBehavior = LangBehavior.AUTO;
-                this.settingsManager.ConfigurationData.App.LanguagePluginId = Guid.Empty;
-            }
-
-            if (wasEnabled || wasChosenLanguage)
-                await this.settingsManager.StoreSettings();
-
-            await PluginFactory.LoadAll(token);
-
-            TryDeleteDirectory(backupDirectory, "local plugin delete backup", this.logger);
-            this.logger.LogInformation($"Deleted {plugin.Type} plugin '{plugin.Name}' ({plugin.Id}) from '{pluginDirectory}'.");
-            return new(true, plugin.Id, plugin.Name, pluginDirectory, string.Empty);
-        }
-        catch (Exception e)
-        {
-            this.logger.LogError(e, $"Failed to delete {plugin.Type} plugin '{plugin.Name}' ({plugin.Id}) from '{pluginDirectory}'.");
-
-            await this.TryRestoreDeletedLocalPluginAsync(plugin, pluginDirectory, backupDirectory, wasEnabled, wasChosenLanguage, token);
-            return DeleteError(plugin, pluginDirectory, string.Format(TB("Unexpected error: {0}"), e.Message));
-        }
-        finally
-        {
-            this.installSemaphore.Release();
-        }
+        return string.Empty;
     }
 
-    private static string GetAssistantDeletionEligibilityIssue(IAvailablePlugin plugin)
+    /// <summary>
+    /// Checks whether a plugin is one users may delete at all, regardless of its current state.
+    /// </summary>
+    private static string GetDeletionEligibilityIssue(IAvailablePlugin plugin)
     {
-        if (plugin.Type is not PluginType.ASSISTANT)
-            return TB("Only assistant plugins can be deleted.");
-
-        if (plugin.IsInternal)
-            return TB("Internal assistant plugins cannot be deleted.");
-
-        if (string.IsNullOrWhiteSpace(plugin.LocalPath))
-            return TB("The assistant plugin has no local directory.");
-
-        //
-        // Like for every other plugin type, the plugin path decides, not what the plugin declares
-        // about itself. Neither DEPLOYED_USING_CONFIG_SERVER nor the Assistant Builder metadata is
-        // suitable here: a locally placed assistant could declare itself as deployed by an
-        // organization, or simply omit the builder metadata, and would then be impossible to remove
-        // through the user interface. Editing, revising, and sharing an assistant already follow the
-        // path, so deleting one must not be the single action that trusts the plugin's own claims.
-        //
-        if (PluginFactory.IsEnterpriseConfigurationPath(plugin.LocalPath))
-            return TB("Config Server managed assistant plugins cannot be deleted.");
-
-        if (!PluginFactory.IsInsidePluginsRoot(plugin.LocalPath) || PluginFactory.IsPluginsRoot(plugin.LocalPath))
-            return TB("The assistant plugin directory is outside the plugins directory.");
-
-        return Directory.Exists(plugin.LocalPath)
-            ? string.Empty
-            : TB("The assistant plugin directory does not exist.");
-    }
-
-    private static string GetLocalPluginDeletionEligibilityIssue(IAvailablePlugin plugin)
-    {
-        if (!DELETABLE_LOCAL_PLUGIN_TYPES.Contains(plugin.Type))
-            return TB("Only configuration and language plugins can be deleted this way.");
+        if (!DELETABLE_PLUGIN_TYPES.Contains(plugin.Type))
+            return TB("Only assistant, configuration, and language plugins can be deleted.");
 
         if (plugin.IsInternal)
             return TB("Plugins shipped with AI Studio cannot be deleted.");
@@ -277,70 +172,94 @@ public sealed partial class PluginInstallService
             return TB("The plugin has no local directory.");
 
         //
-        // We decide by the plugin path, not by IsManagedByConfigServer. That value comes from the
-        // plugin's own DEPLOYED_USING_CONFIG_SERVER field: a locally placed plugin could declare
-        // itself managed and would then be impossible to remove through the user interface, which
+        // We decide by the plugin path, not by what a plugin declares about itself. Both
+        // DEPLOYED_USING_CONFIG_SERVER and the Assistant Builder metadata are self-declared: a
+        // locally placed plugin could claim to be deployed by an organization, or simply omit the
+        // builder metadata, and would then be impossible to remove through the user interface, which
         // is exactly the situation this deletion is meant to resolve.
         //
         if (PluginFactory.IsEnterpriseConfigurationPath(plugin.LocalPath))
             return TB("Plugins deployed by your organization cannot be deleted.");
 
         if (!PluginFactory.IsInsidePluginsRoot(plugin.LocalPath) || PluginFactory.IsPluginsRoot(plugin.LocalPath))
-            return TB("The plugin directory is outside the plugins directory.");
+            return TB("This individual plugin’s directory is outside the expected plugins directory.");
 
-        return Directory.Exists(plugin.LocalPath)
-            ? string.Empty
-            : TB("The plugin directory does not exist.");
+        return Directory.Exists(plugin.LocalPath) ? string.Empty : TB("The plugin directory does not exist.");
     }
 
-    private static string CreateDeleteBackupDirectory(IAvailablePlugin plugin, string pluginKind)
+    /// <summary>
+    /// Removes everything the user decided about the plugin, and reports what was removed so a failed
+    /// deletion can put it back.
+    /// </summary>
+    private PluginDeleteSideEffects ApplyDeleteSideEffects(IAvailablePlugin plugin)
+    {
+        var configurationData = this.settingsManager.ConfigurationData;
+
+        //
+        // Nothing removes the activation state of a plugin which is gone. Should the user install
+        // a plugin with the same ID again later, it would start enabled without ever having been
+        // switched on. We ask for removal regardless of the plugin type: a configuration plugin
+        // is never listed there, so this simply does nothing for it:
+        //
+        var wasEnabled = configurationData.EnabledPlugins.Remove(plugin.Id);
+
+        //
+        // When the user had chosen this language plugin, the app would silently fall back to
+        // English while the settings still point to the deleted plugin. We return the language
+        // choice to automatic instead, so the settings stay truthful:
+        //
+        var wasChosenLanguage = plugin.Type is PluginType.LANGUAGE && configurationData.App.LanguagePluginId == plugin.Id;
+        if (wasChosenLanguage)
+        {
+            configurationData.App.LanguageBehavior = LangBehavior.AUTO;
+            configurationData.App.LanguagePluginId = Guid.Empty;
+        }
+
+        //
+        // The security audit belongs to the assistant code we checked. Another assistant installed
+        // under the same ID later is different code, so it must be audited again:
+        //
+        List<PluginAssistantAudit> removedAudits = [];
+        if (plugin.Type is PluginType.ASSISTANT)
+        {
+            removedAudits = [.. configurationData.AssistantPluginAudits.Where(audit => audit.PluginId == plugin.Id)];
+            if (removedAudits.Count > 0)
+                configurationData.AssistantPluginAudits.RemoveAll(audit => audit.PluginId == plugin.Id);
+        }
+
+        return new(wasEnabled, wasChosenLanguage, removedAudits);
+    }
+
+    private static string CreateDeleteBackupDirectory(IAvailablePlugin plugin)
     {
         var backupRoot = Path.Join(SettingsManager.DataDirectory, DELETE_BACKUP_DIRECTORY);
-        return Path.Join(backupRoot, $"{pluginKind}-{plugin.Id:N}-{Guid.NewGuid():N}");
+        return Path.Join(backupRoot, $"{plugin.Type.GetDirectory()}-{plugin.Id:N}-{Guid.NewGuid():N}");
     }
 
-    private async Task TryRestoreDeletedAssistantPluginAsync(IAvailablePlugin plugin, string pluginDirectory, string backupDirectory, bool wasEnabled, List<PluginAssistantAudit> removedAudits, CancellationToken token)
+    private async Task TryRestoreDeletedPluginAsync(IAvailablePlugin plugin, string pluginDirectory, string backupDirectory, PluginDeleteSideEffects sideEffects, CancellationToken token)
     {
         try
         {
             if (!Directory.Exists(pluginDirectory) && Directory.Exists(backupDirectory))
                 Directory.Move(backupDirectory, pluginDirectory);
 
-            if (wasEnabled && !this.settingsManager.ConfigurationData.EnabledPlugins.Contains(plugin.Id))
-                this.settingsManager.ConfigurationData.EnabledPlugins.Add(plugin.Id);
+            var configurationData = this.settingsManager.ConfigurationData;
+            if (sideEffects.WasEnabled && !configurationData.EnabledPlugins.Contains(plugin.Id))
+                configurationData.EnabledPlugins.Add(plugin.Id);
 
-            if (removedAudits.Count > 0)
+            if (sideEffects.WasChosenLanguage)
             {
-                this.settingsManager.ConfigurationData.AssistantPluginAudits.RemoveAll(audit => audit.PluginId == plugin.Id);
-                this.settingsManager.ConfigurationData.AssistantPluginAudits.AddRange(removedAudits);
+                configurationData.App.LanguageBehavior = LangBehavior.MANUAL;
+                configurationData.App.LanguagePluginId = plugin.Id;
             }
 
-            await this.settingsManager.StoreSettings();
-            await PluginFactory.LoadAll(token);
-        }
-        catch (Exception restoreException)
-        {
-            this.logger.LogError(restoreException, $"Failed to restore assistant plugin '{plugin.Name}' ({plugin.Id}) after a failed delete.");
-        }
-    }
-
-    private async Task TryRestoreDeletedLocalPluginAsync(IAvailablePlugin plugin, string pluginDirectory, string backupDirectory, bool wasEnabled, bool wasChosenLanguage, CancellationToken token)
-    {
-        try
-        {
-            if (!Directory.Exists(pluginDirectory) && Directory.Exists(backupDirectory))
-                Directory.Move(backupDirectory, pluginDirectory);
-
-            if (wasEnabled && !this.settingsManager.ConfigurationData.EnabledPlugins.Contains(plugin.Id))
-                this.settingsManager.ConfigurationData.EnabledPlugins.Add(plugin.Id);
-
-            if (wasChosenLanguage)
+            if (sideEffects.RemovedAudits.Count > 0)
             {
-                this.settingsManager.ConfigurationData.App.LanguageBehavior = LangBehavior.MANUAL;
-                this.settingsManager.ConfigurationData.App.LanguagePluginId = plugin.Id;
+                configurationData.AssistantPluginAudits.RemoveAll(audit => audit.PluginId == plugin.Id);
+                configurationData.AssistantPluginAudits.AddRange(sideEffects.RemovedAudits);
             }
 
-            if (wasEnabled || wasChosenLanguage)
+            if (sideEffects.HasChanges)
                 await this.settingsManager.StoreSettings();
 
             // The reload restores everything the plugin configured, because it is back in place:
@@ -350,5 +269,15 @@ public sealed partial class PluginInstallService
         {
             this.logger.LogError(restoreException, $"Failed to restore {plugin.Type} plugin '{plugin.Name}' ({plugin.Id}) after a failed delete.");
         }
+    }
+
+    /// <summary>
+    /// What deleting a plugin changed in the settings, so a failed deletion can undo it.
+    /// </summary>
+    private sealed record PluginDeleteSideEffects(bool WasEnabled, bool WasChosenLanguage, List<PluginAssistantAudit> RemovedAudits)
+    {
+        public static readonly PluginDeleteSideEffects NONE = new(false, false, []);
+
+        public bool HasChanges => this.WasEnabled || this.WasChosenLanguage || this.RemovedAudits.Count > 0;
     }
 }

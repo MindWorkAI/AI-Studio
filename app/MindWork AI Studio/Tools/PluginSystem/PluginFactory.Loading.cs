@@ -345,7 +345,10 @@ public static partial class PluginFactory
         if(type is PluginType.NONE)
             return new NoPlugin($"TYPE is not a valid plugin type. Valid types are: {CommonTools.GetAllEnumValues<PluginType>()}");
         
-        var isInternal = !string.IsNullOrWhiteSpace(pluginPath) && pluginPath.StartsWith(INTERNAL_PLUGINS_ROOT, StringComparison.OrdinalIgnoreCase);
+        // Whether a plugin is internal is decided by its path, never by the plugin itself. We use the
+        // same nesting check as everywhere else, so that a directory like `.internal-old` next to the
+        // internal plugins does not count as internal:
+        var isInternal = IsPathInside(INTERNAL_PLUGINS_ROOT, pluginPath);
         switch (type)
         {
             case PluginType.LANGUAGE:

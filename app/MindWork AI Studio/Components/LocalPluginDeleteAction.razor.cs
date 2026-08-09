@@ -33,7 +33,9 @@ public partial class LocalPluginDeleteAction : MSGComponentBase
 
     private bool isDeleting;
 
-    private bool CanDelete => PluginInstallService.CanDeleteLocalPlugin(this.Plugin);
+    // The type check keeps this action apart from the AssistantPluginDeleteAction next to it, which
+    // covers assistants. Both are merged into one component in a follow-up:
+    private bool CanDelete => this.Plugin.Type is not PluginType.ASSISTANT && PluginInstallService.CanDeletePlugin(this.Plugin);
 
     private string Tooltip => this.Plugin.Type is PluginType.CONFIGURATION
         ? this.T("Delete configuration plugin")
@@ -52,7 +54,7 @@ public partial class LocalPluginDeleteAction : MSGComponentBase
 
         try
         {
-            var result = await this.PluginInstallService.DeleteLocalPluginAsync(this.Plugin, CancellationToken.None);
+            var result = await this.PluginInstallService.DeletePluginAsync(this.Plugin, CancellationToken.None);
             if (!result.Success)
             {
                 this.Logger.LogError("Failed to delete {PluginType} plugin '{PluginName}' ({PluginId}) from '{PluginDirectory}' with issue '{Issue}'.", this.Plugin.Type, result.PluginName, result.PluginId, result.PluginDirectory, result.Issue);

@@ -24,7 +24,9 @@ public partial class AssistantPluginDeleteAction : MSGComponentBase
     [Inject]
     private ILogger<AssistantPluginDeleteAction> Logger { get; init; } = null!;
 
-    private bool CanDelete => PluginInstallService.CanDeleteInstalledAssistant(this.Plugin);
+    // The type check keeps this action apart from the LocalPluginDeleteAction next to it, which
+    // covers every other deletable type. Both are merged into one component in a follow-up:
+    private bool CanDelete => this.Plugin.Type is PluginType.ASSISTANT && PluginInstallService.CanDeletePlugin(this.Plugin);
 
     private bool IsBlockedByActiveWork => this.PluginInstallService.HasActiveAssistantWork(this.Plugin.Id);
 
@@ -57,7 +59,7 @@ public partial class AssistantPluginDeleteAction : MSGComponentBase
         if (dialogResult is null || dialogResult.Canceled)
             return;
 
-        var result = await this.PluginInstallService.DeleteInstalledAssistantAsync(this.Plugin, CancellationToken.None);
+        var result = await this.PluginInstallService.DeletePluginAsync(this.Plugin, CancellationToken.None);
         if (!result.Success)
         {
             this.Logger.LogError("Failed to delete assistant plugin '{PluginName}' ({PluginId}) from '{PluginDirectory}' with issue '{Issue}'.", result.PluginName, result.PluginId, result.PluginDirectory, result.Issue);
