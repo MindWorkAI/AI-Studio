@@ -109,6 +109,34 @@ public static partial class PluginFactory
     /// <returns>True when the directory is nested in the plugins directory.</returns>
     public static bool IsInsidePluginsRoot(string? pluginPath) => IsPathInside(PLUGINS_ROOT, pluginPath);
 
+    /// <summary>
+    /// Checks whether a plugin directory is the plugins directory itself.
+    /// </summary>
+    /// <remarks>
+    /// A `plugin.lua` placed directly in the plugins directory makes that directory the plugin
+    /// directory. Removing or replacing such a plugin means touching its directory, which would take
+    /// every other plugin with it.
+    /// </remarks>
+    /// <param name="pluginPath">The directory of the plugin.</param>
+    /// <returns>True when the directory is the plugins directory.</returns>
+    public static bool IsPluginsRoot(string? pluginPath)
+    {
+        if (string.IsNullOrWhiteSpace(pluginPath) || string.IsNullOrWhiteSpace(PLUGINS_ROOT))
+            return false;
+
+        try
+        {
+            var root = Path.GetFullPath(PLUGINS_ROOT).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            var pluginDirectory = Path.GetFullPath(pluginPath).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            return string.Equals(root, pluginDirectory, StringComparison.OrdinalIgnoreCase);
+        }
+        catch (Exception e)
+        {
+            LOG.LogWarning(e, $"Was not able to check whether the plugin directory '{pluginPath}' is the plugins directory. Treating it as the plugins directory.");
+            return true;
+        }
+    }
+
     private static bool IsPathInside(string rootDirectory, string? pluginPath)
     {
         if (string.IsNullOrWhiteSpace(pluginPath) || string.IsNullOrWhiteSpace(rootDirectory))
