@@ -377,6 +377,8 @@ The reason is what an approval does: it marks an assistant plugin as safe withou
 
 This is decided by where the plugin is stored, not by its `DEPLOYED_USING_CONFIG_SERVER` field. That field is part of the plugin itself, so any plugin could claim it.
 
+If you want to test approvals before rolling a configuration out, see [Local staging and testing](#local-staging-and-testing).
+
 ### Configuration example
 
 Add the approval list to `CONFIG["SETTINGS"]` in your configuration plugin:
@@ -404,6 +406,45 @@ dotnet run --project app/Build -- assistant-plugin-hash "<plugin-dir>" --lua-sni
 ```
 
 This prints the canonical hash and, with `--lua-snippet`, also prints a ready-to-paste Lua snippet for `CONFIG["SETTINGS"]`.
+
+## Local staging and testing
+
+Before you roll a configuration out through a configuration web server, you can stage it on a device and test it end to end, including the enterprise approvals for assistant plugins described above. This needs no configuration web server, no registry, policy, or environment entry, and no encryption secret.
+
+What makes this work is where the configuration is stored: AI Studio treats every configuration plugin below the `.config` directory as deployed by your organization. That is the same directory a configuration web server downloads into.
+
+### The data directory
+
+Plugins live in the data directory of AI Studio:
+
+| Platform | Data directory |
+| --- | --- |
+| Windows | `%LOCALAPPDATA%\com.github.mindwork-ai.ai-studio\data` |
+| macOS | `~/Library/Application Support/com.github.mindwork-ai.ai-studio/data` |
+| Linux | `$XDG_DATA_HOME/com.github.mindwork-ai.ai-studio/data`, usually `~/.local/share/com.github.mindwork-ai.ai-studio/data` |
+| Linux (Flatpak) | `~/.var/app/org.mindworkai.AIStudio/data/com.github.mindwork-ai.ai-studio/data` |
+
+### Staging a configuration
+
+1. Create the directory `<data directory>/plugins/.config/<configuration plugin ID>/` and place your `plugin.lua` there. Name the directory after the `ID` field of your configuration plugin: AI Studio derives the enterprise configuration ID from the directory name. When both differ, AI Studio writes a warning to the log and cannot relate the plugin to a configuration on the Information page.
+2. Place the assistant plugin you want to test in `<data directory>/plugins/assistants/<any name>/`.
+3. AI Studio watches the plugin directory and reloads without a restart. The security card of the assistant then states that your organization approved it, exactly as it will after the rollout.
+
+Everything else behaves as in production as well: the approvals are honored, the configuration takes precedence over locally placed configurations when both use the same plugin ID, and neither the delete button nor an import may replace it.
+
+### Testing with a small group
+
+To let colleagues take part in the test, place the same two directories on each of their devices, for example through a script, your MDM solution, or a login script. A configuration web server is not involved, and nothing has to be enabled inside AI Studio. Ordinary user accounts can take part: the data directory belongs to the user, so no administrator rights are needed to place the files.
+
+### Cleaning up
+
+AI Studio refuses to delete configuration plugins below `.config` through the user interface, because that is where your IT department deploys them. Remove the directory by hand when your test ends. After the next reload, the approvals are gone and the assistant requires a security audit again.
+
+### Security note
+
+AI Studio trusts everything below `.config` as if your IT department had deployed it: approvals for assistant plugins, precedence when plugin IDs collide, and protection against deletion and replacement. The data directory belongs to the user account, so whoever can write there can approve assistant plugins in the name of your organization.
+
+No feature inside AI Studio writes to that directory. Importing, sharing, and deleting plugins never touch it, so a user cannot be talked into staging a configuration by opening a file. Still, treat write access to the data directory as equivalent to deploying a configuration, and protect it accordingly on managed devices.
 
 ## Encrypted API Keys
 
