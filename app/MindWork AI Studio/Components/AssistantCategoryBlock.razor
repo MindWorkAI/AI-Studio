@@ -1,0 +1,11 @@
+@if (this.HasVisibleAssistant)
+{
+    <MudText Typo="Typo.h4" Class="@this.HeaderClass">
+        @this.Title
+    </MudText>
+}
+<CascadingValue Value="this" IsFixed="@true">
+    <MudStack Row="@true" Wrap="@Wrap.Wrap" Class="@this.StackClass">
+        @this.ChildContent
+    </MudStack>
+</CascadingValue>
