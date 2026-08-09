@@ -8,7 +8,7 @@ use axum::extract::Query;
 use axum::extract::rejection::QueryRejection;
 use axum::response::sse::{Event, Sse};
 use base64::{engine::general_purpose, Engine as _};
-use calamine::{open_workbook_auto, Reader};
+use calamine::{open_workbook_auto, Error as CalamineError, Reader};
 use file_format::{FileFormat, Kind};
 use futures::{Stream, StreamExt};
 use pdfium_render::prelude::{Pdfium, PdfiumError, PdfiumInternalError};
@@ -95,6 +95,7 @@ pub enum ExtractionErrorCode {
     FileNotReadable,
     FormatDetectionFailed,
     NotAValidPdf,
+    NotAValidSpreadsheet,
     PdfiumUnavailable,
     PdfEncrypted,
     PageExtractionFailed,
@@ -585,6 +586,15 @@ async fn stream_pdf(file_path: &str) -> Result<ChunkStream> {
     Ok(Box::pin(ReceiverStream::new(rx)))
 }
 
+/// Classifies a spreadsheet failure, so an unreadable file, e.g. on a network share which went
+/// away, is not reported as a corrupt workbook.
+fn classify_spreadsheet_error_code(error: &CalamineError) -> ExtractionErrorCode {
+    match error {
+        CalamineError::Io(_) => ExtractionErrorCode::FileNotReadable,
+        _ => ExtractionErrorCode::NotAValidSpreadsheet,
+    }
+}
+
 async fn stream_spreadsheet_as_csv(file_path: &str) -> Result<ChunkStream> {
     let path = file_path.to_owned();
     let (tx, rx) = mpsc::channel(10);
@@ -593,7 +603,10 @@ async fn stream_spreadsheet_as_csv(file_path: &str) -> Result<ChunkStream> {
         let mut workbook = match open_workbook_auto(&path) {
             Ok(w) => w,
             Err(e) => {
-                let _ = tx.blocking_send(Err(e.into()));
+                let _ = tx.blocking_send(Err(ExtractionError::new(
+                    classify_spreadsheet_error_code(&e),
+                    format!("The spreadsheet could not be opened: {e}"),
+                ).into()));
                 return;
             }
         };
@@ -602,7 +615,20 @@ async fn stream_spreadsheet_as_csv(file_path: &str) -> Result<ChunkStream> {
             let range = match workbook.worksheet_range(&sheet_name) {
                 Ok(r) => r,
                 Err(e) => {
-                    let _ = tx.blocking_send(Err(e.into()));
+                    //
+                    // One unreadable sheet must not end the workbook: we report it as a non-fatal
+                    // error chunk and continue with the next sheet. Sending it as an `Err` would
+                    // stop the consumer and silently drop all remaining sheets.
+                    //
+                    warn!("The sheet '{sheet_name}' of '{path}' could not be read: {e}");
+
+                    if tx.blocking_send(Ok(Chunk::from_error(&ExtractionError::new(
+                        classify_spreadsheet_error_code(&e),
+                        format!("The sheet '{sheet_name}' could not be read: {e}"),
+                    )))).is_err() {
+                        return;
+                    }
+
                     continue;
                 }
             };
