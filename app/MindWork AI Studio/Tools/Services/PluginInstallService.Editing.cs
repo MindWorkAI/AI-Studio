@@ -161,7 +161,7 @@ public sealed partial class PluginInstallService
             return await ValidatePluginCodeAsync(
                 pluginDirectory,
                 lua.Trim(),
-                PluginType.ASSISTANT,
+                [PluginType.ASSISTANT],
                 TB("The edited plugin is not an assistant plugin. Issue: {0}"),
                 TB("The edited assistant plugin is invalid. Issue: {0}"),
                 TB("The edited assistant plugin uses the ID of another installed plugin."),

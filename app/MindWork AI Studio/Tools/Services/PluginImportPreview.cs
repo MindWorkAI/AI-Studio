@@ -8,7 +8,10 @@ namespace AIStudio.Tools.Services;
 /// </summary>
 /// <param name="Plugin">The plugin from the archive, with the metadata it declares about itself.</param>
 /// <param name="ExistingPlugin">The installed plugin that gets replaced or null when the archive adds a new plugin.</param>
-public sealed record PluginImportPreview(IPluginMetadata Plugin, IAvailablePlugin? ExistingPlugin)
+/// <param name="ConfigurationSummary">
+/// What a configuration plugin would set up. Null for every other plugin type.
+/// </param>
+public sealed record PluginImportPreview(IPluginMetadata Plugin, IAvailablePlugin? ExistingPlugin, ConfigurationPluginImportSummary? ConfigurationSummary = null)
 {
     /// <summary>
     /// True when an installed plugin with the same ID gets replaced.

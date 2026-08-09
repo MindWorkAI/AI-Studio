@@ -95,7 +95,7 @@ public sealed partial class PluginInstallService
             var validation = await ValidatePluginCodeAsync(
                 stagingDirectory,
                 pluginCode,
-                PluginType.ASSISTANT,
+                [PluginType.ASSISTANT],
                 TB("The generated plugin is not an assistant plugin. Issue: {0}"),
                 TB("The generated assistant plugin is invalid. Issue: {0}"),
                 TB("The generated assistant plugin uses the ID of another installed plugin."),

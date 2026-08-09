@@ -35,6 +35,41 @@ public sealed record PluginConfigurationObject
     public required PluginConfigurationObjectType Type { get; init; } = PluginConfigurationObjectType.NONE;
 
     /// <summary>
+    /// The name of the configuration object, e.g. the name of a provider.
+    /// </summary>
+    public string Name { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Where this configuration object sends data to: the host of a self-hosted provider or data
+    /// source, or the name of the cloud provider. Empty for objects without a destination, such as
+    /// chat templates or profiles.
+    /// </summary>
+    /// <remarks>
+    /// We keep this next to the object metadata so the import preview can tell users where a
+    /// configuration would send their prompts before its providers are stored.
+    /// </remarks>
+    public string Endpoint { get; private init; } = string.Empty;
+
+    /// <summary>
+    /// Determines the destination of a configuration object for the import preview.
+    /// </summary>
+    private static string DescribeEndpoint(IConfigurationObject configObject) => configObject switch
+    {
+        Settings.Provider { IsSelfHosted: true } provider => provider.Hostname,
+        Settings.Provider provider => Provider.LLMProvidersExtensions.ToName(provider.UsedLLMProvider),
+
+        EmbeddingProvider { IsSelfHosted: true } embeddingProvider => embeddingProvider.Hostname,
+        EmbeddingProvider embeddingProvider => Provider.LLMProvidersExtensions.ToName(embeddingProvider.UsedLLMProvider),
+
+        TranscriptionProvider { IsSelfHosted: true } transcriptionProvider => transcriptionProvider.Hostname,
+        TranscriptionProvider transcriptionProvider => Provider.LLMProvidersExtensions.ToName(transcriptionProvider.UsedLLMProvider),
+
+        DataSourceERI_V1 dataSource => dataSource.Hostname,
+
+        _ => string.Empty,
+    };
+
+    /// <summary>
     /// Parses Lua table entries into configuration objects of the specified type, populating the
     /// provided list with results.
     /// </summary>
@@ -125,6 +160,8 @@ public sealed record PluginConfigurationObject
                     ConfigPluginId = configPluginId,
                     Id = Guid.Parse(configObject.Id),
                     Type = configObjectType,
+                    Name = configObject.Name,
+                    Endpoint = DescribeEndpoint(configObject),
                 });
 
                 if (dryRun)
@@ -214,6 +251,8 @@ public sealed record PluginConfigurationObject
                 ConfigPluginId = configPluginId,
                 Id = Guid.Parse(configObject.Id),
                 Type = PluginConfigurationObjectType.DATA_SOURCE,
+                Name = configObject.Name,
+                Endpoint = DescribeEndpoint(configObject),
             });
 
             if (dryRun)

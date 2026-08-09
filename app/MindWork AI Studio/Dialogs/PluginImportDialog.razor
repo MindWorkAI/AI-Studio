@@ -35,6 +35,51 @@
             }
         </MudPaper>
 
+        @if (this.Preview.ConfigurationSummary is { HasAnyContent: true } configurationSummary)
+        {
+            <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mb-3">
+                @T("A configuration takes effect right after the installation and has no on/off switch. Please check what it sets up:")
+            </MudAlert>
+
+            @if (configurationSummary.Destinations.Count > 0)
+            {
+                <MudSimpleTable Dense="@true" Striped="@true" Class="mb-3">
+                    <thead>
+                        <tr>
+                            <th>@T("Sends data to")</th>
+                            <th>@T("Name")</th>
+                            <th>@T("Destination")</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var destination in configurationSummary.Destinations)
+                        {
+                            <tr>
+                                <td>@this.DestinationTypeLabel(destination.Type)</td>
+                                <td>@destination.Name</td>
+                                <td><strong>@destination.Endpoint</strong></td>
+                            </tr>
+                        }
+                    </tbody>
+                </MudSimpleTable>
+            }
+
+            @if (this.ConfigurationContents.Count > 0)
+            {
+                <MudText Typo="Typo.body2" Class="mb-1">
+                    @T("It also brings:")
+                </MudText>
+                <MudList T="string" Class="mb-3">
+                    @foreach (var content in this.ConfigurationContents)
+                    {
+                        <MudListItem T="string" Icon="@Icons.Material.Filled.AddCircleOutline">
+                            @content
+                        </MudListItem>
+                    }
+                </MudList>
+            }
+        }
+
         @if (!string.IsNullOrWhiteSpace(this.Preview.Plugin.DeprecationMessage))
         {
             <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mb-3">

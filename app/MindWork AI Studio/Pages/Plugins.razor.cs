@@ -354,7 +354,7 @@ public partial class Plugins : MSGComponentBase
         if (!this.AllowPluginImport)
             return;
 
-        var selection = await this.RustService.SelectFile(this.T("Import assistant plugin"), [FileTypes.PLUGIN_ARCHIVE]);
+        var selection = await this.RustService.SelectFile(this.T("Import plugin"), [FileTypes.PLUGIN_ARCHIVE]);
         if (selection.UserCancelled)
             return;
 
@@ -394,8 +394,8 @@ public partial class Plugins : MSGComponentBase
             }
 
             var message = result.ReplacedExisting
-                ? this.T("Assistant updated.")
-                : this.T("Assistant installed.");
+                ? this.T("Plugin updated.")
+                : this.T("Plugin installed.");
 
             // We do not announce the reload ourselves: a successful installation ran LoadAll, which
             // already sent PLUGINS_RELOADED. The import changes no settings either, so there is

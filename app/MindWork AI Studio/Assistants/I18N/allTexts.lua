@@ -5551,6 +5551,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T504404155"] = "Accept the ter
 -- Pandoc is distributed under the GNU General Public License v2 (GPL). By clicking "Accept GPL and archive," you agree to the terms of the GPL license. Software under GPL is free of charge and free to use.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PANDOCDIALOG::T523908375"] = "Pandoc is distributed under the GNU General Public License v2 (GPL). By clicking \"Accept GPL and archive,\" you agree to the terms of the GPL license. Software under GPL is free of charge and free to use."
 
+-- {0} profiles
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T1238255445"] = "{0} profiles"
+
 -- Install plugin
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T1525735539"] = "Install plugin"
 
@@ -5566,6 +5569,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T1974491324"] = "You are
 -- Authors
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T1985367263"] = "Authors"
 
+-- Data source
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T2034620186"] = "Data source"
+
+-- A configuration takes effect right after the installation and has no on/off switch. Please check what it sets up:
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T2051328106"] = "A configuration takes effect right after the installation and has no on/off switch. Please check what it sets up:"
+
 -- Plugins contain code that runs inside AI Studio. Install plugins only when you trust their source.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T2053517490"] = "Plugins contain code that runs inside AI Studio. Install plugins only when you trust their source."
 
@@ -5575,11 +5584,35 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T2063808316"] = "You are
 -- You are about to install a configuration plugin from a file.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T21052500"] = "You are about to install a configuration plugin from a file."
 
+-- {0} introductions on the welcome page
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T2107991661"] = "{0} introductions on the welcome page"
+
 -- You are about to install a theme plugin from a file.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T2163853103"] = "You are about to install a theme plugin from a file."
 
+-- {0} profile
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T2342765572"] = "{0} profile"
+
+-- {0} introduction on the welcome page
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T2426110502"] = "{0} introduction on the welcome page"
+
 -- Support contact
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T2434966596"] = "Support contact"
+
+-- Name
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T266367750"] = "Name"
+
+-- {0} setting it takes control of
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T2868009192"] = "{0} setting it takes control of"
+
+-- {0} settings it takes control of
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T3190775003"] = "{0} settings it takes control of"
+
+-- {0} chat templates
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T3235448458"] = "{0} chat templates"
+
+-- {0} document analysis policy
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T3278137746"] = "{0} document analysis policy"
 
 -- This replaces the already installed plugin '{0}'. Version {1} gets replaced by version {2}.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T3415610475"] = "This replaces the already installed plugin '{0}'. Version {1} gets replaced by version {2}."
@@ -5590,17 +5623,44 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T3424652889"] = "Unknown
 -- Type
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T3512062061"] = "Type"
 
+-- {0} mandatory information you have to accept before using AI Studio
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T3540986519"] = "{0} mandatory information you have to accept before using AI Studio"
+
+-- Transcription provider
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T3566003684"] = "Transcription provider"
+
 -- Replace plugin
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T4068580334"] = "Replace plugin"
+
+-- LLM provider
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T4099016901"] = "LLM provider"
+
+-- {0} chat template
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T4147879421"] = "{0} chat template"
+
+-- {0} document analysis policies
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T449490978"] = "{0} document analysis policies"
 
 -- The authors marked this plugin as deprecated: {0}
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T497068698"] = "The authors marked this plugin as deprecated: {0}"
 
+-- It also brings:
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T713968030"] = "It also brings:"
+
 -- You are about to install a plugin from a file.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T841685558"] = "You are about to install a plugin from a file."
 
+-- Embedding provider
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T877326195"] = "Embedding provider"
+
 -- Cancel
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T900713019"] = "Cancel"
+
+-- Sends data to
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T914647109"] = "Sends data to"
+
+-- Destination
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PLUGINIMPORTDIALOG::T994314591"] = "Destination"
 
 -- Tell the AI what you want it to do for you. What are your goals or are you trying to achieve? Like having the AI address you informally.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROFILEDIALOG::T1458195391"] = "Tell the AI what you want it to do for you. What are your goals or are you trying to achieve? Like having the AI address you informally."
@@ -8059,17 +8119,29 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T1430375822"] = "Disable plugin"
 -- Import
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T1463683828"] = "Import"
 
+-- Import plugin
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T1467093263"] = "Import plugin"
+
 -- Assistant Audit
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T1506922856"] = "Assistant Audit"
 
 -- Internal Plugins
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T158493184"] = "Internal Plugins"
 
+-- Plugin updated.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T1646565893"] = "Plugin updated."
+
+-- Import plugin from a file
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T169921408"] = "Import plugin from a file"
+
 -- Disabled Plugins
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T1724138133"] = "Disabled Plugins"
 
 -- Edit assistant plugin
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T1851885496"] = "Edit assistant plugin"
+
+-- Plugin installed.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T1889482678"] = "Plugin installed."
 
 -- Send a mail
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T1999487139"] = "Send a mail"
@@ -8079,9 +8151,6 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2057806005"] = "Enable plugin"
 
 -- No source url available
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2058912565"] = "No source url available"
-
--- Assistant installed.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2069785341"] = "Assistant installed."
 
 -- Plugins
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2222816203"] = "Plugins"
@@ -8103,9 +8172,6 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3143506997"] = "The assistant plugin
 
 -- An error occurred while sharing the plugin.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3184210266"] = "An error occurred while sharing the plugin."
-
--- Import assistant plugin
-UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3246593895"] = "Import assistant plugin"
 
 -- Your organization has disabled exporting plugins.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3342440765"] = "Your organization has disabled exporting plugins."
@@ -8136,9 +8202,6 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3902690643"] = "Install Plugin"
 
 -- Please drop only one plugin archive at a time.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T3974628410"] = "Please drop only one plugin archive at a time."
-
--- Assistant updated.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T40397082"] = "Assistant updated."
 
 -- The automatic security audit for the assistant plugin '{0}' failed. Please run it manually.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T4066679817"] = "The automatic security audit for the assistant plugin '{0}' failed. Please run it manually."
@@ -9736,6 +9799,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T1084244321"] 
 -- This plugin archive declares itself as managed by a config server. Only the IT department of your organization might deploy such plugins.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T1138181282"] = "This plugin archive declares itself as managed by a config server. Only the IT department of your organization might deploy such plugins."
 
+-- The imported plugin uses the ID of another installed plugin.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T1195382910"] = "The imported plugin uses the ID of another installed plugin."
+
 -- The assistant plugin directory is outside the local assistant plugin directory.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T1211881977"] = "The assistant plugin directory is outside the local assistant plugin directory."
 
@@ -9747,9 +9813,6 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T1288328479"] 
 
 -- The assistant cannot be deleted while background work is still running.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T1318944584"] = "The assistant cannot be deleted while background work is still running."
-
--- Currently, only assistant plugins can be imported.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T139615196"] = "Currently, only assistant plugins can be imported."
 
 -- The resolved plugin directory is outside the plugin directory.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T1559620698"] = "The resolved plugin directory is outside the plugin directory."
@@ -9765,6 +9828,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T1821013825"] 
 
 -- No Lua plugin code was generated.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T1839013358"] = "No Lua plugin code was generated."
+
+-- Your organization has disabled importing configuration plugins.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T2134532120"] = "Your organization has disabled importing configuration plugins."
 
 -- The assistant plugin directory does not exist.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T2148384567"] = "The assistant plugin directory does not exist."
@@ -9784,26 +9850,29 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T2682912892"] 
 -- The AI Studio data directory is not initialized yet.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T2712481762"] = "The AI Studio data directory is not initialized yet."
 
--- The imported assistant plugin is invalid. Issue: {0}
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T2777304537"] = "The imported assistant plugin is invalid. Issue: {0}"
-
 -- Only assistant plugins can be deleted.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T2864597027"] = "Only assistant plugins can be deleted."
 
 -- The generated plugin is not an assistant plugin. Issue: {0}
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T2955055168"] = "The generated plugin is not an assistant plugin. Issue: {0}"
 
--- The imported assistant plugin uses the ID of another installed plugin.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T2971411166"] = "The imported assistant plugin uses the ID of another installed plugin."
-
 -- The configuration plugin directory does not exist.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T3073748821"] = "The configuration plugin directory does not exist."
+
+-- Only assistant and configuration plugins can be imported.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T3166787637"] = "Only assistant and configuration plugins can be imported."
 
 -- Your organization has disabled importing plugins.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T3212529834"] = "Your organization has disabled importing plugins."
 
 -- The plugin archive must contain exactly one plugin.lua file.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T3355918609"] = "The plugin archive must contain exactly one plugin.lua file."
+
+-- Your organization deployed a configuration with the same ID. An imported configuration must not take its place.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T352004699"] = "Your organization deployed a configuration with the same ID. An imported configuration must not take its place."
+
+-- The imported plugin is invalid. Issue: {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T3634046009"] = "The imported plugin is invalid. Issue: {0}"
 
 -- Config Server managed assistant plugins cannot be deleted.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T3751820312"] = "Config Server managed assistant plugins cannot be deleted."

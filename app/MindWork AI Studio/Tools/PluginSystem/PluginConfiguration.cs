@@ -49,6 +49,17 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
     /// refine it, e.g. per department.
     /// </remarks>
     public int Priority { get; } = ReadPriority(state);
+
+    /// <summary>
+    /// How many settings this configuration plugin declares.
+    /// </summary>
+    /// <remarks>
+    /// This counts the entries of the Lua SETTINGS table, without the <c>.AllowUserOverride</c>
+    /// companions. We need it for the import preview: a dry run does not lock anything, so the
+    /// number of settings the plugin would take over cannot be read from the managed configuration
+    /// at that point.
+    /// </remarks>
+    public int DeclaredSettingsCount { get; private set; }
     
     public async Task InitializeAsync(bool dryRun)
     {
@@ -149,6 +160,26 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
     }
 
     /// <summary>
+    /// Counts the settings a configuration plugin declares, ignoring the <c>.AllowUserOverride</c>
+    /// companion keys: those refine a setting instead of adding one.
+    /// </summary>
+    private static int CountDeclaredSettings(LuaTable settingsTable)
+    {
+        const string USER_OVERRIDE_SUFFIX = ".AllowUserOverride";
+
+        var count = 0;
+        var previousKey = LuaValue.Nil;
+        while (settingsTable.TryGetNext(previousKey, out var pair))
+        {
+            previousKey = pair.Key;
+            if (pair.Key.TryRead<string>(out var settingName) && !settingName.EndsWith(USER_OVERRIDE_SUFFIX, StringComparison.Ordinal))
+                count++;
+        }
+
+        return count;
+    }
+
+    /// <summary>
     /// Tries to initialize the UI text content of the plugin.
     /// </summary>
     /// <param name="dryRun">When true, the method will not apply any changes but only check if the configuration can be read.</param>
@@ -173,6 +204,8 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
             message = TB("The SETTINGS table does not exist or is not a valid table.");
             return false;
         }
+
+        this.DeclaredSettingsCount = CountDeclaredSettings(settingsTable);
         
         // Config: check for updates, and if so, how often?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.UpdateInterval, this.Id, settingsTable, dryRun);

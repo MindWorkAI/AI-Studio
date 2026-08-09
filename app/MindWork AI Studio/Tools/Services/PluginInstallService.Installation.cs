@@ -85,20 +85,20 @@ public sealed partial class PluginInstallService
     /// </summary>
     /// <param name="pluginDirectory">The staging directory the plugin currently lives in.</param>
     /// <param name="pluginCode">The <c>plugin.lua</c> content to validate.</param>
-    /// <param name="expectedType">The plugin type the caller accepts.</param>
+    /// <param name="acceptedTypes">The plugin types the caller accepts.</param>
     /// <param name="wrongTypeIssue">Issue when the plugin has another type. Gets the plugin issues as {0}.</param>
-    /// <param name="invalidPluginIssue">Issue when the plugin is of the right type, but invalid. Gets the plugin issues as {0}.</param>
+    /// <param name="invalidPluginIssue">Issue when the plugin is of an accepted type, but invalid. Gets the plugin issues as {0}.</param>
     /// <param name="conflictingPluginIdIssue">Issue when another plugin already uses this plugin ID.</param>
     /// <param name="token">Cancellation token for running the Lua code.</param>
     /// <returns>The validation result, including the loaded plugin when it passed.</returns>
-    private static async Task<PluginValidationResult> ValidatePluginCodeAsync(string pluginDirectory, string pluginCode, PluginType expectedType,
+    private static async Task<PluginValidationResult> ValidatePluginCodeAsync(string pluginDirectory, string pluginCode, IReadOnlyCollection<PluginType> acceptedTypes,
         string wrongTypeIssue, string invalidPluginIssue, string conflictingPluginIdIssue, CancellationToken token)
     {
         // The plugin is not installed yet: it sits in a staging directory outside the installed
         // plugins directory. We allow that directory as the module base, so the plugin can load its
         // own Lua modules, e.g., an icon.lua, while we validate it:
         var plugin = await PluginFactory.Load(pluginDirectory, pluginCode, token, pluginDirectory);
-        if (plugin.Type != expectedType)
+        if (!acceptedTypes.Contains(plugin.Type))
             return PluginValidationResult.Failure(string.Format(wrongTypeIssue, string.Join("; ", plugin.Issues)));
 
         if (!plugin.IsValid)
@@ -108,7 +108,7 @@ public sealed partial class PluginInstallService
         // ID alone, e.g., the base language plugin in PluginFactory.Starting. A plugin carrying the
         // ID of a plugin of another type would break those lookups. Reusing the ID of another local
         // plugin of the same type stays allowed: that is how updating one works.
-        if (PluginFactory.AvailablePlugins.Any(availablePlugin => availablePlugin.Id == plugin.Id && (availablePlugin.IsInternal || availablePlugin.Type != expectedType)))
+        if (PluginFactory.AvailablePlugins.Any(availablePlugin => availablePlugin.Id == plugin.Id && (availablePlugin.IsInternal || availablePlugin.Type != plugin.Type)))
             return PluginValidationResult.Failure(conflictingPluginIdIssue);
 
         return new(true, string.Empty, plugin, string.Empty);
@@ -157,7 +157,41 @@ public sealed partial class PluginInstallService
     /// </summary>
     /// <param name="plugin">The validated plugin from the archive.</param>
     /// <returns>The preview shown to the user before the installation starts.</returns>
-    private static PluginImportPreview CreateImportPreview(PluginBase plugin) => new(plugin, FindReplaceablePlugin(plugin.Id, plugin.Type));
+    private static PluginImportPreview CreateImportPreview(PluginBase plugin) => new(
+        plugin,
+        FindReplaceablePlugin(plugin.Id, plugin.Type),
+        plugin is PluginConfiguration configurationPlugin ? CreateConfigurationImportSummary(configurationPlugin) : null);
+
+    /// <summary>
+    /// Collects what a configuration plugin would set up once it is installed.
+    /// </summary>
+    /// <remarks>
+    /// The plugin was loaded as a dry run, so nothing of this is stored yet. The destinations come
+    /// from the parsed configuration objects, which is why the preview can name the host a provider
+    /// would talk to.
+    /// </remarks>
+    private static ConfigurationPluginImportSummary CreateConfigurationImportSummary(PluginConfiguration configurationPlugin)
+    {
+        var configObjects = configurationPlugin.ConfigObjects.ToList();
+        var destinations = configObjects
+            .Where(configObject => configObject.Type is PluginConfigurationObjectType.LLM_PROVIDER
+                or PluginConfigurationObjectType.EMBEDDING_PROVIDER
+                or PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER
+                or PluginConfigurationObjectType.DATA_SOURCE)
+            .Select(configObject => new ConfigurationPluginDestination(configObject.Type, configObject.Name, configObject.Endpoint))
+            .ToList();
+
+        return new(
+            Destinations: destinations,
+            ChatTemplates: CountObjects(PluginConfigurationObjectType.CHAT_TEMPLATE),
+            Profiles: CountObjects(PluginConfigurationObjectType.PROFILE),
+            DocumentAnalysisPolicies: CountObjects(PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY),
+            DeclaredSettings: configurationPlugin.DeclaredSettingsCount,
+            MandatoryInfos: configurationPlugin.MandatoryInfos.Count,
+            Introductions: configurationPlugin.Introductions.Count);
+
+        int CountObjects(PluginConfigurationObjectType type) => configObjects.Count(configObject => configObject.Type == type);
+    }
 
     /// <summary>
     /// Checks whether an installation may replace the plugin that currently uses the given ID.
