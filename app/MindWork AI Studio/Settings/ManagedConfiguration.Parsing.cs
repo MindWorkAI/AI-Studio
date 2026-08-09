@@ -913,6 +913,13 @@ public static partial class ManagedConfiguration
         if (!MayManageSetting(configPluginId, configMeta))
             return false;
 
+        //
+        // Remember the value the user had chosen before any configuration plugin took this setting
+        // over. Once no plugin manages it anymore, we hand that value back to the user:
+        //
+        if (successful)
+            configMeta.CaptureUserValueSnapshot();
+
         switch (successful)
         {
             case true:
@@ -966,6 +973,15 @@ public static partial class ManagedConfiguration
         // configuration plugin may touch it, no matter what it declares:
         if (!MayManageSetting(configPluginId, configMeta))
             return false;
+
+        //
+        // Remember the value the user had chosen before any configuration plugin took this setting
+        // over. Once no plugin manages it anymore, we hand that value back to the user. This has to
+        // happen before the managed state below changes, because only an unmanaged setting holds a
+        // value which belongs to the user:
+        //
+        if (successful)
+            configMeta.CaptureUserValueSnapshot();
 
         switch (successful)
         {

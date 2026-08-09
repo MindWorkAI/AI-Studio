@@ -159,11 +159,14 @@ public abstract record ConfigMetaBase(string SettingName) : IConfig
     /// <remarks>
     /// Only an unmanaged setting holds a value which belongs to the user. When one configuration
     /// plugin takes a setting over from another, the current value belongs to the previous plugin,
-    /// so the snapshot of the user's value must survive that handover untouched.
+    /// so the snapshot of the user's value must survive that handover untouched.<br/><br/>
+    /// The persisted editable default counts as managed as well: unlike a locked setting, it is not
+    /// restored into the in-memory state when the settings are loaded, so right after a start it is
+    /// the only evidence that a configuration plugin is already in charge.
     /// </remarks>
     public void CaptureUserValueSnapshot()
     {
-        if (this.ManagedMode is not null)
+        if (this.ManagedMode is not null || SettingsManagerAccess.ConfigurationData.ManagedEditableDefaults.ContainsKey(this.SettingName))
             return;
 
         var snapshots = SettingsManagerAccess.ConfigurationData.ManagedUserValueSnapshots;
