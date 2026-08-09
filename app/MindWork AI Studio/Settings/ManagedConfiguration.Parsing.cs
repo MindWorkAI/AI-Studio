@@ -913,6 +913,13 @@ public static partial class ManagedConfiguration
         if (!MayManageSetting(configPluginId, configMeta))
             return false;
 
+        //
+        // Remember the value the user had chosen before any configuration plugin took this setting
+        // over. Once no plugin manages it anymore, we hand that value back to the user:
+        //
+        if (successful)
+            configMeta.CaptureUserValueSnapshot();
+
         switch (successful)
         {
             case true:
@@ -967,6 +974,15 @@ public static partial class ManagedConfiguration
         if (!MayManageSetting(configPluginId, configMeta))
             return false;
 
+        //
+        // Remember the value the user had chosen before any configuration plugin took this setting
+        // over. Once no plugin manages it anymore, we hand that value back to the user. This has to
+        // happen before the managed state below changes, because only an unmanaged setting holds a
+        // value which belongs to the user:
+        //
+        if (successful)
+            configMeta.CaptureUserValueSnapshot();
+
         switch (successful)
         {
             case true when managedMode is ManagedConfigurationMode.LOCKED:
@@ -1008,7 +1024,7 @@ public static partial class ManagedConfiguration
             case false when configMeta.ManagedMode is ManagedConfigurationMode.EDITABLE_DEFAULT
                             && TryGetEditableDefaultState(settingName, out var editableDefaultStateToRemove)
                             && editableDefaultStateToRemove.ConfigPluginId == configPluginId:
-                configMeta.ClearEditableDefaultConfiguration();
+                configMeta.ResetEditableDefaultConfiguration(HasUserChangedEditableDefault(configMeta, editableDefaultStateToRemove));
                 ClearEditableDefaultState(settingName);
                 break;
         }
@@ -1033,7 +1049,7 @@ public static partial class ManagedConfiguration
         return ManagedConfigurationMode.LOCKED;
     }
 
-    private static string SerializeManagedScalarValue<TValue>(TValue value) => value switch
+    internal static string SerializeManagedScalarValue<TValue>(TValue value) => value switch
     {
         null => string.Empty,
         string text => text,

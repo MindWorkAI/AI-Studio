@@ -238,6 +238,21 @@ CONFIG["SETTINGS"] = {}
 -- DataAssistantPluginAudit.EnterpriseApprovedPlugins.
 -- ------
 
+-- ------
+-- What happens to a setting when your configuration is removed
+-- ------
+--
+-- AI Studio remembers the value a setting had before a configuration took it over.
+-- Once no configuration manages that setting anymore -- because your IT department
+-- stopped deploying this configuration, because the user deleted it, or because a test
+-- configuration ended -- the user gets that value back. When there is nothing to
+-- restore, e.g. for a setting the user had never changed, AI Studio falls back to its
+-- own default value.
+--
+-- One case differs: when you allow users to override a setting and somebody makes use
+-- of that, their choice outlives your configuration and stays as it is.
+-- ------
+
 -- Configure the update check interval:
 -- Allowed values are: NO_CHECK, DISABLE_UPDATES, ONCE_STARTUP, HOURLY, DAILY, WEEKLY
 -- NO_CHECK disables automatic checks, but users can still check and install updates manually.

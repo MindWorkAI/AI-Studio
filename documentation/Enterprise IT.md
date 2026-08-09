@@ -304,7 +304,7 @@ A typical layered setup:
 | Department | `100` | Refines the base, e.g. a different default model |
 | Project or lab | `200` | Refines the department configuration |
 
-A configuration only overrides what it actually defines. Everything it does not mention keeps the value of the configuration below it. The same applies when you remove a configuration later: its settings fall back to the configuration below, not to the AI Studio defaults.
+A configuration only overrides what it actually defines. Everything it does not mention keeps the value of the configuration below it. The same applies when you remove a configuration later: its settings fall back to the configuration below, not to the AI Studio defaults. Once no configuration manages a setting anymore, see [Withdrawing a configuration](#withdrawing-a-configuration).
 
 Give two configurations that must override each other different priorities. With an equal priority, the order is stable across restarts but arbitrary, so the outcome is not the one you designed.
 
@@ -341,6 +341,19 @@ Two settings are the exception and add up instead of replacing:
 In both cases each configuration keeps its own contribution, so removing one of them only withdraws what this configuration had granted. While a configuration plugin is deployed but cannot be loaded, its approvals are kept: AI Studio does not withdraw approvals it cannot currently read.
 
 One clarification for `DataChat.PreselectedDataSourceIds`: the IDs are not limited to the data sources of the same configuration. They are resolved against every known data source, including those of your other configurations and the ones a user configured. IDs that resolve to nothing are ignored.
+
+## Withdrawing a configuration
+
+A configuration does not have to stay forever: you stop deploying it, a user deletes a configuration they installed themselves, or a test configuration ends with the next restart. AI Studio then removes what that configuration brought along, such as its providers, data sources, profiles, chat templates, and its approvals for assistant plugins.
+
+Settings go one step further. AI Studio remembers the value each setting had before a configuration took it over and hands it back once no configuration manages that setting anymore. Somebody who had chosen a start page before your configuration set one therefore gets their own start page back, not the AI Studio default.
+
+Two cases differ:
+
+- **There is nothing to hand back.** When a setting still had its AI Studio default at the moment your configuration took it over, that default returns. The same applies to settings which a configuration already managed before AI Studio v26.8.1, because nothing was remembered back then.
+- **Somebody used `AllowUserOverride`.** A setting you offered as an organization default, and which the user changed afterwards, keeps the user's value. Their decision outlives your configuration.
+
+A configuration that is deployed but cannot be loaded, e.g. because of an error in its Lua code, is not withdrawn. It still manages the device, so everything it brought along stays untouched until you actually stop deploying it.
 
 ## Example AI Studio configuration
 The latest example of an AI Studio configuration via configuration plugin can always be found in the repository in the `app/MindWork AI Studio/Plugins/configuration` folder. Here are the links to the files:
@@ -460,7 +473,7 @@ Keep in mind that everybody in the group loses the test configuration the next t
 
 ### Cleaning up
 
-Restart AI Studio: the test directory is emptied, the approvals are gone, and the assistant requires a security audit again. To end a test without restarting, delete the configuration on the plugin page.
+Restart AI Studio: the test directory is emptied, the approvals are gone, and the assistant requires a security audit again. Every setting your test configuration had taken over returns to the value it had before the test, as described in [Withdrawing a configuration](#withdrawing-a-configuration). To end a test without restarting, delete the configuration on the plugin page.
 
 ### Security note
 
