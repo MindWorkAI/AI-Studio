@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using System.Text.Json;
 
 using AIStudio.Settings.DataModel;
 
@@ -56,6 +57,31 @@ public record ConfigMeta<TClass, TValue> : ConfigMetaBase
 
     /// <inheritdoc/>
     public override bool RemovePluginContribution(Guid configPluginId) => this.pluginContributions.Remove(configPluginId);
+
+    /// <inheritdoc/>
+    public override string SerializeCurrentValue() => ManagedConfiguration.SerializeManagedScalarValue(this.GetValue());
+
+    /// <inheritdoc/>
+    protected override string SerializeCurrentValueAsJson() => JsonSerializer.Serialize(this.GetValue(), SettingsManager.JSON_OPTIONS);
+
+    /// <inheritdoc/>
+    protected override bool TrySetValueFromJson(string json)
+    {
+        try
+        {
+            var value = JsonSerializer.Deserialize<TValue>(json, SettingsManager.JSON_OPTIONS);
+            if (value is null)
+                return false;
+
+            this.SetValue(value);
+            return true;
+        }
+        catch (Exception e)
+        {
+            Log.LogWarning(e, $"Was not able to restore the value of the setting '{this.SettingName}' from its snapshot '{json}'. Using the default value instead.");
+            return false;
+        }
+    }
 
     /// <inheritdoc/>
     protected override void Reset()

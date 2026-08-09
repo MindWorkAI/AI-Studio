@@ -1033,7 +1033,7 @@ public static partial class ManagedConfiguration
         return ManagedConfigurationMode.LOCKED;
     }
 
-    private static string SerializeManagedScalarValue<TValue>(TValue value) => value switch
+    internal static string SerializeManagedScalarValue<TValue>(TValue value) => value switch
     {
         null => string.Empty,
         string text => text,
