@@ -2916,24 +2916,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T3571008422"] = "Assisten
 -- The result is ready.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTBLOCK::T661906146"] = "Das Ergebnis ist fertig."
 
--- The assistant cannot be deleted while background work is still running.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINDELETEACTION::T1318944584"] = "Der Assistent kann nicht gelöscht werden, solange noch Hintergrundaufgaben ausgeführt werden."
-
--- Delete assistant plugin
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINDELETEACTION::T1692493145"] = "Assistenten-Plugin löschen"
-
--- Delete Assistant Plugin
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINDELETEACTION::T3637071001"] = "Assistenten-Plugin löschen"
-
--- The '{0}' assistant plugin has been successfully removed.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINDELETEACTION::T3815023384"] = "Das Assistenten-Plugin „{0}“ wurde erfolgreich entfernt."
-
--- The assistant plugin '{0}' could not be deleted: {1}
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINDELETEACTION::T3985264168"] = "Das Assistenten-Plugin „{0}“ konnte nicht gelöscht werden: {1}"
-
--- Do you really want to delete the assistant plugin '{0}'? This will permanently delete the local plugin files.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINDELETEACTION::T4033722845"] = "Möchtest du das Assistenten-Plug-in „{0}“ wirklich löschen? Dadurch werden die lokalen Plug-in-Dateien dauerhaft gelöscht."
-
 -- Show or hide the detailed security information.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T1045105126"] = "Detaillierte Sicherheitsinformationen anzeigen oder ausblenden."
 
@@ -3282,27 +3264,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::HALLUZINATIONREMINDER::T3528806904"] = "L
 -- Issues
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ISSUES::T3229841001"] = "Probleme"
 
--- Do you really want to delete the language plugin '{0}'? This permanently deletes its local plugin files. When it is your chosen language, AI Studio returns to choosing the language automatically.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::LOCALPLUGINDELETEACTION::T1744561175"] = "Möchten Sie das Sprach-Plugin „{0}“ wirklich löschen? Dadurch werden die lokalen Plugin-Dateien dauerhaft gelöscht. Wenn es Ihre ausgewählte Sprache ist, kehrt AI Studio zur automatischen Sprachauswahl zurück."
-
--- Delete language plugin
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::LOCALPLUGINDELETEACTION::T2707495447"] = "Sprach-Plugin löschen"
-
--- The plugin '{0}' could not be deleted: {1}
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::LOCALPLUGINDELETEACTION::T2738963920"] = "Das Plugin „{0}“ konnte nicht gelöscht werden: {1}"
-
--- Delete Language Plugin
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::LOCALPLUGINDELETEACTION::T2990518039"] = "Sprach-Plugin löschen"
-
--- Delete Configuration Plugin
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::LOCALPLUGINDELETEACTION::T3395354991"] = "Konfigurations-Plugin löschen"
-
--- The plugin '{0}' has been successfully removed.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::LOCALPLUGINDELETEACTION::T3476138264"] = "Das Plugin „{0}“ wurde erfolgreich entfernt."
-
--- Delete configuration plugin
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::LOCALPLUGINDELETEACTION::T459830575"] = "Konfigurations-Plugin löschen"
-
 -- Your Pandoc installation meets the requirements.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEPANDOCDEPENDENCY::T1167365374"] = "Ihre Pandoc-Installation erfüllt die Anforderungen."
 
@@ -3401,6 +3362,39 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MUDCOPYCLIPBOARDBUTTON::T12948066"] = "Ko
 
 -- Cannot copy this content type to clipboard.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MUDCOPYCLIPBOARDBUTTON::T3937637647"] = "Dieser Inhaltstyp kann nicht in die Zwischenablage kopiert werden."
+
+-- The assistant cannot be deleted while background work is still running.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PLUGINDELETEACTION::T1318944584"] = "Der Assistent kann nicht gelöscht werden, solange noch Hintergrundaufgaben ausgeführt werden."
+
+-- Delete assistant plugin
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PLUGINDELETEACTION::T1692493145"] = "Assistenten-Plugin löschen"
+
+-- Do you really want to delete the language plugin '{0}'? This permanently deletes its local plugin files. When it is your chosen language, AI Studio returns to choosing the language automatically.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PLUGINDELETEACTION::T1744561175"] = "Möchten Sie das Sprach-Plugin „{0}“ wirklich löschen? Dadurch werden die lokalen Plugin-Dateien dauerhaft gelöscht. Wenn dies Ihre ausgewählte Sprache ist, stellt AI Studio wieder auf die automatische Sprachauswahl um."
+
+-- Delete language plugin
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PLUGINDELETEACTION::T2707495447"] = "Sprach-Plugin löschen"
+
+-- The plugin '{0}' could not be deleted: {1}
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PLUGINDELETEACTION::T2738963920"] = "Das Plugin „{0}“ konnte nicht gelöscht werden: {1}"
+
+-- Delete Language Plugin
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PLUGINDELETEACTION::T2990518039"] = "Sprach-Plugin löschen"
+
+-- Delete Configuration Plugin
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PLUGINDELETEACTION::T3395354991"] = "Konfigurations-Plugin löschen"
+
+-- The plugin '{0}' has been successfully removed.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PLUGINDELETEACTION::T3476138264"] = "Das Plugin „{0}“ wurde erfolgreich entfernt."
+
+-- Delete Assistant Plugin
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PLUGINDELETEACTION::T3637071001"] = "Assistenten-Plugin löschen"
+
+-- Do you really want to delete the assistant plugin '{0}'? This will permanently delete the local plugin files.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PLUGINDELETEACTION::T4033722845"] = "Möchten Sie das Assistenten-Plugin „{0}“ wirklich löschen? Dadurch werden die lokalen Plugin-Dateien dauerhaft gelöscht."
+
+-- Delete configuration plugin
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PLUGINDELETEACTION::T459830575"] = "Konfigurations-Plugin löschen"
 
 -- Alpha phase means that we are working on the last details before the beta phase.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::PREVIEWALPHA::T166807685"] = "Alpha-Phase bedeutet, dass wir an den letzten Details arbeiten, bevor die Beta-Phase beginnt."
@@ -9804,9 +9798,6 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PANDOCAVAILABILITYSERVICE::T18544701
 -- Pandoc may be required for importing files.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PANDOCAVAILABILITYSERVICE::T2596465560"] = "Zum Importieren von Dateien kann Pandoc erforderlich sein."
 
--- Internal assistant plugins cannot be deleted.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T1084244321"] = "Interne Assistenten-Plugins können nicht gelöscht werden."
-
 -- This plugin archive declares itself as managed by a config server. Only the IT department of your organization might deploy such plugins.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T1138181282"] = "Dieses Plugin-Archiv gibt an, von einem Konfigurationsserver verwaltet zu werden. Nur die IT-Abteilung Ihrer Organisation kann solche Plugins bereitstellen."
 
@@ -9837,6 +9828,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T1821013825"] 
 -- No Lua plugin code was generated.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T1839013358"] = "Es wurde kein Lua-Plugin-Code generiert."
 
+-- Only assistant, configuration, and language plugins can be deleted.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T1878846406"] = "Nur Assistenten-, Konfigurations- und Sprach-Plugins können gelöscht werden."
+
 -- Your organization has disabled importing configuration plugins.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T2134532120"] = "Ihre Organisation hat das Importieren von Konfigurations-Plugins deaktiviert."
 
@@ -9852,23 +9846,17 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T2350673880"] 
 -- The generated assistant plugin uses the ID of another installed plugin.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T2441747251"] = "Das generierte Assistenten-Plugin verwendet die ID eines anderen installierten Plugins."
 
+-- This individual plugin’s directory is outside the expected plugins directory.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T2486199999"] = "Das Verzeichnis dieses einzelnen Plugins liegt außerhalb des erwarteten Plugin-Verzeichnisses."
+
 -- The assistant plugin has no local directory.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T2682912892"] = "Das Assistenten-Plugin hat kein lokales Verzeichnis."
 
 -- The AI Studio data directory is not initialized yet.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T2712481762"] = "Das Datenverzeichnis von AI Studio ist noch nicht initialisiert."
 
--- Only configuration and language plugins can be deleted this way.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T2850672167"] = "Nur Konfigurations- und Sprach-Plugins können auf diese Weise gelöscht werden."
-
--- Only assistant plugins can be deleted.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T2864597027"] = "Nur Assistant-Plugins können gelöscht werden."
-
 -- Only assistant, configuration, and language plugins can be imported.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T2909113247"] = "Es können nur Assistenten-, Konfigurations- und Sprach-Plugins importiert werden."
-
--- The plugin directory is outside the plugins directory.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T2911446827"] = "Das Plugin-Verzeichnis befindet sich außerhalb des Plugins-Verzeichnisses."
 
 -- The generated plugin is not an assistant plugin. Issue: {0}
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T2955055168"] = "Das generierte Plugin ist kein Assistenten-Plugin. Problem: {0}"
@@ -9888,14 +9876,8 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T352004699"] =
 -- The imported plugin is invalid. Issue: {0}
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T3634046009"] = "Das importierte Plugin ist ungültig. Problem: {0}"
 
--- Config Server managed assistant plugins cannot be deleted.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T3751820312"] = "Von einem Config-Server verwaltete Assistenten-Plugins können nicht gelöscht werden."
-
 -- Plugins shipped with AI Studio cannot be deleted.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T3841213017"] = "Mit AI Studio ausgelieferte Plugins können nicht gelöscht werden."
-
--- Only assistants generated by the Assistant Builder can be deleted.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T3940247198"] = "Nur mit dem Assistant Builder erstellte Assistenten können gelöscht werden."
 
 -- The edited plugin is not an assistant plugin. Issue: {0}
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::PLUGININSTALLSERVICE::T3984111892"] = "Das bearbeitete Plugin ist kein Assistenten-Plugin. Problem: {0}"
