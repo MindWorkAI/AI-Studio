@@ -361,6 +361,19 @@ public static partial class ManagedConfiguration
                 configMeta.RemovePluginContribution(contributingConfigPluginId);
                 wasChanged = true;
             }
+
+            //
+            // Finally, drop any snapshot of the user's value which nobody claims anymore. Without
+            // this, a setting which stopped being managed outside of the paths above would keep its
+            // snapshot in the settings file forever. The persisted editable default counts as a
+            // claim as well: it survives a configuration plugin which is deployed but could not be
+            // loaded, and that plugin is still in charge:
+            //
+            if (configMeta.ManagedMode is null && !TryGetEditableDefaultState(configMeta.SettingName, out _) && configMeta.ClearUserValueSnapshot())
+            {
+                Log.LogInformation($"Dropping the snapshot of the user's value for the setting '{configMeta.SettingName}': no configuration plugin manages it anymore.");
+                wasChanged = true;
+            }
         }
 
         // Remove persisted states which belong to settings that do not exist anymore:
@@ -402,6 +415,13 @@ public static partial class ManagedConfiguration
         {
             Log.LogInformation($"Removing the persisted editable default of the setting '{settingName}': this setting does not exist anymore.");
             configurationData.ManagedEditableDefaults.Remove(settingName);
+            wasChanged = true;
+        }
+
+        foreach (var settingName in configurationData.ManagedUserValueSnapshots.Keys.Where(x => !registeredSettingNames.Contains(x)).ToList())
+        {
+            Log.LogInformation($"Removing the snapshot of the user's value for the setting '{settingName}': this setting does not exist anymore.");
+            configurationData.ManagedUserValueSnapshots.Remove(settingName);
             wasChanged = true;
         }
 
@@ -447,7 +467,7 @@ public static partial class ManagedConfiguration
             if (configMeta.ManagedMode is not ManagedConfigurationMode.EDITABLE_DEFAULT)
                 return false;
 
-            configMeta.ClearEditableDefaultConfiguration();
+            configMeta.ResetEditableDefaultConfiguration(keepCurrentValue: false);
             return true;
         }
 
@@ -455,7 +475,17 @@ public static partial class ManagedConfiguration
             return false;
 
         Log.LogInformation($"Clearing the editable default of the setting '{configMeta.SettingName}': the configuration plugin '{editableDefaultState.ConfigPluginId}' is not available anymore.");
-        configMeta.ClearEditableDefaultConfiguration();
+        configMeta.ResetEditableDefaultConfiguration(HasUserChangedEditableDefault(configMeta, editableDefaultState));
         return ClearEditableDefaultState(configMeta.SettingName);
     }
+
+    /// <summary>
+    /// Checks whether the user has changed an editable default themselves.
+    /// </summary>
+    /// <remarks>
+    /// The user may change an editable default at any time. When the current value is not the one
+    /// the configuration plugin applied last, the user decided against that value, and their
+    /// decision outlives the plugin.
+    /// </remarks>
+    private static bool HasUserChangedEditableDefault(ConfigMetaBase configMeta, ManagedEditableDefaultState editableDefaultState) => !string.Equals(configMeta.SerializeCurrentValue(), editableDefaultState.LastAppliedValue, StringComparison.Ordinal);
 }

@@ -1024,7 +1024,7 @@ public static partial class ManagedConfiguration
             case false when configMeta.ManagedMode is ManagedConfigurationMode.EDITABLE_DEFAULT
                             && TryGetEditableDefaultState(settingName, out var editableDefaultStateToRemove)
                             && editableDefaultStateToRemove.ConfigPluginId == configPluginId:
-                configMeta.ClearEditableDefaultConfiguration();
+                configMeta.ResetEditableDefaultConfiguration(HasUserChangedEditableDefault(configMeta, editableDefaultStateToRemove));
                 ClearEditableDefaultState(settingName);
                 break;
         }

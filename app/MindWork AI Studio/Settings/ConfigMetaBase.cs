@@ -140,6 +140,29 @@ public abstract record ConfigMetaBase(string SettingName) : IConfig
     }
 
     /// <summary>
+    /// Clears the editable-default state and hands the setting back to the user.
+    /// </summary>
+    /// <remarks>
+    /// Without a snapshot of the user's value, the current value stays as it is. That is the
+    /// difference to a locked setting: the user was allowed to change an editable default all
+    /// along, so its value is a plausible choice of theirs. Resetting it to the app's default would
+    /// take away something nobody asked us to remove.
+    /// </remarks>
+    /// <param name="keepCurrentValue">
+    /// True when the user has changed the value in the meantime. Their decision outlives the
+    /// configuration plugin, so the snapshot is dropped instead of applied.
+    /// </param>
+    public void ResetEditableDefaultConfiguration(bool keepCurrentValue)
+    {
+        this.ClearEditableDefaultConfiguration();
+
+        if (keepCurrentValue)
+            this.ClearUserValueSnapshot();
+        else
+            this.TryRestoreUserValueSnapshot();
+    }
+
+    /// <summary>
     /// Removes the contribution of one configuration plugin without changing the current value.
     /// </summary>
     /// <param name="configPluginId">The configuration plugin whose contribution is removed.</param>
