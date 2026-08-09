@@ -11,7 +11,7 @@ use base64::{engine::general_purpose, Engine as _};
 use calamine::{open_workbook_auto, Reader};
 use file_format::{FileFormat, Kind};
 use futures::{Stream, StreamExt};
-use pdfium_render::prelude::Pdfium;
+use pdfium_render::prelude::{Pdfium, PdfiumError, PdfiumInternalError};
 use pptx_to_md::{DiagnosticSeverity, ImageHandlingMode, MarkdownOptions, ParserConfig, PresentationContainer, PresentationFormat, PresentationMetadata, ReadingOrder};
 use serde::{Deserialize, Deserializer, Serialize};
 use serde::de::{Error as SerdeError, Visitor};
@@ -19,7 +19,7 @@ use std::path::Path;
 use std::pin::Pin;
 use std::fmt;
 use log::{debug, error, warn};
-use tokio::io::AsyncBufReadExt;
+use tokio::io::{AsyncBufReadExt, AsyncReadExt};
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::ReceiverStream;
 
@@ -127,7 +127,7 @@ impl ExtractionError {
     /// Recovers the structured error from a boxed error. Errors which do not carry a code
     /// yet are reported as `Internal`, so every failure reaches the .NET app through the
     /// same schema.
-    fn from_boxed(error: &(dyn std::error::Error + Send + Sync)) -> Self {
+    fn from_boxed(error: &(dyn std::error::Error + Send + Sync + 'static)) -> Self {
         match error.downcast_ref::<ExtractionError>() {
             Some(extraction_error) => extraction_error.clone(),
             None => Self::new(ExtractionErrorCode::Internal, error.to_string()),
@@ -164,6 +164,13 @@ const TO_MARKDOWN: &str = "markdown";
 const DOCX: &str = "docx";
 const ODT: &str = "odt";
 const IMAGE_SEGMENT_SIZE_IN_CHARS: usize = 8_192; // equivalent to ~ 5500 token
+
+/// Every PDF file starts with this signature.
+const PDF_MAGIC: &[u8] = b"%PDF-";
+
+/// How many bytes we probe to verify the PDF signature. The few extra bytes beyond the
+/// signature itself make the diagnostics useful when the signature does not match.
+const PDF_HEADER_PROBE_SIZE: u64 = 8;
 
 /// Last-resort payload used when even an error event cannot be serialized. It keeps the
 /// chunk schema intact, so the .NET app never has to parse a bare string.
@@ -308,6 +315,13 @@ async fn stream_data(file_path: &str, extract_images: bool) -> Result<ChunkStrea
     debug!("Extracting data from file: '{file_path}', format: '{fmt:?}', extension: '{ext}'");
 
     let stream = match ext.as_str() {
+        //
+        // PDFs are routed by their extension as well, not only by the sniffed format. Otherwise
+        // a PDF whose bytes cannot be read, e.g. on an unavailable network share, falls through
+        // to the text branch below and silently yields empty content.
+        //
+        "pdf" => stream_pdf(file_path).await?,
+
         DOCX | ODT => {
             let from = if ext == DOCX { "docx" } else { "odt" };
             convert_with_pandoc(file_path, from, TO_MARKDOWN).await?
@@ -417,7 +431,62 @@ async fn stream_text_file(file_path: &str, use_md_fences: bool, fence_language: 
     Ok(Box::pin(stream))
 }
 
+/// Verifies the file really is a PDF before handing it to PDFium. Without this check, a file
+/// which only carries the `.pdf` extension, or whose bytes are not available, would end up in
+/// the text branch and silently produce empty content.
+async fn ensure_pdf_header(file_path: &str) -> Result<()> {
+    let file = tokio::fs::File::open(file_path).await.map_err(|error| ExtractionError::new(
+        ExtractionErrorCode::FileNotReadable,
+        format!("The file could not be opened: {error}"),
+    ))?;
+
+    let file_size = file.metadata().await.map_err(|error| ExtractionError::new(
+        ExtractionErrorCode::FileNotReadable,
+        format!("The file size could not be read: {error}"),
+    ))?.len();
+
+    let mut header = Vec::with_capacity(PDF_HEADER_PROBE_SIZE as usize);
+    file.take(PDF_HEADER_PROBE_SIZE).read_to_end(&mut header).await.map_err(|error| ExtractionError::new(
+        ExtractionErrorCode::FileNotReadable,
+        format!("The first bytes of the file could not be read: {error}"),
+    ))?;
+
+    if header.starts_with(PDF_MAGIC) {
+        return Ok(());
+    }
+
+    let header_hex = header.iter().map(|byte| format!("{byte:02x}")).collect::<Vec<_>>().join(" ");
+    error!("The file '{file_path}' does not start with the PDF signature; size: {file_size} bytes, first bytes: [{header_hex}].");
+
+    Err(ExtractionError::new(
+        ExtractionErrorCode::NotAValidPdf,
+        format!("The file does not start with the PDF signature. Size: {file_size} bytes, first bytes: [{header_hex}]."),
+    ).into())
+}
+
+/// Classifies why PDFium refused to open a document, so the cause reaches the user instead of
+/// collapsing into a generic failure.
+fn classify_pdf_load_error(error: &PdfiumError) -> ExtractionError {
+    let code = match error {
+        PdfiumError::PdfiumLibraryInternalError(internal_error) => match internal_error {
+            // The document is encrypted or its security settings forbid access:
+            PdfiumInternalError::PasswordError | PdfiumInternalError::SecurityError => ExtractionErrorCode::PdfEncrypted,
+
+            // Pdfium could not read the file itself, e.g. because a network share went away:
+            PdfiumInternalError::FileError => ExtractionErrorCode::FileNotReadable,
+
+            _ => ExtractionErrorCode::NotAValidPdf,
+        },
+
+        _ => ExtractionErrorCode::NotAValidPdf,
+    };
+
+    ExtractionError::new(code, format!("The PDF could not be opened: {error}"))
+}
+
 async fn stream_pdf(file_path: &str) -> Result<ChunkStream> {
+    ensure_pdf_header(file_path).await?;
+
     let path = file_path.to_owned();
     let (tx, rx) = mpsc::channel(10);
 
@@ -435,10 +504,7 @@ async fn stream_pdf(file_path: &str) -> Result<ChunkStream> {
         let doc = match pdfium.load_pdf_from_file(&path, None) {
             Ok(document) => document,
             Err(e) => {
-                let _ = tx.blocking_send(Err(ExtractionError::new(
-                    ExtractionErrorCode::NotAValidPdf,
-                    format!("The PDF could not be opened: {e}"),
-                ).into()));
+                let _ = tx.blocking_send(Err(classify_pdf_load_error(&e).into()));
                 return;
             }
         };
