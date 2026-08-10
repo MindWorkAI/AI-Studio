@@ -8,7 +8,6 @@ namespace AIStudio.Tools;
 /// </summary>
 public sealed class DocumentManager
 {
-    private int currentPageNumber;
     private StringBuilder? currentPageContent;
 
     public string? AddPage(ContentStreamDocumentMetadata metadata, string? content, bool extractImages)
@@ -21,7 +20,6 @@ public sealed class DocumentManager
         if (image is null)
         {
             var completedPage = this.Flush();
-            this.currentPageNumber = pageNumber;
             this.currentPageContent = new StringBuilder();
             this.currentPageContent.AppendLine($"# Page {pageNumber}");
             this.currentPageContent.Append(content);
@@ -52,7 +50,6 @@ public sealed class DocumentManager
 
         var result = this.currentPageContent.ToString();
         this.currentPageContent = null;
-        this.currentPageNumber = 0;
         return string.IsNullOrWhiteSpace(result) ? null : result;
     }
 }
