@@ -9090,6 +9090,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONRESULTEXTENSIONS::T1268231046"] 
 -- The file type of '{0}' could not be determined, so the file was not sent.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONRESULTEXTENSIONS::T1459702734"] = "Der Dateityp von „{0}“ konnte nicht bestimmt werden. Daher wurde die Datei nicht gesendet."
 
+-- The file '{0}' is an executable program and was not sent, regardless of its file extension.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONRESULTEXTENSIONS::T1481258284"] = "Die Datei „{0}“ ist ein ausführbares Programm und wurde unabhängig von ihrer Dateierweiterung nicht gesendet."
+
 -- The file '{0}' could not be read and was not sent. When the file is stored on a network drive, the drive might be unavailable, or another program might be blocking the file.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONRESULTEXTENSIONS::T1488076079"] = "Die Datei „{0}“ konnte nicht gelesen und daher nicht gesendet werden. Wenn die Datei auf einem Netzlaufwerk gespeichert ist, ist das Laufwerk möglicherweise nicht verfügbar oder ein anderes Programm blockiert die Datei."
 
@@ -9113,6 +9116,15 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONRESULTEXTENSIONS::T2793077828"] 
 
 -- The file '{0}' is not a readable PDF and was not sent. It might be damaged or transferred incompletely.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONRESULTEXTENSIONS::T2891768359"] = "Die Datei „{0}“ ist keine lesbare PDF-Datei und wurde nicht gesendet. Sie ist möglicherweise beschädigt oder wurde unvollständig übertragen."
+
+-- The file '{0}' is a {1}, which AI Studio cannot read, so it was not sent.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONRESULTEXTENSIONS::T3262447403"] = "Die Datei „{0}“ ist eine {1}, die AI Studio nicht lesen kann. Daher wurde sie nicht gesendet."
+
+-- The file '{0}' is actually a {1} and was read as such. Please correct its file extension.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONRESULTEXTENSIONS::T3297602719"] = "Die Datei „{0}“ ist tatsächlich eine {1} und wurde als solche gelesen. Bitte korrigieren Sie ihre Dateiendung."
+
+-- The file '{0}' is not a text file and was not sent. Its content could not be read as text, so it might have a wrong file extension.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONRESULTEXTENSIONS::T3303873344"] = "Die Datei „{0}“ ist keine Textdatei und wurde nicht gesendet. Ihr Inhalt konnte nicht als Text gelesen werden; möglicherweise hat sie die falsche Dateiendung."
 
 -- The file '{0}' could not be read and was not sent.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONRESULTEXTENSIONS::T3527027650"] = "Die Datei „{0}“ konnte nicht gelesen und daher nicht gesendet werden."
