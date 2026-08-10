@@ -716,7 +716,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
                 continue;
             }
 
-            var fileContent = await this.RustService.ReadArbitraryFileData(document.FilePath, int.MaxValue);
+            var fileContent = (await this.RustService.ReadArbitraryFileData(document.FilePath, int.MaxValue)).Content;
             sb.AppendLine($"""
                            
                            ## DOCUMENT {numDocuments}:

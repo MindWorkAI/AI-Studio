@@ -46,6 +46,6 @@ public static class UserFile
         }
         
         var fileContent = await rustService.ReadArbitraryFileData(filePath, int.MaxValue);
-        return fileContent;
+        return fileContent.Content;
     }
 }

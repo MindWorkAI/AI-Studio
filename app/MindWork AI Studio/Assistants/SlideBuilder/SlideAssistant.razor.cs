@@ -382,7 +382,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
                 continue;
             }
 
-            var fileContent = await this.RustService.ReadArbitraryFileData(document.FilePath, int.MaxValue);
+            var fileContent = (await this.RustService.ReadArbitraryFileData(document.FilePath, int.MaxValue)).Content;
             sb.AppendLine($"""
                            
                            ## DOCUMENT {numDocuments}:

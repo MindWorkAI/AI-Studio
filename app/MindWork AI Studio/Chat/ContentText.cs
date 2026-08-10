@@ -299,7 +299,7 @@ public sealed class ContentText : IContent
                         sb.AppendLine($"File path: {document.FilePath}");
                         sb.AppendLine("File content:");
                         sb.AppendLine("````");
-                        sb.AppendLine(await Program.RUST_SERVICE.ReadArbitraryFileData(document.FilePath, int.MaxValue));
+                        sb.AppendLine((await Program.RUST_SERVICE.ReadArbitraryFileData(document.FilePath, int.MaxValue)).Content);
                         sb.AppendLine("````");
                     }
                     
