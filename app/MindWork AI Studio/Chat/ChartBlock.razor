@@ -7,7 +7,20 @@
     <div class="chart-block-shell my-3">
         <MudPaper Class="chart-block" Outlined="true">
             <MudText Typo="Typo.h6" Class="chart-block-title">@chart.Title</MudText>
-            @if (chart.Type is ChartDefinitionType.PIE or ChartDefinitionType.DONUT)
+            @if (chart.Type is ChartDefinitionType.TIME_SERIES)
+            {
+                <div class="chart-block-plot chart-block-plot-axis">
+                    <MudTimeSeriesChart ChartSeries="@this.TimeSeriesChartSeries"
+                                        ChartOptions="@this.ChartOptions"
+                                        AxisChartOptions="@this.AxisChartOptions"
+                                        TimeLabelSpacing="@this.TimeLabelSpacing"
+                                        TimeLabelFormat="@this.TimeLabelFormat"
+                                        DataMarkerTooltipTimeLabelFormat="dd-MM-yyyy HH:mm:ss 'UTC'"
+                                        Width="100%"
+                                        Height="350px" />
+                </div>
+            }
+            else if (chart.Type is ChartDefinitionType.PIE or ChartDefinitionType.DONUT)
             {
                 <div class="chart-block-plot chart-block-plot-circular">
                     <MudChart ChartType="@this.ChartType"
@@ -24,7 +37,7 @@
                     <MudChart ChartType="@this.ChartType"
                               ChartSeries="@this.ChartSeries"
                               XAxisLabels="@chart.Categories.ToArray()"
-                              ChartOptions="@this.ChartOptions"
+                              ChartOptions="@this.CategoryChartOptions"
                               AxisChartOptions="@this.AxisChartOptions"
                               Width="100%"
                               Height="350px" />
