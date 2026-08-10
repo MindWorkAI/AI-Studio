@@ -138,7 +138,7 @@
                             ReadOnly="@true"
                             Variant="Variant.Outlined"
                             Adornment="Adornment.Start"
-                            AdornmentIcon="@Icons.Material.Filled.DataObject"
+                            AdornmentIcon="@Icons.Material.Filled.TextFields"
                             AdornmentColor="Color.Info"/>
                     }
                     <MudJustifiedText Typo="Typo.body1" Class="mb-3">
@@ -155,7 +155,7 @@
                         HelperText="@T("Maximum number of tokens per chunk for this data source. Use 0 to use the embedding provider setting.")"
                         Variant="Variant.Outlined"
                         Adornment="Adornment.Start"
-                        AdornmentIcon="@Icons.Material.Filled.DataObject"
+                        AdornmentIcon="@Icons.Material.Filled.FormatListNumbered"
                         AdornmentColor="Color.Info"/>
                     <MudNumericField
                         T="int"
@@ -169,7 +169,16 @@
                         Adornment="Adornment.Start"
                         AdornmentIcon="@Icons.Material.Filled.CompareArrows"
                         AdornmentColor="Color.Info"/>
-                    <MudNumericField T="ushort" Min="10" @bind-Value="@this.dataMaxMatches" Label="@T("How many matches do you want at most per query?")" Variant="Variant.Outlined" Step="10" />
+                    <MudNumericField
+                        T="ushort"
+                        Min="10"
+                        @bind-Value="@this.dataMaxMatches"
+                        Label="@T("How many matches do you want at most per query?")"
+                        Variant="Variant.Outlined"
+                        Step="10"
+                        Adornment="Adornment.Start"
+                        AdornmentIcon="@Icons.Material.Filled.Search"
+                        AdornmentColor="Color.Info"/>
                 </MudCollapse>
             </MudStack>
         </MudForm>

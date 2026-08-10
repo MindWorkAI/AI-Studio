@@ -99,18 +99,6 @@
             
             @if (!string.IsNullOrWhiteSpace(this.dataEmbeddingId))
             {
-                <MudTextField
-                    T="string"
-                    Text="@this.SelectedEmbeddingTokenizerText"
-                    Label="@T("Tokenizer")"
-                    Class="mb-3"
-                    ReadOnly="@true"
-                    Variant="Variant.Outlined"
-                    Adornment="Adornment.Start"
-                    AdornmentIcon="@Icons.Material.Filled.DataObject"
-                    AdornmentColor="Color.Info"
-                />
-
                 if (this.SelectedCloudEmbedding)
                 {
                     <DataSourceCloudEmbeddingWarning DataSourceType="DataSourceType.LOCAL_FILE" SourcePath="@this.dataFilePath" @bind-UserAcknowledged="@this.dataUserAcknowledgedCloudEmbedding" Validation="@this.dataSourceValidation.ValidateUserAcknowledgedCloudEmbedding"/>
@@ -121,45 +109,6 @@
                         @T("The embedding you selected runs locally or in your organization. Your data is not sent to the cloud.")
                     </MudJustifiedText>
                 }
-
-                <MudStack Class="mb-3">
-                    <MudButton OnClick="@this.ToggleExpertSettings" Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Tune">
-                        @(this.showExpertSettings ? T("Hide Expert Settings") : T("Show Expert Settings"))
-                    </MudButton>
-                    <MudDivider/>
-                    <MudCollapse Expanded="@this.showExpertSettings" Class="@this.GetExpertStyles">
-                        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
-                            @T("Optional expert settings for how this data source is split before embedding.")
-                        </MudJustifiedText>
-                        <MudNumericField
-                            T="int"
-                            @bind-Value="@this.dataMaxChunkTokenLength"
-                            Label="@T("Token limit")"
-                            Class="mb-3"
-                            Min="0"
-                            Immediate="@true"
-                            Validation="@this.ValidateMaxChunkTokenLength"
-                            HelperText="@T("Maximum number of tokens per chunk for this data source. Use 0 to use the embedding provider setting.")"
-                            Variant="Variant.Outlined"
-                            Adornment="Adornment.Start"
-                            AdornmentIcon="@Icons.Material.Filled.DataObject"
-                            AdornmentColor="Color.Info"
-                        />
-                        <MudNumericField
-                            T="int"
-                            @bind-Value="@this.dataChunkOverlapTokenLength"
-                            Label="@T("Token overlap")"
-                            Min="0"
-                            Immediate="@true"
-                            Validation="@this.ValidateChunkOverlapTokenLength"
-                            HelperText="@T("Number of tokens repeated at the start of the next chunk. Use 0 to use the default overlap.")"
-                            Variant="Variant.Outlined"
-                            Adornment="Adornment.Start"
-                            AdornmentIcon="@Icons.Material.Filled.CompareArrows"
-                            AdornmentColor="Color.Info"
-                        />
-                    </MudCollapse>
-                </MudStack>
             }
             
             <ManagePandocDependency IntroText="@T("For some data types, such as Office files, MindWork AI Studio requires the open-source application Pandoc.")"/>
@@ -172,8 +121,66 @@
                     </MudSelectItem>
                 }
             </MudSelect>
-            
-            <MudNumericField T="ushort" Min="10" @bind-Value="@this.dataMaxMatches" Label="@T("How many matches do you want at most per query?")" Variant="Variant.Outlined" Step="10" />
+
+            <MudStack Class="mb-3">
+                <MudButton OnClick="@this.ToggleExpertSettings" Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Tune">
+                    @(this.showExpertSettings ? T("Hide Expert Settings") : T("Show Expert Settings"))
+                </MudButton>
+                <MudDivider/>
+                <MudCollapse Expanded="@this.showExpertSettings" Class="@this.GetExpertStyles">
+                    @if (!string.IsNullOrWhiteSpace(this.dataEmbeddingId))
+                    {
+                        <MudTextField
+                            T="string"
+                            Text="@this.SelectedEmbeddingTokenizerText"
+                            Label="@T("Tokenizer")"
+                            Class="mb-3"
+                            ReadOnly="@true"
+                            Variant="Variant.Outlined"
+                            Adornment="Adornment.Start"
+                            AdornmentIcon="@Icons.Material.Filled.TextFields"
+                            AdornmentColor="Color.Info"/>
+                    }
+                    <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+                        @T("Optional expert settings for how this data source is split before embedding.")
+                    </MudJustifiedText>
+                    <MudNumericField
+                        T="int"
+                        @bind-Value="@this.dataMaxChunkTokenLength"
+                        Label="@T("Token limit")"
+                        Class="mb-3"
+                        Min="0"
+                        Immediate="@true"
+                        Validation="@this.ValidateMaxChunkTokenLength"
+                        HelperText="@T("Maximum number of tokens per chunk for this data source. Use 0 to use the embedding provider setting.")"
+                        Variant="Variant.Outlined"
+                        Adornment="Adornment.Start"
+                        AdornmentIcon="@Icons.Material.Filled.FormatListNumbered"
+                        AdornmentColor="Color.Info"/>
+                    <MudNumericField
+                        T="int"
+                        @bind-Value="@this.dataChunkOverlapTokenLength"
+                        Label="@T("Token overlap")"
+                        Min="0"
+                        Immediate="@true"
+                        Validation="@this.ValidateChunkOverlapTokenLength"
+                        HelperText="@T("Number of tokens repeated at the start of the next chunk. Use 0 to use the default overlap.")"
+                        Variant="Variant.Outlined"
+                        Adornment="Adornment.Start"
+                        AdornmentIcon="@Icons.Material.Filled.CompareArrows"
+                        AdornmentColor="Color.Info"/>
+                    <MudNumericField
+                        T="ushort"
+                        Min="10"
+                        @bind-Value="@this.dataMaxMatches"
+                        Label="@T("How many matches do you want at most per query?")"
+                        Variant="Variant.Outlined"
+                        Step="10"
+                        Adornment="Adornment.Start"
+                        AdornmentIcon="@Icons.Material.Filled.Search"
+                        AdornmentColor="Color.Info"/>
+                </MudCollapse>
+            </MudStack>
         </MudForm>
         <Issues IssuesData="@this.dataIssues"/>
     </DialogContent>
