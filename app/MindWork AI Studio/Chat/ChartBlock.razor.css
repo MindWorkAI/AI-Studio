@@ -44,6 +44,10 @@
     max-width: 56rem;
 }
 
+.chart-block-plot-heatmap {
+    max-width: none;
+}
+
 .chart-block-shell ::deep .chart-block-caption {
     margin-block-start: .75rem;
     color: var(--mud-palette-text-secondary);
