@@ -1055,13 +1055,20 @@ async fn stream_document(file_path: &str, extract_images: bool, stream_id: &str)
         let mut number_of_pages = 0;
         let mut number_of_characters = 0;
 
+        //
+        // A failing page ends the whole document here, unlike a PDF page: the page iterator gives
+        // up for good once it hit an error, so everything behind that page is lost as well. This
+        // is why neither failure below reports `PageExtractionFailed`. That code means that a
+        // single page is missing while the rest stays usable, and the app would hand the truncated
+        // document to the AI on those grounds.
+        //
         for page_result in pages {
             let page = match page_result {
                 Ok(page) => page,
                 Err(e) => {
                     error!("A page of the document '{path:?}' could not be read: {e}");
                     let _ = tx.blocking_send(Err(ExtractionError::new(
-                        ExtractionErrorCode::PageExtractionFailed,
+                        ExtractionErrorCode::Internal,
                         format!("A page of the document could not be read: {e}"),
                     ).into()));
                     return;
@@ -1071,10 +1078,9 @@ async fn stream_document(file_path: &str, extract_images: bool, stream_id: &str)
                 Ok(content) => content,
                 Err(e) => {
                     error!("Page {page_number} of the document '{path:?}' could not be converted: {e}", page_number = page.page_number);
-                    let _ = tx.blocking_send(Err(ExtractionError::on_page(
-                        ExtractionErrorCode::PageExtractionFailed,
+                    let _ = tx.blocking_send(Err(ExtractionError::new(
+                        ExtractionErrorCode::Internal,
                         format!("Page {page_number} of the document could not be converted: {e}", page_number = page.page_number),
-                        page.page_number,
                     ).into()));
                     return;
                 },
