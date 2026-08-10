@@ -1,8 +1,10 @@
-﻿using System.Text;
-
 namespace AIStudio.Tools;
 
-public sealed class SlideImageContent(string base64Image) : ISlideContent
+/// <summary>
+/// An image of a slide, ready to be appended to the slide's Markdown.
+/// </summary>
+/// <param name="markdownImage">The image as a Markdown image with an embedded data URI.</param>
+public sealed class SlideImageContent(string markdownImage) : ISlideContent
 {
-    public StringBuilder Base64Image => new(base64Image);
+    public string MarkdownImage => markdownImage;
 }

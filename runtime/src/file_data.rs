@@ -10,6 +10,7 @@ use axum::response::sse::{Event, Sse};
 use base64::{engine::general_purpose, Engine as _};
 use calamine::{open_workbook_auto, Error as CalamineError, Reader};
 use chardetng::{EncodingDetector, Iso2022JpDetection, Utf8Detection};
+use docx_to_md::{DocumentContainer, ImageHandlingMode as DocumentImageHandlingMode, Metadata as DocumentMetadata, ParserConfig as DocumentParserConfig};
 use encoding_rs::Encoding;
 use file_format::{FileFormat, Kind};
 use futures::{Stream, StreamExt};
@@ -71,7 +72,10 @@ pub enum Metadata {
         row_number: usize,
     },
     
-    Document {},
+    Document {
+        page_number: Option<usize>,
+        image: Option<Base64Image>,
+    },
     Image {},
     
     Presentation {
@@ -214,12 +218,13 @@ pub struct Base64Image {
     pub id: String,
     pub content: String,
     pub segment: usize,
-    pub is_end: bool
+    pub is_end: bool,
+    pub media_type: Option<String>,
 }
 
 impl Base64Image {
-    fn new(id: String, content: String, segment: usize, is_end: bool) -> Self {
-        Self { id, content, segment, is_end }
+    fn new(id: String, content: String, segment: usize, is_end: bool, media_type: Option<String>) -> Self {
+        Self { id, content, segment, is_end, media_type }
     }
 }
 
@@ -318,7 +323,7 @@ pub async fn extract_data(
     let stream = stream! {
         match query {
             Ok(query) => {
-                let stream_result = stream_data(&query.path, query.extract_images).await;
+                let stream_result = stream_data(&query.path, query.extract_images, &query.stream_id).await;
                 let id_ref = &query.stream_id;
                 let path_ref = &query.path;
 
@@ -368,8 +373,8 @@ pub async fn extract_data(
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum ExtractionRoute {
     Pdf,
-    PandocDocx,
-    PandocOdt,
+    Docx,
+    Odt,
     PandocHtml,
     PresentationPptx,
     PresentationOdp,
@@ -389,8 +394,8 @@ enum ExtractionRoute {
 fn route_from_extension(ext: &str) -> Option<ExtractionRoute> {
     match ext {
         "pdf" => Some(ExtractionRoute::Pdf),
-        DOCX => Some(ExtractionRoute::PandocDocx),
-        ODT => Some(ExtractionRoute::PandocOdt),
+        DOCX => Some(ExtractionRoute::Docx),
+        ODT => Some(ExtractionRoute::Odt),
         HTML | "htm" => Some(ExtractionRoute::PandocHtml),
         "csv" | "tsv" => Some(ExtractionRoute::Csv),
         "pptx" => Some(ExtractionRoute::PresentationPptx),
@@ -415,8 +420,8 @@ fn route_from_extension(ext: &str) -> Option<ExtractionRoute> {
 fn route_from_content(fmt: FileFormat) -> Option<ExtractionRoute> {
     match fmt {
         FileFormat::PortableDocumentFormat => Some(ExtractionRoute::Pdf),
-        FileFormat::OfficeOpenXmlDocument => Some(ExtractionRoute::PandocDocx),
-        FileFormat::OpendocumentText => Some(ExtractionRoute::PandocOdt),
+        FileFormat::OfficeOpenXmlDocument => Some(ExtractionRoute::Docx),
+        FileFormat::OpendocumentText => Some(ExtractionRoute::Odt),
         FileFormat::HypertextMarkupLanguage => Some(ExtractionRoute::PandocHtml),
         FileFormat::OfficeOpenXmlPresentation => Some(ExtractionRoute::PresentationPptx),
         FileFormat::OpendocumentPresentation => Some(ExtractionRoute::PresentationOdp),
@@ -430,7 +435,7 @@ fn route_from_content(fmt: FileFormat) -> Option<ExtractionRoute> {
 
         //
         // The legacy binary Word and PowerPoint formats have no reader here: pptx_to_md only
-        // handles PPTX and ODP, and Pandoc cannot read the binary .doc format at all. Saying so
+        // handles PPTX and ODP, and docx_to_md only reads the XML-based DOCX and ODT. Saying so
         // is better than handing the file to a reader which is bound to fail.
         //
         FileFormat::MicrosoftWordDocument | FileFormat::MicrosoftPowerpointPresentation => Some(ExtractionRoute::Unsupported),
@@ -444,7 +449,7 @@ fn route_from_content(fmt: FileFormat) -> Option<ExtractionRoute> {
     }
 }
 
-async fn stream_data(file_path: &str, extract_images: bool) -> Result<ChunkStream> {
+async fn stream_data(file_path: &str, extract_images: bool, stream_id: &str) -> Result<ChunkStream> {
     if !Path::new(file_path).exists() {
         error!("File does not exist: '{file_path}'");
         return Err(ExtractionError::new(ExtractionErrorCode::FileNotFound, format!("The file does not exist: '{file_path}'.")).into());
@@ -528,8 +533,7 @@ async fn stream_data(file_path: &str, extract_images: bool) -> Result<ChunkStrea
 
     let stream = match route {
         ExtractionRoute::Pdf => stream_pdf(file_path).await?,
-        ExtractionRoute::PandocDocx => convert_with_pandoc(file_path, DOCX, TO_MARKDOWN).await?,
-        ExtractionRoute::PandocOdt => convert_with_pandoc(file_path, ODT, TO_MARKDOWN).await?,
+        ExtractionRoute::Docx | ExtractionRoute::Odt => stream_document(file_path, extract_images, stream_id).await?,
         ExtractionRoute::PandocHtml => convert_with_pandoc(file_path, HTML, TO_MARKDOWN).await?,
         ExtractionRoute::PresentationPptx => stream_presentation(file_path, extract_images, PresentationFormat::Pptx).await?,
         ExtractionRoute::PresentationOdp => stream_presentation(file_path, extract_images, PresentationFormat::Odp).await?,
@@ -934,7 +938,10 @@ async fn convert_with_pandoc(
     let stream = stream! {
         yield Ok(Chunk::new(
             content,
-            Metadata::Document {}
+            Metadata::Document {
+                page_number: None,
+                image: None,
+            }
         ));
     };
 
@@ -998,6 +1005,146 @@ async fn chunk_image(file_path: &str) -> Result<ChunkStream> {
     };
 
     Ok(Box::pin(stream))
+}
+
+async fn stream_document(file_path: &str, extract_images: bool, stream_id: &str) -> Result<ChunkStream> {
+    let path = Path::new(file_path).to_owned();
+    let stream_id = stream_id.to_owned();
+    let parser_config = DocumentParserConfig::builder()
+        .extract_images(extract_images)
+        .compress_images(true)
+        .quality(75)
+        .image_handling_mode(DocumentImageHandlingMode::Manually)
+        .include_document_metadata(true)
+        .include_headers_footers(true)
+        .include_footnotes(true)
+        .include_endnotes(true)
+        .include_comments(true)
+        .include_page_number_as_comment(false)
+        .build();
+    let (tx, rx) = mpsc::channel(32);
+    let worker_error_tx = tx.clone();
+
+    // Page iteration performs synchronous ZIP/XML work and image compression,
+    // so the complete producer must stay outside Tokio's asynchronous workers.
+    let worker = tokio::task::spawn_blocking(move || {
+        //
+        // Failures travel through the error channel, which logs them with the file path and the
+        // classified code once they arrive. Logging them here as well would only duplicate that.
+        //
+        let document = match DocumentContainer::open(&path, parser_config) {
+            Ok(document) => document,
+            Err(e) => {
+                let _ = tx.blocking_send(Err(ExtractionError::new(
+                    ExtractionErrorCode::FileNotReadable,
+                    format!("The document could not be read: {e}"),
+                ).into()));
+                return;
+            },
+        };
+        let mut metadata_md = document_metadata_to_markdown(document.metadata());
+        let pages = match document.iter_pages() {
+            Ok(pages) => pages,
+            Err(e) => {
+                let _ = tx.blocking_send(Err(ExtractionError::new(
+                    ExtractionErrorCode::FileNotReadable,
+                    format!("The pages of the document could not be read: {e}"),
+                ).into()));
+                return;
+            },
+        };
+
+        let mut number_of_pages = 0;
+        let mut number_of_characters = 0;
+
+        //
+        // A failing page ends the whole document here, unlike a PDF page: the page iterator gives
+        // up for good once it hit an error, so everything behind that page is lost as well. This
+        // is why neither failure below reports `PageExtractionFailed`. That code means that a
+        // single page is missing while the rest stays usable, and the app would hand the truncated
+        // document to the AI on those grounds.
+        //
+        for page_result in pages {
+            let page = match page_result {
+                Ok(page) => page,
+                Err(e) => {
+                    let _ = tx.blocking_send(Err(ExtractionError::new(
+                        ExtractionErrorCode::Internal,
+                        format!("A page of the document could not be read: {e}"),
+                    ).into()));
+                    return;
+                },
+            };
+            let mut content = match page.to_markdown() {
+                Ok(content) => content,
+                Err(e) => {
+                    let _ = tx.blocking_send(Err(ExtractionError::new(
+                        ExtractionErrorCode::Internal,
+                        format!("Page {page_number} of the document could not be converted: {e}", page_number = page.page_number),
+                    ).into()));
+                    return;
+                },
+            };
+
+            number_of_pages = page.page_number;
+            number_of_characters += content.chars().count();
+
+            if let Some(metadata) = metadata_md.take() {
+                content = format!("{metadata}\n\n{content}");
+            }
+            if tx.blocking_send(Ok(Chunk::new(content, Metadata::Document {
+                page_number: Some(page.page_number),
+                image: None,
+            }))).is_err() {
+                return;
+            }
+
+            for image in page.images.values() {
+                let base64_data = image.base64();
+                let image_id = format!("{stream_id}-{}-{}", page.page_number, image.id);
+                let mut offset = 0;
+                let mut segment_index = 0;
+                while offset < base64_data.len() {
+                    let end = min(offset + IMAGE_SEGMENT_SIZE_IN_CHARS, base64_data.len());
+                    let base64_image = Base64Image::new(image_id.clone(), base64_data[offset..end].to_string(), segment_index, end == base64_data.len(), Some(image.media_type.clone()));
+                    if tx.blocking_send(Ok(Chunk::new(String::new(), Metadata::Document {
+                        page_number: Some(page.page_number),
+                        image: Some(base64_image),
+                    }))).is_err() {
+                        return;
+                    }
+                    offset = end;
+                    segment_index += 1;
+                }
+            }
+        }
+
+        debug!("Extracted {number_of_characters} character(s) from {number_of_pages} page(s) of '{path}'.", path = path.display());
+
+        //
+        // Without this marker, a document without any text and a broken extraction both arrive as
+        // an empty document, and the AI would answer as if the file had no content at all.
+        //
+        if number_of_characters == 0 {
+            warn!("No text could be extracted from '{path}': {number_of_pages} page(s).", path = path.display());
+
+            let _ = tx.blocking_send(Ok(Chunk::from_error(&ExtractionError::new(
+                ExtractionErrorCode::NoTextExtracted,
+                format!("No text could be extracted from {number_of_pages} page(s) of the document."),
+            ))));
+        }
+    });
+
+    tokio::spawn(async move {
+        if let Err(e) = worker.await {
+            let _ = worker_error_tx.send(Err(ExtractionError::new(
+                ExtractionErrorCode::Internal,
+                format!("The document parser task failed: {e}"),
+            ).into())).await;
+        }
+    });
+
+    Ok(Box::pin(ReceiverStream::new(rx)))
 }
 
 async fn stream_presentation(file_path: &str, extract_images: bool, format: PresentationFormat) -> Result<ChunkStream> {
@@ -1095,10 +1242,11 @@ async fn stream_presentation(file_path: &str, extract_images: bool, format: Pres
                         let is_end = end == total_length;
 
                         let base64_image = Base64Image::new(
-                            image.img_ref.id.clone(),
-                            segment_content.to_string(),
-                            segment_index,
-                            is_end
+                        image.img_ref.id.clone(),
+                        segment_content.to_string(),
+                        segment_index,
+                        is_end,
+                        None,
                         );
 
                         let chunk = Chunk::new(
@@ -1154,6 +1302,24 @@ fn presentation_metadata_to_markdown(metadata: &PresentationMetadata) -> Option<
             fields.join("\n")
         ))
     }
+}
+
+fn document_metadata_to_markdown(metadata: &DocumentMetadata) -> Option<String> {
+    let mut fields = Vec::new();
+    push_presentation_metadata_field(&mut fields, "Title", metadata.title.as_deref());
+    push_presentation_metadata_field(&mut fields, "Subject", metadata.subject.as_deref());
+    push_presentation_metadata_field(&mut fields, "Author", metadata.author.as_deref());
+    push_presentation_metadata_field(&mut fields, "Last Modified By", metadata.last_modified_by.as_deref());
+    push_presentation_metadata_field(&mut fields, "Description", metadata.description.as_deref());
+    if !metadata.keywords.is_empty() {
+        fields.push(format!("Keywords: {}", sanitize_presentation_metadata_value(&metadata.keywords.join("; "))));
+    }
+    push_presentation_metadata_field(&mut fields, "Created", metadata.created_at.as_deref());
+    push_presentation_metadata_field(&mut fields, "Modified", metadata.modified_at.as_deref());
+    for (name, value) in &metadata.custom {
+        fields.push(format!("Custom {name}: {}", sanitize_presentation_metadata_value(value)));
+    }
+    if fields.is_empty() { None } else { Some(format!("<!-- Document Metadata\n{}\n-->", fields.join("\n"))) }
 }
 
 fn push_presentation_metadata_field(fields: &mut Vec<String>, label: &str, value: Option<&str>) {
