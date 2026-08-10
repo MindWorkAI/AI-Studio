@@ -383,10 +383,19 @@ fn route_from_extension(ext: &str) -> Option<ExtractionRoute> {
         "pdf" => Some(ExtractionRoute::Pdf),
         DOCX => Some(ExtractionRoute::PandocDocx),
         ODT => Some(ExtractionRoute::PandocOdt),
+        "html" | "htm" => Some(ExtractionRoute::PandocHtml),
         "csv" | "tsv" => Some(ExtractionRoute::Csv),
         "pptx" => Some(ExtractionRoute::PresentationPptx),
         "odp" => Some(ExtractionRoute::PresentationOdp),
         "xlsx" | "ods" | "xls" | "xlsm" | "xlsb" | "xla" | "xlam" => Some(ExtractionRoute::Spreadsheet),
+        "jpg" | "jpeg" | "png" | "gif" | "bmp" | "tiff" | "svg" | "webp" | "heic" => Some(ExtractionRoute::Image),
+
+        //
+        // Everything else claims nothing in particular. Text formats end up here on purpose:
+        // their content cannot be identified beyond "this is text", so there is nothing to
+        // contradict. Every extension which does have a reader must be listed above, otherwise
+        // a correctly named file looks like a mismatch.
+        //
         _ => None,
     }
 }

@@ -51,6 +51,7 @@ public static class FileTypes
     // Document hierarchy
     public static readonly FileTypeFilter PDF         = FileTypeFilter.Leaf("PDF", "pdf");
     public static readonly FileTypeFilter TEXT        = FileTypeFilter.Leaf(TB("Text"), "txt", "md", "rtf");
+    public static readonly FileTypeFilter TABULAR     = FileTypeFilter.Leaf(TB("Tabular text"), "csv", "tsv");
     public static readonly FileTypeFilter MS_WORD     = FileTypeFilter.Leaf("Microsoft Word", "docx");
     public static readonly FileTypeFilter WORD        = FileTypeFilter.Composite("Word", ["odt"], MS_WORD);
     public static readonly FileTypeFilter EXCEL       = FileTypeFilter.Leaf("Excel", "xls", "xlsx");
@@ -64,7 +65,7 @@ public static class FileTypes
     public static readonly FileTypeFilter OFFICE_FILES = FileTypeFilter.Parent(TB("Office Files"),
         WORD, EXCEL, POWER_POINT, PDF);
     public static readonly FileTypeFilter DOCUMENT     = FileTypeFilter.Parent(TB("Document"),
-        TEXT, OFFICE_FILES, SOURCE_CODE, LATEX);
+        TEXT, TABULAR, OFFICE_FILES, SOURCE_CODE, LATEX);
 
     // Media hierarchy
     public static readonly FileTypeFilter IMAGE = FileTypeFilter.Leaf(TB("Image"),
