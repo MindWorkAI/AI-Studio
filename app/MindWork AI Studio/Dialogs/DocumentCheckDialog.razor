@@ -33,6 +33,16 @@
                 @T("The specified file could not be found. The file have been moved, deleted, renamed, or is otherwise inaccessible.")
             </MudAlert>
         }
+        else if (this.isLoadingContent)
+        {
+            <MudJustifiedText Typo="Typo.body1" Class="my-3">
+                @T("Please wait while we load the content of your file. Depending on the file type and size, this may take a moment.")
+            </MudJustifiedText>
+            <MudSkeleton Width="30%" Height="42px"/>
+            <MudSkeleton Width="80%"/>
+            <MudSkeleton Width="100%"/>
+            <MudSkeleton Width="90%"/>
+        }
         else if (this.loadFailureMessage is not null)
         {
             <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Class="my-2">
