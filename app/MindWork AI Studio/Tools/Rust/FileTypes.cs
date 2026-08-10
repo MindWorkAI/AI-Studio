@@ -94,9 +94,11 @@ public static class FileTypes
     /// <remarks>
     /// This is not a user-selectable type, it mirrors the formats the Rust runtime hands to
     /// Pandoc. Every other document type is read by the runtime itself, so it must never depend
-    /// on a Pandoc installation. The name is not localized because it is never shown.
+    /// on a Pandoc installation. Word and OpenDocument text files (.docx, .odt) used to be listed
+    /// here as well; the runtime reads them on its own now. The name is not localized because it
+    /// is never shown.
     /// </remarks>
-    private static readonly FileTypeFilter PANDOC_CONVERTED = FileTypeFilter.Leaf("Pandoc conversion", "docx", "odt", "html", "htm");
+    private static readonly FileTypeFilter PANDOC_CONVERTED = FileTypeFilter.Leaf("Pandoc conversion", "html", "htm");
 
     /// <summary>
     /// Determines whether reading the given file needs Pandoc.
