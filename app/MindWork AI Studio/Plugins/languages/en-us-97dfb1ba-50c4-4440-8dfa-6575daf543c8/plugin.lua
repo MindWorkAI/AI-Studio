@@ -7710,6 +7710,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1290340974"] = "Unknown configur
 -- Copies the configuration slot to the clipboard
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1347508205"] = "Copies the configuration slot to the clipboard"
 
+-- Once the encoding of a text file is known, encoding_rs turns its content into the text AI Studio works with. Together with chardetng, this lets AI Studio read text, CSV, and similar files no matter which encoding they were saved in.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1378412877"] = "Once the encoding of a text file is known, encoding_rs turns its content into the text AI Studio works with. Together with chardetng, this lets AI Studio read text, CSV, and similar files no matter which encoding they were saved in."
+
 -- This library is used to read PDF files. This is necessary, e.g., for using PDFs as a data source for a chat.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1388816916"] = "This library is used to read PDF files. This is necessary, e.g., for using PDFs as a data source for a chat."
 
@@ -7820,6 +7823,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T234598990"] = "Linux AppImages b
 
 -- Used PDFium version
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2368247719"] = "Used PDFium version"
+
+-- Text files are not always saved in the same encoding: files written on Windows often use a legacy one. chardetng recognizes which encoding a text file uses, so AI Studio can read it instead of rejecting it.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T236832881"] = "Text files are not always saved in the same encoding: files written on Windows often use a legacy one. chardetng recognizes which encoding a text file uses, so AI Studio can read it instead of rejecting it."
 
 -- installation provided by the system
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2371107659"] = "installation provided by the system"
