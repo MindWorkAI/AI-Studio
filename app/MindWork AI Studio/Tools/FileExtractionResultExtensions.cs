@@ -81,7 +81,7 @@ internal static class FileExtractionResultExtensions
         FileExtractionErrorCode.PDF_ENCRYPTED => TB("The file '{0}' is protected and could not be opened, so it was not sent."),
         FileExtractionErrorCode.PDFIUM_UNAVAILABLE => TB("AI Studio was not able to start its PDF engine, so the file '{0}' was not sent."),
         FileExtractionErrorCode.PANDOC_UNAVAILABLE => TB("Reading the file '{0}' needs Pandoc, which is not available, so the file was not sent."),
-        FileExtractionErrorCode.NO_TEXT_EXTRACTED => TB("No text could be read from the file '{0}', so it was not sent. The file might consist of scanned images without a text layer."),
+        FileExtractionErrorCode.NO_TEXT_EXTRACTED => TB("No text could be read from the file '{0}', so it was not sent. It might contain images only, such as a scanned PDF without a text layer, or no readable text at all."),
         FileExtractionErrorCode.NO_CONTENT => TB("The file '{0}' did not provide any content and was not sent."),
 
         FileExtractionErrorCode.NOT_TEXT_CONTENT => TB("The file '{0}' is not a text file and was not sent. Its content could not be read as text, so it might have a wrong file extension."),

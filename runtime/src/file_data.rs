@@ -9,6 +9,8 @@ use axum::extract::rejection::QueryRejection;
 use axum::response::sse::{Event, Sse};
 use base64::{engine::general_purpose, Engine as _};
 use calamine::{open_workbook_auto, Error as CalamineError, Reader};
+use chardetng::EncodingDetector;
+use encoding_rs::Encoding;
 use file_format::{FileFormat, Kind};
 use futures::{Stream, StreamExt};
 use pdfium_render::prelude::{Pdfium, PdfiumError, PdfiumInternalError};
@@ -19,7 +21,7 @@ use std::path::Path;
 use std::pin::Pin;
 use std::fmt;
 use log::{debug, error, warn};
-use tokio::io::{AsyncBufReadExt, AsyncReadExt};
+use tokio::io::AsyncReadExt;
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::ReceiverStream;
 
@@ -554,14 +556,59 @@ async fn stream_data(file_path: &str, extract_images: bool) -> Result<ChunkStrea
     Ok(Box::pin(stream))
 }
 
-async fn stream_text_file(file_path: &str, use_md_fences: bool, fence_language: Option<String>) -> Result<ChunkStream> {
-    let file = tokio::fs::File::open(file_path).await?;
-    let reader = tokio::io::BufReader::new(file);
-    let mut lines = reader.lines();
-    let mut line_number = 0;
+/// How many bytes we inspect for NUL bytes to tell binary content from text.
+const BINARY_PROBE_SIZE: usize = 8_192;
 
-    // The stream outlives this call, so it needs its own copy of the path for diagnostics:
-    let path = file_path.to_owned();
+/// Reads a text file and decodes it, no matter which encoding it uses.
+///
+/// Insisting on UTF-8 is not enough in practice: text files written on Windows are frequently
+/// encoded in Windows-1252, where umlauts are single bytes which UTF-8 rejects. Such a file used
+/// to look like it was not text at all.
+async fn read_text_file(file_path: &str) -> Result<String> {
+    let bytes = tokio::fs::read(file_path).await.map_err(|error| ExtractionError::new(
+        classify_io_error(&error),
+        format!("The file could not be read: {error}"),
+    ))?;
+
+    //
+    // A byte order mark is authoritative and also covers UTF-16, which the detector below does not
+    // recognize. We therefore check it first and let `decode` act on it.
+    //
+    if let Some((encoding, _)) = Encoding::for_bom(&bytes) {
+        let (text, _, _) = encoding.decode(&bytes);
+        debug!("Decoded '{file_path}' as {name}, chosen by its byte order mark.", name = encoding.name());
+        return Ok(text.into_owned());
+    }
+
+    //
+    // Without a byte order mark, every byte sequence decodes into *something*, so the decoder can
+    // no longer tell us that a file is binary. NUL bytes do: they do not occur in text, and after
+    // the check above no UTF-16 file can reach this point.
+    //
+    let probe_length = min(bytes.len(), BINARY_PROBE_SIZE);
+    if bytes[..probe_length].contains(&0) {
+        return Err(ExtractionError::new(
+            ExtractionErrorCode::NotTextContent,
+            "The file contains binary data and is not a text file.",
+        ).into());
+    }
+
+    let mut detector = EncodingDetector::new();
+    detector.feed(&bytes, true);
+
+    let (text, encoding, had_errors) = detector.guess(None, true).decode(&bytes);
+    if had_errors {
+        warn!("Decoding '{file_path}' as {name} replaced malformed sequences.", name = encoding.name());
+    } else {
+        debug!("Decoded '{file_path}' as {name}.", name = encoding.name());
+    }
+
+    Ok(text.into_owned())
+}
+
+async fn stream_text_file(file_path: &str, use_md_fences: bool, fence_language: Option<String>) -> Result<ChunkStream> {
+    let text = read_text_file(file_path).await?;
+    let mut line_number = 0;
 
     let stream = stream! {
 
@@ -581,35 +628,12 @@ async fn stream_text_file(file_path: &str, use_md_fences: bool, fence_language: 
             };
         }
 
-        loop {
-            match lines.next_line().await {
-                Ok(Some(line)) => {
-                    line_number += 1;
-                    yield Ok(Chunk::new(
-                        line,
-                        Metadata::Text { line_number }
-                    ));
-                },
-
-                Ok(None) => break,
-
-                //
-                // Reading a line fails when the bytes are not valid UTF-8, which means the file is
-                // not text at all. Treating that like the end of the file, as this loop did before,
-                // turned every binary file into an empty document without a word.
-                //
-                Err(e) => {
-                    let code = if e.kind() == std::io::ErrorKind::InvalidData {
-                        ExtractionErrorCode::NotTextContent
-                    } else {
-                        classify_io_error(&e)
-                    };
-
-                    error!("Reading '{path}' as text failed after {line_number} line(s) ({code:?}): {e}");
-                    yield Err(ExtractionError::new(code, format!("The file could not be read as text: {e}")).into());
-                    break;
-                },
-            }
+        for line in text.lines() {
+            line_number += 1;
+            yield Ok(Chunk::new(
+                line.to_string(),
+                Metadata::Text { line_number }
+            ));
         }
 
         if use_md_fences {
@@ -864,21 +888,44 @@ async fn convert_with_pandoc(
         .with_output_format(to)
         .build()
         .command.output().await?;
-    
+
+    let exit_code = output.status.code();
+    let stderr_text = String::from_utf8_lossy(&output.stderr).trim().to_string();
+    debug!("Pandoc converted '{file_path}' from '{from}' to '{to}': exit={exit_code:?}, {stdout_length} byte(s) of output.", stdout_length = output.stdout.len());
+
+    if !stderr_text.is_empty() {
+        warn!("Pandoc reported while converting '{file_path}': {stderr_text}");
+    }
+
     let stream = stream! {
-        if output.status.success() {
-            match String::from_utf8(output.stdout.clone()) {
+        if !output.status.success() {
+            yield Err(ExtractionError::new(
+                ExtractionErrorCode::Internal,
+                format!("Pandoc failed with exit code {exit_code:?}: {stderr_text}"),
+            ).into());
+        } else {
+            match String::from_utf8(output.stdout) {
+                //
+                // Pandoc succeeded, yet nothing came out. Passing that on as content would hand an
+                // empty document to the AI, which is exactly what this whole path must not do.
+                //
+                Ok(content) if content.trim().is_empty() => {
+                    yield Err(ExtractionError::new(
+                        ExtractionErrorCode::NoTextExtracted,
+                        format!("Pandoc read the file without finding any text{separator}{stderr_text}", separator = if stderr_text.is_empty() { "." } else { ": " }),
+                    ).into());
+                },
+
                 Ok(content) => yield Ok(Chunk::new(
                     content,
                     Metadata::Document {}
                 )),
-                Err(e) => yield Err(e.into()),
+
+                Err(e) => yield Err(ExtractionError::new(
+                    ExtractionErrorCode::Internal,
+                    format!("The output of Pandoc was not valid UTF-8: {e}"),
+                ).into()),
             }
-        } else {
-            yield Err(format!(
-                "Pandoc error: {}",
-                String::from_utf8_lossy(&output.stderr)
-            ).into());
         }
     };
 

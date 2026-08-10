@@ -46,6 +46,12 @@ rcgen = { version = "0.14.8", features = ["pem"] }
 # is only detected as a plain archive.
 file-format = { version = "0.29.0", features = ["reader-zip", "reader-cfb", "reader-txt", "reader-exe"] }
 
+# Text files are not always UTF-8: on Windows they are frequently encoded in Windows-1252, whose
+# umlauts are single bytes and therefore invalid UTF-8. chardetng guesses the encoding, encoding_rs
+# decodes it.
+chardetng = "1.0.0"
+encoding_rs = "0.8.35"
+
 symphonia = { version = "0.6", default-features = false, features = ["aac", "aiff", "alac", "caf", "flac", "isomp4", "mkv", "mp1", "mp2", "mp3", "ogg", "pcm", "vorbis", "wav"] }
 ropus = "=0.12.18"
 rubato = { version = "4", default-features = false, features = ["fft_resampler"] }
