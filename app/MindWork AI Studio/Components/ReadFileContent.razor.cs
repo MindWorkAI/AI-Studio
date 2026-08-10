@@ -324,8 +324,13 @@ public partial class ReadFileContent : MSGComponentBase
 
         try
         {
-            var fileContent = await UserFile.LoadFileData(filePath, this.RustService, this.DialogService);
-            await this.ApplyFileContentAsync(fileContent, filePath);
+            var extraction = await UserFile.LoadFileData(filePath, this.RustService, this.DialogService);
+
+            // The failure was already reported by UserFile.LoadFileData, so we only stop here:
+            if (!extraction.HasUsableContent)
+                return false;
+
+            await this.ApplyFileContentAsync(extraction.Content, filePath);
             this.Logger.LogInformation("Successfully loaded file content: {FilePath}", filePath);
             return true;
         }

@@ -1737,9 +1737,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MYTASKS::ASSISTANTMYTASKS::T534887559"] =
 -- Please provide a custom language.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::MYTASKS::ASSISTANTMYTASKS::T656744944"] = "Bitte wählen Sie eine eigene Sprache aus."
 
--- The custom prompt guide file is empty or could not be read.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T1173408044"] = "Der benutzerdefinierte Prompting Leitfaden ist leer oder konnte nicht gelesen werden."
-
 -- Use English for complex prompts and explicitly request response language if needed.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::PROMPTOPTIMIZER::ASSISTANTPROMPTOPTIMIZER::T119999744"] = "Verwenden Sie Englisch für komplexe Prompts und fordern Sie dann explizit die gewünschte Antwortsprache im Prompt an."
 
@@ -2867,6 +2864,9 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T4188329028"] = "Nein, b
 
 -- Export Chat to Microsoft Word
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T861873672"] = "Chat in Microsoft Word exportieren"
+
+-- The file '{0}' is currently not available and was not sent.
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTTEXT::T1432544573"] = "Die Datei „{0}“ ist derzeit nicht verfügbar und wurde nicht gesendet."
 
 -- The selected model '{0}' is no longer available from '{1}' (provider={2}). Please adapt your provider settings.
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTTEXT::T3267850764"] = "Das ausgewählte Modell '{0}' ist bei '{1}' (Anbieter={2}) nicht mehr verfügbar. Bitte passen Sie Ihre Anbietereinstellungen an."
@@ -9084,6 +9084,66 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::EXTERNALHTTPCLIENTTIMEOUT::T599774443"] = "Das
 -- policy files
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::EXTERNALHTTPCLIENTTIMEOUT::T632340680"] = "Richtliniendateien"
 
+-- The file type of '{0}' could not be determined, so the file was not sent.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONRESULTEXTENSIONS::T1459702734"] = "Der Dateityp von „{0}“ konnte nicht bestimmt werden. Daher wurde die Datei nicht gesendet."
+
+-- The file '{0}' is an executable program and was not sent, regardless of its file extension.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONRESULTEXTENSIONS::T1481258284"] = "Die Datei „{0}“ ist ein ausführbares Programm und wurde unabhängig von ihrer Dateierweiterung nicht gesendet."
+
+-- The file '{0}' could not be read and was not sent. When the file is stored on a network drive, the drive might be unavailable, or another program might be blocking the file.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONRESULTEXTENSIONS::T1488076079"] = "Die Datei „{0}“ konnte nicht gelesen und daher nicht gesendet werden. Wenn die Datei auf einem Netzlaufwerk gespeichert ist, ist das Laufwerk möglicherweise nicht verfügbar oder ein anderes Programm blockiert die Datei."
+
+-- The pages {1} of the file '{0}' could not be read. The remaining content was sent.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONRESULTEXTENSIONS::T1928400379"] = "Die Seiten {1} der Datei „{0}“ konnten nicht gelesen werden. Der verbleibende Inhalt wurde gesendet."
+
+-- Parts of the file '{0}' could not be read. The remaining content was sent.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONRESULTEXTENSIONS::T2036654169"] = "Teile der Datei „{0}“ konnten nicht gelesen werden. Der verbleibende Inhalt wurde gesendet."
+
+-- The file type of '{0}' is not supported, so the file was not sent.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONRESULTEXTENSIONS::T2064321829"] = "Der Dateityp von „{0}“ wird nicht unterstützt. Die Datei wurde daher nicht gesendet."
+
+-- The file '{0}' is not a readable spreadsheet and was not sent. It might be damaged or transferred incompletely.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONRESULTEXTENSIONS::T2240855899"] = "Die Datei „{0}“ ist keine lesbare Tabellenkalkulation und wurde nicht gesendet. Möglicherweise ist sie beschädigt oder unvollständig übertragen worden."
+
+-- The file '{0}' is currently open in another program, which is why it was not sent. Please close the file and try again. When the file is stored on a shared network drive, a colleague might have it open.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONRESULTEXTENSIONS::T2701144378"] = "Die Datei „{0}“ ist derzeit in einem anderen Programm geöffnet und wurde daher nicht gesendet. Bitte schließen Sie die Datei und versuchen Sie es erneut. Wenn die Datei auf einem freigegebenen Netzlaufwerk gespeichert ist, könnte sie von einem Kollegen geöffnet sein."
+
+-- Reading the file '{0}' took too long and was stopped, so the file was not sent. When the file is stored on a network drive, the connection might be slow or interrupted.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONRESULTEXTENSIONS::T2793077828"] = "Das Lesen der Datei „{0}“ dauerte zu lange und wurde abgebrochen. Daher wurde die Datei nicht gesendet. Wenn die Datei auf einem Netzlaufwerk gespeichert ist, könnte die Verbindung langsam oder unterbrochen sein."
+
+-- The file '{0}' is not a readable PDF and was not sent. It might be damaged or transferred incompletely.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONRESULTEXTENSIONS::T2891768359"] = "Die Datei „{0}“ ist keine lesbare PDF-Datei und wurde nicht gesendet. Sie ist möglicherweise beschädigt oder wurde unvollständig übertragen."
+
+-- No text could be read from the file '{0}', so it was not sent. It might contain images only, such as a scanned PDF without a text layer, or no readable text at all.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONRESULTEXTENSIONS::T2897122009"] = "Aus der Datei „{0}“ konnte kein Text gelesen werden, daher wurde sie nicht gesendet. Möglicherweise enthält sie nur Bilder, etwa ein gescanntes PDF ohne Textebene, oder gar keinen lesbaren Text."
+
+-- The file '{0}' is a {1}, which AI Studio cannot read, so it was not sent.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONRESULTEXTENSIONS::T3262447403"] = "Die Datei „{0}“ ist eine {1}, die AI Studio nicht lesen kann. Daher wurde sie nicht gesendet."
+
+-- The file '{0}' is actually a {1} and was read as such. Please correct its file extension.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONRESULTEXTENSIONS::T3297602719"] = "Die Datei „{0}“ ist tatsächlich eine {1} und wurde als solche gelesen. Bitte korrigieren Sie ihre Dateiendung."
+
+-- The file '{0}' is not a text file and was not sent. Its content could not be read as text, so it might have a wrong file extension.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONRESULTEXTENSIONS::T3303873344"] = "Die Datei „{0}“ ist keine Textdatei und wurde nicht gesendet. Ihr Inhalt konnte nicht als Text gelesen werden; möglicherweise hat sie die falsche Dateiendung."
+
+-- The file '{0}' could not be read and was not sent.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONRESULTEXTENSIONS::T3527027650"] = "Die Datei „{0}“ konnte nicht gelesen und daher nicht gesendet werden."
+
+-- The file '{0}' is protected and could not be opened, so it was not sent.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONRESULTEXTENSIONS::T3840033580"] = "Die Datei „{0}“ ist geschützt und konnte nicht geöffnet werden. Daher wurde sie nicht gesendet."
+
+-- AI Studio was not able to start its PDF engine, so the file '{0}' was not sent.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONRESULTEXTENSIONS::T3927045859"] = "AI Studio konnte das PDF-System nicht starten, daher wurde die Datei „{0}“ nicht gesendet."
+
+-- The file '{0}' does not exist anymore and was not sent.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONRESULTEXTENSIONS::T4071378057"] = "Die Datei „{0}“ existiert nicht mehr und wurde nicht gesendet."
+
+-- The file '{0}' did not provide any content and was not sent.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONRESULTEXTENSIONS::T4291141931"] = "Die Datei „{0}“ enthielt keinen Inhalt und wurde nicht gesendet."
+
+-- Reading the file '{0}' needs Pandoc, which is not available, so the file was not sent.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONRESULTEXTENSIONS::T594894810"] = "Zum Lesen der Datei „{0}“ wird Pandoc benötigt. Da Pandoc nicht verfügbar ist, wurde die Datei nicht gesendet."
+
 -- AI Studio couldn't install Pandoc because the archive was not found.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T1059477764"] = "AI Studio konnte Pandoc nicht installieren, da das Archiv nicht gefunden wurde."
 
@@ -9612,6 +9672,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T1041509726"] = "Text"
 -- Office Files
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T1063218378"] = "Office-Dateien"
 
+-- Tabular text
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T13157661"] = "Tabellarischer Text"
+
 -- Executable
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T1364437037"] = "Ausführbare Dateien"
 
@@ -10028,9 +10091,6 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEEXTENSIONS::T4261248356"] = "Von der KI 
 
 -- Pandoc Installation
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::USERFILE::T185447014"] = "Pandoc-Installation"
-
--- Pandoc may be required for importing files.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::USERFILE::T2596465560"] = "Für das Importieren von Dateien ist möglicherweise Pandoc erforderlich."
 
 -- The file path is null or empty and the file therefore can not be loaded.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::USERFILE::T932243993"] = "Der Dateipfad ist leer, daher kann die Datei nicht geladen werden."

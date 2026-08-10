@@ -8,7 +8,7 @@ public static class ContentStreamSseHandler
     private static readonly ConcurrentDictionary<string, List<ContentStreamPptxImageData>> CHUNKED_IMAGES = new();
     private static readonly ConcurrentDictionary<string, SlideManager> SLIDE_MANAGERS = new();
 
-    public static string? ProcessEvent(ContentStreamSseEvent? sseEvent, bool extractImages = true)
+    public static ContentStreamProcessedEvent ProcessEvent(ContentStreamSseEvent? sseEvent, bool extractImages = true)
     {
         switch (sseEvent)
         {
@@ -16,16 +16,16 @@ public static class ContentStreamSseHandler
                 switch (sseEvent.Metadata)
                 {
                     case ContentStreamTextMetadata:
-                        return sseEvent.Content;
-                
+                        return ContentStreamProcessedEvent.FromContent(sseEvent.Content);
+
                     case ContentStreamPdfMetadata pdfMetadata:
                         var pageNumber = pdfMetadata.Pdf?.PageNumber ?? 0;
-                        return $"""
+                        return ContentStreamProcessedEvent.FromContent($"""
                                 # Page {pageNumber}
                                 {sseEvent.Content}
-                                
-                                """;
-                    
+
+                                """);
+
                     case ContentStreamSpreadsheetMetadata spreadsheetMetadata:
                         var sheetName = spreadsheetMetadata.Spreadsheet?.SheetName;
                         var rowNumber = spreadsheetMetadata.Spreadsheet?.RowNumber;
@@ -37,30 +37,38 @@ public static class ContentStreamSseHandler
                         }
 
                         spreadSheetResult.Append(sseEvent.Content);
-                        return spreadSheetResult.ToString();
-                
+                        return ContentStreamProcessedEvent.FromContent(spreadSheetResult.ToString());
+
                     case ContentStreamDocumentMetadata:
                     case ContentStreamImageMetadata:
-                        return sseEvent.Content;
+                        return ContentStreamProcessedEvent.FromContent(sseEvent.Content);
 
                     case ContentStreamPresentationMetadata presentationMetadata:
                         var slideManager = SLIDE_MANAGERS.GetOrAdd(
                             sseEvent.StreamId!,
                             _ => new()
                         );
-                        
+
                         slideManager.AddSlide(presentationMetadata, sseEvent.Content, extractImages);
-                        return null;
-                    
+                        return ContentStreamProcessedEvent.NOTHING;
+
+                    //
+                    // The runtime reported a failure. It must not contribute any content: an empty
+                    // or partial document would otherwise be handed to the AI as if it were the
+                    // real file content.
+                    //
+                    case ContentStreamErrorMetadata errorMetadata:
+                        return ContentStreamProcessedEvent.FromError(errorMetadata.Error);
+
                     default:
-                        return sseEvent.Content;
+                        return ContentStreamProcessedEvent.FromContent(sseEvent.Content);
                 }
-                
+
             case { Content: not null, Metadata: null }:
-                return sseEvent.Content;
-            
+                return ContentStreamProcessedEvent.FromContent(sseEvent.Content);
+
             default:
-                return null;
+                return ContentStreamProcessedEvent.NOTHING;
         }
     }
 
