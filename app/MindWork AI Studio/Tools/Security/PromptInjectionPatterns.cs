@@ -50,7 +50,7 @@ internal static partial class PromptInjectionPatterns
     private const string UNICODE_SMUGGLING_PATTERN = """[\u200B-\u200F\u2060-\u2064\u2066-\u2069\uFEFF]""";
     private const string IGNORE_SAFETY_AFTER_DATA_PATTERN = """(?:after\s+reading|once\s+you\s+read|when\s+you\s+see)\s+.*?(?:ignore|bypass|override)\s+.*?(?:instructions?|safety|rules?)""";
     private const string PERSISTENT_OR_DELAYED_TRIGGER_PATTERN = """(?:(?:remember|store|save|persist|memorize)\s+(?:this|these|the\s+following)\s+(?:instructions?|rules?|message)|(?:later|in\s+the\s+next\s+message|when\s+you\s+see|whenever\s+you\s+read|if\s+you\s+encounter)\s+.{0,120}(?:ignore|bypass|override|reveal|exfiltrate))""";
-    private const string JAILBREAK_MARKER_PATTERN = """\b(?:jailbreak|prompt\s+injection|ignore\s+your\s+guardrails?|bypass\s+(?:your\s+)?(?:guardrails?|safety)|unfiltered\s+mode|do\s+anything\s+now|developer\s+mode|admin\s+mode|root\s+mode)\b""";
+    private const string JAILBREAK_MARKER_PATTERN = """\b(?:jailbreak(?:ed)?|prompt\s+injection|ignore\s+your\s+guardrails?|bypass\s+(?:your\s+)?(?:guardrails?|safety)|unfiltered\s+mode|do\s+anything\s+now|developer\s+mode|admin\s+mode|root\s+mode)\b""";
 
     private const string ANY_RULE_PATTERN =
         "(?:" + INSTRUCTION_OVERRIDE_PATTERN + ")|(?:" +
@@ -69,9 +69,6 @@ internal static partial class PromptInjectionPatterns
 
     [GeneratedRegex(@"\b[a-zA-Z](?:[\s._:/\\|-]+[a-zA-Z]){2,}\b", RegexOptions.CultureInvariant)]
     internal static partial Regex SpacedLetterSequenceRegex();
-
-    [GeneratedRegex(@"\b[a-zA-Z]{5,12}\b", RegexOptions.CultureInvariant)]
-    internal static partial Regex WordRegex();
 
     [GeneratedRegex(@"(?<![A-Za-z0-9+/=])[A-Za-z0-9+/]{16,}={0,2}(?![A-Za-z0-9+/=])", RegexOptions.CultureInvariant)]
     internal static partial Regex Base64Regex();

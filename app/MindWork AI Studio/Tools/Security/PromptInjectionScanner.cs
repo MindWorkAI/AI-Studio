@@ -1,4 +1,5 @@
 ﻿using System.Buffers;
+using System.Numerics;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -10,6 +11,7 @@ public sealed class PromptInjectionScanner(ILogger<PromptInjectionScanner> logge
     private const int MAX_DECODED_TEXT_LENGTH = 12_000;
     private const int MAX_FINDINGS = 8;
     private const int MAX_SNIPPET_LENGTH = 240;
+    private const int LEXICAL_WINDOW_SIZE = 12;
 
     private static readonly IReadOnlyDictionary<(int Length, char First, char Last), string[]> TYPOGLYCEMIA_KEYWORDS =
         CreateTypoglycemiaKeywordIndex();
@@ -22,7 +24,7 @@ public sealed class PromptInjectionScanner(ILogger<PromptInjectionScanner> logge
         var findings = new List<PromptInjectionFinding>();
         var findingKeys = new HashSet<string>(StringComparer.Ordinal);
 
-        this.ScanVariant(text, "raw", findings, findingKeys);
+        this.ScanVariant(text, "raw", findings, findingKeys, scanTypoglycemia: true);
         if (findings.Count >= MAX_FINDINGS)
             return new(source, findings);
 
@@ -33,46 +35,54 @@ public sealed class PromptInjectionScanner(ILogger<PromptInjectionScanner> logge
         if (findings.Count < MAX_FINDINGS)
             this.ScanDecodedCandidates(text, findings, findingKeys);
 
-        if (findings.Count < MAX_FINDINGS)
-            this.ScanTypoglycemia(text, findings, findingKeys);
-
         return new(source, findings);
     }
 
-    private void ScanVariant(string text, string stage, List<PromptInjectionFinding> findings, HashSet<string> findingKeys)
+    private void ScanVariant(
+        string text,
+        string stage,
+        List<PromptInjectionFinding> findings,
+        HashSet<string> findingKeys,
+        bool scanTypoglycemia = false)
     {
+        var shouldScanRegexRules = true;
         try
         {
-            if (!PromptInjectionPatterns.AnyRuleRegex().IsMatch(text))
-                return;
+            shouldScanRegexRules = PromptInjectionPatterns.AnyRuleRegex().IsMatch(text);
         }
         catch (RegexMatchTimeoutException exception)
         {
             logger.LogWarning(exception, "Prompt-injection regex prefilter timed out during stage '{Stage}'. Falling back to individual rules.", stage);
         }
 
-        foreach (var rule in PromptInjectionPatterns.RULES)
+        if (shouldScanRegexRules)
         {
-            if (findings.Count >= MAX_FINDINGS)
-                return;
-
-            Match match;
-            try
+            foreach (var rule in PromptInjectionPatterns.RULES)
             {
-                match = rule.Regex.Match(text);
-            }
-            catch (RegexMatchTimeoutException exception)
-            {
-                logger.LogWarning(exception, "Prompt-injection regex '{RuleId}' timed out during stage '{Stage}'.", rule.Id, stage);
-                continue;
-            }
+                if (findings.Count >= MAX_FINDINGS)
+                    return;
 
-            if (!match.Success)
-                continue;
+                Match match;
+                try
+                {
+                    match = rule.Regex.Match(text);
+                }
+                catch (RegexMatchTimeoutException exception)
+                {
+                    logger.LogWarning(exception, "Prompt-injection regex '{RuleId}' timed out during stage '{Stage}'.", rule.Id, stage);
+                    continue;
+                }
 
-            var snippet = ExtractSnippet(text, match.Index, match.Length);
-            AddFinding(findings, findingKeys, new(rule.Id, rule.Category, snippet));
+                if (!match.Success)
+                    continue;
+
+                var snippet = ExtractSnippet(text, match.Index, match.Length);
+                AddFinding(findings, findingKeys, new(rule.Id, rule.Category, snippet));
+            }
         }
+
+        if (findings.Count < MAX_FINDINGS)
+            ScanLexicalSignals(text, scanTypoglycemia, findings, findingKeys);
     }
 
     private void ScanDecodedCandidates(string text, List<PromptInjectionFinding> findings, HashSet<string> findingKeys)
@@ -114,29 +124,227 @@ public sealed class PromptInjectionScanner(ILogger<PromptInjectionScanner> logge
         }
     }
 
-    private void ScanTypoglycemia(string text, List<PromptInjectionFinding> findings, HashSet<string> findingKeys)
+    private static void ScanLexicalSignals(
+        string text,
+        bool scanTypoglycemia,
+        List<PromptInjectionFinding> findings,
+        HashSet<string> findingKeys)
     {
-        foreach (var match in PromptInjectionPatterns.WordRegex().EnumerateMatches(text))
+        Span<int> lastTokenPositions = stackalloc int[PromptInjectionLexicon.SIGNAL_COUNT];
+        Span<int> lastCharacterPositions = stackalloc int[PromptInjectionLexicon.SIGNAL_COUNT];
+        Span<int> lastTokenLengths = stackalloc int[PromptInjectionLexicon.SIGNAL_COUNT];
+        Span<bool> matchedRules = stackalloc bool[PromptInjectionLexicon.RULES.Count];
+        lastTokenPositions.Fill(int.MinValue);
+        matchedRules.Clear();
+
+        var tokenIndex = 0;
+        var characterIndex = 0;
+        while (characterIndex < text.Length)
         {
-            if (findings.Count >= MAX_FINDINGS)
-                return;
+            while (characterIndex < text.Length && !IsAsciiLetter(text[characterIndex]))
+                characterIndex++;
 
-            var token = text.AsSpan(match.Index, match.Length);
-            var key = (token.Length, char.ToLowerInvariant(token[0]), char.ToLowerInvariant(token[^1]));
-            if (!TYPOGLYCEMIA_KEYWORDS.TryGetValue(key, out var keywords))
-                continue;
-
-            foreach (var keyword in keywords)
-            {
-                if (!IsTypoglycemiaVariant(token, keyword))
-                    continue;
-
-                var snippet = ExtractSnippet(text, match.Index, match.Length);
-                AddFinding(findings, findingKeys, new($"typoglycemia:{keyword}", "evasion", snippet));
+            if (characterIndex >= text.Length)
                 break;
+
+            var tokenStart = characterIndex;
+            while (characterIndex < text.Length &&
+                   (IsAsciiLetter(text[characterIndex]) || text[characterIndex] == '\''))
+            {
+                characterIndex++;
             }
+
+            var token = text.AsSpan(tokenStart, characterIndex - tokenStart);
+            var signals = PromptInjectionLexicon.Classify(token);
+            if (signals != PromptInjectionLexicalSignal.NONE)
+            {
+                UpdateSignalOccurrences(
+                    signals,
+                    tokenIndex,
+                    tokenStart,
+                    token.Length,
+                    lastTokenPositions,
+                    lastCharacterPositions,
+                    lastTokenLengths);
+
+                for (var ruleIndex = 0; ruleIndex < PromptInjectionLexicon.RULES.Count; ruleIndex++)
+                {
+                    if (matchedRules[ruleIndex])
+                        continue;
+
+                    var rule = PromptInjectionLexicon.RULES[ruleIndex];
+                    if (!TryMatchLexicalRule(
+                            rule,
+                            tokenIndex,
+                            lastTokenPositions,
+                            lastCharacterPositions,
+                            lastTokenLengths,
+                            out var matchStart,
+                            out var matchLength))
+                    {
+                        continue;
+                    }
+
+                    matchedRules[ruleIndex] = true;
+                    var snippet = ExtractSnippet(text, matchStart, matchLength);
+                    AddFinding(findings, findingKeys, new(rule.Id, rule.Category, snippet));
+                    if (findings.Count >= MAX_FINDINGS)
+                        return;
+                }
+            }
+
+            if (scanTypoglycemia && IsTypoglycemiaCandidate(token))
+            {
+                ScanTypoglycemiaToken(text, token, tokenStart, findings, findingKeys);
+                if (findings.Count >= MAX_FINDINGS)
+                    return;
+            }
+
+            tokenIndex++;
         }
     }
+
+    private static void UpdateSignalOccurrences(
+        PromptInjectionLexicalSignal signals,
+        int tokenIndex,
+        int tokenStart,
+        int tokenLength,
+        Span<int> lastTokenPositions,
+        Span<int> lastCharacterPositions,
+        Span<int> lastTokenLengths)
+    {
+        var remainingSignals = (uint)signals;
+        while (remainingSignals != 0)
+        {
+            var signalIndex = BitOperations.TrailingZeroCount(remainingSignals);
+            lastTokenPositions[signalIndex] = tokenIndex;
+            lastCharacterPositions[signalIndex] = tokenStart;
+            lastTokenLengths[signalIndex] = tokenLength;
+            remainingSignals &= remainingSignals - 1;
+        }
+    }
+
+    private static bool TryMatchLexicalRule(
+        PromptInjectionLexicalRule rule,
+        int currentTokenIndex,
+        ReadOnlySpan<int> lastTokenPositions,
+        ReadOnlySpan<int> lastCharacterPositions,
+        ReadOnlySpan<int> lastTokenLengths,
+        out int matchStart,
+        out int matchLength)
+    {
+        matchStart = int.MaxValue;
+        var matchEnd = 0;
+
+        if (!TryIncludeMostRecentSignal(
+                rule.First,
+                currentTokenIndex,
+                lastTokenPositions,
+                lastCharacterPositions,
+                lastTokenLengths,
+                ref matchStart,
+                ref matchEnd) ||
+            !TryIncludeMostRecentSignal(
+                rule.Second,
+                currentTokenIndex,
+                lastTokenPositions,
+                lastCharacterPositions,
+                lastTokenLengths,
+                ref matchStart,
+                ref matchEnd) ||
+            rule.Third != PromptInjectionLexicalSignal.NONE &&
+            !TryIncludeMostRecentSignal(
+                rule.Third,
+                currentTokenIndex,
+                lastTokenPositions,
+                lastCharacterPositions,
+                lastTokenLengths,
+                ref matchStart,
+                ref matchEnd))
+        {
+            matchStart = 0;
+            matchLength = 0;
+            return false;
+        }
+
+        matchLength = matchEnd - matchStart;
+        return true;
+    }
+
+    private static bool TryIncludeMostRecentSignal(
+        PromptInjectionLexicalSignal allowedSignals,
+        int currentTokenIndex,
+        ReadOnlySpan<int> lastTokenPositions,
+        ReadOnlySpan<int> lastCharacterPositions,
+        ReadOnlySpan<int> lastTokenLengths,
+        ref int matchStart,
+        ref int matchEnd)
+    {
+        var mostRecentSignalIndex = -1;
+        var mostRecentTokenIndex = int.MinValue;
+        var remainingSignals = (uint)allowedSignals;
+        while (remainingSignals != 0)
+        {
+            var signalIndex = BitOperations.TrailingZeroCount(remainingSignals);
+            if (lastTokenPositions[signalIndex] > mostRecentTokenIndex)
+            {
+                mostRecentSignalIndex = signalIndex;
+                mostRecentTokenIndex = lastTokenPositions[signalIndex];
+            }
+
+            remainingSignals &= remainingSignals - 1;
+        }
+
+        if (mostRecentSignalIndex < 0 ||
+            mostRecentTokenIndex < currentTokenIndex - (LEXICAL_WINDOW_SIZE - 1))
+        {
+            return false;
+        }
+
+        var signalStart = lastCharacterPositions[mostRecentSignalIndex];
+        matchStart = Math.Min(matchStart, signalStart);
+        matchEnd = Math.Max(matchEnd, signalStart + lastTokenLengths[mostRecentSignalIndex]);
+        return true;
+    }
+
+    private static bool IsTypoglycemiaCandidate(ReadOnlySpan<char> token)
+    {
+        if (token.Length is < 5 or > 12)
+            return false;
+
+        foreach (var character in token)
+        {
+            if (!IsAsciiLetter(character))
+                return false;
+        }
+
+        return true;
+    }
+
+    private static void ScanTypoglycemiaToken(
+        string text,
+        ReadOnlySpan<char> token,
+        int tokenStart,
+        List<PromptInjectionFinding> findings,
+        HashSet<string> findingKeys)
+    {
+        var key = (token.Length, char.ToLowerInvariant(token[0]), char.ToLowerInvariant(token[^1]));
+        if (!TYPOGLYCEMIA_KEYWORDS.TryGetValue(key, out var keywords))
+            return;
+
+        foreach (var keyword in keywords)
+        {
+            if (!IsTypoglycemiaVariant(token, keyword))
+                continue;
+
+            var snippet = ExtractSnippet(text, tokenStart, token.Length);
+            AddFinding(findings, findingKeys, new($"typoglycemia:{keyword}", "evasion", snippet));
+            return;
+        }
+    }
+
+    private static bool IsAsciiLetter(char character) =>
+        character is >= 'A' and <= 'Z' or >= 'a' and <= 'z';
 
     private static bool IsTypoglycemiaVariant(ReadOnlySpan<char> token, string keyword)
     {
