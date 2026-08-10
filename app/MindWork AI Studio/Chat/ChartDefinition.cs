@@ -26,4 +26,6 @@ public enum ChartDefinitionType
     LINE,
     PIE,
     DONUT,
+    HEATMAP,
+    TIME_SERIES,
 }
