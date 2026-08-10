@@ -15,6 +15,7 @@ use qdrant_edge::{
     UpdateOperation, ValueVariants, VectorInternal, Vectors, WithPayloadInterface, WithVector,
 };
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 use tauri::Manager;
 
 use crate::api_token::APIToken;
@@ -27,6 +28,8 @@ const HNSW_EF_CONSTRUCT: usize = 100;
 const HNSW_FULL_SCAN_THRESHOLD_KB: usize = 10_000;
 const HNSW_MAX_INDEXING_THREADS: usize = 0;
 const VECTOR_INDEXING_THRESHOLD_KB: usize = 10_000;
+const STORE_INITIALIZATION_MARKER: &str = "store_name.txt";
+const STORE_INITIALIZATION_MARKER_TEMP: &str = "store_name.tmp";
 
 type QdrantEdgeResult<T> = Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
@@ -182,21 +185,52 @@ impl QdrantEdgeDatabase {
 
     fn store_path(&self, store_name: &str) -> QdrantEdgeResult<PathBuf> {
         validate_store_name(store_name)?;
-        Ok(self.base_path.join("stores").join(store_name))
+        Ok(self.base_path.join("stores").join(store_directory_name(store_name)))
     }
 
     // To ensure a shard exists and that you can insert a vector
     fn get_or_create_store(&mut self, store_name: &str, vector_size: usize) -> QdrantEdgeResult<&EdgeShard> {
+        let path = self.store_path(store_name)?;
+        let is_initialized = store_is_initialized(&path, store_name)?;
         if self.shards.contains_key(store_name) {
-            return Ok(self.shards.get(store_name).unwrap());
+            if is_initialized {
+                return Ok(self.shards.get(store_name).unwrap());
+            }
+
+            warn!(Source = "Qdrant Edge"; "Removing stale cached vector store '{}' because its initialized data directory no longer exists.", store_name);
+            self.shards.remove(store_name);
         }
 
-        let path = self.store_path(store_name)?;
-        let shard = if has_existing_store(&path) {
-            EdgeShard::load(&path, None)?
+        if path.exists() && !is_initialized {
+            warn!(Source = "Qdrant Edge"; "Removing incompletely initialized vector store '{}' before recreating it.", store_name);
+            fs::remove_dir_all(&path).map_err(|error| {
+                format!("Failed to remove incomplete vector store '{store_name}' at '{}': {error}", path.display())
+            })?;
+        }
+
+        let shard = if is_initialized {
+            EdgeShard::load(&path, None).map_err(|error| {
+                format!("Failed to load vector store '{store_name}' from '{}': {error}", path.display())
+            })?
         } else {
-            fs::create_dir_all(&path)?;
-            EdgeShard::new(&path, edge_config(vector_size))?
+            fs::create_dir_all(&path).map_err(|error| {
+                format!("Failed to create directory for vector store '{store_name}' at '{}': {error}", path.display())
+            })?;
+            let shard = match EdgeShard::new(&path, edge_config(vector_size)) {
+                Ok(shard) => shard,
+                Err(error) => {
+                    let cleanup_issue = remove_partial_store(&path);
+                    return Err(format!("Failed to create vector store '{store_name}' at '{}': {error}{cleanup_issue}", path.display()).into());
+                },
+            };
+
+            if let Err(error) = write_store_initialization_marker(&path, store_name) {
+                drop(shard);
+                let cleanup_issue = remove_partial_store(&path);
+                return Err(format!("Failed to finalize vector store '{store_name}' at '{}': {error}{cleanup_issue}", path.display()).into());
+            }
+
+            shard
         };
 
         self.shards.insert(store_name.to_string(), shard);
@@ -205,16 +239,31 @@ impl QdrantEdgeDatabase {
 
     // To check whether a shard exists so you can delete a file from it
     fn get_existing_store(&mut self, store_name: &str) -> QdrantEdgeResult<Option<&EdgeShard>> {
+        let path = self.store_path(store_name)?;
+        let is_initialized = store_is_initialized(&path, store_name)?;
         if self.shards.contains_key(store_name) {
-            return Ok(self.shards.get(store_name));
+            if is_initialized {
+                return Ok(self.shards.get(store_name));
+            }
+
+            warn!(Source = "Qdrant Edge"; "Removing stale cached vector store '{}' because its initialized data directory no longer exists.", store_name);
+            self.shards.remove(store_name);
         }
 
-        let path = self.store_path(store_name)?;
-        if !has_existing_store(&path) {
+        if path.exists() && !is_initialized {
+            warn!(Source = "Qdrant Edge"; "Removing incompletely initialized vector store '{}' before continuing.", store_name);
+            fs::remove_dir_all(&path).map_err(|error| {
+                format!("Failed to remove incomplete vector store '{store_name}' at '{}': {error}", path.display())
+            })?;
+        }
+
+        if !is_initialized {
             return Ok(None);
         }
 
-        let shard = EdgeShard::load(&path, None)?;
+        let shard = EdgeShard::load(&path, None).map_err(|error| {
+            format!("Failed to load vector store '{store_name}' from '{}': {error}", path.display())
+        })?;
         self.shards.insert(store_name.to_string(), shard);
         Ok(self.shards.get(store_name))
     }
@@ -224,7 +273,7 @@ impl QdrantEdgeDatabase {
         let stores_count = if stores_path.exists() {
             fs::read_dir(stores_path)?
                 .filter_map(Result::ok)
-                .filter(|entry| entry.path().is_dir())
+                .filter(|entry| entry.path().join(STORE_INITIALIZATION_MARKER).is_file())
                 .count()
         } else {
             0
@@ -337,6 +386,16 @@ impl QdrantEdgeDatabase {
     fn base_path(&self) -> PathBuf {
         self.base_path.clone()
     }
+}
+
+fn store_directory_name(store_name: &str) -> String {
+    // Qdrant creates deeply nested files, so keep the physical path short on Windows.
+    let digest = Sha256::digest(store_name.as_bytes());
+    let short_hash = digest[..12]
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect::<String>();
+    format!("store_{short_hash}")
 }
 
 fn qdrant_edge_base_path() -> QdrantEdgeResult<PathBuf> {
@@ -616,8 +675,38 @@ fn edge_optimizers_config() -> EdgeOptimizersConfig {
     }
 }
 
-fn has_existing_store(path: &Path) -> bool {
-    path.join("edge_config.json").exists() || path.join("segments").exists()
+fn store_is_initialized(path: &Path, store_name: &str) -> QdrantEdgeResult<bool> {
+    if !path.join("edge_config.json").is_file() || !path.join("segments").is_dir() {
+        return Ok(false);
+    }
+
+    let marker_path = path.join(STORE_INITIALIZATION_MARKER);
+    if !marker_path.exists() {
+        return Ok(false);
+    }
+
+    let initialized_store_name = fs::read_to_string(&marker_path).map_err(|error| {
+        format!("Failed to read vector store initialization marker '{}': {error}", marker_path.display())
+    })?;
+    if initialized_store_name != store_name {
+        return Err(format!("Vector store path collision at '{}': expected store '{}', but the path belongs to '{}'.", path.display(), store_name, initialized_store_name).into());
+    }
+
+    Ok(true)
+}
+
+fn write_store_initialization_marker(path: &Path, store_name: &str) -> std::io::Result<()> {
+    let marker_path = path.join(STORE_INITIALIZATION_MARKER);
+    let temporary_marker_path = path.join(STORE_INITIALIZATION_MARKER_TEMP);
+    fs::write(&temporary_marker_path, store_name)?;
+    fs::rename(temporary_marker_path, marker_path)
+}
+
+fn remove_partial_store(path: &Path) -> String {
+    match fs::remove_dir_all(path) {
+        Ok(()) => String::new(),
+        Err(error) => format!(" The incomplete store could not be removed: {error}"),
+    }
 }
 
 fn validate_vector_size(vector_size: usize) -> QdrantEdgeResult<()> {

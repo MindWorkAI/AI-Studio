@@ -212,6 +212,15 @@ fn handle_tokenizer_validate(path: &PathBuf) -> Result<usize, String> {
 }
 
 pub fn get_token_count(text: &str) -> Result<usize, String> {
+    get_token_count_internal(text, true)
+}
+
+pub fn get_segment_token_count(text: &str) -> Result<usize, String> {
+    // Special tokens belong to the final encoding and would inflate sums across many segments.
+    get_token_count_internal(text, false)
+}
+
+fn get_token_count_internal(text: &str, add_special_tokens: bool) -> Result<usize, String> {
     if text.trim().is_empty() {
         return Ok(0);
     }
@@ -234,7 +243,7 @@ pub fn get_token_count(text: &str) -> Result<usize, String> {
             return Err(unavailable_with_status_update("Tokenizer not initialized."));
         }
     };
-    let token_count = match tokenizer.encode(text, true) {
+    let token_count = match tokenizer.encode(text, add_special_tokens) {
         Ok(enc) => enc.len(),
         Err(e) => {
             let reason = format!("Failed to tokenize text: {e}");

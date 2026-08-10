@@ -28,17 +28,40 @@ pub struct Chunk {
     pub content: String,
     pub stream_id: String,
     pub metadata: Metadata,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub token_count: Option<usize>,
 }
 
 impl Chunk {
     pub fn new(content: String, metadata: Metadata) -> Self {
-        Chunk { content, stream_id: String::new(), metadata }
+        Chunk { content, stream_id: String::new(), metadata, token_count: None }
     }
     
     pub fn set_stream_id(&mut self, stream_id: &str) { self.stream_id = stream_id.to_string(); }
+
+    pub fn set_token_count(&mut self) -> std::result::Result<(), String> {
+        self.token_count = Some(crate::tokenizer::get_segment_token_count(&self.content)?);
+        Ok(())
+    }
+
+    fn into_bounded_text_segments(self) -> Vec<Self> {
+        if matches!(&self.metadata, Metadata::Image {}) {
+            return vec![self];
+        }
+
+        let ranges = bounded_text_segment_ranges(&self.content);
+        if ranges.len() == 1 {
+            return vec![self];
+        }
+
+        ranges
+            .into_iter()
+            .map(|(start, end)| Chunk::new(self.content[start..end].to_string(), self.metadata.clone()))
+            .collect()
+    }
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Clone, Debug, Serialize)]
 pub enum Metadata {
     Text {
         line_number: usize
@@ -62,7 +85,7 @@ pub enum Metadata {
     },
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Clone, Debug, Serialize)]
 pub struct Base64Image {
     pub id: String,
     pub content: String,
@@ -80,6 +103,7 @@ const TO_MARKDOWN: &str = "markdown";
 const DOCX: &str = "docx";
 const ODT: &str = "odt";
 const IMAGE_SEGMENT_SIZE_IN_CHARS: usize = 8_192; // equivalent to ~ 5500 token
+const MAX_TEXT_SEGMENT_LENGTH_IN_CHARS: usize = 100_000;
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 type ChunkStream = Pin<Box<dyn Stream<Item = Result<Chunk>> + Send>>;
@@ -90,6 +114,8 @@ pub struct ExtractDataQuery {
     stream_id: String,
     #[serde(deserialize_with = "deserialize_bool_case_insensitive")]
     extract_images: bool,
+    #[serde(default, deserialize_with = "deserialize_bool_case_insensitive")]
+    include_token_count: bool,
 }
 
 fn deserialize_bool_case_insensitive<'de, D>(deserializer: D) -> std::result::Result<bool, D::Error>
@@ -145,11 +171,21 @@ pub async fn extract_data(
 
                 match stream_result {
                     Ok(mut stream) => {
-                        while let Some(chunk) = stream.next().await {
+                        'stream_chunks: while let Some(chunk) = stream.next().await {
                             match chunk {
-                                Ok(mut chunk) => {
-                                    chunk.set_stream_id(id_ref);
-                                    yield Ok(Event::default().json_data(&chunk).unwrap_or_else(|e| Event::default().data(format!("Error: {e}"))));
+                                Ok(chunk) => {
+                                    let chunks = chunk.into_bounded_text_segments();
+
+                                    for mut chunk in chunks {
+                                        chunk.set_stream_id(id_ref);
+                                        if query.include_token_count {
+                                            if let Err(e) = chunk.set_token_count() {
+                                                yield Ok(Event::default().json_data(format!("Error counting tokens: {e}")).unwrap_or_else(|_| Event::default().data(format!("Error counting tokens: {e}"))));
+                                                break 'stream_chunks;
+                                            }
+                                        }
+                                        yield Ok(Event::default().json_data(&chunk).unwrap_or_else(|e| Event::default().data(format!("Error: {e}"))));
+                                    }
                                 },
 
                                 Err(e) => {
@@ -173,6 +209,33 @@ pub async fn extract_data(
     };
 
     Sse::new(stream)
+}
+
+fn bounded_text_segment_ranges(content: &str) -> Vec<(usize, usize)> {
+    let mut ranges = Vec::new();
+    let mut start = 0;
+
+    while start < content.len() {
+        let remaining = &content[start..];
+        let Some(maximum_end_offset) = remaining
+            .char_indices()
+            .nth(MAX_TEXT_SEGMENT_LENGTH_IN_CHARS)
+            .map(|(index, _)| index)
+        else {
+            ranges.push((start, content.len()));
+            break;
+        };
+
+        let end = start + maximum_end_offset;
+        ranges.push((start, end));
+        start = end;
+    }
+
+    if ranges.is_empty() {
+        ranges.push((0, 0));
+    }
+
+    ranges
 }
 
 async fn stream_data(file_path: &str, extract_images: bool) -> Result<ChunkStream> {

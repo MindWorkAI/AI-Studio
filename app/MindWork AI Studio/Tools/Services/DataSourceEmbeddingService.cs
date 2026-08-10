@@ -570,6 +570,10 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                 var startedAtUtc = DateTime.UtcNow;
                 var chunkCount = await this.IndexOneFileAsync(embeddingState, vectorStore, dataSource, file, fingerprint, embeddingProvider, provider, manifest, optimizationTracker, token);
                 token.ThrowIfCancellationRequested();
+                var fingerprintAfterEmbedding = BuildFileMetadataHash(file);
+                if (!string.Equals(fingerprint, fingerprintAfterEmbedding, StringComparison.Ordinal))
+                    throw new IOException($"The file '{file.FullName}' changed while it was being embedded. Its partial embeddings will be discarded and the file will be retried on the next refresh.");
+
                 var embeddedAtUtc = DateTime.UtcNow;
                 var record = new EmbeddedFileRecord(
                     fingerprint,
@@ -606,9 +610,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                 lastError = exception.Message;
                 failureDetails.Add(new DataSourceEmbeddingFailure(file.FullName, exception.Message));
                 manifest.Files.Remove(file.FullName);
-                await this.DeleteFilePointsAsync(vectorStore, collectionName, file.FullName, token);
-                optimizationTracker.MarkChanged();
-                await embeddingState.DeleteFileAsync(dataSource.Id, file.FullName, token);
+                await this.CleanupFailedFileAsync(embeddingState, vectorStore, dataSource, collectionName, file.FullName, optimizationTracker, token);
 
                 logger.LogWarning(exception, "Failed to embed file '{FilePath}' for data source '{DataSourceName}'.", file.FullName, dataSource.Name);
                 this.UpsertStatus(this.CreateStatus(dataSource, DataSourceEmbeddingState.RUNNING, totalFiles, skippedFiles + completedFiles, failedFiles, file.Name, exception.Message, failureDetails));
@@ -669,7 +671,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         var parentFile = this.CreateEmbeddingStateFile(dataSource, file, fingerprint, 0, DateTime.UtcNow);
         await embeddingState.UpsertFileAsync(dataSource.Id, parentFile, token);
 
-        var embeddingBatchSize = embeddingProvider.EffectiveEmbeddingBatchSize;
+        var embeddingBatchSize = Math.Max(1, embeddingProvider.EffectiveEmbeddingBatchSize);
         var batch = new List<EmbeddingChunkDraft>(embeddingBatchSize);
         var totalChunkCount = 0;
 
@@ -743,15 +745,21 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         if (vectorSize <= 0)
             throw new InvalidOperationException("The embedding provider returned an empty vector.");
 
+        if (vectors.Any(vector => vector.Count != vectorSize))
+            throw new InvalidOperationException("The embedding provider returned vectors with inconsistent dimensions.");
+
+        if (vectors.Any(vector => vector.Any(value => !float.IsFinite(value))))
+            throw new InvalidOperationException("The embedding provider returned a vector containing a non-finite value.");
+
         if (manifest.VectorSize > 0 && manifest.VectorSize != vectorSize)
             throw new InvalidOperationException($"The embedding vector size changed from {manifest.VectorSize} to {vectorSize}. Please re-save the data source to trigger a clean re-index.");
 
         if (manifest.VectorSize == 0)
         {
             token.ThrowIfCancellationRequested();
-            manifest.VectorSize = vectorSize;
             await this.EnsureCollectionExistsAsync(vectorStore, collectionName, vectorSize, token);
             await embeddingState.UpdateVectorSizeAsync(dataSource.Id, vectorSize, token);
+            manifest.VectorSize = vectorSize;
             logger.LogInformation(
                 "Created embedding collection '{CollectionName}' with vector size {VectorSize} for data source '{DataSourceName}' ({DataSourceId}).",
                 collectionName,
@@ -844,6 +852,53 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     private async Task DeleteFilePointsAsync(VectorStoreClient vectorStore, string collectionName, string filePath, CancellationToken token)
     {
         await vectorStore.DeleteEmbeddingByFile(collectionName, filePath, token);
+    }
+
+    private async Task CleanupFailedFileAsync(
+        EmbeddingStateClient embeddingState,
+        VectorStoreClient vectorStore,
+        IDataSource dataSource,
+        string collectionName,
+        string filePath,
+        VectorStoreOptimizationTracker optimizationTracker,
+        CancellationToken token)
+    {
+        try
+        {
+            await this.DeleteFilePointsAsync(vectorStore, collectionName, filePath, token);
+            optimizationTracker.MarkChanged();
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(
+                exception,
+                "Could not remove vector points while cleaning up failed embedding for file '{FilePath}' in data source '{DataSourceName}' ({DataSourceId}).",
+                filePath,
+                dataSource.Name,
+                dataSource.Id);
+        }
+
+        try
+        {
+            await embeddingState.DeleteFileAsync(dataSource.Id, filePath, token);
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(
+                exception,
+                "Could not remove embedding state while cleaning up failed embedding for file '{FilePath}' in data source '{DataSourceName}' ({DataSourceId}).",
+                filePath,
+                dataSource.Name,
+                dataSource.Id);
+        }
     }
 
     private async Task OptimizeCollectionIfNeededAsync(
