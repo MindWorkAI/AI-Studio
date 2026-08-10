@@ -339,6 +339,13 @@ public sealed class ContentText : IContent
                         await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.Description, extraction.ToPartialUserMessage(document.FileName)));
                     }
 
+                    // The file was read correctly, but its extension lies about what it contains:
+                    if (extraction.HasExtensionMismatch)
+                    {
+                        LOGGER.LogWarning("The file attachment '{FilePath}' is actually a '{DetectedFormat}'.", document.FilePath, extraction.DetectedFormat);
+                        await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.RuleFolder, extraction.ToExtensionMismatchUserMessage(document.FileName)));
+                    }
+
                     documentBlocks.AppendLine();
                     documentBlocks.AppendLine("---------------------------------------");
                     documentBlocks.AppendLine($"File path: {document.FilePath}");

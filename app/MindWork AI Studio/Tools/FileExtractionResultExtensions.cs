@@ -20,7 +20,29 @@ internal static class FileExtractionResultExtensions
     /// <param name="result">The extraction result.</param>
     /// <param name="fileName">The name of the file, as shown to the user.</param>
     /// <returns>The localized message.</returns>
-    internal static string ToUserMessage(this FileExtractionResult result, string fileName) => result.ErrorCode.ToUserMessage(fileName);
+    internal static string ToUserMessage(this FileExtractionResult result, string fileName)
+    {
+        // When we know what the file really is, naming it beats a generic "not supported":
+        if (result.ErrorCode is FileExtractionErrorCode.UNSUPPORTED && result.DetectedFormat is not null)
+            return string.Format(TB("The file '{0}' is a {1}, which AI Studio cannot read, so it was not sent."), fileName, result.DetectedFormat);
+
+        return result.ErrorCode.ToUserMessage(fileName);
+    }
+
+    /// <summary>
+    /// Gets the localized message for a file whose content does not match its file extension.
+    /// </summary>
+    /// <remarks>
+    /// This is a notice, not a failure: the file was read according to its content. We still tell
+    /// the user, because a wrong extension is a real problem for every other program as well.
+    /// </remarks>
+    /// <param name="result">The extraction result.</param>
+    /// <param name="fileName">The name of the file, as shown to the user.</param>
+    /// <returns>The localized message.</returns>
+    internal static string ToExtensionMismatchUserMessage(this FileExtractionResult result, string fileName) => string.Format(
+        TB("The file '{0}' is actually a {1} and was read as such. Please correct its file extension."),
+        fileName,
+        result.DetectedFormat);
 
     /// <summary>
     /// Gets the localized message which explains why a file could not be read.
@@ -61,6 +83,10 @@ internal static class FileExtractionResultExtensions
         FileExtractionErrorCode.PANDOC_UNAVAILABLE => TB("Reading the file '{0}' needs Pandoc, which is not available, so the file was not sent."),
         FileExtractionErrorCode.NO_TEXT_EXTRACTED => TB("No text could be read from the file '{0}', so it was not sent. The file might consist of scanned images without a text layer."),
         FileExtractionErrorCode.NO_CONTENT => TB("The file '{0}' did not provide any content and was not sent."),
+
+        FileExtractionErrorCode.NOT_TEXT_CONTENT => TB("The file '{0}' is not a text file and was not sent. Its content could not be read as text, so it might have a wrong file extension."),
+
+        FileExtractionErrorCode.EXECUTABLE_REJECTED => TB("The file '{0}' is an executable program and was not sent, regardless of its file extension."),
         FileExtractionErrorCode.FORMAT_DETECTION_FAILED => TB("The file type of '{0}' could not be determined, so the file was not sent."),
         FileExtractionErrorCode.UNSUPPORTED => TB("The file type of '{0}' is not supported, so the file was not sent."),
 

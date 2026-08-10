@@ -13,15 +13,16 @@ namespace AIStudio.Tools;
 /// <param name="ErrorCode">Why the extraction failed or lost parts of the file.</param>
 /// <param name="ErrorMessage">The technical failure description, meant for logs and diagnostics.</param>
 /// <param name="FailedPages">The pages which could not be read, when known.</param>
-public readonly record struct FileExtractionResult(FileExtractionOutcome Outcome, string Content, FileExtractionErrorCode ErrorCode, string? ErrorMessage, IReadOnlyList<int> FailedPages)
+/// <param name="DetectedFormat">The format the runtime identified by looking at the content, when it is worth naming.</param>
+public readonly record struct FileExtractionResult(FileExtractionOutcome Outcome, string Content, FileExtractionErrorCode ErrorCode, string? ErrorMessage, IReadOnlyList<int> FailedPages, string? DetectedFormat)
 {
     private static readonly int[] NO_FAILED_PAGES = [];
 
-    public static FileExtractionResult Success(string content) => new(FileExtractionOutcome.SUCCESS, content, FileExtractionErrorCode.NONE, null, NO_FAILED_PAGES);
+    public static FileExtractionResult Success(string content, string? detectedFormat = null) => new(FileExtractionOutcome.SUCCESS, content, FileExtractionErrorCode.NONE, null, NO_FAILED_PAGES, detectedFormat);
 
-    public static FileExtractionResult Partial(string content, IReadOnlyList<int> failedPages) => new(FileExtractionOutcome.PARTIAL, content, FileExtractionErrorCode.PAGE_EXTRACTION_FAILED, null, failedPages);
+    public static FileExtractionResult Partial(string content, IReadOnlyList<int> failedPages, string? detectedFormat = null) => new(FileExtractionOutcome.PARTIAL, content, FileExtractionErrorCode.PAGE_EXTRACTION_FAILED, null, failedPages, detectedFormat);
 
-    public static FileExtractionResult Failed(FileExtractionErrorCode errorCode, string? errorMessage) => new(FileExtractionOutcome.FAILED, string.Empty, errorCode, errorMessage, NO_FAILED_PAGES);
+    public static FileExtractionResult Failed(FileExtractionErrorCode errorCode, string? errorMessage, string? detectedFormat = null) => new(FileExtractionOutcome.FAILED, string.Empty, errorCode, errorMessage, NO_FAILED_PAGES, detectedFormat);
 
     /// <summary>
     /// Gets a value indicating whether the whole file was read.
@@ -33,4 +34,14 @@ public readonly record struct FileExtractionResult(FileExtractionOutcome Outcome
     /// either succeeded or lost only parts of the file.
     /// </summary>
     public bool HasUsableContent => this.Outcome is FileExtractionOutcome.SUCCESS or FileExtractionOutcome.PARTIAL;
+
+    /// <summary>
+    /// Gets a value indicating whether the file was read, but its content did not match its file
+    /// extension.
+    /// </summary>
+    /// <remarks>
+    /// On a readable file, only the mismatch notice names a detected format, which is why no
+    /// separate flag is needed here.
+    /// </remarks>
+    public bool HasExtensionMismatch => this.HasUsableContent && this.DetectedFormat is not null;
 }

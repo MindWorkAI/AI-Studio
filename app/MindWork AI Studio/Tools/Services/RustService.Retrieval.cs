@@ -28,6 +28,7 @@ public sealed partial class RustService
         var hasPartialFailure = false;
         var failureCode = FileExtractionErrorCode.NONE;
         string? failureMessage = null;
+        string? detectedFormat = null;
 
         try
         {
@@ -77,12 +78,32 @@ public sealed partial class RustService
                     if (processedEvent.Error is not null)
                     {
                         var error = processedEvent.Error;
+
+                        //
+                        // A notice is not a failure: the file was read completely, we only learned
+                        // something about it worth telling the user. It must not change the outcome.
+                        //
+                        if (error.IsNotice)
+                        {
+                            this.logger?.LogInformation(
+                                "The runtime reported a notice while reading '{Path}': code={ErrorCode}, detectedFormat='{DetectedFormat}', message='{Message}'",
+                                path,
+                                error.ParsedCode,
+                                error.DetectedFormat,
+                                error.Message);
+
+                            detectedFormat ??= error.DetectedFormat;
+                            chunkCount++;
+                            continue;
+                        }
+
                         this.logger?.LogError(
-                            "The runtime reported a failure while reading '{Path}': code={ErrorCode}, page={PageNumber}, partial={IsPartialFailure}, message='{Message}'",
+                            "The runtime reported a failure while reading '{Path}': code={ErrorCode}, page={PageNumber}, partial={IsPartialFailure}, detectedFormat='{DetectedFormat}', message='{Message}'",
                             path,
                             error.ParsedCode,
                             error.PageNumber,
                             error.IsPartialFailure,
+                            error.DetectedFormat,
                             error.Message);
 
                         //
@@ -100,6 +121,7 @@ public sealed partial class RustService
                         {
                             failureCode = error.ParsedCode;
                             failureMessage = error.Message;
+                            detectedFormat = error.DetectedFormat;
                         }
                     }
                     else if (processedEvent.Content is not null)
@@ -137,7 +159,7 @@ public sealed partial class RustService
         }
 
         if (failureCode is not FileExtractionErrorCode.NONE)
-            return FileExtractionResult.Failed(failureCode, failureMessage);
+            return FileExtractionResult.Failed(failureCode, failureMessage, detectedFormat);
 
         var content = resultBuilder.ToString();
 
@@ -153,7 +175,7 @@ public sealed partial class RustService
         }
 
         return hasPartialFailure
-            ? FileExtractionResult.Partial(content, failedPages)
-            : FileExtractionResult.Success(content);
+            ? FileExtractionResult.Partial(content, failedPages, detectedFormat)
+            : FileExtractionResult.Success(content, detectedFormat);
     }
 }

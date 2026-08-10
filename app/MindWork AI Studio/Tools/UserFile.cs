@@ -73,6 +73,13 @@ public static class UserFile
             await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.Description, result.ToPartialUserMessage(fileName)));
         }
 
+        // The file was read correctly, but its extension lies about what it contains:
+        if (result.HasExtensionMismatch)
+        {
+            LOGGER.LogWarning("The file '{FilePath}' is actually a '{DetectedFormat}'.", filePath, result.DetectedFormat);
+            await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.RuleFolder, result.ToExtensionMismatchUserMessage(fileName)));
+        }
+
         return result;
     }
 }

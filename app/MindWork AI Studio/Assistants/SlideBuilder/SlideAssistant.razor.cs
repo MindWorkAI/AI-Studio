@@ -396,6 +396,13 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
                 await this.MessageBus.SendWarning(new(Icons.Material.Filled.Description, extraction.ToPartialUserMessage(document.FileName)));
             }
 
+            // The file was read correctly, but its extension lies about what it contains:
+            if (extraction.HasExtensionMismatch)
+            {
+                this.Logger.LogWarning("The document '{FilePath}' is actually a '{DetectedFormat}'.", document.FilePath, extraction.DetectedFormat);
+                await this.MessageBus.SendWarning(new(Icons.Material.Filled.RuleFolder, extraction.ToExtensionMismatchUserMessage(document.FileName)));
+            }
+
             var fileContent = extraction.Content;
             sb.AppendLine($"""
                            

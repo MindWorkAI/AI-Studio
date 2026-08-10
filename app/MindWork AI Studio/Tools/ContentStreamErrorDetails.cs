@@ -19,6 +19,13 @@ public sealed class ContentStreamErrorDetails
     public int? PageNumber { get; init; }
 
     /// <summary>
+    /// The format the runtime identified by looking at the content, e.g. when it contradicts the
+    /// file extension.
+    /// </summary>
+    [JsonPropertyName("detected_format")]
+    public string? DetectedFormat { get; init; }
+
+    /// <summary>
     /// Gets the parsed error code.
     /// </summary>
     /// <remarks>
@@ -35,4 +42,14 @@ public sealed class ContentStreamErrorDetails
     /// </summary>
     [JsonIgnore]
     public bool IsPartialFailure => this.ParsedCode is FileExtractionErrorCode.PAGE_EXTRACTION_FAILED;
+
+    /// <summary>
+    /// Gets a value indicating whether this is a notice rather than a failure.
+    /// </summary>
+    /// <remarks>
+    /// A notice tells the user something worth knowing about the file, while the content itself
+    /// was read completely. It must therefore never degrade the outcome of an extraction.
+    /// </remarks>
+    [JsonIgnore]
+    public bool IsNotice => this.ParsedCode is FileExtractionErrorCode.EXTENSION_MISMATCH;
 }

@@ -36,6 +36,22 @@ public enum FileExtractionErrorCode
     PDF_ENCRYPTED,
     PAGE_EXTRACTION_FAILED,
     NO_TEXT_EXTRACTED,
+
+    /// <summary>
+    /// The content does not match the file extension. This is a notice, not a failure: the file
+    /// was read according to its content.
+    /// </summary>
+    EXTENSION_MISMATCH,
+
+    /// <summary>
+    /// The file was read as text, but its bytes are not text.
+    /// </summary>
+    NOT_TEXT_CONTENT,
+
+    /// <summary>
+    /// The file is an executable, no matter what its extension claims.
+    /// </summary>
+    EXECUTABLE_REJECTED,
     UNSUPPORTED,
     INTERNAL,
 
