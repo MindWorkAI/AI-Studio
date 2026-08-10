@@ -155,6 +155,11 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     public bool ShowAdminSettings { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ShowAdminSettings, false);
 
     /// <summary>
+    /// Settings for indexing local data sources.
+    /// </summary>
+    public DataDataSourceIndexing DataSourceIndexing { get; init; } = new();
+
+    /// <summary>
     /// List of assistants that should be hidden from the UI.
     /// </summary>
     public HashSet<ConfigurableAssistant> HiddenAssistants { get; set; } = ManagedConfiguration.Register(configSelection, n => n.HiddenAssistants, []);

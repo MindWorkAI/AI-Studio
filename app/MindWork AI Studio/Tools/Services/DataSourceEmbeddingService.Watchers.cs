@@ -15,7 +15,7 @@ public sealed partial class DataSourceEmbeddingService
     
     private void RefreshWatchers()
     {
-        if (!settingsManager.ConfigurationData.DataSourceIndexing.AutomaticRefresh)
+        if (!settingsManager.ConfigurationData.App.DataSourceIndexing.AutomaticRefresh)
         {
             this.RemoveAllWatchers();
             return;
@@ -41,7 +41,7 @@ public sealed partial class DataSourceEmbeddingService
 
     private void EnsureWatcher(IDataSource dataSource)
     {
-        if (!settingsManager.ConfigurationData.DataSourceIndexing.AutomaticRefresh)
+        if (!settingsManager.ConfigurationData.App.DataSourceIndexing.AutomaticRefresh)
             return;
 
         var configuration = GetWatchConfiguration(dataSource);
@@ -143,7 +143,7 @@ public sealed partial class DataSourceEmbeddingService
 
     private void ScheduleWatchedDataSourceRefresh(string dataSourceId)
     {
-        if (!settingsManager.ConfigurationData.DataSourceIndexing.AutomaticRefresh)
+        if (!settingsManager.ConfigurationData.App.DataSourceIndexing.AutomaticRefresh)
             return;
 
         var debounceToken = new CancellationTokenSource();

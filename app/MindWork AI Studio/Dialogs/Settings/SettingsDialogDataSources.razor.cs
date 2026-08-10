@@ -41,7 +41,7 @@ public partial class SettingsDialogDataSources : SettingsDialogBase
 
     private async Task AutomaticRefreshChanged(bool enabled)
     {
-        this.SettingsManager.ConfigurationData.DataSourceIndexing.AutomaticRefresh = enabled;
+        this.SettingsManager.ConfigurationData.App.DataSourceIndexing.AutomaticRefresh = enabled;
         await this.SettingsManager.StoreSettings();
         this.DataSourceEmbeddingService.RefreshAutomaticWatchers();
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);

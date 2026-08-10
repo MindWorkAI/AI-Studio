@@ -129,8 +129,6 @@ public sealed class Data
     
     public DataAgentRetrievalContextValidation AgentRetrievalContextValidation { get; init; } = new(x => x.AgentRetrievalContextValidation);
 
-    public DataDataSourceIndexing DataSourceIndexing { get; init; } = new();
-
     public DataAssistantPluginAudit AssistantPluginAudit { get; init; } = new(x => x.AssistantPluginAudit);
     
     public DataAgenda Agenda { get; init; } = new();

@@ -136,7 +136,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
 
     public Task QueueAllInternalDataSourcesIfAutomaticRefreshAsync()
     {
-        if (!settingsManager.ConfigurationData.DataSourceIndexing.AutomaticRefresh)
+        if (!settingsManager.ConfigurationData.App.DataSourceIndexing.AutomaticRefresh)
         {
             this.RefreshWatchers();
             return Task.CompletedTask;
@@ -148,7 +148,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
 
     public void RefreshAutomaticWatchers()
     {
-        if (!settingsManager.ConfigurationData.DataSourceIndexing.AutomaticRefresh)
+        if (!settingsManager.ConfigurationData.App.DataSourceIndexing.AutomaticRefresh)
         {
             Volatile.Write(ref this.startupHashCheckCompleted, 0);
             Interlocked.Exchange(ref this.startupHashCheckStarted, 0);
@@ -959,7 +959,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
 
     private async Task RunInitialDataSourceHashCheckAsync(CancellationToken token)
     {
-        if (!settingsManager.ConfigurationData.DataSourceIndexing.AutomaticRefresh)
+        if (!settingsManager.ConfigurationData.App.DataSourceIndexing.AutomaticRefresh)
         {
             logger.LogInformation("Automatic local data source refresh is disabled. Startup hash checks and file watchers are disabled.");
             this.RemoveAllWatchers();
@@ -997,7 +997,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             }
         }
 
-        if (!settingsManager.ConfigurationData.DataSourceIndexing.AutomaticRefresh)
+        if (!settingsManager.ConfigurationData.App.DataSourceIndexing.AutomaticRefresh)
         {
             Volatile.Write(ref this.startupHashCheckCompleted, 0);
             Interlocked.Exchange(ref this.startupHashCheckStarted, 0);
