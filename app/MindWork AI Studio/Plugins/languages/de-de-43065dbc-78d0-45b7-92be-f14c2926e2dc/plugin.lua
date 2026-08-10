@@ -7710,6 +7710,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1290340974"] = "Unbekanntes Konf
 -- Copies the configuration slot to the clipboard
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1347508205"] = "Kopiert den Slot der Konfiguration in die Zwischenablage"
 
+-- Once the encoding of a text file is known, encoding_rs turns its content into the text AI Studio works with. Together with chardetng, this lets AI Studio read text, CSV, and similar files no matter which encoding they were saved in.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1378412877"] = "Sobald die Zeichenkodierung einer Textdatei bekannt ist, wandelt encoding_rs ihren Inhalt in den Text um, mit dem AI Studio arbeitet. Zusammen mit chardetng kann AI Studio dadurch Text-, CSV- und ähnliche Dateien lesen – unabhängig davon, in welcher Kodierung sie gespeichert wurden."
+
 -- This library is used to read PDF files. This is necessary, e.g., for using PDFs as a data source for a chat.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1388816916"] = "Diese Bibliothek wird verwendet, um PDF-Dateien zu lesen. Das ist zum Beispiel notwendig, um PDFs als Datenquelle für einen Chat zu nutzen."
 
@@ -7820,6 +7823,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T234598990"] = "Linux-AppImages b
 
 -- Used PDFium version
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2368247719"] = "Verwendete PDFium-Version"
+
+-- Text files are not always saved in the same encoding: files written on Windows often use a legacy one. chardetng recognizes which encoding a text file uses, so AI Studio can read it instead of rejecting it.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T236832881"] = "Textdateien werden nicht immer mit derselben Zeichenkodierung gespeichert: Dateien, die unter Windows erstellt wurden, verwenden oft eine ältere Kodierung. chardetng erkennt, welche Zeichenkodierung eine Textdatei verwendet, sodass AI Studio sie lesen kann, statt sie abzulehnen."
 
 -- installation provided by the system
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2371107659"] = "Installation vom System bereitgestellt"
