@@ -45,7 +45,7 @@ public static class ChartBlockParser
 
             if (!TryGetRequiredString(root, "type", out var typeText)
                 || !TryParseType(typeText, out var type))
-                return ChartBlockParseResult.Invalid(json, "type must be bar, stacked_bar, line, pie, or donut.");
+                return ChartBlockParseResult.Invalid(json, "type must be bar, stacked_bar, line, pie, donut, heatmap, or time_series.");
 
             if (!TryGetRequiredString(root, "title", out var title) || string.IsNullOrWhiteSpace(title))
                 return ChartBlockParseResult.Invalid(json, "title must be a non-empty string.");
@@ -66,7 +66,7 @@ public static class ChartBlockParser
             if (!HasOnlyKnownProperties(data, DATA_PROPERTIES, out propertyError))
                 return ChartBlockParseResult.Invalid(json, propertyError);
 
-            if (!TryReadCategories(data, out var categories, out var error))
+            if (!TryReadCategories(data, type, out var categories, out var error))
                 return ChartBlockParseResult.Invalid(json, error);
 
             if (!TryReadSeries(data, categories.Count, out var series, out error))
@@ -89,7 +89,11 @@ public static class ChartBlockParser
         }
     }
 
-    private static bool TryReadCategories(JsonElement data, out IReadOnlyList<string> categories, out string error)
+    private static bool TryReadCategories(
+        JsonElement data,
+        ChartDefinitionType type,
+        out IReadOnlyList<string> categories,
+        out string error)
     {
         categories = [];
         error = string.Empty;
@@ -100,6 +104,7 @@ public static class ChartBlockParser
         }
 
         var values = new List<string>();
+        DateTimeOffset? previousTimestamp = null;
         foreach (var item in element.EnumerateArray())
         {
             if (item.ValueKind is not JsonValueKind.String || string.IsNullOrWhiteSpace(item.GetString()))
@@ -108,7 +113,25 @@ public static class ChartBlockParser
                 return false;
             }
 
-            values.Add(item.GetString()!);
+            var value = item.GetString()!;
+            if (type is ChartDefinitionType.TIME_SERIES)
+            {
+                if (!HasExplicitTimeZone(value) || !item.TryGetDateTimeOffset(out var timestamp))
+                {
+                    error = "Time series categories must be ISO 8601 timestamps with Z or an explicit UTC offset.";
+                    return false;
+                }
+
+                if (previousTimestamp is not null && timestamp <= previousTimestamp.Value)
+                {
+                    error = "Time series categories must be strictly increasing timestamps.";
+                    return false;
+                }
+
+                previousTimestamp = timestamp;
+            }
+
+            values.Add(value);
             if (values.Count > MAX_CATEGORIES)
             {
                 error = $"A chart can contain at most {MAX_CATEGORIES} categories.";
@@ -122,8 +145,31 @@ public static class ChartBlockParser
             return false;
         }
 
+        if (type is ChartDefinitionType.TIME_SERIES && values.Count < 2)
+        {
+            error = "A time series chart requires at least two timestamps.";
+            return false;
+        }
+
         categories = values;
         return true;
+    }
+
+    private static bool HasExplicitTimeZone(string value)
+    {
+        if (value.EndsWith('Z'))
+            return true;
+
+        if (value.Length < 6)
+            return false;
+
+        var offsetSign = value[^6];
+        return offsetSign is '+' or '-'
+               && char.IsAsciiDigit(value[^5])
+               && char.IsAsciiDigit(value[^4])
+               && value[^3] is ':'
+               && char.IsAsciiDigit(value[^2])
+               && char.IsAsciiDigit(value[^1]);
     }
 
     private static bool TryReadSeries(JsonElement data, int categoryCount, out IReadOnlyList<ChartDefinitionSeries> series, out string error)
@@ -247,10 +293,12 @@ public static class ChartBlockParser
             "line" => ChartDefinitionType.LINE,
             "pie" => ChartDefinitionType.PIE,
             "donut" => ChartDefinitionType.DONUT,
+            "heatmap" => ChartDefinitionType.HEATMAP,
+            "time_series" => ChartDefinitionType.TIME_SERIES,
             _ => default,
         };
 
-        return value is "bar" or "stacked_bar" or "line" or "pie" or "donut";
+        return value is "bar" or "stacked_bar" or "line" or "pie" or "donut" or "heatmap" or "time_series";
     }
 }
 
