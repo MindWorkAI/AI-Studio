@@ -31,12 +31,11 @@ public sealed class DocumentManager
 
         if (ContentStreamSseHandler.ProcessImageSegment(image.Id, image))
         {
-            var base64 = ContentStreamSseHandler.BuildImage(image.Id);
-            if (!string.IsNullOrWhiteSpace(base64))
+            var markdownImage = ContentStreamSseHandler.BuildImageMarkdown(image.Id, image.MediaType);
+            if (markdownImage is not null)
             {
-                var mediaType = string.IsNullOrWhiteSpace(image.MediaType) ? "image/jpeg" : image.MediaType;
                 this.currentPageContent.AppendLine();
-                this.currentPageContent.AppendLine($"![Image](data:{mediaType};base64,{base64})");
+                this.currentPageContent.AppendLine(markdownImage);
             }
         }
 

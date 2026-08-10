@@ -52,11 +52,11 @@ public sealed class SlideManager
             //
             if (addImage)
             {
-                var img = ContentStreamSseHandler.BuildImage(image!.Id!);
-                var slideImage = new SlideImageContent(img);
-                createdSlide.Content.Add(slideImage);
+                var markdownImage = ContentStreamSseHandler.BuildImageMarkdown(image!.Id!, image.MediaType);
+                if (markdownImage is not null)
+                    createdSlide.Content.Add(new SlideImageContent(markdownImage));
             }
-            
+
             this.slides[slideNumber] = createdSlide;
         }
         else
@@ -75,9 +75,9 @@ public sealed class SlideManager
             // Add any image content?
             if (addImage)
             {
-                var img = ContentStreamSseHandler.BuildImage(image!.Id!);
-                var slideImage = new SlideImageContent(img);
-                slide.Content.Add(slideImage);
+                var markdownImage = ContentStreamSseHandler.BuildImageMarkdown(image!.Id!, image.MediaType);
+                if (markdownImage is not null)
+                    slide.Content.Add(new SlideImageContent(markdownImage));
             }
         }
     }
@@ -96,7 +96,7 @@ public sealed class SlideManager
 
             foreach (var image in slide.Content.OfType<SlideImageContent>())
             {
-                content.AppendLine(image.Base64Image.ToString());
+                content.AppendLine(image.MarkdownImage);
                 content.AppendLine();
             }
         }

@@ -132,7 +132,32 @@ public static class ContentStreamSseHandler
         CHUNKED_IMAGES.Remove(id, out _);
         return base64Image;
     }
-    
+
+    /// <summary>
+    /// Assembles the collected segments of an image into a Markdown image.
+    /// </summary>
+    /// <remarks>
+    /// Handing the naked Base64 data to the AI says nothing: it is neither readable text nor an
+    /// image it could look at. Only the data URI makes it one, so every reader must embed its
+    /// images this way.
+    /// </remarks>
+    /// <param name="id">The ID of the image to assemble.</param>
+    /// <param name="mediaType">The media type the runtime reported, if any.</param>
+    /// <returns>The Markdown image, or null when no data was collected for that ID.</returns>
+    public static string? BuildImageMarkdown(string id, string? mediaType)
+    {
+        var base64Image = BuildImage(id);
+        if (string.IsNullOrWhiteSpace(base64Image))
+            return null;
+
+        //
+        // Both readers compress their images, and that compression produces JPEG. A runtime which
+        // does not report the media type therefore delivered JPEG as well.
+        //
+        var imageMediaType = string.IsNullOrWhiteSpace(mediaType) ? "image/jpeg" : mediaType;
+        return $"![Image](data:{imageMediaType};base64,{base64Image})";
+    }
+
     public static string? Clear(string streamId)
     {
         if (string.IsNullOrWhiteSpace(streamId))
