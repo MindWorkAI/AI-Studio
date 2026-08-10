@@ -30,16 +30,17 @@ public static class ComponentsExtensions
     /// blocks starting another one and inactive sessions can be cleared as a group.
     /// </summary>
     /// <remarks>
-    /// Components return <c>false</c> for two different reasons. The chat has no assistant sessions
-    /// at all. The visual briefing assistant keys its sessions per briefing, so it owns one slot per
-    /// stored briefing rather than one per component. Both must be excluded from the single-slot
-    /// checks, which is why this is a capability and not a component comparison.
+    /// Components return <c>false</c> for three different reasons. The chat has no assistant sessions
+    /// at all. Dynamic assistants key their sessions per plugin. The visual briefing assistant keys
+    /// its sessions per briefing, so it owns one slot per stored briefing rather than one per
+    /// component. All must be excluded from the single-slot checks, which is why this is a
+    /// capability and not a component comparison.
     /// </remarks>
     /// <param name="component">The component to look up.</param>
     /// <returns><c>true</c> when the component owns exactly one session slot.</returns>
     public static bool HasSingleSessionSlot(this Components component) => component switch
     {
-        Components.CHAT => false,
+        Components.CHAT or Components.DYNAMIC_ASSISTANT => false,
         Components.VISUAL_BRIEFING_ASSISTANT => false,
 
         _ => true,
@@ -60,6 +61,7 @@ public static class ComponentsExtensions
     public static bool AllowSendTo(this Components component) => component switch
     {
         Components.NONE => false,
+        Components.DYNAMIC_ASSISTANT => false,
         
         Components.ERI_ASSISTANT => false,
         Components.BIAS_DAY_ASSISTANT => false,
@@ -186,6 +188,7 @@ public static class ComponentsExtensions
             // The provider is selected per policy instead. We do this inside the Document Analysis Assistant component.
             Components.DOCUMENT_ANALYSIS_ASSISTANT => Settings.Provider.NONE,
 
+            Components.DYNAMIC_ASSISTANT => Components.CHAT.PreselectedProvider(settingsManager),
             Components.CHAT => settingsManager.ConfigurationData.Chat.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.Chat.PreselectedProvider) : null,
 
             Components.AGENT_TEXT_CONTENT_CLEANER => settingsManager.ConfigurationData.TextContentCleaner.PreselectAgentOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.TextContentCleaner.PreselectedAgentProvider) : null,
@@ -212,6 +215,7 @@ public static class ComponentsExtensions
             Components.ERI_ASSISTANT => settingsManager.ConfigurationData.ERI.PreselectOptions ? settingsManager.ConfigurationData.ERI.PreselectedProfile : string.Empty,
             Components.SLIDE_BUILDER_ASSISTANT => settingsManager.ConfigurationData.SlideBuilder.PreselectOptions ? settingsManager.ConfigurationData.SlideBuilder.PreselectedProfile : string.Empty,
             Components.VISUAL_BRIEFING_ASSISTANT => settingsManager.ConfigurationData.VisualBriefing.PreselectedProfile,
+            Components.DYNAMIC_ASSISTANT => (string)Components.CHAT.GetProfilePreselection(settingsManager),
             Components.CHAT => settingsManager.ConfigurationData.Chat.PreselectOptions ? settingsManager.ConfigurationData.Chat.PreselectedProfile : string.Empty,
 
             // The Document Analysis Assistant does not have a preselected profile at the component level.
@@ -226,6 +230,7 @@ public static class ComponentsExtensions
     
     public static ChatTemplate PreselectedChatTemplate(this Components component, SettingsManager settingsManager) => component switch
     {
+        Components.DYNAMIC_ASSISTANT => Components.CHAT.PreselectedChatTemplate(settingsManager),
         Components.CHAT => settingsManager.ConfigurationData.Chat.PreselectOptions ? settingsManager.GetChatTemplateById(settingsManager.ConfigurationData.Chat.PreselectedChatTemplate) : ChatTemplate.NO_CHAT_TEMPLATE,
         
         _ => ChatTemplate.NO_CHAT_TEMPLATE,
