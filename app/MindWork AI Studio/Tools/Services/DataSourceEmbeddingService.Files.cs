@@ -15,7 +15,6 @@ public sealed partial class DataSourceEmbeddingService
 {
     private const string OFFICE_LOCK_FILE_PREFIX = "~$";
     private const int DEFAULT_CHUNK_OVERLAP_TOKEN_LENGTH = 300;
-    private const int MAX_TOKEN_COUNT_REQUEST_TEXT_LENGTH = 200_000;
 
     private static readonly string[] RAG_DELIMITED_TABLE_FILE_EXTENSIONS = ["csv", "tsv"];
     private static readonly string[] RAG_SPREADSHEET_FILE_EXTENSIONS = ["ods", "xlsm", "xlsb"];
@@ -101,7 +100,7 @@ public sealed partial class DataSourceEmbeddingService
 
         var tokenCount = estimatedTokenCount;
         var textWithOverlap = AddOverlapPrefix(text, requiredOverlapPrefix);
-        if (textWithOverlap.Length <= MAX_TOKEN_COUNT_REQUEST_TEXT_LENGTH &&
+        if (textWithOverlap.Length <= RustService.MAX_TOKEN_COUNT_REQUEST_TEXT_LENGTH &&
             (estimatedTokenCount is null || estimatedTokenCount <= options.MaxChunkTokenLength))
         {
             tokenCount = await this.GetEmbeddingTokenCountAsync(embeddingProvider, textWithOverlap, token);
@@ -240,7 +239,7 @@ public sealed partial class DataSourceEmbeddingService
 
                 var candidateUnitCount = minimumCandidateUnitCount + (maximumCandidateUnitCount - minimumCandidateUnitCount) / 2;
                 var candidateText = AddOverlapPrefix(string.Concat(units.Skip(startUnitIndex).Take(candidateUnitCount)).Trim(), overlapPrefix);
-                var candidateFits = candidateText.Length <= MAX_TOKEN_COUNT_REQUEST_TEXT_LENGTH &&
+                var candidateFits = candidateText.Length <= RustService.MAX_TOKEN_COUNT_REQUEST_TEXT_LENGTH &&
                                     await this.GetEmbeddingTokenCountAsync(embeddingProvider, candidateText, token) <= maxChunkTokenLength;
                 if (candidateFits)
                 {
@@ -410,7 +409,7 @@ public sealed partial class DataSourceEmbeddingService
                 yield break;
 
             var bestEndIndex = startIndex;
-            var maximumCandidateEndIndex = Math.Min(text.Length, startIndex + MAX_TOKEN_COUNT_REQUEST_TEXT_LENGTH);
+            var maximumCandidateEndIndex = Math.Min(text.Length, startIndex + RustService.MAX_TOKEN_COUNT_REQUEST_TEXT_LENGTH);
 
             if (estimatedTokenCount > options.MaxChunkTokenLength)
             {
@@ -426,7 +425,7 @@ public sealed partial class DataSourceEmbeddingService
                 {
                     var candidateEndIndex = minimumCandidateEndIndex + (currentMaximumCandidateEndIndex - minimumCandidateEndIndex) / 2;
                     var candidate = AddOverlapPrefix(text[startIndex..candidateEndIndex].Trim(), overlapPrefix);
-                    var candidateFits = candidate.Length <= MAX_TOKEN_COUNT_REQUEST_TEXT_LENGTH &&
+                    var candidateFits = candidate.Length <= RustService.MAX_TOKEN_COUNT_REQUEST_TEXT_LENGTH &&
                                         await this.GetEmbeddingTokenCountAsync(embeddingProvider, candidate, token) <= options.MaxChunkTokenLength;
                     if (candidateFits)
                     {
@@ -438,12 +437,12 @@ public sealed partial class DataSourceEmbeddingService
                 }
 
                 if (bestEndIndex < maximumCandidateEndIndex || bestEndIndex >= text.Length ||
-                    maximumCandidateEndIndex - startIndex >= MAX_TOKEN_COUNT_REQUEST_TEXT_LENGTH)
+                    maximumCandidateEndIndex - startIndex >= RustService.MAX_TOKEN_COUNT_REQUEST_TEXT_LENGTH)
                     break;
 
                 var previousCandidateLength = maximumCandidateEndIndex - startIndex;
                 maximumCandidateEndIndex = (int)Math.Min(
-                    Math.Min(text.Length, startIndex + (long)MAX_TOKEN_COUNT_REQUEST_TEXT_LENGTH),
+                    Math.Min(text.Length, startIndex + (long)RustService.MAX_TOKEN_COUNT_REQUEST_TEXT_LENGTH),
                     startIndex + Math.Max(previousCandidateLength + 1L, previousCandidateLength * 2L));
             }
 

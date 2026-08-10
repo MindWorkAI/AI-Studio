@@ -5,6 +5,8 @@ namespace AIStudio.Tools.Services;
 
 public sealed partial class RustService
 {
+    internal const int MAX_TOKEN_COUNT_REQUEST_TEXT_LENGTH = 200_000;
+
     private readonly SemaphoreSlim tokenizerLock = new(1, 1);
     private string currentTokenizerPath = string.Empty;
     private bool hasInitializedTokenizer;

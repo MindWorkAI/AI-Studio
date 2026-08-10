@@ -6,11 +6,13 @@ using AIStudio.Tools.Databases;
 using AIStudio.Tools.Databases.EmbeddingState;
 using AIStudio.Tools.Databases.VectorStore;
 using AIStudio.Tools.RAG;
+using AIStudio.Tools.Rust;
 
 namespace AIStudio.Tools.Services;
 
 public sealed class DataSourceLocalRetrievalService(
     SettingsManager settingsManager,
+    RustService rustService,
     DatabaseClientProvider databaseClientProvider,
     ILogger<DataSourceLocalRetrievalService> logger)
 {
@@ -107,6 +109,9 @@ public sealed class DataSourceLocalRetrievalService(
                 return [];
             }
 
+            if (!await this.QueryFitsEmbeddingProviderAsync(dataSource, embeddingProvider, query, token))
+                return [];
+
             var provider = embeddingProvider.CreateProvider();
             var vectors = await provider.EmbedTextAsync(embeddingProvider.Model, settingsManager, token, [query]);
             token.ThrowIfCancellationRequested();
@@ -134,6 +139,57 @@ public sealed class DataSourceLocalRetrievalService(
             logger.LogWarning(exception, "Vector retrieval failed for data source '{DataSourceName}' ({DataSourceId}).", dataSource.Name, dataSource.Id);
             return [];
         }
+    }
+
+    private async Task<bool> QueryFitsEmbeddingProviderAsync(
+        IInternalDataSource dataSource,
+        EmbeddingProvider embeddingProvider,
+        string query,
+        CancellationToken token)
+    {
+        var providerTokenLimit = Math.Max(1, embeddingProvider.EffectiveTokenLimit);
+        if (query.Length > RustService.MAX_TOKEN_COUNT_REQUEST_TEXT_LENGTH)
+        {
+            logger.LogWarning(
+                "Skipping vector retrieval for data source '{DataSourceName}' ({DataSourceId}) because the latest prompt has {CharacterCount} characters and exceeds the safe tokenizer request length of {MaxCharacterCount}. ProviderTokenLimit={ProviderTokenLimit}.",
+                dataSource.Name,
+                dataSource.Id,
+                query.Length,
+                RustService.MAX_TOKEN_COUNT_REQUEST_TEXT_LENGTH,
+                providerTokenLimit);
+            return false;
+        }
+
+        var tokenCountResponse = await rustService.GetTokenCount(
+            embeddingProvider.Name,
+            embeddingProvider.TokenizerPath,
+            query,
+            token);
+        if (tokenCountResponse is not { Success: true, Status: TokenizerStatus.AVAILABLE })
+        {
+            logger.LogWarning(
+                "Skipping vector retrieval for data source '{DataSourceName}' ({DataSourceId}) because the token count for embedding provider '{EmbeddingProviderName}' could not be determined. Reason='{Reason}'.",
+                dataSource.Name,
+                dataSource.Id,
+                embeddingProvider.Name,
+                tokenCountResponse?.Message ?? "No response was returned by the tokenizer service.");
+            return false;
+        }
+
+        var queryTokenCount = tokenCountResponse.Value.TokenCount;
+        if (queryTokenCount > providerTokenLimit)
+        {
+            logger.LogWarning(
+                "Skipping vector retrieval for data source '{DataSourceName}' ({DataSourceId}) because the latest prompt has {QueryTokenCount} tokens, exceeding embedding provider '{EmbeddingProviderName}' limit of {ProviderTokenLimit} tokens.",
+                dataSource.Name,
+                dataSource.Id,
+                queryTokenCount,
+                embeddingProvider.Name,
+                providerTokenLimit);
+            return false;
+        }
+
+        return true;
     }
 
     private async Task<IReadOnlyList<EmbeddingStateSearchResult>> SearchBm25Async(IInternalDataSource dataSource, string query, int maxMatches, CancellationToken token)
