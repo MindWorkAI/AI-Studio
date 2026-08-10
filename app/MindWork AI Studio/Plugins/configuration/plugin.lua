@@ -27,6 +27,26 @@ TYPE = "CONFIGURATION"
 -- True when this plugin is deployed by an enterprise configuration server:
 DEPLOYED_USING_CONFIG_SERVER = false
 
+-- The priority of this configuration plugin. Optional, defaults to 0.
+--
+-- It only matters when your organization deploys more than one configuration
+-- plugin. A plugin with a higher priority is applied later and therefore wins
+-- whenever two of your configuration plugins manage the same setting or define
+-- the same object, e.g. the same LLM provider.
+--
+-- A typical setup: deploy one base configuration for everybody with PRIORITY = 0
+-- and one configuration per department with PRIORITY = 100. The department
+-- configuration may then override the default model, while everything it does
+-- not mention stays at the values of the base configuration.
+--
+-- Give two plugins that must override each other different priorities. With an
+-- equal priority, the order is stable but arbitrary.
+--
+-- The priority never lifts a local configuration plugin above one of your
+-- organization: configuration plugins your IT department deployed are always
+-- applied first, whatever a local plugin declares.
+PRIORITY = 0
+
 -- The authors of the plugin:
 AUTHORS = {"<Company Name>"}
 
@@ -199,6 +219,40 @@ CONFIG["DATA_SOURCES"] = {}
 
 CONFIG["SETTINGS"] = {}
 
+-- ------
+-- How settings combine when your organization deploys more than one configuration
+-- ------
+--
+-- A configuration with a higher PRIORITY is applied later and wins. This works per
+-- setting: everything a later configuration does not mention keeps the value of the
+-- configuration below it.
+--
+-- For a setting that holds a list or a table, the winning configuration replaces the
+-- whole collection instead of merging the entries. A department configuration that
+-- lists a single entry therefore drops every entry the base configuration had set for
+-- that setting. That is intentional: replacing is the only way a department can take
+-- something back that the base configuration has set.
+--
+-- The affected settings below carry a note. Two settings are the exception and add up
+-- across configurations instead: DataApp.EnabledPreviewFeatures and
+-- DataAssistantPluginAudit.EnterpriseApprovedPlugins.
+-- ------
+
+-- ------
+-- What happens to a setting when your configuration is removed
+-- ------
+--
+-- AI Studio remembers the value a setting had before a configuration took it over.
+-- Once no configuration manages that setting anymore -- because your IT department
+-- stopped deploying this configuration, because the user deleted it, or because a test
+-- configuration ended -- the user gets that value back. When there is nothing to
+-- restore, e.g. for a setting the user had never changed, AI Studio falls back to its
+-- own default value.
+--
+-- One case differs: when you allow users to override a setting and somebody makes use
+-- of that, their choice outlives your configuration and stays as it is.
+-- ------
+
 -- Configure the update check interval:
 -- Allowed values are: NO_CHECK, DISABLE_UPDATES, ONCE_STARTUP, HOURLY, DAILY, WEEKLY
 -- NO_CHECK disables automatic checks, but users can still check and install updates manually.
@@ -235,6 +289,22 @@ CONFIG["SETTINGS"] = {}
 -- Configure the user permission to add providers:
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToAddProvider"] = false
 
+-- Configure the user permission to import plugin archives from disk.
+-- When set to false, the import button on the plugins page stays visible but is disabled.
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToImportPlugins"] = false
+
+-- Configure the user permission to import configuration plugin archives from disk.
+-- This is a second gate on top of DataApp.AllowUserToImportPlugins: both must allow the
+-- import. Configuration plugins get their own switch because they can do far more than an
+-- assistant: they define LLM providers and data sources, and they lock settings. You may
+-- therefore let users import assistants while keeping configurations to your IT department.
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToImportConfigurationPlugins"] = false
+
+-- Configure the user permission to share or export plugins as archives.
+-- When set to false, the share button on the plugins page stays visible but is disabled.
+-- On Linux, this button exports the plugin archive instead of using a native share sheet.
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToSharePlugins"] = false
+
 -- Configure whether administration settings are visible in the UI:
 -- CONFIG["SETTINGS"]["DataApp.ShowAdminSettings"] = true
 
@@ -248,6 +318,12 @@ CONFIG["SETTINGS"] = {}
 -- Configure the enabled preview features:
 -- Allowed values are can be found in https://github.com/MindWorkAI/AI-Studio/blob/main/app/MindWork%20AI%20Studio/Settings/DataModel/PreviewFeatures.cs
 -- Examples are PRE_WRITER_MODE_2024 and PRE_RAG_2024.
+--
+-- Adds up, does not replace: this is the one setting where all configurations
+-- contribute together. Enable one preview feature for the whole organization and
+-- another one for a single department, and users of that department get both. Each
+-- configuration keeps its own contribution, so removing one of them only withdraws
+-- the features that this configuration had enabled.
 -- CONFIG["SETTINGS"]["DataApp.EnabledPreviewFeatures"] = { "PRE_RAG_2024" }
 
 -- Configure the preselected provider.
@@ -292,6 +368,12 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesAutomaticValidation"] = true
 
 -- Must contain IDs from CONFIG["DATA_SOURCES"] or user-configured data sources.
+-- IDs from another configuration of your organization work as well: they are resolved
+-- against every known data source, not only against the ones defined here. IDs that
+-- resolve to nothing are ignored.
+--
+-- Replaces, does not merge: a configuration with a higher priority replaces this list
+-- completely. To keep an entry of the base configuration, list that ID here again.
 -- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourceIds"] = {
 --     "00000000-0000-0000-0000-000000000000",
 -- }
@@ -327,6 +409,11 @@ CONFIG["SETTINGS"] = {}
 --   JOB_POSTING_ASSISTANT, BIAS_DAY_ASSISTANT, ERI_ASSISTANT,
 --   DOCUMENT_ANALYSIS_ASSISTANT, SLIDE_BUILDER_ASSISTANT, VISUAL_BRIEFING_ASSISTANT, I18N_ASSISTANT,
 --   LOG_VIEWER_ASSISTANT
+--
+-- Replaces, does not merge: a configuration with a higher priority replaces this list
+-- completely. This is what lets a department show an assistant again that the base
+-- configuration hides. The department configuration must then list every other
+-- assistant that is supposed to stay hidden, otherwise those become visible too.
 -- CONFIG["SETTINGS"]["DataApp.HiddenAssistants"] = { "ERI_ASSISTANT", "I18N_ASSISTANT" }
 
 -- Configure organization defaults for the Visual Briefing Assistant.
@@ -395,6 +482,17 @@ CONFIG["SETTINGS"] = {}
 -- no user-run security audit is required.
 -- You can generate the exact hash with the build-script command:
 --   dotnet run --project app/Build -- assistant-plugin-hash "<plugin-dir>" --lua-snippet
+--
+-- Only works in configurations your configuration server deploys. An approval marks an
+-- assistant plugin as safe without any audit, and AI Studio then tells users that their
+-- organization approved it. A configuration plugin that a user placed locally therefore
+-- cannot approve anything: AI Studio ignores its approvals and writes a warning to the
+-- log. This is decided by where the plugin is stored, not by DEPLOYED_USING_CONFIG_SERVER.
+--
+-- Adds up, does not replace: approvals of all your configurations are combined, so a
+-- department configuration can approve additional assistant plugins without repeating
+-- the approvals of the base configuration. Each configuration keeps its own approvals,
+-- so removing one of them only withdraws the approvals it had granted.
 -- CONFIG["SETTINGS"]["DataAssistantPluginAudit.EnterpriseApprovedPlugins"] = {
 --     {
 --         ["PluginHash"] = "0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF",
@@ -434,6 +532,11 @@ CONFIG["SETTINGS"] = {}
 -- MINDWORK_AI_STUDIO_EXTERNAL_HTTP_CUSTOM_ROOT_CERTIFICATE_BUNDLE_PATH=/path/in/sandbox/company-root-cas.pem
 -- MINDWORK_AI_STUDIO_EXTERNAL_HTTP_CUSTOM_ROOT_CERTIFICATE_ALLOWED_HOSTS=*.intra.example.org;data.example.org
 --
+-- Replaces, does not merge: a configuration with a higher priority replaces the host
+-- list completely. Deploy this setting in one configuration only, or repeat every host
+-- of the base configuration. Otherwise, hosts of the base configuration silently stop
+-- trusting your root certificates.
+--
 -- CONFIG["SETTINGS"]["DataApp.ExternalHttpCustomRootCertificatesEnabled"] = true
 -- CONFIG["SETTINGS"]["DataApp.ExternalHttpCustomRootCertificateBundlePath"] = "/path/in/sandbox/company-root-cas.pem"
 -- CONFIG["SETTINGS"]["DataApp.ExternalHttpCustomRootCertificateAllowedHosts"] = { "*.intra.example.org", "eri.example.org" }
@@ -468,6 +571,11 @@ CONFIG["SETTINGS"] = {}
 -- Allowed provider keys are: OPEN_AI, ANTHROPIC, MISTRAL, GOOGLE, X, DEEP_SEEK, ALIBABA_CLOUD,
 --   PERPLEXITY, OPEN_ROUTER, FIREWORKS, GROQ, HUGGINGFACE, SELF_HOSTED, HELMHOLTZ, GWDG
 -- Allowed confidence values are: UNTRUSTED, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
+--
+-- Replaces, does not merge: a configuration with a higher priority replaces the whole
+-- table. Every configuration that sets this must therefore list all providers it wants
+-- to cover. A partial table is not completed from the configuration below it, and the
+-- providers left out fall back to the app default.
 -- CONFIG["SETTINGS"]["DataConfidence.CustomConfidenceScheme"] = {
 --     ["OPEN_AI"] = "MODERATE",
 --     ["ANTHROPIC"] = "MODERATE",
@@ -493,6 +601,10 @@ CONFIG["SETTINGS"] = {}
 -- These IDs may refer to LLM providers, embedding providers, or transcription providers
 -- defined in this configuration. Trusted providers are treated like self-hosted providers
 -- only for data-source security checks and related local data warnings.
+--
+-- Replaces, does not merge: a configuration with a higher priority replaces this list
+-- completely, so providers trusted by the base configuration lose that status. Repeat
+-- them here to keep them trusted.
 -- CONFIG["SETTINGS"]["DataSourceSecuritySettings.TrustedProviderIds"] = {
 --     "00000000-0000-0000-0000-000000000000",
 --     "00000000-0000-0000-0000-000000000001",

@@ -328,16 +328,29 @@ pub async fn open_path_in_file_manager(
         });
     }
 
-    let Some(target) = resolve_file_manager_target(&requested_path) else {
+    match open_file_manager_target(&requested_path).await {
+        Ok(()) => Json(OpenPathResponse {
+            success: true,
+            issue: String::new(),
+        }),
+
+        Err(issue) => {
+            error!(Source = "Tauri"; "{issue}");
+            Json(OpenPathResponse {
+                success: false,
+                issue,
+            })
+        }
+    }
+}
+
+async fn open_file_manager_target(requested_path: &Path) -> Result<(), String> {
+    let Some(target) = resolve_file_manager_target(requested_path) else {
         let issue = format!(
             "The path does not exist and its parent folder could not be found: {}",
             requested_path.to_string_lossy(),
         );
-        error!(Source = "Tauri"; "{issue}");
-        return Json(OpenPathResponse {
-            success: false,
-            issue,
-        });
+        return Err(issue);
     };
 
     #[cfg(target_os = "linux")]
@@ -345,19 +358,10 @@ pub async fn open_path_in_file_manager(
         return match open_path_in_linux_file_manager(&target).await {
             Ok(()) => {
                 info!("Opened file manager for path: {:?}", target.path);
-                Json(OpenPathResponse {
-                    success: true,
-                    issue: String::new(),
-                })
+                Ok(())
             }
 
-            Err(issue) => {
-                error!(Source = "Tauri"; "{issue}");
-                Json(OpenPathResponse {
-                    success: false,
-                    issue,
-                })
-            }
+            Err(issue) => Err(issue),
         };
     }
 
@@ -371,19 +375,12 @@ pub async fn open_path_in_file_manager(
         match command.spawn() {
             Ok(_) => {
                 info!("Opened file manager for path: {:?}", target.path);
-                Json(OpenPathResponse {
-                    success: true,
-                    issue: String::new(),
-                })
+                Ok(())
             }
 
             Err(error) => {
                 let issue = format!("Failed to open the file manager: {error}");
-                error!(Source = "Tauri"; "{issue}");
-                Json(OpenPathResponse {
-                    success: false,
-                    issue,
-                })
+                Err(issue)
             }
         }
     }

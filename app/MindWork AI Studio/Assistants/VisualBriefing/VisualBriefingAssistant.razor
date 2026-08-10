@@ -94,13 +94,13 @@
                         <MudPaper Outlined="true" Class="pa-4 mb-4">
                             <MudGrid>
                                 <MudItem xs="12" md="7">
-                                    <MudTextField T="string" @bind-Text="@this.editor.Name" Label="@T("Briefing name")" Validation="@this.ValidateProjectName" Immediate="@true" Variant="Variant.Outlined" Disabled="@this.IsCurrentBusy"/>
+                                    <MudTextField T="string" @bind-Text="@this.editor.Name" Label="@T("Briefing name")" Validation="@this.ValidateProjectName" Immediate="@true" Variant="Variant.Outlined" Disabled="@this.IsCurrentBusy" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
                                 </MudItem>
                                 <MudItem xs="12" md="5">
-                                    <MudTextField T="string" @bind-Text="@this.editor.Author" Label="@T("Author (optional)")" Variant="Variant.Outlined" Disabled="@this.IsCurrentBusy"/>
+                                    <MudTextField T="string" @bind-Text="@this.editor.Author" Label="@T("Author (optional)")" Variant="Variant.Outlined" Disabled="@this.IsCurrentBusy" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
                                 </MudItem>
                             </MudGrid>
-                            <MudTextField T="string" @bind-Text="@this.editor.Instruction" Label="@T("Briefing scope, notes, or current change instruction (optional)")" Variant="Variant.Outlined" AutoGrow="true" Lines="3" Class="mt-3" Disabled="@this.IsCurrentBusy"/>
+                            <MudTextField T="string" @bind-Text="@this.editor.Instruction" Label="@T("Briefing scope, notes, or current change instruction (optional)")" Variant="Variant.Outlined" AutoGrow="true" Lines="3" Class="mt-3" Disabled="@this.IsCurrentBusy" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 
                             <EnumSelection T="VisualBriefingProtectionLevel"
                                            NameFunc="@this.ProtectionLevelName"
@@ -224,7 +224,7 @@
                         <MudStack Row="true" Spacing="2" Wrap="Wrap.Wrap" Class="mb-4">
                             @if (this.selectedBriefing.Versions.Count == 0)
                             {
-                                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AutoAwesome" OnClick="@(() => this.GenerateAsync(VisualBriefingEditMode.INITIAL))" Disabled="@this.CannotGenerate(VisualBriefingEditMode.INITIAL)" Style="@this.ConfidenceBorderStyle">@T("Create briefing")</MudButton>
+                                <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AutoAwesome" OnClick="@(() => this.GenerateAsync(VisualBriefingEditMode.INITIAL))" Disabled="@this.CannotGenerate(VisualBriefingEditMode.INITIAL)" Style="@this.ConfidenceBorderStyle">@T("Create briefing")</MudButton>
                             }
                             else
                             {

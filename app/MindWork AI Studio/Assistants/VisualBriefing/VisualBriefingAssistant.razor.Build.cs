@@ -100,9 +100,12 @@ public partial class VisualBriefingAssistant
                 terminalStatus = result.FailureCode is VisualBriefingFailureCode.CANCELED ? AssistantSessionStatus.CANCELED : AssistantSessionStatus.FAILED;
                 this.reusableContentBuildId = result.CanContinueAsRebuild ? result.Diagnostics.BuildId : null;
 
-                terminalIssue = result.Issue;
+                // The issue carried by the result is stable English contract language, because it also
+                // goes back to the model and into the persisted build record. What the user reads is
+                // derived from the stable enums in the current language instead:
+                terminalIssue = VisualBriefingFailureExtensions.ToUserMessage(result.FailureCode, result.Diagnostics.ValidationRule);
                 if (terminalStatus is not AssistantSessionStatus.CANCELED)
-                    await this.MessageBus.SendError(new(Icons.Material.Filled.AutoAwesome, result.Issue));
+                    await this.MessageBus.SendError(new(Icons.Material.Filled.AutoAwesome, terminalIssue));
 
                 return;
             }

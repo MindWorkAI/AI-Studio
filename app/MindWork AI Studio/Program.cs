@@ -173,7 +173,7 @@ internal sealed class Program
         builder.Services.AddSingleton<VisualBriefingBuildOrchestrator>();
         builder.Services.AddSingleton<VisualBriefingPreviewTokenService>();
         builder.Services.AddSingleton<IMediaTranscriptStorage, VisualBriefingTranscriptStorage>();
-        builder.Services.AddSingleton<AssistantPluginInstallService>();
+        builder.Services.AddSingleton<PluginInstallService>();
         builder.Services.AddSingleton<UpdatePolicy>();
         builder.Services.AddSingleton<AssistantPluginGenerationService>();
         builder.Services.AddSingleton<DataSourceService>();
@@ -191,6 +191,8 @@ internal sealed class Program
         builder.Services.AddSingleton<DatabaseClientProvider>();
         builder.Services.AddHostedService<GlobalShortcutService>(serviceProvider => serviceProvider.GetRequiredService<GlobalShortcutService>());
         builder.Services.AddHostedService<RustAvailabilityMonitorService>();
+        builder.Services.AddScoped<NativeShareService>();
+        builder.Services.AddScoped<PluginShareService>();
         
         // ReSharper disable AccessToDisposedClosure
         builder.Services.AddHostedService<RustService>(_ => rust);

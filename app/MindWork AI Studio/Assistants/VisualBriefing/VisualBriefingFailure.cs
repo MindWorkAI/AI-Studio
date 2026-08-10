@@ -16,8 +16,14 @@ public sealed class VisualBriefingFailure
     public VisualBriefingBuildStage Stage { get; set; }
 
     /// <summary>
-    /// Gets or sets the localized or user-safe message.
+    /// Gets or sets the user-safe issue text in stable English.
     /// </summary>
+    /// <remarks>
+    /// This text is never localized: it is sent back to the model as a repair instruction and it is
+    /// persisted with the build record, so both a translation and a later language switch would break
+    /// it. Use <see cref="VisualBriefingFailureExtensions.ToUserMessage(VisualBriefingFailure)"/> to
+    /// obtain the text shown to the user.
+    /// </remarks>
     public string UserMessage { get; set; } = string.Empty;
 
     /// <summary>
