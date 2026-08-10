@@ -7,6 +7,7 @@ using AIStudio.Provider.Groq;
 using AIStudio.Provider.GWDG;
 using AIStudio.Provider.Helmholtz;
 using AIStudio.Provider.HuggingFace;
+using AIStudio.Provider.LiteLLM;
 using AIStudio.Provider.Mistral;
 using AIStudio.Provider.OpenAI;
 using AIStudio.Provider.OpenRouter;
@@ -56,11 +57,12 @@ public static class LLMProvidersExtensions
         LLMProviders.ALIBABA_CLOUD => "Alibaba Cloud",
         LLMProviders.PERPLEXITY => "Perplexity",
         LLMProviders.OPEN_ROUTER => "OpenRouter",
+        LLMProviders.LITE_LLM => "LiteLLM",
 
         LLMProviders.GROQ => "Groq",
         LLMProviders.FIREWORKS => "Fireworks.ai",
         LLMProviders.HUGGINGFACE => "Hugging Face",
-        
+
         LLMProviders.SELF_HOSTED => translate ? TB("Self-hosted") : "Self-hosted",
         
         LLMProviders.HELMHOLTZ => "Helmholtz Blablador",
@@ -91,6 +93,7 @@ public static class LLMProvidersExtensions
         LLMProviders.ALIBABA_CLOUD => "Alibaba Cloud",
         LLMProviders.PERPLEXITY => "Perplexity",
         LLMProviders.OPEN_ROUTER => "OpenRouter",
+        LLMProviders.LITE_LLM => "LiteLLM",
 
         LLMProviders.GROQ => "Groq",
         LLMProviders.FIREWORKS => "Fireworks.ai",
@@ -144,6 +147,11 @@ public static class LLMProvidersExtensions
 
         LLMProviders.OPEN_ROUTER => Confidence.USA_HUB.WithRegion("America, U.S.").WithSources("https://openrouter.ai/privacy", "https://openrouter.ai/terms").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
 
+        // LiteLLM is a self-operated gateway: the user runs the proxy and decides which downstream
+        // providers it routes to, so the data destination cannot be known in advance. It is treated
+        // like a self-hosted endpoint, and the user assigns the trust level themselves.
+        LLMProviders.LITE_LLM => Confidence.SELF_HOSTED.WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
+
         LLMProviders.SELF_HOSTED => Confidence.SELF_HOSTED.WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
         
         LLMProviders.HELMHOLTZ => Confidence.GDPR_NO_TRAINING.WithRegion("Europe, Germany").WithSources("https://helmholtz.cloud/services/?serviceID=d7d5c597-a2f6-4bd1-b71e-4d6499d98570").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
@@ -180,15 +188,16 @@ public static class LLMProvidersExtensions
         LLMProviders.HUGGINGFACE => false,
         LLMProviders.PERPLEXITY => false,
         LLMProviders.OPEN_ROUTER => true,
+        LLMProviders.LITE_LLM => false,
 
         //
         // Self-hosted providers are treated as a special case anyway.
         //
         LLMProviders.SELF_HOSTED => true,
-        
+
         _ => false,
     };
-    
+
     public static bool ProvideTranscriptionAPI(this LLMProviders llmProvider) => llmProvider switch
     {
         //
@@ -215,7 +224,8 @@ public static class LLMProvidersExtensions
         LLMProviders.DEEP_SEEK => false,
         LLMProviders.HUGGINGFACE => false,
         LLMProviders.PERPLEXITY => false,
-        
+        LLMProviders.LITE_LLM => false,
+
         LLMProviders.HELMHOLTZ => false,
 
         //
@@ -271,6 +281,7 @@ public static class LLMProvidersExtensions
                 LLMProviders.ALIBABA_CLOUD => new ProviderAlibabaCloud { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, IsEnterpriseConfiguration = isEnterpriseConfiguration },
                 LLMProviders.PERPLEXITY => new ProviderPerplexity { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, IsEnterpriseConfiguration = isEnterpriseConfiguration },
                 LLMProviders.OPEN_ROUTER => new ProviderOpenRouter { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, IsEnterpriseConfiguration = isEnterpriseConfiguration },
+                LLMProviders.LITE_LLM => new ProviderLiteLLM(hostname) { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, IsEnterpriseConfiguration = isEnterpriseConfiguration },
 
                 LLMProviders.GROQ => new ProviderGroq { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, IsEnterpriseConfiguration = isEnterpriseConfiguration },
                 LLMProviders.FIREWORKS => new ProviderFireworks { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, IsEnterpriseConfiguration = isEnterpriseConfiguration },
@@ -408,6 +419,7 @@ public static class LLMProvidersExtensions
     public static bool IsHostnameNeeded(this LLMProviders provider) => provider switch
     {
         LLMProviders.SELF_HOSTED => true,
+        LLMProviders.LITE_LLM => true,
         _ => false,
     };
 
@@ -422,15 +434,16 @@ public static class LLMProvidersExtensions
         LLMProviders.ALIBABA_CLOUD => true,
         LLMProviders.PERPLEXITY => true,
         LLMProviders.OPEN_ROUTER => true,
+        LLMProviders.LITE_LLM => true,
 
         LLMProviders.GROQ => true,
         LLMProviders.FIREWORKS => true,
         LLMProviders.HELMHOLTZ => true,
         LLMProviders.GWDG => true,
         LLMProviders.HUGGINGFACE => true,
-        
+
         LLMProviders.SELF_HOSTED => host is (Host.OLLAMA or Host.VLLM),
-        
+
         _ => false,
     };
 
