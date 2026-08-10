@@ -70,7 +70,7 @@ When a chart is useful or explicitly requested, you may include one or more comp
   "schema_version": 1,
   "type": "bar",
   "title": "Chart title",
-  "caption": "Contextual interpretation of the diagram",
+  "caption": "Contextual interpretation of the chart",
   "data": {
     "categories": ["A", "B"],
     "series": [
@@ -83,10 +83,12 @@ When a chart is useful or explicitly requested, you may include one or more comp
 }
 ```
 
-- Supported types are `bar`, `stacked_bar`, `line`, `pie`, and `donut`.
+- Supported types are `bar`, `stacked_bar`, `line`, `pie`, `donut`, `heatmap`, and `time_series`.
 - Every series needs exactly one finite numeric value per category.
 - Pie and donut charts need exactly one series and non-negative values.
-- Add a concise caption that correctly contextualizes the diagram and may explain the chart's main finding.
+- For heatmaps, categories are the columns, series names are the rows, and series values are the cells.
+- Time series categories must contain at least two strictly increasing ISO 8601 timestamps with `Z` or an explicit UTC offset.
+- Add a concise caption that correctly contextualizes the chart and may explain the chart's main finding.
 - Use only the fields shown above.
 - Keep other explanatory text outside the chart block.
 ]]
