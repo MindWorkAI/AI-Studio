@@ -21,7 +21,14 @@ public sealed class DocumentManager
         {
             var completedPage = this.Flush();
             this.currentPageContent = new StringBuilder();
-            this.currentPageContent.AppendLine($"# Page {pageNumber}");
+
+            //
+            // Sections, not pages: a Word or OpenDocument file carries no fixed page layout, so the
+            // runtime derives these boundaries from page breaks and heuristics. Calling them pages,
+            // as the PDF reader does with its real ones, would invite the AI to cite page numbers
+            // which do not exist in the document.
+            //
+            this.currentPageContent.AppendLine($"# Section {pageNumber}");
             this.currentPageContent.Append(content);
             return completedPage;
         }
