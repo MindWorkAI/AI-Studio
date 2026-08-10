@@ -11,7 +11,7 @@ using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Assistants.Builder;
 
-public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
+public partial class AssistantBuilder : AssistantBaseCore<SettingsDialogAssistantBuilder>
 {
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
@@ -64,7 +64,6 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
     protected override bool ShowProfileSelection => false;
     protected override bool ShowCopyResult => this.step is BuilderStep.DONE;
 
-    protected override bool HasSettingsPanel => false;
     protected override Func<string> Result2Copy => () => !string.IsNullOrWhiteSpace(this.generatedLuaAssistant)
         ? this.generatedLuaAssistant
         : this.generatedAssistantSpec;
@@ -209,9 +208,7 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
         this.typicalInput = string.Empty;
         this.expectedOutput = string.Empty;
         this.selectedAssistantComponents = [];
-        this.selectedOutputLanguage = CommonLanguages.AS_IS;
-        this.customOutputLanguage = string.Empty;
-        this.allowGeneratedAssistantProfiles = true;
+        this.ApplyDefaultBuilderOptions();
         this.extraRules = string.Empty;
         this.exampleRequest = string.Empty;
         this.generatedAssistantSpec = string.Empty;
@@ -220,7 +217,27 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
         this.ResetInstallFlow();
     }
 
-    protected override bool MightPreselectValues() => false;
+    protected override bool MightPreselectValues()
+    {
+        this.ApplyDefaultBuilderOptions();
+        return true;
+    }
+
+    private void ApplyDefaultBuilderOptions()
+    {
+        var defaults = this.SettingsManager.ConfigurationData.AssistantBuilder;
+        if (!defaults.PreselectOptions)
+        {
+            this.selectedOutputLanguage = CommonLanguages.AS_IS;
+            this.customOutputLanguage = string.Empty;
+            this.allowGeneratedAssistantProfiles = true;
+            return;
+        }
+
+        this.selectedOutputLanguage = defaults.PreselectedOutputLanguage;
+        this.customOutputLanguage = defaults.PreselectedOtherOutputLanguage;
+        this.allowGeneratedAssistantProfiles = true;
+    }
 
     /// <inheritdoc />
     protected override void CaptureCustomAssistantSessionState(AssistantSessionStateWriter state)
