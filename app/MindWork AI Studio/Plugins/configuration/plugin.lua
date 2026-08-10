@@ -149,7 +149,7 @@ CONFIG["EMBEDDING_PROVIDERS"] = {}
 --     -- ["TokenizerPath"] = "",
 --
 --     -- Optional: maximum number of tokens per embedding chunk. If omitted, AI Studio uses its default.
---     -- ["TokenLimit"] = 16384,
+--     -- ["TokenLimit"] = 8192,
 --
 --     -- Optional: number of chunks sent to the embedding provider in one request. If omitted, AI Studio sends one chunk per request.
 --     -- ["EmbeddingBatchSize"] = 1,

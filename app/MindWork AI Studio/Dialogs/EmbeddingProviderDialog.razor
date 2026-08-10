@@ -145,7 +145,7 @@
                             AdornmentIcon="@Icons.Material.Filled.Numbers"
                             AdornmentColor="Color.Info"
                             Validation="@this.ValidateTokenLimit"
-                            HelperText="@T("Maximum number of tokens sent to the embedding model per chunk. The default is 16,384.")"/>
+                            HelperText="@T("Maximum number of tokens sent to the embedding model per chunk. The default is 8,192.")"/>
                         <MudNumericField
                             T="int"
                             @bind-Value="@this.DataEmbeddingBatchSize"
