@@ -22,7 +22,7 @@ internal sealed class EmbeddingStateDbContext(DbContextOptions<EmbeddingStateDbC
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        var utcDateTimeConverter = new EmbeddingStateDateTimeConverter();
+        var utcDateTimeOffsetConverter = new EmbeddingStateDateTimeOffsetConverter();
 
         modelBuilder.Entity<EmbeddingStateDataSourceEntity>(entity =>
         {
@@ -36,7 +36,7 @@ internal sealed class EmbeddingStateDbContext(DbContextOptions<EmbeddingStateDbC
             entity.Property(dataSource => dataSource.EmbeddingSignature).HasColumnName("embedding_signature").IsRequired();
             entity.Property(dataSource => dataSource.SourceHash).HasColumnName("source_hash").IsRequired().HasDefaultValue(string.Empty);
             entity.Property(dataSource => dataSource.VectorSize).HasColumnName("vector_size").HasDefaultValue(0);
-            entity.Property(dataSource => dataSource.UpdatedAtUtc).HasColumnName("updated_at_utc").HasConversion(utcDateTimeConverter).IsRequired();
+            entity.Property(dataSource => dataSource.UpdatedAtUtc).HasColumnName("updated_at_utc").HasConversion(utcDateTimeOffsetConverter).IsRequired();
 
             entity
                 .HasMany(dataSource => dataSource.Files)
@@ -58,9 +58,9 @@ internal sealed class EmbeddingStateDbContext(DbContextOptions<EmbeddingStateDbC
             entity.Property(file => file.FileType).HasColumnName("file_type").IsRequired();
             entity.Property(file => file.Fingerprint).HasColumnName("fingerprint").IsRequired();
             entity.Property(file => file.FileSize).HasColumnName("file_size");
-            entity.Property(file => file.CreationUtc).HasColumnName("creation_utc").HasConversion(utcDateTimeConverter).IsRequired();
-            entity.Property(file => file.LastWriteUtc).HasColumnName("last_write_utc").HasConversion(utcDateTimeConverter).IsRequired();
-            entity.Property(file => file.EmbeddedAtUtc).HasColumnName("embedded_at_utc").HasConversion(utcDateTimeConverter).IsRequired();
+            entity.Property(file => file.CreationUtc).HasColumnName("creation_utc").HasConversion(utcDateTimeOffsetConverter).IsRequired();
+            entity.Property(file => file.LastWriteUtc).HasColumnName("last_write_utc").HasConversion(utcDateTimeOffsetConverter).IsRequired();
+            entity.Property(file => file.EmbeddedAtUtc).HasColumnName("embedded_at_utc").HasConversion(utcDateTimeOffsetConverter).IsRequired();
             entity.Property(file => file.ChunkCount).HasColumnName("chunk_count");
             entity.Property(file => file.ComplianceLevel).HasColumnName("compliance_level").IsRequired();
             entity.Property(file => file.ComplianceLevelRank).HasColumnName("compliance_level_rank");
@@ -89,7 +89,7 @@ internal sealed class EmbeddingStateDbContext(DbContextOptions<EmbeddingStateDbC
             entity.Property(chunk => chunk.PageNumber).HasColumnName("page_number");
             entity.Property(chunk => chunk.ChunkIndex).HasColumnName("chunk_index");
             entity.Property(chunk => chunk.ChunkText).HasColumnName("chunk_text").IsRequired();
-            entity.Property(chunk => chunk.EmbeddedAtUtc).HasColumnName("embedded_at_utc").HasConversion(utcDateTimeConverter).IsRequired();
+            entity.Property(chunk => chunk.EmbeddedAtUtc).HasColumnName("embedded_at_utc").HasConversion(utcDateTimeOffsetConverter).IsRequired();
 
             entity.HasIndex(chunk => chunk.ChunkId).HasDatabaseName("idx_embedding_chunks_chunk_id").IsUnique();
             entity.HasIndex(chunk => chunk.ParentFileId).HasDatabaseName("idx_embedding_chunks_parent_file");
@@ -102,9 +102,9 @@ internal sealed class EmbeddingStateDbContext(DbContextOptions<EmbeddingStateDbC
             entity.HasNoKey();
             entity.ToView("embedding_chunk_search_results");
 
-            entity.Property(result => result.CreationUtc).HasConversion(utcDateTimeConverter);
-            entity.Property(result => result.LastWriteUtc).HasConversion(utcDateTimeConverter);
-            entity.Property(result => result.EmbeddedAtUtc).HasConversion(utcDateTimeConverter);
+            entity.Property(result => result.CreationUtc).HasConversion(utcDateTimeOffsetConverter);
+            entity.Property(result => result.LastWriteUtc).HasConversion(utcDateTimeOffsetConverter);
+            entity.Property(result => result.EmbeddedAtUtc).HasConversion(utcDateTimeOffsetConverter);
         });
     }
 
@@ -134,7 +134,7 @@ internal sealed class EmbeddingStateDataSourceEntity
 
     public int VectorSize { get; set; }
 
-    public DateTime UpdatedAtUtc { get; set; }
+    public DateTimeOffset UpdatedAtUtc { get; set; }
 
     public List<EmbeddingStateFileEntity> Files { get; set; } = [];
 }
@@ -157,11 +157,11 @@ internal sealed class EmbeddingStateFileEntity
 
     public long FileSize { get; set; }
 
-    public DateTime CreationUtc { get; set; }
+    public DateTimeOffset CreationUtc { get; set; }
 
-    public DateTime LastWriteUtc { get; set; }
+    public DateTimeOffset LastWriteUtc { get; set; }
 
-    public DateTime EmbeddedAtUtc { get; set; }
+    public DateTimeOffset EmbeddedAtUtc { get; set; }
 
     public int ChunkCount { get; set; }
 
@@ -188,7 +188,7 @@ internal sealed class EmbeddingStateChunkEntity
 
     public string ChunkText { get; set; } = string.Empty;
 
-    public DateTime EmbeddedAtUtc { get; set; }
+    public DateTimeOffset EmbeddedAtUtc { get; set; }
 
     public EmbeddingStateFileEntity? File { get; set; }
 }
@@ -225,11 +225,11 @@ internal sealed class EmbeddingStateSearchResultEntity
 
     public long FileSize { get; set; }
 
-    public DateTime CreationUtc { get; set; }
+    public DateTimeOffset CreationUtc { get; set; }
 
-    public DateTime LastWriteUtc { get; set; }
+    public DateTimeOffset LastWriteUtc { get; set; }
 
-    public DateTime EmbeddedAtUtc { get; set; }
+    public DateTimeOffset EmbeddedAtUtc { get; set; }
 
     public int ChunkCount { get; set; }
 
@@ -238,22 +238,21 @@ internal sealed class EmbeddingStateSearchResultEntity
     public int ComplianceLevelRank { get; set; }
 }
 
-internal sealed class EmbeddingStateDateTimeConverter() : ValueConverter<DateTime, string>(
-    value => EmbeddingStateDateTime.ToUtcText(value),
-    value => EmbeddingStateDateTime.ParseUtc(value));
+internal sealed class EmbeddingStateDateTimeOffsetConverter() : ValueConverter<DateTimeOffset, string>(
+    value => EmbeddingStateDateTimeOffset.ToUtcText(value),
+    value => EmbeddingStateDateTimeOffset.ParseUtc(value));
 
-internal static class EmbeddingStateDateTime
+internal static class EmbeddingStateDateTimeOffset
 {
-    public static string ToUtcText(DateTime dateTime)
+    public static string ToUtcText(DateTimeOffset dateTime)
     {
-        var utc = dateTime.Kind is DateTimeKind.Utc ? dateTime : dateTime.ToUniversalTime();
-        return utc.ToString("O", CultureInfo.InvariantCulture);
+        return dateTime.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture);
     }
 
-    public static DateTime ParseUtc(string value)
+    public static DateTimeOffset ParseUtc(string value)
     {
-        return DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var dateTime)
+        return DateTimeOffset.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dateTime)
             ? dateTime.ToUniversalTime()
-            : DateTime.UnixEpoch;
+            : DateTimeOffset.UnixEpoch;
     }
 }

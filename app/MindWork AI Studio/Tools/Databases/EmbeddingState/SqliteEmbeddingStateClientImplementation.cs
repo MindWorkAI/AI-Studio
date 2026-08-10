@@ -139,7 +139,7 @@ public sealed class SqliteEmbeddingStateClientImplementation(
             return;
 
         dataSource.VectorSize = vectorSize;
-        dataSource.UpdatedAtUtc = DateTime.UtcNow;
+        dataSource.UpdatedAtUtc = DateTimeOffset.UtcNow;
         await context.SaveChangesAsync(token);
     }
 
@@ -151,7 +151,7 @@ public sealed class SqliteEmbeddingStateClientImplementation(
             return;
 
         dataSource.SourceHash = sourceHash;
-        dataSource.UpdatedAtUtc = DateTime.UtcNow;
+        dataSource.UpdatedAtUtc = DateTimeOffset.UtcNow;
         await context.SaveChangesAsync(token);
     }
 
@@ -343,7 +343,7 @@ public sealed class SqliteEmbeddingStateClientImplementation(
         dataSource.EmbeddingSignature = embeddingSignature;
         dataSource.SourceHash = sourceHash;
         dataSource.VectorSize = vectorSize;
-        dataSource.UpdatedAtUtc = DateTime.UtcNow;
+        dataSource.UpdatedAtUtc = DateTimeOffset.UtcNow;
     }
 
     private static void ApplyFile(EmbeddingStateFileEntity fileEntity, string dataSourceId, EmbeddingStateFile file)

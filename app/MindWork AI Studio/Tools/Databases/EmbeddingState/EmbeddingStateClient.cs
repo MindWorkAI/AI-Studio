@@ -39,9 +39,9 @@ public sealed record EmbeddingStateFile(
     string FileType,
     string Fingerprint,
     long FileSize,
-    DateTime CreationUtc,
-    DateTime LastWriteUtc,
-    DateTime EmbeddedAtUtc,
+    DateTimeOffset CreationUtc,
+    DateTimeOffset LastWriteUtc,
+    DateTimeOffset EmbeddedAtUtc,
     int ChunkCount,
     string ComplianceLevel,
     int ComplianceLevelRank);
@@ -52,7 +52,7 @@ public sealed record EmbeddingStateChunk(
     int? PageNumber,
     int ChunkIndex,
     string ChunkText,
-    DateTime EmbeddedAtUtc);
+    DateTimeOffset EmbeddedAtUtc);
 
 public sealed record EmbeddingStateSearchResult(
     string ChunkId,
@@ -70,9 +70,9 @@ public sealed record EmbeddingStateSearchResult(
     double Score,
     string Fingerprint,
     long FileSize,
-    DateTime CreationUtc,
-    DateTime LastWriteUtc,
-    DateTime EmbeddedAtUtc,
+    DateTimeOffset CreationUtc,
+    DateTimeOffset LastWriteUtc,
+    DateTimeOffset EmbeddedAtUtc,
     int ChunkCount,
     string ComplianceLevel,
     int ComplianceLevelRank);

@@ -92,6 +92,6 @@ public sealed class DataSourceEmbeddingManifest
 public sealed record EmbeddedFileRecord(
     string Fingerprint,
     long FileSize,
-    DateTime LastWriteUtc,
-    DateTime EmbeddedAtUtc,
+    DateTimeOffset LastWriteUtc,
+    DateTimeOffset EmbeddedAtUtc,
     int ChunkCount);

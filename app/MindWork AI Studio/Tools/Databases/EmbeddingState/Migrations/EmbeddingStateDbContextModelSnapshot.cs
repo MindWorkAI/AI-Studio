@@ -12,7 +12,7 @@ partial class EmbeddingStateDbContextModelSnapshot : ModelSnapshot
     {
 #pragma warning disable 612, 618
         modelBuilder.HasAnnotation("ProductVersion", "9.0.18");
-        var utcDateTimeConverter = new EmbeddingStateDateTimeConverter();
+        var utcDateTimeOffsetConverter = new EmbeddingStateDateTimeOffsetConverter();
 
         modelBuilder.Entity("AIStudio.Tools.Databases.EmbeddingState.EmbeddingStateDataSourceEntity", entity =>
         {
@@ -46,8 +46,8 @@ partial class EmbeddingStateDbContextModelSnapshot : ModelSnapshot
                 .HasColumnName("source_hash")
                 .HasDefaultValue(string.Empty);
 
-            entity.Property<DateTime>("UpdatedAtUtc")
-                .HasConversion(utcDateTimeConverter)
+            entity.Property<DateTimeOffset>("UpdatedAtUtc")
+                .HasConversion(utcDateTimeOffsetConverter)
                 .HasColumnType("TEXT")
                 .HasColumnName("updated_at_utc");
 
@@ -86,8 +86,8 @@ partial class EmbeddingStateDbContextModelSnapshot : ModelSnapshot
                 .HasColumnType("INTEGER")
                 .HasColumnName("compliance_level_rank");
 
-            entity.Property<DateTime>("CreationUtc")
-                .HasConversion(utcDateTimeConverter)
+            entity.Property<DateTimeOffset>("CreationUtc")
+                .HasConversion(utcDateTimeOffsetConverter)
                 .HasColumnType("TEXT")
                 .HasColumnName("creation_utc");
 
@@ -96,8 +96,8 @@ partial class EmbeddingStateDbContextModelSnapshot : ModelSnapshot
                 .HasColumnType("TEXT")
                 .HasColumnName("data_source_id");
 
-            entity.Property<DateTime>("EmbeddedAtUtc")
-                .HasConversion(utcDateTimeConverter)
+            entity.Property<DateTimeOffset>("EmbeddedAtUtc")
+                .HasConversion(utcDateTimeOffsetConverter)
                 .HasColumnType("TEXT")
                 .HasColumnName("embedded_at_utc");
 
@@ -120,8 +120,8 @@ partial class EmbeddingStateDbContextModelSnapshot : ModelSnapshot
                 .HasColumnType("TEXT")
                 .HasColumnName("fingerprint");
 
-            entity.Property<DateTime>("LastWriteUtc")
-                .HasConversion(utcDateTimeConverter)
+            entity.Property<DateTimeOffset>("LastWriteUtc")
+                .HasConversion(utcDateTimeOffsetConverter)
                 .HasColumnType("TEXT")
                 .HasColumnName("last_write_utc");
 
@@ -173,8 +173,8 @@ partial class EmbeddingStateDbContextModelSnapshot : ModelSnapshot
                 .HasColumnType("TEXT")
                 .HasColumnName("chunk_text");
 
-            entity.Property<DateTime>("EmbeddedAtUtc")
-                .HasConversion(utcDateTimeConverter)
+            entity.Property<DateTimeOffset>("EmbeddedAtUtc")
+                .HasConversion(utcDateTimeOffsetConverter)
                 .HasColumnType("TEXT")
                 .HasColumnName("embedded_at_utc");
 
@@ -233,8 +233,8 @@ partial class EmbeddingStateDbContextModelSnapshot : ModelSnapshot
             entity.Property<int>("ComplianceLevelRank")
                 .HasColumnType("INTEGER");
 
-            entity.Property<DateTime>("CreationUtc")
-                .HasConversion(utcDateTimeConverter)
+            entity.Property<DateTimeOffset>("CreationUtc")
+                .HasConversion(utcDateTimeOffsetConverter)
                 .HasColumnType("TEXT");
 
             entity.Property<string>("DataSourceId")
@@ -249,8 +249,8 @@ partial class EmbeddingStateDbContextModelSnapshot : ModelSnapshot
                 .IsRequired()
                 .HasColumnType("TEXT");
 
-            entity.Property<DateTime>("EmbeddedAtUtc")
-                .HasConversion(utcDateTimeConverter)
+            entity.Property<DateTimeOffset>("EmbeddedAtUtc")
+                .HasConversion(utcDateTimeOffsetConverter)
                 .HasColumnType("TEXT");
 
             entity.Property<string>("FileName")
@@ -268,8 +268,8 @@ partial class EmbeddingStateDbContextModelSnapshot : ModelSnapshot
                 .IsRequired()
                 .HasColumnType("TEXT");
 
-            entity.Property<DateTime>("LastWriteUtc")
-                .HasConversion(utcDateTimeConverter)
+            entity.Property<DateTimeOffset>("LastWriteUtc")
+                .HasConversion(utcDateTimeOffsetConverter)
                 .HasColumnType("TEXT");
 
             entity.Property<int?>("PageNumber")

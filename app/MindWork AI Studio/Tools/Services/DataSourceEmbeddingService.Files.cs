@@ -1105,7 +1105,7 @@ public sealed partial class DataSourceEmbeddingService
         return Convert.ToHexString(bytes);
     }
 
-    private EmbeddingStateFile CreateEmbeddingStateFile(IDataSource dataSource, FileInfo file, string fingerprint, int chunkCount, DateTime embeddedAtUtc)
+    private EmbeddingStateFile CreateEmbeddingStateFile(IDataSource dataSource, FileInfo file, string fingerprint, int chunkCount, DateTimeOffset embeddedAtUtc)
     {
         file.Refresh();
         var absolutePath = Path.GetFullPath(file.FullName);
@@ -1118,15 +1118,15 @@ public sealed partial class DataSourceEmbeddingService
             GetFileType(file),
             fingerprint,
             file.Exists ? file.Length : 0,
-            file.Exists ? file.CreationTimeUtc : DateTime.UnixEpoch,
-            file.Exists ? file.LastWriteTimeUtc : DateTime.UnixEpoch,
+            file.Exists ? new DateTimeOffset(file.CreationTimeUtc) : DateTimeOffset.UnixEpoch,
+            file.Exists ? new DateTimeOffset(file.LastWriteTimeUtc) : DateTimeOffset.UnixEpoch,
             embeddedAtUtc,
             chunkCount,
             complianceLevel.ToString(),
             (int)complianceLevel);
     }
 
-    private IReadOnlyList<EmbeddingStateChunk> CreateEmbeddingStateChunks(EmbeddingStateFile parentFile, IReadOnlyList<EmbeddingChunkDraft> batch, DateTime embeddedAtUtc)
+    private IReadOnlyList<EmbeddingStateChunk> CreateEmbeddingStateChunks(EmbeddingStateFile parentFile, IReadOnlyList<EmbeddingChunkDraft> batch, DateTimeOffset embeddedAtUtc)
     {
         return batch
             .Select(chunk => new EmbeddingStateChunk(

@@ -17,8 +17,8 @@ public sealed record VectorStoragePoint(
     int ChunkIndex,
     string Text,
     string Fingerprint,
-    DateTime CreationUtc,
-    DateTime LastWriteUtc,
-    DateTime EmbeddedAtUtc,
+    DateTimeOffset CreationUtc,
+    DateTimeOffset LastWriteUtc,
+    DateTimeOffset EmbeddedAtUtc,
     string ComplianceLevel,
     int ComplianceLevelRank);

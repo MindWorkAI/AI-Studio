@@ -567,18 +567,18 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                     ShortHash(fingerprint),
                     skippedFiles + completedFiles + 1,
                     totalFiles);
-                var startedAtUtc = DateTime.UtcNow;
+                var startedAtUtc = DateTimeOffset.UtcNow;
                 var chunkCount = await this.IndexOneFileAsync(embeddingState, vectorStore, dataSource, file, fingerprint, embeddingProvider, provider, manifest, optimizationTracker, token);
                 token.ThrowIfCancellationRequested();
                 var fingerprintAfterEmbedding = BuildFileMetadataHash(file);
                 if (!string.Equals(fingerprint, fingerprintAfterEmbedding, StringComparison.Ordinal))
                     throw new IOException($"The file '{file.FullName}' changed while it was being embedded. Its partial embeddings will be discarded and the file will be retried on the next refresh.");
 
-                var embeddedAtUtc = DateTime.UtcNow;
+                var embeddedAtUtc = DateTimeOffset.UtcNow;
                 var record = new EmbeddedFileRecord(
                     fingerprint,
                     file.Length,
-                    file.LastWriteTimeUtc,
+                    new DateTimeOffset(file.LastWriteTimeUtc),
                     embeddedAtUtc,
                     chunkCount);
                 await embeddingState.UpsertFileAsync(
@@ -598,7 +598,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                     dataSource.Name,
                     dataSource.Id,
                     chunkCount,
-                    (DateTime.UtcNow - startedAtUtc).TotalMilliseconds);
+                    (DateTimeOffset.UtcNow - startedAtUtc).TotalMilliseconds);
             }
             catch (OperationCanceledException) when (token.IsCancellationRequested)
             {
@@ -668,7 +668,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         optimizationTracker.MarkChanged();
         await embeddingState.DeleteFileAsync(dataSource.Id, file.FullName, token);
 
-        var parentFile = this.CreateEmbeddingStateFile(dataSource, file, fingerprint, 0, DateTime.UtcNow);
+        var parentFile = this.CreateEmbeddingStateFile(dataSource, file, fingerprint, 0, DateTimeOffset.UtcNow);
         await embeddingState.UpsertFileAsync(dataSource.Id, parentFile, token);
 
         var embeddingBatchSize = Math.Max(1, embeddingProvider.EffectiveEmbeddingBatchSize);
@@ -769,7 +769,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         }
 
         token.ThrowIfCancellationRequested();
-        var embeddedAtUtc = DateTime.UtcNow;
+        var embeddedAtUtc = DateTimeOffset.UtcNow;
         await this.UpsertPointsAsync(
             vectorStore,
             collectionName,
@@ -820,7 +820,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         EmbeddingStateFile parentFile,
         IReadOnlyList<EmbeddingChunkDraft> batch,
         IReadOnlyList<IReadOnlyList<float>> vectors,
-        DateTime embeddedAtUtc,
+        DateTimeOffset embeddedAtUtc,
         CancellationToken token)
     {
         var points = batch.Select((item, index) => new VectorStoragePoint(
@@ -1150,7 +1150,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         if (existingRecord.FileSize != file.Length)
             reasons.Add($"file size changed from {existingRecord.FileSize} to {file.Length} bytes");
 
-        if (existingRecord.LastWriteUtc != file.LastWriteTimeUtc)
+        if (existingRecord.LastWriteUtc != new DateTimeOffset(file.LastWriteTimeUtc))
             reasons.Add($"last modified time changed from {existingRecord.LastWriteUtc:O} to {file.LastWriteTimeUtc:O}");
 
         return reasons.Count == 0
