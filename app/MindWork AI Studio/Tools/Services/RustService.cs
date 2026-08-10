@@ -117,6 +117,7 @@ public sealed partial class RustService : BackgroundService
     public override void Dispose()
     {
         this.http.Dispose();
+        this.extractionHttp.Dispose();
         this.userLanguageLock.Dispose();
         this.userNameLock.Dispose();
         base.Dispose();
