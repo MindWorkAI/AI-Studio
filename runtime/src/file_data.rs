@@ -1028,10 +1028,13 @@ async fn stream_document(file_path: &str, extract_images: bool, stream_id: &str)
     // Page iteration performs synchronous ZIP/XML work and image compression,
     // so the complete producer must stay outside Tokio's asynchronous workers.
     let worker = tokio::task::spawn_blocking(move || {
+        //
+        // Failures travel through the error channel, which logs them with the file path and the
+        // classified code once they arrive. Logging them here as well would only duplicate that.
+        //
         let document = match DocumentContainer::open(&path, parser_config) {
             Ok(document) => document,
             Err(e) => {
-                error!("The document '{path:?}' could not be opened: {e}");
                 let _ = tx.blocking_send(Err(ExtractionError::new(
                     ExtractionErrorCode::FileNotReadable,
                     format!("The document could not be read: {e}"),
@@ -1043,7 +1046,6 @@ async fn stream_document(file_path: &str, extract_images: bool, stream_id: &str)
         let pages = match document.iter_pages() {
             Ok(pages) => pages,
             Err(e) => {
-                error!("The pages of the document '{path:?}' could not be read: {e}");
                 let _ = tx.blocking_send(Err(ExtractionError::new(
                     ExtractionErrorCode::FileNotReadable,
                     format!("The pages of the document could not be read: {e}"),
@@ -1066,7 +1068,6 @@ async fn stream_document(file_path: &str, extract_images: bool, stream_id: &str)
             let page = match page_result {
                 Ok(page) => page,
                 Err(e) => {
-                    error!("A page of the document '{path:?}' could not be read: {e}");
                     let _ = tx.blocking_send(Err(ExtractionError::new(
                         ExtractionErrorCode::Internal,
                         format!("A page of the document could not be read: {e}"),
@@ -1077,7 +1078,6 @@ async fn stream_document(file_path: &str, extract_images: bool, stream_id: &str)
             let mut content = match page.to_markdown() {
                 Ok(content) => content,
                 Err(e) => {
-                    error!("Page {page_number} of the document '{path:?}' could not be converted: {e}", page_number = page.page_number);
                     let _ = tx.blocking_send(Err(ExtractionError::new(
                         ExtractionErrorCode::Internal,
                         format!("Page {page_number} of the document could not be converted: {e}", page_number = page.page_number),
@@ -1119,14 +1119,14 @@ async fn stream_document(file_path: &str, extract_images: bool, stream_id: &str)
             }
         }
 
-        debug!("Extracted {number_of_characters} character(s) from {number_of_pages} page(s) of '{path:?}'.");
+        debug!("Extracted {number_of_characters} character(s) from {number_of_pages} page(s) of '{path}'.", path = path.display());
 
         //
         // Without this marker, a document without any text and a broken extraction both arrive as
         // an empty document, and the AI would answer as if the file had no content at all.
         //
         if number_of_characters == 0 {
-            warn!("No text could be extracted from '{path:?}': {number_of_pages} page(s).");
+            warn!("No text could be extracted from '{path}': {number_of_pages} page(s).", path = path.display());
 
             let _ = tx.blocking_send(Ok(Chunk::from_error(&ExtractionError::new(
                 ExtractionErrorCode::NoTextExtracted,
