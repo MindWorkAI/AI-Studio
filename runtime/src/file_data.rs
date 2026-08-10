@@ -224,8 +224,14 @@ impl Base64Image {
 }
 
 const TO_MARKDOWN: &str = "markdown";
+
+/// Pandoc's markup-free output format. We do not use it as content, only to find out whether a
+/// conversion produced any readable text at all.
+const PANDOC_PLAIN: &str = "plain";
+
 const DOCX: &str = "docx";
 const ODT: &str = "odt";
+const HTML: &str = "html";
 const IMAGE_SEGMENT_SIZE_IN_CHARS: usize = 8_192; // equivalent to ~ 5500 token
 
 /// Every PDF file starts with this signature.
@@ -385,7 +391,7 @@ fn route_from_extension(ext: &str) -> Option<ExtractionRoute> {
         "pdf" => Some(ExtractionRoute::Pdf),
         DOCX => Some(ExtractionRoute::PandocDocx),
         ODT => Some(ExtractionRoute::PandocOdt),
-        "html" | "htm" => Some(ExtractionRoute::PandocHtml),
+        HTML | "htm" => Some(ExtractionRoute::PandocHtml),
         "csv" | "tsv" => Some(ExtractionRoute::Csv),
         "pptx" => Some(ExtractionRoute::PresentationPptx),
         "odp" => Some(ExtractionRoute::PresentationOdp),
@@ -524,7 +530,7 @@ async fn stream_data(file_path: &str, extract_images: bool) -> Result<ChunkStrea
         ExtractionRoute::Pdf => stream_pdf(file_path).await?,
         ExtractionRoute::PandocDocx => convert_with_pandoc(file_path, DOCX, TO_MARKDOWN).await?,
         ExtractionRoute::PandocOdt => convert_with_pandoc(file_path, ODT, TO_MARKDOWN).await?,
-        ExtractionRoute::PandocHtml => convert_with_pandoc(file_path, "html", TO_MARKDOWN).await?,
+        ExtractionRoute::PandocHtml => convert_with_pandoc(file_path, HTML, TO_MARKDOWN).await?,
         ExtractionRoute::PresentationPptx => stream_presentation(file_path, extract_images, PresentationFormat::Pptx).await?,
         ExtractionRoute::PresentationOdp => stream_presentation(file_path, extract_images, PresentationFormat::Odp).await?,
         ExtractionRoute::Spreadsheet => stream_spreadsheet_as_csv(file_path).await?,
@@ -902,39 +908,82 @@ async fn convert_with_pandoc(
         warn!("Pandoc reported while converting '{file_path}': {stderr_text}");
     }
 
+    if !output.status.success() {
+        return Err(ExtractionError::new(
+            ExtractionErrorCode::Internal,
+            format!("Pandoc failed with exit code {exit_code:?}: {stderr_text}"),
+        ).into());
+    }
+
+    let content = String::from_utf8(output.stdout).map_err(|e| ExtractionError::new(
+        ExtractionErrorCode::Internal,
+        format!("The output of Pandoc was not valid UTF-8: {e}"),
+    ))?;
+
+    //
+    // Pandoc succeeded, yet nothing came out. Passing that on as content would hand an empty
+    // document to the AI, which is exactly what this whole path must not do.
+    //
+    if content.trim().is_empty() || !pandoc_found_readable_text(file_path, from, &content).await {
+        return Err(ExtractionError::new(
+            ExtractionErrorCode::NoTextExtracted,
+            format!("Pandoc read the file without finding any readable text{separator}{stderr_text}", separator = if stderr_text.is_empty() { "." } else { ": " }),
+        ).into());
+    }
+
     let stream = stream! {
-        if !output.status.success() {
-            yield Err(ExtractionError::new(
-                ExtractionErrorCode::Internal,
-                format!("Pandoc failed with exit code {exit_code:?}: {stderr_text}"),
-            ).into());
-        } else {
-            match String::from_utf8(output.stdout) {
-                //
-                // Pandoc succeeded, yet nothing came out. Passing that on as content would hand an
-                // empty document to the AI, which is exactly what this whole path must not do.
-                //
-                Ok(content) if content.trim().is_empty() => {
-                    yield Err(ExtractionError::new(
-                        ExtractionErrorCode::NoTextExtracted,
-                        format!("Pandoc read the file without finding any text{separator}{stderr_text}", separator = if stderr_text.is_empty() { "." } else { ": " }),
-                    ).into());
-                },
-
-                Ok(content) => yield Ok(Chunk::new(
-                    content,
-                    Metadata::Document {}
-                )),
-
-                Err(e) => yield Err(ExtractionError::new(
-                    ExtractionErrorCode::Internal,
-                    format!("The output of Pandoc was not valid UTF-8: {e}"),
-                ).into()),
-            }
-        }
+        yield Ok(Chunk::new(
+            content,
+            Metadata::Document {}
+        ));
     };
 
     Ok(Box::pin(stream))
+}
+
+/// Decides whether a conversion produced actual text rather than just structure.
+///
+/// HTML is the one input where markup can masquerade as content: a page which builds its text with
+/// scripts converts into nothing but fenced divs and class names. That looks like content, yet it
+/// says nothing, and the AI would be asked to work with it. Pandoc's plain output settles the
+/// question, because it carries no markup at all. Documents such as `.docx` carry their text
+/// statically, so the check above is enough for them and they are spared the extra conversion.
+async fn pandoc_found_readable_text(file_path: &str, from: &str, content: &str) -> bool {
+    if from != HTML {
+        return true;
+    }
+
+    let output = PandocProcessBuilder::new()
+        .with_input_file(file_path)
+        .with_input_format(from)
+        .with_output_format(PANDOC_PLAIN)
+        .build()
+        .command.output().await;
+
+    match output {
+        Ok(output) if output.status.success() => {
+            let has_text = !String::from_utf8_lossy(&output.stdout).trim().is_empty();
+            if !has_text {
+                warn!("'{file_path}' converted into {length} character(s) of pure structure without any readable text.", length = content.trim().len());
+            }
+
+            has_text
+        },
+
+        //
+        // We could not find out, so we do not claim the file is empty. The content we already have
+        // is the better answer than an error we cannot justify.
+        //
+        Ok(output) => {
+            warn!("Could not check '{file_path}' for readable text, Pandoc exited with {code:?}.", code = output.status.code());
+            true
+        },
+
+        Err(e) => {
+            warn!("Could not check '{file_path}' for readable text: {e}");
+            true
+        },
+    }
 }
 
 async fn chunk_image(file_path: &str) -> Result<ChunkStream> {
