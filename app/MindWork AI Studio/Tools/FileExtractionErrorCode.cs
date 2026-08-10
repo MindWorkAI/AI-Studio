@@ -38,6 +38,11 @@ public enum FileExtractionErrorCode
     //
 
     /// <summary>
+    /// Reading the file needs Pandoc, which is not available.
+    /// </summary>
+    PANDOC_UNAVAILABLE,
+
+    /// <summary>
     /// The runtime answered with an unsuccessful HTTP status.
     /// </summary>
     REQUEST_FAILED,

@@ -33,6 +33,12 @@
                 @T("The specified file could not be found. The file have been moved, deleted, renamed, or is otherwise inaccessible.")
             </MudAlert>
         }
+        else if (this.loadFailureMessage is not null)
+        {
+            <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Class="my-2">
+                @this.loadFailureMessage
+            </MudAlert>
+        }
         else
         {
             <MudTabs Elevation="0" Rounded="true" ApplyEffectsToContainer="true" Outlined="true" PanelClass="pa-2" Class="mb-2">

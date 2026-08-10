@@ -20,6 +20,11 @@ public partial class DocumentCheckDialog : MSGComponentBase
     
     [Parameter]
     public string FileContent { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Set when reading the file failed, so the dialog shows the reason instead of empty content.
+    /// </summary>
+    private string? loadFailureMessage;
     
     [Inject]
     private RustService RustService { get; init; } = null!;
@@ -38,14 +43,22 @@ public partial class DocumentCheckDialog : MSGComponentBase
             {
                 if (!this.Document.IsImage)
                 {
-                    var fileContent = await UserFile.LoadFileData(this.Document.FilePath, this.RustService, this.DialogService);
-                    this.FileContent = fileContent;
+                    var extraction = await UserFile.LoadFileData(this.Document.FilePath, this.RustService, this.DialogService);
+                    this.FileContent = extraction.Content;
+
+                    //
+                    // This dialog exists so the user can check what we hand to the AI. Showing an
+                    // empty document when reading the file failed would answer that question wrong.
+                    //
+                    if (!extraction.HasUsableContent)
+                        this.loadFailureMessage = extraction.ToUserMessage(this.Document.FileName);
                 }
             }
             catch (Exception ex)
             {
                 this.Logger.LogError(ex, "Failed to load file content from '{FilePath}'", this.Document);
                 this.FileContent = string.Empty;
+                this.loadFailureMessage = FileExtractionErrorCode.INTERNAL.ToUserMessage(this.Document.FileName);
             }
             
             this.StateHasChanged();

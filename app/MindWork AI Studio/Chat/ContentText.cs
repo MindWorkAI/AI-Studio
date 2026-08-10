@@ -317,7 +317,7 @@ public sealed class ContentText : IContent
                     if (!pandocIsUsable && FileTypes.RequiresPandoc(document.FilePath))
                     {
                         LOGGER.LogWarning("The file attachment '{FilePath}' needs Pandoc and will be skipped.", document.FilePath);
-                        await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Description, string.Format(TB("The file '{0}' needs Pandoc to be read and was not sent."), document.FileName)));
+                        await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Description, FileExtractionErrorCode.PANDOC_UNAVAILABLE.ToUserMessage(document.FileName)));
                         continue;
                     }
 
