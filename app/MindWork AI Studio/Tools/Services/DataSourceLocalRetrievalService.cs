@@ -6,7 +6,6 @@ using AIStudio.Tools.Databases;
 using AIStudio.Tools.Databases.EmbeddingState;
 using AIStudio.Tools.Databases.VectorStore;
 using AIStudio.Tools.RAG;
-using AIStudio.Tools.Rust;
 
 namespace AIStudio.Tools.Services;
 
@@ -160,12 +159,8 @@ public sealed class DataSourceLocalRetrievalService(
             return false;
         }
 
-        var tokenCountResponse = await rustService.GetTokenCount(
-            embeddingProvider.Name,
-            embeddingProvider.TokenizerPath,
-            query,
-            token);
-        if (tokenCountResponse is not { Success: true, Status: TokenizerStatus.AVAILABLE })
+        var tokenCountResponse = await rustService.GetTokenCount(embeddingProvider, query, token);
+        if (tokenCountResponse is not { Success: true })
         {
             logger.LogWarning(
                 "Skipping vector retrieval for data source '{DataSourceName}' ({DataSourceId}) because the token count for embedding provider '{EmbeddingProviderName}' could not be determined. Reason='{Reason}'.",

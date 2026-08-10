@@ -2,6 +2,7 @@ using System.Text;
 using System.Text.Json;
 using System.Runtime.CompilerServices;
 
+using AIStudio.Settings;
 using AIStudio.Tools.Rust;
 
 namespace AIStudio.Tools.Services;
@@ -85,37 +86,21 @@ public sealed partial class RustService
 
     public async IAsyncEnumerable<string> StreamArbitraryFileData(string path, bool extractImages = false, [EnumeratorCancellation] CancellationToken token = default)
     {
-        await foreach (var segment in this.StreamArbitraryFileDataCore(path, extractImages, false, token))
+        await foreach (var segment in this.StreamArbitraryFileDataCore(path, extractImages, false, string.Empty, token))
             yield return segment.Content;
     }
 
     public async IAsyncEnumerable<ArbitraryFileDataSegment> StreamArbitraryFileDataWithTokenCounts(
         string path,
-        string providerName,
-        string tokenizerPath,
+        EmbeddingProvider embeddingProvider,
         [EnumeratorCancellation] CancellationToken token = default)
     {
-        await this.tokenizerLock.WaitAsync(token);
-        try
+        await foreach (var segment in this.StreamArbitraryFileDataCore(path, false, true, embeddingProvider.TokenizerPath, token))
         {
-            var tokenizerResponse = await this.EnsureTokenizerCoreAsync(providerName, tokenizerPath);
-            if (tokenizerResponse is not { Success: true, Status: TokenizerStatus.AVAILABLE })
-            {
-                var message = tokenizerResponse?.Message ?? "No response was returned by the tokenizer service.";
-                throw new InvalidOperationException($"Could not initialize tokenizer for provider '{providerName}'. {message}");
-            }
+            if (segment.TokenCount is null)
+                throw new InvalidOperationException($"Rust did not return a token count for an extracted segment from '{path}' using provider '{embeddingProvider.Name}'.");
 
-            await foreach (var segment in this.StreamArbitraryFileDataCore(path, false, true, token))
-            {
-                if (segment.TokenCount is null)
-                    throw new InvalidOperationException($"Rust did not return a token count for an extracted segment from '{path}'.");
-
-                yield return new(segment.Content, segment.TokenCount.Value);
-            }
-        }
-        finally
-        {
-            this.tokenizerLock.Release();
+            yield return new(segment.Content, segment.TokenCount.Value);
         }
     }
 
@@ -123,10 +108,11 @@ public sealed partial class RustService
         string path,
         bool extractImages,
         bool includeTokenCount,
+        string tokenizerPath,
         [EnumeratorCancellation] CancellationToken token)
     {
         var streamId = Guid.NewGuid().ToString();
-        var requestUri = $"/retrieval/fs/extract?path={Uri.EscapeDataString(path)}&stream_id={streamId}&extract_images={extractImages}&include_token_count={includeTokenCount}";
+        var requestUri = $"/retrieval/fs/extract?path={Uri.EscapeDataString(path)}&stream_id={streamId}&extract_images={extractImages}&include_token_count={includeTokenCount}&tokenizer_path={Uri.EscapeDataString(tokenizerPath)}";
         using var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
         using var response = await this.http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, token);
 

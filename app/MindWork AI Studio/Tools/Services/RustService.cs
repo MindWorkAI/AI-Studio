@@ -94,7 +94,6 @@ public sealed partial class RustService : BackgroundService
     {
         this.http.Dispose();
         this.userLanguageLock.Dispose();
-        this.tokenizerLock.Dispose();
         this.userNameLock.Dispose();
         base.Dispose();
     }

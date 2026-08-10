@@ -1,10 +1,10 @@
+use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
-use std::sync::{Mutex, OnceLock, RwLock};
+use std::sync::{Arc, Mutex, OnceLock, RwLock};
 
 use axum::Json;
 use log::{error, warn};
-use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use tauri::path::BaseDirectory;
 use tauri::Manager;
@@ -14,30 +14,15 @@ use crate::api_token::APIToken;
 use crate::environment::DATA_DIRECTORY;
 
 const DEFAULT_TOKENIZER_RESOURCE_PATH: &str = "resources/tokenizers/tokenizer.json";
-const NO_TOKENIZER_LOADED_MESSAGE: &str = "Tokenizer must be set before counting tokens.";
 
-static TOKENIZER: OnceLock<RwLock<Option<Tokenizer>>> = OnceLock::new();
+static TOKENIZERS: OnceLock<RwLock<HashMap<PathBuf, Arc<Tokenizer>>>> = OnceLock::new();
 static DEFAULT_TOKENIZER_PATH: OnceLock<PathBuf> = OnceLock::new();
-static TOKENIZER_STATUS: Lazy<Mutex<TokenizerStatusInfo>> = Lazy::new(|| Mutex::new(TokenizerStatusInfo::default()));
-static TOKENIZER_OPERATION_LOCK: Lazy<Mutex<()>> = Lazy::new(|| Mutex::new(()));
-
-#[derive(Clone, Copy, Default, Serialize, PartialEq, Eq)]
-pub enum TokenizerStatus {
-    #[default]
-    Unavailable,
-    Running,
-    Available,
-}
-
-#[derive(Default)]
-struct TokenizerStatusInfo {
-    status: TokenizerStatus,
-    unavailable_reason: Option<String>,
-}
+static TOKENIZER_STORAGE_LOCK: Mutex<()> = Mutex::new(());
 
 #[derive(Deserialize)]
 pub struct SetTokenText {
     text: String,
+    tokenizer_path: String,
 }
 
 #[derive(Clone, Deserialize)]
@@ -61,7 +46,6 @@ pub struct TokenizerResponse {
     success: bool,
     token_count: usize,
     message: String,
-    status: TokenizerStatus,
     stored_path: String,
 }
 
@@ -71,7 +55,6 @@ impl TokenizerResponse {
             success: true,
             token_count,
             message: String::new(),
-            status: TokenizerStatus::Available,
             stored_path: String::new(),
         }
     }
@@ -81,7 +64,6 @@ impl TokenizerResponse {
             success: true,
             token_count: 0,
             message: String::new(),
-            status: TokenizerStatus::Available,
             stored_path,
         }
     }
@@ -91,7 +73,6 @@ impl TokenizerResponse {
             success: false,
             token_count: 0,
             message: reason,
-            status: TokenizerStatus::Unavailable,
             stored_path: String::new(),
         }
     }
@@ -106,7 +87,6 @@ pub fn set_default_tokenizer_path(app_handle: tauri::AppHandle) {
         Err(e) => {
             let reason = format!("The default tokenizer file '{DEFAULT_TOKENIZER_RESOURCE_PATH}' could not be resolved: {e}");
             error!(Source = "Tokenizer"; "{reason}");
-            set_tokenizer_unavailable(reason);
             return;
         }
     };
@@ -114,7 +94,6 @@ pub fn set_default_tokenizer_path(app_handle: tauri::AppHandle) {
     if !tokenizer_path.is_file() {
         let reason = format!("The default tokenizer file was not found: {}", tokenizer_path.display());
         error!(Source = "Tokenizer"; "{reason}");
-        set_tokenizer_unavailable(reason);
         return;
     }
 
@@ -124,23 +103,8 @@ pub fn set_default_tokenizer_path(app_handle: tauri::AppHandle) {
     }
 }
 
-pub async fn tokenizer_info(_token: APIToken) -> Json<TokenizerResponse> {
-    let status = TOKENIZER_STATUS.lock().unwrap();
-    match status.status {
-        TokenizerStatus::Available => Json(TokenizerResponse::available(0)),
-        TokenizerStatus::Running => Json(TokenizerResponse {
-            success: false,
-            token_count: 0,
-            message: String::new(),
-            status: TokenizerStatus::Running,
-            stored_path: String::new(),
-        }),
-        TokenizerStatus::Unavailable => Json(TokenizerResponse::unavailable(status.unavailable_reason.clone().unwrap_or_default())),
-    }
-}
-
 pub async fn token_count(_token: APIToken, req: Json<SetTokenText>) -> Json<TokenizerResponse> {
-    match get_token_count(&req.text) {
+    match get_token_count(&req.tokenizer_path, &req.text) {
         Ok(count) => Json(TokenizerResponse::available(count)),
         Err(e) => Json(TokenizerResponse::unavailable(e)),
     }
@@ -167,92 +131,29 @@ pub async fn delete_tokenizer(_token: APIToken, payload: Json<TokenizerDelete>) 
     }
 }
 
-pub async fn set_tokenizer(_token: APIToken, payload: Json<TokenizerPath>) -> Json<TokenizerResponse> {
-    match handle_tokenizer_set(&payload.file_path) {
-        Ok(_) => Json(TokenizerResponse::available(0)),
-        Err(e) => Json(TokenizerResponse::unavailable(e)),
-    }
-}
-
-pub fn handle_tokenizer_set(path: &str) -> Result<(), String> {
-    let _operation_guard = begin_tokenizer_operation()?;
-    set_tokenizer_running();
-
-    let tokenizer_path = resolve_tokenizer_path(path).map_err(|e| {
-        error!(Source = "Tokenizer"; "{e} Starting the app without a tokenizer.");
-        unavailable_with_status_update(&e)
-    })?;
-
-    let tokenizer = load_tokenizer_from_file(&tokenizer_path).map_err(|e| {
-        error!(Source = "Tokenizer"; "{e}");
-        unavailable_with_status_update(&e)
-    })?;
-
-    match tokenizer_state().write() {
-        Ok(mut tokenizer_guard) => *tokenizer_guard = Some(tokenizer),
-        Err(_) => return Err(unavailable_with_status_update("Tokenizer state lock is poisoned.")),
-    }
-
-    set_tokenizer_available();
-    Ok(())
-}
-
 fn handle_tokenizer_validate(path: &PathBuf) -> Result<usize, String> {
-    let _operation_guard = begin_tokenizer_operation()?;
-    set_tokenizer_running();
-
-    let result = validate_tokenizer_file(path);
-    match tokenizer_state().read() {
-        Ok(tokenizer_guard) if tokenizer_guard.is_some() => set_tokenizer_available(),
-        Ok(_) => set_tokenizer_unavailable(NO_TOKENIZER_LOADED_MESSAGE.to_string()),
-        Err(_) => set_tokenizer_unavailable("Tokenizer state lock is poisoned.".to_string()),
-    }
-
-    result
+    validate_tokenizer_file(path)
 }
 
-pub fn get_token_count(text: &str) -> Result<usize, String> {
-    get_token_count_internal(text, true)
+pub fn get_token_count(path: &str, text: &str) -> Result<usize, String> {
+    let tokenizer = get_tokenizer(path)?;
+    get_token_count_internal(&tokenizer, text, true)
 }
 
-pub fn get_segment_token_count(text: &str) -> Result<usize, String> {
+pub fn get_segment_token_count(tokenizer: &Tokenizer, text: &str) -> Result<usize, String> {
     // Special tokens belong to the final encoding and would inflate sums across many segments.
-    get_token_count_internal(text, false)
+    get_token_count_internal(tokenizer, text, false)
 }
 
-fn get_token_count_internal(text: &str, add_special_tokens: bool) -> Result<usize, String> {
+fn get_token_count_internal(tokenizer: &Tokenizer, text: &str, add_special_tokens: bool) -> Result<usize, String> {
     if text.trim().is_empty() {
         return Ok(0);
     }
 
-    let _operation_guard = begin_tokenizer_operation()?;
-    {
-        let status = TOKENIZER_STATUS.lock().unwrap();
-        if status.status != TokenizerStatus::Available {
-            return Err(status.unavailable_reason.clone().unwrap_or_else(|| NO_TOKENIZER_LOADED_MESSAGE.to_string()));
-        }
-    }
-
-    let tokenizer_guard = tokenizer_state()
-        .read()
-        .map_err(|_| unavailable_with_status_update("Tokenizer state lock is poisoned."))?;
-    let tokenizer = match tokenizer_guard.as_ref() {
-        Some(tokenizer) => tokenizer,
-        None => {
-            drop(tokenizer_guard);
-            return Err(unavailable_with_status_update("Tokenizer not initialized."));
-        }
-    };
-    let token_count = match tokenizer.encode(text, add_special_tokens) {
-        Ok(enc) => enc.len(),
-        Err(e) => {
-            let reason = format!("Failed to tokenize text: {e}");
-            drop(tokenizer_guard);
-            return Err(unavailable_with_status_update(&reason));
-        }
-    };
-
-    Ok(token_count)
+    tokenizer
+        .encode(text, add_special_tokens)
+        .map(|encoding| encoding.len())
+        .map_err(|e| format!("Failed to tokenize text: {e}"))
 }
 
 fn validate_tokenizer_file(path: &PathBuf) -> Result<usize, String> {
@@ -293,7 +194,11 @@ fn handle_tokenizer_store(payload: &TokenizerStorage) -> Result<String, std::io:
         return Ok(destination_path.to_string_lossy().to_string());
     }
 
+    let _storage_guard = TOKENIZER_STORAGE_LOCK
+        .lock()
+        .map_err(|_| std::io::Error::other("Tokenizer storage lock is poisoned."))?;
     if model_path.try_exists()? {
+        invalidate_tokenizers_under(&model_path);
         fs::remove_dir_all(&model_path)?;
     }
 
@@ -320,50 +225,63 @@ fn handle_tokenizer_delete(payload: &TokenizerDelete) -> Result<(), std::io::Err
         .join("tokenizers")
         .join(&payload.model_id);
 
+    let _storage_guard = TOKENIZER_STORAGE_LOCK
+        .lock()
+        .map_err(|_| std::io::Error::other("Tokenizer storage lock is poisoned."))?;
     if tokenizer_path.exists() {
+        invalidate_tokenizers_under(&tokenizer_path);
         fs::remove_dir_all(tokenizer_path)?;
     }
 
     Ok(())
 }
 
-fn tokenizer_state() -> &'static RwLock<Option<Tokenizer>> {
-    TOKENIZER.get_or_init(|| RwLock::new(None))
+fn tokenizer_cache() -> &'static RwLock<HashMap<PathBuf, Arc<Tokenizer>>> {
+    TOKENIZERS.get_or_init(|| RwLock::new(HashMap::new()))
 }
 
-fn begin_tokenizer_operation() -> Result<std::sync::MutexGuard<'static, ()>, String> {
-    TOKENIZER_OPERATION_LOCK
-        .lock()
-        .map_err(|_| unavailable_with_status_update("Tokenizer operation lock is poisoned."))
-}
+pub fn get_tokenizer(path: &str) -> Result<Arc<Tokenizer>, String> {
+    let resolved_path = resolve_tokenizer_path(path)?;
+    let tokenizer_path = fs::canonicalize(&resolved_path)
+        .map_err(|e| format!("Could not resolve tokenizer file '{}': {e}", resolved_path.display()))?;
 
-fn set_tokenizer_available() {
-    let mut status = TOKENIZER_STATUS.lock().unwrap();
-    status.status = TokenizerStatus::Available;
-    status.unavailable_reason = None;
-}
-
-fn set_tokenizer_running() {
-    let mut status = TOKENIZER_STATUS.lock().unwrap();
-    status.status = TokenizerStatus::Running;
-    status.unavailable_reason = None;
-}
-
-fn set_tokenizer_unavailable(reason: String) {
-    let mut status = TOKENIZER_STATUS.lock().unwrap();
-    status.status = TokenizerStatus::Unavailable;
-    status.unavailable_reason = Some(reason);
-}
-
-fn unavailable_with_status_update(reason: &str) -> String {
-    let reason = reason.to_string();
-    match tokenizer_state().write() {
-        Ok(mut tokenizer_guard) => *tokenizer_guard = None,
-        Err(_) => set_tokenizer_unavailable("Tokenizer state lock is poisoned.".to_string()),
+    if let Some(tokenizer) = tokenizer_cache()
+        .read()
+        .map_err(|_| "Tokenizer cache lock is poisoned.".to_string())?
+        .get(&tokenizer_path)
+        .cloned()
+    {
+        return Ok(tokenizer);
     }
 
-    set_tokenizer_unavailable(reason.clone());
-    reason
+    let _storage_guard = TOKENIZER_STORAGE_LOCK
+        .lock()
+        .map_err(|_| "Tokenizer storage lock is poisoned.".to_string())?;
+    if let Some(tokenizer) = tokenizer_cache()
+        .read()
+        .map_err(|_| "Tokenizer cache lock is poisoned.".to_string())?
+        .get(&tokenizer_path)
+        .cloned()
+    {
+        return Ok(tokenizer);
+    }
+
+    let loaded_tokenizer = Arc::new(load_tokenizer_from_file(&tokenizer_path)?);
+    let mut cache = tokenizer_cache()
+        .write()
+        .map_err(|_| "Tokenizer cache lock is poisoned.".to_string())?;
+    Ok(cache
+        .entry(tokenizer_path)
+        .or_insert_with(|| loaded_tokenizer)
+        .clone())
+}
+
+fn invalidate_tokenizers_under(path: &PathBuf) {
+    let cache_path = fs::canonicalize(path).unwrap_or_else(|_| path.clone());
+    match tokenizer_cache().write() {
+        Ok(mut cache) => cache.retain(|tokenizer_path, _| !tokenizer_path.starts_with(&cache_path)),
+        Err(_) => warn!(Source = "Tokenizer"; "Could not invalidate tokenizer cache because its lock is poisoned."),
+    }
 }
 
 fn resolve_tokenizer_path(path: &str) -> Result<PathBuf, String> {

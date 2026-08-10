@@ -22,6 +22,7 @@ use log::{debug, error, warn};
 use tokio::io::AsyncBufReadExt;
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::ReceiverStream;
+use tokenizers::tokenizer::Tokenizer;
 
 #[derive(Debug, Serialize)]
 pub struct Chunk {
@@ -39,8 +40,8 @@ impl Chunk {
     
     pub fn set_stream_id(&mut self, stream_id: &str) { self.stream_id = stream_id.to_string(); }
 
-    pub fn set_token_count(&mut self) -> std::result::Result<(), String> {
-        self.token_count = Some(crate::tokenizer::get_segment_token_count(&self.content)?);
+    pub fn set_token_count(&mut self, tokenizer: &Tokenizer) -> std::result::Result<(), String> {
+        self.token_count = Some(crate::tokenizer::get_segment_token_count(tokenizer, &self.content)?);
         Ok(())
     }
 
@@ -116,6 +117,8 @@ pub struct ExtractDataQuery {
     extract_images: bool,
     #[serde(default, deserialize_with = "deserialize_bool_case_insensitive")]
     include_token_count: bool,
+    #[serde(default)]
+    tokenizer_path: String,
 }
 
 fn deserialize_bool_case_insensitive<'de, D>(deserializer: D) -> std::result::Result<bool, D::Error>
@@ -165,7 +168,18 @@ pub async fn extract_data(
 
     let stream = stream! {
         match query {
-            Ok(query) => {
+            Ok(query) => 'request: {
+                let tokenizer = if query.include_token_count {
+                    match crate::tokenizer::get_tokenizer(&query.tokenizer_path) {
+                        Ok(tokenizer) => Some(tokenizer),
+                        Err(e) => {
+                            yield Ok(Event::default().json_data(format!("Error loading tokenizer: {e}")).unwrap_or_else(|_| Event::default().data(format!("Error loading tokenizer: {e}"))));
+                            break 'request;
+                        },
+                    }
+                } else {
+                    None
+                };
                 let stream_result = stream_data(&query.path, query.extract_images).await;
                 let id_ref = &query.stream_id;
 
@@ -178,8 +192,8 @@ pub async fn extract_data(
 
                                     for mut chunk in chunks {
                                         chunk.set_stream_id(id_ref);
-                                        if query.include_token_count {
-                                            if let Err(e) = chunk.set_token_count() {
+                                        if let Some(tokenizer) = tokenizer.as_deref() {
+                                            if let Err(e) = chunk.set_token_count(tokenizer) {
                                                 yield Ok(Event::default().json_data(format!("Error counting tokens: {e}")).unwrap_or_else(|_| Event::default().data(format!("Error counting tokens: {e}"))));
                                                 break 'stream_chunks;
                                             }

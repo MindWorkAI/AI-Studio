@@ -1259,12 +1259,12 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             return;
         }
 
-        var response = await this.RustService.GetTokenCount(this.Provider.InstanceName, this.Provider.TokenizerPath, this.inputField.Value);
+        var response = await this.RustService.GetTokenCount(this.Provider, this.inputField.Value);
         if (response is null)
             return;
         if (!response.Value.Success)
         {
-            this.Logger.LogWarning($"Failed to calculate token count: status='{response.Value.Status}', reason='{response.Value.Message}'");
+            this.Logger.LogWarning("Failed to calculate token count: reason='{Reason}'", response.Value.Message);
             return;
         }
         this.tokenCount = response.Value.TokenCount.ToString();

@@ -66,7 +66,7 @@ public sealed partial class DataSourceEmbeddingService
     {
         var segments = new List<ExtractedFileSegment>();
 
-        await foreach (var segment in rustService.StreamArbitraryFileDataWithTokenCounts(filePath, embeddingProvider.Name, embeddingProvider.TokenizerPath, token))
+        await foreach (var segment in rustService.StreamArbitraryFileDataWithTokenCounts(filePath, embeddingProvider, token))
         {
             var normalized = NormalizeChunkSegment(segment.Content);
             if (!string.IsNullOrWhiteSpace(normalized))
@@ -536,8 +536,8 @@ public sealed partial class DataSourceEmbeddingService
 
     private async Task<int> GetEmbeddingTokenCountAsync(EmbeddingProvider embeddingProvider, string text, CancellationToken token)
     {
-        var response = await rustService.GetTokenCount(embeddingProvider.Name, embeddingProvider.TokenizerPath, text, token);
-        if (response is { Success: true, Status: TokenizerStatus.AVAILABLE })
+        var response = await rustService.GetTokenCount(embeddingProvider, text, token);
+        if (response is { Success: true })
             return response.Value.TokenCount;
 
         var message = response?.Message ?? "No response was returned by the tokenizer service.";
