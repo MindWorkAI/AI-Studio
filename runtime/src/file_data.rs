@@ -9,7 +9,7 @@ use axum::extract::rejection::QueryRejection;
 use axum::response::sse::{Event, Sse};
 use base64::{engine::general_purpose, Engine as _};
 use calamine::{open_workbook_auto, Error as CalamineError, Reader};
-use chardetng::EncodingDetector;
+use chardetng::{EncodingDetector, Iso2022JpDetection, Utf8Detection};
 use encoding_rs::Encoding;
 use file_format::{FileFormat, Kind};
 use futures::{Stream, StreamExt};
@@ -593,10 +593,15 @@ async fn read_text_file(file_path: &str) -> Result<String> {
         ).into());
     }
 
-    let mut detector = EncodingDetector::new();
+    //
+    // Both options are about untrusted web content which may run scripts, which is not what we
+    // read here: these are local files the user picked, so allowing both guesses gives the better
+    // detection.
+    //
+    let mut detector = EncodingDetector::new(Iso2022JpDetection::Allow);
     detector.feed(&bytes, true);
 
-    let (text, encoding, had_errors) = detector.guess(None, true).decode(&bytes);
+    let (text, encoding, had_errors) = detector.guess(None, Utf8Detection::Allow).decode(&bytes);
     if had_errors {
         warn!("Decoding '{file_path}' as {name} replaced malformed sequences.", name = encoding.name());
     } else {
