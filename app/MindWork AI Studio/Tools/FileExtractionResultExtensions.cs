@@ -52,12 +52,12 @@ internal static class FileExtractionResultExtensions
     {
         FileExtractionErrorCode.FILE_NOT_FOUND => TB("The file '{0}' does not exist anymore and was not sent."),
         FileExtractionErrorCode.FILE_NOT_READABLE => TB("The file '{0}' could not be read and was not sent. When the file is stored on a network drive, the drive might be unavailable, or another program might be blocking the file."),
+        FileExtractionErrorCode.FILE_LOCKED => TB("The file '{0}' is currently open in another program, which is why it was not sent. Please close the file and try again. When the file is stored on a shared network drive, a colleague might have it open."),
         FileExtractionErrorCode.TIMEOUT => TB("Reading the file '{0}' took too long and was stopped, so the file was not sent. When the file is stored on a network drive, the connection might be slow or interrupted."),
         FileExtractionErrorCode.NOT_A_VALID_PDF => TB("The file '{0}' is not a readable PDF and was not sent. It might be damaged or transferred incompletely."),
         FileExtractionErrorCode.NOT_A_VALID_SPREADSHEET => TB("The file '{0}' is not a readable spreadsheet and was not sent. It might be damaged or transferred incompletely."),
         FileExtractionErrorCode.PDF_ENCRYPTED => TB("The file '{0}' is protected and could not be opened, so it was not sent."),
         FileExtractionErrorCode.PDFIUM_UNAVAILABLE => TB("AI Studio was not able to start its PDF engine, so the file '{0}' was not sent."),
-
         FileExtractionErrorCode.PANDOC_UNAVAILABLE => TB("Reading the file '{0}' needs Pandoc, which is not available, so the file was not sent."),
         FileExtractionErrorCode.NO_TEXT_EXTRACTED => TB("No text could be read from the file '{0}', so it was not sent. The file might consist of scanned images without a text layer."),
         FileExtractionErrorCode.NO_CONTENT => TB("The file '{0}' did not provide any content and was not sent."),

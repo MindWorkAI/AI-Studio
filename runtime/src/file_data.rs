@@ -93,6 +93,10 @@ pub enum ExtractionErrorCode {
 
     FileNotFound,
     FileNotReadable,
+
+    /// Another process holds the file open and denies us reading it.
+    FileLocked,
+
     FormatDetectionFailed,
     NotAValidPdf,
     NotAValidSpreadsheet,
@@ -146,6 +150,40 @@ impl fmt::Display for ExtractionError {
 }
 
 impl std::error::Error for ExtractionError {}
+
+/// Detects whether a file system error means that another process holds the file open.
+///
+/// Windows answers with `ERROR_SHARING_VIOLATION` (32) or `ERROR_LOCK_VIOLATION` (33). This also
+/// covers files on a network drive, because the SMB server enforces the lock and the client
+/// surfaces the very same codes.
+#[cfg(windows)]
+fn is_locked_error(error: &std::io::Error) -> bool {
+    matches!(error.raw_os_error(), Some(32) | Some(33))
+}
+
+/// Detects whether a file system error means that another process holds the file open.
+///
+/// Unix has no distinct error for this. A lock held through an SMB share surfaces as a permission
+/// problem, which we cannot tell apart from an actual permission problem, so we never claim a file
+/// is locked here.
+#[cfg(not(windows))]
+fn is_locked_error(_error: &std::io::Error) -> bool {
+    false
+}
+
+/// Classifies a file system error, so a file which another program holds open is reported as such
+/// instead of collapsing into a generic read failure.
+fn classify_io_error(error: &std::io::Error) -> ExtractionErrorCode {
+    if is_locked_error(error) {
+        return ExtractionErrorCode::FileLocked;
+    }
+
+    match error.kind() {
+        std::io::ErrorKind::NotFound => ExtractionErrorCode::FileNotFound,
+        std::io::ErrorKind::InvalidData => ExtractionErrorCode::FormatDetectionFailed,
+        _ => ExtractionErrorCode::FileNotReadable,
+    }
+}
 
 #[derive(Debug, Serialize)]
 pub struct Base64Image {
@@ -303,8 +341,14 @@ async fn stream_data(file_path: &str, extract_images: bool) -> Result<ChunkStrea
     let fmt = match FileFormat::from_file(&file_path_clone) {
         Ok(format) => format,
         Err(error) => {
-            error!("Failed to determine file format for '{file_path}': {error}");
-            return Err(ExtractionError::new(ExtractionErrorCode::FormatDetectionFailed, format!("Failed to determine the file format for '{file_path}': {error}")).into());
+            //
+            // Detecting the format opens the file, so this is the first place a file which another
+            // program holds open fails. Reporting that as a format problem would send the user
+            // looking in the wrong direction, hence we classify the error instead.
+            //
+            let code = classify_io_error(&error);
+            error!("Failed to read '{file_path}' while determining its file format ({code:?}): {error}");
+            return Err(ExtractionError::new(code, format!("The file could not be read: {error}")).into());
         },
     };
 
@@ -445,18 +489,18 @@ async fn stream_text_file(file_path: &str, use_md_fences: bool, fence_language: 
 /// the text branch and silently produce empty content.
 async fn ensure_pdf_header(file_path: &str) -> Result<()> {
     let file = tokio::fs::File::open(file_path).await.map_err(|error| ExtractionError::new(
-        ExtractionErrorCode::FileNotReadable,
+        classify_io_error(&error),
         format!("The file could not be opened: {error}"),
     ))?;
 
     let file_size = file.metadata().await.map_err(|error| ExtractionError::new(
-        ExtractionErrorCode::FileNotReadable,
+        classify_io_error(&error),
         format!("The file size could not be read: {error}"),
     ))?.len();
 
     let mut header = Vec::with_capacity(PDF_HEADER_PROBE_SIZE as usize);
     file.take(PDF_HEADER_PROBE_SIZE).read_to_end(&mut header).await.map_err(|error| ExtractionError::new(
-        ExtractionErrorCode::FileNotReadable,
+        classify_io_error(&error),
         format!("The first bytes of the file could not be read: {error}"),
     ))?;
 
@@ -590,7 +634,7 @@ async fn stream_pdf(file_path: &str) -> Result<ChunkStream> {
 /// away, is not reported as a corrupt workbook.
 fn classify_spreadsheet_error_code(error: &CalamineError) -> ExtractionErrorCode {
     match error {
-        CalamineError::Io(_) => ExtractionErrorCode::FileNotReadable,
+        CalamineError::Io(io_error) => classify_io_error(io_error),
         _ => ExtractionErrorCode::NotAValidSpreadsheet,
     }
 }

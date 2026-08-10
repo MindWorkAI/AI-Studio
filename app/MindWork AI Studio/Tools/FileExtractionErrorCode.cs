@@ -23,6 +23,12 @@ public enum FileExtractionErrorCode
     INVALID_REQUEST,
     FILE_NOT_FOUND,
     FILE_NOT_READABLE,
+
+    /// <summary>
+    /// Another program holds the file open and denies reading it.
+    /// </summary>
+    FILE_LOCKED,
+
     FORMAT_DETECTION_FAILED,
     NOT_A_VALID_PDF,
     NOT_A_VALID_SPREADSHEET,
