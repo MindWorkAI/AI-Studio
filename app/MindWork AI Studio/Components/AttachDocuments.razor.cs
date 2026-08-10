@@ -443,23 +443,31 @@ public partial class AttachDocuments : MSGComponentBase
         var mediaPaths = existingPaths.Where(IsTranscribableMedia).ToList();
         var regularPaths = existingPaths.Except(mediaPaths).ToList();
 
-        var canAddRegularFiles = true;
-        if (regularPaths.Count > 0)
+        //
+        // Only the formats we convert with Pandoc depend on a Pandoc installation. Everything
+        // else, PDFs in particular, is read by the Rust runtime itself, so those files must stay
+        // attachable without Pandoc.
+        //
+        var canAddPandocFiles = true;
+        if (regularPaths.Any(FileTypes.RequiresPandoc))
         {
             var pandocState = await this.PandocAvailabilityService.EnsureAvailabilityAsync(
                 showSuccessMessage: false,
                 showDialog: true);
-            canAddRegularFiles = pandocState.IsAvailable;
+            canAddPandocFiles = pandocState.IsAvailable;
         }
 
         foreach (var path in regularPaths)
         {
-            if (!canAddRegularFiles)
-                break;
+            if (!canAddPandocFiles && FileTypes.RequiresPandoc(path))
+            {
+                this.Logger.LogWarning("The file '{Path}' needs Pandoc and was not attached.", path);
+                continue;
+            }
 
             if (!await FileExtensionValidation.IsExtensionValidWithNotifyAsync(FileExtensionValidation.UseCase.ATTACHING_CONTENT, path, this.ValidateMediaFileTypes, this.Provider))
                 continue;
-            
+
             this.DocumentPaths.Add(FileAttachment.FromPath(path));
         }
 

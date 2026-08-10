@@ -84,6 +84,23 @@ public static class FileTypes
     public static readonly FileTypeFilter EXECUTABLES = FileTypeFilter.Leaf(TB("Executable"), "exe", "app", "bin", "appimage");
     public static readonly FileTypeFilter PLUGIN_ARCHIVE = FileTypeFilter.Leaf(TB("Plugin archive"), PluginArchive.PLUGIN_FILE_EXTENSION.TrimStart('.'), "zip");
     
+    /// <summary>
+    /// The file types AI Studio converts using Pandoc.
+    /// </summary>
+    /// <remarks>
+    /// This is not a user-selectable type, it mirrors the formats the Rust runtime hands to
+    /// Pandoc. Every other document type is read by the runtime itself, so it must never depend
+    /// on a Pandoc installation. The name is not localized because it is never shown.
+    /// </remarks>
+    private static readonly FileTypeFilter PANDOC_CONVERTED = FileTypeFilter.Leaf("Pandoc conversion", "docx", "odt", "html", "htm");
+
+    /// <summary>
+    /// Determines whether reading the given file needs Pandoc.
+    /// </summary>
+    /// <param name="filePath">The path of the file to check.</param>
+    /// <returns>True, when reading the file needs Pandoc.</returns>
+    public static bool RequiresPandoc(string filePath) => IsAllowedPath(filePath, PANDOC_CONVERTED);
+
     public static FileTypeFilter? AsOneFileType(params FileTypeFilter[]? types)
     {
         if (types == null || types.Length == 0)
