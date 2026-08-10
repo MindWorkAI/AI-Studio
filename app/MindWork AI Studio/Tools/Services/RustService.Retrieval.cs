@@ -48,9 +48,19 @@ public sealed partial class RustService
                     var sseEvent = JsonSerializer.Deserialize<ContentStreamSseEvent>(jsonContent);
                     if (sseEvent is not null)
                     {
-                        var content = ContentStreamSseHandler.ProcessEvent(sseEvent, extractImages);
-                        if (content is not null)
-                            resultBuilder.AppendLine(content);
+                        var processedEvent = ContentStreamSseHandler.ProcessEvent(sseEvent, extractImages);
+                        if (processedEvent.Error is not null)
+                        {
+                            this.logger?.LogError(
+                                "The runtime reported a failure while reading '{Path}': code={ErrorCode}, page={PageNumber}, partial={IsPartialFailure}, message='{Message}'",
+                                path,
+                                processedEvent.Error.ParsedCode,
+                                processedEvent.Error.PageNumber,
+                                processedEvent.Error.IsPartialFailure,
+                                processedEvent.Error.Message);
+                        }
+                        else if (processedEvent.Content is not null)
+                            resultBuilder.AppendLine(processedEvent.Content);
 
                         chunkCount++;
                     }
