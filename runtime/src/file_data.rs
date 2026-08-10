@@ -46,6 +46,7 @@ impl Chunk {
                 code: error.code,
                 message: error.message.clone(),
                 page_number: error.page_number,
+                detected_format: error.detected_format.clone(),
             },
         }
     }
@@ -80,6 +81,7 @@ pub enum Metadata {
         code: ExtractionErrorCode,
         message: String,
         page_number: Option<usize>,
+        detected_format: Option<String>,
     },
 }
 
@@ -104,6 +106,17 @@ pub enum ExtractionErrorCode {
     PdfEncrypted,
     PageExtractionFailed,
     NoTextExtracted,
+
+    /// The content does not match the file extension. This is a notice, not a failure: we read
+    /// the file according to its content and only tell the user about the wrong extension.
+    ExtensionMismatch,
+
+    /// The file was read as text, but its bytes are not text.
+    NotTextContent,
+
+    /// The file is an executable, no matter what its extension claims.
+    ExecutableRejected,
+
     Unsupported,
 
     /// Any failure which does not carry a code of its own yet.
@@ -118,15 +131,24 @@ pub struct ExtractionError {
     pub code: ExtractionErrorCode,
     pub message: String,
     pub page_number: Option<usize>,
+
+    /// The format we identified by looking at the content, e.g. when it contradicts the file
+    /// extension. The app names it so the user learns what the file really is.
+    pub detected_format: Option<String>,
 }
 
 impl ExtractionError {
     pub fn new(code: ExtractionErrorCode, message: impl Into<String>) -> Self {
-        Self { code, message: message.into(), page_number: None }
+        Self { code, message: message.into(), page_number: None, detected_format: None }
     }
 
     pub fn on_page(code: ExtractionErrorCode, message: impl Into<String>, page_number: usize) -> Self {
-        Self { code, message: message.into(), page_number: Some(page_number) }
+        Self { code, message: message.into(), page_number: Some(page_number), detected_format: None }
+    }
+
+    /// Creates an error which names the format we identified by looking at the content.
+    pub fn with_detected_format(code: ExtractionErrorCode, message: impl Into<String>, detected_format: &FileFormat) -> Self {
+        Self { code, message: message.into(), page_number: None, detected_format: Some(detected_format.name().to_string()) }
     }
 
     /// Recovers the structured error from a boxed error. Errors which do not carry a code
@@ -213,7 +235,7 @@ const PDF_HEADER_PROBE_SIZE: u64 = 8;
 
 /// Last-resort payload used when even an error event cannot be serialized. It keeps the
 /// chunk schema intact, so the .NET app never has to parse a bare string.
-const FALLBACK_ERROR_EVENT_JSON: &str = r#"{"content":"","stream_id":"","metadata":{"Error":{"code":"INTERNAL","message":"The extraction error could not be serialized.","page_number":null}}}"#;
+const FALLBACK_ERROR_EVENT_JSON: &str = r#"{"content":"","stream_id":"","metadata":{"Error":{"code":"INTERNAL","message":"The extraction error could not be serialized.","page_number":null,"detected_format":null}}}"#;
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 type ChunkStream = Pin<Box<dyn Stream<Item = Result<Chunk>> + Send>>;
@@ -331,6 +353,80 @@ pub async fn extract_data(
     Sse::new(stream)
 }
 
+/// How a file is read.
+///
+/// Deriving the route from the extension and from the content separately is what lets us notice
+/// when the two disagree, instead of trusting a possibly wrong extension blindly.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ExtractionRoute {
+    Pdf,
+    PandocDocx,
+    PandocOdt,
+    PandocHtml,
+    PresentationPptx,
+    PresentationOdp,
+    Spreadsheet,
+    Csv,
+    Text,
+    Image,
+
+    /// The file is an executable and is never read.
+    Executable,
+
+    /// A format we recognize but have no reader for, e.g. the legacy binary Office formats.
+    Unsupported,
+}
+
+/// Derives the route from the file extension.
+fn route_from_extension(ext: &str) -> Option<ExtractionRoute> {
+    match ext {
+        "pdf" => Some(ExtractionRoute::Pdf),
+        DOCX => Some(ExtractionRoute::PandocDocx),
+        ODT => Some(ExtractionRoute::PandocOdt),
+        "csv" | "tsv" => Some(ExtractionRoute::Csv),
+        "pptx" => Some(ExtractionRoute::PresentationPptx),
+        "odp" => Some(ExtractionRoute::PresentationOdp),
+        "xlsx" | "ods" | "xls" | "xlsm" | "xlsb" | "xla" | "xlam" => Some(ExtractionRoute::Spreadsheet),
+        _ => None,
+    }
+}
+
+/// Derives the route from the content we identified.
+///
+/// `None` means the content does not point at any particular reader. Such a file keeps whatever
+/// its extension asks for, and the text reader decides whether the bytes are readable at all.
+fn route_from_content(fmt: FileFormat) -> Option<ExtractionRoute> {
+    match fmt {
+        FileFormat::PortableDocumentFormat => Some(ExtractionRoute::Pdf),
+        FileFormat::OfficeOpenXmlDocument => Some(ExtractionRoute::PandocDocx),
+        FileFormat::OpendocumentText => Some(ExtractionRoute::PandocOdt),
+        FileFormat::HypertextMarkupLanguage => Some(ExtractionRoute::PandocHtml),
+        FileFormat::OfficeOpenXmlPresentation => Some(ExtractionRoute::PresentationPptx),
+        FileFormat::OpendocumentPresentation => Some(ExtractionRoute::PresentationOdp),
+
+        // Calamine reads the legacy binary spreadsheet format as well:
+        FileFormat::OfficeOpenXmlSpreadsheet
+        | FileFormat::OpendocumentSpreadsheet
+        | FileFormat::MicrosoftExcelSpreadsheet => Some(ExtractionRoute::Spreadsheet),
+
+        FileFormat::PlainText => Some(ExtractionRoute::Text),
+
+        //
+        // The legacy binary Word and PowerPoint formats have no reader here: pptx_to_md only
+        // handles PPTX and ODP, and Pandoc cannot read the binary .doc format at all. Saying so
+        // is better than handing the file to a reader which is bound to fail.
+        //
+        FileFormat::MicrosoftWordDocument | FileFormat::MicrosoftPowerpointPresentation => Some(ExtractionRoute::Unsupported),
+
+        _ => match fmt.kind() {
+            Kind::Executable => Some(ExtractionRoute::Executable),
+            Kind::Image => Some(ExtractionRoute::Image),
+            Kind::Ebook | Kind::Archive | Kind::Compressed => Some(ExtractionRoute::Unsupported),
+            _ => None,
+        },
+    }
+}
+
 async fn stream_data(file_path: &str, extract_images: bool) -> Result<ChunkStream> {
     if !Path::new(file_path).exists() {
         error!("File does not exist: '{file_path}'");
@@ -367,79 +463,84 @@ async fn stream_data(file_path: &str, extract_images: bool) -> Result<ChunkStrea
 
     debug!("Extracting data from file: '{file_path}', {file_size}, format: '{fmt:?}', extension: '{ext}'");
 
-    let stream = match ext.as_str() {
-        //
-        // PDFs are routed by their extension as well, not only by the sniffed format. Otherwise
-        // a PDF whose bytes cannot be read, e.g. on an unavailable network share, falls through
-        // to the text branch below and silently yields empty content.
-        //
-        "pdf" => stream_pdf(file_path).await?,
+    let extension_route = route_from_extension(ext.as_str());
+    let content_route = route_from_content(fmt);
 
-        DOCX | ODT => {
-            let from = if ext == DOCX { "docx" } else { "odt" };
-            convert_with_pandoc(file_path, from, TO_MARKDOWN).await?
-        }
+    //
+    // The content decides whenever it points at a specific reader and contradicts the extension.
+    // `Text` is excluded on purpose: it is the least specific answer, and letting it win would
+    // cost a `.csv` its CSV fence. When the content says nothing, the extension keeps its say and
+    // the text reader decides whether the bytes are readable at all.
+    //
+    let content_is_specific = matches!(content_route, Some(route) if route != ExtractionRoute::Text);
+    let content_contradicts_extension = content_is_specific && content_route != extension_route;
 
-        "csv" | "tsv" => {
-            stream_text_file(file_path, true, Some("csv".to_string())).await?
-        },
-
-        "pptx" => stream_presentation(file_path, extract_images, PresentationFormat::Pptx).await?,
-        "odp" => stream_presentation(file_path, extract_images, PresentationFormat::Odp).await?,
-        
-        "xlsx" | "ods" | "xls" | "xlsm" | "xlsb" | "xla" | "xlam" => {
-            stream_spreadsheet_as_csv(file_path).await?
-        }
-        
-        _ => match fmt.kind() {
-            Kind::Document => match fmt {
-                FileFormat::PortableDocumentFormat => stream_pdf(file_path).await?,
-
-                FileFormat::MicrosoftWordDocument => {
-                    convert_with_pandoc(file_path, "docx", TO_MARKDOWN).await?
-                },
-
-                FileFormat::OfficeOpenXmlDocument => {
-                    convert_with_pandoc(file_path, fmt.extension(), TO_MARKDOWN).await?
-                },
-
-                _ => stream_text_file(file_path, false, None).await?,
-            },
-            
-            Kind::Ebook => return Err(ExtractionError::new(ExtractionErrorCode::Unsupported, "Ebooks are not supported yet.").into()),
-
-            Kind::Image => {
-                if !extract_images {
-                    return Err(ExtractionError::new(ExtractionErrorCode::Unsupported, "Image extraction is disabled.").into());
-                }
-
-                chunk_image(file_path).await?
-            },
-            
-            Kind::Other => match fmt {
-                FileFormat::HypertextMarkupLanguage => {
-                    convert_with_pandoc(file_path, fmt.extension(), TO_MARKDOWN).await?
-                },
-
-                _ => stream_text_file(file_path, false, None).await?,
-            },
-            
-            Kind::Presentation => match fmt {
-                FileFormat::OfficeOpenXmlPresentation => {
-                    stream_presentation(file_path, extract_images, PresentationFormat::Pptx).await?
-                },
-                FileFormat::OpendocumentPresentation => {
-                    stream_presentation(file_path, extract_images, PresentationFormat::Odp).await?
-                }
-
-                _ => stream_text_file(file_path, false, None).await?,
-            },
-            
-            Kind::Spreadsheet => stream_spreadsheet_as_csv(file_path).await?,
-
-            _ => stream_text_file(file_path, false, None).await?,
-        },
+    let route = match (extension_route, content_route) {
+        _ if content_contradicts_extension => content_route.unwrap(),
+        (Some(from_extension), _) => from_extension,
+        (None, Some(from_content)) => from_content,
+        (None, None) => ExtractionRoute::Text,
     };
+
+    debug!("Reading '{file_path}' via {route:?} (extension: {extension_route:?}, content: {content_route:?}).");
+
+    match route {
+        ExtractionRoute::Executable => {
+            error!("Refused to read '{file_path}': its content is an executable ({name}).", name = fmt.name());
+            return Err(ExtractionError::with_detected_format(
+                ExtractionErrorCode::ExecutableRejected,
+                format!("The file is an executable ({name}), which is never read.", name = fmt.name()),
+                &fmt,
+            ).into());
+        },
+
+        ExtractionRoute::Unsupported => {
+            return Err(ExtractionError::with_detected_format(
+                ExtractionErrorCode::Unsupported,
+                format!("The format '{name}' is not supported.", name = fmt.name()),
+                &fmt,
+            ).into());
+        },
+
+        ExtractionRoute::Image if !extract_images => {
+            return Err(ExtractionError::new(ExtractionErrorCode::Unsupported, "Image extraction is disabled.").into());
+        },
+
+        _ => {},
+    }
+
+    let stream = match route {
+        ExtractionRoute::Pdf => stream_pdf(file_path).await?,
+        ExtractionRoute::PandocDocx => convert_with_pandoc(file_path, DOCX, TO_MARKDOWN).await?,
+        ExtractionRoute::PandocOdt => convert_with_pandoc(file_path, ODT, TO_MARKDOWN).await?,
+        ExtractionRoute::PandocHtml => convert_with_pandoc(file_path, "html", TO_MARKDOWN).await?,
+        ExtractionRoute::PresentationPptx => stream_presentation(file_path, extract_images, PresentationFormat::Pptx).await?,
+        ExtractionRoute::PresentationOdp => stream_presentation(file_path, extract_images, PresentationFormat::Odp).await?,
+        ExtractionRoute::Spreadsheet => stream_spreadsheet_as_csv(file_path).await?,
+        ExtractionRoute::Csv => stream_text_file(file_path, true, Some("csv".to_string())).await?,
+        ExtractionRoute::Text => stream_text_file(file_path, false, None).await?,
+        ExtractionRoute::Image => chunk_image(file_path).await?,
+
+        // Handled above, before any reader was chosen:
+        ExtractionRoute::Executable | ExtractionRoute::Unsupported => unreachable!(),
+    };
+
+    //
+    // The file was readable, but not as its extension claims. We prepend a notice so the user
+    // learns what the file really is, while the content itself is read correctly.
+    //
+    if content_contradicts_extension {
+        warn!("The content of '{file_path}' is '{name}', which does not match its extension '{ext}'.", name = fmt.name());
+
+        let notice = Chunk::from_error(&ExtractionError::with_detected_format(
+            ExtractionErrorCode::ExtensionMismatch,
+            format!("The content is '{name}', which does not match the file extension '{ext}'.", name = fmt.name()),
+            &fmt,
+        ));
+
+        let notice_stream = stream! { yield Ok(notice); };
+        return Ok(Box::pin(notice_stream.chain(stream)));
+    }
 
     Ok(Box::pin(stream))
 }
@@ -449,6 +550,9 @@ async fn stream_text_file(file_path: &str, use_md_fences: bool, fence_language: 
     let reader = tokio::io::BufReader::new(file);
     let mut lines = reader.lines();
     let mut line_number = 0;
+
+    // The stream outlives this call, so it needs its own copy of the path for diagnostics:
+    let path = file_path.to_owned();
 
     let stream = stream! {
 
@@ -468,12 +572,35 @@ async fn stream_text_file(file_path: &str, use_md_fences: bool, fence_language: 
             };
         }
 
-        while let Ok(Some(line)) = lines.next_line().await {
-            line_number += 1;
-            yield Ok(Chunk::new(
-                line,
-                Metadata::Text { line_number }
-            ));
+        loop {
+            match lines.next_line().await {
+                Ok(Some(line)) => {
+                    line_number += 1;
+                    yield Ok(Chunk::new(
+                        line,
+                        Metadata::Text { line_number }
+                    ));
+                },
+
+                Ok(None) => break,
+
+                //
+                // Reading a line fails when the bytes are not valid UTF-8, which means the file is
+                // not text at all. Treating that like the end of the file, as this loop did before,
+                // turned every binary file into an empty document without a word.
+                //
+                Err(e) => {
+                    let code = if e.kind() == std::io::ErrorKind::InvalidData {
+                        ExtractionErrorCode::NotTextContent
+                    } else {
+                        classify_io_error(&e)
+                    };
+
+                    error!("Reading '{path}' as text failed after {line_number} line(s) ({code:?}): {e}");
+                    yield Err(ExtractionError::new(code, format!("The file could not be read as text: {e}")).into());
+                    break;
+                },
+            }
         }
 
         if use_md_fences {
