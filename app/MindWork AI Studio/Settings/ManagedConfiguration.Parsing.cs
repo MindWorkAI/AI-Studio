@@ -654,6 +654,11 @@ public static partial class ManagedConfiguration
         if (dryRun)
             return successful;
 
+        //
+        // Contributions need no protection against a takeover: every configuration plugin has its
+        // own contribution, so no plugin can replace or drop the contribution of another one. This
+        // is also why a local configuration plugin may contribute next to one of an organization.
+        //
         if (successful)
         {
             var configInstance = configSelection.Compile().Invoke(SettingsManagerAccess.ConfigurationData);
@@ -663,10 +668,8 @@ public static partial class ManagedConfiguration
             configMeta.SetValue(merged);
             configMeta.SetPluginContribution(new HashSet<TValue>(configuredValue), configPluginId);
         }
-        else if (configMeta.HasPluginContribution && configMeta.PluginContributionByConfigPluginId == configPluginId)
-        {
-            configMeta.ClearPluginContribution();
-        }
+        else
+            configMeta.RemovePluginContribution(configPluginId);
 
         if (configMeta.IsLocked && configMeta.LockedByConfigPluginId == configPluginId)
             configMeta.UnlockConfiguration();
@@ -905,6 +908,18 @@ public static partial class ManagedConfiguration
         if(dryRun)
             return successful;
 
+        // The setting might belong to the IT department of an organization. In that case, no local
+        // configuration plugin may touch it, no matter what it declares:
+        if (!MayManageSetting(configPluginId, configMeta))
+            return false;
+
+        //
+        // Remember the value the user had chosen before any configuration plugin took this setting
+        // over. Once no plugin manages it anymore, we hand that value back to the user:
+        //
+        if (successful)
+            configMeta.CaptureUserValueSnapshot();
+
         switch (successful)
         {
             case true:
@@ -924,8 +939,8 @@ public static partial class ManagedConfiguration
                 // case only when the setting was locked and managed by the same configuration plugin.
                 //
                 // The other case, when the setting was locked and managed by a different configuration plugin,
-                // is handled by the IsConfigurationLeftOver method, which checks if the configuration plugin
-                // is still available. If it is not available, it resets the locked state of the
+                // is handled by the CleanupLeftOverManagedConfigurations method, which checks if the configuration
+                // plugin is still available. If it is not available, it resets the locked state of the
                 // configuration setting, allowing it to be reconfigured by a different plugin or left unchanged.
                 //
                 configMeta.ResetLockedConfiguration();
@@ -953,6 +968,20 @@ public static partial class ManagedConfiguration
     {
         if (dryRun)
             return successful;
+
+        // The setting might belong to the IT department of an organization. In that case, no local
+        // configuration plugin may touch it, no matter what it declares:
+        if (!MayManageSetting(configPluginId, configMeta))
+            return false;
+
+        //
+        // Remember the value the user had chosen before any configuration plugin took this setting
+        // over. Once no plugin manages it anymore, we hand that value back to the user. This has to
+        // happen before the managed state below changes, because only an unmanaged setting holds a
+        // value which belongs to the user:
+        //
+        if (successful)
+            configMeta.CaptureUserValueSnapshot();
 
         switch (successful)
         {
@@ -995,7 +1024,7 @@ public static partial class ManagedConfiguration
             case false when configMeta.ManagedMode is ManagedConfigurationMode.EDITABLE_DEFAULT
                             && TryGetEditableDefaultState(settingName, out var editableDefaultStateToRemove)
                             && editableDefaultStateToRemove.ConfigPluginId == configPluginId:
-                configMeta.ClearEditableDefaultConfiguration();
+                configMeta.ResetEditableDefaultConfiguration(HasUserChangedEditableDefault(configMeta, editableDefaultStateToRemove));
                 ClearEditableDefaultState(settingName);
                 break;
         }
@@ -1020,7 +1049,7 @@ public static partial class ManagedConfiguration
         return ManagedConfigurationMode.LOCKED;
     }
 
-    private static string SerializeManagedScalarValue<TValue>(TValue value) => value switch
+    internal static string SerializeManagedScalarValue<TValue>(TValue value) => value switch
     {
         null => string.Empty,
         string text => text,

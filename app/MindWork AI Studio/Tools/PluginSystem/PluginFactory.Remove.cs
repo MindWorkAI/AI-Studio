@@ -1,129 +1,90 @@
-using System.Text.RegularExpressions;
-
 namespace AIStudio.Tools.PluginSystem;
 
 public static partial class PluginFactory
 {
     private const string REASON_NO_LONGER_REFERENCED = "no longer referenced by active enterprise environments";
 
+    /// <summary>
+    /// Removes the configuration plugins an organization deployed once but does not reference anymore.
+    /// </summary>
+    /// <remarks>
+    /// This is how an organization withdraws a configuration: it removes the configuration ID from the
+    /// devices, e.g. through a group policy. The next time AI Studio syncs, the local copy has to go.
+    /// A device which was offline while the policy changed applies the withdrawal when it starts again.
+    /// <br/><br/>
+    /// What an organization deployed is decided by the plugin path alone. We must not ask the plugin
+    /// itself: `DEPLOYED_USING_CONFIG_SERVER` is part of the plugin, so a configuration declaring
+    /// `false` could never be withdrawn again once it was deployed, while it would keep every right of
+    /// an organization configuration, including the approval of assistant plugins.
+    /// </remarks>
+    /// <param name="activeConfigurationIds">The IDs of the enterprise configurations which are currently referenced.</param>
     public static void RemoveUnreferencedManagedConfigurationPlugins(ISet<Guid> activeConfigurationIds)
     {
-        if (!IsInitialized)
+        if (!IsInitialized || !Directory.Exists(ENTERPRISE_CONFIGURATION_PLUGINS_ROOT))
             return;
 
-        var pluginIdsToRemove = new HashSet<Guid>();
-
-        // Case 1: Plugins are already loaded and metadata is available.
-        foreach (var plugin in AVAILABLE_PLUGINS.Where(plugin =>
-                     plugin.Type is PluginType.CONFIGURATION &&
-                     plugin.IsManagedByConfigServer &&
-                     !activeConfigurationIds.Contains(plugin.Id)))
-            pluginIdsToRemove.Add(plugin.Id);
-
-        // Case 2: Startup cleanup before the initial plugin load.
-        // In this case, we inspect the .config directories directly.
-        if (Directory.Exists(CONFIGURATION_PLUGINS_ROOT))
+        foreach (var configurationDirectory in Directory.EnumerateDirectories(ENTERPRISE_CONFIGURATION_PLUGINS_ROOT))
         {
-            foreach (var pluginDirectory in Directory.EnumerateDirectories(CONFIGURATION_PLUGINS_ROOT))
-            {
-                var directoryName = Path.GetFileName(pluginDirectory);
-                if (!Guid.TryParse(directoryName, out var pluginId))
-                    continue;
+            var directoryName = Path.GetFileName(configurationDirectory);
 
-                if (activeConfigurationIds.Contains(pluginId))
-                    continue;
+            // A download in flight stages and backs up next to the configuration directories. Those
+            // directories belong to a running update, not to a withdrawn configuration:
+            if (IsTransientDownloadDirectory(directoryName))
+                continue;
 
-                var deployFlag = ReadDeployFlagFromPluginFile(pluginDirectory);
-                var isManagedByConfigServer = deployFlag ?? true;
-                if (!deployFlag.HasValue)
-                    LOG.LogWarning($"Configuration plugin '{pluginId}' does not define 'DEPLOYED_USING_CONFIG_SERVER'. Falling back to the plugin path and treating it as managed because it is stored under '{CONFIGURATION_PLUGINS_ROOT}'.");
+            //
+            // A configuration server downloads each configuration into a directory named after its
+            // ID. Any other directory name cannot be referenced by an enterprise environment, so it
+            // has no place here either:
+            //
+            if (Guid.TryParse(directoryName, out var configurationId) && activeConfigurationIds.Contains(configurationId))
+                continue;
 
-                if (isManagedByConfigServer)
-                    pluginIdsToRemove.Add(pluginId);
-            }
-        }
-
-        foreach (var pluginId in pluginIdsToRemove)
-            RemovePluginAsync(pluginId, REASON_NO_LONGER_REFERENCED);
-    }
-
-    private static void RemovePluginAsync(Guid pluginId, string reason)
-    {
-        if (!IsInitialized)
-            return;
-
-        LOG.LogWarning("Removing plugin with ID '{PluginId}'. Reason: {Reason}.", pluginId, reason);
-
-        //
-        // Remove the plugin from the available plugins list:
-        //
-        var availablePluginToRemove = AVAILABLE_PLUGINS.FirstOrDefault(p => p.Id == pluginId);
-        if (availablePluginToRemove != null)
-            AVAILABLE_PLUGINS.Remove(availablePluginToRemove);
-        else
-            LOG.LogWarning("No available plugin found with ID '{PluginId}' while removing plugin. Reason: {Reason}.", pluginId, reason);
-        
-        //
-        // Remove the plugin from the running plugins list:
-        //
-        var runningPluginToRemove = RUNNING_PLUGINS.FirstOrDefault(p => p.Id == pluginId);
-        if (runningPluginToRemove == null)
-            LOG.LogWarning("No running plugin found with ID '{PluginId}' while removing plugin. Reason: {Reason}.", pluginId, reason);
-        else
-            RUNNING_PLUGINS.Remove(runningPluginToRemove);
-
-        //
-        // Delete the plugin directory:
-        //
-        DeleteConfigurationPluginDirectory(pluginId);
-
-        LOG.LogInformation("Plugin with ID '{PluginId}' removed successfully. Reason: {Reason}.", pluginId, reason);
-    }
-
-    private static bool? ReadDeployFlagFromPluginFile(string pluginDirectory)
-    {
-        try
-        {
-            var pluginFile = Path.Join(pluginDirectory, "plugin.lua");
-            if (!File.Exists(pluginFile))
-                return null;
-
-            var pluginCode = File.ReadAllText(pluginFile);
-            var match = DeployedByConfigServerRegex().Match(pluginCode);
-            if (!match.Success)
-                return null;
-
-            return bool.TryParse(match.Groups[1].Value, out var deployFlag)
-                ? deployFlag
-                : null;
-        }
-        catch (Exception ex)
-        {
-            LOG.LogWarning(ex, $"Failed to parse deployment flag from plugin directory '{pluginDirectory}'.");
-            return null;
+            RemoveConfigurationDirectory(configurationDirectory, REASON_NO_LONGER_REFERENCED);
         }
     }
 
-    private static void DeleteConfigurationPluginDirectory(Guid pluginId)
+    /// <summary>
+    /// Checks whether a directory below the enterprise configuration directory belongs to a running
+    /// download instead of to an installed configuration.
+    /// </summary>
+    private static bool IsTransientDownloadDirectory(string directoryName) =>
+        directoryName.Contains(".staging-", StringComparison.OrdinalIgnoreCase) ||
+        directoryName.Contains(".backup-", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Unloads every plugin stored in the given directory and deletes the directory afterwards.
+    /// </summary>
+    private static void RemoveConfigurationDirectory(string configurationDirectory, string reason)
     {
-        var pluginDirectory = Path.Join(CONFIGURATION_PLUGINS_ROOT, pluginId.ToString());
-        if (!Directory.Exists(pluginDirectory))
+        LOG.LogWarning("Removing the enterprise configuration directory '{Directory}'. Reason: {Reason}.", configurationDirectory, reason);
+
+        //
+        // We collect the plugins by path, not by the ID the directory is named after: a plugin may
+        // declare an ID which differs from its directory name, and a single directory may even hold
+        // several plugins:
+        //
+        foreach (var plugin in AVAILABLE_PLUGINS.Where(plugin => IsPathInside(configurationDirectory, plugin.LocalPath)).ToList())
         {
-            LOG.LogWarning($"Plugin directory '{pluginDirectory}' does not exist.");
-            return;
+            AVAILABLE_PLUGINS.Remove(plugin);
+
+            if (RUNNING_PLUGINS.FirstOrDefault(runningPlugin => runningPlugin.Id == plugin.Id) is { } runningPluginToRemove)
+                RUNNING_PLUGINS.Remove(runningPluginToRemove);
+
+            LOG.LogInformation("Unloaded the plugin '{PluginName}' ({PluginId}). Reason: {Reason}.", plugin.Name, plugin.Id, reason);
         }
+
+        if (!Directory.Exists(configurationDirectory))
+            return;
 
         try
         {
-            Directory.Delete(pluginDirectory, true);
-            LOG.LogInformation($"Plugin directory '{pluginDirectory}' deleted successfully.");
+            Directory.Delete(configurationDirectory, true);
+            LOG.LogInformation($"Plugin directory '{configurationDirectory}' deleted successfully.");
         }
-        catch (Exception ex)
+        catch (Exception e)
         {
-            LOG.LogError(ex, $"Failed to delete plugin directory '{pluginDirectory}'.");
+            LOG.LogError(e, $"Failed to delete plugin directory '{configurationDirectory}'.");
         }
     }
-
-    [GeneratedRegex(@"^\s*DEPLOYED_USING_CONFIG_SERVER\s*=\s*(true|false)\s*(?:--.*)?$", RegexOptions.IgnoreCase | RegexOptions.Multiline)]
-    private static partial Regex DeployedByConfigServerRegex();
 }

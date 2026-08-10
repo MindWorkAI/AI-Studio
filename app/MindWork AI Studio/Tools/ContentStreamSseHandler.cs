@@ -9,7 +9,7 @@ public static class ContentStreamSseHandler
     private static readonly ConcurrentDictionary<string, SlideManager> SLIDE_MANAGERS = new();
     private static readonly ConcurrentDictionary<string, DocumentManager> DOCUMENT_MANAGERS = new();
 
-    public static string? ProcessEvent(ContentStreamSseEvent? sseEvent, bool extractImages = true)
+    public static ContentStreamProcessedEvent ProcessEvent(ContentStreamSseEvent? sseEvent, bool extractImages = true)
     {
         switch (sseEvent)
         {
@@ -17,16 +17,16 @@ public static class ContentStreamSseHandler
                 switch (sseEvent.Metadata)
                 {
                     case ContentStreamTextMetadata:
-                        return sseEvent.Content;
-                
+                        return ContentStreamProcessedEvent.FromContent(sseEvent.Content);
+
                     case ContentStreamPdfMetadata pdfMetadata:
                         var pageNumber = pdfMetadata.Pdf?.PageNumber ?? 0;
-                        return $"""
+                        return ContentStreamProcessedEvent.FromContent($"""
                                 # Page {pageNumber}
                                 {sseEvent.Content}
-                                
-                                """;
-                    
+
+                                """);
+
                     case ContentStreamSpreadsheetMetadata spreadsheetMetadata:
                         var sheetName = spreadsheetMetadata.Spreadsheet?.SheetName;
                         var rowNumber = spreadsheetMetadata.Spreadsheet?.RowNumber;
@@ -38,35 +38,50 @@ public static class ContentStreamSseHandler
                         }
 
                         spreadSheetResult.Append(sseEvent.Content);
-                        return spreadSheetResult.ToString();
-                
+                        return ContentStreamProcessedEvent.FromContent(spreadSheetResult.ToString());
+
+                    //
+                    // Documents which the runtime reads page by page are buffered, so the images of
+                    // a page can follow its Markdown. Documents converted as a whole, e.g. by Pandoc,
+                    // carry no page number and are passed on unchanged.
+                    //
                     case ContentStreamDocumentMetadata documentMetadata:
                         if (documentMetadata.Document?.PageNumber is not > 0)
-                            return sseEvent.Content;
+                            return ContentStreamProcessedEvent.FromContent(sseEvent.Content);
+
                         var documentManager = DOCUMENT_MANAGERS.GetOrAdd(sseEvent.StreamId!, _ => new());
-                        return documentManager.AddPage(documentMetadata, sseEvent.Content, extractImages);
+                        var documentContent = documentManager.AddPage(documentMetadata, sseEvent.Content, extractImages);
+                        return documentContent is null ? ContentStreamProcessedEvent.NOTHING : ContentStreamProcessedEvent.FromContent(documentContent);
 
                     case ContentStreamImageMetadata:
-                        return sseEvent.Content;
+                        return ContentStreamProcessedEvent.FromContent(sseEvent.Content);
 
                     case ContentStreamPresentationMetadata presentationMetadata:
                         var slideManager = SLIDE_MANAGERS.GetOrAdd(
                             sseEvent.StreamId!,
                             _ => new()
                         );
-                        
+
                         slideManager.AddSlide(presentationMetadata, sseEvent.Content, extractImages);
-                        return null;
-                    
+                        return ContentStreamProcessedEvent.NOTHING;
+
+                    //
+                    // The runtime reported a failure. It must not contribute any content: an empty
+                    // or partial document would otherwise be handed to the AI as if it were the
+                    // real file content.
+                    //
+                    case ContentStreamErrorMetadata errorMetadata:
+                        return ContentStreamProcessedEvent.FromError(errorMetadata.Error);
+
                     default:
-                        return sseEvent.Content;
+                        return ContentStreamProcessedEvent.FromContent(sseEvent.Content);
                 }
-                
+
             case { Content: not null, Metadata: null }:
-                return sseEvent.Content;
-            
+                return ContentStreamProcessedEvent.FromContent(sseEvent.Content);
+
             default:
-                return null;
+                return ContentStreamProcessedEvent.NOTHING;
         }
     }
 

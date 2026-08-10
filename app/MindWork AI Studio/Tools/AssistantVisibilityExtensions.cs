@@ -61,6 +61,7 @@ public static class AssistantVisibilityExtensions
             Components.ERI_ASSISTANT => ConfigurableAssistant.ERI_ASSISTANT,
             Components.DOCUMENT_ANALYSIS_ASSISTANT => ConfigurableAssistant.DOCUMENT_ANALYSIS_ASSISTANT,
             Components.SLIDE_BUILDER_ASSISTANT => ConfigurableAssistant.SLIDE_BUILDER_ASSISTANT,
+            Components.VISUAL_BRIEFING_ASSISTANT => ConfigurableAssistant.VISUAL_BRIEFING_ASSISTANT,
             Components.I18N_ASSISTANT => ConfigurableAssistant.I18N_ASSISTANT,
             Components.LOG_VIEWER_ASSISTANT => ConfigurableAssistant.LOG_VIEWER_ASSISTANT,
 
@@ -82,22 +83,5 @@ public static class AssistantVisibilityExtensions
             LOGGER.LogInformation("Assistant '{AssistantName}' is hidden based on the configuration.", assistantName);
 
         return !isHidden;
-    }
-
-    /// <summary>
-    /// Checks if any assistant in a category should be visible.
-    /// </summary>
-    /// <param name="settingsManager">The settings manager to check configuration against.</param>
-    /// <param name="categoryName">The name of the assistant category (for logging purposes).</param>
-    /// <param name="assistants">The assistants in the category with their optional preview feature requirements.</param>
-    /// <returns>True if at least one assistant in the category should be visible, false otherwise.</returns>
-    public static bool IsAnyCategoryAssistantVisible(this SettingsManager settingsManager, string categoryName, params (Components Component, PreviewFeatures RequiredPreviewFeature)[] assistants)
-    {
-        foreach (var (component, requiredPreviewFeature) in assistants)
-            if (settingsManager.IsAssistantVisible(component, withLogging: false, requiredPreviewFeature: requiredPreviewFeature))
-                return true;
-
-        LOGGER.LogInformation("No assistants in category '{CategoryName}' are visible.", categoryName);
-        return false;
     }
 }

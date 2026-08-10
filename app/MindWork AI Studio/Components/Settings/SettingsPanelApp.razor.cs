@@ -74,7 +74,7 @@ public partial class SettingsPanelApp : SettingsPanelBase
     private async Task GenerateEncryptionSecret()
     {
         var secret = EnterpriseEncryption.GenerateSecret();
-        await this.RustService.CopyText2Clipboard(this.Snackbar, secret);
+        await this.RustService.CopyText2Clipboard(secret);
     }
     
     private string GetStartPageHelpText()
@@ -108,8 +108,10 @@ public partial class SettingsPanelApp : SettingsPanelBase
 
     private HashSet<PreviewFeatures> GetPluginContributedPreviewFeatures()
     {
+        // Several configuration plugins may contribute at the same time, e.g. one preview feature
+        // for the whole organization and another one for a single department:
         if (ManagedConfiguration.TryGet(x => x.App, x => x.EnabledPreviewFeatures, out var meta) && meta.HasPluginContribution)
-            return meta.PluginContribution.Where(x => !x.IsReleased()).ToHashSet();
+            return meta.PluginContributions.Values.SelectMany(contribution => contribution).Where(x => !x.IsReleased()).ToHashSet();
 
         return [];
     }
@@ -122,7 +124,7 @@ public partial class SettingsPanelApp : SettingsPanelBase
         if (!ManagedConfiguration.TryGet(x => x.App, x => x.EnabledPreviewFeatures, out var meta) || !meta.HasPluginContribution)
             return false;
 
-        return meta.PluginContribution.Contains(feature);
+        return meta.PluginContributions.Values.Any(contribution => contribution.Contains(feature));
     }
 
     private HashSet<PreviewFeatures> GetSelectedPreviewFeatures()

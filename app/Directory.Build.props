@@ -1,0 +1,8 @@
+<Project>
+
+    <PropertyGroup>
+        <!-- Audit direct and transitive packages, so vulnerable transitive dependencies surface during restore instead of only in the IDE -->
+        <NuGetAuditMode>all</NuGetAuditMode>
+    </PropertyGroup>
+
+</Project>

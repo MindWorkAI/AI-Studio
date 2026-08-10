@@ -19,9 +19,6 @@ public abstract class SettingsDialogBase : MSGComponentBase
     [Inject]
     protected RustService RustService { get; init; } = null!;
 
-    [Inject]
-    protected ISnackbar Snackbar { get; init; } = null!;
-    
     protected readonly List<ConfigurationSelectData<string>> AvailableLLMProviders = new();
     protected readonly List<ConfigurationSelectData<string>> AvailableEmbeddingProviders = new();
     

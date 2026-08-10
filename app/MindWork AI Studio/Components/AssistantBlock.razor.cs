@@ -9,7 +9,7 @@ using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Components;
 
-public partial class AssistantBlock<TSettings> : MSGComponentBase where TSettings : IComponent
+public partial class AssistantBlock<TSettings> : MSGComponentBase, IAssistantCategoryMember where TSettings : IComponent
 {
     /// <summary>
     /// Describes the assistant session indicator shown on top of the assistant icon.
@@ -58,6 +58,12 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase where TSetting
     [Parameter]
     public PreviewFeatures RequiredPreviewFeature { get; set; } = PreviewFeatures.NONE;
 
+    /// <summary>
+    /// Gets or sets the assistant category this block belongs to, if any.
+    /// </summary>
+    [CascadingParameter]
+    public AssistantCategoryBlock? Category { get; set; }
+
     [Inject]
     private MudTheme ColorTheme { get; init; } = null!;
 
@@ -88,7 +94,8 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase where TSetting
 
     private string BlockStyle => $"border-width: 3px; border-color: {this.BorderColor}; border-radius: 12px; border-style: solid; max-width: 20em;";
 
-    private bool IsVisible => this.SettingsManager.IsAssistantVisible(this.Component, assistantName: this.Name, requiredPreviewFeature: this.RequiredPreviewFeature);
+    /// <inheritdoc />
+    public bool IsVisible => this.SettingsManager.IsAssistantVisible(this.Component, assistantName: this.Name, requiredPreviewFeature: this.RequiredPreviewFeature);
 
     private bool HasSettingsPanel => typeof(TSettings) != typeof(NoSettingsPanel);
 
@@ -103,11 +110,29 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase where TSetting
 
     private MediaImportOwner CurrentMediaImportOwner => MediaImportOwner.ForAssistant(new AssistantSessionKey(this.Component, this.AssistantSessionInstanceId));
 
-    private MediaImportSnapshot? MediaImportSnapshot => string.IsNullOrWhiteSpace(this.AssistantSessionInstanceId)
-        ? this.MediaTranscriptionService.GetSnapshots().FirstOrDefault(snapshot =>
-            snapshot.Owner.Kind is MediaImportOwnerKind.ASSISTANT
-            && snapshot.Owner.Id.StartsWith($"{this.Component}:", StringComparison.Ordinal))
-        : this.MediaTranscriptionService.GetSnapshot(this.CurrentMediaImportOwner);
+    private MediaImportSnapshot? MediaImportSnapshot => this.MediaTranscriptionService.GetSnapshots()
+        .FirstOrDefault(snapshot => this.OwnedByThisBlock(snapshot.Owner));
+
+    /// <summary>
+    /// Gets whether a media-import owner belongs to the assistant represented by this block.
+    /// </summary>
+    /// <remarks>
+    /// Owners that persist their own sources are keyed by the stored document rather than by an
+    /// assistant session, so this block aggregates all of them for its component. Without a session
+    /// instance we aggregate every owner of the component, otherwise we match the exact owner.
+    /// </remarks>
+    /// <param name="owner">The media-import owner to test.</param>
+    /// <returns><c>true</c> when this block represents the owner.</returns>
+    private bool OwnedByThisBlock(MediaImportOwner owner)
+    {
+        if (owner.Kind.PersistsOwnSources())
+            return owner.Kind == this.Component.MediaOwnerKind();
+
+        if (string.IsNullOrWhiteSpace(this.AssistantSessionInstanceId))
+            return owner.Kind is MediaImportOwnerKind.ASSISTANT && owner.Id.StartsWith($"{this.Component}:", StringComparison.Ordinal);
+
+        return owner == this.CurrentMediaImportOwner;
+    }
 
     /// <summary>
     /// Gets the assistant session indicator shown on top of the assistant icon.
@@ -135,22 +160,20 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase where TSetting
     protected override async Task OnInitializedAsync()
     {
         this.MediaTranscriptionService.StateChanged += this.OnMediaImportStateChanged;
+        this.Category?.RegisterAssistant(this);
         await base.OnInitializedAsync();
     }
 
     private void OnMediaImportStateChanged(MediaImportOwner owner)
     {
-        var matches = string.IsNullOrWhiteSpace(this.AssistantSessionInstanceId)
-            ? owner.Kind is MediaImportOwnerKind.ASSISTANT && owner.Id.StartsWith($"{this.Component}:", StringComparison.Ordinal)
-            : owner == this.CurrentMediaImportOwner;
-        
-        if (matches)
+        if (this.OwnedByThisBlock(owner))
             _ = this.InvokeAsync(this.StateHasChanged);
     }
 
     protected override void DisposeResources()
     {
         this.MediaTranscriptionService.StateChanged -= this.OnMediaImportStateChanged;
+        this.Category?.UnregisterAssistant(this);
         base.DisposeResources();
     }
 

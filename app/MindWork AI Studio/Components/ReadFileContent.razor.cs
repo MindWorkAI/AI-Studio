@@ -174,10 +174,16 @@ public partial class ReadFileContent : MSGComponentBase
         this.MediaTranscriptionService.AcknowledgeDelivery(delivery);
     }
 
-    /// <summary>Unsubscribes from the singleton media service.</summary>
+    /// <summary>Unsubscribes from the singleton media service and releases the drop area.</summary>
     protected override void DisposeResources()
     {
         this.MediaTranscriptionService.StateChanged -= this.OnMediaImportStateChanged;
+
+        // Release the drop area. Without this, drop areas below this one would count this component
+        // forever and would stop catching dropped files:
+        if (this.EnableDragDrop)
+            _ = this.MessageBus.SendMessage(this, Event.UNREGISTER_FILE_DROP_AREA, this.Layer);
+
         base.DisposeResources();
     }
 
@@ -318,8 +324,13 @@ public partial class ReadFileContent : MSGComponentBase
 
         try
         {
-            var fileContent = await UserFile.LoadFileData(filePath, this.RustService, this.DialogService);
-            await this.ApplyFileContentAsync(fileContent, filePath);
+            var extraction = await UserFile.LoadFileData(filePath, this.RustService, this.DialogService);
+
+            // The failure was already reported by UserFile.LoadFileData, so we only stop here:
+            if (!extraction.HasUsableContent)
+                return false;
+
+            await this.ApplyFileContentAsync(extraction.Content, filePath);
             this.Logger.LogInformation("Successfully loaded file content: {FilePath}", filePath);
             return true;
         }

@@ -38,10 +38,7 @@ public partial class MudCopyClipboardButton : ComponentBase
     /// </summary>
     [Parameter]
     public Size Size { get; set; } = Size.Small;
-    
-    [Inject]
-    private ISnackbar Snackbar { get; init; } = null!;
-    
+
     [Inject]
     private RustService RustService { get; init; } = null!;
     
@@ -58,7 +55,7 @@ public partial class MudCopyClipboardButton : ComponentBase
     /// </summary>
     private async Task CopyToClipboard(string textContent)
     {
-        await this.RustService.CopyText2Clipboard(this.Snackbar, textContent);
+        await this.RustService.CopyText2Clipboard(textContent);
     }
     
     /// <summary>
@@ -73,16 +70,13 @@ public partial class MudCopyClipboardButton : ComponentBase
         {
             case ContentType.TEXT:
                 var textContent = (ContentText) contentToCopy;
-                await this.RustService.CopyText2Clipboard(this.Snackbar, textContent.Text);
+                await this.RustService.CopyText2Clipboard(textContent.Text);
                 break;
             
             default:
-                this.Snackbar.Add(TB("Cannot copy this content type to clipboard."), Severity.Error, config =>
-                {
-                    config.Icon = Icons.Material.Filled.ContentCopy;
-                    config.IconSize = Size.Large;
-                    config.IconColor = Color.Error;
-                });
+                // This component is no MSGComponentBase, so it uses the shared bus instance the same
+                // way FileExtensionValidation does:
+                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.ContentCopy, TB("Cannot copy this content type to clipboard.")));
                 break;
         }
     }

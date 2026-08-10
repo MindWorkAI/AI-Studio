@@ -17,7 +17,7 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
     private IDialogService DialogService { get; init; } = null!;
 
     [Inject]
-    private AssistantPluginInstallService AssistantPluginInstallService { get; init; } = null!;
+    private PluginInstallService PluginInstallService { get; init; } = null!;
 
     [Inject]
     private AssistantPluginGenerationService AssistantPluginGenerationService { get; init; } = null!;
@@ -500,7 +500,7 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
         this.isCheckingPlugin = true;
         try
         {
-            var result = await this.AssistantPluginInstallService.CheckInstallabilityAsync(this.generatedLuaAssistant, CancellationToken.None);
+            var result = await this.PluginInstallService.CheckInstallabilityAsync(this.generatedLuaAssistant, CancellationToken.None);
             this.pluginCheckResult = result;
             if (!result.Success)
             {
@@ -530,7 +530,7 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
         this.isInstallingPlugin = true;
         try
         {
-            var result = await this.AssistantPluginInstallService.InstallAsync(this.generatedLuaAssistant, CancellationToken.None);
+            var result = await this.PluginInstallService.InstallAsync(this.generatedLuaAssistant, CancellationToken.None);
             this.pluginInstallResult = result;
             if (!result.Success)
             {

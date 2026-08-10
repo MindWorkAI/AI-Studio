@@ -716,7 +716,28 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
                 continue;
             }
 
-            var fileContent = await this.RustService.ReadArbitraryFileData(document.FilePath, int.MaxValue);
+            var extraction = await this.RustService.ReadArbitraryFileData(document.FilePath, int.MaxValue);
+            if (!extraction.HasUsableContent)
+            {
+                this.Logger.LogError("Reading the document '{FilePath}' failed and it will not be analyzed: code={ErrorCode}, message='{ErrorMessage}'.", document.FilePath, extraction.ErrorCode, extraction.ErrorMessage);
+                await this.MessageBus.SendError(new(Icons.Material.Filled.Description, extraction.ToUserMessage(document.FileName)));
+                continue;
+            }
+
+            if (extraction.Outcome is FileExtractionOutcome.PARTIAL)
+            {
+                this.Logger.LogWarning("Parts of the document '{FilePath}' could not be read: pages={FailedPages}.", document.FilePath, string.Join(", ", extraction.FailedPages));
+                await this.MessageBus.SendWarning(new(Icons.Material.Filled.Description, extraction.ToPartialUserMessage(document.FileName)));
+            }
+
+            // The file was read correctly, but its extension lies about what it contains:
+            if (extraction.HasExtensionMismatch)
+            {
+                this.Logger.LogWarning("The document '{FilePath}' is actually a '{DetectedFormat}'.", document.FilePath, extraction.DetectedFormat);
+                await this.MessageBus.SendWarning(new(Icons.Material.Filled.RuleFolder, extraction.ToExtensionMismatchUserMessage(document.FileName)));
+            }
+
+            var fileContent = extraction.Content;
             sb.AppendLine($"""
                            
                            ## DOCUMENT {numDocuments}:
@@ -795,7 +816,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         }
 
         var luaCode = this.GenerateLuaPolicyExport();
-        await this.RustService.CopyText2Clipboard(this.Snackbar, luaCode);
+        await this.RustService.CopyText2Clipboard(luaCode);
     }
 
     private string GenerateLuaPolicyExport()

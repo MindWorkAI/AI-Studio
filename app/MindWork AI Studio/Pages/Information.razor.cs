@@ -27,9 +27,6 @@ public partial class Information : MSGComponentBase
     private IDialogService DialogService { get; init; } = null!;
 
     [Inject]
-    private ISnackbar Snackbar { get; init; } = null!;
-
-    [Inject]
     private UpdatePolicy UpdatePolicy { get; init; } = null!;
 
     [Inject]
@@ -110,10 +107,16 @@ public partial class Information : MSGComponentBase
     private bool showVectorStoreDetails;
     private bool showExternalHttpCustomRootCertificateDetails;
 
-    private List<IAvailablePlugin> configPlugins = PluginFactory.AvailablePlugins
-        .Where(x => x.Type is PluginType.CONFIGURATION)
-        .OfType<IAvailablePlugin>()
-        .ToList();
+    private List<IAvailablePlugin> configPlugins = [];
+
+    /// <summary>
+    /// The configuration plugins an administrator staged for a test.
+    /// </summary>
+    /// <remarks>
+    /// They are kept apart from the other configuration plugins: nobody deployed them, yet they act
+    /// on behalf of the organization while they are loaded. That deserves its own note.
+    /// </remarks>
+    private List<IAvailablePlugin> testConfigPlugins = [];
 
     private List<EnterpriseEnvironment> enterpriseEnvironments = EnterpriseEnvironmentService.CURRENT_ENVIRONMENTS.ToList();
 
@@ -204,10 +207,13 @@ public partial class Information : MSGComponentBase
 
     private void RefreshEnterpriseConfigurationState()
     {
-        this.configPlugins = PluginFactory.AvailablePlugins
+        var availableConfigPlugins = PluginFactory.AvailablePlugins
             .Where(x => x.Type is PluginType.CONFIGURATION)
             .OfType<IAvailablePlugin>()
             .ToList();
+
+        this.testConfigPlugins = availableConfigPlugins.Where(plugin => PluginFactory.IsEnterpriseTestConfigurationPath(plugin.LocalPath)).ToList();
+        this.configPlugins = availableConfigPlugins.Except(this.testConfigPlugins).ToList();
 
         this.enterpriseEnvironments = EnterpriseEnvironmentService.CURRENT_ENVIRONMENTS.ToList();
         this.mandatoryInfoPanels = PluginFactory.GetMandatoryInfos()
@@ -407,6 +413,27 @@ public partial class Information : MSGComponentBase
         return plugin.ManagedConfigurationId == configurationId && plugin.Id != configurationId;
     }
 
+    /// <summary>
+    /// Collects what a user needs to find and judge a staged test configuration.
+    /// </summary>
+    /// <remarks>
+    /// There is no enterprise environment behind it, so we show what identifies it instead: the plugin
+    /// ID it claims and the directory it was staged in.
+    /// </remarks>
+    private IReadOnlyList<ConfigInfoRowItem> BuildTestConfigurationItems(IAvailablePlugin plugin) =>
+    [
+        new(Icons.Material.Filled.ArrowRightAlt,
+            $"{T("Configuration plugin ID:")} {plugin.Id}",
+            plugin.Id.ToString(),
+            T("Copies the configuration plugin ID to the clipboard")),
+
+        new(Icons.Material.Filled.ArrowRightAlt,
+            $"{T("Plugin directory:")} {plugin.LocalPath}",
+            plugin.LocalPath,
+            T("Copies the plugin directory to the clipboard"),
+            "margin-top: 4px;"),
+    ];
+
     private string ExternalHttpCustomRootCertificateWarningText
     {
         get
@@ -488,12 +515,12 @@ public partial class Information : MSGComponentBase
 
     private async Task CopyStartupLogPath()
     {
-        await this.RustService.CopyText2Clipboard(this.Snackbar, this.logPaths.LogStartupPath);
+        await this.RustService.CopyText2Clipboard(this.logPaths.LogStartupPath);
     }
     
     private async Task CopyAppLogPath()
     {
-        await this.RustService.CopyText2Clipboard(this.Snackbar, this.logPaths.LogAppPath);
+        await this.RustService.CopyText2Clipboard(this.logPaths.LogAppPath);
     }
     
     private const string LICENSE = """

@@ -30,9 +30,21 @@ public static partial class Pandoc
     private static readonly Version FALLBACK_VERSION = new (3, 7, 0, 2);
 
     /// <summary>
-    /// Tracks whether the first availability check log has been written to avoid log spam on repeated calls.
+    /// Tracks whether the executable AI Studio checks was already logged.
     /// </summary>
-    private static bool HAS_LOGGED_AVAILABILITY_CHECK_ONCE;
+    /// <remarks>
+    /// Only informational logs are written once, because they describe a stable state and would
+    /// otherwise spam the log on repeated calls. Failures are always logged: they are usually
+    /// transient, e.g. an executable which is temporarily blocked or unreachable. Suppressing
+    /// repeated failures hid exactly the interesting case, where the check succeeded during
+    /// startup and started failing later on.
+    /// </remarks>
+    private static bool HAS_LOGGED_EXECUTABLE_ONCE;
+
+    /// <summary>
+    /// Tracks whether a successful availability check was already logged.
+    /// </summary>
+    private static bool HAS_LOGGED_SUCCESSFUL_CHECK_ONCE;
 
     private static readonly HttpClient WEB_CLIENT = new();
     private static readonly SemaphoreSlim INSTALLATION_LOCK = new(1, 1);
@@ -52,11 +64,6 @@ public static partial class Pandoc
     /// <returns>True, if pandoc is available and the minimum required version is met, else false.</returns>
     public static async Task<PandocInstallation> CheckAvailabilityAsync(RustService rustService, bool showMessages = true, bool showSuccessMessage = true)
     {
-        //
-        // Determine if we should log (only on the first call):
-        //
-        var shouldLog = !HAS_LOGGED_AVAILABILITY_CHECK_ONCE;
-
         try
         {
             //
@@ -64,7 +71,7 @@ public static partial class Pandoc
             // This can happen on dev machines where the metadata.txt contains stale values.
             // We always use the runtime-detected RID for correct behavior.
             //
-            if (shouldLog && CPU_ARCHITECTURE != METADATA_ARCHITECTURE)
+            if (!HAS_LOGGED_EXECUTABLE_ONCE && CPU_ARCHITECTURE != METADATA_ARCHITECTURE)
             {
                 LOG.LogWarning(
                     "Runtime-detected RID '{RuntimeRID}' differs from metadata RID '{MetadataRID}'. Using runtime-detected RID. This is expected on dev machines where metadata.txt may be outdated.",
@@ -73,8 +80,11 @@ public static partial class Pandoc
             }
 
             var preparedProcess = await PreparePandocProcess().AddArgument("--version").BuildAsync(rustService);
-            if (shouldLog)
+            if (!HAS_LOGGED_EXECUTABLE_ONCE)
+            {
                 LOG.LogInformation("Checking Pandoc availability using executable: '{Executable}' (IsLocal: {IsLocal}).", preparedProcess.StartInfo.FileName, preparedProcess.IsLocal);
+                HAS_LOGGED_EXECUTABLE_ONCE = true;
+            }
 
             using var process = Process.Start(preparedProcess.StartInfo);
             if (process == null)
@@ -82,9 +92,8 @@ public static partial class Pandoc
                 if (showMessages)
                     await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Help, TB("Was not able to check the Pandoc installation.")));
 
-                if (shouldLog)
-                    LOG.LogError("The Pandoc process was not started, it was null. Executable path: '{Executable}'.", preparedProcess.StartInfo.FileName);
-                
+                LOG.LogError("The Pandoc process was not started, it was null. Executable path: '{Executable}'.", preparedProcess.StartInfo.FileName);
+
                 return new(false, TB("Was not able to check the Pandoc installation."), false, string.Empty, preparedProcess.IsLocal);
             }
 
@@ -102,9 +111,8 @@ public static partial class Pandoc
                 if (showMessages)
                     await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Error, TB("Pandoc is not available on the system or the process had issues.")));
 
-                if (shouldLog)
-                    LOG.LogError("The Pandoc process exited with code {ProcessExitCode}. Error output: '{ErrorText}'", process.ExitCode, error);
-                
+                LOG.LogError("The Pandoc process exited with code {ProcessExitCode}. Error output: '{ErrorText}'", process.ExitCode, error);
+
                 return new(false, TB("Pandoc is not available on the system or the process had issues."), false, string.Empty, preparedProcess.IsLocal);
             }
 
@@ -114,9 +122,8 @@ public static partial class Pandoc
                 if (showMessages)
                     await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Terminal, TB("Was not able to validate the Pandoc installation.")));
 
-                if (shouldLog)
-                    LOG.LogError("Pandoc --version returned an invalid format: '{Output}'.", output);
-                
+                LOG.LogError("Pandoc --version returned an invalid format: '{Output}'.", output);
+
                 return new(false, TB("Was not able to validate the Pandoc installation."), false, string.Empty, preparedProcess.IsLocal);
             }
 
@@ -129,8 +136,11 @@ public static partial class Pandoc
                 if (showMessages && showSuccessMessage)
                     await MessageBus.INSTANCE.SendSuccess(new(Icons.Material.Filled.CheckCircle, string.Format(TB("Pandoc v{0} is installed."), installedVersionString)));
 
-                if (shouldLog)
+                if (!HAS_LOGGED_SUCCESSFUL_CHECK_ONCE)
+                {
                     LOG.LogInformation("Pandoc v{0} is installed and matches the required version (v{1}).", installedVersionString, MINIMUM_REQUIRED_VERSION.ToString());
+                    HAS_LOGGED_SUCCESSFUL_CHECK_ONCE = true;
+                }
 
                 return new(true, string.Empty, true, installedVersionString, preparedProcess.IsLocal);
             }
@@ -138,9 +148,8 @@ public static partial class Pandoc
             if (showMessages)
                 await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Build, string.Format(TB("Pandoc v{0} is installed, but it doesn't match the required version (v{1})."), installedVersionString, MINIMUM_REQUIRED_VERSION.ToString())));
 
-            if (shouldLog)
-                LOG.LogWarning("Pandoc v{0} is installed, but it does not match the required version (v{1}).", installedVersionString, MINIMUM_REQUIRED_VERSION.ToString());
-            
+            LOG.LogWarning("Pandoc v{0} is installed, but it does not match the required version (v{1}).", installedVersionString, MINIMUM_REQUIRED_VERSION.ToString());
+
             return new(true, string.Format(TB("Pandoc v{0} is installed, but it does not match the required version (v{1})."), installedVersionString, MINIMUM_REQUIRED_VERSION.ToString()), false, installedVersionString, preparedProcess.IsLocal);
         }
         catch (Exception e)
@@ -148,14 +157,9 @@ public static partial class Pandoc
             if (showMessages)
                 await MessageBus.INSTANCE.SendError(new(@Icons.Material.Filled.AppsOutage, TB("Pandoc doesn't seem to be installed.")));
 
-            if(shouldLog)
-                LOG.LogError(e, "Pandoc availability check failed. This usually means Pandoc is not installed or not in the system PATH.");
-            
+            LOG.LogError(e, "Pandoc availability check failed. This usually means Pandoc is not installed or not in the system PATH.");
+
             return new(false, TB("Pandoc doesn't seem to be installed."), false, string.Empty, false);
-        }
-        finally
-        {
-            HAS_LOGGED_AVAILABILITY_CHECK_ONCE = true;
         }
     }
 
