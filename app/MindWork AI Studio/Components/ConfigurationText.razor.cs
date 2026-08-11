@@ -41,6 +41,18 @@ public partial class ConfigurationText : ConfigurationBaseCore
     /// </summary>
     [Parameter]
     public int MaxLines { get; set; } = 12;
+
+    /// <summary>
+    /// When configured, displays a button which restores this value.
+    /// </summary>
+    [Parameter]
+    public Func<string>? ResetValue { get; set; }
+
+    /// <summary>
+    /// The text displayed on the optional reset button.
+    /// </summary>
+    [Parameter]
+    public string ResetButtonText { get; set; } = string.Empty;
     
     private string internalText = string.Empty;
     private readonly Timer timer = new(TimeSpan.FromMilliseconds(500))
@@ -84,6 +96,16 @@ public partial class ConfigurationText : ConfigurationBaseCore
         this.timer.Stop();
         this.internalText = text;
         this.timer.Start();
+    }
+
+    private async Task ResetTextAsync()
+    {
+        if (this.ResetValue is null || this.IsDisabled)
+            return;
+
+        this.timer.Stop();
+        this.internalText = this.ResetValue();
+        await this.OptionChanged(this.internalText);
     }
     
     private async Task OptionChanged(string updatedText)
