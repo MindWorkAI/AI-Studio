@@ -65,6 +65,7 @@ public static class ComponentsExtensions
         Components.BIAS_DAY_ASSISTANT => false,
         Components.I18N_ASSISTANT => false,
         Components.DOCUMENT_ANALYSIS_ASSISTANT => false,
+        Components.BATCH_PROCESSING_ASSISTANT => false,
         Components.LOG_VIEWER_ASSISTANT => false,
         
         Components.APP_SETTINGS => false,
@@ -97,6 +98,7 @@ public static class ComponentsExtensions
         Components.ERI_ASSISTANT => TB("ERI Server"),
         Components.I18N_ASSISTANT => TB("Localization Assistant"),
         Components.DOCUMENT_ANALYSIS_ASSISTANT => TB("Document Analysis Assistant"),
+        Components.BATCH_PROCESSING_ASSISTANT => TB("Batch Processing Assistant"),
         Components.SLIDE_BUILDER_ASSISTANT => TB("Slide Planner Assistant"),
         Components.VISUAL_BRIEFING_ASSISTANT => TB("Visual Briefing Assistant"),
         Components.META_ASSISTANT => TB("Assistant Builder"),
@@ -155,6 +157,10 @@ public static class ComponentsExtensions
         // We do this inside the Document Analysis Assistant component:
         Components.DOCUMENT_ANALYSIS_ASSISTANT => ConfidenceLevel.NONE,
 
+        // A policy-specific minimum is merged with this component default inside
+        // the Batch Processing Assistant; the stricter level wins.
+        Components.BATCH_PROCESSING_ASSISTANT => settingsManager.ConfigurationData.BatchProcessing.PreselectOptions ? settingsManager.ConfigurationData.BatchProcessing.MinimumProviderConfidence : default,
+
         _ => default,
     };
 
@@ -185,6 +191,8 @@ public static class ComponentsExtensions
             // The Document Analysis Assistant does not have a preselected provider at the component level.
             // The provider is selected per policy instead. We do this inside the Document Analysis Assistant component.
             Components.DOCUMENT_ANALYSIS_ASSISTANT => Settings.Provider.NONE,
+
+            Components.BATCH_PROCESSING_ASSISTANT => settingsManager.ConfigurationData.BatchProcessing.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.BatchProcessing.PreselectedProvider) : null,
 
             Components.CHAT => settingsManager.ConfigurationData.Chat.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.Chat.PreselectedProvider) : null,
 

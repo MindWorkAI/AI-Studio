@@ -333,6 +333,333 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T4242312602"] = "Send to .
 -- Copy result
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T83711157"] = "Copy result"
 
+-- The transcription provider returned an empty transcript.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1080540822"] = "The transcription provider returned an empty transcript."
+
+-- We always write a semicolon-separated log named log.csv, which lists every document with its processing time, the model, the status, and the details of any error. When you start another run on the same output folder, we ask you whether to continue that run: documents which failed or are missing in the log are then processed again. When no output folder is selected, everything is written to the subfolder 'ai-results' within the input folder.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1124333059"] = "We always write a semicolon-separated log named log.csv, which lists every document with its processing time, the model, the status, and the details of any error. When you start another run on the same output folder, we ask you whether to continue that run: documents which failed or are missing in the log are then processed again. When no output folder is selected, everything is written to the subfolder 'ai-results' within the input folder."
+
+-- Name of the results table (optional)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1127380661"] = "Name of the results table (optional)"
+
+-- Your organization requires a pause of at least {0} seconds between files.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1155517317"] = "Your organization requires a pause of at least {0} seconds between files."
+
+-- The results table contains one row per document, starting with the file name. Here you can name the column that holds the AI answer, e.g., Summary. When left empty, we use 'Result'.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1164512104"] = "The results table contains one row per document, starting with the file name. Here you can name the column that holds the AI answer, e.g., Summary. When left empty, we use 'Result'."
+
+-- One of the file patterns contains an invalid character.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1182642380"] = "One of the file patterns contains an invalid character."
+
+-- Please use only single asterisks as wildcards, e.g., *.pdf or report-*.docx.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1187528282"] = "Please use only single asterisks as wildcards, e.g., *.pdf or report-*.docx."
+
+-- Supported audio and video files are transcribed automatically without an additional dialog. Each transcript is stored next to its media file as '<media-file>.transcript.md' and reused when an interrupted run is continued.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T120341322"] = "Supported audio and video files are transcribed automatically without an additional dialog. Each transcript is stored next to its media file as '<media-file>.transcript.md' and reused when an interrupted run is continued."
+
+-- Instructions
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1221801316"] = "Instructions"
+
+-- Process all documents and media files of a folder in one batch run: documents are converted to Markdown, while audio and video files are transcribed automatically, before their content is sent to the AI along with your instructions. You choose whether each answer is stored as its own Markdown file or whether all answers are collected in one CSV results table. A log records what happened to every file, so a run which was interrupted or produced errors can be continued later. A single failing file never stops the entire run.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T131887991"] = "Process all documents and media files of a folder in one batch run: documents are converted to Markdown, while audio and video files are transcribed automatically, before their content is sent to the AI along with your instructions. You choose whether each answer is stored as its own Markdown file or whether all answers are collected in one CSV results table. A log records what happened to every file, so a run which was interrupted or produced errors can be continued later. A single failing file never stops the entire run."
+
+-- Batch Processing Assistant
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T132410578"] = "Batch Processing Assistant"
+
+-- These instructions are applied to every single document of the batch run.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1339979506"] = "These instructions are applied to every single document of the batch run."
+
+-- Result
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1347088452"] = "Result"
+
+-- Output folder (optional)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T135877247"] = "Output folder (optional)"
+
+-- Open the Document Analysis Assistant
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1362151883"] = "Open the Document Analysis Assistant"
+
+-- Failed
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1434043348"] = "Failed"
+
+-- Please select the file which contains your instructions.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1462027716"] = "Please select the file which contains your instructions."
+
+-- Which files should be processed? Separate multiple patterns with a semicolon, e.g., *.pdf;*.docx
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1482642245"] = "Which files should be processed? Separate multiple patterns with a semicolon, e.g., *.pdf;*.docx"
+
+-- No matching files were found in the selected folder.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1528532808"] = "No matching files were found in the selected folder."
+
+-- Custom column separator
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1547654319"] = "Custom column separator"
+
+-- Select the output folder
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1598970341"] = "Select the output folder"
+
+-- The configured default policy no longer exists. Please select another document analysis policy.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T169666151"] = "The configured default policy no longer exists. Please select another document analysis policy."
+
+-- Waiting {0} seconds before starting the next file.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1708373046"] = "Waiting {0} seconds before starting the next file."
+
+-- seconds
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1723256298"] = "seconds"
+
+-- The selected folder does not exist.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T17705912"] = "The selected folder does not exist."
+
+-- Minimum pause between files
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1829787634"] = "Minimum pause between files"
+
+-- Was not able to read the input folder: {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1871021621"] = "Was not able to read the input folder: {0}"
+
+-- Please provide a file name without a path, e.g., my-results.csv
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T189587595"] = "Please provide a file name without a path, e.g., my-results.csv"
+
+-- Select the folder containing your documents
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1926838679"] = "Select the folder containing your documents"
+
+-- Include subfolders?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2086334687"] = "Include subfolders?"
+
+-- Please select a document analysis policy.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2148947615"] = "Please select a document analysis policy."
+
+-- The configured instructions file is empty.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T216725576"] = "The configured instructions file is empty."
+
+-- Please provide at least one file pattern, e.g., *.pdf. Separate multiple patterns with a semicolon.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2179775338"] = "Please provide at least one file pattern, e.g., *.pdf. Separate multiple patterns with a semicolon."
+
+-- Model
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2189814010"] = "Model"
+
+-- Was not able to read the file: {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T220483807"] = "Was not able to read the file: {0}"
+
+-- Configured instructions file: {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2215428124"] = "Configured instructions file: {0}"
+
+-- No usable transcription provider is configured.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2282521655"] = "No usable transcription provider is configured."
+
+-- Was not able to create the output folder: {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2290092642"] = "Was not able to create the output folder: {0}"
+
+-- The AI answer was empty.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T230354366"] = "The AI answer was empty."
+
+-- The batch run finished, but {0} files could not be processed. See the progress table and log for details.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2334361705"] = "The batch run finished, but {0} files could not be processed. See the progress table and log for details."
+
+-- The AI request failed: {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2376918044"] = "The AI request failed: {0}"
+
+-- Done
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2379421585"] = "Done"
+
+-- The selected files include audio or video without an existing transcript, but no usable transcription provider is configured. Configure one in the transcription settings or remove the media patterns.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2390162661"] = "The selected files include audio or video without an existing transcript, but no usable transcription provider is configured. Configure one in the transcription settings or remove the media patterns."
+
+-- Was not able to read the existing transcript: {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2397111152"] = "Was not able to read the existing transcript: {0}"
+
+-- File patterns
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2460883298"] = "File patterns"
+
+-- Load prompt from file
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2474257795"] = "Load prompt from file"
+
+-- Details
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T247611973"] = "Details"
+
+-- Folder containing your documents
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2564230480"] = "Folder containing your documents"
+
+-- What should the AI do with each document?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2574784473"] = "What should the AI do with each document?"
+
+-- The batch run was canceled.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2641642683"] = "The batch run was canceled."
+
+-- Choose which character separates the columns of the results table.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2642486086"] = "Choose which character separates the columns of the results table."
+
+-- The configured instructions file no longer exists.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2652734495"] = "The configured instructions file no longer exists."
+
+-- Queued
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2655222900"] = "Queued"
+
+-- Input
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2677268763"] = "Input"
+
+-- Was not able to read the log of the previous run. Continuing the run would process all documents again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2717277840"] = "Was not able to read the log of the previous run. Continuing the run would process all documents again."
+
+-- Each answer is stored as its own Markdown file. Those files are named after the document, e.g., the answer for report.pdf is stored as report_result.md.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2724126639"] = "Each answer is stored as its own Markdown file. Those files are named after the document, e.g., the answer for report.pdf is stored as report_result.md."
+
+-- Before the next file starts, AI Studio waits for a random number of whole seconds from this interval. The minimum is always 6 seconds and the maximum is 300 seconds (5 minutes). Restored files and the end of a run do not add another pause.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2742154256"] = "Before the next file starts, AI Studio waits for a random number of whole seconds from this interval. The minimum is always 6 seconds and the maximum is 300 seconds (5 minutes). Restored files and the end of a run do not add another pause."
+
+-- Please enter exactly one punctuation or symbol character. Letters, numbers, spaces, quotation marks, and line breaks cannot be used as CSV separators.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2908365499"] = "Please enter exactly one punctuation or symbol character. Letters, numbers, spaces, quotation marks, and line breaks cannot be used as CSV separators."
+
+-- Was not able to write the result file: {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2991295581"] = "Was not able to write the result file: {0}"
+
+-- The batch run finished, but one file could not be processed. See the progress table and log for details.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3201532790"] = "The batch run finished, but one file could not be processed. See the progress table and log for details."
+
+-- Maximum pause between files
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3250003796"] = "Maximum pause between files"
+
+-- Please select the folder that contains the documents you want to process.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T33077198"] = "Please select the folder that contains the documents you want to process."
+
+-- You have not yet created any document analysis policies. Please use the Document Analysis Assistant to create a policy first.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3319546491"] = "You have not yet created any document analysis policies. Please use the Document Analysis Assistant to create a policy first."
+
+-- The content of the selected file is used as the instructions for every single document of the batch run.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T332380551"] = "The content of the selected file is used as the instructions for every single document of the batch run."
+
+-- Header of the result column (optional)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T340994102"] = "Header of the result column (optional)"
+
+-- Processing pace
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3428873429"] = "Processing pace"
+
+-- The file name of the CSV results table. We add the ending .csv when it is missing. When left empty, we use 'batch-results.csv'.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3439247329"] = "The file name of the CSV results table. We add the ending .csv when it is missing. When left empty, we use 'batch-results.csv'."
+
+-- Document analysis policy
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3510564924"] = "Document analysis policy"
+
+-- {0} of {1} files processed
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3648144402"] = "{0} of {1} files processed"
+
+-- Please remove empty file patterns. Separate valid patterns with a single semicolon.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T368919579"] = "Please remove empty file patterns. Separate valid patterns with a single semicolon."
+
+-- Was not able to store the transcript next to the media file: {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3691287653"] = "Was not able to store the transcript next to the media file: {0}"
+
+-- Time
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3756319748"] = "Time"
+
+-- Cancel the batch run
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3830551741"] = "Cancel the batch run"
+
+-- Source of the instructions
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3862670863"] = "Source of the instructions"
+
+-- Was not able to write '{0}'. Please make sure that the file is not opened in another application. The results of this run are incomplete on disk. The message is: '{1}'
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3899869356"] = "Was not able to write '{0}'. Please make sure that the file is not opened in another application. The results of this run are incomplete on disk. The message is: '{1}'"
+
+-- Select the file with your instructions
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3943995624"] = "Select the file with your instructions"
+
+-- Output
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T4000727844"] = "Output"
+
+-- Continue the previous batch run?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T4037527734"] = "Continue the previous batch run?"
+
+-- Output mode
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T4132795631"] = "Output mode"
+
+-- Please describe what the AI should do with each document.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T4148480053"] = "Please describe what the AI should do with each document."
+
+-- Canceled
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T4165352378"] = "Canceled"
+
+-- Was not able to extract any text from this file.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T4175885324"] = "Was not able to extract any text from this file."
+
+-- Column separator
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T423947932"] = "Column separator"
+
+-- The configured instructions file could not be read.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T4274794480"] = "The configured instructions file could not be read."
+
+-- Progress
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T439787878"] = "Progress"
+
+-- Enter one punctuation or symbol character.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T469253621"] = "Enter one punctuation or symbol character."
+
+-- No, only process files in the selected folder
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T49675965"] = "No, only process files in the selected folder"
+
+-- Start batch processing
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T50133258"] = "Start batch processing"
+
+-- Please use file name patterns without folder paths, e.g., *.pdf or report-*.docx.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T515934256"] = "Please use file name patterns without folder paths, e.g., *.pdf or report-*.docx."
+
+-- Was not able to read the results table of the previous run. Its completed documents cannot be restored and will be processed again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T544244392"] = "Was not able to read the results table of the previous run. Its completed documents cannot be restored and will be processed again."
+
+-- Yes, process files in subfolders as well
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T618448696"] = "Yes, process files in subfolders as well"
+
+-- Status
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T6222351"] = "Status"
+
+-- File
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T723007075"] = "File"
+
+-- The configured instructions file must be a Markdown file (*.md).
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T742124783"] = "The configured instructions file must be a Markdown file (*.md)."
+
+-- Restore default patterns
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T7425959"] = "Restore default patterns"
+
+-- A separate output folder is excluded from document discovery. This includes the default 'ai-results' folder, so results from an earlier run are not processed again. If the input folder itself is used for output, known batch result files are excluded instead.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T822136905"] = "A separate output folder is excluded from document discovery. This includes the default 'ai-results' folder, so results from an earlier run are not processed again. If the input folder itself is used for output, known batch result files are excluded instead."
+
+-- Comma (,)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::BATCHPROCESSINGCSVSEPARATOREXTENSIONS::T1676507543"] = "Comma (,)"
+
+-- Semicolon (;)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::BATCHPROCESSINGCSVSEPARATOREXTENSIONS::T3267990938"] = "Semicolon (;)"
+
+-- Unknown
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::BATCHPROCESSINGCSVSEPARATOREXTENSIONS::T3424652889"] = "Unknown"
+
+-- Tab
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::BATCHPROCESSINGCSVSEPARATOREXTENSIONS::T4219689196"] = "Tab"
+
+-- Vertical bar (|)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::BATCHPROCESSINGCSVSEPARATOREXTENSIONS::T4252399493"] = "Vertical bar (|)"
+
+-- Custom character
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::BATCHPROCESSINGCSVSEPARATOREXTENSIONS::T719177757"] = "Custom character"
+
+-- One CSV results table, where each answer becomes one row
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::BATCHPROCESSINGOUTPUTMODEEXTENSIONS::T1515293131"] = "One CSV results table, where each answer becomes one row"
+
+-- Unknown output mode
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::BATCHPROCESSINGOUTPUTMODEEXTENSIONS::T2013180377"] = "Unknown output mode"
+
+-- One Markdown file per document
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::BATCHPROCESSINGOUTPUTMODEEXTENSIONS::T2420177746"] = "One Markdown file per document"
+
+-- Use a free prompt
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::BATCHPROCESSINGPROMPTSOURCEEXTENSIONS::T1144335"] = "Use a free prompt"
+
+-- Unknown prompt source
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::BATCHPROCESSINGPROMPTSOURCEEXTENSIONS::T1848924830"] = "Unknown prompt source"
+
+-- Import from a file (.md)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::BATCHPROCESSINGPROMPTSOURCEEXTENSIONS::T3163211653"] = "Import from a file (.md)"
+
+-- Use a document analysis policy
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::BATCHPROCESSINGPROMPTSOURCEEXTENSIONS::T3309547196"] = "Use a document analysis policy"
+
 -- Extended bias poster
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T1241605514"] = "Extended bias poster"
 
@@ -3159,6 +3486,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIDENCEINFO::T847071819"] = "Shows and
 -- This feature is managed by your organization and has therefore been disabled.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONBASE::T1416426626"] = "This feature is managed by your organization and has therefore been disabled."
 
+-- Choose Directory
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONDIRECTORY::T4256489763"] = "Choose Directory"
+
 -- Choose File
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONFILE::T4285779702"] = "Choose File"
 
@@ -3509,6 +3839,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T3554222960"] = "Transcr
 
 -- Some dropped files could not be accessed. Please select them with the file chooser instead.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T3896246824"] = "Some dropped files could not be accessed. Please select them with the file chooser instead."
+
+-- Please select a file with a supported file type.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T3980535867"] = "Please select a file with a supported file type."
 
 -- Attached file '{0}'.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T853724151"] = "Attached file '{0}'."
@@ -4640,6 +4973,27 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINREVISIONDIALOG::T68761554"] =
 
 -- Cancel
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINREVISIONDIALOG::T900713019"] = "Cancel"
+
+-- Continue the previous run
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::BATCHPROCESSINGRESUMEDIALOG::T1544546085"] = "Continue the previous run"
+
+-- Start a new run
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::BATCHPROCESSINGRESUMEDIALOG::T1988102455"] = "Start a new run"
+
+-- Would you like to continue the previous run and process only the missing and failed documents? Or would you like to start a completely new run, which processes all documents again?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::BATCHPROCESSINGRESUMEDIALOG::T3100082920"] = "Would you like to continue the previous run and process only the missing and failed documents? Or would you like to start a completely new run, which processes all documents again?"
+
+-- Please note: the log lists {0} more document(s) as successfully processed, but their results no longer exist. They count as missing and are processed again when you continue the run.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::BATCHPROCESSINGRESUMEDIALOG::T3505810382"] = "Please note: the log lists {0} more document(s) as successfully processed, but their results no longer exist. They count as missing and are processed again when you continue the run."
+
+-- There is already a log of a previous batch run in the output folder.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::BATCHPROCESSINGRESUMEDIALOG::T3762601235"] = "There is already a log of a previous batch run in the output folder."
+
+-- {0} document(s) were processed successfully. {1} document(s) are missing or failed.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::BATCHPROCESSINGRESUMEDIALOG::T4009234360"] = "{0} document(s) were processed successfully. {1} document(s) are missing or failed."
+
+-- Cancel
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::BATCHPROCESSINGRESUMEDIALOG::T900713019"] = "Cancel"
 
 -- Only text content is supported in the editing mode yet.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T1352914344"] = "Only text content is supported in the editing mode yet."
@@ -6210,6 +6564,150 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T6790
 -- When enabled, you can preselect options. This is might be useful when you prefer a specific language or LLM model.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T711745239"] = "When enabled, you can preselect options. This is might be useful when you prefer a specific language or LLM model."
 
+-- Default minimum pause between files
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T1008440099"] = "Default minimum pause between files"
+
+-- Instructions
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T1221801316"] = "Instructions"
+
+-- Leave empty to use the ai-results subfolder of the input folder.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T1550632323"] = "Leave empty to use the ai-results subfolder of the input folder."
+
+-- seconds
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T1723256298"] = "seconds"
+
+-- Default prompt
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T1750564968"] = "Default prompt"
+
+-- Select the default input folder
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T1776900205"] = "Select the default input folder"
+
+-- Batch processing options are preselected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T1893713430"] = "Batch processing options are preselected"
+
+-- Default custom column separator
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T19367494"] = "Default custom column separator"
+
+-- Default document analysis policy
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T2015391667"] = "Default document analysis policy"
+
+-- AI selection
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T2105832301"] = "AI selection"
+
+-- Default output folder
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T223484721"] = "Default output folder"
+
+-- The lower end of the random pause interval. AI Studio never allows less than 6 seconds.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T237774509"] = "The lower end of the random pause interval. AI Studio never allows less than 6 seconds."
+
+-- When enabled, new batch runs start with the defaults configured below.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T2592677194"] = "When enabled, new batch runs start with the defaults configured below."
+
+-- Separate multiple file patterns with a semicolon, e.g., *.pdf;*.docx. The standard patterns include all supported audio and video formats.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T2594325620"] = "Separate multiple file patterns with a semicolon, e.g., *.pdf;*.docx. The standard patterns include all supported audio and video formats."
+
+-- Subfolders are included
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T2607092632"] = "Subfolders are included"
+
+-- Default input folder
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T261282578"] = "Default input folder"
+
+-- Input
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T2677268763"] = "Input"
+
+-- Default column separator
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T2745158463"] = "Default column separator"
+
+-- Preselect batch processing options?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T2849251744"] = "Preselect batch processing options?"
+
+-- Please enter exactly one punctuation or symbol character. Letters, numbers, spaces, quotation marks, and line breaks cannot be used as CSV separators.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T2908365499"] = "Please enter exactly one punctuation or symbol character. Letters, numbers, spaces, quotation marks, and line breaks cannot be used as CSV separators."
+
+-- Default file patterns
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T2909693903"] = "Default file patterns"
+
+-- Only the selected folder is processed
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T2958253681"] = "Only the selected folder is processed"
+
+-- Default maximum pause between files
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3011459001"] = "Default maximum pause between files"
+
+-- Include subfolders by default?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3106330739"] = "Include subfolders by default?"
+
+-- Missing policy ({0})
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3137266534"] = "Missing policy ({0})"
+
+-- These instructions are applied to every document of a new batch run.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3195548336"] = "These instructions are applied to every document of a new batch run."
+
+-- No batch processing options are preselected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3421035581"] = "No batch processing options are preselected"
+
+-- Default result column header
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3425186124"] = "Default result column header"
+
+-- Processing pace
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3428873429"] = "Processing pace"
+
+-- The upper end of the random pause interval. The app-wide maximum is 300 seconds (5 minutes).
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3434290122"] = "The upper end of the random pause interval. The app-wide maximum is 300 seconds (5 minutes)."
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3448155331"] = "Close"
+
+-- The current content of this Markdown file is loaded whenever the defaults are applied.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3468539567"] = "The current content of this Markdown file is loaded whenever the defaults are applied."
+
+-- Your organization requires a pause of at least {0} seconds between files. Users can configure only the upper limit.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3663516199"] = "Your organization requires a pause of at least {0} seconds between files. Users can configure only the upper limit."
+
+-- Load default prompt from file
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3763644960"] = "Load default prompt from file"
+
+-- Default results table name
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3816237687"] = "Default results table name"
+
+-- Default Markdown instructions file
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3967465682"] = "Default Markdown instructions file"
+
+-- Output
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T4000727844"] = "Output"
+
+-- The configured default policy no longer exists. Select another policy before starting a policy-based batch run.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T438852523"] = "The configured default policy no longer exists. Select another policy before starting a policy-based batch run."
+
+-- Enter one punctuation or symbol character.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T469253621"] = "Enter one punctuation or symbol character."
+
+-- Select the default Markdown instructions file
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T470691525"] = "Select the default Markdown instructions file"
+
+-- Assistant: Batch Processing defaults
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T481452904"] = "Assistant: Batch Processing defaults"
+
+-- Choose which character separates the columns of new results tables.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T573962596"] = "Choose which character separates the columns of new results tables."
+
+-- Default output mode
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T601648878"] = "Default output mode"
+
+-- Select the default output folder
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T602371388"] = "Select the default output folder"
+
+-- Load default Markdown instructions file
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T626322240"] = "Load default Markdown instructions file"
+
+-- Default source of the instructions
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T704081768"] = "Default source of the instructions"
+
+-- Restore default patterns
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T7425959"] = "Restore default patterns"
+
+-- Leave empty when an input folder should be selected for every batch run.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T762890100"] = "Leave empty when an input folder should be selected for every batch run."
+
 -- Preselect one of your chat templates?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T1402022556"] = "Preselect one of your chat templates?"
 
@@ -7452,6 +7950,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1907192403"] = "Text Summarizer"
 -- Check grammar and spelling of a given text.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1934717573"] = "Check grammar and spelling of a given text."
 
+-- Process all documents of a folder in one batch run and collect the results.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T200518635"] = "Process all documents of a folder in one batch run and collect the results."
+
 -- Translate text into another language.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T209791153"] = "Translate text into another language."
 
@@ -7553,6 +8054,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T755590027"] = "Learning"
 
 -- Bias of the Day
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T782102948"] = "Bias of the Day"
+
+-- Batch Processing
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T854996482"] = "Batch Processing"
 
 -- Learn about one cognitive bias every day.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T878695986"] = "Learn about one cognitive bias every day."
@@ -8840,6 +9344,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T1082499335"] = "Coding 
 
 -- E-Mail Assistant
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T1185802704"] = "E-Mail Assistant"
+
+-- Batch Processing Assistant
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T132410578"] = "Batch Processing Assistant"
 
 -- My Tasks Assistant
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T1546040625"] = "My Tasks Assistant"

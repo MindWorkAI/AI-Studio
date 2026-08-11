@@ -1,17 +1,19 @@
+using AIStudio.Tools.Services;
+
 using Microsoft.AspNetCore.Components;
 
 using Timer = System.Timers.Timer;
 
 namespace AIStudio.Components;
 
-public partial class ConfigurationText : ConfigurationBaseCore
+public partial class ConfigurationDirectory : ConfigurationBaseCore
 {
     /// <summary>
     /// The text used for the textfield.
     /// </summary>
     [Parameter]
     public Func<string> Text { get; set; } = () => string.Empty;
-    
+
     /// <summary>
     /// An action which is called when the text was changed.
     /// </summary>
@@ -22,7 +24,7 @@ public partial class ConfigurationText : ConfigurationBaseCore
     /// The icon to display next to the textfield.
     /// </summary>
     [Parameter]
-    public string Icon { get; set; } = Icons.Material.Filled.Info;
+    public string Icon { get; set; } = Icons.Material.Filled.Folder;
 
     /// <summary>
     /// The color of the icon to use.
@@ -31,49 +33,34 @@ public partial class ConfigurationText : ConfigurationBaseCore
     public Color IconColor { get; set; } = Color.Default;
 
     /// <summary>
-    /// How many lines should the textfield have?
+    /// The title of the directory selection dialog.
     /// </summary>
     [Parameter]
-    public int NumLines { get; set; } = 1;
+    public string DirectoryDialogTitle { get; set; } = "Select Directory";
 
-    /// <summary>
-    /// What is the maximum number of lines?
-    /// </summary>
-    [Parameter]
-    public int MaxLines { get; set; } = 12;
+    [Inject]
+    private RustService RustService { get; init; } = null!;
 
-    /// <summary>
-    /// When configured, displays a button which restores this value.
-    /// </summary>
-    [Parameter]
-    public Func<string>? ResetValue { get; set; }
-
-    /// <summary>
-    /// The text displayed on the optional reset button.
-    /// </summary>
-    [Parameter]
-    public string ResetButtonText { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Validates the configured text before it is stored.
-    /// </summary>
-    [Parameter]
-    public Func<string, string?>? Validation { get; set; }
-    
     private string internalText = string.Empty;
+    private bool isDirectoryDialogOpen;
+
     private readonly Timer timer = new(TimeSpan.FromMilliseconds(500))
     {
         AutoReset = false
     };
-    
+
     #region Overrides of ConfigurationBase
 
     /// <inheritdoc />
     protected override bool Stretch => true;
 
     protected override Variant Variant => Variant.Outlined;
-    
+
     protected override string Label => this.OptionDescription;
+
+    #endregion
+
+    #region Overrides of ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
@@ -89,10 +76,6 @@ public partial class ConfigurationText : ConfigurationBaseCore
 
     #endregion
 
-    private bool AutoGrow => this.NumLines > 1;
-    
-    private int GetMaxLines => this.AutoGrow ? this.MaxLines : 1;
-
     private void InternalUpdate(string text)
     {
         this.timer.Stop();
@@ -100,21 +83,30 @@ public partial class ConfigurationText : ConfigurationBaseCore
         this.timer.Start();
     }
 
-    private async Task ResetTextAsync()
+    private async Task OpenDirectoryDialog()
     {
-        if (this.ResetValue is null || this.IsDisabled)
+        if (this.isDirectoryDialogOpen)
             return;
 
-        this.timer.Stop();
-        this.internalText = this.ResetValue();
-        await this.OptionChanged(this.internalText);
+        this.isDirectoryDialogOpen = true;
+        try
+        {
+            var response = await this.RustService.SelectDirectory(this.DirectoryDialogTitle, string.IsNullOrWhiteSpace(this.internalText) ? null : this.internalText);
+            if (response.UserCancelled)
+                return;
+
+            this.timer.Stop();
+            this.internalText = response.SelectedDirectory;
+            await this.OptionChanged(response.SelectedDirectory);
+        }
+        finally
+        {
+            this.isDirectoryDialogOpen = false;
+        }
     }
-    
+
     private async Task OptionChanged(string updatedText)
     {
-        if (this.Validation?.Invoke(updatedText) is not null)
-            return;
-
         this.TextUpdate(updatedText);
         await this.SettingsManager.StoreSettings();
         await this.InformAboutChange();
@@ -133,7 +125,7 @@ public partial class ConfigurationText : ConfigurationBaseCore
         {
             // ignore
         }
-        
+
         base.DisposeResources();
     }
 

@@ -394,6 +394,70 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourceIds.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataChat.SendToChatDataSourceBehavior.AllowUserOverride"] = true
 
+-- Configure defaults for the Batch Processing Assistant.
+-- Preselection must be enabled for the remaining batch settings to take effect.
+-- CONFIG["SETTINGS"]["DataBatchProcessing.PreselectOptions"] = true
+--
+-- Configure the default input and output folders.
+-- Leave the input folder empty to require a selection for every new batch run.
+-- Leave the output folder empty to use the ai-results subfolder of the input folder.
+-- CONFIG["SETTINGS"]["DataBatchProcessing.InputDirectory"] = ""
+-- CONFIG["SETTINGS"]["DataBatchProcessing.OutputDirectory"] = ""
+--
+-- Configure the default file patterns and whether subfolders are included.
+-- Separate multiple patterns with semicolons.
+-- CONFIG["SETTINGS"]["DataBatchProcessing.FilePatterns"] = "*.pdf;*.docx;*.pptx;*.xlsx;*.md;*.txt;*.mp3;*.wav;*.wave;*.aac;*.flac;*.ogg;*.opus;*.m4a;*.m4b;*.wma;*.alac;*.aif;*.aiff;*.caf;*.mp4;*.m4v;*.avi;*.mkv;*.mov;*.wmv;*.flv;*.webm"
+-- CONFIG["SETTINGS"]["DataBatchProcessing.IncludeSubdirectories"] = false
+--
+-- Configure the default instruction source.
+-- Allowed values are: FREE_PROMPT, FILE_IMPORT, POLICY
+-- CONFIG["SETTINGS"]["DataBatchProcessing.PromptSource"] = "FREE_PROMPT"
+-- CONFIG["SETTINGS"]["DataBatchProcessing.FreePrompt"] = "Summarize each document."
+-- CONFIG["SETTINGS"]["DataBatchProcessing.PromptFilePath"] = ""
+--
+-- The policy ID must reference an entry in CONFIG["DOCUMENT_ANALYSIS_POLICIES"] or a
+-- user-configured policy. It is used only when PromptSource is POLICY.
+-- CONFIG["SETTINGS"]["DataBatchProcessing.PreselectedPolicyId"] = ""
+--
+-- Configure the default output mode.
+-- Allowed values are: MARKDOWN_FILES, TABLE_ONLY
+-- CONFIG["SETTINGS"]["DataBatchProcessing.OutputMode"] = "MARKDOWN_FILES"
+-- CONFIG["SETTINGS"]["DataBatchProcessing.CsvFileName"] = "batch-results.csv"
+-- CONFIG["SETTINGS"]["DataBatchProcessing.ResultColumnHeader"] = "Result"
+-- Allowed CSV separator values are: COMMA, SEMICOLON, PIPE, TAB, CUSTOM
+-- A custom separator must be exactly one punctuation or symbol character.
+-- CONFIG["SETTINGS"]["DataBatchProcessing.CsvSeparator"] = "SEMICOLON"
+-- CONFIG["SETTINGS"]["DataBatchProcessing.CustomCsvSeparator"] = "^"
+--
+-- Enforce the lower end of the random pause between files for the organization.
+-- The value must be between 6 and 300 seconds. Users can configure only the upper
+-- end of the interval while this setting is managed by a configuration plugin.
+-- CONFIG["SETTINGS"]["DataBatchProcessing.MinimumDelaySeconds"] = 12
+--
+-- Configure the minimum provider confidence and the default provider.
+-- Allowed confidence values are: NONE, UNTRUSTED, UNKNOWN, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
+-- A policy can require a higher minimum confidence; the stricter level wins.
+-- CONFIG["SETTINGS"]["DataBatchProcessing.MinimumProviderConfidence"] = "NONE"
+-- CONFIG["SETTINGS"]["DataBatchProcessing.PreselectedProvider"] = "00000000-0000-0000-0000-000000000000"
+--
+-- Allow users to change individual managed batch defaults locally.
+-- CONFIG["SETTINGS"]["DataBatchProcessing.PreselectOptions.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataBatchProcessing.InputDirectory.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataBatchProcessing.OutputDirectory.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataBatchProcessing.FilePatterns.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataBatchProcessing.IncludeSubdirectories.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataBatchProcessing.PromptSource.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataBatchProcessing.FreePrompt.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataBatchProcessing.PromptFilePath.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataBatchProcessing.PreselectedPolicyId.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataBatchProcessing.OutputMode.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataBatchProcessing.CsvFileName.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataBatchProcessing.ResultColumnHeader.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataBatchProcessing.CsvSeparator.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataBatchProcessing.CustomCsvSeparator.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataBatchProcessing.MinimumProviderConfidence.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataBatchProcessing.PreselectedProvider.AllowUserOverride"] = true
+
 -- Configure the transcription provider for voice-to-text functionality.
 -- It must be one of the transcription provider IDs defined in CONFIG["TRANSCRIPTION_PROVIDERS"].
 -- Without a selected transcription provider, dictation and transcription features will be disabled.
@@ -407,7 +471,8 @@ CONFIG["SETTINGS"] = {}
 --   CODING_ASSISTANT, TEXT_SUMMARIZER_ASSISTANT, EMAIL_ASSISTANT,
 --   LEGAL_CHECK_ASSISTANT, SYNONYMS_ASSISTANT, MY_TASKS_ASSISTANT,
 --   JOB_POSTING_ASSISTANT, BIAS_DAY_ASSISTANT, ERI_ASSISTANT,
---   DOCUMENT_ANALYSIS_ASSISTANT, SLIDE_BUILDER_ASSISTANT, VISUAL_BRIEFING_ASSISTANT, I18N_ASSISTANT,
+--   DOCUMENT_ANALYSIS_ASSISTANT, BATCH_PROCESSING_ASSISTANT, SLIDE_BUILDER_ASSISTANT,
+--   VISUAL_BRIEFING_ASSISTANT, I18N_ASSISTANT,
 --   LOG_VIEWER_ASSISTANT
 --
 -- Replaces, does not merge: a configuration with a higher priority replaces this list

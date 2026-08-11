@@ -28,6 +28,12 @@ public partial class ReadFileContent : MSGComponentBase
     public EventCallback<string> FileContentChanged { get; set; }
 
     /// <summary>
+    /// Reports the path after a file was loaded successfully.
+    /// </summary>
+    [Parameter]
+    public EventCallback<string> FilePathLoaded { get; set; }
+
+    /// <summary>
     /// If true, the component will display the state of the attached document (if any).
     /// </summary>
     [Parameter]
@@ -50,6 +56,13 @@ public partial class ReadFileContent : MSGComponentBase
     /// </summary>
     [Parameter]
     public bool CatchAllDocuments { get; set; }
+
+    /// <summary>
+    /// Optionally restricts the file types offered by the native file picker
+    /// and accepted by this component.
+    /// </summary>
+    [Parameter]
+    public FileTypeFilter[]? Filter { get; set; }
     
     [Inject]
     private RustService RustService { get; init; } = null!;
@@ -252,7 +265,7 @@ public partial class ReadFileContent : MSGComponentBase
         this.isFileDialogOpen = true;
         try
         {
-            var selectedFile = await this.RustService.SelectFile(T("Select file to read its content"));
+            var selectedFile = await this.RustService.SelectFile(T("Select file to read its content"), this.Filter);
             if (selectedFile.UserCancelled)
             {
                 this.Logger.LogInformation("User cancelled the file selection");
@@ -310,6 +323,13 @@ public partial class ReadFileContent : MSGComponentBase
             return false;
         }
 
+        if (this.Filter is { Length: > 0 } && !FileTypes.IsAllowedPath(filePath, this.Filter))
+        {
+            this.Logger.LogWarning("Selected file does not match the configured file type filter: '{FilePath}'", filePath);
+            await this.MessageBus.SendWarning(new(Icons.Material.Filled.Warning, this.T("Please select a file with a supported file type.")));
+            return false;
+        }
+
         if (FileTypes.IsAllowedPath(filePath, FileTypes.AUDIO) || FileTypes.IsAllowedPath(filePath, FileTypes.VIDEO))
             return await this.LoadMediaTranscriptAsync(filePath);
 
@@ -345,6 +365,7 @@ public partial class ReadFileContent : MSGComponentBase
     private async Task ApplyFileContentAsync(string fileContent, string filePath)
     {
         await this.FileContentChanged.InvokeAsync(fileContent);
+        await this.FilePathLoaded.InvokeAsync(filePath);
         this.loadedFileName = Path.GetFileName(filePath);
         this.hasLoadedFileContent = true;
     }
