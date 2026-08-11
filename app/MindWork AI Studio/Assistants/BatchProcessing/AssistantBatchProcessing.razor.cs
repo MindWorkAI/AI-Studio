@@ -300,7 +300,7 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<NoSettingsPane
             }
         }
 
-        return files.ToList();
+        return [.. files];
     }
 
     private static string TrimDirectorySeparator(string path) => path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);

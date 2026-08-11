@@ -10,7 +10,7 @@ namespace AIStudio.Assistants.BatchProcessing;
 /// </summary>
 public static class BatchProcessingCsv
 {
-    public const char SEPARATOR = '|';
+    private const char SEPARATOR = '|';
 
     public static string ToCsvRow(params string[] fields) => string.Join(SEPARATOR, fields.Select(ToCsvField));
 
@@ -42,22 +42,6 @@ public static class BatchProcessingCsv
         var field = new StringBuilder();
         var isQuoted = false;
         var hasContent = false;
-
-        void EndField()
-        {
-            fields.Add(field.ToString());
-            field.Clear();
-        }
-
-        void EndRow()
-        {
-            EndField();
-            if (hasContent)
-                rows.Add([..fields]);
-
-            fields.Clear();
-            hasContent = false;
-        }
 
         for (var index = 0; index < content.Length; index++)
         {
@@ -112,5 +96,21 @@ public static class BatchProcessingCsv
             EndRow();
 
         return rows;
+
+        void EndField()
+        {
+            fields.Add(field.ToString());
+            field.Clear();
+        }
+
+        void EndRow()
+        {
+            EndField();
+            if (hasContent)
+                rows.Add([..fields]);
+
+            fields.Clear();
+            hasContent = false;
+        }
     }
 }
