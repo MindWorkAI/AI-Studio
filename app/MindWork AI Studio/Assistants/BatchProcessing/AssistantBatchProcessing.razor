@@ -9,7 +9,12 @@
 
 <SelectDirectory Label="@T("Folder containing your documents")" DirectoryDialogTitle="@T("Select the folder containing your documents")" @bind-Directory="@this.inputDirectory" Validation="@this.ValidateInputDirectory" Disabled="@this.isProcessingBatch"/>
 
-<MudTextField T="string" @bind-Text="@this.filePatterns" Validation="@this.ValidateFilePatterns" Immediate="@true" Disabled="@this.isProcessingBatch" Label="@T("File patterns")" HelperText="@T("Which files should be processed? Separate multiple patterns with a semicolon, e.g., *.pdf;*.docx")" AdornmentIcon="@Icons.Material.Filled.FilterAlt" Adornment="Adornment.Start" Variant="Variant.Outlined" Margin="Margin.Normal" Class="mb-1" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-1">
+    <MudTextField T="string" @bind-Text="@this.filePatterns" Validation="@this.ValidateFilePatterns" Immediate="@true" Disabled="@this.isProcessingBatch" Label="@T("File patterns")" HelperText="@T("Which files should be processed? Separate multiple patterns with a semicolon, e.g., *.pdf;*.docx")" AdornmentIcon="@Icons.Material.Filled.FilterAlt" Adornment="Adornment.Start" Variant="Variant.Outlined" Margin="Margin.Normal" Class="flex-grow-1" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+    <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Restore" Disabled="@this.isProcessingBatch" OnClick="@this.RestoreDefaultFilePatterns">
+        @T("Restore default patterns")
+    </MudButton>
+</MudStack>
 
 <MudTextSwitch Label="@T("Include subfolders?")" Disabled="@this.isProcessingBatch" Value="@this.includeSubdirectories" ValueChanged="@(v => this.includeSubdirectories = v)" LabelOn="@T("Yes, process files in subfolders as well")" LabelOff="@T("No, only process files in the selected folder")"/>
 
@@ -41,7 +46,7 @@
 }
 else if (this.promptSource is BatchProcessingPromptSource.FILE_IMPORT)
 {
-    <ReadFileContent Text="@T("Select the file with your instructions")" @bind-FileContent="@this.ImportedPrompt" Filter="@([FileTypes.MARKDOWN])" ShowAttachedDocumentState="@true" Disabled="@this.isProcessingBatch"/>
+    <ReadFileContent Text="@T("Select the file with your instructions")" @bind-FileContent="@this.ImportedPrompt" Filter="@([FileTypes.MARKDOWN])" ShowAttachedDocumentState="@true" EnableDragDrop="true" Layer="@DropLayers.ASSISTANTS" CatchAllDocuments="true" Disabled="@this.isProcessingBatch"/>
 
     @if (!string.IsNullOrWhiteSpace(this.promptFilePath))
     {

@@ -126,6 +126,8 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
         }
     }
 
+    private void RestoreDefaultFilePatterns() => this.filePatterns = DataBatchProcessing.DEFAULT_FILE_PATTERNS;
+
     private ConfidenceLevel GetMinimumConfidenceLevel()
     {
         var minimumLevel = this.SettingsManager.GetMinimumConfidenceLevel(this.Component);
