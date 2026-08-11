@@ -29,6 +29,7 @@ public partial class AssistantBatchProcessing
         }
 
         this.PrepareFileResults(resolvedOutputDirectory, files, previousLog, previousResults);
+        await this.CheckpointAssistantSession();
         await this.RunBatchAsync(resolvedOutputDirectory);
     }
 
@@ -105,13 +106,15 @@ public partial class AssistantBatchProcessing
 
                 fileResult.Status = BatchProcessingFileStatus.PROCESSING;
                 fileResult.ModelName = this.ProviderSettings.Model.ToString();
-                await this.InvokeAsync(this.StateHasChanged);
+                await this.CheckpointAssistantSession();
+                await this.RefreshAssistantUIAsync();
 
                 await this.ProcessOneFileAsync(fileResult, resolvedOutputDirectory, token);
 
                 this.numProcessedFiles++;
                 await this.WriteAggregatedResultsAsync(resolvedOutputDirectory);
-                await this.InvokeAsync(this.StateHasChanged);
+                await this.CheckpointAssistantSession();
+                await this.RefreshAssistantUIAsync();
             }
         }
         finally
@@ -119,7 +122,8 @@ public partial class AssistantBatchProcessing
             // The cancellation token source belongs to the base class, which
             // disposes it and evaluates its state after we returned:
             this.isProcessingBatch = false;
-            await this.InvokeAsync(this.StateHasChanged);
+            await this.CheckpointAssistantSession();
+            await this.RefreshAssistantUIAsync();
         }
     }
 
@@ -230,15 +234,6 @@ public partial class AssistantBatchProcessing
 
     private async Task CancelBatchProcessingAsync()
     {
-        if (this.CancellationTokenSource is null)
-            return;
-
-        try
-        {
-            await this.CancellationTokenSource.CancelAsync();
-        }
-        catch (ObjectDisposedException)
-        {
-        }
+        await this.CancelAssistantSessionAsync();
     }
 }

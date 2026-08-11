@@ -525,10 +525,18 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         });
     }
     
-    private async Task CancelStreaming()
-    {
-        await this.AssistantSessionService.CancelAsync(this.assistantSessionKey, this);
-    }
+    private Task CancelStreaming() => this.CancelAssistantSessionAsync();
+
+    /// <summary>
+    /// Requests cancellation of the active assistant session.
+    /// </summary>
+    /// <remarks>
+    /// Derived assistants should use this method instead of accessing their local
+    /// cancellation token source. A component which reattaches after navigation
+    /// does not own that source, while the session service still does.
+    /// </remarks>
+    /// <returns>A task that completes after cancellation was requested.</returns>
+    protected Task CancelAssistantSessionAsync() => this.AssistantSessionService.CancelAsync(this.assistantSessionKey, this);
     
     protected async Task CopyToClipboard()
     {
@@ -763,7 +771,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     /// Stores the current assistant UI and chat state in the active assistant session.
     /// </summary>
     /// <returns>A task that completes after the checkpoint was stored and published.</returns>
-    private Task CheckpointAssistantSession()
+    protected Task CheckpointAssistantSession()
     {
         if (this.assistantSessionId is null)
             return Task.CompletedTask;
@@ -861,7 +869,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     /// Refreshes the component when it is still mounted.
     /// </summary>
     /// <returns>A task that completes after the renderer was notified.</returns>
-    private async Task RefreshAssistantUIAsync()
+    protected async Task RefreshAssistantUIAsync()
     {
         if (this.isDisposed)
             return;
