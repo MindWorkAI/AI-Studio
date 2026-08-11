@@ -28,6 +28,12 @@ public partial class ReadFileContent : MSGComponentBase
     public EventCallback<string> FileContentChanged { get; set; }
 
     /// <summary>
+    /// Reports the path after a file was loaded successfully.
+    /// </summary>
+    [Parameter]
+    public EventCallback<string> FilePathLoaded { get; set; }
+
+    /// <summary>
     /// If true, the component will display the state of the attached document (if any).
     /// </summary>
     [Parameter]
@@ -359,6 +365,7 @@ public partial class ReadFileContent : MSGComponentBase
     private async Task ApplyFileContentAsync(string fileContent, string filePath)
     {
         await this.FileContentChanged.InvokeAsync(fileContent);
+        await this.FilePathLoaded.InvokeAsync(filePath);
         this.loadedFileName = Path.GetFileName(filePath);
         this.hasLoadedFileContent = true;
     }

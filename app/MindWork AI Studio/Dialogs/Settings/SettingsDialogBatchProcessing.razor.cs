@@ -7,6 +7,30 @@ public partial class SettingsDialogBatchProcessing : SettingsDialogBase
 {
     private bool DefaultsDisabled() => !this.SettingsManager.ConfigurationData.BatchProcessing.PreselectOptions;
 
+    private bool FreePromptImportDisabled() => this.DefaultsDisabled()
+                                               || ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.FreePrompt, out var meta) && meta.IsLocked;
+
+    private bool PromptFileImportDisabled() => this.DefaultsDisabled()
+                                                || ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.PromptFilePath, out var meta) && meta.IsLocked;
+
+    private async Task UpdateFreePromptFromFileAsync(string content)
+    {
+        this.SettingsManager.ConfigurationData.BatchProcessing.FreePrompt = content;
+        await this.StoreImportedDefaultAsync();
+    }
+
+    private async Task UpdatePromptFilePathAsync(string path)
+    {
+        this.SettingsManager.ConfigurationData.BatchProcessing.PromptFilePath = path;
+        await this.StoreImportedDefaultAsync();
+    }
+
+    private async Task StoreImportedDefaultAsync()
+    {
+        await this.SettingsManager.StoreSettings();
+        await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+    }
+
     private IReadOnlyList<ConfigurationSelectData<BatchProcessingPromptSource>> PromptSourceData =>
     [
         .. Enum
