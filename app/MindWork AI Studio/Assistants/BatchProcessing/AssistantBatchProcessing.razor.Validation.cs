@@ -204,6 +204,7 @@ public partial class AssistantBatchProcessing
         }
         catch (Exception e)
         {
+            this.Logger.LogError(e, "Was not able to enumerate batch input files in '{InputDirectory}'.", this.inputDirectory);
             this.AddInputIssue(string.Format(T("Was not able to read the input folder: {0}"), e.Message));
             return null;
         }
@@ -220,6 +221,7 @@ public partial class AssistantBatchProcessing
         }
         catch (Exception e)
         {
+            this.Logger.LogError(e, "Was not able to create the batch output folder '{OutputDirectory}'.", resolvedOutputDirectory);
             this.AddInputIssue(string.Format(T("Was not able to create the output folder: {0}"), e.Message));
             return null;
         }

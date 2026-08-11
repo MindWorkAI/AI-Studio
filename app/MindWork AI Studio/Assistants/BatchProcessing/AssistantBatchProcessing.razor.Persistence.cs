@@ -222,6 +222,7 @@ public partial class AssistantBatchProcessing
         catch (Exception e)
         {
             this.Logger.LogWarning(e, "Was not able to read the results table of the previous batch run at '{ResultsFilePath}'.", resultsFilePath);
+            await this.MessageBus.SendWarning(new(Icons.Material.Filled.Warning, T("Was not able to read the results table of the previous run. Its completed documents cannot be restored and will be processed again.")));
         }
 
         return results;

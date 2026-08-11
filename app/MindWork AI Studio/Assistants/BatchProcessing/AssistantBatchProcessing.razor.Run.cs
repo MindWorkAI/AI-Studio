@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Globalization;
 using System.Text;
 
@@ -79,6 +80,14 @@ public partial class AssistantBatchProcessing
     private async Task RunBatchAsync(string resolvedOutputDirectory)
     {
         this.isProcessingBatch = true;
+        var stopwatch = Stopwatch.StartNew();
+        this.Logger.LogInformation(
+            "Batch processing started. InputDirectory='{InputDirectory}', OutputDirectory='{OutputDirectory}', TotalFiles={TotalFiles}, RestoredFiles={RestoredFiles}, Model='{Model}'.",
+            this.inputDirectory,
+            resolvedOutputDirectory,
+            this.fileResults.Count,
+            this.fileResults.Count(fileResult => fileResult.Status is BatchProcessingFileStatus.DONE),
+            this.ProviderSettings.Model);
 
         // We use the cancellation token of the assistant base class, which
         // creates it before it calls us and disposes it after we returned.
@@ -119,11 +128,33 @@ public partial class AssistantBatchProcessing
         }
         finally
         {
+            stopwatch.Stop();
+            var doneFiles = this.fileResults.Count(fileResult => fileResult.Status is BatchProcessingFileStatus.DONE);
+            var failedFiles = this.fileResults.Count(fileResult => fileResult.Status is BatchProcessingFileStatus.FAILED);
+            var canceledFiles = this.fileResults.Count(fileResult => fileResult.Status is BatchProcessingFileStatus.CANCELED);
+
+            this.Logger.LogInformation(
+                "Batch processing finished after {ElapsedMilliseconds} ms. TotalFiles={TotalFiles}, DoneFiles={DoneFiles}, FailedFiles={FailedFiles}, CanceledFiles={CanceledFiles}, OutputWriteFailed={OutputWriteFailed}.",
+                stopwatch.ElapsedMilliseconds,
+                this.fileResults.Count,
+                doneFiles,
+                failedFiles,
+                canceledFiles,
+                this.hasReportedWriteFailure);
+
             // The cancellation token source belongs to the base class, which
             // disposes it and evaluates its state after we returned:
             this.isProcessingBatch = false;
             await this.CheckpointAssistantSession();
             await this.RefreshAssistantUIAsync();
+
+            if (failedFiles > 0)
+            {
+                var failureMessage = failedFiles == 1
+                    ? T("The batch run finished, but one file could not be processed. See the progress table and log for details.")
+                    : string.Format(T("The batch run finished, but {0} files could not be processed. See the progress table and log for details."), failedFiles);
+                await this.MessageBus.SendError(new(Icons.Material.Filled.Error, failureMessage));
+            }
         }
     }
 
@@ -143,7 +174,7 @@ public partial class AssistantBatchProcessing
         }
         catch (Exception e)
         {
-            this.FinishFileResult(fileResult, BatchProcessingFileStatus.FAILED, string.Format(T("Was not able to read the file: {0}"), e.Message));
+            this.FinishFileResult(fileResult, BatchProcessingFileStatus.FAILED, string.Format(T("Was not able to read the file: {0}"), e.Message), e);
             return;
         }
 
@@ -185,7 +216,7 @@ public partial class AssistantBatchProcessing
         }
         catch (Exception e)
         {
-            this.FinishFileResult(fileResult, BatchProcessingFileStatus.FAILED, string.Format(T("The AI request failed: {0}"), e.Message));
+            this.FinishFileResult(fileResult, BatchProcessingFileStatus.FAILED, string.Format(T("The AI request failed: {0}"), e.Message), e);
             return;
         }
 
@@ -215,21 +246,26 @@ public partial class AssistantBatchProcessing
             }
             catch (Exception e)
             {
-                this.FinishFileResult(fileResult, BatchProcessingFileStatus.FAILED, string.Format(T("Was not able to write the result file: {0}"), e.Message));
+                this.FinishFileResult(fileResult, BatchProcessingFileStatus.FAILED, string.Format(T("Was not able to write the result file: {0}"), e.Message), e);
             }
         }
         else
             this.FinishFileResult(fileResult, BatchProcessingFileStatus.DONE, string.Empty);
     }
 
-    private void FinishFileResult(BatchProcessingFileResult fileResult, BatchProcessingFileStatus status, string message)
+    private void FinishFileResult(BatchProcessingFileResult fileResult, BatchProcessingFileStatus status, string message, Exception? exception = null)
     {
         fileResult.Status = status;
         fileResult.Message = message;
         fileResult.ProcessedAt = DateTimeOffset.Now;
 
-        if (status is BatchProcessingFileStatus.FAILED)
+        if (status is not BatchProcessingFileStatus.FAILED)
+            return;
+
+        if (exception is null)
             this.Logger.LogWarning("Batch processing of file '{FilePath}' failed: {Message}", fileResult.FilePath, message);
+        else
+            this.Logger.LogError(exception, "Batch processing of file '{FilePath}' failed: {Message}", fileResult.FilePath, message);
     }
 
     private async Task CancelBatchProcessingAsync()
