@@ -180,6 +180,7 @@ public static class ComponentsExtensions
             Components.ERI_ASSISTANT => settingsManager.ConfigurationData.ERI.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.ERI.PreselectedProvider) : null,
             Components.I18N_ASSISTANT => settingsManager.ConfigurationData.I18N.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.I18N.PreselectedProvider) : null,
             Components.SLIDE_BUILDER_ASSISTANT => settingsManager.ConfigurationData.SlideBuilder.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.SlideBuilder.PreselectedProvider) : null,
+            Components.META_ASSISTANT => settingsManager.ConfigurationData.AssistantBuilder.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.AssistantBuilder.PreselectedProvider) : null,
             Components.VISUAL_BRIEFING_ASSISTANT => settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.VisualBriefing.PreselectedProvider),
             
             // The Document Analysis Assistant does not have a preselected provider at the component level.
