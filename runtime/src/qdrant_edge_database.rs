@@ -133,6 +133,18 @@ pub struct QdrantEdgeOperationResponse {
 }
 
 #[derive(Serialize)]
+pub struct QdrantEdgeEnsureStoreResponse {
+    pub success: bool,
+    pub issue: String,
+    pub data: Option<QdrantEdgeEnsureStoreResult>,
+}
+
+#[derive(Serialize)]
+pub struct QdrantEdgeEnsureStoreResult {
+    pub created: bool,
+}
+
+#[derive(Serialize)]
 pub struct QdrantEdgeSearchResponse {
     pub success: bool,
     pub issue: String,
@@ -289,13 +301,16 @@ impl QdrantEdgeDatabase {
         })
     }
 
-    fn ensure_store_exists(&mut self, store_name: &str, data_source_name: &str, vector_size: usize) -> QdrantEdgeResult<()> {
+    fn ensure_store_exists(&mut self, store_name: &str, data_source_name: &str, vector_size: usize) -> QdrantEdgeResult<QdrantEdgeEnsureStoreResult> {
         validate_vector_size(vector_size)?;
         validate_data_source_name(data_source_name)?;
         let store_path = self.store_path(store_name)?;
+        let store_existed = store_is_initialized(&store_path, store_name)?;
         self.get_or_create_store(store_name, vector_size)?;
         write_store_display_name(&store_path, data_source_name)?;
-        Ok(())
+        Ok(QdrantEdgeEnsureStoreResult {
+            created: !store_existed,
+        })
     }
 
     fn insert_embedding(&mut self, store_name: &str, points: Vec<QdrantEdgeStoragePoint>) -> QdrantEdgeResult<()> {
@@ -439,10 +454,32 @@ pub async fn qdrant_edge_info(_token: APIToken) -> Json<QdrantEdgeServiceInfo> {
     })
 }
 
-pub async fn ensure_qdrant_edge_store(_token: APIToken, Json(request): Json<EnsureQdrantEdgeStoreRequest>) -> Json<QdrantEdgeOperationResponse> {
-    execute_qdrant_edge_operation(|database| {
-        database.ensure_store_exists(&request.store_name, &request.data_source_name, request.vector_size)
-    })
+pub async fn ensure_qdrant_edge_store(_token: APIToken, Json(request): Json<EnsureQdrantEdgeStoreRequest>) -> Json<QdrantEdgeEnsureStoreResponse> {
+    let mut database_guard = QDRANT_EDGE_DATABASE.lock().unwrap();
+    let Some(database) = database_guard.as_mut() else {
+        return Json(QdrantEdgeEnsureStoreResponse {
+            success: false,
+            issue: "Qdrant Edge is not available.".to_string(),
+            data: None,
+        });
+    };
+
+    match database.ensure_store_exists(&request.store_name, &request.data_source_name, request.vector_size) {
+        Ok(result) => Json(QdrantEdgeEnsureStoreResponse {
+            success: true,
+            issue: String::new(),
+            data: Some(result),
+        }),
+        Err(error) => {
+            let issue = error.to_string();
+            error!(Source = "Qdrant Edge"; "Qdrant Edge operation failed: {issue}");
+            Json(QdrantEdgeEnsureStoreResponse {
+                success: false,
+                issue,
+                data: None,
+            })
+        },
+    }
 }
 
 pub async fn insert_qdrant_edge_embedding(_token: APIToken, Json(request): Json<InsertQdrantEdgeEmbeddingRequest>) -> Json<QdrantEdgeOperationResponse> {
@@ -927,6 +964,31 @@ mod tests {
         assert!(validate_data_source_name(" ").is_err());
         assert!(validate_data_source_name("invalid\nname").is_err());
         assert!(validate_data_source_name(&"a".repeat(41)).is_err());
+    }
+
+    #[test]
+    fn ensure_store_reports_creation_and_updates_the_display_name() {
+        let test_directory = std::env::temp_dir().join(format!(
+            "ai-studio-qdrant-ensure-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        let store_name = "rag_6cc665a82b1e4d42bc748015b7b391ec";
+        let mut database = QdrantEdgeDatabase::new(test_directory.clone());
+
+        let created = database.ensure_store_exists(store_name, "Original name", 3).unwrap();
+        assert!(created.created);
+
+        let existing = database.ensure_store_exists(store_name, "Renamed source", 3).unwrap();
+        assert!(!existing.created);
+        let display_name_path = database.store_path(store_name).unwrap().join(STORE_DISPLAY_NAME_MARKER);
+        assert_eq!(fs::read_to_string(display_name_path).unwrap(), "Renamed source");
+
+        drop(database);
+        fs::remove_dir_all(test_directory).unwrap();
     }
 
     #[test]

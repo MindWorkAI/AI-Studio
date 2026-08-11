@@ -82,8 +82,9 @@ public sealed class QdrantEdgeClientImplementation(
         yield return (TB("Number of vector stores"), displayStoresCount.ToString());
     }
 
-    public override Task EnsureVectorStoreExists(string storeName, string dataSourceName, int vectorSize, CancellationToken token) =>
-        rustService.ExecuteDatabaseOperation(DATABASE_NAME, ENSURE_PATH, new EnsureVectorStoreRequest(storeName, dataSourceName, vectorSize), token);
+    public override async Task<VectorStoreEnsureResult> EnsureVectorStoreExists(string storeName, string dataSourceName, int vectorSize, CancellationToken token) =>
+        await rustService.ExecuteDatabaseQuery<EnsureVectorStoreRequest, VectorStoreEnsureResult>( DATABASE_NAME, ENSURE_PATH,
+            new EnsureVectorStoreRequest(storeName, dataSourceName, vectorSize), token) ?? throw new InvalidOperationException("The vector store ensure response was empty.");
 
     public override Task InsertEmbedding(string storeName, IReadOnlyList<VectorStoragePoint> points, CancellationToken token) =>
         rustService.ExecuteDatabaseOperation(DATABASE_NAME, INSERT_PATH, new InsertEmbeddingRequest(storeName, points), token);

@@ -22,8 +22,8 @@ public sealed class NoVectorStoreClient(string name, string? unavailableReason, 
         await Task.CompletedTask;
     }
 
-    public override Task EnsureVectorStoreExists(string storeName, string dataSourceName, int vectorSize, CancellationToken token) =>
-        Task.FromException(this.CreateUnavailableException());
+    public override Task<VectorStoreEnsureResult> EnsureVectorStoreExists(string storeName, string dataSourceName, int vectorSize, CancellationToken token) =>
+        Task.FromException<VectorStoreEnsureResult>(this.CreateUnavailableException());
 
     public override Task InsertEmbedding(string storeName, IReadOnlyList<VectorStoragePoint> points, CancellationToken token) =>
         Task.FromException(this.CreateUnavailableException());

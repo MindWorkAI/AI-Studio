@@ -2,7 +2,7 @@
 
 public abstract class VectorStoreClient(string name, string path): DatabaseClient(name, path)
 {
-    public abstract Task EnsureVectorStoreExists(string storeName, string dataSourceName, int vectorSize, CancellationToken token);
+    public abstract Task<VectorStoreEnsureResult> EnsureVectorStoreExists(string storeName, string dataSourceName, int vectorSize, CancellationToken token);
 
     public abstract Task InsertEmbedding(string storeName, IReadOnlyList<VectorStoragePoint> points, CancellationToken token);
 
@@ -14,3 +14,5 @@ public abstract class VectorStoreClient(string name, string path): DatabaseClien
 
     public abstract Task DeleteVectorStore(string storeName, CancellationToken token);
 }
+
+public sealed record VectorStoreEnsureResult(bool Created);

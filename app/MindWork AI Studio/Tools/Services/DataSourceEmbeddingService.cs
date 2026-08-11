@@ -428,6 +428,22 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             return;
         }
 
+        var collectionName = this.GetCollectionName(dataSource.Id);
+        var persistedManifest = await embeddingState.GetManifestAsync(dataSource.Id, token);
+        if (persistedManifest.VectorSize > 0)
+        {
+            var ensureResult = await this.EnsureCollectionExistsAsync(vectorStore, collectionName, dataSource.Name, persistedManifest.VectorSize, token);
+            if (ensureResult.Created)
+            {
+                logger.LogWarning(
+                    "Vector store '{CollectionName}' for data source '{DataSourceName}' ({DataSourceId}) was missing although persisted embedding state exists. Resetting the stale state so all vectors are rebuilt.",
+                    collectionName,
+                    dataSource.Name,
+                    dataSource.Id);
+                await this.ResetPersistedStateAsync(dataSource.Id, vectorStore, embeddingState, token);
+            }
+        }
+
         if (!this.TryResolveEmbeddingProvider(dataSource, out var embeddingProvider))
         {
             token.ThrowIfCancellationRequested();
@@ -460,11 +476,8 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             dataSource.Name,
             dataSource.Id);
 
-        var collectionName = this.GetCollectionName(dataSource.Id);
         var manifest = await this.EnsureCompatibleManifestAsync(dataSource, embeddingProvider, collectionName, vectorStore, embeddingState, token);
         token.ThrowIfCancellationRequested();
-        if (manifest.VectorSize > 0)
-            await this.EnsureCollectionExistsAsync(vectorStore, collectionName, dataSource.Name, manifest.VectorSize, token);
 
         var inputFiles = this.GetInputFiles(dataSource);
         var indexedFiles = inputFiles.Files;
@@ -770,7 +783,20 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         if (manifest.VectorSize == 0)
         {
             token.ThrowIfCancellationRequested();
-            await this.EnsureCollectionExistsAsync(vectorStore, collectionName, dataSource.Name, vectorSize, token);
+            var ensureResult = await this.EnsureCollectionExistsAsync(vectorStore, collectionName, dataSource.Name, vectorSize, token);
+            if (!ensureResult.Created)
+            {
+                logger.LogWarning(
+                    "Vector store '{CollectionName}' exists for data source '{DataSourceName}' ({DataSourceId}) although no persisted embedding state exists. Replacing the orphaned store before indexing.",
+                    collectionName,
+                    dataSource.Name,
+                    dataSource.Id);
+                await vectorStore.DeleteVectorStore(collectionName, token);
+                ensureResult = await this.EnsureCollectionExistsAsync(vectorStore, collectionName, dataSource.Name, vectorSize, token);
+                if (!ensureResult.Created)
+                    throw new InvalidOperationException($"Vector store '{collectionName}' could not be recreated cleanly.");
+            }
+
             await embeddingState.UpdateVectorSizeAsync(dataSource.Id, vectorSize, token);
             manifest.VectorSize = vectorSize;
             logger.LogInformation(
@@ -819,9 +845,9 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         batch.Clear();
     }
 
-    private async Task EnsureCollectionExistsAsync(VectorStoreClient vectorStore, string collectionName, string dataSourceName, int vectorSize, CancellationToken token)
+    private async Task<VectorStoreEnsureResult> EnsureCollectionExistsAsync(VectorStoreClient vectorStore, string collectionName, string dataSourceName, int vectorSize, CancellationToken token)
     {
-        await vectorStore.EnsureVectorStoreExists(collectionName, dataSourceName, vectorSize, token);
+        return await vectorStore.EnsureVectorStoreExists(collectionName, dataSourceName, vectorSize, token);
     }
 
     private async Task UpsertPointsAsync(
