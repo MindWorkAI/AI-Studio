@@ -7,6 +7,7 @@ public static class ContentStreamSseHandler
 {
     private static readonly ConcurrentDictionary<string, List<ContentStreamPptxImageData>> CHUNKED_IMAGES = new();
     private static readonly ConcurrentDictionary<string, SlideManager> SLIDE_MANAGERS = new();
+    private static readonly ConcurrentDictionary<string, DocumentManager> DOCUMENT_MANAGERS = new();
 
     public static ContentStreamProcessedEvent ProcessEvent(ContentStreamSseEvent? sseEvent, bool extractImages = true)
     {
@@ -39,7 +40,19 @@ public static class ContentStreamSseHandler
                         spreadSheetResult.Append(sseEvent.Content);
                         return ContentStreamProcessedEvent.FromContent(spreadSheetResult.ToString());
 
-                    case ContentStreamDocumentMetadata:
+                    //
+                    // Documents which the runtime reads page by page are buffered, so the images of
+                    // a page can follow its Markdown. Documents converted as a whole, e.g. by Pandoc,
+                    // carry no page number and are passed on unchanged.
+                    //
+                    case ContentStreamDocumentMetadata documentMetadata:
+                        if (documentMetadata.Document?.PageNumber is not > 0)
+                            return ContentStreamProcessedEvent.FromContent(sseEvent.Content);
+
+                        var documentManager = DOCUMENT_MANAGERS.GetOrAdd(sseEvent.StreamId!, _ => new());
+                        var documentContent = documentManager.AddPage(documentMetadata, sseEvent.Content, extractImages);
+                        return documentContent is null ? ContentStreamProcessedEvent.NOTHING : ContentStreamProcessedEvent.FromContent(documentContent);
+
                     case ContentStreamImageMetadata:
                         return ContentStreamProcessedEvent.FromContent(sseEvent.Content);
 
@@ -87,6 +100,7 @@ public static class ContentStreamSseHandler
             Content = content,
             Segment = segment,
             IsEnd = isEnd,
+            MediaType = contentStreamPptxImageData.MediaType,
         };
         
         CHUNKED_IMAGES.AddOrUpdate(
@@ -118,7 +132,32 @@ public static class ContentStreamSseHandler
         CHUNKED_IMAGES.Remove(id, out _);
         return base64Image;
     }
-    
+
+    /// <summary>
+    /// Assembles the collected segments of an image into a Markdown image.
+    /// </summary>
+    /// <remarks>
+    /// Handing the naked Base64 data to the AI says nothing: it is neither readable text nor an
+    /// image it could look at. Only the data URI makes it one, so every reader must embed its
+    /// images this way.
+    /// </remarks>
+    /// <param name="id">The ID of the image to assemble.</param>
+    /// <param name="mediaType">The media type the runtime reported, if any.</param>
+    /// <returns>The Markdown image, or null when no data was collected for that ID.</returns>
+    public static string? BuildImageMarkdown(string id, string? mediaType)
+    {
+        var base64Image = BuildImage(id);
+        if (string.IsNullOrWhiteSpace(base64Image))
+            return null;
+
+        //
+        // Both readers compress their images, and that compression produces JPEG. A runtime which
+        // does not report the media type therefore delivered JPEG as well.
+        //
+        var imageMediaType = string.IsNullOrWhiteSpace(mediaType) ? "image/jpeg" : mediaType;
+        return $"![Image](data:{imageMediaType};base64,{base64Image})";
+    }
+
     public static string? Clear(string streamId)
     {
         if (string.IsNullOrWhiteSpace(streamId))
@@ -131,8 +170,16 @@ public static class ContentStreamSseHandler
             if (!string.IsNullOrWhiteSpace(result))
                 finalContentChunk.Append(result);
         }
+
+        if (DOCUMENT_MANAGERS.TryGetValue(streamId, out var documentManager))
+        {
+            var result = documentManager.Flush();
+            if (!string.IsNullOrWhiteSpace(result))
+                finalContentChunk.Append(result);
+        }
         
         SLIDE_MANAGERS.TryRemove(streamId, out _);
+        DOCUMENT_MANAGERS.TryRemove(streamId, out _);
         var imageIdPrefix = $"{streamId}-";
         foreach (var key in CHUNKED_IMAGES.Keys.Where(k => k.StartsWith(imageIdPrefix, StringComparison.InvariantCultureIgnoreCase)))
             CHUNKED_IMAGES.TryRemove(key, out _);
