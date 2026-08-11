@@ -1,5 +1,5 @@
 @attribute [Route(Routes.ASSISTANT_BATCH_PROCESSING)]
-@inherits AssistantBaseCore<AIStudio.Dialogs.Settings.NoSettingsPanel>
+@inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogBatchProcessing>
 @using AIStudio.Settings.DataModel
 
 <MudText Typo="Typo.h5" Class="mb-3">
@@ -16,7 +16,7 @@
     @T("Instructions")
 </MudText>
 
-<MudSelect T="BatchProcessingPromptSource" @bind-Value="@this.promptSource" Disabled="@this.isProcessingBatch" AdornmentIcon="@Icons.Material.Filled.EditNote" Adornment="Adornment.Start" Label="@T("Source of the instructions")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3">
+<MudSelect T="BatchProcessingPromptSource" Value="@this.promptSource" ValueChanged="@this.PromptSourceChanged" Disabled="@this.isProcessingBatch" AdornmentIcon="@Icons.Material.Filled.EditNote" Adornment="Adornment.Start" Label="@T("Source of the instructions")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3">
     @foreach (var source in Enum.GetValues<BatchProcessingPromptSource>())
     {
         <MudSelectItem Value="@source">
@@ -31,7 +31,17 @@
 }
 else if (this.promptSource is BatchProcessingPromptSource.FILE_IMPORT)
 {
-    <ReadFileContent Text="@T("Select the file with your instructions")" @bind-FileContent="@this.importedPrompt" ShowAttachedDocumentState="@true" Disabled="@this.isProcessingBatch"/>
+    <ReadFileContent Text="@T("Select the file with your instructions")" @bind-FileContent="@this.ImportedPrompt" ShowAttachedDocumentState="@true" Disabled="@this.isProcessingBatch"/>
+
+    @if (!string.IsNullOrWhiteSpace(this.promptFilePath))
+    {
+        <MudText Typo="Typo.body2" Class="mb-3">@(string.Format(T("Configured instructions file: {0}"), this.promptFilePath))</MudText>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(this.promptFileLoadIssue))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mb-3">@this.promptFileLoadIssue</MudAlert>
+    }
 
     <MudJustifiedText Typo="Typo.body2" Class="mb-3">
         @T("The content of the selected file is used as the instructions for every single document of the batch run.")
@@ -39,6 +49,11 @@ else if (this.promptSource is BatchProcessingPromptSource.FILE_IMPORT)
 }
 else
 {
+    @if (this.ConfiguredPolicyIsMissing)
+    {
+        <MudAlert Severity="Severity.Warning" Dense="true" Class="mb-3">@T("The configured default policy no longer exists. Please select another document analysis policy.")</MudAlert>
+    }
+
     @if (this.SettingsManager.ConfigurationData.DocumentAnalysis.Policies.Count is 0)
     {
         <MudJustifiedText Typo="Typo.body1" Class="mb-3">
@@ -50,7 +65,7 @@ else
     }
     else
     {
-        <MudSelect T="DataDocumentAnalysisPolicy" @bind-Value="@this.selectedPolicy" Disabled="@this.isProcessingBatch" AdornmentIcon="@Icons.Material.Filled.Policy" Adornment="Adornment.Start" Label="@T("Document analysis policy")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3">
+        <MudSelect T="DataDocumentAnalysisPolicy" Value="@this.selectedPolicy" ValueChanged="@this.SelectedPolicyChanged" Disabled="@this.isProcessingBatch" AdornmentIcon="@Icons.Material.Filled.Policy" Adornment="Adornment.Start" Label="@T("Document analysis policy")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3">
             @foreach (var policy in this.SettingsManager.ConfigurationData.DocumentAnalysis.Policies)
             {
                 <MudSelectItem Value="@policy">

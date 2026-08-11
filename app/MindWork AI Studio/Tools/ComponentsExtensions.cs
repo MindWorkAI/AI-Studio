@@ -157,9 +157,9 @@ public static class ComponentsExtensions
         // We do this inside the Document Analysis Assistant component:
         Components.DOCUMENT_ANALYSIS_ASSISTANT => ConfidenceLevel.NONE,
 
-        // The minimum confidence for the Batch Processing Assistant is set per policy
-        // as well. We do this inside the Batch Processing Assistant component:
-        Components.BATCH_PROCESSING_ASSISTANT => ConfidenceLevel.NONE,
+        // A policy-specific minimum is merged with this component default inside
+        // the Batch Processing Assistant; the stricter level wins.
+        Components.BATCH_PROCESSING_ASSISTANT => settingsManager.ConfigurationData.BatchProcessing.PreselectOptions ? settingsManager.ConfigurationData.BatchProcessing.MinimumProviderConfidence : default,
 
         _ => default,
     };
@@ -192,6 +192,8 @@ public static class ComponentsExtensions
             // The provider is selected per policy instead. We do this inside the Document Analysis Assistant component.
             Components.DOCUMENT_ANALYSIS_ASSISTANT => Settings.Provider.NONE,
 
+            Components.BATCH_PROCESSING_ASSISTANT => settingsManager.ConfigurationData.BatchProcessing.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.BatchProcessing.PreselectedProvider) : null,
+
             Components.CHAT => settingsManager.ConfigurationData.Chat.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.Chat.PreselectedProvider) : null,
 
             Components.AGENT_TEXT_CONTENT_CLEANER => settingsManager.ConfigurationData.TextContentCleaner.PreselectAgentOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.TextContentCleaner.PreselectedAgentProvider) : null,
@@ -218,6 +220,7 @@ public static class ComponentsExtensions
             Components.ERI_ASSISTANT => settingsManager.ConfigurationData.ERI.PreselectOptions ? settingsManager.ConfigurationData.ERI.PreselectedProfile : string.Empty,
             Components.SLIDE_BUILDER_ASSISTANT => settingsManager.ConfigurationData.SlideBuilder.PreselectOptions ? settingsManager.ConfigurationData.SlideBuilder.PreselectedProfile : string.Empty,
             Components.VISUAL_BRIEFING_ASSISTANT => settingsManager.ConfigurationData.VisualBriefing.PreselectedProfile,
+            Components.BATCH_PROCESSING_ASSISTANT => settingsManager.ConfigurationData.BatchProcessing.PreselectOptions ? settingsManager.ConfigurationData.BatchProcessing.PreselectedProfile : string.Empty,
             Components.CHAT => settingsManager.ConfigurationData.Chat.PreselectOptions ? settingsManager.ConfigurationData.Chat.PreselectedProfile : string.Empty,
 
             // The Document Analysis Assistant does not have a preselected profile at the component level.

@@ -180,6 +180,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         this.ProviderSettings = this.SettingsManager.GetPreselectedProvider(this.Component);
         this.CurrentProfile = this.SettingsManager.GetPreselectedProfile(this.Component);
         this.CurrentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(this.Component);
+        await this.OnDefaultsAppliedAsync();
         this.assistantSessionKey = new(this.Component, this.AssistantSessionInstanceId);
         await this.AttachAssistantSessionIfAvailable();
         await this.ConsumeMediaOutcomeAsync();
@@ -311,6 +312,11 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     /// the user has stopped typing or selecting options.
     /// </remarks>
     protected virtual Task OnFormChange() => Task.CompletedTask;
+
+    /// <summary>
+    /// Allows assistants to finish asynchronous work after their configured defaults were applied.
+    /// </summary>
+    protected virtual Task OnDefaultsAppliedAsync() => Task.CompletedTask;
     
     /// <summary>
     /// Add an issue to the UI.
@@ -668,6 +674,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         
         this.ResetForm();
         this.ResetProviderAndProfileSelection();
+        await this.OnDefaultsAppliedAsync();
         
         this.InputIsValid = false;
         this.InputIssues = [];

@@ -1,17 +1,17 @@
 using AIStudio.Dialogs.Settings;
 using AIStudio.Provider;
+using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 
 using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Assistants.BatchProcessing;
 
-public partial class AssistantBatchProcessing : AssistantBaseCore<NoSettingsPanel>
+public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialogBatchProcessing>
 {
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
 
-    private const string DEFAULT_FILE_PATTERNS = "*.pdf;*.docx;*.pptx;*.xlsx;*.md;*.txt";
     private const string DEFAULT_OUTPUT_DIRECTORY_NAME = "ai-results";
     private const string DEFAULT_RESULTS_FILENAME = "batch-results.csv";
     private const string CSV_EXTENSION = ".csv";
@@ -40,7 +40,7 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<NoSettingsPane
 
     protected override bool ShowResult => false;
 
-    protected override bool AllowProfiles => false;
+    protected override bool AllowProfiles => true;
 
     protected override bool ShowSendTo => false;
 
@@ -51,31 +51,39 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<NoSettingsPane
         if (this.isProcessingBatch)
             return;
 
-        this.inputDirectory = string.Empty;
-        this.outputDirectory = string.Empty;
-        this.filePatterns = DEFAULT_FILE_PATTERNS;
-        this.includeSubdirectories = false;
-        this.promptSource = BatchProcessingPromptSource.FREE_PROMPT;
-        this.freePrompt = string.Empty;
+        this.ApplyFormDefaults();
         this.importedPrompt = string.Empty;
-        this.selectedPolicy = null;
-        this.outputMode = BatchProcessingOutputMode.MARKDOWN_FILES;
-        this.resultColumnHeader = string.Empty;
-        this.csvFileName = string.Empty;
+        this.promptFileLoadIssue = string.Empty;
         this.fileResults.Clear();
         this.usedResultFileNames.Clear();
+        this.hasReportedWriteFailure = false;
         this.numProcessedFiles = 0;
     }
 
-    protected override bool MightPreselectValues() => false;
+    protected override bool MightPreselectValues()
+    {
+        if (!this.SettingsManager.ConfigurationData.BatchProcessing.PreselectOptions)
+            return false;
+
+        this.ApplyFormDefaults();
+        return true;
+    }
+
+    protected override async Task OnDefaultsAppliedAsync()
+    {
+        await this.LoadConfiguredPromptFileAsync();
+        this.ApplyPolicyPreselection();
+    }
 
     private string inputDirectory = string.Empty;
     private string outputDirectory = string.Empty;
-    private string filePatterns = DEFAULT_FILE_PATTERNS;
+    private string filePatterns = DataBatchProcessing.DEFAULT_FILE_PATTERNS;
     private bool includeSubdirectories;
     private BatchProcessingPromptSource promptSource = BatchProcessingPromptSource.FREE_PROMPT;
     private string freePrompt = string.Empty;
     private string importedPrompt = string.Empty;
+    private string promptFilePath = string.Empty;
+    private string promptFileLoadIssue = string.Empty;
     private DataDocumentAnalysisPolicy? selectedPolicy;
     private BatchProcessingOutputMode outputMode = BatchProcessingOutputMode.MARKDOWN_FILES;
     private string resultColumnHeader = string.Empty;
@@ -92,11 +100,163 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<NoSettingsPane
     /// </summary>
     private string ResultColumnHeader => string.IsNullOrWhiteSpace(this.resultColumnHeader) ? T("Result") : this.resultColumnHeader.Trim();
 
+    /// <summary>
+    /// Updates the manually imported prompt and stops presenting an obsolete
+    /// configured path or load error once the user has selected another file.
+    /// </summary>
+    private string ImportedPrompt
+    {
+        get => this.importedPrompt;
+        set
+        {
+            this.importedPrompt = value;
+            this.promptFilePath = string.Empty;
+            this.promptFileLoadIssue = string.Empty;
+        }
+    }
+
+    private bool ConfiguredPolicyIsMissing
+    {
+        get
+        {
+            var settings = this.SettingsManager.ConfigurationData.BatchProcessing;
+            return settings.PreselectOptions
+                   && this.promptSource is BatchProcessingPromptSource.POLICY
+                   && !string.IsNullOrWhiteSpace(settings.PreselectedPolicyId)
+                   && this.selectedPolicy is null;
+        }
+    }
+
     private ConfidenceLevel GetMinimumConfidenceLevel()
     {
-        if (this.promptSource is BatchProcessingPromptSource.POLICY && this.selectedPolicy is not null)
-            return this.selectedPolicy.MinimumProviderConfidence;
+        var minimumLevel = this.SettingsManager.GetMinimumConfidenceLevel(this.Component);
+        if (this.promptSource is BatchProcessingPromptSource.POLICY
+            && this.selectedPolicy is not null
+            && this.selectedPolicy.MinimumProviderConfidence > minimumLevel)
+            minimumLevel = this.selectedPolicy.MinimumProviderConfidence;
 
-        return ConfidenceLevel.NONE;
+        return minimumLevel;
+    }
+
+    private void ApplyFormDefaults()
+    {
+        var settings = this.SettingsManager.ConfigurationData.BatchProcessing;
+        if (!settings.PreselectOptions)
+        {
+            this.inputDirectory = string.Empty;
+            this.outputDirectory = string.Empty;
+            this.filePatterns = DataBatchProcessing.DEFAULT_FILE_PATTERNS;
+            this.includeSubdirectories = false;
+            this.promptSource = BatchProcessingPromptSource.FREE_PROMPT;
+            this.freePrompt = string.Empty;
+            this.promptFilePath = string.Empty;
+            this.selectedPolicy = null;
+            this.outputMode = BatchProcessingOutputMode.MARKDOWN_FILES;
+            this.resultColumnHeader = string.Empty;
+            this.csvFileName = string.Empty;
+            return;
+        }
+
+        this.inputDirectory = settings.InputDirectory;
+        this.outputDirectory = settings.OutputDirectory;
+        this.filePatterns = settings.FilePatterns;
+        this.includeSubdirectories = settings.IncludeSubdirectories;
+        this.promptSource = settings.PromptSource;
+        this.freePrompt = settings.FreePrompt;
+        this.promptFilePath = settings.PromptFilePath;
+        this.selectedPolicy = this.SettingsManager.ConfigurationData.DocumentAnalysis.Policies
+            .FirstOrDefault(policy => policy.Id == settings.PreselectedPolicyId);
+        this.outputMode = settings.OutputMode;
+        this.resultColumnHeader = settings.ResultColumnHeader;
+        this.csvFileName = settings.CsvFileName;
+    }
+
+    private async Task LoadConfiguredPromptFileAsync()
+    {
+        this.promptFileLoadIssue = string.Empty;
+        if (this.promptSource is not BatchProcessingPromptSource.FILE_IMPORT || string.IsNullOrWhiteSpace(this.promptFilePath))
+            return;
+
+        this.importedPrompt = string.Empty;
+        if (!string.Equals(Path.GetExtension(this.promptFilePath), ".md", StringComparison.OrdinalIgnoreCase))
+        {
+            this.promptFileLoadIssue = T("The configured instructions file must be a Markdown file (*.md).");
+            return;
+        }
+
+        if (!File.Exists(this.promptFilePath))
+        {
+            this.promptFileLoadIssue = T("The configured instructions file no longer exists.");
+            return;
+        }
+
+        try
+        {
+            this.importedPrompt = await File.ReadAllTextAsync(this.promptFilePath);
+            if (string.IsNullOrWhiteSpace(this.importedPrompt))
+                this.promptFileLoadIssue = T("The configured instructions file is empty.");
+        }
+        catch (Exception exception)
+        {
+            this.Logger.LogError(exception, "Could not load the configured batch instructions file '{PromptFilePath}'.", this.promptFilePath);
+            this.promptFileLoadIssue = T("The configured instructions file could not be read.");
+        }
+    }
+
+    private void PromptSourceChanged(BatchProcessingPromptSource source)
+    {
+        this.promptSource = source;
+        if (source is BatchProcessingPromptSource.POLICY)
+            this.ApplyPolicyPreselection();
+        else
+            this.ResetProviderAndProfileSelection();
+    }
+
+    private void SelectedPolicyChanged(DataDocumentAnalysisPolicy? policy)
+    {
+        this.selectedPolicy = policy;
+        this.ApplyPolicyPreselection();
+    }
+
+    private void ApplyPolicyPreselection()
+    {
+        if (this.promptSource is not BatchProcessingPromptSource.POLICY || this.selectedPolicy is null)
+            return;
+
+        var minimumLevel = this.GetMinimumConfidenceLevel();
+        var policyProvider = this.SettingsManager.GetPreselectedProvider(this.Component, this.selectedPolicy.PreselectedProvider);
+        if (policyProvider != Settings.Provider.NONE
+            && policyProvider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level >= minimumLevel)
+            this.ProviderSettings = policyProvider;
+        else
+        {
+            var fallbackProvider = this.SettingsManager.GetPreselectedProvider(this.Component, usePreselectionBeforeCurrentProvider: true);
+            this.ProviderSettings = fallbackProvider != Settings.Provider.NONE
+                                    && fallbackProvider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level >= minimumLevel
+                ? fallbackProvider
+                : Settings.Provider.NONE;
+        }
+
+        this.CurrentProfile = this.ResolvePolicyProfile();
+    }
+
+    private Profile ResolvePolicyProfile()
+    {
+        if (this.selectedPolicy is null)
+            return this.SettingsManager.GetPreselectedProfile(this.Component);
+
+        var policyProfile = ProfilePreselection.FromStoredValue(this.selectedPolicy.PreselectedProfile);
+        if (policyProfile.DoNotPreselectProfile)
+            return Profile.NO_PROFILE;
+
+        if (policyProfile.UseSpecificProfile)
+        {
+            var profile = this.SettingsManager.ConfigurationData.Profiles
+                .FirstOrDefault(candidate => candidate.Id == policyProfile.SpecificProfileId);
+            if (profile is not null)
+                return profile;
+        }
+
+        return this.SettingsManager.GetPreselectedProfile(this.Component);
     }
 }
