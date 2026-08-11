@@ -12,6 +12,10 @@ namespace AIStudio.Settings.DataModel;
 public sealed class DataBatchProcessing(Expression<Func<Data, DataBatchProcessing>>? configSelection = null)
 {
     public const string DEFAULT_FILE_PATTERNS = "*.pdf;*.docx;*.pptx;*.xlsx;*.md;*.txt;*.mp3;*.wav;*.wave;*.aac;*.flac;*.ogg;*.opus;*.m4a;*.m4b;*.wma;*.alac;*.aif;*.aiff;*.caf;*.mp4;*.m4v;*.avi;*.mkv;*.mov;*.wmv;*.flv;*.webm";
+    public const int MIN_DELAY_SECONDS = 6;
+    public const int MAX_DELAY_SECONDS = 300;
+    public const int DEFAULT_MIN_DELAY_SECONDS = 6;
+    public const int DEFAULT_MAX_DELAY_SECONDS = 10;
 
     /// <summary>
     /// Initializes an unmanaged Batch Processing settings instance.
@@ -47,6 +51,10 @@ public sealed class DataBatchProcessing(Expression<Func<Data, DataBatchProcessin
     public BatchProcessingCsvSeparator CsvSeparator { get; set; } = ManagedConfiguration.Register(configSelection, value => value.CsvSeparator, BatchProcessingCsvSeparator.SEMICOLON);
 
     public string CustomCsvSeparator { get; set; } = ManagedConfiguration.Register(configSelection, value => value.CustomCsvSeparator, string.Empty);
+
+    public int MinimumDelaySeconds { get; set; } = ManagedConfiguration.Register(configSelection, value => value.MinimumDelaySeconds, DEFAULT_MIN_DELAY_SECONDS);
+
+    public int MaximumDelaySeconds { get; set; } = DEFAULT_MAX_DELAY_SECONDS;
 
     public ConfidenceLevel MinimumProviderConfidence { get; set; } = ManagedConfiguration.Register(configSelection, value => value.MinimumProviderConfidence, ConfidenceLevel.NONE);
 

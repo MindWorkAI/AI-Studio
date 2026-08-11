@@ -1,11 +1,27 @@
 using AIStudio.Assistants.BatchProcessing;
 using AIStudio.Settings;
+using AIStudio.Settings.DataModel;
 
 namespace AIStudio.Dialogs.Settings;
 
 public partial class SettingsDialogBatchProcessing : SettingsDialogBase
 {
     private bool DefaultsDisabled() => !this.SettingsManager.ConfigurationData.BatchProcessing.PreselectOptions;
+
+    private bool MinimumDelayIsManaged => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.MinimumDelaySeconds, out var meta)
+                                                  && meta.ManagedMode is not null;
+
+    private int ManagedMinimumDelaySeconds => Math.Clamp(
+        this.SettingsManager.ConfigurationData.BatchProcessing.MinimumDelaySeconds,
+        DataBatchProcessing.MIN_DELAY_SECONDS,
+        DataBatchProcessing.MAX_DELAY_SECONDS);
+
+    private int EffectiveMinimumDelaySeconds => this.MinimumDelayIsManaged
+        ? this.ManagedMinimumDelaySeconds
+        : Math.Clamp(
+            this.SettingsManager.ConfigurationData.BatchProcessing.MinimumDelaySeconds,
+            DataBatchProcessing.MIN_DELAY_SECONDS,
+            DataBatchProcessing.MAX_DELAY_SECONDS);
 
     private bool FreePromptImportDisabled() => this.DefaultsDisabled()
                                                || ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.FreePrompt, out var meta) && meta.IsLocked;

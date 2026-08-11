@@ -20,11 +20,14 @@ public partial class AssistantBatchProcessing
     private static readonly AssistantSessionStateKey<string> CSV_FILE_NAME_STATE_KEY = new(nameof(csvFileName));
     private static readonly AssistantSessionStateKey<BatchProcessingCsvSeparator> CSV_SEPARATOR_STATE_KEY = new(nameof(csvSeparator));
     private static readonly AssistantSessionStateKey<string> CUSTOM_CSV_SEPARATOR_STATE_KEY = new(nameof(customCsvSeparator));
+    private static readonly AssistantSessionStateKey<int> MINIMUM_DELAY_SECONDS_STATE_KEY = new(nameof(minimumDelaySeconds));
+    private static readonly AssistantSessionStateKey<int> MAXIMUM_DELAY_SECONDS_STATE_KEY = new(nameof(maximumDelaySeconds));
     private static readonly AssistantSessionStateKey<List<BatchProcessingFileResult>> FILE_RESULTS_STATE_KEY = new(nameof(fileResults));
     private static readonly AssistantSessionStateKey<HashSet<string>> USED_RESULT_FILE_NAMES_STATE_KEY = new(nameof(usedResultFileNames));
     private static readonly AssistantSessionStateKey<bool> IS_PROCESSING_BATCH_STATE_KEY = new(nameof(isProcessingBatch));
     private static readonly AssistantSessionStateKey<bool> HAS_REPORTED_WRITE_FAILURE_STATE_KEY = new(nameof(hasReportedWriteFailure));
     private static readonly AssistantSessionStateKey<int> NUM_PROCESSED_FILES_STATE_KEY = new(nameof(numProcessedFiles));
+    private static readonly AssistantSessionStateKey<int> PAUSE_BEFORE_NEXT_FILE_SECONDS_STATE_KEY = new(nameof(pauseBeforeNextFileSeconds));
 
     /// <inheritdoc />
     protected override void CaptureCustomAssistantSessionState(AssistantSessionStateWriter state)
@@ -44,11 +47,14 @@ public partial class AssistantBatchProcessing
         state.Set(CSV_FILE_NAME_STATE_KEY, this.csvFileName);
         state.Set(CSV_SEPARATOR_STATE_KEY, this.csvSeparator);
         state.Set(CUSTOM_CSV_SEPARATOR_STATE_KEY, this.customCsvSeparator);
+        state.Set(MINIMUM_DELAY_SECONDS_STATE_KEY, this.minimumDelaySeconds);
+        state.Set(MAXIMUM_DELAY_SECONDS_STATE_KEY, this.maximumDelaySeconds);
         state.SetList(FILE_RESULTS_STATE_KEY, this.fileResults.Select(CloneFileResult));
         state.SetHashSet(USED_RESULT_FILE_NAMES_STATE_KEY, this.usedResultFileNames);
         state.Set(IS_PROCESSING_BATCH_STATE_KEY, this.isProcessingBatch);
         state.Set(HAS_REPORTED_WRITE_FAILURE_STATE_KEY, this.hasReportedWriteFailure);
         state.Set(NUM_PROCESSED_FILES_STATE_KEY, this.numProcessedFiles);
+        state.Set(PAUSE_BEFORE_NEXT_FILE_SECONDS_STATE_KEY, this.pauseBeforeNextFileSeconds);
     }
 
     /// <inheritdoc />
@@ -69,6 +75,8 @@ public partial class AssistantBatchProcessing
         state.Restore(CSV_FILE_NAME_STATE_KEY, value => this.csvFileName = value);
         state.Restore(CSV_SEPARATOR_STATE_KEY, value => this.csvSeparator = value);
         state.Restore(CUSTOM_CSV_SEPARATOR_STATE_KEY, value => this.customCsvSeparator = value);
+        state.Restore(MINIMUM_DELAY_SECONDS_STATE_KEY, value => this.minimumDelaySeconds = value);
+        state.Restore(MAXIMUM_DELAY_SECONDS_STATE_KEY, value => this.maximumDelaySeconds = value);
         state.Restore(FILE_RESULTS_STATE_KEY, values =>
         {
             this.fileResults.Clear();
@@ -78,6 +86,7 @@ public partial class AssistantBatchProcessing
         state.Restore(IS_PROCESSING_BATCH_STATE_KEY, value => this.isProcessingBatch = value);
         state.Restore(HAS_REPORTED_WRITE_FAILURE_STATE_KEY, value => this.hasReportedWriteFailure = value);
         state.Restore(NUM_PROCESSED_FILES_STATE_KEY, value => this.numProcessedFiles = value);
+        state.Restore(PAUSE_BEFORE_NEXT_FILE_SECONDS_STATE_KEY, value => this.pauseBeforeNextFileSeconds = value);
     }
 
     private static BatchProcessingFileResult CloneFileResult(BatchProcessingFileResult source)

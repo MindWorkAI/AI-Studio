@@ -55,6 +55,17 @@
             }
             <ConfigurationDirectory OptionDescription="@T("Default output folder")" Disabled="@this.DefaultsDisabled" DirectoryDialogTitle="@T("Select the default output folder")" Text="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.OutputDirectory)" TextUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.OutputDirectory = value)" OptionHelp="@T("Leave empty to use the ai-results subfolder of the input folder.")" IsLocked="() => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.OutputDirectory, out var meta) && meta.IsLocked"/>
 
+            <MudText Typo="Typo.h6" Class="mb-3 mt-6">@T("Processing pace")</MudText>
+            @if (this.MinimumDelayIsManaged)
+            {
+                <MudAlert Severity="Severity.Info" Dense="true" Class="mb-6">@(string.Format(T("Your organization requires a pause of at least {0} seconds between files. Users can configure only the upper limit."), this.ManagedMinimumDelaySeconds))</MudAlert>
+            }
+            else
+            {
+                <ConfigurationSlider T="int" OptionDescription="@T("Default minimum pause between files")" Min="@DataBatchProcessing.MIN_DELAY_SECONDS" Max="@DataBatchProcessing.MAX_DELAY_SECONDS" Step="1" Unit="@T("seconds")" Disabled="@this.DefaultsDisabled" Value="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.MinimumDelaySeconds)" ValueUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.MinimumDelaySeconds = value)" OptionHelp="@T("The lower end of the random pause interval. AI Studio never allows less than 6 seconds.")"/>
+            }
+            <ConfigurationSlider T="int" OptionDescription="@T("Default maximum pause between files")" Min="@this.EffectiveMinimumDelaySeconds" Max="@DataBatchProcessing.MAX_DELAY_SECONDS" Step="1" Unit="@T("seconds")" Disabled="@this.DefaultsDisabled" Value="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.MaximumDelaySeconds)" ValueUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.MaximumDelaySeconds = value)" OptionHelp="@T("The upper end of the random pause interval. The app-wide maximum is 300 seconds (5 minutes).")"/>
+
             <MudText Typo="Typo.h6" Class="mb-3 mt-6">@T("AI selection")</MudText>
             <ConfigurationMinConfidenceSelection Disabled="@this.DefaultsDisabled" RestrictToGlobalMinimumConfidence="true" SelectedValue="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.MinimumProviderConfidence)" SelectionUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.MinimumProviderConfidence = value)" IsLocked="() => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.MinimumProviderConfidence, out var meta) && meta.IsLocked"/>
             <ConfigurationProviderSelection Component="Components.BATCH_PROCESSING_ASSISTANT" Data="@this.AvailableLLMProviders" Disabled="@this.DefaultsDisabled" SelectedValue="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.PreselectedProvider)" SelectionUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.PreselectedProvider = value)" IsLocked="() => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.PreselectedProvider, out var meta) && meta.IsLocked"/>

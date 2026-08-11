@@ -41,6 +41,7 @@ public partial class AssistantBatchProcessing
         this.usedResultFileNames.Clear();
         this.hasReportedWriteFailure = false;
         this.numProcessedFiles = 0;
+        this.pauseBeforeNextFileSeconds = 0;
         foreach (var file in files)
         {
             var relativePath = Path.GetRelativePath(this.inputDirectory, file);
@@ -81,13 +82,16 @@ public partial class AssistantBatchProcessing
     {
         this.isProcessingBatch = true;
         var stopwatch = Stopwatch.StartNew();
+        var delayRange = this.GetEffectiveDelayRange();
         this.Logger.LogInformation(
-            "Batch processing started. InputDirectory='{InputDirectory}', OutputDirectory='{OutputDirectory}', TotalFiles={TotalFiles}, RestoredFiles={RestoredFiles}, Model='{Model}'.",
+            "Batch processing started. InputDirectory='{InputDirectory}', OutputDirectory='{OutputDirectory}', TotalFiles={TotalFiles}, RestoredFiles={RestoredFiles}, Model='{Model}', MinimumDelaySeconds={MinimumDelaySeconds}, MaximumDelaySeconds={MaximumDelaySeconds}.",
             this.inputDirectory,
             resolvedOutputDirectory,
             this.fileResults.Count,
             this.fileResults.Count(fileResult => fileResult.Status is BatchProcessingFileStatus.DONE),
-            this.ProviderSettings.Model);
+            this.ProviderSettings.Model,
+            delayRange.Minimum,
+            delayRange.Maximum);
 
         // We use the cancellation token of the assistant base class, which
         // creates it before it calls us and disposes it after we returned.
@@ -97,8 +101,10 @@ public partial class AssistantBatchProcessing
 
         try
         {
-            foreach (var fileResult in this.fileResults)
+            for (var index = 0; index < this.fileResults.Count; index++)
             {
+                var fileResult = this.fileResults[index];
+
                 // Restored from the log of a previous run:
                 if (fileResult.Status is BatchProcessingFileStatus.DONE)
                     continue;
@@ -120,6 +126,10 @@ public partial class AssistantBatchProcessing
                 await this.WriteAggregatedResultsAsync(resolvedOutputDirectory);
                 await this.CheckpointAssistantSession();
                 await this.RefreshAssistantUIAsync();
+
+                var anotherFileIsWaiting = this.fileResults.Skip(index + 1).Any(nextFile => nextFile.Status is not BatchProcessingFileStatus.DONE);
+                if (anotherFileIsWaiting)
+                    await this.WaitBeforeNextFileAsync(delayRange.Minimum, delayRange.Maximum, token);
             }
         }
         finally
