@@ -27,6 +27,9 @@ public partial class AssistantBatchProcessing
         foreach (var patternEntry in individualPatterns)
         {
             var pattern = patternEntry.Trim();
+            if (pattern.Contains("**", StringComparison.Ordinal))
+                return T("Please use only single asterisks as wildcards, e.g., *.pdf or report-*.docx.");
+
             if (pattern is "." or ".."
                 || pattern.EndsWith("..", StringComparison.Ordinal)
                 || pattern.IndexOfAny([Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar, '/', '\\']) >= 0)
