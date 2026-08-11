@@ -36,7 +36,7 @@ public partial class Plugins : MSGComponentBase
     private RustService RustService { get; init; } = null!;
 
     [Inject]
-    private AssistantPluginInstallService AssistantPluginInstallService { get; init; } = null!;
+    private PluginInstallService PluginInstallService { get; init; } = null!;
 
     private static readonly ILogger LOG = Program.LOGGER_FACTORY.CreateLogger(nameof(Plugins));
     
@@ -236,11 +236,16 @@ public partial class Plugins : MSGComponentBase
     }
 
     /// <summary>
-    /// Sharing is limited to assistant plugins because the import accepts only those. Otherwise,
-    /// users would create archives nobody can install. Widen this once the import supports more
-    /// plugin types.
+    /// The plugin types users may share. This list has to match what the import accepts, otherwise
+    /// users would create archives nobody can install.
     /// </summary>
-    private static bool CanSharePlugin(IAvailablePlugin plugin) => plugin is { IsInternal: false, IsManagedByConfigServer: false, Type: PluginType.ASSISTANT } && !string.IsNullOrWhiteSpace(plugin.LocalPath);
+    private static readonly PluginType[] SHAREABLE_PLUGIN_TYPES = [PluginType.ASSISTANT, PluginType.CONFIGURATION, PluginType.LANGUAGE];
+
+    /// <summary>
+    /// Checks whether a plugin may be shared or exported as an archive. Plugins shipped with
+    /// AI Studio and plugins deployed by an organization stay with their owner.
+    /// </summary>
+    private static bool CanSharePlugin(IAvailablePlugin plugin) => plugin is { IsInternal: false, IsManagedByConfigServer: false } && SHAREABLE_PLUGIN_TYPES.Contains(plugin.Type) && !string.IsNullOrWhiteSpace(plugin.LocalPath);
 
     /// <summary>
     /// Highlights the plugin table while the user drags a file over the page, so it is visible
@@ -354,7 +359,7 @@ public partial class Plugins : MSGComponentBase
         if (!this.AllowPluginImport)
             return;
 
-        var selection = await this.RustService.SelectFile(this.T("Import assistant plugin"), [FileTypes.PLUGIN_ARCHIVE]);
+        var selection = await this.RustService.SelectFile(this.T("Import plugin"), [FileTypes.PLUGIN_ARCHIVE]);
         if (selection.UserCancelled)
             return;
 
@@ -379,7 +384,7 @@ public partial class Plugins : MSGComponentBase
 
         try
         {
-            var result = await this.AssistantPluginInstallService.InstallArchiveAsync(archivePath, this.ConfirmPluginImportAsync, CancellationToken.None);
+            var result = await this.PluginInstallService.InstallArchiveAsync(archivePath, this.ConfirmPluginImportAsync, CancellationToken.None);
             if (result.Cancelled)
                 return;
 
@@ -394,8 +399,8 @@ public partial class Plugins : MSGComponentBase
             }
 
             var message = result.ReplacedExisting
-                ? this.T("Assistant updated.")
-                : this.T("Assistant installed.");
+                ? this.T("Plugin updated.")
+                : this.T("Plugin installed.");
 
             // We do not announce the reload ourselves: a successful installation ran LoadAll, which
             // already sent PLUGINS_RELOADED. The import changes no settings either, so there is

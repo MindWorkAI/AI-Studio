@@ -7,7 +7,7 @@
                        Color="Color.Error"
                        Variant="Variant.Text"
                        Size="Size.Medium"
-                       Disabled="@this.IsBlockedByActiveWork"
-                       OnClick="@this.DeleteAssistantPluginAsync" />
+                       Disabled="@(this.isDeleting || this.IsBlockedByActiveWork)"
+                       OnClick="@this.DeletePluginAsync" />
     </MudTooltip>
 }

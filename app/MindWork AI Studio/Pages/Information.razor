@@ -158,6 +158,31 @@
                                 break;
                         }
 
+                        @*
+                            A staged test configuration speaks for the organization without anybody
+                            having deployed it. We report it without the details having to be expanded:
+                        *@
+                        @if (this.testConfigPlugins.Count > 0)
+                        {
+                            <MudText Typo="Typo.body1" Class="mt-2">
+                                @T("A test configuration is active. It acts like a configuration of your organization and may, for example, approve assistant plugins. AI Studio removes it the next time you start the app.")
+                            </MudText>
+                            @foreach (var testConfigPlugin in this.testConfigPlugins)
+                            {
+                                <ConfigPluginInfoCard HeaderIcon="@Icons.Material.Filled.Science"
+                                                      HeaderText="@testConfigPlugin.Name"
+                                                      Items="@this.BuildTestConfigurationItems(testConfigPlugin)"
+                                                      ShowWarning="@true"
+                                                      WarningText="@T("Test configuration: nobody deployed this configuration. It is valid until you restart AI Studio.")"/>
+                            }
+                        }
+                        else if (PluginFactory.RemovedTestConfigurationsAtStartup > 0)
+                        {
+                            <MudText Typo="Typo.body1" Class="mt-2">
+                                @string.Format(T("AI Studio removed {0} test configuration(s) while starting. A test configuration is valid for one session: place it again while AI Studio is running."), PluginFactory.RemovedTestConfigurationsAtStartup)
+                            </MudText>
+                        }
+
                         @if (this.HasEnterpriseConfigurationDetails)
                         {
                             <MudButton StartIcon="@(this.showEnterpriseConfigDetails ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)"
@@ -315,6 +340,8 @@
                     <ThirdPartyComponent Name="windows-rs" Developer="Microsoft, Kenny Kerr, Ryan Levick, Rafael Rivera, sivadeilra, Marijn Suijten & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/microsoft/windows-rs/blob/master/license-mit" RepositoryUrl="https://github.com/microsoft/windows-rs" UseCase="@T("The windows-rs project provides access to Windows APIs from Rust. We use several libraries from this project: windows-registry is used to read the desired configuration in Windows enterprise environments. The windows and windows-collections libraries are used to open the native Windows share dialog, e.g., when you share a plugin with others.")"/>
                     <ThirdPartyComponent Name="objc2" Developer="Steven Sheldon, Mads Marquart, silvanshade, Dzmitry Malyshau, Felix Nemo Kaaman, adamnemecek, Samuel Sleight, Paul Mabileau & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/madsmtm/objc2/blob/main/LICENSE-MIT.txt" RepositoryUrl="https://github.com/madsmtm/objc2" UseCase="@T("The objc2 project provides access to Apple's Objective-C frameworks from Rust. On macOS, we use the libraries objc2, objc2-app-kit, and objc2-foundation to open the native macOS share sheet, e.g., when you share a plugin with others.")"/>
                     <ThirdPartyComponent Name="file-format" Developer="Mickaël Malécot & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/mmalecot/file-format/blob/main/LICENSE-MIT" RepositoryUrl="https://github.com/mmalecot/file-format" UseCase="@T("This library identifies files by their content. It is used for document streaming and as the first safety and media classification step before local audio processing.")"/>
+                    <ThirdPartyComponent Name="chardetng" Developer="Henri Sivonen & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/hsivonen/chardetng/blob/main/LICENSE-MIT" RepositoryUrl="https://github.com/hsivonen/chardetng" UseCase="@T("Text files are not always saved in the same encoding: files written on Windows often use a legacy one. chardetng recognizes which encoding a text file uses, so AI Studio can read it instead of rejecting it.")"/>
+                    <ThirdPartyComponent Name="encoding_rs" Developer="Henri Sivonen, M. Larsen, kornelski, Manish Goregaokar & Open Source Community" LicenseName="MIT & BSD-3-Clause" LicenseUrl="https://github.com/hsivonen/encoding_rs/blob/main/COPYRIGHT" RepositoryUrl="https://github.com/hsivonen/encoding_rs" UseCase="@T("Once the encoding of a text file is known, encoding_rs turns its content into the text AI Studio works with. Together with chardetng, this lets AI Studio read text, CSV, and similar files no matter which encoding they were saved in.")"/>
                     <ThirdPartyComponent Name="Symphonia" Developer="Philip Deljanov & Open Source Community" LicenseName="MPL-2.0" LicenseUrl="https://github.com/pdeljanov/Symphonia/blob/v0.6.0/LICENSE" RepositoryUrl="https://github.com/pdeljanov/Symphonia" UseCase="@T("Symphonia is used for media container demuxing and audio decoding. The exact MPL-covered source is available from the repository linked and is identified in the offline notices bundled with AI Studio.")"/>
                     <ThirdPartyComponent Name="Ropus" Developer="0x4D44, Xiph.Org, Skype Limited, Octasic, Jean-Marc Valin, Timothy B. Terriberry, CSIRO, Gregory Maxwell, Mark Borgerding, Erik de Castro Lopo, Mozilla, Amazon & Open Source Community" LicenseName="BSD-3-Clause" LicenseUrl="https://github.com/0x4D44/ropus/blob/main/LICENSE" RepositoryUrl="https://github.com/0x4d44/ropus" UseCase="@T("Ropus provides the Opus encoder and decoder used by the media pipeline.")"/>
                     <ThirdPartyComponent Name="Rubato" Developer="Henrik Enquist & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/HEnquist/rubato/blob/master/LICENSE-MIT" RepositoryUrl="https://github.com/HEnquist/rubato" UseCase="@T("We use Rubato to resample the decoded audio to 48 kHz before the Opus encoding.")"/>

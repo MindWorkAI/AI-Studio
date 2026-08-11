@@ -238,6 +238,21 @@ CONFIG["SETTINGS"] = {}
 -- DataAssistantPluginAudit.EnterpriseApprovedPlugins.
 -- ------
 
+-- ------
+-- What happens to a setting when your configuration is removed
+-- ------
+--
+-- AI Studio remembers the value a setting had before a configuration took it over.
+-- Once no configuration manages that setting anymore -- because your IT department
+-- stopped deploying this configuration, because the user deleted it, or because a test
+-- configuration ended -- the user gets that value back. When there is nothing to
+-- restore, e.g. for a setting the user had never changed, AI Studio falls back to its
+-- own default value.
+--
+-- One case differs: when you allow users to override a setting and somebody makes use
+-- of that, their choice outlives your configuration and stays as it is.
+-- ------
+
 -- Configure the update check interval:
 -- Allowed values are: NO_CHECK, DISABLE_UPDATES, ONCE_STARTUP, HOURLY, DAILY, WEEKLY
 -- NO_CHECK disables automatic checks, but users can still check and install updates manually.
@@ -277,6 +292,13 @@ CONFIG["SETTINGS"] = {}
 -- Configure the user permission to import plugin archives from disk.
 -- When set to false, the import button on the plugins page stays visible but is disabled.
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToImportPlugins"] = false
+
+-- Configure the user permission to import configuration plugin archives from disk.
+-- This is a second gate on top of DataApp.AllowUserToImportPlugins: both must allow the
+-- import. Configuration plugins get their own switch because they can do far more than an
+-- assistant: they define LLM providers and data sources, and they lock settings. You may
+-- therefore let users import assistants while keeping configurations to your IT department.
+-- CONFIG["SETTINGS"]["DataApp.AllowUserToImportConfigurationPlugins"] = false
 
 -- Configure the user permission to share or export plugins as archives.
 -- When set to false, the share button on the plugins page stays visible but is disabled.
@@ -460,6 +482,12 @@ CONFIG["SETTINGS"] = {}
 -- no user-run security audit is required.
 -- You can generate the exact hash with the build-script command:
 --   dotnet run --project app/Build -- assistant-plugin-hash "<plugin-dir>" --lua-snippet
+--
+-- Only works in configurations your configuration server deploys. An approval marks an
+-- assistant plugin as safe without any audit, and AI Studio then tells users that their
+-- organization approved it. A configuration plugin that a user placed locally therefore
+-- cannot approve anything: AI Studio ignores its approvals and writes a warning to the
+-- log. This is decided by where the plugin is stored, not by DEPLOYED_USING_CONFIG_SERVER.
 --
 -- Adds up, does not replace: approvals of all your configurations are combined, so a
 -- department configuration can approve additional assistant plugins without repeating

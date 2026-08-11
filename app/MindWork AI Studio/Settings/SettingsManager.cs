@@ -23,7 +23,7 @@ public sealed class SettingsManager
     
     private readonly record struct CurrentSettingsReadResult(Data? SettingsData, SettingsWriteBlockReason FailureReason);
     
-    private static readonly JsonSerializerOptions JSON_OPTIONS = new()
+    internal static readonly JsonSerializerOptions JSON_OPTIONS = new()
     {
         WriteIndented = true,
         Converters = { new TolerantEnumConverter() },

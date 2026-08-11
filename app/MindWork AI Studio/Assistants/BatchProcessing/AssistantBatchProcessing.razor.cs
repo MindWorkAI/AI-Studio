@@ -8,6 +8,7 @@ using AIStudio.Dialogs.Settings;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools;
 
 using Microsoft.AspNetCore.Components;
 
@@ -596,10 +597,10 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<NoSettingsPane
     /// </remarks>
     private async Task ProcessOneFileAsync(BatchProcessingFileResult fileResult, string resolvedOutputDirectory, CancellationToken token)
     {
-        string fileContent;
+        FileExtractionResult extraction;
         try
         {
-            fileContent = await this.RustService.ReadArbitraryFileData(fileResult.FilePath, int.MaxValue);
+            extraction = await this.RustService.ReadArbitraryFileData(fileResult.FilePath, int.MaxValue);
         }
         catch (Exception e)
         {
@@ -607,6 +608,26 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<NoSettingsPane
             return;
         }
 
+        if (!extraction.HasUsableContent)
+        {
+            this.Logger.LogError("Reading the batch file '{FilePath}' failed: code={ErrorCode}, message='{ErrorMessage}'.", fileResult.FilePath, extraction.ErrorCode, extraction.ErrorMessage);
+            this.FinishFileResult(fileResult, BatchProcessingFileStatus.FAILED, extraction.ToUserMessage(fileResult.FileName));
+            return;
+        }
+
+        if (extraction.Outcome is FileExtractionOutcome.PARTIAL)
+        {
+            this.Logger.LogWarning("Parts of the batch file '{FilePath}' could not be read: pages={FailedPages}.", fileResult.FilePath, string.Join(", ", extraction.FailedPages));
+            await this.MessageBus.SendWarning(new(Icons.Material.Filled.Description, extraction.ToPartialUserMessage(fileResult.FileName)));
+        }
+
+        if (extraction.HasExtensionMismatch)
+        {
+            this.Logger.LogWarning("The batch file '{FilePath}' is actually a '{DetectedFormat}'.", fileResult.FilePath, extraction.DetectedFormat);
+            await this.MessageBus.SendWarning(new(Icons.Material.Filled.RuleFolder, extraction.ToExtensionMismatchUserMessage(fileResult.FileName)));
+        }
+
+        var fileContent = extraction.Content;
         if (string.IsNullOrWhiteSpace(fileContent))
         {
             this.FinishFileResult(fileResult, BatchProcessingFileStatus.FAILED, T("Was not able to extract any text from this file."));

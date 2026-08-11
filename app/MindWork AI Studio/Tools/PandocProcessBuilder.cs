@@ -216,8 +216,12 @@ public sealed class PandocProcessBuilder
                 }
                 catch (Exception ex)
                 {
-                    if (shouldLog)
-                        LOGGER.LogWarning(ex, "Error while searching for a local Pandoc installation in: '{LocalInstallationRootDirectory}'.", localInstallationRootDirectory);
+                    //
+                    // Always logged, in contrast to the lines above: those describe a stable setup,
+                    // while this one is a transient fault, e.g. an unreachable data directory on a
+                    // network drive. Suppressing repeats would hide it after the first call.
+                    //
+                    LOGGER.LogWarning(ex, "Error while searching for a local Pandoc installation in: '{LocalInstallationRootDirectory}'.", localInstallationRootDirectory);
                 }
             }
 

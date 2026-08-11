@@ -49,6 +49,17 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
     /// refine it, e.g. per department.
     /// </remarks>
     public int Priority { get; } = ReadPriority(state);
+
+    /// <summary>
+    /// How many settings this configuration plugin declares.
+    /// </summary>
+    /// <remarks>
+    /// This counts the entries of the Lua SETTINGS table, without the <c>.AllowUserOverride</c>
+    /// companions. We need it for the import preview: a dry run does not lock anything, so the
+    /// number of settings the plugin would take over cannot be read from the managed configuration
+    /// at that point.
+    /// </remarks>
+    public int DeclaredSettingsCount { get; private set; }
     
     public async Task InitializeAsync(bool dryRun)
     {
@@ -149,6 +160,26 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
     }
 
     /// <summary>
+    /// Counts the settings a configuration plugin declares, ignoring the <c>.AllowUserOverride</c>
+    /// companion keys: those refine a setting instead of adding one.
+    /// </summary>
+    private static int CountDeclaredSettings(LuaTable settingsTable)
+    {
+        const string USER_OVERRIDE_SUFFIX = ".AllowUserOverride";
+
+        var count = 0;
+        var previousKey = LuaValue.Nil;
+        while (settingsTable.TryGetNext(previousKey, out var pair))
+        {
+            previousKey = pair.Key;
+            if (pair.Key.TryRead<string>(out var settingName) && !settingName.EndsWith(USER_OVERRIDE_SUFFIX, StringComparison.Ordinal))
+                count++;
+        }
+
+        return count;
+    }
+
+    /// <summary>
     /// Tries to initialize the UI text content of the plugin.
     /// </summary>
     /// <param name="dryRun">When true, the method will not apply any changes but only check if the configuration can be read.</param>
@@ -173,6 +204,8 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
             message = TB("The SETTINGS table does not exist or is not a valid table.");
             return false;
         }
+
+        this.DeclaredSettingsCount = CountDeclaredSettings(settingsTable);
         
         // Config: check for updates, and if so, how often?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.UpdateInterval, this.Id, settingsTable, dryRun);
@@ -200,6 +233,9 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
 
         // Config: allow the user to import plugin archives?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToImportPlugins, this.Id, settingsTable, dryRun);
+
+        // Config: allow the user to import configuration plugin archives?
+        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToImportConfigurationPlugins, this.Id, settingsTable, dryRun);
 
         // Config: allow the user to share or export plugins?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.AllowUserToSharePlugins, this.Id, settingsTable, dryRun);
@@ -354,6 +390,28 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
 
         if (dryRun)
             return;
+
+        //
+        // Only a configuration which speaks for an organization may approve assistant plugins: one
+        // deployed by a configuration server, or one staged in the test directory. An approval marks
+        // a plugin as safe without any security audit, and the user interface states that the
+        // organization approved it. No local configuration plugin may make that claim: it would
+        // disable the security audit for arbitrary assistant plugins while telling the user that
+        // their organization vouched for them.
+        //
+        // We decide by the plugin path. The self-declared DEPLOYED_USING_CONFIG_SERVER field would
+        // not do, because any plugin can set it to true.
+        //
+        if (!PluginFactory.IsOrganizationConfigurationPath(this.PluginPath))
+        {
+            if (successful)
+                LOG.LogWarning("The configuration plugin '{ConfigPluginId}' at '{PluginPath}' declares enterprise approvals for assistant plugins, but your organization's IT did not deploy it. Ignoring these approvals: only configuration plugins from a configuration server or from the test directory may approve assistant plugins.", this.Id, this.PluginPath);
+
+            return;
+        }
+
+        if (PluginFactory.IsEnterpriseTestConfigurationPath(this.PluginPath))
+            LOG.LogWarning("The test configuration plugin '{ConfigPluginId}' at '{PluginPath}' approves assistant plugins. These approvals are valid for this session only: AI Studio empties the test directory on every start.", this.Id, this.PluginPath);
 
         switch (successful)
         {
