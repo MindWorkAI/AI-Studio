@@ -107,11 +107,7 @@ public partial class AssistantBatchProcessing
                 // remaining files keep their QUEUED state on purpose, so
                 // that the UI shows which files were not processed:
                 if (token.IsCancellationRequested)
-                {
-                    fileResult.Status = BatchProcessingFileStatus.CANCELED;
-                    fileResult.Message = T("The batch run was canceled.");
-                    continue;
-                }
+                    break;
 
                 fileResult.Status = BatchProcessingFileStatus.PROCESSING;
                 fileResult.ModelName = this.ProviderSettings.Model.ToString();
@@ -132,14 +128,16 @@ public partial class AssistantBatchProcessing
             var doneFiles = this.fileResults.Count(fileResult => fileResult.Status is BatchProcessingFileStatus.DONE);
             var failedFiles = this.fileResults.Count(fileResult => fileResult.Status is BatchProcessingFileStatus.FAILED);
             var canceledFiles = this.fileResults.Count(fileResult => fileResult.Status is BatchProcessingFileStatus.CANCELED);
+            var queuedFiles = this.fileResults.Count(fileResult => fileResult.Status is BatchProcessingFileStatus.QUEUED);
 
             this.Logger.LogInformation(
-                "Batch processing finished after {ElapsedMilliseconds} ms. TotalFiles={TotalFiles}, DoneFiles={DoneFiles}, FailedFiles={FailedFiles}, CanceledFiles={CanceledFiles}, OutputWriteFailed={OutputWriteFailed}.",
+                "Batch processing finished after {ElapsedMilliseconds} ms. TotalFiles={TotalFiles}, DoneFiles={DoneFiles}, FailedFiles={FailedFiles}, CanceledFiles={CanceledFiles}, QueuedFiles={QueuedFiles}, OutputWriteFailed={OutputWriteFailed}.",
                 stopwatch.ElapsedMilliseconds,
                 this.fileResults.Count,
                 doneFiles,
                 failedFiles,
                 canceledFiles,
+                queuedFiles,
                 this.hasReportedWriteFailure);
 
             // The cancellation token source belongs to the base class, which
