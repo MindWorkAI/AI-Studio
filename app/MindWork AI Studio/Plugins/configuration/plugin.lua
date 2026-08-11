@@ -424,6 +424,10 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataBatchProcessing.OutputMode"] = "MARKDOWN_FILES"
 -- CONFIG["SETTINGS"]["DataBatchProcessing.CsvFileName"] = "batch-results.csv"
 -- CONFIG["SETTINGS"]["DataBatchProcessing.ResultColumnHeader"] = "Result"
+-- Allowed CSV separator values are: COMMA, SEMICOLON, PIPE, TAB, CUSTOM
+-- A custom separator must be exactly one punctuation or symbol character.
+-- CONFIG["SETTINGS"]["DataBatchProcessing.CsvSeparator"] = "SEMICOLON"
+-- CONFIG["SETTINGS"]["DataBatchProcessing.CustomCsvSeparator"] = "^"
 --
 -- Configure the minimum provider confidence and the default provider.
 -- Allowed confidence values are: NONE, UNTRUSTED, UNKNOWN, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
@@ -444,6 +448,8 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataBatchProcessing.OutputMode.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataBatchProcessing.CsvFileName.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataBatchProcessing.ResultColumnHeader.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataBatchProcessing.CsvSeparator.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataBatchProcessing.CustomCsvSeparator.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataBatchProcessing.MinimumProviderConfidence.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataBatchProcessing.PreselectedProvider.AllowUserOverride"] = true
 

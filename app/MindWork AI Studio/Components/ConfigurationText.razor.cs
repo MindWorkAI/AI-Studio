@@ -53,6 +53,12 @@ public partial class ConfigurationText : ConfigurationBaseCore
     /// </summary>
     [Parameter]
     public string ResetButtonText { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Validates the configured text before it is stored.
+    /// </summary>
+    [Parameter]
+    public Func<string, string?>? Validation { get; set; }
     
     private string internalText = string.Empty;
     private readonly Timer timer = new(TimeSpan.FromMilliseconds(500))
@@ -68,10 +74,6 @@ public partial class ConfigurationText : ConfigurationBaseCore
     protected override Variant Variant => Variant.Outlined;
     
     protected override string Label => this.OptionDescription;
-
-    #endregion
-
-    #region Overrides of ConfigurationBase
 
     protected override async Task OnInitializedAsync()
     {
@@ -110,6 +112,9 @@ public partial class ConfigurationText : ConfigurationBaseCore
     
     private async Task OptionChanged(string updatedText)
     {
+        if (this.Validation?.Invoke(updatedText) is not null)
+            return;
+
         this.TextUpdate(updatedText);
         await this.SettingsManager.StoreSettings();
         await this.InformAboutChange();

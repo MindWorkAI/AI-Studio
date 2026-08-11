@@ -126,12 +126,26 @@ else
     <MudTextField T="string" @bind-Text="@this.csvFileName" Validation="@this.ValidateCsvFileName" Immediate="@true" Disabled="@this.isProcessingBatch" Label="@T("Name of the results table (optional)")" HelperText="@T("The file name of the CSV results table. We add the ending .csv when it is missing. When left empty, we use 'batch-results.csv'.")" AdornmentIcon="@Icons.Material.Filled.Description" Adornment="Adornment.Start" Variant="Variant.Outlined" Margin="Margin.Normal" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 
     <MudTextField T="string" @bind-Text="@this.resultColumnHeader" Disabled="@this.isProcessingBatch" Label="@T("Header of the result column (optional)")" HelperText="@T("The results table contains one row per document, starting with the file name. Here you can name the column that holds the AI answer, e.g., Summary. When left empty, we use 'Result'.")" AdornmentIcon="@Icons.Material.Filled.TableChart" Adornment="Adornment.Start" Variant="Variant.Outlined" Margin="Margin.Normal" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+
+    <MudSelect T="BatchProcessingCsvSeparator" @bind-Value="@this.csvSeparator" Disabled="@this.isProcessingBatch" AdornmentIcon="@Icons.Material.Filled.FormatListBulleted" Adornment="Adornment.Start" Label="@T("Column separator")" HelperText="@T("Choose which character separates the columns of the results table.")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3">
+        @foreach (var separator in Enum.GetValues<BatchProcessingCsvSeparator>())
+        {
+            <MudSelectItem Value="@separator">
+                @separator.Name()
+            </MudSelectItem>
+        }
+    </MudSelect>
+
+    @if (this.csvSeparator is BatchProcessingCsvSeparator.CUSTOM)
+    {
+        <MudTextField T="string" @bind-Text="@this.customCsvSeparator" Validation="@this.ValidateCustomCsvSeparator" Immediate="@true" Disabled="@this.isProcessingBatch" Label="@T("Custom column separator")" HelperText="@T("Enter one punctuation or symbol character.")" AdornmentIcon="@Icons.Material.Filled.Edit" Adornment="Adornment.Start" Variant="Variant.Outlined" Margin="Margin.Normal" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+    }
 }
 
 <SelectDirectory Label="@T("Output folder (optional)")" DirectoryDialogTitle="@T("Select the output folder")" @bind-Directory="@this.outputDirectory" Disabled="@this.isProcessingBatch"/>
 
 <MudJustifiedText Typo="Typo.body2" Class="mb-3">
-    @T("We always write a log named log.csv, which lists every document with its processing time, the model, the status, and the details of any error. Its columns are separated by a vertical bar, so you can open it with any spreadsheet application. When you start another run on the same output folder, we ask you whether to continue that run: documents which failed or are missing in the log are then processed again. When no output folder is selected, everything is written to the subfolder 'ai-results' within the input folder.")
+    @T("We always write a semicolon-separated log named log.csv, which lists every document with its processing time, the model, the status, and the details of any error. When you start another run on the same output folder, we ask you whether to continue that run: documents which failed or are missing in the log are then processed again. When no output folder is selected, everything is written to the subfolder 'ai-results' within the input folder.")
 </MudJustifiedText>
 
 <ProviderSelection @bind-ProviderSettings="@this.ProviderSettings" ValidateProvider="@this.ValidatingProviderWithBatchState" Disabled="@this.isProcessingBatch" ExplicitMinimumConfidence="@this.GetMinimumConfidenceLevel()"/>

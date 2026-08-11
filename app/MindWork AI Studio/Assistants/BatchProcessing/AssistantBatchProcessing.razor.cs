@@ -17,6 +17,7 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
     private const string RESULT_FILE_SUFFIX = "_result.md";
     private const string TRANSCRIPT_FILE_SUFFIX = ".transcript.md";
     private const string TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
+    private const char LOG_SEPARATOR = ';';
 
     /// <summary>
     /// The name of the log file. It is fixed, so that a later batch run finds
@@ -88,6 +89,8 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
     private BatchProcessingOutputMode outputMode = BatchProcessingOutputMode.MARKDOWN_FILES;
     private string resultColumnHeader = string.Empty;
     private string csvFileName = string.Empty;
+    private BatchProcessingCsvSeparator csvSeparator = BatchProcessingCsvSeparator.SEMICOLON;
+    private string customCsvSeparator = string.Empty;
 
     private readonly List<BatchProcessingFileResult> fileResults = [];
     private readonly HashSet<string> usedResultFileNames = new(StringComparer.OrdinalIgnoreCase);
@@ -156,6 +159,8 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
             this.outputMode = BatchProcessingOutputMode.MARKDOWN_FILES;
             this.resultColumnHeader = string.Empty;
             this.csvFileName = string.Empty;
+            this.csvSeparator = BatchProcessingCsvSeparator.SEMICOLON;
+            this.customCsvSeparator = string.Empty;
             return;
         }
 
@@ -171,6 +176,8 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
         this.outputMode = settings.OutputMode;
         this.resultColumnHeader = settings.ResultColumnHeader;
         this.csvFileName = settings.CsvFileName;
+        this.csvSeparator = settings.CsvSeparator;
+        this.customCsvSeparator = settings.CustomCsvSeparator;
     }
 
     private async Task LoadConfiguredPromptFileAsync()

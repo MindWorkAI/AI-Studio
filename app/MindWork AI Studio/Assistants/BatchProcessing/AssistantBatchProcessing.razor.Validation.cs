@@ -56,6 +56,18 @@ public partial class AssistantBatchProcessing
         return null;
     }
 
+    private string? ValidateCustomCsvSeparator(string separator)
+    {
+        if (this.outputMode is not BatchProcessingOutputMode.TABLE_ONLY
+            || this.csvSeparator is not BatchProcessingCsvSeparator.CUSTOM)
+            return null;
+
+        if (!BatchProcessingCsvSeparatorExtensions.IsValidCustomSeparator(separator))
+            return T("Please enter exactly one punctuation or symbol character. Letters, numbers, spaces, quotation marks, and line breaks cannot be used as CSV separators.");
+
+        return null;
+    }
+
     private string? ValidateFreePrompt(string prompt)
     {
         if (this.promptSource is BatchProcessingPromptSource.FREE_PROMPT && string.IsNullOrWhiteSpace(prompt))

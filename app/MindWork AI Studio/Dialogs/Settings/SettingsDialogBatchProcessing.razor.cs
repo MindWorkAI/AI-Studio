@@ -45,6 +45,21 @@ public partial class SettingsDialogBatchProcessing : SettingsDialogBase
             .Select(value => new ConfigurationSelectData<BatchProcessingOutputMode>(value.Name(), value))
     ];
 
+    private IReadOnlyList<ConfigurationSelectData<BatchProcessingCsvSeparator>> CsvSeparatorData =>
+    [
+        .. Enum
+            .GetValues<BatchProcessingCsvSeparator>()
+            .Select(value => new ConfigurationSelectData<BatchProcessingCsvSeparator>(value.Name(), value))
+    ];
+
+    private string? ValidateCustomCsvSeparator(string separator)
+    {
+        if (!BatchProcessingCsvSeparatorExtensions.IsValidCustomSeparator(separator))
+            return T("Please enter exactly one punctuation or symbol character. Letters, numbers, spaces, quotation marks, and line breaks cannot be used as CSV separators.");
+
+        return null;
+    }
+
     private IReadOnlyList<ConfigurationSelectData<string>> PolicyData
     {
         get

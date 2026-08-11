@@ -44,6 +44,10 @@ public sealed class DataBatchProcessing(Expression<Func<Data, DataBatchProcessin
 
     public string ResultColumnHeader { get; set; } = ManagedConfiguration.Register(configSelection, value => value.ResultColumnHeader, string.Empty);
 
+    public BatchProcessingCsvSeparator CsvSeparator { get; set; } = ManagedConfiguration.Register(configSelection, value => value.CsvSeparator, BatchProcessingCsvSeparator.SEMICOLON);
+
+    public string CustomCsvSeparator { get; set; } = ManagedConfiguration.Register(configSelection, value => value.CustomCsvSeparator, string.Empty);
+
     public ConfidenceLevel MinimumProviderConfidence { get; set; } = ManagedConfiguration.Register(configSelection, value => value.MinimumProviderConfidence, ConfidenceLevel.NONE);
 
     public string PreselectedProvider { get; set; } = ManagedConfiguration.Register(configSelection, value => value.PreselectedProvider, string.Empty);

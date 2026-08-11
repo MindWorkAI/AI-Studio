@@ -350,6 +350,8 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.OutputMode, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.CsvFileName, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.ResultColumnHeader, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.CsvSeparator, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.CustomCsvSeparator, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.MinimumProviderConfidence, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.PreselectedProvider, Guid.Empty, this.Id, settingsTable, dryRun);
 
