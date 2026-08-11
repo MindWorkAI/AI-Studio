@@ -47,6 +47,4 @@ public sealed class DataBatchProcessing(Expression<Func<Data, DataBatchProcessin
     public ConfidenceLevel MinimumProviderConfidence { get; set; } = ManagedConfiguration.Register(configSelection, value => value.MinimumProviderConfidence, ConfidenceLevel.NONE);
 
     public string PreselectedProvider { get; set; } = ManagedConfiguration.Register(configSelection, value => value.PreselectedProvider, string.Empty);
-
-    public string PreselectedProfile { get; set; } = ManagedConfiguration.Register(configSelection, value => value.PreselectedProfile, string.Empty);
 }

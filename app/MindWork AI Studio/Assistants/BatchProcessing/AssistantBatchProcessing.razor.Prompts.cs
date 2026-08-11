@@ -1,5 +1,6 @@
 using AIStudio.Chat;
 using AIStudio.Provider;
+using AIStudio.Settings;
 
 namespace AIStudio.Assistants.BatchProcessing;
 
@@ -91,7 +92,7 @@ public partial class AssistantBatchProcessing
         {
             IncludeDateTime = false,
             SelectedProvider = this.ProviderSettings.Id,
-            SelectedProfile = this.CurrentProfile.Id,
+            SelectedProfile = Profile.NO_PROFILE.Id,
             SystemPrompt = this.SystemPrompt,
             WorkspaceId = Guid.Empty,
             ChatId = Guid.NewGuid(),

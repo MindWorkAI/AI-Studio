@@ -1,6 +1,5 @@
 using AIStudio.Dialogs.Settings;
 using AIStudio.Provider;
-using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 
 using Microsoft.AspNetCore.Components;
@@ -40,7 +39,7 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
 
     protected override bool ShowResult => false;
 
-    protected override bool AllowProfiles => true;
+    protected override bool AllowProfiles => false;
 
     protected override bool ShowSendTo => false;
 
@@ -236,27 +235,5 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
                 ? fallbackProvider
                 : Settings.Provider.NONE;
         }
-
-        this.CurrentProfile = this.ResolvePolicyProfile();
-    }
-
-    private Profile ResolvePolicyProfile()
-    {
-        if (this.selectedPolicy is null)
-            return this.SettingsManager.GetPreselectedProfile(this.Component);
-
-        var policyProfile = ProfilePreselection.FromStoredValue(this.selectedPolicy.PreselectedProfile);
-        if (policyProfile.DoNotPreselectProfile)
-            return Profile.NO_PROFILE;
-
-        if (policyProfile.UseSpecificProfile)
-        {
-            var profile = this.SettingsManager.ConfigurationData.Profiles
-                .FirstOrDefault(candidate => candidate.Id == policyProfile.SpecificProfileId);
-            if (profile is not null)
-                return profile;
-        }
-
-        return this.SettingsManager.GetPreselectedProfile(this.Component);
     }
 }
