@@ -120,6 +120,9 @@ public partial class AssistantBatchProcessing
             foreach (var file in Directory.EnumerateFiles(this.inputDirectory, pattern, searchOption))
             {
                 var normalizedFile = Path.GetFullPath(file);
+                if (IsTranscriptArtifact(normalizedFile))
+                    continue;
+
                 if (isOutputSeparateFolder)
                 {
                     if (normalizedFile.StartsWith(outputDirectoryPrefix, StringComparison.OrdinalIgnoreCase))
@@ -179,6 +182,16 @@ public partial class AssistantBatchProcessing
     }
 
     /// <summary>
+    /// Checks for persistent or interrupted media transcript artifacts. They
+    /// always live beside their source file, independently of the output folder.
+    /// </summary>
+    private static bool IsTranscriptArtifact(string filePath)
+    {
+        var fileName = Path.GetFileName(filePath);
+        return fileName.EndsWith(TRANSCRIPT_FILE_SUFFIX, StringComparison.OrdinalIgnoreCase) || fileName.EndsWith(TRANSCRIPT_FILE_SUFFIX + ".tmp", StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
     /// Validates the form, finds the documents, and creates the output folder.
     /// </summary>
     /// <returns>The output folder and the documents, or <c>null</c> when the run must not start.</returns>
@@ -212,6 +225,13 @@ public partial class AssistantBatchProcessing
         if (files.Count == 0)
         {
             this.AddInputIssue(T("No matching files were found in the selected folder."));
+            return null;
+        }
+
+        var requiresTranscription = files.Any(file => IsTranscribableMedia(file) && !HasReusableTranscript(file));
+        if (requiresTranscription && !this.MediaTranscriptionService.HasUsableTranscriptionProvider)
+        {
+            this.AddInputIssue(T("The selected files include audio or video without an existing transcript, but no usable transcription provider is configured. Configure one in the transcription settings or remove the media patterns."));
             return null;
         }
 

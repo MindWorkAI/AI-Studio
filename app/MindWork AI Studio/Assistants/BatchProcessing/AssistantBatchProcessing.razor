@@ -16,6 +16,10 @@
     </MudButton>
 </MudStack>
 
+<MudJustifiedText Typo="Typo.body2" Class="mb-3">
+    @T("Supported audio and video files are transcribed automatically without an additional dialog. Each transcript is stored next to its media file as '<media-file>.transcript.md' and reused when an interrupted run is continued.")
+</MudJustifiedText>
+
 <MudTextSwitch Label="@T("Include subfolders?")" Disabled="@this.isProcessingBatch" Value="@this.includeSubdirectories" ValueChanged="@(v => this.includeSubdirectories = v)" LabelOn="@T("Yes, process files in subfolders as well")" LabelOff="@T("No, only process files in the selected folder")"/>
 
 @if (this.includeSubdirectories)
