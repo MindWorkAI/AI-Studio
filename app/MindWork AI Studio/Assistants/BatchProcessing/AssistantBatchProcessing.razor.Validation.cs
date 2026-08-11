@@ -20,6 +20,25 @@ public partial class AssistantBatchProcessing
         if (string.IsNullOrWhiteSpace(patterns))
             return T("Please provide at least one file pattern, e.g., *.pdf. Separate multiple patterns with a semicolon.");
 
+        var individualPatterns = patterns.Split(';');
+        if (individualPatterns.Any(string.IsNullOrWhiteSpace))
+            return T("Please remove empty file patterns. Separate valid patterns with a single semicolon.");
+
+        foreach (var patternEntry in individualPatterns)
+        {
+            var pattern = patternEntry.Trim();
+            if (pattern is "." or ".."
+                || pattern.EndsWith("..", StringComparison.Ordinal)
+                || pattern.IndexOfAny([Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar, '/', '\\']) >= 0)
+                return T("Please use file name patterns without folder paths, e.g., *.pdf or report-*.docx.");
+
+            var invalidCharacters = Path.GetInvalidFileNameChars()
+                .Where(character => character is not '*' and not '?')
+                .ToArray();
+            if (pattern.IndexOfAny(invalidCharacters) >= 0)
+                return T("One of the file patterns contains an invalid character.");
+        }
+
         return null;
     }
 

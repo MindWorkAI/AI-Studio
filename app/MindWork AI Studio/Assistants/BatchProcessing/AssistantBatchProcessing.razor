@@ -1,6 +1,7 @@
 @attribute [Route(Routes.ASSISTANT_BATCH_PROCESSING)]
 @inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogBatchProcessing>
 @using AIStudio.Settings.DataModel
+@using AIStudio.Tools.Rust
 
 <MudText Typo="Typo.h5" Class="mb-3">
     @T("Input")
@@ -11,6 +12,13 @@
 <MudTextField T="string" @bind-Text="@this.filePatterns" Validation="@this.ValidateFilePatterns" Immediate="@true" Disabled="@this.isProcessingBatch" Label="@T("File patterns")" HelperText="@T("Which files should be processed? Separate multiple patterns with a semicolon, e.g., *.pdf;*.docx")" AdornmentIcon="@Icons.Material.Filled.FilterAlt" Adornment="Adornment.Start" Variant="Variant.Outlined" Margin="Margin.Normal" Class="mb-1" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 
 <MudTextSwitch Label="@T("Include subfolders?")" Disabled="@this.isProcessingBatch" Value="@this.includeSubdirectories" ValueChanged="@(v => this.includeSubdirectories = v)" LabelOn="@T("Yes, process files in subfolders as well")" LabelOff="@T("No, only process files in the selected folder")"/>
+
+@if (this.includeSubdirectories)
+{
+    <MudJustifiedText Typo="Typo.body2" Class="mb-3">
+        @T("A separate output folder is excluded from document discovery. This includes the default 'ai-results' folder, so results from an earlier run are not processed again. If the input folder itself is used for output, known batch result files are excluded instead.")
+    </MudJustifiedText>
+}
 
 <MudText Typo="Typo.h5" Class="mb-3 mt-6">
     @T("Instructions")
@@ -27,11 +35,13 @@
 
 @if (this.promptSource is BatchProcessingPromptSource.FREE_PROMPT)
 {
+    <ReadFileContent Text="@T("Load prompt from file")" @bind-FileContent="@this.freePrompt" Disabled="@this.isProcessingBatch"/>
+
     <MudTextField T="string" @bind-Text="@this.freePrompt" Validation="@this.ValidateFreePrompt" Immediate="@true" Disabled="@this.isProcessingBatch" Label="@T("What should the AI do with each document?")" HelperText="@T("These instructions are applied to every single document of the batch run.")" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="5" AutoGrow="@true" MaxLines="26" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 }
 else if (this.promptSource is BatchProcessingPromptSource.FILE_IMPORT)
 {
-    <ReadFileContent Text="@T("Select the file with your instructions")" @bind-FileContent="@this.ImportedPrompt" ShowAttachedDocumentState="@true" Disabled="@this.isProcessingBatch"/>
+    <ReadFileContent Text="@T("Select the file with your instructions")" @bind-FileContent="@this.ImportedPrompt" Filter="@([FileTypes.MARKDOWN])" ShowAttachedDocumentState="@true" Disabled="@this.isProcessingBatch"/>
 
     @if (!string.IsNullOrWhiteSpace(this.promptFilePath))
     {

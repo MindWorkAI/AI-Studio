@@ -1,5 +1,6 @@
 @using AIStudio.Assistants.BatchProcessing
 @using AIStudio.Settings
+@using AIStudio.Tools.Rust
 @inherits SettingsDialogBase
 
 <MudDialog>
@@ -26,7 +27,7 @@
             }
             else if (this.SettingsManager.ConfigurationData.BatchProcessing.PromptSource is BatchProcessingPromptSource.FILE_IMPORT)
             {
-                <ConfigurationText OptionDescription="@T("Default Markdown instructions file")" Disabled="@this.DefaultsDisabled" Icon="@Icons.Material.Filled.Description" Text="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.PromptFilePath)" TextUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.PromptFilePath = value)" OptionHelp="@T("The current content of this Markdown file is loaded whenever the defaults are applied.")" IsLocked="() => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.PromptFilePath, out var meta) && meta.IsLocked"/>
+                <ConfigurationFile OptionDescription="@T("Default Markdown instructions file")" Disabled="@this.DefaultsDisabled" Icon="@Icons.Material.Filled.Description" Text="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.PromptFilePath)" TextUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.PromptFilePath = value)" FileDialogTitle="@T("Select the default Markdown instructions file")" Filter="@([FileTypes.MARKDOWN])" OptionHelp="@T("The current content of this Markdown file is loaded whenever the defaults are applied.")" IsLocked="() => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.PromptFilePath, out var meta) && meta.IsLocked"/>
             }
             else
             {

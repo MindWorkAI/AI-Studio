@@ -50,6 +50,13 @@ public partial class ReadFileContent : MSGComponentBase
     /// </summary>
     [Parameter]
     public bool CatchAllDocuments { get; set; }
+
+    /// <summary>
+    /// Optionally restricts the file types offered by the native file picker
+    /// and accepted by this component.
+    /// </summary>
+    [Parameter]
+    public FileTypeFilter[]? Filter { get; set; }
     
     [Inject]
     private RustService RustService { get; init; } = null!;
@@ -252,7 +259,7 @@ public partial class ReadFileContent : MSGComponentBase
         this.isFileDialogOpen = true;
         try
         {
-            var selectedFile = await this.RustService.SelectFile(T("Select file to read its content"));
+            var selectedFile = await this.RustService.SelectFile(T("Select file to read its content"), this.Filter);
             if (selectedFile.UserCancelled)
             {
                 this.Logger.LogInformation("User cancelled the file selection");
@@ -307,6 +314,13 @@ public partial class ReadFileContent : MSGComponentBase
         if(!File.Exists(filePath))
         {
             this.Logger.LogWarning("Selected file does not exist: '{FilePath}'", filePath);
+            return false;
+        }
+
+        if (this.Filter is { Length: > 0 } && !FileTypes.IsAllowedPath(filePath, this.Filter))
+        {
+            this.Logger.LogWarning("Selected file does not match the configured file type filter: '{FilePath}'", filePath);
+            await this.MessageBus.SendWarning(new(Icons.Material.Filled.Warning, this.T("Please select a file with a supported file type.")));
             return false;
         }
 
