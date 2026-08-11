@@ -1158,8 +1158,8 @@ public sealed partial class DataSourceEmbeddingService
             : null;
     }
 
-    private string GetCollectionName(string dataSourceName, string dataSourceId) =>
-        DataSourceEmbeddingNames.GetCollectionName(dataSourceName, dataSourceId);
+    private string GetCollectionName(string dataSourceId) =>
+        DataSourceEmbeddingNames.GetCollectionName(dataSourceId);
 
     private string CreatePointId(string dataSourceId, string fingerprint, int chunkIndex) =>
         CreateStableGuid($"{dataSourceId}:chunk:{fingerprint}:{chunkIndex}");

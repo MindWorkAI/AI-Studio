@@ -168,9 +168,9 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
             return false;
         }
 
-        if (!table.TryGetValue("Name", out var nameValue) || !nameValue.TryRead<string>(out var name) || string.IsNullOrWhiteSpace(name))
+        if (!table.TryGetValue("Name", out var nameValue) || !nameValue.TryRead<string>(out var name) || string.IsNullOrWhiteSpace(name) || name.Length > 40 || name.Any(char.IsControl))
         {
-            LOGGER.LogWarning($"The configured data source {idx} does not contain a valid name. (Plugin ID: {configPluginId})");
+            LOGGER.LogWarning($"The configured data source {idx} does not contain a valid name of at most 40 characters without control characters. (Plugin ID: {configPluginId})");
             return false;
         }
 

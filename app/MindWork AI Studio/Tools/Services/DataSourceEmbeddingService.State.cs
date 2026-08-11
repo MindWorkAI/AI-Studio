@@ -6,13 +6,12 @@ namespace AIStudio.Tools.Services;
 public sealed partial class DataSourceEmbeddingService
 {
     private async Task ResetPersistedStateAsync(
-        string dataSourceName,
         string dataSourceId,
         VectorStoreClient? vectorStore,
         EmbeddingStateClient? embeddingState,
         CancellationToken token)
     {
-        await this.DeleteCollectionAsync(this.GetCollectionName(dataSourceName, dataSourceId), vectorStore, token);
+        await this.DeleteCollectionAsync(this.GetCollectionName(dataSourceId), vectorStore, token);
 
         embeddingState ??= await databaseClientProvider.GetEmbeddingStateAsync(token);
         if (!embeddingState.IsAvailable)

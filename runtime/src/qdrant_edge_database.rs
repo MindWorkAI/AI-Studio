@@ -15,7 +15,6 @@ use qdrant_edge::{
     UpdateOperation, ValueVariants, VectorInternal, Vectors, WithPayloadInterface, WithVector,
 };
 use serde::{Deserialize, Serialize};
-use sha2::{Digest, Sha256};
 use tauri::Manager;
 
 use crate::api_token::APIToken;
@@ -30,6 +29,8 @@ const HNSW_MAX_INDEXING_THREADS: usize = 0;
 const VECTOR_INDEXING_THRESHOLD_KB: usize = 10_000;
 const STORE_INITIALIZATION_MARKER: &str = "store_name.txt";
 const STORE_INITIALIZATION_MARKER_TEMP: &str = "store_name.tmp";
+const STORE_DISPLAY_NAME_MARKER: &str = "data_source_name.txt";
+const STORE_DISPLAY_NAME_MARKER_TEMP: &str = "data_source_name.tmp";
 
 type QdrantEdgeResult<T> = Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
@@ -92,6 +93,7 @@ pub struct QdrantEdgeStoragePoint {
 #[derive(Deserialize)]
 pub struct EnsureQdrantEdgeStoreRequest {
     pub store_name: String,
+    pub data_source_name: String,
     pub vector_size: usize,
 }
 
@@ -287,9 +289,12 @@ impl QdrantEdgeDatabase {
         })
     }
 
-    fn ensure_store_exists(&mut self, store_name: &str, vector_size: usize) -> QdrantEdgeResult<()> {
+    fn ensure_store_exists(&mut self, store_name: &str, data_source_name: &str, vector_size: usize) -> QdrantEdgeResult<()> {
         validate_vector_size(vector_size)?;
+        validate_data_source_name(data_source_name)?;
+        let store_path = self.store_path(store_name)?;
         self.get_or_create_store(store_name, vector_size)?;
+        write_store_display_name(&store_path, data_source_name)?;
         Ok(())
     }
 
@@ -304,11 +309,19 @@ impl QdrantEdgeDatabase {
             return Err("All vectors in one insert request must have the same size.".into());
         }
 
+        let data_source_name = first_point.data_source_name.clone();
+        validate_data_source_name(&data_source_name)?;
+        if points.iter().any(|point| point.data_source_name != data_source_name) {
+            return Err("All points in one insert request must belong to the same data source name.".into());
+        }
+
+        let store_path = self.store_path(store_name)?;
         let shard = self.get_or_create_store(store_name, vector_size)?;
+        write_store_display_name(&store_path, &data_source_name)?;
         let points = points
             .into_iter()
             .map(to_qdrant_edge_point)
-            .collect::<Vec<_>>();
+            .collect::<QdrantEdgeResult<Vec<_>>>()?;
 
         shard.update(UpdateOperation::PointOperation(
             PointOperations::UpsertPoints(PointInsertOperations::PointsList(points)),
@@ -389,13 +402,8 @@ impl QdrantEdgeDatabase {
 }
 
 fn store_directory_name(store_name: &str) -> String {
-    // Qdrant creates deeply nested files, so keep the physical path short on Windows.
-    let digest = Sha256::digest(store_name.as_bytes());
-    let short_hash = digest[..12]
-        .iter()
-        .map(|byte| format!("{byte:02x}"))
-        .collect::<String>();
-    format!("store_{short_hash}")
+    let stable_id = store_name.strip_prefix("rag_").unwrap_or(store_name);
+    format!("store_{stable_id}")
 }
 
 fn qdrant_edge_base_path() -> QdrantEdgeResult<PathBuf> {
@@ -433,7 +441,7 @@ pub async fn qdrant_edge_info(_token: APIToken) -> Json<QdrantEdgeServiceInfo> {
 
 pub async fn ensure_qdrant_edge_store(_token: APIToken, Json(request): Json<EnsureQdrantEdgeStoreRequest>) -> Json<QdrantEdgeOperationResponse> {
     execute_qdrant_edge_operation(|database| {
-        database.ensure_store_exists(&request.store_name, request.vector_size)
+        database.ensure_store_exists(&request.store_name, &request.data_source_name, request.vector_size)
     })
 }
 
@@ -702,6 +710,20 @@ fn write_store_initialization_marker(path: &Path, store_name: &str) -> std::io::
     fs::rename(temporary_marker_path, marker_path)
 }
 
+fn write_store_display_name(path: &Path, data_source_name: &str) -> std::io::Result<()> {
+    let marker_path = path.join(STORE_DISPLAY_NAME_MARKER);
+    if fs::read_to_string(&marker_path).is_ok_and(|current_name| current_name == data_source_name) {
+        return Ok(());
+    }
+
+    let temporary_marker_path = path.join(STORE_DISPLAY_NAME_MARKER_TEMP);
+    fs::write(&temporary_marker_path, data_source_name)?;
+    if marker_path.exists() {
+        fs::remove_file(&marker_path)?;
+    }
+    fs::rename(temporary_marker_path, marker_path)
+}
+
 fn remove_partial_store(path: &Path) -> String {
     match fs::remove_dir_all(path) {
         Ok(()) => String::new(),
@@ -712,6 +734,24 @@ fn remove_partial_store(path: &Path) -> String {
 fn validate_vector_size(vector_size: usize) -> QdrantEdgeResult<()> {
     if vector_size == 0 {
         return Err("Vector size must be greater than zero.".into());
+    }
+
+    Ok(())
+}
+
+fn validate_data_source_name(data_source_name: &str) -> QdrantEdgeResult<()> {
+    const MAX_DATA_SOURCE_NAME_LENGTH: usize = 40;
+
+    if data_source_name.trim().is_empty() {
+        return Err("Data source name cannot be empty.".into());
+    }
+
+    if data_source_name.chars().count() > MAX_DATA_SOURCE_NAME_LENGTH {
+        return Err(format!("Data source name exceeds the maximum length of {MAX_DATA_SOURCE_NAME_LENGTH} characters.").into());
+    }
+
+    if data_source_name.chars().any(|c| c.is_control()) {
+        return Err("Data source name contains unsupported control characters.".into());
     }
 
     Ok(())
@@ -728,9 +768,9 @@ fn vector_store_version() -> QdrantEdgeResult<String> {
     Ok(metadata.vector_store_version.clone())
 }
 
-fn to_qdrant_edge_point(point: QdrantEdgeStoragePoint) -> qdrant_edge::PointStructPersisted {
-    PointStruct::new(
-        to_point_id(&point.point_id),
+fn to_qdrant_edge_point(point: QdrantEdgeStoragePoint) -> QdrantEdgeResult<qdrant_edge::PointStructPersisted> {
+    Ok(PointStruct::new(
+        to_point_id(&point.point_id)?,
         Vectors::new_named([(VECTOR_NAME, point.vector)]),
         json!({
             "data_source_id": point.data_source_id,
@@ -754,7 +794,7 @@ fn to_qdrant_edge_point(point: QdrantEdgeStoragePoint) -> qdrant_edge::PointStru
             "compliance_level_rank": point.compliance_level_rank,
         }),
     )
-    .into()
+    .into())
 }
 
 fn to_qdrant_edge_search_result(point: ScoredPoint) -> QdrantEdgeSearchResult {
@@ -784,10 +824,10 @@ fn to_qdrant_edge_search_result(point: ScoredPoint) -> QdrantEdgeSearchResult {
     }
 }
 
-fn to_point_id(point_id: &str) -> PointId {
+fn to_point_id(point_id: &str) -> QdrantEdgeResult<PointId> {
     Uuid::parse_str(point_id)
         .map(PointId::Uuid)
-        .unwrap_or_else(|_| PointId::NumId(stable_u64(point_id)))
+        .map_err(|_| "Vector point ID must be a valid UUID.".into())
 }
 
 fn point_id_to_string(point_id: PointId) -> String {
@@ -814,16 +854,6 @@ fn payload_i32(payload: &Payload, key: &str) -> Option<i32> {
         .and_then(|value| i32::try_from(value).ok())
 }
 
-fn stable_u64(value: &str) -> u64 {
-    let mut hash = 0xcbf29ce484222325_u64;
-    for byte in value.as_bytes() {
-        hash ^= u64::from(*byte);
-        hash = hash.wrapping_mul(0x100000001b3);
-    }
-
-    hash
-}
-
 fn match_keyword_filter(field_name: &str, value: &str) -> QdrantEdgeResult<Filter> {
     Ok(Filter {
         should: None,
@@ -841,17 +871,19 @@ fn match_keyword_filter(field_name: &str, value: &str) -> QdrantEdgeResult<Filte
 }
 
 fn validate_store_name(store_name: &str) -> QdrantEdgeResult<()> {
+    const MAX_STORE_NAME_LENGTH: usize = 128;
+
     if store_name.is_empty() {
         return Err("Vector store name cannot be empty.".into());
     }
 
-    if matches!(store_name, "." | "..") {
-        return Err(format!("Vector store name '{store_name}' is not supported.").into());
+    if store_name.len() > MAX_STORE_NAME_LENGTH {
+        return Err(format!("Vector store name exceeds the maximum length of {MAX_STORE_NAME_LENGTH} bytes.").into());
     }
 
     if store_name
         .chars()
-        .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-' || c == '.')
+        .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
     {
         return Ok(());
     }
@@ -865,12 +897,41 @@ mod tests {
 
     #[test]
     fn validate_store_name_allows_safe_store_names() {
-        assert!(validate_store_name("rag_1234-abcd.ef").is_ok());
+        assert!(validate_store_name("rag_1234-abcd").is_ok());
     }
 
     #[test]
-    fn validate_store_name_rejects_path_traversal_names() {
+    fn validate_store_name_rejects_path_syntax() {
         assert!(validate_store_name(".").is_err());
         assert!(validate_store_name("..").is_err());
+        assert!(validate_store_name("../store").is_err());
+        assert!(validate_store_name("store\\name").is_err());
+    }
+
+    #[test]
+    fn validate_store_name_rejects_oversized_names() {
+        assert!(validate_store_name(&"a".repeat(129)).is_err());
+    }
+
+    #[test]
+    fn store_directory_name_contains_the_stable_data_source_id() {
+        assert_eq!(
+            store_directory_name("rag_6cc665a82b1e4d42bc748015b7b391ec"),
+            "store_6cc665a82b1e4d42bc748015b7b391ec"
+        );
+    }
+
+    #[test]
+    fn validate_data_source_name_allows_display_names_but_rejects_invalid_values() {
+        assert!(validate_data_source_name("Mäßig Confidence C#").is_ok());
+        assert!(validate_data_source_name(" ").is_err());
+        assert!(validate_data_source_name("invalid\nname").is_err());
+        assert!(validate_data_source_name(&"a".repeat(41)).is_err());
+    }
+
+    #[test]
+    fn point_ids_must_be_valid_uuids() {
+        assert!(to_point_id("6cc665a8-2b1e-4d42-bc74-8015b7b391ec").is_ok());
+        assert!(to_point_id("deliberate-collision-input").is_err());
     }
 }

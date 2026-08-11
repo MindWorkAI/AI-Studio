@@ -285,7 +285,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         }
 
         this.statuses.TryRemove(dataSource.Id, out _);
-        await this.ResetPersistedStateAsync(dataSource.Name, dataSource.Id, null, null, CancellationToken.None);
+        await this.ResetPersistedStateAsync(dataSource.Id, null, null, CancellationToken.None);
         this.statuses.TryRemove(dataSource.Id, out _);
         this.PublishStatusChanged();
     }
@@ -460,12 +460,25 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             dataSource.Name,
             dataSource.Id);
 
-        var collectionName = this.GetCollectionName(dataSource.Name, dataSource.Id);
+        var collectionName = this.GetCollectionName(dataSource.Id);
         var manifest = await this.EnsureCompatibleManifestAsync(dataSource, embeddingProvider, collectionName, vectorStore, embeddingState, token);
         token.ThrowIfCancellationRequested();
+        if (manifest.VectorSize > 0)
+            await this.EnsureCollectionExistsAsync(vectorStore, collectionName, dataSource.Name, manifest.VectorSize, token);
+
         var inputFiles = this.GetInputFiles(dataSource);
         var indexedFiles = inputFiles.Files;
         var totalFiles = indexedFiles.Count + inputFiles.FailedFiles;
+
+        foreach (var failure in inputFiles.Failures)
+        {
+            logger.LogWarning(
+                "Cannot index data source input '{FilePath}' for data source '{DataSourceName}' ({DataSourceId}). Reason='{Reason}'.",
+                failure.FilePath,
+                dataSource.Name,
+                dataSource.Id,
+                failure.Reason);
+        }
 
         logger.LogInformation(
             "Prepared data source '{DataSourceName}' ({DataSourceId}) for embedding. AccessibleFiles={AccessibleFiles}, FailedFiles={FailedFiles}, Collection='{CollectionName}'.",
@@ -659,7 +672,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         VectorStoreOptimizationTracker optimizationTracker,
         CancellationToken token)
     {
-        var collectionName = this.GetCollectionName(dataSource.Name, dataSource.Id);
+        var collectionName = this.GetCollectionName(dataSource.Id);
         logger.LogDebug(
             "Resetting stored embeddings for file '{FilePath}' in collection '{CollectionName}' before re-indexing.",
             file.FullName,
@@ -757,7 +770,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         if (manifest.VectorSize == 0)
         {
             token.ThrowIfCancellationRequested();
-            await this.EnsureCollectionExistsAsync(vectorStore, collectionName, vectorSize, token);
+            await this.EnsureCollectionExistsAsync(vectorStore, collectionName, dataSource.Name, vectorSize, token);
             await embeddingState.UpdateVectorSizeAsync(dataSource.Id, vectorSize, token);
             manifest.VectorSize = vectorSize;
             logger.LogInformation(
@@ -806,9 +819,9 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         batch.Clear();
     }
 
-    private async Task EnsureCollectionExistsAsync(VectorStoreClient vectorStore, string collectionName, int vectorSize, CancellationToken token)
+    private async Task EnsureCollectionExistsAsync(VectorStoreClient vectorStore, string collectionName, string dataSourceName, int vectorSize, CancellationToken token)
     {
-        await vectorStore.EnsureVectorStoreExists(collectionName, vectorSize, token);
+        await vectorStore.EnsureVectorStoreExists(collectionName, dataSourceName, vectorSize, token);
     }
 
     private async Task UpsertPointsAsync(
@@ -1061,7 +1074,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                 dataSource.Id,
                 manifest.EmbeddingSignature,
                 embeddingSignature);
-            await this.ResetPersistedStateAsync(dataSource.Name, dataSource.Id, vectorStore, embeddingState, token);
+            await this.ResetPersistedStateAsync(dataSource.Id, vectorStore, embeddingState, token);
             manifest = await embeddingState.GetManifestAsync(dataSource.Id, token);
         }
 

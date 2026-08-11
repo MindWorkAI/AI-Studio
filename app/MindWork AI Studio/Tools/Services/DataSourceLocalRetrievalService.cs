@@ -59,7 +59,7 @@ public sealed class DataSourceLocalRetrievalService(
         if (maxMatches == 0)
             return [];
 
-        var collectionName = DataSourceEmbeddingNames.GetCollectionName(dataSource.Name, dataSource.Id);
+        var collectionName = DataSourceEmbeddingNames.GetCollectionName(dataSource.Id);
         var vectorTask = this.SearchVectorAsync(dataSource, query, maxMatches, collectionName, token);
         var bm25Task = this.SearchBm25Async(dataSource, query, maxMatches, token);
 

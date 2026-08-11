@@ -82,8 +82,8 @@ public sealed class QdrantEdgeClientImplementation(
         yield return (TB("Number of vector stores"), displayStoresCount.ToString());
     }
 
-    public override Task EnsureVectorStoreExists(string storeName, int vectorSize, CancellationToken token) =>
-        rustService.ExecuteDatabaseOperation(DATABASE_NAME, ENSURE_PATH, new EnsureVectorStoreRequest(storeName, vectorSize), token);
+    public override Task EnsureVectorStoreExists(string storeName, string dataSourceName, int vectorSize, CancellationToken token) =>
+        rustService.ExecuteDatabaseOperation(DATABASE_NAME, ENSURE_PATH, new EnsureVectorStoreRequest(storeName, dataSourceName, vectorSize), token);
 
     public override Task InsertEmbedding(string storeName, IReadOnlyList<VectorStoragePoint> points, CancellationToken token) =>
         rustService.ExecuteDatabaseOperation(DATABASE_NAME, INSERT_PATH, new InsertEmbeddingRequest(storeName, points), token);
@@ -121,7 +121,7 @@ public sealed class QdrantEdgeClientImplementation(
     }
 
     // ReSharper disable NotAccessedPositionalProperty.Local
-    private sealed record EnsureVectorStoreRequest(string StoreName, int VectorSize);
+    private sealed record EnsureVectorStoreRequest(string StoreName, string DataSourceName, int VectorSize);
 
     private sealed record InsertEmbeddingRequest(string StoreName, IReadOnlyList<VectorStoragePoint> Points);
 

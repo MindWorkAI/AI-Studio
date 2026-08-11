@@ -121,6 +121,9 @@ public sealed class DataSourceValidation
         
         if (dataSourceName.Length > 40)
             return TB("The name must not exceed 40 characters.");
+
+        if (dataSourceName.Any(char.IsControl))
+            return TB("The name must not contain control characters.");
         
         var lowerName = dataSourceName.ToLowerInvariant();
         if(lowerName != this.GetPreviousDataSourceName() && this.GetUsedDataSourceNames().Contains(lowerName))
