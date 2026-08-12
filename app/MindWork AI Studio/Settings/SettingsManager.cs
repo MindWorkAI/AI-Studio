@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Text.Json;
 
@@ -434,7 +433,6 @@ public sealed class SettingsManager
         return localeTag[..separatorIndex];
     }
     
-    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
     public Provider GetPreselectedProvider(Tools.Components component, string? currentProviderId = null, bool usePreselectionBeforeCurrentProvider = false)
     {
         var minimumLevel = this.GetMinimumConfidenceLevel(component);
@@ -486,7 +484,6 @@ public sealed class SettingsManager
         return this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.ConfigurationData.App.PreselectedProvider && x.UsedLLMProvider.GetConfidence(this).Level >= minimumLevel) ?? Provider.NONE;
     }
 
-    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
     public Provider GetChatProviderForLoadedChat(string? chatProviderId = null)
     {
         var minimumLevel = this.GetMinimumConfidenceLevel(Tools.Components.CHAT);
@@ -548,7 +545,6 @@ public sealed class SettingsManager
     /// </para>
     /// </remarks>
     /// <returns>All configured providers, unfiltered.</returns>
-    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
     public IReadOnlyList<Provider> GetAllProviders() => this.ConfigurationData.Providers;
 
     /// <summary>
@@ -563,7 +559,6 @@ public sealed class SettingsManager
     /// </remarks>
     /// <param name="providerId">The id of the provider to look up.</param>
     /// <returns>The provider, or <see cref="Provider.NONE"/> when no provider with that id exists.</returns>
-    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
     public Provider GetProviderById(string? providerId)
     {
         if (string.IsNullOrWhiteSpace(providerId))
@@ -611,7 +606,6 @@ public sealed class SettingsManager
     /// <param name="component">The component for which the providers get filtered.</param>
     /// <param name="explicitMinimum">An explicit minimum level, which is applied when it is higher than the component's minimum.</param>
     /// <returns>All providers the component may use.</returns>
-    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
     public IEnumerable<Provider> GetConfidentProviders(Tools.Components component, ConfidenceLevel explicitMinimum = ConfidenceLevel.UNKNOWN)
     {
         var minimumLevel = this.GetEffectiveMinimumConfidenceLevel(component, explicitMinimum);
