@@ -54,6 +54,7 @@ public static partial class ProviderExtensions
             LLMProviders.ALIBABA_CLOUD => GetModelCapabilitiesAlibaba(model),
             LLMProviders.PERPLEXITY => GetModelCapabilitiesPerplexity(model),
             LLMProviders.OPEN_ROUTER => GetModelCapabilitiesOpenRouter(model),
+            LLMProviders.HETZNER => GetModelCapabilitiesOpenSource(model),
 
             LLMProviders.GROQ => GetModelCapabilitiesOpenSource(model),
             LLMProviders.FIREWORKS => GetModelCapabilitiesOpenSource(model),

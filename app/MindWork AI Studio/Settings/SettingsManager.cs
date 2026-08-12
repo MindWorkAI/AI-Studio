@@ -599,8 +599,9 @@ public sealed class SettingsManager
                 {
                     LLMProviders.SELF_HOSTED => ConfidenceLevel.HIGH,
                     LLMProviders.DEEP_SEEK => ConfidenceLevel.LOW,
+                    LLMProviders.ALIBABA_CLOUD => ConfidenceLevel.LOW,
                     
-                    _ => ConfidenceLevel.MEDIUM,   
+                    _ => ConfidenceLevel.MEDIUM,
                 };
             
             case ConfidenceSchemes.TRUST_USA:
@@ -610,7 +611,9 @@ public sealed class SettingsManager
                     LLMProviders.MISTRAL => ConfidenceLevel.LOW,
                     LLMProviders.HELMHOLTZ => ConfidenceLevel.LOW,
                     LLMProviders.GWDG => ConfidenceLevel.LOW,
+                    LLMProviders.HETZNER => ConfidenceLevel.LOW,
                     LLMProviders.DEEP_SEEK => ConfidenceLevel.LOW,
+                    LLMProviders.ALIBABA_CLOUD => ConfidenceLevel.LOW,
                     
                     _ => ConfidenceLevel.MEDIUM,
                 };
@@ -622,6 +625,7 @@ public sealed class SettingsManager
                     LLMProviders.MISTRAL => ConfidenceLevel.MEDIUM,
                     LLMProviders.HELMHOLTZ => ConfidenceLevel.MEDIUM,
                     LLMProviders.GWDG => ConfidenceLevel.MEDIUM,
+                    LLMProviders.HETZNER => ConfidenceLevel.MEDIUM,
                     
                     _ => ConfidenceLevel.LOW,
                 };
@@ -631,6 +635,7 @@ public sealed class SettingsManager
                 {
                     LLMProviders.SELF_HOSTED => ConfidenceLevel.HIGH,
                     LLMProviders.DEEP_SEEK => ConfidenceLevel.MEDIUM,
+                    LLMProviders.ALIBABA_CLOUD => ConfidenceLevel.MEDIUM,
                     
                     _ => ConfidenceLevel.LOW,
                 };
