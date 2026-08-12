@@ -30,7 +30,9 @@ public static class FileTypes
     public static readonly FileTypeFilter RUST       = FileTypeFilter.Leaf("Rust", "rs");
     public static readonly FileTypeFilter LUA        = FileTypeFilter.Leaf("Lua", "lua");
     public static readonly FileTypeFilter PHP        = FileTypeFilter.Leaf("PHP", "php");
-    public static readonly FileTypeFilter WEB        = FileTypeFilter.Leaf("HTML/CSS", "html", "css");
+    public static readonly FileTypeFilter HTML       = FileTypeFilter.Leaf("HTML", "html", "htm");
+    public static readonly FileTypeFilter CSS        = FileTypeFilter.Leaf("CSS", "css");
+    public static readonly FileTypeFilter WEB        = FileTypeFilter.Parent("HTML/CSS", HTML, CSS);
 
     /// <summary>
     /// Gets the standalone HTML filter used for visual briefing import and export.
@@ -52,15 +54,18 @@ public static class FileTypes
     public static readonly FileTypeFilter TEXT        = FileTypeFilter.Leaf(TB("Text"), "txt", "md", "rtf");
     public static readonly FileTypeFilter MS_WORD     = FileTypeFilter.Leaf("Microsoft Word", "docx");
     public static readonly FileTypeFilter WORD        = FileTypeFilter.Composite("Word", ["odt"], MS_WORD);
-    public static readonly FileTypeFilter EXCEL       = FileTypeFilter.Leaf("Excel", "xls", "xlsx");
+    public static readonly FileTypeFilter EXCEL       = FileTypeFilter.Leaf("Excel", "xls", "xlsx", "xlsm", "xlsb", "xla", "xlam");
+    public static readonly FileTypeFilter OPEN_DOCUMENT_SPREADSHEET = FileTypeFilter.Leaf("OpenDocument Spreadsheet", "ods");
+    public static readonly FileTypeFilter SPREADSHEET = FileTypeFilter.Parent(TB("Spreadsheet"), EXCEL, OPEN_DOCUMENT_SPREADSHEET);
+    public static readonly FileTypeFilter DELIMITED_TABLE = FileTypeFilter.Leaf(TB("Delimited table"), "csv", "tsv");
     public static readonly FileTypeFilter POWER_POINT = FileTypeFilter.Leaf("PowerPoint", "ppt", "pptx", "odp");
     public static readonly FileTypeFilter MAIL        = FileTypeFilter.Leaf(TB("Mail"), "eml", "msg", "mbox");
     public static readonly FileTypeFilter LATEX       = FileTypeFilter.Leaf("LaTeX", "tex", "bib", "sty", "cls", "log");
 
     public static readonly FileTypeFilter OFFICE_FILES = FileTypeFilter.Parent(TB("Office Files"),
-        WORD, EXCEL, POWER_POINT, PDF);
+        WORD, SPREADSHEET, POWER_POINT, PDF);
     public static readonly FileTypeFilter DOCUMENT     = FileTypeFilter.Parent(TB("Document"),
-        TEXT, OFFICE_FILES, SOURCE_CODE, LATEX);
+        TEXT, OFFICE_FILES, SOURCE_CODE, LATEX, DELIMITED_TABLE);
 
     // Media hierarchy
     public static readonly FileTypeFilter IMAGE = FileTypeFilter.Leaf(TB("Image"),
@@ -81,6 +86,7 @@ public static class FileTypes
     // Other standalone types
     public static readonly FileTypeFilter CERTIFICATE_BUNDLE = FileTypeFilter.Leaf(TB("Certificate bundle"), "pem", "crt", "cer");
     public static readonly FileTypeFilter EXECUTABLES = FileTypeFilter.Leaf(TB("Executable"), "exe", "app", "bin", "appimage");
+    public static readonly FileTypeFilter SHORTCUT = FileTypeFilter.Leaf(TB("Shortcut"), "lnk");
     
     public static FileTypeFilter? AsOneFileType(params FileTypeFilter[]? types)
     {
@@ -106,6 +112,14 @@ public static class FileTypes
             .ToArray();
     }
 
+    public static bool IsAllowedExtension(string extension, params FileTypeFilter[]? types)
+    {
+        if (types == null || types.Length == 0 || string.IsNullOrWhiteSpace(extension))
+            return false;
+
+        return OnlyAllowTypes(types).Contains(extension.TrimStart('.'), StringComparer.OrdinalIgnoreCase);
+    }
+
     /// <summary>
     /// Validates a file path against the provided filters.
     /// Supports extension-based matching and source-like file names (e.g. Dockerfile).
@@ -116,11 +130,8 @@ public static class FileTypes
             return false;
 
         var extension = Path.GetExtension(filePath).TrimStart('.');
-        if (!string.IsNullOrWhiteSpace(extension))
-        {
-            if (OnlyAllowTypes(types).Contains(extension, StringComparer.OrdinalIgnoreCase))
-                return true;
-        }
+        if (IsAllowedExtension(extension, types))
+            return true;
 
         var fileName = Path.GetFileName(filePath);
         if (string.IsNullOrWhiteSpace(fileName))

@@ -17,11 +17,6 @@ public sealed partial class DataSourceEmbeddingService
     private const int DEFAULT_CHUNK_OVERLAP_TOKEN_LENGTH = 300;
     private const bool IMAGE_EMBEDDING_ENABLED = false;
 
-    private static readonly string[] RAG_DELIMITED_TABLE_FILE_EXTENSIONS = ["csv", "tsv"];
-    private static readonly string[] RAG_SPREADSHEET_FILE_EXTENSIONS = ["ods", "xlsm", "xlsb"];
-    private static readonly string[] RAG_SPREADSHEET_ADD_IN_FILE_EXTENSIONS = ["xla", "xlam"];
-    private static readonly string[] SKIPPED_RAG_FILE_EXTENSIONS = ["lnk"];
-
     private enum RagFileIndexingDecision
     {
         INDEXABLE,
@@ -575,7 +570,7 @@ public sealed partial class DataSourceEmbeddingService
             ]);
 
         if (this.IsSourceCodeFilePath(filePath))
-            return GetSourceCodeChunkingStrategy(filePath);
+            return GetSourceCodeChunkingStrategy();
 
         return new("document", [
             new("Page or extracted section", SplitBySourceSegments, true),
@@ -587,24 +582,13 @@ public sealed partial class DataSourceEmbeddingService
         ]);
     }
 
-    private static ChunkingStrategy GetSourceCodeChunkingStrategy(string filePath)
-    {
-        var rules = new List<ChunkingRule>
-        {
+    private static ChunkingStrategy GetSourceCodeChunkingStrategy() =>
+        new("source-code", [
             new("Extracted section", SplitBySourceSegments, true),
-        };
-        rules.AddRange(GetSourceCodeDelimiterRules(filePath));
-        rules.Add(new("Line break", SplitByLineBreaks));
-        rules.Add(new("Whitespace", SplitByWhitespace));
-        rules.Add(new("Hard cut", null));
-
-        return new("source-code", rules);
-    }
-
-    private static IReadOnlyList<ChunkingRule> GetSourceCodeDelimiterRules(string filePath) => Path.GetExtension(filePath).TrimStart('.') switch
-    {
-        _ => [],
-    };
+            new("Line break", SplitByLineBreaks),
+            new("Whitespace", SplitByWhitespace),
+            new("Hard cut", null),
+        ]);
 
     private static List<string> NormalizeSplitUnits(IReadOnlyList<string> units, string fallbackText)
     {
@@ -875,16 +859,12 @@ public sealed partial class DataSourceEmbeddingService
 
     private bool IsDelimitedTableFilePath(string filePath)
     {
-        var extension = Path.GetExtension(filePath).TrimStart('.');
-        return RAG_DELIMITED_TABLE_FILE_EXTENSIONS.Contains(extension, StringComparer.OrdinalIgnoreCase);
+        return FileTypes.IsAllowedPath(filePath, FileTypes.DELIMITED_TABLE);
     }
 
     private bool IsSpreadsheetFilePath(string filePath)
     {
-        var extension = Path.GetExtension(filePath).TrimStart('.');
-        return FileTypes.IsAllowedPath(filePath, FileTypes.EXCEL)
-               || RAG_SPREADSHEET_FILE_EXTENSIONS.Contains(extension, StringComparer.OrdinalIgnoreCase)
-               || RAG_SPREADSHEET_ADD_IN_FILE_EXTENSIONS.Contains(extension, StringComparer.OrdinalIgnoreCase);
+        return FileTypes.IsAllowedPath(filePath, FileTypes.SPREADSHEET);
     }
 
     private bool IsSourceCodeFilePath(string filePath)
@@ -894,18 +874,12 @@ public sealed partial class DataSourceEmbeddingService
 
     private bool IsHtmlFilePath(string filePath)
     {
-        var extension = Path.GetExtension(filePath).TrimStart('.');
-        return extension.Equals("html", StringComparison.OrdinalIgnoreCase)
-               || extension.Equals("htm", StringComparison.OrdinalIgnoreCase);
+        return FileTypes.IsAllowedPath(filePath, FileTypes.HTML);
     }
 
     private bool IsSupportedRagFilePath(string filePath)
     {
-        var extension = Path.GetExtension(filePath).TrimStart('.');
-        return FileTypes.IsAllowedPath(filePath, FileTypes.DOCUMENT)
-               || RAG_DELIMITED_TABLE_FILE_EXTENSIONS.Contains(extension, StringComparer.OrdinalIgnoreCase)
-               || RAG_SPREADSHEET_FILE_EXTENSIONS.Contains(extension, StringComparer.OrdinalIgnoreCase)
-               || RAG_SPREADSHEET_ADD_IN_FILE_EXTENSIONS.Contains(extension, StringComparer.OrdinalIgnoreCase);
+        return FileTypes.IsAllowedPath(filePath, FileTypes.DOCUMENT);
     }
 
     private RagFileIndexingDecision GetRagFileIndexingDecision(FileInfo file)
@@ -942,8 +916,7 @@ public sealed partial class DataSourceEmbeddingService
 
     private static bool IsSkippedRagFileName(string fileName)
     {
-        var extension = Path.GetExtension(fileName).TrimStart('.');
-        return SKIPPED_RAG_FILE_EXTENSIONS.Contains(extension, StringComparer.OrdinalIgnoreCase)
+        return FileTypes.IsAllowedPath(fileName, FileTypes.SHORTCUT)
                || fileName.StartsWith(OFFICE_LOCK_FILE_PREFIX, StringComparison.Ordinal);
     }
 
@@ -1125,9 +1098,6 @@ public sealed partial class DataSourceEmbeddingService
             ? pageNumber
             : null;
     }
-
-    private string GetCollectionName(string dataSourceId) =>
-        DataSourceEmbeddingNames.GetCollectionName(dataSourceId);
 
     private string CreatePointId(string dataSourceId, string fingerprint, int chunkIndex) =>
         CreateStableGuid($"{dataSourceId}:chunk:{fingerprint}:{chunkIndex}");

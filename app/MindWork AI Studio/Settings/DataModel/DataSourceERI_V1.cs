@@ -8,6 +8,7 @@ using AIStudio.Tools.ERIClient.DataModel;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.RAG;
 using AIStudio.Tools.Services;
+using AIStudio.Tools.Validation;
 
 using SharedTools;
 
@@ -168,9 +169,9 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
             return false;
         }
 
-        if (!table.TryGetValue("Name", out var nameValue) || !nameValue.TryRead<string>(out var name) || string.IsNullOrWhiteSpace(name) || name.Length > 40 || name.Any(char.IsControl))
+        if (!table.TryGetValue("Name", out var nameValue) || !nameValue.TryRead<string>(out var name) || !DataSourceValidation.IsNameValid(name))
         {
-            LOGGER.LogWarning($"The configured data source {idx} does not contain a valid name of at most 40 characters without control characters. (Plugin ID: {configPluginId})");
+            LOGGER.LogWarning($"The configured data source {idx} does not contain a valid name of at most {DataSourceValidation.MAX_NAME_LENGTH} characters without control characters. (Plugin ID: {configPluginId})");
             return false;
         }
 

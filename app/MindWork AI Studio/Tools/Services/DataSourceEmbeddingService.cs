@@ -428,11 +428,11 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             return;
         }
 
-        var collectionName = this.GetCollectionName(dataSource.Id);
+        var collectionName = DataSourceEmbeddingNames.GetCollectionName(dataSource.Id);
         var persistedManifest = await embeddingState.GetManifestAsync(dataSource.Id, token);
         if (persistedManifest.VectorSize > 0)
         {
-            var ensureResult = await this.EnsureCollectionExistsAsync(vectorStore, collectionName, dataSource.Name, persistedManifest.VectorSize, token);
+            var ensureResult = await vectorStore.EnsureVectorStoreExists(collectionName, dataSource.Name, persistedManifest.VectorSize, token);
             if (ensureResult.Created)
             {
                 logger.LogWarning(
@@ -685,7 +685,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         VectorStoreOptimizationTracker optimizationTracker,
         CancellationToken token)
     {
-        var collectionName = this.GetCollectionName(dataSource.Id);
+        var collectionName = DataSourceEmbeddingNames.GetCollectionName(dataSource.Id);
         logger.LogDebug(
             "Resetting stored embeddings for file '{FilePath}' in collection '{CollectionName}' before re-indexing.",
             file.FullName,
@@ -783,7 +783,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         if (manifest.VectorSize == 0)
         {
             token.ThrowIfCancellationRequested();
-            var ensureResult = await this.EnsureCollectionExistsAsync(vectorStore, collectionName, dataSource.Name, vectorSize, token);
+            var ensureResult = await vectorStore.EnsureVectorStoreExists(collectionName, dataSource.Name, vectorSize, token);
             if (!ensureResult.Created)
             {
                 logger.LogWarning(
@@ -792,7 +792,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                     dataSource.Name,
                     dataSource.Id);
                 await vectorStore.DeleteVectorStore(collectionName, token);
-                ensureResult = await this.EnsureCollectionExistsAsync(vectorStore, collectionName, dataSource.Name, vectorSize, token);
+                ensureResult = await vectorStore.EnsureVectorStoreExists(collectionName, dataSource.Name, vectorSize, token);
                 if (!ensureResult.Created)
                     throw new InvalidOperationException($"Vector store '{collectionName}' could not be recreated cleanly.");
             }
@@ -843,11 +843,6 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             collectionName);
 
         batch.Clear();
-    }
-
-    private async Task<VectorStoreEnsureResult> EnsureCollectionExistsAsync(VectorStoreClient vectorStore, string collectionName, string dataSourceName, int vectorSize, CancellationToken token)
-    {
-        return await vectorStore.EnsureVectorStoreExists(collectionName, dataSourceName, vectorSize, token);
     }
 
     private async Task UpsertPointsAsync(

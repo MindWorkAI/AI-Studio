@@ -8,7 +8,11 @@ namespace AIStudio.Tools.Validation;
 
 public sealed class DataSourceValidation
 {
+    public const int MAX_NAME_LENGTH = 40;
+
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(DataSourceValidation).Namespace, nameof(DataSourceValidation));
+
+    public static bool IsNameValid(string name) => !string.IsNullOrWhiteSpace(name) && name.Length <= MAX_NAME_LENGTH && !name.Any(char.IsControl);
     
     public Func<string> GetSecretStorageIssue { get; init; } = () => string.Empty;
     
@@ -116,10 +120,10 @@ public sealed class DataSourceValidation
     
     public string? ValidatingName(string dataSourceName)
     {
-        if(string.IsNullOrWhiteSpace(dataSourceName))
+        if (string.IsNullOrWhiteSpace(dataSourceName))
             return TB("The name must not be empty.");
-        
-        if (dataSourceName.Length > 40)
+
+        if (dataSourceName.Length > MAX_NAME_LENGTH)
             return TB("The name must not exceed 40 characters.");
 
         if (dataSourceName.Any(char.IsControl))

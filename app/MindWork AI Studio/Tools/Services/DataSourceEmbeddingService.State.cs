@@ -11,7 +11,7 @@ public sealed partial class DataSourceEmbeddingService
         EmbeddingStateClient? embeddingState,
         CancellationToken token)
     {
-        await this.DeleteCollectionAsync(this.GetCollectionName(dataSourceId), vectorStore, token);
+        await this.DeleteCollectionAsync(DataSourceEmbeddingNames.GetCollectionName(dataSourceId), vectorStore, token);
 
         embeddingState ??= await databaseClientProvider.GetEmbeddingStateAsync(token);
         if (!embeddingState.IsAvailable)

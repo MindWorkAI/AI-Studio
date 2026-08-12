@@ -6,6 +6,7 @@ using AIStudio.Tools.Databases;
 using AIStudio.Tools.Databases.EmbeddingState;
 using AIStudio.Tools.Databases.VectorStore;
 using AIStudio.Tools.RAG;
+using AIStudio.Tools.Rust;
 
 namespace AIStudio.Tools.Services;
 
@@ -371,13 +372,18 @@ public sealed class DataSourceLocalRetrievalService(
         }
     }
 
-    private static RetrievalContentType GetRetrievalContentType(string fileType) => fileType.TrimStart('.').ToLowerInvariant() switch
+    private static RetrievalContentType GetRetrievalContentType(string fileType)
     {
-        "csv" or "tsv" or "ods" or "xls" or "xlsx" or "xlsm" or "xlsb" => RetrievalContentType.TEXT_SPREADSHEET,
-        "odp" or "ppt" or "pptx" => RetrievalContentType.TEXT_PRESENTATION,
-        "htm" or "html" => RetrievalContentType.TEXT_WEBSITE,
-        _ => RetrievalContentType.TEXT_DOCUMENT
-    };
+        if (FileTypes.IsAllowedExtension(fileType, FileTypes.DELIMITED_TABLE, FileTypes.SPREADSHEET))
+            return RetrievalContentType.TEXT_SPREADSHEET;
+
+        if (FileTypes.IsAllowedExtension(fileType, FileTypes.POWER_POINT))
+            return RetrievalContentType.TEXT_PRESENTATION;
+
+        return FileTypes.IsAllowedExtension(fileType, FileTypes.HTML)
+            ? RetrievalContentType.TEXT_WEBSITE
+            : RetrievalContentType.TEXT_DOCUMENT;
+    }
 
     private static string GetQueryText(IContent lastUserPrompt) => lastUserPrompt switch
     {
