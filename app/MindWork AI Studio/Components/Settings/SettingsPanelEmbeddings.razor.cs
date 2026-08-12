@@ -11,6 +11,17 @@ namespace AIStudio.Components.Settings;
 
 public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
 {
+    /// <summary>
+    /// Groups the table by the used LLM provider. The embedding provider list is already sorted by
+    /// that provider, so all instances of one LLM provider form a single, coherent group.
+    /// </summary>
+    private static readonly TableGroupDefinition<EmbeddingProvider> GROUP_CONFIG = new()
+    {
+        Expandable = true,
+        IsInitiallyExpanded = true,
+        Selector = provider => provider.UsedLLMProvider.ToName(),
+    };
+
     [Parameter]
     public List<ConfigurationSelectData<string>> AvailableEmbeddingProviders { get; set; } = new();
     

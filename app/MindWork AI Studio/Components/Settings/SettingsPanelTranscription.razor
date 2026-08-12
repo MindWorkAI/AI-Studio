@@ -13,25 +13,26 @@
             @T("With the support of transcription models, MindWork AI Studio can convert human speech into text. This is useful, for example, when you need to dictate text. You can choose from dedicated transcription models, but not multimodal LLMs (large language models) that can handle both speech and text. The configuration of multimodal models is done in the 'Configure providers' section.")
         </MudJustifiedText>
         
-        <MudTable Items="@this.SettingsManager.GetAllTranscriptionProviders()" Hover="@true" Class="border-dashed border rounded-lg">
+        <MudTable Items="@this.SettingsManager.GetAllTranscriptionProviders()" Hover="@true" GroupBy="@GROUP_CONFIG" Class="border-dashed border rounded-lg">
             <ColGroup>
-                <col style="width: 3em;"/>
-                <col style="width: 12em;"/>
                 <col style="width: 12em;"/>
                 <col/>
                 <col style="width: 22em;"/>
             </ColGroup>
             <HeaderContent>
-                <MudTh>#</MudTh>
                 <MudTh>@T("Name")</MudTh>
-                <MudTh>@T("Provider")</MudTh>
                 <MudTh>@T("Model")</MudTh>
                 <MudTh>@T("Actions")</MudTh>
             </HeaderContent>
+            <GroupHeaderTemplate>
+                <MudTh Class="mud-table-cell-custom-group" colspan="3">
+                    <MudText Typo="Typo.h6" Class="mb-2">
+                        @context.Key
+                    </MudText>
+                </MudTh>
+            </GroupHeaderTemplate>
             <RowTemplate>
-                <MudTd>@context.Num</MudTd>
                 <MudTd>@context.Name</MudTd>
-                <MudTd>@context.UsedLLMProvider.ToName()</MudTd>
                 <MudTd>@this.GetTranscriptionProviderModelName(context)</MudTd>
 
                 <MudTd>

@@ -1,4 +1,5 @@
 using AIStudio.Dialogs;
+using AIStudio.Provider;
 using AIStudio.Settings;
 
 using Microsoft.AspNetCore.Components;
@@ -9,6 +10,17 @@ namespace AIStudio.Components.Settings;
 
 public partial class SettingsPanelTranscription : SettingsPanelProviderBase
 {
+    /// <summary>
+    /// Groups the table by the used LLM provider. The transcription provider list is already sorted by
+    /// that provider, so all instances of one LLM provider form a single, coherent group.
+    /// </summary>
+    private static readonly TableGroupDefinition<TranscriptionProvider> GROUP_CONFIG = new()
+    {
+        Expandable = true,
+        IsInitiallyExpanded = true,
+        Selector = provider => provider.UsedLLMProvider.ToName(),
+    };
+
     [Parameter]
     public List<ConfigurationSelectData<string>> AvailableTranscriptionProviders { get; set; } = new();
     
