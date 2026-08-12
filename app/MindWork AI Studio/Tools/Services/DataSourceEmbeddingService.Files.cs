@@ -15,6 +15,7 @@ public sealed partial class DataSourceEmbeddingService
 {
     private const string OFFICE_LOCK_FILE_PREFIX = "~$";
     private const int DEFAULT_CHUNK_OVERLAP_TOKEN_LENGTH = 300;
+    private const bool IMAGE_EMBEDDING_ENABLED = false;
 
     private static readonly string[] RAG_DELIMITED_TABLE_FILE_EXTENSIONS = ["csv", "tsv"];
     private static readonly string[] RAG_SPREADSHEET_FILE_EXTENSIONS = ["ods", "xlsm", "xlsb"];
@@ -46,17 +47,7 @@ public sealed partial class DataSourceEmbeddingService
     {
         var options = this.GetChunkingOptions(dataSource, embeddingProvider);
         var strategy = this.GetChunkingStrategy(filePath);
-        ExtractedFileContent content;
-
-        if (this.IsImageFilePath(filePath))
-        {
-            var imageIndexText = this.BuildImageIndexText(filePath);
-            content = new(imageIndexText, [new(imageIndexText, null)]);
-        }
-        else
-        {
-            content = await this.ReadExtractedFileContentAsync(filePath, embeddingProvider, token);
-        }
+        var content = await this.ReadExtractedFileContentAsync(filePath, embeddingProvider, token);
 
         await foreach (var chunk in this.SplitByChunkingStrategyAsync(content, strategy, options, embeddingProvider, token))
             yield return chunk;
@@ -567,12 +558,6 @@ public sealed partial class DataSourceEmbeddingService
 
     private ChunkingStrategy GetChunkingStrategy(string filePath)
     {
-        if (this.IsImageFilePath(filePath))
-            return new("image", [
-                new("Whitespace", SplitByWhitespace),
-                new("Hard cut", null),
-            ]);
-
         if (this.IsPresentationFilePath(filePath))
             return new("presentation", [
                 new("Slide", SplitBySourceSegments, true),
@@ -917,7 +902,7 @@ public sealed partial class DataSourceEmbeddingService
     private bool IsSupportedRagFilePath(string filePath)
     {
         var extension = Path.GetExtension(filePath).TrimStart('.');
-        return FileTypes.IsAllowedPath(filePath, FileTypes.DOCUMENT, FileTypes.IMAGE)
+        return FileTypes.IsAllowedPath(filePath, FileTypes.DOCUMENT)
                || RAG_DELIMITED_TABLE_FILE_EXTENSIONS.Contains(extension, StringComparer.OrdinalIgnoreCase)
                || RAG_SPREADSHEET_FILE_EXTENSIONS.Contains(extension, StringComparer.OrdinalIgnoreCase)
                || RAG_SPREADSHEET_ADD_IN_FILE_EXTENSIONS.Contains(extension, StringComparer.OrdinalIgnoreCase);
@@ -926,6 +911,9 @@ public sealed partial class DataSourceEmbeddingService
     private RagFileIndexingDecision GetRagFileIndexingDecision(FileInfo file)
     {
         if (this.IsSkippedRagFile(file))
+            return RagFileIndexingDecision.EXCLUDED;
+
+        if (!IMAGE_EMBEDDING_ENABLED && this.IsImageFilePath(file.FullName))
             return RagFileIndexingDecision.EXCLUDED;
 
         return this.IsSupportedRagFilePath(file.FullName)
@@ -973,26 +961,6 @@ public sealed partial class DataSourceEmbeddingService
             logger.LogWarning(exception, "Cannot inspect directory '{DirectoryPath}' while indexing.", path);
             return true;
         }
-    }
-
-    private string BuildImageIndexText(string filePath)
-    {
-        var fileName = Path.GetFileName(filePath);
-        var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(filePath);
-        var extension = Path.GetExtension(filePath).TrimStart('.');
-        var normalizedName = fileNameWithoutExtension
-            .Replace('_', ' ')
-            .Replace('-', ' ')
-            .Trim();
-
-        return $$"""
-                 Image asset
-                 File name: {{fileName}}
-                 Type: {{extension}}
-                 Search terms: {{normalizedName}}
-                 Path: {{filePath}}
-                 Note: The current RAG embedding pipeline stores image files by metadata only. Visual content is not OCRed or captioned yet.
-                 """;
     }
 
     private string BuildEmbeddingSignature(IDataSource dataSource, EmbeddingProvider embeddingProvider, ChunkingOptions chunkingOptions)
