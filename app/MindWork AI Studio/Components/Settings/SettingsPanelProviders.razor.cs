@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 
 using AIStudio.Dialogs;
+using AIStudio.Provider;
 using AIStudio.Settings;
 
 using Microsoft.AspNetCore.Components;
@@ -11,6 +12,17 @@ namespace AIStudio.Components.Settings;
 
 public partial class SettingsPanelProviders : SettingsPanelProviderBase
 {
+    /// <summary>
+    /// Groups the table by the used LLM provider. The provider list is already sorted by that
+    /// provider, so all instances of one LLM provider form a single, coherent group.
+    /// </summary>
+    private static readonly TableGroupDefinition<AIStudio.Settings.Provider> GROUP_CONFIG = new()
+    {
+        Expandable = true,
+        IsInitiallyExpanded = false,
+        Selector = provider => provider.UsedLLMProvider.ToName(),
+    };
+
     [Parameter]
     public List<ConfigurationSelectData<string>> AvailableLLMProviders { get; set; } = new();
     

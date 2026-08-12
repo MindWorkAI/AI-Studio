@@ -48,7 +48,7 @@ public abstract class SettingsDialogBase : MSGComponentBase
     private void UpdateEmbeddingProviders()
     {
         this.AvailableEmbeddingProviders.Clear();
-        foreach (var provider in this.SettingsManager.ConfigurationData.EmbeddingProviders)
+        foreach (var provider in this.SettingsManager.GetAllEmbeddingProviders())
             this.AvailableEmbeddingProviders.Add(new (provider.Name, provider.Id));
     }
 

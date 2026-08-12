@@ -540,12 +540,18 @@ public sealed class SettingsManager
     /// since they honor the confidence levels.
     /// </para>
     /// <para>
-    /// The returned list is the live provider list. It is read-only for callers: adding, editing,
-    /// or removing providers stays inside the settings UI.
+    /// The returned list is a sorted copy of the provider list, ordered by the used LLM provider and
+    /// then by the instance name. This way, all providers of the same LLM provider stay together, and
+    /// newly added providers appear at their alphabetical position instead of at the end. Callers must
+    /// not mutate the returned list: adding, editing, or removing providers stays inside the settings UI.
     /// </para>
     /// </remarks>
     /// <returns>All configured providers, unfiltered.</returns>
-    public IReadOnlyList<Provider> GetAllProviders() => this.ConfigurationData.Providers;
+    public IReadOnlyList<Provider> GetAllProviders() => this.ConfigurationData.Providers
+        .OrderBy(x => x.UsedLLMProvider.ToName(), StringComparer.OrdinalIgnoreCase)
+        .ThenBy(x => x.InstanceName, StringComparer.OrdinalIgnoreCase)
+        .ThenBy(x => x.Num)
+        .ToList();
 
     /// <summary>
     /// Returns the provider with the given id, without applying any confidence filtering.
@@ -605,14 +611,44 @@ public sealed class SettingsManager
     /// </summary>
     /// <param name="component">The component for which the providers get filtered.</param>
     /// <param name="explicitMinimum">An explicit minimum level, which is applied when it is higher than the component's minimum.</param>
-    /// <returns>All providers the component may use.</returns>
+    /// <returns>All providers the component may use, in the same order as GetAllProviders.</returns>
     public IEnumerable<Provider> GetConfidentProviders(Tools.Components component, ConfidenceLevel explicitMinimum = ConfidenceLevel.UNKNOWN)
     {
         var minimumLevel = this.GetEffectiveMinimumConfidenceLevel(component, explicitMinimum);
-        foreach (var provider in this.ConfigurationData.Providers)
+        foreach (var provider in this.GetAllProviders())
             if (provider.UsedLLMProvider is not LLMProviders.NONE && provider.UsedLLMProvider.GetConfidence(this).Level >= minimumLevel)
                 yield return provider;
     }
+
+    /// <summary>
+    /// Returns all configured embedding providers.
+    /// </summary>
+    /// <remarks>
+    /// The returned list is a sorted copy of the embedding provider list, ordered by the used LLM
+    /// provider and then by the name. Callers must not mutate the returned list: adding, editing, or
+    /// removing embedding providers stays inside the settings UI.
+    /// </remarks>
+    /// <returns>All configured embedding providers.</returns>
+    public IReadOnlyList<EmbeddingProvider> GetAllEmbeddingProviders() => this.ConfigurationData.EmbeddingProviders
+        .OrderBy(x => x.UsedLLMProvider.ToName(), StringComparer.OrdinalIgnoreCase)
+        .ThenBy(x => x.Name, StringComparer.OrdinalIgnoreCase)
+        .ThenBy(x => x.Num)
+        .ToList();
+
+    /// <summary>
+    /// Returns all configured transcription providers.
+    /// </summary>
+    /// <remarks>
+    /// The returned list is a sorted copy of the transcription provider list, ordered by the used LLM
+    /// provider and then by the name. Callers must not mutate the returned list: adding, editing, or
+    /// removing transcription providers stays inside the settings UI.
+    /// </remarks>
+    /// <returns>All configured transcription providers.</returns>
+    public IReadOnlyList<TranscriptionProvider> GetAllTranscriptionProviders() => this.ConfigurationData.TranscriptionProviders
+        .OrderBy(x => x.UsedLLMProvider.ToName(), StringComparer.OrdinalIgnoreCase)
+        .ThenBy(x => x.Name, StringComparer.OrdinalIgnoreCase)
+        .ThenBy(x => x.Num)
+        .ToList();
 
     public Profile GetPreselectedProfile(Tools.Components component)
     {
