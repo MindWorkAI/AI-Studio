@@ -1,5 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
-
 using AIStudio.Components;
 using AIStudio.Settings;
 using AIStudio.Tools.Services;
@@ -40,11 +38,10 @@ public abstract class SettingsDialogBase : MSGComponentBase
     
     protected void Close() => this.MudDialog.Cancel();
     
-    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
     private void UpdateProviders()
     {
         this.AvailableLLMProviders.Clear();
-        foreach (var provider in this.SettingsManager.ConfigurationData.Providers)
+        foreach (var provider in this.SettingsManager.GetAllProviders())
             this.AvailableLLMProviders.Add(new (provider.InstanceName, provider.Id));
     }
     

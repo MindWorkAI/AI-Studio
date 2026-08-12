@@ -27,7 +27,7 @@ public partial class SettingsPanelProviders : SettingsPanelProviderBase
 
     #endregion
     
-    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
+    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed", Justification = "Managing the provider list is the purpose of this settings panel. Reading providers goes through the settings manager, but adding, editing, and removing them stays here on purpose.")]
     private async Task AddLLMProvider()
     {
         var dialogParameters = new DialogParameters<ProviderDialog>
@@ -50,7 +50,7 @@ public partial class SettingsPanelProviders : SettingsPanelProviderBase
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
 
-    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
+    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed", Justification = "Managing the provider list is the purpose of this settings panel. Reading providers goes through the settings manager, but adding, editing, and removing them stays here on purpose.")]
     private async Task EditLLMProvider(AIStudio.Settings.Provider provider)
     {
         if(provider == AIStudio.Settings.Provider.NONE)
@@ -94,7 +94,7 @@ public partial class SettingsPanelProviders : SettingsPanelProviderBase
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
 
-    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
+    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed", Justification = "Managing the provider list is the purpose of this settings panel. Reading providers goes through the settings manager, but adding, editing, and removing them stays here on purpose.")]
     private async Task DeleteLLMProvider(AIStudio.Settings.Provider provider)
     {
         var dialogParameters = new DialogParameters<ConfirmDialog>
@@ -156,11 +156,10 @@ public partial class SettingsPanelProviders : SettingsPanelProviderBase
         return modelName.Length > MAX_LENGTH ? "[...] " + modelName[^Math.Min(MAX_LENGTH, modelName.Length)..] : modelName;
     }
     
-    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
     private async Task UpdateProviders()
     {
         this.AvailableLLMProviders.Clear();
-        foreach (var provider in this.SettingsManager.ConfigurationData.Providers)
+        foreach (var provider in this.SettingsManager.GetAllProviders())
             this.AvailableLLMProviders.Add(new (provider.InstanceName, provider.Id));
         
         await this.AvailableLLMProvidersChanged.InvokeAsync(this.AvailableLLMProviders);
