@@ -129,7 +129,7 @@ public partial class SettingsPanelTranscription : SettingsPanelProviderBase
     private async Task UpdateTranscriptionProviders()
     {
         this.AvailableTranscriptionProviders.Clear();
-        foreach (var provider in this.SettingsManager.ConfigurationData.TranscriptionProviders)
+        foreach (var provider in this.SettingsManager.GetAllTranscriptionProviders())
             this.AvailableTranscriptionProviders.Add(new (provider.Name, provider.Id));
         
         await this.AvailableTranscriptionProvidersChanged.InvokeAsync(this.AvailableTranscriptionProviders);

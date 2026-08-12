@@ -91,7 +91,7 @@ public partial class SettingsPanelApp : SettingsPanelBase
         yield return new(T("Disable dictation and transcription"), string.Empty);
 
         var minimumLevel = this.SettingsManager.GetMinimumConfidenceLevel(Tools.Components.APP_SETTINGS);
-        foreach (var provider in this.SettingsManager.ConfigurationData.TranscriptionProviders)
+        foreach (var provider in this.SettingsManager.GetAllTranscriptionProviders())
         {
             if (provider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level >= minimumLevel)
                 yield return new(provider.Name, provider.Id);

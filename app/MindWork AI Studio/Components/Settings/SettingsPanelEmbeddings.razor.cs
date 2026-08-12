@@ -131,7 +131,7 @@ public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
     private async Task UpdateEmbeddingProviders()
     {
         this.AvailableEmbeddingProviders.Clear();
-        foreach (var provider in this.SettingsManager.ConfigurationData.EmbeddingProviders)
+        foreach (var provider in this.SettingsManager.GetAllEmbeddingProviders())
             this.AvailableEmbeddingProviders.Add(new (provider.Name, provider.Id));
         
         await this.AvailableEmbeddingProvidersChanged.InvokeAsync(this.AvailableEmbeddingProviders);

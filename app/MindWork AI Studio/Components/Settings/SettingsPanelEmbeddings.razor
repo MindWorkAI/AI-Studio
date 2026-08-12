@@ -17,7 +17,7 @@
         <MudJustifiedText Typo="Typo.body1" Class="mb-3">
             @T("This helps AI Studio understand and compare things in a way that's similar to how humans do. When you're working on something, AI Studio can automatically identify related documents and data by comparing their digital fingerprints. For instance, if you're writing about customer service, AI Studio can instantly find other documents in your data that discuss similar topics or experiences, even if they use different words.")
         </MudJustifiedText>
-        <MudTable Items="@this.SettingsManager.ConfigurationData.EmbeddingProviders" Hover="@true" Class="border-dashed border rounded-lg">
+        <MudTable Items="@this.SettingsManager.GetAllEmbeddingProviders()" Hover="@true" Class="border-dashed border rounded-lg">
             <ColGroup>
                 <col style="width: 3em;"/>
                 <col style="width: 12em;"/>
