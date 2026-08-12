@@ -18,7 +18,7 @@ public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
     private static readonly TableGroupDefinition<EmbeddingProvider> GROUP_CONFIG = new()
     {
         Expandable = true,
-        IsInitiallyExpanded = true,
+        IsInitiallyExpanded = false,
         Selector = provider => provider.UsedLLMProvider.ToName(),
     };
 

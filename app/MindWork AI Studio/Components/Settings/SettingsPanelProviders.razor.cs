@@ -19,7 +19,7 @@ public partial class SettingsPanelProviders : SettingsPanelProviderBase
     private static readonly TableGroupDefinition<AIStudio.Settings.Provider> GROUP_CONFIG = new()
     {
         Expandable = true,
-        IsInitiallyExpanded = true,
+        IsInitiallyExpanded = false,
         Selector = provider => provider.UsedLLMProvider.ToName(),
     };
 

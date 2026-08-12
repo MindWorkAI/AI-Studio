@@ -17,7 +17,7 @@ public partial class SettingsPanelTranscription : SettingsPanelProviderBase
     private static readonly TableGroupDefinition<TranscriptionProvider> GROUP_CONFIG = new()
     {
         Expandable = true,
-        IsInitiallyExpanded = true,
+        IsInitiallyExpanded = false,
         Selector = provider => provider.UsedLLMProvider.ToName(),
     };
 
