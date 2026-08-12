@@ -80,7 +80,7 @@ public static partial class ProviderExtensions
                 return
                 [
                     Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
-                    Capability.OPTIONAL_REASONING,
+                    Capability.REASONING_BY_DEFAULT, Capability.FUNCTION_CALLING,
                     Capability.CHAT_COMPLETION_API,
                 ];
 
@@ -125,11 +125,10 @@ public static partial class ProviderExtensions
             if(modelName.IndexOf("qwen3.6") is not -1)
                 return
                 [
-                    Capability.TEXT_INPUT, Capability.VIDEO_INPUT,
-                    Capability.MULTIPLE_IMAGE_INPUT,
+                    Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
                     Capability.TEXT_OUTPUT,
                     
-                    Capability.OPTIONAL_REASONING, Capability.FUNCTION_CALLING,
+                    Capability.REASONING_BY_DEFAULT, Capability.FUNCTION_CALLING,
                     Capability.CHAT_COMPLETION_API,
                 ];
             
@@ -362,7 +361,7 @@ public static partial class ProviderExtensions
                     Capability.TEXT_INPUT,
                     Capability.TEXT_OUTPUT,
 
-                    Capability.OPTIONAL_REASONING, Capability.FUNCTION_CALLING,
+                    Capability.REASONING_BY_DEFAULT, Capability.FUNCTION_CALLING,
                     Capability.CHAT_COMPLETION_API,
                 ];
 
