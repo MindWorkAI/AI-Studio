@@ -34,7 +34,12 @@ public sealed class ProviderAccessAnalyzer : DiagnosticAnalyzer
     
     public override void Initialize(AnalysisContext context)
     {
-        context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
+        //
+        // We analyze generated code as well, because Razor markup ends up in generated files. Without
+        // this, any `ConfigurationData.Providers` access written directly in a `.razor` file would
+        // bypass this rule entirely. The Razor compiler maps the diagnostic back to the `.razor` line:
+        //
+        context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.Analyze | GeneratedCodeAnalysisFlags.ReportDiagnostics);
         context.EnableConcurrentExecution();
         context.RegisterSyntaxNodeAction(this.AnalyzeMemberAccess, SyntaxKind.SimpleMemberAccessExpression);
     }
