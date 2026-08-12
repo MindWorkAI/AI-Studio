@@ -8898,6 +8898,9 @@ UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T1014558951"] = "Das Vertrauens
 -- You or your organization operate the LLM locally or within your trusted network. In terms of data processing and security, this is the best possible way.
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T2124364471"] = "Sie oder ihre Organisation betreiben das LLM lokal oder innerhalb ihres vertrauenswürdigen Netzwerks. In Bezug auf Datenverarbeitung und Sicherheit ist dies die bestmögliche Lösung."
 
+-- The provider operates its service in the EU and is subject to the **GDPR** (General Data Protection Regulation). It provides access to **open source models**. However, the service is currently **experimental**, and performance and availability are not guaranteed. We have no provider-specific information about whether submitted data is used for training.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T2930312134"] = "Der Anbieter betreibt seinen Dienst in der EU und unterliegt der **DSGVO** (Datenschutz-Grundverordnung). Er bietet Zugang zu **Open-Source-Modellen**. Der Dienst befindet sich jedoch derzeit in einer **experimentellen** Phase; Leistung und Verfügbarkeit werden nicht garantiert. Uns liegen keine anbieterspezifischen Informationen dazu vor, ob übermittelte Daten für das Training verwendet werden."
+
 -- The provider is located in the EU and is subject to the **GDPR** (General Data Protection Regulation). Additionally, the provider states that **your data is not used for training**.
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T3010553924"] = "Der Anbieter hat seinen Sitz in der EU und unterliegt der **DSGVO** (Datenschutz-Grundverordnung). Außerdem gibt der Anbieter an, dass **ihre Daten nicht zum Training verwendet werden**."
 
