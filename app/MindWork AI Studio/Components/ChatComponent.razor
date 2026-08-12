@@ -130,7 +130,7 @@
             
             @if (PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager))
             {
-                <DataSourceSelection @ref="@this.dataSourceSelectionComponent" PopoverTriggerMode="PopoverTriggerMode.BUTTON" LLMProvider="@this.Provider" DataSourceOptions="@this.GetCurrentDataSourceOptions()" DataSourceOptionsChanged="@(async options => await this.SetCurrentDataSourceOptions(options))" DataSourcesAISelected="@this.GetAgentSelectedDataSources()"/>
+                <DataSourceSelection @ref="@this.dataSourceSelectionComponent" PopoverTriggerMode="PopoverTriggerMode.ICON" LLMProvider="@this.Provider" DataSourceOptions="@this.GetCurrentDataSourceOptions()" DataSourceOptionsChanged="@(async options => await this.SetCurrentDataSourceOptions(options))" DataSourcesAISelected="@this.GetAgentSelectedDataSources()"/>
             }
             
             @if (this.SettingsManager.ConfigurationData.Confidence.ShowProviderConfidence)
