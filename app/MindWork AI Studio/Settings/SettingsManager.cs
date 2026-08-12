@@ -491,10 +491,23 @@ public sealed class SettingsManager
     {
         var minimumLevel = this.GetMinimumConfidenceLevel(Tools.Components.CHAT);
 
-        bool IsSelectableProvider(Provider provider) =>
-            provider != Provider.NONE
-            && provider.UsedLLMProvider != LLMProviders.NONE
-            && provider.UsedLLMProvider.GetConfidence(this).Level >= minimumLevel;
+        var chatProvider = FindProviderById(chatProviderId);
+        if (chatProvider is not null)
+            return chatProvider;
+
+        var defaultChatProvider = this.ConfigurationData.Chat.PreselectOptions
+            ? FindProviderById(this.ConfigurationData.Chat.PreselectedProvider)
+            : null;
+        
+        if (defaultChatProvider is not null)
+            return defaultChatProvider;
+
+        var defaultAppProvider = FindProviderById(this.ConfigurationData.App.PreselectedProvider);
+        if (defaultAppProvider is not null)
+            return defaultAppProvider;
+
+        var selectableProviders = this.ConfigurationData.Providers.Where(IsSelectableProvider).ToList();
+        return selectableProviders.Count == 1 ? selectableProviders[0] : Provider.NONE;
 
         Provider? FindProviderById(string? providerId)
         {
@@ -505,22 +518,106 @@ public sealed class SettingsManager
             return provider is not null && IsSelectableProvider(provider) ? provider : null;
         }
 
-        var chatProvider = FindProviderById(chatProviderId);
-        if (chatProvider is not null)
-            return chatProvider;
+        bool IsSelectableProvider(Provider provider) =>
+            provider != Provider.NONE
+            && provider.UsedLLMProvider != LLMProviders.NONE
+            && provider.UsedLLMProvider.GetConfidence(this).Level >= minimumLevel;
+    }
 
-        var defaultChatProvider = this.ConfigurationData.Chat.PreselectOptions
-            ? FindProviderById(this.ConfigurationData.Chat.PreselectedProvider)
-            : null;
-        if (defaultChatProvider is not null)
-            return defaultChatProvider;
+    /// <summary>
+    /// Returns all configured providers without applying any confidence filtering.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This method applies neither the global minimum confidence level (see
+    /// <see cref="Data.Confidence"/> with <c>EnforceGlobalMinimumConfidence</c>) nor any
+    /// component-specific minimum. Even when the user enforces a global minimum of, say,
+    /// <see cref="ConfidenceLevel.HIGH"/>, this method still returns every configured provider.
+    /// That is intentional: this method serves the provider management UI, duplicate-name checks,
+    /// and the raw select data of provider dropdowns. The dropdowns are filtered afterward by
+    /// ConfigurationProviderSelection, which calls IsProviderConfident.
+    /// </para>
+    /// <para>
+    /// Whenever a provider is about to be used for an LLM request, do not use this method. Use
+    /// GetConfidentProviders, GetPreselectedProvider, or GetChatProviderForLoadedChat instead,
+    /// since they honor the confidence levels.
+    /// </para>
+    /// <para>
+    /// The returned list is the live provider list. It is read-only for callers: adding, editing,
+    /// or removing providers stays inside the settings UI.
+    /// </para>
+    /// </remarks>
+    /// <returns>All configured providers, unfiltered.</returns>
+    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
+    public IReadOnlyList<Provider> GetAllProviders() => this.ConfigurationData.Providers;
 
-        var defaultAppProvider = FindProviderById(this.ConfigurationData.App.PreselectedProvider);
-        if (defaultAppProvider is not null)
-            return defaultAppProvider;
+    /// <summary>
+    /// Returns the provider with the given id, without applying any confidence filtering.
+    /// </summary>
+    /// <remarks>
+    /// This method resolves a stored provider reference by its id. It applies neither the global
+    /// minimum confidence level nor any component-specific minimum, so it returns the requested
+    /// provider even when the user enforces a higher global minimum. Callers that intend to use the
+    /// returned provider for an LLM request must check it themselves through
+    /// IsProviderConfident or fall back to GetPreselectedProvider.
+    /// </remarks>
+    /// <param name="providerId">The id of the provider to look up.</param>
+    /// <returns>The provider, or <see cref="Provider.NONE"/> when no provider with that id exists.</returns>
+    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
+    public Provider GetProviderById(string? providerId)
+    {
+        if (string.IsNullOrWhiteSpace(providerId))
+            return Provider.NONE;
 
-        var selectableProviders = this.ConfigurationData.Providers.Where(IsSelectableProvider).ToList();
-        return selectableProviders.Count == 1 ? selectableProviders[0] : Provider.NONE;
+        if (string.Equals(providerId, Provider.NONE.Id, StringComparison.OrdinalIgnoreCase))
+            return Provider.NONE;
+
+        return this.ConfigurationData.Providers.FirstOrDefault(x => x.Id.Equals(providerId, StringComparison.OrdinalIgnoreCase)) ?? Provider.NONE;
+    }
+
+    /// <summary>
+    /// Determines the minimum confidence level a provider must have for the given component.
+    /// </summary>
+    /// <param name="component">The component for which the providers get filtered.</param>
+    /// <param name="explicitMinimum">An explicit minimum level, which is applied when it is higher than the component's minimum.</param>
+    /// <returns>The effective minimum confidence level.</returns>
+    public ConfidenceLevel GetEffectiveMinimumConfidenceLevel(Tools.Components component, ConfidenceLevel explicitMinimum = ConfidenceLevel.UNKNOWN)
+    {
+        var minimumLevel = this.GetMinimumConfidenceLevel(component);
+        if (explicitMinimum is not ConfidenceLevel.UNKNOWN && explicitMinimum > minimumLevel)
+            return explicitMinimum;
+
+        return minimumLevel;
+    }
+
+    /// <summary>
+    /// Checks whether the given provider satisfies the minimum confidence level of the given component.
+    /// </summary>
+    /// <param name="provider">The provider to check.</param>
+    /// <param name="component">The component for which the provider gets checked.</param>
+    /// <param name="explicitMinimum">An explicit minimum level, which is applied when it is higher than the component's minimum.</param>
+    /// <returns>True, when the provider may be used by the component, false otherwise.</returns>
+    public bool IsProviderConfident(Provider provider, Tools.Components component, ConfidenceLevel explicitMinimum = ConfidenceLevel.UNKNOWN)
+    {
+        if (provider.UsedLLMProvider is LLMProviders.NONE)
+            return false;
+
+        return provider.UsedLLMProvider.GetConfidence(this).Level >= this.GetEffectiveMinimumConfidenceLevel(component, explicitMinimum);
+    }
+
+    /// <summary>
+    /// Returns all providers that satisfy the minimum confidence level of the given component.
+    /// </summary>
+    /// <param name="component">The component for which the providers get filtered.</param>
+    /// <param name="explicitMinimum">An explicit minimum level, which is applied when it is higher than the component's minimum.</param>
+    /// <returns>All providers the component may use.</returns>
+    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
+    public IEnumerable<Provider> GetConfidentProviders(Tools.Components component, ConfidenceLevel explicitMinimum = ConfidenceLevel.UNKNOWN)
+    {
+        var minimumLevel = this.GetEffectiveMinimumConfidenceLevel(component, explicitMinimum);
+        foreach (var provider in this.ConfigurationData.Providers)
+            if (provider.UsedLLMProvider is not LLMProviders.NONE && provider.UsedLLMProvider.GetConfidence(this).Level >= minimumLevel)
+                yield return provider;
     }
 
     public Profile GetPreselectedProfile(Tools.Components component)
