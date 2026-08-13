@@ -6154,6 +6154,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2189814010"] = "Model"
 -- (Optional) API Key
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2331453405"] = "(Optional) API Key"
 
+-- Failed to remove the API key from the operating system. The message was: {0}. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2439094236"] = "Failed to remove the API key from the operating system. The message was: {0}. Please try again."
+
 -- Enabled
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2626085950"] = "Enabled"
 

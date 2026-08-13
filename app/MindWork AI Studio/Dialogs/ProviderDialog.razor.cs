@@ -136,6 +136,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     private bool dataIsValid;
     private string[] dataIssues = [];
     private string dataAPIKey = string.Empty;
+    private bool dataHadStoredAPIKeyOnLoad;
     private string dataManuallyModel = string.Empty;
     private string dataAPIKeyStorageIssue = string.Empty;
     private string dataEditingPreviousInstanceName = string.Empty;
@@ -237,7 +238,10 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
             // Load the API key:
             var requestedSecret = await this.RustService.GetAPIKey(this, SecretStoreType.LLM_PROVIDER, isTrying: this.DataLLMProvider is LLMProviders.SELF_HOSTED);
             if (requestedSecret.Success)
+            {
                 this.dataAPIKey = await requestedSecret.Secret.Decrypt(this.encryption);
+                this.dataHadStoredAPIKeyOnLoad = !string.IsNullOrWhiteSpace(this.dataAPIKey);
+            }
             else
             {
                 this.dataAPIKey = string.Empty;
@@ -311,6 +315,22 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
                 await this.form.Validate();
                 return;
             }
+
+            this.dataHadStoredAPIKeyOnLoad = true;
+        }
+        else if (this.dataHadStoredAPIKeyOnLoad)
+        {
+            // The user cleared a previously stored key. Without this, the old key would simply
+            // stay in the OS keyring untouched and keep being used:
+            var deleteResponse = await this.RustService.DeleteAPIKey(this, SecretStoreType.LLM_PROVIDER);
+            if (!deleteResponse.Success)
+            {
+                this.dataAPIKeyStorageIssue = string.Format(T("Failed to remove the API key from the operating system. The message was: {0}. Please try again."), deleteResponse.Issue);
+                await this.form.Validate();
+                return;
+            }
+
+            this.dataHadStoredAPIKeyOnLoad = false;
         }
 
         this.MudDialog.Close(DialogResult.Ok(addedProviderSettings));
