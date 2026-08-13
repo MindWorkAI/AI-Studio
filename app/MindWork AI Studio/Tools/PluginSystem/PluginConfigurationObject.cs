@@ -407,6 +407,13 @@ public sealed record PluginConfigurationObject
                 else
                     LOG.LogWarning($"Failed to delete secret for removed enterprise object '{item.Name}' from the OS keyring: {deleteResult.Issue}");
             }
+            else if(item is Settings.Provider { AllowUserProvidedAPIKey: true })
+            {
+                // The user manages their own key for this provider. Keep it in the OS keyring
+                // in case the organization's configuration comes back later, instead of forcing
+                // the user to re-enter it:
+                LOG.LogInformation($"Preserving the user-provided API key for removed enterprise provider '{item.Name}' in the OS keyring.");
+            }
             else if(secretStoreType is not null && item is ISecretId secretId)
             {
                 var deleteResult = await RustService.DeleteAPIKey(secretId, secretStoreType.Value);

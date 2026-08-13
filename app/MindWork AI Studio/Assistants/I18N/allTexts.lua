@@ -4429,6 +4429,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T426925
 -- This self-hosted provider is trusted for data source security checks.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T485526152"] = "This self-hosted provider is trusted for data source security checks."
 
+-- This provider is managed by your organization. You can set your own API key.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T579100747"] = "This provider is managed by your organization. You can set your own API key."
+
 -- Open Dashboard
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T78223861"] = "Open Dashboard"
 
@@ -6084,6 +6087,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINGGUIDELINEDIALOG::T4250996615"] = "P
 
 -- Hugging Face Inference Provider
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1085481431"] = "Hugging Face Inference Provider"
+
+-- This provider is managed by your organization. Host, model, and other settings are locked. You can set your own API key below.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1090492389"] = "This provider is managed by your organization. Host, model, and other settings are locked. You can set your own API key below."
 
 -- Hide Expert Settings
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1108876344"] = "Hide Expert Settings"

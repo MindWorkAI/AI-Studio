@@ -37,10 +37,16 @@
                             <MudIconButton Color="Color.Success" Icon="@Icons.Material.Filled.VerifiedUser" Disabled="true"/>
                         </MudTooltip>
                     }
-                    @if (context.IsEnterpriseConfiguration)
+                    @if (context.IsEnterpriseConfiguration && !context.AllowUserProvidedAPIKey)
                     {
                         <MudTooltip Text="@T("This provider is managed by your organization.")">
                             <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Business" Disabled="true"/>
+                        </MudTooltip>
+                    }
+                    else if (context.IsEnterpriseConfiguration && context.AllowUserProvidedAPIKey)
+                    {
+                        <MudTooltip Text="@T("This provider is managed by your organization. You can set your own API key.")">
+                            <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Key" OnClick="@(() => this.EditLLMProvider(context))"/>
                         </MudTooltip>
                     }
                     else

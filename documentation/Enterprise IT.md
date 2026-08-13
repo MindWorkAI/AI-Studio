@@ -535,3 +535,44 @@ CONFIG["LLM_PROVIDERS"][#CONFIG["LLM_PROVIDERS"]+1] = {
 ```
 
 The API key will be automatically decrypted when the configuration is loaded and stored securely in the operating system's credential store (Windows Credential Manager / macOS Keychain).
+
+## Letting users provide their own API key
+
+Sometimes you want to hand out a preconfigured provider -- a fixed host, model, and instance name
+-- without embedding a shared API key for it. Each user then brings their own key, for example
+their personal OpenAI or Anthropic account, while everything else about the provider stays exactly
+as your organization configured it.
+
+Set `AllowUserProvidedAPIKey` on the provider:
+
+```lua
+CONFIG["LLM_PROVIDERS"][#CONFIG["LLM_PROVIDERS"]+1] = {
+    ["Id"] = "9072b77d-ca81-40da-be6a-861da525ef7b",
+    ["InstanceName"] = "Corporate OpenAI GPT-4",
+    ["UsedLLMProvider"] = "OPEN_AI",
+    ["Host"] = "NONE",
+    ["Hostname"] = "",
+    ["AllowUserProvidedAPIKey"] = true,
+    ["AdditionalJsonApiParameters"] = "",
+    ["Model"] = {
+        ["Id"] = "gpt-4",
+        ["DisplayName"] = "GPT-4",
+    }
+}
+```
+
+With `AllowUserProvidedAPIKey` set, the provider still shows up as managed by your organization,
+and users still cannot change the host, model, instance name, or any other field. The settings
+page shows a key icon instead of the usual lock icon for this provider; opening it only offers the
+API key field, with everything else disabled.
+
+This is mutually exclusive with an embedded `APIKey` on the same provider: if both are present,
+AI Studio ignores the embedded key and logs a warning, because the whole point of the flag is that
+each user manages their own key. Combine the two across different providers if you need it -- one
+provider with a shared, embedded key and another with `AllowUserProvidedAPIKey` -- but not on the
+same provider.
+
+The user's key follows the same "withdrawing a configuration" philosophy as everything else in this
+document: if your configuration stops offering this provider, AI Studio removes the provider from
+the settings but leaves the user's key in the OS keyring rather than deleting it, in case the same
+provider comes back later. See [Withdrawing a configuration](#withdrawing-a-configuration).

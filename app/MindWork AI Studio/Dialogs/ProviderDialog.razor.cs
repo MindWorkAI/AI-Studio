@@ -90,6 +90,13 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     /// </summary>
     [Parameter]
     public bool IsEditing { get; init; }
+
+    /// <summary>
+    /// Whether this provider is managed by an enterprise configuration plugin. When true, every
+    /// field except the API key is locked, matching <see cref="Settings.Provider.IsEnterpriseConfiguration"/>.
+    /// </summary>
+    [Parameter]
+    public bool IsEnterpriseConfiguration { get; set; }
     
     [Parameter]
     public string AdditionalJsonApiParameters { get; set; } = string.Empty;
@@ -170,7 +177,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
             UsedLLMProvider = this.DataLLMProvider,
             Model = this.GetSelectedModel(),
             IsSelfHosted = this.DataLLMProvider is LLMProviders.SELF_HOSTED,
-            IsEnterpriseConfiguration = false,
+            IsEnterpriseConfiguration = this.IsEnterpriseConfiguration,
             Hostname = cleanedHostname.EndsWith('/') ? cleanedHostname[..^1] : cleanedHostname,
             Host = this.DataHost,
             HFInferenceProvider = this.HFInferenceProviderId,
@@ -234,7 +241,10 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
             else
             {
                 this.dataAPIKey = string.Empty;
-                if (this.DataLLMProvider is not LLMProviders.SELF_HOSTED)
+
+                // For an enterprise-managed provider, having no key yet is the expected first-run
+                // state, not a storage failure -- the user is just about to set their own key:
+                if (this.DataLLMProvider is not LLMProviders.SELF_HOSTED && !this.IsEnterpriseConfiguration)
                 {
                     this.dataAPIKeyStorageIssue = string.Format(T("Failed to load the API key from the operating system. The message was: {0}. You might ignore this message and provide the API key again."), requestedSecret.Issue);
                     await this.form.Validate();
@@ -259,8 +269,12 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
 
     #region Implementation of ISecretId
 
-    public string SecretId => this.DataLLMProvider.ToSecretId();
-    
+    // Must mirror Settings.Provider.SecretId exactly: when editing an enterprise-managed
+    // provider, the key has to be stored under the same "ENT::"-prefixed keyring row that the
+    // app reads from at runtime (see BaseProvider.SecretId). Otherwise, a key entered here would
+    // silently end up in the wrong keyring row and never be found again.
+    public string SecretId => this.IsEnterpriseConfiguration ? $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{this.DataLLMProvider.ToSecretId()}" : this.DataLLMProvider.ToSecretId();
+
     public string SecretName => this.DataInstanceName;
 
     #endregion
