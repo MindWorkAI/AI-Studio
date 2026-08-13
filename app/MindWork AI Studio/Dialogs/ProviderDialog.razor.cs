@@ -93,7 +93,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
 
     /// <summary>
     /// Whether this provider is managed by an enterprise configuration plugin. When true, every
-    /// field except the API key is locked, matching <see cref="Settings.Provider.IsEnterpriseConfiguration"/>.
+    /// field except the API key is locked, matching Settings.Provider.IsEnterpriseConfiguration.
     /// </summary>
     [Parameter]
     public bool IsEnterpriseConfiguration { get; set; }
