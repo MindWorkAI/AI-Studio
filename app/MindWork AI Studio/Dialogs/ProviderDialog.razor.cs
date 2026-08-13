@@ -209,9 +209,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         this.SettingsManager.InjectSpellchecking(SPELLCHECK_ATTRIBUTES);
         
         // Load the used instance names:
-        #pragma warning disable MWAIS0001
-        this.UsedInstanceNames = this.SettingsManager.ConfigurationData.Providers.Select(x => x.InstanceName.ToLowerInvariant()).ToList();
-        #pragma warning restore MWAIS0001
+        this.UsedInstanceNames = this.SettingsManager.GetAllProviders().Select(x => x.InstanceName.ToLowerInvariant()).ToList();
 
         this.capabilityOverrides = this.DataCapabilityOverrides ?? new();
         this.showExpertSettings = !string.IsNullOrWhiteSpace(this.AdditionalJsonApiParameters) || this.capabilityOverrides.HasOverrides;
