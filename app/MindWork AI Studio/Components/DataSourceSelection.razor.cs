@@ -1,4 +1,5 @@
 using AIStudio.Dialogs.Settings;
+using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Services;
@@ -141,6 +142,8 @@ public partial class DataSourceSelection : MSGComponentBase
     private IReadOnlyCollection<DataSourceAgentSelected> GetSelectedDataSourcesWithAI() => this.DataSourcesAISelected.Where(n => n.Selected).ToList();
 
     private string GetAIReasoning(DataSourceAgentSelected source) => $"AI reasoning (confidence {source.AIDecision.Confidence:P0}): {source.AIDecision.Reason}";
+
+    private string GetConfidenceIconStyle(IDataSource source) => $"{source.ComplianceLevel.SetColorStyle(this.SettingsManager)} flex-shrink: 0;";
     
     public void ChangeOptionWithoutSaving(DataSourceOptions options, IReadOnlyList<DataSourceAgentSelected>? aiSelectedDataSources = null)
     {

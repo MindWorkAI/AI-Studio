@@ -12,6 +12,29 @@ public partial class SettingsDialogDataSources : SettingsDialogBase
     [Inject]
     private DataSourceEmbeddingService DataSourceEmbeddingService { get; init; } = null!;
 
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        this.ApplyFilters([], [ Event.CONFIGURATION_CHANGED, Event.RAG_EMBEDDING_STATUS_CHANGED ]);
+    }
+
+    protected override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
+    {
+        await base.ProcessIncomingMessage(sendingComponent, triggeredEvent, data);
+        if (triggeredEvent is Event.RAG_EMBEDDING_STATUS_CHANGED)
+            this.StateHasChanged();
+    }
+
+    private static Color GetIndexingStatusColor(DataSourceEmbeddingStatus? status)
+    {
+        if (status is null || status.State is DataSourceEmbeddingState.IDLE or DataSourceEmbeddingState.QUEUED or DataSourceEmbeddingState.RUNNING)
+            return Color.Warning;
+
+        return status.State is DataSourceEmbeddingState.FAILED || status.FailedFiles > 0
+            ? Color.Error
+            : Color.Success;
+    }
+
     private string GetEmbeddingName(IDataSource dataSource)
     {
         if(dataSource is IInternalDataSource internalDataSource)

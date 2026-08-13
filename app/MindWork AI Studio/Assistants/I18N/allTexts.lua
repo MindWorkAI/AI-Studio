@@ -6364,6 +6364,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T214675
 -- Edit ERI v1 Data Source
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T221059217"] = "Edit ERI v1 Data Source"
 
+-- Indexed files
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T2235289713"] = "Indexed files"
+
 -- Edit Local File Data Source
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T2453292893"] = "Edit Local File Data Source"
 
@@ -6372,6 +6375,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T262437
 
 -- Name
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T266367750"] = "Name"
+
+-- Not applicable
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T2675917723"] = "Not applicable"
 
 -- No valid embedding
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T2698203405"] = "No valid embedding"
@@ -6415,6 +6421,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T359566
 -- Local data sources refresh when files change.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T3687976654"] = "Local data sources refresh when files change."
 
+-- Not available
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T3706935413"] = "Not available"
+
 -- Export ERI Data Source
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T3831281036"] = "Export ERI Data Source"
 
@@ -6423,6 +6432,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T386503
 
 -- This ERI data source has an access token configured. Do you want to include the encrypted access token in the export? Note: The recipient will need the same encryption secret to use the access token.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T4027572258"] = "This ERI data source has an access token configured. Do you want to include the encrypted access token in the export? Note: The recipient will need the same encryption secret to use the access token."
+
+-- Waiting for indexing status
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T4108252513"] = "Waiting for indexing status"
+
+-- Information
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T4256323669"] = "Information"
 
 -- Configured Data Sources
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T543942217"] = "Configured Data Sources"
@@ -6438,6 +6453,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T774473
 
 -- Cannot export this ERI data source because no authentication secret is configured. The issue was: {0}
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T782820095"] = "Cannot export this ERI data source because no authentication secret is configured. The issue was: {0}"
+
+-- {0} of {1}
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T825342513"] = "{0} of {1}"
 
 -- Local data sources refresh only when triggered manually.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T854231603"] = "Local data sources refresh only when triggered manually."
