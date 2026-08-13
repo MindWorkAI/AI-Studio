@@ -104,7 +104,37 @@
   <releases>
     <release type="stable" version="26.7.3" date="2026-07-21">
       <description>
-        <p>Update</p>
+        <ul>
+          <li>Added support for OpenAI GPT-5.6 Sol, Terra, and Luna; Anthropic Claude Fable 5 and Mythos 5; and Google Gemini 3 Flash, Gemini 3.1 Flash-Lite, Gemini 3.1 Pro, and Gemini 3.5 Flash.</li>
+          <li>Added support for OpenDocument presentations (<code>.odp</code>) when attaching and reading presentation files.</li>
+          <li>Added a log viewer assistant that shows AI Studio log files in a read-only view with search, log filters, highlighting, and auto-refresh.</li>
+          <li>Added audio and video transcription for chats and assistants. AI Studio now prepares supported media locally, sends only normalized audio to the configured transcription provider, and attaches the resulting transcript instead of the original media.</li>
+          <li>Added AI-assisted editing and revision for assistants created with the Assistant Builder. Thanks, Nils Kruthoff (<code>nilskruthoff</code>), for this contribution.</li>
+          <li>Added options to view and edit the code of AI-generated assistants and to delete your own generated assistants. Thanks, Nils Kruthoff (<code>nilskruthoff</code>), for this contribution.</li>
+          <li>Added enterprise configuration options to hide the last changelog and vision panels on the welcome page. Thanks, Dominic Neuburg (<code>donework</code>), for the contribution.</li>
+          <li>Improved the "My Tasks Assistant": you can now provide one or more documents in addition to text or use documents alone when asking to identify tasks.</li>
+          <li>Improved presentation imports so AI Studio can include speaker notes, slide comments, and presentation metadata in the extracted content.</li>
+          <li>Improved update guidance for Flatpak installations and added an enterprise option that lets organizations manage updates entirely through their IT department.</li>
+          <li>Improved secure API-key storage diagnostics on Linux. AI Studio now provides specific guidance when the default password collection is missing or locked, a password-manager prompt is dismissed, or no compatible Secret Service is available.</li>
+          <li>Improved the file dialogs to prevent opening multiple times when you click "Open" or "Save" multiple times in a row.</li>
+          <li>Improved assistant plugins so they clearly indicate when content from a document has been loaded and clear the indicator when the assistant is reset.</li>
+          <li>Improved the Assistant Builder security check so it can use the selected provider when no dedicated security audit agent provider is configured.</li>
+          <li>Fixed an issue that could leave AI Studio unresponsive after waking the computer from sleep. Yes, we know this was an annoying bug, and we apologize for the inconvenience.</li>
+          <li>Fixed connections to internal HTTPS services and enterprise configuration servers that use organization-provided root certificates on Linux.</li>
+          <li>Fixed enterprise configuration plugins from Windows-created ZIP files may not load correctly on Linux when the ZIP contained plugin files inside a folder.</li>
+          <li>Fixed the voice recording shortcut on Linux so it works globally on supported desktops and while AI Studio is focused on other Linux desktops.</li>
+          <li>Fixed voice recording and transcription on Linux.</li>
+          <li>Fixed copied content from AI Studio not remaining available on the clipboard on Linux.</li>
+          <li>Fixed dragging and dropping files from the home folder into the Linux Flatpak version.</li>
+          <li>Fixed being able to switch document analysis policies while an analysis or media transcription was still in progress.</li>
+          <li>Fixed file extension handling so files are recognized correctly regardless of uppercase or lowercase letters in their extensions. Thanks, Paul Schweiß, for reporting this issue.</li>
+          <li>Fixed AI Studio failing to start on Linux systems &amp; showing an outdated version on the Flatpak page.</li>
+          <li>Upgraded Rust to v1.97.1.</li>
+          <li>Upgraded .NET to v9.0.18.</li>
+          <li>Upgraded Tauri to v2.11.5.</li>
+          <li>Upgraded common dependencies.</li>
+          <li>Upgraded runtime dependencies.</li>
+        </ul>
       </description>
     </release>
   </releases>
