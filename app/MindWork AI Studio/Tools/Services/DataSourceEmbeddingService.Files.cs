@@ -946,7 +946,7 @@ public sealed partial class DataSourceEmbeddingService
             embeddingProvider.Hostname,
             embeddingProvider.TokenizerPath,
             embeddingProvider.EffectiveTokenLimit,
-            GetDataSourceComplianceLevel(dataSource).ToString(),
+            GetDataSourceConfidenceLevel(dataSource).ToString(),
             dataSource is IInternalDataSource internalDataSource ? internalDataSource.MaxChunkTokenLength : 0,
             dataSource is IInternalDataSource overlapDataSource ? overlapDataSource.ChunkOverlapTokenLength : 0,
             chunkingOptions.MaxChunkTokenLength,
@@ -1050,7 +1050,7 @@ public sealed partial class DataSourceEmbeddingService
     {
         file.Refresh();
         var absolutePath = Path.GetFullPath(file.FullName);
-        var complianceLevel = GetDataSourceComplianceLevel(dataSource);
+        var confidenceLevel = GetDataSourceConfidenceLevel(dataSource);
         return new(
             this.CreateParentFileId(dataSource.Id, absolutePath),
             absolutePath,
@@ -1063,8 +1063,8 @@ public sealed partial class DataSourceEmbeddingService
             file.Exists ? new DateTimeOffset(file.LastWriteTimeUtc) : DateTimeOffset.UnixEpoch,
             embeddedAtUtc,
             chunkCount,
-            complianceLevel.ToString(),
-            (int)complianceLevel);
+            confidenceLevel.ToString(),
+            (int)confidenceLevel);
     }
 
     private IReadOnlyList<EmbeddingStateChunk> CreateEmbeddingStateChunks(EmbeddingStateFile parentFile, IReadOnlyList<EmbeddingChunkDraft> batch, DateTimeOffset embeddedAtUtc)
@@ -1080,10 +1080,10 @@ public sealed partial class DataSourceEmbeddingService
             .ToList();
     }
 
-    private static ConfidenceLevel GetDataSourceComplianceLevel(IDataSource dataSource) =>
-        dataSource.ComplianceLevel is ConfidenceLevel.NONE
+    private static ConfidenceLevel GetDataSourceConfidenceLevel(IDataSource dataSource) =>
+        dataSource is not IInternalDataSource internalDataSource || internalDataSource.ConfidenceLevel is ConfidenceLevel.NONE
             ? ConfidenceLevel.UNKNOWN
-            : dataSource.ComplianceLevel;
+            : internalDataSource.ConfidenceLevel;
 
     private static string GetFileType(FileInfo file)
     {

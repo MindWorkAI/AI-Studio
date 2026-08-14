@@ -86,8 +86,8 @@ pub struct QdrantEdgeStoragePoint {
     pub creation_utc: String,
     pub last_write_utc: String,
     pub embedded_at_utc: String,
-    pub compliance_level: String,
-    pub compliance_level_rank: i32,
+    pub confidence_level: String,
+    pub confidence_level_rank: i32,
 }
 
 #[derive(Deserialize)]
@@ -159,8 +159,8 @@ pub struct QdrantEdgeSearchResult {
     pub creation_utc: String,
     pub last_write_utc: String,
     pub embedded_at_utc: String,
-    pub compliance_level: String,
-    pub compliance_level_rank: i32,
+    pub confidence_level: String,
+    pub confidence_level_rank: i32,
 }
 
 #[derive(Clone, Serialize)]
@@ -758,8 +758,8 @@ fn to_qdrant_edge_point(point: QdrantEdgeStoragePoint) -> QdrantEdgeResult<qdran
             "creation_utc": point.creation_utc,
             "last_write_utc": point.last_write_utc,
             "embedded_at_utc": point.embedded_at_utc,
-            "compliance_level": point.compliance_level,
-            "compliance_level_rank": point.compliance_level_rank,
+            "confidence_level": point.confidence_level,
+            "confidence_level_rank": point.confidence_level_rank,
         }),
     )
     .into())
@@ -787,8 +787,8 @@ fn to_qdrant_edge_search_result(point: ScoredPoint) -> QdrantEdgeSearchResult {
         creation_utc: payload_string(&payload, "creation_utc"),
         last_write_utc: payload_string(&payload, "last_write_utc"),
         embedded_at_utc: payload_string(&payload, "embedded_at_utc"),
-        compliance_level: payload_string(&payload, "compliance_level"),
-        compliance_level_rank: payload_i32(&payload, "compliance_level_rank").unwrap_or_default(),
+        confidence_level: payload_string(&payload, "confidence_level"),
+        confidence_level_rank: payload_i32(&payload, "confidence_level_rank").unwrap_or_default(),
     }
 }
 

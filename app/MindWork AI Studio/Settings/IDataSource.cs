@@ -1,7 +1,6 @@
 using System.Text.Json.Serialization;
 
 using AIStudio.Chat;
-using AIStudio.Provider;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.RAG;
@@ -22,16 +21,6 @@ public interface IDataSource : IConfigurationObject
     /// </summary>
     public DataSourceType Type { get; init; }
 
-    /// <summary>
-    /// Which data security policy is applied to this data source?
-    /// </summary>
-    public DataSourceSecurity SecurityPolicy { get; init; }
-
-    /// <summary>
-    /// Which compliance level is assigned to this data source?
-    /// </summary>
-    public ConfidenceLevel ComplianceLevel { get; init; }
-    
     /// <summary>
     /// The maximum number of matches to return when retrieving data from the ERI server.
     /// </summary>

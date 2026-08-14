@@ -74,7 +74,7 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
             // data sources changed its security requirements.
             //
             List<IDataSource> preselectedDataSources = chatThread.DataSourceOptions.PreselectedDataSourceIds.Select(id => settings.ConfigurationData.DataSources.FirstOrDefault(ds => ds.Id == id)).Where(ds => ds is not null).ToList()!;
-            var dataSources = await dataSourceService.GetDataSources(provider, preselectedDataSources);
+            var dataSources = await dataSourceService.GetDataSources(provider, chatThread.DataSourceOptions, preselectedDataSources);
             var selectedDataSources = dataSources.SelectedDataSources;
             
             //
@@ -104,13 +104,15 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
             else
             {
                 var previousDataSecurity = chatThread.DataSecurity;
-                var previousDataComplianceLevel = chatThread.DataComplianceLevel;
+                var previousDataConfidenceLevel = chatThread.DataConfidenceLevel;
                 
                 //
                 // Update the data security of the chat thread. We consider the current data security
                 // of the chat thread and the data security of the selected data sources:
                 //
-                var dataSecurityRestrictedToSelfHosted = selectedDataSources.Any(x => x is not IInternalDataSource && x.SecurityPolicy is DataSourceSecurity.SELF_HOSTED);
+                var dataSecurityRestrictedToSelfHosted = selectedDataSources
+                    .OfType<IExternalDataSource>()
+                    .Any(dataSource => dataSource.SecurityPolicy is DataSourceSecurity.SELF_HOSTED);
                 chatThread.DataSecurity = dataSecurityRestrictedToSelfHosted switch
                 {
                     //
@@ -152,12 +154,12 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
                 if (previousDataSecurity != chatThread.DataSecurity)
                     LOGGER.LogInformation($"The data security of the chat thread was updated from '{previousDataSecurity}' to '{chatThread.DataSecurity}'.");
 
-                foreach (var dataSource in selectedDataSources)
-                    if (dataSource.ComplianceLevel > chatThread.DataComplianceLevel)
-                        chatThread.DataComplianceLevel = dataSource.ComplianceLevel;
+                foreach (var dataSource in selectedDataSources.OfType<IInternalDataSource>())
+                    if (dataSource.ConfidenceLevel > chatThread.DataConfidenceLevel)
+                        chatThread.DataConfidenceLevel = dataSource.ConfidenceLevel;
 
-                if (previousDataComplianceLevel != chatThread.DataComplianceLevel)
-                    LOGGER.LogInformation($"The data compliance level of the chat thread was updated from '{previousDataComplianceLevel.GetName()}' to '{chatThread.DataComplianceLevel.GetName()}'.");
+                if (previousDataConfidenceLevel != chatThread.DataConfidenceLevel)
+                    LOGGER.LogInformation($"The data confidence level of the chat thread was updated from '{previousDataConfidenceLevel.GetName()}' to '{chatThread.DataConfidenceLevel.GetName()}'.");
             }
             
             //

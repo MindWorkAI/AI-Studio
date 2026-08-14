@@ -114,8 +114,8 @@
             
             <ManagePandocDependency IntroText="@T("For some data types, such as Office files, MindWork AI Studio requires the open-source application Pandoc.")"/>
 
-            <MudSelect @bind-Value="@this.dataComplianceLevel" Text="@this.dataComplianceLevel.GetName()" Label="@T("Compliance level")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateDataSourceComplianceLevel">
-                @foreach (var level in this.ComplianceLevels)
+            <MudSelect @bind-Value="@this.dataConfidenceLevel" Text="@this.dataConfidenceLevel.GetName()" Label="@T("Required provider confidence level")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateDataSourceConfidenceLevel">
+                @foreach (var level in this.ConfidenceLevels)
                 {
                     <MudSelectItem Value="@level.Value">
                         @level.Name

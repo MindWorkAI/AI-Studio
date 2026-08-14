@@ -20,5 +20,5 @@ public sealed record VectorSearchResult(
     string CreationUtc,
     string LastWriteUtc,
     string EmbeddedAtUtc,
-    string ComplianceLevel,
-    int ComplianceLevelRank);
+    string ConfidenceLevel,
+    int ConfidenceLevelRank);

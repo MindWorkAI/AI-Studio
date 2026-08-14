@@ -45,8 +45,8 @@ public partial class InitialRagIndex : Migration
                 last_write_utc = table.Column<string>(type: "TEXT", nullable: false),
                 embedded_at_utc = table.Column<string>(type: "TEXT", nullable: false),
                 chunk_count = table.Column<int>(type: "INTEGER", nullable: false),
-                compliance_level = table.Column<string>(type: "TEXT", nullable: false),
-                compliance_level_rank = table.Column<int>(type: "INTEGER", nullable: false),
+                confidence_level = table.Column<string>(type: "TEXT", nullable: false),
+                confidence_level_rank = table.Column<int>(type: "INTEGER", nullable: false),
             },
             constraints: table =>
             {
@@ -89,9 +89,9 @@ public partial class InitialRagIndex : Migration
             column: "absolute_path");
 
         migrationBuilder.CreateIndex(
-            name: "idx_embedded_files_compliance",
+            name: "idx_embedded_files_confidence",
             table: "embedded_files",
-            column: "compliance_level_rank");
+            column: "confidence_level_rank");
 
         migrationBuilder.CreateIndex(
             name: "idx_embedded_files_data_source",

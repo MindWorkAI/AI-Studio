@@ -147,7 +147,7 @@
 
             @if (!this.ChatThread.IsLLMProviderAllowed(this.Provider))
             {
-                <MudTooltip Text="@T("The selected provider is not allowed in this chat due to data security or compliance reasons.")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                <MudTooltip Text="@T("The selected provider is not allowed in this chat due to data security or confidence-level requirements.")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                     <MudIconButton Icon="@Icons.Material.Filled.Error" Color="Color.Error"/>
                 </MudTooltip>
             }

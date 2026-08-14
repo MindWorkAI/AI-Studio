@@ -393,6 +393,15 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
 
     private async Task ProcessDataSourceAsync(IDataSource dataSource, DataSourceEmbeddingRefreshMode refreshMode, CancellationToken token)
     {
+        if (dataSource is not IInternalDataSource internalDataSource)
+        {
+            logger.LogWarning(
+                "Skipping background embeddings for non-internal data source '{DataSourceName}' ({DataSourceId}).",
+                dataSource.Name,
+                dataSource.Id);
+            return;
+        }
+
         logger.LogInformation(
             "Starting background embedding hash check for data source '{DataSourceName}' ({DataSourceId}). RefreshMode={RefreshMode}.",
             dataSource.Name,
@@ -451,17 +460,16 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             return;
         }
 
-        if (!embeddingProvider.AllowsDataSourceAccess(settingsManager, dataSource.SecurityPolicy, dataSource.ComplianceLevel))
+        if (!embeddingProvider.GetConfidenceLevel(settingsManager).AllowsDataSourceConfidenceLevel(internalDataSource.ConfidenceLevel))
         {
-            var errorMessage = $"The selected embedding provider is not allowed to embed this data source. The data source requires provider confidence '{dataSource.ComplianceLevel.GetName()}'. The embedding provider has confidence '{embeddingProvider.GetConfidenceLevel(settingsManager).GetName()}'.";
+            var errorMessage = $"The selected embedding provider is not allowed to embed this data source. The data source requires provider confidence '{internalDataSource.ConfidenceLevel.GetName()}'. The embedding provider has confidence '{embeddingProvider.GetConfidenceLevel(settingsManager).GetName()}'.";
             logger.LogWarning(
-                "Skipping background embeddings for data source '{DataSourceName}' ({DataSourceId}) because embedding provider '{EmbeddingProviderName}' ({EmbeddingProviderId}) is not allowed. RequiredDataSecurity={RequiredDataSecurity}, RequiredCompliance={RequiredCompliance}, EmbeddingProviderConfidence={EmbeddingProviderConfidence}.",
+                "Skipping background embeddings for data source '{DataSourceName}' ({DataSourceId}) because embedding provider '{EmbeddingProviderName}' ({EmbeddingProviderId}) does not meet the required confidence. RequiredConfidence={RequiredConfidence}, EmbeddingProviderConfidence={EmbeddingProviderConfidence}.",
                 dataSource.Name,
                 dataSource.Id,
                 embeddingProvider.Name,
                 embeddingProvider.Id,
-                dataSource.SecurityPolicy,
-                dataSource.ComplianceLevel.GetName(),
+                internalDataSource.ConfidenceLevel.GetName(),
                 embeddingProvider.GetConfidenceLevel(settingsManager).GetName());
 
             token.ThrowIfCancellationRequested();
@@ -877,8 +885,8 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             parentFile.CreationUtc,
             parentFile.LastWriteUtc,
             embeddedAtUtc,
-            parentFile.ComplianceLevel,
-            parentFile.ComplianceLevelRank)).ToList();
+            parentFile.ConfidenceLevel,
+            parentFile.ConfidenceLevelRank)).ToList();
 
         await vectorStore.InsertEmbedding(collectionName, points, token);
     }

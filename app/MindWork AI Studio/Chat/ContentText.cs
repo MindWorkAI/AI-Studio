@@ -57,7 +57,7 @@ public sealed class ContentText : IContent
         
         if(!chatThread.IsLLMProviderAllowed(provider))
         {
-            LOGGER.LogError("The provider is not allowed for this chat thread due to data security or compliance reasons. Skipping the AI process.");
+            LOGGER.LogError("The provider is not allowed for this chat thread due to data security or confidence-level requirements. Skipping the AI process.");
             await this.CompleteWithoutStreaming();
             return chatThread;
         }

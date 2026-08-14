@@ -20,5 +20,5 @@ public sealed record VectorStoragePoint(
     DateTimeOffset CreationUtc,
     DateTimeOffset LastWriteUtc,
     DateTimeOffset EmbeddedAtUtc,
-    string ComplianceLevel,
-    int ComplianceLevelRank);
+    string ConfidenceLevel,
+    int ConfidenceLevelRank);

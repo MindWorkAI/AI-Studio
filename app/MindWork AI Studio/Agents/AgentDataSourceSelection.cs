@@ -141,17 +141,17 @@ public sealed class AgentDataSourceSelection (ILogger<AgentDataSourceSelection> 
 
         // We start with the provider currently selected by the user:
         var requiredDataSecurity = dataSources.AllowedDataSources.GetRequiredSecurityPolicy();
-        var requiredComplianceLevel = dataSources.AllowedDataSources.GetRequiredComplianceLevel();
-        var agentProvider = this.SettingsManager.GetPreselectedProvider(Tools.Components.AGENT_DATA_SOURCE_SELECTION, provider.Id, true);
+        var requiredConfidenceLevel = dataSources.AllowedDataSources.GetRequiredConfidenceLevel();
+        var agentProvider = this.SettingsManager.GetPreselectedProvider(Tools.Components.AGENT_DATA_SOURCE_SELECTION, provider.ConfiguredProviderId, true);
         if (agentProvider == Settings.Provider.NONE)
         {
             logger.LogWarning("No provider is selected for the agent. The agent cannot select data sources.");
             return [];
         }
 
-        if (!agentProvider.AllowsDataSourceAccess(this.SettingsManager, requiredDataSecurity, requiredComplianceLevel))
+        if (!agentProvider.AllowsDataSourceAccess(this.SettingsManager, requiredDataSecurity, requiredConfidenceLevel))
         {
-            logger.LogWarning($"The agent for data source selection uses provider '{agentProvider.InstanceName}' with confidence '{agentProvider.GetConfidenceLevel(this.SettingsManager).GetName()}', but the available data sources require data security '{requiredDataSecurity}' and provider confidence '{requiredComplianceLevel.GetName()}'. The agent cannot select data sources.");
+            logger.LogWarning($"The agent for data source selection uses provider '{agentProvider.InstanceName}' with confidence '{agentProvider.GetConfidenceLevel(this.SettingsManager).GetName()}', but the available data sources require data security '{requiredDataSecurity}' and provider confidence '{requiredConfidenceLevel.GetName()}'. The agent cannot select data sources.");
             return [];
         }
 

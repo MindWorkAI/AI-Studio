@@ -38,8 +38,8 @@ public sealed class DataSourceLocalRetrievalService(
         string Text,
         double Score,
         int Rank,
-        string ComplianceLevel,
-        int ComplianceLevelRank);
+        string ConfidenceLevel,
+        int ConfidenceLevelRank);
 
     public Task<IReadOnlyList<IRetrievalContext>> RetrieveDataAsync(DataSourceLocalFile dataSource, IContent lastUserPrompt, ChatThread thread, CancellationToken token = default) =>
         this.RetrieveDataAsync((IInternalDataSource)dataSource, lastUserPrompt, token);
@@ -296,8 +296,8 @@ public sealed class DataSourceLocalRetrievalService(
             result.Text,
             result.Score,
             rank,
-            result.ComplianceLevel,
-            result.ComplianceLevelRank);
+            result.ConfidenceLevel,
+            result.ConfidenceLevelRank);
 
     private static LocalRetrievalHit FromBm25Result(EmbeddingStateSearchResult result, int rank) =>
         new(
@@ -316,8 +316,8 @@ public sealed class DataSourceLocalRetrievalService(
             result.ChunkText,
             result.Score,
             rank,
-            result.ComplianceLevel,
-            result.ComplianceLevelRank);
+            result.ConfidenceLevel,
+            result.ConfidenceLevelRank);
 
     private static RetrievalTextContext ToRetrievalContext(LocalRetrievalHit hit)
     {

@@ -42,10 +42,7 @@ public readonly record struct DataSourceLocalFile : IInternalDataSource
     public int ChunkOverlapTokenLength { get; init; }
     
     /// <inheritdoc />
-    public DataSourceSecurity SecurityPolicy { get; init; } = DataSourceSecurity.ALLOW_ANY;
-
-    /// <inheritdoc />
-    public ConfidenceLevel ComplianceLevel { get; init; } = ConfidenceLevel.UNKNOWN;
+    public ConfidenceLevel ConfidenceLevel { get; init; } = ConfidenceLevel.UNKNOWN;
 
     /// <inheritdoc />
     public bool IsEnterpriseConfiguration { get; init; }

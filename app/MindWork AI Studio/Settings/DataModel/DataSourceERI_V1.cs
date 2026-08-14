@@ -2,7 +2,6 @@
 
 using AIStudio.Assistants.ERI;
 using AIStudio.Chat;
-using AIStudio.Provider;
 using AIStudio.Tools.ERIClient;
 using AIStudio.Tools.ERIClient.DataModel;
 using AIStudio.Tools.PluginSystem;
@@ -58,9 +57,6 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
 
     /// <inheritdoc />
     public DataSourceSecurity SecurityPolicy { get; init; } = DataSourceSecurity.NOT_SPECIFIED;
-
-    /// <inheritdoc />
-    public ConfidenceLevel ComplianceLevel { get; init; } = ConfidenceLevel.UNKNOWN;
 
     /// <inheritdoc />
     public bool IsEnterpriseConfiguration { get; init; }
@@ -211,16 +207,6 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
             return false;
         }
 
-        var complianceLevel = ConfidenceLevel.UNKNOWN;
-        if (table.TryGetValue("ComplianceLevel", out var complianceLevelValue) &&
-            (!complianceLevelValue.TryRead<string>(out var complianceLevelText) ||
-             !Enum.TryParse(complianceLevelText, true, out complianceLevel) ||
-             complianceLevel is ConfidenceLevel.NONE))
-        {
-            LOGGER.LogWarning($"The configured data source {idx} contains an invalid compliance level. Falling back to UNKNOWN. (Plugin ID: {configPluginId})");
-            complianceLevel = ConfidenceLevel.UNKNOWN;
-        }
-
         if (!table.TryGetValue("SelectedRetrievalId", out var selectedRetrievalIdValue) || !selectedRetrievalIdValue.TryRead<string>(out var selectedRetrievalId) || string.IsNullOrWhiteSpace(selectedRetrievalId))
         {
             LOGGER.LogWarning($"The configured data source {idx} must specify a selected retrieval ID. (Plugin ID: {configPluginId})");
@@ -278,7 +264,6 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
             Username = username,
             UsernamePasswordMode = usernamePasswordMode,
             SecurityPolicy = securityPolicy,
-            ComplianceLevel = complianceLevel,
             Version = ERIVersion.V1,
             SelectedRetrievalId = selectedRetrievalId,
             MaxMatches = (ushort)maxMatches,
@@ -339,7 +324,6 @@ public readonly record struct DataSourceERI_V1 : IERIDataSource
                     {{usernameLine}}
                     {{secretLine}}
                     ["SecurityPolicy"] = "{{this.SecurityPolicy}}",
-                    ["ComplianceLevel"] = "{{this.ComplianceLevel}}",
                     ["SelectedRetrievalId"] = "{{LuaTools.EscapeLuaString(this.SelectedRetrievalId)}}",
                     ["MaxMatches"] = {{this.MaxMatches}},
                 }

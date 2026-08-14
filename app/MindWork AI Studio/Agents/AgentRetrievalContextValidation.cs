@@ -131,11 +131,11 @@ public sealed class AgentRetrievalContextValidation (ILogger<AgentRetrievalConte
     /// </remarks>
     /// <param name="provider">The current LLM provider. When the user doesn't preselect an agent provider, the agent uses this provider.</param>
     /// <param name="requiredDataSecurity">The data security required by the retrieved data.</param>
-    /// <param name="requiredComplianceLevel">The minimum provider confidence required by the retrieved data.</param>
-    public bool SetLLMProvider(IProvider provider, DataSourceSecurity requiredDataSecurity = DataSourceSecurity.NOT_SPECIFIED, ConfidenceLevel requiredComplianceLevel = ConfidenceLevel.NONE)
+    /// <param name="requiredConfidenceLevel">The minimum provider confidence required by the retrieved data.</param>
+    public bool SetLLMProvider(IProvider provider, DataSourceSecurity requiredDataSecurity = DataSourceSecurity.NOT_SPECIFIED, ConfidenceLevel requiredConfidenceLevel = ConfidenceLevel.NONE)
     {
         // We start with the provider currently selected by the user:
-        var agentProvider = this.SettingsManager.GetPreselectedProvider(Tools.Components.AGENT_RETRIEVAL_CONTEXT_VALIDATION, provider.Id, true);
+        var agentProvider = this.SettingsManager.GetPreselectedProvider(Tools.Components.AGENT_RETRIEVAL_CONTEXT_VALIDATION, provider.ConfiguredProviderId, true);
         if (agentProvider == Settings.Provider.NONE)
         {
             logger.LogWarning("No provider is selected for the agent.");
@@ -143,9 +143,9 @@ public sealed class AgentRetrievalContextValidation (ILogger<AgentRetrievalConte
             return false;
         }
 
-        if (!agentProvider.AllowsDataSourceAccess(this.SettingsManager, requiredDataSecurity, requiredComplianceLevel))
+        if (!agentProvider.AllowsDataSourceAccess(this.SettingsManager, requiredDataSecurity, requiredConfidenceLevel))
         {
-            logger.LogWarning($"The agent for retrieval context validation uses provider '{agentProvider.InstanceName}' with confidence '{agentProvider.GetConfidenceLevel(this.SettingsManager).GetName()}', but the retrieved data requires data security '{requiredDataSecurity}' and provider confidence '{requiredComplianceLevel.GetName()}'. The agent cannot validate retrieval contexts.");
+            logger.LogWarning($"The agent for retrieval context validation uses provider '{agentProvider.InstanceName}' with confidence '{agentProvider.GetConfidenceLevel(this.SettingsManager).GetName()}', but the retrieved data requires data security '{requiredDataSecurity}' and provider confidence '{requiredConfidenceLevel.GetName()}'. The agent cannot validate retrieval contexts.");
             this.ProviderSettings = Settings.Provider.NONE;
             return false;
         }

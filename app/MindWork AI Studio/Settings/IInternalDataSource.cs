@@ -1,7 +1,14 @@
+using AIStudio.Provider;
+
 namespace AIStudio.Settings;
 
 public interface IInternalDataSource : IDataSource
 {
+    /// <summary>
+    /// Which provider confidence level is required by this internal data source?
+    /// </summary>
+    public ConfidenceLevel ConfidenceLevel { get; init; }
+
     /// <summary>
     /// The unique identifier of the embedding method used by this internal data source.
     /// </summary>

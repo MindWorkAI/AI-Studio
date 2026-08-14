@@ -61,28 +61,19 @@ public static class DataSourceSecurityTrustExtensions
         return provider.Provider.GetConfidence(settingsManager).Level;
     }
 
-    public static bool AllowsDataSourceAccess(this Provider provider, SettingsManager settingsManager, DataSourceSecurity dataSourceSecurity, ConfidenceLevel dataSourceComplianceLevel)
+    public static bool AllowsDataSourceAccess(this Provider provider, SettingsManager settingsManager, DataSourceSecurity dataSourceSecurity, ConfidenceLevel requiredConfidenceLevel)
     {
         return provider.AllowsDataSourceSecurity(dataSourceSecurity, settingsManager)
-            && provider.GetConfidenceLevel(settingsManager).AllowsDataSourceComplianceLevel(dataSourceComplianceLevel);
+            && provider.GetConfidenceLevel(settingsManager).AllowsDataSourceConfidenceLevel(requiredConfidenceLevel);
     }
 
-    public static bool AllowsDataSourceAccess(this EmbeddingProvider provider, SettingsManager settingsManager, DataSourceSecurity dataSourceSecurity, ConfidenceLevel dataSourceComplianceLevel)
+    public static bool AllowsDataSourceAccess(this IProvider provider, SettingsManager settingsManager, DataSourceSecurity dataSourceSecurity, ConfidenceLevel requiredConfidenceLevel)
     {
         return provider.AllowsDataSourceSecurity(dataSourceSecurity, settingsManager)
-            && provider.GetConfidenceLevel(settingsManager).AllowsDataSourceComplianceLevel(dataSourceComplianceLevel);
-    }
-
-    public static bool AllowsDataSourceAccess(this IProvider provider, SettingsManager settingsManager, DataSourceSecurity dataSourceSecurity, ConfidenceLevel dataSourceComplianceLevel)
-    {
-        return provider.AllowsDataSourceSecurity(dataSourceSecurity, settingsManager)
-            && provider.GetConfidenceLevel(settingsManager).AllowsDataSourceComplianceLevel(dataSourceComplianceLevel);
+            && provider.GetConfidenceLevel(settingsManager).AllowsDataSourceConfidenceLevel(requiredConfidenceLevel);
     }
 
     public static bool AllowsDataSourceSecurity(this Provider provider, DataSourceSecurity dataSourceSecurity, SettingsManager settingsManager)
-        => provider.IsTrustedForDataSourceSecurityChecks(settingsManager).AllowsDataSourceSecurity(dataSourceSecurity);
-
-    public static bool AllowsDataSourceSecurity(this EmbeddingProvider provider, DataSourceSecurity dataSourceSecurity, SettingsManager settingsManager)
         => provider.IsTrustedForDataSourceSecurityChecks(settingsManager).AllowsDataSourceSecurity(dataSourceSecurity);
 
     public static bool AllowsDataSourceSecurity(this IProvider provider, DataSourceSecurity dataSourceSecurity, SettingsManager settingsManager)
@@ -95,28 +86,28 @@ public static class DataSourceSecurityTrustExtensions
         _ => false,
     };
 
-    public static bool AllowsDataSourceComplianceLevel(this ConfidenceLevel providerConfidenceLevel, ConfidenceLevel dataSourceComplianceLevel)
+    public static bool AllowsDataSourceConfidenceLevel(this ConfidenceLevel providerConfidenceLevel, ConfidenceLevel requiredConfidenceLevel)
     {
-        if (dataSourceComplianceLevel is ConfidenceLevel.NONE)
+        if (requiredConfidenceLevel is ConfidenceLevel.NONE)
             return true;
 
-        return providerConfidenceLevel >= dataSourceComplianceLevel;
+        return providerConfidenceLevel >= requiredConfidenceLevel;
     }
 
-    public static ConfidenceLevel GetRequiredComplianceLevel(this IEnumerable<IDataSource> dataSources)
+    public static ConfidenceLevel GetRequiredConfidenceLevel(this IEnumerable<IDataSource> dataSources)
     {
-        var requiredComplianceLevel = ConfidenceLevel.NONE;
-        foreach (var dataSource in dataSources)
-            if (dataSource.ComplianceLevel > requiredComplianceLevel)
-                requiredComplianceLevel = dataSource.ComplianceLevel;
+        var requiredConfidenceLevel = ConfidenceLevel.NONE;
+        foreach (var dataSource in dataSources.OfType<IInternalDataSource>())
+            if (dataSource.ConfidenceLevel > requiredConfidenceLevel)
+                requiredConfidenceLevel = dataSource.ConfidenceLevel;
 
-        return requiredComplianceLevel;
+        return requiredConfidenceLevel;
     }
 
     public static DataSourceSecurity GetRequiredSecurityPolicy(this IEnumerable<IDataSource> dataSources)
     {
         var requiredSecurityPolicy = DataSourceSecurity.ALLOW_ANY;
-        foreach (var dataSource in dataSources)
+        foreach (var dataSource in dataSources.OfType<IExternalDataSource>())
         {
             if (dataSource.SecurityPolicy is DataSourceSecurity.NOT_SPECIFIED)
                 return DataSourceSecurity.NOT_SPECIFIED;

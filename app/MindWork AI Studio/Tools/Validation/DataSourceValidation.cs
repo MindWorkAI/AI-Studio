@@ -23,14 +23,12 @@ public sealed class DataSourceValidation
     public Func<AuthMethod> GetAuthMethod { get; init; } = () => AuthMethod.NONE;
 
     public Func<SecurityRequirements?> GetSecurityRequirements { get; init; } = () => null;
-    
+
     public Func<bool> GetSelectedCloudEmbedding { get; init; } = () => false;
 
     public Func<EmbeddingProvider?> GetSelectedEmbeddingProvider { get; init; } = () => null;
 
-    public Func<DataSourceSecurity> GetSecurityPolicy { get; init; } = () => DataSourceSecurity.ALLOW_ANY;
-
-    public Func<ConfidenceLevel> GetComplianceLevel { get; init; } = () => ConfidenceLevel.NONE;
+    public Func<ConfidenceLevel> GetConfidenceLevel { get; init; } = () => ConfidenceLevel.NONE;
 
     public Func<SettingsManager?> GetSettingsManager { get; init; } = () => null;
     
@@ -61,19 +59,19 @@ public sealed class DataSourceValidation
         
         return null;
     }
-    
+
     public string? ValidateSecurityPolicy(DataSourceSecurity securityPolicy)
     {
         if(securityPolicy is DataSourceSecurity.NOT_SPECIFIED)
             return TB("Please select your security policy.");
-        
+
         var dataSourceSecurity = this.GetSecurityRequirements();
         if (dataSourceSecurity is null)
             return null;
-        
+
         if(dataSourceSecurity.Value.AllowedProviderType is ProviderType.SELF_HOSTED && securityPolicy is not DataSourceSecurity.SELF_HOSTED)
             return TB("This data source can only be used with a self-hosted LLM provider. Please change the security policy.");
-        
+
         return null;
     }
     
@@ -172,10 +170,10 @@ public sealed class DataSourceValidation
         return embeddingIssue ?? this.ValidateSelectedEmbeddingProviderAccess();
     }
 
-    public string? ValidateDataSourceComplianceLevel(ConfidenceLevel complianceLevel)
+    public string? ValidateDataSourceConfidenceLevel(ConfidenceLevel confidenceLevel)
     {
-        if(complianceLevel is ConfidenceLevel.NONE)
-            return TB("Please select a compliance level.");
+        if(confidenceLevel is ConfidenceLevel.NONE)
+            return TB("Please select a required provider confidence level.");
 
         return this.ValidateSelectedEmbeddingProviderAccess();
     }
@@ -214,17 +212,13 @@ public sealed class DataSourceValidation
         if(selectedEmbedding is null || settingsManager is null)
             return null;
 
-        var dataSecurity = this.GetSecurityPolicy();
-        var complianceLevel = this.GetComplianceLevel();
-        if(selectedEmbedding.AllowsDataSourceAccess(settingsManager, dataSecurity, complianceLevel))
+        var confidenceLevel = this.GetConfidenceLevel();
+        if(selectedEmbedding.GetConfidenceLevel(settingsManager).AllowsDataSourceConfidenceLevel(confidenceLevel))
             return null;
 
-        if(!selectedEmbedding.AllowsDataSourceSecurity(dataSecurity, settingsManager))
-            return TB("The selected embedding provider is not allowed to process this data source due to its data security policy. Select a self-hosted or organization-trusted embedding provider.");
-
         return string.Format(
-            TB("The selected embedding provider has confidence '{0}', but this data source requires provider confidence '{1}'. Select an embedding provider with equal or higher confidence or lower the compliance level."),
+            TB("The selected embedding provider has confidence '{0}', but this data source requires provider confidence '{1}'. Select an embedding provider with equal or higher confidence or lower the required confidence level."),
             selectedEmbedding.GetConfidenceLevel(settingsManager).GetName(),
-            complianceLevel.GetName());
+            confidenceLevel.GetName());
     }
 }

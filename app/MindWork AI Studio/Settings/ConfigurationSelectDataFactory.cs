@@ -304,7 +304,7 @@ public static class ConfigurationSelectDataFactory
         }
     }
 
-    public static IEnumerable<ConfigurationSelectData<ConfidenceLevel>> GetDataSourceComplianceLevelsData()
+    public static IEnumerable<ConfigurationSelectData<ConfidenceLevel>> GetDataSourceConfidenceLevelsData()
     {
         foreach (var level in Enum.GetValues<ConfidenceLevel>())
         {

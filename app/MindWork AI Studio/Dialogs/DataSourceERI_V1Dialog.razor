@@ -1,6 +1,5 @@
 @using AIStudio.Settings.DataModel
 @using AIStudio.Tools.Validation
-@using AIStudio.Provider
 @using AIStudio.Tools.ERIClient.DataModel
 @inherits MSGComponentBase
 
@@ -122,15 +121,6 @@
                 }
             </MudSelect>
 
-            <MudSelect @bind-Value="@this.dataComplianceLevel" Text="@this.dataComplianceLevel.GetName()" Label="@T("Compliance level")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start">
-                @foreach (var level in this.ComplianceLevels)
-                {
-                    <MudSelectItem Value="@level.Value">
-                        @level.Name
-                    </MudSelectItem>
-                }
-            </MudSelect>
-            
             <MudNumericField T="ushort" Min="10" @bind-Value="@this.dataMaxMatches" Label="@T("How many matches do you want at most per query?")" Variant="Variant.Outlined" Step="10" />
             
         </MudForm>

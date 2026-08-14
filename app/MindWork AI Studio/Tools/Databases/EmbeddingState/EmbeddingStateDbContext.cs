@@ -62,13 +62,13 @@ internal sealed class EmbeddingStateDbContext(DbContextOptions<EmbeddingStateDbC
             entity.Property(file => file.LastWriteUtc).HasColumnName("last_write_utc").HasConversion(utcDateTimeOffsetConverter).IsRequired();
             entity.Property(file => file.EmbeddedAtUtc).HasColumnName("embedded_at_utc").HasConversion(utcDateTimeOffsetConverter).IsRequired();
             entity.Property(file => file.ChunkCount).HasColumnName("chunk_count");
-            entity.Property(file => file.ComplianceLevel).HasColumnName("compliance_level").IsRequired();
-            entity.Property(file => file.ComplianceLevelRank).HasColumnName("compliance_level_rank");
+            entity.Property(file => file.ConfidenceLevel).HasColumnName("confidence_level").IsRequired();
+            entity.Property(file => file.ConfidenceLevelRank).HasColumnName("confidence_level_rank");
 
             entity.HasIndex(file => file.DataSourceId).HasDatabaseName("idx_embedded_files_data_source");
             entity.HasIndex(file => file.AbsolutePath).HasDatabaseName("idx_embedded_files_absolute_path");
             entity.HasIndex(file => file.FileType).HasDatabaseName("idx_embedded_files_file_type");
-            entity.HasIndex(file => file.ComplianceLevelRank).HasDatabaseName("idx_embedded_files_compliance");
+            entity.HasIndex(file => file.ConfidenceLevelRank).HasDatabaseName("idx_embedded_files_confidence");
             entity.HasIndex(file => new { file.DataSourceId, file.AbsolutePath }).HasDatabaseName("idx_embedded_files_data_source_absolute_path").IsUnique();
 
             entity
@@ -165,9 +165,9 @@ internal sealed class EmbeddingStateFileEntity
 
     public int ChunkCount { get; set; }
 
-    public string ComplianceLevel { get; set; } = string.Empty;
+    public string ConfidenceLevel { get; set; } = string.Empty;
 
-    public int ComplianceLevelRank { get; set; }
+    public int ConfidenceLevelRank { get; set; }
 
     public EmbeddingStateDataSourceEntity? DataSource { get; set; }
 
@@ -233,9 +233,9 @@ internal sealed class EmbeddingStateSearchResultEntity
 
     public int ChunkCount { get; set; }
 
-    public string ComplianceLevel { get; set; } = string.Empty;
+    public string ConfidenceLevel { get; set; } = string.Empty;
 
-    public int ComplianceLevelRank { get; set; }
+    public int ConfidenceLevelRank { get; set; }
 }
 
 internal sealed class EmbeddingStateDateTimeOffsetConverter() : ValueConverter<DateTimeOffset, string>(

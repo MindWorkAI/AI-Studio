@@ -77,14 +77,14 @@ partial class EmbeddingStateDbContextModelSnapshot : ModelSnapshot
                 .HasColumnType("INTEGER")
                 .HasColumnName("chunk_count");
 
-            entity.Property<string>("ComplianceLevel")
+            entity.Property<string>("ConfidenceLevel")
                 .IsRequired()
                 .HasColumnType("TEXT")
-                .HasColumnName("compliance_level");
+                .HasColumnName("confidence_level");
 
-            entity.Property<int>("ComplianceLevelRank")
+            entity.Property<int>("ConfidenceLevelRank")
                 .HasColumnType("INTEGER")
-                .HasColumnName("compliance_level_rank");
+                .HasColumnName("confidence_level_rank");
 
             entity.Property<DateTimeOffset>("CreationUtc")
                 .HasConversion(utcDateTimeOffsetConverter)
@@ -135,8 +135,8 @@ partial class EmbeddingStateDbContextModelSnapshot : ModelSnapshot
             entity.HasIndex("AbsolutePath")
                 .HasDatabaseName("idx_embedded_files_absolute_path");
 
-            entity.HasIndex("ComplianceLevelRank")
-                .HasDatabaseName("idx_embedded_files_compliance");
+            entity.HasIndex("ConfidenceLevelRank")
+                .HasDatabaseName("idx_embedded_files_confidence");
 
             entity.HasIndex("DataSourceId")
                 .HasDatabaseName("idx_embedded_files_data_source");
@@ -226,11 +226,11 @@ partial class EmbeddingStateDbContextModelSnapshot : ModelSnapshot
                 .IsRequired()
                 .HasColumnType("TEXT");
 
-            entity.Property<string>("ComplianceLevel")
+            entity.Property<string>("ConfidenceLevel")
                 .IsRequired()
                 .HasColumnType("TEXT");
 
-            entity.Property<int>("ComplianceLevelRank")
+            entity.Property<int>("ConfidenceLevelRank")
                 .HasColumnType("INTEGER");
 
             entity.Property<DateTimeOffset>("CreationUtc")

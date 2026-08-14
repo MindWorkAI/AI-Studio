@@ -43,8 +43,8 @@ public sealed record EmbeddingStateFile(
     DateTimeOffset LastWriteUtc,
     DateTimeOffset EmbeddedAtUtc,
     int ChunkCount,
-    string ComplianceLevel,
-    int ComplianceLevelRank);
+    string ConfidenceLevel,
+    int ConfidenceLevelRank);
 
 public sealed record EmbeddingStateChunk(
     string ChunkId,
@@ -74,5 +74,5 @@ public sealed record EmbeddingStateSearchResult(
     DateTimeOffset LastWriteUtc,
     DateTimeOffset EmbeddedAtUtc,
     int ChunkCount,
-    string ComplianceLevel,
-    int ComplianceLevelRank);
+    string ConfidenceLevel,
+    int ConfidenceLevelRank);

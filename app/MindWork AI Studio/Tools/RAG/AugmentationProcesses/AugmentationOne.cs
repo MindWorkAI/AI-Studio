@@ -43,7 +43,7 @@ public sealed class AugmentationOne : IAugmentationProcess
         {
             // Let's get the validation agent & set up its provider:
             var validationAgent = Program.SERVICE_PROVIDER.GetService<AgentRetrievalContextValidation>()!;
-            if (validationAgent.SetLLMProvider(provider, chatThread.DataSecurity, chatThread.DataComplianceLevel))
+            if (validationAgent.SetLLMProvider(provider, chatThread.DataSecurity, chatThread.DataConfidenceLevel))
             {
                 // Let's validate all retrieval contexts:
                 var validationResults = await validationAgent.ValidateRetrievalContextsAsync(lastUserPrompt, chatThread, retrievalContexts, token);
@@ -58,7 +58,7 @@ public sealed class AugmentationOne : IAugmentationProcess
                 retrievalContexts = validationResults.Where(x => x.RetrievalContext is not null && x.Confidence >= threshold).Select(x => x.RetrievalContext!).ToList();
             }
             else
-                LOGGER.LogWarning("Skipping retrieval context validation because no compliant validation agent provider is available.");
+                LOGGER.LogWarning("Skipping retrieval context validation because no sufficiently trusted validation agent provider is available.");
         }
         
         LOGGER.LogInformation($"Starting the augmentation process over {numTotalRetrievalContexts:###,###,###,###} retrieval contexts.");

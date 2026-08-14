@@ -71,7 +71,7 @@
                             {
                                 case true when this.availableDataSources.Count == 0:
                                     <MudText Typo="Typo.body1" Class="mb-3">
-                                        @T("Your data sources cannot be used with the LLM provider you selected due to data privacy or compliance requirements, or they are currently unavailable.")
+                                        @T("Your data sources cannot be used with the selected providers due to data privacy or confidence-level requirements, or they are currently unavailable.")
                                     </MudText>
                                     break; 
                                     
@@ -83,7 +83,7 @@
                                     
                                 case false when this.availableDataSources.Count == 0:
                                     <MudText Typo="Typo.body1" Class="mb-3">
-                                        @T("Your data sources cannot be used with the LLM provider you selected due to data privacy or compliance requirements, or they are currently unavailable.")
+                                        @T("Your data sources cannot be used with the selected providers due to data privacy or confidence-level requirements, or they are currently unavailable.")
                                     </MudText>
                                     break;
                                     
@@ -97,11 +97,11 @@
                                                         <MudText Typo="Typo.body1" Style="min-width: 0; white-space: normal; overflow-wrap: anywhere;">
                                                             @source.Name
                                                         </MudText>
-                                                        @if (source is IInternalDataSource)
+                                                        @if (source is IInternalDataSource internalSource)
                                                         {
                                                             <MudSpacer/>
-                                                            <MudTooltip Text="@source.ComplianceLevel.GetName()">
-                                                                <MudIcon Icon="@Icons.Material.Filled.Security" Class="confidence-icon" Style="@this.GetConfidenceIconStyle(source)"/>
+                                                            <MudTooltip Text="@internalSource.ConfidenceLevel.GetName()">
+                                                                <MudIcon Icon="@Icons.Material.Filled.Security" Class="confidence-icon" Style="@this.GetConfidenceIconStyle(internalSource)"/>
                                                             </MudTooltip>
                                                         }
                                                     </MudStack>
@@ -122,11 +122,11 @@
                                                             <MudText Typo="Typo.body1" Style="min-width: 0; white-space: normal; overflow-wrap: anywhere;">
                                                                 @source.Name
                                                             </MudText>
-                                                            @if (source is IInternalDataSource)
+                                                            @if (source is IInternalDataSource internalSource)
                                                             {
                                                                 <MudSpacer/>
-                                                                <MudTooltip Text="@source.ComplianceLevel.GetName()">
-                                                                    <MudIcon Icon="@Icons.Material.Filled.Security" Class="confidence-icon" Style="@this.GetConfidenceIconStyle(source)"/>
+                                                                <MudTooltip Text="@internalSource.ConfidenceLevel.GetName()">
+                                                                    <MudIcon Icon="@Icons.Material.Filled.Security" Class="confidence-icon" Style="@this.GetConfidenceIconStyle(internalSource)"/>
                                                                 </MudTooltip>
                                                             }
                                                         </MudStack>
@@ -144,11 +144,11 @@
                                                                 <MudText Typo="Typo.body1" Style="min-width: 0; white-space: normal; overflow-wrap: anywhere;">
                                                                     @source.DataSource.Name
                                                                 </MudText>
-                                                                @if (source.DataSource is IInternalDataSource)
+                                                                @if (source.DataSource is IInternalDataSource internalSource)
                                                                 {
                                                                     <MudSpacer/>
-                                                                    <MudTooltip Text="@source.DataSource.ComplianceLevel.GetName()">
-                                                                        <MudIcon Icon="@Icons.Material.Filled.Security" Class="confidence-icon" Style="@this.GetConfidenceIconStyle(source.DataSource)"/>
+                                                                    <MudTooltip Text="@internalSource.ConfidenceLevel.GetName()">
+                                                                        <MudIcon Icon="@Icons.Material.Filled.Security" Class="confidence-icon" Style="@this.GetConfidenceIconStyle(internalSource)"/>
                                                                     </MudTooltip>
                                                                 }
                                                             </MudStack>
@@ -206,11 +206,11 @@ else if (this.SelectionMode is DataSourceSelectionMode.CONFIGURATION_MODE)
                                 <MudText Typo="Typo.body1" Style="min-width: 0; white-space: normal; overflow-wrap: anywhere;">
                                     @source.Name
                                 </MudText>
-                                @if (source is IInternalDataSource)
+                                @if (source is IInternalDataSource internalSource)
                                 {
                                     <MudSpacer/>
-                                    <MudTooltip Text="@source.ComplianceLevel.GetName()">
-                                        <MudIcon Icon="@Icons.Material.Filled.Security" Class="confidence-icon" Style="@this.GetConfidenceIconStyle(source)"/>
+                                    <MudTooltip Text="@internalSource.ConfidenceLevel.GetName()">
+                                        <MudIcon Icon="@Icons.Material.Filled.Security" Class="confidence-icon" Style="@this.GetConfidenceIconStyle(internalSource)"/>
                                     </MudTooltip>
                                 }
                             </MudStack>

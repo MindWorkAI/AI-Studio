@@ -38,7 +38,7 @@
             </MudJustifiedText>
         }
 
-        <TextInfoLine Label="@T("Compliance level")" Value="@this.DataSource.ComplianceLevel.GetName()" ClipboardTooltipSubject="@T("the compliance level")"/>
+        <TextInfoLine Label="@T("Required provider confidence level")" Value="@this.DataSource.ConfidenceLevel.GetName()" ClipboardTooltipSubject="@T("the required provider confidence level")"/>
         <TextInfoLine Label="@T("Maximum matches per query")" Value="@this.DataSource.MaxMatches.ToString()" ClipboardTooltipSubject="@T("the maximum number of matches per query")"/>
         <TextInfoLine Icon="@Icons.Material.Filled.SquareFoot" Label="@T("File size")" Value="@this.FileSize" ClipboardTooltipSubject="@T("the file size")"/>
     </DialogContent>

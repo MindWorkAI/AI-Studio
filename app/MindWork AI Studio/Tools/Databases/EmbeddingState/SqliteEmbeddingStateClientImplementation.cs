@@ -268,8 +268,8 @@ public sealed class SqliteEmbeddingStateClientImplementation(
                                       f.last_write_utc AS LastWriteUtc,
                                       c.embedded_at_utc AS EmbeddedAtUtc,
                                       f.chunk_count AS ChunkCount,
-                                      f.compliance_level AS ComplianceLevel,
-                                      f.compliance_level_rank AS ComplianceLevelRank
+                                      f.confidence_level AS ConfidenceLevel,
+                                      f.confidence_level_rank AS ConfidenceLevelRank
                                   FROM embedding_chunks_fts
                                   JOIN embedding_chunks c ON c.id = embedding_chunks_fts.rowid
                                   JOIN embedded_files f ON f.parent_file_id = c.parent_file_id
@@ -359,8 +359,8 @@ public sealed class SqliteEmbeddingStateClientImplementation(
         fileEntity.LastWriteUtc = file.LastWriteUtc;
         fileEntity.EmbeddedAtUtc = file.EmbeddedAtUtc;
         fileEntity.ChunkCount = file.ChunkCount;
-        fileEntity.ComplianceLevel = file.ComplianceLevel;
-        fileEntity.ComplianceLevelRank = file.ComplianceLevelRank;
+        fileEntity.ConfidenceLevel = file.ConfidenceLevel;
+        fileEntity.ConfidenceLevelRank = file.ConfidenceLevelRank;
     }
 
     private static void ApplyChunk(EmbeddingStateChunkEntity chunkEntity, EmbeddingStateChunk chunk)
@@ -393,8 +393,8 @@ public sealed class SqliteEmbeddingStateClientImplementation(
         result.LastWriteUtc,
         result.EmbeddedAtUtc,
         result.ChunkCount,
-        result.ComplianceLevel,
-        result.ComplianceLevelRank);
+        result.ConfidenceLevel,
+        result.ConfidenceLevelRank);
 
     private static string BuildFtsQuery(string query)
     {

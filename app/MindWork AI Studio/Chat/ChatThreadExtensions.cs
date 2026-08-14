@@ -16,7 +16,7 @@ public static class ChatThreadExtensions
     /// One thing which is not so obvious: after RAG was used on this thread, the entire chat
     /// thread is kind of a data source by itself. Why? Because the augmentation data collected
     /// from the data sources is stored in the chat thread. This means we must check if the
-    /// selected provider is allowed to use this thread's data security and compliance level.
+    /// selected provider is allowed to use this thread's data security and confidence level.
     /// </remarks>
     /// <param name="chatThread">The chat thread to check.</param>
     /// <param name="provider">The provider to check.</param>
@@ -36,7 +36,7 @@ public static class ChatThreadExtensions
             _ => ConfidenceLevel.NONE,
         };
 
-        if (!providerConfidenceLevel.AllowsDataSourceComplianceLevel(chatThread.DataComplianceLevel))
+        if (!providerConfidenceLevel.AllowsDataSourceConfidenceLevel(chatThread.DataConfidenceLevel))
             return false;
 
         // The chat thread is available, but the data security is not specified.

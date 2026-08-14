@@ -49,7 +49,7 @@ public partial class DataSourceLocalFileDialog : MSGComponentBase
     private int dataChunkOverlapTokenLength;
     private ushort dataMaxMatches = 10;
     private bool showExpertSettings;
-    private ConfidenceLevel dataComplianceLevel = ConfidenceLevel.UNKNOWN;
+    private ConfidenceLevel dataConfidenceLevel = ConfidenceLevel.UNKNOWN;
     
     // We get the form reference from Blazor code to validate it manually:
     private MudForm form = null!;
@@ -60,8 +60,7 @@ public partial class DataSourceLocalFileDialog : MSGComponentBase
         {
             GetSelectedCloudEmbedding = () => this.SelectedCloudEmbedding,
             GetSelectedEmbeddingProvider = () => this.SelectedEmbedding,
-            GetSecurityPolicy = () => DataSourceSecurity.ALLOW_ANY,
-            GetComplianceLevel = () => this.dataComplianceLevel,
+            GetConfidenceLevel = () => this.dataConfidenceLevel,
             GetSettingsManager = () => this.SettingsManager,
             GetPreviousDataSourceName = () => this.dataEditingPreviousInstanceName,
             GetUsedDataSourceNames = () => this.UsedDataSourcesNames,
@@ -90,7 +89,7 @@ public partial class DataSourceLocalFileDialog : MSGComponentBase
             this.dataFilePath = this.DataSource.FilePath;
             this.dataMaxChunkTokenLength = this.DataSource.MaxChunkTokenLength;
             this.dataChunkOverlapTokenLength = this.DataSource.ChunkOverlapTokenLength;
-            this.dataComplianceLevel = this.DataSource.ComplianceLevel;
+            this.dataConfidenceLevel = this.DataSource.ConfidenceLevel;
             this.dataMaxMatches = this.DataSource.MaxMatches;
             this.showExpertSettings = this.dataMaxChunkTokenLength > 0 || this.dataChunkOverlapTokenLength > 0;
         }
@@ -117,7 +116,7 @@ public partial class DataSourceLocalFileDialog : MSGComponentBase
 
     private bool CanChangeSourceAndEmbedding => !this.IsEditing || !this.LockSourceAndEmbedding;
 
-    private IEnumerable<ConfigurationSelectData<ConfidenceLevel>> ComplianceLevels => ConfigurationSelectDataFactory.GetDataSourceComplianceLevelsData();
+    private IEnumerable<ConfigurationSelectData<ConfidenceLevel>> ConfidenceLevels => ConfigurationSelectDataFactory.GetDataSourceConfidenceLevelsData();
 
     private string SelectedEmbeddingNameText
     {
@@ -145,8 +144,7 @@ public partial class DataSourceLocalFileDialog : MSGComponentBase
         FilePath = this.CanChangeSourceAndEmbedding ? this.dataFilePath : this.DataSource.FilePath,
         MaxChunkTokenLength = this.dataMaxChunkTokenLength,
         ChunkOverlapTokenLength = this.dataChunkOverlapTokenLength,
-        SecurityPolicy = DataSourceSecurity.ALLOW_ANY,
-        ComplianceLevel = this.dataComplianceLevel,
+        ConfidenceLevel = this.dataConfidenceLevel,
         MaxMatches = this.dataMaxMatches,
     };
     
