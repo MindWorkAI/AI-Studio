@@ -32,15 +32,7 @@ public sealed record EmbeddingProvider(
 
     public static readonly EmbeddingProvider NONE = new();
 
-    public EmbeddingProvider() : this(
-        0,
-        Guid.Empty.ToString(),
-        string.Empty,
-        LLMProviders.NONE,
-        default,
-        false,
-        false,
-        Guid.Empty)
+    public EmbeddingProvider() : this(0, Guid.Empty.ToString(), string.Empty, LLMProviders.NONE, default, false, false, Guid.Empty)
     {
     }
 

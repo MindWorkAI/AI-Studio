@@ -14,5 +14,3 @@ public abstract class VectorStoreClient(string name, string path): DatabaseClien
 
     public abstract Task DeleteVectorStore(string storeName, CancellationToken token);
 }
-
-public sealed record VectorStoreEnsureResult(bool Created);

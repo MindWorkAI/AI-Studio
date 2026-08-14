@@ -9,11 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AIStudio.Tools.Databases.IndexStore;
 
-public sealed class SqliteIndexStoreClientImplementation(
-    string name,
-    string databasePath,
-    string basePath,
-    string version) : IndexStoreClient(name, basePath)
+public sealed class SqliteIndexStoreClientImplementation(string name, string databasePath, string basePath, string version) : IndexStoreClient(name, basePath)
 {
     private const string DATABASE_NAME = "Local RAG Index";
     private const string DATABASE_FILENAME = "rag-index.sqlite3";

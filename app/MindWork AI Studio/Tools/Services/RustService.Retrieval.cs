@@ -7,8 +7,6 @@ using AIStudio.Tools.Rust;
 
 namespace AIStudio.Tools.Services;
 
-public sealed record ArbitraryFileDataSegment(string Content, int TokenCount);
-
 public sealed partial class RustService
 {
     public async Task<string> ReadArbitraryFileData(string path, int maxChunks, bool extractImages = false)

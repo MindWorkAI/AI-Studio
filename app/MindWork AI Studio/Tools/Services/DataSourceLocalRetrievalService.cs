@@ -11,9 +11,7 @@ using AIStudio.Tools.Rust;
 namespace AIStudio.Tools.Services;
 
 public sealed class DataSourceLocalRetrievalService(
-    SettingsManager settingsManager,
-    RustService rustService,
-    DatabaseClientProvider databaseClientProvider,
+    SettingsManager settingsManager, RustService rustService, DatabaseClientProvider databaseClientProvider,
     ILogger<DataSourceLocalRetrievalService> logger)
 {
     private enum RetrievalChannel

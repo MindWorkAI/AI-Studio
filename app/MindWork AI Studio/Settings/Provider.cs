@@ -41,15 +41,7 @@ public sealed record Provider(
     
     public static readonly Provider NONE = new();
 
-    public Provider() : this(
-        0,
-        Guid.Empty.ToString(),
-        string.Empty,
-        LLMProviders.NONE,
-        default, 
-        false,
-        false,
-        Guid.Empty)
+    public Provider() : this(0, Guid.Empty.ToString(), string.Empty, LLMProviders.NONE, default, false, false, Guid.Empty)
     {
     }
     

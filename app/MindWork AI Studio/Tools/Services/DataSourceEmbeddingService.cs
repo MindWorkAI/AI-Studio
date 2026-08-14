@@ -13,7 +13,9 @@ using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Tools.Services;
 
-public sealed partial class DataSourceEmbeddingService(SettingsManager settingsManager, RustService rustService, DatabaseClientProvider databaseClientProvider, ILogger<DataSourceEmbeddingService> logger)
+public sealed partial class DataSourceEmbeddingService(
+    SettingsManager settingsManager, RustService rustService, DatabaseClientProvider databaseClientProvider,
+    ILogger<DataSourceEmbeddingService> logger)
     : BackgroundService
 {
     private const int VECTOR_STORE_OPTIMIZATION_CHUNK_THRESHOLD = 100_000;
