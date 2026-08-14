@@ -1,4 +1,4 @@
-using AIStudio.Tools.Databases.EmbeddingState;
+using AIStudio.Tools.Databases.IndexStore;
 using AIStudio.Tools.Databases.VectorStore;
 
 namespace AIStudio.Tools.Services;
@@ -8,19 +8,19 @@ public sealed partial class DataSourceEmbeddingService
     private async Task ResetPersistedStateAsync(
         string dataSourceId,
         VectorStoreClient? vectorStore,
-        EmbeddingStateClient? embeddingState,
+        IndexStoreClient? indexStore,
         CancellationToken token)
     {
         await this.DeleteCollectionAsync(DataSourceEmbeddingNames.GetCollectionName(dataSourceId), vectorStore, token);
 
-        embeddingState ??= await databaseClientProvider.GetEmbeddingStateAsync(token);
-        if (!embeddingState.IsAvailable)
+        indexStore ??= await databaseClientProvider.GetIndexStoreAsync(token);
+        if (!indexStore.IsAvailable)
         {
-            logger.LogWarning("Could not delete local RAG index state for data source '{DataSourceId}' because the database '{DatabaseName}' is unavailable.", dataSourceId, embeddingState.Name);
+            logger.LogWarning("Could not delete local RAG embedding state for data source '{DataSourceId}' because the database '{DatabaseName}' is unavailable.", dataSourceId, indexStore.Name);
             return;
         }
 
-        await embeddingState.DeleteDataSourceAsync(dataSourceId, token);
-        logger.LogInformation("Reset persisted local RAG index state for data source '{DataSourceId}'.", dataSourceId);
+        await indexStore.DeleteDataSourceAsync(dataSourceId, token);
+        logger.LogInformation("Reset persisted local RAG embedding state for data source '{DataSourceId}'.", dataSourceId);
     }
 }

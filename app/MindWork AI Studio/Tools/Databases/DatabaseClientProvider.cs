@@ -1,4 +1,4 @@
-using AIStudio.Tools.Databases.EmbeddingState;
+using AIStudio.Tools.Databases.IndexStore;
 using AIStudio.Tools.Databases.VectorStore;
 using AIStudio.Tools.Services;
 
@@ -57,13 +57,13 @@ public sealed partial class DatabaseClientProvider(RustService rustService, ILog
             client.Status);
     }
 
-    public async Task<EmbeddingStateClient> GetEmbeddingStateAsync(CancellationToken cancellationToken = default)
+    public async Task<IndexStoreClient> GetIndexStoreAsync(CancellationToken cancellationToken = default)
     {
-        var client = await this.GetClientAsync(DatabaseRole.EMBEDDING_STATE, cancellationToken);
-        if (client is EmbeddingStateClient embeddingState)
-            return embeddingState;
+        var client = await this.GetClientAsync(DatabaseRole.INDEX_STORE, cancellationToken);
+        if (client is IndexStoreClient indexStore)
+            return indexStore;
 
-        return new NoEmbeddingStateClient(
+        return new NoIndexStoreClient(
             client.Name,
             "The configured database client does not support local RAG index operations.",
             client.Status);
@@ -105,7 +105,7 @@ public sealed partial class DatabaseClientProvider(RustService rustService, ILog
     private async Task<DatabaseClient> CreateClientAsync(DatabaseRole databaseRole, CancellationToken cancellationToken) => databaseRole switch
     {
         DatabaseRole.VECTOR_STORE => await QdrantEdgeClientImplementation.CreateAsync(rustService, this.logger, this.databaseClientLogger, cancellationToken),
-        DatabaseRole.EMBEDDING_STATE => await SqliteEmbeddingStateClientImplementation.CreateAsync(this.logger, this.databaseClientLogger, cancellationToken),
+        DatabaseRole.INDEX_STORE => await SqliteIndexStoreClientImplementation.CreateAsync(this.logger, this.databaseClientLogger, cancellationToken),
         _ => new NoDatabaseClient(databaseRole.ToString(), "The requested database role is not supported.")
     };
 

@@ -3,9 +3,9 @@
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 
-namespace AIStudio.Tools.Databases.EmbeddingState.Migrations;
+namespace AIStudio.Tools.Databases.IndexStore.Migrations;
 
-[DbContext(typeof(EmbeddingStateDbContext))]
+[DbContext(typeof(IndexStoreDbContext))]
 [Migration("20260804000000_InitialRagIndex")]
 public partial class InitialRagIndex : Migration
 {

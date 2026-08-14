@@ -7,7 +7,7 @@ using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Databases;
-using AIStudio.Tools.Databases.EmbeddingState;
+using AIStudio.Tools.Databases.IndexStore;
 using AIStudio.Tools.Databases.VectorStore;
 using AIStudio.Tools.PluginSystem;
 
@@ -188,14 +188,14 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
 
     public async Task<bool> ShouldLockDataSourceIdentityAsync(string dataSourceId, CancellationToken token = default)
     {
-        var embeddingState = await databaseClientProvider.GetEmbeddingStateAsync(token);
-        if (!embeddingState.IsAvailable)
+        var indexStore = await databaseClientProvider.GetIndexStoreAsync(token);
+        if (!indexStore.IsAvailable)
         {
-            logger.LogWarning("Locking identity settings for data source '{DataSourceId}' because the local RAG index database '{DatabaseName}' is unavailable.", dataSourceId, embeddingState.Name);
+            logger.LogWarning("Locking identity settings for data source '{DataSourceId}' because the local RAG index database '{DatabaseName}' is unavailable.", dataSourceId, indexStore.Name);
             return true;
         }
 
-        var manifest = await embeddingState.GetManifestAsync(dataSourceId, token);
+        var manifest = await indexStore.GetManifestAsync(dataSourceId, token);
         return !string.IsNullOrWhiteSpace(manifest.EmbeddingProviderId)
                || !string.IsNullOrWhiteSpace(manifest.EmbeddingSignature)
                || !string.IsNullOrWhiteSpace(manifest.SourceHash)
@@ -410,7 +410,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         token.ThrowIfCancellationRequested();
 
         var vectorStore = await databaseClientProvider.GetVectorStoreAsync(token);
-        var embeddingState = await databaseClientProvider.GetEmbeddingStateAsync(token);
+        var indexStore = await databaseClientProvider.GetIndexStoreAsync(token);
         token.ThrowIfCancellationRequested();
 
         if (!vectorStore.IsAvailable)
@@ -425,20 +425,20 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             return;
         }
 
-        if (!embeddingState.IsAvailable)
+        if (!indexStore.IsAvailable)
         {
             logger.LogWarning(
                 "Skipping background embeddings for data source '{DataSourceName}' ({DataSourceId}) because the database client '{DatabaseName}' is unavailable.",
                 dataSource.Name,
                 dataSource.Id,
-                embeddingState.Name);
+                indexStore.Name);
             token.ThrowIfCancellationRequested();
             this.UpsertStatus(this.GetFallbackStatus(dataSource, "The local RAG index database is not available."));
             return;
         }
 
         var collectionName = DataSourceEmbeddingNames.GetCollectionName(dataSource.Id);
-        var persistedManifest = await embeddingState.GetManifestAsync(dataSource.Id, token);
+        var persistedManifest = await indexStore.GetManifestAsync(dataSource.Id, token);
         if (persistedManifest.VectorSize > 0)
         {
             var ensureResult = await vectorStore.EnsureVectorStoreExists(collectionName, dataSource.Name, persistedManifest.VectorSize, token);
@@ -449,7 +449,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                     collectionName,
                     dataSource.Name,
                     dataSource.Id);
-                await this.ResetPersistedStateAsync(dataSource.Id, vectorStore, embeddingState, token);
+                await this.ResetPersistedStateAsync(dataSource.Id, vectorStore, indexStore, token);
             }
         }
 
@@ -484,7 +484,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             dataSource.Name,
             dataSource.Id);
 
-        var manifest = await this.EnsureCompatibleManifestAsync(dataSource, embeddingProvider, collectionName, vectorStore, embeddingState, token);
+        var manifest = await this.EnsureCompatibleManifestAsync(dataSource, embeddingProvider, collectionName, vectorStore, indexStore, token);
         token.ThrowIfCancellationRequested();
 
         var inputFiles = this.GetInputFiles(dataSource);
@@ -510,7 +510,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             collectionName);
 
         var metadataSnapshot = this.BuildDataSourceMetadataSnapshot(dataSource, indexedFiles);
-        var removedMissingFiles = await this.RemoveMissingFileEmbeddingsAsync(vectorStore, embeddingState, dataSource, collectionName, manifest, indexedFiles, token);
+        var removedMissingFiles = await this.RemoveMissingFileEmbeddingsAsync(vectorStore, indexStore, dataSource, collectionName, manifest, indexedFiles, token);
         var optimizationTracker = new VectorStoreOptimizationTracker();
         if (removedMissingFiles > 0)
             optimizationTracker.MarkChanged();
@@ -543,7 +543,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                 token);
 
             token.ThrowIfCancellationRequested();
-            await embeddingState.UpdateDataSourceHashAsync(dataSource.Id, metadataSnapshot.SourceHash, token);
+            await indexStore.UpdateDataSourceHashAsync(dataSource.Id, metadataSnapshot.SourceHash, token);
             this.UpsertStatus(this.CreateCompletedStatus(dataSource, totalFiles, indexedFiles.Count, inputFiles.FailedFiles, inputFiles.LastError, inputFiles.Failures));
             return;
         }
@@ -602,7 +602,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                     skippedFiles + completedFiles + 1,
                     totalFiles);
                 var startedAtUtc = DateTimeOffset.UtcNow;
-                var chunkCount = await this.IndexOneFileAsync(embeddingState, vectorStore, dataSource, file, fingerprint, embeddingProvider, provider, manifest, optimizationTracker, token);
+                var chunkCount = await this.IndexOneFileAsync(indexStore, vectorStore, dataSource, file, fingerprint, embeddingProvider, provider, manifest, optimizationTracker, token);
                 token.ThrowIfCancellationRequested();
                 var fingerprintAfterEmbedding = BuildFileMetadataHash(file);
                 if (!string.Equals(fingerprint, fingerprintAfterEmbedding, StringComparison.Ordinal))
@@ -615,7 +615,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                     new DateTimeOffset(file.LastWriteTimeUtc),
                     embeddedAtUtc,
                     chunkCount);
-                await embeddingState.UpsertFileAsync(
+                await indexStore.UpsertFileAsync(
                     dataSource.Id,
                     this.CreateEmbeddingStateFile(dataSource, file, fingerprint, chunkCount, embeddedAtUtc),
                     token);
@@ -644,7 +644,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                 lastError = exception.Message;
                 failureDetails.Add(new DataSourceEmbeddingFailure(file.FullName, exception.Message));
                 manifest.Files.Remove(file.FullName);
-                await this.CleanupFailedFileAsync(embeddingState, vectorStore, dataSource, collectionName, file.FullName, optimizationTracker, token);
+                await this.CleanupFailedFileAsync(indexStore, vectorStore, dataSource, collectionName, file.FullName, optimizationTracker, token);
 
                 logger.LogWarning(exception, "Failed to embed file '{FilePath}' for data source '{DataSourceName}'.", file.FullName, dataSource.Name);
                 this.UpsertStatus(this.CreateStatus(dataSource, DataSourceEmbeddingState.RUNNING, totalFiles, skippedFiles + completedFiles, failedFiles, file.Name, exception.Message, failureDetails));
@@ -662,7 +662,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             token);
 
         token.ThrowIfCancellationRequested();
-        await embeddingState.UpdateDataSourceHashAsync(dataSource.Id, metadataSnapshot.SourceHash, token);
+        await indexStore.UpdateDataSourceHashAsync(dataSource.Id, metadataSnapshot.SourceHash, token);
         token.ThrowIfCancellationRequested();
 
         this.UpsertStatus(this.CreateCompletedStatus(dataSource, totalFiles, skippedFiles + completedFiles, failedFiles, lastError, failureDetails));
@@ -682,7 +682,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     }
 
     private async Task<int> IndexOneFileAsync(
-        EmbeddingStateClient embeddingState,
+        IndexStoreClient indexStore,
         VectorStoreClient vectorStore,
         IDataSource dataSource,
         FileInfo file,
@@ -700,10 +700,10 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             collectionName);
         await this.DeleteFilePointsAsync(vectorStore, collectionName, file.FullName, token);
         optimizationTracker.MarkChanged();
-        await embeddingState.DeleteFileAsync(dataSource.Id, file.FullName, token);
+        await indexStore.DeleteFileAsync(dataSource.Id, file.FullName, token);
 
         var parentFile = this.CreateEmbeddingStateFile(dataSource, file, fingerprint, 0, DateTimeOffset.UtcNow);
-        await embeddingState.UpsertFileAsync(dataSource.Id, parentFile, token);
+        await indexStore.UpsertFileAsync(dataSource.Id, parentFile, token);
 
         var embeddingBatchSize = Math.Max(1, embeddingProvider.EffectiveEmbeddingBatchSize);
         var batch = new List<EmbeddingChunkDraft>(embeddingBatchSize);
@@ -715,11 +715,11 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             totalChunkCount++;
 
             if (batch.Count >= embeddingBatchSize)
-                await this.FlushBatchAsync(embeddingState, vectorStore, dataSource, file, fingerprint, parentFile, embeddingProvider, provider, manifest, optimizationTracker, collectionName, batch, token);
+                await this.FlushBatchAsync(indexStore, vectorStore, dataSource, file, fingerprint, parentFile, embeddingProvider, provider, manifest, optimizationTracker, collectionName, batch, token);
         }
 
         if (batch.Count > 0)
-            await this.FlushBatchAsync(embeddingState, vectorStore, dataSource, file, fingerprint, parentFile, embeddingProvider, provider, manifest, optimizationTracker, collectionName, batch, token);
+            await this.FlushBatchAsync(indexStore, vectorStore, dataSource, file, fingerprint, parentFile, embeddingProvider, provider, manifest, optimizationTracker, collectionName, batch, token);
 
         if (totalChunkCount == 0)
             throw new InvalidOperationException($"The file '{file.Name}' did not yield any text chunks.");
@@ -735,7 +735,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     }
 
     private async Task FlushBatchAsync(
-        EmbeddingStateClient embeddingState,
+        IndexStoreClient indexStore,
         VectorStoreClient vectorStore,
         IDataSource dataSource,
         FileInfo file,
@@ -805,7 +805,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                     throw new InvalidOperationException($"Vector store '{collectionName}' could not be recreated cleanly.");
             }
 
-            await embeddingState.UpdateVectorSizeAsync(dataSource.Id, vectorSize, token);
+            await indexStore.UpdateVectorSizeAsync(dataSource.Id, vectorSize, token);
             manifest.VectorSize = vectorSize;
             logger.LogInformation(
                 "Created embedding collection '{CollectionName}' with vector size {VectorSize} for data source '{DataSourceName}' ({DataSourceId}).",
@@ -829,7 +829,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             embeddedAtUtc,
             token);
         token.ThrowIfCancellationRequested();
-        await embeddingState.UpsertChunksAsync(
+        await indexStore.UpsertChunksAsync(
             dataSource.Id,
             this.CreateEmbeddingStateChunks(parentFile, batch, embeddedAtUtc),
             token);
@@ -897,7 +897,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
     }
 
     private async Task CleanupFailedFileAsync(
-        EmbeddingStateClient embeddingState,
+        IndexStoreClient indexStore,
         VectorStoreClient vectorStore,
         IDataSource dataSource,
         string collectionName,
@@ -926,7 +926,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
 
         try
         {
-            await embeddingState.DeleteFileAsync(dataSource.Id, filePath, token);
+            await indexStore.DeleteFileAsync(dataSource.Id, filePath, token);
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested)
         {
@@ -1018,7 +1018,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             .ToList();
 
         logger.LogInformation(
-            "Starting initial persisted hash check for {DataSourceCount} supported internal data source(s). Incomplete or failed local RAG index state will be retried during this pass. File watchers will be activated after this check completes.",
+            "Starting initial persisted hash check for {DataSourceCount} supported internal data source(s). Incomplete or failed local RAG embedding state will be retried during this pass. File watchers will be activated after this check completes.",
             supportedDataSources.Count);
 
         foreach (var dataSource in supportedDataSources)
@@ -1074,12 +1074,12 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         EmbeddingProvider embeddingProvider,
         string collectionName,
         VectorStoreClient vectorStore,
-        EmbeddingStateClient embeddingState,
+        IndexStoreClient indexStore,
         CancellationToken token)
     {
         var chunkingOptions = this.GetChunkingOptions(dataSource, embeddingProvider);
         var embeddingSignature = this.BuildEmbeddingSignature(dataSource, embeddingProvider, chunkingOptions);
-        var manifest = await embeddingState.GetManifestAsync(dataSource.Id, token);
+        var manifest = await indexStore.GetManifestAsync(dataSource.Id, token);
 
         logger.LogInformation(
             "Loaded persisted local RAG index manifest for data source '{DataSourceName}' ({DataSourceId}). StoredFiles={StoredFiles}, StoredSourceHashPrefix={StoredSourceHashPrefix}, StoredSignaturePrefix={StoredSignaturePrefix}, CurrentSignaturePrefix={CurrentSignaturePrefix}.",
@@ -1093,7 +1093,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         if (!string.Equals(manifest.EmbeddingSignature, embeddingSignature, StringComparison.Ordinal))
         {
             logger.LogInformation(
-                "Embedding configuration changed for data source '{DataSourceName}' ({DataSourceId}). Resetting persisted state and collection '{CollectionName}'.",
+                "Embedding configuration changed for data source '{DataSourceName}' ({DataSourceId}). Resetting persisted embedding state and collection '{CollectionName}'.",
                 dataSource.Name,
                 dataSource.Id,
                 collectionName);
@@ -1103,8 +1103,8 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
                 dataSource.Id,
                 manifest.EmbeddingSignature,
                 embeddingSignature);
-            await this.ResetPersistedStateAsync(dataSource.Id, vectorStore, embeddingState, token);
-            manifest = await embeddingState.GetManifestAsync(dataSource.Id, token);
+            await this.ResetPersistedStateAsync(dataSource.Id, vectorStore, indexStore, token);
+            manifest = await indexStore.GetManifestAsync(dataSource.Id, token);
         }
 
         if (!string.Equals(manifest.EmbeddingProviderId, embeddingProvider.Id, StringComparison.OrdinalIgnoreCase) ||
@@ -1114,7 +1114,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
             manifest.EmbeddingSignature = embeddingSignature;
         }
 
-        await embeddingState.UpsertDataSourceAsync(
+        await indexStore.UpsertDataSourceAsync(
             dataSource.Id,
             dataSource.Name,
             dataSource.Type.ToString(),
@@ -1129,7 +1129,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
 
     private async Task<int> RemoveMissingFileEmbeddingsAsync(
         VectorStoreClient vectorStore,
-        EmbeddingStateClient embeddingState,
+        IndexStoreClient indexStore,
         IDataSource dataSource,
         string collectionName,
         DataSourceEmbeddingManifest manifest,
@@ -1144,7 +1144,7 @@ public sealed partial class DataSourceEmbeddingService(SettingsManager settingsM
         foreach (var removedFilePath in manifest.Files.Keys.Except(existingPaths, StringComparer.OrdinalIgnoreCase).ToList())
         {
             await this.DeleteFilePointsAsync(vectorStore, collectionName, removedFilePath, token);
-            await embeddingState.DeleteFileAsync(dataSource.Id, removedFilePath, token);
+            await indexStore.DeleteFileAsync(dataSource.Id, removedFilePath, token);
             manifest.Files.Remove(removedFilePath);
             removedFiles++;
             logger.LogInformation(

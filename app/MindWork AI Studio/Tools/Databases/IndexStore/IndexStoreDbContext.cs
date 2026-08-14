@@ -4,11 +4,11 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
-namespace AIStudio.Tools.Databases.EmbeddingState;
+namespace AIStudio.Tools.Databases.IndexStore;
 
-internal sealed class EmbeddingStateDbContext(DbContextOptions<EmbeddingStateDbContext> options) : DbContext(options)
+internal sealed class IndexStoreDbContext(DbContextOptions<IndexStoreDbContext> options) : DbContext(options)
 {
-    public static DbContextOptions<EmbeddingStateDbContext> CreateOptions(string databasePath) => new DbContextOptionsBuilder<EmbeddingStateDbContext>()
+    public static DbContextOptions<IndexStoreDbContext> CreateOptions(string databasePath) => new DbContextOptionsBuilder<IndexStoreDbContext>()
         .UseSqlite(BuildConnectionString(databasePath))
         .Options;
 
@@ -18,11 +18,11 @@ internal sealed class EmbeddingStateDbContext(DbContextOptions<EmbeddingStateDbC
 
     public DbSet<EmbeddingStateChunkEntity> EmbeddingChunks => this.Set<EmbeddingStateChunkEntity>();
 
-    public DbSet<EmbeddingStateSearchResultEntity> SearchResults => this.Set<EmbeddingStateSearchResultEntity>();
+    public DbSet<IndexStoreSearchResultEntity> SearchResults => this.Set<IndexStoreSearchResultEntity>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        var utcDateTimeOffsetConverter = new EmbeddingStateDateTimeOffsetConverter();
+        var utcDateTimeOffsetConverter = new IndexStoreDateTimeOffsetConverter();
 
         modelBuilder.Entity<EmbeddingStateDataSourceEntity>(entity =>
         {
@@ -97,7 +97,7 @@ internal sealed class EmbeddingStateDbContext(DbContextOptions<EmbeddingStateDbC
             entity.HasIndex(chunk => new { chunk.ParentFileId, chunk.ChunkIndex }).HasDatabaseName("idx_embedding_chunks_parent_file_chunk_index").IsUnique();
         });
 
-        modelBuilder.Entity<EmbeddingStateSearchResultEntity>(entity =>
+        modelBuilder.Entity<IndexStoreSearchResultEntity>(entity =>
         {
             entity.HasNoKey();
             entity.ToView("embedding_chunk_search_results");
@@ -193,7 +193,7 @@ internal sealed class EmbeddingStateChunkEntity
     public EmbeddingStateFileEntity? File { get; set; }
 }
 
-internal sealed class EmbeddingStateSearchResultEntity
+internal sealed class IndexStoreSearchResultEntity
 {
     public string ChunkId { get; set; } = string.Empty;
 
@@ -238,11 +238,11 @@ internal sealed class EmbeddingStateSearchResultEntity
     public int ConfidenceLevelRank { get; set; }
 }
 
-internal sealed class EmbeddingStateDateTimeOffsetConverter() : ValueConverter<DateTimeOffset, string>(
-    value => EmbeddingStateDateTimeOffset.ToUtcText(value),
-    value => EmbeddingStateDateTimeOffset.ParseUtc(value));
+internal sealed class IndexStoreDateTimeOffsetConverter() : ValueConverter<DateTimeOffset, string>(
+    value => IndexStoreDateTimeOffset.ToUtcText(value),
+    value => IndexStoreDateTimeOffset.ParseUtc(value));
 
-internal static class EmbeddingStateDateTimeOffset
+internal static class IndexStoreDateTimeOffset
 {
     public static string ToUtcText(DateTimeOffset dateTime)
     {

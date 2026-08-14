@@ -1,8 +1,8 @@
 using AIStudio.Tools.Services;
 
-namespace AIStudio.Tools.Databases.EmbeddingState;
+namespace AIStudio.Tools.Databases.IndexStore;
 
-public abstract class EmbeddingStateClient(string name, string path) : DatabaseClient(name, path)
+public abstract class IndexStoreClient(string name, string path) : DatabaseClient(name, path)
 {
     public abstract Task<DataSourceEmbeddingManifest> GetManifestAsync(string dataSourceId, CancellationToken token);
 
@@ -26,7 +26,7 @@ public abstract class EmbeddingStateClient(string name, string path) : DatabaseC
 
     public abstract Task UpsertChunksAsync(string dataSourceId, IReadOnlyList<EmbeddingStateChunk> chunks, CancellationToken token);
 
-    public abstract Task<IReadOnlyList<EmbeddingStateSearchResult>> SearchChunksAsync(string dataSourceId, string query, int maxMatches, CancellationToken token);
+    public abstract Task<IReadOnlyList<IndexStoreSearchResult>> SearchChunksAsync(string dataSourceId, string query, int maxMatches, CancellationToken token);
 
     public abstract Task DeleteDataSourceAsync(string dataSourceId, CancellationToken token);
 }
@@ -54,7 +54,7 @@ public sealed record EmbeddingStateChunk(
     string ChunkText,
     DateTimeOffset EmbeddedAtUtc);
 
-public sealed record EmbeddingStateSearchResult(
+public sealed record IndexStoreSearchResult(
     string ChunkId,
     string ParentFileId,
     string DataSourceId,

@@ -3,7 +3,7 @@ using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Databases;
-using AIStudio.Tools.Databases.EmbeddingState;
+using AIStudio.Tools.Databases.IndexStore;
 using AIStudio.Tools.Databases.VectorStore;
 using AIStudio.Tools.RAG;
 using AIStudio.Tools.Rust;
@@ -188,25 +188,25 @@ public sealed class DataSourceLocalRetrievalService(
         return true;
     }
 
-    private async Task<IReadOnlyList<EmbeddingStateSearchResult>> SearchBm25Async(IInternalDataSource dataSource, string query, int maxMatches, CancellationToken token)
+    private async Task<IReadOnlyList<IndexStoreSearchResult>> SearchBm25Async(IInternalDataSource dataSource, string query, int maxMatches, CancellationToken token)
     {
         try
         {
-            var embeddingState = await databaseClientProvider.GetEmbeddingStateAsync(token);
-            if (!embeddingState.IsAvailable)
+            var indexStore = await databaseClientProvider.GetIndexStoreAsync(token);
+            if (!indexStore.IsAvailable)
             {
                 logger.LogWarning(
                     "Skipping BM25 retrieval for data source '{DataSourceName}' ({DataSourceId}) because local RAG index '{DatabaseName}' is unavailable.",
                     dataSource.Name,
                     dataSource.Id,
-                    embeddingState.Name);
+                    indexStore.Name);
                 return [];
             }
 
             var results = this.LimitSearchResults(
                 dataSource,
                 "BM25",
-                await embeddingState.SearchChunksAsync(dataSource.Id, query, maxMatches, token),
+                await indexStore.SearchChunksAsync(dataSource.Id, query, maxMatches, token),
                 maxMatches);
             this.LogBm25Results(dataSource, results);
             return results;
@@ -240,7 +240,7 @@ public sealed class DataSourceLocalRetrievalService(
 
     private static IReadOnlyList<LocalRetrievalHit> MergeResults(
         IReadOnlyList<VectorSearchResult> vectorResults,
-        IReadOnlyList<EmbeddingStateSearchResult> bm25Results,
+        IReadOnlyList<IndexStoreSearchResult> bm25Results,
         int maxMatches)
     {
         // Future reranking should replace this deterministic channel merge.
@@ -299,7 +299,7 @@ public sealed class DataSourceLocalRetrievalService(
             result.ConfidenceLevel,
             result.ConfidenceLevelRank);
 
-    private static LocalRetrievalHit FromBm25Result(EmbeddingStateSearchResult result, int rank) =>
+    private static LocalRetrievalHit FromBm25Result(IndexStoreSearchResult result, int rank) =>
         new(
             RetrievalChannel.BM25,
             result.ChunkId,
@@ -418,7 +418,7 @@ public sealed class DataSourceLocalRetrievalService(
         }
     }
 
-    private void LogBm25Results(IInternalDataSource dataSource, IReadOnlyList<EmbeddingStateSearchResult> results)
+    private void LogBm25Results(IInternalDataSource dataSource, IReadOnlyList<IndexStoreSearchResult> results)
     {
         if (results.Count == 0)
         {

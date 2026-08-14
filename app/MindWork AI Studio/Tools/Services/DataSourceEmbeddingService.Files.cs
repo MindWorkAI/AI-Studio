@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
-using AIStudio.Tools.Databases.EmbeddingState;
+using AIStudio.Tools.Databases.IndexStore;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
 

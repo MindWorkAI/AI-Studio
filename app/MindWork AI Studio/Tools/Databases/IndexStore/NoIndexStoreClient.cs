@@ -1,11 +1,11 @@
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Services;
 
-namespace AIStudio.Tools.Databases.EmbeddingState;
+namespace AIStudio.Tools.Databases.IndexStore;
 
-public sealed class NoEmbeddingStateClient(string name, string? unavailableReason, DatabaseClientStatus status = DatabaseClientStatus.UNAVAILABLE) : EmbeddingStateClient(name, string.Empty)
+public sealed class NoIndexStoreClient(string name, string? unavailableReason, DatabaseClientStatus status = DatabaseClientStatus.UNAVAILABLE) : IndexStoreClient(name, string.Empty)
 {
-    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(NoEmbeddingStateClient).Namespace, nameof(NoEmbeddingStateClient));
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(NoIndexStoreClient).Namespace, nameof(NoIndexStoreClient));
 
     public override DatabaseClientStatus Status => status;
 
@@ -46,8 +46,8 @@ public sealed class NoEmbeddingStateClient(string name, string? unavailableReaso
 
     public override Task UpsertChunksAsync(string dataSourceId, IReadOnlyList<EmbeddingStateChunk> chunks, CancellationToken token) => Task.CompletedTask;
 
-    public override Task<IReadOnlyList<EmbeddingStateSearchResult>> SearchChunksAsync(string dataSourceId, string query, int maxMatches, CancellationToken token) =>
-        Task.FromResult<IReadOnlyList<EmbeddingStateSearchResult>>([]);
+    public override Task<IReadOnlyList<IndexStoreSearchResult>> SearchChunksAsync(string dataSourceId, string query, int maxMatches, CancellationToken token) =>
+        Task.FromResult<IReadOnlyList<IndexStoreSearchResult>>([]);
 
     public override Task DeleteDataSourceAsync(string dataSourceId, CancellationToken token) => Task.CompletedTask;
 

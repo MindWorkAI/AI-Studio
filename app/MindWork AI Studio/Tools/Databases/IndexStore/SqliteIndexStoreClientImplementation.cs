@@ -7,13 +7,13 @@ using AIStudio.Tools.Services;
 
 using Microsoft.EntityFrameworkCore;
 
-namespace AIStudio.Tools.Databases.EmbeddingState;
+namespace AIStudio.Tools.Databases.IndexStore;
 
-public sealed class SqliteEmbeddingStateClientImplementation(
+public sealed class SqliteIndexStoreClientImplementation(
     string name,
     string databasePath,
     string basePath,
-    string version) : EmbeddingStateClient(name, basePath)
+    string version) : IndexStoreClient(name, basePath)
 {
     private const string DATABASE_NAME = "Local RAG Index";
     private const string DATABASE_FILENAME = "rag-index.sqlite3";
@@ -23,9 +23,9 @@ public sealed class SqliteEmbeddingStateClientImplementation(
     private static readonly Regex FTS_TOKEN_REGEX = new(@"[\p{L}\p{Nd}_]+", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
     private readonly string databasePath = databasePath;
-    private readonly DbContextOptions<EmbeddingStateDbContext> dbContextOptions = EmbeddingStateDbContext.CreateOptions(databasePath);
+    private readonly DbContextOptions<IndexStoreDbContext> dbContextOptions = IndexStoreDbContext.CreateOptions(databasePath);
 
-    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(SqliteEmbeddingStateClientImplementation).Namespace, nameof(SqliteEmbeddingStateClientImplementation));
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(SqliteIndexStoreClientImplementation).Namespace, nameof(SqliteIndexStoreClientImplementation));
 
     public override string CacheKey => $"{this.Name}:{this.databasePath}:{version}";
 
@@ -35,7 +35,7 @@ public sealed class SqliteEmbeddingStateClientImplementation(
         CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(SettingsManager.DataDirectory))
-            return CreateNoEmbeddingStateClient(DATABASE_NAME, "The application data directory is not available yet.", DatabaseClientStatus.STARTING, databaseClientLogger);
+            return CreateNoIndexStoreClient(DATABASE_NAME, "The application data directory is not available yet.", DatabaseClientStatus.STARTING, databaseClientLogger);
 
         try
         {
@@ -45,18 +45,18 @@ public sealed class SqliteEmbeddingStateClientImplementation(
             Directory.CreateDirectory(basePath);
 
             var databasePath = Path.Combine(basePath, DATABASE_FILENAME);
-            var client = new SqliteEmbeddingStateClientImplementation(DATABASE_NAME, databasePath, basePath, string.Empty);
+            var client = new SqliteIndexStoreClientImplementation(DATABASE_NAME, databasePath, basePath, string.Empty);
             await client.InitializeAsync(cancellationToken);
             var version = await client.GetSqliteVersionAsync(cancellationToken);
 
-            client = new SqliteEmbeddingStateClientImplementation(DATABASE_NAME, databasePath, basePath, version);
+            client = new SqliteIndexStoreClientImplementation(DATABASE_NAME, databasePath, basePath, version);
             client.SetLogger(databaseClientLogger);
             return client;
         }
         catch (Exception exception)
         {
             logger.LogWarning(exception, "{DatabaseName} is not available. Indexed file fingerprints and search chunks are disabled.", DATABASE_NAME);
-            return CreateNoEmbeddingStateClient(DATABASE_NAME, exception.Message, DatabaseClientStatus.UNAVAILABLE, databaseClientLogger);
+            return CreateNoIndexStoreClient(DATABASE_NAME, exception.Message, DatabaseClientStatus.UNAVAILABLE, databaseClientLogger);
         }
     }
 
@@ -236,7 +236,7 @@ public sealed class SqliteEmbeddingStateClientImplementation(
         await transaction.CommitAsync(token);
     }
 
-    public override async Task<IReadOnlyList<EmbeddingStateSearchResult>> SearchChunksAsync(string dataSourceId, string query, int maxMatches, CancellationToken token)
+    public override async Task<IReadOnlyList<IndexStoreSearchResult>> SearchChunksAsync(string dataSourceId, string query, int maxMatches, CancellationToken token)
     {
         if (maxMatches <= 0)
             return [];
@@ -314,7 +314,7 @@ public sealed class SqliteEmbeddingStateClientImplementation(
     private async Task InitializeAsync(CancellationToken token)
     {
         await using var context = this.CreateContext();
-        await EmbeddingStateSchemaMigrator.MigrateAsync(context, token);
+        await IndexStoreSchemaMigrator.MigrateAsync(context, token);
     }
 
     private async Task<string> GetSqliteVersionAsync(CancellationToken token)
@@ -326,7 +326,7 @@ public sealed class SqliteEmbeddingStateClientImplementation(
         return versions.FirstOrDefault() ?? string.Empty;
     }
 
-    private EmbeddingStateDbContext CreateContext() => new(this.dbContextOptions);
+    private IndexStoreDbContext CreateContext() => new(this.dbContextOptions);
 
     private static void ApplyDataSource(
         EmbeddingStateDataSourceEntity dataSource,
@@ -373,7 +373,7 @@ public sealed class SqliteEmbeddingStateClientImplementation(
         chunkEntity.EmbeddedAtUtc = chunk.EmbeddedAtUtc;
     }
 
-    private static EmbeddingStateSearchResult ToSearchResult(EmbeddingStateSearchResultEntity result) => new(
+    private static IndexStoreSearchResult ToSearchResult(IndexStoreSearchResultEntity result) => new(
         result.ChunkId,
         result.ParentFileId,
         result.DataSourceId,
@@ -410,9 +410,9 @@ public sealed class SqliteEmbeddingStateClientImplementation(
         return terms.Count == 0 ? string.Empty : string.Join(" OR ", terms);
     }
 
-    private static NoEmbeddingStateClient CreateNoEmbeddingStateClient(string name, string? unavailableReason, DatabaseClientStatus status, ILogger<DatabaseClient> databaseClientLogger)
+    private static NoIndexStoreClient CreateNoIndexStoreClient(string name, string? unavailableReason, DatabaseClientStatus status, ILogger<DatabaseClient> databaseClientLogger)
     {
-        var client = new NoEmbeddingStateClient(name, unavailableReason, status);
+        var client = new NoIndexStoreClient(name, unavailableReason, status);
         client.SetLogger(databaseClientLogger);
         return client;
     }

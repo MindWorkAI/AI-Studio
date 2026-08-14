@@ -3,18 +3,18 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 
-namespace AIStudio.Tools.Databases.EmbeddingState.Migrations;
+namespace AIStudio.Tools.Databases.IndexStore.Migrations;
 
-[DbContext(typeof(EmbeddingStateDbContext))]
-partial class EmbeddingStateDbContextModelSnapshot : ModelSnapshot
+[DbContext(typeof(IndexStoreDbContext))]
+partial class IndexStoreDbContextModelSnapshot : ModelSnapshot
 {
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
 #pragma warning disable 612, 618
         modelBuilder.HasAnnotation("ProductVersion", "9.0.18");
-        var utcDateTimeOffsetConverter = new EmbeddingStateDateTimeOffsetConverter();
+        var utcDateTimeOffsetConverter = new IndexStoreDateTimeOffsetConverter();
 
-        modelBuilder.Entity("AIStudio.Tools.Databases.EmbeddingState.EmbeddingStateDataSourceEntity", entity =>
+        modelBuilder.Entity("AIStudio.Tools.Databases.IndexStore.EmbeddingStateDataSourceEntity", entity =>
         {
             entity.Property<string>("DataSourceId")
                 .HasColumnType("TEXT")
@@ -61,7 +61,7 @@ partial class EmbeddingStateDbContextModelSnapshot : ModelSnapshot
             entity.ToTable("data_sources");
         });
 
-        modelBuilder.Entity("AIStudio.Tools.Databases.EmbeddingState.EmbeddingStateFileEntity", entity =>
+        modelBuilder.Entity("AIStudio.Tools.Databases.IndexStore.EmbeddingStateFileEntity", entity =>
         {
             entity.Property<string>("ParentFileId")
                 .HasColumnType("TEXT")
@@ -151,7 +151,7 @@ partial class EmbeddingStateDbContextModelSnapshot : ModelSnapshot
             entity.ToTable("embedded_files");
         });
 
-        modelBuilder.Entity("AIStudio.Tools.Databases.EmbeddingState.EmbeddingStateChunkEntity", entity =>
+        modelBuilder.Entity("AIStudio.Tools.Databases.IndexStore.EmbeddingStateChunkEntity", entity =>
         {
             entity.Property<int>("Id")
                 .ValueGeneratedOnAdd()
@@ -206,7 +206,7 @@ partial class EmbeddingStateDbContextModelSnapshot : ModelSnapshot
             entity.ToTable("embedding_chunks");
         });
 
-        modelBuilder.Entity("AIStudio.Tools.Databases.EmbeddingState.EmbeddingStateSearchResultEntity", entity =>
+        modelBuilder.Entity("AIStudio.Tools.Databases.IndexStore.IndexStoreSearchResultEntity", entity =>
         {
             entity.Property<string>("AbsolutePath")
                 .IsRequired()
@@ -291,9 +291,9 @@ partial class EmbeddingStateDbContextModelSnapshot : ModelSnapshot
             entity.ToView("embedding_chunk_search_results");
         });
 
-        modelBuilder.Entity("AIStudio.Tools.Databases.EmbeddingState.EmbeddingStateFileEntity", entity =>
+        modelBuilder.Entity("AIStudio.Tools.Databases.IndexStore.EmbeddingStateFileEntity", entity =>
         {
-            entity.HasOne("AIStudio.Tools.Databases.EmbeddingState.EmbeddingStateDataSourceEntity", "DataSource")
+            entity.HasOne("AIStudio.Tools.Databases.IndexStore.EmbeddingStateDataSourceEntity", "DataSource")
                 .WithMany("Files")
                 .HasForeignKey("DataSourceId")
                 .OnDelete(DeleteBehavior.Cascade)
@@ -302,9 +302,9 @@ partial class EmbeddingStateDbContextModelSnapshot : ModelSnapshot
             entity.Navigation("DataSource");
         });
 
-        modelBuilder.Entity("AIStudio.Tools.Databases.EmbeddingState.EmbeddingStateChunkEntity", entity =>
+        modelBuilder.Entity("AIStudio.Tools.Databases.IndexStore.EmbeddingStateChunkEntity", entity =>
         {
-            entity.HasOne("AIStudio.Tools.Databases.EmbeddingState.EmbeddingStateFileEntity", "File")
+            entity.HasOne("AIStudio.Tools.Databases.IndexStore.EmbeddingStateFileEntity", "File")
                 .WithMany("Chunks")
                 .HasForeignKey("ParentFileId")
                 .OnDelete(DeleteBehavior.Cascade)
@@ -313,12 +313,12 @@ partial class EmbeddingStateDbContextModelSnapshot : ModelSnapshot
             entity.Navigation("File");
         });
 
-        modelBuilder.Entity("AIStudio.Tools.Databases.EmbeddingState.EmbeddingStateDataSourceEntity", entity =>
+        modelBuilder.Entity("AIStudio.Tools.Databases.IndexStore.EmbeddingStateDataSourceEntity", entity =>
         {
             entity.Navigation("Files");
         });
 
-        modelBuilder.Entity("AIStudio.Tools.Databases.EmbeddingState.EmbeddingStateFileEntity", entity =>
+        modelBuilder.Entity("AIStudio.Tools.Databases.IndexStore.EmbeddingStateFileEntity", entity =>
         {
             entity.Navigation("Chunks");
         });

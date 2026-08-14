@@ -1,15 +1,15 @@
 using Microsoft.EntityFrameworkCore.Design;
 
-namespace AIStudio.Tools.Databases.EmbeddingState;
+namespace AIStudio.Tools.Databases.IndexStore;
 
-internal sealed class EmbeddingStateDesignTimeDbContextFactory : IDesignTimeDbContextFactory<EmbeddingStateDbContext>
+internal sealed class IndexStoreDesignTimeDbContextFactory : IDesignTimeDbContextFactory<IndexStoreDbContext>
 {
-    public EmbeddingStateDbContext CreateDbContext(string[] args)
+    public IndexStoreDbContext CreateDbContext(string[] args)
     {
         var databasePath = args.FirstOrDefault(argument => argument.EndsWith(".sqlite3", StringComparison.OrdinalIgnoreCase));
         if (string.IsNullOrWhiteSpace(databasePath))
             databasePath = Path.Combine(Path.GetTempPath(), "mindwork-ai-studio-rag-index-design.sqlite3");
 
-        return new EmbeddingStateDbContext(EmbeddingStateDbContext.CreateOptions(databasePath));
+        return new IndexStoreDbContext(IndexStoreDbContext.CreateOptions(databasePath));
     }
 }
