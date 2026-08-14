@@ -14,7 +14,7 @@ namespace AIStudio.Tools.Services;
 public sealed partial class DataSourceEmbeddingService
 {
     private const string OFFICE_LOCK_FILE_PREFIX = "~$";
-    private const int DEFAULT_CHUNK_OVERLAP_TOKEN_LENGTH = 300;
+    internal const int DEFAULT_CHUNK_OVERLAP_TOKEN_LENGTH = 300;
     private const bool IMAGE_EMBEDDING_ENABLED = false;
 
     private enum RagFileIndexingDecision
@@ -542,11 +542,8 @@ public sealed partial class DataSourceEmbeddingService
 
         var configuredOverlapTokenLength = dataSource is IInternalDataSource overlapDataSource
             ? overlapDataSource.ChunkOverlapTokenLength
-            : 0;
-        var requestedOverlapTokenLength = configuredOverlapTokenLength > 0
-            ? configuredOverlapTokenLength
             : DEFAULT_CHUNK_OVERLAP_TOKEN_LENGTH;
-        var overlapTokenLength = Math.Clamp(requestedOverlapTokenLength, 0, Math.Max(0, maxChunkTokenLength - 1));
+        var overlapTokenLength = Math.Clamp(configuredOverlapTokenLength, 0, Math.Max(0, maxChunkTokenLength - 1));
 
         return new(maxChunkTokenLength, overlapTokenLength);
     }
@@ -948,7 +945,7 @@ public sealed partial class DataSourceEmbeddingService
             embeddingProvider.EffectiveTokenLimit,
             GetDataSourceConfidenceLevel(dataSource).ToString(),
             dataSource is IInternalDataSource internalDataSource ? internalDataSource.MaxChunkTokenLength : 0,
-            dataSource is IInternalDataSource overlapDataSource ? overlapDataSource.ChunkOverlapTokenLength : 0,
+            dataSource is IInternalDataSource overlapDataSource ? overlapDataSource.ChunkOverlapTokenLength : DEFAULT_CHUNK_OVERLAP_TOKEN_LENGTH,
             chunkingOptions.MaxChunkTokenLength,
             chunkingOptions.OverlapTokenLength);
     }

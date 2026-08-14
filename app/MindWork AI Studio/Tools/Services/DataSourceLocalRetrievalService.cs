@@ -5,6 +5,7 @@ using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Databases;
 using AIStudio.Tools.Databases.IndexStore;
 using AIStudio.Tools.Databases.VectorStore;
+using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.RAG;
 using AIStudio.Tools.Rust;
 
@@ -14,6 +15,8 @@ public sealed class DataSourceLocalRetrievalService(
     SettingsManager settingsManager, RustService rustService, DatabaseClientProvider databaseClientProvider,
     ILogger<DataSourceLocalRetrievalService> logger)
 {
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(DataSourceLocalRetrievalService).Namespace, nameof(DataSourceLocalRetrievalService));
+
     private enum RetrievalChannel
     {
         VECTOR,
@@ -340,13 +343,16 @@ public sealed class DataSourceLocalRetrievalService(
     private static string BuildReferenceTitle(LocalRetrievalHit hit)
     {
         var sourceName = FirstNonEmpty(hit.FileName, hit.DataSourceName);
-        return BuildChunkTitle(sourceName, hit.ChunkIndex, hit.PageNumber);
+        return BuildLocatedReferenceTitle(sourceName, hit.ChunkIndex, hit.PageNumber);
     }
 
-    private static string BuildChunkTitle(string sourceName, int chunkIndex, int? pageNumber)
+    private static string BuildLocatedReferenceTitle(string sourceName, int chunkIndex, int? pageNumber)
     {
-        var page = pageNumber is > 0 ? $", page {pageNumber}" : string.Empty;
-        return $"{sourceName} (chunk {chunkIndex + 1}{page})";
+        var location = pageNumber is > 0
+            ? string.Format(TB("Page {0}"), pageNumber)
+            : string.Format(TB("Chunk {0}"), chunkIndex + 1);
+
+        return $"{sourceName} ({location})";
     }
 
     private static string BuildReferenceLink(string path, LocalRetrievalHit hit)
@@ -412,7 +418,7 @@ public sealed class DataSourceLocalRetrievalService(
                 result.Result.ParentFileId,
                 result.Result.FileName,
                 FirstNonEmpty(result.Result.AbsolutePath, result.Result.FilePath),
-                BuildChunkTitle(FirstNonEmpty(result.Result.FileName, dataSource.Name), result.Result.ChunkIndex, result.Result.PageNumber));
+                BuildLocatedReferenceTitle(FirstNonEmpty(result.Result.FileName, dataSource.Name), result.Result.ChunkIndex, result.Result.PageNumber));
         }
     }
 
@@ -436,7 +442,7 @@ public sealed class DataSourceLocalRetrievalService(
                 result.Result.ParentFileId,
                 result.Result.FileName,
                 result.Result.AbsolutePath,
-                BuildChunkTitle(FirstNonEmpty(result.Result.FileName, dataSource.Name), result.Result.ChunkIndex, result.Result.PageNumber));
+                BuildLocatedReferenceTitle(FirstNonEmpty(result.Result.FileName, dataSource.Name), result.Result.ChunkIndex, result.Result.PageNumber));
         }
     }
 }

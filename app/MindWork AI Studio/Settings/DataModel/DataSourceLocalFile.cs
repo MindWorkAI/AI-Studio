@@ -39,7 +39,7 @@ public readonly record struct DataSourceLocalFile : IInternalDataSource
     public int MaxChunkTokenLength { get; init; }
 
     /// <inheritdoc />
-    public int ChunkOverlapTokenLength { get; init; }
+    public int ChunkOverlapTokenLength { get; init; } = DataSourceEmbeddingService.DEFAULT_CHUNK_OVERLAP_TOKEN_LENGTH;
     
     /// <inheritdoc />
     public ConfidenceLevel ConfidenceLevel { get; init; } = ConfidenceLevel.UNKNOWN;

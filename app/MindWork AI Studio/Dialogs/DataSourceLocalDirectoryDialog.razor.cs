@@ -2,6 +2,7 @@ using AIStudio.Components;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.Services;
 using AIStudio.Tools.Validation;
 
 using Microsoft.AspNetCore.Components;
@@ -46,7 +47,7 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
     private string dataEmbeddingId = string.Empty;
     private string dataPath = string.Empty;
     private int dataMaxChunkTokenLength;
-    private int dataChunkOverlapTokenLength;
+    private int dataChunkOverlapTokenLength = DataSourceEmbeddingService.DEFAULT_CHUNK_OVERLAP_TOKEN_LENGTH;
     private ushort dataMaxMatches = 10;
     private bool showExpertSettings;
     private ConfidenceLevel dataConfidenceLevel = ConfidenceLevel.UNKNOWN;
@@ -91,7 +92,6 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
             this.dataChunkOverlapTokenLength = this.DataSource.ChunkOverlapTokenLength;
             this.dataConfidenceLevel = this.DataSource.ConfidenceLevel;
             this.dataMaxMatches = this.DataSource.MaxMatches;
-            this.showExpertSettings = this.dataMaxChunkTokenLength > 0 || this.dataChunkOverlapTokenLength > 0;
         }
         
         await base.OnInitializedAsync();
@@ -133,6 +133,16 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
             ? T("Default tokenizer")
             : System.IO.Path.GetFileName(this.SelectedEmbedding.TokenizerPath);
 
+    private int ProviderMaxChunkTokenLength => this.SelectedEmbedding?.EffectiveTokenLimit ?? EmbeddingProvider.DEFAULT_TOKEN_LIMIT;
+
+    private string MaxChunkTokenLengthHelperText => string.Format(
+        T("Maximum number of tokens per chunk for this data source. The embedding provider default is {0} tokens."),
+        this.ProviderMaxChunkTokenLength);
+
+    private string ChunkOverlapTokenLengthHelperText => string.Format(
+        T("Number of tokens repeated at the start of the next chunk. The default overlap is {0} tokens."),
+        DataSourceEmbeddingService.DEFAULT_CHUNK_OVERLAP_TOKEN_LENGTH);
+
     private DataSourceLocalDirectory CreateDataSource() => new()
     {
         Id = this.dataId,
@@ -164,31 +174,42 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
 
     private string? ValidateMaxChunkTokenLength(int maxChunkTokenLength)
     {
-        if (maxChunkTokenLength < 0)
-            return T("Please enter 0 or a positive token limit.");
+        if (!this.showExpertSettings)
+            return null;
 
-        var providerMaxChunkTokenLength = this.SelectedEmbedding?.EffectiveTokenLimit ?? EmbeddingProvider.DEFAULT_TOKEN_LIMIT;
-        if (maxChunkTokenLength > 0 && maxChunkTokenLength >= providerMaxChunkTokenLength)
-            return string.Format(T("The data source token limit must be smaller than the embedding provider token limit ({0}). Use 0 to use the provider setting."), providerMaxChunkTokenLength);
+        if (maxChunkTokenLength < 1)
+            return T("Please enter a token limit of at least 1.");
+
+        var providerMaxChunkTokenLength = this.ProviderMaxChunkTokenLength;
+        if (maxChunkTokenLength > providerMaxChunkTokenLength)
+            return string.Format(T("The data source token limit must not be larger than the embedding provider token limit ({0})."), providerMaxChunkTokenLength);
 
         return null;
     }
 
     private string? ValidateChunkOverlapTokenLength(int chunkOverlapTokenLength)
     {
+        if (!this.showExpertSettings)
+            return null;
+
         if (chunkOverlapTokenLength < 0)
             return T("Please enter 0 or a positive overlap length.");
 
-        var effectiveMaxChunkTokenLength = this.dataMaxChunkTokenLength > 0
+        var effectiveMaxChunkTokenLength = this.showExpertSettings && this.dataMaxChunkTokenLength > 0
             ? this.dataMaxChunkTokenLength
-            : this.SelectedEmbedding?.EffectiveTokenLimit ?? EmbeddingProvider.DEFAULT_TOKEN_LIMIT;
+            : this.ProviderMaxChunkTokenLength;
         if (chunkOverlapTokenLength >= effectiveMaxChunkTokenLength)
             return T("The overlap must be smaller than the effective token limit.");
 
         return null;
     }
 
-    private void ToggleExpertSettings() => this.showExpertSettings = !this.showExpertSettings;
+    private void ToggleExpertSettings()
+    {
+        this.showExpertSettings = !this.showExpertSettings;
+        if (this.showExpertSettings && this.dataMaxChunkTokenLength < 1)
+            this.dataMaxChunkTokenLength = this.ProviderMaxChunkTokenLength;
+    }
 
     private string GetExpertStyles => this.showExpertSettings ? "border-2 border-dashed rounded pa-2" : string.Empty;
 }
