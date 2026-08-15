@@ -334,10 +334,35 @@ public sealed class SettingsManager
         }
 
         var settingsJson = JsonSerializer.Serialize(settingsData, JSON_OPTIONS);
-        var tempFile = Path.GetTempFileName();
-        await File.WriteAllTextAsync(tempFile, settingsJson);
-        
-        File.Move(tempFile, settingsPath, true);
+
+        //
+        // We write the new settings next to the previous ones and replace them afterwards, so that
+        // no crash can leave a half-written settings file behind. The temporary file has to live in
+        // the configuration directory for that: replacing a file is a rename, and a rename across a
+        // file system boundary falls back to copying, which is exactly what we want to avoid. The
+        // temporary directory of the operating system is such another file system under Flatpak.
+        //
+        var tempFile = $"{settingsPath}.tmp-{Guid.NewGuid():N}";
+        try
+        {
+            await File.WriteAllTextAsync(tempFile, settingsJson);
+            File.Move(tempFile, settingsPath, true);
+        }
+        catch
+        {
+            try
+            {
+                if (File.Exists(tempFile))
+                    File.Delete(tempFile);
+            }
+            catch (Exception cleanupException)
+            {
+                this.logger.LogWarning(cleanupException, $"Failed to delete the temporary settings file '{tempFile}'.");
+            }
+
+            throw;
+        }
+
         this.logger.LogInformation($"Stored the settings to '{settingsPath}'.");
     }
     
