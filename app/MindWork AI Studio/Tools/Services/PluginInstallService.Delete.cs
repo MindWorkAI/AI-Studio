@@ -116,7 +116,7 @@ public sealed partial class PluginInstallService
 
             backupDirectory = CreateDeleteBackupDirectory(plugin);
             Directory.CreateDirectory(Path.GetDirectoryName(backupDirectory)!);
-            Directory.Move(pluginDirectory, backupDirectory);
+            this.MoveDirectory(pluginDirectory, backupDirectory);
 
             sideEffects = this.ApplyDeleteSideEffects(plugin);
             if (sideEffects.HasChanges)
@@ -241,7 +241,7 @@ public sealed partial class PluginInstallService
         try
         {
             if (!Directory.Exists(pluginDirectory) && Directory.Exists(backupDirectory))
-                Directory.Move(backupDirectory, pluginDirectory);
+                this.MoveDirectory(backupDirectory, pluginDirectory);
 
             var configurationData = this.settingsManager.ConfigurationData;
             if (sideEffects.WasEnabled && !configurationData.EnabledPlugins.Contains(plugin.Id))

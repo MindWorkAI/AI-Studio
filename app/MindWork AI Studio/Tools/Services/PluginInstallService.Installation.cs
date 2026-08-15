@@ -36,10 +36,10 @@ public sealed partial class PluginInstallService
                 // would be loaded a second time, next to the version we are installing:
                 backupDirectory = CreateInstallBackupDirectory(plugin);
                 Directory.CreateDirectory(Path.GetDirectoryName(backupDirectory)!);
-                Directory.Move(finalDirectory, backupDirectory);
+                this.MoveDirectory(finalDirectory, backupDirectory);
             }
 
-            Directory.Move(stagingDirectory, finalDirectory);
+            this.MoveDirectory(stagingDirectory, finalDirectory);
             movedIntoPlace = true;
             await PluginFactory.LoadAll(token);
 
@@ -63,7 +63,7 @@ public sealed partial class PluginInstallService
             {
                 try
                 {
-                    Directory.Move(backupDirectory, finalDirectory);
+                    this.MoveDirectory(backupDirectory, finalDirectory);
                     await PluginFactory.LoadAll(CancellationToken.None);
                 }
                 catch (Exception restoreException)
