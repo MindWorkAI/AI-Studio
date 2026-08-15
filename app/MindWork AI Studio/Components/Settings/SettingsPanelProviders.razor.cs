@@ -67,10 +67,10 @@ public partial class SettingsPanelProviders : SettingsPanelProviderBase
     {
         if(provider == AIStudio.Settings.Provider.NONE)
             return;
-        
-        if (provider.IsEnterpriseConfiguration)
+
+        if (provider.IsEnterpriseConfiguration && !provider.AllowUserProvidedAPIKey)
             return;
-        
+
         var dialogParameters = new DialogParameters<ProviderDialog>
         {
             { x => x.DataNum, provider.Num },
@@ -85,6 +85,7 @@ public partial class SettingsPanelProviders : SettingsPanelProviderBase
             { x => x.HFInferenceProviderId, provider.HFInferenceProvider },
             { x => x.AdditionalJsonApiParameters, provider.AdditionalJsonApiParameters },
             { x => x.DataCapabilityOverrides, provider.CapabilityOverrides },
+            { x => x.IsEnterpriseConfiguration, provider.IsEnterpriseConfiguration },
         };
 
         var dialogReference = await this.DialogService.ShowAsync<ProviderDialog>(T("Edit LLM Provider"), dialogParameters, DialogOptions.FULLSCREEN);
@@ -92,16 +93,26 @@ public partial class SettingsPanelProviders : SettingsPanelProviderBase
         if (dialogResult is null || dialogResult.Canceled)
             return;
 
+        if (provider.IsEnterpriseConfiguration)
+        {
+            // Only the API key changed, and the dialog already stored it directly. The provider
+            // object itself is managed by the configuration plugin and must not be overwritten
+            // with the dialog's copy -- doing so would let the locked-but-technically-editable
+            // fields drift from what the organization configured.
+            await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+            return;
+        }
+
         var editedProvider = (AIStudio.Settings.Provider)dialogResult.Data!;
-        
+
         // Set the provider number if it's not set. This is important for providers
         // added before we started saving the provider number.
         if(editedProvider.Num == 0)
             editedProvider = editedProvider with { Num = this.SettingsManager.ConfigurationData.NextProviderNum++ };
-        
+
         this.SettingsManager.ConfigurationData.Providers[this.SettingsManager.ConfigurationData.Providers.IndexOf(provider)] = editedProvider;
         await this.UpdateProviders();
-        
+
         await this.SettingsManager.StoreSettings();
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }

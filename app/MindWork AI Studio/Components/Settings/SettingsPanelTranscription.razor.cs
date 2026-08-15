@@ -72,6 +72,9 @@ public partial class SettingsPanelTranscription : SettingsPanelProviderBase
     
     private async Task EditTranscriptionProvider(TranscriptionProvider transcriptionProvider)
     {
+        if (transcriptionProvider.IsEnterpriseConfiguration && !transcriptionProvider.AllowUserProvidedAPIKey)
+            return;
+
         var dialogParameters = new DialogParameters<TranscriptionProviderDialog>
         {
             { x => x.DataNum, transcriptionProvider.Num },
@@ -83,13 +86,24 @@ public partial class SettingsPanelTranscription : SettingsPanelProviderBase
             { x => x.IsSelfHosted, transcriptionProvider.IsSelfHosted },
             { x => x.IsEditing, true },
             { x => x.DataHost, transcriptionProvider.Host },
+            { x => x.IsEnterpriseConfiguration, transcriptionProvider.IsEnterpriseConfiguration },
         };
-        
+
         var dialogReference = await this.DialogService.ShowAsync<TranscriptionProviderDialog>(T("Edit Transcription Provider"), dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return;
-        
+
+        if (transcriptionProvider.IsEnterpriseConfiguration)
+        {
+            // Only the API key changed, and the dialog already stored it directly. The provider
+            // object itself is managed by the configuration plugin and must not be overwritten
+            // with the dialog's copy -- doing so would let the locked-but-technically-editable
+            // fields drift from what the organization configured.
+            await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+            return;
+        }
+
         var editedTranscriptionProvider = (TranscriptionProvider)dialogResult.Data!;
         
         // Set the provider number if it's not set. This is important for providers

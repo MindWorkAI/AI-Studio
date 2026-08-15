@@ -119,6 +119,14 @@ CONFIG["LLM_PROVIDERS"] = {}
 --     -- You can export an encrypted API key from an existing provider using the export button in the settings.
 --     -- ["APIKey"] = "ENC:v1:<base64-encoded encrypted data>",
 --
+--     -- Optional: let each user set their own API key for this otherwise locked provider,
+--     -- instead of (or in addition to not) embedding one centrally. Host, model, instance
+--     -- name, and every other field stay locked; only the API key becomes editable.
+--     -- Mutually exclusive with "APIKey" above: when both are set, the embedded key is
+--     -- ignored and a warning is logged. The user's key is preserved in the OS keyring even
+--     -- if this configuration is later withdrawn.
+--     -- ["AllowUserProvidedAPIKey"] = true,
+--
 --     ["Model"] = {
 --         ["Id"] = "<the model ID>",
 --         ["DisplayName"] = "<user-friendly name of the model>",
@@ -141,6 +149,11 @@ CONFIG["TRANSCRIPTION_PROVIDERS"] = {}
 --     -- Optional: Encrypted API key (see LLM_PROVIDERS example for details)
 --     -- ["APIKey"] = "ENC:v1:<base64-encoded encrypted data>",
 --
+--     -- Optional: let each user set their own API key for this otherwise locked transcription
+--     -- provider (see LLM_PROVIDERS example for details). Mutually exclusive with "APIKey"
+--     -- above: when both are set, the embedded key is ignored and a warning is logged.
+--     -- ["AllowUserProvidedAPIKey"] = true,
+--
 --     ["Model"] = {
 --         ["Id"] = "<the model ID>",
 --         ["DisplayName"] = "<user-friendly name of the model>",
@@ -162,6 +175,11 @@ CONFIG["EMBEDDING_PROVIDERS"] = {}
 --
 --     -- Optional: Encrypted API key (see LLM_PROVIDERS example for details)
 --     -- ["APIKey"] = "ENC:v1:<base64-encoded encrypted data>",
+--
+--     -- Optional: let each user set their own API key for this otherwise locked embedding
+--     -- provider (see LLM_PROVIDERS example for details). Mutually exclusive with "APIKey"
+--     -- above: when both are set, the embedded key is ignored and a warning is logged.
+--     -- ["AllowUserProvidedAPIKey"] = true,
 --
 --     ["Model"] = {
 --         ["Id"] = "<the model ID, e.g., nomic-embed-text>",

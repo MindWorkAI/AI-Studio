@@ -20,7 +20,8 @@ public sealed record EmbeddingProvider(
     bool IsEnterpriseConfiguration = false,
     Guid EnterpriseConfigurationPluginId = default,
     string Hostname = "http://localhost:1234",
-    Host Host = Host.NONE) : ConfigurationBaseObject, ISecretId
+    Host Host = Host.NONE,
+    bool AllowUserProvidedAPIKey = false) : ConfigurationBaseObject, ISecretId, IUserProvidedAPIKey
 {
     private static readonly ILogger<EmbeddingProvider> LOGGER = Program.LOGGER_FACTORY.CreateLogger<EmbeddingProvider>();
 
@@ -97,6 +98,10 @@ public sealed record EmbeddingProvider(
             return false;
         }
 
+        var allowUserProvidedApiKey = false;
+        if (table.TryGetValue("AllowUserProvidedAPIKey", out var allowUserProvidedApiKeyValue) && allowUserProvidedApiKeyValue.TryRead<bool>(out var allowUserProvidedApiKeyBool))
+            allowUserProvidedApiKey = allowUserProvidedApiKeyBool;
+
         provider = new EmbeddingProvider
         {
             Num = 0, // will be set later by the PluginConfigurationObject
@@ -109,10 +114,18 @@ public sealed record EmbeddingProvider(
             EnterpriseConfigurationPluginId = configPluginId,
             Hostname = hostname,
             Host = host,
+            AllowUserProvidedAPIKey = allowUserProvidedApiKey,
         };
 
-        // Handle encrypted API key if present:
-        if (table.TryGetValue("APIKey", out var apiKeyValue) && apiKeyValue.TryRead<string>(out var apiKeyText) && !string.IsNullOrWhiteSpace(apiKeyText))
+        // Handle an encrypted API key if present. When the user manages their own key for this
+        // embedding provider, we must never enqueue an embedded key: doing so would overwrite the
+        // user's key in the OS keyring on every configuration reload.
+        if (allowUserProvidedApiKey)
+        {
+            if (table.TryGetValue("APIKey", out var ignoredApiKeyValue) && ignoredApiKeyValue.TryRead<string>(out var ignoredApiKeyText) && !string.IsNullOrWhiteSpace(ignoredApiKeyText))
+                LOGGER.LogWarning($"The configured embedding provider {idx} sets both AllowUserProvidedAPIKey and an embedded APIKey. Ignoring the embedded key: the user manages their own key for this provider. (Plugin ID: {configPluginId})");
+        }
+        else if (table.TryGetValue("APIKey", out var apiKeyValue) && apiKeyValue.TryRead<string>(out var apiKeyText) && !string.IsNullOrWhiteSpace(apiKeyText))
         {
             if (!EnterpriseEncryption.IsEncrypted(apiKeyText))
                 LOGGER.LogWarning($"The configured embedding provider {idx} contains a plaintext API key. Only encrypted API keys (starting with 'ENC:v1:') are supported. (Plugin ID: {configPluginId})");
