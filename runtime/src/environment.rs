@@ -23,6 +23,12 @@ const ENTERPRISE_REGISTRY_KEY_PATH: &str = r"Software\github\MindWork AI Studio\
 const ENTERPRISE_POLICY_SECRET_FILE_NAME: &str = "config_encryption_secret.yaml";
 const EXTERNAL_HTTP_CUSTOM_ROOT_CERTIFICATE_POLICY_FILE_NAME: &str = "external_http_custom_root_certificates.yaml";
 
+/// Marker file an IT department may place next to the executable to declare this installation
+/// as centrally managed. It is not used on macOS, because any additional file inside the app
+/// bundle would break its code signature.
+#[cfg(any(target_os = "windows", target_os = "linux", test))]
+const MANAGED_INSTALLATION_MARKER_FILE_NAME: &str = "managed-installation";
+
 pub const DOTNET_ENV_CUSTOM_ROOT_CERTIFICATE_POLICY_CONFIGURED: &str = "AI_STUDIO_EXTERNAL_HTTP_CUSTOM_ROOT_CERTIFICATES_POLICY_CONFIGURED";
 pub const DOTNET_ENV_CUSTOM_ROOT_CERTIFICATES_ENABLED: &str = "AI_STUDIO_EXTERNAL_HTTP_CUSTOM_ROOT_CERTIFICATES_ENABLED";
 pub const DOTNET_ENV_CUSTOM_ROOT_CERTIFICATE_BUNDLE_PATH: &str = "AI_STUDIO_EXTERNAL_HTTP_CUSTOM_ROOT_CERTIFICATE_BUNDLE_PATH";
@@ -46,6 +52,9 @@ pub static CONFIG_DIRECTORY: OnceLock<String> = OnceLock::new();
 
 /// The user language cached once per runtime process.
 static USER_LANGUAGE: OnceLock<String> = OnceLock::new();
+
+/// The installation kind cached once per runtime process.
+static INSTALLATION_KIND: OnceLock<InstallationKind> = OnceLock::new();
 
 /// Returns the config directory.
 pub async fn get_config_directory(_token: APIToken) -> String {
@@ -71,11 +80,23 @@ pub async fn read_user_name(_token: APIToken) -> String {
     })
 }
 
+/// Tells whether this installation is able to update itself.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+pub enum InstallationKind {
+    /// An installation the current user owns and which the app may update itself.
+    User,
+
+    /// An installation deployed and maintained by an IT department. The app never updates itself
+    /// here; the IT department distributes new versions instead.
+    Managed,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct RuntimeInfo {
     pub working_directory: String,
     pub executable_path: String,
     pub linux_package_type: String,
+    pub installation_kind: InstallationKind,
 }
 
 pub async fn get_runtime_info(_token: APIToken) -> Json<RuntimeInfo> {
@@ -87,6 +108,7 @@ pub async fn get_runtime_info(_token: APIToken) -> Json<RuntimeInfo> {
             .map(|path| path.to_string_lossy().into_owned())
             .unwrap_or_default(),
         linux_package_type: detect_linux_package_type().to_string(),
+        installation_kind: installation_kind(),
     })
 }
 
@@ -127,6 +149,206 @@ fn is_appimage() -> bool {
 #[cfg(target_os = "linux")]
 fn env_var_has_value(key: &str) -> bool {
     env::var(key).is_ok_and(|value| !value.trim().is_empty())
+}
+
+/// Returns true when this installation is maintained by an IT department and therefore must not
+/// update itself.
+pub(crate) fn is_managed_installation() -> bool {
+    installation_kind() == InstallationKind::Managed
+}
+
+/// Returns the kind of this installation, cached for the lifetime of the process.
+///
+/// A managed installation was deployed by an IT department, for example, system-wide into
+/// `C:\Program Files`. The Tauri updater cannot replace such an installation: on Windows it runs
+/// the NSIS setup with its per-user defaults and creates a second installation below the local
+/// app data directory instead of updating the existing one.
+///
+/// Whenever the kind cannot be determined, we report a user installation. Wrongly reporting a
+/// managed installation would cut regular users off from every future update, including security
+/// updates, which is far worse than a second installation.
+pub(crate) fn installation_kind() -> InstallationKind {
+    *INSTALLATION_KIND.get_or_init(|| {
+        let kind = detect_installation_kind();
+        info!(Source = "Updater"; "Detected a {kind:?} installation of AI Studio.");
+        kind
+    })
+}
+
+#[cfg(target_os = "windows")]
+fn detect_installation_kind() -> InstallationKind {
+    let executable_path = match env::current_exe() {
+        Ok(path) => path,
+        Err(e) => {
+            warn!(Source = "Updater"; "Cannot read the current executable path: {e}. Assuming a user installation.");
+            return InstallationKind::User;
+        }
+    };
+
+    if has_managed_installation_marker(&executable_path) {
+        return InstallationKind::Managed;
+    }
+
+    windows_installation_kind_from_paths(&executable_path, dirs::data_local_dir().as_deref())
+}
+
+#[cfg(target_os = "macos")]
+fn detect_installation_kind() -> InstallationKind {
+    let executable_path = match env::current_exe() {
+        Ok(path) => path,
+        Err(e) => {
+            warn!(Source = "Updater"; "Cannot read the current executable path: {e}. Assuming a user installation.");
+            return InstallationKind::User;
+        }
+    };
+
+    // The updater replaces the entire app bundle, so it needs to write into the directory that
+    // contains the bundle. On a device managed through an MDM solution like Jamf, the bundle sits
+    // in a location the user cannot write to. We deliberately do not look for a marker file here:
+    // any additional file inside the bundle would break its code signature.
+    match macos_app_bundle_directory(&executable_path) {
+        Some(bundle_directory) => update_target_installation_kind(&bundle_directory),
+        None => InstallationKind::User,
+    }
+}
+
+#[cfg(target_os = "linux")]
+fn detect_installation_kind() -> InstallationKind {
+    // Flatpak installations are always updated from outside the app:
+    if is_flatpak() {
+        return InstallationKind::Managed;
+    }
+
+    let executable_path = match env::current_exe() {
+        Ok(path) => path,
+        Err(e) => {
+            warn!(Source = "Updater"; "Cannot read the current executable path: {e}. Assuming a user installation.");
+            return InstallationKind::User;
+        }
+    };
+
+    if has_managed_installation_marker(&executable_path) {
+        return InstallationKind::Managed;
+    }
+
+    // For AppImages, the updater replaces the AppImage file itself. Everything else is replaced
+    // in place as well. A deployment into a system-wide location such as /opt is therefore not
+    // updatable by the app:
+    let update_target = env::var("APPIMAGE")
+        .map(PathBuf::from)
+        .unwrap_or(executable_path);
+
+    update_target_installation_kind(&update_target)
+}
+
+/// Decides the Windows installation kind by comparing the executable path against the local app
+/// data directory. The NSIS updater always targets the per-user location below that directory.
+/// An executable outside of it, for example, in `C:\Program Files`, was deployed by someone else,
+/// and an update would create a second installation next to it instead of replacing it.
+#[cfg(any(target_os = "windows", test))]
+fn windows_installation_kind_from_paths(executable_path: &Path, local_app_data_directory: Option<&Path>) -> InstallationKind {
+    let Some(local_app_data_directory) = local_app_data_directory else {
+        warn!(Source = "Updater"; "Cannot read the local app data directory. Assuming a user installation.");
+        return InstallationKind::User;
+    };
+
+    // Both paths must be compared in the same form. Canonicalization resolves junctions, symbolic
+    // links, and 8.3 short names such as PROGRA~1, but it also prepends the \\?\ verbatim prefix on
+    // Windows. Applying it to only one of the two paths would make even a regular per-user
+    // installation look like it sits outside the local app data directory. Therefore, we either use
+    // both canonicalized paths or neither of them:
+    let (executable_path, local_app_data_directory) = match (fs::canonicalize(executable_path), fs::canonicalize(local_app_data_directory)) {
+        (Ok(canonical_executable_path), Ok(canonical_local_app_data_directory)) => (canonical_executable_path, canonical_local_app_data_directory),
+        _ => (executable_path.to_path_buf(), local_app_data_directory.to_path_buf()),
+    };
+
+    if path_starts_with_ignoring_case(&executable_path, &local_app_data_directory) {
+        InstallationKind::User
+    } else {
+        InstallationKind::Managed
+    }
+}
+
+/// Compares the path components case-insensitively, because Windows paths are not case-sensitive.
+/// A plain string prefix check is not enough either: it would treat `C:\Users\Alice-Backup` as
+/// being below `C:\Users\Alice`.
+#[cfg(any(target_os = "windows", test))]
+fn path_starts_with_ignoring_case(path: &Path, prefix: &Path) -> bool {
+    let mut path_components = path.components();
+    for prefix_component in prefix.components() {
+        let Some(path_component) = path_components.next() else {
+            return false;
+        };
+
+        let path_text = path_component.as_os_str().to_string_lossy();
+        let prefix_text = prefix_component.as_os_str().to_string_lossy();
+        if !path_text.eq_ignore_ascii_case(&prefix_text) {
+            return false;
+        }
+    }
+
+    true
+}
+
+/// Derives the app bundle root from the executable path, e.g.
+/// `/Applications/MindWork AI Studio.app/Contents/MacOS/MindWork AI Studio` becomes
+/// `/Applications/MindWork AI Studio.app`.
+#[cfg(any(target_os = "macos", test))]
+fn macos_app_bundle_directory(executable_path: &Path) -> Option<PathBuf> {
+    let macos_directory = executable_path.parent()?;
+    if macos_directory.file_name()? != "MacOS" {
+        return None;
+    }
+
+    let contents_directory = macos_directory.parent()?;
+    if contents_directory.file_name()? != "Contents" {
+        return None;
+    }
+
+    let bundle_directory = contents_directory.parent()?;
+    if !bundle_directory.extension().is_some_and(|extension| extension.eq_ignore_ascii_case("app")) {
+        return None;
+    }
+
+    Some(bundle_directory.to_path_buf())
+}
+
+/// Decides the installation kind by testing whether the current user may replace the given update
+/// target. The updater writes the replacement into the directory that contains the target, so that
+/// is the directory we test.
+#[cfg(any(target_os = "macos", target_os = "linux", test))]
+fn update_target_installation_kind(update_target: &Path) -> InstallationKind {
+    let Some(directory) = update_target.parent() else {
+        return InstallationKind::User;
+    };
+
+    directory_installation_kind(directory)
+}
+
+/// Tests whether the current user may write into the given directory by actually creating a
+/// temporary file there. Permission bits alone are not reliable: ACLs, read-only mounts, and
+/// managed-device restrictions do not show up in them.
+#[cfg(any(target_os = "macos", target_os = "linux", test))]
+fn directory_installation_kind(directory: &Path) -> InstallationKind {
+    match tempfile::Builder::new().prefix(".ai-studio-write-test").tempfile_in(directory) {
+        Ok(_) => InstallationKind::User,
+        Err(e) if e.kind() == std::io::ErrorKind::PermissionDenied => InstallationKind::Managed,
+        Err(e) => {
+            warn!(Source = "Updater"; "Cannot test whether '{}' is writable: {e}. Assuming a user installation.", directory.display());
+            InstallationKind::User
+        }
+    }
+}
+
+/// Returns whether an IT department declared this installation as centrally managed by placing a
+/// marker file next to the executable. This covers deployments the path check cannot recognize,
+/// for example, when an organization rolls out the regular per-user installer through Intune.
+#[cfg(any(target_os = "windows", target_os = "linux", test))]
+fn has_managed_installation_marker(executable_path: &Path) -> bool {
+    match executable_path.parent() {
+        Some(directory) => directory.join(MANAGED_INSTALLATION_MARKER_FILE_NAME).is_file(),
+        None => false,
+    }
 }
 
 /// Returns true if the application is running in development mode.
@@ -1055,17 +1277,20 @@ fn normalize_enterprise_config_id(value: &str) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::{
-        enterprise_environment_key_name, enterprise_policy_file_slot_suffix,
+        directory_installation_kind, enterprise_environment_key_name,
+        enterprise_policy_file_slot_suffix, has_managed_installation_marker,
         load_external_http_custom_root_certificate_policy_from_directories,
         linux_policy_directories_from_xdg, load_policy_values_from_directories,
-        normalize_locale_tag, parse_enterprise_source_values,
-        select_effective_enterprise_config_source, select_effective_enterprise_secret_source,
-        EnterpriseConfig, EnterpriseSourceData, EnterpriseSourceValue, EnterpriseSourceValues,
-        ExternalHttpCustomRootCertificatePolicy,
+        macos_app_bundle_directory, normalize_locale_tag, parse_enterprise_source_values,
+        path_starts_with_ignoring_case, select_effective_enterprise_config_source,
+        select_effective_enterprise_secret_source, update_target_installation_kind,
+        windows_installation_kind_from_paths, EnterpriseConfig, EnterpriseSourceData,
+        EnterpriseSourceValue, EnterpriseSourceValues, ExternalHttpCustomRootCertificatePolicy,
+        InstallationKind, MANAGED_INSTALLATION_MARKER_FILE_NAME,
     };
     use std::collections::HashMap;
     use std::fs;
-    use std::path::PathBuf;
+    use std::path::{Path, PathBuf};
     use tempfile::tempdir;
 
     const TEST_ID_A: &str = "9072B77D-CA81-40DA-BE6A-861DA525EF7B";
@@ -1452,6 +1677,193 @@ mod tests {
                 PathBuf::from("/etc/xdg/mindwork-ai-studio"),
             ]
         );
+    }
+
+    /// Builds a path from its components using the separator of the current platform. Windows
+    /// paths written with backslashes would be a single component on Unix, so the tests below
+    /// could not exercise the component comparison there.
+    fn path_of(components: &[&str]) -> PathBuf {
+        components.iter().collect()
+    }
+
+    #[test]
+    fn windows_per_user_installations_may_update_themselves() {
+        let local_app_data = path_of(&["/", "Users", "Alice", "AppData", "Local"]);
+        let executable = path_of(&["/", "Users", "Alice", "AppData", "Local", "MindWork AI Studio", "MindWork AI Studio.exe"]);
+
+        assert_eq!(
+            windows_installation_kind_from_paths(&executable, Some(&local_app_data)),
+            InstallationKind::User
+        );
+    }
+
+    #[test]
+    fn windows_system_wide_installations_are_managed() {
+        let local_app_data = path_of(&["/", "Users", "Alice", "AppData", "Local"]);
+
+        for install_directory in [
+            vec!["/", "Program Files", "MindWork AI Studio"],
+            vec!["/", "Program Files (x86)", "MindWork AI Studio"],
+            vec!["/", "Apps", "MindWork AI Studio"],
+            vec!["/", "Users", "Alice", "AppData", "Roaming", "MindWork AI Studio"],
+        ] {
+            let mut components = install_directory.clone();
+            components.push("MindWork AI Studio.exe");
+            let executable = path_of(&components);
+
+            assert_eq!(
+                windows_installation_kind_from_paths(&executable, Some(&local_app_data)),
+                InstallationKind::Managed,
+                "expected '{}' to be a managed installation",
+                executable.display()
+            );
+        }
+    }
+
+    #[test]
+    fn windows_installation_kind_ignores_case_but_respects_component_boundaries() {
+        let local_app_data = path_of(&["/", "Users", "Alice", "AppData", "Local"]);
+
+        // Windows paths are not case-sensitive:
+        let differently_cased = path_of(&["/", "users", "alice", "appdata", "local", "MindWork AI Studio", "MindWork AI Studio.exe"]);
+        assert_eq!(
+            windows_installation_kind_from_paths(&differently_cased, Some(&local_app_data)),
+            InstallationKind::User
+        );
+
+        // A plain string prefix check would wrongly accept this one:
+        let sibling_directory = path_of(&["/", "Users", "Alice", "AppData", "LocalBackup", "MindWork AI Studio", "MindWork AI Studio.exe"]);
+        assert_eq!(
+            windows_installation_kind_from_paths(&sibling_directory, Some(&local_app_data)),
+            InstallationKind::Managed
+        );
+    }
+
+    #[test]
+    fn windows_installation_kind_falls_back_to_user_without_local_app_data() {
+        let executable = path_of(&["/", "Program Files", "MindWork AI Studio", "MindWork AI Studio.exe"]);
+
+        assert_eq!(
+            windows_installation_kind_from_paths(&executable, None),
+            InstallationKind::User
+        );
+    }
+
+    #[test]
+    fn windows_installation_kind_does_not_mix_canonical_and_raw_paths() {
+        // The local app data directory exists and can be canonicalized, while the executable below
+        // it does not. Canonicalizing only one of the two would compare different path forms, for
+        // example '/private/var/...' against '/var/...' or '\\?\C:\...' against 'C:\...', and would
+        // report a managed installation for a perfectly regular per-user installation:
+        let local_app_data = tempdir().unwrap();
+        let executable = local_app_data
+            .path()
+            .join("MindWork AI Studio")
+            .join("MindWork AI Studio.exe");
+
+        assert_eq!(
+            windows_installation_kind_from_paths(&executable, Some(local_app_data.path())),
+            InstallationKind::User
+        );
+    }
+
+    #[test]
+    fn path_starts_with_ignoring_case_compares_whole_components() {
+        assert!(path_starts_with_ignoring_case(
+            Path::new("/Applications/Some App.app/Contents"),
+            Path::new("/applications/some app.app")
+        ));
+
+        assert!(!path_starts_with_ignoring_case(
+            Path::new("/Applications"),
+            Path::new("/Applications/Some App.app")
+        ));
+
+        assert!(!path_starts_with_ignoring_case(
+            Path::new("/Applications-Backup/Some App.app"),
+            Path::new("/Applications")
+        ));
+    }
+
+    #[test]
+    fn macos_app_bundle_directory_resolves_the_bundle_root() {
+        assert_eq!(
+            macos_app_bundle_directory(Path::new(
+                "/Applications/MindWork AI Studio.app/Contents/MacOS/MindWork AI Studio"
+            )),
+            Some(PathBuf::from("/Applications/MindWork AI Studio.app"))
+        );
+    }
+
+    #[test]
+    fn macos_app_bundle_directory_rejects_paths_outside_a_bundle() {
+        assert_eq!(
+            macos_app_bundle_directory(Path::new("/usr/local/bin/mindwork-ai-studio")),
+            None
+        );
+
+        assert_eq!(
+            macos_app_bundle_directory(Path::new(
+                "/Applications/MindWork AI Studio/Contents/MacOS/MindWork AI Studio"
+            )),
+            None
+        );
+    }
+
+    #[test]
+    fn writable_directories_are_user_installations() {
+        let directory = tempdir().unwrap();
+        assert_eq!(
+            directory_installation_kind(directory.path()),
+            InstallationKind::User
+        );
+
+        let update_target = directory.path().join("MindWork AI Studio.AppImage");
+        assert_eq!(
+            update_target_installation_kind(&update_target),
+            InstallationKind::User
+        );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn read_only_directories_are_managed_installations() {
+        use std::os::unix::fs::PermissionsExt;
+
+        let directory = tempdir().unwrap();
+        let read_only_directory = directory.path().join("read-only");
+        fs::create_dir(&read_only_directory).unwrap();
+        fs::set_permissions(&read_only_directory, fs::Permissions::from_mode(0o500)).unwrap();
+
+        // Permissions do not apply to root, so the assertion below would fail there. In that case,
+        // we skip the test instead of asserting something the environment cannot provide:
+        let running_as_root = fs::write(read_only_directory.join("root-probe"), "").is_ok();
+        if !running_as_root {
+            assert_eq!(
+                directory_installation_kind(&read_only_directory),
+                InstallationKind::Managed
+            );
+        }
+
+        // Restore the permissions so that the temporary directory can be cleaned up:
+        fs::set_permissions(&read_only_directory, fs::Permissions::from_mode(0o700)).unwrap();
+    }
+
+    #[test]
+    fn the_marker_file_declares_a_managed_installation() {
+        let directory = tempdir().unwrap();
+        let executable = directory.path().join("MindWork AI Studio");
+        fs::write(&executable, "").unwrap();
+
+        assert!(!has_managed_installation_marker(&executable));
+
+        fs::write(
+            directory.path().join(MANAGED_INSTALLATION_MARKER_FILE_NAME),
+            "",
+        )
+        .unwrap();
+
+        assert!(has_managed_installation_marker(&executable));
     }
 
     #[test]

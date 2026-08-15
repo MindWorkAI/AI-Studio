@@ -23,7 +23,8 @@ use crate::api_token::APIToken;
 use crate::clipboard::shutdown_clipboard;
 use crate::dotnet::{cleanup_dotnet_server, start_dotnet_server, stop_dotnet_server};
 use crate::environment::{
-    is_prod, is_dev, is_flatpak, CONFIG_DIRECTORY, DATA_DIRECTORY, FLATPAK_LIBRARY_DIRECTORY,
+    is_prod, is_dev, is_flatpak, is_managed_installation, CONFIG_DIRECTORY, DATA_DIRECTORY,
+    FLATPAK_LIBRARY_DIRECTORY,
 };
 use crate::log::switch_to_file_logging;
 use crate::pdfium::PDFIUM_LIB_PATH;
@@ -514,8 +515,7 @@ pub async fn change_location_to(url: &str) {
 
 /// Checks for updates.
 pub async fn check_for_update(_token: APIToken) -> Json<CheckUpdateResponse> {
-    if !self_update_allowed(is_dev(), is_flatpak()) {
-        let reason = if is_flatpak() { "Flatpak installations are updated externally" } else { "the app is running in development mode" };
+    if let Some(reason) = self_update_blocked_reason(is_dev(), is_flatpak(), is_managed_installation()) {
         warn!(Source = "Updater"; "Skipping update check because {reason}.");
         return Json(CheckUpdateResponse {
             update_is_available: false,
@@ -600,8 +600,7 @@ pub struct CheckUpdateResponse {
 
 /// Installs the update.
 pub async fn install_update(_token: APIToken) {
-    if !self_update_allowed(is_dev(), is_flatpak()) {
-        let reason = if is_flatpak() { "Flatpak installations are updated externally" } else { "the app is running in development mode" };
+    if let Some(reason) = self_update_blocked_reason(is_dev(), is_flatpak(), is_managed_installation()) {
         warn!(Source = "Updater"; "Skipping update installation because {reason}.");
         return;
     }
@@ -660,8 +659,21 @@ pub async fn install_update(_token: APIToken) {
     }
 }
 
-fn self_update_allowed(development: bool, flatpak: bool) -> bool {
-    !development && !flatpak
+/// Returns why this installation cannot update itself, or `None` when it can.
+fn self_update_blocked_reason(development: bool, flatpak: bool, managed_installation: bool) -> Option<&'static str> {
+    if flatpak {
+        return Some("Flatpak installations are updated externally");
+    }
+
+    if managed_installation {
+        return Some("this installation is managed by an IT department");
+    }
+
+    if development {
+        return Some("the app is running in development mode");
+    }
+
+    None
 }
 
 /// Response for application exit requests.
@@ -895,18 +907,24 @@ mod tests {
 
     #[test]
     fn self_update_is_disabled_in_development() {
-        assert!(!self_update_allowed(true, false));
+        assert!(self_update_blocked_reason(true, false, false).is_some());
     }
 
     #[test]
     fn self_update_is_disabled_for_flatpak() {
-        assert!(!self_update_allowed(false, true));
+        assert!(self_update_blocked_reason(false, true, false).is_some());
+    }
+
+    #[test]
+    fn self_update_is_disabled_for_managed_installations() {
+        assert!(self_update_blocked_reason(false, false, true).is_some());
     }
 
     #[test]
     fn self_update_is_enabled_for_normal_production_installations() {
-        assert!(self_update_allowed(false, false));
+        assert!(self_update_blocked_reason(false, false, false).is_none());
     }
+
     #[test]
     fn pdfium_library_directory_prefers_resources_libraries() {
         let temp_dir = tempfile::tempdir().unwrap();
