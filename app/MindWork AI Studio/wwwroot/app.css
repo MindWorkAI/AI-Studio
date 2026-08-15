@@ -417,6 +417,10 @@
  * transcription providers). The rule targets the entire group row, so that the expand button
  * gets the same compact padding and shading as the header cell itself.
  */
+tr:has(> .provider-group-header) {
+    cursor: pointer;
+}
+
 tr:has(> .provider-group-header) > .mud-table-cell {
     padding-top: 0.25em;
     padding-bottom: 0.25em;
