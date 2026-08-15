@@ -271,6 +271,14 @@ CONFIG["SETTINGS"] = {}
 -- of that, their choice outlives your configuration and stays as it is.
 -- ------
 
+-- Both update settings below only ever apply to installations AI Studio is able to update.
+-- Installations you rolled out yourself, for example, into C:\Program Files or into a location
+-- your users cannot write to, never update themselves, no matter what you configure here. You
+-- can therefore leave automatic updates enabled for everybody: your deployments ignore them,
+-- while installations your colleagues fetched from GitHub keep updating themselves. Place a file
+-- named "managed-installation" next to the program file to mark any other installation as one
+-- you maintain. The Enterprise IT documentation describes this in detail.
+
 -- Configure the update check interval:
 -- Allowed values are: NO_CHECK, DISABLE_UPDATES, ONCE_STARTUP, HOURLY, DAILY, WEEKLY
 -- NO_CHECK disables automatic checks, but users can still check and install updates manually.

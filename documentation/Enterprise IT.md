@@ -4,7 +4,7 @@
 Do you want to manage MindWork AI Studio in a corporate environment or within an organization? This documentation explains what you need to do and how it works. First, here's an overview of the entire process:
 
 - You can distribute MindWork AI Studio to employees' devices using tools like Microsoft System Center Configuration Manager (SCCM).
-- Employees can get updates through the built-in update feature. Enterprise configuration can disable automatic checks or the entire built-in update feature so that the IT department controls which version gets distributed.
+- Employees can get updates through the built-in update feature. Enterprise configuration can disable automatic checks or the entire built-in update feature so that the IT department controls which version gets distributed. Installations you rolled out yourself never update themselves anyway, so the two kinds can coexist on one device.
 - AI Studio checks about every 16 minutes to see where and which configuration it should load. This information is loaded from the local system. On Windows, you might use the registry, for example.
 - If it finds the necessary metadata, AI Studio downloads the configuration as a ZIP file from the specified server.
 - The configuration is an AI Studio plugin written in Lua.
@@ -20,6 +20,36 @@ Set `CONFIG["SETTINGS"]["DataApp.UpdateInterval"]` in the configuration plugin t
 - `DISABLE_UPDATES` disables automatic and manual update checks and installations. AI Studio tells users that updates are managed by their organization and directs questions to their IT department. This policy takes effect immediately when the enterprise configuration changes.
 
 Use `DISABLE_UPDATES` when your organization distributes approved versions through its own software-management process.
+
+### Installations that never update themselves
+
+AI Studio recognizes installations its updater cannot replace and never updates those, no matter what `DataApp.UpdateInterval` and `DataApp.UpdateInstallation` say. You can therefore leave automatic updates enabled for your whole organization: the installations you rolled out ignore them and receive their versions from you, while installations your colleagues fetched from GitHub keep updating themselves.
+
+This matters most on Windows. The installer we publish installs per user below `%LOCALAPPDATA%`, and the updater runs exactly that installer. Updating an installation that sits anywhere else therefore does not replace it: a second installation appears below `%LOCALAPPDATA%` while yours stays untouched, and from then on it is a matter of chance which one a colleague starts. Loosening the permissions of your deployment does not change this — the updater never writes into the current location to begin with.
+
+AI Studio recognizes these cases:
+
+| Case | How AI Studio recognizes it | What users are told |
+|---|---|---|
+| Marker file | A file named `managed-installation` next to the program file | Updates come from their IT department |
+| Machine-wide program directory | The program file sits below `%ProgramFiles%`, `%ProgramFiles(x86)%`, or `%ProgramW6432%` | Updates come from their IT department |
+| Location the user cannot write to | The directory that would have to be replaced is not writable for the current user, e.g. `/Applications` on a device managed through MDM, or `/opt` on Linux | Updates come from their IT department |
+| Self-chosen directory (Windows only) | Everything else outside `%LOCALAPPDATA%`, e.g. `D:\Tools\MindWork AI Studio` | They have to install a new version themselves, with a link to the latest release |
+| Flatpak | Running inside a Flatpak sandbox | Updates come from their Flatpak distribution |
+
+The information page reports which case applies, so a support request can start from that instead of guesswork.
+
+#### The marker file
+
+Place an empty file named `managed-installation` next to the program file, in the same directory as `MindWork AI Studio.exe` on Windows or as the executable on Linux. Its content is ignored; only its existence matters. The marker applies to that one installation, so a colleague who installed AI Studio from GitHub on the same device is not affected by it.
+
+Use the marker when the other cases do not cover your deployment, for example, when you roll out our regular per-user installer through Intune, or when you install into a directory of your own such as `D:\Program Files\MindWork AI Studio`.
+
+On macOS there is no marker file: any additional file inside the app bundle would break its code signature. A bundle in a location your users cannot write to is recognized anyway. If you want AI Studio to name your organization explicitly on macOS, set `DataApp.UpdateInterval` to `DISABLE_UPDATES`, which takes precedence over all of this.
+
+#### Existing double installations
+
+This recognition prevents new double installations; it does not clean up ones that already exist. On affected devices, remove the second installation below `%LOCALAPPDATA%\MindWork AI Studio\` together with its uninstall entry under `HKEY_CURRENT_USER`, and make sure that shortcuts point at your deployment again.
 
 ## Configure the devices
 So that MindWork AI Studio knows where to load which configuration, this information must be provided as metadata on employees' devices. Currently, the following options are available:

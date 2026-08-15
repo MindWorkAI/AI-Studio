@@ -71,6 +71,16 @@ public partial class Information : MSGComponentBase
         _ => T("not applicable")
     };
 
+    private string InstallationKind => $"{T("Installation")}: {this.InstallationKindDisplayName}";
+
+    private string InstallationKindDisplayName => this.RuntimeInfo.InstallationKind switch
+    {
+        Tools.Rust.InstallationKind.MANAGED => T("managed by someone else, no self-updates"),
+        Tools.Rust.InstallationKind.UNSUPPORTED_LOCATION => T("in a location AI Studio cannot update itself from"),
+        Tools.Rust.InstallationKind.DEVELOPMENT => T("development build, no self-updates"),
+        _ => T("owned by you, self-updates possible")
+    };
+
     private string VersionRust => $"{T("Used Rust compiler")}: v{META_DATA.RustVersion}";
     
     private string VersionDotnetRuntime => $"{T("Used .NET runtime")}: v{META_DATA.DotnetVersion}";
@@ -654,6 +664,21 @@ public partial class Information : MSGComponentBase
         {
             parameters.Add(x => x.Message, T("AI Studio cannot update itself when installed as a Flatpak. A Flathub listing is planned. Until then, you can find the latest release on GitHub."));
             parameters.Add(x => x.ReleaseUrl, "https://github.com/MindWorkAI/AI-Studio/releases/latest");
+        }
+        else if (this.updatePolicyMode is UpdatePolicyMode.MANAGED_INSTALLATION)
+        {
+            // No release link here: this installation was deployed centrally, and installing a
+            // second copy from GitHub next to it is exactly what we want to avoid.
+            parameters.Add(x => x.Message, T("This copy of AI Studio was installed for you by someone else, most likely your IT department, so it cannot update itself. Contact your IT department if you have questions about updating AI Studio."));
+        }
+        else if (this.updatePolicyMode is UpdatePolicyMode.UNSUPPORTED_INSTALLATION_LOCATION)
+        {
+            parameters.Add(x => x.Message, T("AI Studio cannot update itself from its current location. Installing an update would leave a second installation behind instead of replacing this one. To get a new version, download the latest release and install it over your current installation."));
+            parameters.Add(x => x.ReleaseUrl, "https://github.com/MindWorkAI/AI-Studio/releases/latest");
+        }
+        else if (this.updatePolicyMode is UpdatePolicyMode.DEVELOPMENT)
+        {
+            parameters.Add(x => x.Message, T("You are running a development build of AI Studio, which never updates itself. Pull the latest changes and rebuild the app instead."));
         }
         else
             return;
