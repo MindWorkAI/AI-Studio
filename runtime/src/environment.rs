@@ -80,15 +80,24 @@ pub async fn read_user_name(_token: APIToken) -> String {
     })
 }
 
-/// Tells whether this installation is able to update itself.
+/// Tells whether this installation is able to update itself, and if not, why.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
 pub enum InstallationKind {
     /// An installation the current user owns and which the app may update itself.
     User,
 
-    /// An installation deployed and maintained by an IT department. The app never updates itself
-    /// here; the IT department distributes new versions instead.
+    /// An installation someone else deployed and maintains: it sits in a machine-wide program
+    /// directory, the current user cannot modify it, or it was declared as centrally maintained
+    /// through the marker file or by shipping it as a Flatpak. Whoever deployed it distributes new
+    /// versions instead.
     Managed,
+
+    /// An installation the current user owns, but which the updater still cannot replace. This only
+    /// happens on Windows: the NSIS updater ignores where the app currently sits and always
+    /// installs below the local app data directory, so updating a self-chosen directory such as
+    /// `D:\Tools\MindWork AI Studio` would leave a second installation behind. Nobody else
+    /// maintains this installation, so its owner has to install a new version themselves.
+    UnsupportedLocation,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
@@ -151,22 +160,16 @@ fn env_var_has_value(key: &str) -> bool {
     env::var(key).is_ok_and(|value| !value.trim().is_empty())
 }
 
-/// Returns true when this installation is maintained by an IT department and therefore must not
-/// update itself.
-pub(crate) fn is_managed_installation() -> bool {
-    installation_kind() == InstallationKind::Managed
-}
-
 /// Returns the kind of this installation, cached for the lifetime of the process.
 ///
-/// A managed installation was deployed by an IT department, for example, system-wide into
-/// `C:\Program Files`. The Tauri updater cannot replace such an installation: on Windows it runs
-/// the NSIS setup with its per-user defaults and creates a second installation below the local
-/// app data directory instead of updating the existing one.
+/// Installations outside the per-user location cannot be replaced by the Tauri updater: on Windows
+/// it runs the NSIS setup with its per-user defaults and creates a second installation below the
+/// local app data directory instead of updating the existing one. That happens for an enterprise
+/// deployment into `C:\Program Files` just as much as for a user who chose their own directory.
 ///
-/// Whenever the kind cannot be determined, we report a user installation. Wrongly reporting a
-/// managed installation would cut regular users off from every future update, including security
-/// updates, which is far worse than a second installation.
+/// Whenever the kind cannot be determined, we report a user installation. Wrongly reporting that an
+/// installation cannot update itself would cut regular users off from every future update,
+/// including security updates, which is far worse than a second installation.
 pub(crate) fn installation_kind() -> InstallationKind {
     *INSTALLATION_KIND.get_or_init(|| {
         let kind = detect_installation_kind();
@@ -189,7 +192,26 @@ fn detect_installation_kind() -> InstallationKind {
         return InstallationKind::Managed;
     }
 
-    windows_installation_kind_from_paths(&executable_path, dirs::data_local_dir().as_deref())
+    if is_windows_machine_wide_installation(&executable_path, &windows_program_files_directories()) {
+        return InstallationKind::Managed;
+    }
+
+    if is_windows_per_user_installation(&executable_path, dirs::data_local_dir().as_deref()) {
+        return InstallationKind::User;
+    }
+
+    // The installation sits neither in the location the NSIS updater targets nor in a machine-wide
+    // program directory, so an update would create a second installation next to it. Who put it
+    // there decides how the app words that: a directory the current user cannot write to was set up
+    // by an administrator, while a writable one is a directory the user chose in the installer.
+    let Some(install_directory) = executable_path.parent() else {
+        return InstallationKind::UnsupportedLocation;
+    };
+
+    match directory_is_writable(install_directory) {
+        Some(false) => InstallationKind::Managed,
+        _ => InstallationKind::UnsupportedLocation,
+    }
 }
 
 #[cfg(target_os = "macos")]
@@ -205,7 +227,10 @@ fn detect_installation_kind() -> InstallationKind {
     // The updater replaces the entire app bundle, so it needs to write into the directory that
     // contains the bundle. On a device managed through an MDM solution like Jamf, the bundle sits
     // in a location the user cannot write to. We deliberately do not look for a marker file here:
-    // any additional file inside the bundle would break its code signature.
+    // any additional file inside the bundle would break its code signature. As a consequence, a
+    // macOS installation is never reported as managed, only as an unsupported location. An
+    // organization that wants AI Studio to name it explicitly sets DataApp.UpdateInterval to
+    // DISABLE_UPDATES in its enterprise configuration, which takes precedence anyway.
     match macos_app_bundle_directory(&executable_path) {
         Some(bundle_directory) => update_target_installation_kind(&bundle_directory),
         None => InstallationKind::User,
@@ -241,32 +266,62 @@ fn detect_installation_kind() -> InstallationKind {
     update_target_installation_kind(&update_target)
 }
 
-/// Decides the Windows installation kind by comparing the executable path against the local app
-/// data directory. The NSIS updater always targets the per-user location below that directory.
-/// An executable outside of it, for example, in `C:\Program Files`, was deployed by someone else,
-/// and an update would create a second installation next to it instead of replacing it.
+/// Returns whether the executable sits in the per-user location the NSIS updater targets, which is
+/// the only Windows location it can actually replace. Everywhere else an update installs below the
+/// local app data directory and leaves the existing installation behind.
 #[cfg(any(target_os = "windows", test))]
-fn windows_installation_kind_from_paths(executable_path: &Path, local_app_data_directory: Option<&Path>) -> InstallationKind {
+fn is_windows_per_user_installation(executable_path: &Path, local_app_data_directory: Option<&Path>) -> bool {
     let Some(local_app_data_directory) = local_app_data_directory else {
         warn!(Source = "Updater"; "Cannot read the local app data directory. Assuming a user installation.");
-        return InstallationKind::User;
+        return true;
     };
 
-    // Both paths must be compared in the same form. Canonicalization resolves junctions, symbolic
-    // links, and 8.3 short names such as PROGRA~1, but it also prepends the \\?\ verbatim prefix on
-    // Windows. Applying it to only one of the two paths would make even a regular per-user
-    // installation look like it sits outside the local app data directory. Therefore, we either use
-    // both canonicalized paths or neither of them:
-    let (executable_path, local_app_data_directory) = match (fs::canonicalize(executable_path), fs::canonicalize(local_app_data_directory)) {
-        (Ok(canonical_executable_path), Ok(canonical_local_app_data_directory)) => (canonical_executable_path, canonical_local_app_data_directory),
-        _ => (executable_path.to_path_buf(), local_app_data_directory.to_path_buf()),
+    path_is_below(executable_path, local_app_data_directory)
+}
+
+/// Returns whether the executable sits in one of the machine-wide program directories. The NSIS
+/// installer we ship installs per user and never picks such a directory on its own, so whatever
+/// runs from there was packaged and deployed by an IT department.
+///
+/// The permissions of that directory deliberately play no role here. Some organizations make their
+/// deployment writable for users, hoping the updater would then replace it in place. It never does:
+/// it runs our per-user setup, which installs below the local app data directory regardless of the
+/// current location and leaves a second installation behind.
+#[cfg(any(target_os = "windows", test))]
+fn is_windows_machine_wide_installation(executable_path: &Path, program_files_directories: &[PathBuf]) -> bool {
+    program_files_directories
+        .iter()
+        .any(|program_files_directory| path_is_below(executable_path, program_files_directory))
+}
+
+/// Returns the machine-wide program directories of this Windows system. A 32-bit process sees
+/// `ProgramFiles` as `C:\Program Files (x86)` and reaches the 64-bit directory only through
+/// `ProgramW6432`, so we read all of them instead of assuming one layout or a fixed drive.
+#[cfg(target_os = "windows")]
+fn windows_program_files_directories() -> Vec<PathBuf> {
+    ["ProgramFiles", "ProgramFiles(x86)", "ProgramW6432"]
+        .iter()
+        .filter_map(|variable_name| env::var(variable_name).ok())
+        .filter(|value| !value.trim().is_empty())
+        .map(PathBuf::from)
+        .collect()
+}
+
+/// Returns whether the given path sits inside the given directory.
+///
+/// Both paths must be compared in the same form. Canonicalization resolves junctions, symbolic
+/// links, and 8.3 short names such as PROGRA~1, but it also prepends the \\?\ verbatim prefix on
+/// Windows. Applying it to only one of the two paths would make even a regular per-user
+/// installation look like it sits somewhere else. Therefore, we either use both canonicalized paths
+/// or neither of them.
+#[cfg(any(target_os = "windows", test))]
+fn path_is_below(path: &Path, directory: &Path) -> bool {
+    let (path, directory) = match (fs::canonicalize(path), fs::canonicalize(directory)) {
+        (Ok(canonical_path), Ok(canonical_directory)) => (canonical_path, canonical_directory),
+        _ => (path.to_path_buf(), directory.to_path_buf()),
     };
 
-    if path_starts_with_ignoring_case(&executable_path, &local_app_data_directory) {
-        InstallationKind::User
-    } else {
-        InstallationKind::Managed
-    }
+    path_starts_with_ignoring_case(&path, &directory)
 }
 
 /// Compares the path components case-insensitively, because Windows paths are not case-sensitive.
@@ -313,29 +368,37 @@ fn macos_app_bundle_directory(executable_path: &Path) -> Option<PathBuf> {
     Some(bundle_directory.to_path_buf())
 }
 
-/// Decides the installation kind by testing whether the current user may replace the given update
-/// target. The updater writes the replacement into the directory that contains the target, so that
-/// is the directory we test.
+/// Decides the installation kind for the platforms whose updater replaces the given target in
+/// place. It writes the replacement into the directory that contains the target, so that is the
+/// directory we test: whoever may write there may update the app.
 #[cfg(any(target_os = "macos", target_os = "linux", test))]
 fn update_target_installation_kind(update_target: &Path) -> InstallationKind {
     let Some(directory) = update_target.parent() else {
         return InstallationKind::User;
     };
 
-    directory_installation_kind(directory)
+    // A directory the current user cannot write to was set up by an administrator or an IT
+    // department, and they are the ones distributing new versions. There is no unsupported location
+    // on these platforms: an in-place replacement works wherever the user may write:
+    match directory_is_writable(directory) {
+        Some(false) => InstallationKind::Managed,
+        _ => InstallationKind::User,
+    }
 }
 
 /// Tests whether the current user may write into the given directory by actually creating a
 /// temporary file there. Permission bits alone are not reliable: ACLs, read-only mounts, and
 /// managed-device restrictions do not show up in them.
-#[cfg(any(target_os = "macos", target_os = "linux", test))]
-fn directory_installation_kind(directory: &Path) -> InstallationKind {
+///
+/// Returns `None` when the test itself could not be carried out, so that callers can fall back to
+/// treating the installation as updatable instead of locking the user out on an inconclusive probe.
+fn directory_is_writable(directory: &Path) -> Option<bool> {
     match tempfile::Builder::new().prefix(".ai-studio-write-test").tempfile_in(directory) {
-        Ok(_) => InstallationKind::User,
-        Err(e) if e.kind() == std::io::ErrorKind::PermissionDenied => InstallationKind::Managed,
+        Ok(_) => Some(true),
+        Err(e) if e.kind() == std::io::ErrorKind::PermissionDenied => Some(false),
         Err(e) => {
-            warn!(Source = "Updater"; "Cannot test whether '{}' is writable: {e}. Assuming a user installation.", directory.display());
-            InstallationKind::User
+            warn!(Source = "Updater"; "Cannot test whether '{}' is writable: {e}.", directory.display());
+            None
         }
     }
 }
@@ -1277,16 +1340,17 @@ fn normalize_enterprise_config_id(value: &str) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::{
-        directory_installation_kind, enterprise_environment_key_name,
+        directory_is_writable, enterprise_environment_key_name,
         enterprise_policy_file_slot_suffix, has_managed_installation_marker,
+        is_windows_machine_wide_installation, is_windows_per_user_installation,
         load_external_http_custom_root_certificate_policy_from_directories,
         linux_policy_directories_from_xdg, load_policy_values_from_directories,
         macos_app_bundle_directory, normalize_locale_tag, parse_enterprise_source_values,
         path_starts_with_ignoring_case, select_effective_enterprise_config_source,
         select_effective_enterprise_secret_source, update_target_installation_kind,
-        windows_installation_kind_from_paths, EnterpriseConfig, EnterpriseSourceData,
-        EnterpriseSourceValue, EnterpriseSourceValues, ExternalHttpCustomRootCertificatePolicy,
-        InstallationKind, MANAGED_INSTALLATION_MARKER_FILE_NAME,
+        EnterpriseConfig, EnterpriseSourceData, EnterpriseSourceValue, EnterpriseSourceValues,
+        ExternalHttpCustomRootCertificatePolicy, InstallationKind,
+        MANAGED_INSTALLATION_MARKER_FILE_NAME,
     };
     use std::collections::HashMap;
     use std::fs;
@@ -1691,14 +1755,11 @@ mod tests {
         let local_app_data = path_of(&["/", "Users", "Alice", "AppData", "Local"]);
         let executable = path_of(&["/", "Users", "Alice", "AppData", "Local", "MindWork AI Studio", "MindWork AI Studio.exe"]);
 
-        assert_eq!(
-            windows_installation_kind_from_paths(&executable, Some(&local_app_data)),
-            InstallationKind::User
-        );
+        assert!(is_windows_per_user_installation(&executable, Some(&local_app_data)));
     }
 
     #[test]
-    fn windows_system_wide_installations_are_managed() {
+    fn windows_installations_outside_the_local_app_data_directory_cannot_update_themselves() {
         let local_app_data = path_of(&["/", "Users", "Alice", "AppData", "Local"]);
 
         for install_directory in [
@@ -1711,13 +1772,60 @@ mod tests {
             components.push("MindWork AI Studio.exe");
             let executable = path_of(&components);
 
-            assert_eq!(
-                windows_installation_kind_from_paths(&executable, Some(&local_app_data)),
-                InstallationKind::Managed,
-                "expected '{}' to be a managed installation",
+            assert!(
+                !is_windows_per_user_installation(&executable, Some(&local_app_data)),
+                "expected '{}' to sit outside the per-user installation location",
                 executable.display()
             );
         }
+    }
+
+    #[test]
+    fn windows_program_directories_are_managed_regardless_of_their_permissions() {
+        let program_files_directories = vec![
+            path_of(&["/", "Program Files"]),
+            path_of(&["/", "Program Files (x86)"]),
+        ];
+
+        for install_directory in [
+            vec!["/", "Program Files", "MindWork AI Studio"],
+            vec!["/", "Program Files (x86)", "MindWork AI Studio"],
+        ] {
+            let mut components = install_directory.clone();
+            components.push("MindWork AI Studio.exe");
+            let executable = path_of(&components);
+
+            assert!(
+                is_windows_machine_wide_installation(&executable, &program_files_directories),
+                "expected '{}' to be a machine-wide installation",
+                executable.display()
+            );
+        }
+    }
+
+    #[test]
+    fn windows_directories_next_to_the_program_directories_are_not_machine_wide() {
+        let program_files_directories = vec![path_of(&["/", "Program Files"])];
+
+        // 'Program Files (x86)' is not configured here, and a plain string prefix check would still
+        // match it against 'Program Files'. The same holds for a self-chosen directory:
+        for executable in [
+            path_of(&["/", "Program Files (x86)", "MindWork AI Studio", "MindWork AI Studio.exe"]),
+            path_of(&["/", "Apps", "MindWork AI Studio", "MindWork AI Studio.exe"]),
+        ] {
+            assert!(
+                !is_windows_machine_wide_installation(&executable, &program_files_directories),
+                "expected '{}' not to be a machine-wide installation",
+                executable.display()
+            );
+        }
+    }
+
+    #[test]
+    fn windows_installations_are_not_machine_wide_without_program_directories() {
+        let executable = path_of(&["/", "Program Files", "MindWork AI Studio", "MindWork AI Studio.exe"]);
+
+        assert!(!is_windows_machine_wide_installation(&executable, &[]));
     }
 
     #[test]
@@ -1726,27 +1834,18 @@ mod tests {
 
         // Windows paths are not case-sensitive:
         let differently_cased = path_of(&["/", "users", "alice", "appdata", "local", "MindWork AI Studio", "MindWork AI Studio.exe"]);
-        assert_eq!(
-            windows_installation_kind_from_paths(&differently_cased, Some(&local_app_data)),
-            InstallationKind::User
-        );
+        assert!(is_windows_per_user_installation(&differently_cased, Some(&local_app_data)));
 
         // A plain string prefix check would wrongly accept this one:
         let sibling_directory = path_of(&["/", "Users", "Alice", "AppData", "LocalBackup", "MindWork AI Studio", "MindWork AI Studio.exe"]);
-        assert_eq!(
-            windows_installation_kind_from_paths(&sibling_directory, Some(&local_app_data)),
-            InstallationKind::Managed
-        );
+        assert!(!is_windows_per_user_installation(&sibling_directory, Some(&local_app_data)));
     }
 
     #[test]
     fn windows_installation_kind_falls_back_to_user_without_local_app_data() {
         let executable = path_of(&["/", "Program Files", "MindWork AI Studio", "MindWork AI Studio.exe"]);
 
-        assert_eq!(
-            windows_installation_kind_from_paths(&executable, None),
-            InstallationKind::User
-        );
+        assert!(is_windows_per_user_installation(&executable, None));
     }
 
     #[test]
@@ -1754,17 +1853,14 @@ mod tests {
         // The local app data directory exists and can be canonicalized, while the executable below
         // it does not. Canonicalizing only one of the two would compare different path forms, for
         // example '/private/var/...' against '/var/...' or '\\?\C:\...' against 'C:\...', and would
-        // report a managed installation for a perfectly regular per-user installation:
+        // reject a perfectly regular per-user installation:
         let local_app_data = tempdir().unwrap();
         let executable = local_app_data
             .path()
             .join("MindWork AI Studio")
             .join("MindWork AI Studio.exe");
 
-        assert_eq!(
-            windows_installation_kind_from_paths(&executable, Some(local_app_data.path())),
-            InstallationKind::User
-        );
+        assert!(is_windows_per_user_installation(&executable, Some(local_app_data.path())));
     }
 
     #[test]
@@ -1811,13 +1907,11 @@ mod tests {
     }
 
     #[test]
-    fn writable_directories_are_user_installations() {
+    fn writable_update_targets_are_user_installations() {
         let directory = tempdir().unwrap();
-        assert_eq!(
-            directory_installation_kind(directory.path()),
-            InstallationKind::User
-        );
+        assert_eq!(directory_is_writable(directory.path()), Some(true));
 
+        // An AppImage may sit anywhere as long as its directory is writable:
         let update_target = directory.path().join("MindWork AI Studio.AppImage");
         assert_eq!(
             update_target_installation_kind(&update_target),
@@ -1827,7 +1921,7 @@ mod tests {
 
     #[cfg(unix)]
     #[test]
-    fn read_only_directories_are_managed_installations() {
+    fn read_only_update_targets_are_managed_installations() {
         use std::os::unix::fs::PermissionsExt;
 
         let directory = tempdir().unwrap();
@@ -1835,12 +1929,16 @@ mod tests {
         fs::create_dir(&read_only_directory).unwrap();
         fs::set_permissions(&read_only_directory, fs::Permissions::from_mode(0o500)).unwrap();
 
-        // Permissions do not apply to root, so the assertion below would fail there. In that case,
-        // we skip the test instead of asserting something the environment cannot provide:
+        // Permissions do not apply to root, so the assertions below would fail there. In that case,
+        // we skip them instead of asserting something the environment cannot provide:
         let running_as_root = fs::write(read_only_directory.join("root-probe"), "").is_ok();
         if !running_as_root {
+            assert_eq!(directory_is_writable(&read_only_directory), Some(false));
+
+            // Whoever set up a directory the user cannot write to also distributes the updates:
+            let update_target = read_only_directory.join("MindWork AI Studio.AppImage");
             assert_eq!(
-                directory_installation_kind(&read_only_directory),
+                update_target_installation_kind(&update_target),
                 InstallationKind::Managed
             );
         }

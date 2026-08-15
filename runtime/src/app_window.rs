@@ -23,8 +23,8 @@ use crate::api_token::APIToken;
 use crate::clipboard::shutdown_clipboard;
 use crate::dotnet::{cleanup_dotnet_server, start_dotnet_server, stop_dotnet_server};
 use crate::environment::{
-    is_prod, is_dev, is_flatpak, is_managed_installation, CONFIG_DIRECTORY, DATA_DIRECTORY,
-    FLATPAK_LIBRARY_DIRECTORY,
+    installation_kind, is_prod, is_dev, is_flatpak, InstallationKind, CONFIG_DIRECTORY,
+    DATA_DIRECTORY, FLATPAK_LIBRARY_DIRECTORY,
 };
 use crate::log::switch_to_file_logging;
 use crate::pdfium::PDFIUM_LIB_PATH;
@@ -515,7 +515,7 @@ pub async fn change_location_to(url: &str) {
 
 /// Checks for updates.
 pub async fn check_for_update(_token: APIToken) -> Json<CheckUpdateResponse> {
-    if let Some(reason) = self_update_blocked_reason(is_dev(), is_flatpak(), is_managed_installation()) {
+    if let Some(reason) = self_update_blocked_reason(is_dev(), is_flatpak(), installation_kind()) {
         warn!(Source = "Updater"; "Skipping update check because {reason}.");
         return Json(CheckUpdateResponse {
             update_is_available: false,
@@ -600,7 +600,7 @@ pub struct CheckUpdateResponse {
 
 /// Installs the update.
 pub async fn install_update(_token: APIToken) {
-    if let Some(reason) = self_update_blocked_reason(is_dev(), is_flatpak(), is_managed_installation()) {
+    if let Some(reason) = self_update_blocked_reason(is_dev(), is_flatpak(), installation_kind()) {
         warn!(Source = "Updater"; "Skipping update installation because {reason}.");
         return;
     }
@@ -660,13 +660,15 @@ pub async fn install_update(_token: APIToken) {
 }
 
 /// Returns why this installation cannot update itself, or `None` when it can.
-fn self_update_blocked_reason(development: bool, flatpak: bool, managed_installation: bool) -> Option<&'static str> {
+fn self_update_blocked_reason(development: bool, flatpak: bool, installation_kind: InstallationKind) -> Option<&'static str> {
     if flatpak {
         return Some("Flatpak installations are updated externally");
     }
 
-    if managed_installation {
-        return Some("this installation is managed by an IT department");
+    match installation_kind {
+        InstallationKind::Managed => return Some("this installation is centrally managed"),
+        InstallationKind::UnsupportedLocation => return Some("this installation is in a location the updater cannot replace"),
+        InstallationKind::User => {},
     }
 
     if development {
@@ -907,22 +909,35 @@ mod tests {
 
     #[test]
     fn self_update_is_disabled_in_development() {
-        assert!(self_update_blocked_reason(true, false, false).is_some());
+        assert!(self_update_blocked_reason(true, false, InstallationKind::User).is_some());
     }
 
     #[test]
     fn self_update_is_disabled_for_flatpak() {
-        assert!(self_update_blocked_reason(false, true, false).is_some());
+        assert!(self_update_blocked_reason(false, true, InstallationKind::User).is_some());
     }
 
     #[test]
     fn self_update_is_disabled_for_managed_installations() {
-        assert!(self_update_blocked_reason(false, false, true).is_some());
+        assert!(self_update_blocked_reason(false, false, InstallationKind::Managed).is_some());
+    }
+
+    #[test]
+    fn self_update_is_disabled_for_unsupported_installation_locations() {
+        assert!(self_update_blocked_reason(false, false, InstallationKind::UnsupportedLocation).is_some());
+    }
+
+    #[test]
+    fn self_update_blocked_reason_distinguishes_managed_from_unsupported_locations() {
+        assert_ne!(
+            self_update_blocked_reason(false, false, InstallationKind::Managed),
+            self_update_blocked_reason(false, false, InstallationKind::UnsupportedLocation)
+        );
     }
 
     #[test]
     fn self_update_is_enabled_for_normal_production_installations() {
-        assert!(self_update_blocked_reason(false, false, false).is_none());
+        assert!(self_update_blocked_reason(false, false, InstallationKind::User).is_none());
     }
 
     #[test]
