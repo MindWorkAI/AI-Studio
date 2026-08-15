@@ -4080,6 +4080,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1666052109"]
 -- seconds
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1723256298"] = "Sekunden"
 
+-- This copy of AI Studio was installed for you by someone else, so it does not check for updates on its own.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T176917293"] = "Diese Kopie von AI Studio wurde von einer anderen Person für Sie installiert und sucht daher nicht selbstständig nach Updates."
+
 -- Select a transcription provider for transcribing your voice. Without a selected provider, dictation and transcription features will be disabled.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1834486728"] = "Wählen Sie für die Transkription Ihrer Stimme einen Anbieter für Transkriptionen aus. Ohne einen ausgewählten Anbieter wird die Diktier- und Transkriptions-Funktion deaktiviert."
 
@@ -4140,6 +4143,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2960110864"]
 -- Save energy?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3100928009"] = "Energie sparen?"
 
+-- AI Studio cannot install updates into this installation. Your IT department provides new versions.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3125872224"] = "AI Studio kann in dieser Installation keine Updates installieren. Ihre IT-Abteilung stellt neue Versionen bereit."
+
 -- Spellchecking is enabled
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3165555978"] = "Rechtschreibprüfung ist aktiviert"
 
@@ -4182,6 +4188,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T4004501229"]
 -- When enabled, spellchecking will be active in all input fields. Depending on your operating system, errors may not be visually highlighted, but right-clicking may still offer possible corrections.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T4067492921"] = "Wenn aktiviert, ist die Rechtschreibprüfung in allen Eingabefeldern aktiv. Je nach Betriebssystem werden Fehler möglicherweise nicht visuell hervorgehoben, aber ein Rechtsklick kann dennoch Korrekturvorschläge anzeigen."
 
+-- AI Studio cannot install updates into its current location. Install new versions yourself.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T408056494"] = "AI Studio kann Updates nicht am aktuellen Speicherort installieren. Installieren Sie neue Versionen selbst."
+
 -- Select a transcription provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T4174666315"] = "Wählen Sie einen Transkriptionsanbieter aus"
 
@@ -4190,6 +4199,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T4192032183"]
 
 -- Use additional root certificates for external HTTPS requests?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T4235562267"] = "Zusätzliche Stammzertifikate für externe HTTPS-Anfragen verwenden?"
+
+-- AI Studio cannot update itself from its current location, so it does not check for updates.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T4258440666"] = "AI Studio kann sich an seinem aktuellen Speicherort nicht selbst aktualisieren und sucht daher nicht nach Updates."
 
 -- Select a root certificate bundle
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T436881267"] = "Wählen Sie ein Stammzertifikat-Bundle aus"
@@ -8229,6 +8241,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1209549230"] = "Dies ist eine pr
 -- Copies the configuration origin to the clipboard
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T125850635"] = "Kopiert den Ursprung der Konfiguration in die Zwischenablage"
 
+-- Installation
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1289059917"] = "Installation"
+
 -- Unknown configuration plugin
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1290340974"] = "Unbekanntes Konfigurations-Plugin"
 
@@ -8271,6 +8286,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1630237140"] = "AI Studio erstel
 -- Plugin directory:
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1698127325"] = "Plugin-Verzeichnis:"
 
+-- in a location AI Studio cannot update itself from
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1711792389"] = "an einem Speicherort, von dem aus AI Studio keine Updates durchführen kann"
+
 -- Consent:
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T171952677"] = "Zustimmung:"
 
@@ -8279,6 +8297,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1722690800"] = "Kopiert den Pfad
 
 -- This library is used to display the differences between two texts. This is necessary, e.g., for the grammar and spelling assistant.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1772678682"] = "Diese Bibliothek wird verwendet, um die Unterschiede zwischen zwei Texten anzuzeigen. Das ist zum Beispiel für den Grammatik- und Rechtschreibassistenten notwendig."
+
+-- owned by you, self-updates possible
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1802999304"] = "von Ihnen verwaltet, Updates sind möglich"
 
 -- By clicking on the respective path, the path is copied to the clipboard. You might open these files with a text editor to view their contents.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1806897624"] = "Wenn Sie auf den jeweiligen Pfad klicken, wird dieser in die Zwischenablage kopiert. Sie können diese Dateien mit einem Texteditor öffnen, um ihren Inhalt anzusehen."
@@ -8312,6 +8333,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2029659664"] = "Kopiert Folgende
 
 -- Copies the server URL to the clipboard
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2037899437"] = "Kopiert die Server-URL in die Zwischenablage"
+
+-- AI Studio cannot update itself from its current location. Installing an update would leave a second installation behind instead of replacing this one. To get a new version, download the latest release and install it over your current installation.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2050051760"] = "AI Studio kann sich von seinem aktuellen Speicherort aus nicht selbst aktualisieren. Durch die Installation eines Updates würde eine zweite Installation entstehen, anstatt diese zu ersetzen. Um eine neue Version zu erhalten, laden Sie die aktuelle Version herunter und installieren Sie sie über Ihre bestehende Installation."
 
 -- The windows-rs project provides access to Windows APIs from Rust. We use several libraries from this project: windows-registry is used to read the desired configuration in Windows enterprise environments. The windows and windows-collections libraries are used to open the native Windows share dialog, e.g., when you share a plugin with others.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2146481269"] = "Das Projekt windows-rs ermöglicht den Zugriff auf Windows-APIs aus Rust. Wir verwenden mehrere Bibliotheken aus diesem Projekt: windows-registry wird verwendet, um die gewünschte Konfiguration in Windows-Unternehmensumgebungen auszulesen. Die Bibliotheken windows und windows-collections werden verwendet, um den nativen Windows-Dialog zum Teilen zu öffnen, zum Beispiel wenn Sie ein Plugin mit anderen teilen."
@@ -8360,6 +8384,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2374031539"] = "Installierte Pan
 
 -- Configuration origin:
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2435772109"] = "Ursprung der Konfiguration:"
+
+-- This copy of AI Studio was installed for you by someone else, most likely your IT department, so it cannot update itself. Contact your IT department if you have questions about updating AI Studio.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2500327819"] = "Diese Kopie von AI Studio wurde von einer anderen Person für Sie installiert, höchstwahrscheinlich von Ihrer IT-Abteilung. Daher kann sie sich nicht selbst aktualisieren. Wenden Sie sich an Ihre IT-Abteilung, wenn Sie Fragen zur Aktualisierung von AI Studio haben."
 
 -- Configuration slot:
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T254943559"] = "Slot der Konfiguration:"
@@ -8450,6 +8477,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3046399223"] = "Vektordatenbank"
 
 -- Enterprise configuration ID:
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3092349641"] = "Unternehmenskonfigurations-ID:"
+
+-- managed by someone else, no self-updates
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3131065024"] = "von jemand anderem verwaltet, keine Selbstaktualisierung"
 
 -- Connect AI Studio to your organization's data with our External Retrieval Interface (ERI).
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T313276297"] = "Verbinden Sie AI Studio mit den Daten ihrer Organisation über unsere Schnittstelle für externe Datenabfrage (ERI)."

@@ -4080,6 +4080,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1666052109"]
 -- seconds
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1723256298"] = "seconds"
 
+-- This copy of AI Studio was installed for you by someone else, so it does not check for updates on its own.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T176917293"] = "This copy of AI Studio was installed for you by someone else, so it does not check for updates on its own."
+
 -- Select a transcription provider for transcribing your voice. Without a selected provider, dictation and transcription features will be disabled.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1834486728"] = "Select a transcription provider for transcribing your voice. Without a selected provider, dictation and transcription features will be disabled."
 
@@ -4140,6 +4143,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2960110864"]
 -- Save energy?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3100928009"] = "Save energy?"
 
+-- AI Studio cannot install updates into this installation. Your IT department provides new versions.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3125872224"] = "AI Studio cannot install updates into this installation. Your IT department provides new versions."
+
 -- Spellchecking is enabled
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3165555978"] = "Spellchecking is enabled"
 
@@ -4182,6 +4188,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T4004501229"]
 -- When enabled, spellchecking will be active in all input fields. Depending on your operating system, errors may not be visually highlighted, but right-clicking may still offer possible corrections.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T4067492921"] = "When enabled, spellchecking will be active in all input fields. Depending on your operating system, errors may not be visually highlighted, but right-clicking may still offer possible corrections."
 
+-- AI Studio cannot install updates into its current location. Install new versions yourself.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T408056494"] = "AI Studio cannot install updates into its current location. Install new versions yourself."
+
 -- Select a transcription provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T4174666315"] = "Select a transcription provider"
 
@@ -4190,6 +4199,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T4192032183"]
 
 -- Use additional root certificates for external HTTPS requests?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T4235562267"] = "Use additional root certificates for external HTTPS requests?"
+
+-- AI Studio cannot update itself from its current location, so it does not check for updates.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T4258440666"] = "AI Studio cannot update itself from its current location, so it does not check for updates."
 
 -- Select a root certificate bundle
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T436881267"] = "Select a root certificate bundle"
@@ -8229,6 +8241,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1209549230"] = "This is a privat
 -- Copies the configuration origin to the clipboard
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T125850635"] = "Copies the configuration origin to the clipboard"
 
+-- Installation
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1289059917"] = "Installation"
+
 -- Unknown configuration plugin
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1290340974"] = "Unknown configuration plugin"
 
@@ -8271,6 +8286,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1630237140"] = "AI Studio create
 -- Plugin directory:
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1698127325"] = "Plugin directory:"
 
+-- in a location AI Studio cannot update itself from
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1711792389"] = "in a location AI Studio cannot update itself from"
+
 -- Consent:
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T171952677"] = "Consent:"
 
@@ -8279,6 +8297,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1722690800"] = "Copies the execu
 
 -- This library is used to display the differences between two texts. This is necessary, e.g., for the grammar and spelling assistant.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1772678682"] = "This library is used to display the differences between two texts. This is necessary, e.g., for the grammar and spelling assistant."
+
+-- owned by you, self-updates possible
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1802999304"] = "owned by you, self-updates possible"
 
 -- By clicking on the respective path, the path is copied to the clipboard. You might open these files with a text editor to view their contents.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1806897624"] = "By clicking on the respective path, the path is copied to the clipboard. You might open these files with a text editor to view their contents."
@@ -8312,6 +8333,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2029659664"] = "Copies the follo
 
 -- Copies the server URL to the clipboard
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2037899437"] = "Copies the server URL to the clipboard"
+
+-- AI Studio cannot update itself from its current location. Installing an update would leave a second installation behind instead of replacing this one. To get a new version, download the latest release and install it over your current installation.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2050051760"] = "AI Studio cannot update itself from its current location. Installing an update would leave a second installation behind instead of replacing this one. To get a new version, download the latest release and install it over your current installation."
 
 -- The windows-rs project provides access to Windows APIs from Rust. We use several libraries from this project: windows-registry is used to read the desired configuration in Windows enterprise environments. The windows and windows-collections libraries are used to open the native Windows share dialog, e.g., when you share a plugin with others.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2146481269"] = "The windows-rs project provides access to Windows APIs from Rust. We use several libraries from this project: windows-registry is used to read the desired configuration in Windows enterprise environments. The windows and windows-collections libraries are used to open the native Windows share dialog, e.g., when you share a plugin with others."
@@ -8360,6 +8384,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2374031539"] = "Installed Pandoc
 
 -- Configuration origin:
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2435772109"] = "Configuration origin:"
+
+-- This copy of AI Studio was installed for you by someone else, most likely your IT department, so it cannot update itself. Contact your IT department if you have questions about updating AI Studio.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2500327819"] = "This copy of AI Studio was installed for you by someone else, most likely your IT department, so it cannot update itself. Contact your IT department if you have questions about updating AI Studio."
 
 -- Configuration slot:
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T254943559"] = "Configuration slot:"
@@ -8450,6 +8477,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3046399223"] = "Vector store"
 
 -- Enterprise configuration ID:
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3092349641"] = "Enterprise configuration ID:"
+
+-- managed by someone else, no self-updates
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3131065024"] = "managed by someone else, no self-updates"
 
 -- Connect AI Studio to your organization's data with our External Retrieval Interface (ERI).
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T313276297"] = "Connect AI Studio to your organization's data with our External Retrieval Interface (ERI)."
