@@ -98,6 +98,10 @@ pub enum InstallationKind {
     /// `D:\Tools\MindWork AI Studio` would leave a second installation behind. Nobody else
     /// maintains this installation, so its owner has to install a new version themselves.
     UnsupportedLocation,
+
+    /// Not an installation at all, but a development build started from a build directory or an
+    /// IDE. There is nothing here the updater could replace.
+    Development,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
@@ -172,7 +176,15 @@ fn env_var_has_value(key: &str) -> bool {
 /// including security updates, which is far worse than a second installation.
 pub(crate) fn installation_kind() -> InstallationKind {
     *INSTALLATION_KIND.get_or_init(|| {
-        let kind = detect_installation_kind();
+        // A development build lives in a build directory, which is perfectly writable and would
+        // therefore look like a regular user installation. We check it up front so that the
+        // platform-specific detection below only ever deals with real installations:
+        let kind = if is_dev() {
+            InstallationKind::Development
+        } else {
+            detect_installation_kind()
+        };
+
         info!(Source = "Updater"; "Detected a {kind:?} installation of AI Studio.");
         kind
     })

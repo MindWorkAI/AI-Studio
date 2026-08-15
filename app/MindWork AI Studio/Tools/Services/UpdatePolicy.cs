@@ -20,6 +20,7 @@ public sealed class UpdatePolicy(SettingsManager settingsManager, RuntimeInfoRes
                 //
                 InstallationKind.MANAGED => UpdatePolicyMode.MANAGED_INSTALLATION,
                 InstallationKind.UNSUPPORTED_LOCATION => UpdatePolicyMode.UNSUPPORTED_INSTALLATION_LOCATION,
+                InstallationKind.DEVELOPMENT => UpdatePolicyMode.DEVELOPMENT,
                 _ => UpdatePolicyMode.SELF_UPDATE
             }
         };

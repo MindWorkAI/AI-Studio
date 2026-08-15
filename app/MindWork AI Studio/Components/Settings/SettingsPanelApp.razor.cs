@@ -15,13 +15,13 @@ public partial class SettingsPanelApp : SettingsPanelBase
 
     private UpdatePolicyMode updatePolicyMode;
 
-    private bool AreUpdatesHandledOutsideTheApp => this.updatePolicyMode is UpdatePolicyMode.FLATPAK or UpdatePolicyMode.MANAGED_INSTALLATION or UpdatePolicyMode.UNSUPPORTED_INSTALLATION_LOCATION;
+    private bool CannotUpdateItself => this.updatePolicyMode is UpdatePolicyMode.FLATPAK or UpdatePolicyMode.MANAGED_INSTALLATION or UpdatePolicyMode.UNSUPPORTED_INSTALLATION_LOCATION or UpdatePolicyMode.DEVELOPMENT;
 
-    private UpdateInterval DisplayedUpdateInterval => this.AreUpdatesHandledOutsideTheApp
+    private UpdateInterval DisplayedUpdateInterval => this.CannotUpdateItself
         ? UpdateInterval.NO_CHECK
         : this.SettingsManager.ConfigurationData.App.UpdateInterval;
 
-    private UpdateInstallation DisplayedUpdateInstallation => this.AreUpdatesHandledOutsideTheApp
+    private UpdateInstallation DisplayedUpdateInstallation => this.CannotUpdateItself
         ? UpdateInstallation.MANUAL
         : this.SettingsManager.ConfigurationData.App.UpdateInstallation;
 
@@ -31,6 +31,7 @@ public partial class SettingsPanelApp : SettingsPanelBase
         UpdatePolicyMode.FLATPAK => T("AI Studio cannot check for updates when running as a Flatpak. Updates are managed outside the app."),
         UpdatePolicyMode.MANAGED_INSTALLATION => T("This copy of AI Studio was installed for you by someone else, so it does not check for updates on its own."),
         UpdatePolicyMode.UNSUPPORTED_INSTALLATION_LOCATION => T("AI Studio cannot update itself from its current location, so it does not check for updates."),
+        UpdatePolicyMode.DEVELOPMENT => T("Development builds do not check for updates."),
         _ => T("How often should we check for app updates?")
     };
 
@@ -40,13 +41,14 @@ public partial class SettingsPanelApp : SettingsPanelBase
         UpdatePolicyMode.FLATPAK => T("AI Studio cannot install updates when running as a Flatpak. Use the update method provided by your Flatpak distribution."),
         UpdatePolicyMode.MANAGED_INSTALLATION => T("AI Studio cannot install updates into this installation. Your IT department provides new versions."),
         UpdatePolicyMode.UNSUPPORTED_INSTALLATION_LOCATION => T("AI Studio cannot install updates into its current location. Install new versions yourself."),
+        UpdatePolicyMode.DEVELOPMENT => T("Development builds do not install updates."),
         _ => T("Should updates be installed automatically or manually?")
     };
 
-    private bool IsUpdateIntervalLocked() => this.updatePolicyMode is UpdatePolicyMode.ENTERPRISE_DISABLED || this.AreUpdatesHandledOutsideTheApp ||
+    private bool IsUpdateIntervalLocked() => this.updatePolicyMode is UpdatePolicyMode.ENTERPRISE_DISABLED || this.CannotUpdateItself ||
         ManagedConfiguration.TryGet(x => x.App, x => x.UpdateInterval, out var meta) && meta.IsLocked;
 
-    private bool IsUpdateInstallationLocked() => this.updatePolicyMode is UpdatePolicyMode.ENTERPRISE_DISABLED || this.AreUpdatesHandledOutsideTheApp ||
+    private bool IsUpdateInstallationLocked() => this.updatePolicyMode is UpdatePolicyMode.ENTERPRISE_DISABLED || this.CannotUpdateItself ||
         ManagedConfiguration.TryGet(x => x.App, x => x.UpdateInstallation, out var meta) && meta.IsLocked;
 
     protected override async Task OnInitializedAsync()

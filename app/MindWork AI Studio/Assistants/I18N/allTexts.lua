@@ -4144,6 +4144,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3100928009"]
 -- AI Studio cannot install updates into this installation. Your IT department provides new versions.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3125872224"] = "AI Studio cannot install updates into this installation. Your IT department provides new versions."
 
+-- Development builds do not install updates.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3138812562"] = "Development builds do not install updates."
+
 -- Spellchecking is enabled
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3165555978"] = "Spellchecking is enabled"
 
@@ -4218,6 +4221,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T71162186"] =
 
 -- Energy saving is disabled
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T716338721"] = "Energy saving is disabled"
+
+-- Development builds do not check for updates.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T735114866"] = "Development builds do not check for updates."
 
 -- Start page
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T78084670"] = "Start page"
@@ -8532,6 +8538,12 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3440211747"] = "Used Rust compil
 
 -- AI Studio runs with an enterprise configuration using configuration plugins, without central configuration management.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3449345633"] = "AI Studio runs with an enterprise configuration using configuration plugins, without central configuration management."
+
+-- You are running a development build of AI Studio, which never updates itself. Pull the latest changes and rebuild the app instead.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3454691558"] = "You are running a development build of AI Studio, which never updates itself. Pull the latest changes and rebuild the app instead."
+
+-- development build, no self-updates
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3459123358"] = "development build, no self-updates"
 
 -- Tauri is used to host the Blazor user interface. It is a great project that allows the creation of desktop applications using web technologies. I love Tauri!
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3494984593"] = "Tauri is used to host the Blazor user interface. It is a great project that allows the creation of desktop applications using web technologies. I love Tauri!"

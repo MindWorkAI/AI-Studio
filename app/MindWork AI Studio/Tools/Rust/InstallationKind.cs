@@ -22,4 +22,10 @@ public enum InstallationKind
     /// to install a new version themselves.
     /// </summary>
     UNSUPPORTED_LOCATION,
+
+    /// <summary>
+    /// Not an installation at all, but a development build started from a build directory or an
+    /// IDE. There is nothing here the updater could replace.
+    /// </summary>
+    DEVELOPMENT,
 }

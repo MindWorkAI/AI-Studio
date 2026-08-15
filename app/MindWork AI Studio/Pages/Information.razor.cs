@@ -77,6 +77,7 @@ public partial class Information : MSGComponentBase
     {
         Tools.Rust.InstallationKind.MANAGED => T("managed by someone else, no self-updates"),
         Tools.Rust.InstallationKind.UNSUPPORTED_LOCATION => T("in a location AI Studio cannot update itself from"),
+        Tools.Rust.InstallationKind.DEVELOPMENT => T("development build, no self-updates"),
         _ => T("owned by you, self-updates possible")
     };
 
@@ -674,6 +675,10 @@ public partial class Information : MSGComponentBase
         {
             parameters.Add(x => x.Message, T("AI Studio cannot update itself from its current location. Installing an update would leave a second installation behind instead of replacing this one. To get a new version, download the latest release and install it over your current installation."));
             parameters.Add(x => x.ReleaseUrl, "https://github.com/MindWorkAI/AI-Studio/releases/latest");
+        }
+        else if (this.updatePolicyMode is UpdatePolicyMode.DEVELOPMENT)
+        {
+            parameters.Add(x => x.Message, T("You are running a development build of AI Studio, which never updates itself. Pull the latest changes and rebuild the app instead."));
         }
         else
             return;
