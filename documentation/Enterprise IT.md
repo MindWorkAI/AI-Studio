@@ -566,6 +566,39 @@ and users still cannot change the host, model, instance name, or any other field
 page shows a key icon instead of the usual lock icon for this provider; opening it only offers the
 API key field, with everything else disabled.
 
+The flag works the same way for embedding and transcription providers:
+
+```lua
+CONFIG["EMBEDDING_PROVIDERS"][#CONFIG["EMBEDDING_PROVIDERS"]+1] = {
+    ["Id"] = "3f0a4e8c-1d6b-4a91-8f2e-7c5d9b0a4e13",
+    ["Name"] = "Corporate Embeddings",
+    ["UsedLLMProvider"] = "OPEN_AI",
+    ["Host"] = "NONE",
+    ["Hostname"] = "",
+    ["AllowUserProvidedAPIKey"] = true,
+    ["Model"] = {
+        ["Id"] = "text-embedding-3-large",
+        ["DisplayName"] = "Text Embedding 3 Large",
+    }
+}
+
+CONFIG["TRANSCRIPTION_PROVIDERS"][#CONFIG["TRANSCRIPTION_PROVIDERS"]+1] = {
+    ["Id"] = "b1c7d24f-5e83-4a06-9d1b-2f8e6a3c7d50",
+    ["Name"] = "Corporate Transcription",
+    ["UsedLLMProvider"] = "OPEN_AI",
+    ["Host"] = "NONE",
+    ["Hostname"] = "",
+    ["AllowUserProvidedAPIKey"] = true,
+    ["Model"] = {
+        ["Id"] = "whisper-1",
+        ["DisplayName"] = "Whisper",
+    }
+}
+```
+
+For embedding providers, the settings page keeps the test button available next to the key icon, so
+users can verify their own key right after entering it.
+
 This is mutually exclusive with an embedded `APIKey` on the same provider: if both are present,
 AI Studio ignores the embedded key and logs a warning, because the whole point of the flag is that
 each user manages their own key. Combine the two across different providers if you need it -- one

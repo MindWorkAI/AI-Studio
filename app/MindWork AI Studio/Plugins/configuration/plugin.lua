@@ -149,6 +149,11 @@ CONFIG["TRANSCRIPTION_PROVIDERS"] = {}
 --     -- Optional: Encrypted API key (see LLM_PROVIDERS example for details)
 --     -- ["APIKey"] = "ENC:v1:<base64-encoded encrypted data>",
 --
+--     -- Optional: let each user set their own API key for this otherwise locked transcription
+--     -- provider (see LLM_PROVIDERS example for details). Mutually exclusive with "APIKey"
+--     -- above: when both are set, the embedded key is ignored and a warning is logged.
+--     -- ["AllowUserProvidedAPIKey"] = true,
+--
 --     ["Model"] = {
 --         ["Id"] = "<the model ID>",
 --         ["DisplayName"] = "<user-friendly name of the model>",
@@ -170,6 +175,11 @@ CONFIG["EMBEDDING_PROVIDERS"] = {}
 --
 --     -- Optional: Encrypted API key (see LLM_PROVIDERS example for details)
 --     -- ["APIKey"] = "ENC:v1:<base64-encoded encrypted data>",
+--
+--     -- Optional: let each user set their own API key for this otherwise locked embedding
+--     -- provider (see LLM_PROVIDERS example for details). Mutually exclusive with "APIKey"
+--     -- above: when both are set, the embedded key is ignored and a warning is logged.
+--     -- ["AllowUserProvidedAPIKey"] = true,
 --
 --     ["Model"] = {
 --         ["Id"] = "<the model ID, e.g., nomic-embed-text>",
