@@ -23,8 +23,11 @@ public sealed partial class PluginInstallService
 
     private const string PLUGIN_FILE_NAME = "plugin.lua";
     private const string ASSISTANT_BUILDER_DIRECTORY_PREFIX = "assistant-builder";
+    private const string PLUGIN_IMPORT_DIRECTORY_PREFIX = "plugin-import";
     private const string DELETE_BACKUP_DIRECTORY = ".plugin-delete-backups";
     private const string INSTALL_BACKUP_DIRECTORY = ".plugin-install-backups";
+    private const string STAGING_DIRECTORY = ".plugin-staging";
+    private const int STAGING_RETENTION_HOURS = 24;
     private const int DIRECTORY_PREFIX_MAX_LEN = 80;
 
     private readonly ILogger<PluginInstallService> logger;
