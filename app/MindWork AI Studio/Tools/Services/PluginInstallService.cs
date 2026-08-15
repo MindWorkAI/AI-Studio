@@ -38,6 +38,16 @@ public sealed partial class PluginInstallService
 
     private static AssistantPluginInstallResult Error(string issue) => new(false, Guid.Empty, string.Empty, string.Empty, false, issue);
 
+    /// <summary>
+    /// Reports a failed installation of a plugin we already know.
+    /// </summary>
+    /// <remarks>
+    /// Prefer this over the variant which only takes an issue: the caller logs the plugin and the
+    /// directory it tried to install into, and both are empty otherwise. Everything that fails
+    /// before we could read the plugin has to use the other variant.
+    /// </remarks>
+    private static AssistantPluginInstallResult Error(IPluginMetadata plugin, string pluginDirectory, string issue) => new(false, plugin.Id, plugin.Name, pluginDirectory, false, issue);
+
     private static AssistantPluginInstallResult CancelledByUser() => new(false, Guid.Empty, string.Empty, string.Empty, false, string.Empty, true);
 
     private static AssistantPluginCheckResult CheckError(string issue) => new(false, Guid.Empty, string.Empty, issue);

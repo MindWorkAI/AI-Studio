@@ -24,11 +24,11 @@ public sealed partial class PluginInstallService
             Directory.CreateDirectory(pluginRoot);
             finalDirectory = DetermineFinalDirectory(pluginRoot, plugin, pluginType);
             if (!IsPathInsideDirectory(pluginRoot, finalDirectory))
-                return Error(TB("The resolved plugin directory is outside the plugin directory."));
+                return Error(plugin, finalDirectory, TB("The resolved plugin directory is outside the plugin directory."));
 
             var replacementIssue = GetReplacementIssue(plugin.Id, pluginType);
             if (!string.IsNullOrWhiteSpace(replacementIssue))
-                return Error(replacementIssue);
+                return Error(plugin, finalDirectory, replacementIssue);
 
             if (Directory.Exists(finalDirectory))
             {
@@ -54,7 +54,7 @@ public sealed partial class PluginInstallService
         }
         catch (Exception e)
         {
-            this.logger.LogError(e, "Failed to install plugin.");
+            this.logger.LogError(e, "Failed to install the {PluginType} plugin '{PluginName}' ({PluginId}) into '{PluginDirectory}'.", pluginType, plugin.Name, plugin.Id, finalDirectory);
 
             // Only remove the target directory when this installation actually moved the plugin
             // there. Otherwise, when moving the previous plugin into the backup directory failed,
@@ -75,7 +75,7 @@ public sealed partial class PluginInstallService
                 }
             }
 
-            return Error(string.Format(TB("Unexpected error: {0}"), e.Message));
+            return Error(plugin, finalDirectory ?? string.Empty, string.Format(TB("Unexpected error: {0}"), e.Message));
         }
         finally
         {
