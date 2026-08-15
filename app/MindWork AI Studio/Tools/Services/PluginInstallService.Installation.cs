@@ -16,6 +16,9 @@ public sealed partial class PluginInstallService
         var replacedExisting = false;
         var movedIntoPlace = false;
 
+        // We reload the plugins ourselves below. Holding back hot reloading keeps the file system
+        // watcher from starting a second reload while the plugin is being moved into place:
+        await PluginFactory.LockHotReloadAsync();
         try
         {
             Directory.CreateDirectory(pluginRoot);
@@ -77,6 +80,7 @@ public sealed partial class PluginInstallService
         finally
         {
             this.TryDeleteStagingDirectory(stagingDirectory);
+            PluginFactory.UnlockHotReload();
         }
     }
 

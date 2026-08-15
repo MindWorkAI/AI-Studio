@@ -106,6 +106,9 @@ public sealed partial class PluginInstallService
         var backupDirectory = string.Empty;
         var sideEffects = PluginDeleteSideEffects.NONE;
 
+        // We reload the plugins ourselves below. Holding back hot reloading keeps the file system
+        // watcher from starting a second reload while the plugin is being moved away:
+        await PluginFactory.LockHotReloadAsync();
         try
         {
             // Check again under the semaphore: another operation might have changed the plugin state
@@ -137,6 +140,7 @@ public sealed partial class PluginInstallService
         }
         finally
         {
+            PluginFactory.UnlockHotReload();
             this.installSemaphore.Release();
         }
     }
