@@ -16,16 +16,19 @@ public sealed partial class PluginInstallService
         var replacedExisting = false;
         var movedIntoPlace = false;
 
+        // We reload the plugins ourselves below. Holding back hot reloading keeps the file system
+        // watcher from starting a second reload while the plugin is being moved into place:
+        await PluginFactory.LockHotReloadAsync();
         try
         {
             Directory.CreateDirectory(pluginRoot);
             finalDirectory = DetermineFinalDirectory(pluginRoot, plugin, pluginType);
             if (!IsPathInsideDirectory(pluginRoot, finalDirectory))
-                return Error(TB("The resolved plugin directory is outside the plugin directory."));
+                return Error(plugin, finalDirectory, TB("The resolved plugin directory is outside the plugin directory."));
 
             var replacementIssue = GetReplacementIssue(plugin.Id, pluginType);
             if (!string.IsNullOrWhiteSpace(replacementIssue))
-                return Error(replacementIssue);
+                return Error(plugin, finalDirectory, replacementIssue);
 
             if (Directory.Exists(finalDirectory))
             {
@@ -36,10 +39,10 @@ public sealed partial class PluginInstallService
                 // would be loaded a second time, next to the version we are installing:
                 backupDirectory = CreateInstallBackupDirectory(plugin);
                 Directory.CreateDirectory(Path.GetDirectoryName(backupDirectory)!);
-                Directory.Move(finalDirectory, backupDirectory);
+                this.MoveDirectory(finalDirectory, backupDirectory);
             }
 
-            Directory.Move(stagingDirectory, finalDirectory);
+            this.MoveDirectory(stagingDirectory, finalDirectory);
             movedIntoPlace = true;
             await PluginFactory.LoadAll(token);
 
@@ -51,7 +54,7 @@ public sealed partial class PluginInstallService
         }
         catch (Exception e)
         {
-            this.logger.LogError(e, "Failed to install plugin.");
+            this.logger.LogError(e, "Failed to install the {PluginType} plugin '{PluginName}' ({PluginId}) into '{PluginDirectory}'.", pluginType, plugin.Name, plugin.Id, finalDirectory);
 
             // Only remove the target directory when this installation actually moved the plugin
             // there. Otherwise, when moving the previous plugin into the backup directory failed,
@@ -63,7 +66,7 @@ public sealed partial class PluginInstallService
             {
                 try
                 {
-                    Directory.Move(backupDirectory, finalDirectory);
+                    this.MoveDirectory(backupDirectory, finalDirectory);
                     await PluginFactory.LoadAll(CancellationToken.None);
                 }
                 catch (Exception restoreException)
@@ -72,11 +75,12 @@ public sealed partial class PluginInstallService
                 }
             }
 
-            return Error(string.Format(TB("Unexpected error: {0}"), e.Message));
+            return Error(plugin, finalDirectory ?? string.Empty, string.Format(TB("Unexpected error: {0}"), e.Message));
         }
         finally
         {
             this.TryDeleteStagingDirectory(stagingDirectory);
+            PluginFactory.UnlockHotReload();
         }
     }
 

@@ -106,6 +106,9 @@ public sealed partial class PluginInstallService
         var backupDirectory = string.Empty;
         var sideEffects = PluginDeleteSideEffects.NONE;
 
+        // We reload the plugins ourselves below. Holding back hot reloading keeps the file system
+        // watcher from starting a second reload while the plugin is being moved away:
+        await PluginFactory.LockHotReloadAsync();
         try
         {
             // Check again under the semaphore: another operation might have changed the plugin state
@@ -116,7 +119,7 @@ public sealed partial class PluginInstallService
 
             backupDirectory = CreateDeleteBackupDirectory(plugin);
             Directory.CreateDirectory(Path.GetDirectoryName(backupDirectory)!);
-            Directory.Move(pluginDirectory, backupDirectory);
+            this.MoveDirectory(pluginDirectory, backupDirectory);
 
             sideEffects = this.ApplyDeleteSideEffects(plugin);
             if (sideEffects.HasChanges)
@@ -137,6 +140,7 @@ public sealed partial class PluginInstallService
         }
         finally
         {
+            PluginFactory.UnlockHotReload();
             this.installSemaphore.Release();
         }
     }
@@ -241,7 +245,7 @@ public sealed partial class PluginInstallService
         try
         {
             if (!Directory.Exists(pluginDirectory) && Directory.Exists(backupDirectory))
-                Directory.Move(backupDirectory, pluginDirectory);
+                this.MoveDirectory(backupDirectory, pluginDirectory);
 
             var configurationData = this.settingsManager.ConfigurationData;
             if (sideEffects.WasEnabled && !configurationData.EnabledPlugins.Contains(plugin.Id))
