@@ -71,7 +71,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
 
     /// <summary>
     /// Whether this embedding provider is managed by an enterprise configuration plugin. When true,
-    /// every field except the API key is locked, matching <see cref="Settings.EmbeddingProvider.IsEnterpriseConfiguration"/>.
+    /// every field except the API key is locked, matching Settings.EmbeddingProvider.IsEnterpriseConfiguration.
     /// </summary>
     [Parameter]
     public bool IsEnterpriseConfiguration { get; set; }
