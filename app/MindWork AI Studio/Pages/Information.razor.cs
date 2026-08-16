@@ -65,9 +65,9 @@ public partial class Information : MSGComponentBase
 
     private string LinuxPackageTypeDisplayName => this.RuntimeInfo.LinuxPackageType switch
     {
-        "appimage" => "AppImage",
-        "flatpak" => "Flatpak",
-        "unknown" => T("unknown"),
+        Tools.Rust.LinuxPackageType.APP_IMAGE => "AppImage",
+        Tools.Rust.LinuxPackageType.FLATPAK => "Flatpak",
+        Tools.Rust.LinuxPackageType.UNKNOWN => T("unknown"),
         _ => T("not applicable")
     };
 
@@ -75,7 +75,7 @@ public partial class Information : MSGComponentBase
 
     private string InstallationKindDisplayName => this.RuntimeInfo.LinuxPackageType switch
     {
-        "flatpak" => T("Flatpak installation, updates are handled outside of AI Studio"),
+        Tools.Rust.LinuxPackageType.FLATPAK => T("Flatpak installation, updates are handled outside of AI Studio"),
         _ => this.RuntimeInfo.InstallationKind switch
         {
             Tools.Rust.InstallationKind.MANAGED => T("managed; updates are handled outside of AI Studio; contact whoever installed it and ask about updates"),
