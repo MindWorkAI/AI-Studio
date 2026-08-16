@@ -104,11 +104,27 @@ pub enum InstallationKind {
     Development,
 }
 
+/// Identifies how the Linux build was packaged. Non-Linux builds report `NotApplicable`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+pub enum LinuxPackageType {
+    /// A Linux package type the runtime cannot identify.
+    Unknown,
+
+    /// The app is not running on Linux.
+    NotApplicable,
+
+    /// An AppImage build. The explicit name preserves the existing JSON contract.
+    AppImage,
+
+    /// A Flatpak build.
+    Flatpak,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct RuntimeInfo {
     pub working_directory: String,
     pub executable_path: String,
-    pub linux_package_type: String,
+    pub linux_package_type: LinuxPackageType,
     pub installation_kind: InstallationKind,
 }
 
@@ -120,25 +136,25 @@ pub async fn get_runtime_info(_token: APIToken) -> Json<RuntimeInfo> {
         executable_path: env::current_exe()
             .map(|path| path.to_string_lossy().into_owned())
             .unwrap_or_default(),
-        linux_package_type: detect_linux_package_type().to_string(),
+        linux_package_type: detect_linux_package_type(),
         installation_kind: installation_kind(),
     })
 }
 
 #[cfg(target_os = "linux")]
-fn detect_linux_package_type() -> &'static str {
+fn detect_linux_package_type() -> LinuxPackageType {
     if is_flatpak() {
-        "flatpak"
+        LinuxPackageType::Flatpak
     } else if is_appimage() {
-        "appimage"
+        LinuxPackageType::AppImage
     } else {
-        "unknown"
+        LinuxPackageType::Unknown
     }
 }
 
 #[cfg(not(target_os = "linux"))]
-fn detect_linux_package_type() -> &'static str {
-    "not_applicable"
+fn detect_linux_package_type() -> LinuxPackageType {
+    LinuxPackageType::NotApplicable
 }
 
 #[cfg(target_os = "linux")]
@@ -1361,7 +1377,7 @@ mod tests {
         path_starts_with_ignoring_case, select_effective_enterprise_config_source,
         select_effective_enterprise_secret_source, update_target_installation_kind,
         EnterpriseConfig, EnterpriseSourceData, EnterpriseSourceValue, EnterpriseSourceValues,
-        ExternalHttpCustomRootCertificatePolicy, InstallationKind,
+        ExternalHttpCustomRootCertificatePolicy, InstallationKind, LinuxPackageType,
         MANAGED_INSTALLATION_MARKER_FILE_NAME,
     };
     use std::collections::HashMap;
@@ -1372,6 +1388,18 @@ mod tests {
     const TEST_ID_A: &str = "9072B77D-CA81-40DA-BE6A-861DA525EF7B";
     const TEST_ID_B: &str = "a1b2c3d4-e5f6-7890-abcd-ef1234567890";
     const TEST_ID_C: &str = "11111111-2222-3333-4444-555555555555";
+
+    #[test]
+    fn linux_package_type_serialization_preserves_runtime_contract() {
+        for (package_type, expected) in [
+            (LinuxPackageType::Unknown, "\"unknown\""),
+            (LinuxPackageType::NotApplicable, "\"not_applicable\""),
+            (LinuxPackageType::AppImage, "\"appimage\""),
+            (LinuxPackageType::Flatpak, "\"flatpak\""),
+        ] {
+            assert_eq!(serde_json::to_string(&package_type).unwrap(), expected);
+        }
+    }
 
     fn enterprise_config(
         id: &str,

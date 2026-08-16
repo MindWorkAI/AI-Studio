@@ -4068,6 +4068,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1454730224"]
 -- Root certificate bundle path
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1471315821"] = "Pfad zum Stammzertifikatsbundle"
 
+-- AI Studio cannot install updates into its current installation location. Install new versions yourself.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T14786838"] = "AI Studio kann Updates am aktuellen Installationsort nicht installieren. Installieren Sie neue Versionen bitte selbst."
+
 -- Select the desired behavior for the navigation bar.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1555038969"] = "Wählen Sie das gewünschte Verhalten für die Navigationsleiste aus."
 
@@ -4079,9 +4082,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1666052109"]
 
 -- seconds
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1723256298"] = "Sekunden"
-
--- This copy of AI Studio was installed for you by someone else, so it does not check for updates on its own.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T176917293"] = "Diese Kopie von AI Studio wurde von einer anderen Person für Sie installiert und sucht daher nicht selbstständig nach Updates."
 
 -- Select a transcription provider for transcribing your voice. Without a selected provider, dictation and transcription features will be disabled.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1834486728"] = "Wählen Sie für die Transkription Ihrer Stimme einen Anbieter für Transkriptionen aus. Ohne einen ausgewählten Anbieter wird die Diktier- und Transkriptions-Funktion deaktiviert."
@@ -4104,6 +4104,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1907446663"]
 -- Your organization has disabled update checks and installations.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1909339369"] = "Ihre Organisation hat die Suche nach Updates und deren Installation deaktiviert."
 
+-- AI Studio cannot install updates when running as a Flatpak. Update it using the Flatpak source or bundle from which you installed it.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2009652585"] = "AI Studio kann keine Updates installieren, wenn es als Flatpak ausgeführt wird. Aktualisieren Sie es über die Flatpak-Quelle oder das Bundle, über die bzw. das Sie es installiert haben."
+
 -- When enabled, additional administration options become visible. These options are intended for IT staff to manage organization-wide configuration, e.g. configuring and exporting providers for an entire organization.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2013281167"] = "Wenn diese Option aktiviert ist, werden zusätzliche Optionen für die Administration angezeigt. Diese Optionen sind für IT-Mitarbeitende vorgesehen, um organisationsweite Einstellungen zu verwalten, z. B. Anbieter für eine gesamte Organisation zu konfigurieren und zu exportieren."
 
@@ -4122,9 +4125,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2341504363"]
 -- Update installation method
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T237706157"] = "Installationsmethode für Updates"
 
--- AI Studio cannot install updates when running as a Flatpak. Use the update method provided by your Flatpak distribution.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T244540698"] = "AI Studio kann keine Updates installieren, wenn es als Flatpak ausgeführt wird. Verwenden Sie die von Ihrer Flatpak-Distribution bereitgestellte Methode zur Aktualisierung."
-
 -- Language
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2591284123"] = "Sprache"
 
@@ -4137,14 +4137,14 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2655930524"]
 -- Path to a PEM file containing one or more root CA certificates. For Flatpak deployments, this file must be placed in a location that is readable inside the sandbox.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2700836219"] = "Pfad zu einer PEM-Datei mit einem oder mehreren Root-CA-Zertifikaten. Bei Flatpak-Bereitstellungen muss diese Datei an einem Ort abgelegt werden, der innerhalb der Sandbox lesbar ist."
 
+-- This installation does not check for updates itself. Contact the person or organization that installed AI Studio for update information.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2918560776"] = "Diese Installation sucht nicht selbst nach Updates. Wenden Sie sich an die Person oder Organisation, die AI Studio installiert hat, um Informationen zu Updates zu erhalten."
+
 -- Enter one host pattern per line. Exact hosts such as data.intra.example.org and one-label wildcards such as *.intra.example.org are supported. Cloud provider endpoints built into AI Studio, such as OpenAI, Google, etc., never use these additional root certificates.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2960110864"] = "Geben Sie pro Zeile ein Hostmuster ein. Exakte Hosts wie data.intra.example.org sowie Wildcards mit einem Label wie *.intra.example.org werden unterstützt. In AI Studio integrierte Endpunkte von Cloud-Anbietern wie OpenAI, Google usw. verwenden diese zusätzlichen Stammzertifikate nicht."
 
 -- Save energy?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3100928009"] = "Energie sparen?"
-
--- AI Studio cannot install updates into this installation. Your IT department provides new versions.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3125872224"] = "AI Studio kann in dieser Installation keine Updates installieren. Ihre IT-Abteilung stellt neue Versionen bereit."
 
 -- Development builds do not install updates.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3138812562"] = "Entwicklerversionen installieren keine Updates."
@@ -4191,9 +4191,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T4004501229"]
 -- When enabled, spellchecking will be active in all input fields. Depending on your operating system, errors may not be visually highlighted, but right-clicking may still offer possible corrections.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T4067492921"] = "Wenn aktiviert, ist die Rechtschreibprüfung in allen Eingabefeldern aktiv. Je nach Betriebssystem werden Fehler möglicherweise nicht visuell hervorgehoben, aber ein Rechtsklick kann dennoch Korrekturvorschläge anzeigen."
 
--- AI Studio cannot install updates into its current location. Install new versions yourself.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T408056494"] = "AI Studio kann Updates nicht am aktuellen Speicherort installieren. Installieren Sie neue Versionen selbst."
-
 -- Select a transcription provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T4174666315"] = "Wählen Sie einen Transkriptionsanbieter aus"
 
@@ -4208,6 +4205,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T4258440666"]
 
 -- Select a root certificate bundle
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T436881267"] = "Wählen Sie ein Stammzertifikat-Bundle aus"
+
+-- AI Studio cannot install updates into this installation. Contact the person or organization that installed it for new versions.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T476576809"] = "AI Studio kann in dieser Installation keine Updates installieren. Wenden Sie sich für neue Versionen an die Person oder Organisation, die die Installation vorgenommen hat."
 
 -- Navigation bar behavior
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T602293588"] = "Verhalten der Navigationsleiste"
@@ -8292,9 +8292,6 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1630237140"] = "AI Studio erstel
 -- Plugin directory:
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1698127325"] = "Plugin-Verzeichnis:"
 
--- in a location AI Studio cannot update itself from
-UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1711792389"] = "an einem Speicherort, von dem aus AI Studio keine Updates durchführen kann"
-
 -- Consent:
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T171952677"] = "Zustimmung:"
 
@@ -8303,9 +8300,6 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1722690800"] = "Kopiert den Pfad
 
 -- This library is used to display the differences between two texts. This is necessary, e.g., for the grammar and spelling assistant.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1772678682"] = "Diese Bibliothek wird verwendet, um die Unterschiede zwischen zwei Texten anzuzeigen. Das ist zum Beispiel für den Grammatik- und Rechtschreibassistenten notwendig."
-
--- owned by you, self-updates possible
-UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1802999304"] = "von Ihnen verwaltet, Updates sind möglich"
 
 -- By clicking on the respective path, the path is copied to the clipboard. You might open these files with a text editor to view their contents.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1806897624"] = "Wenn Sie auf den jeweiligen Pfad klicken, wird dieser in die Zwischenablage kopiert. Sie können diese Dateien mit einem Texteditor öffnen, um ihren Inhalt anzusehen."
@@ -8340,9 +8334,6 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2029659664"] = "Kopiert Folgende
 -- Copies the server URL to the clipboard
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2037899437"] = "Kopiert die Server-URL in die Zwischenablage"
 
--- AI Studio cannot update itself from its current location. Installing an update would leave a second installation behind instead of replacing this one. To get a new version, download the latest release and install it over your current installation.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2050051760"] = "AI Studio kann sich von seinem aktuellen Speicherort aus nicht selbst aktualisieren. Durch die Installation eines Updates würde eine zweite Installation entstehen, anstatt diese zu ersetzen. Um eine neue Version zu erhalten, laden Sie die aktuelle Version herunter und installieren Sie sie über Ihre bestehende Installation."
-
 -- The windows-rs project provides access to Windows APIs from Rust. We use several libraries from this project: windows-registry is used to read the desired configuration in Windows enterprise environments. The windows and windows-collections libraries are used to open the native Windows share dialog, e.g., when you share a plugin with others.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2146481269"] = "Das Projekt windows-rs ermöglicht den Zugriff auf Windows-APIs aus Rust. Wir verwenden mehrere Bibliotheken aus diesem Projekt: windows-registry wird verwendet, um die gewünschte Konfiguration in Windows-Unternehmensumgebungen auszulesen. Die Bibliotheken windows und windows-collections werden verwendet, um den nativen Windows-Dialog zum Teilen zu öffnen, zum Beispiel wenn Sie ein Plugin mit anderen teilen."
 
@@ -8361,8 +8352,14 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2272122662"] = "Konfigurationsse
 -- We must generate random numbers, e.g., for securing the interprocess communication between the user interface and the runtime. The rand library is great for this purpose.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2273492381"] = "Wir müssen Zufallszahlen erzeugen, z. B. um die Kommunikation zwischen der Benutzeroberfläche und der Laufzeitumgebung abzusichern. Die rand-Bibliothek eignet sich dafür hervorragend."
 
+-- Flatpak installation, updates are handled outside of AI Studio
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2294279524"] = "Flatpak-Installation – Updates werden außerhalb von AI Studio verwaltet."
+
 -- Configuration plugin ID:
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2301484629"] = "Konfigurations-Plugin-ID:"
+
+-- AI Studio cannot update itself from its current installation location. Installing an update would leave a second installation behind instead of replacing this one. To get a new version, download the latest release and install it over your current installation.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2307318338"] = "AI Studio kann sich an seinem aktuellen Installationsort nicht selbst aktualisieren. Bei der Installation eines Updates würde eine zweite Installation erstellt, anstatt diese zu ersetzen. Um eine neue Version zu erhalten, laden Sie die neueste Version herunter und installieren Sie sie über Ihrer aktuellen Installation."
 
 -- dirs determines the platform-specific local application data directory. AI Studio uses it so the Flatpak startup log is written to the same application data directory that Tauri uses.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2325338322"] = "dirs bestimmt das plattformspezifische lokale Anwendungsdatenverzeichnis. AI Studio verwendet es, damit das Flatpak-Startprotokoll in dasselbe Verzeichnis geschrieben wird, das auch Tauri verwendet."
@@ -8388,11 +8385,14 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2371107659"] = "Installation vom
 -- Installed Pandoc version: Pandoc is not installed or not available.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2374031539"] = "Installierte Pandoc-Version: Pandoc ist nicht installiert oder nicht verfügbar."
 
+-- current installation location does not support automatic updates
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2401198677"] = "Der aktuelle Installationsort unterstützt keine automatischen Updates."
+
 -- Configuration origin:
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2435772109"] = "Ursprung der Konfiguration:"
 
--- This copy of AI Studio was installed for you by someone else, most likely your IT department, so it cannot update itself. Contact your IT department if you have questions about updating AI Studio.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2500327819"] = "Diese Kopie von AI Studio wurde von einer anderen Person für Sie installiert, höchstwahrscheinlich von Ihrer IT-Abteilung. Daher kann sie sich nicht selbst aktualisieren. Wenden Sie sich an Ihre IT-Abteilung, wenn Sie Fragen zur Aktualisierung von AI Studio haben."
+-- This installation cannot update itself. Contact the person or organization that installed AI Studio for information about new versions.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2444057400"] = "Diese Installation kann sich nicht selbst aktualisieren. Wenden Sie sich an die Person oder Organisation, die AI Studio installiert hat, um Informationen zu neuen Versionen zu erhalten."
 
 -- Configuration slot:
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T254943559"] = "Slot der Konfiguration:"
@@ -8405,6 +8405,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2557014401"] = "Diese Bibliothek
 
 -- Used Open Source Projects
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2557066213"] = "Verwendete Open-Source-Projekte"
+
+-- development build, no support for automatic updates
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2582380608"] = "Entwicklungsversion, keine Unterstützung für automatische Updates"
 
 -- Build time
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T260228112"] = "Build-Zeit"
@@ -8451,6 +8454,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2840582448"] = "Erklärung"
 -- checking availability
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2855535668"] = "Verfügbarkeit wird geprüft"
 
+-- managed; updates are handled outside of AI Studio; contact whoever installed it and ask about updates
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T285730904"] = "verwaltet; Updates werden außerhalb von AI Studio durchgeführt; wenden Sie sich an die Person oder Organisation, die AI Studio installiert hat, und erkundigen Sie sich nach Updates."
+
 -- The .NET backend cannot be started as a desktop app. Therefore, I use a second backend in Rust, which I call runtime. With Rust as the runtime, Tauri can be used to realize a typical desktop app. Thanks to Rust, this app can be offered for Windows, macOS, and Linux desktops. Rust is a great language for developing safe and high-performance software.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2868174483"] = "Das .NET-Backend kann nicht als Desktop-App gestartet werden. Deshalb verwende ich ein zweites Backend in Rust, das ich „Runtime“ nenne. Mit Rust als Runtime kann Tauri genutzt werden, um eine typische Desktop-App zu realisieren. Dank Rust kann diese App für Windows-, macOS- und Linux-Desktops angeboten werden. Rust ist eine großartige Sprache für die Entwicklung sicherer und leistungsstarker Software."
 
@@ -8483,9 +8489,6 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3046399223"] = "Vektordatenbank"
 
 -- Enterprise configuration ID:
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3092349641"] = "Unternehmenskonfigurations-ID:"
-
--- managed by someone else, no self-updates
-UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3131065024"] = "von jemand anderem verwaltet, keine Selbstaktualisierung"
 
 -- Connect AI Studio to your organization's data with our External Retrieval Interface (ERI).
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T313276297"] = "Verbinden Sie AI Studio mit den Daten ihrer Organisation über unsere Schnittstelle für externe Datenabfrage (ERI)."
@@ -8544,9 +8547,6 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3449345633"] = "AI Studio wird m
 -- You are running a development build of AI Studio, which never updates itself. Pull the latest changes and rebuild the app instead.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3454691558"] = "Du verwendest eine Entwicklerversion von AI Studio, die sich niemals selbst aktualisiert. Hole stattdessen die neuesten Änderungen und erstelle die App neu."
 
--- development build, no self-updates
-UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3459123358"] = "Entwicklerversion, keine automatischen Updates"
-
 -- Tauri is used to host the Blazor user interface. It is a great project that allows the creation of desktop applications using web technologies. I love Tauri!
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3494984593"] = "Tauri wird verwendet, um die Blazor-Benutzeroberfläche bereitzustellen. Es ist ein großartiges Projekt, das die Erstellung von Desktop-Anwendungen mit Webtechnologien ermöglicht. Ich liebe Tauri!"
 
@@ -8564,6 +8564,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3574465749"] = "nicht verfügbar
 
 -- active
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3648362799"] = "aktiv"
+
+-- standard; automatic updates supported
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3656709502"] = "Standard; automatische Updates werden unterstützt"
 
 -- This library is used to read Excel and OpenDocument spreadsheet files. This is necessary, e.g., for using spreadsheets as a data source for a chat.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3722989559"] = "Diese Bibliothek wird verwendet, um Excel- und OpenDocument-Tabellendateien zu lesen. Dies ist zum Beispiel notwendig, wenn Tabellen als Datenquelle für einen Chat verwendet werden sollen."

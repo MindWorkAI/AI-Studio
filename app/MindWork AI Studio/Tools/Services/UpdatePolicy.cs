@@ -10,7 +10,7 @@ public sealed class UpdatePolicy(SettingsManager settingsManager, RuntimeInfoRes
         ? UpdatePolicyMode.ENTERPRISE_DISABLED
         : runtimeInfo.LinuxPackageType switch
         {
-            "flatpak" => UpdatePolicyMode.FLATPAK,
+            LinuxPackageType.FLATPAK => UpdatePolicyMode.FLATPAK,
             _ => runtimeInfo.InstallationKind switch
             {
                 //
