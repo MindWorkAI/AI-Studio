@@ -220,14 +220,17 @@ public sealed partial class PluginInstallService
         // under the same ID later is different code, so it must be audited again:
         //
         List<PluginAssistantAudit> removedAudits = [];
+        DataDynamicAssistant? removedDynamicAssistant = null;
         if (plugin.Type is PluginType.ASSISTANT)
         {
             removedAudits = [.. configurationData.AssistantPluginAudits.Where(audit => audit.PluginId == plugin.Id)];
             if (removedAudits.Count > 0)
                 configurationData.AssistantPluginAudits.RemoveAll(audit => audit.PluginId == plugin.Id);
+
+            configurationData.DynamicAssistants.Remove(plugin.Id, out removedDynamicAssistant);
         }
 
-        return new(wasEnabled, wasChosenLanguage, removedAudits);
+        return new(wasEnabled, wasChosenLanguage, removedAudits, removedDynamicAssistant);
     }
 
     private static string CreateDeleteBackupDirectory(IAvailablePlugin plugin)
@@ -259,6 +262,9 @@ public sealed partial class PluginInstallService
                 configurationData.AssistantPluginAudits.AddRange(sideEffects.RemovedAudits);
             }
 
+            if (sideEffects.RemovedDynamicAssistant is not null)
+                configurationData.DynamicAssistants[plugin.Id] = sideEffects.RemovedDynamicAssistant;
+
             if (sideEffects.HasChanges)
                 await this.settingsManager.StoreSettings();
 
@@ -274,10 +280,14 @@ public sealed partial class PluginInstallService
     /// <summary>
     /// What deleting a plugin changed in the settings, so a failed deletion can undo it.
     /// </summary>
-    private sealed record PluginDeleteSideEffects(bool WasEnabled, bool WasChosenLanguage, List<PluginAssistantAudit> RemovedAudits)
+    private sealed record PluginDeleteSideEffects(
+        bool WasEnabled,
+        bool WasChosenLanguage,
+        List<PluginAssistantAudit> RemovedAudits,
+        DataDynamicAssistant? RemovedDynamicAssistant)
     {
-        public static readonly PluginDeleteSideEffects NONE = new(false, false, []);
+        public static readonly PluginDeleteSideEffects NONE = new(false, false, [], null);
 
-        public bool HasChanges => this.WasEnabled || this.WasChosenLanguage || this.RemovedAudits.Count > 0;
+        public bool HasChanges => this.WasEnabled || this.WasChosenLanguage || this.RemovedAudits.Count > 0 || this.RemovedDynamicAssistant is not null;
     }
 }
