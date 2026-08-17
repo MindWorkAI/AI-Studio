@@ -90,6 +90,11 @@ public static class ComponentPropSpecs
                 optional: ["Heading", "UserPrompt", "CatchAllDocuments", "UseSmallForm", "Class", "Style"],
                 nonWriteable: ["Name", "UserPrompt", "Class", "Style" ]
             ),
+            [AssistantComponentType.PERSISTENT_FILE_ATTACHMENTS] = new(
+                required: ["Name"],
+                optional: ["Heading", "UserPrompt", "CatchAllDocuments", "UseSmallForm", "Class", "Style"],
+                nonWriteable: ["Name", "UserPrompt", "Class", "Style" ]
+            ),
             [AssistantComponentType.IMAGE] = new(
                 required: ["Src"],
                 optional: ["Alt", "Caption", "Class", "Style"],
