@@ -3,7 +3,7 @@ using AIStudio.Assistants.Dynamic;
 
 namespace AIStudio.Tools.PluginSystem.Assistants.DataModel;
 
-internal sealed class AssistantFileAttachment : StatefulAssistantComponentBase
+internal class AssistantFileAttachment : StatefulAssistantComponentBase
 {
     public override AssistantComponentType Type => AssistantComponentType.FILE_ATTACHMENTS;
     public override Dictionary<string, object> Props { get; set; } = new();
