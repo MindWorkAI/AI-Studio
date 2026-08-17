@@ -76,6 +76,16 @@ public static partial class ProviderExtensions
         //
         if (modelName.IndexOf("deepseek") is not -1)
         {
+            if ((modelName.IndexOf("deepseek-v4-flash") is not -1 ||
+                 modelName.IndexOf("deepseek-v4-pro") is not -1) &&
+                modelName.IndexOf("-base") is -1)
+                return
+                [
+                    Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
+                    Capability.REASONING_BY_DEFAULT, Capability.FUNCTION_CALLING,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+
             if(modelName.IndexOf("deepseek-r1") is not -1 ||
                modelName.IndexOf("deepseek r1") is not -1)
                 return [
@@ -101,6 +111,16 @@ public static partial class ProviderExtensions
                     Capability.ALWAYS_REASONING,
                     Capability.CHAT_COMPLETION_API,
                 ];
+
+            // Check for the open-weight Qwen 3.8 checkpoint:
+            if(modelName.IndexOf("qwen3.8-2.4t-a95b") is not -1)
+                return
+                [
+                    Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
+
+                    Capability.ALWAYS_REASONING, Capability.FUNCTION_CALLING,
+                    Capability.CHAT_COMPLETION_API,
+                ];
             
             // Check for Qwen 3.5:
             if(modelName.IndexOf("qwen3.5") is not -1)
@@ -117,11 +137,10 @@ public static partial class ProviderExtensions
             if(modelName.IndexOf("qwen3.6") is not -1)
                 return
                 [
-                    Capability.TEXT_INPUT, Capability.VIDEO_INPUT,
-                    Capability.MULTIPLE_IMAGE_INPUT,
+                    Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
                     Capability.TEXT_OUTPUT,
                     
-                    Capability.OPTIONAL_REASONING, Capability.FUNCTION_CALLING,
+                    Capability.REASONING_BY_DEFAULT, Capability.FUNCTION_CALLING,
                     Capability.CHAT_COMPLETION_API,
                 ];
             
@@ -139,6 +158,29 @@ public static partial class ProviderExtensions
                 Capability.CHAT_COMPLETION_API,
             ];
         }
+
+        //
+        // Moonshot AI / Kimi models:
+        //
+        if (modelName.IndexOf("kimi-k3") is not -1)
+            return
+            [
+                Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT, Capability.VIDEO_INPUT,
+                Capability.TEXT_OUTPUT,
+
+                Capability.ALWAYS_REASONING, Capability.FUNCTION_CALLING,
+                Capability.CHAT_COMPLETION_API,
+            ];
+
+        if (modelName.IndexOf("kimi-k2.7-code") is not -1)
+            return
+            [
+                Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                Capability.TEXT_OUTPUT,
+
+                Capability.ALWAYS_REASONING, Capability.FUNCTION_CALLING,
+                Capability.CHAT_COMPLETION_API,
+            ];
         
         //
         // Mistral models:
@@ -335,6 +377,16 @@ public static partial class ProviderExtensions
         //
         if (modelName.IndexOf("glm") is not -1)
         {
+            if (modelName.IndexOf("glm-5.2") is not -1)
+                return
+                [
+                    Capability.TEXT_INPUT,
+                    Capability.TEXT_OUTPUT,
+
+                    Capability.REASONING_BY_DEFAULT, Capability.FUNCTION_CALLING,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+
             if(modelName.IndexOf("v") is not -1)
                 return 
                 [

@@ -17,25 +17,24 @@
         <MudJustifiedText Typo="Typo.body1" Class="mb-3">
             @T("This helps AI Studio understand and compare things in a way that's similar to how humans do. When you're working on something, AI Studio can automatically identify related documents and data by comparing their digital fingerprints. For instance, if you're writing about customer service, AI Studio can instantly find other documents in your data that discuss similar topics or experiences, even if they use different words.")
         </MudJustifiedText>
-        <MudTable Items="@this.SettingsManager.ConfigurationData.EmbeddingProviders" Hover="@true" Class="border-dashed border rounded-lg">
+        <MudTable Items="@this.SettingsManager.GetAllEmbeddingProviders()" Hover="@true" GroupBy="@GROUP_CONFIG" Class="border-dashed border rounded-lg">
             <ColGroup>
-                <col style="width: 3em;"/>
-                <col style="width: 12em;"/>
                 <col style="width: 12em;"/>
                 <col/>
                 <col style="width: 22em;"/>
             </ColGroup>
             <HeaderContent>
-                <MudTh>#</MudTh>
                 <MudTh>@T("Name")</MudTh>
-                <MudTh>@T("Provider")</MudTh>
                 <MudTh>@T("Model")</MudTh>
                 <MudTh>@T("Actions")</MudTh>
             </HeaderContent>
+            <GroupHeaderTemplate>
+                <MudTh Class="provider-group-header" colspan="4">
+                    @context.Key
+                </MudTh>
+            </GroupHeaderTemplate>
             <RowTemplate>
-                <MudTd>@context.Num</MudTd>
                 <MudTd>@context.Name</MudTd>
-                <MudTd>@context.UsedLLMProvider.ToName()</MudTd>
                 <MudTd>@this.GetEmbeddingProviderModelName(context)</MudTd>
 
                 <MudTd>
@@ -46,10 +45,19 @@
                                 <MudIconButton Color="Color.Success" Icon="@Icons.Material.Filled.VerifiedUser" Disabled="true"/>
                             </MudTooltip>
                         }
-                        @if (context.IsEnterpriseConfiguration)
+                        @if (context.IsEnterpriseConfiguration && !context.AllowUserProvidedAPIKey)
                         {
                             <MudTooltip Text="@T("This embedding provider is managed by your organization.")">
                                 <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Business" Disabled="true"/>
+                            </MudTooltip>
+                        }
+                        else if (context.IsEnterpriseConfiguration && context.AllowUserProvidedAPIKey)
+                        {
+                            <MudTooltip Text="@T("This embedding provider is managed by your organization. You can set your own API key.")">
+                                <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Key" OnClick="@(() => this.EditEmbeddingProvider(context))"/>
+                            </MudTooltip>
+                            <MudTooltip Text="@T("Test")">
+                                <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Api" OnClick="@(() => this.TestEmbeddingProvider(context))"/>
                             </MudTooltip>
                         }
                         else

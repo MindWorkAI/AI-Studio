@@ -60,6 +60,7 @@ public static class AssistantVisibilityExtensions
             Components.BIAS_DAY_ASSISTANT => ConfigurableAssistant.BIAS_DAY_ASSISTANT,
             Components.ERI_ASSISTANT => ConfigurableAssistant.ERI_ASSISTANT,
             Components.DOCUMENT_ANALYSIS_ASSISTANT => ConfigurableAssistant.DOCUMENT_ANALYSIS_ASSISTANT,
+            Components.BATCH_PROCESSING_ASSISTANT => ConfigurableAssistant.BATCH_PROCESSING_ASSISTANT,
             Components.SLIDE_BUILDER_ASSISTANT => ConfigurableAssistant.SLIDE_BUILDER_ASSISTANT,
             Components.VISUAL_BRIEFING_ASSISTANT => ConfigurableAssistant.VISUAL_BRIEFING_ASSISTANT,
             Components.I18N_ASSISTANT => ConfigurableAssistant.I18N_ASSISTANT,

@@ -15,11 +15,13 @@ public partial class SettingsPanelApp : SettingsPanelBase
 
     private UpdatePolicyMode updatePolicyMode;
 
-    private UpdateInterval DisplayedUpdateInterval => this.updatePolicyMode is UpdatePolicyMode.FLATPAK
+    private bool CannotUpdateItself => this.updatePolicyMode is UpdatePolicyMode.FLATPAK or UpdatePolicyMode.MANAGED_INSTALLATION or UpdatePolicyMode.UNSUPPORTED_INSTALLATION_LOCATION or UpdatePolicyMode.DEVELOPMENT;
+
+    private UpdateInterval DisplayedUpdateInterval => this.CannotUpdateItself
         ? UpdateInterval.NO_CHECK
         : this.SettingsManager.ConfigurationData.App.UpdateInterval;
 
-    private UpdateInstallation DisplayedUpdateInstallation => this.updatePolicyMode is UpdatePolicyMode.FLATPAK
+    private UpdateInstallation DisplayedUpdateInstallation => this.CannotUpdateItself
         ? UpdateInstallation.MANUAL
         : this.SettingsManager.ConfigurationData.App.UpdateInstallation;
 
@@ -27,20 +29,26 @@ public partial class SettingsPanelApp : SettingsPanelBase
     {
         UpdatePolicyMode.ENTERPRISE_DISABLED => T("Your organization has disabled update checks and installations."),
         UpdatePolicyMode.FLATPAK => T("AI Studio cannot check for updates when running as a Flatpak. Updates are managed outside the app."),
+        UpdatePolicyMode.MANAGED_INSTALLATION => T("This installation does not check for updates itself. Contact the person or organization that installed AI Studio for update information."),
+        UpdatePolicyMode.UNSUPPORTED_INSTALLATION_LOCATION => T("AI Studio cannot update itself from its current location, so it does not check for updates."),
+        UpdatePolicyMode.DEVELOPMENT => T("Development builds do not check for updates."),
         _ => T("How often should we check for app updates?")
     };
 
     private string UpdateInstallationHelp => this.updatePolicyMode switch
     {
         UpdatePolicyMode.ENTERPRISE_DISABLED => T("This setting has no effect while updates are disabled by your organization."),
-        UpdatePolicyMode.FLATPAK => T("AI Studio cannot install updates when running as a Flatpak. Use the update method provided by your Flatpak distribution."),
+        UpdatePolicyMode.FLATPAK => T("AI Studio cannot install updates when running as a Flatpak. Update it using the Flatpak source or bundle from which you installed it."),
+        UpdatePolicyMode.MANAGED_INSTALLATION => T("AI Studio cannot install updates into this installation. Contact the person or organization that installed it for new versions."),
+        UpdatePolicyMode.UNSUPPORTED_INSTALLATION_LOCATION => T("AI Studio cannot install updates into its current installation location. Install new versions yourself."),
+        UpdatePolicyMode.DEVELOPMENT => T("Development builds do not install updates."),
         _ => T("Should updates be installed automatically or manually?")
     };
 
-    private bool IsUpdateIntervalLocked() => this.updatePolicyMode is UpdatePolicyMode.ENTERPRISE_DISABLED or UpdatePolicyMode.FLATPAK ||
+    private bool IsUpdateIntervalLocked() => this.updatePolicyMode is UpdatePolicyMode.ENTERPRISE_DISABLED || this.CannotUpdateItself ||
         ManagedConfiguration.TryGet(x => x.App, x => x.UpdateInterval, out var meta) && meta.IsLocked;
 
-    private bool IsUpdateInstallationLocked() => this.updatePolicyMode is UpdatePolicyMode.ENTERPRISE_DISABLED or UpdatePolicyMode.FLATPAK ||
+    private bool IsUpdateInstallationLocked() => this.updatePolicyMode is UpdatePolicyMode.ENTERPRISE_DISABLED || this.CannotUpdateItself ||
         ManagedConfiguration.TryGet(x => x.App, x => x.UpdateInstallation, out var meta) && meta.IsLocked;
 
     protected override async Task OnInitializedAsync()
@@ -91,7 +99,7 @@ public partial class SettingsPanelApp : SettingsPanelBase
         yield return new(T("Disable dictation and transcription"), string.Empty);
 
         var minimumLevel = this.SettingsManager.GetMinimumConfidenceLevel(Tools.Components.APP_SETTINGS);
-        foreach (var provider in this.SettingsManager.ConfigurationData.TranscriptionProviders)
+        foreach (var provider in this.SettingsManager.GetAllTranscriptionProviders())
         {
             if (provider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level >= minimumLevel)
                 yield return new(provider.Name, provider.Id);

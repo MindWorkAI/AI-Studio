@@ -114,7 +114,7 @@ internal sealed class Program
             options.FormatterName = TerminalLogger.FORMATTER_NAME;
         }).AddConsoleFormatter<TerminalLogger, ConsoleFormatterOptions>();
 
-        if(runtimeInfo.LinuxPackageType == "flatpak")
+        if(runtimeInfo.LinuxPackageType is LinuxPackageType.FLATPAK)
         {
             try
             {

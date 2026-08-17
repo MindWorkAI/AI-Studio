@@ -97,6 +97,9 @@ public sealed partial class PluginInstallService
         var tempFile = string.Empty;
         var backupFile = string.Empty;
 
+        // We reload the plugins ourselves below. Holding back hot reloading keeps the file system
+        // watcher from starting a second reload while the plugin file is being replaced:
+        await PluginFactory.LockHotReloadAsync();
         try
         {
             var validation = await this.ValidateInPluginDirectoryAsync(lua, pluginDirectory, token);
@@ -144,6 +147,7 @@ public sealed partial class PluginInstallService
         {
             this.TryDeleteFile(tempFile, "assistant plugin edit temp file");
 
+            PluginFactory.UnlockHotReload();
             this.installSemaphore.Release();
         }
     }

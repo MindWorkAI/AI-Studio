@@ -83,6 +83,7 @@ public static partial class ManagedConfiguration
     /// <param name="propertyExpression">The expression to select the property within the configuration class.</param>
     /// <param name="dryRun">When true, the method will not apply any changes, but only check if the configuration can be read.</param>
     /// <param name="_">An unused parameter to help with type inference. You might ignore it when calling the method.</param>
+    /// <param name="validator">An optional validator for rejecting parsed values outside the setting's supported range.</param>
     /// <typeparam name="TClass">The type of the configuration class.</typeparam>
     /// <typeparam name="TValue">The type of the property within the configuration class.</typeparam>
     /// <returns>True when the configuration was successfully processed, otherwise false.</returns>
@@ -92,7 +93,8 @@ public static partial class ManagedConfiguration
         Guid configPluginId,
         LuaTable settings,
         bool dryRun,
-        ISpanParsable<TValue>? _ = null)
+        ISpanParsable<TValue>? _ = null,
+        Func<TValue, bool>? validator = null)
         where TValue : struct, ISpanParsable<TValue>
     {
         //
@@ -113,7 +115,8 @@ public static partial class ManagedConfiguration
             if (configuredLuaValue.Type is LuaValueType.String && configuredLuaValue.TryRead<string>(out var configuredLuaValueText))
             {
                 // Step 3 -- try to parse the string as the target type:
-                if (TValue.TryParse(configuredLuaValueText, CultureInfo.InvariantCulture, out var configuredParsedValue))
+                if (TValue.TryParse(configuredLuaValueText, CultureInfo.InvariantCulture, out var configuredParsedValue)
+                    && (validator?.Invoke(configuredParsedValue) ?? true))
                 {
                     configuredValue = configuredParsedValue;
                     successful = true;
@@ -121,7 +124,8 @@ public static partial class ManagedConfiguration
             }
 
             // Step 2b -- try to read the Lua value:
-            if(configuredLuaValue.TryRead<TValue>(out var configuredLuaValueInstance))
+            if(configuredLuaValue.TryRead<TValue>(out var configuredLuaValueInstance)
+               && (validator?.Invoke(configuredLuaValueInstance) ?? true))
             {
                 configuredValue = configuredLuaValueInstance;
                 successful = true;

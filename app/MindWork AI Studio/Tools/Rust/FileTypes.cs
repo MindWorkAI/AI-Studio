@@ -50,6 +50,7 @@ public static class FileTypes
 
     // Document hierarchy
     public static readonly FileTypeFilter PDF         = FileTypeFilter.Leaf("PDF", "pdf");
+    public static readonly FileTypeFilter MARKDOWN    = FileTypeFilter.Leaf("Markdown", "md");
     public static readonly FileTypeFilter TEXT        = FileTypeFilter.Leaf(TB("Text"), "txt", "md", "rtf");
     public static readonly FileTypeFilter TABULAR     = FileTypeFilter.Leaf(TB("Tabular text"), "csv", "tsv");
     public static readonly FileTypeFilter MS_WORD     = FileTypeFilter.Leaf("Microsoft Word", "docx");

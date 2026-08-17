@@ -333,6 +333,333 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T4242312602"] = "Senden an
 -- Copy result
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T83711157"] = "Ergebnis kopieren"
 
+-- The transcription provider returned an empty transcript.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1080540822"] = "Der Anbieter für Transkriptionen hat eine leere Transkription zurückgegeben."
+
+-- We always write a semicolon-separated log named log.csv, which lists every document with its processing time, the model, the status, and the details of any error. When you start another run on the same output folder, we ask you whether to continue that run: documents which failed or are missing in the log are then processed again. When no output folder is selected, everything is written to the subfolder 'ai-results' within the input folder.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1124333059"] = "Wir schreiben stets ein durch Semikolons getrenntes Protokoll namens „log.csv“. Es enthält jedes Dokument mit seiner Verarbeitungszeit, dem Modell, dem Status und den Details zu möglichen Fehlern. Wenn Sie einen weiteren Durchlauf mit demselben Ausgabeordner starten, fragen wir Sie, ob Sie diesen Durchlauf fortsetzen möchten: Dokumente, deren Verarbeitung fehlgeschlagen ist oder die im Protokoll fehlen, werden dann erneut verarbeitet. Wenn kein Ausgabeordner ausgewählt ist, wird alles im Unterordner „ai-results“ innerhalb des Eingabeordners gespeichert."
+
+-- Name of the results table (optional)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1127380661"] = "Name der Ergebnistabelle (optional)"
+
+-- Your organization requires a pause of at least {0} seconds between files.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1155517317"] = "Ihre Organisation verlangt eine Pause von mindestens {0} Sekunden zwischen den Dateien."
+
+-- The results table contains one row per document, starting with the file name. Here you can name the column that holds the AI answer, e.g., Summary. When left empty, we use 'Result'.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1164512104"] = "Die Ergebnistabelle enthält eine Zeile pro Dokument, beginnend mit dem Dateinamen. Hier können Sie die Spalte benennen, welche die Antwort der KI enthält, z. B. Zusammenfassung. Wenn Sie das Feld leer lassen, verwenden wir 'Ergebnis'."
+
+-- One of the file patterns contains an invalid character.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1182642380"] = "Eines der Dateimuster enthält ein ungültiges Zeichen."
+
+-- Please use only single asterisks as wildcards, e.g., *.pdf or report-*.docx.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1187528282"] = "Bitte verwenden Sie nur einzelne Sternchen als Platzhalter, z. B. *.pdf oder report-*.docx."
+
+-- Supported audio and video files are transcribed automatically without an additional dialog. Each transcript is stored next to its media file as '<media-file>.transcript.md' and reused when an interrupted run is continued.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T120341322"] = "Unterstützte Audio- und Videodateien werden ohne zusätzlichen Dialog automatisch transkribiert. Jedes Transkript wird neben der zugehörigen Mediendatei als „<Mediendatei>.transcript.md“ gespeichert und bei der Fortsetzung eines unterbrochenen Durchlaufs wiederverwendet."
+
+-- Instructions
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1221801316"] = "Anweisungen"
+
+-- Process all documents and media files of a folder in one batch run: documents are converted to Markdown, while audio and video files are transcribed automatically, before their content is sent to the AI along with your instructions. You choose whether each answer is stored as its own Markdown file or whether all answers are collected in one CSV results table. A log records what happened to every file, so a run which was interrupted or produced errors can be continued later. A single failing file never stops the entire run.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T131887991"] = "Verarbeitung alle Dokumente und Mediendateien eines Ordners in einem einzigen Durchlauf: Dokumente werden in Markdown umgewandelt, während Audio- und Videodateien automatisch transkribiert werden. Anschließend werden ihre Inhalte zusammen mit Ihren Anweisungen an die KI gesendet. Sie entscheiden, ob jede Antwort in einer eigenen Markdown-Datei gespeichert oder alle Antworten in einer CSV-Ergebnistabelle gesammelt werden. Ein Protokoll hält fest, was mit jeder Datei passiert ist, sodass ein unterbrochener oder fehlerhafter Durchlauf später fortgesetzt werden kann. Eine einzelne fehlerhafte Datei hält niemals den gesamten Durchlauf auf."
+
+-- Batch Processing Assistant
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T132410578"] = "Assistent für die Stapelverarbeitung"
+
+-- These instructions are applied to every single document of the batch run.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1339979506"] = "Diese Anweisungen werden auf jedes einzelne Dokument des Stapellaufs angewendet."
+
+-- Result
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1347088452"] = "Ergebnis"
+
+-- Output folder (optional)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T135877247"] = "Ausgabeordner (optional)"
+
+-- Open the Document Analysis Assistant
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1362151883"] = "Assistent für die Dokumentenanalyse öffnen"
+
+-- Failed
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1434043348"] = "Fehlgeschlagen"
+
+-- Please select the file which contains your instructions.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1462027716"] = "Bitte wählen Sie die Datei aus, die Ihre Anweisungen enthält."
+
+-- Which files should be processed? Separate multiple patterns with a semicolon, e.g., *.pdf;*.docx
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1482642245"] = "Welche Dateien sollen verarbeitet werden? Trennen Sie mehrere Dateiendungen mit einem Semikolon, z. B. *.pdf;*.docx"
+
+-- No matching files were found in the selected folder.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1528532808"] = "Im ausgewählten Ordner wurden keine passenden Dateien gefunden."
+
+-- Custom column separator
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1547654319"] = "Benutzerdefiniertes Spaltentrennzeichen"
+
+-- Select the output folder
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1598970341"] = "Wählen Sie den Ausgabeordner aus"
+
+-- The configured default policy no longer exists. Please select another document analysis policy.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T169666151"] = "Das konfigurierte Standardregelwerk existiert nicht mehr. Bitte wählen Sie ein anderes Regelwerk für die Dokumentenanalyse aus."
+
+-- Waiting {0} seconds before starting the next file.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1708373046"] = "Warte {0} Sekunden, bevor die nächste Datei gestartet wird."
+
+-- seconds
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1723256298"] = "Sekunden"
+
+-- The selected folder does not exist.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T17705912"] = "Der ausgewählte Ordner existiert nicht."
+
+-- Minimum pause between files
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1829787634"] = "Mindestpause zwischen Dateien"
+
+-- Was not able to read the input folder: {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1871021621"] = "Der Eingabeordner konnte nicht gelesen werden: {0}"
+
+-- Please provide a file name without a path, e.g., my-results.csv
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T189587595"] = "Bitte geben Sie einen Dateinamen ohne Pfad an, z. B. meine-ergebnisse.csv"
+
+-- Select the folder containing your documents
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T1926838679"] = "Wählen Sie den Ordner mit den Dokumenten aus"
+
+-- Include subfolders?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2086334687"] = "Unterordner einbeziehen?"
+
+-- Please select a document analysis policy.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2148947615"] = "Bitte wählen Sie ein Regelwerk für die Dokumentenanalyse aus."
+
+-- The configured instructions file is empty.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T216725576"] = "Die konfigurierte Anweisungsdatei ist leer."
+
+-- Please provide at least one file pattern, e.g., *.pdf. Separate multiple patterns with a semicolon.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2179775338"] = "Bitte geben Sie mindestens eine Dateiendung an, z. B. *.pdf. Trennen Sie mehrere Dateiendungen mit einem Semikolon."
+
+-- Model
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2189814010"] = "Modell"
+
+-- Was not able to read the file: {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T220483807"] = "Die Datei konnte nicht gelesen werden: {0}"
+
+-- Configured instructions file: {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2215428124"] = "Konfigurierte Anweisungsdatei: {0}"
+
+-- No usable transcription provider is configured.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2282521655"] = "Es ist kein verwendbarer Anbieter für Transkriptionen konfiguriert."
+
+-- Was not able to create the output folder: {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2290092642"] = "Der Ausgabeordner konnte nicht erstellt werden: {0}"
+
+-- The AI answer was empty.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T230354366"] = "Die Antwort der KI war leer."
+
+-- The batch run finished, but {0} files could not be processed. See the progress table and log for details.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2334361705"] = "Die Stapelverarbeitung ist abgeschlossen, aber {0} Dateien konnten nicht verarbeitet werden. Einzelheiten finden Sie in der Fortschrittstabelle und im Protokoll."
+
+-- The AI request failed: {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2376918044"] = "Die Anfrage an die KI ist fehlgeschlagen: {0}"
+
+-- Done
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2379421585"] = "Fertig"
+
+-- The selected files include audio or video without an existing transcript, but no usable transcription provider is configured. Configure one in the transcription settings or remove the media patterns.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2390162661"] = "Die ausgewählten Dateien enthalten Audio- oder Videodateien ohne vorhandenes Transkript, aber es ist kein nutzbarer Anbieter für die Transkription konfiguriert. Konfigurieren Sie einen Anbieter in den Einstellungen der Transkriptionen oder entfernen Sie die Medien-Dateiendungen."
+
+-- Was not able to read the existing transcript: {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2397111152"] = "Das vorhandene Transkript konnte nicht gelesen werden: {0}"
+
+-- File patterns
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2460883298"] = "Dateiendungen"
+
+-- Load prompt from file
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2474257795"] = "Prompt aus Datei laden"
+
+-- Details
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T247611973"] = "Details"
+
+-- Folder containing your documents
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2564230480"] = "Ordner mit Ihren Dokumenten"
+
+-- What should the AI do with each document?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2574784473"] = "Was soll die KI mit jedem Dokument tun?"
+
+-- The batch run was canceled.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2641642683"] = "Der Stapellauf wurde abgebrochen."
+
+-- Choose which character separates the columns of the results table.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2642486086"] = "Wählen Sie das Zeichen aus, das die Spalten der Ergebnistabelle trennt."
+
+-- The configured instructions file no longer exists.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2652734495"] = "Die konfigurierte Anweisungsdatei existiert nicht mehr."
+
+-- Queued
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2655222900"] = "In der Warteschlange"
+
+-- Input
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2677268763"] = "Eingabe"
+
+-- Was not able to read the log of the previous run. Continuing the run would process all documents again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2717277840"] = "Die Log-Datei des vorherigen Laufs konnte nicht gelesen werden. Beim Fortsetzen würden alle Dokumente erneut verarbeitet."
+
+-- Each answer is stored as its own Markdown file. Those files are named after the document, e.g., the answer for report.pdf is stored as report_result.md.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2724126639"] = "Jede Antwort wird als eigene Ergebnisdatei (.md) gespeichert. Diese Dateien werden nach dem Eingangsdokument benannt, die Antwort zu report.pdf wird also als report_result.md gespeichert."
+
+-- Before the next file starts, AI Studio waits for a random number of whole seconds from this interval. The minimum is always 6 seconds and the maximum is 300 seconds (5 minutes). Restored files and the end of a run do not add another pause.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2742154256"] = "Bevor die nächste Datei gestartet wird, wartet AI Studio eine zufällige Anzahl ganzer Sekunden aus diesem Intervall. Das Minimum beträgt immer 6 Sekunden, das Maximum 300 Sekunden (5 Minuten). Wiederhergestellte Dateien und das Ende eines Durchlaufs führen nicht zu einer weiteren Pause."
+
+-- Please enter exactly one punctuation or symbol character. Letters, numbers, spaces, quotation marks, and line breaks cannot be used as CSV separators.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2908365499"] = "Bitte geben Sie genau ein Satz- oder Sonderzeichen ein. Buchstaben, Zahlen, Leerzeichen, Anführungszeichen und Zeilenumbrüche können nicht als CSV-Trennzeichen verwendet werden."
+
+-- Was not able to write the result file: {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T2991295581"] = "Die Ergebnisdatei konnte nicht geschrieben werden: {0}"
+
+-- The batch run finished, but one file could not be processed. See the progress table and log for details.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3201532790"] = "Die Stapelverarbeitung ist abgeschlossen, aber eine Datei konnte nicht verarbeitet werden. Weitere Informationen finden Sie in der Fortschrittstabelle und im Protokoll."
+
+-- Maximum pause between files
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3250003796"] = "Maximale Pause zwischen Dateien"
+
+-- Please select the folder that contains the documents you want to process.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T33077198"] = "Bitte wählen Sie den Ordner aus, der die zu verarbeitenden Dokumente enthält."
+
+-- You have not yet created any document analysis policies. Please use the Document Analysis Assistant to create a policy first.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3319546491"] = "Sie haben noch keine Regelwerke für die Dokumentenanalyse erstellt. Bitte erstellen Sie zuerst ein Regelwerk im Assistenten für die Dokumentenanalyse."
+
+-- The content of the selected file is used as the instructions for every single document of the batch run.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T332380551"] = "Der Inhalt der ausgewählten Datei wird als Anweisung für jedes einzelne Dokument des Stapellaufs verwendet."
+
+-- Header of the result column (optional)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T340994102"] = "Überschrift der Ergebnisspalte (optional)"
+
+-- Processing pace
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3428873429"] = "Verarbeitungsgeschwindigkeit"
+
+-- The file name of the CSV results table. We add the ending .csv when it is missing. When left empty, we use 'batch-results.csv'.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3439247329"] = "Der Dateiname der CSV-Ergebnistabelle. Die Endung .csv wird ergänzt, falls sie fehlt. Wenn Sie das Feld leer lassen, wird 'batch-results.csv' verwendet."
+
+-- Document analysis policy
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3510564924"] = "Regelwerk für die Dokumentenanalyse"
+
+-- {0} of {1} files processed
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3648144402"] = "{0} von {1} Dateien verarbeitet"
+
+-- Please remove empty file patterns. Separate valid patterns with a single semicolon.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T368919579"] = "Bitte entfernen Sie leere Dateimuster. Trennen Sie gültige Muster durch ein einzelnes Semikolon."
+
+-- Was not able to store the transcript next to the media file: {0}
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3691287653"] = "Das Transkript konnte nicht neben der Mediendatei gespeichert werden: {0}"
+
+-- Time
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3756319748"] = "Zeit"
+
+-- Cancel the batch run
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3830551741"] = "Stapellauf abbrechen"
+
+-- Source of the instructions
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3862670863"] = "Quelle der Anweisungen"
+
+-- Was not able to write '{0}'. Please make sure that the file is not opened in another application. The results of this run are incomplete on disk. The message is: '{1}'
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3899869356"] = "'{0}' konnte nicht geschrieben werden. Bitte stellen Sie sicher, dass die Datei nicht in einem anderen Programm geöffnet ist. Die Ergebnisse dieses Laufs sind auf der Festplatte unvollständig. Die Meldung lautet: '{1}'"
+
+-- Select the file with your instructions
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T3943995624"] = "Datei mit Ihren Anweisungen auswählen"
+
+-- Output
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T4000727844"] = "Ausgabe"
+
+-- Continue the previous batch run?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T4037527734"] = "Vorherigen Stapellauf fortsetzen?"
+
+-- Output mode
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T4132795631"] = "Ausgabemodus"
+
+-- Please describe what the AI should do with each document.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T4148480053"] = "Bitte beschreiben Sie, was die KI mit jedem Dokument tun soll."
+
+-- Canceled
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T4165352378"] = "Abgebrochen"
+
+-- Was not able to extract any text from this file.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T4175885324"] = "Aus dieser Datei konnte kein Text extrahiert werden."
+
+-- Column separator
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T423947932"] = "Spaltentrennzeichen"
+
+-- The configured instructions file could not be read.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T4274794480"] = "Die konfigurierte Anweisungsdatei konnte nicht gelesen werden."
+
+-- Progress
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T439787878"] = "Fortschritt"
+
+-- Enter one punctuation or symbol character.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T469253621"] = "Geben Sie ein Satz- oder Sonderzeichen ein."
+
+-- No, only process files in the selected folder
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T49675965"] = "Nein, nur Dateien im ausgewählten Ordner verarbeiten"
+
+-- Start batch processing
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T50133258"] = "Stapelverarbeitung starten"
+
+-- Please use file name patterns without folder paths, e.g., *.pdf or report-*.docx.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T515934256"] = "Bitte verwenden Sie Dateinamensmuster ohne Ordnerpfade, z. B. *.pdf oder bericht-*.docx."
+
+-- Was not able to read the results table of the previous run. Its completed documents cannot be restored and will be processed again.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T544244392"] = "Die Ergebnistabelle des vorherigen Durchlaufs konnte nicht gelesen werden. Die bereits abgeschlossenen Dokumente können nicht wiederhergestellt werden und werden erneut verarbeitet."
+
+-- Yes, process files in subfolders as well
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T618448696"] = "Ja, auch Dateien in Unterordnern verarbeiten"
+
+-- Status
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T6222351"] = "Status"
+
+-- File
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T723007075"] = "Datei"
+
+-- The configured instructions file must be a Markdown file (*.md).
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T742124783"] = "Die konfigurierte Anweisungsdatei muss eine Markdown-Datei (*.md) sein."
+
+-- Restore default patterns
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T7425959"] = "Standardmuster wiederherstellen"
+
+-- A separate output folder is excluded from document discovery. This includes the default 'ai-results' folder, so results from an earlier run are not processed again. If the input folder itself is used for output, known batch result files are excluded instead.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::ASSISTANTBATCHPROCESSING::T822136905"] = "Ein separater Ausgabeordner wird bei der Dokumentensuche ausgeschlossen. Dazu gehört der Standardordner „ai-results“, damit Ergebnisse eines früheren Durchlaufs nicht erneut verarbeitet werden. Wenn der Eingabeordner selbst als Ausgabe verwendet wird, werden stattdessen bekannte Batch-Ergebnisdateien ausgeschlossen."
+
+-- Comma (,)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::BATCHPROCESSINGCSVSEPARATOREXTENSIONS::T1676507543"] = "Komma (,)"
+
+-- Semicolon (;)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::BATCHPROCESSINGCSVSEPARATOREXTENSIONS::T3267990938"] = "Semikolon (;)"
+
+-- Unknown
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::BATCHPROCESSINGCSVSEPARATOREXTENSIONS::T3424652889"] = "Unbekannt"
+
+-- Tab
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::BATCHPROCESSINGCSVSEPARATOREXTENSIONS::T4219689196"] = "Tabulator"
+
+-- Vertical bar (|)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::BATCHPROCESSINGCSVSEPARATOREXTENSIONS::T4252399493"] = "Senkrechter Strich (|)"
+
+-- Custom character
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::BATCHPROCESSINGCSVSEPARATOREXTENSIONS::T719177757"] = "Benutzerdefiniertes Zeichen"
+
+-- One CSV results table, where each answer becomes one row
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::BATCHPROCESSINGOUTPUTMODEEXTENSIONS::T1515293131"] = "Eine Ergebnistabelle (.csv), in der jede Antwort zu einer Zeile wird"
+
+-- Unknown output mode
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::BATCHPROCESSINGOUTPUTMODEEXTENSIONS::T2013180377"] = "Unbekannter Ausgabemodus"
+
+-- One Markdown file per document
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::BATCHPROCESSINGOUTPUTMODEEXTENSIONS::T2420177746"] = "Eine Ergebnisdatei (.md) pro Dokument"
+
+-- Use a free prompt
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::BATCHPROCESSINGPROMPTSOURCEEXTENSIONS::T1144335"] = "Freien Prompt verwenden"
+
+-- Unknown prompt source
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::BATCHPROCESSINGPROMPTSOURCEEXTENSIONS::T1848924830"] = "Unbekannte Prompt-Quelle"
+
+-- Import from a file (.md)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::BATCHPROCESSINGPROMPTSOURCEEXTENSIONS::T3163211653"] = "Aus Datei importieren (.md)"
+
+-- Use a document analysis policy
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BATCHPROCESSING::BATCHPROCESSINGPROMPTSOURCEEXTENSIONS::T3309547196"] = "Regelwerk für die Dokumentenanalyse verwenden"
+
 -- Extended bias poster
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BIASDAY::BIASOFTHEDAYASSISTANT::T1241605514"] = "Erweitertes Bias-Poster"
 
@@ -3165,6 +3492,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIDENCEINFO::T847071819"] = "Zeigt ode
 -- This feature is managed by your organization and has therefore been disabled.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONBASE::T1416426626"] = "Diese Funktion wird von Ihrer Organisation verwaltet und wurde daher deaktiviert."
 
+-- Choose Directory
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONDIRECTORY::T4256489763"] = "Ordner auswählen"
+
 -- Choose File
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CONFIGURATIONFILE::T4285779702"] = "Datei auswählen"
 
@@ -3516,6 +3846,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T3554222960"] = "Mediend
 -- Some dropped files could not be accessed. Please select them with the file chooser instead.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T3896246824"] = "Auf einige abgelegte Dateien konnte nicht zugegriffen werden. Bitte wähle die Dateien stattdessen über den Dateiauswahl-Dialog aus."
 
+-- Please select a file with a supported file type.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T3980535867"] = "Bitte wählen Sie eine Datei mit einem unterstützten Dateityp aus."
+
 -- Attached file '{0}'.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::READFILECONTENT::T853724151"] = "Datei „{0}“ angehängt."
 
@@ -3741,6 +4074,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1454730224"]
 -- Root certificate bundle path
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1471315821"] = "Pfad zum Stammzertifikatsbundle"
 
+-- AI Studio cannot install updates into its current installation location. Install new versions yourself.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T14786838"] = "AI Studio kann Updates am aktuellen Installationsort nicht installieren. Installieren Sie neue Versionen bitte selbst."
+
 -- Select the desired behavior for the navigation bar.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1555038969"] = "Wählen Sie das gewünschte Verhalten für die Navigationsleiste aus."
 
@@ -3774,6 +4110,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1907446663"]
 -- Your organization has disabled update checks and installations.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1909339369"] = "Ihre Organisation hat die Suche nach Updates und deren Installation deaktiviert."
 
+-- AI Studio cannot install updates when running as a Flatpak. Update it using the Flatpak source or bundle from which you installed it.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2009652585"] = "AI Studio kann keine Updates installieren, wenn es als Flatpak ausgeführt wird. Aktualisieren Sie es über die Flatpak-Quelle oder das Bundle, über die bzw. das Sie es installiert haben."
+
 -- When enabled, additional administration options become visible. These options are intended for IT staff to manage organization-wide configuration, e.g. configuring and exporting providers for an entire organization.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2013281167"] = "Wenn diese Option aktiviert ist, werden zusätzliche Optionen für die Administration angezeigt. Diese Optionen sind für IT-Mitarbeitende vorgesehen, um organisationsweite Einstellungen zu verwalten, z. B. Anbieter für eine gesamte Organisation zu konfigurieren und zu exportieren."
 
@@ -3792,9 +4131,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2341504363"]
 -- Update installation method
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T237706157"] = "Installationsmethode für Updates"
 
--- AI Studio cannot install updates when running as a Flatpak. Use the update method provided by your Flatpak distribution.
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T244540698"] = "AI Studio kann keine Updates installieren, wenn es als Flatpak ausgeführt wird. Verwenden Sie die von Ihrer Flatpak-Distribution bereitgestellte Methode zur Aktualisierung."
-
 -- Language
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2591284123"] = "Sprache"
 
@@ -3807,11 +4143,17 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2655930524"]
 -- Path to a PEM file containing one or more root CA certificates. For Flatpak deployments, this file must be placed in a location that is readable inside the sandbox.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2700836219"] = "Pfad zu einer PEM-Datei mit einem oder mehreren Root-CA-Zertifikaten. Bei Flatpak-Bereitstellungen muss diese Datei an einem Ort abgelegt werden, der innerhalb der Sandbox lesbar ist."
 
+-- This installation does not check for updates itself. Contact the person or organization that installed AI Studio for update information.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2918560776"] = "Diese Installation sucht nicht selbst nach Updates. Wenden Sie sich an die Person oder Organisation, die AI Studio installiert hat, um Informationen zu Updates zu erhalten."
+
 -- Enter one host pattern per line. Exact hosts such as data.intra.example.org and one-label wildcards such as *.intra.example.org are supported. Cloud provider endpoints built into AI Studio, such as OpenAI, Google, etc., never use these additional root certificates.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2960110864"] = "Geben Sie pro Zeile ein Hostmuster ein. Exakte Hosts wie data.intra.example.org sowie Wildcards mit einem Label wie *.intra.example.org werden unterstützt. In AI Studio integrierte Endpunkte von Cloud-Anbietern wie OpenAI, Google usw. verwenden diese zusätzlichen Stammzertifikate nicht."
 
 -- Save energy?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3100928009"] = "Energie sparen?"
+
+-- Development builds do not install updates.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3138812562"] = "Entwicklerversionen installieren keine Updates."
 
 -- Spellchecking is enabled
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T3165555978"] = "Rechtschreibprüfung ist aktiviert"
@@ -3864,8 +4206,14 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T4192032183"]
 -- Use additional root certificates for external HTTPS requests?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T4235562267"] = "Zusätzliche Stammzertifikate für externe HTTPS-Anfragen verwenden?"
 
+-- AI Studio cannot update itself from its current location, so it does not check for updates.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T4258440666"] = "AI Studio kann sich an seinem aktuellen Speicherort nicht selbst aktualisieren und sucht daher nicht nach Updates."
+
 -- Select a root certificate bundle
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T436881267"] = "Wählen Sie ein Stammzertifikat-Bundle aus"
+
+-- AI Studio cannot install updates into this installation. Contact the person or organization that installed it for new versions.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T476576809"] = "AI Studio kann in dieser Installation keine Updates installieren. Wenden Sie sich für neue Versionen an die Person oder Organisation, die die Installation vorgenommen hat."
 
 -- Navigation bar behavior
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T602293588"] = "Verhalten der Navigationsleiste"
@@ -3881,6 +4229,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T71162186"] =
 
 -- Energy saving is disabled
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T716338721"] = "Energiesparmodus ist deaktiviert"
+
+-- Development builds do not check for updates.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T735114866"] = "Entwicklerversionen suchen nicht nach Updates."
 
 -- Start page
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T78084670"] = "Startseite"
@@ -3969,6 +4320,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T18253
 -- Add Embedding Provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T190634634"] = "Einbettungsanbieter hinzufügen"
 
+-- This embedding provider is managed by your organization. You can set your own API key.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T1931890418"] = "Dieser Anbieter für Einbettungen wird von Ihrer Organisation verwaltet. Sie können Ihren eigenen API-Schlüssel festlegen."
+
 -- Add text that should be embedded:
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T1992646324"] = "Text zum Einbetten eingeben:"
 
@@ -4031,9 +4385,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T80509
 
 -- Example text to embed
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T816748904"] = "Beispieltext zum Einbetten"
-
--- Provider
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T900237532"] = "Anbieter"
 
 -- Export configuration
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T975426229"] = "Konfiguration exportieren"
@@ -4104,11 +4455,11 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T426925
 -- This self-hosted provider is trusted for data source security checks.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T485526152"] = "Dieser selbstgehostete Anbieter ist für Sicherheitsprüfungen von Datenquellen vertrauenswürdig."
 
+-- This provider is managed by your organization. You can set your own API key.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T579100747"] = "Dieser Anbieter wird von Ihrer Organisation verwaltet. Sie können Ihren eigenen API-Schlüssel einrichten."
+
 -- Open Dashboard
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T78223861"] = "Dashboard öffnen"
-
--- Provider
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T900237532"] = "Anbieter"
 
 -- Export configuration
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELPROVIDERS::T975426229"] = "Konfiguration exportieren"
@@ -4161,6 +4512,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T58
 -- This transcription provider is trusted by your organization for data source security checks.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T601264181"] = "Ihre Organisation vertraut diesem Anbieter für Transkriptionen bei der Sicherheitsprüfung von Datenquellen."
 
+-- This transcription provider is managed by your organization. You can set your own API key.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T690752279"] = "Dieser Anbieter für Transkriptionen wird von Ihrer Organisation verwaltet. Sie können Ihren eigenen API-Schlüssel festlegen."
+
 -- This transcription provider is managed by your organization.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T756131076"] = "Dieser Anbieter für Transkriptionen wird von Ihrer Organisation verwaltet."
 
@@ -4169,9 +4523,6 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T78
 
 -- Are you sure you want to delete the transcription provider '{0}'?
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T789660305"] = "Möchten Sie den Anbieter für Transkriptionen „{0}“ wirklich löschen?"
-
--- Provider
-UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T900237532"] = "Anbieter"
 
 -- Export configuration
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T975426229"] = "Konfiguration exportieren"
@@ -4646,6 +4997,27 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINREVISIONDIALOG::T68761554"] =
 
 -- Cancel
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::ASSISTANTPLUGINREVISIONDIALOG::T900713019"] = "Abbrechen"
+
+-- Continue the previous run
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::BATCHPROCESSINGRESUMEDIALOG::T1544546085"] = "Vorherigen Lauf fortsetzen"
+
+-- Start a new run
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::BATCHPROCESSINGRESUMEDIALOG::T1988102455"] = "Neuen Lauf starten"
+
+-- Would you like to continue the previous run and process only the missing and failed documents? Or would you like to start a completely new run, which processes all documents again?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::BATCHPROCESSINGRESUMEDIALOG::T3100082920"] = "Möchten Sie den vorherigen Lauf fortsetzen und nur die fehlenden und fehlgeschlagenen Dokumente verarbeiten, oder möchten Sie einen völlig neuen Lauf starten, der alle Dokumente erneut verarbeitet?"
+
+-- Please note: the log lists {0} more document(s) as successfully processed, but their results no longer exist. They count as missing and are processed again when you continue the run.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::BATCHPROCESSINGRESUMEDIALOG::T3505810382"] = "Bitte beachten Sie: Die Log-Datei führt {0} weitere(s) Dokument(e) als erfolgreich verarbeitet auf, deren Ergebnisse jedoch nicht mehr vorliegen. Sie zählen als fehlend und werden beim Fortsetzen erneut verarbeitet."
+
+-- There is already a log of a previous batch run in the output folder.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::BATCHPROCESSINGRESUMEDIALOG::T3762601235"] = "Im Ausgabeordner liegt bereits eine Log-Datei eines vorherigen Stapellaufs."
+
+-- {0} document(s) were processed successfully. {1} document(s) are missing or failed.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::BATCHPROCESSINGRESUMEDIALOG::T4009234360"] = "{0} Dokument(e) wurden erfolgreich verarbeitet. {1} Dokument(e) fehlen oder sind fehlgeschlagen."
+
+-- Cancel
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::BATCHPROCESSINGRESUMEDIALOG::T900713019"] = "Abbrechen"
 
 -- Only text content is supported in the editing mode yet.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::CHATTEMPLATEDIALOG::T1352914344"] = "Im Bearbeitungsmodus wird bisher nur Textinhalt unterstützt."
@@ -5439,6 +5811,12 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T2189814010"] = "Mo
 -- (Optional) API Key
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T2331453405"] = "(Optional) API-Schlüssel"
 
+-- Failed to remove the API key from the operating system. The message was: {0}. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T2439094236"] = "Der API-Schlüssel konnte nicht aus dem Betriebssystem entfernt werden. Die Meldung lautete: {0}. Bitte versuchen Sie es erneut."
+
+-- This embedding provider is managed by your organization. Host, model, and other settings are locked. You can set your own API key below.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T2555207324"] = "Dieser Anbieter für Einbettungen wird von Ihrer Organisation verwaltet. Host, Modell und andere Einstellungen sind gesperrt. Unten können Sie Ihren eigenen API-Schlüssel festlegen."
+
 -- Add
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T2646845972"] = "Hinzufügen"
 
@@ -5739,6 +6117,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINGGUIDELINEDIALOG::T4250996615"] = "P
 -- Hugging Face Inference Provider
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1085481431"] = "Hugging Face Inferenz-Anbieter"
 
+-- This provider is managed by your organization. Host, model, and other settings are locked. You can set your own API key below.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1090492389"] = "Dieser Provider wird von Ihrer Organisation verwaltet. Host, Modell und andere Einstellungen sind gesperrt. Sie können Ihren eigenen API-Schlüssel unten festlegen."
+
 -- Hide Expert Settings
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1108876344"] = "Experten-Einstellungen ausblenden"
 
@@ -5801,6 +6182,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2189814010"] = "Modell"
 
 -- (Optional) API Key
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2331453405"] = "(Optional) API-Schlüssel"
+
+-- Failed to remove the API key from the operating system. The message was: {0}. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2439094236"] = "Fehler beim Löschen des API-Schlüssels vom Betriebssystem. Die Nachricht war: {0}. Bitte versuchen Sie es erneut."
 
 -- Enabled
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2626085950"] = "Aktiviert"
@@ -6215,6 +6599,150 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T6790
 
 -- When enabled, you can preselect options. This is might be useful when you prefer a specific language or LLM model.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGASSISTANTBIAS::T711745239"] = "Wenn diese Option aktiviert ist, können Sie Voreinstellungen vornehmen. Das kann nützlich sein, wenn Sie eine bestimmte Sprache oder ein bestimmtes LLM-Modell bevorzugen."
+
+-- Default minimum pause between files
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T1008440099"] = "Standardmäßige Mindestpause zwischen Dateien"
+
+-- Instructions
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T1221801316"] = "Anweisungen"
+
+-- Leave empty to use the ai-results subfolder of the input folder.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T1550632323"] = "Leer lassen, um den Unterordner „ai-results“ des Eingabeordners zu verwenden."
+
+-- seconds
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T1723256298"] = "Sekunden"
+
+-- Default prompt
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T1750564968"] = "Standard-Prompt"
+
+-- Select the default input folder
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T1776900205"] = "Standard-Eingabeordner auswählen"
+
+-- Batch processing options are preselected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T1893713430"] = "Optionen für die Stapelverarbeitung sind vorausgewählt"
+
+-- Default custom column separator
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T19367494"] = "Standardmäßiges benutzerdefiniertes Trennzeichen für Spalten"
+
+-- Default document analysis policy
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T2015391667"] = "Standardregelwerk für die Dokumentenanalyse"
+
+-- AI selection
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T2105832301"] = "KI-Auswahl"
+
+-- Default output folder
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T223484721"] = "Standard-Ausgabeordner"
+
+-- The lower end of the random pause interval. AI Studio never allows less than 6 seconds.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T237774509"] = "Das untere Ende des Intervalls für die zufällige Pause. AI Studio erlaubt niemals weniger als 6 Sekunden."
+
+-- When enabled, new batch runs start with the defaults configured below.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T2592677194"] = "Wenn aktiviert, werden neue Stapel-Durchläufe mit den unten konfigurierten Standardwerten gestartet."
+
+-- Separate multiple file patterns with a semicolon, e.g., *.pdf;*.docx. The standard patterns include all supported audio and video formats.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T2594325620"] = "Trennen Sie mehrere Dateimuster durch ein Semikolon, z. B. *.pdf;*.docx. Die Standardmuster umfassen alle unterstützten Audio- und Videoformate."
+
+-- Subfolders are included
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T2607092632"] = "Unterordner werden einbezogen"
+
+-- Default input folder
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T261282578"] = "Standard-Eingabeordner"
+
+-- Input
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T2677268763"] = "Eingabe"
+
+-- Default column separator
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T2745158463"] = "Standard-Spaltentrennzeichen"
+
+-- Preselect batch processing options?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T2849251744"] = "Optionen für die Stapelverarbeitung vorauswählen?"
+
+-- Please enter exactly one punctuation or symbol character. Letters, numbers, spaces, quotation marks, and line breaks cannot be used as CSV separators.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T2908365499"] = "Bitte geben Sie genau ein Satz- oder Sonderzeichen ein. Buchstaben, Zahlen, Leerzeichen, Anführungszeichen und Zeilenumbrüche können nicht als CSV-Trennzeichen verwendet werden."
+
+-- Default file patterns
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T2909693903"] = "Standard-Dateimuster"
+
+-- Only the selected folder is processed
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T2958253681"] = "Nur der ausgewählte Ordner wird verarbeitet."
+
+-- Default maximum pause between files
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3011459001"] = "Standardmäßige maximale Pause zwischen Dateien"
+
+-- Include subfolders by default?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3106330739"] = "Unterordner standardmäßig einbeziehen?"
+
+-- Missing policy ({0})
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3137266534"] = "Fehlendes Regelwerk ({0})"
+
+-- These instructions are applied to every document of a new batch run.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3195548336"] = "Diese Anweisungen werden auf jedes Dokument eines neuen Stapelverarbeitungsdurchlaufs angewendet."
+
+-- No batch processing options are preselected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3421035581"] = "Keine Optionen für die Stapelverarbeitung sind vorausgewählt."
+
+-- Default result column header
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3425186124"] = "Standard-Spaltenüberschrift für Ergebnisse"
+
+-- Processing pace
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3428873429"] = "Verarbeitungsgeschwindigkeit"
+
+-- The upper end of the random pause interval. The app-wide maximum is 300 seconds (5 minutes).
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3434290122"] = "Das obere Ende des zufälligen Pausenintervalls. Der appweite Höchstwert beträgt 300 Sekunden (5 Minuten)."
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3448155331"] = "Schließen"
+
+-- The current content of this Markdown file is loaded whenever the defaults are applied.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3468539567"] = "Der aktuelle Inhalt dieser Markdown-Datei wird geladen, wenn die Standardwerte angewendet werden."
+
+-- Your organization requires a pause of at least {0} seconds between files. Users can configure only the upper limit.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3663516199"] = "Ihre Organisation verlangt eine Pause von mindestens {0} Sekunden zwischen Dateien. Benutzer können nur die Obergrenze festlegen."
+
+-- Load default prompt from file
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3763644960"] = "Standard-Prompt aus Datei laden"
+
+-- Default results table name
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3816237687"] = "Standardname der Ergebnistabelle"
+
+-- Default Markdown instructions file
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T3967465682"] = "Standarddatei für Markdown-Anweisungen"
+
+-- Output
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T4000727844"] = "Ausgabe"
+
+-- The configured default policy no longer exists. Select another policy before starting a policy-based batch run.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T438852523"] = "Das konfigurierte Standardregelwerk existiert nicht mehr. Wählen Sie eine anderes Regelwerk aus, bevor Sie einen regelwerkbasierten Stapellauf starten."
+
+-- Enter one punctuation or symbol character.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T469253621"] = "Gib ein Satzzeichen oder Sonderzeichen ein."
+
+-- Select the default Markdown instructions file
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T470691525"] = "Standarddatei mit Markdown-Anweisungen auswählen"
+
+-- Assistant: Batch Processing defaults
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T481452904"] = "Assistent: Standardwerte für die Stapelverarbeitung"
+
+-- Choose which character separates the columns of new results tables.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T573962596"] = "Wählen Sie das Zeichen aus, das die Spalten neuer Ergebnistabellen trennt."
+
+-- Default output mode
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T601648878"] = "Standardausgabemodus"
+
+-- Select the default output folder
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T602371388"] = "Standard-Ausgabeordner auswählen"
+
+-- Load default Markdown instructions file
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T626322240"] = "Standarddatei mit Markdown-Anweisungen laden"
+
+-- Default source of the instructions
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T704081768"] = "Standardquelle der Anweisungen"
+
+-- Restore default patterns
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T7425959"] = "Standardmuster wiederherstellen"
+
+-- Leave empty when an input folder should be selected for every batch run.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T762890100"] = "Leer lassen, wenn für jeden Stapelverarbeitungsdurchlauf ein Eingabeordner ausgewählt werden soll."
 
 -- Preselect one of your chat templates?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCHAT::T1402022556"] = "Eine ihrer Chat-Vorlagen vorab auswählen?"
@@ -7290,6 +7818,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T2189814010"] =
 -- (Optional) API Key
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T2331453405"] = "(Optional) API-Schlüssel"
 
+-- Failed to remove the API key from the operating system. The message was: {0}. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T2439094236"] = "Der API-Schlüssel konnte nicht aus dem Betriebssystem entfernt werden. Die Meldung lautete: {0}. Bitte versuchen Sie es erneut."
+
 -- Add
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T2646845972"] = "Hinzufügen"
 
@@ -7313,6 +7844,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T504465522"] = 
 
 -- Host
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T808120719"] = "Host"
+
+-- This transcription provider is managed by your organization. Host, model, and other settings are locked. You can set your own API key below.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T828088153"] = "Dieser Anbieter für Transkriptionen wird von Ihrer Organisation verwaltet. Host, Modell und weitere Einstellungen sind gesperrt. Sie können unten Ihren eigenen API-Schlüssel festlegen."
 
 -- Provider
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T900237532"] = "Anbieter"
@@ -7458,6 +7992,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1907192403"] = "Texte zusammenfas
 -- Check grammar and spelling of a given text.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1934717573"] = "Grammatik und Rechtschreibung eines gegebenen Textes überprüfen."
 
+-- Process all documents of a folder in one batch run and collect the results.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T200518635"] = "Alle Dokumente eines Ordners in einem Stapellauf verarbeiten und die Ergebnisse sammeln."
+
 -- Translate text into another language.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T209791153"] = "Text in eine andere Sprache übersetzen."
 
@@ -7559,6 +8096,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T755590027"] = "Lernen"
 
 -- Bias of the Day
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T782102948"] = "Vorurteil des Tages"
+
+-- Batch Processing
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T854996482"] = "Stapelverarbeitung"
 
 -- Learn about one cognitive bias every day.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T878695986"] = "Lerne jeden Tag einen kognitiven Bias kennen."
@@ -7665,14 +8205,14 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T3341379752"] = "Kosteneffizient"
 -- Flexibility
 UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T3723223888"] = "Flexibilität"
 
--- You are not tied to any single provider. Instead, you might choose the provider that best suits your needs. Right now, we support OpenAI (GPT5, o1, etc.), Perplexity, Mistral, Anthropic (Claude), Google Gemini, xAI (Grok), DeepSeek, Alibaba Cloud (Qwen), OpenRouter, Hugging Face, and self-hosted models using vLLM, llama.cpp, ollama, LM Studio, Groq, or Fireworks. For scientists and employees of research institutions, we also support Helmholtz and GWDG AI services. These are available through federated logins like eduGAIN to all 18 Helmholtz Centers, the Max Planck Society, most German, and many international universities.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T3892227145"] = "Sie sind an keinen einzelnen Anbieter gebunden. Stattdessen können Sie den Anbieter wählen, der am besten zu ihren Bedürfnissen passt. Derzeit unterstützen wir OpenAI (GPT5, o1, etc.), Perplexity, Mistral, Anthropic (Claude), Google Gemini, xAI (Grok), DeepSeek, Alibaba Cloud (Qwen), OpenRouter, Hugging Face und selbst gehostete Modelle mit vLLM, llama.cpp, ollama, LM Studio, Groq oder Fireworks. Für Wissenschaftler und Mitarbeiter von Forschungseinrichtungen unterstützen wir auch die KI-Dienste von Helmholtz und GWDG. Diese sind über föderierte Anmeldungen wie eduGAIN für alle 18 Helmholtz-Zentren, die Max-Planck-Gesellschaft, die meisten deutschen und viele internationale Universitäten verfügbar."
-
 -- Privacy
 UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T3959064551"] = "Datenschutz"
 
 -- You can control which providers receive your data using the provider confidence settings. For example, you can set different protection levels for writing emails compared to general chats, etc. Additionally, most providers guarantee that they won't use your data to train new AI systems.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T457410099"] = "Sie können über die Einstellungen zur Anbietervertrauenswürdigkeit steuern, welche Anbieter ihre Daten erhalten. Zum Beispiel können Sie für das Schreiben von E-Mails einen anderen Schutzlevel festlegen als für allgemeine Chats usw. Außerdem garantieren die meisten Anbieter, dass ihre Daten nicht zum Trainieren neuer KI-Systeme verwendet werden."
+
+-- You are not tied to any single provider. Instead, you might choose the provider that best suits your needs. Right now, we support OpenAI (GPT5, o1, etc.), Perplexity, Mistral, Anthropic (Claude), Google Gemini, xAI (Grok), DeepSeek, Alibaba Cloud (Qwen), OpenRouter, Hetzner (experimental, open-source models hosted in the EU), Hugging Face, Groq, Fireworks, and self-hosted models using vLLM, llama.cpp, ollama, or LM Studio. For scientists and employees of research institutions, we also support Helmholtz and GWDG AI services. These are available through federated logins like eduGAIN to all 18 Helmholtz Centers, the Max Planck Society, most German, and many international universities.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T558496815"] = "Sie sind nicht an einen einzelnen Anbieter gebunden. Stattdessen können Sie den Anbieter wählen, der am besten zu Ihren Bedürfnissen passt. Derzeit unterstützen wir OpenAI (GPT-5, o1 usw.), Perplexity, Mistral, Anthropic (Claude), Google Gemini, xAI (Grok), DeepSeek, Alibaba Cloud (Qwen), OpenRouter, Hetzner (experimentell, in der EU gehostete Open-Source-Modelle), Hugging Face, Groq, Fireworks sowie selbst gehostete Modelle mit vLLM, llama.cpp, ollama oder LM Studio. Für Forschende und Mitarbeitende von Forschungseinrichtungen unterstützen wir außerdem die KI-Dienste von Helmholtz und GWDG. Diese stehen über föderierte Anmeldungen wie eduGAIN allen 18 Helmholtz-Zentren, der Max-Planck-Gesellschaft, den meisten deutschen und vielen internationalen Universitäten zur Verfügung."
 
 -- Free of charge
 UI_TEXT_CONTENT["AISTUDIO::PAGES::HOME::T617579208"] = "Kostenlos"
@@ -7712,6 +8252,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1209549230"] = "Dies ist eine pr
 
 -- Copies the configuration origin to the clipboard
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T125850635"] = "Kopiert den Ursprung der Konfiguration in die Zwischenablage"
+
+-- Installation
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1289059917"] = "Installation"
 
 -- Unknown configuration plugin
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1290340974"] = "Unbekanntes Konfigurations-Plugin"
@@ -7815,8 +8358,14 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2272122662"] = "Konfigurationsse
 -- We must generate random numbers, e.g., for securing the interprocess communication between the user interface and the runtime. The rand library is great for this purpose.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2273492381"] = "Wir müssen Zufallszahlen erzeugen, z. B. um die Kommunikation zwischen der Benutzeroberfläche und der Laufzeitumgebung abzusichern. Die rand-Bibliothek eignet sich dafür hervorragend."
 
+-- Flatpak installation, updates are handled outside of AI Studio
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2294279524"] = "Flatpak-Installation – Updates werden außerhalb von AI Studio verwaltet."
+
 -- Configuration plugin ID:
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2301484629"] = "Konfigurations-Plugin-ID:"
+
+-- AI Studio cannot update itself from its current installation location. Installing an update would leave a second installation behind instead of replacing this one. To get a new version, download the latest release and install it over your current installation.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2307318338"] = "AI Studio kann sich an seinem aktuellen Installationsort nicht selbst aktualisieren. Bei der Installation eines Updates würde eine zweite Installation erstellt, anstatt diese zu ersetzen. Um eine neue Version zu erhalten, laden Sie die neueste Version herunter und installieren Sie sie über Ihrer aktuellen Installation."
 
 -- dirs determines the platform-specific local application data directory. AI Studio uses it so the Flatpak startup log is written to the same application data directory that Tauri uses.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2325338322"] = "dirs bestimmt das plattformspezifische lokale Anwendungsdatenverzeichnis. AI Studio verwendet es, damit das Flatpak-Startprotokoll in dasselbe Verzeichnis geschrieben wird, das auch Tauri verwendet."
@@ -7842,8 +8391,14 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2371107659"] = "Installation vom
 -- Installed Pandoc version: Pandoc is not installed or not available.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2374031539"] = "Installierte Pandoc-Version: Pandoc ist nicht installiert oder nicht verfügbar."
 
+-- current installation location does not support automatic updates
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2401198677"] = "Der aktuelle Installationsort unterstützt keine automatischen Updates."
+
 -- Configuration origin:
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2435772109"] = "Ursprung der Konfiguration:"
+
+-- This installation cannot update itself. Contact the person or organization that installed AI Studio for information about new versions.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2444057400"] = "Diese Installation kann sich nicht selbst aktualisieren. Wenden Sie sich an die Person oder Organisation, die AI Studio installiert hat, um Informationen zu neuen Versionen zu erhalten."
 
 -- Configuration slot:
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T254943559"] = "Slot der Konfiguration:"
@@ -7856,6 +8411,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2557014401"] = "Diese Bibliothek
 
 -- Used Open Source Projects
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2557066213"] = "Verwendete Open-Source-Projekte"
+
+-- development build, no support for automatic updates
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2582380608"] = "Entwicklungsversion, keine Unterstützung für automatische Updates"
 
 -- Build time
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T260228112"] = "Build-Zeit"
@@ -7901,6 +8459,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2840582448"] = "Erklärung"
 
 -- checking availability
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2855535668"] = "Verfügbarkeit wird geprüft"
+
+-- managed; updates are handled outside of AI Studio; contact whoever installed it and ask about updates
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T285730904"] = "verwaltet; Updates werden außerhalb von AI Studio durchgeführt; wenden Sie sich an die Person oder Organisation, die AI Studio installiert hat, und erkundigen Sie sich nach Updates."
 
 -- The .NET backend cannot be started as a desktop app. Therefore, I use a second backend in Rust, which I call runtime. With Rust as the runtime, Tauri can be used to realize a typical desktop app. Thanks to Rust, this app can be offered for Windows, macOS, and Linux desktops. Rust is a great language for developing safe and high-performance software.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2868174483"] = "Das .NET-Backend kann nicht als Desktop-App gestartet werden. Deshalb verwende ich ein zweites Backend in Rust, das ich „Runtime“ nenne. Mit Rust als Runtime kann Tauri genutzt werden, um eine typische Desktop-App zu realisieren. Dank Rust kann diese App für Windows-, macOS- und Linux-Desktops angeboten werden. Rust ist eine großartige Sprache für die Entwicklung sicherer und leistungsstarker Software."
@@ -7989,6 +8550,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3440211747"] = "Verwendeter Rust
 -- AI Studio runs with an enterprise configuration using configuration plugins, without central configuration management.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3449345633"] = "AI Studio wird mit Unternehmenskonfigurationen unter Verwendung von Konfigurations-Plugins betrieben. Eine zentrale Konfigurationsverwaltung wird nicht eingesetzt."
 
+-- You are running a development build of AI Studio, which never updates itself. Pull the latest changes and rebuild the app instead.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3454691558"] = "Du verwendest eine Entwicklerversion von AI Studio, die sich niemals selbst aktualisiert. Hole stattdessen die neuesten Änderungen und erstelle die App neu."
+
 -- Tauri is used to host the Blazor user interface. It is a great project that allows the creation of desktop applications using web technologies. I love Tauri!
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3494984593"] = "Tauri wird verwendet, um die Blazor-Benutzeroberfläche bereitzustellen. Es ist ein großartiges Projekt, das die Erstellung von Desktop-Anwendungen mit Webtechnologien ermöglicht. Ich liebe Tauri!"
 
@@ -8006,6 +8570,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3574465749"] = "nicht verfügbar
 
 -- active
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3648362799"] = "aktiv"
+
+-- standard; automatic updates supported
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3656709502"] = "Standard; automatische Updates werden unterstützt"
 
 -- This library is used to read Excel and OpenDocument spreadsheet files. This is necessary, e.g., for using spreadsheets as a data source for a chat.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3722989559"] = "Diese Bibliothek wird verwendet, um Excel- und OpenDocument-Tabellendateien zu lesen. Dies ist zum Beispiel notwendig, wenn Tabellen als Datenquelle für einen Chat verwendet werden sollen."
@@ -8399,6 +8966,9 @@ UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T1014558951"] = "Das Vertrauens
 
 -- You or your organization operate the LLM locally or within your trusted network. In terms of data processing and security, this is the best possible way.
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T2124364471"] = "Sie oder ihre Organisation betreiben das LLM lokal oder innerhalb ihres vertrauenswürdigen Netzwerks. In Bezug auf Datenverarbeitung und Sicherheit ist dies die bestmögliche Lösung."
+
+-- The provider operates its service in the EU and is subject to the **GDPR** (General Data Protection Regulation). It provides access to **open source models**. However, the service is currently **experimental**, and performance and availability are not guaranteed. We have no provider-specific information about whether submitted data is used for training.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T2930312134"] = "Der Anbieter betreibt seinen Dienst in der EU und unterliegt der **DSGVO** (Datenschutz-Grundverordnung). Er bietet Zugang zu **Open-Source-Modellen**. Der Dienst befindet sich jedoch derzeit in einer **experimentellen** Phase; Leistung und Verfügbarkeit werden nicht garantiert. Uns liegen keine anbieterspezifischen Informationen dazu vor, ob übermittelte Daten für das Training verwendet werden."
 
 -- The provider is located in the EU and is subject to the **GDPR** (General Data Protection Regulation). Additionally, the provider states that **your data is not used for training**.
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCE::T3010553924"] = "Der Anbieter hat seinen Sitz in der EU und unterliegt der **DSGVO** (Datenschutz-Grundverordnung). Außerdem gibt der Anbieter an, dass **ihre Daten nicht zum Training verwendet werden**."
@@ -8846,6 +9416,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T1082499335"] = "Program
 
 -- E-Mail Assistant
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T1185802704"] = "E-Mail-Assistent"
+
+-- Batch Processing Assistant
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T132410578"] = "Stapelverarbeitungs-Assistent"
 
 -- My Tasks Assistant
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T1546040625"] = "Meine Aufgaben-Assistent"
