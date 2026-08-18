@@ -76,6 +76,7 @@ pub enum Metadata {
         page_number: Option<usize>,
         image: Option<Base64Image>,
     },
+
     Image {},
     
     Presentation {
