@@ -24,6 +24,9 @@ public partial class Information : MSGComponentBase
     private RustService RustService { get; init; } = null!;
 
     [Inject]
+    private ILogger<Information> Logger { get; init; } = null!;
+
+    [Inject]
     private IDialogService DialogService { get; init; } = null!;
 
     [Inject]
@@ -535,6 +538,36 @@ public partial class Information : MSGComponentBase
     private async Task CopyAppLogPath()
     {
         await this.RustService.CopyText2Clipboard(this.logPaths.LogAppPath);
+    }
+
+    private async Task OpenLogInFileManager(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            await this.MessageBus.SendWarning(new(Icons.Material.Filled.Folder, T("The log file path is not available yet.")));
+            return;
+        }
+
+        OpenPathResponse response;
+        try
+        {
+            response = await this.RustService.TryOpenPathInRuntimeFileManager(path);
+        }
+        catch (Exception e)
+        {
+            this.Logger.LogWarning(e, "Could not open the log file location in the file manager.");
+            await this.MessageBus.SendError(new(Icons.Material.Filled.Folder, T("Could not open the log file location.")));
+            return;
+        }
+
+        if (response.Success)
+        {
+            await this.MessageBus.SendSuccess(new(Icons.Material.Filled.FolderOpen, T("Opened the log file location.")));
+            return;
+        }
+
+        var issue = string.IsNullOrWhiteSpace(response.Issue) ? T("Unknown error") : response.Issue;
+        await this.MessageBus.SendError(new(Icons.Material.Filled.Folder, string.Format(T("Could not open the log file location: {0}"), issue)));
     }
     
     private const string LICENSE = """

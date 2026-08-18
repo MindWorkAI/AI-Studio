@@ -8289,6 +8289,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1629800076"] = "Building on .NET
 -- AI Studio creates a log file at startup, in which events during startup are recorded. After startup, another log file is created that records all events that occur during the use of the app. This includes any errors that may occur. Depending on when an error occurs (at startup or during use), the contents of these log files can be helpful for troubleshooting. Sensitive information such as passwords is not included in the log files.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1630237140"] = "AI Studio creates a log file at startup, in which events during startup are recorded. After startup, another log file is created that records all events that occur during the use of the app. This includes any errors that may occur. Depending on when an error occurs (at startup or during use), the contents of these log files can be helpful for troubleshooting. Sensitive information such as passwords is not included in the log files."
 
+-- Click a path to copy it to the clipboard, or use the folder button to open its location in your file manager. You can open the log files with a text editor to view their contents.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1671349852"] = "Click a path to copy it to the clipboard, or use the folder button to open its location in your file manager. You can open the log files with a text editor to view their contents."
+
 -- Plugin directory:
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1698127325"] = "Plugin directory:"
 
@@ -8301,8 +8304,8 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1722690800"] = "Copies the execu
 -- This library is used to display the differences between two texts. This is necessary, e.g., for the grammar and spelling assistant.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1772678682"] = "This library is used to display the differences between two texts. This is necessary, e.g., for the grammar and spelling assistant."
 
--- By clicking on the respective path, the path is copied to the clipboard. You might open these files with a text editor to view their contents.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1806897624"] = "By clicking on the respective path, the path is copied to the clipboard. You might open these files with a text editor to view their contents."
+-- Could not open the log file location.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1828231197"] = "Could not open the log file location."
 
 -- Pandoc Installation
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T185447014"] = "Pandoc Installation"
@@ -8393,6 +8396,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2435772109"] = "Configuration or
 
 -- This installation cannot update itself. Contact the person or organization that installed AI Studio for information about new versions.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2444057400"] = "This installation cannot update itself. Contact the person or organization that installed AI Studio for information about new versions."
+
+-- Could not open the log file location: {0}
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2533784927"] = "Could not open the log file location: {0}"
 
 -- Configuration slot:
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T254943559"] = "Configuration slot:"
@@ -8547,6 +8553,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3449345633"] = "AI Studio runs w
 -- You are running a development build of AI Studio, which never updates itself. Pull the latest changes and rebuild the app instead.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3454691558"] = "You are running a development build of AI Studio, which never updates itself. Pull the latest changes and rebuild the app instead."
 
+-- Unknown error
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3461425987"] = "Unknown error"
+
 -- Tauri is used to host the Blazor user interface. It is a great project that allows the creation of desktop applications using web technologies. I love Tauri!
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3494984593"] = "Tauri is used to host the Blazor user interface. It is a great project that allows the creation of desktop applications using web technologies. I love Tauri!"
 
@@ -8567,6 +8576,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3648362799"] = "active"
 
 -- standard; automatic updates supported
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3656709502"] = "standard; automatic updates supported"
+
+-- The log file path is not available yet.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3686775689"] = "The log file path is not available yet."
 
 -- This library is used to read Excel and OpenDocument spreadsheet files. This is necessary, e.g., for using spreadsheets as a data source for a chat.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3722989559"] = "This library is used to read Excel and OpenDocument spreadsheet files. This is necessary, e.g., for using spreadsheets as a data source for a chat."
@@ -8610,6 +8622,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3986423270"] = "Check Pandoc Ins
 -- Versions
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4010195468"] = "Versions"
 
+-- Open in folder
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4048746540"] = "Open in folder"
+
 -- Allowed hosts: none configured
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4058524336"] = "Allowed hosts: none configured"
 
@@ -8624,6 +8639,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4113556626"] = "Ropus provides t
 
 -- Community & Code
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4158546761"] = "Community & Code"
+
+-- Opened the log file location.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4162897654"] = "Opened the log file location."
 
 -- Executable path
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4164953312"] = "Executable path"

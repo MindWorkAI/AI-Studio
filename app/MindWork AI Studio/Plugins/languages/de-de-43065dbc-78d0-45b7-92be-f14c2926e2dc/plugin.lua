@@ -8289,6 +8289,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1629800076"] = "Basierend auf .N
 -- AI Studio creates a log file at startup, in which events during startup are recorded. After startup, another log file is created that records all events that occur during the use of the app. This includes any errors that may occur. Depending on when an error occurs (at startup or during use), the contents of these log files can be helpful for troubleshooting. Sensitive information such as passwords is not included in the log files.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1630237140"] = "AI Studio erstellt beim Start eine Protokolldatei, in der Ereignisse während des Starts aufgezeichnet werden. Nach dem Start wird eine weitere Protokolldatei erstellt, die alle Ereignisse während der Nutzung der App dokumentiert. Dazu gehören auch eventuell auftretende Fehler. Je nachdem, wann ein Fehler auftritt (beim Start oder während der Nutzung), können die Inhalte dieser Protokolldateien bei der Fehlerbehebung hilfreich sein. Sensible Informationen wie Passwörter werden nicht in den Protokolldateien gespeichert."
 
+-- Click a path to copy it to the clipboard, or use the folder button to open its location in your file manager. You can open the log files with a text editor to view their contents.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1671349852"] = "Klicken Sie auf einen Pfad, um ihn in die Zwischenablage zu kopieren, oder verwenden Sie den Button, um den Speicherort in Ihrem Dateimanager zu öffnen. Sie können die Protokolldateien mit einem Texteditor öffnen, um ihren Inhalt anzuzeigen."
+
 -- Plugin directory:
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1698127325"] = "Plugin-Verzeichnis:"
 
@@ -8301,8 +8304,8 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1722690800"] = "Kopiert den Pfad
 -- This library is used to display the differences between two texts. This is necessary, e.g., for the grammar and spelling assistant.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1772678682"] = "Diese Bibliothek wird verwendet, um die Unterschiede zwischen zwei Texten anzuzeigen. Das ist zum Beispiel für den Grammatik- und Rechtschreibassistenten notwendig."
 
--- By clicking on the respective path, the path is copied to the clipboard. You might open these files with a text editor to view their contents.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1806897624"] = "Wenn Sie auf den jeweiligen Pfad klicken, wird dieser in die Zwischenablage kopiert. Sie können diese Dateien mit einem Texteditor öffnen, um ihren Inhalt anzusehen."
+-- Could not open the log file location.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1828231197"] = "Der Speicherort der Protokolldatei konnte nicht geöffnet werden."
 
 -- Pandoc Installation
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T185447014"] = "Pandoc-Installation"
@@ -8393,6 +8396,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2435772109"] = "Ursprung der Kon
 
 -- This installation cannot update itself. Contact the person or organization that installed AI Studio for information about new versions.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2444057400"] = "Diese Installation kann sich nicht selbst aktualisieren. Wenden Sie sich an die Person oder Organisation, die AI Studio installiert hat, um Informationen zu neuen Versionen zu erhalten."
+
+-- Could not open the log file location: {0}
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2533784927"] = "Der Speicherort der Protokolldatei konnte nicht geöffnet werden: {0}"
 
 -- Configuration slot:
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T254943559"] = "Slot der Konfiguration:"
@@ -8547,6 +8553,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3449345633"] = "AI Studio wird m
 -- You are running a development build of AI Studio, which never updates itself. Pull the latest changes and rebuild the app instead.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3454691558"] = "Du verwendest eine Entwicklerversion von AI Studio, die sich niemals selbst aktualisiert. Hole stattdessen die neuesten Änderungen und erstelle die App neu."
 
+-- Unknown error
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3461425987"] = "Unbekannter Fehler"
+
 -- Tauri is used to host the Blazor user interface. It is a great project that allows the creation of desktop applications using web technologies. I love Tauri!
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3494984593"] = "Tauri wird verwendet, um die Blazor-Benutzeroberfläche bereitzustellen. Es ist ein großartiges Projekt, das die Erstellung von Desktop-Anwendungen mit Webtechnologien ermöglicht. Ich liebe Tauri!"
 
@@ -8567,6 +8576,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3648362799"] = "aktiv"
 
 -- standard; automatic updates supported
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3656709502"] = "Standard; automatische Updates werden unterstützt"
+
+-- The log file path is not available yet.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3686775689"] = "Der Pfad zur Protokolldatei ist noch nicht verfügbar."
 
 -- This library is used to read Excel and OpenDocument spreadsheet files. This is necessary, e.g., for using spreadsheets as a data source for a chat.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3722989559"] = "Diese Bibliothek wird verwendet, um Excel- und OpenDocument-Tabellendateien zu lesen. Dies ist zum Beispiel notwendig, wenn Tabellen als Datenquelle für einen Chat verwendet werden sollen."
@@ -8610,6 +8622,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3986423270"] = "Pandoc-Installat
 -- Versions
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4010195468"] = "Versionen"
 
+-- Open in folder
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4048746540"] = "Im Ordner öffnen"
+
 -- Allowed hosts: none configured
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4058524336"] = "Zulässige Hosts: keine konfiguriert"
 
@@ -8624,6 +8639,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4113556626"] = "Ropus stellt den
 
 -- Community & Code
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4158546761"] = "Community & Code"
+
+-- Opened the log file location.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4162897654"] = "Speicherort der Protokolldatei wurde geöffnet."
 
 -- Executable path
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4164953312"] = "Pfad der ausführbaren Datei"
