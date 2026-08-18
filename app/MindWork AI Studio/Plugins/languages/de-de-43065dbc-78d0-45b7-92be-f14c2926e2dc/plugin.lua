@@ -8289,9 +8289,6 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1629800076"] = "Basierend auf .N
 -- AI Studio creates a log file at startup, in which events during startup are recorded. After startup, another log file is created that records all events that occur during the use of the app. This includes any errors that may occur. Depending on when an error occurs (at startup or during use), the contents of these log files can be helpful for troubleshooting. Sensitive information such as passwords is not included in the log files.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1630237140"] = "AI Studio erstellt beim Start eine Protokolldatei, in der Ereignisse während des Starts aufgezeichnet werden. Nach dem Start wird eine weitere Protokolldatei erstellt, die alle Ereignisse während der Nutzung der App dokumentiert. Dazu gehören auch eventuell auftretende Fehler. Je nachdem, wann ein Fehler auftritt (beim Start oder während der Nutzung), können die Inhalte dieser Protokolldateien bei der Fehlerbehebung hilfreich sein. Sensible Informationen wie Passwörter werden nicht in den Protokolldateien gespeichert."
 
--- Click a path to copy it to the clipboard, or use the folder button to open its location in your file manager. You can open the log files with a text editor to view their contents.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1671349852"] = "Klicken Sie auf einen Pfad, um ihn in die Zwischenablage zu kopieren, oder verwenden Sie den Button, um den Speicherort in Ihrem Dateimanager zu öffnen. Sie können die Protokolldateien mit einem Texteditor öffnen, um ihren Inhalt anzuzeigen."
-
 -- Plugin directory:
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1698127325"] = "Plugin-Verzeichnis:"
 
@@ -8447,6 +8444,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2787929913"] = "Das Crate „ima
 
 -- Show Details
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T27924674"] = "Details anzeigen"
+
+-- You can view and filter these files directly in AI Studio with the Log Viewer. Click a path to copy it to the clipboard, or use the folder button to open its location in your file manager. You can also open the files with a text editor.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T280847088"] = "Diese Dateien können Sie direkt in AI Studio mit dem Log-Viewer anzeigen und filtern. Klicken Sie auf einen Pfad, um ihn in die Zwischenablage zu kopieren, oder verwenden Sie den Button rechts, um den Speicherort in Ihrem Dateimanager zu öffnen. Sie können die Dateien auch mit einem Texteditor öffnen."
 
 -- View our project roadmap and help shape AI Studio's future development.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2829971158"] = "Sehen Sie sich unsere Roadmap an und helfen Sie mit, die zukünftige Entwicklung von AI Studio mitzugestalten."
@@ -8666,6 +8666,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T4291960437"] = "Kopiert den Stat
 
 -- Apache ECharts is embedded only in exported visual briefings that use supported data-driven charts.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T485678418"] = "Apache ECharts ist nur in exportierten visuellen Briefings eingebettet, die unterstützte datengesteuerte Diagramme verwenden."
+
+-- Open Log Viewer
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T551035563"] = "Protokollanzeige öffnen"
 
 -- This is a library providing the foundations for asynchronous programming in Rust. It includes key trait definitions like Stream, as well as utilities like join!, select!, and various futures combinator methods which enable expressive asynchronous control flow.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T566998575"] = "Dies ist eine Bibliothek, die die Grundlagen für asynchrones Programmieren in Rust bereitstellt. Sie enthält zentrale Trait-Definitionen wie Stream sowie Hilfsfunktionen wie join!, select! und verschiedene Methoden zur Kombination von Futures, die einen ausdrucksstarken asynchronen Kontrollfluss ermöglichen."

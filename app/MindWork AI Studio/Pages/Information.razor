@@ -276,8 +276,15 @@
                 </MudJustifiedText>
                 
                 <MudJustifiedText Class="mb-3" Typo="Typo.body1">
-                    @T("Click a path to copy it to the clipboard, or use the folder button to open its location in your file manager. You can open the log files with a text editor to view their contents.")
+                    @T("You can view and filter these files directly in AI Studio with the Log Viewer. Click a path to copy it to the clipboard, or use the folder button to open its location in your file manager. You can also open the files with a text editor.")
                 </MudJustifiedText>
+
+                <MudButton Variant="Variant.Filled"
+                           StartIcon="@Icons.Material.Filled.Article"
+                           Href="@Routes.ASSISTANT_LOG_VIEWER"
+                           Class="mb-3">
+                    @T("Open Log Viewer")
+                </MudButton>
                 
                 <MudText Typo="Typo.h4">
                     @T("Startup log file")
