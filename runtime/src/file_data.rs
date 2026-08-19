@@ -1,8 +1,10 @@
 ﻿use std::cmp::min;
+use std::collections::VecDeque;
 use std::convert::Infallible;
 use crate::api_token::APIToken;
 use crate::pandoc::PandocProcessBuilder;
 use crate::pdfium::PdfiumInit;
+use crate::prompt_injection::{Finding as PromptInjectionFinding, Sanitizer};
 use async_stream::stream;
 use axum::extract::Query;
 use axum::extract::rejection::QueryRejection;
@@ -55,6 +57,22 @@ impl Chunk {
     }
 
     pub fn set_stream_id(&mut self, stream_id: &str) { self.stream_id = stream_id.to_string(); }
+
+    /// Whether this chunk's content is prose a prompt injection could hide in.
+    ///
+    /// Image chunks carry base64 data, which must never reach the filter: it is not text, and
+    /// the encoded-carrier scan would treat a photo as one enormous carrier. Chunks that only
+    /// announce an error or an image carry nothing to filter either.
+    fn carries_filterable_text(&self) -> bool {
+        !matches!(
+            self.metadata,
+            Metadata::Image { .. }
+                | Metadata::Error { .. }
+                | Metadata::PromptInjection { .. }
+                | Metadata::Document { image: Some(_), .. }
+                | Metadata::Presentation { image: Some(_), .. }
+        )
+    }
 }
 
 #[derive(Debug, Serialize)]
@@ -89,6 +107,20 @@ pub enum Metadata {
         message: String,
         page_number: Option<usize>,
         detected_format: Option<String>,
+    },
+
+    /// Reports that suspected prompt injections were filtered out of this document.
+    ///
+    /// This is a notice, not a failure: the document was read and the content around the
+    /// filtered passages is intact. It travels as its own metadata variant rather than as an
+    /// `ExtractionErrorCode`, because the app needs the findings themselves to tell the user
+    /// what was removed, and a code carries no payload.
+    PromptInjection {
+        findings: Vec<PromptInjectionFinding>,
+
+        /// How many passages were filtered. Can exceed the number of findings, which is
+        /// capped, so the user still learns the true extent of the filtering.
+        redacted_count: usize,
     },
 }
 
@@ -260,6 +292,17 @@ pub struct ExtractDataQuery {
     stream_id: String,
     #[serde(deserialize_with = "deserialize_bool_case_insensitive")]
     extract_images: bool,
+
+    /// Whether suspected prompt injections are filtered out of the content.
+    ///
+    /// Defaults to filtering when the app does not say: leaving it out must not be a way to
+    /// receive unfiltered content by accident.
+    #[serde(default = "filter_by_default", deserialize_with = "deserialize_bool_case_insensitive")]
+    filter_prompt_injections: bool,
+}
+
+fn filter_by_default() -> bool {
+    true
 }
 
 fn deserialize_bool_case_insensitive<'de, D>(deserializer: D) -> std::result::Result<bool, D::Error>
@@ -308,6 +351,37 @@ fn error_event(error: &ExtractionError, stream_id: Option<&str>) -> Event {
     })
 }
 
+/// Serializes a content chunk as an SSE event, reporting a serialization failure as an error
+/// event rather than dropping the chunk silently.
+fn content_event(chunk: &Chunk, stream_id: &str, path: &str) -> Event {
+    Event::default().json_data(chunk).unwrap_or_else(|e| {
+        error!("Failed to serialize a content chunk for '{path}': {e}");
+        error_event(&ExtractionError::new(ExtractionErrorCode::Internal, format!("Failed to serialize a content chunk: {e}")), Some(stream_id))
+    })
+}
+
+/// Pairs the sanitized texts back up with the chunks they came from.
+///
+/// The sanitizer holds chunks back until it has seen enough text to scan across their
+/// boundaries, and releases them in order. Their metadata waited here in the meantime,
+/// which is what keeps a page's text under its own page number.
+fn take_released(held: &mut VecDeque<(u64, Chunk)>, released: Vec<(u64, String)>) -> Vec<Chunk> {
+    let mut chunks = Vec::with_capacity(released.len());
+
+    for (id, text) in released {
+        let Some((held_id, mut chunk)) = held.pop_front() else {
+            error!("The prompt-injection filter released a chunk that was never held: {id}.");
+            continue;
+        };
+
+        debug_assert_eq!(held_id, id, "chunks must be released in the order they arrived");
+        chunk.content = text;
+        chunks.push(chunk);
+    }
+
+    chunks
+}
+
 pub async fn extract_data(
     _token: APIToken,
     query: std::result::Result<Query<ExtractDataQuery>, QueryRejection>,
@@ -330,22 +404,88 @@ pub async fn extract_data(
 
                 match stream_result {
                     Ok(mut stream) => {
+                        //
+                        // Every chunk of every file format passes through here, which is why the
+                        // prompt-injection filter sits at this point: it needs to see the document
+                        // as a whole, and this is the one place where the whole document goes by.
+                        //
+                        let mut sanitizer = query.filter_prompt_injections.then(Sanitizer::new);
+                        let mut held: VecDeque<(u64, Chunk)> = VecDeque::new();
+                        let mut next_chunk_id = 0u64;
+
                         while let Some(chunk) = stream.next().await {
                             match chunk {
                                 Ok(mut chunk) => {
                                     chunk.set_stream_id(id_ref);
-                                    yield Ok(Event::default().json_data(&chunk).unwrap_or_else(|e| {
-                                        error!("Failed to serialize a content chunk for '{path_ref}': {e}");
-                                        error_event(&ExtractionError::new(ExtractionErrorCode::Internal, format!("Failed to serialize a content chunk: {e}")), Some(id_ref))
-                                    }));
+
+                                    let Some(sanitizer) = sanitizer.as_mut() else {
+                                        yield Ok(content_event(&chunk, id_ref, path_ref));
+                                        continue;
+                                    };
+
+                                    //
+                                    // Image data and error notices are passed on untouched. They
+                                    // must still wait for the text ahead of them, or a page's
+                                    // image would overtake the page it belongs to.
+                                    //
+                                    if !chunk.carries_filterable_text() {
+                                        for released in take_released(&mut held, sanitizer.flush()) {
+                                            yield Ok(content_event(&released, id_ref, path_ref));
+                                        }
+
+                                        yield Ok(content_event(&chunk, id_ref, path_ref));
+                                        continue;
+                                    }
+
+                                    let id = next_chunk_id;
+                                    next_chunk_id += 1;
+
+                                    let content = std::mem::take(&mut chunk.content);
+                                    held.push_back((id, chunk));
+
+                                    for released in take_released(&mut held, sanitizer.push(id, &content)) {
+                                        yield Ok(content_event(&released, id_ref, path_ref));
+                                    }
                                 },
 
                                 Err(e) => {
                                     let extraction_error = ExtractionError::from_boxed(e.as_ref());
                                     error!("Extraction failed for '{path_ref}': {extraction_error}");
+
+                                    // Whatever was read before the failure is still content the
+                                    // app may show, so it is released before the error.
+                                    if let Some(sanitizer) = sanitizer.as_mut() {
+                                        for released in take_released(&mut held, sanitizer.flush()) {
+                                            yield Ok(content_event(&released, id_ref, path_ref));
+                                        }
+                                    }
+
                                     yield Ok(error_event(&extraction_error, Some(id_ref)));
                                     break;
                                 },
+                            }
+                        }
+
+                        if let Some(mut sanitizer) = sanitizer {
+                            for released in take_released(&mut held, sanitizer.flush()) {
+                                yield Ok(content_event(&released, id_ref, path_ref));
+                            }
+
+                            let report = sanitizer.into_report();
+                            if !report.is_empty() {
+                                warn!(
+                                    "Filtered {count} suspected prompt injection(s) out of '{path_ref}': {rules:?}",
+                                    count = report.redacted_count,
+                                    rules = report.findings.iter().map(|finding| finding.rule_id.as_str()).collect::<Vec<_>>(),
+                                );
+
+                                let mut notice = Chunk::new(String::new(), Metadata::PromptInjection {
+                                    findings: report.findings,
+                                    redacted_count: report.redacted_count,
+                                });
+
+                                notice.set_stream_id(id_ref);
+                                yield Ok(content_event(&notice, id_ref, path_ref));
                             }
                         }
                     },
@@ -1338,4 +1478,67 @@ fn sanitize_presentation_metadata_value(value: &str) -> String {
         .collect::<Vec<_>>()
         .join(" ")
         .replace("--", "&#45;&#45;")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Base64 image data must never reach the prompt-injection filter. It is not prose, and
+    /// the filter's encoded-carrier scan would treat a photo as one enormous carrier and
+    /// replace it with a marker, destroying the image.
+    #[test]
+    fn image_chunks_are_kept_away_from_the_filter() {
+        let image = Chunk::new("iVBORw0KGgo".to_string(), Metadata::Image {});
+        assert!(!image.carries_filterable_text());
+
+        let base64_image = Base64Image::new("id".to_string(), "data".to_string(), 0, true, None);
+        let slide_image = Chunk::new(String::new(), Metadata::Presentation {
+            slide_number: 1,
+            image: Some(base64_image),
+        });
+
+        assert!(!slide_image.carries_filterable_text());
+    }
+
+    #[test]
+    fn text_chunks_go_through_the_filter() {
+        let page = Chunk::new("Some page text.".to_string(), Metadata::Pdf { page_number: 1 });
+        assert!(page.carries_filterable_text());
+
+        let line = Chunk::new("Some line.".to_string(), Metadata::Text { line_number: 1 });
+        assert!(line.carries_filterable_text());
+
+        let row = Chunk::new("a,b,c".to_string(), Metadata::Spreadsheet {
+            sheet_name: "Sheet1".to_string(),
+            row_number: 1,
+        });
+
+        assert!(row.carries_filterable_text());
+    }
+
+    /// A slide's Markdown is text even though the same metadata variant also carries images.
+    #[test]
+    fn slide_text_without_an_image_goes_through_the_filter() {
+        let slide = Chunk::new("# Slide title".to_string(), Metadata::Presentation {
+            slide_number: 1,
+            image: None,
+        });
+
+        assert!(slide.carries_filterable_text());
+    }
+
+    /// Notices are generated by the runtime itself and would only be scanned in circles.
+    #[test]
+    fn notices_are_kept_away_from_the_filter() {
+        let error = Chunk::from_error(&ExtractionError::new(ExtractionErrorCode::Internal, "failed"));
+        assert!(!error.carries_filterable_text());
+
+        let notice = Chunk::new(String::new(), Metadata::PromptInjection {
+            findings: Vec::new(),
+            redacted_count: 1,
+        });
+
+        assert!(!notice.carries_filterable_text());
+    }
 }

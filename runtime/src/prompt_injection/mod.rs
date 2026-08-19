@@ -15,6 +15,8 @@
 //! still intact by the time it is scanned and can still be redacted, because nothing
 //! containing it has left the sanitizer yet.
 
+pub mod api;
+
 mod decode;
 mod normalize;
 mod rules;
@@ -35,6 +37,14 @@ const REDACTION_MARKER: &str = "[AI Studio removed suspicious content here]";
 /// Comfortably above the longest pattern any rule can match, which is bounded by the
 /// `{0,300}` spans in the markup rules.
 const OVERLAP_BYTES: usize = 4_096;
+
+/// How much new text has to arrive before the held-back buffer is scanned again.
+///
+/// Scanning on every chunk would re-scan the whole buffer each time. A text file arrives
+/// line by line, so that would mean scanning several kilobytes per line — quadratic in the
+/// size of the document. Waiting for a batch bounds it: every byte is scanned about twice,
+/// once as new text and once as overlap.
+const SCAN_BATCH_BYTES: usize = 8_192;
 
 /// The most findings reported for one document. The report explains to a user what was
 /// found; past a handful more entries add no insight, while redaction continues regardless.
@@ -83,11 +93,27 @@ struct Redactable {
     redaction: Redaction,
 }
 
+/// A chunk that was handed in but not released yet.
+struct Part {
+    /// The caller's handle for this chunk. `extract_data` uses it to pair the sanitized text
+    /// back up with the chunk's metadata, which matters because that metadata ends up in the
+    /// document: a page number travels with its page, and releasing text under the wrong one
+    /// would put `# Page 41` in front of page 42's text.
+    id: u64,
+    text: String,
+}
+
 /// Filters prompt injections out of a document as it streams past.
 pub struct Sanitizer {
-    /// Text scanned but not yet released, so a pattern crossing into the next chunk can
-    /// still be redacted.
-    pending: String,
+    /// Chunks scanned but not released yet, so a pattern crossing a chunk boundary can still
+    /// be redacted. Kept as separate chunks rather than one string so each one can be handed
+    /// back under its own id.
+    pending: Vec<Part>,
+    pending_bytes: usize,
+
+    /// Bytes added since the last scan. Scanning on every chunk would re-scan the whole
+    /// held-back buffer each time, which turns a line-by-line text file into quadratic work.
+    unscanned_bytes: usize,
 
     findings: Vec<Finding>,
     seen: HashSet<(String, String)>,
@@ -103,61 +129,102 @@ impl Default for Sanitizer {
 impl Sanitizer {
     pub fn new() -> Self {
         Self {
-            pending: String::new(),
+            pending: Vec::new(),
+            pending_bytes: 0,
+            unscanned_bytes: 0,
             findings: Vec::new(),
             seen: HashSet::new(),
             redacted_count: 0,
         }
     }
 
-    /// Takes the next chunk and returns the text that is safe to release.
+    /// Takes the next chunk under the caller's `id` and returns the chunks that are now safe
+    /// to release, in order.
     ///
-    /// The returned text is usually shorter than what went in: the tail is held back until
-    /// the following chunk arrives. Call `finish` to get the remainder.
-    pub fn sanitize(&mut self, chunk: &str) -> String {
-        self.pending.push_str(chunk);
-        let buffer = std::mem::take(&mut self.pending);
-        let sanitized = self.scan_and_redact(buffer, false);
+    /// Usually returns nothing: chunks are held until enough text has arrived to scan across
+    /// their boundaries. Call `flush` to release what is left.
+    pub fn push(&mut self, id: u64, text: &str) -> Vec<(u64, String)> {
+        self.pending_bytes += text.len();
+        self.unscanned_bytes += text.len();
+        self.pending.push(Part { id, text: text.to_string() });
 
-        // Hold back the tail, but never split a character in half:
-        let split_at = sanitized.len().saturating_sub(OVERLAP_BYTES);
-        let split_at = floor_char_boundary(&sanitized, split_at);
+        if self.unscanned_bytes < SCAN_BATCH_BYTES {
+            return Vec::new();
+        }
 
-        self.pending = sanitized[split_at..].to_string();
-        sanitized[..split_at].to_string()
+        self.process(false)
     }
 
-    /// Releases the held-back tail and returns what was found in the whole document.
-    pub fn finish(mut self) -> (String, Report) {
-        // Only now is the end of the text the actual end, so matches reaching it can be
-        // acted on. Until this point they might still have continued into the next chunk.
-        let buffer = std::mem::take(&mut self.pending);
-        let remainder = self.scan_and_redact(buffer, true);
-        let report = Report { findings: self.findings, redacted_count: self.redacted_count };
-
-        (remainder, report)
+    /// Releases every chunk still held back.
+    ///
+    /// Only now is the end of the buffered text the end of the document, so matches reaching
+    /// it can finally be acted on.
+    pub fn flush(&mut self) -> Vec<(u64, String)> {
+        self.process(true)
     }
 
-    /// Scans `text` and replaces what was found.
+    /// What was found across the whole document.
+    pub fn into_report(self) -> Report {
+        Report { findings: self.findings, redacted_count: self.redacted_count }
+    }
+
+    /// Scans everything held back, redacts it, and decides what may be released.
+    fn process(&mut self, is_final: bool) -> Vec<(u64, String)> {
+        self.unscanned_bytes = 0;
+        if self.pending.is_empty() {
+            return Vec::new();
+        }
+
+        // The scan runs across chunk boundaries, so the chunks are joined for it and the
+        // result is taken apart again afterwards.
+        let mut buffer = String::with_capacity(self.pending_bytes);
+        let mut spans = Vec::with_capacity(self.pending.len());
+        for part in &self.pending {
+            let start = buffer.len();
+            buffer.push_str(&part.text);
+            spans.push((part.id, start, buffer.len()));
+        }
+
+        let redactions = self.collect_redactions(&buffer, is_final);
+        let mut parts = apply_to_parts(&buffer, &spans, redactions);
+        if is_final {
+            self.pending.clear();
+            self.pending_bytes = 0;
+            return parts;
+        }
+
+        // Hold back the last chunks, enough of them to cover any pattern that might continue
+        // into the chunk still to come.
+        let mut held_bytes = 0;
+        let mut first_held = parts.len();
+        while first_held > 0 && held_bytes < OVERLAP_BYTES {
+            first_held -= 1;
+            held_bytes += parts[first_held].1.len();
+        }
+
+        let held = parts.split_off(first_held);
+        self.pending_bytes = held.iter().map(|(_, text)| text.len()).sum();
+        self.pending = held.into_iter().map(|(id, text)| Part { id, text }).collect();
+
+        parts
+    }
+
+    /// Collects everything to redact in `text`.
     ///
     /// `is_final` says whether the end of `text` is the end of the document. While it is
     /// not, a match touching that end is ignored: the text may continue in the next chunk,
     /// and redacting `instruction` before its `s` has arrived would leave the `s` behind.
-    /// Nothing is lost by waiting because the tail containing the match is held back and
+    /// Nothing is lost by waiting because the chunk containing the match is held back and
     /// scanned again.
-    fn scan_and_redact(&mut self, text: String, is_final: bool) -> String {
+    fn collect_redactions(&mut self, text: &str, is_final: bool) -> Vec<Redactable> {
         let mut redactions = Vec::new();
 
-        self.collect_phrase_matches(&text, is_final, &mut redactions);
-        self.collect_structural_matches(&text, is_final, &mut redactions);
-        self.collect_encoded_matches(&text, is_final, &mut redactions);
-        self.collect_spaced_and_shuffled_matches(&text, is_final, &mut redactions);
+        self.collect_phrase_matches(text, is_final, &mut redactions);
+        self.collect_structural_matches(text, is_final, &mut redactions);
+        self.collect_encoded_matches(text, is_final, &mut redactions);
+        self.collect_spaced_and_shuffled_matches(text, is_final, &mut redactions);
 
-        if redactions.is_empty() {
-            return text;
-        }
-
-        self.apply(&text, redactions)
+        redactions
     }
 
     /// Whether a match may be acted on, or has to wait for more text.
@@ -309,37 +376,73 @@ impl Sanitizer {
         });
     }
 
-    /// Replaces every redacted range, merging the ones that overlap.
-    fn apply(&self, text: &str, mut redactions: Vec<Redactable>) -> String {
-        redactions.sort_by_key(|redaction| (redaction.start, std::cmp::Reverse(redaction.end)));
+}
 
-        let mut result = String::with_capacity(text.len());
-        let mut cursor = 0;
-
-        for redaction in redactions {
-            // Overlapping matches are common: a phrase and a structural rule often describe
-            // the same sentence. Whatever was already replaced is skipped.
-            if redaction.start < cursor {
-                continue;
-            }
-
-            let start = floor_char_boundary(text, redaction.start);
-            let end = ceil_char_boundary(text, redaction.end);
-            if start >= end {
-                continue;
-            }
-
-            result.push_str(&text[cursor..start]);
-            if redaction.redaction == Redaction::Marker {
-                result.push_str(REDACTION_MARKER);
-            }
-
-            cursor = end;
+/// Applies every redaction to the joined buffer and hands each chunk back separately.
+///
+/// `spans` says which byte range of `buffer` belongs to which chunk. A redaction may cross
+/// a chunk boundary — that is the whole reason the chunks were joined — so the text it
+/// removes is taken out of every chunk it touches, while the marker replacing it goes into
+/// the chunk where the match began.
+fn apply_to_parts(
+    buffer: &str,
+    spans: &[(u64, usize, usize)],
+    mut redactions: Vec<Redactable>,
+) -> Vec<(u64, String)> {
+    let mut parts: Vec<(u64, String)> = spans.iter().map(|(id, _, _)| (*id, String::new())).collect();
+    if redactions.is_empty() {
+        for (index, (_, start, end)) in spans.iter().enumerate() {
+            parts[index].1.push_str(&buffer[*start..*end]);
         }
 
-        result.push_str(&text[cursor..]);
-        result
+        return parts;
     }
+
+    redactions.sort_by_key(|redaction| (redaction.start, std::cmp::Reverse(redaction.end)));
+
+    // Copies a byte range of the buffer into the chunks it belongs to.
+    let copy = |from: usize, to: usize, parts: &mut Vec<(u64, String)>| {
+        for (index, (_, span_start, span_end)) in spans.iter().enumerate() {
+            let start = from.max(*span_start);
+            let end = to.min(*span_end);
+            if start < end {
+                parts[index].1.push_str(&buffer[start..end]);
+            }
+        }
+    };
+
+    // Which chunk a position belongs to, for placing the marker.
+    let chunk_of = |position: usize| {
+        spans
+            .iter()
+            .position(|(_, start, end)| position >= *start && position < *end)
+            .unwrap_or(spans.len().saturating_sub(1))
+    };
+
+    let mut cursor = 0;
+    for redaction in redactions {
+        // Overlapping matches are common: a phrase and a structural rule often describe the
+        // same sentence. Whatever was already replaced is skipped.
+        if redaction.start < cursor {
+            continue;
+        }
+
+        let start = floor_char_boundary(buffer, redaction.start);
+        let end = ceil_char_boundary(buffer, redaction.end);
+        if start >= end {
+            continue;
+        }
+
+        copy(cursor, start, &mut parts);
+        if redaction.redaction == Redaction::Marker {
+            parts[chunk_of(start)].1.push_str(REDACTION_MARKER);
+        }
+
+        cursor = end;
+    }
+
+    copy(cursor, buffer.len(), &mut parts);
+    parts
 }
 
 /// Returns the first rule that matches a decoded payload, if any.
@@ -477,11 +580,17 @@ fn ceil_char_boundary(text: &str, index: usize) -> usize {
 /// Sanitizes a text that is not streamed, such as a web page or a retrieval context.
 pub fn sanitize_text(text: &str) -> (String, Report) {
     let mut sanitizer = Sanitizer::new();
-    let mut result = sanitizer.sanitize(text);
-    let (remainder, report) = sanitizer.finish();
-    result.push_str(&remainder);
+    let mut result = String::with_capacity(text.len());
 
-    (result, report)
+    for (_, part) in sanitizer.push(0, text) {
+        result.push_str(&part);
+    }
+
+    for (_, part) in sanitizer.flush() {
+        result.push_str(&part);
+    }
+
+    (result, sanitizer.into_report())
 }
 
 #[cfg(test)]
