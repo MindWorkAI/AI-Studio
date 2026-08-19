@@ -43,6 +43,9 @@ const MAX_FINDINGS: usize = 8;
 /// How much of the surrounding sentence a finding quotes.
 const MAX_SNIPPET_LENGTH: usize = 240;
 
+/// Where a quoted finding is cut off, so the snippet shows a sentence rather than a fragment.
+const SENTENCE_BOUNDARIES: [char; 5] = ['.', '!', '?', '\r', '\n'];
+
 /// One detected injection attempt, as reported to the .NET app.
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
 pub struct Finding {
@@ -223,7 +226,7 @@ impl Sanitizer {
             // The decoded phrase exists nowhere in the document, so the encoded block is
             // what has to go. The snippet quotes the decoded text, because that is what
             // explains to the user why the block was removed.
-            self.push_finding(rule_id, category, snippet_of(&block.text, 0, block.text.len()));
+            self.push_finding(&rule_id, &category, snippet_of(&block.text, 0, block.text.len()));
             redactions.push(Redactable {
                 start: block.start,
                 end: block.end,
@@ -340,10 +343,10 @@ impl Sanitizer {
 }
 
 /// Returns the first rule that matches a decoded payload, if any.
-fn first_hit(text: &str) -> Option<(&'static str, &'static str)> {
-    for index in STRUCTURAL.matching(text) {
+fn first_hit(text: &str) -> Option<(String, String)> {
+    if let Some(&index) = STRUCTURAL.matching(text).first() {
         let (rule, _) = STRUCTURAL.rule(index);
-        return Some((rule.id, rule.category));
+        return Some((rule.id.to_string(), rule.category.to_string()));
     }
 
     let normalized = normalize::collapse_whitespace(text);
@@ -351,25 +354,7 @@ fn first_hit(text: &str) -> Option<(&'static str, &'static str)> {
     let matched = rules.automaton().find(&normalized.text)?;
     let (rule_id, category) = rules.rule_for(matched.pattern().as_usize());
 
-    // The rule table lives for the process, so these borrows outlive the call. Leaking the
-    // strings would be the alternative; instead the ids are looked up as static names.
-    Some((static_rule_id(rule_id), static_rule_id(category)))
-}
-
-/// Interns a rule id so it can be handed out with a static lifetime. The set of ids is
-/// fixed and tiny, so a lookup table beats leaking a fresh string per match.
-fn static_rule_id(value: &str) -> &'static str {
-    static IDS: once_cell::sync::Lazy<std::sync::Mutex<HashSet<&'static str>>> =
-        once_cell::sync::Lazy::new(|| std::sync::Mutex::new(HashSet::new()));
-
-    let mut ids = IDS.lock().expect("the rule id table must not be poisoned");
-    if let Some(existing) = ids.get(value) {
-        return existing;
-    }
-
-    let leaked: &'static str = Box::leak(value.to_string().into_boxed_str());
-    ids.insert(leaked);
-    leaked
+    Some((rule_id.to_string(), category.to_string()))
 }
 
 /// Finds words that are a letter-shuffled variant of a watched keyword.
@@ -448,12 +433,12 @@ fn snippet_of(text: &str, start: usize, end: usize) -> String {
     let end = ceil_char_boundary(text, end.min(text.len())).max(start);
 
     let sentence_start = text[..start]
-        .rfind(|character| matches!(character, '.' | '!' | '?' | '\r' | '\n'))
+        .rfind(SENTENCE_BOUNDARIES)
         .map(|index| index + 1)
         .unwrap_or(0);
 
     let sentence_end = text[end..]
-        .find(|character| matches!(character, '.' | '!' | '?' | '\r' | '\n'))
+        .find(SENTENCE_BOUNDARIES)
         .map(|index| end + index + 1)
         .unwrap_or(text.len());
 
