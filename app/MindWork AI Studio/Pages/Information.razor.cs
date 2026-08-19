@@ -24,10 +24,16 @@ public partial class Information : MSGComponentBase
     private RustService RustService { get; init; } = null!;
 
     [Inject]
+    private ILogger<Information> Logger { get; init; } = null!;
+
+    [Inject]
     private IDialogService DialogService { get; init; } = null!;
 
     [Inject]
-    private ISnackbar Snackbar { get; init; } = null!;
+    private UpdatePolicy UpdatePolicy { get; init; } = null!;
+
+    [Inject]
+    private RuntimeInfoResponse RuntimeInfo { get; init; }
     
     [Inject]
     private DatabaseClientProvider DatabaseClientProvider { get; init; } = null!;
@@ -42,7 +48,7 @@ public partial class Information : MSGComponentBase
 
     private string osLanguage = string.Empty;
     private string osUserName = string.Empty;
-    private RuntimeInfoResponse runtimeInfo;
+    private UpdatePolicyMode updatePolicyMode;
     
     private static string VersionApp => $"MindWork AI Studio: v{META_DATA.Version} (commit {META_DATA.AppCommitHash}, build {META_DATA.BuildNum}, {META_DATA_ARCH.Architecture.ToRID().ToUserFriendlyName()})";
     
@@ -54,18 +60,32 @@ public partial class Information : MSGComponentBase
     
     private string OSUserName => $"{T("Username provided by the OS")}: '{this.osUserName}'";
 
-    private string WorkingDirectory => $"{T("Working directory")}: {this.runtimeInfo.WorkingDirectory}";
+    private string WorkingDirectory => $"{T("Working directory")}: {this.RuntimeInfo.WorkingDirectory}";
 
-    private string ExecutablePath => $"{T("Executable path")}: {this.runtimeInfo.ExecutablePath}";
+    private string ExecutablePath => $"{T("Executable path")}: {this.RuntimeInfo.ExecutablePath}";
 
     private string LinuxPackageType => $"{T("Linux package")}: {this.LinuxPackageTypeDisplayName}";
 
-    private string LinuxPackageTypeDisplayName => this.runtimeInfo.LinuxPackageType switch
+    private string LinuxPackageTypeDisplayName => this.RuntimeInfo.LinuxPackageType switch
     {
-        "appimage" => "AppImage",
-        "flatpak" => "Flatpak",
-        "unknown" => T("unknown"),
+        Tools.Rust.LinuxPackageType.APP_IMAGE => "AppImage",
+        Tools.Rust.LinuxPackageType.FLATPAK => "Flatpak",
+        Tools.Rust.LinuxPackageType.UNKNOWN => T("unknown"),
         _ => T("not applicable")
+    };
+
+    private string InstallationKind => $"{T("Installation")}: {this.InstallationKindDisplayName}";
+
+    private string InstallationKindDisplayName => this.RuntimeInfo.LinuxPackageType switch
+    {
+        Tools.Rust.LinuxPackageType.FLATPAK => T("Flatpak installation, updates are handled outside of AI Studio"),
+        _ => this.RuntimeInfo.InstallationKind switch
+        {
+            Tools.Rust.InstallationKind.MANAGED => T("managed; updates are handled outside of AI Studio; contact whoever installed it and ask about updates"),
+            Tools.Rust.InstallationKind.UNSUPPORTED_LOCATION => T("current installation location does not support automatic updates"),
+            Tools.Rust.InstallationKind.DEVELOPMENT => T("development build, no support for automatic updates"),
+            _ => T("standard; automatic updates supported")
+        }
     };
 
     private string VersionRust => $"{T("Used Rust compiler")}: v{META_DATA.RustVersion}";
@@ -104,10 +124,16 @@ public partial class Information : MSGComponentBase
     private bool showVectorStoreDetails;
     private bool showExternalHttpCustomRootCertificateDetails;
 
-    private List<IAvailablePlugin> configPlugins = PluginFactory.AvailablePlugins
-        .Where(x => x.Type is PluginType.CONFIGURATION)
-        .OfType<IAvailablePlugin>()
-        .ToList();
+    private List<IAvailablePlugin> configPlugins = [];
+
+    /// <summary>
+    /// The configuration plugins an administrator staged for a test.
+    /// </summary>
+    /// <remarks>
+    /// They are kept apart from the other configuration plugins: nobody deployed them, yet they act
+    /// on behalf of the organization while they are loaded. That deserves its own note.
+    /// </remarks>
+    private List<IAvailablePlugin> testConfigPlugins = [];
 
     private List<EnterpriseEnvironment> enterpriseEnvironments = EnterpriseEnvironmentService.CURRENT_ENVIRONMENTS.ToList();
 
@@ -162,7 +188,7 @@ public partial class Information : MSGComponentBase
         
         this.osLanguage = await this.RustService.ReadUserLanguage();
         this.osUserName = await this.RustService.ReadUserName();
-        this.runtimeInfo = await this.RustService.GetRuntimeInfo();
+        this.updatePolicyMode = this.UpdatePolicy.CurrentMode;
         this.logPaths = await this.RustService.GetLogPaths();
         
         await this.RefreshVectorStoreInfo(CancellationToken.None);
@@ -185,6 +211,7 @@ public partial class Information : MSGComponentBase
             case Event.PLUGINS_RELOADED:
             case Event.ENTERPRISE_ENVIRONMENTS_CHANGED:
             case Event.CONFIGURATION_CHANGED:
+                this.updatePolicyMode = this.UpdatePolicy.CurrentMode;
                 this.RefreshEnterpriseConfigurationState();
                 await this.InvokeAsync(this.StateHasChanged);
                 break;
@@ -197,10 +224,13 @@ public partial class Information : MSGComponentBase
 
     private void RefreshEnterpriseConfigurationState()
     {
-        this.configPlugins = PluginFactory.AvailablePlugins
+        var availableConfigPlugins = PluginFactory.AvailablePlugins
             .Where(x => x.Type is PluginType.CONFIGURATION)
             .OfType<IAvailablePlugin>()
             .ToList();
+
+        this.testConfigPlugins = availableConfigPlugins.Where(plugin => PluginFactory.IsEnterpriseTestConfigurationPath(plugin.LocalPath)).ToList();
+        this.configPlugins = availableConfigPlugins.Except(this.testConfigPlugins).ToList();
 
         this.enterpriseEnvironments = EnterpriseEnvironmentService.CURRENT_ENVIRONMENTS.ToList();
         this.mandatoryInfoPanels = PluginFactory.GetMandatoryInfos()
@@ -400,6 +430,27 @@ public partial class Information : MSGComponentBase
         return plugin.ManagedConfigurationId == configurationId && plugin.Id != configurationId;
     }
 
+    /// <summary>
+    /// Collects what a user needs to find and judge a staged test configuration.
+    /// </summary>
+    /// <remarks>
+    /// There is no enterprise environment behind it, so we show what identifies it instead: the plugin
+    /// ID it claims and the directory it was staged in.
+    /// </remarks>
+    private IReadOnlyList<ConfigInfoRowItem> BuildTestConfigurationItems(IAvailablePlugin plugin) =>
+    [
+        new(Icons.Material.Filled.ArrowRightAlt,
+            $"{T("Configuration plugin ID:")} {plugin.Id}",
+            plugin.Id.ToString(),
+            T("Copies the configuration plugin ID to the clipboard")),
+
+        new(Icons.Material.Filled.ArrowRightAlt,
+            $"{T("Plugin directory:")} {plugin.LocalPath}",
+            plugin.LocalPath,
+            T("Copies the plugin directory to the clipboard"),
+            "margin-top: 4px;"),
+    ];
+
     private string ExternalHttpCustomRootCertificateWarningText
     {
         get
@@ -481,12 +532,42 @@ public partial class Information : MSGComponentBase
 
     private async Task CopyStartupLogPath()
     {
-        await this.RustService.CopyText2Clipboard(this.Snackbar, this.logPaths.LogStartupPath);
+        await this.RustService.CopyText2Clipboard(this.logPaths.LogStartupPath);
     }
     
     private async Task CopyAppLogPath()
     {
-        await this.RustService.CopyText2Clipboard(this.Snackbar, this.logPaths.LogAppPath);
+        await this.RustService.CopyText2Clipboard(this.logPaths.LogAppPath);
+    }
+
+    private async Task OpenLogInFileManager(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            await this.MessageBus.SendWarning(new(Icons.Material.Filled.Folder, T("The log file path is not available yet.")));
+            return;
+        }
+
+        OpenPathResponse response;
+        try
+        {
+            response = await this.RustService.TryOpenPathInRuntimeFileManager(path);
+        }
+        catch (Exception e)
+        {
+            this.Logger.LogWarning(e, "Could not open the log file location in the file manager.");
+            await this.MessageBus.SendError(new(Icons.Material.Filled.Folder, T("Could not open the log file location.")));
+            return;
+        }
+
+        if (response.Success)
+        {
+            await this.MessageBus.SendSuccess(new(Icons.Material.Filled.FolderOpen, T("Opened the log file location.")));
+            return;
+        }
+
+        var issue = string.IsNullOrWhiteSpace(response.Issue) ? T("Unknown error") : response.Issue;
+        await this.MessageBus.SendError(new(Icons.Material.Filled.Folder, string.Format(T("Could not open the log file location: {0}"), issue)));
     }
     
     private const string LICENSE = """
@@ -604,6 +685,41 @@ public partial class Information : MSGComponentBase
     
     private async Task CheckForUpdate()
     {
-        await this.MessageBus.SendMessage<bool>(this, Event.USER_SEARCH_FOR_UPDATE);
+        this.updatePolicyMode = this.UpdatePolicy.CurrentMode;
+        if (this.updatePolicyMode is UpdatePolicyMode.SELF_UPDATE)
+        {
+            await this.MessageBus.SendMessage<bool>(this, Event.USER_SEARCH_FOR_UPDATE);
+            return;
+        }
+
+        var parameters = new DialogParameters<UpdateInstructionsDialog>();
+        if (this.updatePolicyMode is UpdatePolicyMode.ENTERPRISE_DISABLED)
+        {
+            parameters.Add(x => x.Message, T("Updates are managed by your organization. Contact your IT department if you have questions about updating AI Studio."));
+        }
+        else if (this.updatePolicyMode is UpdatePolicyMode.FLATPAK)
+        {
+            parameters.Add(x => x.Message, T("AI Studio cannot update itself when installed as a Flatpak. A Flathub listing is planned. Until then, you can find the latest release on GitHub."));
+            parameters.Add(x => x.ReleaseUrl, "https://github.com/MindWorkAI/AI-Studio/releases/latest");
+        }
+        else if (this.updatePolicyMode is UpdatePolicyMode.MANAGED_INSTALLATION)
+        {
+            // No release link here: the app cannot tell how this installation receives updates,
+            // and installing a second copy from GitHub next to it is exactly what we want to avoid.
+            parameters.Add(x => x.Message, T("This installation cannot update itself. Contact the person or organization that installed AI Studio for information about new versions."));
+        }
+        else if (this.updatePolicyMode is UpdatePolicyMode.UNSUPPORTED_INSTALLATION_LOCATION)
+        {
+            parameters.Add(x => x.Message, T("AI Studio cannot update itself from its current installation location. Installing an update would leave a second installation behind instead of replacing this one. To get a new version, download the latest release and install it over your current installation."));
+            parameters.Add(x => x.ReleaseUrl, "https://github.com/MindWorkAI/AI-Studio/releases/latest");
+        }
+        else if (this.updatePolicyMode is UpdatePolicyMode.DEVELOPMENT)
+        {
+            parameters.Add(x => x.Message, T("You are running a development build of AI Studio, which never updates itself. Pull the latest changes and rebuild the app instead."));
+        }
+        else
+            return;
+
+        await this.DialogService.ShowAsync<UpdateInstructionsDialog>(T("How to update"), parameters, DialogOptions.FULLSCREEN);
     }
 }

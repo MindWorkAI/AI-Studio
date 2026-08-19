@@ -36,6 +36,9 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
     public bool AllowProfiles { get; private set; } = true;
     public bool HasEmbeddedProfileSelection { get; private set; }
     public bool HasCustomPromptBuilder => this.buildPromptFunction is not null;
+    public bool IsAssistantBuilderGenerated { get; private set; }
+    public bool HasDeploymentManagementMetadata { get; private set; }
+    public bool IsManagedByConfigServer { get; private set; }
     public AssistantPluginLaunchBehavior LaunchBehavior { get; private set; }
     public string LaunchWorkspaceName { get; private set; } = string.Empty;
     public bool StartsChatDirectly => this.LaunchBehavior is AssistantPluginLaunchBehavior.OPEN_WORKSPACE_CHAT_BY_NAME;
@@ -63,11 +66,16 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
     {
         message = string.Empty;
         this.HasEmbeddedProfileSelection = false;
+        this.IsAssistantBuilderGenerated = false;
+        this.HasDeploymentManagementMetadata = false;
+        this.IsManagedByConfigServer = false;
         this.buildPromptFunction = null;
         this.LaunchBehavior = AssistantPluginLaunchBehavior.NONE;
         this.LaunchWorkspaceName = string.Empty;
 
         this.RegisterLuaHelpers();
+        this.TryReadAssistantBuilderMetadata();
+        this.TryReadDeploymentMetadata();
         
         // Ensure that the main ASSISTANT table exists and is a valid Lua table:
         if (!this.State.Environment["ASSISTANT"].TryRead<LuaTable>(out var assistantTable))
@@ -149,6 +157,24 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
 
         this.RootComponent = (AssistantForm)rootComponent;
         return true;
+    }
+
+    private void TryReadAssistantBuilderMetadata()
+    {
+        if (!this.State.Environment["AI_STUDIO_ASSISTANT_BUILDER"].TryRead<LuaTable>(out var builderTable))
+            return;
+
+        if (builderTable.TryGetValue("Generated", out var generatedValue) && generatedValue.TryRead<bool>(out var generated))
+            this.IsAssistantBuilderGenerated = generated;
+    }
+
+    private void TryReadDeploymentMetadata()
+    {
+        if (this.State.Environment["DEPLOYED_USING_CONFIG_SERVER"].TryRead<bool>(out var deployedUsingConfigServer))
+        {
+            this.HasDeploymentManagementMetadata = true;
+            this.IsManagedByConfigServer = deployedUsingConfigServer;
+        }
     }
 
     private bool TryReadLaunchConfiguration(LuaTable assistantTable, out string message)
@@ -276,11 +302,39 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
     }
 
     /// <summary>
+    /// The audit hash of this plugin, together with the directory it was computed for.
+    /// </summary>
+    /// <remarks>
+    /// One record instead of two fields, so that a reader always sees a directory and a hash which
+    /// belong together. Recomputing the same hash twice costs nothing but time, mixing up a hash
+    /// with the wrong directory would show a wrong security state.
+    /// </remarks>
+    private sealed record AuditHashCache(string PluginPath, string Hash);
+
+    private AuditHashCache? auditHashCache;
+
+    /// <summary>
     /// Computes a stable audit hash across all Lua files by hashing a canonical
     /// sequence of relative path length, relative path, content length, and content
     /// for each file in ordinal path order.
     /// </summary>
-    public string ComputeAuditHash() => AssistantPluginHash.Compute(this.PluginPath);
+    /// <remarks>
+    /// The result is kept, because computing it reads every Lua file of the plugin, and the plugins
+    /// page as well as the assistants page ask for it on every render. That is safe: the files of
+    /// one plugin instance never change. Whenever something in the plugins directory changes, the
+    /// plugin factory reloads and creates new instances, cf. PluginFactory.Starting.RestartAllPlugins.
+    /// The plugin directory is assigned after the instance was created, so the cache remembers which
+    /// directory it belongs to.
+    /// </remarks>
+    public string ComputeAuditHash()
+    {
+        if (this.auditHashCache is { } cache && string.Equals(cache.PluginPath, this.PluginPath, StringComparison.Ordinal))
+            return cache.Hash;
+
+        var hash = AssistantPluginHash.Compute(this.PluginPath);
+        this.auditHashCache = new(this.PluginPath, hash);
+        return hash;
+    }
 
     private static string BuildSecureSystemPrompt(string pluginSystemPrompt)
     {

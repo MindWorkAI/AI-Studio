@@ -1,0 +1,95 @@
+using AIStudio.Tools.PluginSystem;
+
+namespace AIStudio.Tools;
+
+/// <summary>
+/// Translates the stable failure codes of a file extraction into user-facing text.
+/// </summary>
+/// <remarks>
+/// The message which travels with a result is technical: it comes from the runtime, names the
+/// library which failed, and belongs into the log. The texts here are the counterpart for the
+/// user, and they name what the user can act on, such as an unavailable network drive.
+/// </remarks>
+internal static class FileExtractionResultExtensions
+{
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(FileExtractionResultExtensions).Namespace, nameof(FileExtractionResultExtensions));
+
+    /// <summary>
+    /// Gets the localized message which explains why a file could not be read.
+    /// </summary>
+    /// <param name="result">The extraction result.</param>
+    /// <param name="fileName">The name of the file, as shown to the user.</param>
+    /// <returns>The localized message.</returns>
+    internal static string ToUserMessage(this FileExtractionResult result, string fileName)
+    {
+        // When we know what the file really is, naming it beats a generic "not supported":
+        if (result.ErrorCode is FileExtractionErrorCode.UNSUPPORTED && result.DetectedFormat is not null)
+            return string.Format(TB("The file '{0}' is a {1}, which AI Studio cannot read, so it was not sent."), fileName, result.DetectedFormat);
+
+        return result.ErrorCode.ToUserMessage(fileName);
+    }
+
+    /// <summary>
+    /// Gets the localized message for a file whose content does not match its file extension.
+    /// </summary>
+    /// <remarks>
+    /// This is a notice, not a failure: the file was read according to its content. We still tell
+    /// the user, because a wrong extension is a real problem for every other program as well.
+    /// </remarks>
+    /// <param name="result">The extraction result.</param>
+    /// <param name="fileName">The name of the file, as shown to the user.</param>
+    /// <returns>The localized message.</returns>
+    internal static string ToExtensionMismatchUserMessage(this FileExtractionResult result, string fileName) => string.Format(
+        TB("The file '{0}' is actually a {1} and was read as such. Please correct its file extension."),
+        fileName,
+        result.DetectedFormat);
+
+    /// <summary>
+    /// Gets the localized message which explains why a file could not be read.
+    /// </summary>
+    /// <remarks>
+    /// This overload exists for the places which know the reason before an extraction was even
+    /// attempted, so both ways of skipping a file tell the user the same thing.
+    /// </remarks>
+    /// <param name="code">The stable failure code.</param>
+    /// <param name="fileName">The name of the file, as shown to the user.</param>
+    /// <returns>The localized message.</returns>
+    internal static string ToUserMessage(this FileExtractionErrorCode code, string fileName) => string.Format(ToUserMessageFormat(code), fileName);
+
+    /// <summary>
+    /// Gets the localized message for a file which was read, but lost some of its pages.
+    /// </summary>
+    /// <param name="result">The extraction result.</param>
+    /// <param name="fileName">The name of the file, as shown to the user.</param>
+    /// <returns>The localized message.</returns>
+    internal static string ToPartialUserMessage(this FileExtractionResult result, string fileName)
+    {
+        if (result.FailedPages.Count == 0)
+            return string.Format(TB("Parts of the file '{0}' could not be read. The remaining content was sent."), fileName);
+
+        return string.Format(TB("The pages {1} of the file '{0}' could not be read. The remaining content was sent."), fileName, string.Join(", ", result.FailedPages));
+    }
+
+    private static string ToUserMessageFormat(FileExtractionErrorCode code) => code switch
+    {
+        FileExtractionErrorCode.FILE_NOT_FOUND => TB("The file '{0}' does not exist anymore and was not sent."),
+        FileExtractionErrorCode.FILE_NOT_READABLE => TB("The file '{0}' could not be read and was not sent. When the file is stored on a network drive, the drive might be unavailable, or another program might be blocking the file."),
+        FileExtractionErrorCode.FILE_LOCKED => TB("The file '{0}' is currently open in another program, which is why it was not sent. Please close the file and try again. When the file is stored on a shared network drive, a colleague might have it open."),
+        FileExtractionErrorCode.TIMEOUT => TB("Reading the file '{0}' took too long and was stopped, so the file was not sent. When the file is stored on a network drive, the connection might be slow or interrupted."),
+        FileExtractionErrorCode.NOT_A_VALID_PDF => TB("The file '{0}' is not a readable PDF and was not sent. It might be damaged or transferred incompletely."),
+        FileExtractionErrorCode.NOT_A_VALID_SPREADSHEET => TB("The file '{0}' is not a readable spreadsheet and was not sent. It might be damaged or transferred incompletely."),
+        FileExtractionErrorCode.PDF_ENCRYPTED => TB("The file '{0}' is protected and could not be opened, so it was not sent."),
+        FileExtractionErrorCode.PDFIUM_UNAVAILABLE => TB("AI Studio was not able to start its PDF engine, so the file '{0}' was not sent."),
+        FileExtractionErrorCode.PANDOC_UNAVAILABLE => TB("Reading the file '{0}' needs Pandoc, which is not available, so the file was not sent."),
+        FileExtractionErrorCode.NO_TEXT_EXTRACTED => TB("No text could be read from the file '{0}', so it was not sent. It might contain images only, such as a scanned PDF without a text layer, or no readable text at all."),
+        FileExtractionErrorCode.NO_CONTENT => TB("The file '{0}' did not provide any content and was not sent."),
+
+        FileExtractionErrorCode.NOT_TEXT_CONTENT => TB("The file '{0}' is not a text file and was not sent. Its content could not be read as text, so it might have a wrong file extension."),
+
+        FileExtractionErrorCode.EXECUTABLE_REJECTED => TB("The file '{0}' is an executable program and was not sent, regardless of its file extension."),
+        FileExtractionErrorCode.FORMAT_DETECTION_FAILED => TB("The file type of '{0}' could not be determined, so the file was not sent."),
+        FileExtractionErrorCode.UNSUPPORTED => TB("The file type of '{0}' is not supported, so the file was not sent."),
+
+        _ => TB("The file '{0}' could not be read and was not sent."),
+    };
+}

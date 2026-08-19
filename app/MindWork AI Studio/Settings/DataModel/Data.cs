@@ -64,6 +64,23 @@ public sealed class Data
     public Dictionary<string, ManagedEditableDefaultState> ManagedEditableDefaults { get; set; } = [];
 
     /// <summary>
+    /// The configuration plugin that owns each locked managed setting.
+    /// </summary>
+    public Dictionary<string, Guid> ManagedLockedConfigurations { get; set; } = [];
+
+    /// <summary>
+    /// The value each managed setting had before a configuration plugin took it over, as JSON.
+    /// </summary>
+    /// <remarks>
+    /// A configuration plugin might be removed later, e.g. when a test configuration ends or when an
+    /// organization withdraws its configuration. The value the user had chosen before belongs to the
+    /// user, so we keep it here and restore it instead of falling back to the app's default value.
+    /// The snapshot is taken once, when a setting becomes managed, and is consumed when no
+    /// configuration plugin manages that setting anymore.
+    /// </remarks>
+    public Dictionary<string, string> ManagedUserValueSnapshots { get; set; } = [];
+
+    /// <summary>
     /// Cached audit results for assistant plugins.
     /// </summary>
     public List<PluginAssistantAudit> AssistantPluginAudits { get; set; } = [];
@@ -119,6 +136,11 @@ public sealed class Data
     
     public DataDocumentAnalysis DocumentAnalysis { get; init; } = new();
 
+    /// <summary>
+    /// Gets the managed Batch Processing Assistant defaults.
+    /// </summary>
+    public DataBatchProcessing BatchProcessing { get; init; } = new(x => x.BatchProcessing);
+
     public DataMandatoryInformation MandatoryInformation { get; init; } = new();
 
     public DataTextSummarizer TextSummarizer { get; init; } = new();
@@ -142,6 +164,11 @@ public sealed class Data
     public DataEMail EMail { get; init; } = new();
     
     public DataSlideBuilder SlideBuilder { get; init; } = new();
+
+    /// <summary>
+    /// Gets the managed Visual Briefing Assistant defaults.
+    /// </summary>
+    public DataVisualBriefing VisualBriefing { get; init; } = new(x => x.VisualBriefing);
     
     public DataLegalCheck LegalCheck { get; init; } = new();
     
@@ -154,4 +181,4 @@ public sealed class Data
     public DataBiasOfTheDay BiasOfTheDay { get; init; } = new();
     
     public DataI18N I18N { get; init; } = new();
-}
+}   

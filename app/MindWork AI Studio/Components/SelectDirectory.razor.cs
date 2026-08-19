@@ -31,6 +31,7 @@ public partial class SelectDirectory : MSGComponentBase
     protected ILogger<SelectDirectory> Logger { get; init; } = null!;
     
     private static readonly Dictionary<string, object?> SPELLCHECK_ATTRIBUTES = new();
+    private bool isDirectoryDialogOpen;
     
     #region Overrides of ComponentBase
 
@@ -51,10 +52,21 @@ public partial class SelectDirectory : MSGComponentBase
 
     private async Task OpenDirectoryDialog()
     {
-        var response = await this.RustService.SelectDirectory(this.DirectoryDialogTitle, string.IsNullOrWhiteSpace(this.Directory) ? null : this.Directory);
-        this.Logger.LogInformation($"The user selected the directory '{response.SelectedDirectory}'.");
+        if (this.isDirectoryDialogOpen)
+            return;
 
-        if (!response.UserCancelled)
-            this.InternalDirectoryChanged(response.SelectedDirectory);
+        this.isDirectoryDialogOpen = true;
+        try
+        {
+            var response = await this.RustService.SelectDirectory(this.DirectoryDialogTitle, string.IsNullOrWhiteSpace(this.Directory) ? null : this.Directory);
+            this.Logger.LogInformation("The user selected the directory '{SelectedDirectory}'.", response.SelectedDirectory);
+
+            if (!response.UserCancelled)
+                this.InternalDirectoryChanged(response.SelectedDirectory);
+        }
+        finally
+        {
+            this.isDirectoryDialogOpen = false;
+        }
     }
 }

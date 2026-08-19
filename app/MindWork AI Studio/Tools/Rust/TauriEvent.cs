@@ -30,6 +30,24 @@ public readonly record struct TauriEvent(TauriEventType EventType, List<string> 
     }
 
     /// <summary>
+    /// Reads a portal shortcut change and its effective display name.
+    /// </summary>
+    public bool TryGetShortcutChange(out Shortcut shortcut, out string effectiveDisplayName)
+    {
+        shortcut = default;
+        effectiveDisplayName = string.Empty;
+        if (this.EventType != TauriEventType.GLOBAL_SHORTCUT_CHANGED || this.Payload.Count < 2)
+            return false;
+
+        if (!Enum.TryParse(this.Payload[0], ignoreCase: true, out shortcut)
+            && !TryParseSnakeCase(this.Payload[0], out shortcut))
+            return false;
+
+        effectiveDisplayName = this.Payload[1];
+        return true;
+    }
+
+    /// <summary>
     /// Tries to parse a snake_case string into a ShortcutName enum value.
     /// </summary>
     private static bool TryParseSnakeCase(string value, out Shortcut shortcut)

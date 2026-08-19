@@ -11,6 +11,17 @@ namespace AIStudio.Components.Settings;
 
 public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
 {
+    /// <summary>
+    /// Groups the table by the used LLM provider. The embedding provider list is already sorted by
+    /// that provider, so all instances of one LLM provider form a single, coherent group.
+    /// </summary>
+    private static readonly TableGroupDefinition<EmbeddingProvider> GROUP_CONFIG = new()
+    {
+        Expandable = true,
+        IsInitiallyExpanded = false,
+        Selector = provider => provider.UsedLLMProvider.ToName(),
+    };
+
     [Parameter]
     public List<ConfigurationSelectData<string>> AvailableEmbeddingProviders { get; set; } = new();
     
@@ -62,6 +73,9 @@ public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
     
     private async Task EditEmbeddingProvider(EmbeddingProvider embeddingProvider)
     {
+        if (embeddingProvider.IsEnterpriseConfiguration && !embeddingProvider.AllowUserProvidedAPIKey)
+            return;
+
         var dialogParameters = new DialogParameters<EmbeddingProviderDialog>
         {
             { x => x.DataNum, embeddingProvider.Num },
@@ -73,12 +87,23 @@ public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
             { x => x.IsSelfHosted, embeddingProvider.IsSelfHosted },
             { x => x.IsEditing, true },
             { x => x.DataHost, embeddingProvider.Host },
+            { x => x.IsEnterpriseConfiguration, embeddingProvider.IsEnterpriseConfiguration },
         };
 
         var dialogReference = await this.DialogService.ShowAsync<EmbeddingProviderDialog>(T("Edit Embedding Provider"), dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return;
+
+        if (embeddingProvider.IsEnterpriseConfiguration)
+        {
+            // Only the API key changed, and the dialog already stored it directly. The provider
+            // object itself is managed by the configuration plugin and must not be overwritten
+            // with the dialog's copy -- doing so would let the locked-but-technically-editable
+            // fields drift from what the organization configured.
+            await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+            return;
+        }
 
         var editedEmbeddingProvider = (EmbeddingProvider)dialogResult.Data!;
         
@@ -131,7 +156,7 @@ public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
     private async Task UpdateEmbeddingProviders()
     {
         this.AvailableEmbeddingProviders.Clear();
-        foreach (var provider in this.SettingsManager.ConfigurationData.EmbeddingProviders)
+        foreach (var provider in this.SettingsManager.GetAllEmbeddingProviders())
             this.AvailableEmbeddingProviders.Add(new (provider.Name, provider.Id));
         
         await this.AvailableEmbeddingProvidersChanged.InvokeAsync(this.AvailableEmbeddingProviders);

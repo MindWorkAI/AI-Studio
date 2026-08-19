@@ -10,6 +10,25 @@ public static partial class ProviderExtensions
 
         if (modelName.IndexOf("gemini-") is not -1)
         {
+            // Chat-compatible Gemini 3.x reasoning models:
+            if (modelName is "gemini-3.5-flash" ||
+                modelName is "gemini-flash-latest" ||
+                modelName is "gemini-3.1-flash-lite" ||
+                modelName is "gemini-3-flash-preview" ||
+                modelName is "gemini-pro-latest" ||
+                modelName is "gemini-3.1-pro-preview" ||
+                modelName is "gemini-3.1-pro-preview-customtools")
+                return
+                [
+                    Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT, Capability.AUDIO_INPUT,
+                    Capability.SPEECH_INPUT, Capability.VIDEO_INPUT,
+
+                    Capability.TEXT_OUTPUT,
+
+                    Capability.ALWAYS_REASONING, Capability.FUNCTION_CALLING,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+
             // Gemini 2.5 Flash Lite supports thinking, but the default is off:
             if (modelName.IndexOf("gemini-2.5-flash-lite") is not -1)
                 return

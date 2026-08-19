@@ -4,6 +4,8 @@ using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.AIJobs;
+using AIStudio.Tools.Media;
+using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
@@ -14,6 +16,7 @@ namespace AIStudio.Components;
 
 public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 {
+    private readonly Guid draftMediaOwnerId = Guid.NewGuid();
     private const string CHAT_INPUT_ID = "chat-user-input";
     private const string MARKDOWN_CODE = "code";
     private const string MARKDOWN_BOLD = "bold";
@@ -54,6 +57,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     [Inject]
     private AIJobService AIJobService { get; init; } = null!;
 
+    [Inject]
+    private MediaTranscriptionService MediaTranscriptionService { get; init; } = null!;
+
     private const Placement TOOLBAR_TOOLTIP_PLACEMENT = Placement.Top;
     private static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
 
@@ -81,6 +87,8 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private Guid foregroundChatId = Guid.Empty;
     private int workspaceHeaderSyncVersion;
 
+    private MediaImportOwner CurrentMediaImportOwner => MediaImportOwner.ForChat(this.ChatThread?.ChatId ?? this.draftMediaOwnerId);
+
     // Unfortunately, we need the input field reference to blur the focus away. Without
     // this, we cannot clear the input field.
     private MudTextField<string> inputField = null!;
@@ -104,6 +112,8 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 
     protected override async Task OnInitializedAsync()
     {
+        this.MediaTranscriptionService.StateChanged += this.OnMediaImportStateChanged;
+        
         // Apply the filters for the message bus:
         this.ApplyFilters([], [ Event.HAS_CHAT_UNSAVED_CHANGES, Event.RESET_CHAT_STATE, Event.CHAT_STREAMING_DONE, Event.AI_JOB_CHANGED, Event.AI_JOB_FINISHED, Event.CHAT_GENERATION_CHANGED, Event.WORKSPACE_RENAMED, Event.CONFIGURATION_CHANGED ]);
         
@@ -243,7 +253,48 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         // Select the correct provider:
         await this.SelectProviderWhenLoadingChat();
         await this.SyncForegroundChatAsync();
+        await this.ConsumeMediaOutcomeAsync();
         await base.OnInitializedAsync();
+    }
+
+    /// <summary>Refreshes send and attachment controls when the media import lane changes.</summary>
+    private void OnMediaImportStateChanged(MediaImportOwner owner)
+    {
+        if (owner == this.CurrentMediaImportOwner)
+            _ = this.InvokeAsync(async () =>
+            {
+                await this.ConsumeMediaOutcomeAsync();
+                this.StateHasChanged();
+            });
+    }
+
+    /// <summary>Consumes a terminal media notification when its chat is visible.</summary>
+    private async Task ConsumeMediaOutcomeAsync()
+    {
+        var outcome = this.MediaTranscriptionService.TryConsumeOutcome(this.CurrentMediaImportOwner);
+        if (outcome is null)
+            return;
+
+        if (outcome.Failures.Count > 0)
+        {
+            var message = string.Join(Environment.NewLine, outcome.Failures.Select(failure => $"{failure.FileName}: {failure.UserMessage}"));
+            await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, message));
+        }
+        else if (outcome.Status is MediaImportStatus.FAILED)
+        {
+            await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, this.T("The media file could not be transcribed.")));
+        }
+
+        if (outcome.Warnings.Count > 0)
+        {
+            var message = string.Join(Environment.NewLine, outcome.Warnings.Select(warning => $"{warning.FileName}: {warning.UserMessage}"));
+            await this.MessageBus.SendWarning(new(Icons.Material.Filled.VoiceChat, message));
+        }
+
+        if (outcome.Status is MediaImportStatus.CANCELLED)
+        {
+            await this.MessageBus.SendWarning(new(Icons.Material.Filled.VoiceChat, this.T("The media transcription was canceled.")));
+        }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -314,6 +365,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 
         await this.ApplyLoadedChatParameterAsync();
         await this.SyncForegroundChatAsync();
+        await this.ConsumeMediaOutcomeAsync();
         await base.OnParametersSetAsync();
     }
 
@@ -680,9 +732,43 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         this.ComposerState.MarkUserDraft();
         this.hasUnsavedChanges = true;
     }
+
+    /// <summary>Creates and stores a stable draft immediately after media import confirmation.</summary>
+    private async Task<ChatThread?> EnsureMediaImportChatAsync(string firstMediaPath)
+    {
+        if (this.ChatThread is not null)
+            return this.ChatThread;
+
+        this.RefreshCurrentProfileAndChatTemplate();
+        var promptName = this.ExtractThreadName(this.ComposerState.UserInput);
+        this.ChatThread = new()
+        {
+            IncludeDateTime = true,
+            SelectedProvider = this.Provider.Id,
+            SelectedProfile = this.currentProfile.Id,
+            SelectedChatTemplate = this.currentChatTemplate.Id,
+            SystemPrompt = SystemPrompts.DEFAULT,
+            WorkspaceId = this.currentWorkspaceId,
+            ChatId = Guid.NewGuid(),
+            DataSourceOptions = this.earlyDataSourceOptions,
+            Name = string.IsNullOrWhiteSpace(this.ComposerState.UserInput)
+                ? $"Transkription: {Path.GetFileName(firstMediaPath)}"
+                : promptName,
+            Blocks = this.currentChatTemplate == ChatTemplate.NO_CHAT_TEMPLATE ? [] : this.currentChatTemplate.ExampleConversation.Select(block => block.DeepClone()).ToList(),
+        };
+
+        await WorkspaceBehaviour.StoreChatAsync(this.ChatThread);
+        this.MarkCurrentChatAsLoadedParameter();
+        await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
+        await this.SyncForegroundChatAsync();
+        return this.ChatThread;
+    }
     
     private async Task SendMessage(bool reuseLastUserPrompt = false)
     {
+        if (this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner))
+            return;
+
         if (!this.IsProviderSelected)
             return;
         
@@ -745,6 +831,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 Text = this.ComposerState.UserInput,
                 FileAttachments = normalizedAttachments,
             };
+            this.ChatThread.PendingMediaTranscripts.Clear();
 
             //
             // Add the user message to the thread:
@@ -986,12 +1073,8 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         if (workspaceId == Guid.Empty)
             return;
         
-        // Delete the chat from the current workspace or the temporary storage:
-        await WorkspaceBehaviour.DeleteChatAsync(this.DialogService, this.ChatThread!.WorkspaceId, this.ChatThread.ChatId, askForConfirmation: false);
-        
-        this.ChatThread!.WorkspaceId = workspaceId;
+        await WorkspaceBehaviour.MoveChatAsync(this.ChatThread!, workspaceId);
         this.MarkCurrentChatAsLoadedParameter();
-        await this.SaveThread();
 
         await this.SyncWorkspaceHeaderWithChatThreadAsync();
     }
@@ -1209,6 +1292,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
+        this.MediaTranscriptionService.StateChanged -= this.OnMediaImportStateChanged;
         if(this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
         {
             await this.SaveThread();

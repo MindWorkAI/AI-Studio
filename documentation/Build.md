@@ -62,3 +62,13 @@ In order to create a release:
 8. Once the PR is merged, a member of the maintainers team will create & push an appropriate git tag in the format `vX.Y.Z`.
 9. The GitHub Workflow will then build the release and upload it to the [release page](https://github.com/MindWorkAI/AI-Studio/releases/latest).
 10. Building the release including virus scanning takes some time. Please be patient.
+
+### Rebuild the current pre-release
+
+If a pre-release must be rebuilt without changing its version, open a terminal in `/app/Build` and run:
+
+```bash
+dotnet run rebuild-release
+```
+
+The command keeps the current version, increments the build number, refreshes the release time and related changelog metadata, reserves the following build number for the next changelog, and performs the same two builds as the regular `release` command. Use `--offline` to skip downloads and rely on locally available build dependencies.

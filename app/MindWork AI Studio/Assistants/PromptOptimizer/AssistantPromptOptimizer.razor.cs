@@ -563,7 +563,7 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
         this.currentCustomPromptGuidePath = selected.FilePath;
 
         if (files.Count > 1 || replacedPrevious)
-            this.Snackbar.Add(T("Replaced the previously selected custom prompt guide file."), Severity.Info);
+            await this.MessageBus.SendInfo(new(Icons.Material.Filled.SwapHoriz, T("Replaced the previously selected custom prompt guide file.")));
 
         await this.LoadCustomPromptGuidelineContentAsync(selected);
     }
@@ -573,16 +573,17 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
         if (!fileAttachment.Exists)
         {
             this.customPromptingGuidelineContent = string.Empty;
-            this.Snackbar.Add(T("The selected custom prompt guide file could not be found."), Severity.Warning);
+            await this.MessageBus.SendWarning(new(Icons.Material.Filled.FindInPage, T("The selected custom prompt guide file could not be found.")));
             return;
         }
 
         try
         {
             this.isLoadingCustomPromptGuide = true;
-            this.customPromptingGuidelineContent = await UserFile.LoadFileData(fileAttachment.FilePath, this.RustService, this.DialogService);
-            if (string.IsNullOrWhiteSpace(this.customPromptingGuidelineContent))
-                this.Snackbar.Add(T("The custom prompt guide file is empty or could not be read."), Severity.Warning);
+
+            // A failure was already reported by UserFile.LoadFileData, so we only keep the content:
+            var extraction = await UserFile.LoadFileData(fileAttachment.FilePath, this.RustService, this.DialogService);
+            this.customPromptingGuidelineContent = extraction.HasUsableContent ? extraction.Content : string.Empty;
         }
         catch (PromptInjectionBlockedException)
         {
@@ -591,7 +592,7 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
         catch
         {
             this.customPromptingGuidelineContent = string.Empty;
-            this.Snackbar.Add(T("Failed to load custom prompt guide content."), Severity.Error);
+            await this.MessageBus.SendError(new(Icons.Material.Filled.Description, T("Failed to load custom prompt guide content.")));
         }
         finally
         {
@@ -605,7 +606,7 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
         var promptingGuideline = await ReadPromptingGuidelineAsync();
         if (string.IsNullOrWhiteSpace(promptingGuideline))
         {
-            this.Snackbar.Add(T("The prompting guideline file could not be loaded."), Severity.Warning);
+            await this.MessageBus.SendWarning(new(Icons.Material.Filled.MenuBook, T("The prompting guideline file could not be loaded.")));
             return;
         }
 

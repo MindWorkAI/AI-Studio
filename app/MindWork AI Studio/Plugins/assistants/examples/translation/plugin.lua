@@ -10,6 +10,8 @@ CATEGORIES = {"CORE"}
 TARGET_GROUPS = {"EVERYONE"}
 IS_MAINTAINED = true
 DEPRECATION_MESSAGE = ""
+-- This example is locally managed and can therefore be revised with AI.
+DEPLOYED_USING_CONFIG_SERVER = false
 
 ASSISTANT = {
     ["Title"] = "Translation",

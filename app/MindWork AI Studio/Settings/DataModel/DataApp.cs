@@ -68,6 +68,16 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     public bool ShowQuickStartGuide { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ShowQuickStartGuide, true);
 
     /// <summary>
+    /// Should the last changelog be visible on the home page?
+    /// </summary>
+    public bool ShowLastChangelog { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ShowLastChangelog, true);
+
+    /// <summary>
+    /// Should the vision panel be visible on the home page?
+    /// </summary>
+    public bool ShowVision { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ShowVision, true);
+
+    /// <summary>
     /// The visibility setting for previews features.
     /// </summary>
     public PreviewVisibility PreviewVisibility { get; set; } = ManagedConfiguration.Register(configSelection, n => n.PreviewVisibility, PreviewVisibility.NONE);
@@ -138,7 +148,27 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     /// Should the user be allowed to add providers?
     /// </summary>
     public bool AllowUserToAddProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToAddProvider, true);
-    
+
+    /// <summary>
+    /// Should the user be allowed to import plugin archives from disk?
+    /// </summary>
+    public bool AllowUserToImportPlugins { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportPlugins, true);
+
+    /// <summary>
+    /// Should the user be allowed to import configuration plugin archives from disk?
+    /// </summary>
+    /// <remarks>
+    /// This is a second gate on top of AllowUserToImportPlugins, and both must allow the import.
+    /// Configuration plugins deserve their own switch because they are far more powerful than an
+    /// assistant: they define LLM providers and data sources, and they lock settings.
+    /// </remarks>
+    public bool AllowUserToImportConfigurationPlugins { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToImportConfigurationPlugins, true);
+
+    /// <summary>
+    /// Should the user be allowed to share or export plugins as archives?
+    /// </summary>
+    public bool AllowUserToSharePlugins { get; set; } = ManagedConfiguration.Register(configSelection, n => n.AllowUserToSharePlugins, true);
+
     /// <summary>
     /// Should administration settings be visible in the UI?
     /// </summary>

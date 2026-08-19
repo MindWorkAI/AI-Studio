@@ -15,6 +15,7 @@ public enum AssistantComponentType
     LIST,
     WEB_CONTENT_READER,
     FILE_CONTENT_READER,
+    FILE_ATTACHMENTS,
     IMAGE,
     COLOR_PICKER,
     DATE_PICKER,

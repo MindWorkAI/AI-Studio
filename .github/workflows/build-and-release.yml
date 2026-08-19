@@ -256,6 +256,17 @@ jobs:
       PDFIUM_CHROMIUM_REVISION: ${{ needs.read_metadata.outputs.pdfium_chromium_revision }}
 
     steps:
+      - name: Checkout AI Studio release metadata
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.AI_STUDIO_COMMIT }}
+          path: ai-studio
+          sparse-checkout: |
+            metadata.txt
+            runtime/packaging/linux/org.mindworkai.AIStudio.desktop
+            runtime/packaging/linux/org.mindworkai.AIStudio.metainfo.xml
+          sparse-checkout-cone-mode: false
+
       - name: Checkout Flatpak repository
         uses: actions/checkout@v4
         with:
@@ -315,6 +326,19 @@ jobs:
         run: |
           set -euo pipefail
 
+          release_version=$(sed -n '1p' ../ai-studio/metadata.txt)
+          release_timestamp=$(sed -n '2p' ../ai-studio/metadata.txt)
+          release_date=${release_timestamp%% *}
+
+          test "$release_version" = "${AI_STUDIO_TAG#v}"
+          [[ "$release_timestamp" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}[[:space:]][0-9]{2}:[0-9]{2}:[0-9]{2}[[:space:]]UTC$ ]]
+          test -s ../ai-studio/runtime/packaging/linux/org.mindworkai.AIStudio.desktop
+          python3 ./update-metainfo.py \
+            --check \
+            --metainfo ../ai-studio/runtime/packaging/linux/org.mindworkai.AIStudio.metainfo.xml \
+            "$release_version" \
+            "$release_date"
+
           pdfium_base_url="https://github.com/bblanchon/pdfium-binaries/releases/download/chromium%2F${PDFIUM_CHROMIUM_REVISION}"
           pdfium_x64_url="${pdfium_base_url}/pdfium-linux-x64.tgz"
           pdfium_arm64_url="${pdfium_base_url}/pdfium-linux-arm64.tgz"
@@ -336,16 +360,16 @@ jobs:
             (.modules[] | select(.name == "mind-work-ai-studio").sources[] | select(.type == "archive" and .only-arches[0] == "x86_64").sha256) = strenv(PDFIUM_X64_SHA256) |
             (.modules[] | select(.name == "mind-work-ai-studio").sources[] | select(.type == "archive" and .only-arches[0] == "aarch64").url) = strenv(PDFIUM_ARM64_URL) |
             (.modules[] | select(.name == "mind-work-ai-studio").sources[] | select(.type == "archive" and .only-arches[0] == "aarch64").sha256) = strenv(PDFIUM_ARM64_SHA256)
-          ' org.MindWorkAI.AIStudio.yml
+          ' org.mindworkai.AIStudio.yml
 
           ./update-dependencies
 
-          test "$(yq -r '(.modules[] | select(.name == "mind-work-ai-studio")).sources[0].tag' org.MindWorkAI.AIStudio.yml)" = "$AI_STUDIO_TAG"
-          test "$(yq -r '(.modules[] | select(.name == "mind-work-ai-studio")).sources[0].commit' org.MindWorkAI.AIStudio.yml)" = "$AI_STUDIO_COMMIT"
-          test "$(yq -r '(.modules[] | select(.name == "mind-work-ai-studio")).sources[] | select(.type == "archive" and .only-arches[0] == "x86_64").url' org.MindWorkAI.AIStudio.yml)" = "$PDFIUM_X64_URL"
-          test "$(yq -r '(.modules[] | select(.name == "mind-work-ai-studio")).sources[] | select(.type == "archive" and .only-arches[0] == "x86_64").sha256' org.MindWorkAI.AIStudio.yml)" = "$PDFIUM_X64_SHA256"
-          test "$(yq -r '(.modules[] | select(.name == "mind-work-ai-studio")).sources[] | select(.type == "archive" and .only-arches[0] == "aarch64").url' org.MindWorkAI.AIStudio.yml)" = "$PDFIUM_ARM64_URL"
-          test "$(yq -r '(.modules[] | select(.name == "mind-work-ai-studio")).sources[] | select(.type == "archive" and .only-arches[0] == "aarch64").sha256' org.MindWorkAI.AIStudio.yml)" = "$PDFIUM_ARM64_SHA256"
+          test "$(yq -r '(.modules[] | select(.name == "mind-work-ai-studio")).sources[0].tag' org.mindworkai.AIStudio.yml)" = "$AI_STUDIO_TAG"
+          test "$(yq -r '(.modules[] | select(.name == "mind-work-ai-studio")).sources[0].commit' org.mindworkai.AIStudio.yml)" = "$AI_STUDIO_COMMIT"
+          test "$(yq -r '(.modules[] | select(.name == "mind-work-ai-studio")).sources[] | select(.type == "archive" and .only-arches[0] == "x86_64").url' org.mindworkai.AIStudio.yml)" = "$PDFIUM_X64_URL"
+          test "$(yq -r '(.modules[] | select(.name == "mind-work-ai-studio")).sources[] | select(.type == "archive" and .only-arches[0] == "x86_64").sha256' org.mindworkai.AIStudio.yml)" = "$PDFIUM_X64_SHA256"
+          test "$(yq -r '(.modules[] | select(.name == "mind-work-ai-studio")).sources[] | select(.type == "archive" and .only-arches[0] == "aarch64").url' org.mindworkai.AIStudio.yml)" = "$PDFIUM_ARM64_URL"
+          test "$(yq -r '(.modules[] | select(.name == "mind-work-ai-studio")).sources[] | select(.type == "archive" and .only-arches[0] == "aarch64").sha256' org.mindworkai.AIStudio.yml)" = "$PDFIUM_ARM64_SHA256"
 
           for generated_source in cargo-sources.json dotnet-sources.json tauri-cli-sources.json; do
             test -s "$generated_source"
@@ -368,7 +392,7 @@ jobs:
 
           branch="sync/ai-studio-${AI_STUDIO_TAG}"
           git checkout -B "$branch"
-          git add org.MindWorkAI.AIStudio.yml cargo-sources.json dotnet-sources.json tauri-cli-sources.json
+          git add org.mindworkai.AIStudio.yml cargo-sources.json dotnet-sources.json tauri-cli-sources.json
 
           if git diff --cached --quiet; then
             echo "Flatpak repository is already synced for ${AI_STUDIO_TAG}."
@@ -441,7 +465,7 @@ jobs:
 
           gh pr merge "$pr_number" \
             --repo "$FLATPAK_REPOSITORY" \
-            --merge \
+            --squash \
             --delete-branch \
             --match-head-commit "$sync_commit"
 
@@ -483,7 +507,7 @@ jobs:
       FLATPAK_COMMIT: ${{ needs.sync_flatpak_repo.outputs.flatpak_commit }}
 
     steps:
-      - name: Wait for Flatpak main build
+      - name: Dispatch and wait for Flatpak build
         id: flatpak_run
         env:
           GH_TOKEN: ${{ secrets.FLATPAK_WORKFLOW_TOKEN }}
@@ -491,7 +515,7 @@ jobs:
           set -euo pipefail
 
           find_run_id() {
-            local created_after="${1:-}"
+            local created_after="$1"
             local runs
 
             runs=$(gh run list \
@@ -502,16 +526,10 @@ jobs:
               --limit 20 \
               --json databaseId,event,headSha,createdAt)
 
-            if [ -n "$created_after" ]; then
-              echo "$runs" | jq -r \
-                --arg commit "$FLATPAK_COMMIT" \
-                --arg created_after "$created_after" \
-                '[.[] | select(.headSha == $commit and .event == "workflow_dispatch" and .createdAt >= $created_after)][0].databaseId // empty'
-            else
-              echo "$runs" | jq -r \
-                --arg commit "$FLATPAK_COMMIT" \
-                '[.[] | select(.headSha == $commit and (.event == "push" or .event == "workflow_dispatch"))][0].databaseId // empty'
-            fi
+            echo "$runs" | jq -r \
+              --arg commit "$FLATPAK_COMMIT" \
+              --arg created_after "$created_after" \
+              '[.[] | select(.headSha == $commit and .event == "workflow_dispatch" and .createdAt >= $created_after)][0].databaseId // empty'
           }
 
           validate_required_artifacts() {
@@ -584,40 +602,28 @@ jobs:
             return 2
           }
 
+          current_main=$(gh api "repos/${FLATPAK_REPOSITORY}/commits/main" --jq .sha)
+          if [ "$current_main" != "$FLATPAK_COMMIT" ]; then
+            echo "Flatpak main advanced from ${FLATPAK_COMMIT} to ${current_main} before the build could be dispatched."
+            exit 1
+          fi
+
+          dispatch_started_at=$(date --utc +'%Y-%m-%dT%H:%M:%SZ')
+          gh workflow run "$FLATPAK_WORKFLOW" \
+            --repo "$FLATPAK_REPOSITORY" \
+            --ref main \
+            -f "artifact_retention_days=${RETENTION_INTERMEDIATE_ASSETS}"
+
           run_id=""
           for attempt in {1..15}; do
-            run_id=$(find_run_id)
+            run_id=$(find_run_id "$dispatch_started_at")
             if [ -n "$run_id" ]; then
               break
             fi
 
-            echo "Waiting for Flatpak workflow on commit ${FLATPAK_COMMIT}..."
+            echo "Waiting for the dispatched Flatpak workflow on commit ${FLATPAK_COMMIT}..."
             sleep 20
           done
-
-          if [ -z "$run_id" ]; then
-            current_main=$(gh api "repos/${FLATPAK_REPOSITORY}/commits/main" --jq .sha)
-            if [ "$current_main" != "$FLATPAK_COMMIT" ]; then
-              echo "No Flatpak run exists for ${FLATPAK_COMMIT}, and Flatpak main has advanced to ${current_main}."
-              exit 1
-            fi
-
-            dispatch_started_at=$(date --utc +'%Y-%m-%dT%H:%M:%SZ')
-            gh workflow run "$FLATPAK_WORKFLOW" \
-              --repo "$FLATPAK_REPOSITORY" \
-              --ref main \
-              -f "artifact_retention_days=${RETENTION_INTERMEDIATE_ASSETS}"
-
-            for attempt in {1..15}; do
-              run_id=$(find_run_id "$dispatch_started_at")
-              if [ -n "$run_id" ]; then
-                break
-              fi
-
-              echo "Waiting for the dispatched Flatpak workflow on commit ${FLATPAK_COMMIT}..."
-              sleep 20
-            done
-          fi
 
           if [ -z "$run_id" ]; then
             echo "Timed out waiting for a Flatpak workflow to start on commit ${FLATPAK_COMMIT}."

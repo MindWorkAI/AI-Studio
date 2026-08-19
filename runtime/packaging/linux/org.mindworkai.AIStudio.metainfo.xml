@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>org.mindworkai.AIStudio</id>
+  <name>MindWork AI Studio</name>
+  <project_license>FSL-1.1-MIT</project_license>
+  <metadata_license>MIT</metadata_license>
+
+  <summary>MindWork AI Studio is a free, independent cross-platform desktop app for local and cloud LLMs across providers, built to democratize AI access.</summary>
+  <developer id="org.mindworkai">
+    <name>MindWork AI Community</name>
+  </developer>
+  <content_rating type="oars-1.1" />
+  <description>
+    <p>
+      MindWork AI Studio is a free desktop app for macOS, Windows, and Linux. It provides a unified user interface
+      for interaction with Large Language Models (LLM). AI Studio also offers so-called assistants, where prompting
+      is not necessary. You can think of AI Studio like an email program: you bring your own API key for the LLM of
+      your choice and can then use these AI systems with AI Studio.
+    </p>
+    <p>Key advantages:</p>
+    <ul>
+      <li>
+        Free of charge: The app is free to use, both for personal and commercial purposes.
+      </li>
+      <li>
+        Democratization of AI: MindWork AI Studio runs even on low-cost hardware, including
+        computers such as Raspberry Pi. This makes the app and its full feature set accessible
+        to people and families with limited budgets. You can start with local LLMs or use
+        affordable cloud models.
+      </li>
+      <li>
+        Independence: You are not tied to any single provider. Choose the providers that best
+        suit your needs, including OpenAI, Perplexity, Mistral, Anthropic, Google Gemini, xAI,
+        DeepSeek, Alibaba Cloud, OpenRouter, Hugging Face, Groq, Fireworks, Helmholtz, GWDG,
+        and self-hosted models.
+      </li>
+      <li>
+        Assistants: Use ready-made assistants for common business and other tasks without writing prompts yourself.
+      </li>
+      <li>
+        Unrestricted usage: Unlike services that impose limits after intensive use, MindWork
+        AI Studio lets you use provider APIs without restrictions imposed by the app.
+      </li>
+      <li>
+        Cost-effective: You only pay providers for what you use, which can be cheaper than a
+        monthly subscription when used infrequently. For intensive usage, API costs may be
+        higher, so you should monitor your provider accounts and use prepaid credit or cost
+        limits when available.
+      </li>
+      <li>
+        Privacy: Control which providers receive your data using provider confidence settings
+        and assign different protection levels to different tasks.
+      </li>
+      <li>
+        Flexibility: Choose the provider and model best suited to your current task.
+      </li>
+      <li>
+        No bloatware: The app requires little storage and memory and has minimal impact on
+        system resources and battery life.
+      </li>
+    </ul>
+  </description>
+
+  <launchable type="desktop-id">org.mindworkai.AIStudio.desktop</launchable>
+
+  <categories>
+    <category>Utility</category>
+    <category>Office</category>
+    <category>Science</category>
+  </categories>
+
+  <keywords>
+    <keyword>AI</keyword>
+    <keyword>Assistant</keyword>
+    <keyword>Privacy</keyword>
+  </keywords>
+
+  <url type="homepage">https://mindworkai.org</url>
+  <url type="bugtracker">https://github.com/MindWorkAI/AI-Studio/issues</url>
+  <url type="contact">https://github.com/MindWorkAI</url>
+  <url type="contribute">https://github.com/MindWorkAI/AI-Studio#contributing-ov-file</url>
+  <url type="vcs-browser">https://github.com/MindWorkAI/AI-Studio</url>
+
+  <provides>
+    <binary>mind-work-ai-studio</binary>
+  </provides>
+
+  <branding>
+    <color type="primary" scheme_preference="light">#b4bed5</color>
+    <color type="primary" scheme_preference="dark">#707e99</color>
+  </branding>
+
+  <screenshots>
+    <screenshot type="default">
+      <image>https://github.com/MindWorkAI/AI-Studio/blob/main/documentation/AI%20Studio%20Home.png?raw=true</image>
+      <caption>Getting started</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://raw.githubusercontent.com/MindWorkAI/AI-Studio/refs/heads/main/documentation/AI%20Studio%20Assistants.png</image>
+      <caption>Assistants</caption>
+    </screenshot>
+  </screenshots>
+
+  <releases>
+    <release type="stable" version="26.8.1" date="2026-08-19">
+      <description>
+        <ul>
+          <li>Added Hetzner's experimental inference API as an LLM provider. It runs open-source models in the EU and supports text and image chats through its OpenAI-compatible API.</li>
+          <li>Added support for the new open source models DeepSeek V4 Flash and Pro, GLM 5.2, Kimi K2.7 Code and K3, as well as Qwen 3.6 and 3.8.</li>
+          <li>Added a prototype Visual Briefing Assistant that turns documents, data, images, audio, and video into self-contained interactive HTML briefings. When you want to test it, you have to enable this preview feature in your app settings.</li>
+          <li>Added organization-configurable defaults and visibility controls for the Visual Briefing Assistant.</li>
+          <li>Added a share button for assistants, configurations, and language plugins. It uses the native share dialog on Windows and macOS. For Linux, we added an export option, which stores the plugin archive at a location of your choice. When you work on a translation for a new language, you can now hand your current state to testers or to us with one click.</li>
+          <li>Added the option to install plugin archives from your files: use the import button on the plugin page or simply drop an archive onto that page. Assistants, configurations, and language plugins are supported, and plugin archives now have their own file extension <code>.mwplugin</code>. Before installing a configuration, AI Studio shows what it sets up: which LLM providers and data sources it adds and where each of them sends your data, plus how many settings it takes control of. A configuration takes effect right away and has no on/off switch, so please install one only when you trust its source. You can remove it again at any time.</li>
+          <li>Added a delete button for assistants, configurations, and language plugins you installed or placed yourself. Until now, such a plugin could only be removed from the data directory by hand, which was especially painful for configurations because they have no on/off switch. Before deleting a configuration, AI Studio lists what disappears with it, such as providers, data sources, and settings that return to their default. When you delete the language plugin you had chosen, AI Studio returns to choosing your language automatically. Plugins shipped with AI Studio and plugins deployed by your IT department cannot be deleted.</li>
+          <li>Added options for organizations to disable importing, sharing, and exporting plugins, with a separate option for configuration plugins. Organizations can now let people import assistants while keeping configurations to their IT department.</li>
+          <li>Added a priority for configuration plugins. Organizations that deploy several configurations can now decide which one wins: a configuration with a higher priority overrides the settings and providers of a lower one. This allows a company-wide base configuration that each department refines for itself.</li>
+          <li>Added the Batch Processing Assistant: process all documents of a folder in one run. Each document is sent to the AI along with your instructions – either a free prompt, one of your document analysis policies, or instructions you import from a file. You choose whether each answer is stored as its own Markdown file or whether all answers are collected in one CSV results table, which you can name yourself. Every run writes a log that lists each document with its processing time, the model, the status, and the reason for any error. When you start another run on the same output folder, we ask whether you want to continue it: documents that failed or are missing from the log are processed again, which is helpful after a crash or when documents exceeded the context window of your model. A single failing document never stops the run, and you can cancel at any time. The assistant was contributed by Jens Erler (<code>j-erler</code>) and marks his first contribution to AI Studio. Thank you, Jens, for this wonderful and useful contribution.</li>
+          <li>Added a way for IT departments to try out a configuration before rolling it out. A configuration placed in the new <code>.config-tests</code> directory below the plugins directory acts like one your organization deployed, including the approval of assistant plugins, so a test shows exactly what colleagues will see later. No configuration server is needed for this. AI Studio empties that directory every time it starts, so a test configuration is valid for one session, and the information page reports it while it is active. The Enterprise IT documentation describes the whole procedure.</li>
+          <li>Added providers for which you bring your own API key. Until now, a provider your organization configured had to come with a shared API key, which meant your IT department needed one key for everybody. Such a provider can now be handed out without a key, so that everyone signs in with their own, for example, a personal OpenAI or Anthropic account. This works for chat, embedding, and transcription providers alike. The provider stays managed by your organization: the host, the model, the instance name, and everything else remain fixed, and the only thing you can edit is the API key. In the settings, these providers carry a key icon instead of the usual lock, so you can see at a glance where you have to add your key; for embedding providers, the test button stays available, so you can check your key right after entering it. Your key is stored on your device in the operating system's credential store, and it stays there even when your organization withdraws the provider later, so it is still in place should the same provider return. For IT departments: the new <code>AllowUserProvidedAPIKey</code> option does this, and it works for <code>LLM_PROVIDERS</code>, <code>EMBEDDING_PROVIDERS</code>, and <code>TRANSCRIPTION_PROVIDERS</code> alike.</li>
+          <li>Added CSV and TSV files to the file types you can attach. AI Studio was already able to read them, but they could not be selected.</li>
+          <li>Improved how your organization's configuration behaves when a configuration plugin is present but cannot be loaded, e.g. because of an error in the plugin. Such a plugin still manages your app, so its settings, providers, data sources, profiles, and chat templates now stay in place instead of being removed.</li>
+          <li>Improved reading large files from slow locations such as network drives. AI Studio now waits considerably longer before it gives up, and it tells you when it does.</li>
+          <li>Improved how Word documents (<code>.docx</code>) and OpenDocument files (<code>.odt</code>) are read. AI Studio now reads them itself instead of handing them to Pandoc, so these documents no longer need a Pandoc installation. It reads them section by section, which keeps even large documents responsive, and it now picks up more of the document: the title, the author, headers and footers, footnotes, endnotes, and comments. This was contributed by Nils Kruthoff (<code>nilskruthoff</code>), who also wrote the library behind it. Thank you, Nils, for this great contribution.</li>
+          <li>Improved the order of your models. Every list of models is now sorted by provider and name, so all models of one provider stay together. Until now, models appeared in the order they were created, which meant that a model added later always showed up at the end of the list. This was especially confusing when your organization rolled out new models. In the settings, the tables for LLM providers, embeddings, and transcription are now grouped by provider and start collapsed, so even a long list stays easy to survey.</li>
+          <li>Improved how you access log files from the information page: you can now open their locations in the system file manager or jump directly to the Log Viewer Assistant.</li>
+          <li>Changed how approvals for assistant plugins combine when your organization deploys several configurations. They now add up, so a department can approve additional assistant plugins without repeating the approvals of the company-wide configuration. Previously, the last configuration replaced all earlier approvals, which silently required a new security check for those assistants.</li>
+          <li>Fixed attached files reaching the AI as empty documents when AI Studio could not read them. The AI then answered as if your file had no content, and nothing pointed to a problem. AI Studio now names the cause instead, for example, an unavailable network drive, a file another program is blocking, a protected PDF, or a scanned PDF without a text layer, and it no longer attaches such a file.</li>
+          <li>Fixed files that are open in another program being reported as an unrecognized file type. AI Studio now tells you that the file is currently open elsewhere and asks you to close it. This also works for files on shared network drives, where a colleague might have the file open.</li>
+          <li>Fixed files with a wrong file extension being reported as empty. AI Studio now recognizes what a file really is by looking at its content, for example, a PowerPoint presentation that was renamed to <code>.txt</code>, and reads it accordingly. It also points out the wrong extension, so you can correct it.</li>
+          <li>Fixed files whose content is not text being sent as an empty document. AI Studio now tells you that the file is not readable as text, which usually means it carries a wrong file extension.</li>
+          <li>Fixed executable programs with a harmless file extension being read as text. They are now recognized by their content and refused.</li>
+          <li>Fixed a single unreadable page of a PDF silently cutting off the rest of the document. The remaining pages are now used, and AI Studio tells you which pages are missing.</li>
+          <li>Fixed a single unreadable sheet of a spreadsheet silently dropping all remaining sheets.</li>
+          <li>Fixed PDFs, text files, spreadsheets, and presentations requiring Pandoc. Only HTML files need Pandoc now, so every other file can be attached and read without it.</li>
+          <li>Fixed attached files that are temporarily unavailable, disappearing from your message without a word. This could happen when a file was stored on a network drive.</li>
+          <li>Fixed the file preview showing an empty document when reading the file failed. It now shows what went wrong, so the preview again answers what AI Studio will hand to the AI.</li>
+          <li>Fixed the file preview looking like an empty file while AI Studio was still reading it. Larger documents and PDFs need a moment to be read, and until now that moment looked like a file without any content. The preview now says that it is still loading and shows the content as soon as it is ready.</li>
+          <li>Fixed problems while reading files being missing from the log file after the first one. This made exactly those issues hard to track down that only appeared later on.</li>
+          <li>Fixed reset buttons in assistants. As you may have noticed in the Document Analysis Assistant, resetting it could leave content from the previous analysis visible. Reset buttons now clear previous results completely.</li>
+          <li>Fixed dropping files after you closed a dialog that accepts files itself. Such a dialog takes over dropped files while it is open, but never handed that role back when you closed it. Afterward, the chat and the assistants silently ignored dropped files until you switched to another page. Each time you opened such a dialog again, the problem got worse.</li>
+          <li>Fixed configuration-managed settings, remaining active after their configuration plugin was removed.</li>
+          <li>Fixed settings not returning to your own value after a configuration was removed. When a configuration takes control of a setting, AI Studio now remembers the value you had chosen before and hands it back once no configuration manages that setting anymore. This covers an IT department withdrawing a configuration, deleting one yourself, and an administrator ending a test configuration. When a configuration only suggested a value, and you changed it afterward, your choice stays as it is.</li>
+          <li>Fixed the integrated code editor to keep errors and other issues in plugin code visible in the footer while scrolling.</li>
+          <li>Fixed the trusted badge so you can now see at a glance which models are trusted. It is shown consistently for self-hosted models and models from trusted providers.</li>
+          <li>Fixed approvals for assistant plugins being accepted from any configuration plugin. An approval marks an assistant as safe without a security check, and the app states that your organization approved it. Only configurations your IT department deploys, or that an administrator stages for a test, can do that now; approvals from any other locally placed configuration plugin are ignored and reported in the log.</li>
+          <li>Fixed withdrawing a configuration your organization deployed. A configuration that declared itself as locally managed stayed on the device even after the IT department stopped deploying it, and it kept every right of an organization configuration, such as approving assistant plugins. Where a configuration is stored now decides this instead of what the configuration says about itself, so withdrawing one always takes effect. This also applies to a device that was offline while the organization changed its policy: the withdrawal is applied when AI Studio starts again.</li>
+          <li>Fixed preview features contributed by several configuration plugins at once. Only the most recent contribution was recognized as coming from your organization, so features enabled by another configuration looked as if you had switched them on yourself. Each configuration is now tracked separately, which lets your organization enable one preview feature company-wide and another one for a single department.</li>
+          <li>Fixed which configuration wins when two configuration plugins collide, e.g. by claiming the same plugin ID, by managing the same setting, or by defining the same provider. Previously, this was down to chance, so a local configuration plugin could take over parts of the configuration your IT department deployed. Configurations from your organization now always win, and every ignored attempt is reported in the log.</li>
+          <li>Fixed the assistant categories when your organization hides individual assistants. A category heading could stay visible above an empty area, and the Log Viewer could disappear together with the Localization assistant. Each heading now follows the assistants actually shown below it.</li>
+          <li>Fixed a removed API key staying in the operating system's credential store. When you cleared the API key of a provider, the previous key remained stored and was still used. It is now removed together with your change.</li>
+          <li>Fixed AI Studio installing a second copy of itself next to an existing installation. Its updater always installs into your personal user folder, so an installation elsewhere, such as one your IT department rolled out, was never replaced. AI Studio now recognizes those installations and leaves them alone. The information page tells you which case applies to yours. For IT departments: automatic updates can now stay enabled for everybody, and the Enterprise IT documentation explains the rest.</li>
+          <li>Fixed installing an assistant on Linux when AI Studio runs as a Flatpak. The Assistant Builder was able to create an assistant, but installing it always ended with an unexpected error.</li>
+          <li>Fixed the plugins page and the assistants page reloading again and again on Linux, which started as soon as an assistant was installed. Both pages kept flickering, and nothing on them could be used anymore until you left for another page.</li>
+          <li>Removed the legacy PowerPoint format (<code>.ppt</code>) from the selectable file types. AI Studio has no reader for it, so such a file could be attached but never read. The modern <code>.pptx</code> format is not affected.</li>
+          <li>Upgraded dependencies to their latest versions to improve security and stability.</li>
+        </ul>
+      </description>
+    </release>
+    <release type="stable" version="26.7.3" date="2026-07-21">
+      <description>
+        <ul>
+          <li>Added support for OpenAI GPT-5.6 Sol, Terra, and Luna; Anthropic Claude Fable 5 and Mythos 5; and Google Gemini 3 Flash, Gemini 3.1 Flash-Lite, Gemini 3.1 Pro, and Gemini 3.5 Flash.</li>
+          <li>Added support for OpenDocument presentations (<code>.odp</code>) when attaching and reading presentation files.</li>
+          <li>Added a log viewer assistant that shows AI Studio log files in a read-only view with search, log filters, highlighting, and auto-refresh.</li>
+          <li>Added audio and video transcription for chats and assistants. AI Studio now prepares supported media locally, sends only normalized audio to the configured transcription provider, and attaches the resulting transcript instead of the original media.</li>
+          <li>Added AI-assisted editing and revision for assistants created with the Assistant Builder. Thanks, Nils Kruthoff (<code>nilskruthoff</code>), for this contribution.</li>
+          <li>Added options to view and edit the code of AI-generated assistants and to delete your own generated assistants. Thanks, Nils Kruthoff (<code>nilskruthoff</code>), for this contribution.</li>
+          <li>Added enterprise configuration options to hide the last changelog and vision panels on the welcome page. Thanks, Dominic Neuburg (<code>donework</code>), for the contribution.</li>
+          <li>Improved the "My Tasks Assistant": you can now provide one or more documents in addition to text or use documents alone when asking to identify tasks.</li>
+          <li>Improved presentation imports so AI Studio can include speaker notes, slide comments, and presentation metadata in the extracted content.</li>
+          <li>Improved update guidance for Flatpak installations and added an enterprise option that lets organizations manage updates entirely through their IT department.</li>
+          <li>Improved secure API-key storage diagnostics on Linux. AI Studio now provides specific guidance when the default password collection is missing or locked, a password-manager prompt is dismissed, or no compatible Secret Service is available.</li>
+          <li>Improved the file dialogs to prevent opening multiple times when you click "Open" or "Save" multiple times in a row.</li>
+          <li>Improved assistant plugins so they clearly indicate when content from a document has been loaded and clear the indicator when the assistant is reset.</li>
+          <li>Improved the Assistant Builder security check so it can use the selected provider when no dedicated security audit agent provider is configured.</li>
+          <li>Fixed an issue that could leave AI Studio unresponsive after waking the computer from sleep. Yes, we know this was an annoying bug, and we apologize for the inconvenience.</li>
+          <li>Fixed connections to internal HTTPS services and enterprise configuration servers that use organization-provided root certificates on Linux.</li>
+          <li>Fixed enterprise configuration plugins from Windows-created ZIP files may not load correctly on Linux when the ZIP contained plugin files inside a folder.</li>
+          <li>Fixed the voice recording shortcut on Linux so it works globally on supported desktops and while AI Studio is focused on other Linux desktops.</li>
+          <li>Fixed voice recording and transcription on Linux.</li>
+          <li>Fixed copied content from AI Studio not remaining available on the clipboard on Linux.</li>
+          <li>Fixed dragging and dropping files from the home folder into the Linux Flatpak version.</li>
+          <li>Fixed being able to switch document analysis policies while an analysis or media transcription was still in progress.</li>
+          <li>Fixed file extension handling so files are recognized correctly regardless of uppercase or lowercase letters in their extensions. Thanks, Paul Schweiß, for reporting this issue.</li>
+          <li>Fixed AI Studio failing to start on Linux systems &amp; showing an outdated version on the Flatpak page.</li>
+          <li>Upgraded Rust to v1.97.1.</li>
+          <li>Upgraded .NET to v9.0.18.</li>
+          <li>Upgraded Tauri to v2.11.5.</li>
+          <li>Upgraded common dependencies.</li>
+          <li>Upgraded runtime dependencies.</li>
+        </ul>
+      </description>
+    </release>
+  </releases>
+</component>

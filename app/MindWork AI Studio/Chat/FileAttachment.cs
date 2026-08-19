@@ -14,6 +14,7 @@ namespace AIStudio.Chat;
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "$type")]
 [JsonDerivedType(typeof(FileAttachment), typeDiscriminator: "file")]
 [JsonDerivedType(typeof(FileAttachmentImage), typeDiscriminator: "image")]
+[JsonDerivedType(typeof(ManagedTranscriptAttachment), typeDiscriminator: "managed_transcript")]
 public record FileAttachment(FileAttachmentType Type, string FileName, string FilePath, long FileSizeBytes)
 {
     /// <summary>
@@ -56,7 +57,7 @@ public record FileAttachment(FileAttachmentType Type, string FileName, string Fi
     /// <summary>
     /// Rebuilds the attachment from its current file path so file type detection uses the latest rules.
     /// </summary>
-    public FileAttachment Normalize() => FromPath(this.FilePath);
+    public virtual FileAttachment Normalize() => FromPath(this.FilePath);
 
     /// <summary>
     /// Creates a FileAttachment from a file path by automatically determining the type,

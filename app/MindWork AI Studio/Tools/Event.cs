@@ -74,6 +74,11 @@ public enum Event
     SHOW_SUCCESS,
 
     /// <summary>
+    /// Requests display of an informational notification.
+    /// </summary>
+    SHOW_INFO,
+
+    /// <summary>
     /// Requests display of a prompt-injection alert dialog.
     /// </summary>
     SHOW_PROMPT_INJECTION_ALERT,
@@ -92,6 +97,11 @@ public enum Event
     /// Notifies receivers that voice recording availability changed.
     /// </summary>
     VOICE_RECORDING_AVAILABILITY_CHANGED,
+
+    /// <summary>
+    /// Notifies settings UI receivers that a portal changed the effective global shortcut label.
+    /// </summary>
+    GLOBAL_SHORTCUT_CHANGED,
     
     // Update events:
     /// <summary>
@@ -302,5 +312,10 @@ public enum Event
     /// <summary>
     /// Sends content to the slide builder assistant.
     /// </summary>
-    SEND_TO_SLIDE_BUILDER_ASSISTANT
+    SEND_TO_SLIDE_BUILDER_ASSISTANT,
+
+    /// <summary>
+    /// Sends content to the Visual Briefing Assistant.
+    /// </summary>
+    SEND_TO_VISUAL_BRIEFING_ASSISTANT
 }

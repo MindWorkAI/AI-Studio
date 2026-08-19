@@ -56,7 +56,13 @@ public abstract partial class ConfigurationBase : MSGComponentBase
 
     protected bool IsDisabled => this.Disabled() || this.IsLocked();
     
-    private string Classes => $"{this.GetClassForBase} {JUSTIFIED_HELP_CLASS} {MARGIN_CLASS}";
+    private string Classes => $"{this.GetClassForBase} {JUSTIFIED_HELP_CLASS} {this.MarginClass}";
+
+    /// <summary>
+    /// The bottom margin of the option. Options inside settings panels need the default
+    /// spacing; standalone usages like toolbar buttons can remove it.
+    /// </summary>
+    protected virtual string MarginClass => MARGIN_CLASS;
     
     private protected virtual RenderFragment? Body => null;
 

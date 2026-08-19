@@ -4,7 +4,7 @@ using AIStudio.Settings;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Tools.AIJobs;
 using AIStudio.Tools.AssistantSessions;
-using AIStudio.Tools.Security;
+using AIStudio.Tools.Media;
 using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
@@ -24,10 +24,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     
     [Inject]
     protected IJSRuntime JsRuntime { get; init; } = null!;
-    
-    [Inject]
-    protected ISnackbar Snackbar { get; init; } = null!;
-    
+
     [Inject]
     protected RustService RustService { get; init; } = null!;
     
@@ -48,6 +45,9 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     /// </summary>
     [Inject]
     protected AIJobService AIJobService { get; init; } = null!;
+
+    [Inject]
+    protected MediaTranscriptionService MediaTranscriptionService { get; init; } = null!;
     
     protected abstract string Title { get; }
     
@@ -133,6 +133,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     protected CancellationTokenSource? CancellationTokenSource;
     private bool isDisposed;
     private AssistantSessionKey assistantSessionKey;
+    private MediaImportOwner CurrentMediaImportOwner => MediaImportOwner.ForAssistant(this.assistantSessionKey);
     private Guid? assistantSessionId;
     private AssistantSessionSnapshot? pendingRenderedAssistantSessionSnapshot;
 
@@ -146,6 +147,9 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     /// </summary>
     protected bool HasAssistantSession => this.assistantSessionId is not null;
 
+    /// <summary>Gets whether this assistant currently owns active media work.</summary>
+    protected bool IsMediaImportBusy => this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner);
+
     /// <summary>
     /// Gets the assistant-specific identifier used to distinguish session slots.
     /// </summary>
@@ -155,6 +159,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     protected override async Task OnInitializedAsync()
     {
+        this.MediaTranscriptionService.StateChanged += this.OnMediaImportStateChanged;
         await base.OnInitializedAsync();
 
         if (!this.SettingsManager.IsAssistantVisible(this.Component, assistantName: this.Title))
@@ -175,8 +180,10 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         this.ProviderSettings = this.SettingsManager.GetPreselectedProvider(this.Component);
         this.CurrentProfile = this.SettingsManager.GetPreselectedProfile(this.Component);
         this.CurrentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(this.Component);
+        await this.OnDefaultsAppliedAsync();
         this.assistantSessionKey = new(this.Component, this.AssistantSessionInstanceId);
         await this.AttachAssistantSessionIfAvailable();
+        await this.ConsumeMediaOutcomeAsync();
     }
 
     protected override async Task OnParametersSetAsync()
@@ -224,6 +231,9 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     private async Task Start()
     {
+        if (this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner))
+            return;
+
         var activeSession = this.AssistantSessionService.TryGetSnapshot(this.assistantSessionKey);
         if (activeSession?.IsActive ?? false)
         {
@@ -264,12 +274,6 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             this.Logger.LogError(e, "The provider request failed for assistant '{AssistantTitle}'. Status={StatusCode}, Reason='{ReasonPhrase}', Body='{ResponseBody}'", this.Title, e.StatusCode, e.ReasonPhrase, e.ResponseBody);
             await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, e.UserMessage));
         }
-        catch (PromptInjectionBlockedException e)
-        {
-            sessionStatus = AssistantSessionStatus.FAILED;
-            errorMessage = e.Message;
-            this.Logger.LogWarning(e, "Blocked prompt-injection content during assistant session '{AssistantTitle}'.", this.Title);
-        }
         catch (Exception e)
         {
             sessionStatus = AssistantSessionStatus.FAILED;
@@ -308,6 +312,11 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     /// the user has stopped typing or selecting options.
     /// </remarks>
     protected virtual Task OnFormChange() => Task.CompletedTask;
+
+    /// <summary>
+    /// Allows assistants to finish asynchronous work after their configured defaults were applied.
+    /// </summary>
+    protected virtual Task OnDefaultsAppliedAsync() => Task.CompletedTask;
     
     /// <summary>
     /// Add an issue to the UI.
@@ -458,18 +467,6 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
             return string.Empty;
         }
-        catch (PromptInjectionBlockedException e)
-        {
-            this.Logger.LogWarning(e, "Blocked prompt-injection content before sending assistant request for '{AssistantTitle}'.", this.Title);
-
-            if (this.ResultingContentBlock is not null && string.IsNullOrWhiteSpace(aiText.Text))
-            {
-                this.ChatThread?.Blocks.Remove(this.ResultingContentBlock);
-                this.ResultingContentBlock = null;
-            }
-
-            return string.Empty;
-        }
         finally
         {
             this.IsProcessing = this.assistantSessionId is not null && (this.AssistantSessionService.TryGetSnapshot(this.assistantSessionKey)?.IsActive ?? false);
@@ -528,14 +525,22 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         });
     }
     
-    private async Task CancelStreaming()
-    {
-        await this.AssistantSessionService.CancelAsync(this.assistantSessionKey, this);
-    }
+    private Task CancelStreaming() => this.CancelAssistantSessionAsync();
+
+    /// <summary>
+    /// Requests cancellation of the active assistant session.
+    /// </summary>
+    /// <remarks>
+    /// Derived assistants should use this method instead of accessing their local
+    /// cancellation token source. A component which reattaches after navigation
+    /// does not own that source, while the session service still does.
+    /// </remarks>
+    /// <returns>A task that completes after cancellation was requested.</returns>
+    protected Task CancelAssistantSessionAsync() => this.AssistantSessionService.CancelAsync(this.assistantSessionKey, this);
     
     protected async Task CopyToClipboard()
     {
-        await this.RustService.CopyText2Clipboard(this.Snackbar, this.Result2Copy());
+        await this.RustService.CopyText2Clipboard(this.Result2Copy());
     }
 
     private ChatThread CreateSendToChatThread()
@@ -612,14 +617,17 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         };
 
         var sendToData = destination.GetData();
-        if (destination is not Tools.Components.CHAT && this.AssistantSessionService.GetSnapshots().Any(snapshot => snapshot.IsActive && snapshot.Key.Component == destination))
+        if (destination.HasSingleSessionSlot() && this.AssistantSessionService.GetSnapshots().Any(snapshot => snapshot.IsActive && snapshot.Key.Component == destination))
         {
             await this.MessageBus.SendWarning(new(Icons.Material.Filled.Apps, this.TB("This assistant is already running. AI Studio opens the running session instead.")));
             this.NavigationManager.NavigateTo(sendToData.Route);
             return;
         }
 
-        if (destination is not Tools.Components.CHAT)
+        // Only components with a single session slot may be cleared as a group. The visual briefing
+        // assistant keys its sessions per briefing, so clearing by component would discard the
+        // status of every stored briefing instead of the one we are about to open.
+        if (destination.HasSingleSessionSlot())
             await this.AssistantSessionService.ClearInactiveSessionsForComponentAsync(destination);
 
         switch (destination)
@@ -648,24 +656,33 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         if (!component.AllowSendTo())
             return false;
 
-        return this.SettingsManager.IsAssistantVisible(component, withLogging: false);
+        return this.SettingsManager.IsAssistantVisible(
+            component,
+            withLogging: false,
+            requiredPreviewFeature: component.RequiredPreviewFeature());
     }
     
     private async Task InnerResetForm()
     {
-        if (this.AssistantSessionService.TryGetSnapshot(this.assistantSessionKey)?.IsActive ?? false)
+        if ((this.AssistantSessionService.TryGetSnapshot(this.assistantSessionKey)?.IsActive ?? false)
+            || this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner))
             return;
 
         await this.AssistantSessionService.ClearAsync(this.assistantSessionKey);
+        this.MediaTranscriptionService.ClearOwnerState(this.CurrentMediaImportOwner);
         this.assistantSessionId = null;
+        this.ChatThread = null;
+        this.LastUserPrompt = null;
         this.ResultingContentBlock = null;
         this.ProviderSettings = Settings.Provider.NONE;
         
+        await this.JsRuntime.ClearDiv(BEFORE_RESULT_DIV_ID);
         await this.JsRuntime.ClearDiv(RESULT_DIV_ID);
         await this.JsRuntime.ClearDiv(AFTER_RESULT_DIV_ID);
         
         this.ResetForm();
         this.ResetProviderAndProfileSelection();
+        await this.OnDefaultsAppliedAsync();
         
         this.InputIsValid = false;
         this.InputIssues = [];
@@ -691,6 +708,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     protected override void DisposeResources()
     {
+        this.MediaTranscriptionService.StateChanged -= this.OnMediaImportStateChanged;
         this.isDisposed = true;
         try
         {
@@ -705,6 +723,46 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         base.DisposeResources();
     }
 
+    /// <summary>Refreshes assistant actions when the shared import lane changes.</summary>
+    private void OnMediaImportStateChanged(MediaImportOwner owner)
+    {
+        if (owner == this.CurrentMediaImportOwner)
+            _ = this.InvokeAsync(async () =>
+            {
+                await this.ConsumeMediaOutcomeAsync();
+                this.StateHasChanged();
+            });
+    }
+
+    /// <summary>Consumes a terminal media notification when this assistant is visible.</summary>
+    private async Task ConsumeMediaOutcomeAsync()
+    {
+        var outcome = this.MediaTranscriptionService.TryConsumeOutcome(this.CurrentMediaImportOwner);
+        if (outcome is null)
+            return;
+
+        if (outcome.Failures.Count > 0)
+        {
+            var message = string.Join(Environment.NewLine, outcome.Failures.Select(failure => $"{failure.FileName}: {failure.UserMessage}"));
+            await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, message));
+        }
+        else if (outcome.Status is MediaImportStatus.FAILED)
+        {
+            await this.MessageBus.SendError(new(Icons.Material.Filled.VoiceChat, this.TB("The media file could not be transcribed.")));
+        }
+
+        if (outcome.Warnings.Count > 0)
+        {
+            var message = string.Join(Environment.NewLine, outcome.Warnings.Select(warning => $"{warning.FileName}: {warning.UserMessage}"));
+            await this.MessageBus.SendWarning(new(Icons.Material.Filled.VoiceChat, message));
+        }
+
+        if (outcome.Status is MediaImportStatus.CANCELLED)
+        {
+            await this.MessageBus.SendWarning(new(Icons.Material.Filled.VoiceChat, this.TB("The media transcription was canceled.")));
+        }
+    }
+
     #endregion
 
     #region Assistant sessions
@@ -713,7 +771,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     /// Stores the current assistant UI and chat state in the active assistant session.
     /// </summary>
     /// <returns>A task that completes after the checkpoint was stored and published.</returns>
-    private Task CheckpointAssistantSession()
+    protected Task CheckpointAssistantSession()
     {
         if (this.assistantSessionId is null)
             return Task.CompletedTask;
@@ -811,7 +869,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     /// Refreshes the component when it is still mounted.
     /// </summary>
     /// <returns>A task that completes after the renderer was notified.</returns>
-    private async Task RefreshAssistantUIAsync()
+    protected async Task RefreshAssistantUIAsync()
     {
         if (this.isDisposed)
             return;

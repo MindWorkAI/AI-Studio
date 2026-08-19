@@ -34,6 +34,30 @@ public static class Markdown
         }
     };
 
+    /// <summary>Escapes arbitrary text for literal display inside Markdown.</summary>
+    public static string EscapeInlineText(string value)
+    {
+        if (string.IsNullOrEmpty(value))
+            return string.Empty;
+
+        var escaped = new StringBuilder(value.Length);
+        foreach (var character in value)
+        {
+            if (character is '\r' or '\n' or '\t' || char.IsControl(character))
+            {
+                escaped.Append(' ');
+                continue;
+            }
+
+            if (character is >= '!' and <= '/' or >= ':' and <= '@' or >= '[' and <= '`' or >= '{' and <= '~')
+                escaped.Append('\\');
+
+            escaped.Append(character);
+        }
+
+        return escaped.ToString();
+    }
+
     public static string RemoveSharedIndentation(string value)
     {
         if (string.IsNullOrWhiteSpace(value))

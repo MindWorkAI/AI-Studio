@@ -1,14 +1,18 @@
 using AIStudio.Agents;
 using AIStudio.Agents.AssistantAudit;
+using AIStudio.Assistants.VisualBriefing;
 using AIStudio.Settings;
 using AIStudio.Tools.Databases;
 using AIStudio.Tools.AIJobs;
 using AIStudio.Tools.AssistantSessions;
+using AIStudio.Tools.Media;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.PluginSystem.Assistants;
+using AIStudio.Tools.Rust;
 using AIStudio.Tools.Security;
 using AIStudio.Tools.Services;
 
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Logging.Console;
 
@@ -89,6 +93,7 @@ internal sealed class Program
             return;
         }
         
+        var runtimeInfo = await rust.GetRuntimeInfo();
         var builder = WebApplication.CreateBuilder();
         builder.WebHost.ConfigureKestrel(kestrelServerOptions =>
         {
@@ -110,6 +115,32 @@ internal sealed class Program
             options.FormatterName = TerminalLogger.FORMATTER_NAME;
         }).AddConsoleFormatter<TerminalLogger, ConsoleFormatterOptions>();
 
+        if(runtimeInfo.LinuxPackageType is LinuxPackageType.FLATPAK)
+        {
+            try
+            {
+                var tauriDataDirectory = await rust.GetDataDirectory();
+                if(string.IsNullOrWhiteSpace(tauriDataDirectory))
+                    throw new InvalidOperationException("Rust returned an empty Tauri data directory.");
+
+                var dataProtectionKeysDirectory = Path.Combine(tauriDataDirectory, "data-protection-keys");
+                Directory.CreateDirectory(dataProtectionKeysDirectory);
+                var writeTestPath = Path.Combine(dataProtectionKeysDirectory, $".write-test-{Guid.NewGuid():N}");
+                using (new FileStream(writeTestPath, FileMode.CreateNew, FileAccess.Write, FileShare.None, 1, FileOptions.DeleteOnClose))
+                {
+                }
+
+                builder.Services.AddDataProtection()
+                    .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionKeysDirectory))
+                    .SetApplicationName("org.mindworkai.AIStudio");
+            }
+            catch(Exception exception)
+            {
+                Console.WriteLine($"Error: Failed to configure Flatpak data-protection keys in the Tauri data directory: {exception.Message}");
+                return;
+            }
+        }
+
         builder.Services.AddMudExtensions();
         builder.Services.AddMudServices(config =>
         {
@@ -128,6 +159,7 @@ internal sealed class Program
         builder.Services.AddSingleton(new MudTheme());
         builder.Services.AddSingleton(MessageBus.INSTANCE);
         builder.Services.AddSingleton(rust);
+        builder.Services.AddSingleton(typeof(RuntimeInfoResponse), runtimeInfo);
         builder.Services.AddMudMarkdownClipboardService<MarkdownClipboardService>();
         builder.Services.AddSingleton<SettingsManager>();
         builder.Services.AddSingleton<PromptInjectionScanner>();
@@ -136,7 +168,17 @@ internal sealed class Program
         builder.Services.AddSingleton<AIJobService>();
         builder.Services.AddSingleton<AssistantSessionService>();
         builder.Services.AddSingleton<VoiceRecordingAvailabilityService>();
-        builder.Services.AddSingleton<AssistantPluginInstallService>();
+        builder.Services.AddSingleton<GlobalShortcutService>();
+        builder.Services.AddSingleton<MediaTranscriptionService>();
+        builder.Services.AddSingleton<VisualBriefingArtifactService>();
+        builder.Services.AddSingleton<VisualBriefingStore>();
+        builder.Services.AddSingleton<VisualBriefingBuildProgressService>();
+        builder.Services.AddSingleton<VisualBriefingBuildOrchestrator>();
+        builder.Services.AddSingleton<VisualBriefingPreviewTokenService>();
+        builder.Services.AddSingleton<IMediaTranscriptStorage, VisualBriefingTranscriptStorage>();
+        builder.Services.AddSingleton<PluginInstallService>();
+        builder.Services.AddSingleton<UpdatePolicy>();
+        builder.Services.AddSingleton<AssistantPluginGenerationService>();
         builder.Services.AddSingleton<DataSourceService>();
         builder.Services.AddScoped<PandocAvailabilityService>();
         builder.Services.AddTransient<HTMLParser>();
@@ -147,10 +189,13 @@ internal sealed class Program
         builder.Services.AddTransient<AssistantPluginAuditService>();
         builder.Services.AddHostedService<UpdateService>();
         builder.Services.AddHostedService<TemporaryChatService>();
+        builder.Services.AddHostedService<TranscriptStagingCleanupService>();
         builder.Services.AddHostedService<EnterpriseEnvironmentService>();
         builder.Services.AddSingleton<DatabaseClientProvider>();
-        builder.Services.AddHostedService<GlobalShortcutService>();
+        builder.Services.AddHostedService<GlobalShortcutService>(serviceProvider => serviceProvider.GetRequiredService<GlobalShortcutService>());
         builder.Services.AddHostedService<RustAvailabilityMonitorService>();
+        builder.Services.AddScoped<NativeShareService>();
+        builder.Services.AddScoped<PluginShareService>();
         
         // ReSharper disable AccessToDisposedClosure
         builder.Services.AddHostedService<RustService>(_ => rust);
@@ -231,6 +276,10 @@ internal sealed class Program
 #endif
 
         app.UseAntiforgery();
+
+        // Serves committed briefing revisions to the assistant's live preview iframe:
+        app.MapVisualBriefingPreview();
+
         app.MapRazorComponents<App>()
             .AddInteractiveServerRenderMode();
 

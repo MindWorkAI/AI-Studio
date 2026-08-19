@@ -3,6 +3,7 @@ using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.AIJobs;
 using AIStudio.Tools.AssistantSessions;
+using AIStudio.Tools.Media;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Security;
 using AIStudio.Tools.Rust;
@@ -31,10 +32,16 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     private RustService RustService { get; init; } = null!;
 
     [Inject]
+    private UpdatePolicy UpdatePolicy { get; init; } = null!;
+
+    [Inject]
     private AIJobService AIJobService { get; init; } = null!;
 
     [Inject]
     private AssistantSessionService AssistantSessionService { get; init; } = null!;
+
+    [Inject]
+    private MediaTranscriptionService MediaTranscriptionService { get; init; } = null!;
     
     [Inject]
     private ISnackbar Snackbar { get; init; } = null!;
@@ -74,6 +81,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     protected override async Task OnInitializedAsync()
     {
         this.NavigationManager.RegisterLocationChangingHandler(this.OnLocationChanging);
+        this.MediaTranscriptionService.StateChanged += this.OnMediaImportStateChanged;
         
         //
         // We use the Tauri API (Rust) to get the data and config directories
@@ -106,13 +114,13 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         this.MessageBus.ApplyFilters(this, [],
         [
             Event.UPDATE_AVAILABLE, Event.CONFIGURATION_CHANGED, Event.COLOR_THEME_CHANGED, Event.SHOW_ERROR,
-            Event.SHOW_WARNING, Event.SHOW_SUCCESS, Event.SHOW_PROMPT_INJECTION_ALERT, Event.STARTUP_PLUGIN_SYSTEM, Event.PLUGINS_RELOADED,
+            Event.SHOW_WARNING, Event.SHOW_SUCCESS, Event.SHOW_INFO, Event.SHOW_PROMPT_INJECTION_ALERT, Event.STARTUP_PLUGIN_SYSTEM, Event.PLUGINS_RELOADED,
             Event.INSTALL_UPDATE, Event.STARTUP_COMPLETED, Event.AI_JOB_CHANGED, Event.AI_JOB_FINISHED,
             Event.CHAT_GENERATION_CHANGED, Event.ASSISTANT_SESSION_CHANGED, Event.ASSISTANT_SESSION_FINISHED,
         ]);
         
         // Set the snackbar for the update service:
-        UpdateService.SetBlazorDependencies(this.Snackbar);
+        UpdateService.MarkBlazorReady();
         TemporaryChatService.Initialize();
         
         // Should the navigation bar be open by default?
@@ -188,6 +196,8 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
             switch (triggeredEvent)
             {
                 case Event.INSTALL_UPDATE:
+                    if (!this.UpdatePolicy.AllowsInstallations)
+                        break;
                     this.performingUpdate = true;
                     this.StateHasChanged();
                     break;
@@ -261,6 +271,12 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
                 case Event.SHOW_WARNING:
                     if (data is DataWarningMessage warning)
                         warning.Show(this.Snackbar);
+
+                    break;
+
+                case Event.SHOW_INFO:
+                    if (data is DataInfoMessage info)
+                        info.Show(this.Snackbar);
 
                     break;
 
@@ -374,6 +390,16 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     {
         this.navItems = new List<NavBarItem>(this.GetNavItems());
     }
+
+    /// <summary>Refreshes navigation activity colors when a media import changes state.</summary>
+    private void OnMediaImportStateChanged(MediaImportOwner owner)
+    {
+        _ = this.InvokeAsync(() =>
+        {
+            this.LoadNavItems();
+            this.StateHasChanged();
+        });
+    }
     
     private IEnumerable<NavBarItem> GetNavItems()
     {
@@ -382,10 +408,15 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         var activityIndicatorDarkColor = this.ColorTheme.GetActivityIndicatorDarkColor();
         var defaultLightColor = palette.DarkLighten;
         var defaultDarkColor = palette.GrayLight;
-        var chatLightColor = this.AIJobService.HasActiveJobs ? activityIndicatorLightColor : defaultLightColor;
-        var chatDarkColor = this.AIJobService.HasActiveJobs ? activityIndicatorDarkColor : defaultDarkColor;
-        var assistantsLightColor = this.AssistantSessionService.HasActiveSessions ? activityIndicatorLightColor : defaultLightColor;
-        var assistantsDarkColor = this.AssistantSessionService.HasActiveSessions ? activityIndicatorDarkColor : defaultDarkColor;
+        var mediaSnapshots = this.MediaTranscriptionService.GetSnapshots();
+        var hasActiveChatMedia = mediaSnapshots.Any(snapshot => snapshot is { IsBusy: true, Owner.Kind: MediaImportOwnerKind.CHAT });
+        var hasActiveAssistantMedia = mediaSnapshots.Any(snapshot => snapshot is { IsBusy: true, Owner.Kind: MediaImportOwnerKind.ASSISTANT or MediaImportOwnerKind.VISUAL_BRIEFING });
+        var hasActiveChatWork = this.AIJobService.HasActiveJobs || hasActiveChatMedia;
+        var hasActiveAssistantWork = this.AssistantSessionService.HasActiveSessions || hasActiveAssistantMedia;
+        var chatLightColor = hasActiveChatWork ? activityIndicatorLightColor : defaultLightColor;
+        var chatDarkColor = hasActiveChatWork ? activityIndicatorDarkColor : defaultDarkColor;
+        var assistantsLightColor = hasActiveAssistantWork ? activityIndicatorLightColor : defaultLightColor;
+        var assistantsDarkColor = hasActiveAssistantWork ? activityIndicatorDarkColor : defaultDarkColor;
         
         yield return new(T("Home"), Icons.Material.Filled.Home, defaultLightColor, defaultDarkColor, Routes.HOME, true);
         yield return new(T("Chat"), Icons.Material.Filled.Chat, chatLightColor, chatDarkColor, Routes.CHAT, false);
@@ -402,6 +433,9 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
 
     private async Task ShowUpdateDialog()
     {
+        if (!this.UpdatePolicy.AllowsInstallations)
+            return;
+
         if(this.currentUpdateResponse is null)
             return;
         
@@ -427,6 +461,9 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         var dialogReference = await this.DialogService.ShowAsync<UpdateDialog>(T("Update"), dialogParameters, DialogOptions.FULLSCREEN_NO_HEADER);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
+            return;
+
+        if (!this.UpdatePolicy.AllowsInstallations)
             return;
         
         this.performingUpdate = true;
@@ -555,6 +592,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
 
     public void Dispose()
     {
+        this.MediaTranscriptionService.StateChanged -= this.OnMediaImportStateChanged;
         this.MessageBus.Unregister(this);
         this.mandatoryInfoDialogSemaphore.Dispose();
     }

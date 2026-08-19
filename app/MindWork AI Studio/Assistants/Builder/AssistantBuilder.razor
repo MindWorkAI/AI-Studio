@@ -96,7 +96,7 @@ else
                   </MudExpansionPanel>
               </MudExpansionPanels>
 
-              <MudStepper @bind-ActiveIndex="@this.stepperIndex" CompletedStepColor="Color.Primary" CurrentStepColor="Color.Primary" ErrorStepColor="Color.Error" NonLinear="@false" ShowResetButton="@false" Class="mb-3">
+              <MudStepperWithoutActions @bind-ActiveIndex="@this.stepperIndex" Class="mb-3">
                   <ChildContent>
                       <MudStep Title="@T("Validate plugin")" Completed="@this.PluginCheckCompleted" HasError="@this.IsInstallStepFailed(BuilderInstallStep.CHECK_PLUGIN)">
                           <MudStack Spacing="2" Class="mt-2">
@@ -111,14 +111,14 @@ else
                                       @T("The generated assistant could not be checked.")
                                       @if (!string.IsNullOrWhiteSpace(this.installFlowIssue))
                                       {
-                                          <span> @string.Format(T("Issue: {0}"), this.installFlowIssue)</span>
+                                          <span>&#32;@string.Format(T("Issue: {0}"), this.installFlowIssue)</span>
                                       }
                                   </MudAlert>
                               }
                               else if (this.PluginCheckCompleted)
                               {
                                   <MudAlert Severity="Severity.Info" Dense="@true" Icon="@Icons.Material.Filled.CheckCircle">
-                                      @string.Format(T("The generated assistant \"{0}\" is valid and runnable."), this.pluginCheckResult?.PluginName ?? T("Unknown assistant"))
+                                      @string.Format(T("The generated assistant '{0}' is valid and runnable."), this.pluginCheckResult?.PluginName ?? T("Unknown assistant"))
                                   </MudAlert>
                               }
                               else
@@ -143,7 +143,7 @@ else
                                       @T("The assistant could not be installed.")
                                       @if (!string.IsNullOrWhiteSpace(this.installFlowIssue))
                                       {
-                                          <span> @string.Format(T("Issue: {0}"), this.installFlowIssue)</span>
+                                          <span>&#32;@string.Format(T("Issue: {0}"), this.installFlowIssue)</span>
                                       }
                                   </MudAlert>
                               }
@@ -151,8 +151,8 @@ else
                               {
                                   <MudAlert Severity="Severity.Info" Dense="@true" Icon="@Icons.Material.Filled.Extension">
                                       @(this.pluginInstallResult?.ReplacedExisting is true
-                                          ? string.Format(T("The assistant \"{0}\" was updated."), this.pluginInstallResult?.PluginName ?? T("Unknown assistant"))
-                                          : string.Format(T("The assistant \"{0}\" was installed."), this.pluginInstallResult?.PluginName ?? T("Unknown assistant")))
+                                          ? string.Format(T("The assistant '{0}' was updated."), this.pluginInstallResult?.PluginName ?? T("Unknown assistant"))
+                                          : string.Format(T("The assistant '{0}' was installed."), this.pluginInstallResult?.PluginName ?? T("Unknown assistant")))
                                   </MudAlert>
                               }
                               else
@@ -177,7 +177,7 @@ else
                                       @T("The security audit could not be completed.")
                                       @if (!string.IsNullOrWhiteSpace(this.installFlowIssue))
                                       {
-                                          <span> @string.Format(T("Issue: {0}"), this.installFlowIssue)</span>
+                                          <span>&#32;@string.Format(T("Issue: {0}"), this.installFlowIssue)</span>
                                       }
                                   </MudAlert>
                               }
@@ -209,7 +209,7 @@ else
                                       @T("The assistant cannot be enabled.")
                                       @if (!string.IsNullOrWhiteSpace(this.installFlowIssue))
                                       {
-                                          <span> @string.Format(T("Issue: {0}"), this.installFlowIssue)</span>
+                                          <span>&#32;@string.Format(T("Issue: {0}"), this.installFlowIssue)</span>
                                       }
                                   </MudAlert>
                               }
@@ -249,9 +249,7 @@ else
                           </MudStack>
                       </MudStep>
                   </ChildContent>
-                  <ActionContent Context="_">
-                  </ActionContent>
-              </MudStepper>
+              </MudStepperWithoutActions>
           </MudStack>
         : null;
 
