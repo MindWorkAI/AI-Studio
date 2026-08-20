@@ -363,7 +363,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         {
             var dialogParameters = new DialogParameters<PromptInjectionAlertDialog>
             {
-                { x => x.Result, alert.Result },
+                { x => x.Alert, alert },
             };
 
             var dialogReference = await this.DialogService.ShowAsync<PromptInjectionAlertDialog>(

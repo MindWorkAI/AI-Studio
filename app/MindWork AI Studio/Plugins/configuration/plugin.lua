@@ -367,11 +367,13 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataChat.PreselectOptions"] = true
 --
 -- Configure prompt-injection protection for external content such as webpages,
--- retrieved context, and file attachments before it is sent to an LLM.
+-- retrieved context, and file attachments before it is sent to an LLM. Instructions
+-- aimed at the AI are removed from the content, while everything around them is kept,
+-- so the document stays usable.
 -- CONFIG["SETTINGS"]["DataChat.EnablePromptInjectionProtection"] = true
 --
--- Configure whether AI Studio shows a blocking explanation dialog when
--- suspicious content is detected and blocked.
+-- Configure whether AI Studio shows a dialog listing what it removed from the content,
+-- together with an explanation of the attack pattern.
 -- CONFIG["SETTINGS"]["DataChat.ShowPromptInjectionAlert"] = true
 --
 -- Configure the preselected provider for chats.

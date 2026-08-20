@@ -12,8 +12,15 @@ public partial class PromptInjectionAlertDialog : MSGComponentBase
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = null!;
 
-    [Parameter]
-    public PromptInjectionScanResult Result { get; set; } = null!;
+    /// <summary>
+    /// What was filtered during the user action that triggered this dialog.
+    /// </summary>
+    /// <remarks>
+    /// Carries every affected source, because one action may involve many documents and the
+    /// user should acknowledge them together rather than one dialog at a time.
+    /// </remarks>
+    [Parameter, EditorRequired]
+    public PromptInjectionAlertMessage Alert { get; set; } = null!;
 
     private void Close() => this.MudDialog.Close();
 

@@ -91,7 +91,7 @@ public partial class ReadWebContent : MSGComponentBase
             this.processStep = this.process[ReadWebContentSteps.PARSING];
             this.StateHasChanged();
             markdown = this.HTMLParser.ParseToMarkdown(html);
-            markdown = await this.PromptInjectionGuardService.EnsureSafeForLlmAsync(markdown, PromptInjectionSource.WebContent(this.providedURL));
+            markdown = await this.PromptInjectionGuardService.SanitizeAsync(markdown, PromptInjectionSource.WebContent(this.providedURL));
             
             if (this.PreselectContentCleanerAgent && this.providerSettings != AIStudio.Settings.Provider.NONE)
             {
@@ -124,10 +124,6 @@ public partial class ReadWebContent : MSGComponentBase
                 await this.AgentIsRunningChanged.InvokeAsync(this.AgentIsRunning);
                 this.StateHasChanged();
             }
-        }
-        catch (PromptInjectionBlockedException)
-        {
-            markdown = string.Empty;
         }
         catch
         {

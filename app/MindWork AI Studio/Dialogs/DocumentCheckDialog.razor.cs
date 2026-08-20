@@ -1,6 +1,5 @@
 ﻿using AIStudio.Chat;
 using AIStudio.Components;
-using AIStudio.Tools.Security;
 using AIStudio.Tools.Services;
 using Microsoft.AspNetCore.Components;
 
@@ -76,11 +75,6 @@ public partial class DocumentCheckDialog : MSGComponentBase
                 //
                 if (!extraction.HasUsableContent)
                     this.loadFailureMessage = extraction.ToUserMessage(this.Document.FileName);
-            }
-            catch (PromptInjectionBlockedException exception)
-            {
-                this.Logger.LogWarning(exception, "Blocked suspected prompt injection while previewing '{FilePath}'", this.Document?.FilePath);
-                this.FileContent = string.Empty;
             }
             catch (Exception ex)
             {

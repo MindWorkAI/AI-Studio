@@ -4,7 +4,6 @@ using System.Text.RegularExpressions;
 using AIStudio.Chat;
 using AIStudio.Dialogs;
 using AIStudio.Dialogs.Settings;
-using AIStudio.Tools.Security;
 using AIStudio.Tools.AssistantSessions;
 using Microsoft.AspNetCore.Components;
 
@@ -584,10 +583,6 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
             // A failure was already reported by UserFile.LoadFileData, so we only keep the content:
             var extraction = await UserFile.LoadFileData(fileAttachment.FilePath, this.RustService, this.DialogService);
             this.customPromptingGuidelineContent = extraction.HasUsableContent ? extraction.Content : string.Empty;
-        }
-        catch (PromptInjectionBlockedException)
-        {
-            this.customPromptingGuidelineContent = string.Empty;
         }
         catch
         {

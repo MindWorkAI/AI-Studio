@@ -14,23 +14,19 @@ public static class IRetrievalContextExtensions
         sb ??= new StringBuilder();
         var index = 0;
         
+        //
+        // One report for the whole retrieval run: a query may pull in dozens of contexts, and
+        // the user wants to know that something was filtered, not to acknowledge it per context.
+        //
+        var guardService = Program.SERVICE_PROVIDER.GetRequiredService<PromptInjectionGuardService>();
+        await using var reportingScope = guardService.BeginAction();
+
         foreach(var retrievalContext in retrievalContexts)
         {
             index++;
-            try
-            {
-                await retrievalContext.AsMarkdown(sb, index, retrievalContexts.Count, token);
-            }
-            catch (PromptInjectionBlockedException exception)
-            {
-                LOGGER.LogWarning(
-                    exception,
-                    "Skipping retrieval context '{DataSourceName}' at '{Path}' because it was blocked by prompt-injection protection.",
-                    retrievalContext.DataSourceName,
-                    retrievalContext.Path);
-            }
+            await retrievalContext.AsMarkdown(sb, index, retrievalContexts.Count, token);
         }
-        
+
         return sb.ToString();
     }
     
@@ -67,6 +63,7 @@ public static class IRetrievalContextExtensions
 
         var guardService = Program.SERVICE_PROVIDER.GetRequiredService<PromptInjectionGuardService>();
         var source = PromptInjectionSource.RetrievalContext(retrievalContext.DataSourceName, retrievalContext.Path);
+
         switch(retrievalContext)
         {
             case RetrievalTextContext textContext:
@@ -75,7 +72,7 @@ public static class IRetrievalContextExtensions
                 contextBuilder.AppendLine("````");
                 contextBuilder.AppendLine(textContext.MatchedText);
                 contextBuilder.AppendLine("````");
-                    
+
                 if(textContext.SurroundingContent.Count > 0)
                 {
                     contextBuilder.AppendLine();
@@ -89,22 +86,27 @@ public static class IRetrievalContextExtensions
                     }
                 }
 
-                await guardService.EnsureSafeForLlmAsync(contextBuilder.ToString(), source);
+                await FilterWhatWeHaveSoFar();
                 break;
-                
+
             case RetrievalImageContext imageContext:
-                await guardService.EnsureSafeForLlmAsync(contextBuilder.ToString(), source);
+                //
+                // Filtering happens before the image is appended, and only covers the text
+                // around it. Base64 image data is not prose, and running it through the filter
+                // would have it treated as one enormous encoded carrier.
+                //
+                await FilterWhatWeHaveSoFar();
                 contextBuilder.AppendLine();
                 contextBuilder.AppendLine("Matched image content as base64-encoded data:");
                 contextBuilder.AppendLine("````");
                 contextBuilder.AppendLine(await imageContext.TryAsBase64(token) is (success: true, { } base64Image)
-                        ? base64Image 
+                        ? base64Image
                         : string.Empty);
                 contextBuilder.AppendLine("````");
                 break;
-                
+
             default:
-                await guardService.EnsureSafeForLlmAsync(contextBuilder.ToString(), source);
+                await FilterWhatWeHaveSoFar();
                 LOGGER.LogWarning($"The retrieval content type '{retrievalContext.Type}' of data source '{retrievalContext.DataSourceName}' at location '{retrievalContext.Path}' is not supported yet.");
                 break;
         }
@@ -112,5 +114,17 @@ public static class IRetrievalContextExtensions
         contextBuilder.AppendLine();
         sb.Append(contextBuilder);
         return sb.ToString();
+
+        //
+        // Replaces what has been built so far with its filtered version. A data source is as
+        // untrusted as any other external content: it may serve text written to steer the model
+        // rather than to answer the query.
+        //
+        async Task FilterWhatWeHaveSoFar()
+        {
+            var sanitized = await guardService.SanitizeAsync(contextBuilder.ToString(), source);
+            contextBuilder.Clear();
+            contextBuilder.Append(sanitized);
+        }
     }
 }

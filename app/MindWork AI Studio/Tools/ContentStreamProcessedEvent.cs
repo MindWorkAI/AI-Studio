@@ -10,7 +10,8 @@ namespace AIStudio.Tools;
 /// </remarks>
 /// <param name="Content">The content to append, or null when this event carries none.</param>
 /// <param name="Error">The reported failure, or null when the event was processed successfully.</param>
-public readonly record struct ContentStreamProcessedEvent(string? Content, ContentStreamErrorDetails? Error)
+/// <param name="PromptInjection">What the runtime filtered out of the content, or null when it filtered nothing.</param>
+public readonly record struct ContentStreamProcessedEvent(string? Content, ContentStreamErrorDetails? Error, ContentStreamPromptInjectionDetails? PromptInjection = null)
 {
     /// <summary>
     /// An event which neither produced content nor reported a failure.
@@ -20,4 +21,13 @@ public readonly record struct ContentStreamProcessedEvent(string? Content, Conte
     public static ContentStreamProcessedEvent FromContent(string? content) => new(content, null);
 
     public static ContentStreamProcessedEvent FromError(ContentStreamErrorDetails? error) => new(null, error);
+
+    /// <summary>
+    /// An event reporting that suspicious passages were filtered out of the content.
+    /// </summary>
+    /// <remarks>
+    /// Carries no content and no error: the content was delivered by the events before it, and
+    /// filtering is a notice rather than a failure.
+    /// </remarks>
+    public static ContentStreamProcessedEvent FromPromptInjection(ContentStreamPromptInjectionDetails? promptInjection) => new(null, null, promptInjection);
 }
