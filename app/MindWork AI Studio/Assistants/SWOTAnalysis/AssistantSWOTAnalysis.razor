@@ -1,0 +1,14 @@
+﻿@attribute [Route(Routes.ASSISTANT_SWOT_ANALYSIS)]
+@inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogSWOTAnalysis>
+
+@if (!this.SettingsManager.ConfigurationData.SWOTAnalysis.HideWebContentReader)
+{
+    <ReadWebContent @bind-Content="@this.inputText" ProviderSettings="@this.ProviderSettings" @bind-AgentIsRunning="@this.isAgentRunning" @bind-Preselect="@this.showWebContentReader" @bind-PreselectContentCleanerAgent="@this.useContentCleanerAgent"/>
+}
+
+<ReadFileContent @bind-FileContent="@this.inputText" EnableDragDrop="true" Layer="@DropLayers.ASSISTANTS" CatchAllDocuments="true"/>
+<MudTextField T="string" Disabled="@this.isAgentRunning" @bind-Text="@this.inputText" Validation="@this.ValidatingText" AdornmentIcon="@Icons.Material.Filled.DocumentScanner" Adornment="Adornment.Start" Label="@T("Source material")" Variant="Variant.Outlined" Lines="6" AutoGrow="@true" MaxLines="12" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+<MudTextField T="string" Disabled="@this.isAgentRunning" @bind-Text="@this.analysisGoal" AdornmentIcon="@Icons.Material.Filled.TrackChanges" Adornment="Adornment.Start" Label="@T("(Optional) Analysis goal")" HelperText="@T("Describe the decision or question the SWOT analysis should support.")" Variant="Variant.Outlined" Lines="2" AutoGrow="@true" Class="mb-3"/>
+<MudTextField T="string" Disabled="@this.isAgentRunning" @bind-Text="@this.importantAspects" AdornmentIcon="@Icons.Material.Filled.List" Adornment="Adornment.Start" Label="@T("(Optional) Analysis focus")" HelperText="@T("Specify topics the SWOT analysis should pay particular attention to.")" Variant="Variant.Outlined" Lines="2" AutoGrow="@true" Class="mb-3"/>
+<EnumSelection T="CommonLanguages" NameFunc="@(language => language.Name())" @bind-Value="@this.selectedTargetLanguage" Icon="@Icons.Material.Filled.Translate" Label="@T("Target language")" AllowOther="@true" @bind-OtherInput="@this.customTargetLanguage" OtherValue="CommonLanguages.OTHER" LabelOther="@T("Custom target language")" ValidateOther="@this.ValidateCustomLanguage" />
+<ProviderSelection @bind-ProviderSettings="@this.ProviderSettings" ValidateProvider="@this.ValidatingProvider"/>

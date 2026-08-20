@@ -18,6 +18,7 @@ public sealed partial class Routes
     public const string ASSISTANT_ICON_FINDER = "/assistant/icons";
     public const string ASSISTANT_GRAMMAR_SPELLING = "/assistant/grammar-spelling";
     public const string ASSISTANT_SUMMARIZER = "/assistant/summarizer";
+    public const string ASSISTANT_SWOT_ANALYSIS = "/assistant/swot-analysis";
     public const string ASSISTANT_CODING = "/assistant/coding";
     public const string ASSISTANT_AGENDA = "/assistant/agenda";
     public const string ASSISTANT_EMAIL = "/assistant/email";

@@ -52,6 +52,7 @@ public static class AssistantVisibilityExtensions
             Components.AGENDA_ASSISTANT => ConfigurableAssistant.AGENDA_ASSISTANT,
             Components.CODING_ASSISTANT => ConfigurableAssistant.CODING_ASSISTANT,
             Components.TEXT_SUMMARIZER_ASSISTANT => ConfigurableAssistant.TEXT_SUMMARIZER_ASSISTANT,
+            Components.SWOT_ANALYSIS_ASSISTANT => ConfigurableAssistant.SWOT_ANALYSIS_ASSISTANT,
             Components.EMAIL_ASSISTANT => ConfigurableAssistant.EMAIL_ASSISTANT,
             Components.LEGAL_CHECK_ASSISTANT => ConfigurableAssistant.LEGAL_CHECK_ASSISTANT,
             Components.SYNONYMS_ASSISTANT => ConfigurableAssistant.SYNONYMS_ASSISTANT,

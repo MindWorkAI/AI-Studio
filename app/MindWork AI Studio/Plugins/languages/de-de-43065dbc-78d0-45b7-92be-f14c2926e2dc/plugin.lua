@@ -2466,6 +2466,45 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T617902505"
 -- Please provide a custom language.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SLIDEBUILDER::SLIDEASSISTANT::T656744944"] = "Bitte geben Sie eine benutzerdefinierte Sprache an."
 
+-- This assistant serves as a strategic planning tool that systematically captures strengths, weaknesses, opportunities, and risks. It can assist in positioning and strategy development for companies, organizations, or individuals. Additionally, it formulates concrete next steps to facilitate strategic decisions.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T1017586574"] = "Dieser Assistent dient als strategisches Planungstool, das systematisch Stärken, Schwächen, Chancen und Risiken erfasst. Er kann bei der Positionierung und Strategieentwicklung für Unternehmen, Organisationen oder Einzelpersonen unterstützen. Zudem formuliert er konkrete nächste Schritte, um strategische Entscheidungen zu erleichtern."
+
+-- Create a SWOT analysis of my content
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T1113304215"] = "Stärken, Schwächen, Chancen und Risiken meiner Inhalte analysieren"
+
+-- Source material
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T1697755825"] = "Ihre Eingabe"
+
+-- SWOT Analysis
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T1864542518"] = "SWOT-Analyse"
+
+-- Target language
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T237828418"] = "Deutsch (Deutschland)"
+
+-- Describe the decision or question the SWOT analysis should support.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T2901719160"] = "Beschreibe die Entscheidung oder Frage, die die SWOT-Analyse unterstützen soll."
+
+-- Create SWOT analysis
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T3549988380"] = "Erstelle eine SWOT-Analyse"
+
+-- Please provide source material for the SWOT analysis. You can enter text, load a document, or import content from a website.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T381075478"] = "Bitte geben Sie das Quellmaterial für die SWOT-Analyse ein. Sie können Text eingeben, ein Dokument hochladen oder Inhalte von einer Website importieren."
+
+-- Custom target language
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T3848935911"] = "Benutzerdefinierte Zielsprache"
+
+-- Specify topics the SWOT analysis should pay particular attention to.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T3857591121"] = "Geben Sie die Themen an, auf die die SWOT-Analyse besonders achten soll."
+
+-- (Optional) Analysis goal
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T4150922727"] = "(Optional) Analyseziel"
+
+-- (Optional) Analysis focus
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T578386116"] = "(Optional) Analysefokus"
+
+-- Please provide a custom language.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T656744944"] = "Benutzerdefinierte Sprache"
+
 -- Find synonyms for the following word or phrase:
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SYNONYM::ASSISTANTSYNONYMS::T1793532807"] = "Finde Synonyme für das folgende Wort oder die folgende Phrase:"
 
@@ -7410,6 +7449,75 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T95684
 -- Which audience profile should be preselected?
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSLIDEBUILDER::T973572510"] = "Welches Zielgruppenprofil soll vorausgewählt sein?"
 
+-- Content cleaner agent is preselected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T1013787967"] = "Content-Cleaner-Agent ist vorgewählt"
+
+-- Web content reader is shown
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T1030372436"] = "Web Content Reader wird angezeigt"
+
+-- Preselect the target language
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T1417990312"] = "Zielsprache vorauswählen"
+
+-- Preselect another target language
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T1462295644"] = "Wähle eine andere Zielsprache aus"
+
+-- When activated, the web content reader is hidden and cannot be used. As a result, the user interface becomes a bit easier to use.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T1633101895"] = "Wenn aktiviert, wird der Webinhaltsleser ausgeblendet und kann nicht verwendet werden. Dadurch wird die Benutzeroberfläche etwas übersichtlicher."
+
+-- Web content reader is not preselected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T1701127912"] = "Web Content Reader ist nicht vorselektiert"
+
+-- Content cleaner agent is not preselected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T1969816694"] = "Der Agent \"Inhaltsbereiniger\" ist nicht vorausselektiert."
+
+-- Hide the web content reader?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T2090693677"] = "Webinhaltsleser ausblenden?"
+
+-- SWOT analysis options are preselected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T2171839562"] = "Die SWOT-Analyse-Optionen sind vorselektiert"
+
+-- No SWOT analysis options are preselected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T2361666775"] = "Keine SWOT-Analyse-Optionen sind vorselektiert"
+
+-- Preselect SWOT analysis options?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T2593950994"] = "\"SWOT-Analyse-Optionen vorauswählen?\""
+
+-- Web content reader is hidden
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T2799795311"] = "Web Content Reader ist ausgeblendet"
+
+-- When enabled, the web content reader is preselected. This is useful when you often analyze content from websites.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T3088856907"] = "Wenn aktiviert, ist der Webinhaltsleser vorgewählt. Dies ist nützlich, wenn Sie häufig Inhalte von Websites analysieren."
+
+-- When enabled, the content cleaner agent is preselected for cleaning website content before it is analyzed.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T332064979"] = "Wenn aktiviert, ist der Inhaltsbereinigungs-Agent vorab ausgewählt, um Webinhalte vor der Analyse zu bereinigen."
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T3448155331"] = "Schließen"
+
+-- Which target language should be preselected?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T3547337928"] = "Welche Zielsprache sollte vorselektiert sein?"
+
+-- Web content reader is preselected
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T3641773985"] = "Web Content Reader ist vorgewählt"
+
+-- Preselect the content cleaner agent?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T3649428096"] = "\"Content-Cleaner-Agent vorauswählen?\""
+
+-- Specify topics the SWOT analysis should pay particular attention to.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T3857591121"] = "Geben Sie die Themen an, auf die die SWOT-Analyse besonders achten soll."
+
+-- Assistant: SWOT Analysis Options
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T4267340780"] = "Assistent: SWOT-Analyse-Optionen"
+
+-- Preselect the web content reader?
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T629158142"] = "Webinhaltsleser vorauswählen?"
+
+-- Preselect an analysis focus
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T656094797"] = "Analysefokus vorwählen"
+
+-- When enabled, you can preselect the SWOT analysis options. This is useful when you prefer a specific language, analysis focus, or LLM.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSWOTANALYSIS::T975761680"] = "Wenn aktiviert, können Sie die SWOT-Analyse-Optionen vorab auswählen. Dies ist nützlich, wenn Sie eine bestimmte Sprache, einen bestimmten Analysefokus oder ein bestimmtes LLM bevorzugen."
+
 -- When enabled, you can preselect synonym options. This is might be useful when you prefer a specific language or LLM model.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGSYNONYMS::T183953912"] = "Wenn diese Option aktiviert ist, können Sie Synonymoptionen im Voraus auswählen. Dies kann nützlich sein, wenn Sie eine bestimmte Sprache oder ein bestimmtes LLM-Modell bevorzugen."
 
@@ -7923,6 +8031,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T131837803"] = "Business"
 -- Legal Check
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1348190638"] = "Rechtliche Prüfung"
 
+-- Identify strengths, weaknesses, opportunities, threats, and practical next steps from provided information.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1356376259"] = "Stärken, Schwächen, Chancen, Risiken und praktische nächste Schritte aus den bereitgestellten Informationen identifizieren."
+
 -- General
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1432485131"] = "Allgemein"
 
@@ -7943,6 +8054,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1728590051"] = "Analysieren Sie e
 
 -- Prompt Optimizer
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1777666968"] = "Prompt-Optimierer"
+
+-- SWOT Analysis
+UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1864542518"] = "SWOT-Analyse"
 
 -- Text Summarizer
 UI_TEXT_CONTENT["AISTUDIO::PAGES::ASSISTANTS::T1907192403"] = "Texte zusammenfassen"
@@ -9362,6 +9476,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T1993795352"] = "Prompt-
 
 -- Job Posting Assistant
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T2212811874"] = "Stellenanzeigen-Assistent"
+
+-- SWOT Analysis Assistant
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T2431303678"] = "SWOT-Analyse-Assistent"
 
 -- Icon Finder Assistant
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::COMPONENTSEXTENSIONS::T2457005512"] = "Icon Finder-Assistent"
