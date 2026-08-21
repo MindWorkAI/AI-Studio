@@ -24,6 +24,7 @@ mod rules;
 use rules::{Redaction, PHRASE_RULES, STRUCTURAL, STRUCTURAL_COMPACT, TYPOGLYCEMIA_KEYWORDS};
 use serde::Serialize;
 use std::collections::HashSet;
+use std::time::{Duration, Instant};
 
 /// What replaces a redacted passage.
 ///
@@ -118,6 +119,11 @@ pub struct Sanitizer {
     findings: Vec<Finding>,
     seen: HashSet<(String, String)>,
     redacted_count: usize,
+
+    /// How much text was scanned and how long it took, for the log line the extraction writes
+    /// when it is done. Without it, a slow scan is only visible by reproducing it.
+    scanned_bytes: usize,
+    scan_duration: Duration,
 }
 
 impl Default for Sanitizer {
@@ -135,6 +141,8 @@ impl Sanitizer {
             findings: Vec::new(),
             seen: HashSet::new(),
             redacted_count: 0,
+            scanned_bytes: 0,
+            scan_duration: Duration::ZERO,
         }
     }
 
@@ -163,6 +171,14 @@ impl Sanitizer {
         self.process(true)
     }
 
+    /// How many bytes were scanned and how long that took.
+    ///
+    /// The scanned amount exceeds the document, because the held-back tail is scanned again
+    /// with the chunk that follows it.
+    pub fn scan_stats(&self) -> (usize, Duration) {
+        (self.scanned_bytes, self.scan_duration)
+    }
+
     /// What was found across the whole document.
     pub fn into_report(self) -> Report {
         Report { findings: self.findings, redacted_count: self.redacted_count }
@@ -185,8 +201,12 @@ impl Sanitizer {
             spans.push((part.id, start, buffer.len()));
         }
 
+        let scan_start = Instant::now();
         let redactions = self.collect_redactions(&buffer, is_final);
         let mut parts = apply_to_parts(&buffer, &spans, redactions);
+        self.scan_duration += scan_start.elapsed();
+        self.scanned_bytes += buffer.len();
+
         if is_final {
             self.pending.clear();
             self.pending_bytes = 0;

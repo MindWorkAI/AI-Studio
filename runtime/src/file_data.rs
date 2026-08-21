@@ -471,6 +471,19 @@ pub async fn extract_data(
                                 yield Ok(content_event(&released, id_ref, path_ref));
                             }
 
+                            //
+                            // Logged for every document, not only for a filtered one: a scan
+                            // that is too slow leaves no other trace, and reproducing it means
+                            // having the same document at hand again.
+                            //
+                            let (scanned_bytes, scan_duration) = sanitizer.scan_stats();
+                            debug!(
+                                "Scanned {mib:.2} MiB of '{path_ref}' for prompt injections in {ms} ms ({throughput:.2} MiB/s).",
+                                mib = scanned_bytes as f64 / 1_048_576.0,
+                                ms = scan_duration.as_millis(),
+                                throughput = scanned_bytes as f64 / 1_048_576.0 / scan_duration.as_secs_f64().max(f64::EPSILON),
+                            );
+
                             let report = sanitizer.into_report();
                             if !report.is_empty() {
                                 warn!(
@@ -1540,5 +1553,55 @@ mod tests {
         });
 
         assert!(!notice.carries_filterable_text());
+    }
+
+    /// Dumps the text pdfium extracts from a PDF, so the prompt-injection throughput test can
+    /// measure the scan against a real document instead of synthetic prose.
+    ///
+    /// Ignored by default: it needs a PDF, the pdfium library, and minutes rather than
+    /// milliseconds. Run it as
+    ///
+    /// ```text
+    /// AI_STUDIO_DUMP_PDF=/path/to/document.pdf \
+    /// AI_STUDIO_DUMP_OUT=/path/to/corpus.txt \
+    /// cargo test dump_pdf_text -- --ignored --nocapture
+    /// ```
+    ///
+    /// The pages are separated by a record separator rather than a newline, so the throughput
+    /// test can split them back into exactly the chunks the sanitizer sees in production. A
+    /// newline would be indistinguishable from the ones inside a page.
+    #[tokio::test]
+    #[ignore]
+    async fn dump_pdf_text() {
+        let source = std::env::var("AI_STUDIO_DUMP_PDF").expect("set AI_STUDIO_DUMP_PDF to the PDF to dump");
+        let target = std::env::var("AI_STUDIO_DUMP_OUT").expect("set AI_STUDIO_DUMP_OUT to the file to write");
+
+        // The library ships next to the runtime and is not on the loader path during a test:
+        let library_directory = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("resources/libraries");
+        *crate::pdfium::PDFIUM_LIB_PATH.lock().unwrap() = Some(library_directory.to_string_lossy().to_string());
+
+        let mut stream = stream_pdf(&source).await.expect("the PDF must be readable");
+        let mut pages = Vec::new();
+        let mut failed_pages = 0;
+
+        while let Some(chunk) = stream.next().await {
+            let chunk = chunk.expect("no page may fail the whole document");
+            match chunk.metadata {
+                Metadata::Pdf { .. } => pages.push(chunk.content),
+                _ => failed_pages += 1,
+            }
+        }
+
+        let dump = pages.join("\u{1E}");
+        std::fs::write(&target, &dump).expect("the dump must be writable");
+
+        println!(
+            "Dumped {pages} page(s) ({bytes} bytes, {failed} non-text chunk(s)) from '{source}' to '{target}'.",
+            pages = pages.len(),
+            bytes = dump.len(),
+            failed = failed_pages,
+        );
+
+        assert!(!pages.is_empty(), "the PDF produced no text pages");
     }
 }
