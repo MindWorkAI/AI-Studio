@@ -394,6 +394,11 @@ fn scan_throughput() {
     let source_bytes: usize = pages.iter().map(String::len).sum();
     let scanned_bytes: usize = batches.iter().map(String::len).sum();
 
+    // Builds the automatons and compiles the patterns before the clock starts. They are built
+    // once per process, and counting that one-off against the first batch would make it look
+    // like a batch can take tens of milliseconds.
+    let _ = sanitize_text("warm up");
+
     let mut sanitizer = Sanitizer::new();
     let mut phrases = Duration::ZERO;
     let mut structural = Duration::ZERO;
@@ -451,7 +456,7 @@ fn scan_throughput() {
     println!();
     println!("Per pass:");
     report("phrases (Aho-Corasick)", phrases);
-    report("structural (RegexSet)", structural);
+    report("structural (regexes)", structural);
     report("encoded (base64/hex)", encoded);
     report("spaced + shuffled", spaced);
     report("TOTAL", total);

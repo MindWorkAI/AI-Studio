@@ -271,8 +271,7 @@ impl Sanitizer {
 
     /// Matches the structural patterns against the text as it stands.
     fn collect_structural_matches(&mut self, text: &str, is_final: bool, redactions: &mut Vec<Redactable>) {
-        for index in STRUCTURAL.matching(text) {
-            let (rule, pattern) = STRUCTURAL.rule(index);
+        for (rule, pattern) in STRUCTURAL.rules() {
             for matched in pattern.find_iter(text) {
                 if !Self::is_settled(text, matched.end(), is_final) {
                     continue;
@@ -341,8 +340,7 @@ impl Sanitizer {
                 redactions.push(Redactable { start, end, redaction: Redaction::Marker });
             }
 
-            for index in STRUCTURAL_COMPACT.matching(&spaced.text) {
-                let (rule, pattern) = STRUCTURAL_COMPACT.rule(index);
+            for (rule, pattern) in STRUCTURAL_COMPACT.rules() {
                 for matched in pattern.find_iter(&spaced.text) {
                     let (start, end) = spaced.to_source_range(matched.start(), matched.end());
                     if !Self::is_settled(text, end, is_final) {
@@ -467,8 +465,9 @@ fn apply_to_parts(
 
 /// Returns the first rule that matches a decoded payload, if any.
 fn first_hit(text: &str) -> Option<(String, String)> {
-    if let Some(&index) = STRUCTURAL.matching(text).first() {
-        let (rule, _) = STRUCTURAL.rule(index);
+    // Stops at the first rule that matches; which one it is only decides how the finding is
+    // labelled, and the carrier is removed either way.
+    if let Some((rule, _)) = STRUCTURAL.rules().find(|(_, pattern)| pattern.is_match(text)) {
         return Some((rule.id.to_string(), rule.category.to_string()));
     }
 
