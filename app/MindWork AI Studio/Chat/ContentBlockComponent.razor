@@ -105,9 +105,13 @@
                                         {
                                             <MudMarkdown @key="@segment.RenderKey" Value="@segmentContent" Props="Markdown.DefaultConfig" Styling="@this.MarkdownStyling" MarkdownPipeline="Markdown.CHAT_MARKDOWN_PIPELINE" />
                                         }
-                                        else
+                                        else if (segment.Type is MarkdownRenderSegmentType.MATH_BLOCK)
                                         {
                                             <MathJaxBlock @key="@segment.RenderKey" Value="@segmentContent" Class="mb-5" />
+                                        }
+                                        else if (segment.ChartResult is not null)
+                                        {
+                                            <ChartBlock @key="@segment.RenderKey" Result="@segment.ChartResult" />
                                         }
                                     }
                                     @if (textContent.Sources.Count > 0)
