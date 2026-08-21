@@ -42,6 +42,8 @@ public class AssistantComponentFactory
                 return new AssistantFileContentReader { Props = props, Children = children };
             case AssistantComponentType.FILE_ATTACHMENTS:
                 return new AssistantFileAttachment { Props = props, Children = children };
+            case AssistantComponentType.PERSISTENT_FILE_ATTACHMENTS:
+                return new AssistantPersistentFileAttachment { Props = props, Children = children };
             case AssistantComponentType.IMAGE:
                 return new AssistantImage { Props = props, Children = children };
             case AssistantComponentType.COLOR_PICKER:

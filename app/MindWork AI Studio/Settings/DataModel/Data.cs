@@ -86,6 +86,11 @@ public sealed class Data
     public List<PluginAssistantAudit> AssistantPluginAudits { get; set; } = [];
 
     /// <summary>
+    /// Persistent state owned by dynamic assistant plugins.
+    /// </summary>
+    public Dictionary<Guid, DataDynamicAssistant> DynamicAssistants { get; set; } = [];
+
+    /// <summary>
     /// The next provider number to use.
     /// </summary>
     public uint NextProviderNum { get; set; } = 1;

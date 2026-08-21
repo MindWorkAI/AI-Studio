@@ -354,6 +354,9 @@ public partial class AttachDocuments : MSGComponentBase
             ManagedTranscriptAttachment.TryDeleteOwnedFile(removedAttachment);
         
         this.ReconcileOwnerPendingTranscripts();
+        // Notify the parent explicitly so dynamic assistants persist changes to PERSISTENT_FILE_ATTACHMENTS.
+        await this.DocumentPathsChanged.InvokeAsync(this.DocumentPaths);
+        await this.OnChange(this.DocumentPaths);
     }
 
     private async Task ClearAllFiles()
