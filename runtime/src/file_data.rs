@@ -382,6 +382,63 @@ fn take_released(held: &mut VecDeque<(u64, Chunk)>, released: Vec<(u64, String)>
     chunks
 }
 
+/// Runs one step of the prompt-injection filter off the async worker.
+///
+/// The scan is synchronous CPU work sitting in the middle of the stream that serves the SSE
+/// response, which is exactly what pdfium and the presentation reader are kept away from. How
+/// long one step runs is not bounded by the batch size either: a text file is chunked by line,
+/// so a minified JSON or a log without line breaks arrives as one chunk of the whole file and
+/// is scanned in a single call. Yielding between steps would not help there; the step itself
+/// has to leave the worker.
+///
+/// The sanitizer is the scan's state, so it travels into the blocking thread and back out.
+///
+/// Returns `None` when the scan thread died. The sanitizer died with it, and what it still
+/// held cannot be released: nothing has checked that content.
+async fn scan_off_worker<F>(holder: &mut Option<Sanitizer>, step: F) -> Option<Vec<(u64, String)>>
+where
+    F: FnOnce(&mut Sanitizer) -> Vec<(u64, String)> + Send + 'static,
+{
+    let mut sanitizer = holder.take()?;
+    match tokio::task::spawn_blocking(move || {
+        let released = step(&mut sanitizer);
+        (sanitizer, released)
+    }).await {
+        Ok((sanitizer, released)) => {
+            *holder = Some(sanitizer);
+            Some(released)
+        },
+
+        Err(e) => {
+            error!("The prompt-injection filter failed while scanning: {e}");
+            None
+        },
+    }
+}
+
+/// Hands one chunk to the filter, keeping the scan off the async worker.
+async fn scan_push(holder: &mut Option<Sanitizer>, id: u64, content: String) -> Option<Vec<(u64, String)>> {
+    // Most pushes only add their chunk to the buffer. Moving those to another thread would
+    // cost more than doing them here, so only the ones that scan make the trip.
+    if holder.as_ref().is_some_and(|sanitizer| !sanitizer.will_scan(content.len())) {
+        return holder.as_mut().map(|sanitizer| sanitizer.push(id, &content));
+    }
+
+    scan_off_worker(holder, move |sanitizer| sanitizer.push(id, &content)).await
+}
+
+/// The error the app sees when the filter itself failed.
+///
+/// Reported as a failure rather than as unfiltered content: the point of the filter is that
+/// nothing reaches a model unchecked, and a document nobody checked is exactly what the app
+/// must not receive.
+fn filter_failed_error() -> ExtractionError {
+    ExtractionError::new(
+        ExtractionErrorCode::Internal,
+        "The prompt-injection filter failed, so the content was not passed on unchecked.".to_string(),
+    )
+}
+
 pub async fn extract_data(
     _token: APIToken,
     query: std::result::Result<Query<ExtractDataQuery>, QueryRejection>,
@@ -418,10 +475,10 @@ pub async fn extract_data(
                                 Ok(mut chunk) => {
                                     chunk.set_stream_id(id_ref);
 
-                                    let Some(sanitizer) = sanitizer.as_mut() else {
+                                    if sanitizer.is_none() {
                                         yield Ok(content_event(&chunk, id_ref, path_ref));
                                         continue;
-                                    };
+                                    }
 
                                     //
                                     // Image data and error notices are passed on untouched. They
@@ -429,7 +486,12 @@ pub async fn extract_data(
                                     // image would overtake the page it belongs to.
                                     //
                                     if !chunk.carries_filterable_text() {
-                                        for released in take_released(&mut held, sanitizer.flush()) {
+                                        let Some(released_chunks) = scan_off_worker(&mut sanitizer, Sanitizer::flush).await else {
+                                            yield Ok(error_event(&filter_failed_error(), Some(id_ref)));
+                                            break;
+                                        };
+
+                                        for released in take_released(&mut held, released_chunks) {
                                             yield Ok(content_event(&released, id_ref, path_ref));
                                         }
 
@@ -443,7 +505,12 @@ pub async fn extract_data(
                                     let content = std::mem::take(&mut chunk.content);
                                     held.push_back((id, chunk));
 
-                                    for released in take_released(&mut held, sanitizer.push(id, &content)) {
+                                    let Some(released_chunks) = scan_push(&mut sanitizer, id, content).await else {
+                                        yield Ok(error_event(&filter_failed_error(), Some(id_ref)));
+                                        break;
+                                    };
+
+                                    for released in take_released(&mut held, released_chunks) {
                                         yield Ok(content_event(&released, id_ref, path_ref));
                                     }
                                 },
@@ -453,9 +520,11 @@ pub async fn extract_data(
                                     error!("Extraction failed for '{path_ref}': {extraction_error}");
 
                                     // Whatever was read before the failure is still content the
-                                    // app may show, so it is released before the error.
-                                    if let Some(sanitizer) = sanitizer.as_mut() {
-                                        for released in take_released(&mut held, sanitizer.flush()) {
+                                    // app may show, so it is released before the error. A filter
+                                    // that failed on top of that releases nothing; the extraction
+                                    // error below is reported either way.
+                                    if let Some(released_chunks) = scan_off_worker(&mut sanitizer, Sanitizer::flush).await {
+                                        for released in take_released(&mut held, released_chunks) {
                                             yield Ok(content_event(&released, id_ref, path_ref));
                                         }
                                     }
@@ -466,11 +535,22 @@ pub async fn extract_data(
                             }
                         }
 
-                        if let Some(mut sanitizer) = sanitizer {
-                            for released in take_released(&mut held, sanitizer.flush()) {
+                        //
+                        // A filter that is gone by now was either never switched on, or it
+                        // failed and said so. Only a live one still holds content back.
+                        //
+                        if sanitizer.is_some() {
+                            let Some(released_chunks) = scan_off_worker(&mut sanitizer, Sanitizer::flush).await else {
+                                yield Ok(error_event(&filter_failed_error(), Some(id_ref)));
+                                return;
+                            };
+
+                            for released in take_released(&mut held, released_chunks) {
                                 yield Ok(content_event(&released, id_ref, path_ref));
                             }
+                        }
 
+                        if let Some(sanitizer) = sanitizer {
                             //
                             // Logged for every document, not only for a filtered one: a scan
                             // that is too slow leaves no other trace, and reproducing it means
@@ -1603,5 +1683,42 @@ mod tests {
         );
 
         assert!(!pages.is_empty(), "the PDF produced no text pages");
+    }
+
+    /// Moving the scan to a blocking thread must not change what the filter releases: the same
+    /// chunks under the same ids in the same order, whether a push scanned here or elsewhere.
+    #[tokio::test]
+    async fn moving_the_scan_off_the_worker_changes_nothing() {
+        let pages: Vec<String> = (0..40)
+            .map(|index| format!("Page {index}: {}", "ordinary prose about mixing consoles. ".repeat(20)))
+            .collect();
+
+        let mut direct = Sanitizer::new();
+        let mut expected = Vec::new();
+        for (id, page) in pages.iter().enumerate() {
+            expected.extend(direct.push(id as u64, page));
+        }
+
+        expected.extend(direct.flush());
+
+        let mut holder = Some(Sanitizer::new());
+        let mut moved = Vec::new();
+        for (id, page) in pages.iter().enumerate() {
+            moved.extend(scan_push(&mut holder, id as u64, page.clone()).await.expect("the filter must survive a push"));
+        }
+
+        moved.extend(scan_off_worker(&mut holder, Sanitizer::flush).await.expect("the filter must survive the flush"));
+
+        assert_eq!(moved, expected);
+        assert!(!moved.is_empty(), "the pages must come back out");
+    }
+
+    /// Without a filter there is no scan to move, and no failure to report either.
+    #[tokio::test]
+    async fn scanning_without_a_filter_reports_nothing_to_release() {
+        let mut holder: Option<Sanitizer> = None;
+
+        assert!(scan_push(&mut holder, 0, "some text".to_string()).await.is_none());
+        assert!(scan_off_worker(&mut holder, Sanitizer::flush).await.is_none());
     }
 }

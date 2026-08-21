@@ -163,6 +163,14 @@ impl Sanitizer {
         self.process(false)
     }
 
+    /// Whether pushing this many bytes scans, rather than only buffering the chunk.
+    ///
+    /// Lets the caller move the scan off its thread without paying for the pushes that merely
+    /// add a chunk to the buffer, which is most of them.
+    pub fn will_scan(&self, incoming_bytes: usize) -> bool {
+        self.unscanned_bytes + incoming_bytes >= SCAN_BATCH_BYTES
+    }
+
     /// Releases every chunk still held back.
     ///
     /// Only now is the end of the buffered text the end of the document, so matches reaching

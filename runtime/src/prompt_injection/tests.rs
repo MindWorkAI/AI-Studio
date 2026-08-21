@@ -310,6 +310,24 @@ fn multi_byte_characters_survive_chunking() {
         assert_eq!(result, source, "chunk size {chunk_size} damaged the text");
     }
 }
+/// `will_scan` decides whether a push is moved to another thread, so it has to agree with what
+/// the push then does. A prediction that drifts from the behaviour would either put the cheap
+/// pushes on a blocking thread or leave the expensive ones on the async worker.
+#[test]
+fn will_scan_predicts_when_a_push_scans() {
+    let mut sanitizer = Sanitizer::new();
+    let page = "ordinary prose about mixing consoles. ".repeat(30);
+
+    for id in 0..40u64 {
+        let predicted = sanitizer.will_scan(page.len());
+        let (before, _) = sanitizer.scan_stats();
+        sanitizer.push(id, &page);
+        let (after, _) = sanitizer.scan_stats();
+
+        assert_eq!(predicted, after > before, "push {id} disagreed with will_scan");
+    }
+}
+
 // ---------------------------------------------------------------------------------------------
 // Throughput measurement.
 //
@@ -404,7 +422,7 @@ fn scan_throughput() {
     let mut structural = Duration::ZERO;
     let mut encoded = Duration::ZERO;
     let mut spaced = Duration::ZERO;
-    let mut slowest_batch = Duration::ZERO;
+    let mut batch_durations = Vec::with_capacity(batches.len());
     let mut base64_candidates = 0usize;
     let mut hex_candidates = 0usize;
     let mut redactions_found = 0usize;
@@ -429,7 +447,7 @@ fn scan_throughput() {
         sanitizer.collect_spaced_and_shuffled_matches(batch, true, &mut redactions);
         spaced += start.elapsed();
 
-        slowest_batch = slowest_batch.max(batch_start.elapsed());
+        batch_durations.push(batch_start.elapsed());
         base64_candidates += decode::find_base64_blocks(batch).len();
         hex_candidates += decode::find_hex_blocks(batch).len();
         redactions_found += redactions.len();
@@ -461,8 +479,22 @@ fn scan_throughput() {
     report("spaced + shuffled", spaced);
     report("TOTAL", total);
 
+    // How long one batch holds the thread it runs on, which is what decides whether the scan
+    // may stay on an async worker:
+    batch_durations.sort();
+    let percentile = |fraction: f64| {
+        let index = ((batch_durations.len() as f64 * fraction) as usize).min(batch_durations.len().saturating_sub(1));
+        batch_durations.get(index).copied().unwrap_or(Duration::ZERO)
+    };
+
     println!();
-    println!("  slowest single batch:      {ms:>10.1} ms", ms = as_millis(slowest_batch));
+    println!("Per batch: p50 {p50:.2} ms, p95 {p95:.2} ms, p99 {p99:.2} ms, max {max:.2} ms",
+        p50 = as_millis(percentile(0.50)),
+        p95 = as_millis(percentile(0.95)),
+        p99 = as_millis(percentile(0.99)),
+        max = as_millis(batch_durations.last().copied().unwrap_or(Duration::ZERO)),
+    );
+
     println!("  base64 candidates:         {base64_candidates:>10} ({per:.1} per batch)", per = base64_candidates as f64 / batches.len().max(1) as f64);
     println!("  hex candidates:            {hex_candidates:>10} ({per:.1} per batch)", per = hex_candidates as f64 / batches.len().max(1) as f64);
     println!("  redactions:                {redactions_found:>10}");
