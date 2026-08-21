@@ -393,9 +393,24 @@ public static partial class PluginFactory
 
     public static IReadOnlyList<DataIntroduction> GetIntroductions()
     {
-        return RUNNING_PLUGINS
-            .OfType<PluginConfiguration>()
-            .SelectMany(plugin => plugin.Introductions)
+        var introductionsById = new Dictionary<string, DataIntroduction>(StringComparer.OrdinalIgnoreCase);
+        foreach (var introduction in RUNNING_PLUGINS
+                     .OfType<PluginConfiguration>()
+                     .SelectMany(plugin => plugin.Introductions))
+        {
+            if (introductionsById.TryGetValue(introduction.Id, out var overriddenIntroduction))
+            {
+                LOG.LogWarning(
+                    "Multiple configuration plugins provide the introduction ID '{IntroductionId}'. Using the introduction from plugin '{WinningPluginId}' and ignoring the one from plugin '{OverriddenPluginId}' because later configuration plugins take precedence.",
+                    introduction.Id,
+                    introduction.EnterpriseConfigurationPluginId,
+                    overriddenIntroduction.EnterpriseConfigurationPluginId);
+            }
+
+            introductionsById[introduction.Id] = introduction;
+        }
+
+        return introductionsById.Values
             .OrderBy(introduction => introduction.Index)
             .ToList();
     }
