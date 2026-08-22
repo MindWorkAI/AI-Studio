@@ -1389,15 +1389,35 @@ mod tests {
     const TEST_ID_B: &str = "a1b2c3d4-e5f6-7890-abcd-ef1234567890";
     const TEST_ID_C: &str = "11111111-2222-3333-4444-555555555555";
 
+    /// The app reads these values through its `RustEnumConverter`, which expects PascalCase
+    /// and turns it into the UPPER_SNAKE_CASE its own enums use: `AppImage` becomes
+    /// `APP_IMAGE`. Renaming the variants for the wire would break that. A lower-case
+    /// `appimage` in particular would arrive as `APPIMAGE`, match no member of the app's
+    /// enum, and silently fall back to `UNKNOWN` — the app would stop recognising AppImage
+    /// installations and offer them the wrong update path.
     #[test]
     fn linux_package_type_serialization_preserves_runtime_contract() {
         for (package_type, expected) in [
-            (LinuxPackageType::Unknown, "\"unknown\""),
-            (LinuxPackageType::NotApplicable, "\"not_applicable\""),
-            (LinuxPackageType::AppImage, "\"appimage\""),
-            (LinuxPackageType::Flatpak, "\"flatpak\""),
+            (LinuxPackageType::Unknown, "\"Unknown\""),
+            (LinuxPackageType::NotApplicable, "\"NotApplicable\""),
+            (LinuxPackageType::AppImage, "\"AppImage\""),
+            (LinuxPackageType::Flatpak, "\"Flatpak\""),
         ] {
             assert_eq!(serde_json::to_string(&package_type).unwrap(), expected);
+        }
+    }
+
+    /// Travels to the app through the same converter, and is what decides whether the app
+    /// may update itself at all.
+    #[test]
+    fn installation_kind_serialization_preserves_runtime_contract() {
+        for (kind, expected) in [
+            (InstallationKind::User, "\"User\""),
+            (InstallationKind::Managed, "\"Managed\""),
+            (InstallationKind::UnsupportedLocation, "\"UnsupportedLocation\""),
+            (InstallationKind::Development, "\"Development\""),
+        ] {
+            assert_eq!(serde_json::to_string(&kind).unwrap(), expected);
         }
     }
 

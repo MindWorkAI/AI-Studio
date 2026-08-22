@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using AIStudio.Tools.Security;
 
 namespace AIStudio.Tools.Services;
 
@@ -17,6 +18,13 @@ public sealed partial class RustService
 
     public async Task<FileExtractionResult> ReadArbitraryFileData(string path, int maxChunks, bool extractImages = false)
     {
+        //
+        // The runtime filters prompt injections while it streams the file. Doing it there rather
+        // than here means the whole document never has to exist in memory at once, which is what
+        // makes documents of a few thousand pages affordable.
+        //
+        var guardService = Program.SERVICE_PROVIDER.GetRequiredService<PromptInjectionGuardService>();
+
         var streamId = Guid.NewGuid().ToString();
         var requestUri = $"/retrieval/fs/extract?path={Uri.EscapeDataString(path)}&stream_id={streamId}&extract_images={extractImages}";
 
@@ -25,6 +33,8 @@ public sealed partial class RustService
 
         var resultBuilder = new StringBuilder();
         var failedPages = new List<int>();
+        var promptInjectionFindings = new List<PromptInjectionFinding>();
+        var promptInjectionRedactedCount = 0;
         var hasPartialFailure = false;
         var failureCode = FileExtractionErrorCode.NONE;
         string? failureMessage = null;
@@ -124,6 +134,17 @@ public sealed partial class RustService
                             detectedFormat = error.DetectedFormat;
                         }
                     }
+                    else if (processedEvent.PromptInjection is { } promptInjection)
+                    {
+                        //
+                        // Not a failure: the passages were removed and the document around them is
+                        // intact. It only needs to reach the user, so they know their document was
+                        // changed before the AI saw it.
+                        //
+                        promptInjectionRedactedCount += promptInjection.RedactedCount;
+                        if (promptInjection.Findings is { } findings)
+                            promptInjectionFindings.AddRange(findings);
+                    }
                     else if (processedEvent.Content is not null)
                         resultBuilder.AppendLine(processedEvent.Content);
 
@@ -174,8 +195,28 @@ public sealed partial class RustService
             return FileExtractionResult.Failed(FileExtractionErrorCode.NO_CONTENT, "Reading the file produced no content.");
         }
 
-        return hasPartialFailure
+        var result = hasPartialFailure
             ? FileExtractionResult.Partial(content, failedPages, detectedFormat)
             : FileExtractionResult.Success(content, detectedFormat);
+
+        if (promptInjectionRedactedCount is 0)
+            return result;
+
+        //
+        // Reported from here rather than from the callers: every way of reading a file passes
+        // through this method, so this is the one place where no caller can forget it.
+        //
+        await guardService.ReportAsync(new(PromptInjectionSource.FileContent(path), promptInjectionFindings, promptInjectionRedactedCount));
+
+        //
+        // Filtering does not change the outcome: the passages were removed and the document
+        // around them is intact. The findings travel along so a caller can show them next to
+        // the document they belong to.
+        //
+        return result with
+        {
+            PromptInjectionFindings = promptInjectionFindings,
+            PromptInjectionRedactedCount = promptInjectionRedactedCount,
+        };
     }
 }
