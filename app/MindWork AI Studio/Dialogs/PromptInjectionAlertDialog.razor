@@ -51,7 +51,7 @@
                                 </MudJustifiedText>
 
                                 <MudJustifiedText Typo="Typo.body2">
-                                    @this.GetSourceKindLabel(result.Source.Kind)
+                                    @result.Source.Kind.GetDisplayName()
                                 </MudJustifiedText>
                             </MudStack>
                         </MudItem>
@@ -81,7 +81,7 @@
                                     <MudStack Spacing="0">
                                         <MudJustifiedText Typo="Typo.body2">
                                             <b>
-                                                @($"{this.GetFindingCategoryLabel(finding.Category)}")
+                                                @finding.Category.GetDisplayName()
                                             </b>
                                         </MudJustifiedText>
 

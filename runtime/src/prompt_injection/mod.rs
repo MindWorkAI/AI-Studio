@@ -22,7 +22,7 @@ mod normalize;
 mod rules;
 
 use rules::{Redaction, PHRASE_RULES, STRUCTURAL, STRUCTURAL_COMPACT, TYPOGLYCEMIA_KEYWORDS};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::time::{Duration, Instant};
 
@@ -57,14 +57,33 @@ const MAX_SNIPPET_LENGTH: usize = 240;
 /// Where a quoted finding is cut off, so the snippet shows a sentence rather than a fragment.
 const SENTENCE_BOUNDARIES: [char; 5] = ['.', '!', '?', '\r', '\n'];
 
+/// The family of a detected prompt-injection rule.
+///
+/// The snake_case spelling is the wire format: it is what `phrases.toml` writes and what the
+/// .NET app reads, so renaming a variant without renaming it there breaks both.
+#[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum FindingCategory {
+    Override,
+    RoleOverride,
+    Exfiltration,
+    Jailbreak,
+    AgentManipulation,
+    DelimiterEvasion,
+    MarkupEvasion,
+    EncodingEvasion,
+    Persistence,
+    Evasion,
+}
+
 /// One detected injection attempt, as reported to the .NET app.
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
 pub struct Finding {
     /// Which rule matched, e.g. `instruction_override`.
     pub rule_id: String,
 
-    /// The rule's family, e.g. `exfiltration`.
-    pub category: String,
+    /// The rule's family, e.g. `FindingCategory::Exfiltration`.
+    pub category: FindingCategory,
 
     /// The passage as it appeared in the document, for showing the user what was removed.
     pub snippet: String,
@@ -320,7 +339,7 @@ impl Sanitizer {
             // The decoded phrase exists nowhere in the document, so the encoded block is
             // what has to go. The snippet quotes the decoded text, because that is what
             // explains to the user why the block was removed.
-            self.push_finding(&rule_id, &category, snippet_of(&block.text, 0, block.text.len()));
+            self.push_finding(&rule_id, category, snippet_of(&block.text, 0, block.text.len()));
             redactions.push(Redactable {
                 start: block.start,
                 end: block.end,
@@ -368,7 +387,7 @@ impl Sanitizer {
 
             self.push_finding(
                 &format!("typoglycemia:{keyword}"),
-                "evasion",
+                FindingCategory::Evasion,
                 snippet_of(text, start, end),
             );
 
@@ -376,11 +395,11 @@ impl Sanitizer {
         }
     }
 
-    fn record(&mut self, text: &str, start: usize, end: usize, rule_id: &str, category: &str) {
+    fn record(&mut self, text: &str, start: usize, end: usize, rule_id: &str, category: FindingCategory) {
         self.push_finding(rule_id, category, snippet_of(text, start, end));
     }
 
-    fn push_finding(&mut self, rule_id: &str, category: &str, snippet: String) {
+    fn push_finding(&mut self, rule_id: &str, category: FindingCategory, snippet: String) {
         self.redacted_count += 1;
 
         let key = (rule_id.to_string(), snippet.clone());
@@ -397,7 +416,7 @@ impl Sanitizer {
 
         self.findings.push(Finding {
             rule_id: rule_id.to_string(),
-            category: category.to_string(),
+            category,
             snippet,
         });
     }
@@ -472,11 +491,11 @@ fn apply_to_parts(
 }
 
 /// Returns the first rule that matches a decoded payload, if any.
-fn first_hit(text: &str) -> Option<(String, String)> {
+fn first_hit(text: &str) -> Option<(String, FindingCategory)> {
     // Stops at the first rule that matches; which one it is only decides how the finding is
     // labelled, and the carrier is removed either way.
     if let Some((rule, _)) = STRUCTURAL.rules().find(|(_, pattern)| pattern.is_match(text)) {
-        return Some((rule.id.to_string(), rule.category.to_string()));
+        return Some((rule.id.to_string(), rule.category));
     }
 
     let normalized = normalize::collapse_whitespace(text);
@@ -484,7 +503,7 @@ fn first_hit(text: &str) -> Option<(String, String)> {
     let matched = rules.automaton().find(&normalized.text)?;
     let (rule_id, category) = rules.rule_for(matched.pattern().as_usize());
 
-    Some((rule_id.to_string(), category.to_string()))
+    Some((rule_id.to_string(), category))
 }
 
 /// Finds words that are a letter-shuffled variant of a watched keyword.

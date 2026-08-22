@@ -14,6 +14,8 @@ use once_cell::sync::Lazy;
 use regex::Regex;
 use serde::Deserialize;
 
+use super::FindingCategory;
+
 /// How a redacted match is replaced.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Redaction {
@@ -29,7 +31,7 @@ pub enum Redaction {
 
 pub struct StructuralRule {
     pub id: &'static str,
-    pub category: &'static str,
+    pub category: FindingCategory,
     pub redaction: Redaction,
     pattern: &'static str,
 }
@@ -41,85 +43,85 @@ pub struct StructuralRule {
 const STRUCTURAL_RULES: &[StructuralRule] = &[
     StructuralRule {
         id: "instruction_override",
-        category: "override",
+        category: FindingCategory::Override,
         redaction: Redaction::Marker,
         pattern: r"(?:ignore|disregard|forget|bypass|override|replace|drop)\s+(?:all\s+)?(?:previous|prior|above|earlier)\s+(?:instructions?|prompts?|messages?|rules?)",
     },
     StructuralRule {
         id: "instruction_priority_override",
-        category: "override",
+        category: FindingCategory::Override,
         redaction: Redaction::Marker,
         pattern: r"(?:(?:new|following|these)\s+(?:instructions?|rules?|prompts?)\s+(?:are|is)\s+(?:now\s+)?(?:the\s+)?(?:highest|top|only)\s+priority|(?:take|takes|treat)\s+(?:the\s+)?(?:following|these|this)\s+as\s+(?:the\s+)?(?:new\s+)?(?:system|developer)\s+(?:prompt|message|instructions?)|(?:supersede|replace|override)\s+(?:the\s+)?(?:system|developer|previous|prior|earlier)\s+(?:prompt|message|instructions?|rules?))",
     },
     StructuralRule {
         id: "system_prompt_spoofing",
-        category: "role_override",
+        category: FindingCategory::RoleOverride,
         redaction: Redaction::Marker,
         pattern: r"(?:(?:this|the\s+following)\s+is\s+(?:a\s+)?(?:system|developer)\s+(?:prompt|message|instruction)|(?:prepend|insert|write)\s+(?:a\s+)?(?:system|developer)\s+(?:prompt|message|instruction)|(?:system|developer|assistant)\s*[:>#-]\s*(?:ignore|bypass|override|reveal|you\s+are\s+now))",
     },
     StructuralRule {
         id: "system_prompt_exfiltration",
-        category: "exfiltration",
+        category: FindingCategory::Exfiltration,
         redaction: Redaction::Marker,
         pattern: r"(?:reveal|show|print|display|dump|expose|leak|tell\s+me|return|quote|repeat\s+back)\s+(?:the\s+)?(?:hidden\s+|full\s+|exact\s+|verbatim\s+|initial\s+|original\s+)?(?:system|developer|assistant)\s+(?:prompt|message|instructions?)",
     },
     StructuralRule {
         id: "prompt_echo_exfiltration",
-        category: "exfiltration",
+        category: FindingCategory::Exfiltration,
         redaction: Redaction::Marker,
         pattern: r#"(?:(?:what\s+(?:were|are))\s+your\s+(?:exact|full|hidden|original)\s+(?:instructions?|prompt)|(?:repeat|quote|print|output|display)\s+(?:the\s+)?text\s+(?:above|before|from\s+the\s+top)\s+(?:verbatim|exactly)?|starting\s+with\s+["']?you\s+are)"#,
     },
     StructuralRule {
         id: "policy_bypass",
-        category: "override",
+        category: FindingCategory::Override,
         redaction: Redaction::Marker,
         pattern: r"(?:do\s+not|don't|stop\s+to|never)\s+(?:follow|obey|respect|apply|enforce)\s+(?:the\s+)?(?:system|developer|safety|security|content|usage)\s+(?:prompt|message|instructions?|policy|policies|guardrails?|restrictions?)",
     },
     StructuralRule {
         id: "role_reassignment",
-        category: "role_override",
+        category: FindingCategory::RoleOverride,
         redaction: Redaction::Marker,
         pattern: r"(?:you\s+are\s+now|you\s+are\s+no\s+longer|act\s+as|pretend\s+to\s+be|simulate\s+being|assume\s+the\s+role\s+of|from\s+now\s+on\s+you\s+are)\s+(?:an\s+)?(?:unfiltered|unrestricted|developer|system|root|admin|jailbroken|evil|dan|do\s+anything\s+now)",
     },
     StructuralRule {
         id: "privileged_persona_activation",
-        category: "jailbreak",
+        category: FindingCategory::Jailbreak,
         redaction: Redaction::Marker,
         pattern: r"\b(?:developer\s+mode|debug\s+mode|admin\s+mode|root\s+mode|god\s+mode|maintenance\s+mode|dan\s*(?:mode)?|do\s+anything\s+now|grandmother\s+trick)\b",
     },
     StructuralRule {
         id: "tool_or_secret_exfiltration",
-        category: "exfiltration",
+        category: FindingCategory::Exfiltration,
         redaction: Redaction::Marker,
         pattern: r"(?:export|send|return|reveal|show|print|output|list|dump|exfiltrate)\s+(?:all\s+)?(?:tools?|functions?|plugins?|api\s*keys?|keys?|tokens?|credentials?|secrets?|passwords?|hidden\s+instructions?|environment\s+variables?|system\s+information|internal\s+data)",
     },
     StructuralRule {
         id: "conversation_memory_exfiltration",
-        category: "exfiltration",
+        category: FindingCategory::Exfiltration,
         redaction: Redaction::Marker,
         pattern: r"(?:(?:show|print|reveal|return|dump|list)\s+(?:the\s+)?(?:conversation\s+history|chat\s+history|memory|scratchpad|chain\s+of\s+thought|reasoning|previous\s+user\s+messages?|prior\s+messages?)|(?:what\s+did\s+(?:the\s+)?previous\s+user\s+say))",
     },
     StructuralRule {
         id: "tool_call_manipulation",
-        category: "agent_manipulation",
+        category: FindingCategory::AgentManipulation,
         redaction: Redaction::Marker,
         pattern: r"(?:(?:call|invoke|execute|run|use|trigger)\s+(?:the\s+)?(?:tool|function|plugin|api|browser|web|shell|terminal|command)[^\n]{0,120}(?:with|using|to)\s+(?:these\s+)?(?:arguments|params?|parameters)|(?:do\s+not|don't)\s+ask\s+for\s+(?:confirmation|approval|permission)|(?:silently|secretly|without\s+asking)\s+(?:call|invoke|execute|run|use))",
     },
     StructuralRule {
         id: "agent_thought_injection",
-        category: "agent_manipulation",
+        category: FindingCategory::AgentManipulation,
         redaction: Redaction::Marker,
         pattern: r"(?:(?:thought|observation|reasoning|scratchpad|tool\s+output|assistant|system|developer)\s*[:=]\s*(?:ignore|bypass|override|reveal|call|execute)|forge\s+(?:an\s+)?(?:observation|tool\s+output|assistant\s+message)|pretend\s+(?:the\s+)?tool\s+(?:returned|said))",
     },
     StructuralRule {
         id: "delimiter_wrapped_attack",
-        category: "delimiter_evasion",
+        category: FindingCategory::DelimiterEvasion,
         redaction: Redaction::Marker,
         pattern: r"(?:^|\n)\s*(?:<{2,}|>{2,}|`{3,}|#{1,6}\s*)(?:\s*(?:system|developer|assistant|instructions?|prompt)\b)",
     },
     StructuralRule {
         id: "hidden_markup_injection",
-        category: "markup_evasion",
+        category: FindingCategory::MarkupEvasion,
         // The carrier is an HTML comment or an invisible element. The reader never saw it,
         // so removing it restores what they believed they were reading.
         redaction: Redaction::Silent,
@@ -127,32 +129,32 @@ const STRUCTURAL_RULES: &[StructuralRule] = &[
     },
     StructuralRule {
         id: "latex_invisible_text",
-        category: "markup_evasion",
+        category: FindingCategory::MarkupEvasion,
         redaction: Redaction::Silent,
         pattern: r"(?:\\(?:color|textcolor)\s*\{\s*white\s*\}\s*\{[^}]{0,300}\}|\\(?:fontsize|tiny|scriptsize)\b[^\r\n]{0,120}(?:ignore|bypass|override|reveal))",
     },
     StructuralRule {
         id: "unicode_smuggling",
-        category: "encoding_evasion",
+        category: FindingCategory::EncodingEvasion,
         // Zero-width and bidirectional control characters carry no meaning for a reader.
         redaction: Redaction::Silent,
         pattern: r"[\u{200B}-\u{200F}\u{2060}-\u{2064}\u{2066}-\u{2069}\u{FEFF}]+",
     },
     StructuralRule {
         id: "ignore_safety_after_data",
-        category: "override",
+        category: FindingCategory::Override,
         redaction: Redaction::Marker,
         pattern: r"(?:after\s+reading|once\s+you\s+read|when\s+you\s+see)\s+.*?(?:ignore|bypass|override)\s+.*?(?:instructions?|safety|rules?)",
     },
     StructuralRule {
         id: "persistent_or_delayed_trigger",
-        category: "persistence",
+        category: FindingCategory::Persistence,
         redaction: Redaction::Marker,
         pattern: r"(?:(?:remember|store|save|persist|memorize)\s+(?:this|these|the\s+following)\s+(?:instructions?|rules?|message)|(?:later|in\s+the\s+next\s+message|when\s+you\s+see|whenever\s+you\s+read|if\s+you\s+encounter)\s+.{0,120}(?:ignore|bypass|override|reveal|exfiltrate))",
     },
     StructuralRule {
         id: "jailbreak_marker",
-        category: "jailbreak",
+        category: FindingCategory::Jailbreak,
         redaction: Redaction::Marker,
         pattern: r"\b(?:jailbreak|prompt\s+injection|ignore\s+your\s+guardrails?|bypass\s+(?:your\s+)?(?:guardrails?|safety)|unfiltered\s+mode|do\s+anything\s+now|developer\s+mode|admin\s+mode|root\s+mode)\b",
     },
@@ -169,7 +171,7 @@ struct PhraseFile {
 #[derive(Deserialize)]
 struct PhraseRule {
     id: String,
-    category: String,
+    category: FindingCategory,
     phrases: Vec<String>,
 }
 
@@ -184,15 +186,15 @@ pub struct PhraseRules {
     /// For every pattern in the automatons, which rule contributed it. Both are built from
     /// the same phrase list in the same order, so one table serves both.
     owners: Vec<usize>,
-    rules: Vec<(String, String)>,
+    rules: Vec<(String, FindingCategory)>,
 }
 
 impl PhraseRules {
     /// Returns the rule id and category behind a pattern index reported by an automaton.
-    pub fn rule_for(&self, pattern_index: usize) -> (&str, &str) {
+    pub fn rule_for(&self, pattern_index: usize) -> (&str, FindingCategory) {
         let owner = self.owners[pattern_index];
         let (id, category) = &self.rules[owner];
-        (id, category)
+        (id, *category)
     }
 
     pub fn automaton(&self) -> &AhoCorasick {
@@ -310,9 +312,8 @@ mod tests {
     fn every_phrase_belongs_to_a_known_rule() {
         let rules = &*PHRASE_RULES;
         for index in 0..rules.owners.len() {
-            let (id, category) = rules.rule_for(index);
+            let (id, _) = rules.rule_for(index);
             assert!(!id.is_empty());
-            assert!(!category.is_empty());
         }
     }
 

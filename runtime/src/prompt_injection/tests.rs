@@ -235,7 +235,13 @@ fn findings_carry_a_readable_snippet() {
 
     assert!(!finding.snippet.is_empty());
     assert!(!finding.rule_id.is_empty());
-    assert!(!finding.category.is_empty());
+    assert_eq!(finding.category, FindingCategory::Override);
+}
+
+#[test]
+fn finding_categories_keep_their_snake_case_wire_format() {
+    let serialized = serde_json::to_string(&FindingCategory::RoleOverride).expect("the category must serialize");
+    assert_eq!(serialized, "\"role_override\"");
 }
 
 /// The scenario that motivated moving this out of .NET: a very large document must stay

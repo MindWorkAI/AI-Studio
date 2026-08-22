@@ -21,7 +21,7 @@ public sealed record PromptInjectionFinding
     /// The rule's family, e.g. "exfiltration".
     /// </summary>
     [JsonPropertyName("category")]
-    public string Category { get; init; } = string.Empty;
+    public PromptInjectionFindingCategory Category { get; init; } = PromptInjectionFindingCategory.UNKNOWN;
 
     /// <summary>
     /// The passage as it appeared in the content, so the user can see what was removed.
