@@ -6120,9 +6120,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINGGUIDELINEDIALOG::T384594633"] = "De
 -- Prompting Guideline
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINGGUIDELINEDIALOG::T4250996615"] = "Prompting-Leitfaden"
 
--- Chat attachment
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T1071345316"] = "Chat-Anhang"
-
 -- AI Studio found instructions aimed at the AI inside your content and removed them. Everything around them was kept, so you can continue working with the content. Please review what was removed below.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T1100148261"] = "AI Studio hat in Ihren Inhalten Anweisungen erkannt, die an die KI gerichtet waren, und sie entfernt. Alles andere wurde beibehalten, sodass Sie mit den Inhalten weiterarbeiten können. Bitte überprüfen Sie unten, was entfernt wurde."
 
@@ -6132,26 +6129,8 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T1129278507"] = 
 -- Close and don't show again
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T1384522605"] = "Schließen und nicht mehr anzeigen"
 
--- Attempt to override instructions
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T161976090"] = "Versuch, Anweisungen zu überschreiben"
-
 -- And {0} more passages of the same kind.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T2039738154"] = "Und {0} weitere Passagen derselben Art."
-
--- Attempt to expose protected data
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T2050274293"] = "Versuch, geschützte Daten offenzulegen"
-
--- Attempt to bypass safeguards
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T2260642992"] = "Versuch, Schutzmechanismen zu umgehen"
-
--- Attempt to change the AI's role
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T2340508370"] = "Versuch, die Rolle der KI zu ändern"
-
--- Hidden instructions using markup
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T2526538070"] = "Versteckte Anweisungen mithilfe von Markup"
-
--- Web content
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T2626468388"] = "Webinhalte"
 
 -- Source type
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T280442848"] = "Typ der Quelle"
@@ -6159,26 +6138,11 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T280442848"] = "
 -- Prompt injection is a method used to manipulate AI systems such as chatbots. An attacker places misleading instructions in content so that the AI treats them as legitimate. This can cause the AI to ignore safeguards, expose private information, or generate harmful content.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T3122726298"] = "Prompt Injection ist eine Methode zur Manipulation von KI-Systemen wie Chatbots. Dabei platziert ein Angreifer irreführende Anweisungen in Inhalten, sodass die KI sie als legitim behandelt. Dies kann dazu führen, dass die KI Schutzmaßnahmen ignoriert, private Informationen preisgibt oder schädliche Inhalte erstellt."
 
--- Hidden instructions using delimiters
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T329656456"] = "Versteckte Anweisungen mit Trennzeichen"
-
--- Retrieved context
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T3347144620"] = "Abgerufener Kontext"
-
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T3448155331"] = "Schließen"
 
 -- Removed content
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T3549539878"] = "Inhalt entfernt"
-
--- Attempt to manipulate an agent
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T355252317"] = "Versuch, einen Agenten zu manipulieren"
-
--- File content
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T3788064862"] = "Dateiinhalt"
-
--- Persistent or delayed instruction
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T4169123215"] = "Dauerhafte oder verzögerte Anweisung"
 
 -- Typical attacks on AI systems (e.g. prompt injection) hide instructions within untrusted content to trick an AI model into ignoring its intended rules or performing unintended actions.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T4221674400"] = "Typische Angriffe auf KI-Systeme (z. B. Prompt-Injection) verbergen Anweisungen in nicht vertrauenswürdigen Inhalten, um ein KI-Modell dazu zu bringen, seine vorgesehenen Regeln zu ignorieren oder unbeabsichtigte Aktionen auszuführen."
@@ -6186,17 +6150,11 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T4221674400"] = 
 -- More information
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T475337262"] = "Weitere Informationen"
 
--- Hidden instructions using encoding
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T49495195"] = "Versteckte Anweisungen mithilfe von Kodierung"
-
 -- Hide more information
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T808738984"] = "Weitere Informationen ausblenden"
 
 -- Suspicious content was removed
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T871282530"] = "Verdächtige Inhalte wurden entfernt"
-
--- Obfuscated instruction
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T87316699"] = "Verschleierte Anweisung"
 
 -- Hugging Face Inference Provider
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1085481431"] = "Hugging Face Inferenz-Anbieter"
@@ -10428,6 +10386,39 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T4165204724"] = "Dokument"
 -- Plugin archive
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T927001356"] = "Plugin-Archiv"
 
+-- Attempt to override instructions
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONFINDINGCATEGORYEXTENSIONS::T161976090"] = "Versuch, Anweisungen zu überschreiben"
+
+-- Attempt to expose protected data
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONFINDINGCATEGORYEXTENSIONS::T2050274293"] = "Versuch, geschützte Daten offenzulegen"
+
+-- Attempt to bypass safeguards
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONFINDINGCATEGORYEXTENSIONS::T2260642992"] = "Versuch, Schutzvorkehrungen zu umgehen"
+
+-- Attempt to change the AI's role
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONFINDINGCATEGORYEXTENSIONS::T2340508370"] = "Versuch, die Rolle der KI zu ändern"
+
+-- Hidden instructions using markup
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONFINDINGCATEGORYEXTENSIONS::T2526538070"] = "Versteckte Anweisungen mit Markup"
+
+-- Hidden instructions using delimiters
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONFINDINGCATEGORYEXTENSIONS::T329656456"] = "Versteckte Anweisungen mit Trennzeichen"
+
+-- Unknown
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONFINDINGCATEGORYEXTENSIONS::T3424652889"] = "Unbekannt"
+
+-- Attempt to manipulate an agent
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONFINDINGCATEGORYEXTENSIONS::T355252317"] = "Versuch, einen Agenten zu manipulieren"
+
+-- Persistent or delayed instruction
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONFINDINGCATEGORYEXTENSIONS::T4169123215"] = "Dauerhafte oder verzögerte Anweisung"
+
+-- Hidden instructions using encoding
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONFINDINGCATEGORYEXTENSIONS::T49495195"] = "Versteckte Anweisungen mithilfe von Kodierung"
+
+-- Obfuscated instruction
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONFINDINGCATEGORYEXTENSIONS::T87316699"] = "Verschleierte Anweisung"
+
 -- AI Studio could not check '{0}' for prompt injections. The content is used as it is.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONGUARDSERVICE::T1026469976"] = "AI Studio konnte „{0}“ nicht auf Prompt-Injections prüfen. Der Inhalt wird unverändert verwendet."
 
@@ -10436,6 +10427,21 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONGUARDSERVICE::T246048
 
 -- AI Studio removed suspicious instructions from {0} sources before using them.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONGUARDSERVICE::T3489536228"] = "AI Studio hat verdächtige Anweisungen aus {0} Quellen entfernt, bevor es sie verwendet hat."
+
+-- Chat attachment
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONSOURCEKINDEXTENSIONS::T1071345316"] = "Chat-Anhang"
+
+-- Web content
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONSOURCEKINDEXTENSIONS::T2626468388"] = "Webinhalte"
+
+-- Retrieved context
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONSOURCEKINDEXTENSIONS::T3347144620"] = "Abgerufener Kontext"
+
+-- Unknown
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONSOURCEKINDEXTENSIONS::T3424652889"] = "Unbekannt"
+
+-- File content
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONSOURCEKINDEXTENSIONS::T3788064862"] = "Dateiinhalt"
 
 -- The Assistant Builder context could not be loaded.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T108292972"] = "Der Kontext des Assistenten-Builders konnte nicht geladen werden."
