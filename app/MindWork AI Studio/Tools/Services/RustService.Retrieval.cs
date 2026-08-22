@@ -24,10 +24,9 @@ public sealed partial class RustService
         // makes documents of a few thousand pages affordable.
         //
         var guardService = Program.SERVICE_PROVIDER.GetRequiredService<PromptInjectionGuardService>();
-        var filterPromptInjections = guardService.IsProtectionEnabled;
 
         var streamId = Guid.NewGuid().ToString();
-        var requestUri = $"/retrieval/fs/extract?path={Uri.EscapeDataString(path)}&stream_id={streamId}&extract_images={extractImages}&filter_prompt_injections={filterPromptInjections}";
+        var requestUri = $"/retrieval/fs/extract?path={Uri.EscapeDataString(path)}&stream_id={streamId}&extract_images={extractImages}&filter_prompt_injections=true";
 
         using var timeoutTokenSource = new CancellationTokenSource(EXTRACTION_TIMEOUT);
         var cancellationToken = timeoutTokenSource.Token;

@@ -312,6 +312,11 @@ CONFIG["SETTINGS"] = {}
 -- Configure whether the vision panel is shown on the welcome page.
 -- CONFIG["SETTINGS"]["DataApp.ShowVision"] = false
 
+-- Configure whether AI Studio shows a dialog listing suspicious instructions it
+-- removed from external content, together with an explanation of the attack pattern.
+-- A short notification is still shown when this setting is disabled.
+-- CONFIG["SETTINGS"]["DataApp.ShowPromptInjectionAlert"] = true
+
 -- Configure the user permission to add providers:
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToAddProvider"] = false
 
@@ -365,16 +370,6 @@ CONFIG["SETTINGS"] = {}
 -- Configure chat-specific preselected options.
 -- This must be enabled for the chat-specific provider, profile, and chat template to take effect.
 -- CONFIG["SETTINGS"]["DataChat.PreselectOptions"] = true
---
--- Configure prompt-injection protection for external content such as webpages,
--- retrieved context, and file attachments before it is sent to an LLM. Instructions
--- aimed at the AI are removed from the content, while everything around them is kept,
--- so the document stays usable.
--- CONFIG["SETTINGS"]["DataChat.EnablePromptInjectionProtection"] = true
---
--- Configure whether AI Studio shows a dialog listing what it removed from the content,
--- together with an explanation of the attack pattern.
--- CONFIG["SETTINGS"]["DataChat.ShowPromptInjectionAlert"] = true
 --
 -- Configure the preselected provider for chats.
 -- It must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"].

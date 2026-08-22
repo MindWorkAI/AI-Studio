@@ -26,24 +26,22 @@ public sealed class PromptInjectionGuardService(
     private readonly List<PromptInjectionScanResult> pendingResults = [];
     private int openActions;
 
-    public bool IsProtectionEnabled => settingsManager.ConfigurationData.Chat.EnablePromptInjectionProtection;
-
     /// <summary>
     /// Filters prompt injections out of a text the runtime did not read itself, such as a web
     /// page or a retrieval context.
     /// </summary>
     /// <remarks>
-    /// Returns usable text in every case. When filtering is off, or the runtime cannot be
-    /// reached, the text is passed through unchanged: refusing the user's content because a
-    /// check could not run would cost them their work over a check that is best-effort anyway.
-    /// The failure is logged and shown, so it does not pass silently.
+    /// Returns usable text in every case. When the runtime cannot be reached, the text is passed
+    /// through unchanged: refusing the user's content because a check could not run would cost
+    /// them their work over a check that is best-effort anyway. The failure is logged and shown,
+    /// so it does not pass silently.
     /// </remarks>
     /// <param name="text">The content to filter.</param>
     /// <param name="source">Where the content came from, for the report shown to the user.</param>
     /// <returns>The content with any suspicious passages removed.</returns>
     public async Task<string> SanitizeAsync(string text, PromptInjectionSource source)
     {
-        if (!this.IsProtectionEnabled || string.IsNullOrWhiteSpace(text))
+        if (string.IsNullOrWhiteSpace(text))
             return text;
 
         if (await rustService.SanitizePromptInjections(text) is not { } response)
@@ -147,7 +145,7 @@ public sealed class PromptInjectionGuardService(
 
         logger.LogInformation("Reported {Count} filtered prompt injection(s) across {Sources} source(s) to the user.", totalCount, results.Count);
 
-        if (settingsManager.ConfigurationData.Chat.ShowPromptInjectionAlert)
+        if (settingsManager.ConfigurationData.App.ShowPromptInjectionAlert)
             await MessageBus.INSTANCE.SendMessage<PromptInjectionAlertMessage>(null, Event.SHOW_PROMPT_INJECTION_ALERT, new(results));
     }
 
