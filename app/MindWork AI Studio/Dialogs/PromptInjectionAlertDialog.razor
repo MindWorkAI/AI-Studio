@@ -129,6 +129,15 @@
         </MudCollapse>
     </DialogContent>
     <DialogActions>
+        @if (CanDisableFutureAlerts)
+        {
+            <MudButton Variant="Variant.Text"
+                       Color="Color.Default"
+                       OnClick="@this.CloseAndDisableFutureAlertsAsync">
+
+                @T("Close and don't show again")
+            </MudButton>
+        }
         <MudButton Variant="Variant.Filled"
                    Color="Color.Default"
                    OnClick="@this.Close">

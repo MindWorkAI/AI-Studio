@@ -361,6 +361,9 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         await this.promptInjectionDialogSemaphore.WaitAsync();
         try
         {
+            if (!this.SettingsManager.ConfigurationData.App.ShowPromptInjectionAlert)
+                return;
+
             var dialogParameters = new DialogParameters<PromptInjectionAlertDialog>
             {
                 { x => x.Alert, alert },
