@@ -238,10 +238,31 @@ fn findings_carry_a_readable_snippet() {
     assert_eq!(finding.category, FindingCategory::Override);
 }
 
+/// The category is a contract, not an implementation detail: `phrases.toml` names the same
+/// spellings and the .NET app maps them onto its own enum. Renaming a variant has to break
+/// here rather than silently change what the app receives.
 #[test]
 fn finding_categories_keep_their_snake_case_wire_format() {
-    let serialized = serde_json::to_string(&FindingCategory::RoleOverride).expect("the category must serialize");
-    assert_eq!(serialized, "\"role_override\"");
+    let expected = [
+        (FindingCategory::Override, "\"override\""),
+        (FindingCategory::RoleOverride, "\"role_override\""),
+        (FindingCategory::Exfiltration, "\"exfiltration\""),
+        (FindingCategory::Jailbreak, "\"jailbreak\""),
+        (FindingCategory::AgentManipulation, "\"agent_manipulation\""),
+        (FindingCategory::DelimiterEvasion, "\"delimiter_evasion\""),
+        (FindingCategory::MarkupEvasion, "\"markup_evasion\""),
+        (FindingCategory::EncodingEvasion, "\"encoding_evasion\""),
+        (FindingCategory::Persistence, "\"persistence\""),
+        (FindingCategory::Evasion, "\"evasion\""),
+    ];
+
+    for (category, wire) in expected {
+        let serialized = serde_json::to_string(&category).expect("the category must serialize");
+        assert_eq!(serialized, wire, "unexpected wire format for {category:?}");
+
+        let parsed: FindingCategory = serde_json::from_str(wire).expect("the wire format must parse back");
+        assert_eq!(parsed, category, "{wire} did not round-trip");
+    }
 }
 
 /// The scenario that motivated moving this out of .NET: a very large document must stay
