@@ -5,7 +5,7 @@
 
     <DialogContent>
 
-        <MudPaper Class="pa-6 mb-4" Elevation="0" Style="background:#fff3e0; border:1px solid #ffcc80;">
+        <MudPaper Class="pa-6 mb-4" Elevation="0" Outlined="true">
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3">
                 <MudAvatar Size="Size.Large"
                            Color="Color.Warning"
@@ -24,8 +24,8 @@
                 </MudStack>
             </MudStack>
 
-            <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mt-4" Style="border:1px solid #ffcc80;">
-                <MudJustifiedText Typo="Typo.body2" Color="Color.Dark">
+            <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="mt-4">
+                <MudJustifiedText Typo="Typo.body2">
                     @T("Typical attacks on AI systems (e.g. prompt injection) hide instructions within untrusted content to trick an AI model into ignoring its intended rules or performing unintended actions.")
                 </MudJustifiedText>
             </MudAlert>
@@ -115,7 +115,7 @@
             </MudPaper>
 
             <MudPaper Class="pa-4 mt-2"
-                      Style="background:#fafafa;">
+                      Outlined="true">
 
                 <MudJustifiedText  Typo="Typo.body2" Class="mb-3">
                     @T("Prompt injection is a method used to manipulate AI systems such as chatbots. An attacker places misleading instructions in content so that the AI treats them as legitimate. This can cause the AI to ignore safeguards, expose private information, or generate harmful content.")
