@@ -53,7 +53,7 @@ public sealed class PromptInjectionGuardService(
             logger.LogError("Could not check {SourceKind} '{SourceLabel}' for prompt injections. The content is used unchanged.", source.Kind, source.Label);
             await MessageBus.INSTANCE.SendWarning(new(
                 Icons.Material.Filled.GppMaybe,
-                string.Format(TB("AI Studio could not check '{0}' for prompt injections. The content is used as it is."), source.Label)));
+                string.Format(TB("AI Studio could not check '{0}' for prompt injections. The content is used as it is."), source.NotificationLabel)));
 
             return text;
         }
@@ -142,7 +142,7 @@ public sealed class PromptInjectionGuardService(
         await MessageBus.INSTANCE.SendWarning(new(
             Icons.Material.Filled.GppMaybe,
             results.Count is 1
-                ? string.Format(TB("AI Studio removed suspicious instructions from '{0}' before using it."), results[0].Source.Label)
+                ? string.Format(TB("AI Studio removed suspicious instructions from '{0}' before using it."), results[0].Source.NotificationLabel)
                 : string.Format(TB("AI Studio removed suspicious instructions from {0} sources before using them."), results.Count)));
 
         if (settingsManager.ConfigurationData.App.ShowPromptInjectionAlert)
