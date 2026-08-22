@@ -72,9 +72,9 @@ qdrant-edge = "0.7.2"
 # Prompt-injection detection. `regex` gives us linear-time matching without backtracking, so
 # a hostile document cannot make a scan blow up, and `aho-corasick` matches the ~1600 fixed
 # phrases in one pass no matter how long that list grows.
-regex = "1.11.4"
-aho-corasick = "1.1.4"
-toml = "0.9.9"
+regex = "1.13.1"
+aho-corasick = "1.1.5"
+toml = "1.1.4+spec-1.1.0"
 image = { version = "0.25.10", default-features = false, features = ["jpeg", "png", "webp"] }
 
 [patch.crates-io]
