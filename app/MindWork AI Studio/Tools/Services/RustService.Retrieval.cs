@@ -26,7 +26,7 @@ public sealed partial class RustService
         var guardService = Program.SERVICE_PROVIDER.GetRequiredService<PromptInjectionGuardService>();
 
         var streamId = Guid.NewGuid().ToString();
-        var requestUri = $"/retrieval/fs/extract?path={Uri.EscapeDataString(path)}&stream_id={streamId}&extract_images={extractImages}&filter_prompt_injections=true";
+        var requestUri = $"/retrieval/fs/extract?path={Uri.EscapeDataString(path)}&stream_id={streamId}&extract_images={extractImages}";
 
         using var timeoutTokenSource = new CancellationTokenSource(EXTRACTION_TIMEOUT);
         var cancellationToken = timeoutTokenSource.Token;

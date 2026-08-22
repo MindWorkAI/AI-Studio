@@ -292,17 +292,6 @@ pub struct ExtractDataQuery {
     stream_id: String,
     #[serde(deserialize_with = "deserialize_bool_case_insensitive")]
     extract_images: bool,
-
-    /// Whether suspected prompt injections are filtered out of the content.
-    ///
-    /// Defaults to filtering when the app does not say: leaving it out must not be a way to
-    /// receive unfiltered content by accident.
-    #[serde(default = "filter_by_default", deserialize_with = "deserialize_bool_case_insensitive")]
-    filter_prompt_injections: bool,
-}
-
-fn filter_by_default() -> bool {
-    true
 }
 
 fn deserialize_bool_case_insensitive<'de, D>(deserializer: D) -> std::result::Result<bool, D::Error>
@@ -466,7 +455,7 @@ pub async fn extract_data(
                         // prompt-injection filter sits at this point: it needs to see the document
                         // as a whole, and this is the one place where the whole document goes by.
                         //
-                        let mut sanitizer = query.filter_prompt_injections.then(Sanitizer::new);
+                        let mut sanitizer = Some(Sanitizer::new());
                         let mut held: VecDeque<(u64, Chunk)> = VecDeque::new();
                         let mut next_chunk_id = 0u64;
 
@@ -474,11 +463,6 @@ pub async fn extract_data(
                             match chunk {
                                 Ok(mut chunk) => {
                                     chunk.set_stream_id(id_ref);
-
-                                    if sanitizer.is_none() {
-                                        yield Ok(content_event(&chunk, id_ref, path_ref));
-                                        continue;
-                                    }
 
                                     //
                                     // Image data and error notices are passed on untouched. They
@@ -536,8 +520,8 @@ pub async fn extract_data(
                         }
 
                         //
-                        // A filter that is gone by now was either never switched on, or it
-                        // failed and said so. Only a live one still holds content back.
+                        // A filter that is gone by now failed and said so. Only a live one still
+                        // holds content back.
                         //
                         if sanitizer.is_some() {
                             let Some(released_chunks) = scan_off_worker(&mut sanitizer, Sanitizer::flush).await else {
