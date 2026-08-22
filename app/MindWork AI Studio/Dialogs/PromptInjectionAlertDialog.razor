@@ -2,14 +2,10 @@
 @inherits MSGComponentBase
 
 <MudDialog>
-
     <DialogContent>
-
         <MudPaper Class="pa-6 mb-4" Elevation="0" Outlined="true">
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3">
-                <MudAvatar Size="Size.Large"
-                           Color="Color.Warning"
-                           Variant="Variant.Filled">
+                <MudAvatar Size="Size.Large" Color="Color.Warning" Variant="Variant.Filled">
                     <MudIcon Icon="@Icons.Material.Filled.GppMaybe"/>
                 </MudAvatar>
 
@@ -34,16 +30,14 @@
         <MudDivider />
         <MudStack Row="true" Justify="Justify.Center" Class="my-2">
             <MudButton Variant="Variant.Text"
-                       EndIcon="@(showPromptInjectionInformation ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)"
-                       OnClick="@TogglePromptInjectionInformation">
+                       EndIcon="@(this.showPromptInjectionInformation ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)"
+                       OnClick="@this.TogglePromptInjectionInformation">
 
-                @(showPromptInjectionInformation
-                    ? T("Hide more information")
-                    : T("More information"))
+                @(this.showPromptInjectionInformation ? T("Hide more information") : T("More information"))
             </MudButton>
         </MudStack>
 
-        <MudCollapse Expanded="@showPromptInjectionInformation">
+        <MudCollapse Expanded="@this.showPromptInjectionInformation">
             <MudPaper Outlined="true"
                       Class="pa-4 mb-4">
                 @foreach (var result in this.Alert.Results)
@@ -52,7 +46,6 @@
                         <MudItem xs="12" md="3">
                             <MudStack>
                                 <MudIcon Icon="@Icons.Material.Filled.Source" />
-
                                 <MudJustifiedText Typo="Typo.subtitle2">
                                     @T("Source type")
                                 </MudJustifiedText>
@@ -66,13 +59,11 @@
                         <MudItem xs="12" md="4">
                             <MudStack>
                                 <MudIcon Icon="@Icons.Material.Outlined.Description"/>
-
                                 <MudJustifiedText Typo="Typo.subtitle2">
                                     @T("Content source")
                                 </MudJustifiedText>
 
-                                <MudJustifiedText Typo="Typo.body2"
-                                         Style="word-break:break-all;">
+                                <MudJustifiedText Typo="Typo.body2" Style="word-break:break-all;">
                                     @result.Source.Label
                                 </MudJustifiedText>
                             </MudStack>
@@ -81,7 +72,6 @@
                         <MudItem xs="12" md="5">
                             <MudStack>
                                 <MudIcon Icon="@Icons.Material.Outlined.WarningAmber"/>
-
                                 <MudJustifiedText Typo="Typo.subtitle2">
                                     @T("Removed content")
                                 </MudJustifiedText>
@@ -114,15 +104,11 @@
                 }
             </MudPaper>
 
-            <MudPaper Class="pa-4 mt-2"
-                      Outlined="true">
-
+            <MudPaper Class="pa-4 mt-2" Outlined="true">
                 <MudJustifiedText  Typo="Typo.body2" Class="mb-3">
                     @T("Prompt injection is a method used to manipulate AI systems such as chatbots. An attacker places misleading instructions in content so that the AI treats them as legitimate. This can cause the AI to ignore safeguards, expose private information, or generate harmful content.")
                 </MudJustifiedText>
-
-                <MudLink Href="@PromptInjectionGuardService.WIKI_URL"
-                         Target="_blank">
+                <MudLink Href="@PromptInjectionGuardService.WIKI_URL" Target="_blank">
                     @PromptInjectionGuardService.WIKI_URL
                 </MudLink>
             </MudPaper>
@@ -131,17 +117,11 @@
     <DialogActions>
         @if (CanDisableFutureAlerts)
         {
-            <MudButton Variant="Variant.Text"
-                       Color="Color.Default"
-                       OnClick="@this.CloseAndDisableFutureAlertsAsync">
-
+            <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="@this.CloseAndDisableFutureAlertsAsync">
                 @T("Close and don't show again")
             </MudButton>
         }
-        <MudButton Variant="Variant.Filled"
-                   Color="Color.Default"
-                   OnClick="@this.Close">
-
+        <MudButton Variant="Variant.Filled" Color="Color.Default" OnClick="@this.Close">
             @T("Close")
         </MudButton>
     </DialogActions>
