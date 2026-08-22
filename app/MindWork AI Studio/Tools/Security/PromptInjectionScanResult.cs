@@ -16,6 +16,4 @@ public sealed record PromptInjectionScanResult(PromptInjectionSource Source, IRe
     /// them is not rejected.
     /// </remarks>
     public bool WasFiltered => this.RedactedCount > 0;
-
-    public IReadOnlyList<string> RuleIds => this.Findings.Select(finding => finding.RuleId).Distinct(StringComparer.Ordinal).ToList();
 }

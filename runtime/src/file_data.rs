@@ -550,12 +550,6 @@ pub async fn extract_data(
 
                             let report = sanitizer.into_report();
                             if !report.is_empty() {
-                                warn!(
-                                    "Filtered {count} suspected prompt injection(s) out of '{path_ref}': {rules:?}",
-                                    count = report.redacted_count,
-                                    rules = report.findings.iter().map(|finding| finding.rule_id.as_str()).collect::<Vec<_>>(),
-                                );
-
                                 let mut notice = Chunk::new(String::new(), Metadata::PromptInjection {
                                     findings: report.findings,
                                     redacted_count: report.redacted_count,

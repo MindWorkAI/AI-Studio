@@ -16,12 +16,16 @@ namespace AIStudio.Tools.Security;
 public sealed class PromptInjectionGuardService(
     RustService rustService,
     SettingsManager settingsManager,
-    ILogger<PromptInjectionGuardService> logger)
+    ILogger<PromptInjectionGuardService> logger,
+    ILoggerFactory loggerFactory)
 {
     public const string WIKI_URL = "https://en.wikipedia.org/wiki/Prompt_engineering#Prompt_injection";
 
+    private const string DETECTION_LOG_CATEGORY = "PromptInjectionProtection";
+
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(PromptInjectionGuardService).Namespace, nameof(PromptInjectionGuardService));
 
+    private readonly ILogger detectionLogger = loggerFactory.CreateLogger(DETECTION_LOG_CATEGORY);
     private readonly Lock reportLock = new();
     private readonly List<PromptInjectionScanResult> pendingResults = [];
     private int openActions;
@@ -73,13 +77,6 @@ public sealed class PromptInjectionGuardService(
     {
         if (!result.WasFiltered)
             return;
-
-        logger.LogWarning(
-            "Filtered {Count} suspected prompt injection(s) in {SourceKind} '{SourceLabel}'. RuleIds={RuleIds}",
-            result.RedactedCount,
-            result.Source.Kind,
-            result.Source.Label,
-            string.Join(", ", result.RuleIds));
 
         bool reportNow;
         lock (this.reportLock)
@@ -137,13 +134,16 @@ public sealed class PromptInjectionGuardService(
         }
 
         var totalCount = results.Sum(result => result.RedactedCount);
+        this.detectionLogger.LogWarning(
+            "Detected and removed {PassageCount} potentially dangerous passage(s) in {SourceCount} content source(s).",
+            totalCount,
+            results.Count);
+
         await MessageBus.INSTANCE.SendWarning(new(
             Icons.Material.Filled.GppMaybe,
             results.Count is 1
                 ? string.Format(TB("AI Studio removed suspicious instructions from '{0}' before using it."), results[0].Source.Label)
                 : string.Format(TB("AI Studio removed suspicious instructions from {0} sources before using them."), results.Count)));
-
-        logger.LogInformation("Reported {Count} filtered prompt injection(s) across {Sources} source(s) to the user.", totalCount, results.Count);
 
         if (settingsManager.ConfigurationData.App.ShowPromptInjectionAlert)
             await MessageBus.INSTANCE.SendMessage<PromptInjectionAlertMessage>(null, Event.SHOW_PROMPT_INJECTION_ALERT, new(results));
