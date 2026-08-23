@@ -81,19 +81,34 @@ const STRUCTURAL_RULES: &[StructuralRule] = &[
         id: "role_reassignment",
         category: FindingCategory::RoleOverride,
         redaction: Redaction::Marker,
-        pattern: r"(?:you\s+are\s+now|you\s+are\s+no\s+longer|act\s+as|pretend\s+to\s+be|simulate\s+being|assume\s+the\s+role\s+of|from\s+now\s+on\s+you\s+are)\s+(?:an\s+)?(?:unfiltered|unrestricted|developer|system|root|admin|jailbroken|evil|dan|do\s+anything\s+now)",
+        // The trailing `\b` matters because the shortest personas are prefixes of ordinary words:
+        // without it, "you are now dangerous" and "act as Danish translator" are role changes.
+        pattern: r"(?:you\s+are\s+now|you\s+are\s+no\s+longer|act\s+as|pretend\s+to\s+be|simulate\s+being|assume\s+the\s+role\s+of|from\s+now\s+on\s+you\s+are)\s+(?:an\s+)?(?:unfiltered|unrestricted|developer|system|root|admin|jailbroken|evil|dan|do\s+anything\s+now)\b",
     },
     StructuralRule {
         id: "privileged_persona_activation",
         category: FindingCategory::Jailbreak,
+        // Only personas that exist for the sake of a jailbreak. `debug mode`, `admin mode`,
+        // `maintenance mode` and `root mode` are ordinary manual vocabulary on their own; the
+        // forms that actually activate them ("activate debug mode", "enter admin mode") are in
+        // the phrase list in all supported languages, so naming them here only cost us hits on
+        // software manuals. `dan` requires its `mode` for the same reason: on its own it is a
+        // first name, the Indonesian word for "and", and whatever a hyphenated line break in a
+        // PDF happens to leave behind ("Cir-\ndan", "hasarlar-\ndan").
         redaction: Redaction::Marker,
-        pattern: r"\b(?:developer\s+mode|debug\s+mode|admin\s+mode|root\s+mode|god\s+mode|maintenance\s+mode|dan\s*(?:mode)?|do\s+anything\s+now|grandmother\s+trick)\b",
+        pattern: r"\b(?:developer\s+mode|god\s+mode|jailbreak\s+mode|unfiltered\s+mode|dan\s+mode|do\s+anything\s+now|grandmother\s+trick)\b",
     },
     StructuralRule {
         id: "tool_or_secret_exfiltration",
         category: FindingCategory::Exfiltration,
+        // Two branches, because the verbs are everyday words and only the object decides whether
+        // a request is an attack. Secrets may follow any of them. Tools, functions and plugins
+        // may not: "show tool", "export function" and "list all tools" are the basic vocabulary
+        // of every software manual, so those need a possessive pointing at the model itself.
+        // `keys` and `tokens` have to be qualified as well — unqualified they match the keys of
+        // a piano and of a keyboard. The trailing `\b` keeps `tools?` out of "toolbox".
         redaction: Redaction::Marker,
-        pattern: r"(?:export|send|return|reveal|show|print|output|list|dump|exfiltrate)\s+(?:all\s+)?(?:tools?|functions?|plugins?|api\s*keys?|keys?|tokens?|credentials?|secrets?|passwords?|hidden\s+instructions?|environment\s+variables?|system\s+information|internal\s+data)",
+        pattern: r"(?:export|send|return|reveal|show|print|output|list|dump|exfiltrate)\s+(?:me\s+)?(?:all\s+(?:of\s+)?)?(?:the\s+|your\s+|its\s+)?(?:api\s*keys?|secret\s+keys?|private\s+keys?|encryption\s+keys?|access\s+tokens?|auth(?:orization)?\s+tokens?|credentials?|secrets?|passwords?|environment\s+variables?|hidden\s+instructions?|system\s+information|internal\s+data)\b|(?:export|send|return|reveal|show|print|output|list|dump|exfiltrate)\s+(?:me\s+)?(?:all\s+(?:of\s+)?)?(?:your|the\s+available|every)\s+(?:tools?|functions?|plugins?)\b",
     },
     StructuralRule {
         id: "conversation_memory_exfiltration",
@@ -116,8 +131,11 @@ const STRUCTURAL_RULES: &[StructuralRule] = &[
     StructuralRule {
         id: "delimiter_wrapped_attack",
         category: FindingCategory::DelimiterEvasion,
+        // What makes this an attack is the instruction behind the fake delimiter, not the
+        // delimiter itself: `## Prompt` and `# Assistant` are ordinary Markdown headings, and we
+        // convert every web page to Markdown before scanning it.
         redaction: Redaction::Marker,
-        pattern: r"(?:^|\n)\s*(?:<{2,}|>{2,}|`{3,}|#{1,6}\s*)(?:\s*(?:system|developer|assistant|instructions?|prompt)\b)",
+        pattern: r"(?:^|\n)\s*(?:<{2,}|>{2,}|`{3,}|#{1,6}\s*)\s*(?:system|developer|assistant|instructions?|prompt)\b[\s:>\]\-]*(?:ignore|disregard|bypass|override|reveal|forget|you\s+are\s+now|new\s+instructions?)",
     },
     StructuralRule {
         id: "hidden_markup_injection",
@@ -155,8 +173,12 @@ const STRUCTURAL_RULES: &[StructuralRule] = &[
     StructuralRule {
         id: "jailbreak_marker",
         category: FindingCategory::Jailbreak,
+        // Writing about an attack is not the attack. Bare `jailbreak` matches every article on
+        // phone modding and every security handbook, and `prompt injection` even matched our own
+        // changelog entry announcing this feature. The modes moved to
+        // `privileged_persona_activation`, which is where personas belong.
         redaction: Redaction::Marker,
-        pattern: r"\b(?:jailbreak|prompt\s+injection|ignore\s+your\s+guardrails?|bypass\s+(?:your\s+)?(?:guardrails?|safety)|unfiltered\s+mode|do\s+anything\s+now|developer\s+mode|admin\s+mode|root\s+mode)\b",
+        pattern: r"\b(?:jailbreak\s+(?:mode|prompt)|ignore\s+your\s+guardrails?|bypass\s+(?:your\s+)?(?:guardrails?|safety)|unfiltered\s+mode|do\s+anything\s+now)\b",
     },
 ];
 
