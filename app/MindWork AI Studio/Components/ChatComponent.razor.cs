@@ -14,7 +14,7 @@ using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Components;
 
-public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
+public partial class ChatComponent : MSGComponentBase
 {
     private readonly Guid draftMediaOwnerId = Guid.NewGuid();
     private const string CHAT_INPUT_ID = "chat-user-input";
@@ -1288,9 +1288,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 
     #endregion
     
-    #region Implementation of IAsyncDisposable
+    #region Overrides of MSGComponentBase
 
-    public async ValueTask DisposeAsync()
+    protected override async ValueTask DisposeResourcesAsync()
     {
         this.MediaTranscriptionService.StateChanged -= this.OnMediaImportStateChanged;
         if(this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
@@ -1300,7 +1300,6 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         }
 
         await this.AIJobService.SetForegroundAsync(AIJobKind.CHAT_GENERATION, this.foregroundChatId, false);
-        this.Dispose();
     }
 
     #endregion

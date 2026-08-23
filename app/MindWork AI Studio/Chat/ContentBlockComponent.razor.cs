@@ -8,7 +8,7 @@ namespace AIStudio.Chat;
 /// <summary>
 /// The UI component for a chat content block, i.e., for any IContent.
 /// </summary>
-public partial class ContentBlockComponent : MSGComponentBase, IAsyncDisposable
+public partial class ContentBlockComponent : MSGComponentBase
 {
     private const string CHAT_MATH_SYNC_FUNCTION = "chatMath.syncContainer";
     private const string CHAT_MATH_DISPOSE_FUNCTION = "chatMath.disposeContainer";
@@ -604,13 +604,12 @@ public partial class ContentBlockComponent : MSGComponentBase, IAsyncDisposable
         this.Content.FileAttachments = result.ToList();
     }
 
-    public async ValueTask DisposeAsync()
+    protected override async ValueTask DisposeResourcesAsync()
     {
         if (this.isDisposed)
             return;
 
         this.isDisposed = true;
         await this.DisposeMathContainerIfNeededAsync();
-        this.Dispose();
     }
 }
