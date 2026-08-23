@@ -18,6 +18,15 @@ public static partial class PluginFactory
     {
         LOG.LogInformation("Try to start or restart all plugins.");
         var configObjects = new List<PluginConfigurationObject>();
+
+        //
+        // Dropping the plugins is not enough: each one owns a Lua runtime, which we have to release
+        // ourselves. Otherwise, every restart — above all every hot reload during development —
+        // leaves another set of runtimes behind:
+        //
+        foreach (var runningPlugin in RUNNING_PLUGINS)
+            runningPlugin.Dispose();
+
         RUNNING_PLUGINS.Clear();
 
         //
