@@ -22,9 +22,28 @@ public partial class DocumentCheckDialog : MSGComponentBase
     public string FileContent { get; set; } = string.Empty;
 
     /// <summary>
+    /// How many characters we show at most. Rendering a huge document costs us a large Markdown
+    /// syntax tree and an equally large render tree. This dialog answers the question of how we
+    /// read the file, though — the beginning of the document is enough for that, and the AI still
+    /// receives the entire content.
+    /// </summary>
+    private const int PREVIEW_CHARACTER_LIMIT = 200_000;
+
+    /// <summary>
     /// Set when reading the file failed, so the dialog shows the reason instead of empty content.
     /// </summary>
     private string? loadFailureMessage;
+
+    /// <summary>
+    /// What we show to the user: either the entire file content, or its beginning. We keep this in
+    /// its own field so that we cut the content only once, instead of on every render.
+    /// </summary>
+    private string previewContent = string.Empty;
+
+    /// <summary>
+    /// How many characters we cut off from the preview. Zero when we show the entire content.
+    /// </summary>
+    private int previewCutOffCharacters;
 
     /// <summary>
     /// True while we extract the file content. Reading happens after the first render, so the
@@ -54,6 +73,7 @@ public partial class DocumentCheckDialog : MSGComponentBase
             this.Document.Exists &&
             string.IsNullOrWhiteSpace(this.FileContent);
 
+        this.UpdatePreview();
         await base.OnInitializedAsync();
     }
 
@@ -85,6 +105,7 @@ public partial class DocumentCheckDialog : MSGComponentBase
             finally
             {
                 this.isLoadingContent = false;
+                this.UpdatePreview();
                 this.StateHasChanged();
             }
         }
@@ -92,6 +113,41 @@ public partial class DocumentCheckDialog : MSGComponentBase
             this.Logger.LogWarning("Document check dialog opened without a valid file path.");
     }
     
+    /// <summary>
+    /// Called when the user loads a file through this dialog. We don't use a two-way binding here,
+    /// since we have to refresh the preview whenever the content changes.
+    /// </summary>
+    /// <param name="fileContent">The content of the file the user has loaded.</param>
+    private void ApplyLoadedFileContent(string fileContent)
+    {
+        this.FileContent = fileContent;
+        this.UpdatePreview();
+    }
+
+    /// <summary>
+    /// Determines what part of the file content we show to the user.
+    /// </summary>
+    private void UpdatePreview()
+    {
+        if (this.FileContent.Length <= PREVIEW_CHARACTER_LIMIT)
+        {
+            this.previewContent = this.FileContent;
+            this.previewCutOffCharacters = 0;
+            return;
+        }
+
+        //
+        // We cut at the last line break before our limit. Otherwise, we might tear apart a Markdown
+        // construct like a table row or a code fence in the middle of a line:
+        //
+        var cutIndex = this.FileContent.LastIndexOf('\n', PREVIEW_CHARACTER_LIMIT - 1) + 1;
+        if (cutIndex < 1)
+            cutIndex = PREVIEW_CHARACTER_LIMIT;
+
+        this.previewContent = this.FileContent[..cutIndex];
+        this.previewCutOffCharacters = this.FileContent.Length - cutIndex;
+    }
+
     private CodeBlockTheme CodeColorPalette => this.SettingsManager.IsDarkMode ? CodeBlockTheme.Dark : CodeBlockTheme.Default;
 
     private MudMarkdownStyling MarkdownStyling => new()
