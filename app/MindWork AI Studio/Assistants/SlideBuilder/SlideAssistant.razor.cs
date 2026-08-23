@@ -256,7 +256,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
 
     protected override async Task OnInitializedAsync()
     {
-        var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_SLIDE_BUILDER_ASSISTANT).FirstOrDefault();
+        var deferredContent = MessageBus.INSTANCE.TakeDeferredMessages<string>(Event.SEND_TO_SLIDE_BUILDER_ASSISTANT).LastOrDefault();
         if (deferredContent is not null)
             this.inputContent = deferredContent;
         

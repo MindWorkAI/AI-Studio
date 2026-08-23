@@ -131,7 +131,7 @@ public partial class ChatComponent : MSGComponentBase
 
         this.lastAppliedStandardDataSourceOptions = this.SettingsManager.ConfigurationData.Chat.PreselectedDataSourceOptions.CreateCopy();
 
-        var deferredInput = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_CHAT_INPUT).FirstOrDefault();
+        var deferredInput = MessageBus.INSTANCE.TakeDeferredMessages<string>(Event.SEND_TO_CHAT_INPUT).LastOrDefault();
         if (!string.IsNullOrWhiteSpace(deferredInput))
             this.ComposerState.SetUserInput(deferredInput);
 
@@ -139,7 +139,7 @@ public partial class ChatComponent : MSGComponentBase
         // Check for deferred messages of the kind 'SEND_TO_CHAT',
         // aka the user sends an assistant result to the chat:
         //
-        var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<ChatThread>(Event.SEND_TO_CHAT).FirstOrDefault();
+        var deferredContent = MessageBus.INSTANCE.TakeDeferredMessages<ChatThread>(Event.SEND_TO_CHAT).LastOrDefault();
         if (deferredContent is not null)
         {
             //
@@ -234,7 +234,7 @@ public partial class ChatComponent : MSGComponentBase
         // component sends a message to the chat component to load
         // the chat with the bias:
         //
-        var deferredLoading = MessageBus.INSTANCE.CheckDeferredMessages<LoadChat>(Event.LOAD_CHAT).FirstOrDefault();
+        var deferredLoading = MessageBus.INSTANCE.TakeDeferredMessages<LoadChat>(Event.LOAD_CHAT).LastOrDefault();
         if (deferredLoading != default)
         {
             this.loadChat = deferredLoading;

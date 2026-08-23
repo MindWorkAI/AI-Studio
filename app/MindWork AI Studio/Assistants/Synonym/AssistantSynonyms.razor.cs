@@ -131,7 +131,7 @@ public partial class AssistantSynonyms : AssistantBaseCore<SettingsDialogSynonym
 
     protected override async Task OnInitializedAsync()
     {
-        var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_SYNONYMS_ASSISTANT).FirstOrDefault();
+        var deferredContent = MessageBus.INSTANCE.TakeDeferredMessages<string>(Event.SEND_TO_SYNONYMS_ASSISTANT).LastOrDefault();
         if (deferredContent is not null)
             this.inputContext = deferredContent;
         

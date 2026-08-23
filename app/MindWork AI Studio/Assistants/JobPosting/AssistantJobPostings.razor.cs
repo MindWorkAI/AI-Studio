@@ -177,7 +177,7 @@ public partial class AssistantJobPostings : AssistantBaseCore<SettingsDialogJobP
 
     protected override async Task OnInitializedAsync()
     {
-        var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_JOB_POSTING_ASSISTANT).FirstOrDefault();
+        var deferredContent = MessageBus.INSTANCE.TakeDeferredMessages<string>(Event.SEND_TO_JOB_POSTING_ASSISTANT).LastOrDefault();
         if (deferredContent is not null)
             this.inputJobDescription = deferredContent;
         
