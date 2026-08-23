@@ -747,8 +747,8 @@ async fn stream_data(file_path: &str, extract_images: bool, stream_id: &str) -> 
         ExtractionRoute::Pdf => stream_pdf(file_path).await?,
         ExtractionRoute::Docx | ExtractionRoute::Odt => stream_document(file_path, extract_images, stream_id).await?,
         ExtractionRoute::PandocHtml => convert_with_pandoc(file_path, HTML, TO_MARKDOWN).await?,
-        ExtractionRoute::PresentationPptx => stream_presentation(file_path, extract_images, PresentationFormat::Pptx).await?,
-        ExtractionRoute::PresentationOdp => stream_presentation(file_path, extract_images, PresentationFormat::Odp).await?,
+        ExtractionRoute::PresentationPptx => stream_presentation(file_path, extract_images, PresentationFormat::Pptx, stream_id).await?,
+        ExtractionRoute::PresentationOdp => stream_presentation(file_path, extract_images, PresentationFormat::Odp, stream_id).await?,
         ExtractionRoute::Spreadsheet => stream_spreadsheet_as_csv(file_path).await?,
         ExtractionRoute::Csv => stream_text_file(file_path, true, Some("csv".to_string())).await?,
         ExtractionRoute::Text => stream_text_file(file_path, false, None).await?,
@@ -1359,8 +1359,9 @@ async fn stream_document(file_path: &str, extract_images: bool, stream_id: &str)
     Ok(Box::pin(ReceiverStream::new(rx)))
 }
 
-async fn stream_presentation(file_path: &str, extract_images: bool, format: PresentationFormat) -> Result<ChunkStream> {
+async fn stream_presentation(file_path: &str, extract_images: bool, format: PresentationFormat, stream_id: &str) -> Result<ChunkStream> {
     let path = Path::new(file_path).to_owned();
+    let stream_id = stream_id.to_owned();
 
     let parser_config = ParserConfig::builder()
         .extract_images(extract_images)
@@ -1443,6 +1444,12 @@ async fn stream_presentation(file_path: &str, extract_images: bool, format: Pres
 
             if let Some(images) = slide.load_images_manually() {
                 for image in images.iter() {
+                    //
+                    // The image ID carries the stream it belongs to, exactly like the document
+                    // route does above. The app removes the segments of a finished extraction by
+                    // that prefix, so an ID without it would stay in memory forever:
+                    //
+                    let image_id = format!("{stream_id}-{}-{}", slide.slide_number, image.img_ref.id);
                     let base64_data = &image.base64_content;
                     let total_length = base64_data.len();
                     let mut offset = 0;
@@ -1454,7 +1461,7 @@ async fn stream_presentation(file_path: &str, extract_images: bool, format: Pres
                         let is_end = end == total_length;
 
                         let base64_image = Base64Image::new(
-                        image.img_ref.id.clone(),
+                        image_id.clone(),
                         segment_content.to_string(),
                         segment_index,
                         is_end,
