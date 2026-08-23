@@ -46,6 +46,17 @@ public partial class DocumentCheckDialog : MSGComponentBase
     private int previewCutOffCharacters;
 
     /// <summary>
+    /// Ends the extraction when this dialog is gone before the file was read completely.
+    /// </summary>
+    private readonly CancellationTokenSource extractionCancellation = new();
+
+    /// <summary>
+    /// True once this dialog was disposed. The extraction runs across awaits, so it may return
+    /// long after the user closed the dialog — it must not touch this component afterwards.
+    /// </summary>
+    private bool isDisposed;
+
+    /// <summary>
     /// True while we extract the file content. Reading happens after the first render, so the
     /// dialog can tell the user that it is working instead of showing an empty document.
     /// </summary>
@@ -86,7 +97,10 @@ public partial class DocumentCheckDialog : MSGComponentBase
 
             try
             {
-                var extraction = await UserFile.LoadFileData(this.Document.FilePath, this.RustService, this.DialogService);
+                var extraction = await UserFile.LoadFileData(this.Document.FilePath, this.RustService, this.DialogService, this.extractionCancellation.Token);
+                if (this.isDisposed)
+                    return;
+
                 this.FileContent = extraction.Content;
 
                 //
@@ -96,6 +110,10 @@ public partial class DocumentCheckDialog : MSGComponentBase
                 if (!extraction.HasUsableContent)
                     this.loadFailureMessage = extraction.ToUserMessage(this.Document.FileName);
             }
+            catch (OperationCanceledException)
+            {
+                // The user closed this dialog while we were reading the file. Nothing left to do.
+            }
             catch (Exception ex)
             {
                 this.Logger.LogError(ex, "Failed to load file content from '{FilePath}'", this.Document);
@@ -104,9 +122,12 @@ public partial class DocumentCheckDialog : MSGComponentBase
             }
             finally
             {
-                this.isLoadingContent = false;
-                this.UpdatePreview();
-                this.StateHasChanged();
+                if (!this.isDisposed)
+                {
+                    this.isLoadingContent = false;
+                    this.UpdatePreview();
+                    this.StateHasChanged();
+                }
             }
         }
         else if (firstRender)
@@ -146,6 +167,20 @@ public partial class DocumentCheckDialog : MSGComponentBase
 
         this.previewContent = this.FileContent[..cutIndex];
         this.previewCutOffCharacters = this.FileContent.Length - cutIndex;
+    }
+
+    /// <summary>
+    /// Ends a running extraction. Without this, reading a large document would continue after the
+    /// user closed this dialog and would keep this component, the extracted content, and the
+    /// response stream alive until the runtime is done.
+    /// </summary>
+    protected override void DisposeResources()
+    {
+        this.isDisposed = true;
+        this.extractionCancellation.Cancel();
+        this.extractionCancellation.Dispose();
+
+        base.DisposeResources();
     }
 
     private CodeBlockTheme CodeColorPalette => this.SettingsManager.IsDarkMode ? CodeBlockTheme.Dark : CodeBlockTheme.Default;
