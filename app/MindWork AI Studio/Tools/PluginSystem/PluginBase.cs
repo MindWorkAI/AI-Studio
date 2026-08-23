@@ -6,7 +6,7 @@ namespace AIStudio.Tools.PluginSystem;
 /// <summary>
 /// Represents the base of any AI Studio plugin.
 /// </summary>
-public abstract partial class PluginBase : IPluginMetadata
+public abstract partial class PluginBase : IPluginMetadata, IDisposable
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(PluginBase).Namespace, nameof(PluginBase));
     
@@ -544,6 +544,20 @@ public abstract partial class PluginBase : IPluginMetadata
             lastKey = pair.Key;
         }
     }
+
+    #endregion
+
+    #region Implementation of IDisposable
+
+    /// <summary>
+    /// Releases the Lua runtime of this plugin.
+    /// </summary>
+    /// <remarks>
+    /// Every plugin owns a Lua state, which is an entire scripting runtime. Dropping a plugin
+    /// without disposing it leaves that runtime behind: before this existed, each hot reload added
+    /// another set of them for as long as the app was running.
+    /// </remarks>
+    public void Dispose() => this.State.Dispose();
 
     #endregion
 }

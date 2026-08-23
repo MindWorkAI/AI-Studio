@@ -14,7 +14,7 @@ using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Components;
 
-public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
+public partial class ChatComponent : MSGComponentBase
 {
     private readonly Guid draftMediaOwnerId = Guid.NewGuid();
     private const string CHAT_INPUT_ID = "chat-user-input";
@@ -131,7 +131,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 
         this.lastAppliedStandardDataSourceOptions = this.SettingsManager.ConfigurationData.Chat.PreselectedDataSourceOptions.CreateCopy();
 
-        var deferredInput = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_CHAT_INPUT).FirstOrDefault();
+        var deferredInput = MessageBus.INSTANCE.TakeDeferredMessages<string>(Event.SEND_TO_CHAT_INPUT).LastOrDefault();
         if (!string.IsNullOrWhiteSpace(deferredInput))
             this.ComposerState.SetUserInput(deferredInput);
 
@@ -139,7 +139,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         // Check for deferred messages of the kind 'SEND_TO_CHAT',
         // aka the user sends an assistant result to the chat:
         //
-        var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<ChatThread>(Event.SEND_TO_CHAT).FirstOrDefault();
+        var deferredContent = MessageBus.INSTANCE.TakeDeferredMessages<ChatThread>(Event.SEND_TO_CHAT).LastOrDefault();
         if (deferredContent is not null)
         {
             //
@@ -234,7 +234,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         // component sends a message to the chat component to load
         // the chat with the bias:
         //
-        var deferredLoading = MessageBus.INSTANCE.CheckDeferredMessages<LoadChat>(Event.LOAD_CHAT).FirstOrDefault();
+        var deferredLoading = MessageBus.INSTANCE.TakeDeferredMessages<LoadChat>(Event.LOAD_CHAT).LastOrDefault();
         if (deferredLoading != default)
         {
             this.loadChat = deferredLoading;
@@ -1288,9 +1288,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 
     #endregion
     
-    #region Implementation of IAsyncDisposable
+    #region Overrides of MSGComponentBase
 
-    public async ValueTask DisposeAsync()
+    protected override async ValueTask DisposeResourcesAsync()
     {
         this.MediaTranscriptionService.StateChanged -= this.OnMediaImportStateChanged;
         if(this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
@@ -1300,7 +1300,6 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         }
 
         await this.AIJobService.SetForegroundAsync(AIJobKind.CHAT_GENERATION, this.foregroundChatId, false);
-        this.Dispose();
     }
 
     #endregion

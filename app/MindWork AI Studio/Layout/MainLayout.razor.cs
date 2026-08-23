@@ -292,8 +292,10 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
                             //
                             // Check if there is an enterprise configuration plugin to download:
                             //
+                            // Every deferred environment matters here: each one is a configuration
+                            // to download, so this is the one place which uses all of them.
                             var enterpriseEnvironments = this.MessageBus
-                                .CheckDeferredMessages<EnterpriseEnvironment>(Event.STARTUP_ENTERPRISE_ENVIRONMENT)
+                                .TakeDeferredMessages<EnterpriseEnvironment>(Event.STARTUP_ENTERPRISE_ENVIRONMENT)
                                 .Where(env => env != default)
                                 .ToList();
                             

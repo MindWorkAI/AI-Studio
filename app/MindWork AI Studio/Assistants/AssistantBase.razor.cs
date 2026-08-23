@@ -478,6 +478,12 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
                 this.CancellationTokenSource?.Dispose();
                 this.CancellationTokenSource = null;
             }
+
+            //
+            // The handlers above close over this assistant, and the content stays in the chat
+            // thread. The stream is over by now, so nothing has to listen to it anymore:
+            //
+            aiText.ResetStreamingHandlers();
         }
     }
 
