@@ -601,7 +601,7 @@ public partial class ContentBlockComponent : MSGComponentBase
     private async Task OpenAttachmentsDialog()
     {
         var result = await ReviewAttachmentsDialog.OpenDialogAsync(this.DialogService, this.Content.FileAttachments.ToHashSet());
-        this.Content.FileAttachments = result.ToList();
+        this.Content.FileAttachments = [.. result];
     }
 
     protected override async ValueTask DisposeResourcesAsync()
@@ -610,6 +610,15 @@ public partial class ContentBlockComponent : MSGComponentBase
             return;
 
         this.isDisposed = true;
+
+        //
+        // Our handlers close over this component, while the content belongs to the chat thread and
+        // outlives us. We only detach what is still ours, though: when this content is streaming
+        // again, another component has registered its own handlers in the meantime.
+        //
+        if (this.Content.StreamingDone == this.AfterStreaming)
+            this.Content.ResetStreamingHandlers();
+
         await this.DisposeMathContainerIfNeededAsync();
     }
 }

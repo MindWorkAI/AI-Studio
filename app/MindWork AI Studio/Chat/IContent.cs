@@ -39,6 +39,11 @@ public interface IContent
     public Func<Task> StreamingDone { get; set; }
 
     /// <summary>
+    /// What a content does while nobody listens to its stream: nothing.
+    /// </summary>
+    public static readonly Func<Task> NO_STREAMING_HANDLER = () => Task.CompletedTask;
+
+    /// <summary>
     /// The provided sources, if any.
     /// </summary>
     /// <remarks>
