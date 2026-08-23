@@ -27,6 +27,15 @@
         <SuppressTrimAnalysisWarnings>true</SuppressTrimAnalysisWarnings> <!-- Suppress trim analysis warnings -->
 
         <!--
+            The Web SDK defaults to server GC. AI Studio is a single-user desktop app, though: workstation
+            GC collects earlier and returns the memory to the OS sooner. This matters for devices with
+            little RAM, e.g., a Raspberry Pi. Please note that we override an SDK default here, so this is
+            not a redundant repetition of the default value.
+        -->
+        <ServerGarbageCollection>false</ServerGarbageCollection>
+        <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
+
+        <!--
             IL2026: Usage of methods marked as RequiresUnreferencedCode. None issue here, since we use partial trim mode, though.
             CS8974: Converting method group to non-delegate type; Did you intend to invoke the method? We have this issue with MudBlazor validation methods.
         -->
