@@ -312,6 +312,11 @@ CONFIG["SETTINGS"] = {}
 -- Configure whether the vision panel is shown on the welcome page.
 -- CONFIG["SETTINGS"]["DataApp.ShowVision"] = false
 
+-- Configure whether AI Studio shows a dialog listing suspicious instructions it
+-- removed from external content, together with an explanation of the attack pattern.
+-- A short notification is still shown when this setting is disabled.
+-- CONFIG["SETTINGS"]["DataApp.ShowPromptInjectionAlert"] = true
+
 -- Configure the user permission to add providers:
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToAddProvider"] = false
 

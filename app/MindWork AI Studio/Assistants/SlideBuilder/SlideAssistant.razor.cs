@@ -2,6 +2,7 @@
 using AIStudio.Chat;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Tools.AssistantSessions;
+using AIStudio.Tools.Security;
 
 namespace AIStudio.Assistants.SlideBuilder;
 
@@ -372,6 +373,13 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
 
                           """);
         }
+
+        //
+        // One report for the whole batch: reading twenty documents must produce one dialog
+        // listing all of them, not twenty dialogs in a row.
+        //
+        var guardService = Program.SERVICE_PROVIDER.GetRequiredService<PromptInjectionGuardService>();
+        await using var promptInjectionScope = guardService.BeginAction();
 
         var numDocuments = 1;
         foreach (var document in documents)

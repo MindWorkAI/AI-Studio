@@ -9,6 +9,7 @@ using AIStudio.Tools.Media;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.PluginSystem.Assistants;
 using AIStudio.Tools.Rust;
+using AIStudio.Tools.Security;
 using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.DataProtection;
@@ -161,6 +162,7 @@ internal sealed class Program
         builder.Services.AddSingleton(typeof(RuntimeInfoResponse), runtimeInfo);
         builder.Services.AddMudMarkdownClipboardService<MarkdownClipboardService>();
         builder.Services.AddSingleton<SettingsManager>();
+        builder.Services.AddSingleton<PromptInjectionGuardService>();
         builder.Services.AddSingleton<ThreadSafeRandom>();
         builder.Services.AddSingleton<AIJobService>();
         builder.Services.AddSingleton<AssistantSessionService>();

@@ -73,6 +73,14 @@ public static class ContentStreamSseHandler
                     case ContentStreamErrorMetadata errorMetadata:
                         return ContentStreamProcessedEvent.FromError(errorMetadata.Error);
 
+                    //
+                    // The runtime filtered suspected prompt injections out of the content. The
+                    // content itself already arrived through the events before this one, so this
+                    // only reports what was removed.
+                    //
+                    case ContentStreamPromptInjectionMetadata promptInjectionMetadata:
+                        return ContentStreamProcessedEvent.FromPromptInjection(promptInjectionMetadata.PromptInjection);
+
                     default:
                         return ContentStreamProcessedEvent.FromContent(sseEvent.Content);
                 }

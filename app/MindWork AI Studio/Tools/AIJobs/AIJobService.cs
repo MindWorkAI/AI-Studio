@@ -8,10 +8,7 @@ using AIStudio.Tools.RAG.RAGProcesses;
 
 namespace AIStudio.Tools.AIJobs;
 
-public sealed class AIJobService(
-    SettingsManager settingsManager,
-    MessageBus messageBus,
-    ILogger<AIJobService> logger)
+public sealed class AIJobService(SettingsManager settingsManager, MessageBus messageBus, ILogger<AIJobService> logger)
 {
     private sealed class AIJobState
     {

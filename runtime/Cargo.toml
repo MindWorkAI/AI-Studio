@@ -68,6 +68,13 @@ strum_macros = "0.28.0"
 sysinfo = "0.39.6"
 bytes = "1.12.1"
 qdrant-edge = "0.7.2"
+
+# Prompt-injection detection. `regex` gives us linear-time matching without backtracking, so
+# a hostile document cannot make a scan blow up, and `aho-corasick` matches the ~1600 fixed
+# phrases in one pass no matter how long that list grows.
+regex = "1.13.1"
+aho-corasick = "1.1.5"
+toml = "1.1.4+spec-1.1.0"
 image = { version = "0.25.10", default-features = false, features = ["jpeg", "png", "webp"] }
 
 [patch.crates-io]
@@ -119,4 +126,26 @@ opt-level = 3
 opt-level = 3
 
 [profile.dev.package.webm-iterable]
+opt-level = 3
+
+# Scanning a document for prompt injections is just as CPU-heavy, and unoptimized matching
+# engines dominate it completely: a 1580-page PDF takes about 3 seconds to scan when these
+# crates are optimized and over a minute when they are not. Without this, every developer
+# measuring the app against a large document measures the build profile instead of the scan.
+# The engines are `regex-automata` and `aho-corasick`; `regex` is the wrapper around the
+# former, `regex-syntax` compiles the ~1600 phrases once at startup, and `memchr` provides
+# the SIMD prefilters both engines rely on.
+[profile.dev.package.regex]
+opt-level = 3
+
+[profile.dev.package.regex-automata]
+opt-level = 3
+
+[profile.dev.package.regex-syntax]
+opt-level = 3
+
+[profile.dev.package.aho-corasick]
+opt-level = 3
+
+[profile.dev.package.memchr]
 opt-level = 3
