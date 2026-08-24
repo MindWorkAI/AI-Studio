@@ -364,6 +364,18 @@ ASSISTANT = {
                 }
             },
             {
+                ["Type"] = "PERSISTENT_FILE_ATTACHMENTS", -- like FILE_ATTACHMENTS, but restores saved file paths after form resets and app restarts
+                ["Props"] = {
+                    ["Name"] = "<unique and stable identifier of this component>", -- required; part of the settings key
+                    ["Heading"] = "<component heading>",
+                    ["CatchAllDocuments"] = true,
+                    ["UseSmallForm"] = false,
+                    ["UserPrompt"] = "<prompt context for the selected file(s)>",
+                    ["Class"] = "<optional MudBlazor or css classes>",
+                    ["Style"] = "<optional css styles>",
+                }
+            },
+            {
                 ["Type"] = "COLOR_PICKER",
                 ["Props"] = {
                     ["Name"] = "<unique identifier of this component>", -- required

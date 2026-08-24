@@ -157,6 +157,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
         if (rootComponent is not null)
         {
             this.InitializeComponentState(rootComponent.Children);
+            this.RestorePersistentFileAttachments(rootComponent.Children);
         }
 
         base.OnInitialized();
@@ -168,7 +169,10 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
 
         var rootComponent = this.RootComponent;
         if (rootComponent is not null)
+        {
             this.InitializeComponentState(rootComponent.Children);
+            this.RestorePersistentFileAttachments(rootComponent.Children);
+        }
     }
 
     protected override bool MightPreselectValues()
@@ -303,7 +307,10 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
 
         this.assistantState.Clear();
         if (this.RootComponent is not null)
+        {
             this.InitializeComponentState(this.RootComponent.Children);
+            this.RestorePersistentFileAttachments(this.RootComponent.Children);
+        }
     }
 
     #endregion
@@ -368,6 +375,105 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
         }
     }
 
+    private void RestorePersistentFileAttachments(IEnumerable<IAssistantComponent> components)
+    {
+        if (this.assistantPlugin is null ||
+            !this.SettingsManager.ConfigurationData.DynamicAssistants.TryGetValue(this.assistantPlugin.Id, out var assistantData))
+            return;
+
+        foreach (var component in EnumerateComponents(components).OfType<AssistantPersistentFileAttachment>())
+        {
+            if (!assistantData.PersistentFileAttachments.TryGetValue(component.Name, out var paths) ||
+                !this.assistantState.FileAttachments.TryGetValue(component.Name, out var state))
+                continue;
+
+            state.DocumentPaths = paths
+                .Where(static path => !string.IsNullOrWhiteSpace(path))
+                .Distinct(StringComparer.Ordinal)
+                .OrderBy(static path => path, StringComparer.Ordinal)
+                .Select(FileAttachment.FromPath)
+                .ToHashSet();
+        }
+    }
+
+    private Task OnFileAttachmentsChangedAsync(AssistantFileAttachment component, HashSet<FileAttachment> _)
+    {
+        return component is AssistantPersistentFileAttachment
+            ? this.StorePersistentFileAttachmentsAsync()
+            : Task.CompletedTask;
+    }
+
+    private async Task StorePersistentFileAttachmentsAsync()
+    {
+        if (this.assistantPlugin is null || this.RootComponent is null)
+            return;
+
+        var persistentAttachments = new Dictionary<string, List<string>>(StringComparer.Ordinal);
+        foreach (var component in EnumerateComponents(this.RootComponent.Children).OfType<AssistantPersistentFileAttachment>())
+        {
+            if (!this.assistantState.FileAttachments.TryGetValue(component.Name, out var state))
+                continue;
+
+            var paths = state.DocumentPaths
+                .Select(static attachment => attachment.FilePath)
+                .Where(static path => !string.IsNullOrWhiteSpace(path))
+                .Distinct(StringComparer.Ordinal)
+                .OrderBy(static path => path, StringComparer.Ordinal)
+                .ToList();
+
+            if (paths.Count > 0)
+                persistentAttachments[component.Name] = paths;
+        }
+
+        var dynamicAssistants = this.SettingsManager.ConfigurationData.DynamicAssistants;
+        var hasExisting = dynamicAssistants.TryGetValue(this.assistantPlugin.Id, out var existing);
+        if (persistentAttachments.Count == 0)
+        {
+            if (!hasExisting)
+                return;
+
+            dynamicAssistants.Remove(this.assistantPlugin.Id);
+            await this.SettingsManager.StoreSettings();
+            return;
+        }
+
+        if (hasExisting && PersistentFileAttachmentsEqual(existing!.PersistentFileAttachments, persistentAttachments))
+            return;
+
+        dynamicAssistants[this.assistantPlugin.Id] = new Settings.DataModel.DataDynamicAssistant
+        {
+            PersistentFileAttachments = persistentAttachments,
+        };
+        await this.SettingsManager.StoreSettings();
+    }
+
+    private static bool PersistentFileAttachmentsEqual(
+        IReadOnlyDictionary<string, List<string>> left,
+        IReadOnlyDictionary<string, List<string>> right)
+    {
+        if (left.Count != right.Count)
+            return false;
+
+        foreach (var (name, paths) in left)
+        {
+            if (!right.TryGetValue(name, out var otherPaths) || !paths.SequenceEqual(otherPaths, StringComparer.Ordinal))
+                return false;
+        }
+
+        return true;
+    }
+
+    private static IEnumerable<IAssistantComponent> EnumerateComponents(IEnumerable<IAssistantComponent> components)
+    {
+        foreach (var component in components)
+        {
+            yield return component;
+
+            foreach (var child in EnumerateComponents(component.Children))
+                yield return child;
+        }
+    }
+
     private static string MergeClass(string customClass, string fallback)
     {
         var trimmedCustom = customClass.Trim();
@@ -402,7 +508,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
             var cancellationToken = this.CancellationTokenSource?.Token ?? CancellationToken.None;
             var result = await this.assistantPlugin.TryInvokeButtonActionAsync(button, input, cancellationToken);
             if (result is not null)
-                this.ApplyActionResult(result, AssistantComponentType.BUTTON);
+                await this.ApplyActionResultAsync(result, AssistantComponentType.BUTTON);
         }
         finally
         {
@@ -433,7 +539,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
             var cancellationToken = this.CancellationTokenSource?.Token ?? CancellationToken.None;
             var result = await this.assistantPlugin.TryInvokeSwitchChangedAsync(switchComponent, input, cancellationToken);
             if (result is not null)
-                this.ApplyActionResult(result, AssistantComponentType.SWITCH);
+                await this.ApplyActionResultAsync(result, AssistantComponentType.SWITCH);
         }
         finally
         {
@@ -442,7 +548,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
         }
     }
 
-    private void ApplyActionResult(LuaTable result, AssistantComponentType sourceType)
+    private async Task ApplyActionResultAsync(LuaTable result, AssistantComponentType sourceType)
     {
         if (!result.TryGetValue("state", out var statesValue))
             return;
@@ -466,6 +572,8 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
 
             this.TryApplyComponentUpdate(componentName, componentUpdate, sourceType);
         }
+
+        await this.StorePersistentFileAttachmentsAsync();
     }
 
     private void TryApplyComponentUpdate(string componentName, LuaTable componentUpdate, AssistantComponentType sourceType)

@@ -146,18 +146,38 @@ else
                 break;
                 
             case AssistantComponentType.FILE_ATTACHMENTS:
+            case AssistantComponentType.PERSISTENT_FILE_ATTACHMENTS:
                 if (component is AssistantFileAttachment fileAttachment)
                 {
                     var fileState = this.assistantState.FileAttachments[fileAttachment.Name];
+                    var isPersistent = fileAttachment is AssistantPersistentFileAttachment;
                     <div class="@fileAttachment.Class mb-3" style="@GetOptionalStyle(fileAttachment.Style)">
-                        @if (!string.IsNullOrWhiteSpace(fileAttachment.Heading))
+                        @if (!string.IsNullOrWhiteSpace(fileAttachment.Heading) || isPersistent)
                         {
-                            <MudText Typo="Typo.h6" Class="mb-2">@fileAttachment.Heading</MudText>
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="flex-wrap mb-2">
+                                @if (!string.IsNullOrWhiteSpace(fileAttachment.Heading))
+                                {
+                                    <MudText Typo="Typo.h6">@fileAttachment.Heading</MudText>
+                                }
+                                @if (isPersistent)
+                                {
+                                    <MudTooltip Text='@T("The file selection is retained after resetting the form and restarting the app. Deleted, renamed, or moved files can no longer be used.")'>
+                                        <MudChip T="string"
+                                                 Color="Color.Info"
+                                                 Variant="Variant.Outlined"
+                                                 Size="Size.Small"
+                                                 Icon="@Icons.Material.Filled.Save">
+                                            @T("Permanently saved")
+                                        </MudChip>
+                                    </MudTooltip>
+                                }
+                            </MudStack>
                         }
                         <div class="px-4">
                             <AttachDocuments Name="@fileAttachment.Name"
                                              Layer="@DropLayers.ASSISTANTS"
                                              @bind-DocumentPaths="@fileState.DocumentPaths"
+                                             OnChange="@(paths => this.OnFileAttachmentsChangedAsync(fileAttachment, paths))"
                                              CatchAllDocuments="@fileAttachment.CatchAllDocuments"
                                              UseSmallForm="@fileAttachment.UseSmallForm"
                                              Provider="@this.ProviderSettings"/>
