@@ -22,6 +22,7 @@ namespace AIStudio.Settings;
 /// <param name="Hostname">The hostname of the provider. Useful for self-hosted providers.</param>
 /// <param name="Model">The LLM model to use for chat.</param>
 /// <param name="AllowUserProvidedAPIKey">When set by a configuration plugin, the user may set their own API key for this otherwise locked, enterprise-managed provider.</param>
+/// <param name="CustomIconDataUrl">The validated custom SVG icon supplied by a configuration plugin.</param>
 public sealed record Provider(
     uint Num,
     string Id,
@@ -36,7 +37,8 @@ public sealed record Provider(
     HFInferenceProvider HFInferenceProvider = HFInferenceProvider.NONE,
     string AdditionalJsonApiParameters = "",
     ProviderCapabilityOverrides? CapabilityOverrides = null,
-    bool AllowUserProvidedAPIKey = false) : ConfigurationBaseObject, ISecretId, IUserProvidedAPIKey
+    bool AllowUserProvidedAPIKey = false,
+    string CustomIconDataUrl = "") : ConfigurationBaseObject, ISecretId, IUserProvidedAPIKey
 {
     private static readonly ILogger<Provider> LOGGER = Program.LOGGER_FACTORY.CreateLogger<Provider>();
     
@@ -93,7 +95,7 @@ public sealed record Provider(
 
     #endregion
     
-    public static bool TryParseProviderTable(int idx, LuaTable table, Guid configPluginId, out ConfigurationBaseObject provider)
+    public static bool TryParseProviderTable(int idx, LuaTable table, Guid configPluginId, string pluginPath, out ConfigurationBaseObject provider)
     {
         provider = NONE;
         if (!table.TryGetValue("Id", out var idValue) || !idValue.TryRead<string>(out var idText) || !Guid.TryParse(idText, out var id))
@@ -161,6 +163,15 @@ public sealed record Provider(
         if (table.TryGetValue("AllowUserProvidedAPIKey", out var allowUserProvidedApiKeyValue) && allowUserProvidedApiKeyValue.TryRead<bool>(out var allowUserProvidedApiKeyBool))
             allowUserProvidedApiKey = allowUserProvidedApiKeyBool;
 
+        var customIconDataUrl = string.Empty;
+        if (table.TryGetValue("IconPath", out var iconPathValue))
+        {
+            if (!iconPathValue.TryRead<string>(out var iconPath))
+                LOGGER.LogWarning($"The configured provider {idx} does not contain a valid icon path. Falling back to the built-in provider icon. (Plugin ID: {configPluginId})");
+            else if (!ProviderIconFile.TryLoadDataUrl(iconPath, pluginPath, out customIconDataUrl, out var iconIssue))
+                LOGGER.LogWarning($"The configured provider {idx} contains an invalid icon path. Falling back to the built-in provider icon. Issue: {iconIssue} (Plugin ID: {configPluginId})");
+        }
+
         provider = new Provider
         {
             Num = 0, // will be set later by the PluginConfigurationObject
@@ -177,6 +188,7 @@ public sealed record Provider(
             AdditionalJsonApiParameters = additionalJsonApiParameters,
             CapabilityOverrides = capabilityOverrides,
             AllowUserProvidedAPIKey = allowUserProvidedApiKey,
+            CustomIconDataUrl = customIconDataUrl,
         };
 
         // Handle an encrypted API key if present. When the user manages their own key for this

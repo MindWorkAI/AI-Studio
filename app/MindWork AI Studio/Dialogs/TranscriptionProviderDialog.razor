@@ -13,13 +13,16 @@
         <MudForm @ref="@this.form" @bind-IsValid="@this.dataIsValid" @bind-Errors="@this.dataIssues">
             <MudStack Row="@true" AlignItems="AlignItems.Center">
                 @* ReSharper disable once CSharpWarnings::CS8974 *@
-                <MudSelect @bind-Value="@this.DataLLMProvider"  Label="@T("Provider")" Class="mb-3" OpenIcon="@Icons.Material.Filled.AccountBalance" AdornmentColor="Color.Info" Adornment="Adornment.Start" Disabled="@this.IsEnterpriseConfiguration" Validation="@this.providerValidation.ValidatingProvider">
+                <MudSelect @bind-Value="@this.DataLLMProvider" Label="@T("Provider")" Class="mb-3" Disabled="@this.IsEnterpriseConfiguration" Validation="@this.providerValidation.ValidatingProvider">
                     @foreach (LLMProviders provider in Enum.GetValues(typeof(LLMProviders)))
                     {
                         if (provider.ProvideTranscriptionAPI() || provider is LLMProviders.NONE)
                         {
                             <MudSelectItem Value="@provider">
-                                @provider.ToName()
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Wrap="Wrap.NoWrap">
+                                    <ProviderIcon ProviderType="@provider" CustomIconDataUrl="@(provider == this.DataLLMProvider ? this.DataCustomIconDataUrl : string.Empty)" />
+                                    <MudText>@provider.ToName()</MudText>
+                                </MudStack>
                             </MudSelectItem>
                         }
                     }

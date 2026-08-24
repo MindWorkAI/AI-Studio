@@ -21,7 +21,8 @@ public sealed record EmbeddingProvider(
     Guid EnterpriseConfigurationPluginId = default,
     string Hostname = "http://localhost:1234",
     Host Host = Host.NONE,
-    bool AllowUserProvidedAPIKey = false) : ConfigurationBaseObject, ISecretId, IUserProvidedAPIKey
+    bool AllowUserProvidedAPIKey = false,
+    string CustomIconDataUrl = "") : ConfigurationBaseObject, ISecretId, IUserProvidedAPIKey
 {
     private static readonly ILogger<EmbeddingProvider> LOGGER = Program.LOGGER_FACTORY.CreateLogger<EmbeddingProvider>();
 
@@ -53,7 +54,7 @@ public sealed record EmbeddingProvider(
 
     #endregion
 
-    public static bool TryParseEmbeddingProviderTable(int idx, LuaTable table, Guid configPluginId, out ConfigurationBaseObject provider)
+    public static bool TryParseEmbeddingProviderTable(int idx, LuaTable table, Guid configPluginId, string pluginPath, out ConfigurationBaseObject provider)
     {
         provider = NONE;
         if (!table.TryGetValue("Id", out var idValue) || !idValue.TryRead<string>(out var idText) || !Guid.TryParse(idText, out var id))
@@ -102,6 +103,15 @@ public sealed record EmbeddingProvider(
         if (table.TryGetValue("AllowUserProvidedAPIKey", out var allowUserProvidedApiKeyValue) && allowUserProvidedApiKeyValue.TryRead<bool>(out var allowUserProvidedApiKeyBool))
             allowUserProvidedApiKey = allowUserProvidedApiKeyBool;
 
+        var customIconDataUrl = string.Empty;
+        if (table.TryGetValue("IconPath", out var iconPathValue))
+        {
+            if (!iconPathValue.TryRead<string>(out var iconPath))
+                LOGGER.LogWarning($"The configured embedding provider {idx} does not contain a valid icon path. Falling back to the built-in provider icon. (Plugin ID: {configPluginId})");
+            else if (!ProviderIconFile.TryLoadDataUrl(iconPath, pluginPath, out customIconDataUrl, out var iconIssue))
+                LOGGER.LogWarning($"The configured embedding provider {idx} contains an invalid icon path. Falling back to the built-in provider icon. Issue: {iconIssue} (Plugin ID: {configPluginId})");
+        }
+
         provider = new EmbeddingProvider
         {
             Num = 0, // will be set later by the PluginConfigurationObject
@@ -115,6 +125,7 @@ public sealed record EmbeddingProvider(
             Hostname = hostname,
             Host = host,
             AllowUserProvidedAPIKey = allowUserProvidedApiKey,
+            CustomIconDataUrl = customIconDataUrl,
         };
 
         // Handle an encrypted API key if present. When the user manages their own key for this

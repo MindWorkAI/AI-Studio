@@ -18,15 +18,15 @@
                            ValueChanged="@this.OnProviderChanged"
                            Label="@T("Provider")"
                            Class="mb-3"
-                           OpenIcon="@Icons.Material.Filled.AccountBalance"
-                           AdornmentColor="Color.Info"
-                           Adornment="Adornment.Start"
                            Disabled="@this.IsEnterpriseConfiguration"
                            Validation="@this.providerValidation.ValidatingProvider">
                     @foreach (LLMProviders provider in Enum.GetValues(typeof(LLMProviders)))
                     {
                         <MudSelectItem Value="@provider">
-                            @provider.ToName()
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Wrap="Wrap.NoWrap">
+                                <ProviderIcon ProviderType="@provider" />
+                                <MudText>@provider.ToName()</MudText>
+                            </MudStack>
                         </MudSelectItem>
                     }
                 </MudSelect>

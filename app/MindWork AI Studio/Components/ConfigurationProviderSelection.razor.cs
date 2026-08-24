@@ -32,7 +32,7 @@ public partial class ConfigurationProviderSelection : MSGComponentBase
     
     [Parameter]
     public Func<bool> IsLocked { get; set; } = () => false;
-    
+
     private IEnumerable<ConfigurationSelectData<string>> FilteredData()
     {
         if(this.Component is not Tools.Components.NONE and not Tools.Components.APP_SETTINGS)
@@ -49,6 +49,15 @@ public partial class ConfigurationProviderSelection : MSGComponentBase
             if (this.SettingsManager.IsProviderConfident(provider, this.Component, this.ExplicitMinimumConfidence))
                 yield return providerId;
         }
+    }
+
+    private AIStudio.Settings.Provider? GetProvider(string providerId)
+    {
+        if (string.IsNullOrWhiteSpace(providerId))
+            return null;
+
+        var provider = this.SettingsManager.GetProviderById(providerId);
+        return provider == AIStudio.Settings.Provider.NONE ? null : provider;
     }
 
     #region Overrides of MSGComponentBase

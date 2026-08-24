@@ -30,11 +30,19 @@
             </HeaderContent>
             <GroupHeaderTemplate>
                 <MudTh Class="provider-group-header" colspan="4">
-                    @context.Key
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Wrap="Wrap.NoWrap">
+                        <ProviderIcon ProviderType="@((LLMProviders)context.Key)" />
+                        <MudText>@(((LLMProviders)context.Key).ToName())</MudText>
+                    </MudStack>
                 </MudTh>
             </GroupHeaderTemplate>
             <RowTemplate>
-                <MudTd>@context.Name</MudTd>
+                <MudTd>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Wrap="Wrap.NoWrap">
+                        <ProviderIcon ProviderType="@context.UsedLLMProvider" CustomIconDataUrl="@context.CustomIconDataUrl" />
+                        <MudText>@context.Name</MudText>
+                    </MudStack>
+                </MudTd>
                 <MudTd>@this.GetEmbeddingProviderModelName(context)</MudTd>
 
                 <MudTd>

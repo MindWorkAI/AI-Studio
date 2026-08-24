@@ -142,11 +142,11 @@ public sealed record PluginConfigurationObject
 
             var (wasParsingSuccessful, configObject) = configObjectType switch
             {
-                PluginConfigurationObjectType.LLM_PROVIDER => (Settings.Provider.TryParseProviderTable(i, luaObjectTable, configPluginId, out var configurationObject) && configurationObject != Settings.Provider.NONE, configurationObject),
+                PluginConfigurationObjectType.LLM_PROVIDER => (Settings.Provider.TryParseProviderTable(i, luaObjectTable, configPluginId, pluginPath, out var configurationObject) && configurationObject != Settings.Provider.NONE, configurationObject),
                 PluginConfigurationObjectType.CHAT_TEMPLATE => (ChatTemplate.TryParseChatTemplateTable(i, luaObjectTable, configPluginId, pluginPath, out var configurationObject) && configurationObject != ChatTemplate.NO_CHAT_TEMPLATE, configurationObject),
                 PluginConfigurationObjectType.PROFILE => (Profile.TryParseProfileTable(i, luaObjectTable, configPluginId, out var configurationObject) && configurationObject != Profile.NO_PROFILE, configurationObject),
-                PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER => (TranscriptionProvider.TryParseTranscriptionProviderTable(i, luaObjectTable, configPluginId, out var configurationObject) && configurationObject != TranscriptionProvider.NONE, configurationObject),
-                PluginConfigurationObjectType.EMBEDDING_PROVIDER => (EmbeddingProvider.TryParseEmbeddingProviderTable(i, luaObjectTable, configPluginId, out var configurationObject) && configurationObject != EmbeddingProvider.NONE, configurationObject),
+                PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER => (TranscriptionProvider.TryParseTranscriptionProviderTable(i, luaObjectTable, configPluginId, pluginPath, out var configurationObject) && configurationObject != TranscriptionProvider.NONE, configurationObject),
+                PluginConfigurationObjectType.EMBEDDING_PROVIDER => (EmbeddingProvider.TryParseEmbeddingProviderTable(i, luaObjectTable, configPluginId, pluginPath, out var configurationObject) && configurationObject != EmbeddingProvider.NONE, configurationObject),
                 PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY => (DataDocumentAnalysisPolicy.TryProcessConfiguration(i, luaObjectTable, configPluginId, out var configurationObject) && configurationObject is DataDocumentAnalysisPolicy, configurationObject),
 
                 _ => (false, NoConfigurationObject.INSTANCE)

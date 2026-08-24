@@ -20,7 +20,7 @@ public partial class SettingsPanelProviders : SettingsPanelProviderBase
     {
         Expandable = true,
         IsInitiallyExpanded = false,
-        Selector = provider => provider.UsedLLMProvider.ToName(),
+        Selector = provider => provider.UsedLLMProvider,
     };
 
     [Parameter]

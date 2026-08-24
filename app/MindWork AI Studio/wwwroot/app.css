@@ -76,6 +76,13 @@
     height: 100%;
 }
 
+.provider-icon {
+    width: 1.5em;
+    height: 1.5em;
+    object-fit: contain;
+    flex: none;
+}
+
 .mud-popover-open.InnerScrollingFix {
     left: 0 !important;
 }
