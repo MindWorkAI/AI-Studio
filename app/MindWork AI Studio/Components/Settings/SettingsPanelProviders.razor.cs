@@ -77,6 +77,7 @@ public partial class SettingsPanelProviders : SettingsPanelProviderBase
             { x => x.DataId, provider.Id },
             { x => x.DataInstanceName, provider.InstanceName },
             { x => x.DataLLMProvider, provider.UsedLLMProvider },
+            { x => x.DataCustomIconDataUrl, provider.CustomIconDataUrl },
             { x => x.DataModel, provider.Model },
             { x => x.DataHostname, provider.Hostname },
             { x => x.IsSelfHosted, provider.IsSelfHosted },

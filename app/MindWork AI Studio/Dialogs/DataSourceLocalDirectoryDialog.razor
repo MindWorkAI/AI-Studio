@@ -50,7 +50,17 @@
                 @foreach (var embedding in this.AvailableEmbeddings)
                 {
                     <MudSelectItem Value="@embedding.Value">
-                        @embedding.Name
+                        @if (this.GetEmbeddingProvider(embedding.Value) is { } provider)
+                        {
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Wrap="Wrap.NoWrap">
+                                <ProviderIcon ProviderType="@provider.UsedLLMProvider" CustomIconDataUrl="@provider.CustomIconDataUrl" />
+                                <MudText>@embedding.Name</MudText>
+                            </MudStack>
+                        }
+                        else
+                        {
+                            @embedding.Name
+                        }
                     </MudSelectItem>
                 }
             </MudSelect>

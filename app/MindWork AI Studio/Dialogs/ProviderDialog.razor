@@ -24,7 +24,7 @@
                     {
                         <MudSelectItem Value="@provider">
                             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Wrap="Wrap.NoWrap">
-                                <ProviderIcon ProviderType="@provider" />
+                                <ProviderIcon ProviderType="@provider" CustomIconDataUrl="@(provider == this.DataLLMProvider ? this.DataCustomIconDataUrl : string.Empty)" />
                                 <MudText>@provider.ToName()</MudText>
                             </MudStack>
                         </MudSelectItem>
