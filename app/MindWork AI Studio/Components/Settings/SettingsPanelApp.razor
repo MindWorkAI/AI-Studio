@@ -5,10 +5,10 @@
 
 <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Apps" HeaderText="@T("App Options")">
     
-    <ConfigurationSelect OptionDescription="@T("Language behavior")" SelectedValue="@(() => this.SettingsManager.ConfigurationData.App.LanguageBehavior)" Data="@ConfigurationSelectDataFactory.GetLangBehaviorData()" SelectionUpdate="@(selectedValue => _ = this.UpdateLangBehaviour(selectedValue))" OptionHelp="@T("Select the language behavior for the app. The default is to use the system language. You might want to choose a language manually?")"/>
+    <ConfigurationSelect OptionDescription="@T("Language behavior")" SelectedValue="@(() => this.SettingsManager.ConfigurationData.App.LanguageBehavior)" Data="@ConfigurationSelectDataFactory.GetLangBehaviorData()" SelectionUpdate="@(selectedValue => this.UpdateLangBehaviour(selectedValue).Observe(nameof(this.UpdateLangBehaviour)))" OptionHelp="@T("Select the language behavior for the app. The default is to use the system language. You might want to choose a language manually?")"/>
     @if (this.SettingsManager.ConfigurationData.App.LanguageBehavior is LangBehavior.MANUAL)
     {
-        <ConfigurationSelect OptionDescription="@T("Language")" SelectedValue="@(() => this.SettingsManager.ConfigurationData.App.LanguagePluginId)" Data="@ConfigurationSelectDataFactory.GetLanguagesData()" SelectionUpdate="@(selectedValue => _ = this.UpdateManuallySelectedLanguage(selectedValue))" OptionHelp="@T("Select the language for the app.")"/>
+        <ConfigurationSelect OptionDescription="@T("Language")" SelectedValue="@(() => this.SettingsManager.ConfigurationData.App.LanguagePluginId)" Data="@ConfigurationSelectDataFactory.GetLanguagesData()" SelectionUpdate="@(selectedValue => this.UpdateManuallySelectedLanguage(selectedValue).Observe(nameof(this.UpdateManuallySelectedLanguage)))" OptionHelp="@T("Select the language for the app.")"/>
     }
     
     <ConfigurationSelect OptionDescription="@T("Color theme")" SelectedValue="@(() => this.SettingsManager.ConfigurationData.App.PreferredTheme)" Data="@ConfigurationSelectDataFactory.GetThemesData()" SelectionUpdate="@(selectedValue => this.SettingsManager.ConfigurationData.App.PreferredTheme = selectedValue)" OptionHelp="@T("Choose the color theme that best suits for you.")"/>

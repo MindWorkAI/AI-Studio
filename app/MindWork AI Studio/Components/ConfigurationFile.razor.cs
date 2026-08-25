@@ -70,7 +70,7 @@ public partial class ConfigurationFile : ConfigurationBaseCore
 
     protected override async Task OnInitializedAsync()
     {
-        this.timer.Elapsed += async (_, _) => await this.InvokeAsync(async () => await this.OptionChanged(this.internalText));
+        this.timer.Elapsed += (_, _) => this.InvokeAsync(async () => await this.OptionChanged(this.internalText)).Observe($"{nameof(ConfigurationFile)}: applying the changed file");
         await base.OnInitializedAsync();
     }
 
