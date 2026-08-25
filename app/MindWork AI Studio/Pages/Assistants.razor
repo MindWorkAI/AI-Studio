@@ -31,6 +31,7 @@
                     var launchLink = assistantPlugin.StartsChatDirectly ? string.Empty : $"{Routes.ASSISTANT_DYNAMIC}?assistantId={assistantPlugin.Id}";
                     var availablePlugin = PluginFactory.AvailablePlugins.OfType<IAvailablePlugin>().FirstOrDefault(plugin => plugin.Id == assistantPlugin.Id);
                     <AssistantBlock TSettings="NoSettingsPanel"
+                                    Component="Components.DYNAMIC_ASSISTANT"
                                     Name="@T(assistantPlugin.AssistantTitle)"
                                     Description="@T(assistantPlugin.Description)"
                                     Icon="@Icons.Material.Filled.FindInPage"

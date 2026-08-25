@@ -31,9 +31,9 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
     protected override string SubmitText => this.submitText;
     protected override Func<Task> SubmitAction => this.Submit;
     protected override bool SubmitDisabled => this.isSecurityBlocked;
-    // Dynamic assistants do not have dedicated settings yet.
-    // Reuse chat-level provider filtering/preselection instead of NONE.
-    protected override Tools.Components Component => Tools.Components.CHAT;
+    // Dynamic assistants do not have dedicated settings yet. Their internal identity keeps their
+    // session and media state separate while ComponentsExtensions derives their defaults from chat.
+    protected override Tools.Components Component => Tools.Components.DYNAMIC_ASSISTANT;
 
     /// <summary>
     /// Gets the plugin ID as the assistant session instance ID.
