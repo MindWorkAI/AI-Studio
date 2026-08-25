@@ -22,7 +22,10 @@
         </HeaderContent>
         <GroupHeaderTemplate>
             <MudTh Class="provider-group-header" colspan="4">
-                <ProviderLabel ProviderType="@((LLMProviders)context.Key)" Text="@(((LLMProviders)context.Key).ToName())" />
+                @if (context.Key is LLMProviders llmProvider)
+                {
+                    <ProviderLabel ProviderType="@llmProvider" Text="@llmProvider.ToName()" />
+                }
             </MudTh>
         </GroupHeaderTemplate>
         <RowTemplate>

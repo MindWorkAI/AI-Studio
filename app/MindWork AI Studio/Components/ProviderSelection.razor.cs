@@ -109,6 +109,11 @@ public partial class ProviderSelection : MSGComponentBase
     {
         if (triggeredEvent is Event.CONFIGURATION_CHANGED or Event.PLUGINS_RELOADED)
         {
+            //
+            // We hold a copy of the provider record, which is a snapshot taken when it was selected.
+            // Once the user edits that provider, our copy is stale and would keep showing the old
+            // name and the old icon, so we resolve it again and hand the fresh one to our parent:
+            //
             var updatedProvider = this.SettingsManager.GetProviderById(this.ProviderSettings.Id);
             if (updatedProvider != AIStudio.Settings.Provider.NONE && updatedProvider != this.ProviderSettings)
             {
@@ -118,7 +123,6 @@ public partial class ProviderSelection : MSGComponentBase
 
             this.StateHasChanged();
         }
-
     }
 
     #endregion

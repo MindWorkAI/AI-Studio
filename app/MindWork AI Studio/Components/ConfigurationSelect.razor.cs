@@ -40,20 +40,6 @@ public partial class ConfigurationSelect<TConfig> : ConfigurationBaseCore
     [Parameter]
     public RenderFragment<ConfigurationSelectData<TConfig>>? ItemTemplate { get; set; }
 
-    /// <summary>
-    /// Additional CSS class for the select element.
-    /// </summary>
-    [Parameter]
-    public string SelectClass { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Additional inline style for the select element.
-    /// </summary>
-    [Parameter]
-    public string SelectStyle { get; set; } = string.Empty;
-
-    private string SelectCssClass => $"rounded-lg mb-0 {this.SelectClass}".Trim();
-    
     #region Overrides of ConfigurationBase
 
     /// <inheritdoc />
