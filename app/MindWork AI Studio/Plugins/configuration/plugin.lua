@@ -94,6 +94,19 @@ CONFIG["LLM_PROVIDERS"] = {}
 --     -- Please do not add the enclosing curly braces {} here. Also, no trailing comma is allowed.
 --     ["AdditionalJsonApiParameters"] = "",
 --
+--     -- Optional: replace the built-in provider logo with a project-specific icon.
+--     -- The path is relative to this plugin.lua and must point to an SVG file inside
+--     -- this plugin directory, for example: assets/project-icon.svg. Absolute paths,
+--     -- parent-directory segments (..), links leaving the plugin directory, files
+--     -- larger than 32 KiB, and files which are not well-formed SVG are rejected.
+--     -- An invalid or missing icon logs a warning while the provider still loads
+--     -- with its built-in logo. AI Studio shows every icon in an isolated image
+--     -- element, so scripts or external references inside an SVG never run; for the
+--     -- same reason, the icon cannot inherit colors from the app and has to bring
+--     -- its own. Provide a single icon with enough contrast on both light and dark
+--     -- surfaces.
+--     -- ["IconPath"] = "assets/project-icon.svg",
+--
 --     -- Optional: expert capability overrides.
 --     -- Allowed keys are exactly:
 --     -- AUDIO_INPUT, MULTIPLE_IMAGE_INPUT, SPEECH_INPUT, VIDEO_INPUT,
@@ -146,6 +159,10 @@ CONFIG["TRANSCRIPTION_PROVIDERS"] = {}
 --     ["Host"] = "WHISPER_CPP",
 --     ["Hostname"] = "<https address of the server>",
 --
+--     -- Optional: project-specific SVG icon. The same path, size, rendering, and
+--     -- fallback rules described for IconPath under LLM_PROVIDERS apply here.
+--     -- ["IconPath"] = "assets/project-icon.svg",
+--
 --     -- Optional: Encrypted API key (see LLM_PROVIDERS example for details)
 --     -- ["APIKey"] = "ENC:v1:<base64-encoded encrypted data>",
 --
@@ -172,6 +189,10 @@ CONFIG["EMBEDDING_PROVIDERS"] = {}
 --     -- Allowed values for Host are: LM_STUDIO, LLAMACPP, OLLAMA, and VLLM
 --     ["Host"] = "OLLAMA",
 --     ["Hostname"] = "<https address of the server>",
+--
+--     -- Optional: project-specific SVG icon. The same path, size, rendering, and
+--     -- fallback rules described for IconPath under LLM_PROVIDERS apply here.
+--     -- ["IconPath"] = "assets/project-icon.svg",
 --
 --     -- Optional: Encrypted API key (see LLM_PROVIDERS example for details)
 --     -- ["APIKey"] = "ENC:v1:<base64-encoded encrypted data>",

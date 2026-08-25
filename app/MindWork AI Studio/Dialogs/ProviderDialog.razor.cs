@@ -78,6 +78,12 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     /// </summary>
     [Parameter]
     public LLMProviders DataLLMProvider { get; set; } = LLMProviders.NONE;
+
+    /// <summary>
+    /// The validated custom icon supplied by a configuration plugin.
+    /// </summary>
+    [Parameter]
+    public string DataCustomIconDataUrl { get; set; } = string.Empty;
     
     /// <summary>
     /// The LLM model to use, e.g., GPT-4o.
@@ -184,6 +190,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
             HFInferenceProvider = this.HFInferenceProviderId,
             AdditionalJsonApiParameters = this.AdditionalJsonApiParameters,
             CapabilityOverrides = this.capabilityOverrides.HasOverrides ? this.capabilityOverrides : null,
+            CustomIconDataUrl = this.DataCustomIconDataUrl,
         };
     }
 

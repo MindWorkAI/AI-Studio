@@ -71,9 +71,17 @@
     height: var(--mud-icon-size-large);
 }
 
-.plugin-icon-container svg {
+.plugin-icon-container img {
     width: 100%;
     height: 100%;
+    object-fit: contain;
+}
+
+.provider-icon {
+    width: 1.5em;
+    height: 1.5em;
+    object-fit: contain;
+    flex: none;
 }
 
 .mud-popover-open.InnerScrollingFix {

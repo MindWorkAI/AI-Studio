@@ -391,7 +391,7 @@ The latest example of an AI Studio configuration via configuration plugin can al
 - [The icon](../app/MindWork%20AI%20Studio/Plugins/configuration/icon.lua)
 - [The configuration with explanations](../app/MindWork%20AI%20Studio/Plugins/configuration/plugin.lua)
 
-Please note that the icon must be an SVG vector graphic. Raster graphics like PNGs, GIFs, and others aren’t supported. You can use the sample icon, which looks like a gear.
+Please note that the icon must be an SVG vector graphic. Raster graphics like PNGs, GIFs, and others aren’t supported. You can use the sample icon, which looks like a gear. AI Studio shows plugin icons in an isolated image element, so set the colors inside the SVG itself: `currentColor` and CSS rules from the app do not reach the icon. Your organization is responsible for holding the rights to any icon it ships. You can also give each configured provider its own icon, see [Giving providers your own icon](#giving-providers-your-own-icon).
 
 Currently, you can configure the following things:
 - Any number of LLM providers (self-hosted or cloud providers with encrypted API keys)
@@ -639,3 +639,41 @@ The user's key follows the same "withdrawing a configuration" philosophy as ever
 document: if your configuration stops offering this provider, AI Studio removes the provider from
 the settings but leaves the user's key in the OS keyring rather than deleting it, in case the same
 provider comes back later. See [Withdrawing a configuration](#withdrawing-a-configuration).
+
+## Giving providers your own icon
+
+By default, AI Studio shows the logo of the underlying AI provider next to each provider entry. When
+you would rather show your own project or department logo, point the optional `IconPath` field at an
+SVG file inside your configuration plugin:
+
+```lua
+CONFIG["LLM_PROVIDERS"][#CONFIG["LLM_PROVIDERS"]+1] = {
+    ["Id"] = "9072b77d-ca81-40da-be6a-861da525ef7b",
+    ["InstanceName"] = "Corporate OpenAI GPT-4",
+    ["UsedLLMProvider"] = "OPEN_AI",
+    ["Host"] = "NONE",
+    ["Hostname"] = "",
+    ["IconPath"] = "assets/project-icon.svg",
+    ["Model"] = {
+        ["Id"] = "gpt-4",
+        ["DisplayName"] = "GPT-4",
+    }
+}
+```
+
+The field works the same way for embedding and transcription providers.
+
+The path is relative to your `plugin.lua` and must stay inside the plugin directory. AI Studio
+rejects absolute paths, `..` segments, links pointing out of that directory, files which do not end
+in `.svg`, files larger than 32 KiB, and anything which is not well-formed SVG. A rejected or
+missing icon is never fatal: AI Studio logs a warning, and the provider loads with its built-in
+logo.
+
+Two things to keep in mind when you prepare the icon:
+
+- **Colors belong inside the SVG.** AI Studio shows every icon in an isolated image element, so
+  `currentColor` and CSS rules from the app do not reach it. Choose colors which work on both light
+  and dark surfaces.
+- **Your organization holds the rights.** Whatever icon you ship -- for a provider through
+  `IconPath`, or for the configuration plugin itself through its `icon.lua` -- your organization is
+  responsible for holding the rights to use it.

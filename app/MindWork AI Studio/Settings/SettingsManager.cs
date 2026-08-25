@@ -661,6 +661,29 @@ public sealed class SettingsManager
         .ToList();
 
     /// <summary>
+    /// Returns the embedding provider with the given id, without applying any confidence filtering.
+    /// </summary>
+    /// <remarks>
+    /// This method resolves a stored embedding provider reference by its id. It applies neither the
+    /// global minimum confidence level nor any component-specific minimum, so it returns the
+    /// requested embedding provider even when the user enforces a higher global minimum. Callers
+    /// that intend to send data to the returned embedding provider must check it themselves, for
+    /// example through IsTrustedForDataSourceSecurityChecks.
+    /// </remarks>
+    /// <param name="embeddingProviderId">The id of the embedding provider to look up.</param>
+    /// <returns>The embedding provider, or EmbeddingProvider.NONE when no embedding provider with that id exists.</returns>
+    public EmbeddingProvider GetEmbeddingProviderById(string? embeddingProviderId)
+    {
+        if (string.IsNullOrWhiteSpace(embeddingProviderId))
+            return EmbeddingProvider.NONE;
+
+        if (string.Equals(embeddingProviderId, EmbeddingProvider.NONE.Id, StringComparison.OrdinalIgnoreCase))
+            return EmbeddingProvider.NONE;
+
+        return this.ConfigurationData.EmbeddingProviders.FirstOrDefault(x => x.Id.Equals(embeddingProviderId, StringComparison.OrdinalIgnoreCase)) ?? EmbeddingProvider.NONE;
+    }
+
+    /// <summary>
     /// Returns all configured transcription providers.
     /// </summary>
     /// <remarks>
@@ -674,6 +697,29 @@ public sealed class SettingsManager
         .ThenBy(x => x.Name, StringComparer.OrdinalIgnoreCase)
         .ThenBy(x => x.Num)
         .ToList();
+
+    /// <summary>
+    /// Returns the transcription provider with the given id, without applying any confidence filtering.
+    /// </summary>
+    /// <remarks>
+    /// This method resolves a stored transcription provider reference by its id. It applies neither
+    /// the global minimum confidence level nor any component-specific minimum, so it returns the
+    /// requested transcription provider even when the user enforces a higher global minimum. Callers
+    /// that intend to send audio to the returned transcription provider must check its confidence
+    /// level themselves, the way GetFilteredTranscriptionProviders does for the app settings.
+    /// </remarks>
+    /// <param name="transcriptionProviderId">The id of the transcription provider to look up.</param>
+    /// <returns>The transcription provider, or TranscriptionProvider.NONE when no transcription provider with that id exists.</returns>
+    public TranscriptionProvider GetTranscriptionProviderById(string? transcriptionProviderId)
+    {
+        if (string.IsNullOrWhiteSpace(transcriptionProviderId))
+            return TranscriptionProvider.NONE;
+
+        if (string.Equals(transcriptionProviderId, TranscriptionProvider.NONE.Id, StringComparison.OrdinalIgnoreCase))
+            return TranscriptionProvider.NONE;
+
+        return this.ConfigurationData.TranscriptionProviders.FirstOrDefault(x => x.Id.Equals(transcriptionProviderId, StringComparison.OrdinalIgnoreCase)) ?? TranscriptionProvider.NONE;
+    }
 
     public Profile GetPreselectedProfile(Tools.Components component)
     {

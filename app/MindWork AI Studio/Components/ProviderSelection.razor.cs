@@ -105,12 +105,24 @@ public partial class ProviderSelection : MSGComponentBase
 
     #region Overrides of MSGComponentBase
 
-    protected override Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
+    protected override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
     {
         if (triggeredEvent is Event.CONFIGURATION_CHANGED or Event.PLUGINS_RELOADED)
-            this.StateHasChanged();
+        {
+            //
+            // We hold a copy of the provider record, which is a snapshot taken when it was selected.
+            // Once the user edits that provider, our copy is stale and would keep showing the old
+            // name and the old icon, so we resolve it again and hand the fresh one to our parent:
+            //
+            var updatedProvider = this.SettingsManager.GetProviderById(this.ProviderSettings.Id);
+            if (updatedProvider != AIStudio.Settings.Provider.NONE && updatedProvider != this.ProviderSettings)
+            {
+                this.ProviderSettings = updatedProvider;
+                await this.ProviderSettingsChanged.InvokeAsync(updatedProvider);
+            }
 
-        return Task.CompletedTask;
+            this.StateHasChanged();
+        }
     }
 
     #endregion

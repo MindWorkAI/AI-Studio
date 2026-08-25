@@ -19,7 +19,7 @@ public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
     {
         Expandable = true,
         IsInitiallyExpanded = false,
-        Selector = provider => provider.UsedLLMProvider.ToName(),
+        Selector = provider => provider.UsedLLMProvider,
     };
 
     [Parameter]
@@ -82,6 +82,7 @@ public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
             { x => x.DataId, embeddingProvider.Id },
             { x => x.DataName, embeddingProvider.Name },
             { x => x.DataLLMProvider, embeddingProvider.UsedLLMProvider },
+            { x => x.DataCustomIconDataUrl, embeddingProvider.CustomIconDataUrl },
             { x => x.DataModel, embeddingProvider.Model },
             { x => x.DataHostname, embeddingProvider.Hostname },
             { x => x.IsSelfHosted, embeddingProvider.IsSelfHosted },
