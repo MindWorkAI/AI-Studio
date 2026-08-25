@@ -269,11 +269,14 @@ public sealed class GlobalShortcutService : BackgroundService, IMessageBusReceiv
 
     private async Task<string> GetShortcutDescription(Shortcut shortcutId)
     {
+        // Message bus receivers run without being awaited, so I18N.Init in MainLayout may still be
+        // pending during startup or a plugin reload. Resolve the active language directly to avoid
+        // using no language or the previously active language for the shortcut description:
         var language = await this.settingsManager.GetActiveLanguagePlugin();
         return shortcutId switch
         {
-            Shortcut.VOICE_RECORDING_TOGGLE => I18N.I.GetText(language, "Toggle voice recording", typeof(GlobalShortcutService).Namespace, nameof(GlobalShortcutService)),
-            _ => I18N.I.GetText(language, "Global shortcut", typeof(GlobalShortcutService).Namespace, nameof(GlobalShortcutService)),
+            Shortcut.VOICE_RECORDING_TOGGLE => TB("Toggle voice recording", language),
+            _ => TB("Global shortcut", language),
         };
     }
 
@@ -319,6 +322,8 @@ public sealed class GlobalShortcutService : BackgroundService, IMessageBusReceiv
     }
 
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(GlobalShortcutService).Namespace, nameof(GlobalShortcutService));
+
+    private static string TB(string fallbackEN, ILanguagePlugin language) => I18N.I.GetText(language, fallbackEN, typeof(GlobalShortcutService).Namespace, nameof(GlobalShortcutService));
 
     private async Task<ShortcutState> GetShortcutState(Shortcut shortcutId, ShortcutSyncSource source)
     {
