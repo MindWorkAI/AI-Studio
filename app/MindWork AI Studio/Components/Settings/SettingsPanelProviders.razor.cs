@@ -1,7 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 
 using AIStudio.Dialogs;
-using AIStudio.Provider;
 using AIStudio.Settings;
 
 using Microsoft.AspNetCore.Components;
