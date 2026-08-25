@@ -59,6 +59,7 @@ public sealed partial class CollectI18NKeysCommand
         var allFiles = Directory.EnumerateFiles(cwd, "*", SearchOption.AllDirectories);
         var counter = 0;
         
+        var warnings = new List<string>();
         var allI18NContent = new Dictionary<string, string>();
         foreach (var filePath in allFiles)
         {
@@ -76,7 +77,7 @@ public sealed partial class CollectI18NKeysCommand
                 continue;
             
             var content = await File.ReadAllTextAsync(filePath, Encoding.UTF8);
-            var matches = this.FindAllTextTags(content, filePath);
+            var matches = this.FindAllTextTags(content, filePath, warnings);
             if (matches.Count == 0)
                 continue;
             
@@ -99,7 +100,9 @@ public sealed partial class CollectI18NKeysCommand
         }
         
         Console.WriteLine($" {counter:###,###} files processed, {allI18NContent.Count:###,###} keys found.");
-        
+        foreach (var warning in warnings)
+            Console.WriteLine(warning);
+
         Console.Write("- Creating Lua code ...");
         var luaCode = this.ExportToLuaAssignments(allI18NContent);
         
@@ -173,7 +176,7 @@ public sealed partial class CollectI18NKeysCommand
         return sb.ToString();
     }
 
-    private List<string> FindAllTextTags(ReadOnlySpan<char> fileContent, string filePath)
+    private List<string> FindAllTextTags(ReadOnlySpan<char> fileContent, string filePath, List<string> warnings)
     {
         (int Index, int Len) FindNextStart(ReadOnlySpan<char> content)
         {
@@ -236,7 +239,7 @@ public sealed partial class CollectI18NKeysCommand
             // about it here:
             //
             if(text.Contains('\\'))
-                Console.WriteLine($"- Warning: The text '{text}' in the file '{filePath}' contains an escape sequence. Its key does not match the key the app looks up at runtime, so this text stays untranslated. Please rewrite the text without escape sequences.");
+                warnings.Add($"- Warning: The text '{text}' in the file '{filePath}' contains an escape sequence. Its key does not match the key the app looks up at runtime, so this text stays untranslated. Please use a raw string literal instead.");
 
             matches.Add(text);
             startIdx = FindNextStart(content);
