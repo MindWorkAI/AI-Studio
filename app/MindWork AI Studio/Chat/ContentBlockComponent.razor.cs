@@ -245,7 +245,7 @@ public partial class ContentBlockComponent : MSGComponentBase
         if (string.Equals(this.lastMathRenderSignature, mathRenderSignature, StringComparison.Ordinal))
             return;
 
-        await this.JsRuntime.InvokeVoidAsync(CHAT_MATH_SYNC_FUNCTION, this.mathContentContainer, mathRenderSignature);
+        await this.JsRuntime.TryInvokeVoidAsync(CHAT_MATH_SYNC_FUNCTION, this.mathContentContainer, mathRenderSignature);
         this.lastMathRenderSignature = mathRenderSignature;
         this.hasActiveMathContainer = true;
     }
@@ -258,16 +258,7 @@ public partial class ContentBlockComponent : MSGComponentBase
             return;
         }
 
-        try
-        {
-            await this.JsRuntime.InvokeVoidAsync(CHAT_MATH_DISPOSE_FUNCTION, this.mathContentContainer);
-        }
-        catch (JSDisconnectedException)
-        {
-        }
-        catch (ObjectDisposedException)
-        {
-        }
+        await this.JsRuntime.TryInvokeVoidAsync(CHAT_MATH_DISPOSE_FUNCTION, this.mathContentContainer);
 
         this.hasActiveMathContainer = false;
         this.lastMathRenderSignature = string.Empty;

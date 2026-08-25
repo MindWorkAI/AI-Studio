@@ -152,35 +152,10 @@ public partial class VoiceRecorder : MSGComponentBase
             return;
         }
 
-        try
-        {
-            if (runtimeState.Backend is ShortcutBackend.LOCAL
-                && !runtimeState.IsSuspended
-                && !string.IsNullOrWhiteSpace(runtimeState.Shortcut))
-            {
-                await this.JsRuntime.InvokeVoidAsync(
-                    "localShortcut.register",
-                    "voice-recording-toggle",
-                    runtimeState.Shortcut,
-                    this.localShortcutDotNetReference);
-            }
-            else
-            {
-                await this.JsRuntime.InvokeVoidAsync("localShortcut.unregister", "voice-recording-toggle");
-            }
-        }
-        catch (JSDisconnectedException)
-        {
-            this.Logger.LogDebug("The focused-window shortcut listener could not be updated because the JS runtime disconnected.");
-        }
-        catch (OperationCanceledException)
-        {
-            this.Logger.LogDebug("Updating the focused-window shortcut listener was canceled.");
-        }
-        catch (JSException ex)
-        {
-            this.Logger.LogWarning(ex, "Failed to update the focused-window shortcut listener.");
-        }
+        if (runtimeState.Backend is ShortcutBackend.LOCAL && !runtimeState.IsSuspended && !string.IsNullOrWhiteSpace(runtimeState.Shortcut))
+            await this.JsRuntime.TryInvokeVoidAsync("localShortcut.register", "voice-recording-toggle", runtimeState.Shortcut, this.localShortcutDotNetReference);
+        else
+            await this.JsRuntime.TryInvokeVoidAsync("localShortcut.unregister", "voice-recording-toggle");
     }
 
     private bool ShouldRenderVoiceRecording => PreviewFeatures.PRE_SPEECH_TO_TEXT_2026.IsEnabled(this.SettingsManager)
