@@ -8,6 +8,7 @@ using AIStudio.Tools.AssistantSessions;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.PluginSystem.Assistants;
 using AIStudio.Tools.PluginSystem.Assistants.DataModel;
+using AIStudio.Tools.Services;
 using Lua;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.WebUtilities;
@@ -19,6 +20,9 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
 {
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
+
+    [Inject]
+    private DirectChatService DirectChatService { get; init; } = null!;
 
     [Parameter] 
     public AssistantForm? RootComponent { get; set; }
@@ -242,13 +246,34 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
 
         this.Logger.LogInformation($"AssistantDynamic of plugin '{revisionResult.PluginName}' ({revisionResult.PluginName}) was successfully revised with audit result {revisionResult.Audit?.Level ?? AssistantAuditLevel.UNKNOWN}.");
         var updatedPlugin = PluginFactory.RunningPlugins.OfType<PluginAssistants>().FirstOrDefault(x => x.Id == revisionResult.PluginId);
-        if (updatedPlugin is not null)
+        if (updatedPlugin is not null && !updatedPlugin.StartsChatDirectly)
             this.ApplyUpdatedAssistantPlugin(updatedPlugin);
 
         await this.MessageBus.SendSuccess(new(Icons.Material.Filled.AutoFixHigh, string.Format(this.T("The assistant '{0}' has been updated."), revisionResult.PluginName)));
         await this.MessageBus.SendMessage<bool>(this, Event.PLUGINS_RELOADED);
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+
+        if (updatedPlugin is { StartsChatDirectly: true })
+        {
+            await this.OpenUpdatedChatLauncherAsync(updatedPlugin);
+            return;
+        }
+
         await this.InvokeAsync(this.StateHasChanged);
+    }
+
+    private async Task OpenUpdatedChatLauncherAsync(PluginAssistants assistantPlugin)
+    {
+        var result = await this.DirectChatService.TryCreateAssistantChatAsync(assistantPlugin);
+        if (result.Request is null)
+        {
+            await this.MessageBus.SendError(new(Icons.Material.Filled.ReportProblem, result.ErrorMessage));
+            this.NavigationManager.NavigateTo(Routes.ASSISTANTS);
+            return;
+        }
+
+        MessageBus.INSTANCE.DeferMessage(this, Event.SEND_TO_CHAT, result.Request);
+        this.NavigationManager.NavigateTo(Routes.CHAT);
     }
 
     private async Task<string> BuildRevisionTestContextAsync()

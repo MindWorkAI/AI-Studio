@@ -280,7 +280,7 @@ public sealed class AssistantPluginGenerationService(ILogger<AssistantPluginGene
               """
             : $$"""
               - Set assistant.kind to "CHAT_LAUNCHER" and populate assistant.launch from the structured chat_launch request exactly.
-              - The ASSISTANT table must include Title, Description, LaunchBehavior = "OPEN_WORKSPACE_CHAT_BY_NAME", and WorkspaceName = "{{chatLaunch.WorkspaceName}}".
+              - The ASSISTANT table must include Title, Description, LaunchBehavior = "OPEN_WORKSPACE_CHAT_BY_NAME", and WorkspaceName copied exactly from the structured chat_launch request.
               - Emit ProviderId, ProfileId, ChatTemplateId, and DataSourceIds only when their corresponding chat_launch value is not null.
               - Preserve the empty GUID for an explicitly selected no-profile or no-template value.
               - Do not emit SystemPrompt, SubmitText, AllowProfiles, BuildPrompt, or UI for a chat launcher; those form fields are ignored by the launcher runtime.

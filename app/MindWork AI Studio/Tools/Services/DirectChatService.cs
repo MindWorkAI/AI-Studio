@@ -141,10 +141,10 @@ public sealed class DirectChatService(
             requestedDataSources.Add(dataSource);
         }
 
-        AllowedSelectedDataSources availableDataSources;
+        IReadOnlyList<IDataSource> availableDataSources;
         try
         {
-            availableDataSources = await dataSourceService.GetDataSources(provider, requestedDataSources);
+            availableDataSources = await dataSourceService.GetAllowedDataSources(provider, requestedDataSources);
         }
         catch (Exception exception)
         {
@@ -152,7 +152,7 @@ public sealed class DirectChatService(
             return new(null, TB("The data sources selected by the assistant chat launcher could not be checked. No chat was created."));
         }
 
-        var availableSelectedIds = availableDataSources.SelectedDataSources.Select(source => source.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var availableSelectedIds = availableDataSources.Select(source => source.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
         var unavailableDataSources = requestedDataSources.Where(source => !availableSelectedIds.Contains(source.Id)).Select(source => source.Name).ToList();
         if (unavailableDataSources.Count > 0)
             return new(null, string.Format(TB("The following data sources selected by the assistant chat launcher are currently unavailable or not permitted for the selected provider: {0}"), string.Join(", ", unavailableDataSources)));
