@@ -39,10 +39,10 @@ public partial class Chat : MSGComponentBase
         
         this.splitterPosition = this.SettingsManager.ConfigurationData.Workspace.SplitterPosition;
         this.splitterSaveTimer.AutoReset = false;
-        this.splitterSaveTimer.Elapsed += async (_, _) =>
+        this.splitterSaveTimer.Elapsed += (_, _) =>
         {
             this.SettingsManager.ConfigurationData.Workspace.SplitterPosition = this.splitterPosition;
-            await this.SettingsManager.StoreSettings();
+            this.SettingsManager.StoreSettings().Observe($"{nameof(Chat)}: storing the splitter position");
         };
         
         await base.OnInitializedAsync();

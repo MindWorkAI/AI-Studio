@@ -170,10 +170,15 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         }
         
         this.formChangeTimer.AutoReset = false;
-        this.formChangeTimer.Elapsed += async (_, _) =>
+        //
+        // Mind the missing async here: a timer hands its elapsed event to a thread pool thread, where an
+        // async handler has nobody to hand its exception to. Such an exception is not merely unobserved,
+        // it is unhandled, and it takes the app down with it. Observing the task keeps it contained.
+        //
+        this.formChangeTimer.Elapsed += (_, _) =>
         {
             this.formChangeTimer.Stop();
-            await this.OnFormChange();
+            this.OnFormChange().Observe($"{nameof(AssistantBase<TSettings>)}: handling a form change");
         };
         
         this.MightPreselectValues();
