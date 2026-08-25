@@ -1,14 +1,14 @@
 namespace AIStudio.Settings;
 
 /// <summary>
-/// Loads the custom provider icon a configuration plugin may point to.
+/// Loads an icon file a configuration plugin points to, such as a custom provider logo.
 /// </summary>
 /// <remarks>
 /// The checks here are about the path, not about the markup: they keep a plugin from turning an
 /// arbitrary file somewhere on the system into a data URL. Whether the file is a usable SVG, and
 /// how it becomes a data URL, is up to SvgIcon.
 /// </remarks>
-internal static class ProviderIconFile
+internal static class PluginIconFile
 {
     public static bool TryLoadDataUrl(string iconPath, string pluginPath, out string dataUrl, out string issue)
     {

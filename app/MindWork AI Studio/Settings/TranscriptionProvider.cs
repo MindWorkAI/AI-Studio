@@ -108,7 +108,7 @@ public sealed record TranscriptionProvider(
         {
             if (!iconPathValue.TryRead<string>(out var iconPath))
                 LOGGER.LogWarning($"The configured transcription provider {idx} does not contain a valid icon path. Falling back to the built-in provider icon. (Plugin ID: {configPluginId})");
-            else if (!ProviderIconFile.TryLoadDataUrl(iconPath, pluginPath, out customIconDataUrl, out var iconIssue))
+            else if (!PluginIconFile.TryLoadDataUrl(iconPath, pluginPath, out customIconDataUrl, out var iconIssue))
                 LOGGER.LogWarning($"The configured transcription provider {idx} contains an invalid icon path. Falling back to the built-in provider icon. Issue: {iconIssue} (Plugin ID: {configPluginId})");
         }
 
