@@ -10567,8 +10567,14 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::GLOBALSHORTCUTSERVICE::T1204510649"]
 -- The global shortcut could not be registered. The previous shortcut remains active.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::GLOBALSHORTCUTSERVICE::T2266307101"] = "The global shortcut could not be registered. The previous shortcut remains active."
 
+-- Global shortcut
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::GLOBALSHORTCUTSERVICE::T2637055764"] = "Global shortcut"
+
 -- The global shortcut change was cancelled. The previous shortcut remains active.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::GLOBALSHORTCUTSERVICE::T3299913860"] = "The global shortcut change was cancelled. The previous shortcut remains active."
+
+-- Toggle voice recording
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::GLOBALSHORTCUTSERVICE::T40517664"] = "Toggle voice recording"
 
 -- The configured transcription provider could not be created.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::MEDIATRANSCRIPTIONSERVICE::T1235984176"] = "The configured transcription provider could not be created."
