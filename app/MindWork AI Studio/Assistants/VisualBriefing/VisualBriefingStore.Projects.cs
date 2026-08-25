@@ -398,6 +398,7 @@ public sealed partial class VisualBriefingStore
         finally
         {
             gate.Release();
+            this.ForgetLock(briefingId);
         }
     }
 

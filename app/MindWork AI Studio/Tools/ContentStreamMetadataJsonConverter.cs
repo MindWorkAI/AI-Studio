@@ -24,6 +24,7 @@ public sealed class ContentStreamMetadataJsonConverter : JsonConverter<ContentSt
             "Image" => JsonSerializer.Deserialize<ContentStreamImageMetadata?>(rawText, options),
             "Document" => JsonSerializer.Deserialize<ContentStreamDocumentMetadata?>(rawText, options),
             "Error" => JsonSerializer.Deserialize<ContentStreamErrorMetadata?>(rawText, options),
+            "PromptInjection" => JsonSerializer.Deserialize<ContentStreamPromptInjectionMetadata?>(rawText, options),
 
             _ => null
         };

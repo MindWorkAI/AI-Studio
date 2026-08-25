@@ -21,6 +21,16 @@ public static partial class PluginFactory
         AutoReset = false,
     };
 
+    /// <summary>
+    /// Whether hot reloading was set up already.
+    /// </summary>
+    /// <remarks>
+    /// The timer and the watcher are static, while this method is called from a component. Calling
+    /// it twice would add a second handler to each of them, and every change in the plugins
+    /// directory would then trigger as many reloads as there were calls.
+    /// </remarks>
+    private static bool IS_HOT_RELOADING_SET_UP;
+
     public static void SetUpHotReloading()
     {
         if (!IsInitialized)
@@ -28,6 +38,14 @@ public static partial class PluginFactory
             LOG.LogError("PluginFactory is not initialized. Please call Setup() before using it.");
             return;
         }
+
+        if (IS_HOT_RELOADING_SET_UP)
+        {
+            LOG.LogInformation("Hot reloading is already set up. Skipping.");
+            return;
+        }
+
+        IS_HOT_RELOADING_SET_UP = true;
 
         LOG.LogInformation($"Start hot reloading plugins for path '{HOT_RELOAD_WATCHER.Path}'.");
         try

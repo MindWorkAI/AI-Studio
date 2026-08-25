@@ -1,5 +1,6 @@
 using AIStudio.Agents;
 using AIStudio.Chat;
+using AIStudio.Tools.Security;
 
 using Microsoft.AspNetCore.Components;
 
@@ -12,6 +13,9 @@ public partial class ReadWebContent : MSGComponentBase
     
     [Inject]
     private AgentTextContentCleaner AgentTextContentCleaner { get; init; } = null!;
+
+    [Inject]
+    private PromptInjectionGuardService PromptInjectionGuardService { get; init; } = null!;
 
     [Parameter]
     public string Content { get; set; } = string.Empty;
@@ -87,6 +91,7 @@ public partial class ReadWebContent : MSGComponentBase
             this.processStep = this.process[ReadWebContentSteps.PARSING];
             this.StateHasChanged();
             markdown = this.HTMLParser.ParseToMarkdown(html);
+            markdown = await this.PromptInjectionGuardService.SanitizeAsync(markdown, PromptInjectionSource.WebContent(this.providedURL));
             
             if (this.PreselectContentCleanerAgent && this.providerSettings != AIStudio.Settings.Provider.NONE)
             {

@@ -4071,6 +4071,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1471315821"]
 -- AI Studio cannot install updates into its current installation location. Install new versions yourself.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T14786838"] = "AI Studio kann Updates am aktuellen Installationsort nicht installieren. Installieren Sie neue Versionen bitte selbst."
 
+-- A dialog lists what was removed and explains the attack pattern
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T148008546"] = "Ein Dialog führt auf, was entfernt wurde, und erklärt das Angriffsmuster"
+
 -- Select the desired behavior for the navigation bar.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1555038969"] = "Wählen Sie das gewünschte Verhalten für die Navigationsleiste aus."
 
@@ -4103,6 +4106,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1907446663"]
 
 -- Your organization has disabled update checks and installations.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T1909339369"] = "Ihre Organisation hat die Suche nach Updates und deren Installation deaktiviert."
+
+-- Shows a dialog listing the removed passages, together with an explanation and an external reference.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2005319120"] = "Zeigt einen Dialog mit den entfernten Textstellen sowie einer Erklärung und einer externen Referenz an."
 
 -- AI Studio cannot install updates when running as a Flatpak. Update it using the Flatpak source or bundle from which you installed it.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T2009652585"] = "AI Studio kann keine Updates installieren, wenn es als Flatpak ausgeführt wird. Aktualisieren Sie es über die Flatpak-Quelle oder das Bundle, über die bzw. das Sie es installiert haben."
@@ -4191,8 +4197,14 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T4004501229"]
 -- When enabled, spellchecking will be active in all input fields. Depending on your operating system, errors may not be visually highlighted, but right-clicking may still offer possible corrections.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T4067492921"] = "Wenn aktiviert, ist die Rechtschreibprüfung in allen Eingabefeldern aktiv. Je nach Betriebssystem werden Fehler möglicherweise nicht visuell hervorgehoben, aber ein Rechtsklick kann dennoch Korrekturvorschläge anzeigen."
 
+-- Show details when suspicious content was removed?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T4156872850"] = "Details anzeigen, wenn verdächtige Inhalte entfernt wurden?"
+
 -- Select a transcription provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T4174666315"] = "Wählen Sie einen Transkriptionsanbieter aus"
+
+-- Only a short notification is shown
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T4191930078"] = "Es wird nur eine kurze Benachrichtigung angezeigt"
 
 -- How long AI Studio waits for external HTTP requests, such as AI providers, embeddings, transcription, ERI data sources, and enterprise configuration downloads.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELAPP::T4192032183"] = "Wie lange AI Studio auf externe HTTP-Anfragen wartet, z. B. an KI-Anbieter, Einbettungen, Transkription, ERI-Datenquellen und Downloads von Enterprise-Konfigurationen."
@@ -5688,6 +5700,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T2129302565"] = "Datei 
 -- Image View
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T2199753423"] = "Bildansicht"
 
+-- Your document is large, so we show you only its beginning. We hide the remaining {0:N0} characters here. Rest assured: the AI still receives your entire document.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T2468296835"] = "Ihr Dokument ist groß, daher zeigen wir Ihnen hier nur den Anfang. Die verbleibenden {0:N0} Zeichen werden ausgeblendet. Keine Sorge: Die KI erhält trotzdem Ihr gesamtes Dokument."
+
 -- See how we load your file. Review the content before we process it further.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T3271853346"] = "So wird Ihre Datei geladen. Überprüfen Sie den Inhalt, bevor wir ihn weiterverarbeiten."
 
@@ -6107,6 +6122,42 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINGGUIDELINEDIALOG::T384594633"] = "De
 
 -- Prompting Guideline
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINGGUIDELINEDIALOG::T4250996615"] = "Prompting-Leitfaden"
+
+-- AI Studio found instructions aimed at the AI inside your content and removed them. Everything around them was kept, so you can continue working with the content. Please review what was removed below.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T1100148261"] = "AI Studio hat in Ihren Inhalten Anweisungen erkannt, die an die KI gerichtet waren, und sie entfernt. Alles andere wurde beibehalten, sodass Sie mit den Inhalten weiterarbeiten können. Bitte überprüfen Sie unten, was entfernt wurde."
+
+-- Content source
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T1129278507"] = "Quelle des Inhalts"
+
+-- Close and don't show again
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T1384522605"] = "Schließen und nicht mehr anzeigen"
+
+-- And {0} more passages of the same kind.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T2039738154"] = "Und {0} weitere Passagen derselben Art."
+
+-- Source type
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T280442848"] = "Typ der Quelle"
+
+-- Prompt injection is a method used to manipulate AI systems such as chatbots. An attacker places misleading instructions in content so that the AI treats them as legitimate. This can cause the AI to ignore safeguards, expose private information, or generate harmful content.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T3122726298"] = "Prompt Injection ist eine Methode zur Manipulation von KI-Systemen wie Chatbots. Dabei platziert ein Angreifer irreführende Anweisungen in Inhalten, sodass die KI sie als legitim behandelt. Dies kann dazu führen, dass die KI Schutzmaßnahmen ignoriert, private Informationen preisgibt oder schädliche Inhalte erstellt."
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T3448155331"] = "Schließen"
+
+-- Removed content
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T3549539878"] = "Inhalt entfernt"
+
+-- Typical attacks on AI systems (e.g. prompt injection) hide instructions within untrusted content to trick an AI model into ignoring its intended rules or performing unintended actions.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T4221674400"] = "Typische Angriffe auf KI-Systeme (z. B. Prompt-Injection) verbergen Anweisungen in nicht vertrauenswürdigen Inhalten, um ein KI-Modell dazu zu bringen, seine vorgesehenen Regeln zu ignorieren oder unbeabsichtigte Aktionen auszuführen."
+
+-- More information
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T475337262"] = "Weitere Informationen"
+
+-- Hide more information
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T808738984"] = "Weitere Informationen ausblenden"
+
+-- Suspicious content was removed
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROMPTINJECTIONALERTDIALOG::T871282530"] = "Verdächtige Inhalte wurden entfernt"
 
 -- Hugging Face Inference Provider
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1085481431"] = "Hugging Face Inferenz-Anbieter"
@@ -7938,6 +7989,9 @@ UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T2979224202"] = "Schreiben"
 -- Show details
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T3692372066"] = "Details anzeigen"
 
+-- Security notice
+UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T4004397997"] = "Sicherheitshinweis"
+
 -- Information
 UI_TEXT_CONTENT["AISTUDIO::LAYOUT::MAINLAYOUT::T4256323669"] = "Information"
 
@@ -8343,6 +8397,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2160280545"] = "Diese Bibliothek
 -- For the secure communication between the user interface and the runtime, we need to create certificates. This Rust library is great for this purpose.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2174764529"] = "Für die sichere Kommunikation zwischen der Benutzeroberfläche und der Laufzeit müssen wir Zertifikate erstellen. Diese Rust-Bibliothek eignet sich hervorragend dafür."
 
+-- The regex crate detects structural and obfuscated prompt-injection patterns in untrusted document content. Its linear-time matching without backtracking keeps these scans predictable, even for hostile input.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2196053547"] = "Das Crate „regex“ erkennt strukturelle und verschleierte Prompt-Injection-Muster in nicht vertrauenswürdigen Dokumentinhalten. Durch die lineare Abgleichzeit ohne Backtracking bleiben diese Prüfungen auch bei bösartigen Eingaben vorhersehbar."
+
 -- OK
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2246359087"] = "OK"
 
@@ -8478,6 +8535,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2929232062"] = "Kopiert die Quel
 -- Copies the root certificate fingerprint to the clipboard
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2989678330"] = "Kopiert den Fingerabdruck des Stammzertifikats in die Zwischenablage"
 
+-- The toml crate parses the embedded prompt-injection phrase catalog when the runtime starts. This keeps the detection rules separate from the Rust implementation and easier to maintain.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2999154325"] = "Die TOML-Bibliothek analysiert beim Start der Laufzeitumgebung den eingebetteten Phrasenkatalog zur Erkennung von Prompt-Injection. Dadurch bleiben die Erkennungsregeln von der Rust-Implementierung getrennt und lassen sich leichter pflegen."
+
 -- This library identifies files by their content. It is used for document streaming and as the first safety and media classification step before local audio processing.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3002755581"] = "Diese Bibliothek identifiziert Dateien anhand ihres Inhalts. Sie wird für das Streaming von Dokumenten sowie als erste Sicherheits- und Medienklassifizierungsstufe vor der lokalen Audioverarbeitung verwendet."
 
@@ -8546,6 +8606,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3433065373"] = "Informationen ü
 
 -- Used Rust compiler
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3440211747"] = "Verwendeter Rust-Compiler"
+
+-- The aho-corasick crate searches the fixed catalog of prompt-injection phrases in one pass, allowing AI Studio to scan large documents efficiently. We thank Alfred V. Aho and Margaret J. Corasick for publishing the algorithm in 1975, and Andrew Gallant and the Open Source Community for bringing it to Rust.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3444344506"] = "Das Crate „aho-corasick“ durchsucht den festgelegten Katalog von Prompt-Injection-Phrasen in einem Durchlauf. Dadurch kann AI Studio auch große Dokumente effizient prüfen. Wir danken Alfred V. Aho und Margaret J. Corasick für die Veröffentlichung des Algorithmus im Jahr 1975 sowie Andrew Gallant und der Open-Source-Community dafür, ihn nach Rust gebracht zu haben."
 
 -- AI Studio runs with an enterprise configuration using configuration plugins, without central configuration management.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3449345633"] = "AI Studio wird mit Unternehmenskonfigurationen unter Verwendung von Konfigurations-Plugins betrieben. Eine zentrale Konfigurationsverwaltung wird nicht eingesetzt."
@@ -10325,6 +10388,63 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T4165204724"] = "Dokument"
 
 -- Plugin archive
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T927001356"] = "Plugin-Archiv"
+
+-- Attempt to override instructions
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONFINDINGCATEGORYEXTENSIONS::T161976090"] = "Versuch, Anweisungen zu überschreiben"
+
+-- Attempt to expose protected data
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONFINDINGCATEGORYEXTENSIONS::T2050274293"] = "Versuch, geschützte Daten offenzulegen"
+
+-- Attempt to bypass safeguards
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONFINDINGCATEGORYEXTENSIONS::T2260642992"] = "Versuch, Schutzvorkehrungen zu umgehen"
+
+-- Attempt to change the AI's role
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONFINDINGCATEGORYEXTENSIONS::T2340508370"] = "Versuch, die Rolle der KI zu ändern"
+
+-- Hidden instructions using markup
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONFINDINGCATEGORYEXTENSIONS::T2526538070"] = "Versteckte Anweisungen mit Markup"
+
+-- Hidden instructions using delimiters
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONFINDINGCATEGORYEXTENSIONS::T329656456"] = "Versteckte Anweisungen mit Trennzeichen"
+
+-- Unknown
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONFINDINGCATEGORYEXTENSIONS::T3424652889"] = "Unbekannt"
+
+-- Attempt to manipulate an agent
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONFINDINGCATEGORYEXTENSIONS::T355252317"] = "Versuch, einen Agenten zu manipulieren"
+
+-- Persistent or delayed instruction
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONFINDINGCATEGORYEXTENSIONS::T4169123215"] = "Dauerhafte oder verzögerte Anweisung"
+
+-- Hidden instructions using encoding
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONFINDINGCATEGORYEXTENSIONS::T49495195"] = "Versteckte Anweisungen mithilfe von Kodierung"
+
+-- Obfuscated instruction
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONFINDINGCATEGORYEXTENSIONS::T87316699"] = "Verschleierte Anweisung"
+
+-- AI Studio could not check '{0}' for prompt injections. The content is used as it is.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONGUARDSERVICE::T1026469976"] = "AI Studio konnte „{0}“ nicht auf Prompt-Injections prüfen. Der Inhalt wird unverändert verwendet."
+
+-- AI Studio removed suspicious instructions from '{0}' before using it.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONGUARDSERVICE::T2460486335"] = "AI Studio hat verdächtige Anweisungen aus „{0}“ entfernt, bevor es verwendet wurde."
+
+-- AI Studio removed suspicious instructions from {0} sources before using them.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONGUARDSERVICE::T3489536228"] = "AI Studio hat verdächtige Anweisungen aus {0} Quellen entfernt, bevor es sie verwendet hat."
+
+-- Chat attachment
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONSOURCEKINDEXTENSIONS::T1071345316"] = "Chat-Anhang"
+
+-- Web content
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONSOURCEKINDEXTENSIONS::T2626468388"] = "Webinhalte"
+
+-- Retrieved context
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONSOURCEKINDEXTENSIONS::T3347144620"] = "Abgerufener Kontext"
+
+-- Unknown
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONSOURCEKINDEXTENSIONS::T3424652889"] = "Unbekannt"
+
+-- File content
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONSOURCEKINDEXTENSIONS::T3788064862"] = "Dateiinhalt"
 
 -- The Assistant Builder context could not be loaded.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T108292972"] = "Der Kontext des Assistenten-Builders konnte nicht geladen werden."

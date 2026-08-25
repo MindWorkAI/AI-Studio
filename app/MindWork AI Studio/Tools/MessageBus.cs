@@ -93,22 +93,47 @@ public sealed class MessageBus
 
     public Task SendInfo(DataInfoMessage dataInfoMessage) => this.SendMessage(null, Event.SHOW_INFO, dataInfoMessage);
 
+    /// <summary>
+    /// Stores a message until someone asks for it, cf. TakeDeferredMessages. This is how a
+    /// component hands data to a component which does not exist yet, e.g. an assistant which
+    /// sends its result to the chat before the user gets there.
+    /// </summary>
+    /// <param name="sendingComponent">That's you, the sender.</param>
+    /// <param name="triggeredEvent">The event this message belongs to.</param>
+    /// <param name="data">The data to hand over.</param>
     public void DeferMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data = default)
     {
-        if (this.deferredMessages.TryGetValue(triggeredEvent, out var queue))
-            queue.Enqueue(new Message(sendingComponent, triggeredEvent, data));
-        else
-        {
-            this.deferredMessages[triggeredEvent] = new();
-            this.deferredMessages[triggeredEvent].Enqueue(new Message(sendingComponent, triggeredEvent, data));
-        }
+        var queue = this.deferredMessages.GetOrAdd(triggeredEvent, _ => new());
+        queue.Enqueue(new Message(sendingComponent, triggeredEvent, data));
     }
-    
-    public IEnumerable<T?> CheckDeferredMessages<T>(Event triggeredEvent)
+
+    /// <summary>
+    /// Takes all deferred messages of an event out of the bus.
+    /// </summary>
+    /// <remarks>
+    /// This empties the queue and returns what was in it. It used to be a lazy iterator, which
+    /// meant that a caller stopping after the first message left the rest of the queue behind:
+    /// those messages were never delivered, and the data they carry — a complete chat thread, for
+    /// instance — stayed alive for as long as the app ran. Returning a list makes that impossible.
+    /// Callers who expect a single message take the last one, since that is the most recent thing
+    /// the user asked for.
+    /// </remarks>
+    /// <param name="triggeredEvent">The event whose messages you want.</param>
+    /// <returns>The deferred messages, oldest first. Empty when there are none.</returns>
+    public IReadOnlyList<T?> TakeDeferredMessages<T>(Event triggeredEvent)
     {
-        if (this.deferredMessages.TryGetValue(triggeredEvent, out var queue))
-            while (queue.TryDequeue(out var message))
-                yield return message.Data is T data ? data : default;
+        //
+        // Removing the queue along with its messages is what keeps the dictionary from growing:
+        // otherwise, every event which ever deferred a message would keep an empty queue forever.
+        //
+        if (!this.deferredMessages.TryRemove(triggeredEvent, out var queue))
+            return [];
+
+        var messages = new List<T?>();
+        while (queue.TryDequeue(out var message))
+            messages.Add(message.Data is T data ? data : default);
+
+        return messages;
     }
     
     public async Task<TResult?> SendMessageUseFirstResult<TPayload, TResult>(ComponentBase? sendingComponent, Event triggeredEvent, TPayload? data = default)

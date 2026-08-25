@@ -1,8 +1,10 @@
 ﻿use std::cmp::min;
+use std::collections::VecDeque;
 use std::convert::Infallible;
 use crate::api_token::APIToken;
 use crate::pandoc::PandocProcessBuilder;
 use crate::pdfium::PdfiumInit;
+use crate::prompt_injection::{Finding as PromptInjectionFinding, Sanitizer};
 use async_stream::stream;
 use axum::extract::Query;
 use axum::extract::rejection::QueryRejection;
@@ -55,6 +57,22 @@ impl Chunk {
     }
 
     pub fn set_stream_id(&mut self, stream_id: &str) { self.stream_id = stream_id.to_string(); }
+
+    /// Whether this chunk's content is prose a prompt injection could hide in.
+    ///
+    /// Image chunks carry base64 data, which must never reach the filter: it is not text, and
+    /// the encoded-carrier scan would treat a photo as one enormous carrier. Chunks that only
+    /// announce an error or an image carry nothing to filter either.
+    fn carries_filterable_text(&self) -> bool {
+        !matches!(
+            self.metadata,
+            Metadata::Image { .. }
+                | Metadata::Error { .. }
+                | Metadata::PromptInjection { .. }
+                | Metadata::Document { image: Some(_), .. }
+                | Metadata::Presentation { image: Some(_), .. }
+        )
+    }
 }
 
 #[derive(Debug, Serialize)]
@@ -89,6 +107,20 @@ pub enum Metadata {
         message: String,
         page_number: Option<usize>,
         detected_format: Option<String>,
+    },
+
+    /// Reports that suspected prompt injections were filtered out of this document.
+    ///
+    /// This is a notice, not a failure: the document was read and the content around the
+    /// filtered passages is intact. It travels as its own metadata variant rather than as an
+    /// `ExtractionErrorCode`, because the app needs the findings themselves to tell the user
+    /// what was removed, and a code carries no payload.
+    PromptInjection {
+        findings: Vec<PromptInjectionFinding>,
+
+        /// How many passages were filtered. Can exceed the number of findings, which is
+        /// capped, so the user still learns the true extent of the filtering.
+        redacted_count: usize,
     },
 }
 
@@ -308,6 +340,94 @@ fn error_event(error: &ExtractionError, stream_id: Option<&str>) -> Event {
     })
 }
 
+/// Serializes a content chunk as an SSE event, reporting a serialization failure as an error
+/// event rather than dropping the chunk silently.
+fn content_event(chunk: &Chunk, stream_id: &str, path: &str) -> Event {
+    Event::default().json_data(chunk).unwrap_or_else(|e| {
+        error!("Failed to serialize a content chunk for '{path}': {e}");
+        error_event(&ExtractionError::new(ExtractionErrorCode::Internal, format!("Failed to serialize a content chunk: {e}")), Some(stream_id))
+    })
+}
+
+/// Pairs the sanitized texts back up with the chunks they came from.
+///
+/// The sanitizer holds chunks back until it has seen enough text to scan across their
+/// boundaries, and releases them in order. Their metadata waited here in the meantime,
+/// which is what keeps a page's text under its own page number.
+fn take_released(held: &mut VecDeque<(u64, Chunk)>, released: Vec<(u64, String)>) -> Vec<Chunk> {
+    let mut chunks = Vec::with_capacity(released.len());
+
+    for (id, text) in released {
+        let Some((held_id, mut chunk)) = held.pop_front() else {
+            error!("The prompt-injection filter released a chunk that was never held: {id}.");
+            continue;
+        };
+
+        debug_assert_eq!(held_id, id, "chunks must be released in the order they arrived");
+        chunk.content = text;
+        chunks.push(chunk);
+    }
+
+    chunks
+}
+
+/// Runs one step of the prompt-injection filter off the async worker.
+///
+/// The scan is synchronous CPU work sitting in the middle of the stream that serves the SSE
+/// response, which is exactly what pdfium and the presentation reader are kept away from. How
+/// long one step runs is not bounded by the batch size either: a text file is chunked by line,
+/// so a minified JSON or a log without line breaks arrives as one chunk of the whole file and
+/// is scanned in a single call. Yielding between steps would not help there; the step itself
+/// has to leave the worker.
+///
+/// The sanitizer is the scan's state, so it travels into the blocking thread and back out.
+///
+/// Returns `None` when the scan thread died. The sanitizer died with it, and what it still
+/// held cannot be released: nothing has checked that content.
+async fn scan_off_worker<F>(holder: &mut Option<Sanitizer>, step: F) -> Option<Vec<(u64, String)>>
+where
+    F: FnOnce(&mut Sanitizer) -> Vec<(u64, String)> + Send + 'static,
+{
+    let mut sanitizer = holder.take()?;
+    match tokio::task::spawn_blocking(move || {
+        let released = step(&mut sanitizer);
+        (sanitizer, released)
+    }).await {
+        Ok((sanitizer, released)) => {
+            *holder = Some(sanitizer);
+            Some(released)
+        },
+
+        Err(e) => {
+            error!("The prompt-injection filter failed while scanning: {e}");
+            None
+        },
+    }
+}
+
+/// Hands one chunk to the filter, keeping the scan off the async worker.
+async fn scan_push(holder: &mut Option<Sanitizer>, id: u64, content: String) -> Option<Vec<(u64, String)>> {
+    // Most pushes only add their chunk to the buffer. Moving those to another thread would
+    // cost more than doing them here, so only the ones that scan make the trip.
+    if holder.as_ref().is_some_and(|sanitizer| !sanitizer.will_scan(content.len())) {
+        return holder.as_mut().map(|sanitizer| sanitizer.push(id, &content));
+    }
+
+    scan_off_worker(holder, move |sanitizer| sanitizer.push(id, &content)).await
+}
+
+/// The error the app sees when the filter itself failed.
+///
+/// Reported as a failure rather than as unfiltered content: the point of the filter is that
+/// nothing reaches a model unchecked, and a document nobody checked is exactly what the app
+/// must not receive.
+fn filter_failed_error() -> ExtractionError {
+    ExtractionError::new(
+        ExtractionErrorCode::Internal,
+        "The prompt-injection filter failed, so the content was not passed on unchecked.".to_string(),
+    )
+}
+
 pub async fn extract_data(
     _token: APIToken,
     query: std::result::Result<Query<ExtractDataQuery>, QueryRejection>,
@@ -330,22 +450,113 @@ pub async fn extract_data(
 
                 match stream_result {
                     Ok(mut stream) => {
+                        //
+                        // Every chunk of every file format passes through here, which is why the
+                        // prompt-injection filter sits at this point: it needs to see the document
+                        // as a whole, and this is the one place where the whole document goes by.
+                        //
+                        let mut sanitizer = Some(Sanitizer::new());
+                        let mut held: VecDeque<(u64, Chunk)> = VecDeque::new();
+                        let mut next_chunk_id = 0u64;
+
                         while let Some(chunk) = stream.next().await {
                             match chunk {
                                 Ok(mut chunk) => {
                                     chunk.set_stream_id(id_ref);
-                                    yield Ok(Event::default().json_data(&chunk).unwrap_or_else(|e| {
-                                        error!("Failed to serialize a content chunk for '{path_ref}': {e}");
-                                        error_event(&ExtractionError::new(ExtractionErrorCode::Internal, format!("Failed to serialize a content chunk: {e}")), Some(id_ref))
-                                    }));
+
+                                    //
+                                    // Image data and error notices are passed on untouched. They
+                                    // must still wait for the text ahead of them, or a page's
+                                    // image would overtake the page it belongs to.
+                                    //
+                                    if !chunk.carries_filterable_text() {
+                                        let Some(released_chunks) = scan_off_worker(&mut sanitizer, Sanitizer::flush).await else {
+                                            yield Ok(error_event(&filter_failed_error(), Some(id_ref)));
+                                            break;
+                                        };
+
+                                        for released in take_released(&mut held, released_chunks) {
+                                            yield Ok(content_event(&released, id_ref, path_ref));
+                                        }
+
+                                        yield Ok(content_event(&chunk, id_ref, path_ref));
+                                        continue;
+                                    }
+
+                                    let id = next_chunk_id;
+                                    next_chunk_id += 1;
+
+                                    let content = std::mem::take(&mut chunk.content);
+                                    held.push_back((id, chunk));
+
+                                    let Some(released_chunks) = scan_push(&mut sanitizer, id, content).await else {
+                                        yield Ok(error_event(&filter_failed_error(), Some(id_ref)));
+                                        break;
+                                    };
+
+                                    for released in take_released(&mut held, released_chunks) {
+                                        yield Ok(content_event(&released, id_ref, path_ref));
+                                    }
                                 },
 
                                 Err(e) => {
                                     let extraction_error = ExtractionError::from_boxed(e.as_ref());
                                     error!("Extraction failed for '{path_ref}': {extraction_error}");
+
+                                    // Whatever was read before the failure is still content the
+                                    // app may show, so it is released before the error. A filter
+                                    // that failed on top of that releases nothing; the extraction
+                                    // error below is reported either way.
+                                    if let Some(released_chunks) = scan_off_worker(&mut sanitizer, Sanitizer::flush).await {
+                                        for released in take_released(&mut held, released_chunks) {
+                                            yield Ok(content_event(&released, id_ref, path_ref));
+                                        }
+                                    }
+
                                     yield Ok(error_event(&extraction_error, Some(id_ref)));
                                     break;
                                 },
+                            }
+                        }
+
+                        //
+                        // A filter that is gone by now failed and said so. Only a live one still
+                        // holds content back.
+                        //
+                        if sanitizer.is_some() {
+                            let Some(released_chunks) = scan_off_worker(&mut sanitizer, Sanitizer::flush).await else {
+                                yield Ok(error_event(&filter_failed_error(), Some(id_ref)));
+                                return;
+                            };
+
+                            for released in take_released(&mut held, released_chunks) {
+                                yield Ok(content_event(&released, id_ref, path_ref));
+                            }
+                        }
+
+                        if let Some(sanitizer) = sanitizer {
+                            //
+                            // Logged for every document, not only for a filtered one: a scan
+                            // that is too slow leaves no other trace, and reproducing it means
+                            // having the same document at hand again.
+                            //
+                            let (scanned_bytes, scan_duration) = sanitizer.scan_stats();
+                            debug!(
+                                "Scanned {mib:.2} MiB of '{path_ref}' for prompt injections in {ms} ms ({throughput:.2} MiB/s).",
+                                mib = scanned_bytes as f64 / 1_048_576.0,
+                                ms = scan_duration.as_millis(),
+                                throughput = scanned_bytes as f64 / 1_048_576.0 / scan_duration.as_secs_f64().max(f64::EPSILON),
+                            );
+
+                            let report = sanitizer.into_report();
+                            if !report.is_empty() {
+                                let mut notice = Chunk::new(String::new(), Metadata::PromptInjection {
+                                    findings: report.findings,
+                                    redacted_count: report.redacted_count,
+                                });
+
+                                notice.set_stream_id(id_ref);
+                                yield Ok(content_event(&notice, id_ref, path_ref));
                             }
                         }
                     },
@@ -536,8 +747,8 @@ async fn stream_data(file_path: &str, extract_images: bool, stream_id: &str) -> 
         ExtractionRoute::Pdf => stream_pdf(file_path).await?,
         ExtractionRoute::Docx | ExtractionRoute::Odt => stream_document(file_path, extract_images, stream_id).await?,
         ExtractionRoute::PandocHtml => convert_with_pandoc(file_path, HTML, TO_MARKDOWN).await?,
-        ExtractionRoute::PresentationPptx => stream_presentation(file_path, extract_images, PresentationFormat::Pptx).await?,
-        ExtractionRoute::PresentationOdp => stream_presentation(file_path, extract_images, PresentationFormat::Odp).await?,
+        ExtractionRoute::PresentationPptx => stream_presentation(file_path, extract_images, PresentationFormat::Pptx, stream_id).await?,
+        ExtractionRoute::PresentationOdp => stream_presentation(file_path, extract_images, PresentationFormat::Odp, stream_id).await?,
         ExtractionRoute::Spreadsheet => stream_spreadsheet_as_csv(file_path).await?,
         ExtractionRoute::Csv => stream_text_file(file_path, true, Some("csv".to_string())).await?,
         ExtractionRoute::Text => stream_text_file(file_path, false, None).await?,
@@ -1148,8 +1359,9 @@ async fn stream_document(file_path: &str, extract_images: bool, stream_id: &str)
     Ok(Box::pin(ReceiverStream::new(rx)))
 }
 
-async fn stream_presentation(file_path: &str, extract_images: bool, format: PresentationFormat) -> Result<ChunkStream> {
+async fn stream_presentation(file_path: &str, extract_images: bool, format: PresentationFormat, stream_id: &str) -> Result<ChunkStream> {
     let path = Path::new(file_path).to_owned();
+    let stream_id = stream_id.to_owned();
 
     let parser_config = ParserConfig::builder()
         .extract_images(extract_images)
@@ -1232,6 +1444,12 @@ async fn stream_presentation(file_path: &str, extract_images: bool, format: Pres
 
             if let Some(images) = slide.load_images_manually() {
                 for image in images.iter() {
+                    //
+                    // The image ID carries the stream it belongs to, exactly like the document
+                    // route does above. The app removes the segments of a finished extraction by
+                    // that prefix, so an ID without it would stay in memory forever:
+                    //
+                    let image_id = format!("{stream_id}-{}-{}", slide.slide_number, image.img_ref.id);
                     let base64_data = &image.base64_content;
                     let total_length = base64_data.len();
                     let mut offset = 0;
@@ -1243,7 +1461,7 @@ async fn stream_presentation(file_path: &str, extract_images: bool, format: Pres
                         let is_end = end == total_length;
 
                         let base64_image = Base64Image::new(
-                        image.img_ref.id.clone(),
+                        image_id.clone(),
                         segment_content.to_string(),
                         segment_index,
                         is_end,
@@ -1338,4 +1556,154 @@ fn sanitize_presentation_metadata_value(value: &str) -> String {
         .collect::<Vec<_>>()
         .join(" ")
         .replace("--", "&#45;&#45;")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Base64 image data must never reach the prompt-injection filter. It is not prose, and
+    /// the filter's encoded-carrier scan would treat a photo as one enormous carrier and
+    /// replace it with a marker, destroying the image.
+    #[test]
+    fn image_chunks_are_kept_away_from_the_filter() {
+        let image = Chunk::new("iVBORw0KGgo".to_string(), Metadata::Image {});
+        assert!(!image.carries_filterable_text());
+
+        let base64_image = Base64Image::new("id".to_string(), "data".to_string(), 0, true, None);
+        let slide_image = Chunk::new(String::new(), Metadata::Presentation {
+            slide_number: 1,
+            image: Some(base64_image),
+        });
+
+        assert!(!slide_image.carries_filterable_text());
+    }
+
+    #[test]
+    fn text_chunks_go_through_the_filter() {
+        let page = Chunk::new("Some page text.".to_string(), Metadata::Pdf { page_number: 1 });
+        assert!(page.carries_filterable_text());
+
+        let line = Chunk::new("Some line.".to_string(), Metadata::Text { line_number: 1 });
+        assert!(line.carries_filterable_text());
+
+        let row = Chunk::new("a,b,c".to_string(), Metadata::Spreadsheet {
+            sheet_name: "Sheet1".to_string(),
+            row_number: 1,
+        });
+
+        assert!(row.carries_filterable_text());
+    }
+
+    /// A slide's Markdown is text even though the same metadata variant also carries images.
+    #[test]
+    fn slide_text_without_an_image_goes_through_the_filter() {
+        let slide = Chunk::new("# Slide title".to_string(), Metadata::Presentation {
+            slide_number: 1,
+            image: None,
+        });
+
+        assert!(slide.carries_filterable_text());
+    }
+
+    /// Notices are generated by the runtime itself and would only be scanned in circles.
+    #[test]
+    fn notices_are_kept_away_from_the_filter() {
+        let error = Chunk::from_error(&ExtractionError::new(ExtractionErrorCode::Internal, "failed"));
+        assert!(!error.carries_filterable_text());
+
+        let notice = Chunk::new(String::new(), Metadata::PromptInjection {
+            findings: Vec::new(),
+            redacted_count: 1,
+        });
+
+        assert!(!notice.carries_filterable_text());
+    }
+
+    /// Dumps the text pdfium extracts from a PDF, so the prompt-injection throughput test can
+    /// measure the scan against a real document instead of synthetic prose.
+    ///
+    /// Ignored by default: it needs a PDF, the pdfium library, and minutes rather than
+    /// milliseconds. Run it as
+    ///
+    /// ```text
+    /// AI_STUDIO_DUMP_PDF=/path/to/document.pdf \
+    /// AI_STUDIO_DUMP_OUT=/path/to/corpus.txt \
+    /// cargo test dump_pdf_text -- --ignored --nocapture
+    /// ```
+    ///
+    /// The pages are separated by a record separator rather than a newline, so the throughput
+    /// test can split them back into exactly the chunks the sanitizer sees in production. A
+    /// newline would be indistinguishable from the ones inside a page.
+    #[tokio::test]
+    #[ignore]
+    async fn dump_pdf_text() {
+        let source = std::env::var("AI_STUDIO_DUMP_PDF").expect("set AI_STUDIO_DUMP_PDF to the PDF to dump");
+        let target = std::env::var("AI_STUDIO_DUMP_OUT").expect("set AI_STUDIO_DUMP_OUT to the file to write");
+
+        // The library ships next to the runtime and is not on the loader path during a test:
+        let library_directory = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("resources/libraries");
+        *crate::pdfium::PDFIUM_LIB_PATH.lock().unwrap() = Some(library_directory.to_string_lossy().to_string());
+
+        let mut stream = stream_pdf(&source).await.expect("the PDF must be readable");
+        let mut pages = Vec::new();
+        let mut failed_pages = 0;
+
+        while let Some(chunk) = stream.next().await {
+            let chunk = chunk.expect("no page may fail the whole document");
+            match chunk.metadata {
+                Metadata::Pdf { .. } => pages.push(chunk.content),
+                _ => failed_pages += 1,
+            }
+        }
+
+        let dump = pages.join("\u{1E}");
+        std::fs::write(&target, &dump).expect("the dump must be writable");
+
+        println!(
+            "Dumped {pages} page(s) ({bytes} bytes, {failed} non-text chunk(s)) from '{source}' to '{target}'.",
+            pages = pages.len(),
+            bytes = dump.len(),
+            failed = failed_pages,
+        );
+
+        assert!(!pages.is_empty(), "the PDF produced no text pages");
+    }
+
+    /// Moving the scan to a blocking thread must not change what the filter releases: the same
+    /// chunks under the same ids in the same order, whether a push scanned here or elsewhere.
+    #[tokio::test]
+    async fn moving_the_scan_off_the_worker_changes_nothing() {
+        let pages: Vec<String> = (0..40)
+            .map(|index| format!("Page {index}: {}", "ordinary prose about mixing consoles. ".repeat(20)))
+            .collect();
+
+        let mut direct = Sanitizer::new();
+        let mut expected = Vec::new();
+        for (id, page) in pages.iter().enumerate() {
+            expected.extend(direct.push(id as u64, page));
+        }
+
+        expected.extend(direct.flush());
+
+        let mut holder = Some(Sanitizer::new());
+        let mut moved = Vec::new();
+        for (id, page) in pages.iter().enumerate() {
+            moved.extend(scan_push(&mut holder, id as u64, page.clone()).await.expect("the filter must survive a push"));
+        }
+
+        moved.extend(scan_off_worker(&mut holder, Sanitizer::flush).await.expect("the filter must survive the flush"));
+
+        assert_eq!(moved, expected);
+        assert!(!moved.is_empty(), "the pages must come back out");
+    }
+
+    /// Without a filter there is no scan to move, and no failure to report either.
+    #[tokio::test]
+    async fn scanning_without_a_filter_reports_nothing_to_release() {
+        let mut holder: Option<Sanitizer> = None;
+
+        assert!(scan_push(&mut holder, 0, "some text".to_string()).await.is_none());
+        assert!(scan_off_worker(&mut holder, Sanitizer::flush).await.is_none());
+    }
 }

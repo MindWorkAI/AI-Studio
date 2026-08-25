@@ -9,6 +9,7 @@ using AIStudio.Tools.Media;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.PluginSystem.Assistants;
 using AIStudio.Tools.Rust;
+using AIStudio.Tools.Security;
 using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.DataProtection;
@@ -161,6 +162,7 @@ internal sealed class Program
         builder.Services.AddSingleton(typeof(RuntimeInfoResponse), runtimeInfo);
         builder.Services.AddMudMarkdownClipboardService<MarkdownClipboardService>();
         builder.Services.AddSingleton<SettingsManager>();
+        builder.Services.AddSingleton<PromptInjectionGuardService>();
         builder.Services.AddSingleton<ThreadSafeRandom>();
         builder.Services.AddSingleton<AIJobService>();
         builder.Services.AddSingleton<AssistantSessionService>();
@@ -201,6 +203,13 @@ internal sealed class Program
         builder.Services.AddRazorComponents()
             .AddInteractiveServerComponents(options =>
             {
+                //
+                // We keep disconnected circuits for a long time on purpose: when the machine goes to
+                // sleep, the WebView loses its connection. Without this retention period, the user would
+                // return to a lost app state after waking up the machine (cf. issue #849). Since AI Studio
+                // is a single-user desktop app, at most two circuits are retained, which bounds the memory
+                // this costs us.
+                //
                 options.DisconnectedCircuitRetentionPeriod = TimeSpan.FromDays(30);
                 options.DisconnectedCircuitMaxRetained = 2;
             })

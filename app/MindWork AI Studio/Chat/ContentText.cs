@@ -6,6 +6,7 @@ using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.RAG.RAGProcesses;
 using AIStudio.Tools.Rust;
+using AIStudio.Tools.Security;
 
 namespace AIStudio.Chat;
 
@@ -36,11 +37,11 @@ public sealed class ContentText : IContent
 
     /// <inheritdoc />
     [JsonIgnore]
-    public Func<Task> StreamingDone { get; set; } = () => Task.CompletedTask;
+    public Func<Task> StreamingDone { get; set; } = IContent.NO_STREAMING_HANDLER;
 
     /// <inheritdoc />
     [JsonIgnore]
-    public Func<Task> StreamingEvent { get; set; } = () => Task.CompletedTask;
+    public Func<Task> StreamingEvent { get; set; } = IContent.NO_STREAMING_HANDLER;
 
     /// <inheritdoc />
     public List<Source> Sources { get; set; } = [];
@@ -299,6 +300,13 @@ public sealed class ContentText : IContent
                     else if (!pandocState.CheckWasSuccessful)
                         LOGGER.LogWarning("File attachments which need Pandoc could not be processed because the Pandoc version check failed.");
                 }
+
+                //
+                // One report for the whole batch: attaching twenty documents must produce one
+                // dialog listing all of them, not twenty dialogs in a row.
+                //
+                var guardService = Program.SERVICE_PROVIDER.GetRequiredService<PromptInjectionGuardService>();
+                await using var promptInjectionScope = guardService.BeginAction();
 
                 //
                 // The document blocks are collected separately, so we only announce attached

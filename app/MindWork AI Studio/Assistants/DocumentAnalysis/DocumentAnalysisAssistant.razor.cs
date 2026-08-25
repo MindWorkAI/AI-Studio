@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Components;
 using SharedTools;
 
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
+using AIStudio.Tools.Security;
 
 namespace AIStudio.Assistants.DocumentAnalysis;
 
@@ -703,6 +704,13 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
 
                           """);
         }
+
+        //
+        // One report for the whole batch: analysing twenty documents must produce one dialog
+        // listing all of them, not twenty dialogs in a row.
+        //
+        var guardService = Program.SERVICE_PROVIDER.GetRequiredService<PromptInjectionGuardService>();
+        await using var promptInjectionScope = guardService.BeginAction();
 
         var numDocuments = 1;
         foreach (var document in documents)

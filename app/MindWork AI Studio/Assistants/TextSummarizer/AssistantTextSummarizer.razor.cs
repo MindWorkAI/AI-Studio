@@ -115,7 +115,7 @@ public partial class AssistantTextSummarizer : AssistantBaseCore<SettingsDialogT
 
     protected override async Task OnInitializedAsync()
     {
-        var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_TEXT_SUMMARIZER_ASSISTANT).FirstOrDefault();
+        var deferredContent = MessageBus.INSTANCE.TakeDeferredMessages<string>(Event.SEND_TO_TEXT_SUMMARIZER_ASSISTANT).LastOrDefault();
         if (deferredContent is not null)
             this.inputText = deferredContent;
         

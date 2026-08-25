@@ -15,19 +15,29 @@ public partial class AssistantBatchProcessing
     {
         return IsTranscribableMedia(fileResult.FilePath)
             ? this.LoadMediaTranscriptAsync(fileResult, token)
-            : this.LoadDocumentContentAsync(fileResult);
+            : this.LoadDocumentContentAsync(fileResult, token);
     }
 
-    private async Task<string?> LoadDocumentContentAsync(BatchProcessingFileResult fileResult)
+    private async Task<string?> LoadDocumentContentAsync(BatchProcessingFileResult fileResult, CancellationToken token)
     {
         FileExtractionResult extraction;
         try
         {
-            extraction = await this.RustService.ReadArbitraryFileData(fileResult.FilePath, int.MaxValue);
+            extraction = await this.RustService.ReadArbitraryFileData(fileResult.FilePath, int.MaxValue, token: token);
         }
         catch (Exception e)
         {
             this.FinishFileResult(fileResult, BatchProcessingFileStatus.FAILED, string.Format(T("Was not able to read the file: {0}"), e.Message), e);
+            return null;
+        }
+
+        //
+        // The user stopped the batch run while we were reading this file. That says nothing about
+        // the file, so it gets the same status as a cancelled AI request instead of a failure:
+        //
+        if (extraction.ErrorCode is FileExtractionErrorCode.CANCELLED)
+        {
+            this.FinishFileResult(fileResult, BatchProcessingFileStatus.CANCELED, T("The batch run was canceled."));
             return null;
         }
 

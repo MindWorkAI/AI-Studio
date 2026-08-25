@@ -58,6 +58,11 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     public StartPage StartPage { get; set; } = ManagedConfiguration.Register(configSelection, n => n.StartPage, StartPage.HOME);
 
     /// <summary>
+    /// Whether an alert dialog should be shown when prompt-injection content is blocked.
+    /// </summary>
+    public bool ShowPromptInjectionAlert { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ShowPromptInjectionAlert, true);
+
+    /// <summary>
     /// Should the built-in introduction be visible on the home page?
     /// </summary>
     public bool ShowIntroduction { get; set; } = ManagedConfiguration.Register(configSelection, n => n.ShowIntroduction, true);
