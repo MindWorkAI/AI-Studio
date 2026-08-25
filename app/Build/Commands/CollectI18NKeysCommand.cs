@@ -76,7 +76,7 @@ public sealed partial class CollectI18NKeysCommand
                 continue;
             
             var content = await File.ReadAllTextAsync(filePath, Encoding.UTF8);
-            var matches = this.FindAllTextTags(content);
+            var matches = this.FindAllTextTags(content, filePath);
             if (matches.Count == 0)
                 continue;
             
@@ -173,7 +173,7 @@ public sealed partial class CollectI18NKeysCommand
         return sb.ToString();
     }
 
-    private List<string> FindAllTextTags(ReadOnlySpan<char> fileContent)
+    private List<string> FindAllTextTags(ReadOnlySpan<char> fileContent, string filePath)
     {
         (int Index, int Len) FindNextStart(ReadOnlySpan<char> content)
         {
@@ -226,8 +226,19 @@ public sealed partial class CollectI18NKeysCommand
             var match = content[..endIdx];
             while (match[^1] == '"')
                 match = match[..^1];
-            
-            matches.Add(match.ToString());
+
+            var text = match.ToString();
+
+            //
+            // We read the raw source text, whereas the app hashes the unescaped string at
+            // runtime. Thus, any escape sequence makes both hashes differ, so that the text
+            // never finds its translation. Since we cannot detect this at runtime, we warn
+            // about it here:
+            //
+            if(text.Contains('\\'))
+                Console.WriteLine($"- Warning: The text '{text}' in the file '{filePath}' contains an escape sequence. Its key does not match the key the app looks up at runtime, so this text stays untranslated. Please rewrite the text without escape sequences.");
+
+            matches.Add(text);
             startIdx = FindNextStart(content);
         }
         
