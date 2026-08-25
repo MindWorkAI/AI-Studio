@@ -6241,7 +6241,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2646845972"] = "Hinzufügen
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2728244552"] = "Zusätzliche API-Parameter"
 
 -- Invalid JSON: Add the parameters in proper JSON formatting, e.g., "temperature": 0.5. Remove trailing commas. The usual surrounding curly brackets {} must not be used, though.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2765821959"] = "Ungültiges JSON: Fügen Sie die Parameter in korrektem JSON-Format hinzu, z. B. "temperature": 0.5. Entfernen Sie abschließende Kommas. Die üblichen umgebenden geschweiften Klammern {} dürfen jedoch nicht verwendet werden."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2765821959"] = "Ungültiges JSON: Fügen Sie die Parameter in korrektem JSON-Format hinzu, z. B. \"temperature\": 0.5. Entfernen Sie abschließende Kommas. Die üblichen umgebenden geschweiften Klammern {} dürfen jedoch nicht verwendet werden."
 
 -- No models loaded or available.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T2810182573"] = "Keine Modelle geladen oder verfügbar."
