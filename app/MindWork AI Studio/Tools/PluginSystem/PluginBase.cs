@@ -16,8 +16,8 @@ public abstract partial class PluginBase : IPluginMetadata, IDisposable
     protected readonly List<string> PluginIssues = [];
 
     /// <inheritdoc />
-    public string IconSVG { get; }
-    
+    public string IconDataUrl { get; }
+
     /// <inheritdoc />
     public PluginType Type { get; }
     
@@ -88,14 +88,14 @@ public abstract partial class PluginBase : IPluginMetadata, IDisposable
         if (this is NoPlugin or NoPluginLanguage)
         {
             this.IsInternal = isInternal;
-            this.IconSVG = string.Empty;
+            this.IconDataUrl = string.Empty;
             this.baseIssues = issues;
             return;
         }
 
         // Notice: when no icon is specified, the default icon will be used.
-        this.TryInitIconSVG(out _, out var iconSVG);
-        this.IconSVG = iconSVG;
+        this.TryInitIconDataUrl(out _, out var iconDataUrl);
+        this.IconDataUrl = iconDataUrl;
         
         if(this.TryInitId(out var issue, out var id))
         {
