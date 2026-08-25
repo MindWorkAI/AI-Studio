@@ -536,12 +536,26 @@ public partial class VoiceRecorder : MSGComponentBase
 
     #region Overrides of MSGComponentBase
 
+    /// <summary>
+    /// Hands the focused-window shortcut back to the browser before this component goes away.
+    /// </summary>
+    /// <remarks>
+    /// This belongs into the asynchronous part of the disposal: the base class runs it before
+    /// DisposeResources, and only here we can await the call. Discarding it instead left the
+    /// unregistration unfinished, and its failure on an already-disconnected circuit surfaced as an
+    /// unobserved task exception once the finalizer got to it.
+    /// </remarks>
+    protected override async ValueTask DisposeResourcesAsync()
+    {
+        if (this.localShortcutInteropReady)
+            await this.JsRuntime.TryInvokeVoidAsync("localShortcut.unregister", "voice-recording-toggle");
+
+        await base.DisposeResourcesAsync();
+    }
+
     protected override void DisposeResources()
     {
         this.GlobalShortcutService.RuntimeStateChanged -= this.OnShortcutRuntimeStateChanged;
-
-        if (this.localShortcutInteropReady)
-            _ = this.JsRuntime.InvokeVoidAsync("localShortcut.unregister", "voice-recording-toggle");
 
         this.localShortcutDotNetReference?.Dispose();
         this.localShortcutDotNetReference = null;
