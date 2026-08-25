@@ -26,18 +26,12 @@
             </HeaderContent>
             <GroupHeaderTemplate>
                 <MudTh Class="provider-group-header" colspan="4">
-                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Wrap="Wrap.NoWrap">
-                        <ProviderIcon ProviderType="@((LLMProviders)context.Key)" />
-                        <MudText>@(((LLMProviders)context.Key).ToName())</MudText>
-                    </MudStack>
+                    <ProviderLabel ProviderType="@((LLMProviders)context.Key)" Text="@(((LLMProviders)context.Key).ToName())" />
                 </MudTh>
             </GroupHeaderTemplate>
             <RowTemplate>
                 <MudTd>
-                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Wrap="Wrap.NoWrap">
-                        <ProviderIcon ProviderType="@context.UsedLLMProvider" CustomIconDataUrl="@context.CustomIconDataUrl" />
-                        <MudText>@context.Name</MudText>
-                    </MudStack>
+                    <ProviderLabel ProviderType="@context.UsedLLMProvider" CustomIconDataUrl="@context.CustomIconDataUrl" Text="@context.Name" />
                 </MudTd>
                 <MudTd>@this.GetTranscriptionProviderModelName(context)</MudTd>
 

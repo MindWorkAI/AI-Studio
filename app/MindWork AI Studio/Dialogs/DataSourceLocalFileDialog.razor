@@ -52,10 +52,7 @@
                     <MudSelectItem Value="@embedding.Value">
                         @if (this.GetEmbeddingProvider(embedding.Value) is { } provider)
                         {
-                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Wrap="Wrap.NoWrap">
-                                <ProviderIcon ProviderType="@provider.UsedLLMProvider" CustomIconDataUrl="@provider.CustomIconDataUrl" />
-                                <MudText>@embedding.Name</MudText>
-                            </MudStack>
+                            <ProviderLabel ProviderType="@provider.UsedLLMProvider" CustomIconDataUrl="@provider.CustomIconDataUrl" Text="@embedding.Name" />
                         }
                         else
                         {

@@ -41,10 +41,7 @@
             <ItemTemplate Context="providerData">
                 @if (this.GetTranscriptionProvider(providerData.Value) is { } provider)
                 {
-                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Wrap="Wrap.NoWrap">
-                        <ProviderIcon ProviderType="@provider.UsedLLMProvider" CustomIconDataUrl="@provider.CustomIconDataUrl" />
-                        <MudText>@providerData.Name</MudText>
-                    </MudStack>
+                    <ProviderLabel ProviderType="@provider.UsedLLMProvider" CustomIconDataUrl="@provider.CustomIconDataUrl" Text="@providerData.Name" />
                 }
                 else
                 {

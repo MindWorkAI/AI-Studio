@@ -3,10 +3,7 @@
     <ItemTemplate Context="providerData">
         @if (this.GetProvider(providerData.Value) is { } provider)
         {
-            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Wrap="Wrap.NoWrap">
-                <ProviderIcon ProviderSettings="@provider" />
-                <MudText>@providerData.Name</MudText>
-            </MudStack>
+            <ProviderLabel ProviderSettings="@provider" Text="@providerData.Name" />
         }
         else
         {

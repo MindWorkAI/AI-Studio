@@ -23,10 +23,7 @@
                     @foreach (LLMProviders provider in Enum.GetValues(typeof(LLMProviders)))
                     {
                         <MudSelectItem Value="@provider">
-                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Wrap="Wrap.NoWrap">
-                                <ProviderIcon ProviderType="@provider" CustomIconDataUrl="@(provider == this.DataLLMProvider ? this.DataCustomIconDataUrl : string.Empty)" />
-                                <MudText>@provider.ToName()</MudText>
-                            </MudStack>
+                            <ProviderLabel ProviderType="@provider" CustomIconDataUrl="@(provider == this.DataLLMProvider ? this.DataCustomIconDataUrl : string.Empty)" Text="@provider.ToName()" />
                         </MudSelectItem>
                     }
                 </MudSelect>

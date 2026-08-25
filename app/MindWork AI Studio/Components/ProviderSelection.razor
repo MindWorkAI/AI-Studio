@@ -5,10 +5,7 @@
     {
         <MudSelectItem Value="@providerItem.Provider">
             <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="w-100" Wrap="Wrap.NoWrap">
-                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Wrap="Wrap.NoWrap">
-                    <ProviderIcon ProviderSettings="@providerItem.Provider" />
-                    <MudText Class="me-2">@providerItem.Provider</MudText>
-                </MudStack>
+                <ProviderLabel ProviderSettings="@providerItem.Provider" Text="@providerItem.Provider.ToString()" TextClass="me-2" />
                 @if (providerItem.CapabilityIcons.Count > 0)
                 {
                     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Wrap="Wrap.NoWrap" Class="flex-grow-0">
