@@ -22,15 +22,25 @@ public sealed partial class CollectI18NKeysCommand
                                       T(@"
                                       """;
         
-    private const string END_TAG = """
-                           ")
-                           """;
+    private const string END_TAG1 = """
+                            ")
+                            """;
+
+    private const string END_TAG2 = """
+                            ",
+                            """;
         
     private static readonly (string Tag, int Length)[] START_TAGS =
     [
         (START_TAG1, START_TAG1.Length),
         (START_TAG2, START_TAG2.Length),
         (START_TAG3, START_TAG3.Length)
+    ];
+
+    private static readonly string[] END_TAGS =
+    [
+        END_TAG1,
+        END_TAG2
     ];
     
     [Command("collect-i18n", Description = "Collect I18N keys")]
@@ -182,6 +192,19 @@ public sealed partial class CollectI18NKeysCommand
 
             return (bestIndex, bestLength);
         }
+
+        int FindNextEnd(ReadOnlySpan<char> content)
+        {
+            var bestIndex = -1;
+            foreach (var tag in END_TAGS)
+            {
+                var index = content.IndexOf(tag);
+                if (index != -1 && (bestIndex == -1 || index < bestIndex))
+                    bestIndex = index;
+            }
+
+            return bestIndex;
+        }
         
         var matches = new List<string>();
         var startIdx = FindNextStart(fileContent);
@@ -196,7 +219,7 @@ public sealed partial class CollectI18NKeysCommand
             while(content[0] == '"')
                 content = content[1..];
             
-            var endIdx = content.IndexOf(END_TAG);
+            var endIdx = FindNextEnd(content);
             if (endIdx == -1)
                 break;
             
