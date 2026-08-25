@@ -97,7 +97,10 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
     #endregion
 
     private EmbeddingProvider? GetEmbeddingProvider(string providerId)
-        => this.SettingsManager.ConfigurationData.EmbeddingProviders.FirstOrDefault(provider => provider.Id == providerId);
+    {
+        var provider = this.SettingsManager.GetEmbeddingProviderById(providerId);
+        return provider == EmbeddingProvider.NONE ? null : provider;
+    }
     
     private bool SelectedCloudEmbedding => !(this.SettingsManager.ConfigurationData.EmbeddingProviders.FirstOrDefault(x => x.Id == this.dataEmbeddingId)?.IsTrustedForDataSourceSecurityChecks(this.SettingsManager) ?? false);
 

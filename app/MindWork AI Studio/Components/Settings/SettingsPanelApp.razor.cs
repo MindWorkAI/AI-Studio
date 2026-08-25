@@ -108,10 +108,8 @@ public partial class SettingsPanelApp : SettingsPanelBase
 
     private TranscriptionProvider? GetTranscriptionProvider(string providerId)
     {
-        if (string.IsNullOrWhiteSpace(providerId))
-            return null;
-
-        return this.SettingsManager.ConfigurationData.TranscriptionProviders.FirstOrDefault(provider => provider.Id == providerId);
+        var provider = this.SettingsManager.GetTranscriptionProviderById(providerId);
+        return provider == TranscriptionProvider.NONE ? null : provider;
     }
 
     private void UpdatePreviewFeatures(PreviewVisibility previewVisibility)
