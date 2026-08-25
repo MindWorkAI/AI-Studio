@@ -93,7 +93,7 @@ public partial class Plugins : MSGComponentBase
     protected override void DisposeResources()
     {
         // Release the drop area again, so lower layers can catch dropped files:
-        _ = this.MessageBus.SendMessage(this, Event.UNREGISTER_FILE_DROP_AREA, DropLayers.PAGES);
+        this.MessageBus.SendMessage(this, Event.UNREGISTER_FILE_DROP_AREA, DropLayers.PAGES).Observe($"{nameof(Plugins)}: releasing the drop area");
         base.DisposeResources();
     }
 

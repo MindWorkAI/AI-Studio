@@ -15,7 +15,7 @@ public sealed class CircuitStateService
     private volatile bool isConnected = true;
 
     /// <summary>
-    /// True as long as the browser of this circuit is reachable, and thus JS interop is possible.
+    /// True, as long as the browser of this circuit is reachable, and thus JS interop is possible.
     /// </summary>
     /// <remarks>
     /// This starts as true: a circuit is created for a connected browser, and the handler reports the

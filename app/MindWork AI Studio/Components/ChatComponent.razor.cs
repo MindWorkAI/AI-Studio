@@ -261,11 +261,11 @@ public partial class ChatComponent : MSGComponentBase
     private void OnMediaImportStateChanged(MediaImportOwner owner)
     {
         if (owner == this.CurrentMediaImportOwner)
-            _ = this.InvokeAsync(async () =>
+            this.InvokeAsync(async () =>
             {
                 await this.ConsumeMediaOutcomeAsync();
                 this.StateHasChanged();
-            });
+            }).Observe($"{nameof(ChatComponent)}: consuming a media import outcome");
     }
 
     /// <summary>Consumes a terminal media notification when its chat is visible.</summary>

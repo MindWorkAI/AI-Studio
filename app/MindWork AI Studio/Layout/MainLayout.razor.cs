@@ -237,7 +237,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
                     this.LoadNavItems();
                     this.StateHasChanged();
                     if (this.startupCompleted)
-                        _ = this.EnsureMandatoryInfosAcceptedAsync();
+                        this.EnsureMandatoryInfosAcceptedAsync().Observe($"{nameof(MainLayout)}: mandatory infos after a configuration change");
                     break;
 
                 case Event.COLOR_THEME_CHANGED:
@@ -284,7 +284,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
                     break;
 
                 case Event.STARTUP_PLUGIN_SYSTEM:
-                    _ = Task.Run(async () =>
+                    Task.Run(async () =>
                     {
                         // Set up the plugin system:
                         if (PluginFactory.Setup())
@@ -339,7 +339,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
                             PluginFactory.SetUpHotReloading();
                             await this.MessageBus.SendMessage<bool>(this, Event.STARTUP_COMPLETED);
                         }
-                    });
+                    }).Observe($"{nameof(MainLayout)}: setting up the plugin system");
                     break;
 
                 case Event.PLUGINS_RELOADED:
@@ -350,12 +350,12 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
 
                     await this.InvokeAsync(this.StateHasChanged);
                     if (this.startupCompleted)
-                        _ = this.EnsureMandatoryInfosAcceptedAsync();
+                        this.EnsureMandatoryInfosAcceptedAsync().Observe($"{nameof(MainLayout)}: mandatory infos after a plugin reload");
                     break;
 
                 case Event.STARTUP_COMPLETED:
                     this.startupCompleted = true;
-                    _ = this.EnsureMandatoryInfosAcceptedAsync();
+                    this.EnsureMandatoryInfosAcceptedAsync().Observe($"{nameof(MainLayout)}: mandatory infos after the startup");
                     break;
             }
         });
@@ -402,11 +402,11 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     /// <summary>Refreshes navigation activity colors when a media import changes state.</summary>
     private void OnMediaImportStateChanged(MediaImportOwner owner)
     {
-        _ = this.InvokeAsync(() =>
+        this.InvokeAsync(() =>
         {
             this.LoadNavItems();
             this.StateHasChanged();
-        });
+        }).Observe($"{nameof(MainLayout)}: refreshing the navigation after a media import change");
     }
     
     private IEnumerable<NavBarItem> GetNavItems()

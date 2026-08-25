@@ -265,7 +265,7 @@ public partial class VisualBriefingAssistant
             : briefing.Versions.OrderByDescending(version => version.VersionNumber).FirstOrDefault()?.RevisionId ?? Guid.Empty;
 
         if (revisionId != Guid.Empty)
-            _ = this.SelectRevisionAsync(revisionId);
+            this.SelectRevisionAsync(revisionId).Observe($"{nameof(VisualBriefingAssistant)}: selecting a revision");
         else
         {
             this.selectedRevisionId = Guid.Empty;

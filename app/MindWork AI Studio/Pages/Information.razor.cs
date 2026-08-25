@@ -197,7 +197,7 @@ public partial class Information : MSGComponentBase
         
         // Determine the Pandoc version may take some time, so we start it here
         // without waiting for the result:
-        _ = this.DeterminePandocVersion();
+        this.DeterminePandocVersion().Observe($"{nameof(Information)}: determining the Pandoc version");
     }
 
     #endregion
@@ -340,7 +340,7 @@ public partial class Information : MSGComponentBase
         this.vectorStoreRefreshCancellationTokenSource = new CancellationTokenSource();
         var cancellationToken = this.vectorStoreRefreshCancellationTokenSource.Token;
 
-        _ = Task.Run(async () =>
+        Task.Run(async () =>
         {
             const int MAX_TRIES = 12;
             for (var attempt = 0; attempt < MAX_TRIES; attempt++)
@@ -366,7 +366,7 @@ public partial class Information : MSGComponentBase
                     return;
                 }
             }
-        }, cancellationToken);
+        }, cancellationToken).Observe($"{nameof(Information)}: refreshing the vector store info");
     }
 
     private IAvailablePlugin? FindManagedConfigurationPlugin(Guid configurationId)
