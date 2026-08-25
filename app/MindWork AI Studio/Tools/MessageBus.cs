@@ -71,7 +71,7 @@ public sealed class MessageBus
                     if (eventFilter.Length == 0 || eventFilter.Contains(message.TriggeredEvent))
 
                         // We don't await the task here because we don't want to block the message bus:
-                        _ = receiver.ProcessMessage(message.SendingComponent, message.TriggeredEvent, message.Data);
+                        _ = DeliverMessage(receiver, message);
                 }
             }
         }
@@ -82,6 +82,38 @@ public sealed class MessageBus
         finally
         {
             this.sendingSemaphore.Release();
+        }
+    }
+
+    /// <summary>
+    /// Hands one message to one receiver and observes how that went.
+    /// </summary>
+    /// <remarks>
+    /// The bus must not wait for a receiver, since one slow receiver would hold up everybody else. Not
+    /// waiting is not the same as not caring, though: a receiver whose circuit is gone fails with a
+    /// disconnect or disposal exception, and nobody would ever see where it came from. Such a task
+    /// carries its fault until the finalizer reports it as an unobserved task exception — naming a task
+    /// type instead of the receiver and the event. This is where we give those failures a name.
+    /// </remarks>
+    /// <param name="receiver">The receiver of the message.</param>
+    /// <param name="message">The message to deliver.</param>
+    private static async Task DeliverMessage(IMessageBusReceiver receiver, Message message)
+    {
+        try
+        {
+            await receiver.ProcessMessage(message.SendingComponent, message.TriggeredEvent, message.Data);
+        }
+        catch (Exception exception) when (exception is JSDisconnectedException or ObjectDisposedException or OperationCanceledException)
+        {
+            //
+            // Expected whenever the browser connection of a receiver is gone: the app keeps circuits
+            // of reloaded or sleeping windows around, and their components still receive events.
+            //
+            LOG?.LogDebug("The receiver '{ReceiverName}' did not process the event '{Event}' because its circuit was gone: {Reason}", receiver.GetType().Name, message.TriggeredEvent, exception.Message);
+        }
+        catch (Exception exception)
+        {
+            LOG?.LogError(exception, "The receiver '{ReceiverName}' failed while processing the event '{Event}'.", receiver.GetType().Name, message.TriggeredEvent);
         }
     }
 
