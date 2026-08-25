@@ -106,6 +106,12 @@ public partial class SettingsPanelApp : SettingsPanelBase
         }
     }
 
+    private TranscriptionProvider? GetTranscriptionProvider(string providerId)
+    {
+        var provider = this.SettingsManager.GetTranscriptionProviderById(providerId);
+        return provider == TranscriptionProvider.NONE ? null : provider;
+    }
+
     private void UpdatePreviewFeatures(PreviewVisibility previewVisibility)
     {
         this.SettingsManager.ConfigurationData.App.PreviewVisibility = previewVisibility;

@@ -1,7 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 
 using AIStudio.Dialogs;
-using AIStudio.Provider;
 using AIStudio.Settings;
 
 using Microsoft.AspNetCore.Components;
@@ -20,7 +19,7 @@ public partial class SettingsPanelProviders : SettingsPanelProviderBase
     {
         Expandable = true,
         IsInitiallyExpanded = false,
-        Selector = provider => provider.UsedLLMProvider.ToName(),
+        Selector = provider => provider.UsedLLMProvider,
     };
 
     [Parameter]
@@ -77,6 +76,7 @@ public partial class SettingsPanelProviders : SettingsPanelProviderBase
             { x => x.DataId, provider.Id },
             { x => x.DataInstanceName, provider.InstanceName },
             { x => x.DataLLMProvider, provider.UsedLLMProvider },
+            { x => x.DataCustomIconDataUrl, provider.CustomIconDataUrl },
             { x => x.DataModel, provider.Model },
             { x => x.DataHostname, provider.Hostname },
             { x => x.IsSelfHosted, provider.IsSelfHosted },

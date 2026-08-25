@@ -214,3 +214,20 @@ MindWork AI Studio is licensed under the `FSL-1.1-MIT` license (functional sourc
 For more details, refer to the [LICENSE](LICENSE.md) file. This license structure ensures you have plenty of freedom to use and enjoy the software while protecting our work.
 
 </details>
+
+<details>
+    <summary>
+    <h2 style="display:inline-block">
+        Trademarks
+    </h2>
+    </summary>
+
+The license above covers our own software. It says nothing about the trademarks of other companies, so here is where AI Studio stands on those.
+
+AI Studio ships the logos of the AI providers it supports and shows them next to the matching provider entry, so you can see at a glance which service a provider connects to. All product names, logos, and trademarks are the property of their respective owners. Their use here identifies compatible services and implies no endorsement, sponsorship, or business relationship between MindWork AI Studio and these companies.
+
+Some of these logos come from the [Simple Icons](https://github.com/simple-icons/simple-icons) project, which publishes them under [CC0-1.0](https://github.com/simple-icons/simple-icons/blob/16.21.0/LICENSE.md); the trademarks themselves are not part of that release. The remaining ones were taken from the official brand resources of the respective provider. The source of every single file is documented in [the provider icon notes](app/MindWork%20AI%20Studio/wwwroot/images/provider-icons/README.md). All logos ship with AI Studio and are loaded from your device, so showing one never sends a request to the provider.
+
+Organizations can replace these logos with their own icons through a configuration plugin. When an organization does so, it is responsible for holding the rights to the icons it provides.
+
+</details>

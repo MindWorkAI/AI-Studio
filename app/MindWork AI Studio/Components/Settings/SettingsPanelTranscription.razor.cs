@@ -1,5 +1,4 @@
 using AIStudio.Dialogs;
-using AIStudio.Provider;
 using AIStudio.Settings;
 
 using Microsoft.AspNetCore.Components;
@@ -18,7 +17,7 @@ public partial class SettingsPanelTranscription : SettingsPanelProviderBase
     {
         Expandable = true,
         IsInitiallyExpanded = false,
-        Selector = provider => provider.UsedLLMProvider.ToName(),
+        Selector = provider => provider.UsedLLMProvider,
     };
 
     [Parameter]
@@ -81,6 +80,7 @@ public partial class SettingsPanelTranscription : SettingsPanelProviderBase
             { x => x.DataId, transcriptionProvider.Id },
             { x => x.DataName, transcriptionProvider.Name },
             { x => x.DataLLMProvider, transcriptionProvider.UsedLLMProvider },
+            { x => x.DataCustomIconDataUrl, transcriptionProvider.CustomIconDataUrl },
             { x => x.DataModel, transcriptionProvider.Model },
             { x => x.DataHostname, transcriptionProvider.Hostname },
             { x => x.IsSelfHosted, transcriptionProvider.IsSelfHosted },

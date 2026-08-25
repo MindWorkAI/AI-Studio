@@ -8322,6 +8322,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1402243995"] = "Updates werden v
 -- This library is used to extend the MudBlazor library. It provides additional components that are not part of the MudBlazor library.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1421513382"] = "Diese Bibliothek wird verwendet, um die MudBlazor-Bibliothek zu erweitern. Sie stellt zusätzliche Komponenten bereit, die nicht Teil der MudBlazor-Bibliothek sind."
 
+-- Trademarks & Brand Assets
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1421823619"] = "Marken und Markenressourcen"
+
 -- Copies the allowed host pattern to the clipboard
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1513592659"] = "Kopiert das zulässige Hostmuster in die Zwischenablage"
 
@@ -8330,6 +8333,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1533382393"] = "Warten auf das K
 
 -- Encryption secret: is not configured
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1560776885"] = "Geheimnis für die Verschlüsselung: ist nicht konfiguriert"
+
+-- Organizations can replace these logos with their own icons through a configuration plugin. When your organization does so, it is responsible for holding the rights to the icons it provides.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T158845920"] = "Organisationen können diese Logos über ein Konfigurations-Plugin durch eigene Symbole ersetzen. In diesem Fall ist Ihre Organisation dafür verantwortlich, die Rechte an den bereitgestellten Symbolen zu besitzen."
 
 -- AI Studio runs with an enterprise configuration and configuration servers. The configuration plugins are active.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1596483935"] = "AI Studio wird mit Unternehmenskonfigurationen und Konfigurationsservern betrieben. Die Konfigurations-Plugins sind aktiv."
@@ -8345,6 +8351,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1630237140"] = "AI Studio erstel
 
 -- Plugin directory:
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1698127325"] = "Plugin-Verzeichnis:"
+
+-- Several of the provider logos in AI Studio use the icon paths and brand colors published by the Simple Icons project, which releases them into the public domain under CC0. The trademarks themselves are not part of that release and remain the property of their respective owners.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T1699089284"] = "Mehrere Anbieterlogos in AI Studio verwenden die vom Projekt Simple Icons veröffentlichten Icon-Pfade und Markenfarben, die unter CC0 gemeinfrei bereitgestellt werden. Die Marken selbst sind nicht Teil dieser Freigabe und bleiben Eigentum ihrer jeweiligen Inhaber."
 
 -- Consent:
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T171952677"] = "Zustimmung:"
@@ -8387,6 +8396,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2029659664"] = "Kopiert Folgende
 
 -- Copies the server URL to the clipboard
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2037899437"] = "Kopiert die Server-URL in die Zwischenablage"
+
+-- AI Studio shows the logo of an AI provider next to its entry, so you can see at a glance which service a provider connects to. All product names, logos, and trademarks are the property of their respective owners. Their use here identifies compatible services and implies no endorsement, sponsorship, or business relationship between MindWork AI Studio and these companies.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2124655767"] = "AI Studio zeigt neben dem jeweiligen Eintrag das Logo eines KI-Anbieters, damit Sie auf einen Blick sehen können, mit welchem Dienst ein Anbieter verbunden ist. Alle Produktnamen, Logos und Marken sind Eigentum ihrer jeweiligen Inhaber. Ihre Verwendung dient hier ausschließlich der Kennzeichnung kompatibler Dienste und bedeutet keine Empfehlung, Unterstützung oder Geschäftsbeziehung zwischen MindWork AI Studio und diesen Unternehmen."
 
 -- The windows-rs project provides access to Windows APIs from Rust. We use several libraries from this project: windows-registry is used to read the desired configuration in Windows enterprise environments. The windows and windows-collections libraries are used to open the native Windows share dialog, e.g., when you share a plugin with others.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T2146481269"] = "Das Projekt windows-rs ermöglicht den Zugriff auf Windows-APIs aus Rust. Wir verwenden mehrere Bibliotheken aus diesem Projekt: windows-registry wird verwendet, um die gewünschte Konfiguration in Windows-Unternehmensumgebungen auszulesen. Die Bibliotheken windows und windows-collections werden verwendet, um den nativen Windows-Dialog zum Teilen zu öffnen, zum Beispiel wenn Sie ein Plugin mit anderen teilen."
@@ -8651,6 +8663,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3764549776"] = "Vom Betriebssyst
 
 -- Allowed host:
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3774270763"] = "Zulässiger Host:"
+
+-- Some of these logos come from the Simple Icons project, which publishes them under CC0. The remaining ones were taken from the official brand resources of the respective provider. Every logo ships with AI Studio and is loaded from your device, so showing it never sends a request to the provider.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3775183188"] = "Einige dieser Logos stammen aus dem Projekt Simple Icons, das sie unter CC0 veröffentlicht. Die übrigen wurden den offiziellen Markenressourcen des jeweiligen Anbieters entnommen. Jedes Logo wird mit AI Studio ausgeliefert und von Ihrem Gerät geladen. Beim Anzeigen wird daher keine Anfrage an den Anbieter gesendet."
 
 -- Configuration source:
 UI_TEXT_CONTENT["AISTUDIO::PAGES::INFORMATION::T3801531724"] = "Quelle der Konfiguration:"

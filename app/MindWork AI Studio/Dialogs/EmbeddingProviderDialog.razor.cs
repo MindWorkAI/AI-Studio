@@ -56,6 +56,12 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
     /// </summary>
     [Parameter]
     public LLMProviders DataLLMProvider { get; set; } = LLMProviders.NONE;
+
+    /// <summary>
+    /// The validated custom icon supplied by a configuration plugin.
+    /// </summary>
+    [Parameter]
+    public string DataCustomIconDataUrl { get; set; } = string.Empty;
     
     /// <summary>
     /// The embedding model to use.
@@ -144,6 +150,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
             Host = this.DataHost,
             IsEnterpriseConfiguration = this.IsEnterpriseConfiguration,
             EnterpriseConfigurationPluginId = Guid.Empty,
+            CustomIconDataUrl = this.DataCustomIconDataUrl,
         };
     }
     

@@ -393,7 +393,19 @@
                     <ThirdPartyComponent Name="ReverseMarkdown" Developer="Babu Annamalai & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/mysticmind/reversemarkdown-net/blob/master/LICENSE" RepositoryUrl="https://github.com/mysticmind/reversemarkdown-net" UseCase="@T("This library is used to convert HTML to Markdown. This is necessary, e.g., when you provide a URL as input for an assistant.")"/>
                     <ThirdPartyComponent Name="wikEd diff" Developer="Cacycle & Open Source Community" LicenseName="None (public domain)" LicenseUrl="https://en.wikipedia.org/wiki/User:Cacycle/diff#License" RepositoryUrl="https://en.wikipedia.org/wiki/User:Cacycle/diff" UseCase="@T("This library is used to display the differences between two texts. This is necessary, e.g., for the grammar and spelling assistant.")"/>
                     <ThirdPartyComponent Name="CodeJar" Developer="Anton Medvedev" LicenseName="MIT" LicenseUrl="https://github.com/antonmedv/codejar/blob/master/LICENSE" RepositoryUrl="https://github.com/antonmedv/codejar/" UseCase="@T("CodeJar is a lightweight embeddable code editor for the browser.")"/>
+                    <ThirdPartyComponent Name="Simple Icons" Developer="Simple Icons Contributors & Open Source Community" LicenseName="CC0-1.0" LicenseUrl="https://github.com/simple-icons/simple-icons/blob/16.21.0/LICENSE.md" RepositoryUrl="https://github.com/simple-icons/simple-icons" UseCase="@T("Several of the provider logos in AI Studio use the icon paths and brand colors published by the Simple Icons project, which releases them into the public domain under CC0. The trademarks themselves are not part of that release and remain the property of their respective owners.")"/>
                 </MudGrid>
+            </ExpansionPanel>
+            <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Copyright" HeaderText="@T("Trademarks & Brand Assets")">
+                <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+                    @T("AI Studio shows the logo of an AI provider next to its entry, so you can see at a glance which service a provider connects to. All product names, logos, and trademarks are the property of their respective owners. Their use here identifies compatible services and implies no endorsement, sponsorship, or business relationship between MindWork AI Studio and these companies.")
+                </MudJustifiedText>
+                <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+                    @T("Some of these logos come from the Simple Icons project, which publishes them under CC0. The remaining ones were taken from the official brand resources of the respective provider. Every logo ships with AI Studio and is loaded from your device, so showing it never sends a request to the provider.")
+                </MudJustifiedText>
+                <MudJustifiedText Typo="Typo.body1">
+                    @T("Organizations can replace these logos with their own icons through a configuration plugin. When your organization does so, it is responsible for holding the rights to the icons it provides.")
+                </MudJustifiedText>
             </ExpansionPanel>
             <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Verified" HeaderText="License: FSL-1.1-MIT">
                 <MudMarkdown Value="@LICENSE" Props="Markdown.DefaultConfig" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE"/>
