@@ -1,26 +1,15 @@
-using System.Xml;
-using System.Xml.Linq;
-
 namespace AIStudio.Settings;
 
+/// <summary>
+/// Loads the custom provider icon a configuration plugin may point to.
+/// </summary>
+/// <remarks>
+/// The checks here are about the path, not about the markup: they keep a plugin from turning an
+/// arbitrary file somewhere on the system into a data URL. Whether the file is a usable SVG, and
+/// how it becomes a data URL, is up to SvgIcon.
+/// </remarks>
 internal static class ProviderIconFile
 {
-    private const int MAX_FILE_SIZE_BYTES = 256 * 1024;
-    private static readonly HashSet<string> FORBIDDEN_ELEMENTS = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "embed",
-        "discard",
-        "foreignObject",
-        "iframe",
-        "object",
-        "script",
-        "set",
-        "style",
-        "animate",
-        "animateMotion",
-        "animateTransform",
-    };
-
     public static bool TryLoadDataUrl(string iconPath, string pluginPath, out string dataUrl, out string issue)
     {
         dataUrl = string.Empty;
@@ -87,17 +76,11 @@ internal static class ProviderIconFile
 
         try
         {
+            // Check the size before reading, so an oversized file never reaches memory:
             var fileInfo = new FileInfo(resolvedPath);
-            var finalTarget = fileInfo.ResolveLinkTarget(true);
-            if (finalTarget is not null && !IsInsideDirectory(pluginRoot, finalTarget.FullName))
+            if (fileInfo.Length is <= 0 or > SvgIcon.MAX_ICON_SIZE_BYTES)
             {
-                issue = "The icon file link points outside of the configuration plugin directory.";
-                return false;
-            }
-
-            if (fileInfo.Length is <= 0 or > MAX_FILE_SIZE_BYTES)
-            {
-                issue = $"The icon file must be between 1 byte and {MAX_FILE_SIZE_BYTES / 1024} KiB.";
+                issue = $"The icon file must be between 1 byte and {SvgIcon.MAX_ICON_SIZE_BYTES / 1024} KiB.";
                 return false;
             }
 
@@ -107,18 +90,7 @@ internal static class ProviderIconFile
                 return false;
             }
 
-            var bytes = File.ReadAllBytes(resolvedPath);
-            if (bytes.Length is <= 0 or > MAX_FILE_SIZE_BYTES)
-            {
-                issue = $"The icon file must be between 1 byte and {MAX_FILE_SIZE_BYTES / 1024} KiB.";
-                return false;
-            }
-
-            if (!TryValidateSvg(bytes, out issue))
-                return false;
-
-            dataUrl = $"data:image/svg+xml;base64,{Convert.ToBase64String(bytes)}";
-            return true;
+            return SvgIcon.TryCreateDataUrl(File.ReadAllBytes(resolvedPath), out dataUrl, out issue);
         }
         catch (Exception e)
         {
@@ -127,112 +99,11 @@ internal static class ProviderIconFile
         }
     }
 
-    private static bool TryValidateSvg(byte[] svg, out string issue)
-    {
-        issue = string.Empty;
-        XDocument document;
-        try
-        {
-            var settings = new XmlReaderSettings
-            {
-                DtdProcessing = DtdProcessing.Prohibit,
-                MaxCharactersInDocument = MAX_FILE_SIZE_BYTES,
-                XmlResolver = null,
-            };
-            using var stream = new MemoryStream(svg, writable: false);
-            using var xmlReader = XmlReader.Create(stream, settings);
-            document = XDocument.Load(xmlReader, LoadOptions.None);
-        }
-        catch (Exception e)
-        {
-            issue = $"The icon file is not valid SVG XML: {e.Message}";
-            return false;
-        }
-
-        if (document.Root is null ||
-            !string.Equals(document.Root.Name.LocalName, "svg", StringComparison.OrdinalIgnoreCase) ||
-            document.Root.Name.NamespaceName != "http://www.w3.org/2000/svg")
-        {
-            issue = "The icon file does not have an SVG root element in the SVG namespace.";
-            return false;
-        }
-
-        if (document.DescendantNodes().OfType<XProcessingInstruction>().Any())
-        {
-            issue = "The icon file must not contain processing instructions.";
-            return false;
-        }
-
-        foreach (var element in document.Root.DescendantsAndSelf())
-        {
-            if (FORBIDDEN_ELEMENTS.Contains(element.Name.LocalName))
-            {
-                issue = $"The icon file contains the forbidden SVG element '{element.Name.LocalName}'.";
-                return false;
-            }
-
-            foreach (var attribute in element.Attributes())
-            {
-                if (attribute.Name == XNamespace.Xml + "base")
-                {
-                    issue = $"The icon file contains the forbidden SVG attribute '{attribute.Name.LocalName}'.";
-                    return false;
-                }
-
-                if (attribute.Name.LocalName.StartsWith("on", StringComparison.OrdinalIgnoreCase))
-                {
-                    issue = $"The icon file contains the forbidden event-handler attribute '{attribute.Name.LocalName}'.";
-                    return false;
-                }
-
-                if (attribute.Name.LocalName is "href" or "src")
-                {
-                    var reference = attribute.Value.Trim();
-                    if (!string.IsNullOrEmpty(reference) && !reference.StartsWith('#'))
-                    {
-                        issue = "The icon file contains an external resource reference.";
-                        return false;
-                    }
-                }
-
-                if (ContainsExternalCssUrl(attribute.Value))
-                {
-                    issue = "The icon file contains an external CSS resource reference.";
-                    return false;
-                }
-            }
-        }
-
-        return true;
-    }
-
-    private static bool ContainsExternalCssUrl(string value)
-    {
-        var searchStart = 0;
-        while (true)
-        {
-            var urlStart = value.IndexOf("url(", searchStart, StringComparison.OrdinalIgnoreCase);
-            if (urlStart < 0)
-                return false;
-
-            var valueStart = urlStart + 4;
-            var valueEnd = value.IndexOf(')', valueStart);
-            if (valueEnd < 0)
-                return true;
-
-            var reference = value[valueStart..valueEnd].Trim().Trim('\'', '"');
-            if (!reference.StartsWith('#'))
-                return true;
-
-            searchStart = valueEnd + 1;
-        }
-    }
-
     private static bool LinksStayInsideDirectory(string rootDirectory, string filePath)
     {
         var relativePath = Path.GetRelativePath(rootDirectory, filePath);
         var currentPath = Path.GetFullPath(rootDirectory);
-        foreach (var segment in relativePath.Split(new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries))
+        foreach (var segment in relativePath.Split([Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar], StringSplitOptions.RemoveEmptyEntries))
         {
             currentPath = Path.Combine(currentPath, segment);
             FileSystemInfo pathInfo = Directory.Exists(currentPath) ? new DirectoryInfo(currentPath) : new FileInfo(currentPath);
