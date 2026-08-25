@@ -8,7 +8,7 @@ namespace AIStudio.Chat;
 /// <summary>
 /// The UI component for a chat content block, i.e., for any IContent.
 /// </summary>
-public partial class ContentBlockComponent : MSGComponentBase, IAsyncDisposable
+public partial class ContentBlockComponent : MSGComponentBase
 {
     private const string CHAT_MATH_SYNC_FUNCTION = "chatMath.syncContainer";
     private const string CHAT_MATH_DISPOSE_FUNCTION = "chatMath.disposeContainer";
@@ -601,16 +601,24 @@ public partial class ContentBlockComponent : MSGComponentBase, IAsyncDisposable
     private async Task OpenAttachmentsDialog()
     {
         var result = await ReviewAttachmentsDialog.OpenDialogAsync(this.DialogService, this.Content.FileAttachments.ToHashSet());
-        this.Content.FileAttachments = result.ToList();
+        this.Content.FileAttachments = [.. result];
     }
 
-    public async ValueTask DisposeAsync()
+    protected override async ValueTask DisposeResourcesAsync()
     {
         if (this.isDisposed)
             return;
 
         this.isDisposed = true;
+
+        //
+        // Our handlers close over this component, while the content belongs to the chat thread and
+        // outlives us. We only detach what is still ours, though: when this content is streaming
+        // again, another component has registered its own handlers in the meantime.
+        //
+        if (this.Content.StreamingDone == this.AfterStreaming)
+            this.Content.ResetStreamingHandlers();
+
         await this.DisposeMathContainerIfNeededAsync();
-        this.Dispose();
     }
 }

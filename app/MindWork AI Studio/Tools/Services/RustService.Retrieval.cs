@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using AIStudio.Tools.Security;
 
 namespace AIStudio.Tools.Services;
 
@@ -15,16 +16,42 @@ public sealed partial class RustService
     /// </remarks>
     private static readonly TimeSpan EXTRACTION_TIMEOUT = TimeSpan.FromMinutes(10);
 
-    public async Task<FileExtractionResult> ReadArbitraryFileData(string path, int maxChunks, bool extractImages = false)
+    /// <summary>
+    /// Reads the content of an arbitrary file through the Rust runtime.
+    /// </summary>
+    /// <param name="path">The path of the file to read.</param>
+    /// <param name="maxChunks">How many chunks of the content stream we read at most.</param>
+    /// <param name="extractImages">Whether we want the images of the file as well.</param>
+    /// <param name="token">
+    /// Cancels the extraction when the caller no longer needs the content. Reading a large document
+    /// takes a while, and without this, the runtime would keep streaming into a caller which is
+    /// already gone.
+    /// </param>
+    /// <returns>The result of reading the file.</returns>
+    public async Task<FileExtractionResult> ReadArbitraryFileData(string path, int maxChunks, bool extractImages = false, CancellationToken token = default)
     {
+        //
+        // The runtime filters prompt injections while it streams the file. Doing it there rather
+        // than here means the whole document never has to exist in memory at once, which is what
+        // makes documents of a few thousand pages affordable.
+        //
+        var guardService = Program.SERVICE_PROVIDER.GetRequiredService<PromptInjectionGuardService>();
+
         var streamId = Guid.NewGuid().ToString();
         var requestUri = $"/retrieval/fs/extract?path={Uri.EscapeDataString(path)}&stream_id={streamId}&extract_images={extractImages}";
 
+        //
+        // Both reasons to stop end the same read, so we combine them: our own timeout bounds the
+        // operation, and the caller's token ends it as soon as nobody needs the content anymore.
+        //
         using var timeoutTokenSource = new CancellationTokenSource(EXTRACTION_TIMEOUT);
-        var cancellationToken = timeoutTokenSource.Token;
+        using var cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(timeoutTokenSource.Token, token);
+        var cancellationToken = cancellationTokenSource.Token;
 
         var resultBuilder = new StringBuilder();
         var failedPages = new List<int>();
+        var promptInjectionFindings = new List<PromptInjectionFinding>();
+        var promptInjectionRedactedCount = 0;
         var hasPartialFailure = false;
         var failureCode = FileExtractionErrorCode.NONE;
         string? failureMessage = null;
@@ -124,6 +151,17 @@ public sealed partial class RustService
                             detectedFormat = error.DetectedFormat;
                         }
                     }
+                    else if (processedEvent.PromptInjection is { } promptInjection)
+                    {
+                        //
+                        // Not a failure: the passages were removed and the document around them is
+                        // intact. It only needs to reach the user, so they know their document was
+                        // changed before the AI saw it.
+                        //
+                        promptInjectionRedactedCount += promptInjection.RedactedCount;
+                        if (promptInjection.Findings is { } findings)
+                            promptInjectionFindings.AddRange(findings);
+                    }
                     else if (processedEvent.Content is not null)
                         resultBuilder.AppendLine(processedEvent.Content);
 
@@ -140,6 +178,16 @@ public sealed partial class RustService
                     }
                 }
             }
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
+        {
+            //
+            // The caller dropped out, e.g. because the user closed the dialog which asked for this
+            // file. That is not a failure, so we log it as information and leave it to the caller
+            // to stay silent about it.
+            //
+            this.logger?.LogInformation("Reading the file '{Path}' was cancelled by the caller.", path);
+            return FileExtractionResult.Failed(FileExtractionErrorCode.CANCELLED, "The caller cancelled reading the file.");
         }
         catch (OperationCanceledException) when (timeoutTokenSource.IsCancellationRequested)
         {
@@ -174,8 +222,28 @@ public sealed partial class RustService
             return FileExtractionResult.Failed(FileExtractionErrorCode.NO_CONTENT, "Reading the file produced no content.");
         }
 
-        return hasPartialFailure
+        var result = hasPartialFailure
             ? FileExtractionResult.Partial(content, failedPages, detectedFormat)
             : FileExtractionResult.Success(content, detectedFormat);
+
+        if (promptInjectionRedactedCount is 0)
+            return result;
+
+        //
+        // Reported from here rather than from the callers: every way of reading a file passes
+        // through this method, so this is the one place where no caller can forget it.
+        //
+        await guardService.ReportAsync(new(PromptInjectionSource.FileContent(path), promptInjectionFindings, promptInjectionRedactedCount));
+
+        //
+        // Filtering does not change the outcome: the passages were removed and the document
+        // around them is intact. The findings travel along so a caller can show them next to
+        // the document they belong to.
+        //
+        return result with
+        {
+            PromptInjectionFindings = promptInjectionFindings,
+            PromptInjectionRedactedCount = promptInjectionRedactedCount,
+        };
     }
 }

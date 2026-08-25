@@ -23,12 +23,14 @@ public sealed class DocumentManager
             this.currentPageContent = new StringBuilder();
 
             //
-            // Sections, not pages: a Word or OpenDocument file carries no fixed page layout, so the
-            // runtime derives these boundaries from page breaks and heuristics. Calling them pages,
-            // as the PDF reader does with its real ones, would invite the AI to cite page numbers
-            // which do not exist in the document.
+            // A Word or OpenDocument file carries no fixed page layout, so the runtime derives these
+            // boundaries from page breaks and heuristics. We note the estimate as a comment rather
+            // than as a heading: a heading would sit on the same level as the document's own first
+            // level headings, leaving the AI unable to tell the structure of the document apart from
+            // our boundaries. The presentation reader marks its slides the same way.
             //
-            this.currentPageContent.AppendLine($"# Section {pageNumber}");
+            this.currentPageContent.AppendLine($"<!-- Estimated page {pageNumber} -->");
+            this.currentPageContent.AppendLine();
             this.currentPageContent.Append(content);
             return completedPage;
         }

@@ -142,11 +142,11 @@ public sealed record PluginConfigurationObject
 
             var (wasParsingSuccessful, configObject) = configObjectType switch
             {
-                PluginConfigurationObjectType.LLM_PROVIDER => (Settings.Provider.TryParseProviderTable(i, luaObjectTable, configPluginId, out var configurationObject) && configurationObject != Settings.Provider.NONE, configurationObject),
+                PluginConfigurationObjectType.LLM_PROVIDER => (Settings.Provider.TryParseProviderTable(i, luaObjectTable, configPluginId, pluginPath, out var configurationObject) && configurationObject != Settings.Provider.NONE, configurationObject),
                 PluginConfigurationObjectType.CHAT_TEMPLATE => (ChatTemplate.TryParseChatTemplateTable(i, luaObjectTable, configPluginId, pluginPath, out var configurationObject) && configurationObject != ChatTemplate.NO_CHAT_TEMPLATE, configurationObject),
                 PluginConfigurationObjectType.PROFILE => (Profile.TryParseProfileTable(i, luaObjectTable, configPluginId, out var configurationObject) && configurationObject != Profile.NO_PROFILE, configurationObject),
-                PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER => (TranscriptionProvider.TryParseTranscriptionProviderTable(i, luaObjectTable, configPluginId, out var configurationObject) && configurationObject != TranscriptionProvider.NONE, configurationObject),
-                PluginConfigurationObjectType.EMBEDDING_PROVIDER => (EmbeddingProvider.TryParseEmbeddingProviderTable(i, luaObjectTable, configPluginId, out var configurationObject) && configurationObject != EmbeddingProvider.NONE, configurationObject),
+                PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER => (TranscriptionProvider.TryParseTranscriptionProviderTable(i, luaObjectTable, configPluginId, pluginPath, out var configurationObject) && configurationObject != TranscriptionProvider.NONE, configurationObject),
+                PluginConfigurationObjectType.EMBEDDING_PROVIDER => (EmbeddingProvider.TryParseEmbeddingProviderTable(i, luaObjectTable, configPluginId, pluginPath, out var configurationObject) && configurationObject != EmbeddingProvider.NONE, configurationObject),
                 PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY => (DataDocumentAnalysisPolicy.TryProcessConfiguration(i, luaObjectTable, configPluginId, out var configurationObject) && configurationObject is DataDocumentAnalysisPolicy, configurationObject),
 
                 _ => (false, NoConfigurationObject.INSTANCE)
@@ -406,6 +406,13 @@ public sealed record PluginConfigurationObject
                     LOG.LogInformation($"Successfully deleted secret for removed enterprise object '{item.Name}' from the OS keyring.");
                 else
                     LOG.LogWarning($"Failed to delete secret for removed enterprise object '{item.Name}' from the OS keyring: {deleteResult.Issue}");
+            }
+            else if(item is IUserProvidedAPIKey { AllowUserProvidedAPIKey: true })
+            {
+                // The user manages their own key for this provider. Keep it in the OS keyring
+                // in case the organization's configuration comes back later, instead of forcing
+                // the user to re-enter it:
+                LOG.LogInformation($"Preserving the user-provided API key for removed enterprise provider '{item.Name}' in the OS keyring.");
             }
             else if(secretStoreType is not null && item is ISecretId secretId)
             {

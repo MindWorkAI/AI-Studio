@@ -10,7 +10,7 @@ using Timer = System.Timers.Timer;
 
 namespace AIStudio.Dialogs;
 
-public partial class DataSourceLocalDirectoryInfoDialog : MSGComponentBase, IAsyncDisposable
+public partial class DataSourceLocalDirectoryInfoDialog : MSGComponentBase
 {
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = null!;
@@ -89,9 +89,9 @@ public partial class DataSourceLocalDirectoryInfoDialog : MSGComponentBase, IAsy
         this.MudDialog.Close();
     }
 
-    #region Implementation of IDisposable
+    #region Overrides of MSGComponentBase
 
-    public async ValueTask DisposeAsync()
+    protected override async ValueTask DisposeResourcesAsync()
     {
         try
         {

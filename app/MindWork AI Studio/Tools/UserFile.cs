@@ -22,8 +22,9 @@ public static class UserFile
     /// <param name="filePath">The full path to the file to be read. Must not be null or empty.</param>
     /// <param name="rustService">Rust service used to read file content.</param>
     /// <param name="dialogService">Dialogservice used to display the Pandoc installation dialog if needed.</param>
+    /// <param name="token">Cancels the extraction when the caller no longer needs the content.</param>
     /// <returns>The result of reading the file.</returns>
-    public static async Task<FileExtractionResult> LoadFileData(string filePath, RustService rustService, IDialogService dialogService)
+    public static async Task<FileExtractionResult> LoadFileData(string filePath, RustService rustService, IDialogService dialogService, CancellationToken token = default)
     {
         if (string.IsNullOrEmpty(filePath))
         {
@@ -61,7 +62,15 @@ public static class UserFile
             }
         }
 
-        var result = await rustService.ReadArbitraryFileData(filePath, int.MaxValue);
+        var result = await rustService.ReadArbitraryFileData(filePath, int.MaxValue, token: token);
+
+        //
+        // Nobody wants to read that their own cancellation failed. We hand the result back so the
+        // caller can tell the two apart, but we report nothing to the user:
+        //
+        if (result.ErrorCode is FileExtractionErrorCode.CANCELLED)
+            return result;
+
         if (!result.HasUsableContent)
         {
             LOGGER.LogError("Reading the file '{FilePath}' failed: code={ErrorCode}, message='{ErrorMessage}'.", filePath, result.ErrorCode, result.ErrorMessage);

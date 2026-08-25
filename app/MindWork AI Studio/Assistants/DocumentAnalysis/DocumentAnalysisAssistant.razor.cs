@@ -1,5 +1,4 @@
 using System.Text;
-using System.Diagnostics.CodeAnalysis;
 
 using AIStudio.Chat;
 using AIStudio.Dialogs;
@@ -14,6 +13,7 @@ using Microsoft.AspNetCore.Components;
 using SharedTools;
 
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
+using AIStudio.Tools.Security;
 
 namespace AIStudio.Assistants.DocumentAnalysis;
 
@@ -371,11 +371,10 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         await this.SettingsManager.StoreSettings();
     }
 
-    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
     private void UpdateProviders()
     {
         this.availableLLMProviders.Clear();
-        foreach (var provider in this.SettingsManager.ConfigurationData.Providers)
+        foreach (var provider in this.SettingsManager.GetAllProviders())
             this.availableLLMProviders.Add(new ConfigurationSelectData<string>(provider.InstanceName, provider.Id));
     }
 
@@ -459,7 +458,6 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         await this.AutoSave(true);
     }
 
-    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed", Justification = "Policy-specific preselection needs to probe providers by id before falling back to SettingsManager APIs.")]
     private void ApplyPolicyPreselection(bool preferPolicyPreselection = false)
     {
         if (this.selectedPolicy is null)
@@ -480,8 +478,8 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         }
 
         // Try to apply the policy preselection:
-        var policyProvider = this.SettingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.selectedPolicy.PreselectedProvider);
-        if (policyProvider is not null && policyProvider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level >= minimumLevel)
+        var policyProvider = this.SettingsManager.GetProviderById(this.selectedPolicy.PreselectedProvider);
+        if (policyProvider != Settings.Provider.NONE && policyProvider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level >= minimumLevel)
         {
             this.ProviderSettings = policyProvider;
             this.CurrentProfile = this.ResolveProfileSelection();
@@ -706,6 +704,13 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
 
                           """);
         }
+
+        //
+        // One report for the whole batch: analysing twenty documents must produce one dialog
+        // listing all of them, not twenty dialogs in a row.
+        //
+        var guardService = Program.SERVICE_PROVIDER.GetRequiredService<PromptInjectionGuardService>();
+        await using var promptInjectionScope = guardService.BeginAction();
 
         var numDocuments = 1;
         foreach (var document in documents)

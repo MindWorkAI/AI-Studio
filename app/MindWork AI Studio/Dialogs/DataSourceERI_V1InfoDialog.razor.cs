@@ -15,7 +15,7 @@ using RetrievalInfo = AIStudio.Tools.ERIClient.DataModel.RetrievalInfo;
 
 namespace AIStudio.Dialogs;
 
-public partial class DataSourceERI_V1InfoDialog : MSGComponentBase, IAsyncDisposable, ISecretId
+public partial class DataSourceERI_V1InfoDialog : MSGComponentBase, ISecretId
 {
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = null!;
@@ -186,9 +186,9 @@ public partial class DataSourceERI_V1InfoDialog : MSGComponentBase, IAsyncDispos
 
     #endregion
 
-    #region Implementation of IDisposable
+    #region Overrides of MSGComponentBase
 
-    public async ValueTask DisposeAsync()
+    protected override async ValueTask DisposeResourcesAsync()
     {
         try
         {

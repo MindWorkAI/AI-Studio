@@ -69,7 +69,12 @@ public static partial class PluginFactory
             AVAILABLE_PLUGINS.Remove(plugin);
 
             if (RUNNING_PLUGINS.FirstOrDefault(runningPlugin => runningPlugin.Id == plugin.Id) is { } runningPluginToRemove)
+            {
                 RUNNING_PLUGINS.Remove(runningPluginToRemove);
+
+                // The plugin is unloaded, so its Lua runtime is of no use anymore:
+                runningPluginToRemove.Dispose();
+            }
 
             LOG.LogInformation("Unloaded the plugin '{PluginName}' ({PluginId}). Reason: {Reason}.", plugin.Name, plugin.Id, reason);
         }

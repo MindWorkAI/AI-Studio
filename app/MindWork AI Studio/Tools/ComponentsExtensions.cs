@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
@@ -62,11 +61,12 @@ public static class ComponentsExtensions
     {
         Components.NONE => false,
         Components.DYNAMIC_ASSISTANT => false,
-        
+
         Components.ERI_ASSISTANT => false,
         Components.BIAS_DAY_ASSISTANT => false,
         Components.I18N_ASSISTANT => false,
         Components.DOCUMENT_ANALYSIS_ASSISTANT => false,
+        Components.BATCH_PROCESSING_ASSISTANT => false,
         Components.LOG_VIEWER_ASSISTANT => false,
         
         Components.APP_SETTINGS => false,
@@ -99,6 +99,7 @@ public static class ComponentsExtensions
         Components.ERI_ASSISTANT => TB("ERI Server"),
         Components.I18N_ASSISTANT => TB("Localization Assistant"),
         Components.DOCUMENT_ANALYSIS_ASSISTANT => TB("Document Analysis Assistant"),
+        Components.BATCH_PROCESSING_ASSISTANT => TB("Batch Processing Assistant"),
         Components.SLIDE_BUILDER_ASSISTANT => TB("Slide Planner Assistant"),
         Components.VISUAL_BRIEFING_ASSISTANT => TB("Visual Briefing Assistant"),
         Components.META_ASSISTANT => TB("Assistant Builder"),
@@ -157,50 +158,50 @@ public static class ComponentsExtensions
         // We do this inside the Document Analysis Assistant component:
         Components.DOCUMENT_ANALYSIS_ASSISTANT => ConfidenceLevel.NONE,
 
+        // A policy-specific minimum is merged with this component default inside
+        // the Batch Processing Assistant; the stricter level wins.
+        Components.BATCH_PROCESSING_ASSISTANT => settingsManager.ConfigurationData.BatchProcessing.PreselectOptions ? settingsManager.ConfigurationData.BatchProcessing.MinimumProviderConfidence : default,
+
         _ => default,
     };
 
-    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
-    public static AIStudio.Settings.Provider PreselectedProvider(this Components component, SettingsManager settingsManager)
+    public static AIStudio.Settings.Provider PreselectedProvider(this Components component, SettingsManager settingsManager) => component switch
     {
-        var preselectedProvider = component switch
-        {
-            Components.GRAMMAR_SPELLING_ASSISTANT => settingsManager.ConfigurationData.GrammarSpelling.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.GrammarSpelling.PreselectedProvider) : null,
-            Components.ICON_FINDER_ASSISTANT => settingsManager.ConfigurationData.IconFinder.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.IconFinder.PreselectedProvider) : null,
-            Components.REWRITE_ASSISTANT => settingsManager.ConfigurationData.RewriteImprove.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.RewriteImprove.PreselectedProvider) : null,
-            Components.PROMPT_OPTIMIZER_ASSISTANT => settingsManager.ConfigurationData.PromptOptimizer.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.PromptOptimizer.PreselectedProvider) : null,
-            Components.TRANSLATION_ASSISTANT => settingsManager.ConfigurationData.Translation.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.Translation.PreselectedProvider) : null,
-            Components.AGENDA_ASSISTANT => settingsManager.ConfigurationData.Agenda.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.Agenda.PreselectedProvider) : null,
-            Components.CODING_ASSISTANT => settingsManager.ConfigurationData.Coding.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.Coding.PreselectedProvider) : null,
-            Components.TEXT_SUMMARIZER_ASSISTANT => settingsManager.ConfigurationData.TextSummarizer.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.TextSummarizer.PreselectedProvider) : null,
-            Components.EMAIL_ASSISTANT => settingsManager.ConfigurationData.EMail.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.EMail.PreselectedProvider) : null,
-            Components.LEGAL_CHECK_ASSISTANT => settingsManager.ConfigurationData.LegalCheck.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.LegalCheck.PreselectedProvider) : null,
-            Components.SYNONYMS_ASSISTANT => settingsManager.ConfigurationData.Synonyms.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.Synonyms.PreselectedProvider) : null,
-            Components.MY_TASKS_ASSISTANT => settingsManager.ConfigurationData.MyTasks.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.MyTasks.PreselectedProvider) : null,
-            Components.JOB_POSTING_ASSISTANT => settingsManager.ConfigurationData.JobPostings.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.JobPostings.PreselectedProvider) : null,
-            Components.BIAS_DAY_ASSISTANT => settingsManager.ConfigurationData.BiasOfTheDay.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.BiasOfTheDay.PreselectedProvider) : null,
-            Components.ERI_ASSISTANT => settingsManager.ConfigurationData.ERI.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.ERI.PreselectedProvider) : null,
-            Components.I18N_ASSISTANT => settingsManager.ConfigurationData.I18N.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.I18N.PreselectedProvider) : null,
-            Components.SLIDE_BUILDER_ASSISTANT => settingsManager.ConfigurationData.SlideBuilder.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.SlideBuilder.PreselectedProvider) : null,
-            Components.VISUAL_BRIEFING_ASSISTANT => settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.VisualBriefing.PreselectedProvider),
-            
-            // The Document Analysis Assistant does not have a preselected provider at the component level.
-            // The provider is selected per policy instead. We do this inside the Document Analysis Assistant component.
-            Components.DOCUMENT_ANALYSIS_ASSISTANT => Settings.Provider.NONE,
+        Components.GRAMMAR_SPELLING_ASSISTANT => settingsManager.ConfigurationData.GrammarSpelling.PreselectOptions ? settingsManager.GetProviderById(settingsManager.ConfigurationData.GrammarSpelling.PreselectedProvider) : Settings.Provider.NONE,
+        Components.ICON_FINDER_ASSISTANT => settingsManager.ConfigurationData.IconFinder.PreselectOptions ? settingsManager.GetProviderById(settingsManager.ConfigurationData.IconFinder.PreselectedProvider) : Settings.Provider.NONE,
+        Components.REWRITE_ASSISTANT => settingsManager.ConfigurationData.RewriteImprove.PreselectOptions ? settingsManager.GetProviderById(settingsManager.ConfigurationData.RewriteImprove.PreselectedProvider) : Settings.Provider.NONE,
+        Components.PROMPT_OPTIMIZER_ASSISTANT => settingsManager.ConfigurationData.PromptOptimizer.PreselectOptions ? settingsManager.GetProviderById(settingsManager.ConfigurationData.PromptOptimizer.PreselectedProvider) : Settings.Provider.NONE,
+        Components.TRANSLATION_ASSISTANT => settingsManager.ConfigurationData.Translation.PreselectOptions ? settingsManager.GetProviderById(settingsManager.ConfigurationData.Translation.PreselectedProvider) : Settings.Provider.NONE,
+        Components.AGENDA_ASSISTANT => settingsManager.ConfigurationData.Agenda.PreselectOptions ? settingsManager.GetProviderById(settingsManager.ConfigurationData.Agenda.PreselectedProvider) : Settings.Provider.NONE,
+        Components.CODING_ASSISTANT => settingsManager.ConfigurationData.Coding.PreselectOptions ? settingsManager.GetProviderById(settingsManager.ConfigurationData.Coding.PreselectedProvider) : Settings.Provider.NONE,
+        Components.TEXT_SUMMARIZER_ASSISTANT => settingsManager.ConfigurationData.TextSummarizer.PreselectOptions ? settingsManager.GetProviderById(settingsManager.ConfigurationData.TextSummarizer.PreselectedProvider) : Settings.Provider.NONE,
+        Components.EMAIL_ASSISTANT => settingsManager.ConfigurationData.EMail.PreselectOptions ? settingsManager.GetProviderById(settingsManager.ConfigurationData.EMail.PreselectedProvider) : Settings.Provider.NONE,
+        Components.LEGAL_CHECK_ASSISTANT => settingsManager.ConfigurationData.LegalCheck.PreselectOptions ? settingsManager.GetProviderById(settingsManager.ConfigurationData.LegalCheck.PreselectedProvider) : Settings.Provider.NONE,
+        Components.SYNONYMS_ASSISTANT => settingsManager.ConfigurationData.Synonyms.PreselectOptions ? settingsManager.GetProviderById(settingsManager.ConfigurationData.Synonyms.PreselectedProvider) : Settings.Provider.NONE,
+        Components.MY_TASKS_ASSISTANT => settingsManager.ConfigurationData.MyTasks.PreselectOptions ? settingsManager.GetProviderById(settingsManager.ConfigurationData.MyTasks.PreselectedProvider) : Settings.Provider.NONE,
+        Components.JOB_POSTING_ASSISTANT => settingsManager.ConfigurationData.JobPostings.PreselectOptions ? settingsManager.GetProviderById(settingsManager.ConfigurationData.JobPostings.PreselectedProvider) : Settings.Provider.NONE,
+        Components.BIAS_DAY_ASSISTANT => settingsManager.ConfigurationData.BiasOfTheDay.PreselectOptions ? settingsManager.GetProviderById(settingsManager.ConfigurationData.BiasOfTheDay.PreselectedProvider) : Settings.Provider.NONE,
+        Components.ERI_ASSISTANT => settingsManager.ConfigurationData.ERI.PreselectOptions ? settingsManager.GetProviderById(settingsManager.ConfigurationData.ERI.PreselectedProvider) : Settings.Provider.NONE,
+        Components.I18N_ASSISTANT => settingsManager.ConfigurationData.I18N.PreselectOptions ? settingsManager.GetProviderById(settingsManager.ConfigurationData.I18N.PreselectedProvider) : Settings.Provider.NONE,
+        Components.SLIDE_BUILDER_ASSISTANT => settingsManager.ConfigurationData.SlideBuilder.PreselectOptions ? settingsManager.GetProviderById(settingsManager.ConfigurationData.SlideBuilder.PreselectedProvider) : Settings.Provider.NONE,
+        Components.VISUAL_BRIEFING_ASSISTANT => settingsManager.GetProviderById(settingsManager.ConfigurationData.VisualBriefing.PreselectedProvider),
 
-            Components.DYNAMIC_ASSISTANT => Components.CHAT.PreselectedProvider(settingsManager),
-            Components.CHAT => settingsManager.ConfigurationData.Chat.PreselectOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.Chat.PreselectedProvider) : null,
+        // The Document Analysis Assistant does not have a preselected provider at the component level.
+        // The provider is selected per policy instead. We do this inside the Document Analysis Assistant component.
+        Components.DOCUMENT_ANALYSIS_ASSISTANT => Settings.Provider.NONE,
 
-            Components.AGENT_TEXT_CONTENT_CLEANER => settingsManager.ConfigurationData.TextContentCleaner.PreselectAgentOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.TextContentCleaner.PreselectedAgentProvider) : null,
-            Components.AGENT_DATA_SOURCE_SELECTION => settingsManager.ConfigurationData.AgentDataSourceSelection.PreselectAgentOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.AgentDataSourceSelection.PreselectedAgentProvider) : null,
-            Components.AGENT_RETRIEVAL_CONTEXT_VALIDATION => settingsManager.ConfigurationData.AgentRetrievalContextValidation.PreselectAgentOptions ? settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.AgentRetrievalContextValidation.PreselectedAgentProvider) : null,
-            Components.AGENT_ASSISTANT_PLUGIN_AUDIT => settingsManager.ConfigurationData.Providers.FirstOrDefault(x => x.Id == settingsManager.ConfigurationData.AssistantPluginAudit.PreselectedAgentProvider),
+        Components.BATCH_PROCESSING_ASSISTANT => settingsManager.ConfigurationData.BatchProcessing.PreselectOptions ? settingsManager.GetProviderById(settingsManager.ConfigurationData.BatchProcessing.PreselectedProvider) : Settings.Provider.NONE,
 
-            _ => Settings.Provider.NONE,
-        };
-        
-        return preselectedProvider ?? Settings.Provider.NONE;
-    }
+        // Dynamic assistants have no dedicated settings yet, so they derive their defaults from the chat:
+        Components.DYNAMIC_ASSISTANT or Components.CHAT => settingsManager.ConfigurationData.Chat.PreselectOptions ? settingsManager.GetProviderById(settingsManager.ConfigurationData.Chat.PreselectedProvider) : Settings.Provider.NONE,
+
+        Components.AGENT_TEXT_CONTENT_CLEANER => settingsManager.ConfigurationData.TextContentCleaner.PreselectAgentOptions ? settingsManager.GetProviderById(settingsManager.ConfigurationData.TextContentCleaner.PreselectedAgentProvider) : Settings.Provider.NONE,
+        Components.AGENT_DATA_SOURCE_SELECTION => settingsManager.ConfigurationData.AgentDataSourceSelection.PreselectAgentOptions ? settingsManager.GetProviderById(settingsManager.ConfigurationData.AgentDataSourceSelection.PreselectedAgentProvider) : Settings.Provider.NONE,
+        Components.AGENT_RETRIEVAL_CONTEXT_VALIDATION => settingsManager.ConfigurationData.AgentRetrievalContextValidation.PreselectAgentOptions ? settingsManager.GetProviderById(settingsManager.ConfigurationData.AgentRetrievalContextValidation.PreselectedAgentProvider) : Settings.Provider.NONE,
+        Components.AGENT_ASSISTANT_PLUGIN_AUDIT => settingsManager.GetProviderById(settingsManager.ConfigurationData.AssistantPluginAudit.PreselectedAgentProvider),
+
+        _ => Settings.Provider.NONE,
+    };
 
     public static ProfilePreselection GetProfilePreselection(this Components component, SettingsManager settingsManager)
     {
@@ -215,8 +216,8 @@ public static class ComponentsExtensions
             Components.ERI_ASSISTANT => settingsManager.ConfigurationData.ERI.PreselectOptions ? settingsManager.ConfigurationData.ERI.PreselectedProfile : string.Empty,
             Components.SLIDE_BUILDER_ASSISTANT => settingsManager.ConfigurationData.SlideBuilder.PreselectOptions ? settingsManager.ConfigurationData.SlideBuilder.PreselectedProfile : string.Empty,
             Components.VISUAL_BRIEFING_ASSISTANT => settingsManager.ConfigurationData.VisualBriefing.PreselectedProfile,
-            Components.DYNAMIC_ASSISTANT => (string)Components.CHAT.GetProfilePreselection(settingsManager),
-            Components.CHAT => settingsManager.ConfigurationData.Chat.PreselectOptions ? settingsManager.ConfigurationData.Chat.PreselectedProfile : string.Empty,
+            // Dynamic assistants have no dedicated settings yet, so they derive their defaults from the chat:
+            Components.DYNAMIC_ASSISTANT or Components.CHAT => settingsManager.ConfigurationData.Chat.PreselectOptions ? settingsManager.ConfigurationData.Chat.PreselectedProfile : string.Empty,
 
             // The Document Analysis Assistant does not have a preselected profile at the component level.
             // The profile is selected per policy instead. We do this inside the Document Analysis Assistant component:
@@ -230,8 +231,8 @@ public static class ComponentsExtensions
     
     public static ChatTemplate PreselectedChatTemplate(this Components component, SettingsManager settingsManager) => component switch
     {
-        Components.DYNAMIC_ASSISTANT => Components.CHAT.PreselectedChatTemplate(settingsManager),
-        Components.CHAT => settingsManager.ConfigurationData.Chat.PreselectOptions ? settingsManager.GetChatTemplateById(settingsManager.ConfigurationData.Chat.PreselectedChatTemplate) : ChatTemplate.NO_CHAT_TEMPLATE,
+        // Dynamic assistants have no dedicated settings yet, so they derive their defaults from the chat:
+        Components.DYNAMIC_ASSISTANT or Components.CHAT => settingsManager.ConfigurationData.Chat.PreselectOptions ? settingsManager.GetChatTemplateById(settingsManager.ConfigurationData.Chat.PreselectedChatTemplate) : ChatTemplate.NO_CHAT_TEMPLATE,
         
         _ => ChatTemplate.NO_CHAT_TEMPLATE,
     };

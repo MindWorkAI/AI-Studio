@@ -94,6 +94,19 @@ CONFIG["LLM_PROVIDERS"] = {}
 --     -- Please do not add the enclosing curly braces {} here. Also, no trailing comma is allowed.
 --     ["AdditionalJsonApiParameters"] = "",
 --
+--     -- Optional: replace the built-in provider logo with a project-specific icon.
+--     -- The path is relative to this plugin.lua and must point to an SVG file inside
+--     -- this plugin directory, for example: assets/project-icon.svg. Absolute paths,
+--     -- parent-directory segments (..), links leaving the plugin directory, files
+--     -- larger than 32 KiB, and files which are not well-formed SVG are rejected.
+--     -- An invalid or missing icon logs a warning while the provider still loads
+--     -- with its built-in logo. AI Studio shows every icon in an isolated image
+--     -- element, so scripts or external references inside an SVG never run; for the
+--     -- same reason, the icon cannot inherit colors from the app and has to bring
+--     -- its own. Provide a single icon with enough contrast on both light and dark
+--     -- surfaces.
+--     -- ["IconPath"] = "assets/project-icon.svg",
+--
 --     -- Optional: expert capability overrides.
 --     -- Allowed keys are exactly:
 --     -- AUDIO_INPUT, MULTIPLE_IMAGE_INPUT, SPEECH_INPUT, VIDEO_INPUT,
@@ -119,6 +132,14 @@ CONFIG["LLM_PROVIDERS"] = {}
 --     -- You can export an encrypted API key from an existing provider using the export button in the settings.
 --     -- ["APIKey"] = "ENC:v1:<base64-encoded encrypted data>",
 --
+--     -- Optional: let each user set their own API key for this otherwise locked provider,
+--     -- instead of (or in addition to not) embedding one centrally. Host, model, instance
+--     -- name, and every other field stay locked; only the API key becomes editable.
+--     -- Mutually exclusive with "APIKey" above: when both are set, the embedded key is
+--     -- ignored and a warning is logged. The user's key is preserved in the OS keyring even
+--     -- if this configuration is later withdrawn.
+--     -- ["AllowUserProvidedAPIKey"] = true,
+--
 --     ["Model"] = {
 --         ["Id"] = "<the model ID>",
 --         ["DisplayName"] = "<user-friendly name of the model>",
@@ -138,8 +159,17 @@ CONFIG["TRANSCRIPTION_PROVIDERS"] = {}
 --     ["Host"] = "WHISPER_CPP",
 --     ["Hostname"] = "<https address of the server>",
 --
+--     -- Optional: project-specific SVG icon. The same path, size, rendering, and
+--     -- fallback rules described for IconPath under LLM_PROVIDERS apply here.
+--     -- ["IconPath"] = "assets/project-icon.svg",
+--
 --     -- Optional: Encrypted API key (see LLM_PROVIDERS example for details)
 --     -- ["APIKey"] = "ENC:v1:<base64-encoded encrypted data>",
+--
+--     -- Optional: let each user set their own API key for this otherwise locked transcription
+--     -- provider (see LLM_PROVIDERS example for details). Mutually exclusive with "APIKey"
+--     -- above: when both are set, the embedded key is ignored and a warning is logged.
+--     -- ["AllowUserProvidedAPIKey"] = true,
 --
 --     ["Model"] = {
 --         ["Id"] = "<the model ID>",
@@ -160,8 +190,17 @@ CONFIG["EMBEDDING_PROVIDERS"] = {}
 --     ["Host"] = "OLLAMA",
 --     ["Hostname"] = "<https address of the server>",
 --
+--     -- Optional: project-specific SVG icon. The same path, size, rendering, and
+--     -- fallback rules described for IconPath under LLM_PROVIDERS apply here.
+--     -- ["IconPath"] = "assets/project-icon.svg",
+--
 --     -- Optional: Encrypted API key (see LLM_PROVIDERS example for details)
 --     -- ["APIKey"] = "ENC:v1:<base64-encoded encrypted data>",
+--
+--     -- Optional: let each user set their own API key for this otherwise locked embedding
+--     -- provider (see LLM_PROVIDERS example for details). Mutually exclusive with "APIKey"
+--     -- above: when both are set, the embedded key is ignored and a warning is logged.
+--     -- ["AllowUserProvidedAPIKey"] = true,
 --
 --     ["Model"] = {
 --         ["Id"] = "<the model ID, e.g., nomic-embed-text>",
@@ -253,6 +292,14 @@ CONFIG["SETTINGS"] = {}
 -- of that, their choice outlives your configuration and stays as it is.
 -- ------
 
+-- Both update settings below only ever apply to installations AI Studio is able to update.
+-- Installations you rolled out yourself, for example, into C:\Program Files or into a location
+-- your users cannot write to, never update themselves, no matter what you configure here. You
+-- can therefore leave automatic updates enabled for everybody: your deployments ignore them,
+-- while installations your colleagues fetched from GitHub keep updating themselves. Place a file
+-- named "managed-installation" next to the program file to mark any other installation as one
+-- you maintain. The Enterprise IT documentation describes this in detail.
+
 -- Configure the update check interval:
 -- Allowed values are: NO_CHECK, DISABLE_UPDATES, ONCE_STARTUP, HOURLY, DAILY, WEEKLY
 -- NO_CHECK disables automatic checks, but users can still check and install updates manually.
@@ -285,6 +332,11 @@ CONFIG["SETTINGS"] = {}
 
 -- Configure whether the vision panel is shown on the welcome page.
 -- CONFIG["SETTINGS"]["DataApp.ShowVision"] = false
+
+-- Configure whether AI Studio shows a dialog listing suspicious instructions it
+-- removed from external content, together with an explanation of the attack pattern.
+-- A short notification is still shown when this setting is disabled.
+-- CONFIG["SETTINGS"]["DataApp.ShowPromptInjectionAlert"] = true
 
 -- Configure the user permission to add providers:
 -- CONFIG["SETTINGS"]["DataApp.AllowUserToAddProvider"] = false
@@ -394,6 +446,70 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourceIds.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataChat.SendToChatDataSourceBehavior.AllowUserOverride"] = true
 
+-- Configure defaults for the Batch Processing Assistant.
+-- Preselection must be enabled for the remaining batch settings to take effect.
+-- CONFIG["SETTINGS"]["DataBatchProcessing.PreselectOptions"] = true
+--
+-- Configure the default input and output folders.
+-- Leave the input folder empty to require a selection for every new batch run.
+-- Leave the output folder empty to use the ai-results subfolder of the input folder.
+-- CONFIG["SETTINGS"]["DataBatchProcessing.InputDirectory"] = ""
+-- CONFIG["SETTINGS"]["DataBatchProcessing.OutputDirectory"] = ""
+--
+-- Configure the default file patterns and whether subfolders are included.
+-- Separate multiple patterns with semicolons.
+-- CONFIG["SETTINGS"]["DataBatchProcessing.FilePatterns"] = "*.pdf;*.docx;*.pptx;*.xlsx;*.md;*.txt;*.mp3;*.wav;*.wave;*.aac;*.flac;*.ogg;*.opus;*.m4a;*.m4b;*.wma;*.alac;*.aif;*.aiff;*.caf;*.mp4;*.m4v;*.avi;*.mkv;*.mov;*.wmv;*.flv;*.webm"
+-- CONFIG["SETTINGS"]["DataBatchProcessing.IncludeSubdirectories"] = false
+--
+-- Configure the default instruction source.
+-- Allowed values are: FREE_PROMPT, FILE_IMPORT, POLICY
+-- CONFIG["SETTINGS"]["DataBatchProcessing.PromptSource"] = "FREE_PROMPT"
+-- CONFIG["SETTINGS"]["DataBatchProcessing.FreePrompt"] = "Summarize each document."
+-- CONFIG["SETTINGS"]["DataBatchProcessing.PromptFilePath"] = ""
+--
+-- The policy ID must reference an entry in CONFIG["DOCUMENT_ANALYSIS_POLICIES"] or a
+-- user-configured policy. It is used only when PromptSource is POLICY.
+-- CONFIG["SETTINGS"]["DataBatchProcessing.PreselectedPolicyId"] = ""
+--
+-- Configure the default output mode.
+-- Allowed values are: MARKDOWN_FILES, TABLE_ONLY
+-- CONFIG["SETTINGS"]["DataBatchProcessing.OutputMode"] = "MARKDOWN_FILES"
+-- CONFIG["SETTINGS"]["DataBatchProcessing.CsvFileName"] = "batch-results.csv"
+-- CONFIG["SETTINGS"]["DataBatchProcessing.ResultColumnHeader"] = "Result"
+-- Allowed CSV separator values are: COMMA, SEMICOLON, PIPE, TAB, CUSTOM
+-- A custom separator must be exactly one punctuation or symbol character.
+-- CONFIG["SETTINGS"]["DataBatchProcessing.CsvSeparator"] = "SEMICOLON"
+-- CONFIG["SETTINGS"]["DataBatchProcessing.CustomCsvSeparator"] = "^"
+--
+-- Enforce the lower end of the random pause between files for the organization.
+-- The value must be between 6 and 300 seconds. Users can configure only the upper
+-- end of the interval while this setting is managed by a configuration plugin.
+-- CONFIG["SETTINGS"]["DataBatchProcessing.MinimumDelaySeconds"] = 12
+--
+-- Configure the minimum provider confidence and the default provider.
+-- Allowed confidence values are: NONE, UNTRUSTED, UNKNOWN, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
+-- A policy can require a higher minimum confidence; the stricter level wins.
+-- CONFIG["SETTINGS"]["DataBatchProcessing.MinimumProviderConfidence"] = "NONE"
+-- CONFIG["SETTINGS"]["DataBatchProcessing.PreselectedProvider"] = "00000000-0000-0000-0000-000000000000"
+--
+-- Allow users to change individual managed batch defaults locally.
+-- CONFIG["SETTINGS"]["DataBatchProcessing.PreselectOptions.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataBatchProcessing.InputDirectory.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataBatchProcessing.OutputDirectory.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataBatchProcessing.FilePatterns.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataBatchProcessing.IncludeSubdirectories.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataBatchProcessing.PromptSource.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataBatchProcessing.FreePrompt.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataBatchProcessing.PromptFilePath.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataBatchProcessing.PreselectedPolicyId.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataBatchProcessing.OutputMode.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataBatchProcessing.CsvFileName.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataBatchProcessing.ResultColumnHeader.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataBatchProcessing.CsvSeparator.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataBatchProcessing.CustomCsvSeparator.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataBatchProcessing.MinimumProviderConfidence.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataBatchProcessing.PreselectedProvider.AllowUserOverride"] = true
+
 -- Configure the transcription provider for voice-to-text functionality.
 -- It must be one of the transcription provider IDs defined in CONFIG["TRANSCRIPTION_PROVIDERS"].
 -- Without a selected transcription provider, dictation and transcription features will be disabled.
@@ -407,7 +523,8 @@ CONFIG["SETTINGS"] = {}
 --   CODING_ASSISTANT, TEXT_SUMMARIZER_ASSISTANT, EMAIL_ASSISTANT,
 --   LEGAL_CHECK_ASSISTANT, SYNONYMS_ASSISTANT, MY_TASKS_ASSISTANT,
 --   JOB_POSTING_ASSISTANT, BIAS_DAY_ASSISTANT, ERI_ASSISTANT,
---   DOCUMENT_ANALYSIS_ASSISTANT, SLIDE_BUILDER_ASSISTANT, VISUAL_BRIEFING_ASSISTANT, I18N_ASSISTANT,
+--   DOCUMENT_ANALYSIS_ASSISTANT, BATCH_PROCESSING_ASSISTANT, SLIDE_BUILDER_ASSISTANT,
+--   VISUAL_BRIEFING_ASSISTANT, I18N_ASSISTANT,
 --   LOG_VIEWER_ASSISTANT
 --
 -- Replaces, does not merge: a configuration with a higher priority replaces this list
@@ -569,7 +686,7 @@ CONFIG["SETTINGS"] = {}
 -- Configure a custom confidence scheme.
 -- This is used when DataConfidence.ConfidenceScheme is set to CUSTOM.
 -- Allowed provider keys are: OPEN_AI, ANTHROPIC, MISTRAL, GOOGLE, X, DEEP_SEEK, ALIBABA_CLOUD,
---   PERPLEXITY, OPEN_ROUTER, FIREWORKS, GROQ, HUGGINGFACE, SELF_HOSTED, HELMHOLTZ, GWDG
+--   PERPLEXITY, OPEN_ROUTER, HETZNER, FIREWORKS, GROQ, HUGGINGFACE, SELF_HOSTED, HELMHOLTZ, GWDG
 -- Allowed confidence values are: UNTRUSTED, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
 --
 -- Replaces, does not merge: a configuration with a higher priority replaces the whole
@@ -586,6 +703,7 @@ CONFIG["SETTINGS"] = {}
 --     ["ALIBABA_CLOUD"] = "LOW",
 --     ["PERPLEXITY"] = "MODERATE",
 --     ["OPEN_ROUTER"] = "MODERATE",
+--     ["HETZNER"] = "HIGH",
 --     ["FIREWORKS"] = "MODERATE",
 --     ["GROQ"] = "MODERATE",
 --     ["HUGGINGFACE"] = "MODERATE",

@@ -138,6 +138,11 @@ public partial class VisualBriefingAssistant
         this.MediaTranscriptionService.ClearOwnerState(MediaImportOwner.ForVisualBriefing(id));
         await this.Store.DeleteAsync(id);
         await this.Store.ForgetSelectionAsync(id);
+
+        // The briefing is gone, so neither its build state nor its progress snapshot is of use:
+        this.BuildOrchestrator.ForgetBriefing(id);
+        this.BuildProgressService.Forget(id);
+
         this.ClearSelectedProject();
 
         await this.ReloadListAsync();

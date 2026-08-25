@@ -290,7 +290,25 @@ public static partial class PluginFactory
         return AVAILABLE_PLUGINS.Any(plugin => plugin.Id == configPluginId && plugin.Type is PluginType.CONFIGURATION && IsEnterpriseTestConfigurationPath(plugin.LocalPath));
     }
 
-    private static async Task LockHotReloadAsync()
+    /// <summary>
+    /// Counts how many operations currently write to the plugins directory.
+    /// </summary>
+    /// <remarks>
+    /// Downloading an organization's configuration and installing a plugin can run at the same
+    /// time. Without counting, whichever finishes first would unlock hot reloading while the other
+    /// is still writing.
+    /// </remarks>
+    private static int HOT_RELOAD_LOCK_COUNT;
+    private static readonly SemaphoreSlim HOT_RELOAD_LOCK_SEMAPHORE = new(1, 1);
+
+    /// <summary>
+    /// Holds back hot reloading while the caller writes to the plugins directory.
+    /// </summary>
+    /// <remarks>
+    /// Every caller has to release the lock again, so wrap the write in a try-finally block. Hot
+    /// reloading resumes once the last caller has released it.
+    /// </remarks>
+    public static async Task LockHotReloadAsync()
     {
         if (!IsInitialized)
         {
@@ -298,23 +316,28 @@ public static partial class PluginFactory
             return;
         }
 
+        await HOT_RELOAD_LOCK_SEMAPHORE.WaitAsync();
         try
         {
-            if (File.Exists(HOT_RELOAD_LOCK_FILE))
-            {
-                LOG.LogWarning("Hot reload lock file already exists.");
+            if (HOT_RELOAD_LOCK_COUNT++ > 0)
                 return;
-            }
-            
+
             await File.WriteAllTextAsync(HOT_RELOAD_LOCK_FILE, DateTime.UtcNow.ToString("o"));
         }
         catch (Exception e)
         {
             LOG.LogError(e, "An error occurred while trying to lock hot reloading.");
         }
+        finally
+        {
+            HOT_RELOAD_LOCK_SEMAPHORE.Release();
+        }
     }
 
-    private static void UnlockHotReload()
+    /// <summary>
+    /// Releases the hot reload lock of one caller, see LockHotReloadAsync.
+    /// </summary>
+    public static void UnlockHotReload()
     {
         if (!IsInitialized)
         {
@@ -322,8 +345,20 @@ public static partial class PluginFactory
             return;
         }
 
+        HOT_RELOAD_LOCK_SEMAPHORE.Wait();
         try
         {
+            //
+            // The count can be zero when the reload gave up waiting and removed the lock file
+            // itself. We must not go negative, because that would keep the next lock from ever
+            // writing the file again:
+            //
+            if (HOT_RELOAD_LOCK_COUNT > 0)
+                HOT_RELOAD_LOCK_COUNT--;
+
+            if (HOT_RELOAD_LOCK_COUNT > 0)
+                return;
+
             if(File.Exists(HOT_RELOAD_LOCK_FILE))
                 File.Delete(HOT_RELOAD_LOCK_FILE);
             else
@@ -333,30 +368,106 @@ public static partial class PluginFactory
         {
             LOG.LogError(e, "An error occurred while trying to unlock hot reloading.");
         }
+        finally
+        {
+            HOT_RELOAD_LOCK_SEMAPHORE.Release();
+        }
     }
     
     public static void Dispose()
     {
         if(!IsInitialized)
             return;
-        
+
         HOT_RELOAD_WATCHER.Dispose();
+        HOT_RELOAD_DEBOUNCE_TIMER.Dispose();
     }
 
     public static IReadOnlyList<DataMandatoryInfo> GetMandatoryInfos()
     {
-        return RUNNING_PLUGINS
-            .OfType<PluginConfiguration>()
-            .SelectMany(plugin => plugin.MandatoryInfos)
-            .ToList();
+        return ResolveLivePluginContent<DataMandatoryInfo>("mandatory info", plugin => plugin.MandatoryInfos).ToList();
     }
 
     public static IReadOnlyList<DataIntroduction> GetIntroductions()
     {
-        return RUNNING_PLUGINS
-            .OfType<PluginConfiguration>()
-            .SelectMany(plugin => plugin.Introductions)
+        return ResolveLivePluginContent<DataIntroduction>("introduction", plugin => plugin.Introductions)
             .OrderBy(introduction => introduction.Index)
+            .ThenBy(introduction => introduction.Id, StringComparer.Ordinal)
             .ToList();
+    }
+
+    /// <summary>
+    /// Collects live content from all running configuration plugins, so that each content ID appears exactly once.
+    /// </summary>
+    /// <remarks>
+    /// The IDs of live content are chosen by whoever writes the configuration, so two configuration
+    /// plugins may use the same ID. We resolve such a collision the same way a collision on a setting
+    /// is resolved: a configuration which acts on behalf of the organization wins, so nobody can push
+    /// aside what an organization deployed. Among configurations of the same origin, the declared
+    /// priority decides, and when even that is equal, the plugin which started later wins.<br/><br/>
+    /// Duplicates are not merely a cosmetic problem: the home page keys its panels by the introduction
+    /// ID, and the acceptance of a mandatory info is stored per ID as well.
+    /// </remarks>
+    /// <param name="contentKind">The kind of content, used to report a collision in the log.</param>
+    /// <param name="selector">Selects the content of one configuration plugin.</param>
+    /// <typeparam name="T">The type of the live plugin content.</typeparam>
+    /// <returns>The content of all configuration plugins, with every ID resolved to one winner.</returns>
+    private static IEnumerable<T> ResolveLivePluginContent<T>(string contentKind, Func<PluginConfiguration, IEnumerable<T>> selector) where T : ILivePluginContent
+    {
+        var contentById = new Dictionary<string, (T Content, int Authority, int Priority)>(StringComparer.Ordinal);
+        foreach (var plugin in RUNNING_PLUGINS.OfType<PluginConfiguration>())
+        {
+            var authority = GetConfigurationAuthority(plugin.PluginPath);
+            foreach (var content in selector(plugin))
+            {
+                if (contentById.TryGetValue(content.Id, out var currentWinner))
+                {
+                    //
+                    // The candidate needs the higher authority to take over. Within the same
+                    // authority, the higher priority wins, and an equal priority falls back to the
+                    // start order, where the plugin processed later wins:
+                    //
+                    var isTakingOver = authority > currentWinner.Authority || (authority == currentWinner.Authority && plugin.Priority >= currentWinner.Priority);
+                    var winnerPluginId = isTakingOver ? content.EnterpriseConfigurationPluginId : currentWinner.Content.EnterpriseConfigurationPluginId;
+                    var ignoredPluginId = isTakingOver ? currentWinner.Content.EnterpriseConfigurationPluginId : content.EnterpriseConfigurationPluginId;
+
+                    if (winnerPluginId == ignoredPluginId)
+                        LOG.LogWarning($"The configuration plugin '{winnerPluginId}' defines the {contentKind} ID '{content.Id}' more than once. Using its last definition and ignoring the earlier one. Please use each ID only once.");
+                    else
+                    {
+                        var reason = isTakingOver
+                            ? DescribeConfigurationPrecedence(authority, plugin.Priority, currentWinner.Authority, currentWinner.Priority)
+                            : DescribeConfigurationPrecedence(currentWinner.Authority, currentWinner.Priority, authority, plugin.Priority);
+
+                        LOG.LogWarning($"Multiple configuration plugins define the {contentKind} ID '{content.Id}'. Using the one from the configuration plugin '{winnerPluginId}' and ignoring the one from the configuration plugin '{ignoredPluginId}', because {reason}.");
+                    }
+
+                    if (!isTakingOver)
+                        continue;
+                }
+
+                contentById[content.Id] = (content, authority, plugin.Priority);
+            }
+        }
+
+        return contentById.Values.Select(entry => entry.Content);
+    }
+
+    /// <summary>
+    /// Explains in one phrase why one configuration plugin won a collision against another.
+    /// </summary>
+    /// <remarks>
+    /// Administrators read this in the log while they are testing their configuration. Naming the
+    /// deciding rule saves them from guessing why their change had no effect.
+    /// </remarks>
+    private static string DescribeConfigurationPrecedence(int winnerAuthority, int winnerPriority, int ignoredAuthority, int ignoredPriority)
+    {
+        if (winnerAuthority != ignoredAuthority)
+            return "a configuration which acts on behalf of your organization takes precedence over a locally placed one";
+
+        if (winnerPriority != ignoredPriority)
+            return $"it declares the higher priority ({winnerPriority} instead of {ignoredPriority})";
+
+        return $"both declare the same priority ({winnerPriority}), so the configuration plugin which started later wins";
     }
 }

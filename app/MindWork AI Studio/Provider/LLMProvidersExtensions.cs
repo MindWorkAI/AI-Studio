@@ -6,6 +6,7 @@ using AIStudio.Provider.Google;
 using AIStudio.Provider.Groq;
 using AIStudio.Provider.GWDG;
 using AIStudio.Provider.Helmholtz;
+using AIStudio.Provider.Hetzner;
 using AIStudio.Provider.HuggingFace;
 using AIStudio.Provider.Mistral;
 using AIStudio.Provider.OpenAI;
@@ -56,6 +57,7 @@ public static class LLMProvidersExtensions
         LLMProviders.ALIBABA_CLOUD => "Alibaba Cloud",
         LLMProviders.PERPLEXITY => "Perplexity",
         LLMProviders.OPEN_ROUTER => "OpenRouter",
+        LLMProviders.HETZNER => "Hetzner (Experimental)",
 
         LLMProviders.GROQ => "Groq",
         LLMProviders.FIREWORKS => "Fireworks.ai",
@@ -91,6 +93,7 @@ public static class LLMProvidersExtensions
         LLMProviders.ALIBABA_CLOUD => "Alibaba Cloud",
         LLMProviders.PERPLEXITY => "Perplexity",
         LLMProviders.OPEN_ROUTER => "OpenRouter",
+        LLMProviders.HETZNER => "Hetzner",
 
         LLMProviders.GROQ => "Groq",
         LLMProviders.FIREWORKS => "Fireworks.ai",
@@ -144,6 +147,12 @@ public static class LLMProvidersExtensions
 
         LLMProviders.OPEN_ROUTER => Confidence.USA_HUB.WithRegion("America, U.S.").WithSources("https://openrouter.ai/privacy", "https://openrouter.ai/terms").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
 
+        LLMProviders.HETZNER => Confidence.GDPR_EXPERIMENTAL_OPEN_SOURCE.WithRegion("Europe, Germany").WithSources(
+            "https://experiments.hetzner.com/docs/inference",
+            "https://www.hetzner.com/legal/privacy-policy/",
+            "https://www.hetzner.com/legal/terms-and-conditions/"
+        ).WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
+
         LLMProviders.SELF_HOSTED => Confidence.SELF_HOSTED.WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
         
         LLMProviders.HELMHOLTZ => Confidence.GDPR_NO_TRAINING.WithRegion("Europe, Germany").WithSources("https://helmholtz.cloud/services/?serviceID=d7d5c597-a2f6-4bd1-b71e-4d6499d98570").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
@@ -180,6 +189,7 @@ public static class LLMProvidersExtensions
         LLMProviders.HUGGINGFACE => false,
         LLMProviders.PERPLEXITY => false,
         LLMProviders.OPEN_ROUTER => true,
+        LLMProviders.HETZNER => false,
 
         //
         // Self-hosted providers are treated as a special case anyway.
@@ -209,6 +219,7 @@ public static class LLMProvidersExtensions
         // Providers that do not support transcription:
         //
         LLMProviders.OPEN_ROUTER => false,
+        LLMProviders.HETZNER => false,
         LLMProviders.GROQ => false,
         LLMProviders.ANTHROPIC => false,
         LLMProviders.X => false,
@@ -271,6 +282,7 @@ public static class LLMProvidersExtensions
                 LLMProviders.ALIBABA_CLOUD => new ProviderAlibabaCloud { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, IsEnterpriseConfiguration = isEnterpriseConfiguration },
                 LLMProviders.PERPLEXITY => new ProviderPerplexity { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, IsEnterpriseConfiguration = isEnterpriseConfiguration },
                 LLMProviders.OPEN_ROUTER => new ProviderOpenRouter { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, IsEnterpriseConfiguration = isEnterpriseConfiguration },
+                LLMProviders.HETZNER => new ProviderHetzner { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, IsEnterpriseConfiguration = isEnterpriseConfiguration },
 
                 LLMProviders.GROQ => new ProviderGroq { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, IsEnterpriseConfiguration = isEnterpriseConfiguration },
                 LLMProviders.FIREWORKS => new ProviderFireworks { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, IsEnterpriseConfiguration = isEnterpriseConfiguration },
@@ -302,6 +314,7 @@ public static class LLMProvidersExtensions
         LLMProviders.ALIBABA_CLOUD => "https://account.alibabacloud.com/register/intl_register.htm",
         LLMProviders.PERPLEXITY => "https://www.perplexity.ai/account/api",
         LLMProviders.OPEN_ROUTER => "https://openrouter.ai/keys",
+        LLMProviders.HETZNER => "https://experiments.hetzner.com",
 
         LLMProviders.GROQ => "https://console.groq.com/",
         LLMProviders.FIREWORKS => "https://fireworks.ai/login",
@@ -327,6 +340,7 @@ public static class LLMProvidersExtensions
         LLMProviders.PERPLEXITY => "https://www.perplexity.ai/account/api/",
         LLMProviders.OPEN_ROUTER => "https://openrouter.ai/activity",
         LLMProviders.HUGGINGFACE => "https://huggingface.co/settings/billing",
+        LLMProviders.HETZNER => "https://experiments.hetzner.com",
 
         _ => string.Empty,
     };
@@ -345,6 +359,7 @@ public static class LLMProvidersExtensions
         LLMProviders.PERPLEXITY => true,
         LLMProviders.OPEN_ROUTER => true,
         LLMProviders.HUGGINGFACE => true,
+        LLMProviders.HETZNER => true,
 
         _ => false,
     };
@@ -422,6 +437,7 @@ public static class LLMProvidersExtensions
         LLMProviders.ALIBABA_CLOUD => true,
         LLMProviders.PERPLEXITY => true,
         LLMProviders.OPEN_ROUTER => true,
+        LLMProviders.HETZNER => true,
 
         LLMProviders.GROQ => true,
         LLMProviders.FIREWORKS => true,
@@ -445,6 +461,7 @@ public static class LLMProvidersExtensions
         LLMProviders.ALIBABA_CLOUD => true,
         LLMProviders.PERPLEXITY => true,
         LLMProviders.OPEN_ROUTER => true,
+        LLMProviders.HETZNER => true,
 
         LLMProviders.GROQ => true,
         LLMProviders.FIREWORKS => true,

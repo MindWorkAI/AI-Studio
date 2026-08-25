@@ -71,9 +71,17 @@
     height: var(--mud-icon-size-large);
 }
 
-.plugin-icon-container svg {
+.plugin-icon-container img {
     width: 100%;
     height: 100%;
+    object-fit: contain;
+}
+
+.provider-icon {
+    width: 1.5em;
+    height: 1.5em;
+    object-fit: contain;
+    flex: none;
 }
 
 .mud-popover-open.InnerScrollingFix {
@@ -410,4 +418,29 @@
 
 .code-editor .lua-variable {
     color: var(--mw-code-editor-variable, #267f99);
+}
+
+/*
+ * Group headers of the provider tables in the settings (LLM providers, embedding providers,
+ * transcription providers). The rule targets the entire group row, so that the expand button
+ * gets the same compact padding and shading as the header cell itself.
+ */
+tr:has(> .provider-group-header) {
+    cursor: pointer;
+}
+
+tr:has(> .provider-group-header) > .mud-table-cell {
+    padding-top: 0.25em;
+    padding-bottom: 0.25em;
+    background-color: var(--mud-palette-background-gray);
+    border-top: 1px solid var(--mud-palette-lines-default);
+    border-bottom: 1px solid var(--mud-palette-lines-default);
+}
+
+tr:has(> .provider-group-header) .mud-icon-button {
+    padding: 0.15em;
+}
+
+.provider-group-header {
+    font-weight: 600;
 }

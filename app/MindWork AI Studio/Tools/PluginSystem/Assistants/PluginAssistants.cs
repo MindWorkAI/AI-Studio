@@ -302,11 +302,39 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
     }
 
     /// <summary>
+    /// The audit hash of this plugin, together with the directory it was computed for.
+    /// </summary>
+    /// <remarks>
+    /// One record instead of two fields, so that a reader always sees a directory and a hash which
+    /// belong together. Recomputing the same hash twice costs nothing but time, mixing up a hash
+    /// with the wrong directory would show a wrong security state.
+    /// </remarks>
+    private sealed record AuditHashCache(string PluginPath, string Hash);
+
+    private AuditHashCache? auditHashCache;
+
+    /// <summary>
     /// Computes a stable audit hash across all Lua files by hashing a canonical
     /// sequence of relative path length, relative path, content length, and content
     /// for each file in ordinal path order.
     /// </summary>
-    public string ComputeAuditHash() => AssistantPluginHash.Compute(this.PluginPath);
+    /// <remarks>
+    /// The result is kept, because computing it reads every Lua file of the plugin, and the plugins
+    /// page as well as the assistants page ask for it on every render. That is safe: the files of
+    /// one plugin instance never change. Whenever something in the plugins directory changes, the
+    /// plugin factory reloads and creates new instances, cf. PluginFactory.Starting.RestartAllPlugins.
+    /// The plugin directory is assigned after the instance was created, so the cache remembers which
+    /// directory it belongs to.
+    /// </remarks>
+    public string ComputeAuditHash()
+    {
+        if (this.auditHashCache is { } cache && string.Equals(cache.PluginPath, this.PluginPath, StringComparison.Ordinal))
+            return cache.Hash;
+
+        var hash = AssistantPluginHash.Compute(this.PluginPath);
+        this.auditHashCache = new(this.PluginPath, hash);
+        return hash;
+    }
 
     private static string BuildSecureSystemPrompt(string pluginSystemPrompt)
     {

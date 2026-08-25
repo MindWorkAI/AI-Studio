@@ -69,6 +69,7 @@
                     {
                         <MudListItem T="string" Icon="@Icons.Material.Outlined.Storage" Text="@this.LinuxPackageType"/>
                     }
+                    <MudListItem T="string" Icon="@Icons.Material.Outlined.InstallDesktop" Text="@this.InstallationKind"/>
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.Business">
                         @switch (HasAnyActiveEnvironment)
                         {
@@ -275,21 +276,52 @@
                 </MudJustifiedText>
                 
                 <MudJustifiedText Class="mb-3" Typo="Typo.body1">
-                    @T("By clicking on the respective path, the path is copied to the clipboard. You might open these files with a text editor to view their contents.")
+                    @T("You can view and filter these files directly in AI Studio with the Log Viewer. Click a path to copy it to the clipboard, or use the folder button to open its location in your file manager. You can also open the files with a text editor.")
                 </MudJustifiedText>
+
+                <MudButton Variant="Variant.Filled"
+                           StartIcon="@Icons.Material.Filled.Article"
+                           Href="@Routes.ASSISTANT_LOG_VIEWER"
+                           Class="mb-3">
+                    @T("Open Log Viewer")
+                </MudButton>
                 
                 <MudText Typo="Typo.h4">
                     @T("Startup log file")
                 </MudText>
                 <MudList T="string" Class="mb-3">
-                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Folder" Text="@this.logPaths.LogStartupPath" OnClick="@(() => this.CopyStartupLogPath())"/>
+                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Folder">
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="1" Style="width: 100%; min-width: 0;">
+                            <MudLink OnClick="@this.CopyStartupLogPath" Style="min-width: 0; overflow-wrap: anywhere;">
+                                @this.logPaths.LogStartupPath
+                            </MudLink>
+                            <MudTooltip Text="@T("Open in folder")">
+                                <MudIconButton Icon="@Icons.Material.Filled.FolderOpen"
+                                               Size="Size.Medium"
+                                               Disabled="@string.IsNullOrWhiteSpace(this.logPaths.LogStartupPath)"
+                                               OnClick="@(() => this.OpenLogInFileManager(this.logPaths.LogStartupPath))"/>
+                            </MudTooltip>
+                        </MudStack>
+                    </MudListItem>
                 </MudList>
                 
                 <MudText Typo="Typo.h4">
                     @T("Usage log file")
                 </MudText>
                 <MudList T="string" Class="mb-3">
-                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Folder" Text="@this.logPaths.LogAppPath" OnClick="@(() => this.CopyAppLogPath())"/>
+                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Folder">
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="1" Style="width: 100%; min-width: 0;">
+                            <MudLink OnClick="@this.CopyAppLogPath" Style="min-width: 0; overflow-wrap: anywhere;">
+                                @this.logPaths.LogAppPath
+                            </MudLink>
+                            <MudTooltip Text="@T("Open in folder")">
+                                <MudIconButton Icon="@Icons.Material.Filled.FolderOpen"
+                                               Size="Size.Medium"
+                                               Disabled="@string.IsNullOrWhiteSpace(this.logPaths.LogAppPath)"
+                                               OnClick="@(() => this.OpenLogInFileManager(this.logPaths.LogAppPath))"/>
+                            </MudTooltip>
+                        </MudStack>
+                    </MudListItem>
                 </MudList>
             </ExpansionPanel>
 
@@ -319,6 +351,9 @@
                     }
                     
                     <ThirdPartyComponent Name="Qdrant Edge" Developer="Andrey Vasnetsov, Tim Visée, Arnaud Gourlay, Luis Cossío, Ivan Pleshkov, Roman Titov, xzfc, JojiiOfficial & Open Source Community" LicenseName="Apache-2.0" LicenseUrl="https://github.com/qdrant/qdrant/blob/master/LICENSE" RepositoryUrl="https://github.com/qdrant/qdrant" UseCase="@T("Qdrant Edge is an embedded vector database and vector similarity search engine. We use it to realize local RAG—retrieval-augmented generation—within AI Studio. Thanks for the effort and great work that has been and is being put into Qdrant.")"/>
+                    <ThirdPartyComponent Name="regex" Developer="Andrew Gallant, Alex Crichton, The Rust Project Developers & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/rust-lang/regex/blob/master/LICENSE-MIT" RepositoryUrl="https://github.com/rust-lang/regex" UseCase="@T("The regex crate detects structural and obfuscated prompt-injection patterns in untrusted document content. Its linear-time matching without backtracking keeps these scans predictable, even for hostile input.")"/>
+                    <ThirdPartyComponent Name="aho-corasick" Developer="Alfred V. Aho, Margaret J. Corasick, Andrew Gallant & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/BurntSushi/aho-corasick/blob/master/LICENSE-MIT" RepositoryUrl="https://github.com/BurntSushi/aho-corasick" UseCase="@T("The aho-corasick crate searches the fixed catalog of prompt-injection phrases in one pass, allowing AI Studio to scan large documents efficiently. We thank Alfred V. Aho and Margaret J. Corasick for publishing the algorithm in 1975, and Andrew Gallant and the Open Source Community for bringing it to Rust.")"/>
+                    <ThirdPartyComponent Name="toml" Developer="Ed Page, Alex Crichton, ordian, Eric Huss & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/toml-rs/toml/blob/main/LICENSE-MIT" RepositoryUrl="https://github.com/toml-rs/toml" UseCase="@T("The toml crate parses the embedded prompt-injection phrase catalog when the runtime starts. This keeps the detection rules separate from the Rust implementation and easier to maintain.")"/>
                     <ThirdPartyComponent Name="axum" Developer="David Pedersen, Jonas Platte, tottoto, David Mládek, Yann Simon, Tobias Bieniek, Open Source Community & Tokio Project" LicenseName="MIT" LicenseUrl="https://github.com/tokio-rs/axum/blob/main/LICENSE" RepositoryUrl="https://github.com/tokio-rs/axum" UseCase="@T("Axum is used to provide the small internal service that connects the Rust runtime with the app's user interface. This lets both parts of AI Studio exchange information while the app is running.")"/>
                     <ThirdPartyComponent Name="axum-server" Developer="Eray Karatay, Adi Salimgereyev, daxpedda & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/programatik29/axum-server/blob/master/LICENSE" RepositoryUrl="https://github.com/programatik29/axum-server" UseCase="@T("Axum server runs the internal axum service over a secure local connection. This helps AI Studio protect the communication between the Rust runtime and the user interface.")"/>
                     <ThirdPartyComponent Name="Rustls" Developer="Joe Birr-Pixton, Dirkjan Ochtman, Daniel McCarney, Brian Smith, Jacob Hoffman-Andrews, Jorge Aparicio & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/rustls/rustls/blob/main/LICENSE-MIT" RepositoryUrl="https://github.com/rustls/rustls" UseCase="@T("Rustls helps secure the internal connection between the app's user interface and the Rust runtime. This protects the local communication that AI Studio needs while it is running.")"/>
@@ -358,7 +393,19 @@
                     <ThirdPartyComponent Name="ReverseMarkdown" Developer="Babu Annamalai & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/mysticmind/reversemarkdown-net/blob/master/LICENSE" RepositoryUrl="https://github.com/mysticmind/reversemarkdown-net" UseCase="@T("This library is used to convert HTML to Markdown. This is necessary, e.g., when you provide a URL as input for an assistant.")"/>
                     <ThirdPartyComponent Name="wikEd diff" Developer="Cacycle & Open Source Community" LicenseName="None (public domain)" LicenseUrl="https://en.wikipedia.org/wiki/User:Cacycle/diff#License" RepositoryUrl="https://en.wikipedia.org/wiki/User:Cacycle/diff" UseCase="@T("This library is used to display the differences between two texts. This is necessary, e.g., for the grammar and spelling assistant.")"/>
                     <ThirdPartyComponent Name="CodeJar" Developer="Anton Medvedev" LicenseName="MIT" LicenseUrl="https://github.com/antonmedv/codejar/blob/master/LICENSE" RepositoryUrl="https://github.com/antonmedv/codejar/" UseCase="@T("CodeJar is a lightweight embeddable code editor for the browser.")"/>
+                    <ThirdPartyComponent Name="Simple Icons" Developer="Simple Icons Contributors & Open Source Community" LicenseName="CC0-1.0" LicenseUrl="https://github.com/simple-icons/simple-icons/blob/16.21.0/LICENSE.md" RepositoryUrl="https://github.com/simple-icons/simple-icons" UseCase="@T("Several of the provider logos in AI Studio use the icon paths and brand colors published by the Simple Icons project, which releases them into the public domain under CC0. The trademarks themselves are not part of that release and remain the property of their respective owners.")"/>
                 </MudGrid>
+            </ExpansionPanel>
+            <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Copyright" HeaderText="@T("Trademarks & Brand Assets")">
+                <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+                    @T("AI Studio shows the logo of an AI provider next to its entry, so you can see at a glance which service a provider connects to. All product names, logos, and trademarks are the property of their respective owners. Their use here identifies compatible services and implies no endorsement, sponsorship, or business relationship between MindWork AI Studio and these companies.")
+                </MudJustifiedText>
+                <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+                    @T("Some of these logos come from the Simple Icons project, which publishes them under CC0. The remaining ones were taken from the official brand resources of the respective provider. Every logo ships with AI Studio and is loaded from your device, so showing it never sends a request to the provider.")
+                </MudJustifiedText>
+                <MudJustifiedText Typo="Typo.body1">
+                    @T("Organizations can replace these logos with their own icons through a configuration plugin. When your organization does so, it is responsible for holding the rights to the icons it provides.")
+                </MudJustifiedText>
             </ExpansionPanel>
             <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Verified" HeaderText="License: FSL-1.1-MIT">
                 <MudMarkdown Value="@LICENSE" Props="Markdown.DefaultConfig" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE"/>

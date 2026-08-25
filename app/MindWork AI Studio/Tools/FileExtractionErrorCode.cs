@@ -83,4 +83,11 @@ public enum FileExtractionErrorCode
     /// The extraction finished without reporting a failure, but produced no content at all.
     /// </summary>
     NO_CONTENT,
+
+    /// <summary>
+    /// The caller no longer needs the content, e.g. because the user closed the dialog which
+    /// asked for it. This is not a failure: nobody has to be told about it, which is why there
+    /// is no user-facing message for this code.
+    /// </summary>
+    CANCELLED,
 }

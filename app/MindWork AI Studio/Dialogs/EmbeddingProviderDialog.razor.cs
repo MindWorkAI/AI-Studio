@@ -56,6 +56,12 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
     /// </summary>
     [Parameter]
     public LLMProviders DataLLMProvider { get; set; } = LLMProviders.NONE;
+
+    /// <summary>
+    /// The validated custom icon supplied by a configuration plugin.
+    /// </summary>
+    [Parameter]
+    public string DataCustomIconDataUrl { get; set; } = string.Empty;
     
     /// <summary>
     /// The embedding model to use.
@@ -68,7 +74,14 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
     /// </summary>
     [Parameter]
     public bool IsEditing { get; init; }
-    
+
+    /// <summary>
+    /// Whether this embedding provider is managed by an enterprise configuration plugin. When true,
+    /// every field except the API key is locked, matching Settings.EmbeddingProvider.IsEnterpriseConfiguration.
+    /// </summary>
+    [Parameter]
+    public bool IsEnterpriseConfiguration { get; set; }
+
     [Inject]
     private RustService RustService { get; init; } = null!;
 
@@ -85,6 +98,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
     private bool dataIsValid;
     private string[] dataIssues = [];
     private string dataAPIKey = string.Empty;
+    private bool dataHadStoredAPIKeyOnLoad;
     private string dataManuallyModel = string.Empty;
     private string dataAPIKeyStorageIssue = string.Empty;
     private string dataEditingPreviousInstanceName = string.Empty;
@@ -134,8 +148,9 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
             IsSelfHosted = this.DataLLMProvider is LLMProviders.SELF_HOSTED,
             Hostname = cleanedHostname.EndsWith('/') ? cleanedHostname[..^1] : cleanedHostname,
             Host = this.DataHost,
-            IsEnterpriseConfiguration = false,
+            IsEnterpriseConfiguration = this.IsEnterpriseConfiguration,
             EnterpriseConfigurationPluginId = Guid.Empty,
+            CustomIconDataUrl = this.DataCustomIconDataUrl,
         };
     }
     
@@ -174,11 +189,17 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
             // Load the API key:
             var requestedSecret = await this.RustService.GetAPIKey(this, SecretStoreType.EMBEDDING_PROVIDER, isTrying: this.DataLLMProvider is LLMProviders.SELF_HOSTED);
             if (requestedSecret.Success)
+            {
                 this.dataAPIKey = await requestedSecret.Secret.Decrypt(this.encryption);
+                this.dataHadStoredAPIKeyOnLoad = !string.IsNullOrWhiteSpace(this.dataAPIKey);
+            }
             else
             {
                 this.dataAPIKey = string.Empty;
-                if (this.DataLLMProvider is not LLMProviders.SELF_HOSTED)
+
+                // For an enterprise-managed provider, having no key yet is the expected first-run
+                // state, not a storage failure -- the user is just about to set their own key:
+                if (this.DataLLMProvider is not LLMProviders.SELF_HOSTED && !this.IsEnterpriseConfiguration)
                 {
                     this.dataAPIKeyStorageIssue = string.Format(T("Failed to load the API key from the operating system. The message was: {0}. You might ignore this message and provide the API key again."), requestedSecret.Issue);
                     await this.form.Validate();
@@ -203,8 +224,12 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
     
     #region Implementation of ISecretId
 
-    public string SecretId => this.DataLLMProvider.ToSecretId();
-    
+    // Must mirror Settings.EmbeddingProvider.SecretId exactly: when editing an enterprise-managed
+    // provider, the key has to be stored under the same "ENT::"-prefixed keyring row that the
+    // app reads from at runtime (see BaseProvider.SecretId). Otherwise, a key entered here would
+    // silently end up in the wrong keyring row and never be found again.
+    public string SecretId => this.IsEnterpriseConfiguration ? $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{this.DataLLMProvider.ToSecretId()}" : this.DataLLMProvider.ToSecretId();
+
     public string SecretName => this.DataName;
 
     #endregion
@@ -240,6 +265,22 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
                 await this.form.Validate();
                 return;
             }
+
+            this.dataHadStoredAPIKeyOnLoad = true;
+        }
+        else if (this.dataHadStoredAPIKeyOnLoad)
+        {
+            // The user cleared a previously stored key. Without this, the old key would simply
+            // stay in the OS keyring untouched and keep being used:
+            var deleteResponse = await this.RustService.DeleteAPIKey(this, SecretStoreType.EMBEDDING_PROVIDER);
+            if (!deleteResponse.Success)
+            {
+                this.dataAPIKeyStorageIssue = string.Format(T("Failed to remove the API key from the operating system. The message was: {0}. Please try again."), deleteResponse.Issue);
+                await this.form.Validate();
+                return;
+            }
+
+            this.dataHadStoredAPIKeyOnLoad = false;
         }
 
         this.MudDialog.Close(DialogResult.Ok(addedProviderSettings));

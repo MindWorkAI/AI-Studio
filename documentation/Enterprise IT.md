@@ -4,7 +4,7 @@
 Do you want to manage MindWork AI Studio in a corporate environment or within an organization? This documentation explains what you need to do and how it works. First, here's an overview of the entire process:
 
 - You can distribute MindWork AI Studio to employees' devices using tools like Microsoft System Center Configuration Manager (SCCM).
-- Employees can get updates through the built-in update feature. Enterprise configuration can disable automatic checks or the entire built-in update feature so that the IT department controls which version gets distributed.
+- Employees can get updates through the built-in update feature. Enterprise configuration can disable automatic checks or the entire built-in update feature so that the IT department controls which version gets distributed. Installations you rolled out yourself never update themselves anyway, so the two kinds can coexist on one device.
 - AI Studio checks about every 16 minutes to see where and which configuration it should load. This information is loaded from the local system. On Windows, you might use the registry, for example.
 - If it finds the necessary metadata, AI Studio downloads the configuration as a ZIP file from the specified server.
 - The configuration is an AI Studio plugin written in Lua.
@@ -20,6 +20,36 @@ Set `CONFIG["SETTINGS"]["DataApp.UpdateInterval"]` in the configuration plugin t
 - `DISABLE_UPDATES` disables automatic and manual update checks and installations. AI Studio tells users that updates are managed by their organization and directs questions to their IT department. This policy takes effect immediately when the enterprise configuration changes.
 
 Use `DISABLE_UPDATES` when your organization distributes approved versions through its own software-management process.
+
+### Installations that never update themselves
+
+AI Studio recognizes installations its updater cannot replace and never updates those, no matter what `DataApp.UpdateInterval` and `DataApp.UpdateInstallation` say. You can therefore leave automatic updates enabled for your whole organization: the installations you rolled out ignore them and receive their versions from you, while installations your colleagues fetched from GitHub keep updating themselves.
+
+This matters most on Windows. The installer we publish installs per user below `%LOCALAPPDATA%`, and the updater runs exactly that installer. Updating an installation that sits anywhere else therefore does not replace it: a second installation appears below `%LOCALAPPDATA%` while yours stays untouched, and from then on it is a matter of chance which one a colleague starts. Loosening the permissions of your deployment does not change this — the updater never writes into the current location to begin with.
+
+AI Studio recognizes these cases:
+
+| Case | How AI Studio recognizes it | What users are told |
+|---|---|---|
+| Marker file | A file named `managed-installation` next to the program file | Updates come from their IT department |
+| Machine-wide program directory | The program file sits below `%ProgramFiles%`, `%ProgramFiles(x86)%`, or `%ProgramW6432%` | Updates come from their IT department |
+| Location the user cannot write to | The directory that would have to be replaced is not writable for the current user, e.g. `/Applications` on a device managed through MDM, or `/opt` on Linux | Updates come from their IT department |
+| Self-chosen directory (Windows only) | Everything else outside `%LOCALAPPDATA%`, e.g. `D:\Tools\MindWork AI Studio` | They have to install a new version themselves, with a link to the latest release |
+| Flatpak | Running inside a Flatpak sandbox | Updates come from their Flatpak distribution |
+
+The information page reports which case applies, so a support request can start from that instead of guesswork.
+
+#### The marker file
+
+Place an empty file named `managed-installation` next to the program file, in the same directory as `MindWork AI Studio.exe` on Windows or as the executable on Linux. Its content is ignored; only its existence matters. The marker applies to that one installation, so a colleague who installed AI Studio from GitHub on the same device is not affected by it.
+
+Use the marker when the other cases do not cover your deployment, for example, when you roll out our regular per-user installer through Intune, or when you install into a directory of your own such as `D:\Program Files\MindWork AI Studio`.
+
+On macOS there is no marker file: any additional file inside the app bundle would break its code signature. A bundle in a location your users cannot write to is recognized anyway. If you want AI Studio to name your organization explicitly on macOS, set `DataApp.UpdateInterval` to `DISABLE_UPDATES`, which takes precedence over all of this.
+
+#### Existing double installations
+
+This recognition prevents new double installations; it does not clean up ones that already exist. On affected devices, remove the second installation below `%LOCALAPPDATA%\MindWork AI Studio\` together with its uninstall entry under `HKEY_CURRENT_USER`, and make sure that shortcuts point at your deployment again.
 
 ## Configure the devices
 So that MindWork AI Studio knows where to load which configuration, this information must be provided as metadata on employees' devices. Currently, the following options are available:
@@ -361,7 +391,7 @@ The latest example of an AI Studio configuration via configuration plugin can al
 - [The icon](../app/MindWork%20AI%20Studio/Plugins/configuration/icon.lua)
 - [The configuration with explanations](../app/MindWork%20AI%20Studio/Plugins/configuration/plugin.lua)
 
-Please note that the icon must be an SVG vector graphic. Raster graphics like PNGs, GIFs, and others aren’t supported. You can use the sample icon, which looks like a gear.
+Please note that the icon must be an SVG vector graphic. Raster graphics like PNGs, GIFs, and others aren’t supported. You can use the sample icon, which looks like a gear. AI Studio shows plugin icons in an isolated image element, so set the colors inside the SVG itself: `currentColor` and CSS rules from the app do not reach the icon. Your organization is responsible for holding the rights to any icon it ships. You can also give each configured provider its own icon, see [Giving providers your own icon](#giving-providers-your-own-icon).
 
 Currently, you can configure the following things:
 - Any number of LLM providers (self-hosted or cloud providers with encrypted API keys)
@@ -535,3 +565,115 @@ CONFIG["LLM_PROVIDERS"][#CONFIG["LLM_PROVIDERS"]+1] = {
 ```
 
 The API key will be automatically decrypted when the configuration is loaded and stored securely in the operating system's credential store (Windows Credential Manager / macOS Keychain).
+
+## Letting users provide their own API key
+
+Sometimes you want to hand out a preconfigured provider -- a fixed host, model, and instance name
+-- without embedding a shared API key for it. Each user then brings their own key, for example
+their personal OpenAI or Anthropic account, while everything else about the provider stays exactly
+as your organization configured it.
+
+Set `AllowUserProvidedAPIKey` on the provider:
+
+```lua
+CONFIG["LLM_PROVIDERS"][#CONFIG["LLM_PROVIDERS"]+1] = {
+    ["Id"] = "9072b77d-ca81-40da-be6a-861da525ef7b",
+    ["InstanceName"] = "Corporate OpenAI GPT-4",
+    ["UsedLLMProvider"] = "OPEN_AI",
+    ["Host"] = "NONE",
+    ["Hostname"] = "",
+    ["AllowUserProvidedAPIKey"] = true,
+    ["AdditionalJsonApiParameters"] = "",
+    ["Model"] = {
+        ["Id"] = "gpt-4",
+        ["DisplayName"] = "GPT-4",
+    }
+}
+```
+
+With `AllowUserProvidedAPIKey` set, the provider still shows up as managed by your organization,
+and users still cannot change the host, model, instance name, or any other field. The settings
+page shows a key icon instead of the usual lock icon for this provider; opening it only offers the
+API key field, with everything else disabled.
+
+The flag works the same way for embedding and transcription providers:
+
+```lua
+CONFIG["EMBEDDING_PROVIDERS"][#CONFIG["EMBEDDING_PROVIDERS"]+1] = {
+    ["Id"] = "3f0a4e8c-1d6b-4a91-8f2e-7c5d9b0a4e13",
+    ["Name"] = "Corporate Embeddings",
+    ["UsedLLMProvider"] = "OPEN_AI",
+    ["Host"] = "NONE",
+    ["Hostname"] = "",
+    ["AllowUserProvidedAPIKey"] = true,
+    ["Model"] = {
+        ["Id"] = "text-embedding-3-large",
+        ["DisplayName"] = "Text Embedding 3 Large",
+    }
+}
+
+CONFIG["TRANSCRIPTION_PROVIDERS"][#CONFIG["TRANSCRIPTION_PROVIDERS"]+1] = {
+    ["Id"] = "b1c7d24f-5e83-4a06-9d1b-2f8e6a3c7d50",
+    ["Name"] = "Corporate Transcription",
+    ["UsedLLMProvider"] = "OPEN_AI",
+    ["Host"] = "NONE",
+    ["Hostname"] = "",
+    ["AllowUserProvidedAPIKey"] = true,
+    ["Model"] = {
+        ["Id"] = "whisper-1",
+        ["DisplayName"] = "Whisper",
+    }
+}
+```
+
+For embedding providers, the settings page keeps the test button available next to the key icon, so
+users can verify their own key right after entering it.
+
+This is mutually exclusive with an embedded `APIKey` on the same provider: if both are present,
+AI Studio ignores the embedded key and logs a warning, because the whole point of the flag is that
+each user manages their own key. Combine the two across different providers if you need it -- one
+provider with a shared, embedded key and another with `AllowUserProvidedAPIKey` -- but not on the
+same provider.
+
+The user's key follows the same "withdrawing a configuration" philosophy as everything else in this
+document: if your configuration stops offering this provider, AI Studio removes the provider from
+the settings but leaves the user's key in the OS keyring rather than deleting it, in case the same
+provider comes back later. See [Withdrawing a configuration](#withdrawing-a-configuration).
+
+## Giving providers your own icon
+
+By default, AI Studio shows the logo of the underlying AI provider next to each provider entry. When
+you would rather show your own project or department logo, point the optional `IconPath` field at an
+SVG file inside your configuration plugin:
+
+```lua
+CONFIG["LLM_PROVIDERS"][#CONFIG["LLM_PROVIDERS"]+1] = {
+    ["Id"] = "9072b77d-ca81-40da-be6a-861da525ef7b",
+    ["InstanceName"] = "Corporate OpenAI GPT-4",
+    ["UsedLLMProvider"] = "OPEN_AI",
+    ["Host"] = "NONE",
+    ["Hostname"] = "",
+    ["IconPath"] = "assets/project-icon.svg",
+    ["Model"] = {
+        ["Id"] = "gpt-4",
+        ["DisplayName"] = "GPT-4",
+    }
+}
+```
+
+The field works the same way for embedding and transcription providers.
+
+The path is relative to your `plugin.lua` and must stay inside the plugin directory. AI Studio
+rejects absolute paths, `..` segments, links pointing out of that directory, files which do not end
+in `.svg`, files larger than 32 KiB, and anything which is not well-formed SVG. A rejected or
+missing icon is never fatal: AI Studio logs a warning, and the provider loads with its built-in
+logo.
+
+Two things to keep in mind when you prepare the icon:
+
+- **Colors belong inside the SVG.** AI Studio shows every icon in an isolated image element, so
+  `currentColor` and CSS rules from the app do not reach it. Choose colors which work on both light
+  and dark surfaces.
+- **Your organization holds the rights.** Whatever icon you ship -- for a provider through
+  `IconPath`, or for the configuration plugin itself through its `icon.lua` -- your organization is
+  responsible for holding the rights to use it.

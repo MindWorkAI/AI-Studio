@@ -9,6 +9,17 @@ namespace AIStudio.Components.Settings;
 
 public partial class SettingsPanelTranscription : SettingsPanelProviderBase
 {
+    /// <summary>
+    /// Groups the table by the used LLM provider. The transcription provider list is already sorted by
+    /// that provider, so all instances of one LLM provider form a single, coherent group.
+    /// </summary>
+    private static readonly TableGroupDefinition<TranscriptionProvider> GROUP_CONFIG = new()
+    {
+        Expandable = true,
+        IsInitiallyExpanded = false,
+        Selector = provider => provider.UsedLLMProvider,
+    };
+
     [Parameter]
     public List<ConfigurationSelectData<string>> AvailableTranscriptionProviders { get; set; } = new();
     
@@ -60,24 +71,39 @@ public partial class SettingsPanelTranscription : SettingsPanelProviderBase
     
     private async Task EditTranscriptionProvider(TranscriptionProvider transcriptionProvider)
     {
+        if (transcriptionProvider.IsEnterpriseConfiguration && !transcriptionProvider.AllowUserProvidedAPIKey)
+            return;
+
         var dialogParameters = new DialogParameters<TranscriptionProviderDialog>
         {
             { x => x.DataNum, transcriptionProvider.Num },
             { x => x.DataId, transcriptionProvider.Id },
             { x => x.DataName, transcriptionProvider.Name },
             { x => x.DataLLMProvider, transcriptionProvider.UsedLLMProvider },
+            { x => x.DataCustomIconDataUrl, transcriptionProvider.CustomIconDataUrl },
             { x => x.DataModel, transcriptionProvider.Model },
             { x => x.DataHostname, transcriptionProvider.Hostname },
             { x => x.IsSelfHosted, transcriptionProvider.IsSelfHosted },
             { x => x.IsEditing, true },
             { x => x.DataHost, transcriptionProvider.Host },
+            { x => x.IsEnterpriseConfiguration, transcriptionProvider.IsEnterpriseConfiguration },
         };
-        
+
         var dialogReference = await this.DialogService.ShowAsync<TranscriptionProviderDialog>(T("Edit Transcription Provider"), dialogParameters, DialogOptions.FULLSCREEN);
         var dialogResult = await dialogReference.Result;
         if (dialogResult is null || dialogResult.Canceled)
             return;
-        
+
+        if (transcriptionProvider.IsEnterpriseConfiguration)
+        {
+            // Only the API key changed, and the dialog already stored it directly. The provider
+            // object itself is managed by the configuration plugin and must not be overwritten
+            // with the dialog's copy -- doing so would let the locked-but-technically-editable
+            // fields drift from what the organization configured.
+            await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+            return;
+        }
+
         var editedTranscriptionProvider = (TranscriptionProvider)dialogResult.Data!;
         
         // Set the provider number if it's not set. This is important for providers
@@ -129,7 +155,7 @@ public partial class SettingsPanelTranscription : SettingsPanelProviderBase
     private async Task UpdateTranscriptionProviders()
     {
         this.AvailableTranscriptionProviders.Clear();
-        foreach (var provider in this.SettingsManager.ConfigurationData.TranscriptionProviders)
+        foreach (var provider in this.SettingsManager.GetAllTranscriptionProviders())
             this.AvailableTranscriptionProviders.Add(new (provider.Name, provider.Id));
         
         await this.AvailableTranscriptionProvidersChanged.InvokeAsync(this.AvailableTranscriptionProviders);

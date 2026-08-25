@@ -158,7 +158,7 @@ public partial class VisualBriefingAssistant : MSGComponentBase
         await this.ReloadListAsync();
         await this.ConsumePendingMediaOutcomesAsync();
         _ = this.MonitorSourceStatusAsync(this.sourceMonitorCancellation.Token);
-        var deferredInstruction = this.MessageBus.CheckDeferredMessages<string>(Event.SEND_TO_VISUAL_BRIEFING_ASSISTANT).FirstOrDefault();
+        var deferredInstruction = this.MessageBus.TakeDeferredMessages<string>(Event.SEND_TO_VISUAL_BRIEFING_ASSISTANT).LastOrDefault();
 
         if (!string.IsNullOrWhiteSpace(deferredInstruction))
         {

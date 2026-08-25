@@ -136,6 +136,11 @@ public sealed class Data
     
     public DataDocumentAnalysis DocumentAnalysis { get; init; } = new();
 
+    /// <summary>
+    /// Gets the managed Batch Processing Assistant defaults.
+    /// </summary>
+    public DataBatchProcessing BatchProcessing { get; init; } = new(x => x.BatchProcessing);
+
     public DataMandatoryInformation MandatoryInformation { get; init; } = new();
 
     public DataTextSummarizer TextSummarizer { get; init; } = new();
@@ -176,4 +181,4 @@ public sealed class Data
     public DataBiasOfTheDay BiasOfTheDay { get; init; } = new();
     
     public DataI18N I18N { get; init; } = new();
-}
+}   

@@ -269,10 +269,10 @@ public abstract class BaseProvider : IProvider, ISecretId
     {
         exception = new();
 
-        if (!line.StartsWith("data: ", StringComparison.InvariantCulture))
+        if (!TryGetServerSentEventData(line, out var jsonData))
             return false;
 
-        var jsonData = line[6..].Trim();
+        jsonData = jsonData.Trim();
         if (string.IsNullOrWhiteSpace(jsonData) || jsonData is "[DONE]")
             return false;
 
@@ -302,6 +302,21 @@ public abstract class BaseProvider : IProvider, ISecretId
         {
             return false;
         }
+    }
+
+    private static bool TryGetServerSentEventData(string line, out string data)
+    {
+        const string DATA_PREFIX = "data:";
+        data = string.Empty;
+
+        if (!line.StartsWith(DATA_PREFIX, StringComparison.InvariantCulture))
+            return false;
+
+        data = line[DATA_PREFIX.Length..];
+        if (data.StartsWith(' '))
+            data = data[1..];
+
+        return true;
     }
 
     private static bool IsProviderStreamFailure(JsonElement root)
@@ -661,13 +676,13 @@ public abstract class BaseProvider : IProvider, ISecretId
             if (this.TryCreateProviderRequestExceptionFromStreamLine(providerName, line, out var providerRequestException))
                 throw providerRequestException;
 
-            // Skip lines that do not start with "data: ". Regard
+            // Skip lines that do not start with "data:". According
             // to the specification, we only want to read the data lines:
-            if (!line.StartsWith("data: ", StringComparison.InvariantCulture))
+            if (!TryGetServerSentEventData(line, out var jsonData))
                 continue;
 
             // Check if the line is the end of the stream:
-            if (line.StartsWith("data: [DONE]", StringComparison.InvariantCulture))
+            if (jsonData is "[DONE]")
                 yield break;
 
             //
@@ -681,10 +696,6 @@ public abstract class BaseProvider : IProvider, ISecretId
                 
                 try
                 {
-                    // We know that the line starts with "data: ". Hence, we can
-                    // skip the first 6 characters to get the JSON data after that.
-                    var jsonData = line[6..];
-
                     // Deserialize the JSON data:
                     providerResponse = JsonSerializer.Deserialize<TAnnotation>(jsonData, JSON_SERIALIZER_OPTIONS);
 
@@ -713,10 +724,6 @@ public abstract class BaseProvider : IProvider, ISecretId
                 TDelta? providerResponse;
                 try
                 {
-                    // We know that the line starts with "data: ". Hence, we can
-                    // skip the first 6 characters to get the JSON data after that.
-                    var jsonData = line[6..];
-
                     // Deserialize the JSON data:
                     providerResponse = JsonSerializer.Deserialize<TDelta>(jsonData, JSON_SERIALIZER_OPTIONS);
 
@@ -866,20 +873,19 @@ public abstract class BaseProvider : IProvider, ISecretId
             if (line.StartsWith("event: response.completed", StringComparison.InvariantCulture))
                 yield break;
             
+            if (!TryGetServerSentEventData(line, out var jsonData))
+                continue;
+
             //
             // Find delta lines:
             //
-            if (line.StartsWith("""
-                                data: {"type":"response.output_text.delta"
-                                """, StringComparison.InvariantCulture))
+            if (jsonData.StartsWith("""
+                                    {"type":"response.output_text.delta"
+                                    """, StringComparison.InvariantCulture))
             {
                 TDelta? providerResponse;
                 try
                 {
-                    // We know that the line starts with "data: ". Hence, we can
-                    // skip the first 6 characters to get the JSON data after that.
-                    var jsonData = line[6..];
-
                     // Deserialize the JSON data:
                     providerResponse = JsonSerializer.Deserialize<TDelta>(jsonData, JSON_SERIALIZER_OPTIONS);
 
@@ -903,18 +909,14 @@ public abstract class BaseProvider : IProvider, ISecretId
             //
             // Find annotation added lines:
             //
-            else if (annotationSupported && line.StartsWith(
+            else if (annotationSupported && jsonData.StartsWith(
                          """
-                         data: {"type":"response.output_text.annotation.added"
+                         {"type":"response.output_text.annotation.added"
                          """, StringComparison.InvariantCulture))
             {
                 TAnnotation? providerResponse;
                 try
                 {
-                    // We know that the line starts with "data: ". Hence, we can
-                    // skip the first 6 characters to get the JSON data after that.
-                    var jsonData = line[6..];
-
                     // Deserialize the JSON data:
                     providerResponse = JsonSerializer.Deserialize<TAnnotation>(jsonData, JSON_SERIALIZER_OPTIONS);
 
