@@ -245,7 +245,13 @@ public partial class ContentBlockComponent : MSGComponentBase
         if (string.Equals(this.lastMathRenderSignature, mathRenderSignature, StringComparison.Ordinal))
             return;
 
-        await this.JsRuntime.TryInvokeVoidAsync(CHAT_MATH_SYNC_FUNCTION, this.mathContentContainer, mathRenderSignature);
+        //
+        // Remember what the browser shows only when it really got the call: otherwise, a call which was
+        // lost while the connection was down would make us skip the math rendering after the reconnect.
+        //
+        if (!await this.JsRuntime.TryInvokeVoidAsync(this.CircuitState, CHAT_MATH_SYNC_FUNCTION, this.mathContentContainer, mathRenderSignature))
+            return;
+
         this.lastMathRenderSignature = mathRenderSignature;
         this.hasActiveMathContainer = true;
     }
@@ -258,7 +264,7 @@ public partial class ContentBlockComponent : MSGComponentBase
             return;
         }
 
-        await this.JsRuntime.TryInvokeVoidAsync(CHAT_MATH_DISPOSE_FUNCTION, this.mathContentContainer);
+        await this.JsRuntime.TryInvokeVoidAsync(this.CircuitState, CHAT_MATH_DISPOSE_FUNCTION, this.mathContentContainer);
 
         this.hasActiveMathContainer = false;
         this.lastMathRenderSignature = string.Empty;

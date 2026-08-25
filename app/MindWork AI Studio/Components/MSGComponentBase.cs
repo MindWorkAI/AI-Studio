@@ -1,5 +1,6 @@
 using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
 
@@ -13,6 +14,13 @@ public abstract class MSGComponentBase : ComponentBase, IDisposable, IAsyncDispo
     [Inject]
     protected MessageBus MessageBus { get; init; } = null!;
 
+    /// <summary>
+    /// The circuit this component lives in. Use it before any JS interop: while its connection is down,
+    /// the browser is unreachable, although the component itself keeps working.
+    /// </summary>
+    [Inject]
+    protected CircuitStateService CircuitState { get; init; } = null!;
+
     private ILanguagePlugin Lang { get; set; } = PluginFactory.BaseLanguage;
 
     #region Overrides of ComponentBase
@@ -21,7 +29,7 @@ public abstract class MSGComponentBase : ComponentBase, IDisposable, IAsyncDispo
     {
         this.Lang = await this.SettingsManager.GetActiveLanguagePlugin();
         
-        this.MessageBus.RegisterComponent(this);
+        this.MessageBus.RegisterComponent(this, this.CircuitState);
         await base.OnInitializedAsync();
     }
 

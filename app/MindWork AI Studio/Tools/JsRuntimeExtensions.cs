@@ -1,4 +1,5 @@
 using AIStudio.Assistants;
+using AIStudio.Tools.Services;
 
 namespace AIStudio.Tools;
 
@@ -29,16 +30,45 @@ public static class JsRuntimeExtensions
     /// <param name="jsRuntime">The JS runtime to call.</param>
     /// <param name="identifier">The name of the JavaScript function.</param>
     /// <param name="args">The arguments for the JavaScript function.</param>
-    public static async ValueTask TryInvokeVoidAsync(this IJSRuntime jsRuntime, string identifier, params object?[]? args)
+    /// <returns>True when the browser ran the function. Callers which remember what they told the browser
+    /// must check this: a call which never arrived leaves the browser in its previous state.</returns>
+    public static async ValueTask<bool> TryInvokeVoidAsync(this IJSRuntime jsRuntime, string identifier, params object?[]? args)
     {
         try
         {
             await jsRuntime.InvokeVoidAsync(identifier, args);
+            return true;
         }
         catch (Exception exception)
         {
             LogInvocationFailure(exception, identifier);
+            return false;
         }
+    }
+
+    /// <summary>
+    /// Calls a JavaScript function which returns nothing, unless the circuit is known to be disconnected.
+    /// </summary>
+    /// <remarks>
+    /// Prefer this over the variant without a circuit state wherever the caller knows its circuit. While a
+    /// browser connection is gone, every single call would otherwise throw, which is needless work for
+    /// something we already know cannot succeed — a component of a disconnected circuit which keeps
+    /// rendering would produce one such exception per render.
+    /// </remarks>
+    /// <param name="jsRuntime">The JS runtime to call.</param>
+    /// <param name="circuitState">The circuit of the caller.</param>
+    /// <param name="identifier">The name of the JavaScript function.</param>
+    /// <param name="args">The arguments for the JavaScript function.</param>
+    /// <returns>True when the browser ran the function, false when it was skipped or failed.</returns>
+    public static async ValueTask<bool> TryInvokeVoidAsync(this IJSRuntime jsRuntime, CircuitStateService circuitState, string identifier, params object?[]? args)
+    {
+        if (!circuitState.IsConnected)
+        {
+            LOGGER.LogDebug("The JS call '{Identifier}' was skipped because the browser connection of the circuit '{CircuitId}' is down.", identifier, circuitState.CircuitId);
+            return false;
+        }
+
+        return await jsRuntime.TryInvokeVoidAsync(identifier, args);
     }
 
     /// <summary>
@@ -48,15 +78,18 @@ public static class JsRuntimeExtensions
     /// <param name="module">The JavaScript module to call.</param>
     /// <param name="identifier">The name of the function inside the module.</param>
     /// <param name="args">The arguments for the function.</param>
-    public static async ValueTask TryInvokeVoidAsync(this IJSObjectReference module, string identifier, params object?[]? args)
+    /// <returns>True when the browser ran the function, false when it failed.</returns>
+    public static async ValueTask<bool> TryInvokeVoidAsync(this IJSObjectReference module, string identifier, params object?[]? args)
     {
         try
         {
             await module.InvokeVoidAsync(identifier, args);
+            return true;
         }
         catch (Exception exception)
         {
             LogInvocationFailure(exception, identifier);
+            return false;
         }
     }
 

@@ -12,6 +12,7 @@ using AIStudio.Tools.Rust;
 using AIStudio.Tools.Security;
 using AIStudio.Tools.Services;
 
+using Microsoft.AspNetCore.Components.Server.Circuits;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Logging.Console;
@@ -195,6 +196,13 @@ internal sealed class Program
         builder.Services.AddHostedService<RustAvailabilityMonitorService>();
         builder.Services.AddScoped<NativeShareService>();
         builder.Services.AddScoped<PluginShareService>();
+
+        //
+        // One circuit state per circuit, and the handler which keeps it up to date. Both are scoped,
+        // because the circuit is the scope: every browser window gets its own pair.
+        //
+        builder.Services.AddScoped<CircuitStateService>();
+        builder.Services.AddScoped<CircuitHandler, AIStudioCircuitHandler>();
         
         // ReSharper disable AccessToDisposedClosure
         builder.Services.AddHostedService<RustService>(_ => rust);

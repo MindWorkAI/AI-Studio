@@ -54,6 +54,9 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
     
     [Inject]
     private MudTheme ColorTheme { get; init; } = null!;
+
+    [Inject]
+    private CircuitStateService CircuitState { get; init; } = null!;
     
     private ILanguagePlugin Lang { get; set; } = PluginFactory.BaseLanguage;
     
@@ -110,7 +113,7 @@ public partial class MainLayout : LayoutComponentBase, IMessageBusReceiver, ILan
         await this.SettingsManager.LoadSettings();
         
         // Register this component with the message bus:
-        this.MessageBus.RegisterComponent(this);
+        this.MessageBus.RegisterComponent(this, this.CircuitState);
         this.MessageBus.ApplyFilters(this, [],
         [
             Event.UPDATE_AVAILABLE, Event.CONFIGURATION_CHANGED, Event.COLOR_THEME_CHANGED, Event.SHOW_ERROR,

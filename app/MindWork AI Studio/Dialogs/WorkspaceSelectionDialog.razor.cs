@@ -190,7 +190,7 @@ public partial class WorkspaceSelectionDialog : MSGComponentBase
     /// </remarks>
     protected override async ValueTask DisposeResourcesAsync()
     {
-        await this.JsRuntime.TryInvokeVoidAsync("unregisterEscapeHandler", this.escapeHandlerId);
+        await this.JsRuntime.TryInvokeVoidAsync(this.CircuitState, "unregisterEscapeHandler", this.escapeHandlerId);
         await base.DisposeResourcesAsync();
     }
 

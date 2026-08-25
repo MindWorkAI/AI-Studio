@@ -1,5 +1,7 @@
 using System.Collections.Concurrent;
 
+using AIStudio.Tools.Services;
+
 using Microsoft.AspNetCore.Components;
 // ReSharper disable RedundantRecordClassKeyword
 
@@ -11,6 +13,7 @@ public sealed class MessageBus
     
     private readonly ConcurrentDictionary<IMessageBusReceiver, ComponentBase[]> componentFilters = new();
     private readonly ConcurrentDictionary<IMessageBusReceiver, Event[]> componentEvents = new();
+    private readonly ConcurrentDictionary<IMessageBusReceiver, CircuitStateService> receiverCircuits = new();
     private readonly ConcurrentDictionary<Event, ConcurrentQueue<Message>> deferredMessages = new();
     private readonly ConcurrentQueue<Message> messageQueue = new();
     private readonly SemaphoreSlim sendingSemaphore = new(1, 1);
@@ -39,16 +42,53 @@ public sealed class MessageBus
         this.componentEvents[receiver] = events.ToArray();
     }
     
-    public void RegisterComponent(IMessageBusReceiver receiver)
+    /// <summary>
+    /// Registers a receiver at the bus.
+    /// </summary>
+    /// <param name="receiver">That's you, the receiver.</param>
+    /// <param name="circuitState">The circuit this receiver belongs to. Components hand over their circuit
+    /// so the bus can let them go when that circuit ends. Services which live longer than any circuit,
+    /// such as hosted services, hand over nothing.</param>
+    public void RegisterComponent(IMessageBusReceiver receiver, CircuitStateService? circuitState = null)
     {
         this.componentFilters.TryAdd(receiver, []);
         this.componentEvents.TryAdd(receiver, []);
+
+        if (circuitState is not null)
+            this.receiverCircuits[receiver] = circuitState;
     }
-    
+
     public void Unregister(IMessageBusReceiver receiver)
     {
         this.componentFilters.TryRemove(receiver, out _);
         this.componentEvents.TryRemove(receiver, out _);
+        this.receiverCircuits.TryRemove(receiver, out _);
+    }
+
+    /// <summary>
+    /// Removes all receivers which belong to one circuit.
+    /// </summary>
+    /// <remarks>
+    /// The circuit handler calls this when a circuit ends. Components deregister themselves when they get
+    /// disposed, but a circuit which was retained and then dropped does not give all of them that chance.
+    /// Since the bus holds a strong reference to every receiver, those leftovers would stay and would be
+    /// served forever.
+    /// </remarks>
+    /// <param name="circuitState">The circuit whose receivers must go.</param>
+    /// <returns>The number of removed receivers.</returns>
+    public int UnregisterCircuit(CircuitStateService circuitState)
+    {
+        var numRemovedReceivers = 0;
+        foreach (var (receiver, receiverCircuit) in this.receiverCircuits)
+        {
+            if (!ReferenceEquals(receiverCircuit, circuitState))
+                continue;
+
+            this.Unregister(receiver);
+            numRemovedReceivers++;
+        }
+
+        return numRemovedReceivers;
     }
     
     private record class Message(ComponentBase? SendingComponent, Event TriggeredEvent, object? Data);

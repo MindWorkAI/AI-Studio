@@ -153,9 +153,9 @@ public partial class VoiceRecorder : MSGComponentBase
         }
 
         if (runtimeState.Backend is ShortcutBackend.LOCAL && !runtimeState.IsSuspended && !string.IsNullOrWhiteSpace(runtimeState.Shortcut))
-            await this.JsRuntime.TryInvokeVoidAsync("localShortcut.register", "voice-recording-toggle", runtimeState.Shortcut, this.localShortcutDotNetReference);
+            await this.JsRuntime.TryInvokeVoidAsync(this.CircuitState, "localShortcut.register", "voice-recording-toggle", runtimeState.Shortcut, this.localShortcutDotNetReference);
         else
-            await this.JsRuntime.TryInvokeVoidAsync("localShortcut.unregister", "voice-recording-toggle");
+            await this.JsRuntime.TryInvokeVoidAsync(this.CircuitState, "localShortcut.unregister", "voice-recording-toggle");
     }
 
     private bool ShouldRenderVoiceRecording => PreviewFeatures.PRE_SPEECH_TO_TEXT_2026.IsEnabled(this.SettingsManager)
@@ -548,7 +548,7 @@ public partial class VoiceRecorder : MSGComponentBase
     protected override async ValueTask DisposeResourcesAsync()
     {
         if (this.localShortcutInteropReady)
-            await this.JsRuntime.TryInvokeVoidAsync("localShortcut.unregister", "voice-recording-toggle");
+            await this.JsRuntime.TryInvokeVoidAsync(this.CircuitState, "localShortcut.unregister", "voice-recording-toggle");
 
         await base.DisposeResourcesAsync();
     }
