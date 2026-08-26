@@ -30,6 +30,20 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
         if (chatTemplate is null)
             return new(null, chatTemplateResult.ErrorMessage);
 
+        //
+        // A chat template that forbids profiles wins over a configured profile: the chat disables
+        // its profile selection for such templates, so keeping the profile would pin one that the
+        // user can neither see nor change. We drop it instead of failing the whole launch.
+        //
+        if (!chatTemplate.AllowProfileUsage && profile != Profile.NO_PROFILE)
+        {
+            logger.LogWarning(
+                "Assistant plugin '{PluginName}' selects the profile '{ProfileName}', but its chat template '{ChatTemplateName}' does not allow profiles. The chat starts without a profile.",
+                assistantPlugin.Name, profile.GetSafeName(), chatTemplate.GetSafeName());
+
+            profile = Profile.NO_PROFILE;
+        }
+
         var dataSourceOptionsResult = await this.ResolveDataSourceOptionsAsync(providerResult.Provider, launchConfiguration.DataSourceIds);
         var dataSourceOptions = dataSourceOptionsResult.Options;
         if (dataSourceOptions is null)
