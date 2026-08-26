@@ -36,7 +36,6 @@
                                     Description="@T(assistantPlugin.Description)"
                                     Icon="@Icons.Material.Filled.FindInPage"
                                     Disabled="@(!securityState.CanStartAssistant)"
-                                    LogVisibilityDecision="@false"
                                     AssistantSessionInstanceId="@assistantPlugin.Id.ToString()"
                                     Link="@launchLink"
                                     OnClick="@(() => this.StartAssistantPluginAsync(assistantPlugin))">

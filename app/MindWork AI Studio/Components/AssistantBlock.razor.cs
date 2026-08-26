@@ -58,9 +58,6 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase, IAssistantCat
     [Parameter]
     public PreviewFeatures RequiredPreviewFeature { get; set; } = PreviewFeatures.NONE;
 
-    [Parameter]
-    public bool LogVisibilityDecision { get; set; } = true;
-
     /// <summary>
     /// Gets or sets the assistant category this block belongs to, if any.
     /// </summary>
@@ -98,7 +95,7 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase, IAssistantCat
     private string BlockStyle => $"border-width: 3px; border-color: {this.BorderColor}; border-radius: 12px; border-style: solid; max-width: 20em;";
 
     /// <inheritdoc />
-    public bool IsVisible => this.SettingsManager.IsAssistantVisible(this.Component, withLogging: this.LogVisibilityDecision, assistantName: this.Name, requiredPreviewFeature: this.RequiredPreviewFeature);
+    public bool IsVisible => this.SettingsManager.IsAssistantVisible(this.Component, assistantName: this.Name, requiredPreviewFeature: this.RequiredPreviewFeature);
 
     private bool HasSettingsPanel => typeof(TSettings) != typeof(NoSettingsPanel);
 
