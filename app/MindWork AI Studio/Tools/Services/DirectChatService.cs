@@ -19,7 +19,7 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
             return new(null, TB("The assistant plugin does not contain a valid chat launch configuration."));
 
         var providerResult = this.ResolveProvider(launchConfiguration.ProviderId);
-        if (providerResult.Provider == ProviderSettings.NONE)
+        if (providerResult.IsExplicit && providerResult.Provider == ProviderSettings.NONE)
             return new(null, providerResult.ErrorMessage);
 
         var profileResult = this.ResolveProfile(launchConfiguration.ProfileId);
@@ -57,7 +57,7 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
         var chatThread = new ChatThread
         {
             IncludeDateTime = true,
-            SelectedProvider = providerResult.Provider.Id,
+            SelectedProvider = providerResult.Provider == ProviderSettings.NONE ? string.Empty : providerResult.Provider.Id,
             SelectedProfile = profile.Id,
             SelectedChatTemplate = chatTemplate.Id,
             SystemPrompt = SystemPrompts.DEFAULT,
@@ -71,26 +71,27 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
         return new(new(chatThread, ApplySelectedChatTemplateToComposer: true, PreserveDataSourceOptions: launchConfiguration.DataSourceIds is not null), string.Empty);
     }
 
-    private (ProviderSettings Provider, string ErrorMessage) ResolveProvider(Guid? providerId)
+    private (ProviderSettings Provider, bool IsExplicit, string ErrorMessage) ResolveProvider(Guid? providerId)
     {
+        //
+        // The launcher does not name a provider, so it wants the chat defaults. We resolve them
+        // exactly like the chat does when it loads a chat without a provider. When no default can
+        // be determined, we do not fail: the chat opens with an empty provider selection and the
+        // user picks a provider there, just like for any other new chat.
+        //
         if (providerId is null)
-        {
-            var defaultProvider = settingsManager.GetPreselectedProvider(Components.CHAT);
-            return defaultProvider == ProviderSettings.NONE
-                ? new(ProviderSettings.NONE, TB("No provider is currently available for this assistant chat launcher."))
-                : new(defaultProvider, string.Empty);
-        }
+            return new(settingsManager.GetChatProviderForLoadedChat(), false, string.Empty);
 
         var provider = settingsManager.GetAllProviders().FirstOrDefault(candidate =>
             Guid.TryParse(candidate.Id, out var candidateId) && candidateId == providerId.Value);
-        
+
         if (provider is null)
-            return new(ProviderSettings.NONE, string.Format(TB("The assistant chat launcher references provider '{0}', but that provider does not exist."), providerId));
+            return new(ProviderSettings.NONE, true, string.Format(TB("The assistant chat launcher references provider '{0}', but that provider does not exist."), providerId));
 
         if (!settingsManager.IsProviderConfident(provider, Components.CHAT))
-            return new(ProviderSettings.NONE, string.Format(TB("The provider '{0}' selected by the assistant chat launcher is not permitted for chats at the required confidence level."), provider.InstanceName));
+            return new(ProviderSettings.NONE, true, string.Format(TB("The provider '{0}' selected by the assistant chat launcher is not permitted for chats at the required confidence level."), provider.InstanceName));
 
-        return new(provider, string.Empty);
+        return new(provider, true, string.Empty);
     }
 
     private (Profile? Profile, string ErrorMessage) ResolveProfile(Guid? profileId)
@@ -129,6 +130,14 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
     {
         if (dataSourceIds is null)
             return new(settingsManager.ConfigurationData.Chat.PreselectedDataSourceOptions.CreateCopy(), string.Empty);
+
+        //
+        // Deciding which data sources are permitted needs an effective provider. Without one,
+        // the check below would report every requested source as unavailable, which would hide
+        // the actual cause from the user:
+        //
+        if (provider == ProviderSettings.NONE)
+            return new(null, TB("The assistant chat launcher selects data sources, but no provider is available for chats. Please choose a default provider for chats first. No chat was created."));
 
         var requestedDataSources = new List<IDataSource>(dataSourceIds.Count);
         foreach (var dataSourceId in dataSourceIds)
