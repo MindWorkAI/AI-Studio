@@ -13,6 +13,9 @@
        outside the advanced options. Its fields are required, and a collapsed panel would hide
        both them and their validation messages. *@
     <MudSwitch T="bool" @bind-Value="@this.createChatLauncher" Label="@T("Create a direct chat launcher")" LabelPlacement="Placement.End" Color="Color.Primary" Class="mb-3"/>
+    <MudJustifiedText Typo="Typo.body2" Class="mb-3">
+        @T("A direct chat launcher has no input form of its own. Its tile opens a new chat right away, in the workspace you name below and with the provider, profile, chat template, and data sources you select there. Leave this switch off to create a regular assistant instead, which asks users for input and builds its own prompt from it.")
+    </MudJustifiedText>
     @if (this.createChatLauncher)
     {
         @if (this.availableWorkspaces.Count > 0)
