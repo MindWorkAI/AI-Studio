@@ -82,10 +82,12 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
         if (providerId is null)
             return new(settingsManager.GetChatProviderForLoadedChat(), false, string.Empty);
 
-        var provider = settingsManager.GetAllProviders().FirstOrDefault(candidate =>
-            Guid.TryParse(candidate.Id, out var candidateId) && candidateId == providerId.Value);
-
-        if (provider is null)
+        //
+        // GetProviderById does not apply any confidence filtering, so we check the provider
+        // ourselves afterwards, exactly as its documentation demands:
+        //
+        var provider = settingsManager.GetProviderById(providerId.Value.ToString());
+        if (provider == ProviderSettings.NONE)
             return new(ProviderSettings.NONE, true, string.Format(TB("The assistant chat launcher references provider '{0}', but that provider does not exist."), providerId));
 
         if (!settingsManager.IsProviderConfident(provider, Components.CHAT))
@@ -99,13 +101,16 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
         if (profileId is null)
             return new(settingsManager.GetPreselectedProfile(Components.CHAT), string.Empty);
 
+        // The launcher explicitly wants no profile:
         if (profileId == Guid.Empty)
             return new(Profile.NO_PROFILE, string.Empty);
 
-        var profile = settingsManager.ConfigurationData.Profiles.FirstOrDefault(candidate =>
-            Guid.TryParse(candidate.Id, out var candidateId) && candidateId == profileId.Value);
-        
-        return profile is null
+        //
+        // We already handled the empty GUID above, so GetProfileById returning the no-profile
+        // entry here can only mean that the referenced profile is gone:
+        //
+        var profile = settingsManager.GetProfileById(profileId.Value.ToString());
+        return profile == Profile.NO_PROFILE
             ? new(null, string.Format(TB("The assistant chat launcher references profile '{0}', but that profile does not exist."), profileId))
             : new(profile, string.Empty);
     }
@@ -115,13 +120,16 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
         if (chatTemplateId is null)
             return new(settingsManager.GetPreselectedChatTemplate(Components.CHAT), string.Empty);
 
+        // The launcher explicitly wants no chat template:
         if (chatTemplateId == Guid.Empty)
             return new(ChatTemplate.NO_CHAT_TEMPLATE, string.Empty);
 
-        var chatTemplate = settingsManager.ConfigurationData.ChatTemplates.FirstOrDefault(candidate =>
-            Guid.TryParse(candidate.Id, out var candidateId) && candidateId == chatTemplateId.Value);
-        
-        return chatTemplate is null
+        //
+        // We already handled the empty GUID above, so GetChatTemplateById returning the
+        // no-template entry here can only mean that the referenced template is gone:
+        //
+        var chatTemplate = settingsManager.GetChatTemplateById(chatTemplateId.Value.ToString());
+        return chatTemplate == ChatTemplate.NO_CHAT_TEMPLATE
             ? new(null, string.Format(TB("The assistant chat launcher references chat template '{0}', but that template does not exist."), chatTemplateId))
             : new(chatTemplate, string.Empty);
     }
@@ -142,9 +150,12 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
         var requestedDataSources = new List<IDataSource>(dataSourceIds.Count);
         foreach (var dataSourceId in dataSourceIds)
         {
+            // Data sources have no lookup helper in the settings manager, so we match their ids
+            // the same way the rest of the app does:
+            var dataSourceIdText = dataSourceId.ToString();
             var dataSource = settingsManager.ConfigurationData.DataSources.FirstOrDefault(candidate =>
-                Guid.TryParse(candidate.Id, out var candidateId) && candidateId == dataSourceId);
-            
+                string.Equals(candidate.Id, dataSourceIdText, StringComparison.OrdinalIgnoreCase));
+
             if (dataSource is null)
                 return new(null, string.Format(TB("The assistant chat launcher references data source '{0}', but that data source does not exist."), dataSourceId));
 
