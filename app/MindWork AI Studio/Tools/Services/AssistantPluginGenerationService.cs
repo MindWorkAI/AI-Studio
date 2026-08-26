@@ -635,9 +635,14 @@ public sealed class AssistantPluginGenerationService(ILogger<AssistantPluginGene
 
     private static bool ResponseMetadataMatchesPlugin(AssistantBuilderAssistantMetadata? metadata, PluginAssistants assistant)
     {
+        //
+        // The plugin loader keeps Title and Description exactly as the Lua table spells them,
+        // while the model writes both a second time into its JSON response. Comparing them
+        // untrimmed would reject an otherwise correct plugin over surrounding whitespace alone:
+        //
         if (metadata is null ||
-            !string.Equals(metadata.Title, assistant.AssistantTitle, StringComparison.Ordinal) ||
-            !string.Equals(metadata.Description, assistant.AssistantDescription, StringComparison.Ordinal))
+            !MetadataTextMatches(metadata.Title, assistant.AssistantTitle) ||
+            !MetadataTextMatches(metadata.Description, assistant.AssistantDescription))
             return false;
 
         if (!assistant.StartsChatDirectly)
@@ -655,6 +660,8 @@ public sealed class AssistantPluginGenerationService(ILogger<AssistantPluginGene
             launch.DataSourceIds);
         return IsValidChatLaunchRequest(request) && LaunchConfigurationMatches(request, assistant);
     }
+
+    private static bool MetadataTextMatches(string responseText, string pluginText) => string.Equals(responseText.Trim(), pluginText.Trim(), StringComparison.Ordinal);
 
     private static bool IsOptionalGuid(string? value, bool allowEmpty) => value is null ||
         Guid.TryParse(value, out var parsed) && (allowEmpty || parsed != Guid.Empty);
