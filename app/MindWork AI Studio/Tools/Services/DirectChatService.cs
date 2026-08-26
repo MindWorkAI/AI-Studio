@@ -9,10 +9,7 @@ namespace AIStudio.Tools.Services;
 
 public sealed record DirectChatStartResult(ChatStartRequest? Request, string ErrorMessage);
 
-public sealed class DirectChatService(
-    SettingsManager settingsManager,
-    DataSourceService dataSourceService,
-    ILogger<DirectChatService> logger)
+public sealed class DirectChatService(SettingsManager settingsManager, DataSourceService dataSourceService, ILogger<DirectChatService> logger)
 {
     private static string TB(string fallbackEn) => I18N.I.T(fallbackEn, typeof(DirectChatService).Namespace, nameof(DirectChatService));
 
@@ -86,6 +83,7 @@ public sealed class DirectChatService(
 
         var provider = settingsManager.GetAllProviders().FirstOrDefault(candidate =>
             Guid.TryParse(candidate.Id, out var candidateId) && candidateId == providerId.Value);
+        
         if (provider is null)
             return new(ProviderSettings.NONE, string.Format(TB("The assistant chat launcher references provider '{0}', but that provider does not exist."), providerId));
 
@@ -105,6 +103,7 @@ public sealed class DirectChatService(
 
         var profile = settingsManager.ConfigurationData.Profiles.FirstOrDefault(candidate =>
             Guid.TryParse(candidate.Id, out var candidateId) && candidateId == profileId.Value);
+        
         return profile is null
             ? new(null, string.Format(TB("The assistant chat launcher references profile '{0}', but that profile does not exist."), profileId))
             : new(profile, string.Empty);
@@ -120,6 +119,7 @@ public sealed class DirectChatService(
 
         var chatTemplate = settingsManager.ConfigurationData.ChatTemplates.FirstOrDefault(candidate =>
             Guid.TryParse(candidate.Id, out var candidateId) && candidateId == chatTemplateId.Value);
+        
         return chatTemplate is null
             ? new(null, string.Format(TB("The assistant chat launcher references chat template '{0}', but that template does not exist."), chatTemplateId))
             : new(chatTemplate, string.Empty);
@@ -135,6 +135,7 @@ public sealed class DirectChatService(
         {
             var dataSource = settingsManager.ConfigurationData.DataSources.FirstOrDefault(candidate =>
                 Guid.TryParse(candidate.Id, out var candidateId) && candidateId == dataSourceId);
+            
             if (dataSource is null)
                 return new(null, string.Format(TB("The assistant chat launcher references data source '{0}', but that data source does not exist."), dataSourceId));
 
