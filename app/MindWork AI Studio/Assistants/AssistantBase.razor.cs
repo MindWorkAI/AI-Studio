@@ -170,10 +170,15 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         }
         
         this.formChangeTimer.AutoReset = false;
-        this.formChangeTimer.Elapsed += async (_, _) =>
+        //
+        // Mind the missing async here: a timer hands its elapsed event to a thread pool thread, where an
+        // async handler has nobody to hand its exception to. Such an exception is not merely unobserved,
+        // it is unhandled, and it takes the app down with it. Observing the task keeps it contained.
+        //
+        this.formChangeTimer.Elapsed += (_, _) =>
         {
             this.formChangeTimer.Stop();
-            await this.OnFormChange();
+            this.OnFormChange().Observe($"{nameof(AssistantBase<TSettings>)}: handling a form change");
         };
         
         this.MightPreselectValues();
@@ -327,7 +332,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         Array.Resize(ref this.InputIssues, this.InputIssues.Length + 1);
         this.InputIssues[^1] = issue;
         this.InputIsValid = false;
-        _ = this.RefreshAssistantUIAsync();
+        this.RefreshAssistantUIAsync().Observe($"{nameof(AssistantBase<TSettings>)}: rendering an added input issue");
     }
     
     /// <summary>
@@ -337,7 +342,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     {
         this.InputIssues = [];
         this.InputIsValid = true;
-        _ = this.RefreshAssistantUIAsync();
+        this.RefreshAssistantUIAsync().Observe($"{nameof(AssistantBase<TSettings>)}: rendering cleared input issues");
     }
 
     protected void CreateChatThread()
@@ -733,11 +738,11 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     private void OnMediaImportStateChanged(MediaImportOwner owner)
     {
         if (owner == this.CurrentMediaImportOwner)
-            _ = this.InvokeAsync(async () =>
+            this.InvokeAsync(async () =>
             {
                 await this.ConsumeMediaOutcomeAsync();
                 this.StateHasChanged();
-            });
+            }).Observe($"{nameof(AssistantBase<TSettings>)}: consuming a media import outcome");
     }
 
     /// <summary>Consumes a terminal media notification when this assistant is visible.</summary>

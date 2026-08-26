@@ -22,15 +22,25 @@ public sealed partial class CollectI18NKeysCommand
                                       T(@"
                                       """;
         
-    private const string END_TAG = """
-                           ")
-                           """;
+    private const string END_TAG1 = """
+                            ")
+                            """;
+
+    private const string END_TAG2 = """
+                            ",
+                            """;
         
     private static readonly (string Tag, int Length)[] START_TAGS =
     [
         (START_TAG1, START_TAG1.Length),
         (START_TAG2, START_TAG2.Length),
         (START_TAG3, START_TAG3.Length)
+    ];
+
+    private static readonly string[] END_TAGS =
+    [
+        END_TAG1,
+        END_TAG2
     ];
     
     [Command("collect-i18n", Description = "Collect I18N keys")]
@@ -49,6 +59,7 @@ public sealed partial class CollectI18NKeysCommand
         var allFiles = Directory.EnumerateFiles(cwd, "*", SearchOption.AllDirectories);
         var counter = 0;
         
+        var warnings = new List<string>();
         var allI18NContent = new Dictionary<string, string>();
         foreach (var filePath in allFiles)
         {
@@ -66,7 +77,7 @@ public sealed partial class CollectI18NKeysCommand
                 continue;
             
             var content = await File.ReadAllTextAsync(filePath, Encoding.UTF8);
-            var matches = this.FindAllTextTags(content);
+            var matches = this.FindAllTextTags(content, filePath, warnings);
             if (matches.Count == 0)
                 continue;
             
@@ -89,7 +100,9 @@ public sealed partial class CollectI18NKeysCommand
         }
         
         Console.WriteLine($" {counter:###,###} files processed, {allI18NContent.Count:###,###} keys found.");
-        
+        foreach (var warning in warnings)
+            Console.WriteLine(warning);
+
         Console.Write("- Creating Lua code ...");
         var luaCode = this.ExportToLuaAssignments(allI18NContent);
         
@@ -163,7 +176,7 @@ public sealed partial class CollectI18NKeysCommand
         return sb.ToString();
     }
 
-    private List<string> FindAllTextTags(ReadOnlySpan<char> fileContent)
+    private List<string> FindAllTextTags(ReadOnlySpan<char> fileContent, string filePath, List<string> warnings)
     {
         (int Index, int Len) FindNextStart(ReadOnlySpan<char> content)
         {
@@ -182,6 +195,19 @@ public sealed partial class CollectI18NKeysCommand
 
             return (bestIndex, bestLength);
         }
+
+        int FindNextEnd(ReadOnlySpan<char> content)
+        {
+            var bestIndex = -1;
+            foreach (var tag in END_TAGS)
+            {
+                var index = content.IndexOf(tag);
+                if (index != -1 && (bestIndex == -1 || index < bestIndex))
+                    bestIndex = index;
+            }
+
+            return bestIndex;
+        }
         
         var matches = new List<string>();
         var startIdx = FindNextStart(fileContent);
@@ -196,15 +222,26 @@ public sealed partial class CollectI18NKeysCommand
             while(content[0] == '"')
                 content = content[1..];
             
-            var endIdx = content.IndexOf(END_TAG);
+            var endIdx = FindNextEnd(content);
             if (endIdx == -1)
                 break;
             
             var match = content[..endIdx];
             while (match[^1] == '"')
                 match = match[..^1];
-            
-            matches.Add(match.ToString());
+
+            var text = match.ToString();
+
+            //
+            // We read the raw source text, whereas the app hashes the unescaped string at
+            // runtime. Thus, any escape sequence makes both hashes differ, so that the text
+            // never finds its translation. Since we cannot detect this at runtime, we warn
+            // about it here:
+            //
+            if(text.Contains('\\'))
+                warnings.Add($"- Warning: The text '{text}' in the file '{filePath}' contains an escape sequence. Its key does not match the key the app looks up at runtime, so this text stays untranslated. Please use a raw string literal instead.");
+
+            matches.Add(text);
             startIdx = FindNextStart(content);
         }
         

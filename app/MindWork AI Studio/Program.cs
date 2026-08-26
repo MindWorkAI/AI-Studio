@@ -12,6 +12,7 @@ using AIStudio.Tools.Rust;
 using AIStudio.Tools.Security;
 using AIStudio.Tools.Services;
 
+using Microsoft.AspNetCore.Components.Server.Circuits;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Logging.Console;
@@ -196,6 +197,13 @@ internal sealed class Program
         builder.Services.AddHostedService<RustAvailabilityMonitorService>();
         builder.Services.AddScoped<NativeShareService>();
         builder.Services.AddScoped<PluginShareService>();
+
+        //
+        // One circuit state per circuit, and the handler which keeps it up to date. Both are scoped,
+        // because the circuit is the scope: every browser window gets its own pair.
+        //
+        builder.Services.AddScoped<CircuitStateService>();
+        builder.Services.AddScoped<CircuitHandler, AIStudioCircuitHandler>();
         
         // ReSharper disable AccessToDisposedClosure
         builder.Services.AddHostedService<RustService>(_ => rust);
@@ -244,7 +252,22 @@ internal sealed class Program
         // Get a program logger:
         var programLogger = app.Services.GetRequiredService<ILogger<Program>>();
         programLogger.LogInformation("Starting the AI Studio server.");
-        
+
+        //
+        // Observe tasks whose exceptions nobody awaited. We register this before the server starts:
+        // otherwise, everything the startup does — the plugin system, the first message bus traffic —
+        // would fault outside of this handler. The sender of such a task says nothing about where it
+        // came from, which is why we log each inner exception with its own stack trace.
+        //
+        TaskScheduler.UnobservedTaskException += (sender, taskArgs) =>
+        {
+            programLogger.LogError(taskArgs.Exception, $"Unobserved task exception by sender '{sender ?? "n/a"}'.");
+            foreach (var innerException in taskArgs.Exception.Flatten().InnerExceptions)
+                programLogger.LogError(innerException, $"Unobserved task exception detail: {innerException.GetType().FullName}.");
+
+            taskArgs.SetObserved();
+        };
+
         // Store the service provider (DI). We need it later for some classes,
         // which are not part of the request pipeline:
         SERVICE_PROVIDER = app.Services;
@@ -296,13 +319,7 @@ internal sealed class Program
         await encryptionInitializer;
         await rust.AppIsReady();
         programLogger.LogInformation("The AI Studio server is ready.");
-        
-        TaskScheduler.UnobservedTaskException += (sender, taskArgs) =>
-        {
-            programLogger.LogError(taskArgs.Exception, $"Unobserved task exception by sender '{sender ?? "n/a"}'.");
-            taskArgs.SetObserved();
-        };
-        
+
         await serverTask;
         
         RUST_SERVICE.Dispose();

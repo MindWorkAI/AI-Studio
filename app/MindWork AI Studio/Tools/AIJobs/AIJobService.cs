@@ -131,7 +131,12 @@ public sealed class AIJobService(SettingsManager settingsManager, MessageBus mes
         await CheckpointChatAsync(state, force: true);
         await this.NotifyChangedAsync(state);
 
-        _ = Task.Factory.StartNew(async () => await this.RunChatGenerationAsync(state), TaskCreationOptions.LongRunning);
+        //
+        // Unwrap matters here: StartNew with an async delegate hands back a task which completes as soon
+        // as the generation started, wrapping the task which does the actual work. Watching the outer one
+        // would tell us nothing about how the generation itself ended.
+        //
+        Task.Factory.StartNew(async () => await this.RunChatGenerationAsync(state), TaskCreationOptions.LongRunning).Unwrap().Observe($"{nameof(AIJobService)}: running a chat generation");
         return state.Snapshot;
     }
 

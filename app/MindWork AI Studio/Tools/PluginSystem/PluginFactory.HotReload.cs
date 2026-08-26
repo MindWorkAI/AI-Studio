@@ -50,7 +50,7 @@ public static partial class PluginFactory
         LOG.LogInformation($"Start hot reloading plugins for path '{HOT_RELOAD_WATCHER.Path}'.");
         try
         {
-            HOT_RELOAD_DEBOUNCE_TIMER.Elapsed += (_, _) => _ = ReloadPluginsAsync();
+            HOT_RELOAD_DEBOUNCE_TIMER.Elapsed += (_, _) => ReloadPluginsAsync().Observe($"{nameof(PluginFactory)}: hot reloading plugins");
 
             HOT_RELOAD_WATCHER.IncludeSubdirectories = true;
 

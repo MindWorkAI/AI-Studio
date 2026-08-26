@@ -42,7 +42,7 @@ public partial class Home : MSGComponentBase
         
         // Read the last change content asynchronously
         // without blocking the UI thread:
-        _ = this.ReadLastChangeAsync();
+        this.ReadLastChangeAsync().Observe($"{nameof(Home)}: reading the last change");
     }
 
     protected override Task OnAfterRenderAsync(bool firstRender)
