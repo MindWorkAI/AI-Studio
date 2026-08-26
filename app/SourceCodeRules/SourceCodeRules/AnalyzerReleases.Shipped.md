@@ -15,3 +15,4 @@
  MWAIS0009 | Usage    | Error    | StaticServiceProviderCacheAnalyzer
  MWAIS0010 | Usage    | Error    | CanonicalJsonConfigurationAnalyzer
  MWAIS0011 | Usage    | Error    | CanonicalJsonShapeAnalyzer
+ MWAIS0012 | Usage    | Error    | DirectI18NGetTextAnalyzer

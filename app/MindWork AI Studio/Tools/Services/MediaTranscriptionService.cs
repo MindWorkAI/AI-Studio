@@ -173,7 +173,7 @@ public sealed class MediaTranscriptionService(
         }
 
         this.UpdateImportState(target, Path.GetFileName(mediaPaths[0]), MediaTranscriptionPhase.QUEUED, null, MediaImportStatus.QUEUED);
-        _ = Task.Run(() => this.RunAttachmentBatchAsync(mediaPaths, target, ownerChat));
+        Task.Run(() => this.RunAttachmentBatchAsync(mediaPaths, target, ownerChat)).Observe($"{nameof(MediaTranscriptionService)}: running an attachment batch");
         return true;
     }
 
@@ -191,7 +191,7 @@ public sealed class MediaTranscriptionService(
         }
 
         this.UpdateImportState(target, Path.GetFileName(mediaPath), MediaTranscriptionPhase.QUEUED, null, MediaImportStatus.QUEUED);
-        _ = Task.Run(() => this.RunTextImportAsync(mediaPath, target));
+        Task.Run(() => this.RunTextImportAsync(mediaPath, target)).Observe($"{nameof(MediaTranscriptionService)}: running a text import");
         return true;
     }
 

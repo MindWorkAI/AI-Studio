@@ -93,7 +93,7 @@ public partial class Plugins : MSGComponentBase
     protected override void DisposeResources()
     {
         // Release the drop area again, so lower layers can catch dropped files:
-        _ = this.MessageBus.SendMessage(this, Event.UNREGISTER_FILE_DROP_AREA, DropLayers.PAGES);
+        this.MessageBus.SendMessage(this, Event.UNREGISTER_FILE_DROP_AREA, DropLayers.PAGES).Observe($"{nameof(Plugins)}: releasing the drop area");
         base.DisposeResources();
     }
 
@@ -175,7 +175,7 @@ public partial class Plugins : MSGComponentBase
             {
                 x => x.Message,
                 string.Format(
-                    this.T("The assistant plugin '{0}' was audited with the level '{1}', which is below the required minimum level \"{2}\". Your current settings allow activation anyway, but this may be potentially dangerous. Do you really want to enable this plugin?"),
+                    this.T("The assistant plugin '{0}' was audited with the level '{1}', which is below the required minimum level '{2}'. Your current settings allow activation anyway, but this may be potentially dangerous. Do you really want to enable this plugin?"),
                     pluginName,
                     actualLevel.GetName(),
                     this.AssistantPluginAuditSettings.MinimumLevel.GetName())

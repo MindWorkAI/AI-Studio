@@ -140,12 +140,12 @@ public partial class AttachDocuments : MSGComponentBase
     private void OnMediaImportStateChanged(MediaImportOwner owner)
     {
         if (owner == this.EffectiveImportOwner)
-            _ = this.InvokeAsync(async () =>
+            this.InvokeAsync(async () =>
             {
                 await this.SyncCompletedMediaAttachmentsAsync();
                 await this.ConsumeStandaloneMediaOutcomeAsync();
                 this.StateHasChanged();
-            });
+            }).Observe($"{nameof(AttachDocuments)}: syncing media attachments");
     }
 
     /// <summary>Consumes outcomes for dialog-local controls that have no chat or assistant owner surface.</summary>
@@ -225,7 +225,7 @@ public partial class AttachDocuments : MSGComponentBase
 
         // Release the drop area. Without this, drop areas below this one would count this component
         // forever and would stop catching dropped files:
-        _ = this.MessageBus.SendMessage(this, Event.UNREGISTER_FILE_DROP_AREA, this.Layer);
+        this.MessageBus.SendMessage(this, Event.UNREGISTER_FILE_DROP_AREA, this.Layer).Observe($"{nameof(AttachDocuments)}: releasing the drop area");
 
         base.DisposeResources();
     }

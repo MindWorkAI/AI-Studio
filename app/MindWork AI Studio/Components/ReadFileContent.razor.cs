@@ -132,12 +132,12 @@ public partial class ReadFileContent : MSGComponentBase
     private void OnMediaImportStateChanged(MediaImportOwner owner)
     {
         if (owner == this.EffectiveImportOwner)
-            _ = this.InvokeAsync(async () =>
+            this.InvokeAsync(async () =>
             {
                 await this.SyncCompletedMediaTextAsync();
                 await this.ConsumeStandaloneMediaOutcomeAsync();
                 this.StateHasChanged();
-            });
+            }).Observe($"{nameof(ReadFileContent)}: syncing transcribed text");
     }
 
     /// <summary>Consumes outcomes for dialog-local controls that have no assistant owner surface.</summary>
@@ -195,7 +195,7 @@ public partial class ReadFileContent : MSGComponentBase
         // Release the drop area. Without this, drop areas below this one would count this component
         // forever and would stop catching dropped files:
         if (this.EnableDragDrop)
-            _ = this.MessageBus.SendMessage(this, Event.UNREGISTER_FILE_DROP_AREA, this.Layer);
+            this.MessageBus.SendMessage(this, Event.UNREGISTER_FILE_DROP_AREA, this.Layer).Observe($"{nameof(ReadFileContent)}: releasing the drop area");
 
         base.DisposeResources();
     }

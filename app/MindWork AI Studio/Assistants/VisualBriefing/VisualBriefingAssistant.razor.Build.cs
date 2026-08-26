@@ -246,14 +246,14 @@ public partial class VisualBriefingAssistant
         if (this.selectedBriefing?.BriefingId != briefingId)
             return;
 
-        _ = this.InvokeAsync(() =>
+        this.InvokeAsync(() =>
         {
             if (this.selectedBriefing?.BriefingId != briefingId)
                 return;
 
             this.latestBuild = this.BuildProgressService.GetLatest(briefingId);
             this.StateHasChanged();
-        });
+        }).Observe($"{nameof(VisualBriefingAssistant)}: rendering the build progress");
     }
 
     /// <summary>
