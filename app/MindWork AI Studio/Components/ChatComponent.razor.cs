@@ -150,7 +150,12 @@ public partial class ChatComponent : MSGComponentBase
             this.ChatThread = deferredRequest.ChatThread;
             this.ChatThread.IncludeDateTime = true;
 
-            if (deferredRequest.ApplySelectedChatTemplateToComposer)
+            //
+            // Apply the chat template of the incoming chat to the composer. Like everywhere else,
+            // a draft the user typed themselves wins: we must not discard it just because someone
+            // started a preconfigured chat in the meantime.
+            //
+            if (deferredRequest.ApplySelectedChatTemplateToComposer && !this.ComposerState.HasUserDraft)
                 this.ComposerState.ApplyTemplate(this.SettingsManager.GetChatTemplateById(this.ChatThread.SelectedChatTemplate));
             
             this.Logger.LogInformation($"The chat '{this.ChatThread.ChatId}' with {this.ChatThread.Blocks.Count} messages was deferred and will be rendered now.");
