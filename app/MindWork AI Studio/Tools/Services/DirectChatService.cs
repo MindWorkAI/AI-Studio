@@ -7,8 +7,6 @@ using ProviderSettings = AIStudio.Settings.Provider;
 
 namespace AIStudio.Tools.Services;
 
-public sealed record DirectChatStartResult(ChatStartRequest? Request, string ErrorMessage);
-
 public sealed class DirectChatService(SettingsManager settingsManager, DataSourceService dataSourceService, ILogger<DirectChatService> logger)
 {
     private static string TB(string fallbackEn) => I18N.I.T(fallbackEn, typeof(DirectChatService).Namespace, nameof(DirectChatService));

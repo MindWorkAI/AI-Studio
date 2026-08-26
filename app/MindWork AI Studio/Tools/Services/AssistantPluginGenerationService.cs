@@ -13,38 +13,6 @@ using ProviderSettings = AIStudio.Settings.Provider;
 
 namespace AIStudio.Tools.Services;
 
-public sealed record AssistantBuilderChatLaunchRequest(
-    string WorkspaceName,
-    string? ProviderId,
-    string? ProfileId,
-    string? ChatTemplateId,
-    IReadOnlyList<string>? DataSourceIds);
-
-public sealed record AssistantPluginLuaGenerationRequest(
-    Guid PluginId,
-    string ApprovedAssistantDraft,
-    string ReviewNotes,
-    AssistantBuilderChatLaunchRequest? ChatLaunch);
-
-public sealed record AssistantPluginDraftGenerationRequest(
-    string AssistantDescription,
-    string Category,
-    string AssistantTitle,
-    string TypicalInput,
-    string ExpectedOutput,
-    string RequestedUiInputComponents,
-    string OutputLanguage,
-    bool AllowAiStudioProfiles,
-    string ExtraRules,
-    string ExampleRequest,
-    AssistantBuilderChatLaunchRequest? ChatLaunch);
-
-public sealed record AssistantPluginDraftGenerationResult(bool Success, string Markdown, string Issue);
-
-public sealed record AssistantPluginGenerationDraft(bool Success, string Lua, string PluginName, string Issue);
-
-public sealed record AssistantPluginRevisionDraft(bool Success, string Lua, string PluginName, string Issue);
-
 public sealed class AssistantPluginGenerationService(ILogger<AssistantPluginGenerationService> logger)
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(AssistantPluginGenerationService).Namespace, nameof(AssistantPluginGenerationService));
