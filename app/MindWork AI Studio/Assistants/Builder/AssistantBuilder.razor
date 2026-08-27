@@ -18,45 +18,16 @@
     </MudJustifiedText>
     @if (this.createChatLauncher)
     {
-        @if (this.availableWorkspaces.Count > 0)
-        {
-            <MudSelect T="string" Value="@this.launcherWorkspaceName" ValueChanged="@this.SelectExistingWorkspace" Strict="@false" Label="@T("Existing workspace (Optional)")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3 rounded-lg" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Folder">
-                @foreach (var workspace in this.availableWorkspaces)
-                {
-                    <MudSelectItem T="string" Value="@workspace.Name">@workspace.Name</MudSelectItem>
-                }
-            </MudSelect>
-        }
-        <MudTextField T="string" @bind-Text="@this.launcherWorkspaceName" Validation="@this.ValidateLauncherWorkspaceName" AdornmentIcon="@Icons.Material.Filled.CreateNewFolder" Adornment="Adornment.Start" IconSize="Size.Small" Label="@T("Workspace name")" HelperText="@T("Choose an existing workspace or enter a name that should be created when the launcher is opened.")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
-        <MudSelect T="string" @bind-Value="@this.launcherProviderId" Label="@T("Chat provider")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3 rounded-lg" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.SmartToy">
-            <MudSelectItem T="string" Value="@string.Empty">@T("Use chat default")</MudSelectItem>
-            @foreach (var provider in this.SettingsManager.GetConfidentProviders(Components.CHAT))
-            {
-                <MudSelectItem T="string" Value="@provider.Id">@provider.InstanceName</MudSelectItem>
-            }
-        </MudSelect>
-        <MudSelect T="string" @bind-Value="@this.launcherProfileId" Label="@T("Chat profile")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3 rounded-lg" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Person">
-            <MudSelectItem T="string" Value="@string.Empty">@T("Use chat default")</MudSelectItem>
-            <MudSelectItem T="string" Value="@Guid.Empty.ToString()">@T("Use no profile")</MudSelectItem>
-            @foreach (var profile in this.SettingsManager.ConfigurationData.Profiles)
-            {
-                <MudSelectItem T="string" Value="@profile.Id">@profile.GetSafeName()</MudSelectItem>
-            }
-        </MudSelect>
-        <MudSelect T="string" @bind-Value="@this.launcherChatTemplateId" Label="@T("Chat template")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3 rounded-lg" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Article">
-            <MudSelectItem T="string" Value="@string.Empty">@T("Use chat default")</MudSelectItem>
-            <MudSelectItem T="string" Value="@Guid.Empty.ToString()">@T("Use no chat template")</MudSelectItem>
-            @foreach (var chatTemplate in this.SettingsManager.ConfigurationData.ChatTemplates)
-            {
-                <MudSelectItem T="string" Value="@chatTemplate.Id">@chatTemplate.GetSafeName()</MudSelectItem>
-            }
-        </MudSelect>
-        <MudSelect T="string" Label="@T("Data sources (Optional)")" MultiSelection="@true" @bind-SelectedValues="@this.launcherDataSourceIds" MultiSelectionTextFunc="@this.GetSelectedLauncherDataSourceText" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3 rounded-lg" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Source">
-            @foreach (var dataSource in this.SettingsManager.ConfigurationData.DataSources)
-            {
-                <MudSelectItem T="string" Value="@dataSource.Id">@dataSource.Name</MudSelectItem>
-            }
-        </MudSelect>
+        @* The dashed frame shows that these fields belong together: they describe one chat the
+           launcher tile opens. *@
+        <MudPaper Class="pa-3 mb-3 border-dashed border rounded-lg">
+            <DirectChatLauncherForm @bind-WorkspaceName="@this.launcherWorkspaceName"
+                                    @bind-ProviderId="@this.launcherProviderId"
+                                    @bind-ProfileId="@this.launcherProfileId"
+                                    @bind-ChatTemplateId="@this.launcherChatTemplateId"
+                                    @bind-DataSourceIds="@this.launcherDataSourceIds"
+                                    ValidateWorkspaceName="@this.ValidateLauncherWorkspaceName"/>
+        </MudPaper>
     }
 
     <MudExpansionPanels Dense="@true" Elevation="0" Class="mb-3 rounded">

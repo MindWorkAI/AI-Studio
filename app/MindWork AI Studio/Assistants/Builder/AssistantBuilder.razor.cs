@@ -100,7 +100,6 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
     private string launcherProfileId = string.Empty;
     private string launcherChatTemplateId = string.Empty;
     private IEnumerable<string> launcherDataSourceIds = [];
-    private IReadOnlyList<WorkspaceTreeWorkspace> availableWorkspaces = [];
     private IEnumerable<AssistantComponentType> selectedAssistantComponents = [];
     private CommonLanguages selectedOutputLanguage = CommonLanguages.AS_IS;
     private string customOutputLanguage = string.Empty;
@@ -372,13 +371,6 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
         return null;
     }
 
-    protected override async Task OnInitializedAsync()
-    {
-        await base.OnInitializedAsync();
-        var workspaceSnapshot = await WorkspaceBehaviour.GetOrLoadWorkspaceTreeShellAsync();
-        this.availableWorkspaces = workspaceSnapshot.Workspaces;
-    }
-
     private async Task GenerateAssistantSpec()
     {
         await this.Form!.Validate();
@@ -552,20 +544,6 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
             NullIfEmpty(this.launcherProfileId),
             NullIfEmpty(this.launcherChatTemplateId),
             dataSourceIds.Length == 0 ? null : dataSourceIds);
-    }
-
-    private void SelectExistingWorkspace(string workspaceName)
-    {
-        if (!string.IsNullOrWhiteSpace(workspaceName))
-            this.launcherWorkspaceName = workspaceName;
-    }
-
-    private string GetSelectedLauncherDataSourceText(List<string?>? selectedValues)
-    {
-        if (selectedValues is null || selectedValues.Count == 0)
-            return T("Use the normal chat data source defaults");
-
-        return string.Format(T("{0} data source(s) selected"), selectedValues.Count);
     }
 
     private static string? NullIfEmpty(string value) => string.IsNullOrWhiteSpace(value) ? null : value;
