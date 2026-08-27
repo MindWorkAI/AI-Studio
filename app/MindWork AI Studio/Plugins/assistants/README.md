@@ -136,6 +136,17 @@ ASSISTANT = {
 - When the selected chat template does not allow profiles, the template wins: the launcher `ProfileId` is dropped and the chat starts without a profile. This matches the disabled profile selection such a template produces in the chat.
 - The predefined user prompt and the attachments of the selected chat template are placed into the chat input, unless the user already has an unsent draft there.
 
+### Editing a launcher in AI Studio
+Users can change a launcher without touching Lua and without asking a model: the tile on the assistants page and the plugins page both offer a settings dialog for the name, the title, the description, and every chat selection above. Changing a launcher is picking from drop-downs, so there is nothing to prompt about, and locally managed launchers therefore get this dialog instead of the AI revision.
+
+Saving rewrites the whole `plugin.lua` in a canonical shape. Comments, formatting, and anything beyond the metadata and the `ASSISTANT` table would be lost that way, so AI Studio offers the dialog only for launchers that are:
+
+- locally managed, meaning not internal and not deployed by a configuration server,
+- made of a single `plugin.lua` without companion Lua files, and
+- free of `ICON_SVG` and any `require(...)`.
+
+Launchers with an own icon or extra Lua code keep the plugin code editor and the AI revision, so nothing an author wrote gets dropped. `AI_STUDIO_ASSISTANT_BUILDER` is carried over unchanged: the dialog never adds it to a manually authored plugin.
+
 
 #### Supported types (matching the Blazor UI components):
 
