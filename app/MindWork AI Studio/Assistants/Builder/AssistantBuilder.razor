@@ -30,7 +30,7 @@
         <MudTextField T="string" @bind-Text="@this.launcherWorkspaceName" Validation="@this.ValidateLauncherWorkspaceName" AdornmentIcon="@Icons.Material.Filled.CreateNewFolder" Adornment="Adornment.Start" IconSize="Size.Small" Label="@T("Workspace name")" HelperText="@T("Choose an existing workspace or enter a name that should be created when the launcher is opened.")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
         <MudSelect T="string" @bind-Value="@this.launcherProviderId" Label="@T("Chat provider")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3 rounded-lg" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.SmartToy">
             <MudSelectItem T="string" Value="@string.Empty">@T("Use chat default")</MudSelectItem>
-            @foreach (var provider in this.SettingsManager.GetConfidentProviders(Tools.Components.CHAT))
+            @foreach (var provider in this.SettingsManager.GetConfidentProviders(Components.CHAT))
             {
                 <MudSelectItem T="string" Value="@provider.Id">@provider.InstanceName</MudSelectItem>
             }

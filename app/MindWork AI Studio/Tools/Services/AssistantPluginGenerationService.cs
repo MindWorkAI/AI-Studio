@@ -272,7 +272,7 @@ public sealed class AssistantPluginGenerationService(ILogger<AssistantPluginGene
           {
               ApprovedAssistantDraft = request.ApprovedAssistantDraft.Trim(),
               ReviewNotes = ValueOrNone(request.ReviewNotes),
-              ChatLaunch = request.ChatLaunch,
+              request.ChatLaunch,
           })}}
           </untrusted_generation_request_json>
 
@@ -387,7 +387,7 @@ public sealed class AssistantPluginGenerationService(ILogger<AssistantPluginGene
               request.AllowAiStudioProfiles,
               ExtraRules = ValueOrModelDecides(request.ExtraRules),
               ExampleRequest = ValueOrModelDecides(request.ExampleRequest),
-              ChatLaunch = request.ChatLaunch,
+              request.ChatLaunch,
           })}}
           </untrusted_assistant_request_json>
 

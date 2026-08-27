@@ -47,7 +47,7 @@ public sealed class DataSourceService
 
     /// <summary>
     /// Returns the requested data sources that are allowed for the selected LLM provider.
-    /// Unlike <see cref="GetDataSources(AIStudio.Settings.Provider, IReadOnlyCollection{IDataSource})"/>,
+    /// Unlike see GetDataSources(AIStudio.Settings.Provider, IReadOnlyCollection{IDataSource}),
     /// this method checks only the supplied data sources.
     /// </summary>
     /// <param name="selectedLLMProvider">The selected LLM provider.</param>

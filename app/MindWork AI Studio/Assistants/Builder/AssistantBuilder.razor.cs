@@ -1,7 +1,6 @@
 ﻿using AIStudio.Agents.AssistantAudit;
 using AIStudio.Dialogs;
 using AIStudio.Dialogs.Settings;
-using AIStudio.Settings;
 using AIStudio.Tools.AssistantSessions;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.PluginSystem.Assistants;
@@ -30,9 +29,13 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
     private DirectChatService DirectChatService { get; init; } = null!;
 
     private static readonly ILogger LOGGER = Program.LOGGER_FACTORY.CreateLogger(nameof(AssistantBuilder));
+    
     protected override Tools.Components Component => Tools.Components.META_ASSISTANT;
+    
     protected override string Title => T("Assistant Builder");
+    
     protected override string Description => T("Describe the assistant you want to create. AI Studio will draft a readable assistant specification first and then generate an assistant plugin from it.");
+    
     protected override string SystemPrompt =>
         $"""
          You are the Assistant Builder inside MindWork AI Studio.
@@ -54,6 +57,7 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
         BuilderStep.DONE => T("Regenerate Assistant"),
         _ => T("Create assistant draft"),
     };
+    
     protected override Func<Task> SubmitAction => this.step switch
     {
         BuilderStep.DESCRIBE => this.GenerateAssistantSpec,
@@ -61,17 +65,22 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
         BuilderStep.DONE => this.GenerateLuaAssistant,
         _ => this.GenerateAssistantSpec,
     };
+    
     protected override bool SubmitDisabled => this.isAgentRunning || this.IsInstallFlowRunning;
+    
     protected override bool ShowResult => false;
+    
     protected override bool ShowEntireChatThread => false;
+    
     protected override bool AllowProfiles => false;
+    
     protected override bool ShowProfileSelection => false;
+    
     protected override bool ShowCopyResult => this.step is BuilderStep.DONE;
 
     protected override bool HasSettingsPanel => false;
-    protected override Func<string> Result2Copy => () => !string.IsNullOrWhiteSpace(this.generatedLuaAssistant)
-        ? this.generatedLuaAssistant
-        : this.generatedAssistantSpec;
+    
+    protected override Func<string> Result2Copy => () => !string.IsNullOrWhiteSpace(this.generatedLuaAssistant) ? this.generatedLuaAssistant : this.generatedAssistantSpec;
 
     private BuilderStep step = BuilderStep.DESCRIBE;
     private bool isAgentRunning;
@@ -145,6 +154,7 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
     private static readonly AssistantSessionStateKey<PluginAssistants?> INSTALLED_ASSISTANT_PLUGIN_STATE_KEY = new(nameof(installedAssistantPlugin));
     private static readonly AssistantSessionStateKey<BuilderInstallStep?> FAILED_INSTALL_STEP_STATE_KEY = new(nameof(failedInstallStep));
     private static readonly AssistantSessionStateKey<string> INSTALL_FLOW_ISSUE_STATE_KEY = new(nameof(installFlowIssue));
+    
     private enum BuilderStep
     {
         DESCRIBE,
