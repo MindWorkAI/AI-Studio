@@ -702,9 +702,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1199074722"] 
 -- Additional rules (Optional)
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1239995078"] = "Zusätzliche Regeln (optional)"
 
--- Create a direct chat launcher
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1312944597"] = "Einen Chat-Schnellstart erstellen"
-
 -- Auditing assistants safety...
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1322393857"] = "Sicherheitsprüfung der Assistenten..."
 
@@ -764,6 +761,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2078723318"] 
 
 -- Typical input (Optional)
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2172900154"] = "Typische Eingabe (optional)"
+
+-- A direct chat launcher tile that opens a preconfigured chat right away
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2195648311"] = "Eine Kachel für einen Chat-Schnellstart, die sofort einen vorkonfigurierten Chat öffnet"
 
 -- These notes are applied on top of the accepted draft and can still change the generated assistant plugin. Leave empty to use the draft as-is.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2345545005"] = "Diese Hinweise werden zusätzlich auf den akzeptierten Entwurf angewendet und können das generierte Assistenten-Plugin noch verändern. Leer lassen, um den Entwurf unverändert zu verwenden."
@@ -828,6 +828,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3163704605"] 
 -- Regenerate Assistant
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3171038735"] = "Assistent neu erstellen"
 
+-- What kind of assistant should this be?
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3238517263"] = "Was für eine Art von Assistent soll dies sein?"
+
 -- The security check could not determine a result.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3303290181"] = "Die Sicherheitsprüfung konnte kein Ergebnis ermitteln."
 
@@ -873,8 +876,8 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3843866124"] 
 -- Install assistant
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3863433088"] = "Assistent installieren"
 
--- A direct chat launcher has no input form of its own. Its tile opens a new chat right away, in the workspace you name below and with the provider, profile, chat template, and data sources you select there. Leave this switch off to create a regular assistant instead, which asks users for input and builds its own prompt from it.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3903239952"] = "Ein Chat-Schnellstart hat kein eigenes Eingabeformular. Seine Kachel öffnet sofort einen neuen Chat – in dem unten benannten Arbeitsbereich und mit dem dort ausgewählten Anbieter, Profil, der Chatvorlage und den Datenquellen. Lassen Sie diesen Schalter ausgeschaltet, um stattdessen einen regulären Assistenten zu erstellen. Dieser fragt Nutzende nach Eingaben und erstellt daraus seinen eigenen Prompt."
+-- The direct chat launcher tile has no input form of its own. It opens a new chat right away, in the workspace you name below and with the provider, profile, chat template, and data sources you select there.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T395398616"] = "Die Kachel für den direkten Chat-Schnellstart hat kein eigenes Eingabeformular. Sie öffnet sofort einen neuen Chat – im unten benannten Arbeitsbereich und mit dem dort ausgewählten Anbieter, Profil, der Chat-Vorlage und den Datenquellen."
 
 -- Assistant draft
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3957423852"] = "Assistentenentwurf"
@@ -900,6 +903,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T4269176489"] 
 -- Please select or enter a workspace name for the chat launcher.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T4396903"] = "Bitte wählen Sie einen Namen für den Arbeitsbereich des Chat-Schnellstarts aus oder geben Sie einen ein."
 
+-- The assistant asks users for input through a form and builds its own prompt from it.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T451049798"] = "Der Assistent fragt Nutzer über ein Formular nach Eingaben und erstellt daraus seinen eigenen Prompt."
+
 -- The assistant cannot be enabled.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T451764889"] = "Der Assistent kann nicht aktiviert werden."
 
@@ -908,6 +914,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T463667108"] =
 
 -- Unknown assistant
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T471171049"] = "Unbekannter Assistent"
+
+-- A full assistant with its own input form
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T474300345"] = "Ein vollständiger Assistent mit eigenem Eingabeformular"
 
 -- Describe your assistant
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T507682539"] = "Beschreiben Sie Ihren Assistenten"
