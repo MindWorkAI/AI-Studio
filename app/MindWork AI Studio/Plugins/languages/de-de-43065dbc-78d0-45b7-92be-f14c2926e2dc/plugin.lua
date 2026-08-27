@@ -711,8 +711,14 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1322393857"] 
 -- The assistant is enabled.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1373471225"] = "Der Assistent ist aktiviert."
 
+-- Weekly Report Chat
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T14279270"] = "Chat für Wochenberichte"
+
 -- Validating the generated assistant...
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1428868592"] = "Generierter Assistent wird überprüft..."
+
+-- Tile title (optional)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T145442870"] = "Kacheltitel (optional)"
 
 -- Additional changes (Optional)
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1502888752"] = "Zusätzliche Änderungen (optional)"
@@ -770,6 +776,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T239354512"] =
 
 -- The assistant could not be installed.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2432974339"] = "Der Assistent konnte nicht installiert werden."
+
+-- The title shown on the tile. Leave it empty to let the model choose one.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2453908329"] = "Der auf der Kachel angezeigte Titel. Leer lassen, damit das Modell einen Titel auswählt."
 
 -- Security check completed. No security issues were found.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2521082424"] = "Sicherheitsprüfung abgeschlossen. Es wurden keine Sicherheitsprobleme gefunden."
@@ -3597,40 +3606,40 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T700666808"] = "Date
 -- Available Data Sources
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T86053874"] = "Verfügbare Datenquellen"
 
--- Chat-Anbieter
+-- Chat provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T1648955896"] = "Chat-Anbieter"
 
--- Kein Profil verwenden
+-- Use no profile
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T2205839602"] = "Kein Profil verwenden"
 
--- Vorhandener Arbeitsbereich (optional)
+-- Existing workspace (Optional)
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T2364306588"] = "Vorhandener Arbeitsbereich (optional)"
 
--- Chat-Profil
+-- Chat profile
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T2412069346"] = "Chat-Profil"
 
--- {0} Datenquelle(n) ausgewählt
+-- {0} data source(s) selected
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T2777836629"] = "{0} Datenquelle(n) ausgewählt"
 
--- Chat-Standard verwenden
+-- Use chat default
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T2886517443"] = "Chat-Standard verwenden"
 
--- Wählen Sie einen vorhandenen Arbeitsbereich aus oder geben Sie einen Namen ein, der beim Verwenden des Chat-Schnellstarts erstellt werden soll.
+-- Choose an existing workspace or enter a name that should be created when the launcher is opened.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T2901190527"] = "Wählen Sie einen vorhandenen Arbeitsbereich aus oder geben Sie einen Namen ein, der beim Verwenden des Chat-Schnellstarts erstellt werden soll."
 
--- Name des Arbeitsbereichs
+-- Workspace name
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T295876489"] = "Name des Arbeitsbereichs"
 
--- Datenquellen (optional)
+-- Data sources (Optional)
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T3259309302"] = "Datenquellen (optional)"
 
--- Die Standardwerte der Datenquelle für den normalen Chat verwenden
+-- Use the normal chat data source defaults
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T3898572329"] = "Die Standardwerte der Datenquelle für den normalen Chat verwenden"
 
--- Kein Chat-Template verwenden
+-- Use no chat template
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T4258819635"] = "Kein Chat-Template verwenden"
 
--- Chat-Vorlage
+-- Chat template
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T923285303"] = "Chat-Vorlage"
 
 -- LLMs can make mistakes. Check important information.

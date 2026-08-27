@@ -19,8 +19,10 @@
     @if (this.createChatLauncher)
     {
         @* The dashed frame shows that these fields belong together: they describe one chat the
-           launcher tile opens. *@
+           launcher tile opens. The title lives here rather than in the advanced options, because a
+           launcher has no other visible content: its tile is the whole assistant. *@
         <MudPaper Class="pa-3 mb-3 border-dashed border rounded-lg">
+            <MudTextField T="string" @bind-Text="@this.assistantName" AdornmentIcon="@Icons.Material.Filled.Assistant" Adornment="Adornment.Start" IconSize="Size.Small" Label="@T("Tile title (optional)")" HelperText="@T("The title shown on the tile. Leave it empty to let the model choose one.")" Placeholder="@T("Weekly Report Chat")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
             <DirectChatLauncherForm @bind-WorkspaceName="@this.launcherWorkspaceName"
                                     @bind-ProviderId="@this.launcherProviderId"
                                     @bind-ProfileId="@this.launcherProfileId"
@@ -41,7 +43,12 @@
                 </div>
             </TitleContent>
             <ChildContent>
-                <MudTextField T="string" @bind-Text="@this.assistantName" AdornmentIcon="@Icons.Material.Filled.Assistant" Adornment="Adornment.Start" IconSize="Size.Small" Label="@T("Display Name (Optional)")" Placeholder="@T("Meeting Task Extractor")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+                @* A launcher shows this field inside its own frame above, next to the chat settings
+                   it belongs with. *@
+                @if (!this.createChatLauncher)
+                {
+                    <MudTextField T="string" @bind-Text="@this.assistantName" AdornmentIcon="@Icons.Material.Filled.Assistant" Adornment="Adornment.Start" IconSize="Size.Small" Label="@T("Display Name (Optional)")" Placeholder="@T("Meeting Task Extractor")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+                }
                 <EnumSelection T="AssistantCategory" NameFunc="@(category => category.NameSelecting())" @bind-Value="@this.selectedCategory" ValidateSelection="@this.ValidatingCategory" Icon="@Icons.Material.Filled.Category" IconSize="Size.Small" Label="@T("Category (Optional)")" AllowOther="@true" OtherValue="AssistantCategory.OTHER" @bind-OtherInput="@this.customCategory" ValidateOther="@this.ValidateCustomCategory" LabelOther="@T("Custom assistant category")" />
                 @if (!this.createChatLauncher)
                 {
