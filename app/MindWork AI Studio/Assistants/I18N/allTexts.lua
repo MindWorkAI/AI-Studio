@@ -3655,6 +3655,15 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T4258819635"] = "
 -- Chat template
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T923285303"] = "Chat template"
 
+-- Tile Settings
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERSETTINGSACTION::T1482677174"] = "Tile Settings"
+
+-- The tile '{0}' has been updated.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERSETTINGSACTION::T2443911707"] = "The tile '{0}' has been updated."
+
+-- Change what this tile opens
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERSETTINGSACTION::T4272203100"] = "Change what this tile opens"
+
 -- LLMs can make mistakes. Check important information.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::HALLUZINATIONREMINDER::T3528806904"] = "LLMs can make mistakes. Check important information."
 
@@ -8947,6 +8956,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T1463683828"] = "Import"
 -- Import plugin
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T1467093263"] = "Import plugin"
 
+-- Tile Settings
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T1482677174"] = "Tile Settings"
+
 -- Assistant Audit
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T1506922856"] = "Assistant Audit"
 
@@ -8979,6 +8991,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2058912565"] = "No source url availa
 
 -- Plugins
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2222816203"] = "Plugins"
+
+-- The tile '{0}' has been updated.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2443911707"] = "The tile '{0}' has been updated."
 
 -- Edit Assistant Plugin
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2477579768"] = "Edit Assistant Plugin"
@@ -9039,6 +9054,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T4157246824"] = "The assistant plugin
 
 -- Open website
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T4239378936"] = "Open website"
+
+-- Change what this tile opens
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T4272203100"] = "Change what this tile opens"
 
 -- The plugin archive was exported to '{0}'.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T659549952"] = "The plugin archive was exported to '{0}'."

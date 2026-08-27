@@ -3657,6 +3657,15 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T4258819635"] = "
 -- Chat template
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T923285303"] = "Chat-Vorlage"
 
+-- Tile Settings
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERSETTINGSACTION::T1482677174"] = "Einstellungen der Kachel"
+
+-- The tile '{0}' has been updated.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERSETTINGSACTION::T2443911707"] = "Die Kachel „{0}“ wurde aktualisiert."
+
+-- Change what this tile opens
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERSETTINGSACTION::T4272203100"] = "Ändern, was diese Kachel öffnet"
+
 -- LLMs can make mistakes. Check important information.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::HALLUZINATIONREMINDER::T3528806904"] = "LLMs können Fehler machen. Überprüfen Sie wichtige Informationen."
 
@@ -8949,6 +8958,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T1463683828"] = "Importieren"
 -- Import plugin
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T1467093263"] = "Plugin importieren"
 
+-- Tile Settings
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T1482677174"] = "Einstellungen der Kachel"
+
 -- Assistant Audit
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T1506922856"] = "Assistentenprüfung"
 
@@ -8981,6 +8993,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2058912565"] = "Keine Quell-URL verf
 
 -- Plugins
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2222816203"] = "Plugins"
+
+-- The tile '{0}' has been updated.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2443911707"] = "Die Kachel „{0}“ wurde aktualisiert."
 
 -- Edit Assistant Plugin
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T2477579768"] = "Plugin für „Assistent bearbeiten“"
@@ -9041,6 +9056,9 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T4157246824"] = "Das Assistenten-Plug
 
 -- Open website
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T4239378936"] = "Website öffnen"
+
+-- Change what this tile opens
+UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T4272203100"] = "Ändern, was diese Kachel öffnet"
 
 -- The plugin archive was exported to '{0}'.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::PLUGINS::T659549952"] = "Das Plugin-Archiv wurde nach „{0}“ exportiert."
