@@ -5757,6 +5757,69 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T3688254408"]
 -- Your security policy
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DATASOURCELOCALFILEINFODIALOG::T4081226330"] = "Ihre Sicherheitsrichtlinie"
 
+-- Please select or enter a workspace name for this tile.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DIRECTCHATLAUNCHERSETTINGSDIALOG::T1505747232"] = "Bitte wählen Sie einen Namen für den Arbeitsbereich für diese Kachel aus oder geben Sie einen ein."
+
+-- Resulting Lua plugin
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DIRECTCHATLAUNCHERSETTINGSDIALOG::T1671332249"] = "Resultierendes Lua-Plugin"
+
+-- Description
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DIRECTCHATLAUNCHERSETTINGSDIALOG::T1725856265"] = "Beschreibung"
+
+-- Running security audit...
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DIRECTCHATLAUNCHERSETTINGSDIALOG::T1731066725"] = "Sicherheitsprüfung wird durchgeführt …"
+
+-- The assistant plugin could not be resolved.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DIRECTCHATLAUNCHERSETTINGSDIALOG::T1823819434"] = "Das Assistenten-Plugin konnte nicht aufgelöst werden."
+
+-- Plugin name
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DIRECTCHATLAUNCHERSETTINGSDIALOG::T1953702445"] = "Plugin-Name"
+
+-- Shown on the tile and on the plugins page.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DIRECTCHATLAUNCHERSETTINGSDIALOG::T2413885878"] = "Wird auf der Kachel und auf der Plugin-Seite angezeigt."
+
+-- The assistant plugin could not be loaded: {0}
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DIRECTCHATLAUNCHERSETTINGSDIALOG::T2486953475"] = "Das Assistenten-Plugin konnte nicht geladen werden: {0}"
+
+-- The plugin.lua file could not be found.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DIRECTCHATLAUNCHERSETTINGSDIALOG::T2530869782"] = "Die Datei „plugin.lua“ konnte nicht gefunden werden."
+
+-- The title shown on the tile.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DIRECTCHATLAUNCHERSETTINGSDIALOG::T3705971409"] = "Der auf der Kachel angezeigte Titel."
+
+-- Only locally managed direct chat launchers can be edited here.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DIRECTCHATLAUNCHERSETTINGSDIALOG::T378728350"] = "Hier können nur lokale Chat-Schnellstarts bearbeitet werden."
+
+-- The name shown on the plugins page.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DIRECTCHATLAUNCHERSETTINGSDIALOG::T3915583159"] = "Der auf der Plugin-Seite angezeigte Name."
+
+-- This launcher contains its own icon or additional Lua code. Please edit it with the plugin code editor, so nothing of it gets lost.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DIRECTCHATLAUNCHERSETTINGSDIALOG::T408384245"] = "Dieser Chat-Schnellstart enthält ein eigenes Symbol oder zusätzlichen Lua-Code. Bitte bearbeiten Sie ihn mit dem Plugin-Code-Editor, damit nichts davon verloren geht."
+
+-- Save tile
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DIRECTCHATLAUNCHERSETTINGSDIALOG::T4106886476"] = "Kachel speichern"
+
+-- Please provide a description for this tile.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DIRECTCHATLAUNCHERSETTINGSDIALOG::T4278452702"] = "Bitte geben Sie eine Beschreibung für diese Kachel ein."
+
+-- Saving the tile...
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DIRECTCHATLAUNCHERSETTINGSDIALOG::T444338"] = "Kachel wird gespeichert …"
+
+-- Tile title
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DIRECTCHATLAUNCHERSETTINGSDIALOG::T630859435"] = "Kacheltitel"
+
+-- This tile opens a chat directly, so there is nothing to prompt for: pick what the chat should start with. AI Studio rewrites the plugin itself, without asking a model.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DIRECTCHATLAUNCHERSETTINGSDIALOG::T730548250"] = "Diese Kachel öffnet direkt einen Chat, daher müssen Sie keinen Prompt eingeben: Wählen Sie aus, womit der Chat beginnen soll. AI Studio schreibt das Plugin selbst um, ohne ein Modell zu fragen."
+
+-- Please provide a title for this tile.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DIRECTCHATLAUNCHERSETTINGSDIALOG::T84825154"] = "Bitte geben Sie einen Titel für diese Kachel ein."
+
+-- Please provide a name for this plugin.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DIRECTCHATLAUNCHERSETTINGSDIALOG::T854110894"] = "Bitte geben Sie einen Namen für dieses Plugin ein."
+
+-- Cancel
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DIRECTCHATLAUNCHERSETTINGSDIALOG::T900713019"] = "Abbrechen"
+
 -- Please wait while we load the content of your file. Depending on the file type and size, this may take a moment.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::DOCUMENTCHECKDIALOG::T1205126512"] = "Bitte warten Sie, während wir den Inhalt Ihrer Datei laden. Je nach Dateityp und -größe kann dies einen Moment dauern."
 
