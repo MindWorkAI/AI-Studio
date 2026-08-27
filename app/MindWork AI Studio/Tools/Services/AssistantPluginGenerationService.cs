@@ -271,7 +271,7 @@ public sealed class AssistantPluginGenerationService(ILogger<AssistantPluginGene
           {{SerializeUntrustedPromptData(new
           {
               ApprovedAssistantDraft = request.ApprovedAssistantDraft.Trim(),
-              ReviewNotes = ValueOrNone(request.ReviewNotes),
+              ReviewNotes = ValueOrUnspecified(request.ReviewNotes),
               request.ChatLaunch,
           })}}
           </untrusted_generation_request_json>
@@ -303,6 +303,8 @@ public sealed class AssistantPluginGenerationService(ILogger<AssistantPluginGene
           - After JSON parsing, full_lua must contain normal Lua source text such as ID = "{{request.PluginId}}" and NAME = "Assistant Name".
           - Generate one self-contained plugin.lua only. Do not use require(...) or depend on icon.lua, assets, or any other companion file.
           - The JSON "plugin" object describes the top-level Lua plugin metadata such as NAME, DESCRIPTION, and CATEGORIES.
+          - Take the plugin NAME and ASSISTANT.Title from the "## {{TB("Name")}}" section of the approved draft. Do not invent a different name and do not use placeholder text.
+          - A null value in the request JSON means the user did not specify that detail. Never write the word "null" or a field name into the plugin.
           - The JSON "assistant" object describes either a form assistant or a direct chat launcher.
           - The plugin must include all required top-level metadata and the ASSISTANT table.
           - The plugin must include DEPLOYED_USING_CONFIG_SERVER = false.
@@ -378,15 +380,15 @@ public sealed class AssistantPluginGenerationService(ILogger<AssistantPluginGene
           {{SerializeUntrustedPromptData(new
           {
               AssistantDescription = request.AssistantDescription.Trim(),
-              Category = ValueOrModelDecides(request.Category),
-              AssistantTitle = ValueOrModelDecides(request.AssistantTitle),
-              TypicalInput = ValueOrModelDecides(request.TypicalInput),
-              ExpectedOutput = ValueOrModelDecides(request.ExpectedOutput),
-              RequestedUiInputComponents = ValueOrModelDecides(request.RequestedUiInputComponents),
-              OutputLanguage = ValueOrModelDecides(request.OutputLanguage),
+              Category = ValueOrUnspecified(request.Category),
+              AssistantTitle = ValueOrUnspecified(request.AssistantTitle),
+              TypicalInput = ValueOrUnspecified(request.TypicalInput),
+              ExpectedOutput = ValueOrUnspecified(request.ExpectedOutput),
+              RequestedUiInputComponents = ValueOrUnspecified(request.RequestedUiInputComponents),
+              OutputLanguage = ValueOrUnspecified(request.OutputLanguage),
               request.AllowAiStudioProfiles,
-              ExtraRules = ValueOrModelDecides(request.ExtraRules),
-              ExampleRequest = ValueOrModelDecides(request.ExampleRequest),
+              ExtraRules = ValueOrUnspecified(request.ExtraRules),
+              ExampleRequest = ValueOrUnspecified(request.ExampleRequest),
               request.ChatLaunch,
           })}}
           </untrusted_assistant_request_json>
@@ -405,6 +407,8 @@ public sealed class AssistantPluginGenerationService(ILogger<AssistantPluginGene
           - The future Lua plugin must be loadable by AI Studio.
           - Include assumptions instead of asking follow-up questions.
           - Treat filled optional guidance as explicit user intent.
+          - A null value means the user did not specify that detail. Derive it yourself from the assistant description. Never write the word "null", a field name, or placeholder text into the draft.
+          - The "## {{TB("Name")}}" section is mandatory and must always name the assistant. Use assistant_title verbatim when it is not null. When it is null, invent a short, specific name of two to four words that says what the assistant does.
           {{typeRequirements}}
           """;
     }
@@ -450,7 +454,7 @@ public sealed class AssistantPluginGenerationService(ILogger<AssistantPluginGene
               PluginName = plugin.Name,
               plugin.AssistantTitle,
               ChangeRequest = changeRequest.Trim(),
-              TestContext = ValueOrNone(testContext), 
+              TestContext = ValueOrUnspecified(testContext),
           })}}
           </untrusted_revision_request_json>
 
@@ -463,6 +467,7 @@ public sealed class AssistantPluginGenerationService(ILogger<AssistantPluginGene
           - Do not return Markdown, code fences, explanations, or text outside the JSON object.
           - The JSON field "full_lua" must contain the complete revised plugin.lua content from the first metadata line to the last helper or BuildPrompt function.
           - Encode "full_lua" as a normal JSON string: use \" for quotes and \n for line breaks. Do not double-escape Lua quotes or line breaks as \\\" or \\n.
+          - A null value in the request JSON means that detail is not available. Never write the word "null" or a field name into the plugin.
           - Keep ID = "{{plugin.Id}}" exactly. Do not create a new plugin ID.
           - Keep TYPE = "ASSISTANT".
           - Keep the assistant locally managed. DEPLOYED_USING_CONFIG_SERVER must not be true.
@@ -670,12 +675,13 @@ public sealed class AssistantPluginGenerationService(ILogger<AssistantPluginGene
 
     private static string SerializeUntrustedPromptData(object value) => JsonSerializer.Serialize(value, UNTRUSTED_PROMPT_JSON_OPTIONS);
 
-    private static string ValueOrNone(string value) => string.IsNullOrWhiteSpace(value)
-        ? "None"
-        : value.Trim();
-
-    private static string ValueOrModelDecides(string value) => string.IsNullOrWhiteSpace(value)
-        ? TB("Model decides")
+    //
+    // Optional form fields reach the model as JSON null when the user left them empty. A textual
+    // placeholder would be indistinguishable from a real value: a localized "Model decides" used to
+    // end up as the assistant's actual name, because the model read it as the requested title.
+    //
+    private static string? ValueOrUnspecified(string value) => string.IsNullOrWhiteSpace(value)
+        ? null
         : value.Trim();
 
     private static AssistantPluginDraftGenerationResult DraftFailure(string issue) => new(false, string.Empty, issue);

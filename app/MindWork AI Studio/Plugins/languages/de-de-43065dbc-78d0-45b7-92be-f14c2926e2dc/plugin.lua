@@ -10587,9 +10587,6 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3
 -- The revised assistant metadata does not match the revised plugin.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3578379466"] = "Die überarbeiteten Assistenten-Metadaten stimmen nicht mit dem überarbeiteten Plugin überein."
 
--- Model decides
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T358632395"] = "Modell entscheidet"
-
 -- The generated assistant plugin does not match the selected chat launcher configuration.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3631147451"] = "Das generierte Assistenten-Plugin entspricht nicht der ausgewählten Konfiguration des Chat-Schnellstarts."
 

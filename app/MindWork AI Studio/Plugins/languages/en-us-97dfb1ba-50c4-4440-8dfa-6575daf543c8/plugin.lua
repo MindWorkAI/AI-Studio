@@ -10587,9 +10587,6 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3
 -- The revised assistant metadata does not match the revised plugin.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3578379466"] = "The revised assistant metadata does not match the revised plugin."
 
--- Model decides
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T358632395"] = "Model decides"
-
 -- The generated assistant plugin does not match the selected chat launcher configuration.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3631147451"] = "The generated assistant plugin does not match the selected chat launcher configuration."
 
