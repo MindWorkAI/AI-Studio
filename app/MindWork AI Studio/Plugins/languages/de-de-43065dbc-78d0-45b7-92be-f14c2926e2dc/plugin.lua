@@ -702,6 +702,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1199074722"] 
 -- Additional rules (Optional)
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1239995078"] = "Zusätzliche Regeln (optional)"
 
+-- Create a direct chat launcher
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1312944597"] = "Einen Chat-Schnellstart erstellen"
+
 -- Auditing assistants safety...
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1322393857"] = "Sicherheitsprüfung der Assistenten..."
 
@@ -725,6 +728,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1622920412"] 
 
 -- Category (Optional)
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1644710572"] = "Kategorie (optional)"
+
+-- Chat provider
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1648955896"] = "Chat-Anbieter"
 
 -- Security check completed with findings.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T1696631610"] = "Sicherheitsprüfung mit Befunden abgeschlossen."
@@ -756,14 +762,23 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2078723318"] 
 -- Typical input (Optional)
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2172900154"] = "Typische Eingabe (optional)"
 
+-- Use no profile
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2205839602"] = "Kein Profil verwenden"
+
 -- These notes are applied on top of the accepted draft and can still change the generated assistant plugin. Leave empty to use the draft as-is.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2345545005"] = "Diese Hinweise werden zusätzlich auf den akzeptierten Entwurf angewendet und können das generierte Assistenten-Plugin noch verändern. Leer lassen, um den Entwurf unverändert zu verwenden."
+
+-- Existing workspace (Optional)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2364306588"] = "Vorhandener Arbeitsbereich (optional)"
 
 -- What users provide, e.g. text, notes, files, or a URL
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2381710500"] = "Was Nutzer bereitstellen, z. B. Text, Notizen, Dateien oder eine URL"
 
 -- The assistant '{0}' was checked with the level '{1}', which is below your required level '{2}'. Your settings allow activation anyway, but this may be unsafe. Do you want to enable this assistant?
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T239354512"] = "Der Assistent „{0}“ wurde mit der Stufe „{1}“ geprüft, die unter Ihrer erforderlichen Stufe „{2}“ liegt. Ihre Einstellungen erlauben die Aktivierung trotzdem, aber das kann unsicher sein. Möchten Sie diesen Assistenten aktivieren?"
+
+-- Chat profile
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2412069346"] = "Chat-Profil"
 
 -- The assistant could not be installed.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2432974339"] = "Der Assistent konnte nicht installiert werden."
@@ -786,6 +801,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2745057219"] 
 -- Input and UI components (Optional)
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2750415283"] = "Eingabe- und UI-Komponenten (optional)"
 
+-- {0} data source(s) selected
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2777836629"] = "{0} Datenquelle(n) ausgewählt"
+
 -- The security audit could not be completed.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2789724311"] = "Das Sicherheitsaudit konnte nicht abgeschlossen werden."
 
@@ -801,6 +819,15 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T283315403"] =
 -- The generated assistant could not be checked.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2844109727"] = "Der erstellte Assistent konnte nicht überprüft werden."
 
+-- Use chat default
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2886517443"] = "Chat-Standard verwenden"
+
+-- Choose an existing workspace or enter a name that should be created when the launcher is opened.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2901190527"] = "Wählen Sie einen vorhandenen Arbeitsbereich aus oder geben Sie einen Namen ein, der beim Verwenden des Chat-Schnellstarts erstellt werden soll."
+
+-- Workspace name
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T295876489"] = "Name des Arbeitsbereichs"
+
 -- Enable assistant
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3055650774"] = "Assistent aktivieren"
 
@@ -815,6 +842,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3163704605"] 
 
 -- Regenerate Assistant
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3171038735"] = "Assistent neu erstellen"
+
+-- Data sources (Optional)
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3259309302"] = "Datenquellen (optional)"
 
 -- The security check could not determine a result.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3303290181"] = "Die Sicherheitsprüfung konnte kein Ergebnis ermitteln."
@@ -861,6 +891,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3843866124"] 
 -- Install assistant
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3863433088"] = "Assistent installieren"
 
+-- Use the normal chat data source defaults
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3898572329"] = "Die Standardwerte der Datenquelle für den normalen Chat verwenden"
+
+-- A direct chat launcher has no input form of its own. Its tile opens a new chat right away, in the workspace you name below and with the provider, profile, chat template, and data sources you select there. Leave this switch off to create a regular assistant instead, which asks users for input and builds its own prompt from it.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3903239952"] = "Ein Chat-Schnellstart hat kein eigenes Eingabeformular. Seine Kachel öffnet sofort einen neuen Chat – in dem unten benannten Arbeitsbereich und mit dem dort ausgewählten Anbieter, Profil, der Chatvorlage und den Datenquellen. Lassen Sie diesen Schalter ausgeschaltet, um stattdessen einen regulären Assistenten zu erstellen. Dieser fragt Nutzende nach Eingaben und erstellt daraus seinen eigenen Prompt."
+
 -- Assistant draft
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3957423852"] = "Assistentenentwurf"
 
@@ -879,8 +915,14 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T4185028924"] 
 -- Example prompt (Optional)
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T4217647404"] = "Beispiel-Prompt (optional)"
 
+-- Use no chat template
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T4258819635"] = "Kein Chat-Template verwenden"
+
 -- Please create an assistant draft first.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T4269176489"] = "Bitte erstellen Sie zuerst einen Entwurf für einen Assistenten."
+
+-- Please select or enter a workspace name for the chat launcher.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T4396903"] = "Bitte wählen Sie einen Namen für den Arbeitsbereich des Chat-Schnellstarts aus oder geben Sie einen ein."
 
 -- The assistant cannot be enabled.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T451764889"] = "Der Assistent kann nicht aktiviert werden."
@@ -920,6 +962,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T894887001"] =
 
 -- Expected output (Optional)
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T911303749"] = "Erwartete Ausgabe (optional)"
+
+-- Chat template
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T923285303"] = "Chat-Vorlage"
 
 -- Potentially Unsafe Assistant
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T997013004"] = "Potenziell unsicherer Assistent"
@@ -9978,6 +10023,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T2
 -- The ASSISTANT lua table does not exist or is not a valid table.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T3017816936"] = "Die Lua-Tabelle **ASSISTANT** existiert nicht oder ist keine gültige Tabelle."
 
+-- The ASSISTANT table contains an invalid {0}. Expected a {1}GUID.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T3101963220"] = "Die Tabelle ASSISTANT enthält eine ungültige {0}. Erwartet wurde eine {1}GUID."
+
 -- The ASSISTANT table contains an empty WorkspaceName for LaunchBehavior 'OPEN_WORKSPACE_CHAT_BY_NAME'.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T3233001282"] = "Die ASSISTANT-Tabelle enthält einen leeren Arbeitsbereichsnamen für das LaunchBehavior 'OPEN_WORKSPACE_CHAT_BY_NAME'."
 
@@ -9992,6 +10040,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T4
 
 -- ASSISTANT.BuildPrompt exists but is not a Lua function or has invalid syntax.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T683382975"] = "`ASSISTANT.BuildPrompt` ist vorhanden, aber keine Lua-Funktion oder hat eine ungültige Syntax."
+
+-- The ASSISTANT table contains invalid DataSourceIds. Expected a non-empty list of unique, non-empty GUIDs.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T712020466"] = "Die Tabelle ASSISTANT enthält ungültige DataSourceIds. Erwartet wird eine nicht leere Liste eindeutiger, nicht leerer GUIDs."
 
 -- The provided ASSISTANT lua table does not contain the boolean flag to control the allowance of profiles.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T781921072"] = "Die bereitgestellte ASSISTANT-Lua-Tabelle enthält kein boolesches Flag, mit dem sich die Zulassung von Profilen steuern lässt."
@@ -10503,6 +10554,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T2
 -- Name
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T266367750"] = "Name"
 
+-- The generated assistant metadata does not match the generated plugin.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T271237042"] = "Die generierten Assistenten-Metadaten stimmen nicht mit dem generierten Plugin überein."
+
 -- Category
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T2947802513"] = "Kategorie"
 
@@ -10527,8 +10581,17 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3
 -- Assistant Plugin Generation
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T355580240"] = "Erstellung von Assistenten-Plugins"
 
+-- Chat Launcher
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3565812333"] = "Chat-Schnellstart"
+
+-- The revised assistant metadata does not match the revised plugin.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3578379466"] = "Die überarbeiteten Assistenten-Metadaten stimmen nicht mit dem überarbeiteten Plugin überein."
+
 -- Model decides
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T358632395"] = "Modell entscheidet"
+
+-- The generated assistant plugin does not match the selected chat launcher configuration.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3631147451"] = "Das generierte Assistenten-Plugin entspricht nicht der ausgewählten Konfiguration des Chat-Schnellstarts."
 
 -- Safety Notes
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3633499050"] = "Sicherheitshinweise"
@@ -10539,11 +10602,17 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3
 -- The revised assistant plugin must remain locally managed.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3791030033"] = "Das überarbeitete Assistenten-Plugin muss weiterhin lokal verwaltet werden."
 
+-- Chat Configuration
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3856025069"] = "Chat-Konfiguration"
+
 -- The revised assistant plugin is not a valid assistant plugin.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T390267914"] = "Das überarbeitete Assistenten-Plugin ist kein gültiges Assistenten-Plugin."
 
 -- The generated assistant plugin must include the Assistant Builder metadata.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3985906496"] = "Das generierte Assistenten-Plug-in muss die Assistant-Builder-Metadaten enthalten."
+
+-- The chat launcher configuration is incomplete or invalid.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T399302464"] = "Die Konfiguration des Chat-Schnellstarts ist unvollständig oder ungültig."
 
 -- Output
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T4000727844"] = "Ausgabe"
@@ -10562,6 +10631,42 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T4
 
 -- Please create an assistant draft first.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T4269176489"] = "Bitte erstellen Sie zuerst einen Entwurf für den Assistenten."
+
+-- Data Sources
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T558345131"] = "Datenquellen"
+
+-- Workspace
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T658612054"] = "Arbeitsbereich"
+
+-- The following data sources selected by the assistant chat launcher are currently unavailable or not permitted for the selected provider: {0}
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DIRECTCHATSERVICE::T103791004"] = "Die folgenden vom Chat-Schnellstart-Assistenten ausgewählten Datenquellen sind derzeit nicht verfügbar oder für den ausgewählten Anbieter nicht zugelassen: {0}"
+
+-- The assistant chat launcher references profile '{0}', but that profile does not exist.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DIRECTCHATSERVICE::T2466659933"] = "Der Chat-Schnellstart-Assistent verweist auf das Profil „{0}“, aber dieses Profil existiert nicht."
+
+-- The assistant chat launcher references data source '{0}', but that data source does not exist.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DIRECTCHATSERVICE::T289191545"] = "Der Chat-Schnellstart-Assistent verweist auf die Datenquelle „{0}“, aber diese Datenquelle existiert nicht."
+
+-- The data sources selected by the assistant chat launcher could not be checked. No chat was created.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DIRECTCHATSERVICE::T3232401465"] = "Die vom Chat-Schnellstart-Assistenten ausgewählten Datenquellen konnten nicht geprüft werden. Es wurde kein Chat erstellt."
+
+-- The workspace '{0}' could not be opened or created.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DIRECTCHATSERVICE::T3242713584"] = "Der Arbeitsbereich „{0}“ konnte nicht geöffnet oder erstellt werden."
+
+-- The provider '{0}' selected by the assistant chat launcher is not permitted for chats at the required confidence level.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DIRECTCHATSERVICE::T3491209726"] = "Der vom Chat-Schnellstart-Assistenten ausgewählte Anbieter „{0}“ ist für Chats mit der erforderlichen Zuverlässigkeitsstufe nicht zugelassen."
+
+-- The assistant chat launcher selects data sources, but no provider is available for chats. Please choose a default provider for chats first. No chat was created.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DIRECTCHATSERVICE::T3780395901"] = "Der Chat-Schnellstart-Assistent wählt Datenquellen aus, aber für Chats ist kein Anbieter verfügbar. Bitte wählen Sie zuerst einen Standardanbieter für Chats aus. Es wurde kein Chat erstellt."
+
+-- The assistant chat launcher references chat template '{0}', but that template does not exist.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DIRECTCHATSERVICE::T4054927207"] = "Der Chat-Schnellstart-Assistent verweist auf die Chat-Vorlage „{0}“, aber diese Vorlage existiert nicht."
+
+-- The assistant chat launcher references provider '{0}', but that provider does not exist.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DIRECTCHATSERVICE::T745600307"] = "Der Chat-Schnellstart-Assistent verweist auf den Anbieter „{0}“, aber dieser Anbieter existiert nicht."
+
+-- The assistant plugin does not contain a valid chat launch configuration.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DIRECTCHATSERVICE::T930321059"] = "Das Assistenten-Plugin enthält keine gültige Konfiguration zum Starten eines Chats."
 
 -- The voice recording shortcut currently works only while AI Studio is focused.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::GLOBALSHORTCUTSERVICE::T1204510649"] = "Die Tastenkombination für Sprachaufnahmen funktioniert derzeit nur, wenn AI Studio im Vordergrund aktiv ist."

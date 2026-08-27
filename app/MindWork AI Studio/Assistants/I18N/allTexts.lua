@@ -892,6 +892,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3863433088"] 
 -- Use the normal chat data source defaults
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3898572329"] = "Use the normal chat data source defaults"
 
+-- A direct chat launcher has no input form of its own. Its tile opens a new chat right away, in the workspace you name below and with the provider, profile, chat template, and data sources you select there. Leave this switch off to create a regular assistant instead, which asks users for input and builds its own prompt from it.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3903239952"] = "A direct chat launcher has no input form of its own. Its tile opens a new chat right away, in the workspace you name below and with the provider, profile, chat template, and data sources you select there. Leave this switch off to create a regular assistant instead, which asks users for input and builds its own prompt from it."
+
 -- Assistant draft
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T3957423852"] = "Assistant draft"
 
@@ -10651,8 +10654,8 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DIRECTCHATSERVICE::T3242713584"] = "
 -- The provider '{0}' selected by the assistant chat launcher is not permitted for chats at the required confidence level.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DIRECTCHATSERVICE::T3491209726"] = "The provider '{0}' selected by the assistant chat launcher is not permitted for chats at the required confidence level."
 
--- No provider is currently available for this assistant chat launcher.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DIRECTCHATSERVICE::T3571205351"] = "No provider is currently available for this assistant chat launcher."
+-- The assistant chat launcher selects data sources, but no provider is available for chats. Please choose a default provider for chats first. No chat was created.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DIRECTCHATSERVICE::T3780395901"] = "The assistant chat launcher selects data sources, but no provider is available for chats. Please choose a default provider for chats first. No chat was created."
 
 -- The assistant chat launcher references chat template '{0}', but that template does not exist.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::DIRECTCHATSERVICE::T4054927207"] = "The assistant chat launcher references chat template '{0}', but that template does not exist."
