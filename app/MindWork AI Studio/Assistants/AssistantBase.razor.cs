@@ -650,7 +650,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
                 {
                     var convertedChatThread = this.ConvertToChatThread;
                     convertedChatThread = convertedChatThread with { SelectedProvider = this.ProviderSettings.Id };
-                    MessageBus.INSTANCE.DeferMessage(this, sendToData.Event, convertedChatThread);
+                    MessageBus.INSTANCE.DeferMessage(this, sendToData.Event, new ChatStartRequest(convertedChatThread));
                 }
                 break;
             

@@ -40,8 +40,8 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
     public bool HasDeploymentManagementMetadata { get; private set; }
     public bool IsManagedByConfigServer { get; private set; }
     public AssistantPluginLaunchBehavior LaunchBehavior { get; private set; }
-    public string LaunchWorkspaceName { get; private set; } = string.Empty;
-    public bool StartsChatDirectly => this.LaunchBehavior is AssistantPluginLaunchBehavior.OPEN_WORKSPACE_CHAT_BY_NAME;
+    public AssistantChatLaunchConfiguration? ChatLaunchConfiguration { get; private set; }
+    public bool StartsChatDirectly => this.ChatLaunchConfiguration is not null;
     public const int TEXT_AREA_MAX_VALUE = 524288;
 
     private LuaFunction? buildPromptFunction;
@@ -65,13 +65,20 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
     private bool TryProcessAssistant(out string message)
     {
         message = string.Empty;
+        this.RootComponent = null;
+        this.AssistantTitle = string.Empty;
+        this.AssistantDescription = string.Empty;
+        this.RawSystemPrompt = string.Empty;
+        this.SystemPrompt = string.Empty;
+        this.SubmitText = string.Empty;
+        this.AllowProfiles = true;
         this.HasEmbeddedProfileSelection = false;
         this.IsAssistantBuilderGenerated = false;
         this.HasDeploymentManagementMetadata = false;
         this.IsManagedByConfigServer = false;
         this.buildPromptFunction = null;
         this.LaunchBehavior = AssistantPluginLaunchBehavior.NONE;
-        this.LaunchWorkspaceName = string.Empty;
+        this.ChatLaunchConfiguration = null;
 
         this.RegisterLuaHelpers();
         this.TryReadAssistantBuilderMetadata();
@@ -97,6 +104,18 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
             message = TB("The provided ASSISTANT lua table does not contain a valid description.");
             return false;
         }
+
+        this.AssistantTitle = assistantTitle;
+        this.AssistantDescription = assistantDescription;
+
+        if (!this.TryReadLaunchConfiguration(assistantTable, out var launchConfigIssue))
+        {
+            message = launchConfigIssue;
+            return false;
+        }
+
+        if (this.StartsChatDirectly)
+            return true;
         
         if (!assistantTable.TryGetValue("SystemPrompt", out var assistantSystemPromptValue) ||
             !assistantSystemPromptValue.TryRead<string>(out var assistantSystemPrompt))
@@ -129,18 +148,10 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
 
         var rawSystemPrompt = assistantSystemPrompt.Trim();
 
-        this.AssistantTitle = assistantTitle;
-        this.AssistantDescription = assistantDescription;
         this.RawSystemPrompt = rawSystemPrompt;
         this.SystemPrompt = BuildSecureSystemPrompt(rawSystemPrompt);
         this.SubmitText = assistantSubmitText;
         this.AllowProfiles = assistantAllowProfiles;
-
-        if (!this.TryReadLaunchConfiguration(assistantTable, out var launchConfigIssue))
-        {
-            message = launchConfigIssue;
-            return false;
-        }
 
         // Ensure that the UI table exists nested in the ASSISTANT table and is a valid Lua table:
         if (!assistantTable.TryGetValue("UI", out var uiVal) || !uiVal.TryRead<LuaTable>(out var uiTable))
@@ -212,7 +223,13 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
                     return false;
                 }
 
-                this.LaunchWorkspaceName = workspaceName;
+                if (!TryReadOptionalGuid(assistantTable, "ProviderId", false, out var providerId, out message) ||
+                    !TryReadOptionalGuid(assistantTable, "ProfileId", true, out var profileId, out message) ||
+                    !TryReadOptionalGuid(assistantTable, "ChatTemplateId", true, out var chatTemplateId, out message) ||
+                    !TryReadOptionalDataSourceIds(assistantTable, out var dataSourceIds, out message))
+                    return false;
+
+                this.ChatLaunchConfiguration = new(workspaceName, providerId, profileId, chatTemplateId, dataSourceIds);
 
                 return true;
 
@@ -220,6 +237,58 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
                 message = TB("The ASSISTANT table contains an unsupported LaunchBehavior value.");
                 return false;
         }
+    }
+
+    private static bool TryReadOptionalGuid(LuaTable assistantTable, string fieldName, bool allowEmpty, out Guid? id, out string message)
+    {
+        id = null;
+        message = string.Empty;
+
+        if (!assistantTable.TryGetValue(fieldName, out var idValue))
+            return true;
+
+        if (!idValue.TryRead<string>(out var idText) || !Guid.TryParse(idText, out var parsedId) || (!allowEmpty && parsedId == Guid.Empty))
+        {
+            message = string.Format(TB("The ASSISTANT table contains an invalid {0}. Expected a {1}GUID."), fieldName, allowEmpty ? string.Empty : "non-empty ");
+            return false;
+        }
+
+        id = parsedId;
+        return true;
+    }
+
+    private static bool TryReadOptionalDataSourceIds(LuaTable assistantTable, out IReadOnlyList<Guid>? dataSourceIds, out string message)
+    {
+        dataSourceIds = null;
+        message = string.Empty;
+
+        if (!assistantTable.TryGetValue("DataSourceIds", out var dataSourceIdsValue))
+            return true;
+
+        if (!dataSourceIdsValue.TryRead<LuaTable>(out var dataSourceIdsTable) || dataSourceIdsTable.ArrayLength == 0)
+        {
+            message = TB("The ASSISTANT table contains invalid DataSourceIds. Expected a non-empty list of unique, non-empty GUIDs.");
+            return false;
+        }
+
+        var parsedIds = new List<Guid>(dataSourceIdsTable.ArrayLength);
+        var uniqueIds = new HashSet<Guid>();
+        for (var index = 1; index <= dataSourceIdsTable.ArrayLength; index++)
+        {
+            if (!dataSourceIdsTable[index].TryRead<string>(out var idText) ||
+                !Guid.TryParse(idText, out var parsedId) ||
+                parsedId == Guid.Empty ||
+                !uniqueIds.Add(parsedId))
+            {
+                message = TB("The ASSISTANT table contains invalid DataSourceIds. Expected a non-empty list of unique, non-empty GUIDs.");
+                return false;
+            }
+
+            parsedIds.Add(parsedId);
+        }
+
+        dataSourceIds = parsedIds.ToImmutableArray();
+        return true;
     }
 
     public async Task<string?> TryBuildPromptAsync(LuaTable input, CancellationToken cancellationToken = default)

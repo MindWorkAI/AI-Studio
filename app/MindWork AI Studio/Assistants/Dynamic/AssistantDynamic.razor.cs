@@ -8,6 +8,7 @@ using AIStudio.Tools.AssistantSessions;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.PluginSystem.Assistants;
 using AIStudio.Tools.PluginSystem.Assistants.DataModel;
+using AIStudio.Tools.Services;
 using Lua;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.WebUtilities;
@@ -19,6 +20,9 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
 {
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
+
+    [Inject]
+    private DirectChatService DirectChatService { get; init; } = null!;
 
     [Parameter] 
     public AssistantForm? RootComponent { get; set; }
@@ -56,6 +60,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
     private PluginAssistantAudit? audit;
     private string securityMessage = string.Empty;
     private bool isSecurityBlocked;
+    private PluginAssistants? pendingChatLauncher;
     private const string ASSISTANT_QUERY_KEY = "assistantId";
     private static readonly Dictionary<string, object?> SPELLCHECK_ATTRIBUTES = new();
     private static readonly AssistantSessionStateKey<string> TITLE_STATE_KEY = new(nameof(title));
@@ -131,6 +136,22 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
             return;
         }
 
+        //
+        // Direct chat launchers have no assistant form: the plugin loader does not read
+        // SystemPrompt, SubmitText, AllowProfiles, or UI for them. Rendering this page for a
+        // launcher would show an empty shell, so we remember it here and open its chat as soon
+        // as we may run asynchronous work:
+        //
+        if (pluginAssistant.StartsChatDirectly)
+        {
+            this.assistantPlugin = pluginAssistant;
+            this.title = pluginAssistant.AssistantTitle;
+            this.description = pluginAssistant.AssistantDescription;
+            this.pendingChatLauncher = pluginAssistant;
+            base.OnInitialized();
+            return;
+        }
+
         this.assistantPlugin = pluginAssistant;
         this.RootComponent = pluginAssistant.RootComponent;
         this.title = pluginAssistant.AssistantTitle;
@@ -161,7 +182,18 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
 
         base.OnInitialized();
     }
-    
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        if (this.pendingChatLauncher is not { } launcherPlugin)
+            return;
+
+        this.pendingChatLauncher = null;
+        await this.OpenChatLauncherAsync(launcherPlugin);
+    }
+
     protected override void ResetForm()
     {
         this.assistantState.Clear();
@@ -192,10 +224,18 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
             return null;
 
         var requestedPluginId = this.TryGetAssistantIdFromQuery();
-        if (requestedPluginId is not { } id) return pluginAssistants.First();
-        
+        if (requestedPluginId is not { } id)
+            return FirstFormAssistant();
+
         var requestedPlugin = pluginAssistants.FirstOrDefault(p => p.Id == id);
-        return requestedPlugin ?? pluginAssistants.First();
+        return requestedPlugin ?? FirstFormAssistant();
+
+        //
+        // Direct chat launchers have no form to render, so they must never serve as the fallback
+        // for a missing or unknown assistant id. Only an explicitly requested launcher opens its
+        // chat; everything else falls back to the first form assistant:
+        //
+        PluginAssistants? FirstFormAssistant() => pluginAssistants.FirstOrDefault(plugin => !plugin.StartsChatDirectly);
     }
 
     private Guid? TryGetAssistantIdFromQuery()
@@ -242,13 +282,34 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
 
         this.Logger.LogInformation($"AssistantDynamic of plugin '{revisionResult.PluginName}' ({revisionResult.PluginName}) was successfully revised with audit result {revisionResult.Audit?.Level ?? AssistantAuditLevel.UNKNOWN}.");
         var updatedPlugin = PluginFactory.RunningPlugins.OfType<PluginAssistants>().FirstOrDefault(x => x.Id == revisionResult.PluginId);
-        if (updatedPlugin is not null)
+        if (updatedPlugin is not null && !updatedPlugin.StartsChatDirectly)
             this.ApplyUpdatedAssistantPlugin(updatedPlugin);
 
         await this.MessageBus.SendSuccess(new(Icons.Material.Filled.AutoFixHigh, string.Format(this.T("The assistant '{0}' has been updated."), revisionResult.PluginName)));
         await this.MessageBus.SendMessage<bool>(this, Event.PLUGINS_RELOADED);
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+
+        if (updatedPlugin is { StartsChatDirectly: true })
+        {
+            await this.OpenChatLauncherAsync(updatedPlugin);
+            return;
+        }
+
         await this.InvokeAsync(this.StateHasChanged);
+    }
+
+    private async Task OpenChatLauncherAsync(PluginAssistants launcherPlugin)
+    {
+        var result = await this.DirectChatService.TryCreateAssistantChatAsync(launcherPlugin);
+        if (result.Request is null)
+        {
+            await this.MessageBus.SendError(new(Icons.Material.Filled.ReportProblem, result.ErrorMessage));
+            this.NavigationManager.NavigateTo(Routes.ASSISTANTS);
+            return;
+        }
+
+        MessageBus.INSTANCE.DeferMessage(this, Event.SEND_TO_CHAT, result.Request);
+        this.NavigationManager.NavigateTo(Routes.CHAT);
     }
 
     private async Task<string> BuildRevisionTestContextAsync()

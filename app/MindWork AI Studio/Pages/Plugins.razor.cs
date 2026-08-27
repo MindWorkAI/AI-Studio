@@ -229,6 +229,15 @@ public partial class Plugins : MSGComponentBase
     //
     private static bool CanEditAssistantPlugin(IAvailablePlugin plugin) => plugin is { IsInternal: false, Type: PluginType.ASSISTANT } && !string.IsNullOrWhiteSpace(plugin.LocalPath);
 
+    /// <summary>
+    /// Whether this plugin is a direct chat launcher whose settings can be changed without AI.
+    /// </summary>
+    private static bool IsDirectChatLauncher(IAvailablePlugin plugin)
+    {
+        var assistantPlugin = PluginFactory.RunningPlugins.OfType<PluginAssistants>().FirstOrDefault(x => x.Id == plugin.Id);
+        return assistantPlugin is not null && DirectChatLauncherLuaWriter.CanRewrite(assistantPlugin);
+    }
+
     private static bool CanReviseAssistantPlugin(IAvailablePlugin plugin)
     {
         var assistantPlugin = PluginFactory.RunningPlugins.OfType<PluginAssistants>().FirstOrDefault(x => x.Id == plugin.Id);
@@ -298,6 +307,17 @@ public partial class Plugins : MSGComponentBase
 
     private async Task OpenAssistantPluginRevisionDialogAsync(IAvailablePlugin plugin)
     {
+        //
+        // Changing a launcher means picking a different workspace, provider, profile, chat template,
+        // or set of data sources. Prompting a model for that would be a detour, so launchers go to
+        // the mechanical dialog instead:
+        //
+        if (IsDirectChatLauncher(plugin))
+        {
+            await this.OpenDirectChatLauncherSettingsDialogAsync(plugin);
+            return;
+        }
+
         var parameters = new DialogParameters<AssistantPluginRevisionDialog>
         {
             { x => x.PluginId, plugin.Id },
@@ -313,6 +333,28 @@ public partial class Plugins : MSGComponentBase
         LOG.LogInformation($"The assistant plugin '{result.PluginName}' ({result.PluginId}) has been successfully revised.");
 
         // Saving the revision ran LoadAll, which already sent PLUGINS_RELOADED. We still announce the
+        // configuration change: with automatic audits enabled, the dialog stored an audit result:
+        await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+        await this.InvokeAsync(this.StateHasChanged);
+    }
+
+    private async Task OpenDirectChatLauncherSettingsDialogAsync(IAvailablePlugin plugin)
+    {
+        var parameters = new DialogParameters<DirectChatLauncherSettingsDialog>
+        {
+            { x => x.PluginId, plugin.Id },
+            { x => x.PluginLocalPath, plugin.LocalPath },
+        };
+
+        var dialogReference = await this.DialogService.ShowAsync<DirectChatLauncherSettingsDialog>(this.T("Tile Settings"), parameters, DialogOptions.BLOCKING_FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        if (dialogResult is null || dialogResult.Canceled || dialogResult.Data is not DirectChatLauncherSettingsDialogResult result)
+            return;
+
+        await this.MessageBus.SendSuccess(new(Icons.Material.Filled.Save, string.Format(this.T("The tile '{0}' has been updated."), result.PluginName)));
+        LOG.LogInformation($"The chat launcher '{result.PluginName}' ({result.PluginId}) has been successfully updated.");
+
+        // Saving ran LoadAll, which already sent PLUGINS_RELOADED. We still announce the
         // configuration change: with automatic audits enabled, the dialog stored an audit result:
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
         await this.InvokeAsync(this.StateHasChanged);

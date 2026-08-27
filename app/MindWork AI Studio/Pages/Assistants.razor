@@ -40,6 +40,7 @@
                                     Link="@launchLink"
                                     OnClick="@(() => this.StartAssistantPluginAsync(assistantPlugin))">
                         <AdditionalActions>
+                            <DirectChatLauncherSettingsAction Plugin="@assistantPlugin" />
                             @if (availablePlugin is not null)
                             {
                                 <PluginDeleteAction Plugin="@availablePlugin" />

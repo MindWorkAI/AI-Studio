@@ -139,16 +139,24 @@ public partial class ChatComponent : MSGComponentBase
         // Check for deferred messages of the kind 'SEND_TO_CHAT',
         // aka the user sends an assistant result to the chat:
         //
-        var deferredContent = MessageBus.INSTANCE.TakeDeferredMessages<ChatThread>(Event.SEND_TO_CHAT).LastOrDefault();
-        if (deferredContent is not null)
+        var deferredRequest = MessageBus.INSTANCE.TakeDeferredMessages<ChatStartRequest>(Event.SEND_TO_CHAT).LastOrDefault();
+        if (deferredRequest is not null)
         {
             //
             // Yes, the user sent an assistant result to the chat.
             //
             
             // Use chat thread sent by the user:
-            this.ChatThread = deferredContent;
+            this.ChatThread = deferredRequest.ChatThread;
             this.ChatThread.IncludeDateTime = true;
+
+            //
+            // Apply the chat template of the incoming chat to the composer. Like everywhere else,
+            // a draft the user typed themselves wins: we must not discard it just because someone
+            // started a preconfigured chat in the meantime.
+            //
+            if (deferredRequest.ApplySelectedChatTemplateToComposer && !this.ComposerState.HasUserDraft)
+                this.ComposerState.ApplyTemplate(this.SettingsManager.GetChatTemplateById(this.ChatThread.SelectedChatTemplate));
             
             this.Logger.LogInformation($"The chat '{this.ChatThread.ChatId}' with {this.ChatThread.Blocks.Count} messages was deferred and will be rendered now.");
             this.MarkCurrentChatAsLoadedParameter();
@@ -179,7 +187,8 @@ public partial class ChatComponent : MSGComponentBase
                 //
                 // Check if the user wants to apply the standard chat data source options:
                 //
-                if (this.SettingsManager.ConfigurationData.Chat.SendToChatDataSourceBehavior is SendToChatDataSourceBehavior.APPLY_STANDARD_CHAT_DATA_SOURCE_OPTIONS)
+                if (!deferredRequest.PreserveDataSourceOptions &&
+                    this.SettingsManager.ConfigurationData.Chat.SendToChatDataSourceBehavior is SendToChatDataSourceBehavior.APPLY_STANDARD_CHAT_DATA_SOURCE_OPTIONS)
                     this.ChatThread.DataSourceOptions = this.SettingsManager.ConfigurationData.Chat.PreselectedDataSourceOptions.CreateCopy();
 
                 //

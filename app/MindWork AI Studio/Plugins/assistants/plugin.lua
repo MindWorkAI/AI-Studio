@@ -57,6 +57,9 @@ DEPLOYED_USING_CONFIG_SERVER = false
 ASSISTANT = {
     ["Title"] = "<Title of your assistant>",
     ["Description"] = "<Description presented to the users, explaining your assistant>",
+    ["SystemPrompt"] = "<System prompt for the assistant>",
+    ["SubmitText"] = "<label for submit button>",
+    ["AllowProfiles"] = true,
     ["UI"] = {
         ["Type"] = "FORM",
         ["Children"] = {}
@@ -70,8 +73,6 @@ ASSISTANT = {
     ["SystemPrompt"] = "<prompt that fundamentally changes behaviour, personality and task focus of your assistant. Invisible to the user>", -- required
     ["SubmitText"] = "<label for submit button>", -- required
     ["AllowProfiles"] = true, -- if true, allows AiStudios profiles; required
-    ["LaunchBehavior"] = "<NONE|OPEN_WORKSPACE_CHAT_BY_NAME>", -- optional; when set to OPEN_WORKSPACE_CHAT_BY_NAME the tile opens a chat directly
-    ["WorkspaceName"] = "<name of the workspace to open or create>", -- optional; required for OPEN_WORKSPACE_CHAT_BY_NAME
     ["UI"] = {
         ["Type"] = "FORM",
         ["Children"] = {
@@ -427,5 +428,19 @@ ASSISTANT = {
                 }
             },
         }
+    },
+}
+
+-- direct chat launcher example; form-only fields and UI are not used in this mode:
+ASSISTANT = {
+    ["Title"] = "<main title of chat launcher>",
+    ["Description"] = "<description of the chat that will be opened>",
+    ["LaunchBehavior"] = "OPEN_WORKSPACE_CHAT_BY_NAME",
+    ["WorkspaceName"] = "<name of the workspace to open or create>",
+    ["ProviderId"] = "<optional provider GUID; omit to use the chat default>",
+    ["ProfileId"] = "<optional profile GUID; use the empty GUID for no profile>",
+    ["ChatTemplateId"] = "<optional chat template GUID; use the empty GUID for no template>",
+    ["DataSourceIds"] = {
+        "<optional data source GUID>",
     },
 }
