@@ -15,7 +15,9 @@
     <MudSelectItem T="string" Value="@string.Empty">@T("Use chat default")</MudSelectItem>
     @foreach (var provider in this.SettingsManager.GetConfidentProviders(Components.CHAT))
     {
-        <MudSelectItem T="string" Value="@provider.Id">@provider.InstanceName</MudSelectItem>
+        <MudSelectItem T="string" Value="@provider.Id">
+            <ProviderLabel ProviderSettings="@provider" Text="@provider.InstanceName"/>
+        </MudSelectItem>
     }
 </MudSelect>
 <MudSelect T="string" Value="@this.ProfileId" ValueChanged="@this.SetProfileId" Label="@T("Chat profile")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3 rounded-lg" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Person">
