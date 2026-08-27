@@ -14,7 +14,7 @@
        both them and their validation messages. It asks a question and labels both of its states,
        so the choice reads the same way as the switches in the app settings. *@
     <MudField Label="@T("What kind of assistant should this be?")" Variant="Variant.Outlined" Underline="@false" Class="mb-3" InnerPadding="@false">
-        <MudSwitch T="bool" @bind-Value="@this.createChatLauncher" Color="Color.Primary">
+        <MudSwitch T="bool" Value="@this.createChatLauncher" ValueChanged="@this.CreateChatLauncherChanged" Color="Color.Primary">
             @(this.createChatLauncher
                 ? T("A direct chat launcher tile that opens a preconfigured chat right away")
                 : T("A full assistant with its own input form"))
@@ -32,7 +32,8 @@
            launcher has no other visible content: its tile is the whole assistant. *@
         <MudPaper Class="pa-3 mb-3 border-dashed border rounded-lg">
             <MudTextField T="string" @bind-Text="@this.assistantName" AdornmentIcon="@Icons.Material.Filled.Assistant" Adornment="Adornment.Start" IconSize="Size.Small" Label="@T("Tile title (optional)")" HelperText="@T("The title shown on the tile. Leave it empty to let the model choose one.")" Placeholder="@T("Weekly Report Chat")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
-            <DirectChatLauncherForm @bind-WorkspaceName="@this.launcherWorkspaceName"
+            <DirectChatLauncherForm WorkspaceName="@this.launcherWorkspaceName"
+                                    WorkspaceNameChanged="@this.LauncherWorkspaceNameChanged"
                                     @bind-ProviderId="@this.launcherProviderId"
                                     @bind-ProfileId="@this.launcherProfileId"
                                     @bind-ChatTemplateId="@this.launcherChatTemplateId"

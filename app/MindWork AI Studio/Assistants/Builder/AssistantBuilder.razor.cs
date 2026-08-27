@@ -95,6 +95,7 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
     private string typicalInput = string.Empty;
     private string expectedOutput = string.Empty;
     private bool createChatLauncher;
+    private string descriptionSuggestion = string.Empty;
     private string launcherWorkspaceName = string.Empty;
     private string launcherProviderId = string.Empty;
     private string launcherProfileId = string.Empty;
@@ -131,6 +132,7 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
     private static readonly AssistantSessionStateKey<string> TYPICAL_INPUT_STATE_KEY = new(nameof(typicalInput));
     private static readonly AssistantSessionStateKey<string> EXPECTED_OUTPUT_STATE_KEY = new(nameof(expectedOutput));
     private static readonly AssistantSessionStateKey<bool> CREATE_CHAT_LAUNCHER_STATE_KEY = new(nameof(createChatLauncher));
+    private static readonly AssistantSessionStateKey<string> DESCRIPTION_SUGGESTION_STATE_KEY = new(nameof(descriptionSuggestion));
     private static readonly AssistantSessionStateKey<string> LAUNCHER_WORKSPACE_NAME_STATE_KEY = new(nameof(launcherWorkspaceName));
     private static readonly AssistantSessionStateKey<string> LAUNCHER_PROVIDER_ID_STATE_KEY = new(nameof(launcherProviderId));
     private static readonly AssistantSessionStateKey<string> LAUNCHER_PROFILE_ID_STATE_KEY = new(nameof(launcherProfileId));
@@ -235,6 +237,7 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
         this.typicalInput = string.Empty;
         this.expectedOutput = string.Empty;
         this.createChatLauncher = false;
+        this.descriptionSuggestion = string.Empty;
         this.launcherWorkspaceName = string.Empty;
         this.launcherProviderId = string.Empty;
         this.launcherProfileId = string.Empty;
@@ -270,6 +273,7 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
         state.Set(TYPICAL_INPUT_STATE_KEY, this.typicalInput);
         state.Set(EXPECTED_OUTPUT_STATE_KEY, this.expectedOutput);
         state.Set(CREATE_CHAT_LAUNCHER_STATE_KEY, this.createChatLauncher);
+        state.Set(DESCRIPTION_SUGGESTION_STATE_KEY, this.descriptionSuggestion);
         state.Set(LAUNCHER_WORKSPACE_NAME_STATE_KEY, this.launcherWorkspaceName);
         state.Set(LAUNCHER_PROVIDER_ID_STATE_KEY, this.launcherProviderId);
         state.Set(LAUNCHER_PROFILE_ID_STATE_KEY, this.launcherProfileId);
@@ -310,6 +314,7 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
         state.Restore(TYPICAL_INPUT_STATE_KEY, value => this.typicalInput = value);
         state.Restore(EXPECTED_OUTPUT_STATE_KEY, value => this.expectedOutput = value);
         state.Restore(CREATE_CHAT_LAUNCHER_STATE_KEY, value => this.createChatLauncher = value);
+        state.Restore(DESCRIPTION_SUGGESTION_STATE_KEY, value => this.descriptionSuggestion = value);
         state.Restore(LAUNCHER_WORKSPACE_NAME_STATE_KEY, value => this.launcherWorkspaceName = value);
         state.Restore(LAUNCHER_PROVIDER_ID_STATE_KEY, value => this.launcherProviderId = value);
         state.Restore(LAUNCHER_PROFILE_ID_STATE_KEY, value => this.launcherProfileId = value);
@@ -545,6 +550,58 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
             NullIfEmpty(this.launcherChatTemplateId),
             dataSourceIds.Length == 0 ? null : dataSourceIds);
     }
+
+    private void CreateChatLauncherChanged(bool createLauncher)
+    {
+        this.createChatLauncher = createLauncher;
+        if (createLauncher)
+        {
+            this.SuggestLauncherDescription();
+            return;
+        }
+
+        //
+        // Switching back to a form assistant must not leave a launcher description behind. Only our
+        // own suggestion is dropped, never something the user wrote:
+        //
+        if (this.MaySuggestDescription())
+            this.assistantDescription = string.Empty;
+
+        this.descriptionSuggestion = string.Empty;
+    }
+
+    private void LauncherWorkspaceNameChanged(string workspaceName)
+    {
+        this.launcherWorkspaceName = workspaceName;
+        this.SuggestLauncherDescription();
+    }
+
+    //
+    // The description stays required for both kinds of assistant. Users who only want a tile
+    // usually flip the switch before typing anything, so the Builder offers a starting point they
+    // can edit or replace. The workspace is picked after that, hence the suggestion is refreshed
+    // whenever the workspace changes:
+    //
+    private void SuggestLauncherDescription()
+    {
+        if (!this.createChatLauncher || !this.MaySuggestDescription())
+            return;
+
+        var suggestion = T("Create a tile that opens a preconfigured chat directly, without an input form of its own.");
+        if (!string.IsNullOrWhiteSpace(this.launcherWorkspaceName))
+            suggestion = $"{suggestion} {string.Format(T("Workspace: {0}"), this.launcherWorkspaceName.Trim())}";
+
+        this.assistantDescription = suggestion;
+        this.descriptionSuggestion = suggestion;
+    }
+
+    /// <summary>
+    /// Whether the description field may be written to: it is either still empty, or it holds
+    /// exactly the suggestion we put there ourselves.
+    /// </summary>
+    private bool MaySuggestDescription() =>
+        string.IsNullOrWhiteSpace(this.assistantDescription) ||
+        string.Equals(this.assistantDescription, this.descriptionSuggestion, StringComparison.Ordinal);
 
     private static string? NullIfEmpty(string value) => string.IsNullOrWhiteSpace(value) ? null : value;
 
