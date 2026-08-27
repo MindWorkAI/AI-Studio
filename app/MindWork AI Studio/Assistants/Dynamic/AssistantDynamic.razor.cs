@@ -298,9 +298,9 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
         await this.InvokeAsync(this.StateHasChanged);
     }
 
-    private async Task OpenChatLauncherAsync(PluginAssistants assistantPlugin)
+    private async Task OpenChatLauncherAsync(PluginAssistants launcherPlugin)
     {
-        var result = await this.DirectChatService.TryCreateAssistantChatAsync(assistantPlugin);
+        var result = await this.DirectChatService.TryCreateAssistantChatAsync(launcherPlugin);
         if (result.Request is null)
         {
             await this.MessageBus.SendError(new(Icons.Material.Filled.ReportProblem, result.ErrorMessage));
