@@ -72,6 +72,14 @@ public partial class AssistantPluginEditorDialog : MSGComponentBase
                 return;
             }
 
+            // An assistant an organization rolled out must keep the content its enterprise approval
+            // was granted for, so only its IT department may change it:
+            if (this.plugin.IsManagedByConfigServer)
+            {
+                this.issue = T("Only locally managed assistant plugins can be edited.");
+                return;
+            }
+
             this.pluginFile = Path.Join(this.plugin.LocalPath, PLUGIN_FILE_NAME);
             if (!File.Exists(this.pluginFile))
             {

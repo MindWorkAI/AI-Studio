@@ -227,7 +227,7 @@ public partial class Plugins : MSGComponentBase
     // transient state like an ongoing share: they gate the markup, so a transient value would make
     // the action buttons disappear and reappear. Transient state belongs into the buttons' Disabled.
     //
-    private static bool CanEditAssistantPlugin(IAvailablePlugin plugin) => plugin is { IsInternal: false, Type: PluginType.ASSISTANT } && !string.IsNullOrWhiteSpace(plugin.LocalPath);
+    private static bool CanEditAssistantPlugin(IAvailablePlugin plugin) => plugin is { IsInternal: false, IsManagedByConfigServer: false, Type: PluginType.ASSISTANT } && !string.IsNullOrWhiteSpace(plugin.LocalPath);
 
     /// <summary>
     /// Whether this plugin is a direct chat launcher whose settings can be changed without AI.
