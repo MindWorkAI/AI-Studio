@@ -232,9 +232,28 @@ public static partial class PluginFactory
         foreach (var testConfigurationPlugin in AVAILABLE_PLUGINS.Where(plugin => plugin.Type is PluginType.CONFIGURATION && IsEnterpriseTestConfigurationPath(plugin.LocalPath)))
             deployedEnterpriseConfigPluginIds.Add(testConfigurationPlugin.Id);
 
+        //
+        // A deployment does not have to contain a configuration plugin under its own ID: an
+        // organization uses the same channel to roll out assistant plugins and other plugin types.
+        // We therefore collect which deployments contributed a plugin at all, so that such a rollout
+        // is not mistaken for a configuration nobody could read:
+        //
+        var configurationIdsWithLoadedPlugins = AVAILABLE_PLUGINS
+            .Where(plugin => plugin.ManagedConfigurationId.HasValue)
+            .Select(plugin => plugin.ManagedConfigurationId!.Value)
+            .ToHashSet();
+
         var unloadedEnterpriseConfigPluginIds = deployedEnterpriseConfigPluginIds.Where(x => AVAILABLE_PLUGINS.All(plugin => plugin.Id != x)).ToList();
         foreach (var unloadedEnterpriseConfigPluginId in unloadedEnterpriseConfigPluginIds)
+        {
+            if (configurationIdsWithLoadedPlugins.Contains(unloadedEnterpriseConfigPluginId))
+            {
+                LOG.LogInformation($"The deployment '{unloadedEnterpriseConfigPluginId}' contains no configuration plugin of its own, but other plugins your organization deployed with it were loaded. Should you expect a configuration plugin here, please check the errors above.");
+                continue;
+            }
+
             LOG.LogWarning($"The configuration plugin '{unloadedEnterpriseConfigPluginId}' is deployed, but was not loaded. Everything it manages stays unchanged, because the plugin was not removed. Please check the errors above and fix the plugin.");
+        }
 
         // Check LLM providers:
         var wasConfigurationChanged = await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.LLM_PROVIDER, x => x.Providers, AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds, configObjectList, SecretStoreType.LLM_PROVIDER);
