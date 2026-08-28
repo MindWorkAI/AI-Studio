@@ -13,24 +13,33 @@ public static partial class PluginFactory
     private static string INTERNAL_PLUGINS_ROOT = string.Empty;
 
     /// <summary>
-    /// The directory the config server downloads the configuration plugins of an organization into.
+    /// The directory the config server downloads the plugins of an organization into.
     /// </summary>
     /// <remarks>
     /// This is not the home of configuration plugins in general: a local configuration plugin can
     /// live in any directory below the plugins root. Only the IT department of an organization
-    /// deploys plugins here, each in a directory named after its configuration ID.
+    /// deploys plugins here, each deployment in a directory named after its configuration ID.<br/><br/>
+    /// A deployment is not limited to a configuration, even though the directory name says so. An
+    /// organization serves one archive per configuration ID and uses it for every kind of plugin:
+    /// assistants, languages, themes, and whatever else follows. Those plugins live in
+    /// subdirectories, each with its own plugin.lua and its own plugin ID, and only the
+    /// configuration plugin itself carries the configuration ID as its ID. Everything below such a
+    /// deployment belongs to the organization, whatever its type is and however deeply it is nested.
     /// </remarks>
     private static string ENTERPRISE_CONFIGURATION_PLUGINS_ROOT = string.Empty;
 
     /// <summary>
-    /// The directory administrators use to try out a configuration before their organization deploys it.
+    /// The directory administrators use to try a deployment out before their organization rolls it out.
     /// </summary>
     /// <remarks>
     /// Everything stored here acts on behalf of the organization, so that a test behaves like the
-    /// later rollout, including the approval of assistant plugins. In exchange, the directory is
-    /// emptied on every start: a test configuration lives for one session only. It also never gets
-    /// the protection of a deployed configuration, so users can remove or replace it through the user
-    /// interface.
+    /// later rollout, including the approval of assistant plugins and the protection against changes
+    /// through the user interface. It takes every kind of plugin, exactly like a real deployment, so
+    /// the directory structure of the later archive can be reproduced one to one. In exchange, the
+    /// directory is emptied on every start: a test lives for one session only.<br/><br/>
+    /// A test therefore ends by restarting AI Studio, or by removing the files again. Whoever builds
+    /// enterprise plugins places them here by hand in the first place, so both ways are open to them
+    /// anyway, and neither weakens what the directory grants a plugin.
     /// </remarks>
     private static string ENTERPRISE_TEST_CONFIGURATION_PLUGINS_ROOT = string.Empty;
 
@@ -114,9 +123,10 @@ public static partial class PluginFactory
     /// </summary>
     /// <remarks>
     /// Only the IT department of an organization deploys plugins there: the config server downloads
-    /// them into a directory named after their configuration ID. We decide by path on purpose. The
-    /// Lua field DEPLOYED_USING_CONFIG_SERVER is self-declared, so any plugin could claim to be
-    /// deployed by an organization.
+    /// each deployment into a directory named after its configuration ID, and a plugin of any type
+    /// may sit in a subdirectory of it. We decide by path on purpose. The Lua field
+    /// DEPLOYED_USING_CONFIG_SERVER is self-declared, so any plugin could claim to be deployed by an
+    /// organization, and one an organization did deploy could deny it.
     /// </remarks>
     /// <param name="pluginPath">The directory of the plugin.</param>
     /// <returns>True when the directory is nested in the enterprise configuration directory.</returns>
@@ -130,14 +140,21 @@ public static partial class PluginFactory
     public static bool IsEnterpriseTestConfigurationPath(string? pluginPath) => IsPathInside(ENTERPRISE_TEST_CONFIGURATION_PLUGINS_ROOT, pluginPath);
 
     /// <summary>
-    /// Checks whether a plugin acts on behalf of an organization, either deployed by a configuration
-    /// server or staged for a test.
+    /// Checks whether a plugin belongs to an organization, either deployed by a configuration server
+    /// or staged for a test.
     /// </summary>
     /// <remarks>
-    /// Use this wherever a configuration speaks for the organization, e.g. when it approves assistant
-    /// plugins or claims a setting against a local configuration plugin. Do not use it where a
-    /// deployed configuration is protected against the user, e.g. against deletion: an administrator
-    /// must be able to get rid of their own test configuration.
+    /// This is the criterion for everything an organization owns, and it holds for every plugin type:
+    /// a configuration speaking for the organization when it approves assistant plugins or claims a
+    /// setting, and the protection of a plugin against the user, e.g. against deletion or editing
+    /// through the user interface.<br/><br/>
+    /// A test deployment is protected just like a real one, so that a test shows what colleagues will
+    /// see later. Administrators end a test by restarting AI Studio or by removing the files they
+    /// placed, which is why they do not need the user interface to get rid of it.<br/><br/>
+    /// Plugins an organization rolls out past these directories, e.g. through an MDM solution, carry
+    /// no path to prove it. Those declare DEPLOYED_USING_CONFIG_SERVER instead, which is read into
+    /// the IsManagedByConfigServer property of a plugin's metadata. Check that property in addition
+    /// to this method wherever a plugin is protected against the user.
     /// </remarks>
     /// <param name="pluginPath">The directory of the plugin.</param>
     /// <returns>True when the directory belongs to the enterprise or the test configuration area.</returns>
