@@ -144,6 +144,41 @@ public static partial class PluginFactory
     public static bool IsOrganizationConfigurationPath(string? pluginPath) => IsEnterpriseConfigurationPath(pluginPath) || IsEnterpriseTestConfigurationPath(pluginPath);
 
     /// <summary>
+    /// Determines which deployed configuration a plugin below the enterprise configuration directory
+    /// belongs to.
+    /// </summary>
+    /// <remarks>
+    /// A configuration server downloads each configuration into a directory named after its ID. That
+    /// archive may carry more than the configuration itself: organizations deploy assistant plugins
+    /// and other plugin types alongside it, each in its own subdirectory. We therefore look at the
+    /// topmost directory below the enterprise configuration directory instead of the directory the
+    /// plugin lives in, which for such a plugin is a nested one.
+    /// </remarks>
+    /// <param name="pluginPath">The directory of the plugin.</param>
+    /// <param name="configurationId">The ID of the configuration the plugin was deployed with.</param>
+    /// <returns>True when the plugin is nested in a directory named after a configuration ID.</returns>
+    public static bool TryGetDeployedConfigurationId(string? pluginPath, out Guid configurationId)
+    {
+        configurationId = Guid.Empty;
+        if (!IsEnterpriseConfigurationPath(pluginPath))
+            return false;
+
+        try
+        {
+            var root = Path.GetFullPath(ENTERPRISE_CONFIGURATION_PLUGINS_ROOT);
+            var relativePath = Path.GetRelativePath(root, Path.GetFullPath(pluginPath!));
+            var deploymentDirectory = relativePath.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)[0];
+
+            return Guid.TryParse(deploymentDirectory, out configurationId) && configurationId != Guid.Empty;
+        }
+        catch (Exception e)
+        {
+            LOG.LogWarning(e, $"Was not able to determine the deployed configuration ID for the plugin directory '{pluginPath}'.");
+            return false;
+        }
+    }
+
+    /// <summary>
     /// Ranks how much say a configuration plugin has, based on where it is stored. The higher rank
     /// wins when two configuration plugins claim the same plugin ID.
     /// </summary>
