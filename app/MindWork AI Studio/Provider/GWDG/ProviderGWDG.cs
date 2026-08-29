@@ -10,6 +10,14 @@ public sealed class ProviderGWDG() : BaseProvider(LLMProviders.GWDG, new Uri("ht
 {
     private static readonly ILogger<ProviderGWDG> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderGWDG>();
 
+    // Source: https://docs.hpc.gwdg.de/services/saia/index.html#embeddings
+    private static readonly Model[] KNOWN_EMBEDDING_MODELS =
+    [
+        new("e5-mistral-7b-instruct", "E5 Mistral 7B Instruct"),
+        new("multilingual-e5-large-instruct", "Multilingual E5 Large Instruct"),
+        new("qwen3-embedding-4b", "Qwen3 Embedding 4B"),
+    ];
+
     #region Implementation of IProvider
 
     /// <inheritdoc />
@@ -90,12 +98,26 @@ public sealed class ProviderGWDG() : BaseProvider(LLMProviders.GWDG, new Uri("ht
     }
     
     /// <inheritdoc />
+    /// <remarks>
+    /// SAIA answers the models endpoint with its chat models only, so asking it for the embedding
+    /// models comes back empty. We therefore fall back to the models the documentation names. The
+    /// endpoint is still asked first: should SAIA start reporting them one day, its answer wins
+    /// over our list. A failed request is passed on unchanged, so a wrong API key stays visible
+    /// as such instead of being covered up by the fallback.
+    /// </remarks>
     public override async Task<ModelLoadResult> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
         var result = await this.LoadModels(SecretStoreType.EMBEDDING_PROVIDER, token, apiKeyProvisional);
+        if (!result.Success)
+            return result;
+
+        var embeddingModels = result.Models.Where(model => model.IsEmbeddingModel()).ToList();
+        if (embeddingModels.Count is 0)
+            return ModelLoadResult.FromModels(KNOWN_EMBEDDING_MODELS);
+
         return result with
         {
-            Models = [..result.Models.Where(model => model.IsEmbeddingModel())]
+            Models = [..embeddingModels]
         };
     }
     
