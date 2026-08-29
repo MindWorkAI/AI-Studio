@@ -380,6 +380,18 @@ public static partial class ProviderExtensions
                     Capability.CHAT_COMPLETION_API,
                 ];
         
+            // Grok 4 models take text, images, and video natively. Reasoning is always
+            // on, only the reasoning effort can be configured:
+            if(modelName.IndexOf("grok-4") is not -1)
+                return
+                [
+                    Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT, Capability.VIDEO_INPUT,
+                    Capability.TEXT_OUTPUT,
+
+                    Capability.ALWAYS_REASONING, Capability.FUNCTION_CALLING,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+
             if(modelName.StartsWith("grok-3-mini"))
                 return 
                 [
@@ -391,14 +403,25 @@ public static partial class ProviderExtensions
                 ];
         
             if(modelName.StartsWith("grok-3"))
-                return 
+                return
                 [
                     Capability.TEXT_INPUT,
                     Capability.TEXT_OUTPUT,
-                    
+
                     Capability.FUNCTION_CALLING,
                     Capability.CHAT_COMPLETION_API,
                 ];
+
+            // Any other Grok model. Without this, unknown Grok versions would fall
+            // through to the global default and would lose function calling:
+            return
+            [
+                Capability.TEXT_INPUT,
+                Capability.TEXT_OUTPUT,
+
+                Capability.FUNCTION_CALLING,
+                Capability.CHAT_COMPLETION_API,
+            ];
         }
         
         //
