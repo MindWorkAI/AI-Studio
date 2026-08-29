@@ -401,6 +401,20 @@ public static partial class ProviderExtensions
         //
         if (modelName.IndexOf("glm") is not -1)
         {
+            // GLM 5.3 uses forced thinking: the reasoning effort can be lowered, but
+            // reasoning cannot be turned off. This check must stay in front of the
+            // vision check below, because quantized builds such as GLM-5.3-Flash-NVFP4
+            // contain a "v" and would be misread as a vision model:
+            if (modelName.IndexOf("glm-5.3") is not -1)
+                return
+                [
+                    Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                    Capability.TEXT_OUTPUT,
+
+                    Capability.ALWAYS_REASONING, Capability.FUNCTION_CALLING,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+
             if (modelName.IndexOf("glm-5.2") is not -1)
                 return
                 [
