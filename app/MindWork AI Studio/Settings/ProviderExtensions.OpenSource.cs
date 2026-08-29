@@ -429,6 +429,22 @@ public static partial class ProviderExtensions
         }
         
         //
+        // NVIDIA Nemotron models. They are built for agentic workloads and are text
+        // only. Reasoning has to be requested through enable_thinking, so it is
+        // optional. The check also covers the quantized checkpoints such as
+        // NVIDIA-Nemotron-3.5-Lightning-30B-A3B-NVFP4.
+        //
+        if (modelName.IndexOf("nemotron") is not -1)
+            return
+            [
+                Capability.TEXT_INPUT,
+                Capability.TEXT_OUTPUT,
+
+                Capability.OPTIONAL_REASONING, Capability.FUNCTION_CALLING,
+                Capability.CHAT_COMPLETION_API,
+            ];
+
+        //
         // Z AI / GLM models:
         //
         if (modelName.IndexOf("glm") is not -1)
