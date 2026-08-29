@@ -72,6 +72,21 @@ public static partial class ProviderExtensions
         }
 
         //
+        // Meta Muse models. They need their own block because their names do not
+        // contain "llama". Muse Glimmer always reasons: its chat template opens the
+        // thinking channel unconditionally, only the reasoning strength can be lowered.
+        //
+        if (modelName.IndexOf("muse-glimmer") is not -1)
+            return
+            [
+                Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                Capability.TEXT_OUTPUT,
+
+                Capability.ALWAYS_REASONING, Capability.FUNCTION_CALLING,
+                Capability.CHAT_COMPLETION_API,
+            ];
+
+        //
         // DeepSeek models:
         //
         if (modelName.IndexOf("deepseek") is not -1)
