@@ -185,7 +185,9 @@ public static class LLMProvidersExtensions
         LLMProviders.HELMHOLTZ => true,
         LLMProviders.ALIBABA_CLOUD => true,
         LLMProviders.IONOS => true,
-        
+        LLMProviders.GWDG => true,
+        LLMProviders.OPEN_ROUTER => true,
+
         //
         // Providers that do not support embeddings:
         //
@@ -193,11 +195,9 @@ public static class LLMProvidersExtensions
         LLMProviders.ANTHROPIC => false,
         LLMProviders.FIREWORKS => false,
         LLMProviders.X => false,
-        LLMProviders.GWDG => false,
         LLMProviders.DEEP_SEEK => false,
         LLMProviders.HUGGINGFACE => false,
         LLMProviders.PERPLEXITY => false,
-        LLMProviders.OPEN_ROUTER => true,
         LLMProviders.HETZNER => false,
 
         //
