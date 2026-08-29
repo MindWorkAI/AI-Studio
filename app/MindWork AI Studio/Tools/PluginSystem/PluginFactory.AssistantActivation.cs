@@ -17,11 +17,30 @@ public static partial class PluginFactory
     private static IReadOnlySet<Guid> ENFORCED_ASSISTANT_ACTIVATIONS = new HashSet<Guid>();
 
     /// <summary>
+    /// The assistant plugins your organization enabled while leaving the user free to switch them off.
+    /// </summary>
+    /// <remarks>
+    /// This is not what decides the activation: such a default is applied once and then belongs to the
+    /// user, which is what the applied activations in the settings remember. We keep the plugins it
+    /// concerns so that the user interface can say where the activation came from, whether the default
+    /// was applied just now or during an earlier start.
+    /// </remarks>
+    private static IReadOnlySet<Guid> DEFAULT_ASSISTANT_ACTIVATIONS = new HashSet<Guid>();
+
+    /// <summary>
     /// Whether your organization requires this assistant plugin to stay enabled.
     /// </summary>
     /// <param name="pluginId">The ID of the plugin in question.</param>
     /// <returns>True when the user may not switch this assistant plugin off.</returns>
     public static bool IsAssistantActivationEnforced(Guid pluginId) => ENFORCED_ASSISTANT_ACTIVATIONS.Contains(pluginId);
+
+    /// <summary>
+    /// Whether your organization enables this assistant plugin by default, leaving you free to switch
+    /// it off again.
+    /// </summary>
+    /// <param name="pluginId">The ID of the plugin in question.</param>
+    /// <returns>True when the organization asked for this assistant plugin to be enabled by default.</returns>
+    public static bool IsAssistantActivationOrganizationDefault(Guid pluginId) => DEFAULT_ASSISTANT_ACTIVATIONS.Contains(pluginId);
 
     /// <summary>
     /// Applies what the approvals of your organization say about enabling assistant plugins.
@@ -44,6 +63,7 @@ public static partial class PluginFactory
 
         var appliedActivations = SettingsManagerAccess.ConfigurationData.AppliedEnterpriseAssistantActivations;
         var enforcedActivations = new HashSet<Guid>();
+        var defaultActivations = new HashSet<Guid>();
         var wasConfigurationChanged = false;
 
         foreach (var assistantPlugin in RUNNING_PLUGINS.OfType<PluginAssistants>())
@@ -74,6 +94,8 @@ public static partial class PluginFactory
                 continue;
             }
 
+            defaultActivations.Add(assistantPlugin.Id);
+
             // An organization default is applied once. Afterwards the decision belongs to the user:
             if (appliedActivations.Contains(pluginHash))
                 continue;
@@ -89,6 +111,7 @@ public static partial class PluginFactory
         }
 
         ENFORCED_ASSISTANT_ACTIVATIONS = enforcedActivations;
+        DEFAULT_ASSISTANT_ACTIVATIONS = defaultActivations;
 
         //
         // Forget the defaults we applied for plugins no approval asks for anymore. Otherwise, an
