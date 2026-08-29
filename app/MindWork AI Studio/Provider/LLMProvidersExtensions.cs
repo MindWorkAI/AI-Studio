@@ -218,6 +218,7 @@ public static class LLMProvidersExtensions
         LLMProviders.FIREWORKS => true,
         LLMProviders.GWDG => true,
         LLMProviders.HELMHOLTZ => true,
+        LLMProviders.GROQ => true,
 
         //
         // Providers that support transcription but provide no OpenAI-compatible API yet:
@@ -231,7 +232,6 @@ public static class LLMProvidersExtensions
         LLMProviders.OPEN_ROUTER => false,
         LLMProviders.HETZNER => false,
         LLMProviders.IONOS => false,
-        LLMProviders.GROQ => false,
         LLMProviders.ANTHROPIC => false,
         LLMProviders.X => false,
         LLMProviders.DEEP_SEEK => false,
