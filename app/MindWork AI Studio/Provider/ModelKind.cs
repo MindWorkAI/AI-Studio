@@ -23,6 +23,16 @@ public enum ModelKind
     CHAT,
 
     /// <summary>
+    /// The model continues a text instead of answering in a conversation.
+    /// </summary>
+    /// <remarks>
+    /// These are the models from the era before chat completions, such as OpenAI's text-davinci-003.
+    /// Some providers still offer them, but they only work through the completions endpoint. Asking
+    /// them for a chat completion fails, so they must not show up as chat models.
+    /// </remarks>
+    TEXT_COMPLETION,
+
+    /// <summary>
     /// The model maps text or images into a vector space.
     /// </summary>
     EMBEDDING,

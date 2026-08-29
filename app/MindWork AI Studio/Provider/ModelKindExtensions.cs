@@ -30,6 +30,14 @@ public static class ModelKindExtensions
 
     private static readonly string[] EMBEDDING_MARKERS = ["embed", "bge", "mpnet", "paraphrase", "sentence-transformers", "gte-", "e5-", "gritlm"];
 
+    //
+    // The models from before chat completions existed. Providers keep offering some of them, and
+    // Helmholtz Blablador still reports 'text-davinci-003', but asking any of them for a chat
+    // completion fails. We deliberately do not look for 'ada' here: three letters appear in far too
+    // many unrelated model names, and losing a chat model weighs heavier than keeping a dead one.
+    //
+    private static readonly string[] TEXT_COMPLETION_MARKERS = ["davinci", "babbage", "curie", "gpt-3.5-turbo-instruct"];
+
     private static readonly string[] IMAGE_GENERATION_MARKERS = ["flux", "stable-diffusion", "sdxl", "dall-e", "midjourney", "gpt-image"];
 
     //
@@ -61,6 +69,9 @@ public static class ModelKindExtensions
 
         if (HasAnyMarker(model.Id, EMBEDDING_MARKERS))
             return ModelKind.EMBEDDING;
+
+        if (HasAnyMarker(model.Id, TEXT_COMPLETION_MARKERS))
+            return ModelKind.TEXT_COMPLETION;
 
         if (HasAnyMarker(model.Id, IMAGE_GENERATION_MARKERS))
             return ModelKind.IMAGE_GENERATION;
