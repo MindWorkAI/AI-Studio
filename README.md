@@ -116,6 +116,7 @@ MindWork AI Studio is a free desktop app for macOS, Windows, and Linux. It provi
   - [Alibaba Cloud](https://www.alibabacloud.com) (Qwen)
   - [OpenRouter](https://openrouter.ai/)
   - [Hetzner](https://experiments.hetzner.com) (experimental inference API running open-source models in the EU)
+  - [IONOS](https://cloud.ionos.com/managed/ai-model-hub) (AI Model Hub running open-source models in Germany)
   - [Hugging Face](https://huggingface.co/) using their [inference providers](https://huggingface.co/docs/inference-providers/index) such as Cerebras, Nebius, Sambanova, Novita, Hyperbolic, Together AI, Fireworks, Hugging Face
   - Self-hosted models using [llama.cpp](https://github.com/ggerganov/llama.cpp), [ollama](https://github.com/ollama/ollama), [LM Studio](https://lmstudio.ai/), and [vLLM](https://github.com/vllm-project/vllm)
   - [Groq](https://groq.com/)

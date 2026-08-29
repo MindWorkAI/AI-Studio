@@ -31,8 +31,8 @@
       <li>
         Independence: You are not tied to any single provider. Choose the providers that best
         suit your needs, including OpenAI, Perplexity, Mistral, Anthropic, Google Gemini, xAI,
-        DeepSeek, Alibaba Cloud, OpenRouter, Hugging Face, Groq, Fireworks, Helmholtz, GWDG,
-        and self-hosted models.
+        DeepSeek, Alibaba Cloud, OpenRouter, Hetzner, IONOS, Hugging Face, Groq, Fireworks,
+        Helmholtz, GWDG, and self-hosted models.
       </li>
       <li>
         Assistants: Use ready-made assistants for common business and other tasks without writing prompts yourself.
