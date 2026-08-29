@@ -122,6 +122,19 @@ public static partial class ProviderExtensions
                     Capability.CHAT_COMPLETION_API,
                 ];
 
+            // Check for the Qwen 3.8 Flash models. The open weights are published as
+            // Flash-Next, while Flash without the suffix is the production model. Both
+            // share the same capabilities, so one check covers them:
+            if(modelName.IndexOf("qwen3.8-flash") is not -1)
+                return
+                [
+                    Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT, Capability.VIDEO_INPUT,
+                    Capability.TEXT_OUTPUT,
+
+                    Capability.REASONING_BY_DEFAULT, Capability.FUNCTION_CALLING,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+
             // Check for the multimodal Qwen 3.8 27B checkpoint:
             if(modelName.IndexOf("qwen3.8-27b") is not -1)
                 return
