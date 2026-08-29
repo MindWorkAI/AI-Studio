@@ -105,6 +105,13 @@ public static class ModelKindExtensions
     /// <returns>True, when the model is an embedding model.</returns>
     public static bool IsEmbeddingModel(this Model model) => model.DetermineKind() is ModelKind.EMBEDDING;
 
+    /// <summary>
+    /// Checks whether this model transcribes audio.
+    /// </summary>
+    /// <param name="model">The model to check.</param>
+    /// <returns>True, when the model is a transcription model.</returns>
+    public static bool IsTranscriptionModel(this Model model) => model.DetermineKind() is ModelKind.TRANSCRIPTION;
+
     private static bool HasAnyMarker(string modelId, string[] markers)
     {
         foreach (var marker in markers)

@@ -185,7 +185,9 @@ public static class LLMProvidersExtensions
         LLMProviders.HELMHOLTZ => true,
         LLMProviders.ALIBABA_CLOUD => true,
         LLMProviders.IONOS => true,
-        
+        LLMProviders.GWDG => true,
+        LLMProviders.OPEN_ROUTER => true,
+
         //
         // Providers that do not support embeddings:
         //
@@ -193,11 +195,9 @@ public static class LLMProvidersExtensions
         LLMProviders.ANTHROPIC => false,
         LLMProviders.FIREWORKS => false,
         LLMProviders.X => false,
-        LLMProviders.GWDG => false,
         LLMProviders.DEEP_SEEK => false,
         LLMProviders.HUGGINGFACE => false,
         LLMProviders.PERPLEXITY => false,
-        LLMProviders.OPEN_ROUTER => true,
         LLMProviders.HETZNER => false,
 
         //
@@ -217,7 +217,9 @@ public static class LLMProvidersExtensions
         LLMProviders.MISTRAL => true,
         LLMProviders.FIREWORKS => true,
         LLMProviders.GWDG => true,
-        
+        LLMProviders.HELMHOLTZ => true,
+        LLMProviders.GROQ => true,
+
         //
         // Providers that support transcription but provide no OpenAI-compatible API yet:
         //
@@ -230,20 +232,17 @@ public static class LLMProvidersExtensions
         LLMProviders.OPEN_ROUTER => false,
         LLMProviders.HETZNER => false,
         LLMProviders.IONOS => false,
-        LLMProviders.GROQ => false,
         LLMProviders.ANTHROPIC => false,
         LLMProviders.X => false,
         LLMProviders.DEEP_SEEK => false,
         LLMProviders.HUGGINGFACE => false,
         LLMProviders.PERPLEXITY => false,
-        
-        LLMProviders.HELMHOLTZ => false,
 
         //
         // Self-hosted providers are treated as a special case anyway.
         //
         LLMProviders.SELF_HOSTED => true,
-        
+
         _ => false,
     };
 

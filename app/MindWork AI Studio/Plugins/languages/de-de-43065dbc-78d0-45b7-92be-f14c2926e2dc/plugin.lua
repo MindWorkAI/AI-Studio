@@ -9204,6 +9204,9 @@ UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T1999987800"] = "Wir haben ve
 -- We tried to communicate with the LLM provider '{0}' (type={1}). You might not be able to use this provider from your location. The provider message is: '{2}'
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T2107463087"] = "Wir haben versucht, mit dem LLM-Anbieter „{0}“ (Typ={1}) zu kommunizieren. Möglicherweise können Sie diesen Anbieter von Ihrem Standort aus nicht nutzen. Die Nachricht des Anbieters lautet: „{2}“."
 
+-- The provider '{0}' was not able to read the audio file. It probably does not support the WebM/Opus format which AI Studio sends. Please contact the provider about it.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T2304106455"] = "Der Anbieter „{0}“ konnte die Audiodatei nicht lesen. Er unterstützt vermutlich das WebM/Opus-Format nicht, das AI Studio sendet. Bitte kontaktieren Sie den Anbieter dazu."
+
 -- We tried to communicate with the LLM provider '{0}' (type={1}). Something was not found. The provider message is: '{2}'
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T3014737766"] = "Wir haben versucht, mit dem LLM-Anbieter „{0}“ (Typ={1}) zu kommunizieren. Etwas wurde nicht gefunden. Die Nachricht des Anbieters lautet: „{2}“"
 

@@ -239,6 +239,14 @@ public static partial class ProviderExtensions
             ];
 
         //
+        // Ministral models. They need their own block because their names do not contain
+        // "mistral" as a substring, so the block below never sees them. Only Ministral 3 accepts
+        // images, the 2024 models are text only, which is why the release date decides here too:
+        //
+        if (modelName.IndexOf("ministral") is not -1)
+            return BuildMistralCapabilities(GetMistralReleaseDate(modelName, MINISTRAL_LATEST), MINISTRAL_VISION_SINCE, MISTRAL_REASONING_NEVER);
+
+        //
         // Mistral models:
         //
         if (modelName.IndexOf("mistral") is not -1 ||
@@ -280,19 +288,6 @@ public static partial class ProviderExtensions
                     Capability.MULTIPLE_IMAGE_INPUT,
                     Capability.TEXT_OUTPUT,
                 
-                    Capability.OPTIONAL_REASONING,
-                
-                    Capability.FUNCTION_CALLING,
-                    Capability.CHAT_COMPLETION_API,
-                ];
-            
-            if (modelName.IndexOf("mistral-small-4") is not -1)
-                return
-                [
-                    Capability.TEXT_INPUT, 
-                    Capability.MULTIPLE_IMAGE_INPUT,
-                    Capability.TEXT_OUTPUT,
-
                     Capability.OPTIONAL_REASONING,
                 
                     Capability.FUNCTION_CALLING,
@@ -472,11 +467,18 @@ public static partial class ProviderExtensions
         //
         if (modelName.IndexOf("glm") is not -1)
         {
+            //
+            // Both version checks below accept a hyphen as the version separator as well:
+            // Mistral serves these models as glm-5-2 and zai-glm-5-2, while everybody else
+            // writes the version with a dot.
+            //
+
             // GLM 5.3 uses forced thinking: the reasoning effort can be lowered, but
             // reasoning cannot be turned off. This check must stay in front of the
             // vision check below, because quantized builds such as GLM-5.3-Flash-NVFP4
             // contain a "v" and would be misread as a vision model:
-            if (modelName.IndexOf("glm-5.3") is not -1)
+            if (modelName.IndexOf("glm-5.3") is not -1 ||
+                modelName.IndexOf("glm-5-3") is not -1)
                 return
                 [
                     Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
@@ -486,7 +488,8 @@ public static partial class ProviderExtensions
                     Capability.CHAT_COMPLETION_API,
                 ];
 
-            if (modelName.IndexOf("glm-5.2") is not -1)
+            if (modelName.IndexOf("glm-5.2") is not -1 ||
+                modelName.IndexOf("glm-5-2") is not -1)
                 return
                 [
                     Capability.TEXT_INPUT,
