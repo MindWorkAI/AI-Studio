@@ -239,6 +239,14 @@ public static partial class ProviderExtensions
             ];
 
         //
+        // Ministral models. They need their own block because their names do not contain
+        // "mistral" as a substring, so the block below never sees them. Only Ministral 3 accepts
+        // images, the 2024 models are text only, which is why the release date decides here too:
+        //
+        if (modelName.IndexOf("ministral") is not -1)
+            return BuildMistralCapabilities(GetMistralReleaseDate(modelName, MINISTRAL_LATEST), MINISTRAL_VISION_SINCE, MISTRAL_REASONING_NEVER);
+
+        //
         // Mistral models:
         //
         if (modelName.IndexOf("mistral") is not -1 ||
