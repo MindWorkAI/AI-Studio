@@ -610,6 +610,29 @@ CONFIG["SETTINGS"] = {}
 -- department configuration can approve additional assistant plugins without repeating
 -- the approvals of the base configuration. Each configuration keeps its own approvals,
 -- so removing one of them only withdraws the approvals it had granted.
+--
+-- An approval only says that a plugin is safe. Whether it is enabled is a second
+-- decision, and without the optional Activate field it stays with your colleagues: the
+-- assistant is approved, and everybody switches it on themselves. Set Activate to have
+-- AI Studio enable it instead. AllowUserOverride works as it does for every setting:
+-- without it, your colleagues cannot switch the assistant off; with it, you only provide
+-- a default, which AI Studio applies once and then leaves alone.
+--
+--     Activate  AllowUserOverride  Result
+--     ------------------------------------------------------------------------
+--     absent    any                approved, everybody enables it themselves
+--     true      true               enabled for everybody, may be switched off
+--     true      absent             enabled for everybody, cannot be switched off
+--
+-- Activating needs more than the approval: AI Studio only enables an assistant plugin
+-- your organization actually rolled out, i.e. one below .config or .config-tests, or one
+-- marked with DEPLOYED_USING_CONFIG_SERVER. An approval alone is matched by hash and would
+-- otherwise also cover a copy a user placed themselves, which you can neither update nor
+-- withdraw. Such a copy stays approved, but nobody's settings are changed for it.
+--
+-- When two of your configurations approve the same hash, any Activate wins, while the
+-- freedom to switch the assistant off survives only if every configuration asking for the
+-- activation grants it.
 -- CONFIG["SETTINGS"]["DataAssistantPluginAudit.EnterpriseApprovedPlugins"] = {
 --     {
 --         ["PluginHash"] = "0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF",
@@ -617,6 +640,8 @@ CONFIG["SETTINGS"] = {}
 --         ["Comment"] = "Optional comment",
 --         ["ApprovedBy"] = "Optional Approver",
 --         ["ApprovedAtUtc"] = "2026-07-02T09:30:00Z",
+--         ["Activate"] = true,
+--         ["AllowUserOverride"] = true,
 --     }
 -- }
 
