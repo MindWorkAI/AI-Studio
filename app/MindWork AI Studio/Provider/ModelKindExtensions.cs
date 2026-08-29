@@ -32,6 +32,12 @@ public static class ModelKindExtensions
 
     private static readonly string[] IMAGE_GENERATION_MARKERS = ["flux", "stable-diffusion", "sdxl", "dall-e", "midjourney", "gpt-image"];
 
+    //
+    // Voxtral is marketed as an audio model which understands speech, so one could expect it to work
+    // in a chat as well. It does not: asking Mistral for a chat completion with 'voxtral-mini-latest'
+    // is answered with 'Invalid model'. Voxtral therefore belongs here, next to the models which do
+    // nothing but transcribe.
+    //
     private static readonly string[] TRANSCRIPTION_MARKERS = ["whisper", "-transcribe", "wav2vec", "parakeet", "voxtral"];
 
     private static readonly string[] SPEECH_SYNTHESIS_MARKERS = ["-tts", "tts-", "-speech", "speech-"];
