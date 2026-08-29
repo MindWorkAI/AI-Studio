@@ -222,6 +222,23 @@ public static partial class ProviderExtensions
             ];
         
         //
+        // Tencent Hunyuan models. Hy3 answers directly by default: its reasoning_effort
+        // parameter defaults to no_think, low and high must be requested. We also match
+        // the short name because providers offer the model as tencent/hy3, so checking
+        // the start of the name is not enough.
+        //
+        if (modelName.IndexOf("hunyuan") is not -1 ||
+            modelName.IndexOf("hy3") is not -1)
+            return
+            [
+                Capability.TEXT_INPUT,
+                Capability.TEXT_OUTPUT,
+
+                Capability.OPTIONAL_REASONING, Capability.FUNCTION_CALLING,
+                Capability.CHAT_COMPLETION_API,
+            ];
+
+        //
         // Mistral models:
         //
         if (modelName.IndexOf("mistral") is not -1 ||
