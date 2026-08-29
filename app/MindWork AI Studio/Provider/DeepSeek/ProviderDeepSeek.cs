@@ -102,7 +102,7 @@ public sealed class ProviderDeepSeek() : BaseProvider(LLMProviders.DEEP_SEEK, ne
         return this.LoadModelsResponse<ModelsResponse>(
             storeType,
             "models",
-            modelResponse => modelResponse.Data,
+            modelResponse => modelResponse.Data.Where(model => model.IsChatModel()),
             token,
             apiKeyProvisional);
     }
