@@ -301,6 +301,14 @@ public static partial class PluginFactory
         if(unloadedEnterpriseConfigPluginIds.Count == 0 && PluginConfiguration.RefreshEnterpriseApprovedAssistantPlugins())
             wasConfigurationChanged = true;
 
+        //
+        // Now that the approvals are final, we know which assistant plugins your organization wants
+        // enabled. This needs no guard of its own: it reads the stored approvals, which stay in place
+        // when a configuration plugin could not be loaded:
+        //
+        if(RefreshEnterpriseAssistantActivations())
+            wasConfigurationChanged = true;
+
         // Compatibility shim, see documentation/compatibility-shims/2026-08-orphaned-config-locks.md (remove after 2027-08-06):
         if (RepairLegacyConfigOnlySettings(unloadedEnterpriseConfigPluginIds.Count > 0))
             wasConfigurationChanged = true;

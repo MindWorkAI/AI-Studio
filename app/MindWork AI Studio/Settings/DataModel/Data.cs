@@ -86,6 +86,19 @@ public sealed class Data
     public List<PluginAssistantAudit> AssistantPluginAudits { get; set; } = [];
 
     /// <summary>
+    /// The assistant plugin hashes whose organization default for the activation was already applied.
+    /// </summary>
+    /// <remarks>
+    /// An organization may enable an assistant plugin it approved while still letting the user switch
+    /// it off again. That is a default, not a rule, so it must be applied exactly once: applying it on
+    /// every start would keep switching the assistant back on against the user's decision. We remember
+    /// the hashes it was applied for, and forget one as soon as no approval asks for it anymore, so a
+    /// later rollout of the same plugin takes effect again. Activations the user may not override are
+    /// not listed here: those are decided live and never touch the list of enabled plugins.
+    /// </remarks>
+    public List<string> AppliedEnterpriseAssistantActivations { get; set; } = [];
+
+    /// <summary>
     /// The next provider number to use.
     /// </summary>
     public uint NextProviderNum { get; set; } = 1;
