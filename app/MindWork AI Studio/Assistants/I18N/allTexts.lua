@@ -3154,6 +3154,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGFAILUREEXTE
 -- The model response used an unsupported contract version. Please try again or select another model.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::VISUALBRIEFING::VISUALBRIEFINGFAILUREEXTENSIONS::T921285247"] = "The model response used an unsupported contract version. Please try again or select another model."
 
+-- This chart cannot be displayed: {0}
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CHARTBLOCK::T1070038198"] = "This chart cannot be displayed: {0}"
+
 -- System
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CHATROLEEXTENSIONS::T2402387132"] = "System"
 

@@ -1,0 +1,61 @@
+@namespace AIStudio.Chat
+@using MudBlazor
+@inherits AIStudio.Components.MSGComponentBase
+
+@if (this.Result.Chart is { } chart)
+{
+    <div class="chart-block-shell my-3">
+        <MudPaper Class="chart-block" Outlined="true">
+            <MudText Typo="Typo.h6" Class="chart-block-title">@chart.Title</MudText>
+            @if (chart.Type is ChartDefinitionType.TIME_SERIES)
+            {
+                <div class="chart-block-plot chart-block-plot-axis">
+                    <MudTimeSeriesChart ChartSeries="@this.TimeSeriesChartSeries"
+                                        ChartOptions="@this.ChartOptions"
+                                        AxisChartOptions="@this.AxisChartOptions"
+                                        TimeLabelSpacing="@this.TimeLabelSpacing"
+                                        TimeLabelFormat="@this.TimeLabelFormat"
+                                        DataMarkerTooltipTimeLabelFormat="dd-MM-yyyy HH:mm:ss 'UTC'"
+                                        Width="100%"
+                                        Height="350px" />
+                </div>
+            }
+            else if (chart.Type is ChartDefinitionType.PIE or ChartDefinitionType.DONUT)
+            {
+                <div class="chart-block-plot chart-block-plot-circular">
+                    <MudChart ChartType="@this.ChartType"
+                              InputData="@chart.Series[0].Values.ToArray()"
+                              InputLabels="@chart.Categories.ToArray()"
+                              ChartOptions="@this.ChartOptions"
+                              Width="100%"
+                              Height="200px" />
+                </div>
+            }
+            else
+            {
+                <div class="chart-block-plot chart-block-plot-axis">
+                    <MudChart ChartType="@this.ChartType"
+                              ChartSeries="@this.ChartSeries"
+                              XAxisLabels="@chart.Categories.ToArray()"
+                              ChartOptions="@this.CategoryChartOptions"
+                              AxisChartOptions="@this.AxisChartOptions"
+                              Width="100%"
+                              Height="350px" />
+                </div>
+            }
+            @if (chart.Caption is not null)
+            {
+                <MudText Typo="Typo.caption" Align="Align.Center" Class="chart-block-caption d-block">
+                    <em>@chart.Caption</em>
+                </MudText>
+            }
+        </MudPaper>
+    </div>
+}
+else
+{
+    <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Class="my-3">
+        @string.Format(T("This chart cannot be displayed: {0}"), this.Result.Error)
+    </MudAlert>
+    <pre class="overflow-auto"><code>@this.Result.RawJson</code></pre>
+}

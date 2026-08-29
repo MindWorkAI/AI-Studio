@@ -350,6 +350,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         this.ChatThread = new()
         {
             IncludeDateTime = false,
+            AllowChartOutput = true,
             SelectedProvider = this.ProviderSettings.Id,
             SelectedProfile = this.AllowProfiles ? this.CurrentProfile.Id : Profile.NO_PROFILE.Id,
             SystemPrompt = this.SystemPrompt,
@@ -366,6 +367,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         this.ChatThread = new()
         {
             IncludeDateTime = false,
+            AllowChartOutput = true,
             SelectedProvider = this.ProviderSettings.Id,
             SelectedProfile = this.AllowProfiles ? this.CurrentProfile.Id : Profile.NO_PROFILE.Id,
             SystemPrompt = this.SystemPrompt,

@@ -17,6 +17,7 @@ public partial class ContentBlockComponent : MSGComponentBase
     private const string HTML_SELF_CLOSING_TAG = "/>";
     private const string CODE_FENCE_MARKER_BACKTICK = "```";
     private const string CODE_FENCE_MARKER_TILDE = "~~~";
+    private const string CHART_CODE_FENCE_LANGUAGE = "aistudio-chart";
     private const string MATH_BLOCK_MARKER_DOLLAR = "$$";
     private const string MATH_BLOCK_MARKER_BRACKET_OPEN = """\[""";
     private const string MATH_BLOCK_MARKER_BRACKET_CLOSE = """\]""";
@@ -333,6 +334,20 @@ public partial class ContentBlockComponent : MSGComponentBase
             }
 
             var trimmedLine = TrimWhitespace(normalizedSpan[lineStart..lineEnd]);
+            if (activeMathBlockFenceType is MathBlockFenceType.NONE
+                && activeCodeFenceMarker == '\0'
+                && TryGetChartFenceMarker(trimmedLine, out var chartFenceMarker)
+                && TryFindClosingCodeFence(normalizedSpan, nextLineStart, chartFenceMarker, out var chartContentEnd, out var afterChartFence))
+            {
+                AddMarkdownSegment(markdownSegmentStart, lineStart);
+                var (start, end) = TrimLineBreaks(normalizedSpan, nextLineStart, chartContentEnd);
+                var chartJson = normalized.Substring(start, end - start);
+                segments.Add(new(MarkdownRenderSegmentType.CHART, start, end - start, ChartBlockParser.Parse(chartJson)));
+                markdownSegmentStart = afterChartFence;
+                lineStart = afterChartFence;
+                continue;
+            }
+
             if (activeMathBlockFenceType is MathBlockFenceType.NONE && TryUpdateCodeFenceState(trimmedLine, ref activeCodeFenceMarker))
             {
                 lineStart = nextLineStart;
@@ -460,6 +475,48 @@ public partial class ContentBlockComponent : MSGComponentBase
         return true;
     }
 
+    private static bool TryGetChartFenceMarker(ReadOnlySpan<char> trimmedLine, out char fenceMarker)
+    {
+        fenceMarker = '\0';
+        if (trimmedLine.SequenceEqual($"{CODE_FENCE_MARKER_BACKTICK}{CHART_CODE_FENCE_LANGUAGE}".AsSpan()))
+            fenceMarker = '`';
+        else if (trimmedLine.SequenceEqual($"{CODE_FENCE_MARKER_TILDE}{CHART_CODE_FENCE_LANGUAGE}".AsSpan()))
+            fenceMarker = '~';
+
+        return fenceMarker != '\0';
+    }
+
+    private static bool TryFindClosingCodeFence(ReadOnlySpan<char> text, int searchStart, char fenceMarker, out int contentEnd, out int afterFence)
+    {
+        contentEnd = 0;
+        afterFence = 0;
+        var closingFence = fenceMarker == '`' ? CODE_FENCE_MARKER_BACKTICK : CODE_FENCE_MARKER_TILDE;
+
+        for (var lineStart = searchStart; lineStart < text.Length;)
+        {
+            var lineEnd = lineStart;
+            while (lineEnd < text.Length && text[lineEnd] is not '\r' and not '\n')
+                lineEnd++;
+
+            var nextLineStart = lineEnd;
+            if (nextLineStart < text.Length && text[nextLineStart] == '\r')
+                nextLineStart++;
+            if (nextLineStart < text.Length && text[nextLineStart] == '\n')
+                nextLineStart++;
+
+            if (TrimWhitespace(text[lineStart..lineEnd]).SequenceEqual(closingFence.AsSpan()))
+            {
+                contentEnd = lineStart;
+                afterFence = nextLineStart;
+                return true;
+            }
+
+            lineStart = nextLineStart;
+        }
+
+        return false;
+    }
+
     private static ReadOnlySpan<char> TrimWhitespace(ReadOnlySpan<char> text)
     {
         var start = 0;
@@ -489,6 +546,7 @@ public partial class ContentBlockComponent : MSGComponentBase
     {
         MARKDOWN,
         MATH_BLOCK,
+        CHART,
     }
 
     private enum MathBlockFenceType
@@ -503,7 +561,7 @@ public partial class ContentBlockComponent : MSGComponentBase
         public static readonly MarkdownRenderPlan EMPTY = new(string.Empty, []);
     }
 
-    private sealed class MarkdownRenderSegment(MarkdownRenderSegmentType type, int start, int length)
+    private sealed class MarkdownRenderSegment(MarkdownRenderSegmentType type, int start, int length, ChartBlockParseResult? chartResult = null)
     {
         private string? cachedContent;
 
@@ -512,6 +570,8 @@ public partial class ContentBlockComponent : MSGComponentBase
         public int Start { get; } = start;
 
         public int Length { get; } = length;
+
+        public ChartBlockParseResult? ChartResult { get; } = chartResult;
 
         public int RenderKey { get; } = HashCode.Combine(type, start, length);
 
