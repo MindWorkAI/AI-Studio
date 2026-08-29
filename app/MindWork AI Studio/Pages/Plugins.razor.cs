@@ -101,6 +101,15 @@ public partial class Plugins : MSGComponentBase
 
     private async Task PluginActivationStateChanged(IPluginMetadata pluginMeta)
     {
+        //
+        // The switch is disabled for these, so this cannot be reached through the user interface. We
+        // check anyway: removing the plugin from the enabled list would achieve nothing, because the
+        // activation is decided live, but it would leave the settings in a state which claims the
+        // opposite of what the user sees:
+        //
+        if (PluginFactory.IsAssistantActivationEnforced(pluginMeta.Id))
+            return;
+
         if (this.SettingsManager.IsPluginEnabled(pluginMeta))
         {
             this.SettingsManager.ConfigurationData.EnabledPlugins.Remove(pluginMeta.Id);
@@ -190,6 +199,10 @@ public partial class Plugins : MSGComponentBase
     
     private bool IsActivationSwitchDisabled(IPluginMetadata pluginMeta, bool isEnabled)
     {
+        // An assistant plugin your organization requires to stay enabled has no switch to offer:
+        if (PluginFactory.IsAssistantActivationEnforced(pluginMeta.Id))
+            return true;
+
         if (isEnabled || pluginMeta.Type is not PluginType.ASSISTANT)
             return false;
 
@@ -203,6 +216,9 @@ public partial class Plugins : MSGComponentBase
 
     private string GetActivationTooltip(IPluginMetadata pluginMeta, bool isEnabled)
     {
+        if (PluginFactory.IsAssistantActivationEnforced(pluginMeta.Id))
+            return this.T("Your organization requires this assistant to stay enabled");
+
         if (isEnabled)
             return this.T("Disable plugin");
 

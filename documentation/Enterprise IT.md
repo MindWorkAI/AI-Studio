@@ -395,7 +395,7 @@ AI Studio extracts the whole tree and picks up every `plugin.lua` in it. A few r
 - **Only the configuration plugin carries the configuration ID.** Every other plugin has its own `ID`, as any plugin does. The archive does not have to contain a configuration plugin at all: an archive that only ships an assistant plugin is fine.
 - **Everything in the archive belongs to your organization.** Users cannot delete, edit, share, or replace any of it, whatever the individual plugins declare about themselves.
 - **The withdrawal takes the whole deployment.** Once you stop referencing the configuration ID, AI Studio removes that directory including every plugin you shipped in it. See [Withdrawing a configuration](#withdrawing-a-configuration).
-- **Assistant plugins still need an approval or an audit.** Deploying an assistant does not approve it. List its hash in `CONFIG["SETTINGS"]["DataAssistantPluginAudit.EnterpriseApprovedPlugins"]` of a configuration you deploy, otherwise users have to run a local security audit before they can activate it. See [Enterprise approval for assistant plugins](#enterprise-approval-for-assistant-plugins).
+- **Assistant plugins still need an approval or an audit.** Deploying an assistant does not approve it. List its hash in `CONFIG["SETTINGS"]["DataAssistantPluginAudit.EnterpriseApprovedPlugins"]` of a configuration you deploy, otherwise users have to run a local security audit before they can activate it. An approval does not enable the assistant either; add `Activate` to the approval for that. See [Enterprise approval for assistant plugins](#enterprise-approval-for-assistant-plugins) and [Enabling an assistant plugin for your colleagues](#enabling-an-assistant-plugin-for-your-colleagues).
 
 If you would rather not use the configuration server for this, roll the plugin out with your MDM solution into the ordinary plugin directory and mark it with `DEPLOYED_USING_CONFIG_SERVER = true`. It is then protected against changes just the same, but it is not tied to a configuration ID, so you have to remove it the same way you placed it.
 
@@ -471,7 +471,47 @@ CONFIG["SETTINGS"]["DataAssistantPluginAudit.EnterpriseApprovedPlugins"] = {
 }
 ```
 
-`PluginHash` is required. All other fields are optional and are shown in the UI as approval metadata.
+`PluginHash` is required. All other fields are optional. `DisplayName`, `Comment`, `ApprovedBy`, and `ApprovedAtUtc` are shown in the UI as approval metadata; `Activate` and `AllowUserOverride` are described in the next section.
+
+### Enabling an assistant plugin for your colleagues
+
+An approval only says that an assistant plugin is safe. Whether it is enabled is a second decision, and it stays with your colleagues unless you make it: after a rollout the assistant is approved, but everybody still has to find it on the plugin page and switch it on. Two optional fields of an approval let you make that decision instead:
+
+```lua
+CONFIG["SETTINGS"]["DataAssistantPluginAudit.EnterpriseApprovedPlugins"] = {
+    {
+        ["PluginHash"] = "0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF",
+        ["DisplayName"] = "Corporate Translation Assistant",
+        ["Activate"] = true,
+        ["AllowUserOverride"] = true,
+    }
+}
+```
+
+`AllowUserOverride` works exactly as it does for every other managed setting: without it, what you set is locked; with it, you only provide a default.
+
+| `Activate` | `AllowUserOverride` | Result |
+| --- | --- | --- |
+| absent | any | Approved. Everybody enables the assistant themselves. This is the behavior of every approval written before these fields existed. |
+| `true` | `true` | AI Studio enables the assistant once. Your colleagues may switch it off again, and their decision survives every restart. |
+| `true` | absent | AI Studio enables the assistant and keeps it enabled. The switch on the plugin page is greyed out, and the security card says why. |
+
+A default is applied exactly once per plugin, not on every start: otherwise it would keep overruling a colleague who deliberately switched the assistant off. AI Studio forgets that it applied the default as soon as no approval asks for it anymore, so rolling the same plugin out again later takes effect again.
+
+#### Activating needs the rollout, not only the approval
+
+AI Studio only enables an assistant plugin your organization actually rolled out: one below `.config` or `.config-tests`, or one you marked with `DEPLOYED_USING_CONFIG_SERVER`, as described in [Deploying other plugin types](#deploying-other-plugin-types).
+
+The reason is the hash. An approval is matched by the plugin content alone, so it also covers a byte-identical copy a user placed in their own plugin directory. For an approval that is correct, because the hash is the code. For enabling a plugin on somebody's behalf it is not enough: you would be enforcing a copy you never shipped, cannot update, and cannot withdraw. Such a copy therefore stays approved, and nobody's settings are changed for it. AI Studio notes this in the log.
+
+#### When several configurations approve the same plugin
+
+`Activate` and `AllowUserOverride` are combined in opposite directions, so a department cannot quietly take back what your base configuration locked:
+
+- One configuration asking for the activation is enough. Not asking for it says nothing against it.
+- The freedom to switch the assistant off survives only when every configuration that asks for the activation grants it.
+
+An approval that does not ask for the activation at all says nothing about that freedom and is not counted.
 
 ### Generating the hash
 
@@ -509,7 +549,7 @@ Place the files **while AI Studio is running**: the test directory is emptied wh
 1. Start AI Studio. It creates `<data directory>/plugins/.config-tests/` if it does not exist yet.
 2. Create a directory below it and place your `plugin.lua` there, e.g. `.config-tests/my-department-draft/`. The directory name is up to you here: a plugin is identified by the `ID` field inside it, not by the directory it lives in.
 3. Place every other plugin of the deployment in a subdirectory of it, e.g. `.config-tests/my-department-draft/translation-assistant/`. This mirrors the archive you will serve later, as described in [Deploying other plugin types](#deploying-other-plugin-types).
-4. AI Studio watches the plugin directory and picks everything up without a restart. The security card of the assistant then states that your organization approved it, exactly as it will after the rollout.
+4. AI Studio watches the plugin directory and picks everything up without a restart. The security card of the assistant then states that your organization approved it, exactly as it will after the rollout. If your approval sets `Activate`, the assistant is enabled right away, so you see the state your colleagues will start from.
 
 You can also keep an assistant plugin you are only iterating on in `<data directory>/plugins/assistants/<any name>/`. Your test configuration approves it by hash either way. The difference is that a plugin outside `.config-tests` is not protected against the user, so this variant no longer mirrors the later rollout.
 

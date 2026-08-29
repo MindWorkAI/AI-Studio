@@ -410,7 +410,9 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
                 approvals.Add(approval);
             }
 
-            configuredApprovals = approvals;
+            // A configuration may list the same hash more than once, e.g. once to describe the
+            // plugin and once to activate it. Combine those before anything else sees them:
+            configuredApprovals = CombineApprovals(approvals);
             successful = true;
         }
 
@@ -453,11 +455,7 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
                 // Merge into the stored list right away, so the approvals of this plugin take
                 // effect immediately. PluginFactory.LoadAll recomputes the authoritative list once
                 // every configuration plugin has contributed:
-                var mergedApprovals = new List<DataAssistantPluginEnterpriseApproval>(configMeta.GetValue());
-                var knownHashes = mergedApprovals.Select(approval => approval.PluginHash).ToHashSet(StringComparer.Ordinal);
-                mergedApprovals.AddRange(configuredApprovals.Where(approval => knownHashes.Add(approval.PluginHash)));
-
-                configMeta.SetValue(mergedApprovals);
+                configMeta.SetValue(CombineApprovals(configMeta.GetValue().Concat(configuredApprovals)));
                 configMeta.LockConfiguration(this.Id);
                 break;
 
@@ -487,19 +485,121 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         if (!ManagedConfiguration.TryGet(x => x.AssistantPluginAudit, x => x.EnterpriseApprovedPlugins, out ConfigMeta<DataAssistantPluginAudit, IList<DataAssistantPluginEnterpriseApproval>> configMeta))
             return false;
 
-        var effectiveApprovals = new List<DataAssistantPluginEnterpriseApproval>();
-        var effectiveHashes = new HashSet<string>(StringComparer.Ordinal);
-        foreach (var approval in configMeta.PluginContributions.Values.SelectMany(contribution => contribution))
-            if (effectiveHashes.Add(approval.PluginHash))
-                effectiveApprovals.Add(approval);
+        var effectiveApprovals = CombineApprovals(configMeta.PluginContributions.Values.SelectMany(contribution => contribution));
 
-        // Compare by hash, so a different order alone does not rewrite the settings on every start:
+        // Compare by what an approval decides, so a different order alone does not rewrite the
+        // settings on every start, while a changed activation does reach the user:
         var currentApprovals = configMeta.GetValue();
-        if (currentApprovals.Count == effectiveApprovals.Count && effectiveHashes.SetEquals(currentApprovals.Select(approval => approval.PluginHash)))
+        if (HaveApprovalsSameEffect(currentApprovals, effectiveApprovals))
             return false;
 
         LOG.LogInformation($"The enterprise approvals for assistant plugins changed from {currentApprovals.Count} to {effectiveApprovals.Count} entries, contributed by {configMeta.PluginContributions.Count} configuration plugin(s).");
         configMeta.SetValue(effectiveApprovals);
+        return true;
+    }
+
+    /// <summary>
+    /// Reduces approvals of several configuration plugins to one entry per assistant plugin hash.
+    /// </summary>
+    /// <remarks>
+    /// Approving the same plugin twice is normal: a base configuration approves it for the whole
+    /// organization, and a department configuration lists it again to activate it. Keeping only the
+    /// entry seen first would silently drop what the other one asked for, and the contributions
+    /// carry no guaranteed order, so which one that is could differ from start to start.
+    /// </remarks>
+    /// <param name="approvals">The approvals of all configuration plugins, in any order.</param>
+    /// <returns>One approval per hash, in the order the hashes were first seen.</returns>
+    private static List<DataAssistantPluginEnterpriseApproval> CombineApprovals(IEnumerable<DataAssistantPluginEnterpriseApproval> approvals)
+    {
+        var combined = new List<DataAssistantPluginEnterpriseApproval>();
+        var positionByHash = new Dictionary<string, int>(StringComparer.Ordinal);
+        foreach (var approval in approvals)
+        {
+            if (positionByHash.TryGetValue(approval.PluginHash, out var position))
+            {
+                combined[position] = MergeApprovals(combined[position], approval);
+                continue;
+            }
+
+            positionByHash[approval.PluginHash] = combined.Count;
+            combined.Add(approval);
+        }
+
+        return combined;
+    }
+
+    /// <summary>
+    /// Combines two approvals of the same assistant plugin hash into a single one.
+    /// </summary>
+    /// <remarks>
+    /// The two activation fields are combined in opposite directions on purpose. One configuration
+    /// asking for the activation is enough to activate, because not asking for it says nothing
+    /// against it. The freedom to switch the assistant off again, however, only survives when every
+    /// configuration which does ask for the activation grants it: otherwise a department could take
+    /// back a lock the organization deliberately set. An approval which does not ask for the
+    /// activation at all expresses nothing about that freedom and is therefore not counted.<br/><br/>
+    /// The result of these two fields does not depend on the order the approvals arrive in. For the
+    /// descriptive fields, the first value which says anything wins, and the approval date is the
+    /// earliest one given: the plugin has been approved since then.
+    /// </remarks>
+    /// <param name="first">The approval seen first.</param>
+    /// <param name="second">The approval to combine it with.</param>
+    /// <returns>The combined approval.</returns>
+    private static DataAssistantPluginEnterpriseApproval MergeApprovals(DataAssistantPluginEnterpriseApproval first, DataAssistantPluginEnterpriseApproval second) => new()
+    {
+        PluginHash = first.PluginHash,
+        DisplayName = string.IsNullOrWhiteSpace(first.DisplayName) ? second.DisplayName : first.DisplayName,
+        Comment = string.IsNullOrWhiteSpace(first.Comment) ? second.Comment : first.Comment,
+        ApprovedBy = string.IsNullOrWhiteSpace(first.ApprovedBy) ? second.ApprovedBy : first.ApprovedBy,
+        ApprovedAtUtc = EarliestApprovalTime(first.ApprovedAtUtc, second.ApprovedAtUtc),
+
+        Activate = first.Activate || second.Activate,
+        AllowUserOverride = (first.Activate, second.Activate) switch
+        {
+            (true, true) => first.AllowUserOverride && second.AllowUserOverride,
+            (true, false) => first.AllowUserOverride,
+            (false, true) => second.AllowUserOverride,
+            _ => false,
+        },
+    };
+
+    private static DateTimeOffset? EarliestApprovalTime(DateTimeOffset? first, DateTimeOffset? second) => (first, second) switch
+    {
+        (null, _) => second,
+        (_, null) => first,
+        _ => first <= second ? first : second,
+    };
+
+    /// <summary>
+    /// Checks whether two approval lists decide the same thing for every assistant plugin.
+    /// </summary>
+    /// <remarks>
+    /// This is what tells a rewrite of the settings apart from a mere reordering of the same
+    /// approvals. Only the hash and the two activation fields are compared: the descriptive fields
+    /// change nothing about what an approval does, and rewriting the settings because a comment was
+    /// reworded would store the file on every start.
+    /// </remarks>
+    /// <param name="currentApprovals">The approvals currently stored in the settings.</param>
+    /// <param name="effectiveApprovals">The approvals recomputed from the contributions.</param>
+    /// <returns>True when both lists have the same effect, otherwise false.</returns>
+    private static bool HaveApprovalsSameEffect(IList<DataAssistantPluginEnterpriseApproval> currentApprovals, IList<DataAssistantPluginEnterpriseApproval> effectiveApprovals)
+    {
+        if (currentApprovals.Count != effectiveApprovals.Count)
+            return false;
+
+        var currentByHash = new Dictionary<string, DataAssistantPluginEnterpriseApproval>(StringComparer.Ordinal);
+        foreach (var approval in currentApprovals)
+            currentByHash[approval.PluginHash] = approval;
+
+        foreach (var effectiveApproval in effectiveApprovals)
+        {
+            if (!currentByHash.TryGetValue(effectiveApproval.PluginHash, out var currentApproval))
+                return false;
+
+            if (currentApproval.Activate != effectiveApproval.Activate || currentApproval.AllowUserOverride != effectiveApproval.AllowUserOverride)
+                return false;
+        }
+
         return true;
     }
 
@@ -524,6 +624,11 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         var comment = TryReadOptionalString(table, "Comment");
         var approvedBy = TryReadOptionalString(table, "ApprovedBy");
         var approvedAtUtc = TryReadOptionalDateTimeOffset(table, "ApprovedAtUtc", index, configPluginId);
+        var activate = TryReadOptionalBool(table, "Activate", index, configPluginId);
+        var allowUserOverride = TryReadOptionalBool(table, "AllowUserOverride", index, configPluginId);
+
+        if (allowUserOverride && !activate)
+            LOG.LogWarning("The enterprise assistant approval entry at index {Index} allows the user to override an activation it never asks for. 'AllowUserOverride' has no effect without 'Activate' (config plugin id: {ConfigPluginId}).", index, configPluginId);
 
         approval = new()
         {
@@ -532,6 +637,8 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
             Comment = comment,
             ApprovedBy = approvedBy,
             ApprovedAtUtc = approvedAtUtc,
+            Activate = activate,
+            AllowUserOverride = allowUserOverride,
         };
         return true;
     }
@@ -541,6 +648,18 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         return table.TryGetValue(key, out var value) && value.TryRead<string>(out var text)
             ? text
             : string.Empty;
+    }
+
+    private static bool TryReadOptionalBool(LuaTable table, string key, int index, Guid configPluginId)
+    {
+        if (!table.TryGetValue(key, out var value))
+            return false;
+
+        if (value.TryRead<bool>(out var flag))
+            return flag;
+
+        LOG.LogWarning("The enterprise assistant approval entry at index {Index} contains an invalid {Key} value. Expected a boolean (config plugin id: {ConfigPluginId}).", index, key, configPluginId);
+        return false;
     }
 
     private static DateTimeOffset? TryReadOptionalDateTimeOffset(LuaTable table, string key, int index, Guid configPluginId)
