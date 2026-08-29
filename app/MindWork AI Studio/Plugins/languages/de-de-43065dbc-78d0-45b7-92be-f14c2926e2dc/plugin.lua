@@ -3384,6 +3384,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T2250917004"] = "Einige 
 -- Drag and drop files into the marked area or click here to attach documents:
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T230755331"] = "Ziehen Sie Dateien in den markierten Bereich oder klicken Sie hier, um Dokumente anzuhängen:"
 
+-- The attachment has not been sent. Please enter a prompt in the chat window
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1585750793"] = "Der Anhang wurde nicht verschickt. Bitte gib einen Prompt in das Chatfenster ein"
+
 -- The media transcription was canceled.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ATTACHDOCUMENTS::T241403726"] = "Die Transkription des Mediums wurde abgebrochen."
 

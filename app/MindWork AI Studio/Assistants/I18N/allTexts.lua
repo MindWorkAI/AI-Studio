@@ -3427,6 +3427,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1516264254"] = "Save chat
 -- The media file could not be transcribed.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1543974632"] = "The media file could not be transcribed."
 
+-- The attachment has not been sent. Please enter a prompt in the chat window
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1585750793"] = "The attachment has not been sent. Please enter a prompt in the chat window"
+
 -- Type your input here...
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::CHATCOMPONENT::T1849313532"] = "Type your input here..."
 
