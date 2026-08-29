@@ -91,6 +91,7 @@ public static partial class ProviderExtensions
 
             LLMProviders.OPEN_ROUTER or
                 LLMProviders.HETZNER or
+                LLMProviders.IONOS or
                 LLMProviders.X or
                 LLMProviders.DEEP_SEEK or
                 LLMProviders.GROQ or

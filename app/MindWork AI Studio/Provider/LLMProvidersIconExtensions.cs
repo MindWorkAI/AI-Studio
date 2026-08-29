@@ -29,6 +29,7 @@ public static class LLMProvidersIconExtensions
         LLMProviders.PERPLEXITY => $"{ICON_ROOT}/perplexity.svg",
         LLMProviders.OPEN_ROUTER => $"{ICON_ROOT}/openrouter.svg",
         LLMProviders.HETZNER => $"{ICON_ROOT}/hetzner.svg",
+        LLMProviders.IONOS => $"{ICON_ROOT}/ionos.svg",
         LLMProviders.GROQ => $"{ICON_ROOT}/groq.svg",
         LLMProviders.FIREWORKS => $"{ICON_ROOT}/fireworks.svg",
         LLMProviders.HUGGINGFACE => $"{ICON_ROOT}/hugging-face.svg",

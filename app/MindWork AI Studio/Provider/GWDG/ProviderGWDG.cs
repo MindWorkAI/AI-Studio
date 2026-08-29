@@ -78,7 +78,7 @@ public sealed class ProviderGWDG() : BaseProvider(LLMProviders.GWDG, new Uri("ht
         var result = await this.LoadModels(SecretStoreType.LLM_PROVIDER, token, apiKeyProvisional);
         return result with
         {
-            Models = [..result.Models.Where(model => !model.Id.StartsWith("e5-mistral-7b-instruct", StringComparison.InvariantCultureIgnoreCase))]
+            Models = [..result.Models.Where(model => model.IsChatModel())]
         };
     }
 
@@ -94,7 +94,7 @@ public sealed class ProviderGWDG() : BaseProvider(LLMProviders.GWDG, new Uri("ht
         var result = await this.LoadModels(SecretStoreType.EMBEDDING_PROVIDER, token, apiKeyProvisional);
         return result with
         {
-            Models = [..result.Models.Where(model => model.Id.StartsWith("e5-", StringComparison.InvariantCultureIgnoreCase))]
+            Models = [..result.Models.Where(model => model.IsEmbeddingModel())]
         };
     }
     
