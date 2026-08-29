@@ -385,9 +385,16 @@ public sealed class SettingsManager
     /// <summary>
     /// Checks if the given plugin is enabled.
     /// </summary>
+    /// <remarks>
+    /// Which plugins are enabled is the user's decision, with two exceptions. Configuration plugins
+    /// have no switch at all: they carry what an organization configured, so turning them off would
+    /// mean opting out of that configuration. And an organization may require one of the assistant
+    /// plugins it approved to stay enabled, which is decided live from its approvals rather than from
+    /// the user's list.
+    /// </remarks>
     /// <param name="plugin">The plugin to check.</param>
     /// <returns>True, when the plugin is enabled, false otherwise.</returns>
-    public bool IsPluginEnabled(IPluginMetadata plugin) => plugin.Type is PluginType.CONFIGURATION || this.ConfigurationData.EnabledPlugins.Contains(plugin.Id);
+    public bool IsPluginEnabled(IPluginMetadata plugin) => plugin.Type is PluginType.CONFIGURATION || this.ConfigurationData.EnabledPlugins.Contains(plugin.Id) || PluginFactory.IsAssistantActivationEnforced(plugin.Id);
     
     /// <summary>
     /// Returns the active language plugin.
