@@ -17,6 +17,7 @@ public enum LLMProviders
     PERPLEXITY = 14,
     OPEN_ROUTER = 15,
     HETZNER = 16,
+    IONOS = 17,
 
     FIREWORKS = 5,
     GROQ = 6,

@@ -817,6 +817,7 @@ public sealed class SettingsManager
                     LLMProviders.HELMHOLTZ => ConfidenceLevel.LOW,
                     LLMProviders.GWDG => ConfidenceLevel.LOW,
                     LLMProviders.HETZNER => ConfidenceLevel.LOW,
+                    LLMProviders.IONOS => ConfidenceLevel.LOW,
                     LLMProviders.DEEP_SEEK => ConfidenceLevel.LOW,
                     LLMProviders.ALIBABA_CLOUD => ConfidenceLevel.LOW,
                     
@@ -831,6 +832,7 @@ public sealed class SettingsManager
                     LLMProviders.HELMHOLTZ => ConfidenceLevel.MEDIUM,
                     LLMProviders.GWDG => ConfidenceLevel.MEDIUM,
                     LLMProviders.HETZNER => ConfidenceLevel.MEDIUM,
+                    LLMProviders.IONOS => ConfidenceLevel.MEDIUM,
                     
                     _ => ConfidenceLevel.LOW,
                 };

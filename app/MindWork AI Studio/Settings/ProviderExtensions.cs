@@ -55,6 +55,7 @@ public static partial class ProviderExtensions
             LLMProviders.PERPLEXITY => GetModelCapabilitiesPerplexity(model),
             LLMProviders.OPEN_ROUTER => GetModelCapabilitiesOpenRouter(model),
             LLMProviders.HETZNER => GetModelCapabilitiesOpenSource(model),
+            LLMProviders.IONOS => GetModelCapabilitiesOpenSource(model),
 
             LLMProviders.GROQ => GetModelCapabilitiesOpenSource(model),
             LLMProviders.FIREWORKS => GetModelCapabilitiesOpenSource(model),

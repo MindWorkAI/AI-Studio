@@ -8,6 +8,7 @@ using AIStudio.Provider.GWDG;
 using AIStudio.Provider.Helmholtz;
 using AIStudio.Provider.Hetzner;
 using AIStudio.Provider.HuggingFace;
+using AIStudio.Provider.IONOS;
 using AIStudio.Provider.Mistral;
 using AIStudio.Provider.OpenAI;
 using AIStudio.Provider.OpenRouter;
@@ -58,6 +59,7 @@ public static class LLMProvidersExtensions
         LLMProviders.PERPLEXITY => "Perplexity",
         LLMProviders.OPEN_ROUTER => "OpenRouter",
         LLMProviders.HETZNER => "Hetzner (Experimental)",
+        LLMProviders.IONOS => "IONOS",
 
         LLMProviders.GROQ => "Groq",
         LLMProviders.FIREWORKS => "Fireworks.ai",
@@ -94,6 +96,7 @@ public static class LLMProvidersExtensions
         LLMProviders.PERPLEXITY => "Perplexity",
         LLMProviders.OPEN_ROUTER => "OpenRouter",
         LLMProviders.HETZNER => "Hetzner",
+        LLMProviders.IONOS => "IONOS",
 
         LLMProviders.GROQ => "Groq",
         LLMProviders.FIREWORKS => "Fireworks.ai",
@@ -153,6 +156,11 @@ public static class LLMProvidersExtensions
             "https://www.hetzner.com/legal/terms-and-conditions/"
         ).WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
 
+        LLMProviders.IONOS => Confidence.GDPR_NO_TRAINING.WithRegion("Europe, Germany").WithSources(
+            "https://docs.ionos.com/cloud/ai/ai-model-hub/governance-and-compliance/data-handling",
+            "https://www.ionos.com/terms-gtc/privacy-policy/"
+        ).WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
+
         LLMProviders.SELF_HOSTED => Confidence.SELF_HOSTED.WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
         
         LLMProviders.HELMHOLTZ => Confidence.GDPR_NO_TRAINING.WithRegion("Europe, Germany").WithSources("https://helmholtz.cloud/services/?serviceID=d7d5c597-a2f6-4bd1-b71e-4d6499d98570").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
@@ -176,6 +184,7 @@ public static class LLMProvidersExtensions
         LLMProviders.GOOGLE => true,
         LLMProviders.HELMHOLTZ => true,
         LLMProviders.ALIBABA_CLOUD => true,
+        LLMProviders.IONOS => true,
         
         //
         // Providers that do not support embeddings:
@@ -220,6 +229,7 @@ public static class LLMProvidersExtensions
         //
         LLMProviders.OPEN_ROUTER => false,
         LLMProviders.HETZNER => false,
+        LLMProviders.IONOS => false,
         LLMProviders.GROQ => false,
         LLMProviders.ANTHROPIC => false,
         LLMProviders.X => false,
@@ -283,6 +293,7 @@ public static class LLMProvidersExtensions
                 LLMProviders.PERPLEXITY => new ProviderPerplexity { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, IsEnterpriseConfiguration = isEnterpriseConfiguration },
                 LLMProviders.OPEN_ROUTER => new ProviderOpenRouter { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, IsEnterpriseConfiguration = isEnterpriseConfiguration },
                 LLMProviders.HETZNER => new ProviderHetzner { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, IsEnterpriseConfiguration = isEnterpriseConfiguration },
+                LLMProviders.IONOS => new ProviderIONOS { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, IsEnterpriseConfiguration = isEnterpriseConfiguration },
 
                 LLMProviders.GROQ => new ProviderGroq { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, IsEnterpriseConfiguration = isEnterpriseConfiguration },
                 LLMProviders.FIREWORKS => new ProviderFireworks { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, IsEnterpriseConfiguration = isEnterpriseConfiguration },
@@ -315,6 +326,7 @@ public static class LLMProvidersExtensions
         LLMProviders.PERPLEXITY => "https://www.perplexity.ai/account/api",
         LLMProviders.OPEN_ROUTER => "https://openrouter.ai/keys",
         LLMProviders.HETZNER => "https://experiments.hetzner.com",
+        LLMProviders.IONOS => "https://cloud.ionos.com/compute/sign-up",
 
         LLMProviders.GROQ => "https://console.groq.com/",
         LLMProviders.FIREWORKS => "https://fireworks.ai/login",
@@ -341,6 +353,7 @@ public static class LLMProvidersExtensions
         LLMProviders.OPEN_ROUTER => "https://openrouter.ai/activity",
         LLMProviders.HUGGINGFACE => "https://huggingface.co/settings/billing",
         LLMProviders.HETZNER => "https://experiments.hetzner.com",
+        LLMProviders.IONOS => "https://dcd.ionos.com/latest/?page=dcd-ai-model-hub",
 
         _ => string.Empty,
     };
@@ -360,6 +373,7 @@ public static class LLMProvidersExtensions
         LLMProviders.OPEN_ROUTER => true,
         LLMProviders.HUGGINGFACE => true,
         LLMProviders.HETZNER => true,
+        LLMProviders.IONOS => true,
 
         _ => false,
     };
@@ -438,6 +452,7 @@ public static class LLMProvidersExtensions
         LLMProviders.PERPLEXITY => true,
         LLMProviders.OPEN_ROUTER => true,
         LLMProviders.HETZNER => true,
+        LLMProviders.IONOS => true,
 
         LLMProviders.GROQ => true,
         LLMProviders.FIREWORKS => true,
@@ -462,6 +477,7 @@ public static class LLMProvidersExtensions
         LLMProviders.PERPLEXITY => true,
         LLMProviders.OPEN_ROUTER => true,
         LLMProviders.HETZNER => true,
+        LLMProviders.IONOS => true,
 
         LLMProviders.GROQ => true,
         LLMProviders.FIREWORKS => true,
