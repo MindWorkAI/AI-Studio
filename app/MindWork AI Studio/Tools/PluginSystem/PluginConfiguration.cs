@@ -524,6 +524,11 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         var comment = TryReadOptionalString(table, "Comment");
         var approvedBy = TryReadOptionalString(table, "ApprovedBy");
         var approvedAtUtc = TryReadOptionalDateTimeOffset(table, "ApprovedAtUtc", index, configPluginId);
+        var activate = TryReadOptionalBool(table, "Activate", index, configPluginId);
+        var allowUserOverride = TryReadOptionalBool(table, "AllowUserOverride", index, configPluginId);
+
+        if (allowUserOverride && !activate)
+            LOG.LogWarning("The enterprise assistant approval entry at index {Index} allows the user to override an activation it never asks for. 'AllowUserOverride' has no effect without 'Activate' (config plugin id: {ConfigPluginId}).", index, configPluginId);
 
         approval = new()
         {
@@ -532,6 +537,8 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
             Comment = comment,
             ApprovedBy = approvedBy,
             ApprovedAtUtc = approvedAtUtc,
+            Activate = activate,
+            AllowUserOverride = allowUserOverride,
         };
         return true;
     }
@@ -541,6 +548,18 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         return table.TryGetValue(key, out var value) && value.TryRead<string>(out var text)
             ? text
             : string.Empty;
+    }
+
+    private static bool TryReadOptionalBool(LuaTable table, string key, int index, Guid configPluginId)
+    {
+        if (!table.TryGetValue(key, out var value))
+            return false;
+
+        if (value.TryRead<bool>(out var flag))
+            return flag;
+
+        LOG.LogWarning("The enterprise assistant approval entry at index {Index} contains an invalid {Key} value. Expected a boolean (config plugin id: {ConfigPluginId}).", index, key, configPluginId);
+        return false;
     }
 
     private static DateTimeOffset? TryReadOptionalDateTimeOffset(LuaTable table, string key, int index, Guid configPluginId)
