@@ -101,42 +101,29 @@ public partial class ContentBlockComponent : MSGComponentBase
     private int lastRenderHash;
     private string cachedMarkdownRenderPlanInput = string.Empty;
     private MarkdownRenderPlan cachedMarkdownRenderPlan = MarkdownRenderPlan.EMPTY;
-    private string cachedTabularExportInput = string.Empty;
-    private TabularExtract? cachedTabularExport;
     private ElementReference mathContentContainer;
     private string lastMathRenderSignature = string.Empty;
     private bool hasActiveMathContainer;
     private bool isDisposed;
 
     /// <summary>
-    /// Whether this block can be exported at all. Only text carries something a document can hold;
-    /// an image, for example, has no representation any of our export formats could write.
+    /// Whether this block can be exported.
     /// </summary>
-    private bool CanExport => this.Content.TryGetMarkdownText(out _);
+    /// <remarks>
+    /// We wait for the stream to finish: half an answer is nothing anybody wants in a document,
+    /// and waiting keeps us from searching a text which still grows with every token. Only text
+    /// can be exported at all; an image, for example, has no representation our formats could write.
+    /// </remarks>
+    private bool CanExport => this.Content is { InitialRemoteWait: false, IsStreaming: false } && this.Content.TryGetMarkdownText(out _);
 
     /// <summary>
     /// The table this block holds, if any, so that the export menu can offer it.
     /// </summary>
     /// <remarks>
-    /// The result is cached the same way the Markdown render plan is: the render tree asks for
-    /// this on every render, and during streaming every token causes one. Without the cache, the
-    /// regex would run over the whole message once per token.
+    /// Only asked for once the stream has finished, see CanExport, so the text this searches
+    /// is final and the search happens once per render of a settled block.
     /// </remarks>
-    private TabularExtract? TabularExport
-    {
-        get
-        {
-            if (!this.Content.TryGetMarkdownText(out var markdown))
-                return null;
-
-            if (ReferenceEquals(this.cachedTabularExportInput, markdown) || string.Equals(this.cachedTabularExportInput, markdown, StringComparison.Ordinal))
-                return this.cachedTabularExport;
-
-            this.cachedTabularExportInput = markdown;
-            this.cachedTabularExport = PlainFileExport.TryExtractTabularContent(markdown, out var extract) ? extract : null;
-            return this.cachedTabularExport;
-        }
-    }
+    private TabularExtract? TabularExport => this.Content.TryGetMarkdownText(out var markdown) && PlainFileExport.TryExtractTabularContent(markdown, out var extract) ? extract : null;
 
     #region Overrides of ComponentBase
 
