@@ -143,6 +143,13 @@ public static class ModelKindExtensions
     /// <returns>True, when the model is a transcription model.</returns>
     public static bool IsTranscriptionModel(this Model model) => model.DetermineKind() is ModelKind.TRANSCRIPTION;
 
+    /// <summary>
+    /// Checks whether this model generates images.
+    /// </summary>
+    /// <param name="model">The model to check.</param>
+    /// <returns>True, when the model is an image generation model.</returns>
+    public static bool IsImageModel(this Model model) => model.DetermineKind() is ModelKind.IMAGE_GENERATION;
+
     private static bool HasAnyMarker(string modelId, string[] markers)
     {
         foreach (var marker in markers)

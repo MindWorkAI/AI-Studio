@@ -261,56 +261,45 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
         return await this.PerformStandardTextEmbeddingRequest(requestedSecret, embeddingModel, token: token, texts: texts);
     }
 
+    //
+    // OpenAI offers every kind of model through one models endpoint, so we have to sort them apart
+    // ourselves. We used to do that with lists of name prefixes kept here. The shared model kind
+    // detection knows those families as well, and it knows them for every provider, so we ask it
+    // instead of maintaining a second set of rules which only ever lagged behind.
+    //
+
     /// <inheritdoc />
-    public override async Task<ModelLoadResult> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override Task<ModelLoadResult> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        //
-        // The prefixes are what OpenAI calls its chat models. That knowledge is specific to this
-        // provider, so it stays here. Which of those models are made for something other than
-        // chatting is not: the shared model kind detection sorts the image, video, audio, live
-        // speech, and transcription models out for us.
-        //
-        var result = await this.LoadModels(SecretStoreType.LLM_PROVIDER, ["chatgpt-", "gpt-", "o1-", "o3-", "o4-"], token, apiKeyProvisional);
-        return result with
-        {
-            Models = [..result.Models.Where(model => model.IsChatModel())]
-        };
+        return this.LoadModels(SecretStoreType.LLM_PROVIDER, static model => model.IsChatModel(), token, apiKeyProvisional);
     }
 
     /// <inheritdoc />
     public override Task<ModelLoadResult> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModels(SecretStoreType.IMAGE_PROVIDER, ["dall-e-", "gpt-image"], token, apiKeyProvisional);
+        return this.LoadModels(SecretStoreType.IMAGE_PROVIDER, static model => model.IsImageModel(), token, apiKeyProvisional);
     }
-    
+
     /// <inheritdoc />
     public override Task<ModelLoadResult> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModels(SecretStoreType.EMBEDDING_PROVIDER, ["text-embedding-"], token, apiKeyProvisional);
+        return this.LoadModels(SecretStoreType.EMBEDDING_PROVIDER, static model => model.IsEmbeddingModel(), token, apiKeyProvisional);
     }
-    
+
     /// <inheritdoc />
-    public override async Task<ModelLoadResult> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override Task<ModelLoadResult> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        var result = await this.LoadModels(SecretStoreType.TRANSCRIPTION_PROVIDER, ["whisper-", "gpt-"], token, apiKeyProvisional);
-        return result with
-        {
-            Models =
-            [
-                ..result.Models.Where(model => model.Id.StartsWith("whisper-", StringComparison.InvariantCultureIgnoreCase) ||
-                                               model.Id.Contains("-transcribe", StringComparison.InvariantCultureIgnoreCase))
-            ]
-        };
+        return this.LoadModels(SecretStoreType.TRANSCRIPTION_PROVIDER, static model => model.IsTranscriptionModel(), token, apiKeyProvisional);
     }
     
     #endregion
 
-    private Task<ModelLoadResult> LoadModels(SecretStoreType storeType, string[] prefixes, CancellationToken token, string? apiKeyProvisional = null)
+    private Task<ModelLoadResult> LoadModels(SecretStoreType storeType, Func<Model, bool> isWantedKind, CancellationToken token, string? apiKeyProvisional = null)
     {
         return this.LoadModelsResponse<ModelsResponse>(
             storeType,
             "models",
-            modelResponse => modelResponse.Data.Where(model => prefixes.Any(prefix => model.Id.StartsWith(prefix, StringComparison.InvariantCulture))),
+            modelResponse => modelResponse.Data.Where(isWantedKind),
             token,
             apiKeyProvisional);
     }
