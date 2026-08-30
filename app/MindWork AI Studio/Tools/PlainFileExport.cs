@@ -116,7 +116,7 @@ public static partial class PlainFileExport
 
         try
         {
-            await File.WriteAllTextAsync(response.SaveFilePath, fileContent);
+            await File.WriteAllTextAsync(response.SaveFilePath, fileContent, format.ToFileEncoding());
             await MessageBus.INSTANCE.SendSuccess(new(Icons.Material.Filled.CheckCircle, TB("The export succeeded.")));
             
             return true;

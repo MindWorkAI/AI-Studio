@@ -33,8 +33,6 @@ public partial class ContentBlockComponent : MSGComponentBase
         "<iframe",
         "<svg",
     ];
-    
-    private static readonly ILogger LOGGER = Program.LOGGER_FACTORY.CreateLogger(nameof(ContentBlockComponent));
 
     /// <summary>
     /// The role of the chat content block.
@@ -108,6 +106,9 @@ public partial class ContentBlockComponent : MSGComponentBase
 
     [Inject]
     private IJSRuntime JsRuntime { get; init; } = null!;
+
+    [Inject]
+    private ILogger<ContentBlockComponent> Logger { get; init; } = null!;
 
     private bool HideContent { get; set; }
     private bool hasRenderHash;
@@ -598,7 +599,7 @@ public partial class ContentBlockComponent : MSGComponentBase
         catch (ArgumentOutOfRangeException e)
         {
             await this.MessageBus.SendError(new(Icons.Material.Filled.Error, string.Format(this.T("Failed to export this message, because the file format '{0}' is unknown."), format)));
-            LOGGER.LogError(e, "Failed to export the content, because no exporter writes the format {ExportFormat}.", format);
+            this.Logger.LogError(e, "Failed to export the content, because no exporter writes the format {ExportFormat}.", format);
         }
     }
     

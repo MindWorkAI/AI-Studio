@@ -1,4 +1,6 @@
-﻿using AIStudio.Tools.PluginSystem;
+﻿using System.Text;
+
+using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
 
 namespace AIStudio.Tools;
@@ -15,6 +17,9 @@ namespace AIStudio.Tools;
 public static class FileExportFormatExtensions
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(FileExportFormatExtensions).Namespace, nameof(FileExportFormatExtensions));
+
+    private static readonly Encoding WITH_BYTE_ORDER_MARK = new UTF8Encoding(true);
+    private static readonly Encoding WITHOUT_BYTE_ORDER_MARK = new UTF8Encoding(false);
 
     /// <summary>
     /// The formats which lay the text out as a document you would hand to somebody, in the order
@@ -117,6 +122,24 @@ public static class FileExportFormatExtensions
         FileExportFormat.TSV => FileTypes.TSV,
 
         _ => null,
+    };
+
+    /// <summary>
+    /// Returns the encoding the file gets written with.
+    /// </summary>
+    /// <remarks>
+    /// Everything is UTF-8, the question is only whether the file starts with a byte order mark.
+    /// Tabular files get one, because Excel otherwise reads them in the local ANSI code page and
+    /// turns every umlaut into garbage. Text files get none: editors, compilers, and LaTeX have
+    /// no use for it and some of them stumble over it.
+    /// </remarks>
+    /// <param name="format">The format.</param>
+    /// <returns>The encoding to write the file with.</returns>
+    public static Encoding ToFileEncoding(this FileExportFormat format) => format switch
+    {
+        FileExportFormat.CSV or FileExportFormat.TSV => WITH_BYTE_ORDER_MARK,
+
+        _ => WITHOUT_BYTE_ORDER_MARK,
     };
 
     /// <summary>

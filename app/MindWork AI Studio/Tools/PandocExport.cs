@@ -1,8 +1,9 @@
 ﻿using System.Diagnostics;
+using System.Text;
+
 using AIStudio.Chat;
 using AIStudio.Dialogs;
 using AIStudio.Tools.PluginSystem;
-using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
@@ -55,8 +56,9 @@ public static class PandocExport
             var tempMarkdownFile = Guid.NewGuid().ToString();
             tempMarkdownFilePath = Path.Combine(Path.GetTempPath(), tempMarkdownFile);
 
-            // Write text content to a temporary file:
-            await File.WriteAllTextAsync(tempMarkdownFilePath, markdownText);
+            // Write text content to a temporary file. Pandoc expects UTF-8 without a byte order
+            // mark; a mark would end up as a stray character at the start of the document:
+            await File.WriteAllTextAsync(tempMarkdownFilePath, markdownText, new UTF8Encoding(false));
 
             // Ensure that Pandoc is installed and ready:
             var pandocState = await Pandoc.CheckAvailabilityAsync(rustService, showSuccessMessage: false);
@@ -134,7 +136,7 @@ public static class PandocExport
                 }
                 catch
                 {
-                    LOGGER.LogWarning($"Was not able to delete temporary file: '{tempMarkdownFilePath}'");
+                    LOGGER.LogWarning("Was not able to delete the temporary file '{TempFilePath}'.", tempMarkdownFilePath);
                 }
             }
         }
