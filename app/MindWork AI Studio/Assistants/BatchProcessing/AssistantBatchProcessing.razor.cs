@@ -1,6 +1,7 @@
 using AIStudio.Dialogs.Settings;
 using AIStudio.Provider;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
 
@@ -11,10 +12,13 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
 
+    [Inject]
+    private PandocAvailabilityService PandocAvailability { get; init; } = null!;
+
     private const string DEFAULT_OUTPUT_DIRECTORY_NAME = "ai-results";
     private const string DEFAULT_RESULTS_FILENAME = "batch-results.csv";
     private const string CSV_EXTENSION = ".csv";
-    private const string RESULT_FILE_SUFFIX = "_result.md";
+    private const string RESULT_FILE_SUFFIX = "_result";
     private const string TRANSCRIPT_FILE_SUFFIX = ".transcript.md";
     private const string TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
     private const char LOG_SEPARATOR = ';';

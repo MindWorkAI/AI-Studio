@@ -71,8 +71,8 @@ public partial class AssistantBatchProcessing
     /// <summary>
     /// Checks whether a document can be restored from the previous run. Beyond
     /// the log entry, the result of the previous run must still exist: in the
-    /// table mode the answer within the results table, in the Markdown mode the
-    /// result file. Without the result, restoring would mark the document as
+    /// table mode the answer within the results table, in the individual file
+    /// mode the result file. Without the result, restoring would mark the document as
     /// done while its answer is lost, so we process it again instead.
     /// </summary>
     private bool CanRestoreFromPreviousRun(string relativePath, string resolvedOutputDirectory, Dictionary<string, BatchProcessingLogEntry> previousLog, Dictionary<string, string> previousResults, out BatchProcessingLogEntry? logEntry)
@@ -232,7 +232,7 @@ public partial class AssistantBatchProcessing
     }
 
     /// <summary>
-    /// Creates the name of the Markdown result file for one document.
+    /// Creates the name of the result file for one document, in the chosen file format.
     /// </summary>
     /// <remarks>
     /// Two documents of the same run may share their name and differ only in
@@ -242,13 +242,14 @@ public partial class AssistantBatchProcessing
     /// </remarks>
     private string CreateResultFileName(string sourceFileName)
     {
+        var extension = this.resultFileFormat.ToFileExtension();
         var stem = Path.GetFileNameWithoutExtension(sourceFileName);
-        var candidate = $"{stem}{RESULT_FILE_SUFFIX}";
+        var candidate = $"{stem}{RESULT_FILE_SUFFIX}{extension}";
 
         var counter = 2;
         while (!this.usedResultFileNames.Add(candidate))
         {
-            candidate = $"{stem}_result_{counter}.md";
+            candidate = $"{stem}{RESULT_FILE_SUFFIX}_{counter}{extension}";
             counter++;
         }
 
