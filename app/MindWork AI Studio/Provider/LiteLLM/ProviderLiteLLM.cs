@@ -74,7 +74,7 @@ public sealed class ProviderLiteLLM(string hostname) : BaseProvider(LLMProviders
     /// <inheritdoc />
     public override Task<ModelLoadResult> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModels(SecretStoreType.LLM_PROVIDER, token, apiKeyProvisional);
+        return this.LoadModels(SecretStoreType.LLM_PROVIDER, static model => model.IsChatModel(), token, apiKeyProvisional);
     }
 
     /// <inheritdoc />
@@ -106,12 +106,17 @@ public sealed class ProviderLiteLLM(string hostname) : BaseProvider(LLMProviders
         return new Uri($"{normalizedHostname}/v1/");
     }
 
-    private Task<ModelLoadResult> LoadModels(SecretStoreType storeType, CancellationToken token, string? apiKeyProvisional = null)
+    private Task<ModelLoadResult> LoadModels(SecretStoreType storeType, Func<Model, bool> isWantedKind, CancellationToken token, string? apiKeyProvisional = null)
     {
+        //
+        // The gateway serves every kind of model through one endpoint, so we have to sort
+        // them apart ourselves. We use the shared model kind detection for that, which every
+        // other provider uses as well:
+        //
         return this.LoadModelsResponse<ModelsResponse>(
             storeType,
             "models",
-            modelResponse => modelResponse.Data,
+            modelResponse => modelResponse.Data.Where(isWantedKind),
             token,
             apiKeyProvisional);
     }
