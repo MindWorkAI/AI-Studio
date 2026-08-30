@@ -115,7 +115,7 @@ else
     }
 </MudSelect>
 
-@if (this.outputMode is BatchProcessingOutputMode.MARKDOWN_FILES)
+@if (this.outputMode is BatchProcessingOutputMode.INDIVIDUAL_FILES)
 {
     <MudJustifiedText Typo="Typo.body2" Class="mb-3">
         @T("Each answer is stored as its own Markdown file. Those files are named after the document, e.g., the answer for report.pdf is stored as report_result.md.")

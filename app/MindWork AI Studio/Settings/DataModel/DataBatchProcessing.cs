@@ -42,7 +42,7 @@ public sealed class DataBatchProcessing(Expression<Func<Data, DataBatchProcessin
 
     public string PreselectedPolicyId { get; set; } = ManagedConfiguration.Register(configSelection, value => value.PreselectedPolicyId, string.Empty);
 
-    public BatchProcessingOutputMode OutputMode { get; set; } = ManagedConfiguration.Register(configSelection, value => value.OutputMode, BatchProcessingOutputMode.MARKDOWN_FILES);
+    public BatchProcessingOutputMode OutputMode { get; set; } = ManagedConfiguration.Register(configSelection, value => value.OutputMode, BatchProcessingOutputMode.INDIVIDUAL_FILES);
 
     public string CsvFileName { get; set; } = ManagedConfiguration.Register(configSelection, value => value.CsvFileName, string.Empty);
 

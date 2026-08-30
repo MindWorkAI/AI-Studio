@@ -492,8 +492,8 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataBatchProcessing.PreselectedPolicyId"] = ""
 --
 -- Configure the default output mode.
--- Allowed values are: MARKDOWN_FILES, TABLE_ONLY
--- CONFIG["SETTINGS"]["DataBatchProcessing.OutputMode"] = "MARKDOWN_FILES"
+-- Allowed values are: INDIVIDUAL_FILES, TABLE_ONLY
+-- CONFIG["SETTINGS"]["DataBatchProcessing.OutputMode"] = "INDIVIDUAL_FILES"
 -- CONFIG["SETTINGS"]["DataBatchProcessing.CsvFileName"] = "batch-results.csv"
 -- CONFIG["SETTINGS"]["DataBatchProcessing.ResultColumnHeader"] = "Result"
 -- Allowed CSV separator values are: COMMA, SEMICOLON, PIPE, TAB, CUSTOM

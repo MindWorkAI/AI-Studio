@@ -87,7 +87,7 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
     private string promptFilePath = string.Empty;
     private string promptFileLoadIssue = string.Empty;
     private DataDocumentAnalysisPolicy? selectedPolicy;
-    private BatchProcessingOutputMode outputMode = BatchProcessingOutputMode.MARKDOWN_FILES;
+    private BatchProcessingOutputMode outputMode = BatchProcessingOutputMode.INDIVIDUAL_FILES;
     private string resultColumnHeader = string.Empty;
     private string csvFileName = string.Empty;
     private BatchProcessingCsvSeparator csvSeparator = BatchProcessingCsvSeparator.SEMICOLON;
@@ -160,7 +160,7 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
             this.freePrompt = string.Empty;
             this.promptFilePath = string.Empty;
             this.selectedPolicy = null;
-            this.outputMode = BatchProcessingOutputMode.MARKDOWN_FILES;
+            this.outputMode = BatchProcessingOutputMode.INDIVIDUAL_FILES;
             this.resultColumnHeader = string.Empty;
             this.csvFileName = string.Empty;
             this.csvSeparator = BatchProcessingCsvSeparator.SEMICOLON;

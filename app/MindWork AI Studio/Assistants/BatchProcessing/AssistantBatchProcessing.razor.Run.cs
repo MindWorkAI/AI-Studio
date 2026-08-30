@@ -211,7 +211,7 @@ public partial class AssistantBatchProcessing
         }
 
         fileResult.ResultText = aiAnswer;
-        if (this.outputMode is BatchProcessingOutputMode.MARKDOWN_FILES)
+        if (this.outputMode is BatchProcessingOutputMode.INDIVIDUAL_FILES)
         {
             try
             {
