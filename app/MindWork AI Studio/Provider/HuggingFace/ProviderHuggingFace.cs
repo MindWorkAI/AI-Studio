@@ -121,7 +121,7 @@ public sealed class ProviderHuggingFace : BaseProvider
     public override string InstanceName { get; set; } = "HuggingFace";
 
     /// <inheritdoc />
-    public override bool HasModelLoadingCapability => false;
+    public override bool HasModelLoadingCapability => true;
 
     /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
@@ -176,7 +176,41 @@ public sealed class ProviderHuggingFace : BaseProvider
     /// <inheritdoc />
     public override Task<ModelLoadResult> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return Task.FromResult(ModelLoadResult.FromModels([]));
+        return this.LoadModelsResponse<ModelsResponse>(SecretStoreType.LLM_PROVIDER, "models", this.SelectChatModels, token, apiKeyProvisional);
+    }
+
+    /// <summary>
+    /// Picks the models the user may chat with through the chosen inference provider.
+    /// </summary>
+    /// <remarks>
+    /// The router reports every model it knows, together with the providers serving it. When the
+    /// user named a provider, we show what that provider offers. Should that leave nothing, we show
+    /// the whole list instead: some providers serve models the list does not attribute to them, and
+    /// an empty selection would leave the user without any way forward.
+    /// </remarks>
+    /// <param name="response">The response of the model endpoint.</param>
+    /// <returns>The models to offer.</returns>
+    private IEnumerable<Model> SelectChatModels(ModelsResponse response)
+    {
+        var chatModels = response.Data.Where(hfModel => new Model(hfModel.Id, null).IsChatModel()).ToList();
+        var providerSlug = this.hfProvider.EndpointsId();
+        if (string.IsNullOrEmpty(providerSlug))
+            return ToModels(chatModels);
+
+        var servedModels = chatModels.Where(hfModel => IsServedBy(hfModel, providerSlug)).ToList();
+        return ToModels(servedModels.Count > 0 ? servedModels : chatModels);
+    }
+
+    private static IEnumerable<Model> ToModels(IEnumerable<HFModel> hfModels) => hfModels.Select(hfModel => new Model(hfModel.Id, null));
+
+    private static bool IsServedBy(HFModel hfModel, string providerSlug)
+    {
+        if (hfModel.Providers is null)
+            return false;
+
+        return hfModel.Providers.Any(provider =>
+            string.Equals(provider.Provider, providerSlug, StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(provider.Status, "live", StringComparison.OrdinalIgnoreCase));
     }
 
     /// <inheritdoc />

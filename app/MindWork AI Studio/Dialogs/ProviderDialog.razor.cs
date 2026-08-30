@@ -226,7 +226,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         {
             this.dataEditingPreviousInstanceName = this.DataInstanceName.ToLowerInvariant();
             
-            // When using Fireworks or Hugging Face, we must copy the model name:
+            // When using Fireworks, we must copy the model name:
             if (this.DataLLMProvider.IsLLMModelProvidedManually())
                 this.dataManuallyModel = this.DataModel.Id;
             
@@ -372,6 +372,24 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         this.usesLegacySystemModelFallback = false;
     }
 
+    /// <summary>
+    /// Resets the model selection when the user picks another Hugging Face inference provider.
+    /// </summary>
+    /// <remarks>
+    /// Which models are on offer depends on the inference provider, so the models loaded for the
+    /// previous one say nothing about the new one. Keeping them would let the user pick a model
+    /// their provider does not serve, which the router answers with an error.
+    /// </remarks>
+    /// <param name="selectedInferenceProvider">The inference provider the user chose.</param>
+    private void OnHFInferenceProviderChanged(HFInferenceProvider selectedInferenceProvider)
+    {
+        this.HFInferenceProviderId = selectedInferenceProvider;
+        this.DataModel = default;
+        this.capabilityOverrides = new();
+        this.availableModels.Clear();
+        this.dataLoadingModelsIssue = string.Empty;
+    }
+
     private void OnHostChanged(Host selectedHost)
     {
         // When the host changes, reset the model selection state:
@@ -429,6 +447,11 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
                                              this.DataLLMProvider is LLMProviders.SELF_HOSTED &&
                                              this.DataHost is Host.LLAMA_CPP &&
                                              this.usesLegacySystemModelFallback;
+
+    /// <summary>
+    /// The catalog of the provider, where the user can read up on the models before choosing one.
+    /// </summary>
+    private string ModelsOverviewURL => this.DataLLMProvider.GetModelsOverviewURL(this.HFInferenceProviderId);
 
     private void UpdateModelSelectionAfterLoading()
     {

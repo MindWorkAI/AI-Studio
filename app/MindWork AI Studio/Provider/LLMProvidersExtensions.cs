@@ -399,7 +399,6 @@ public static class LLMProvidersExtensions
     public static bool IsLLMModelProvidedManually(this LLMProviders provider) => provider switch
     {
         LLMProviders.FIREWORKS => true,
-        LLMProviders.HUGGINGFACE => true,
         _ => false,
     };
     
