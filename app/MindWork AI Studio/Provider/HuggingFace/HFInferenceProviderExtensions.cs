@@ -53,6 +53,24 @@ public static class HFInferenceProviderExtensions
     };
 
     /// <summary>
+    /// Removes the routing suffix from a model, if it carries one.
+    /// </summary>
+    /// <remarks>
+    /// The suffix says where a request goes, not what the model is. Everything asking what a model
+    /// can do has to look at the bare name: "google/gemma-4-31B-it:novita" is the same model as
+    /// "google/gemma-4-31B-it", and a name detection which never heard of the suffix would miss it.
+    /// Model IDs on the hub are written as "org/model" and carry no colon of their own, so the last
+    /// colon always starts the suffix.
+    /// </remarks>
+    /// <param name="model">The model as it is configured.</param>
+    /// <returns>The model without its routing suffix.</returns>
+    public static Model WithoutRoutingSuffix(this Model model)
+    {
+        var separatorIndex = model.Id.LastIndexOf(':');
+        return separatorIndex is -1 ? model : model with { Id = model.Id[..separatorIndex] };
+    }
+
+    /// <summary>
     /// The value to filter the Hugging Face model catalog by.
     /// </summary>
     /// <param name="provider">The inference provider.</param>

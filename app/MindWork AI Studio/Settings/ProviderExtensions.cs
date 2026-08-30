@@ -1,4 +1,5 @@
 ﻿using AIStudio.Provider;
+using AIStudio.Provider.HuggingFace;
 
 namespace AIStudio.Settings;
 
@@ -65,9 +66,15 @@ public static partial class ProviderExtensions
             //
             LLMProviders.LITE_LLM => GetModelCapabilitiesOpenRouter(model),
 
-            LLMProviders.GROQ => GetModelCapabilitiesOpenSource(model),
-            LLMProviders.FIREWORKS => GetModelCapabilitiesOpenSource(model),
-            LLMProviders.HUGGINGFACE => GetModelCapabilitiesOpenSource(model),
+            LLMProviders.GROQ or LLMProviders.FIREWORKS => GetModelCapabilitiesOpenSource(model),
+
+            //
+            // Hugging Face names its models the way the hub does, "org/model", which is the same
+            // shape OpenRouter uses. So we let the OpenRouter detection resolve the organization
+            // and ask the provider implementation which really knows the model. The routing suffix
+            // has to go first: it says which inference provider answers, not what the model is.
+            //
+            LLMProviders.HUGGINGFACE => GetModelCapabilitiesOpenRouter(model.WithoutRoutingSuffix()),
         
             LLMProviders.HELMHOLTZ => GetModelCapabilitiesOpenSource(model),
             LLMProviders.GWDG => GetModelCapabilitiesOpenSource(model),
