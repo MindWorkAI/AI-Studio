@@ -17,17 +17,21 @@ public static class FileExportFormatExtensions
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(FileExportFormatExtensions).Namespace, nameof(FileExportFormatExtensions));
 
     /// <summary>
-    /// The formats which every text message can be exported to, in the order the export menu shows them.
+    /// The formats which lay the text out as a document you would hand to somebody, in the order
+    /// the export menu shows them.
     /// </summary>
-    /// <remarks>
-    /// The tabular formats are missing on purpose: they depend on the message actually containing
-    /// a table, so whoever builds the menu adds the one which applies.
-    /// </remarks>
-    public static readonly IReadOnlyList<FileExportFormat> ALWAYS_AVAILABLE_FORMATS =
+    public static readonly IReadOnlyList<FileExportFormat> DOCUMENT_FORMATS =
     [
         FileExportFormat.MICROSOFT_WORD,
         FileExportFormat.OPEN_DOCUMENT_TEXT,
         FileExportFormat.LATEX,
+    ];
+
+    /// <summary>
+    /// The formats which keep the text as text, in the order the export menu shows them.
+    /// </summary>
+    public static readonly IReadOnlyList<FileExportFormat> TEXT_FORMATS =
+    [
         FileExportFormat.MARKDOWN,
         FileExportFormat.HTML,
     ];

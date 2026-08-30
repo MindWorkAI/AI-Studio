@@ -16,7 +16,7 @@
             </MudText>
         </CardHeaderContent>
         <CardHeaderActions>
-            <div class="d-flex">
+            <div class="d-flex align-center">
                 @if (this.Content.FileAttachments.Count > 0)
                 {
                     <MudTooltip Text="@T("Number of attachments")" Placement="Placement.Bottom">
@@ -63,37 +63,25 @@
                 {
                     <MudTooltip Text="@this.EffectiveExportTitle" Placement="Placement.Bottom">
                         <MudMenu Icon="@Icons.Material.Filled.Save">
-                            <MudMenuItem OnClick="@(() => this.ExportDocument(FileExportFormat.MICROSOFT_WORD))" Icon="@Icons.Custom.FileFormats.FileWord">
-                                @T("Microsoft Word (.docx)")
-                            </MudMenuItem>
-                            <MudMenuItem OnClick="@(() => this.ExportDocument(FileExportFormat.OPEN_DOCUMENT_TEXT))" Icon="@Icons.Custom.FileFormats.FileDocument">
-                                <MudTooltip Text="@T("LibreOffice / OpenOffice")">
-                                    @T("OpenDocument Text (.odt)")
-                                </MudTooltip>
-                            </MudMenuItem>
-                            <MudMenuItem OnClick="@(() => this.ExportDocument(FileExportFormat.LATEX))" Icon="@Icons.Material.Filled.Functions">
-                                @T("LaTeX (.tex)")
-                            </MudMenuItem>
+                            @foreach (var documentFormat in FileExportFormatExtensions.DOCUMENT_FORMATS)
+                            {
+                                <MudMenuItem OnClick="@(() => this.ExportDocument(documentFormat))" Icon="@documentFormat.ToIcon()" Label="@documentFormat.ToName()"/>
+                            }
                             @if (this.TabularExport is { } tabularExport)
                             {
-                                <MudDivider />
-                                <MudMenuItem OnClick="@(() => this.ExportDocument(tabularExport.Format))" Icon="@tabularExport.Format.ToIcon()">
-                                    @tabularExport.Format.ToName()
-                                </MudMenuItem>
+                                <MudDivider/>
+                                <MudMenuItem OnClick="@(() => this.ExportDocument(tabularExport.Format))" Icon="@tabularExport.Format.ToIcon()" Label="@tabularExport.Format.ToName()"/>
                             }
-                            <MudDivider />
-                            <MudMenuItem OnClick="@(() => this.ExportDocument(FileExportFormat.MARKDOWN))" Icon="@Icons.Material.Filled.TextFields">
-                                @T("Markdown (.md)")
-                            </MudMenuItem>
-                            <MudMenuItem OnClick="@(() => this.ExportDocument(FileExportFormat.HTML))" Icon="@Icons.Material.Filled.Html">
-                                <MudTooltip Text="@T("Webpage")">
-                                    @T("Hypertext (.html)")
-                                </MudTooltip>
-                            </MudMenuItem>
+                            <MudDivider/>
+                            @foreach (var textFormat in FileExportFormatExtensions.TEXT_FORMATS)
+                            {
+                                <MudMenuItem OnClick="@(() => this.ExportDocument(textFormat))" Icon="@textFormat.ToIcon()" Label="@textFormat.ToName()"/>
+                            }
                         </MudMenu>
                     </MudTooltip>
                 }
-                <MudCopyClipboardButton Content="@this.Content" Type="@this.Type" Size="Size.Medium"/></div>
+                <MudCopyClipboardButton Content="@this.Content" Type="@this.Type" Size="Size.Medium"/>
+            </div>
         </CardHeaderActions>
     </MudCardHeader>
     <MudCardContent>
