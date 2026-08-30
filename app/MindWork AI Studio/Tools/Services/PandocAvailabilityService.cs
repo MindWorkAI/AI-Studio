@@ -54,7 +54,7 @@ public sealed class PandocAvailabilityService(RustService rustService, IDialogSe
             if (!pandocState.IsAvailable)
             {
                 this.Logger.LogError("Pandoc is not available after installation attempt.");
-                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Cancel, TB("Pandoc may be required for importing files.")));
+                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Cancel, TB("AI Studio needs Pandoc for this, but it is not available.")));
             }
         }
 

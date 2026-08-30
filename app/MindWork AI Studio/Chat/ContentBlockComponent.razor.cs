@@ -110,6 +110,9 @@ public partial class ContentBlockComponent : MSGComponentBase
     [Inject]
     private ILogger<ContentBlockComponent> Logger { get; init; } = null!;
 
+    [Inject]
+    private PandocAvailabilityService PandocAvailability { get; init; } = null!;
+
     private bool HideContent { get; set; }
     private bool hasRenderHash;
     private int lastRenderHash;
@@ -656,7 +659,7 @@ public partial class ContentBlockComponent : MSGComponentBase
             // here which would fall out of sync with the one in FileExportFormatExtensions.
             //
             if (format.UsesPandoc())
-                await PandocExport.ToDocument(this.RustService, this.DialogService, this.EffectiveExportTitle, format, this.Content);
+                await PandocExport.ToDocument(this.RustService, this.PandocAvailability, this.EffectiveExportTitle, format, this.Content);
             else if (this.Content.TryGetMarkdownText(out var markdown))
                 await PlainFileExport.ToFile(this.RustService, this.EffectiveExportTitle, format, markdown);
         }
