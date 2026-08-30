@@ -8,13 +8,8 @@ namespace AIStudio.Tools;
 
 public static partial class PlainFileExport
 {
-    private static readonly ILogger LOGGER = Program.LOGGER_FACTORY.CreateLogger(nameof(PlainFileExport)); 
-    
-    private sealed record ExportTarget(string DisplayName, FileTypeFilter FileType);
-    
-    private static readonly ExportTarget MARKDOWN = new("Markdown (.md)", FileTypes.MARKDOWN);
-    private static readonly ExportTarget CSV = new("CSV (.csv)", FileTypes.CSV);
-    
+    private static readonly ILogger LOGGER = Program.LOGGER_FACTORY.CreateLogger(nameof(PlainFileExport));
+
     private static string TB(string fallbackEn) => I18N.I.T(fallbackEn, typeof(PlainFileExport).Namespace, nameof(PlainFileExport));
 
     /// <summary>
@@ -56,23 +51,26 @@ public static partial class PlainFileExport
         RegexOptions.IgnorePatternWhitespace)]
     private static partial Regex CsvCodeFenceRegex();
     
+    /// <summary>
+    /// Writes the given content to a plain text file and lets the user save it.
+    /// </summary>
+    /// <param name="rustService">The Rust service, used for the save dialog.</param>
+    /// <param name="format">The format to write. Must be a format which does not use Pandoc.</param>
+    /// <param name="markdownContent">The content to export.</param>
+    /// <returns>True, when the file was written.</returns>
     public static async Task<bool> ToFile(RustService rustService, FileExportFormat format, IContent markdownContent)
     {
-        var exportTarget = format switch
-        {
-            FileExportFormat.MARKDOWN => MARKDOWN,
-            FileExportFormat.CSV => CSV,
-            _ => throw new ArgumentOutOfRangeException(nameof(format), format, null),
-        };
-        
-        var response = await rustService.SaveFile(TB("Export chat"), [exportTarget.FileType]);
+        if (format.UsesPandoc() || format.ToFileTypeFilter() is not { } fileTypeFilter)
+            throw new ArgumentOutOfRangeException(nameof(format), format, "AI Studio cannot write this format itself.");
+
+        var response = await rustService.SaveFile(TB("Export chat"), [fileTypeFilter]);
         if (response.UserCancelled)
         {
             LOGGER.LogInformation("User cancelled the save dialog.");
             return false;
         }
 
-        LOGGER.LogInformation($"The user chose the path '{response.SaveFilePath}' for the {exportTarget.DisplayName} export.");
+        LOGGER.LogInformation("The user chose the path '{SaveFilePath}' for the {ExportFormat} export.", response.SaveFilePath, format);
 
         try
         {
@@ -95,7 +93,7 @@ public static partial class PlainFileExport
         }
         catch (Exception ex)
         {
-            LOGGER.LogError(ex, $"Error during {exportTarget.DisplayName} export.");
+            LOGGER.LogError(ex, "Error during {ExportFormat} export.", format);
             await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Cancel, TB("Error during document export")));
             return false;
         }

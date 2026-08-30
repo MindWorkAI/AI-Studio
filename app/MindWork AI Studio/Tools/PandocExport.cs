@@ -10,35 +10,31 @@ namespace AIStudio.Tools;
 
 public static class PandocExport
 {
-    private static readonly ILogger LOGGER = Program.LOGGER_FACTORY.CreateLogger(nameof(PandocExport)); 
-    private sealed record ExportTarget(string DisplayName, string PandocOutputFormat, FileTypeFilter FileType);
+    private static readonly ILogger LOGGER = Program.LOGGER_FACTORY.CreateLogger(nameof(PandocExport));
 
-    private static readonly ExportTarget MICROSOFT_WORD = new("Microsoft Word (.docx)", "docx", FileTypes.MS_WORD);
-    private static readonly ExportTarget OPEN_DOCUMENT_TEXT = new("OpenDocument Text (.odt)", "odt", FileTypes.ODT);
-    private static readonly ExportTarget HTML = new("Hypertext (.html)", "html", FileTypes.HTML);
-    private static readonly ExportTarget LATEX = new("LaTeX (.tex)", "latex", FileTypes.TEX);
-    
     private static string TB(string fallbackEn) => I18N.I.T(fallbackEn, typeof(PandocExport).Namespace, nameof(PandocExport));
-    
+
+    /// <summary>
+    /// Converts the given content to a document using Pandoc and lets the user save it.
+    /// </summary>
+    /// <param name="rustService">The Rust service, used for the save dialog and for Pandoc.</param>
+    /// <param name="dialogService">The dialog service, used to offer the Pandoc installation.</param>
+    /// <param name="format">The format to write. Must be a format which uses Pandoc.</param>
+    /// <param name="markdownContent">The content to export.</param>
+    /// <returns>True, when the document was written.</returns>
     public static async Task<bool> ToDocument(RustService rustService, IDialogService dialogService, FileExportFormat format, IContent markdownContent)
     {
-        var exportTarget = format switch
-        {
-            FileExportFormat.MICROSOFT_WORD => MICROSOFT_WORD,
-            FileExportFormat.OPEN_DOCUMENT_TEXT => OPEN_DOCUMENT_TEXT,
-            FileExportFormat.HTML => HTML,
-            FileExportFormat.LATEX => LATEX,
-            _ => throw new ArgumentOutOfRangeException(nameof(format), format, null),
-        };
+        if (!format.UsesPandoc() || format.ToFileTypeFilter() is not { } fileTypeFilter)
+            throw new ArgumentOutOfRangeException(nameof(format), format, "Pandoc cannot write this format.");
 
-        var response = await rustService.SaveFile(TB("Export chat"), [exportTarget.FileType]);
+        var response = await rustService.SaveFile(TB("Export chat"), [fileTypeFilter]);
         if (response.UserCancelled)
         {
             LOGGER.LogInformation("User cancelled the save dialog.");
             return false;
         }
 
-        LOGGER.LogInformation("The user chose the path '{SaveFilePath}' for the {ExportFormat} export.", response.SaveFilePath, exportTarget.DisplayName);
+        LOGGER.LogInformation("The user chose the path '{SaveFilePath}' for the {ExportFormat} export.", response.SaveFilePath, format);
 
         var tempMarkdownFilePath = string.Empty;
         try
@@ -84,7 +80,7 @@ public static class PandocExport
                 .Create()
                 .UseStandaloneMode()
                 .WithInputFormat("gfm+emoji+tex_math_dollars")
-                .WithOutputFormat(exportTarget.PandocOutputFormat)
+                .WithOutputFormat(format.ToPandocOutputFormat())
                 .WithOutputFile(response.SaveFilePath)
                 .WithInputFile(tempMarkdownFilePath)
                 .BuildAsync(rustService);
@@ -119,7 +115,7 @@ public static class PandocExport
         }
         catch (Exception ex)
         {
-            LOGGER.LogError(ex, "Error during {ExportFormat} export.", exportTarget.DisplayName);
+            LOGGER.LogError(ex, "Error during {ExportFormat} export.", format);
             await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Cancel, TB("Error during document export")));
             return false;
         }
