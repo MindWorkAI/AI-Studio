@@ -104,7 +104,7 @@ public sealed class ProviderLiteLLM(string hostname) : BaseProvider(LLMProviders
         // LiteLLM exposes an OpenAI-compatible API under the "/v1/" path. Users configure the
         // base URL of their LiteLLM proxy (e.g. http://localhost:4000); we normalize any trailing
         // slash and append the OpenAI-compatible path.
-        var normalizedHostname = (hostname ?? string.Empty).TrimEnd('/');
+        var normalizedHostname = hostname.TrimEnd('/');
         return new Uri($"{normalizedHostname}/v1/");
     }
 
