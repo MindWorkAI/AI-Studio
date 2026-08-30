@@ -60,9 +60,10 @@ public sealed class ProviderLiteLLM(string hostname) : BaseProvider(LLMProviders
     #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 
     /// <inheritdoc />
-    public override Task<TranscriptionResult> TranscribeAudioAsync(Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default)
+    public override async Task<TranscriptionResult> TranscribeAudioAsync(Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default)
     {
-        return Task.FromResult(TranscriptionResult.Failure());
+        var requestedSecret = await Program.RUST_SERVICE.GetAPIKey(this, SecretStoreType.TRANSCRIPTION_PROVIDER);
+        return await this.PerformStandardTranscriptionRequest(requestedSecret, transcriptionModel, audioFilePath, token: token);
     }
 
     /// <inheritdoc />
@@ -93,7 +94,7 @@ public sealed class ProviderLiteLLM(string hostname) : BaseProvider(LLMProviders
     /// <inheritdoc />
     public override Task<ModelLoadResult> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return Task.FromResult(ModelLoadResult.FromModels([]));
+        return this.LoadModels(SecretStoreType.TRANSCRIPTION_PROVIDER, static model => model.IsTranscriptionModel(), token, apiKeyProvisional);
     }
 
     #endregion

@@ -229,6 +229,7 @@ public static class LLMProvidersExtensions
         LLMProviders.GWDG => true,
         LLMProviders.HELMHOLTZ => true,
         LLMProviders.GROQ => true,
+        LLMProviders.LITE_LLM => true,
 
         //
         // Providers that support transcription but provide no OpenAI-compatible API yet:
@@ -247,7 +248,6 @@ public static class LLMProvidersExtensions
         LLMProviders.DEEP_SEEK => false,
         LLMProviders.HUGGINGFACE => false,
         LLMProviders.PERPLEXITY => false,
-        LLMProviders.LITE_LLM => false,
 
         //
         // Self-hosted providers are treated as a special case anyway.
