@@ -118,8 +118,20 @@ public sealed class ProviderLiteLLM(string hostname) : BaseProvider(LLMProviders
         return this.LoadModelsResponse<ModelsResponse>(
             storeType,
             "models",
-            modelResponse => modelResponse.Data.Where(isWantedKind),
+            modelResponse => modelResponse.Data.Where(IsRealModel).Where(isWantedKind),
             token,
             apiKeyProvisional);
     }
+
+    /// <summary>
+    /// Checks whether this entry is a model at all, or one of LiteLLM's wildcards.
+    /// </summary>
+    /// <remarks>
+    /// A LiteLLM configuration may pass a whole provider through at once, written as "openai/*" or
+    /// just "*". Those patterns show up among the models, but they are no models: asking the gateway
+    /// for one of them fails. No model carries an asterisk in its name, which makes it a safe mark.
+    /// </remarks>
+    /// <param name="model">The entry to check.</param>
+    /// <returns>True, when the entry is a model rather than a wildcard.</returns>
+    private static bool IsRealModel(Model model) => !model.Id.Contains('*');
 }

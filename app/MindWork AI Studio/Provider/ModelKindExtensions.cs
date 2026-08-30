@@ -23,6 +23,12 @@ namespace AIStudio.Provider;
 public static class ModelKindExtensions
 {
     //
+    // Checked first, because these entries are no models at all: whatever else their name might
+    // suggest, none of the other kinds applies to them.
+    //
+    private static readonly string[] OTHER_MARKERS = ["container"];
+
+    //
     // Reranking is checked before embedding: rerankers are commonly named after the embedding model
     // they belong to, e.g. Qwen3-VL-Reranker-8B next to Qwen3-VL-Embedding-8B.
     //
@@ -40,6 +46,8 @@ public static class ModelKindExtensions
 
     private static readonly string[] IMAGE_GENERATION_MARKERS = ["flux", "stable-diffusion", "sdxl", "dall-e", "midjourney", "gpt-image"];
 
+    private static readonly string[] VIDEO_GENERATION_MARKERS = ["sora", "veo-", "kling", "runway"];
+
     //
     // Voxtral is marketed as an audio model which understands speech, so one could expect it to work
     // in a chat as well. It does not: asking Mistral for a chat completion with 'voxtral-mini-latest'
@@ -48,7 +56,21 @@ public static class ModelKindExtensions
     //
     private static readonly string[] TRANSCRIPTION_MARKERS = ["whisper", "-transcribe", "wav2vec", "parakeet", "voxtral"];
 
-    private static readonly string[] SPEECH_SYNTHESIS_MARKERS = ["-tts", "tts-", "-speech", "speech-"];
+    //
+    // Besides the pure text-to-speech models, this covers the models which answer in audio, such as
+    // 'gpt-audio' and 'gpt-4o-audio-preview'. Those do accept a text-only request, but they are made
+    // for spoken conversations, and the providers offering them directly keep them out of their chat
+    // model lists as well.
+    //
+    private static readonly string[] SPEECH_SYNTHESIS_MARKERS = ["-tts", "tts-", "-speech", "speech-", "-audio", "audio-"];
+
+    //
+    // The models for spoken conversations over a live connection. They speak their own protocol,
+    // usually a WebSocket, and answer a chat completion request with an error. Checked before
+    // transcription, because some of them carry the name of a transcription model, such as
+    // OpenAI's 'gpt-realtime-whisper'. Those still need the live connection.
+    //
+    private static readonly string[] REALTIME_MARKERS = ["realtime"];
 
     private static readonly string[] OCR_MARKERS = ["ocr"];
 
@@ -64,6 +86,9 @@ public static class ModelKindExtensions
         if (string.IsNullOrWhiteSpace(model.Id) || model.IsSystemModel)
             return ModelKind.CHAT;
 
+        if (HasAnyMarker(model.Id, OTHER_MARKERS))
+            return ModelKind.OTHER;
+
         if (HasAnyMarker(model.Id, RERANKING_MARKERS))
             return ModelKind.RERANKING;
 
@@ -75,6 +100,12 @@ public static class ModelKindExtensions
 
         if (HasAnyMarker(model.Id, IMAGE_GENERATION_MARKERS))
             return ModelKind.IMAGE_GENERATION;
+
+        if (HasAnyMarker(model.Id, VIDEO_GENERATION_MARKERS))
+            return ModelKind.VIDEO_GENERATION;
+
+        if (HasAnyMarker(model.Id, REALTIME_MARKERS))
+            return ModelKind.REALTIME;
 
         if (HasAnyMarker(model.Id, TRANSCRIPTION_MARKERS))
             return ModelKind.TRANSCRIPTION;
@@ -111,6 +142,13 @@ public static class ModelKindExtensions
     /// <param name="model">The model to check.</param>
     /// <returns>True, when the model is a transcription model.</returns>
     public static bool IsTranscriptionModel(this Model model) => model.DetermineKind() is ModelKind.TRANSCRIPTION;
+
+    /// <summary>
+    /// Checks whether this model generates images.
+    /// </summary>
+    /// <param name="model">The model to check.</param>
+    /// <returns>True, when the model is an image generation model.</returns>
+    public static bool IsImageModel(this Model model) => model.DetermineKind() is ModelKind.IMAGE_GENERATION;
 
     private static bool HasAnyMarker(string modelId, string[] markers)
     {
