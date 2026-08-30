@@ -47,6 +47,12 @@ public sealed record Confidence
         Description = TB("The trust level of this provider **has not yet** been thoroughly **investigated and evaluated**. We do not know if your data is safe."),
     };
 
+    public static readonly Confidence USER_OPERATED_GATEWAY = new()
+    {
+        Level = ConfidenceLevel.UNKNOWN,
+        Description = TB("You or your organization operate this gateway. However, it forwards your data to **whichever providers you configured behind it**, which may be cloud services in any jurisdiction. We cannot know where your data ends up, so **please assign the trust level yourself**."),
+    };
+
     public static readonly Confidence USA_NO_TRAINING = new()
     {
         Level = ConfidenceLevel.MODERATE,

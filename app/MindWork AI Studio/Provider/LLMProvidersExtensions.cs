@@ -9,6 +9,7 @@ using AIStudio.Provider.Helmholtz;
 using AIStudio.Provider.Hetzner;
 using AIStudio.Provider.HuggingFace;
 using AIStudio.Provider.IONOS;
+using AIStudio.Provider.LiteLLM;
 using AIStudio.Provider.Mistral;
 using AIStudio.Provider.OpenAI;
 using AIStudio.Provider.OpenRouter;
@@ -60,11 +61,12 @@ public static class LLMProvidersExtensions
         LLMProviders.OPEN_ROUTER => "OpenRouter",
         LLMProviders.HETZNER => "Hetzner (Experimental)",
         LLMProviders.IONOS => "IONOS",
+        LLMProviders.LITE_LLM => "LiteLLM",
 
         LLMProviders.GROQ => "Groq",
         LLMProviders.FIREWORKS => "Fireworks.ai",
         LLMProviders.HUGGINGFACE => "Hugging Face",
-        
+
         LLMProviders.SELF_HOSTED => translate ? TB("Self-hosted") : "Self-hosted",
         
         LLMProviders.HELMHOLTZ => "Helmholtz Blablador",
@@ -97,6 +99,7 @@ public static class LLMProvidersExtensions
         LLMProviders.OPEN_ROUTER => "OpenRouter",
         LLMProviders.HETZNER => "Hetzner",
         LLMProviders.IONOS => "IONOS",
+        LLMProviders.LITE_LLM => "LiteLLM",
 
         LLMProviders.GROQ => "Groq",
         LLMProviders.FIREWORKS => "Fireworks.ai",
@@ -161,6 +164,12 @@ public static class LLMProvidersExtensions
             "https://www.ionos.com/terms-gtc/privacy-policy/"
         ).WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
 
+        // LiteLLM is a gateway the user runs, but it is not a self-hosted LLM: the proxy owner decides
+        // which downstream providers it routes to, and those are usually cloud services. Self-hosting
+        // the proxy therefore says nothing about where the data ends up, so we do not claim the trust
+        // of a self-hosted model here and let the user assign the level themselves.
+        LLMProviders.LITE_LLM => Confidence.USER_OPERATED_GATEWAY.WithSources("https://docs.litellm.ai/docs/data_security").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
+
         LLMProviders.SELF_HOSTED => Confidence.SELF_HOSTED.WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
         
         LLMProviders.HELMHOLTZ => Confidence.GDPR_NO_TRAINING.WithRegion("Europe, Germany").WithSources("https://helmholtz.cloud/services/?serviceID=d7d5c597-a2f6-4bd1-b71e-4d6499d98570").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
@@ -187,6 +196,7 @@ public static class LLMProvidersExtensions
         LLMProviders.IONOS => true,
         LLMProviders.GWDG => true,
         LLMProviders.OPEN_ROUTER => true,
+        LLMProviders.LITE_LLM => true,
 
         //
         // Providers that do not support embeddings:
@@ -204,10 +214,10 @@ public static class LLMProvidersExtensions
         // Self-hosted providers are treated as a special case anyway.
         //
         LLMProviders.SELF_HOSTED => true,
-        
+
         _ => false,
     };
-    
+
     public static bool ProvideTranscriptionAPI(this LLMProviders llmProvider) => llmProvider switch
     {
         //
@@ -219,6 +229,7 @@ public static class LLMProvidersExtensions
         LLMProviders.GWDG => true,
         LLMProviders.HELMHOLTZ => true,
         LLMProviders.GROQ => true,
+        LLMProviders.LITE_LLM => true,
 
         //
         // Providers that support transcription but provide no OpenAI-compatible API yet:
@@ -293,6 +304,7 @@ public static class LLMProvidersExtensions
                 LLMProviders.OPEN_ROUTER => new ProviderOpenRouter { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, IsEnterpriseConfiguration = isEnterpriseConfiguration },
                 LLMProviders.HETZNER => new ProviderHetzner { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, IsEnterpriseConfiguration = isEnterpriseConfiguration },
                 LLMProviders.IONOS => new ProviderIONOS { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, IsEnterpriseConfiguration = isEnterpriseConfiguration },
+                LLMProviders.LITE_LLM => new ProviderLiteLLM(hostname) { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, IsEnterpriseConfiguration = isEnterpriseConfiguration },
 
                 LLMProviders.GROQ => new ProviderGroq { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, IsEnterpriseConfiguration = isEnterpriseConfiguration },
                 LLMProviders.FIREWORKS => new ProviderFireworks { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, IsEnterpriseConfiguration = isEnterpriseConfiguration },
@@ -436,6 +448,7 @@ public static class LLMProvidersExtensions
     public static bool IsHostnameNeeded(this LLMProviders provider) => provider switch
     {
         LLMProviders.SELF_HOSTED => true,
+        LLMProviders.LITE_LLM => true,
         _ => false,
     };
 
@@ -452,15 +465,16 @@ public static class LLMProvidersExtensions
         LLMProviders.OPEN_ROUTER => true,
         LLMProviders.HETZNER => true,
         LLMProviders.IONOS => true,
+        LLMProviders.LITE_LLM => true,
 
         LLMProviders.GROQ => true,
         LLMProviders.FIREWORKS => true,
         LLMProviders.HELMHOLTZ => true,
         LLMProviders.GWDG => true,
         LLMProviders.HUGGINGFACE => true,
-        
+
         LLMProviders.SELF_HOSTED => host is (Host.OLLAMA or Host.VLLM),
-        
+
         _ => false,
     };
 

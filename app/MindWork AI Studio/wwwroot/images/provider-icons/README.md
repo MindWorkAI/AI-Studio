@@ -9,6 +9,7 @@ All provider icons are shipped with AI Studio and loaded locally. No icon trigge
 - `openai*.svg` uses the OpenAI mark path from [Simple Icons 15.15.0](https://github.com/simple-icons/simple-icons/blob/15.15.0/icons/openai.svg) and black/white variants following the [OpenAI Design Guidelines](https://openai.com/brand/).
 - `fireworks.svg` is adapted from the [Fireworks AI site icon](https://fireworks.ai/icon0.svg).
 - `groq.svg` is adapted from the [Groq site icon](https://groq.com/favicon.svg).
+- `litellm.svg` is the bullet train emoji from [Twemoji 17.0.3](https://github.com/jdecked/twemoji/tree/v17.0.3), licensed under [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/). LiteLLM has no mark of its own and identifies itself with that emoji. Retrieved on 2026-08-30.
 - `provider*.svg` and `self-hosted*.svg` are neutral project-owned fallback graphics.
 - `gwdg.svg`, `openrouter.svg`, `google.svg` and `helmholtz.svg` were created by taking the official logo from their respective websites as images and creating a svg from them.
 

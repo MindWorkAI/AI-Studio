@@ -26,7 +26,12 @@ public sealed class ProviderValidation
 
     public string? ValidatingHostname(string hostname)
     {
-        if(this.GetProvider() != LLMProviders.SELF_HOSTED)
+        //
+        // Every provider for which IsHostnameNeeded is true must be validated here. Otherwise,
+        // the dialog shows a hostname field which nobody checks, and the provider silently ends
+        // up as a NoProvider later on, because its base URI cannot be built:
+        //
+        if(this.GetProvider() is not (LLMProviders.SELF_HOSTED or LLMProviders.LITE_LLM))
             return null;
         
         if(string.IsNullOrWhiteSpace(hostname))
