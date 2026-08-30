@@ -1,17 +1,25 @@
 using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Services;
 
 using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Components;
 
-public abstract class MSGComponentBase : ComponentBase, IDisposable, IMessageBusReceiver, ILang
+public abstract class MSGComponentBase : ComponentBase, IDisposable, IAsyncDisposable, IMessageBusReceiver, ILang
 {
     [Inject]
     protected SettingsManager SettingsManager { get; init; } = null!;
     
     [Inject]
     protected MessageBus MessageBus { get; init; } = null!;
+
+    /// <summary>
+    /// The circuit this component lives in. Use it before any JS interop: while its connection is down,
+    /// the browser is unreachable, although the component itself keeps working.
+    /// </summary>
+    [Inject]
+    protected CircuitStateService CircuitState { get; init; } = null!;
 
     private ILanguagePlugin Lang { get; set; } = PluginFactory.BaseLanguage;
 
@@ -21,7 +29,7 @@ public abstract class MSGComponentBase : ComponentBase, IDisposable, IMessageBus
     {
         this.Lang = await this.SettingsManager.GetActiveLanguagePlugin();
         
-        this.MessageBus.RegisterComponent(this);
+        this.MessageBus.RegisterComponent(this, this.CircuitState);
         await base.OnInitializedAsync();
     }
 
@@ -103,16 +111,47 @@ public abstract class MSGComponentBase : ComponentBase, IDisposable, IMessageBus
         this.MessageBus.ApplyFilters(this, filterComponents, eventsList.ToHashSet());
     }
     
+    /// <summary>
+    /// Releases what this component has acquired. Override this instead of implementing
+    /// IDisposable again, so the deregistration from the message bus cannot be lost.
+    /// </summary>
     protected virtual void DisposeResources()
     {
     }
-    
+
+    /// <summary>
+    /// Releases what this component has acquired and needs an await to release. Override this
+    /// instead of implementing IAsyncDisposable, see the remarks on DisposeAsync below.
+    /// </summary>
+    protected virtual ValueTask DisposeResourcesAsync() => ValueTask.CompletedTask;
+
     #region Implementation of IDisposable
 
     public void Dispose()
     {
         this.MessageBus.Unregister(this);
         this.DisposeResources();
+    }
+
+    #endregion
+
+    #region Implementation of IAsyncDisposable
+
+    /// <summary>
+    /// Releases this component asynchronously.
+    /// </summary>
+    /// <remarks>
+    /// This base class implements both ways of disposing on purpose. Blazor calls only DisposeAsync
+    /// when a component offers both, so a derived component which implements IAsyncDisposable on
+    /// its own would silently skip everything Dispose does — above all the deregistration from the
+    /// message bus, which holds a strong reference to every receiver. Deriving components override
+    /// DisposeResources or DisposeResourcesAsync instead, and this stays the one place which knows
+    /// about both.
+    /// </remarks>
+    public async ValueTask DisposeAsync()
+    {
+        await this.DisposeResourcesAsync();
+        this.Dispose();
     }
 
     #endregion

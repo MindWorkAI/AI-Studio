@@ -93,7 +93,7 @@ public partial class Plugins : MSGComponentBase
     protected override void DisposeResources()
     {
         // Release the drop area again, so lower layers can catch dropped files:
-        _ = this.MessageBus.SendMessage(this, Event.UNREGISTER_FILE_DROP_AREA, DropLayers.PAGES);
+        this.MessageBus.SendMessage(this, Event.UNREGISTER_FILE_DROP_AREA, DropLayers.PAGES).Observe($"{nameof(Plugins)}: releasing the drop area");
         base.DisposeResources();
     }
 
@@ -101,6 +101,15 @@ public partial class Plugins : MSGComponentBase
 
     private async Task PluginActivationStateChanged(IPluginMetadata pluginMeta)
     {
+        //
+        // The switch is disabled for these, so this cannot be reached through the user interface. We
+        // check anyway: removing the plugin from the enabled list would achieve nothing, because the
+        // activation is decided live, but it would leave the settings in a state which claims the
+        // opposite of what the user sees:
+        //
+        if (PluginFactory.IsAssistantActivationEnforced(pluginMeta.Id))
+            return;
+
         if (this.SettingsManager.IsPluginEnabled(pluginMeta))
         {
             this.SettingsManager.ConfigurationData.EnabledPlugins.Remove(pluginMeta.Id);
@@ -175,7 +184,7 @@ public partial class Plugins : MSGComponentBase
             {
                 x => x.Message,
                 string.Format(
-                    this.T("The assistant plugin '{0}' was audited with the level '{1}', which is below the required minimum level \"{2}\". Your current settings allow activation anyway, but this may be potentially dangerous. Do you really want to enable this plugin?"),
+                    this.T("The assistant plugin '{0}' was audited with the level '{1}', which is below the required minimum level '{2}'. Your current settings allow activation anyway, but this may be potentially dangerous. Do you really want to enable this plugin?"),
                     pluginName,
                     actualLevel.GetName(),
                     this.AssistantPluginAuditSettings.MinimumLevel.GetName())
@@ -190,6 +199,10 @@ public partial class Plugins : MSGComponentBase
     
     private bool IsActivationSwitchDisabled(IPluginMetadata pluginMeta, bool isEnabled)
     {
+        // An assistant plugin your organization requires to stay enabled has no switch to offer:
+        if (PluginFactory.IsAssistantActivationEnforced(pluginMeta.Id))
+            return true;
+
         if (isEnabled || pluginMeta.Type is not PluginType.ASSISTANT)
             return false;
 
@@ -203,6 +216,9 @@ public partial class Plugins : MSGComponentBase
 
     private string GetActivationTooltip(IPluginMetadata pluginMeta, bool isEnabled)
     {
+        if (PluginFactory.IsAssistantActivationEnforced(pluginMeta.Id))
+            return this.T("Your organization requires this assistant to stay enabled");
+
         if (isEnabled)
             return this.T("Disable plugin");
 
@@ -227,7 +243,16 @@ public partial class Plugins : MSGComponentBase
     // transient state like an ongoing share: they gate the markup, so a transient value would make
     // the action buttons disappear and reappear. Transient state belongs into the buttons' Disabled.
     //
-    private static bool CanEditAssistantPlugin(IAvailablePlugin plugin) => plugin is { IsInternal: false, Type: PluginType.ASSISTANT } && !string.IsNullOrWhiteSpace(plugin.LocalPath);
+    private static bool CanEditAssistantPlugin(IAvailablePlugin plugin) => plugin is { IsInternal: false, IsManagedByConfigServer: false, Type: PluginType.ASSISTANT } && !string.IsNullOrWhiteSpace(plugin.LocalPath);
+
+    /// <summary>
+    /// Whether this plugin is a direct chat launcher whose settings can be changed without AI.
+    /// </summary>
+    private static bool IsDirectChatLauncher(IAvailablePlugin plugin)
+    {
+        var assistantPlugin = PluginFactory.RunningPlugins.OfType<PluginAssistants>().FirstOrDefault(x => x.Id == plugin.Id);
+        return assistantPlugin is not null && DirectChatLauncherLuaWriter.CanRewrite(assistantPlugin);
+    }
 
     private static bool CanReviseAssistantPlugin(IAvailablePlugin plugin)
     {
@@ -298,6 +323,17 @@ public partial class Plugins : MSGComponentBase
 
     private async Task OpenAssistantPluginRevisionDialogAsync(IAvailablePlugin plugin)
     {
+        //
+        // Changing a launcher means picking a different workspace, provider, profile, chat template,
+        // or set of data sources. Prompting a model for that would be a detour, so launchers go to
+        // the mechanical dialog instead:
+        //
+        if (IsDirectChatLauncher(plugin))
+        {
+            await this.OpenDirectChatLauncherSettingsDialogAsync(plugin);
+            return;
+        }
+
         var parameters = new DialogParameters<AssistantPluginRevisionDialog>
         {
             { x => x.PluginId, plugin.Id },
@@ -313,6 +349,28 @@ public partial class Plugins : MSGComponentBase
         LOG.LogInformation($"The assistant plugin '{result.PluginName}' ({result.PluginId}) has been successfully revised.");
 
         // Saving the revision ran LoadAll, which already sent PLUGINS_RELOADED. We still announce the
+        // configuration change: with automatic audits enabled, the dialog stored an audit result:
+        await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+        await this.InvokeAsync(this.StateHasChanged);
+    }
+
+    private async Task OpenDirectChatLauncherSettingsDialogAsync(IAvailablePlugin plugin)
+    {
+        var parameters = new DialogParameters<DirectChatLauncherSettingsDialog>
+        {
+            { x => x.PluginId, plugin.Id },
+            { x => x.PluginLocalPath, plugin.LocalPath },
+        };
+
+        var dialogReference = await this.DialogService.ShowAsync<DirectChatLauncherSettingsDialog>(this.T("Tile Settings"), parameters, DialogOptions.BLOCKING_FULLSCREEN);
+        var dialogResult = await dialogReference.Result;
+        if (dialogResult is null || dialogResult.Canceled || dialogResult.Data is not DirectChatLauncherSettingsDialogResult result)
+            return;
+
+        await this.MessageBus.SendSuccess(new(Icons.Material.Filled.Save, string.Format(this.T("The tile '{0}' has been updated."), result.PluginName)));
+        LOG.LogInformation($"The chat launcher '{result.PluginName}' ({result.PluginId}) has been successfully updated.");
+
+        // Saving ran LoadAll, which already sent PLUGINS_RELOADED. We still announce the
         // configuration change: with automatic audits enabled, the dialog stored an audit result:
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
         await this.InvokeAsync(this.StateHasChanged);

@@ -63,7 +63,7 @@ public partial class Workspaces : MSGComponentBase
         this.MediaTranscriptionService.StateChanged += this.OnMediaImportStateChanged;
         await base.OnInitializedAsync();
         this.ApplyFilters([], [ Event.AI_JOB_CHANGED, Event.AI_JOB_FINISHED, Event.CHAT_GENERATION_CHANGED, Event.WORKSPACE_CREATED ]);
-        _ = this.LoadTreeItemsAsync(startPrefetch: true);
+        this.LoadTreeItemsAsync(startPrefetch: true).Observe($"{nameof(Workspaces)}: loading the workspace tree");
     }
 
     #endregion
@@ -445,7 +445,7 @@ public partial class Workspaces : MSGComponentBase
     private void OnMediaImportStateChanged(MediaImportOwner owner)
     {
         if (owner.Kind is MediaImportOwnerKind.CHAT)
-            _ = this.SafeStateHasChanged();
+            this.SafeStateHasChanged().Observe($"{nameof(Workspaces)}: rendering a media import change");
     }
 
     private async Task SafeStateHasChanged()

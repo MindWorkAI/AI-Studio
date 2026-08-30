@@ -64,9 +64,10 @@ public class ProviderGroq() : BaseProvider(LLMProviders.GROQ, new Uri("https://a
     #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
     
     /// <inheritdoc />
-    public override Task<TranscriptionResult> TranscribeAudioAsync(Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default)
+    public override async Task<TranscriptionResult> TranscribeAudioAsync(Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default)
     {
-        return Task.FromResult(TranscriptionResult.Failure());
+        var requestedSecret = await Program.RUST_SERVICE.GetAPIKey(this, SecretStoreType.TRANSCRIPTION_PROVIDER);
+        return await this.PerformStandardTranscriptionRequest(requestedSecret, transcriptionModel, audioFilePath, token: token);
     }
     
     /// <inhertidoc />
@@ -76,9 +77,13 @@ public class ProviderGroq() : BaseProvider(LLMProviders.GROQ, new Uri("https://a
     }
 
     /// <inheritdoc />
-    public override Task<ModelLoadResult> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override async Task<ModelLoadResult> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModels(SecretStoreType.LLM_PROVIDER, token, apiKeyProvisional);
+        var result = await this.LoadModels(SecretStoreType.LLM_PROVIDER, token, apiKeyProvisional);
+        return result with
+        {
+            Models = [..result.Models.Where(model => model.IsChatModel())]
+        };
     }
 
     /// <inheritdoc />
@@ -94,9 +99,13 @@ public class ProviderGroq() : BaseProvider(LLMProviders.GROQ, new Uri("https://a
     }
     
     /// <inheritdoc />
-    public override Task<ModelLoadResult> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override async Task<ModelLoadResult> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return Task.FromResult(ModelLoadResult.FromModels([]));
+        var result = await this.LoadModels(SecretStoreType.TRANSCRIPTION_PROVIDER, token, apiKeyProvisional);
+        return result with
+        {
+            Models = [..result.Models.Where(model => model.IsTranscriptionModel())]
+        };
     }
     
     #endregion
@@ -106,10 +115,7 @@ public class ProviderGroq() : BaseProvider(LLMProviders.GROQ, new Uri("https://a
         return this.LoadModelsResponse<ModelsResponse>(
             storeType,
             "models",
-            modelResponse => modelResponse.Data.Where(n =>
-                !n.Id.StartsWith("whisper-", StringComparison.OrdinalIgnoreCase) &&
-                !n.Id.StartsWith("distil-", StringComparison.OrdinalIgnoreCase) &&
-                !n.Id.Contains("-tts", StringComparison.OrdinalIgnoreCase)),
+            modelResponse => modelResponse.Data,
             token,
             apiKeyProvisional);
     }

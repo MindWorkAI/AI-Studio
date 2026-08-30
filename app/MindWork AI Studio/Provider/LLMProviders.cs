@@ -16,7 +16,9 @@ public enum LLMProviders
     ALIBABA_CLOUD = 12,
     PERPLEXITY = 14,
     OPEN_ROUTER = 15,
-    LITE_LLM = 16,
+    HETZNER = 16,
+    IONOS = 17,
+    LITE_LLM = 18,
 
     FIREWORKS = 5,
     GROQ = 6,

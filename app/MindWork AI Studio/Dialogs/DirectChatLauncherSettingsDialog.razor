@@ -1,0 +1,80 @@
+@inherits MSGComponentBase
+
+<MudDialog DefaultFocus="DefaultFocus.None">
+    <DialogContent>
+        <MudStack Spacing="3">
+            @if (!string.IsNullOrWhiteSpace(this.issue))
+            {
+                <MudAlert Severity="Severity.Error" Dense="@true">
+                    @this.issue
+                </MudAlert>
+            }
+
+            @if (this.isLoading)
+            {
+                <MudProgressLinear Indeterminate="@true" Color="Color.Primary"/>
+            }
+            else if (this.assistantPlugin is not null && this.canEdit)
+            {
+                <MudText Typo="Typo.body2" Class="mud-text-secondary">
+                    @T("This tile opens a chat directly, so there is nothing to prompt for: pick what the chat should start with. AI Studio rewrites the plugin itself, without asking a model.")
+                </MudText>
+
+                <MudForm @ref="@this.form">
+                    @* The dashed frame shows that these fields belong together: they describe one
+                       chat the launcher tile opens. *@
+                    <MudPaper Class="pa-3 border-dashed border rounded-lg">
+                        <MudTextField T="string" @bind-Text="@this.pluginName" Validation="@this.ValidatePluginName" AdornmentIcon="@Icons.Material.Filled.Extension" Adornment="Adornment.Start" IconSize="Size.Small" Label="@T("Plugin name")" HelperText="@T("The name shown on the plugins page.")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3" Disabled="@this.IsBusy"/>
+                        <MudTextField T="string" @bind-Text="@this.title" Validation="@this.ValidateTitle" AdornmentIcon="@Icons.Material.Filled.Assistant" Adornment="Adornment.Start" IconSize="Size.Small" Label="@T("Tile title")" HelperText="@T("The title shown on the tile.")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3" Disabled="@this.IsBusy"/>
+                        <MudTextField T="string" @bind-Text="@this.description" Validation="@this.ValidateDescription" AdornmentIcon="@Icons.Material.Filled.Notes" Adornment="Adornment.Start" IconSize="Size.Small" Label="@T("Description")" HelperText="@T("Shown on the tile and on the plugins page.")" Variant="Variant.Outlined" Margin="Margin.Dense" Lines="2" AutoGrow="@true" MaxLines="6" Class="mb-3" Disabled="@this.IsBusy"/>
+                        <DirectChatLauncherForm @bind-WorkspaceName="@this.workspaceName"
+                                                @bind-ProviderId="@this.providerId"
+                                                @bind-ProfileId="@this.profileId"
+                                                @bind-ChatTemplateId="@this.chatTemplateId"
+                                                @bind-DataSourceIds="@this.dataSourceIds"
+                                                ValidateWorkspaceName="@this.ValidateWorkspaceName"/>
+                    </MudPaper>
+                </MudForm>
+
+                @* The panel content is only built while it is open, so the plugin is written just
+                   for users who want to look at it. *@
+                <MudExpansionPanels Dense="@true" Elevation="0">
+                    <MudExpansionPanel Dense="@true" Class="border-solid border rounded pt-n4" Style="border-color: #BDBDBD">
+                        <TitleContent>
+                            <div class="d-flex align-center">
+                                <MudIcon Icon="@Icons.Material.Filled.Code" Class="mr-3" Color="Color.Primary"/>
+                                <MudText Typo="Typo.button">
+                                    @T("Resulting Lua plugin")
+                                </MudText>
+                            </div>
+                        </TitleContent>
+                        <ChildContent>
+                            <MudTextField T="string" Text="@this.BuildLua()" ReadOnly="@true" Variant="Variant.Outlined" Lines="18" Class="mt-2" Style="font-family: monospace"/>
+                        </ChildContent>
+                    </MudExpansionPanel>
+                </MudExpansionPanels>
+
+                @if (this.IsBusy)
+                {
+                    <MudProgressLinear Indeterminate="@true" Color="Color.Primary"/>
+                    <MudText Typo="Typo.body2">
+                        @(this.isAuditing ? T("Running security audit...") : T("Saving the tile..."))
+                    </MudText>
+                }
+            }
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Cancel" Disabled="@this.IsBusy" Size="Size.Small">
+            @T("Cancel")
+        </MudButton>
+        <MudButton OnClick="@(async () => await this.SaveAsync())"
+                   Disabled="@(!this.CanSave)"
+                   Color="Color.Primary"
+                   Variant="Variant.Filled"
+                   StartIcon="@Icons.Material.Filled.Save"
+                   Size="Size.Small">
+            @T("Save tile")
+        </MudButton>
+    </DialogActions>
+</MudDialog>

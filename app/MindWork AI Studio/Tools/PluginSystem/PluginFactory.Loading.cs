@@ -133,38 +133,58 @@ public static partial class PluginFactory
                         AVAILABLE_PLUGINS.Remove(duplicatePlugin);
                     }
 
-                    var isConfigurationPluginInConfigDirectory = plugin.Type is PluginType.CONFIGURATION && IsEnterpriseConfigurationPath(pluginPath);
-                    var isManagedByConfigServer = false;
+                    //
+                    // An organization may deploy any kind of plugin, not just configurations: the
+                    // archive it serves under a configuration ID often carries an assistant plugin
+                    // in a subdirectory as well. Everything stored below one of the organization's
+                    // directories therefore belongs to that organization, whatever its type is and
+                    // however deeply it is nested:
+                    //
+                    var isInOrganizationDirectory = IsOrganizationConfigurationPath(pluginPath);
+
                     Guid? managedConfigurationId = null;
                     var configurationPriority = 0;
+                    bool? declaredAsManagedByConfigServer = null;
                     if (plugin is PluginConfiguration configPlugin)
                     {
                         configurationPriority = configPlugin.Priority;
-                        if (configPlugin.DeployedUsingConfigServer.HasValue)
-                            isManagedByConfigServer = configPlugin.DeployedUsingConfigServer.Value;
-
-                        else if (isConfigurationPluginInConfigDirectory)
-                        {
-                            isManagedByConfigServer = true;
-                            LOG.LogWarning($"The configuration plugin '{plugin.Id}' does not define 'DEPLOYED_USING_CONFIG_SERVER'. Falling back to the plugin path and treating it as managed because it is stored under '{ENTERPRISE_CONFIGURATION_PLUGINS_ROOT}'.");
-                        }
+                        declaredAsManagedByConfigServer = configPlugin.DeployedUsingConfigServer;
                     }
-                    else if (plugin is PluginAssistants assistantPlugin)
-                        isManagedByConfigServer = assistantPlugin.IsManagedByConfigServer;
+                    else if (plugin is PluginAssistants { HasDeploymentManagementMetadata: true } assistantPlugin)
+                        declaredAsManagedByConfigServer = assistantPlugin.IsManagedByConfigServer;
 
-                    // For configuration plugins, validate that the plugin ID matches the enterprise config ID
-                    // (the directory name under which the plugin was downloaded):
-                    if (isConfigurationPluginInConfigDirectory && isManagedByConfigServer)
+                    //
+                    // The plugin path outranks what a plugin declares about itself. A plugin an
+                    // organization deployed could otherwise deny it and escape the withdrawal of that
+                    // configuration, while keeping every right the directory grants it:
+                    //
+                    var isManagedByConfigServer = isInOrganizationDirectory || declaredAsManagedByConfigServer is true;
+                    switch (declaredAsManagedByConfigServer)
                     {
-                        var directoryName = Path.GetFileName(pluginPath);
-                        if (Guid.TryParse(directoryName, out var enterpriseConfigId))
+                        case null when isInOrganizationDirectory:
+                            LOG.LogWarning($"The {plugin.Type} plugin '{plugin.Id}' does not define 'DEPLOYED_USING_CONFIG_SERVER'. Falling back to the plugin path and treating it as managed because it is stored under '{pluginPath}'.");
+                            break;
+
+                        case false when isInOrganizationDirectory:
+                            LOG.LogWarning($"The {plugin.Type} plugin '{plugin.Id}' declares 'DEPLOYED_USING_CONFIG_SERVER = false', but it is stored under '{pluginPath}' and therefore belongs to your organization. Treating it as managed. Please fix the plugin.");
+                            break;
+                    }
+
+                    //
+                    // Which configuration a plugin was deployed with is what ties it to the archive it
+                    // came from. Only the configuration plugin itself must carry the configuration ID
+                    // as its own ID: a plugin deployed alongside it has an ID of its own:
+                    //
+                    if (IsEnterpriseConfigurationPath(pluginPath))
+                    {
+                        if (TryGetDeployedConfigurationId(pluginPath, out var enterpriseConfigId))
                         {
                             managedConfigurationId = enterpriseConfigId;
-                            if (enterpriseConfigId != plugin.Id)
+                            if (plugin.Type is PluginType.CONFIGURATION && enterpriseConfigId != plugin.Id)
                                 LOG.LogWarning($"The configuration plugin's ID ('{plugin.Id}') does not match the enterprise configuration ID ('{enterpriseConfigId}'). These IDs should be identical. Please update the plugin's ID field to match the enterprise configuration ID.");
                         }
                         else
-                            LOG.LogWarning($"Could not determine the managed configuration ID for configuration plugin '{plugin.Id}'. The plugin directory '{pluginPath}' does not end with a valid GUID.");
+                            LOG.LogWarning($"Could not determine the managed configuration ID for the {plugin.Type} plugin '{plugin.Id}'. The plugin directory '{pluginPath}' is not nested in a directory named after a configuration ID.");
                     }
 
                     AVAILABLE_PLUGINS.Add(new PluginMetadata(plugin, pluginPath, isManagedByConfigServer, managedConfigurationId, configurationPriority));
@@ -212,9 +232,28 @@ public static partial class PluginFactory
         foreach (var testConfigurationPlugin in AVAILABLE_PLUGINS.Where(plugin => plugin.Type is PluginType.CONFIGURATION && IsEnterpriseTestConfigurationPath(plugin.LocalPath)))
             deployedEnterpriseConfigPluginIds.Add(testConfigurationPlugin.Id);
 
+        //
+        // A deployment does not have to contain a configuration plugin under its own ID: an
+        // organization uses the same channel to roll out assistant plugins and other plugin types.
+        // We therefore collect which deployments contributed a plugin at all, so that such a rollout
+        // is not mistaken for a configuration nobody could read:
+        //
+        var configurationIdsWithLoadedPlugins = AVAILABLE_PLUGINS
+            .Where(plugin => plugin.ManagedConfigurationId.HasValue)
+            .Select(plugin => plugin.ManagedConfigurationId!.Value)
+            .ToHashSet();
+
         var unloadedEnterpriseConfigPluginIds = deployedEnterpriseConfigPluginIds.Where(x => AVAILABLE_PLUGINS.All(plugin => plugin.Id != x)).ToList();
         foreach (var unloadedEnterpriseConfigPluginId in unloadedEnterpriseConfigPluginIds)
+        {
+            if (configurationIdsWithLoadedPlugins.Contains(unloadedEnterpriseConfigPluginId))
+            {
+                LOG.LogInformation($"The deployment '{unloadedEnterpriseConfigPluginId}' contains no configuration plugin of its own, but other plugins your organization deployed with it were loaded. Should you expect a configuration plugin here, please check the errors above.");
+                continue;
+            }
+
             LOG.LogWarning($"The configuration plugin '{unloadedEnterpriseConfigPluginId}' is deployed, but was not loaded. Everything it manages stays unchanged, because the plugin was not removed. Please check the errors above and fix the plugin.");
+        }
 
         // Check LLM providers:
         var wasConfigurationChanged = await PluginConfigurationObject.CleanLeftOverConfigurationObjects(PluginConfigurationObjectType.LLM_PROVIDER, x => x.Providers, AVAILABLE_PLUGINS, deployedEnterpriseConfigPluginIds, configObjectList, SecretStoreType.LLM_PROVIDER);
@@ -260,6 +299,14 @@ public static partial class PluginFactory
         // security audit for assistant plugins the organization has approved:
         //
         if(unloadedEnterpriseConfigPluginIds.Count == 0 && PluginConfiguration.RefreshEnterpriseApprovedAssistantPlugins())
+            wasConfigurationChanged = true;
+
+        //
+        // Now that the approvals are final, we know which assistant plugins your organization wants
+        // enabled. This needs no guard of its own: it reads the stored approvals, which stay in place
+        // when a configuration plugin could not be loaded:
+        //
+        if(RefreshEnterpriseAssistantActivations())
             wasConfigurationChanged = true;
 
         // Compatibility shim, see documentation/compatibility-shims/2026-08-orphaned-config-locks.md (remove after 2027-08-06):

@@ -28,6 +28,12 @@ public partial class ReadFileContent : MSGComponentBase
     public EventCallback<string> FileContentChanged { get; set; }
 
     /// <summary>
+    /// Reports the path after a file was loaded successfully.
+    /// </summary>
+    [Parameter]
+    public EventCallback<string> FilePathLoaded { get; set; }
+
+    /// <summary>
     /// If true, the component will display the state of the attached document (if any).
     /// </summary>
     [Parameter]
@@ -50,6 +56,13 @@ public partial class ReadFileContent : MSGComponentBase
     /// </summary>
     [Parameter]
     public bool CatchAllDocuments { get; set; }
+
+    /// <summary>
+    /// Optionally restricts the file types offered by the native file picker
+    /// and accepted by this component.
+    /// </summary>
+    [Parameter]
+    public FileTypeFilter[]? Filter { get; set; }
     
     [Inject]
     private RustService RustService { get; init; } = null!;
@@ -119,12 +132,12 @@ public partial class ReadFileContent : MSGComponentBase
     private void OnMediaImportStateChanged(MediaImportOwner owner)
     {
         if (owner == this.EffectiveImportOwner)
-            _ = this.InvokeAsync(async () =>
+            this.InvokeAsync(async () =>
             {
                 await this.SyncCompletedMediaTextAsync();
                 await this.ConsumeStandaloneMediaOutcomeAsync();
                 this.StateHasChanged();
-            });
+            }).Observe($"{nameof(ReadFileContent)}: syncing transcribed text");
     }
 
     /// <summary>Consumes outcomes for dialog-local controls that have no assistant owner surface.</summary>
@@ -182,7 +195,7 @@ public partial class ReadFileContent : MSGComponentBase
         // Release the drop area. Without this, drop areas below this one would count this component
         // forever and would stop catching dropped files:
         if (this.EnableDragDrop)
-            _ = this.MessageBus.SendMessage(this, Event.UNREGISTER_FILE_DROP_AREA, this.Layer);
+            this.MessageBus.SendMessage(this, Event.UNREGISTER_FILE_DROP_AREA, this.Layer).Observe($"{nameof(ReadFileContent)}: releasing the drop area");
 
         base.DisposeResources();
     }
@@ -252,7 +265,7 @@ public partial class ReadFileContent : MSGComponentBase
         this.isFileDialogOpen = true;
         try
         {
-            var selectedFile = await this.RustService.SelectFile(T("Select file to read its content"));
+            var selectedFile = await this.RustService.SelectFile(T("Select file to read its content"), this.Filter);
             if (selectedFile.UserCancelled)
             {
                 this.Logger.LogInformation("User cancelled the file selection");
@@ -310,6 +323,13 @@ public partial class ReadFileContent : MSGComponentBase
             return false;
         }
 
+        if (this.Filter is { Length: > 0 } && !FileTypes.IsAllowedPath(filePath, this.Filter))
+        {
+            this.Logger.LogWarning("Selected file does not match the configured file type filter: '{FilePath}'", filePath);
+            await this.MessageBus.SendWarning(new(Icons.Material.Filled.Warning, this.T("Please select a file with a supported file type.")));
+            return false;
+        }
+
         if (FileTypes.IsAllowedPath(filePath, FileTypes.AUDIO) || FileTypes.IsAllowedPath(filePath, FileTypes.VIDEO))
             return await this.LoadMediaTranscriptAsync(filePath);
 
@@ -324,8 +344,13 @@ public partial class ReadFileContent : MSGComponentBase
 
         try
         {
-            var fileContent = await UserFile.LoadFileData(filePath, this.RustService, this.DialogService);
-            await this.ApplyFileContentAsync(fileContent, filePath);
+            var extraction = await UserFile.LoadFileData(filePath, this.RustService, this.DialogService);
+
+            // The failure was already reported by UserFile.LoadFileData, so we only stop here:
+            if (!extraction.HasUsableContent)
+                return false;
+
+            await this.ApplyFileContentAsync(extraction.Content, filePath);
             this.Logger.LogInformation("Successfully loaded file content: {FilePath}", filePath);
             return true;
         }
@@ -340,6 +365,7 @@ public partial class ReadFileContent : MSGComponentBase
     private async Task ApplyFileContentAsync(string fileContent, string filePath)
     {
         await this.FileContentChanged.InvokeAsync(fileContent);
+        await this.FilePathLoaded.InvokeAsync(filePath);
         this.loadedFileName = Path.GetFileName(filePath);
         this.hasLoadedFileContent = true;
     }

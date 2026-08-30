@@ -4,16 +4,22 @@
 
 <MudDialog>
     <DialogContent>
+        @if (this.IsEnterpriseConfiguration)
+        {
+            <MudAlert Severity="Severity.Info" Class="mb-4">
+                @T("This embedding provider is managed by your organization. Host, model, and other settings are locked. You can set your own API key below.")
+            </MudAlert>
+        }
         <MudForm @ref="@this.form" @bind-IsValid="@this.dataIsValid" @bind-Errors="@this.dataIssues">
             <MudStack Row="@true" AlignItems="AlignItems.Center">
                 @* ReSharper disable once CSharpWarnings::CS8974 *@
-                <MudSelect @bind-Value="@this.DataLLMProvider"  Label="@T("Provider")" Class="mb-3" OpenIcon="@Icons.Material.Filled.AccountBalance" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.providerValidation.ValidatingProvider">
+                <MudSelect @bind-Value="@this.DataLLMProvider" Label="@T("Provider")" Class="mb-3" Disabled="@this.IsEnterpriseConfiguration" Validation="@this.providerValidation.ValidatingProvider">
                     @foreach (LLMProviders provider in Enum.GetValues(typeof(LLMProviders)))
                     {
                         if (provider.ProvideEmbeddingAPI() || provider is LLMProviders.NONE)
                         {
                             <MudSelectItem Value="@provider">
-                                @provider.ToName()
+                                <ProviderLabel ProviderType="@provider" CustomIconDataUrl="@(provider == this.DataLLMProvider ? this.DataCustomIconDataUrl : string.Empty)" Text="@provider.ToName()" />
                             </MudSelectItem>
                         }
                     }
@@ -38,13 +44,14 @@
                     Adornment="Adornment.Start"
                     AdornmentIcon="@Icons.Material.Filled.Dns"
                     AdornmentColor="Color.Info"
+                    Disabled="@this.IsEnterpriseConfiguration"
                     Validation="@this.providerValidation.ValidatingHostname"
                     UserAttributes="@SPELLCHECK_ATTRIBUTES"/>
             }
 
             @if (this.DataLLMProvider.IsHostNeeded())
             {
-                <MudSelect T="Host" Value="@this.DataHost" ValueChanged="@this.OnHostChanged" Label="@T("Host")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.providerValidation.ValidatingHost">
+                <MudSelect T="Host" Value="@this.DataHost" ValueChanged="@this.OnHostChanged" Label="@T("Host")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Disabled="@this.IsEnterpriseConfiguration" Validation="@this.providerValidation.ValidatingHost">
                     @foreach (Host host in Enum.GetValues(typeof(Host)))
                     {
                         if (host.IsEmbeddingSupported())
@@ -69,6 +76,7 @@
                             Adornment="Adornment.Start"
                             AdornmentIcon="@Icons.Material.Filled.Dns"
                             AdornmentColor="Color.Info"
+                            Disabled="@this.IsEnterpriseConfiguration"
                             Validation="@this.ValidateManuallyModel"
                             UserAttributes="@SPELLCHECK_ATTRIBUTES"
                             HelperText="@T("Currently, we cannot query the embedding models for the selected provider and/or host. Therefore, please enter the model name manually.")"
@@ -76,7 +84,7 @@
                     }
                     else
                     {
-                        <MudButton Disabled="@(!this.DataLLMProvider.CanLoadModels(this.DataHost, this.dataAPIKey))" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Refresh" OnClick="@this.ReloadModels">
+                        <MudButton Disabled="@(this.IsEnterpriseConfiguration || !this.DataLLMProvider.CanLoadModels(this.DataHost, this.dataAPIKey))" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Refresh" OnClick="@this.ReloadModels">
                             @T("Load")
                         </MudButton>
                         @if(this.availableModels.Count is 0)
@@ -87,7 +95,7 @@
                         }
                         else
                         {
-                            <MudSelect Disabled="@this.IsNoneProvider" @bind-Value="@this.DataModel" Label="@T("Model")"
+                            <MudSelect Disabled="@(this.IsEnterpriseConfiguration || this.IsNoneProvider)" @bind-Value="@this.DataModel" Label="@T("Model")"
                                        OpenIcon="@Icons.Material.Filled.FaceRetouchingNatural"
                                        AdornmentColor="Color.Info" Adornment="Adornment.Start"
                                        Validation="@this.providerValidation.ValidatingModel">
@@ -121,6 +129,7 @@
                 Adornment="Adornment.Start"
                 AdornmentIcon="@Icons.Material.Filled.Lightbulb"
                 AdornmentColor="Color.Info"
+                Disabled="@this.IsEnterpriseConfiguration"
                 Validation="@this.providerValidation.ValidatingInstanceName"
                 UserAttributes="@SPELLCHECK_ATTRIBUTES"
             />

@@ -106,6 +106,9 @@ public sealed partial class PluginInstallService
         var backupDirectory = string.Empty;
         var sideEffects = PluginDeleteSideEffects.NONE;
 
+        // We reload the plugins ourselves below. Holding back hot reloading keeps the file system
+        // watcher from starting a second reload while the plugin is being moved away:
+        await PluginFactory.LockHotReloadAsync();
         try
         {
             // Check again under the semaphore: another operation might have changed the plugin state
@@ -116,7 +119,7 @@ public sealed partial class PluginInstallService
 
             backupDirectory = CreateDeleteBackupDirectory(plugin);
             Directory.CreateDirectory(Path.GetDirectoryName(backupDirectory)!);
-            Directory.Move(pluginDirectory, backupDirectory);
+            this.MoveDirectory(pluginDirectory, backupDirectory);
 
             sideEffects = this.ApplyDeleteSideEffects(plugin);
             if (sideEffects.HasChanges)
@@ -137,6 +140,7 @@ public sealed partial class PluginInstallService
         }
         finally
         {
+            PluginFactory.UnlockHotReload();
             this.installSemaphore.Release();
         }
     }
@@ -172,13 +176,22 @@ public sealed partial class PluginInstallService
             return TB("The plugin has no local directory.");
 
         //
-        // We decide by the plugin path, not by what a plugin declares about itself. Both
-        // DEPLOYED_USING_CONFIG_SERVER and the Assistant Builder metadata are self-declared: a
-        // locally placed plugin could claim to be deployed by an organization, or simply omit the
-        // builder metadata, and would then be impossible to remove through the user interface, which
-        // is exactly the situation this deletion is meant to resolve.
+        // Nothing an organization rolled out belongs to the user, so none of it may be removed here.
+        // The plugin path is the primary criterion and covers every plugin type: a deployed
+        // configuration, a test configuration staged for it, and every plugin an organization ships
+        // alongside them in a subdirectory.
         //
-        if (PluginFactory.IsEnterpriseConfigurationPath(plugin.LocalPath))
+        if (PluginFactory.IsOrganizationConfigurationPath(plugin.LocalPath))
+            return TB("Plugins deployed by your organization cannot be deleted.");
+
+        //
+        // Organizations also roll plugins out past these directories, e.g. through their MDM
+        // solution. DEPLOYED_USING_CONFIG_SERVER is the only marker such a plugin has, so we honor
+        // it here just like sharing, replacing, and revising already do. A plugin cannot acquire the
+        // flag by accident: an archive declaring it is refused on import, which leaves deliberate
+        // manual placement as the only way in, and the file system as the way back out.
+        //
+        if (plugin.IsManagedByConfigServer)
             return TB("Plugins deployed by your organization cannot be deleted.");
 
         if (!PluginFactory.IsInsidePluginsRoot(plugin.LocalPath) || PluginFactory.IsPluginsRoot(plugin.LocalPath))
@@ -241,7 +254,7 @@ public sealed partial class PluginInstallService
         try
         {
             if (!Directory.Exists(pluginDirectory) && Directory.Exists(backupDirectory))
-                Directory.Move(backupDirectory, pluginDirectory);
+                this.MoveDirectory(backupDirectory, pluginDirectory);
 
             var configurationData = this.settingsManager.ConfigurationData;
             if (sideEffects.WasEnabled && !configurationData.EnabledPlugins.Contains(plugin.Id))

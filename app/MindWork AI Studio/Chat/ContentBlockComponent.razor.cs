@@ -8,7 +8,7 @@ namespace AIStudio.Chat;
 /// <summary>
 /// The UI component for a chat content block, i.e., for any IContent.
 /// </summary>
-public partial class ContentBlockComponent : MSGComponentBase, IAsyncDisposable
+public partial class ContentBlockComponent : MSGComponentBase
 {
     private const string CHAT_MATH_SYNC_FUNCTION = "chatMath.syncContainer";
     private const string CHAT_MATH_DISPOSE_FUNCTION = "chatMath.disposeContainer";
@@ -245,7 +245,13 @@ public partial class ContentBlockComponent : MSGComponentBase, IAsyncDisposable
         if (string.Equals(this.lastMathRenderSignature, mathRenderSignature, StringComparison.Ordinal))
             return;
 
-        await this.JsRuntime.InvokeVoidAsync(CHAT_MATH_SYNC_FUNCTION, this.mathContentContainer, mathRenderSignature);
+        //
+        // Remember what the browser shows only when it really got the call: otherwise, a call which was
+        // lost while the connection was down would make us skip the math rendering after the reconnect.
+        //
+        if (!await this.JsRuntime.TryInvokeVoidAsync(this.CircuitState, CHAT_MATH_SYNC_FUNCTION, this.mathContentContainer, mathRenderSignature))
+            return;
+
         this.lastMathRenderSignature = mathRenderSignature;
         this.hasActiveMathContainer = true;
     }
@@ -258,16 +264,7 @@ public partial class ContentBlockComponent : MSGComponentBase, IAsyncDisposable
             return;
         }
 
-        try
-        {
-            await this.JsRuntime.InvokeVoidAsync(CHAT_MATH_DISPOSE_FUNCTION, this.mathContentContainer);
-        }
-        catch (JSDisconnectedException)
-        {
-        }
-        catch (ObjectDisposedException)
-        {
-        }
+        await this.JsRuntime.TryInvokeVoidAsync(this.CircuitState, CHAT_MATH_DISPOSE_FUNCTION, this.mathContentContainer);
 
         this.hasActiveMathContainer = false;
         this.lastMathRenderSignature = string.Empty;
@@ -601,16 +598,24 @@ public partial class ContentBlockComponent : MSGComponentBase, IAsyncDisposable
     private async Task OpenAttachmentsDialog()
     {
         var result = await ReviewAttachmentsDialog.OpenDialogAsync(this.DialogService, this.Content.FileAttachments.ToHashSet());
-        this.Content.FileAttachments = result.ToList();
+        this.Content.FileAttachments = [.. result];
     }
 
-    public async ValueTask DisposeAsync()
+    protected override async ValueTask DisposeResourcesAsync()
     {
         if (this.isDisposed)
             return;
 
         this.isDisposed = true;
+
+        //
+        // Our handlers close over this component, while the content belongs to the chat thread and
+        // outlives us. We only detach what is still ours, though: when this content is streaming
+        // again, another component has registered its own handlers in the meantime.
+        //
+        if (this.Content.StreamingDone == this.AfterStreaming)
+            this.Content.ResetStreamingHandlers();
+
         await this.DisposeMathContainerIfNeededAsync();
-        this.Dispose();
     }
 }

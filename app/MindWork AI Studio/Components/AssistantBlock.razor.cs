@@ -167,7 +167,7 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase, IAssistantCat
     private void OnMediaImportStateChanged(MediaImportOwner owner)
     {
         if (this.OwnedByThisBlock(owner))
-            _ = this.InvokeAsync(this.StateHasChanged);
+            this.InvokeAsync(this.StateHasChanged).Observe($"{nameof(AssistantBlock<TSettings>)}: rendering a media import change");
     }
 
     protected override void DisposeResources()

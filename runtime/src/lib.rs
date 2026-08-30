@@ -10,6 +10,7 @@ pub mod clipboard;
 pub mod runtime_api;
 pub mod runtime_certificate;
 pub mod file_data;
+pub mod prompt_injection;
 pub mod metadata;
 pub mod media;
 pub mod image;

@@ -19,6 +19,22 @@ public sealed class PluginAssistantSecurityState
     public string CurrentHash { get; init; } = string.Empty;
     public bool HasAudit => this.Audit is not null;
     public bool IsEnterpriseApproved => this.Source is PluginAssistantSecurityStatusSource.ENTERPRISE_APPROVAL;
+
+    /// <summary>
+    /// Whether your organization requires this assistant plugin to stay enabled.
+    /// </summary>
+    /// <remarks>
+    /// This asks the plugin factory instead of reading the approval, because an approval alone does
+    /// not activate anything: it is matched by hash, so it also covers a copy of the plugin your
+    /// organization never rolled out. The factory is the one place which knows both.
+    /// </remarks>
+    public bool IsActivationEnforcedByOrganization => PluginFactory.IsAssistantActivationEnforced(this.Plugin.Id);
+
+    /// <summary>
+    /// Whether your organization enabled this assistant plugin for you, leaving you free to switch it
+    /// off again.
+    /// </summary>
+    public bool IsActivatedByOrganizationDefault => PluginFactory.IsAssistantActivationOrganizationDefault(this.Plugin.Id);
     public bool HashMatches { get; init; }
     public bool HasHashMismatch { get; init; }
     public bool IsBelowMinimum { get; init; }

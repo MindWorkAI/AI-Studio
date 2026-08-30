@@ -170,16 +170,22 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         }
         
         this.formChangeTimer.AutoReset = false;
-        this.formChangeTimer.Elapsed += async (_, _) =>
+        //
+        // Mind the missing async here: a timer hands its elapsed event to a thread pool thread, where an
+        // async handler has nobody to hand its exception to. Such an exception is not merely unobserved,
+        // it is unhandled, and it takes the app down with it. Observing the task keeps it contained.
+        //
+        this.formChangeTimer.Elapsed += (_, _) =>
         {
             this.formChangeTimer.Stop();
-            await this.OnFormChange();
+            this.OnFormChange().Observe($"{nameof(AssistantBase<TSettings>)}: handling a form change");
         };
         
         this.MightPreselectValues();
         this.ProviderSettings = this.SettingsManager.GetPreselectedProvider(this.Component);
         this.CurrentProfile = this.SettingsManager.GetPreselectedProfile(this.Component);
         this.CurrentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(this.Component);
+        await this.OnDefaultsAppliedAsync();
         this.assistantSessionKey = new(this.Component, this.AssistantSessionInstanceId);
         await this.AttachAssistantSessionIfAvailable();
         await this.ConsumeMediaOutcomeAsync();
@@ -311,6 +317,11 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     /// the user has stopped typing or selecting options.
     /// </remarks>
     protected virtual Task OnFormChange() => Task.CompletedTask;
+
+    /// <summary>
+    /// Allows assistants to finish asynchronous work after their configured defaults were applied.
+    /// </summary>
+    protected virtual Task OnDefaultsAppliedAsync() => Task.CompletedTask;
     
     /// <summary>
     /// Add an issue to the UI.
@@ -321,7 +332,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         Array.Resize(ref this.InputIssues, this.InputIssues.Length + 1);
         this.InputIssues[^1] = issue;
         this.InputIsValid = false;
-        _ = this.RefreshAssistantUIAsync();
+        this.RefreshAssistantUIAsync().Observe($"{nameof(AssistantBase<TSettings>)}: rendering an added input issue");
     }
     
     /// <summary>
@@ -331,7 +342,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     {
         this.InputIssues = [];
         this.InputIsValid = true;
-        _ = this.RefreshAssistantUIAsync();
+        this.RefreshAssistantUIAsync().Observe($"{nameof(AssistantBase<TSettings>)}: rendering cleared input issues");
     }
 
     protected void CreateChatThread()
@@ -472,6 +483,12 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
                 this.CancellationTokenSource?.Dispose();
                 this.CancellationTokenSource = null;
             }
+
+            //
+            // The handlers above close over this assistant, and the content stays in the chat
+            // thread. The stream is over by now, so nothing has to listen to it anymore:
+            //
+            aiText.ResetStreamingHandlers();
         }
     }
 
@@ -519,10 +536,18 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         });
     }
     
-    private async Task CancelStreaming()
-    {
-        await this.AssistantSessionService.CancelAsync(this.assistantSessionKey, this);
-    }
+    private Task CancelStreaming() => this.CancelAssistantSessionAsync();
+
+    /// <summary>
+    /// Requests cancellation of the active assistant session.
+    /// </summary>
+    /// <remarks>
+    /// Derived assistants should use this method instead of accessing their local
+    /// cancellation token source. A component which reattaches after navigation
+    /// does not own that source, while the session service still does.
+    /// </remarks>
+    /// <returns>A task that completes after cancellation was requested.</returns>
+    protected Task CancelAssistantSessionAsync() => this.AssistantSessionService.CancelAsync(this.assistantSessionKey, this);
     
     protected async Task CopyToClipboard()
     {
@@ -625,7 +650,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
                 {
                     var convertedChatThread = this.ConvertToChatThread;
                     convertedChatThread = convertedChatThread with { SelectedProvider = this.ProviderSettings.Id };
-                    MessageBus.INSTANCE.DeferMessage(this, sendToData.Event, convertedChatThread);
+                    MessageBus.INSTANCE.DeferMessage(this, sendToData.Event, new ChatStartRequest(convertedChatThread));
                 }
                 break;
             
@@ -668,6 +693,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         
         this.ResetForm();
         this.ResetProviderAndProfileSelection();
+        await this.OnDefaultsAppliedAsync();
         
         this.InputIsValid = false;
         this.InputIssues = [];
@@ -712,11 +738,11 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     private void OnMediaImportStateChanged(MediaImportOwner owner)
     {
         if (owner == this.CurrentMediaImportOwner)
-            _ = this.InvokeAsync(async () =>
+            this.InvokeAsync(async () =>
             {
                 await this.ConsumeMediaOutcomeAsync();
                 this.StateHasChanged();
-            });
+            }).Observe($"{nameof(AssistantBase<TSettings>)}: consuming a media import outcome");
     }
 
     /// <summary>Consumes a terminal media notification when this assistant is visible.</summary>
@@ -756,7 +782,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     /// Stores the current assistant UI and chat state in the active assistant session.
     /// </summary>
     /// <returns>A task that completes after the checkpoint was stored and published.</returns>
-    private Task CheckpointAssistantSession()
+    protected Task CheckpointAssistantSession()
     {
         if (this.assistantSessionId is null)
             return Task.CompletedTask;
@@ -854,7 +880,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     /// Refreshes the component when it is still mounted.
     /// </summary>
     /// <returns>A task that completes after the renderer was notified.</returns>
-    private async Task RefreshAssistantUIAsync()
+    protected async Task RefreshAssistantUIAsync()
     {
         if (this.isDisposed)
             return;

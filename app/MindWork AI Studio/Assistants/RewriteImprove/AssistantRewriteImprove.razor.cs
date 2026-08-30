@@ -77,7 +77,7 @@ public partial class AssistantRewriteImprove : AssistantBaseCore<SettingsDialogR
 
     protected override async Task OnInitializedAsync()
     {
-        var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_REWRITE_ASSISTANT).FirstOrDefault();
+        var deferredContent = MessageBus.INSTANCE.TakeDeferredMessages<string>(Event.SEND_TO_REWRITE_ASSISTANT).LastOrDefault();
         if (deferredContent is not null)
             this.inputText = deferredContent;
         

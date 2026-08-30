@@ -64,6 +64,12 @@ public sealed record Confidence
         Level = ConfidenceLevel.MEDIUM,
         Description = TB("The provider is located in the EU and is subject to the **GDPR** (General Data Protection Regulation). Additionally, the provider states that **your data is not used for training**."),
     };
+
+    public static readonly Confidence GDPR_EXPERIMENTAL_OPEN_SOURCE = new()
+    {
+        Level = ConfidenceLevel.MEDIUM,
+        Description = TB("The provider operates its service in the EU and is subject to the **GDPR** (General Data Protection Regulation). It provides access to **open source models**. However, the service is currently **experimental**, and performance and availability are not guaranteed. We have no provider-specific information about whether submitted data is used for training."),
+    };
     
     public static readonly Confidence SELF_HOSTED = new()
     {

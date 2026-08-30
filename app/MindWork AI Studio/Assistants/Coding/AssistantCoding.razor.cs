@@ -143,7 +143,7 @@ public partial class AssistantCoding : AssistantBaseCore<SettingsDialogCoding>
 
     protected override async Task OnInitializedAsync()
     {
-        var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_CODING_ASSISTANT).FirstOrDefault();
+        var deferredContent = MessageBus.INSTANCE.TakeDeferredMessages<string>(Event.SEND_TO_CODING_ASSISTANT).LastOrDefault();
         if (deferredContent is not null)
             this.questions = deferredContent;
         

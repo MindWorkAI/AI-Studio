@@ -140,12 +140,12 @@ public partial class AttachDocuments : MSGComponentBase
     private void OnMediaImportStateChanged(MediaImportOwner owner)
     {
         if (owner == this.EffectiveImportOwner)
-            _ = this.InvokeAsync(async () =>
+            this.InvokeAsync(async () =>
             {
                 await this.SyncCompletedMediaAttachmentsAsync();
                 await this.ConsumeStandaloneMediaOutcomeAsync();
                 this.StateHasChanged();
-            });
+            }).Observe($"{nameof(AttachDocuments)}: syncing media attachments");
     }
 
     /// <summary>Consumes outcomes for dialog-local controls that have no chat or assistant owner surface.</summary>
@@ -225,7 +225,7 @@ public partial class AttachDocuments : MSGComponentBase
 
         // Release the drop area. Without this, drop areas below this one would count this component
         // forever and would stop catching dropped files:
-        _ = this.MessageBus.SendMessage(this, Event.UNREGISTER_FILE_DROP_AREA, this.Layer);
+        this.MessageBus.SendMessage(this, Event.UNREGISTER_FILE_DROP_AREA, this.Layer).Observe($"{nameof(AttachDocuments)}: releasing the drop area");
 
         base.DisposeResources();
     }
@@ -443,23 +443,31 @@ public partial class AttachDocuments : MSGComponentBase
         var mediaPaths = existingPaths.Where(IsTranscribableMedia).ToList();
         var regularPaths = existingPaths.Except(mediaPaths).ToList();
 
-        var canAddRegularFiles = true;
-        if (regularPaths.Count > 0)
+        //
+        // Only the formats we convert with Pandoc depend on a Pandoc installation. Everything
+        // else, PDFs in particular, is read by the Rust runtime itself, so those files must stay
+        // attachable without Pandoc.
+        //
+        var canAddPandocFiles = true;
+        if (regularPaths.Any(FileTypes.RequiresPandoc))
         {
             var pandocState = await this.PandocAvailabilityService.EnsureAvailabilityAsync(
                 showSuccessMessage: false,
                 showDialog: true);
-            canAddRegularFiles = pandocState.IsAvailable;
+            canAddPandocFiles = pandocState.IsAvailable;
         }
 
         foreach (var path in regularPaths)
         {
-            if (!canAddRegularFiles)
-                break;
+            if (!canAddPandocFiles && FileTypes.RequiresPandoc(path))
+            {
+                this.Logger.LogWarning("The file '{Path}' needs Pandoc and was not attached.", path);
+                continue;
+            }
 
             if (!await FileExtensionValidation.IsExtensionValidWithNotifyAsync(FileExtensionValidation.UseCase.ATTACHING_CONTENT, path, this.ValidateMediaFileTypes, this.Provider))
                 continue;
-            
+
             this.DocumentPaths.Add(FileAttachment.FromPath(path));
         }
 

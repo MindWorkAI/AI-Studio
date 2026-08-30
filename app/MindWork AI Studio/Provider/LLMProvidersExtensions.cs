@@ -6,7 +6,9 @@ using AIStudio.Provider.Google;
 using AIStudio.Provider.Groq;
 using AIStudio.Provider.GWDG;
 using AIStudio.Provider.Helmholtz;
+using AIStudio.Provider.Hetzner;
 using AIStudio.Provider.HuggingFace;
+using AIStudio.Provider.IONOS;
 using AIStudio.Provider.LiteLLM;
 using AIStudio.Provider.Mistral;
 using AIStudio.Provider.OpenAI;
@@ -57,6 +59,8 @@ public static class LLMProvidersExtensions
         LLMProviders.ALIBABA_CLOUD => "Alibaba Cloud",
         LLMProviders.PERPLEXITY => "Perplexity",
         LLMProviders.OPEN_ROUTER => "OpenRouter",
+        LLMProviders.HETZNER => "Hetzner (Experimental)",
+        LLMProviders.IONOS => "IONOS",
         LLMProviders.LITE_LLM => "LiteLLM",
 
         LLMProviders.GROQ => "Groq",
@@ -93,6 +97,8 @@ public static class LLMProvidersExtensions
         LLMProviders.ALIBABA_CLOUD => "Alibaba Cloud",
         LLMProviders.PERPLEXITY => "Perplexity",
         LLMProviders.OPEN_ROUTER => "OpenRouter",
+        LLMProviders.HETZNER => "Hetzner",
+        LLMProviders.IONOS => "IONOS",
         LLMProviders.LITE_LLM => "LiteLLM",
 
         LLMProviders.GROQ => "Groq",
@@ -147,6 +153,17 @@ public static class LLMProvidersExtensions
 
         LLMProviders.OPEN_ROUTER => Confidence.USA_HUB.WithRegion("America, U.S.").WithSources("https://openrouter.ai/privacy", "https://openrouter.ai/terms").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
 
+        LLMProviders.HETZNER => Confidence.GDPR_EXPERIMENTAL_OPEN_SOURCE.WithRegion("Europe, Germany").WithSources(
+            "https://experiments.hetzner.com/docs/inference",
+            "https://www.hetzner.com/legal/privacy-policy/",
+            "https://www.hetzner.com/legal/terms-and-conditions/"
+        ).WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
+
+        LLMProviders.IONOS => Confidence.GDPR_NO_TRAINING.WithRegion("Europe, Germany").WithSources(
+            "https://docs.ionos.com/cloud/ai/ai-model-hub/governance-and-compliance/data-handling",
+            "https://www.ionos.com/terms-gtc/privacy-policy/"
+        ).WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
+
         // LiteLLM is a self-operated gateway: the user runs the proxy and decides which downstream
         // providers it routes to, so the data destination cannot be known in advance. It is treated
         // like a self-hosted endpoint, and the user assigns the trust level themselves.
@@ -175,7 +192,10 @@ public static class LLMProvidersExtensions
         LLMProviders.GOOGLE => true,
         LLMProviders.HELMHOLTZ => true,
         LLMProviders.ALIBABA_CLOUD => true,
-        
+        LLMProviders.IONOS => true,
+        LLMProviders.GWDG => true,
+        LLMProviders.OPEN_ROUTER => true,
+
         //
         // Providers that do not support embeddings:
         //
@@ -183,11 +203,10 @@ public static class LLMProvidersExtensions
         LLMProviders.ANTHROPIC => false,
         LLMProviders.FIREWORKS => false,
         LLMProviders.X => false,
-        LLMProviders.GWDG => false,
         LLMProviders.DEEP_SEEK => false,
         LLMProviders.HUGGINGFACE => false,
         LLMProviders.PERPLEXITY => false,
-        LLMProviders.OPEN_ROUTER => true,
+        LLMProviders.HETZNER => false,
         LLMProviders.LITE_LLM => false,
 
         //
@@ -207,7 +226,9 @@ public static class LLMProvidersExtensions
         LLMProviders.MISTRAL => true,
         LLMProviders.FIREWORKS => true,
         LLMProviders.GWDG => true,
-        
+        LLMProviders.HELMHOLTZ => true,
+        LLMProviders.GROQ => true,
+
         //
         // Providers that support transcription but provide no OpenAI-compatible API yet:
         //
@@ -218,7 +239,8 @@ public static class LLMProvidersExtensions
         // Providers that do not support transcription:
         //
         LLMProviders.OPEN_ROUTER => false,
-        LLMProviders.GROQ => false,
+        LLMProviders.HETZNER => false,
+        LLMProviders.IONOS => false,
         LLMProviders.ANTHROPIC => false,
         LLMProviders.X => false,
         LLMProviders.DEEP_SEEK => false,
@@ -226,13 +248,11 @@ public static class LLMProvidersExtensions
         LLMProviders.PERPLEXITY => false,
         LLMProviders.LITE_LLM => false,
 
-        LLMProviders.HELMHOLTZ => false,
-
         //
         // Self-hosted providers are treated as a special case anyway.
         //
         LLMProviders.SELF_HOSTED => true,
-        
+
         _ => false,
     };
 
@@ -281,6 +301,8 @@ public static class LLMProvidersExtensions
                 LLMProviders.ALIBABA_CLOUD => new ProviderAlibabaCloud { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, IsEnterpriseConfiguration = isEnterpriseConfiguration },
                 LLMProviders.PERPLEXITY => new ProviderPerplexity { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, IsEnterpriseConfiguration = isEnterpriseConfiguration },
                 LLMProviders.OPEN_ROUTER => new ProviderOpenRouter { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, IsEnterpriseConfiguration = isEnterpriseConfiguration },
+                LLMProviders.HETZNER => new ProviderHetzner { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, IsEnterpriseConfiguration = isEnterpriseConfiguration },
+                LLMProviders.IONOS => new ProviderIONOS { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, IsEnterpriseConfiguration = isEnterpriseConfiguration },
                 LLMProviders.LITE_LLM => new ProviderLiteLLM(hostname) { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, IsEnterpriseConfiguration = isEnterpriseConfiguration },
 
                 LLMProviders.GROQ => new ProviderGroq { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, IsEnterpriseConfiguration = isEnterpriseConfiguration },
@@ -313,6 +335,8 @@ public static class LLMProvidersExtensions
         LLMProviders.ALIBABA_CLOUD => "https://account.alibabacloud.com/register/intl_register.htm",
         LLMProviders.PERPLEXITY => "https://www.perplexity.ai/account/api",
         LLMProviders.OPEN_ROUTER => "https://openrouter.ai/keys",
+        LLMProviders.HETZNER => "https://experiments.hetzner.com",
+        LLMProviders.IONOS => "https://cloud.ionos.com/compute/sign-up",
 
         LLMProviders.GROQ => "https://console.groq.com/",
         LLMProviders.FIREWORKS => "https://fireworks.ai/login",
@@ -338,6 +362,8 @@ public static class LLMProvidersExtensions
         LLMProviders.PERPLEXITY => "https://www.perplexity.ai/account/api/",
         LLMProviders.OPEN_ROUTER => "https://openrouter.ai/activity",
         LLMProviders.HUGGINGFACE => "https://huggingface.co/settings/billing",
+        LLMProviders.HETZNER => "https://experiments.hetzner.com",
+        LLMProviders.IONOS => "https://dcd.ionos.com/latest/?page=dcd-ai-model-hub",
 
         _ => string.Empty,
     };
@@ -356,6 +382,8 @@ public static class LLMProvidersExtensions
         LLMProviders.PERPLEXITY => true,
         LLMProviders.OPEN_ROUTER => true,
         LLMProviders.HUGGINGFACE => true,
+        LLMProviders.HETZNER => true,
+        LLMProviders.IONOS => true,
 
         _ => false,
     };
@@ -434,6 +462,8 @@ public static class LLMProvidersExtensions
         LLMProviders.ALIBABA_CLOUD => true,
         LLMProviders.PERPLEXITY => true,
         LLMProviders.OPEN_ROUTER => true,
+        LLMProviders.HETZNER => true,
+        LLMProviders.IONOS => true,
         LLMProviders.LITE_LLM => true,
 
         LLMProviders.GROQ => true,
@@ -458,6 +488,8 @@ public static class LLMProvidersExtensions
         LLMProviders.ALIBABA_CLOUD => true,
         LLMProviders.PERPLEXITY => true,
         LLMProviders.OPEN_ROUTER => true,
+        LLMProviders.HETZNER => true,
+        LLMProviders.IONOS => true,
 
         LLMProviders.GROQ => true,
         LLMProviders.FIREWORKS => true,

@@ -8,7 +8,7 @@
         
         @if (this.Document is null)
         {
-            <ReadFileContent Text="@T("Load file")" @bind-FileContent="@this.FileContent" EnableDragDrop="true" Layer="@DropLayers.DIALOGS" CatchAllDocuments="true"/>
+            <ReadFileContent Text="@T("Load file")" FileContent="@this.FileContent" FileContentChanged="@this.ApplyLoadedFileContent" EnableDragDrop="true" Layer="@DropLayers.DIALOGS" CatchAllDocuments="true"/>
         }
         else
         {
@@ -33,8 +33,31 @@
                 @T("The specified file could not be found. The file have been moved, deleted, renamed, or is otherwise inaccessible.")
             </MudAlert>
         }
+        else if (this.isLoadingContent)
+        {
+            <MudJustifiedText Typo="Typo.body1" Class="my-3">
+                @T("Please wait while we load the content of your file. Depending on the file type and size, this may take a moment.")
+            </MudJustifiedText>
+            <MudSkeleton Width="30%" Height="42px"/>
+            <MudSkeleton Width="80%"/>
+            <MudSkeleton Width="100%"/>
+            <MudSkeleton Width="90%"/>
+        }
+        else if (this.loadFailureMessage is not null)
+        {
+            <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Class="my-2">
+                @this.loadFailureMessage
+            </MudAlert>
+        }
         else
         {
+            @if (this.previewCutOffCharacters > 0)
+            {
+                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="my-2">
+                    @string.Format(T("Your document is large, so we show you only its beginning. We hide the remaining {0:N0} characters here. Rest assured: the AI still receives your entire document."), this.previewCutOffCharacters)
+                </MudAlert>
+            }
+            
             <MudTabs Elevation="0" Rounded="true" ApplyEffectsToContainer="true" Outlined="true" PanelClass="pa-2" Class="mb-2">
                 @if (this.Document?.IsImage ?? false)
                 {
@@ -54,14 +77,14 @@
                             Class="ma-2 pe-4"
                             HelperText="@T("This is the content we loaded from your file — including headings, lists, and formatting. Use this to verify your file loads as expected.")">
                             <div style="max-height: 40vh; overflow-y: auto;">
-                                <MudMarkdown Value="@this.FileContent" Props="Markdown.DefaultConfig" Styling="@this.MarkdownStyling" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE"/>
+                                <MudMarkdown Value="@this.previewContent" Props="Markdown.DefaultConfig" Styling="@this.MarkdownStyling" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE"/>
                             </div>
                         </MudField>
                     </MudTabPanel>
                     <MudTabPanel Text="@T("Simple View")" Icon="@Icons.Material.Filled.Terminal">
                         <MudTextField
                             T="string"
-                            @bind-Text="@this.FileContent"
+                            Text="@this.previewContent"
                             AdornmentIcon="@Icons.Material.Filled.Article"
                             Adornment="Adornment.Start"
                             Immediate="@true"

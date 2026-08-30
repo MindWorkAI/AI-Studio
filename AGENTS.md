@@ -2,6 +2,17 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Incremental implementation workflow
+
+When the developer asks to implement a plan step by step, complete exactly one coherent plan item at
+a time. After each item:
+
+1. Run the relevant Rider or RustRover build through MCP and perform any other appropriate checks.
+2. Summarize the diff and any remaining problems.
+3. Suggest a short, concise commit title in US English.
+4. Stop and wait until the developer has reviewed and committed the changes before continuing.
+5. Never push the changes; the developer performs all pushes.
+
 ## Project Overview
 
 MindWork AI Studio is a cross-platform desktop application for interacting with Large Language Models (LLMs). The app uses a hybrid architecture combining a Rust Tauri runtime (for the native desktop shell) with a .NET Blazor Server web application (for the UI and business logic).

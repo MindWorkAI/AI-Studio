@@ -61,6 +61,7 @@ pub fn start_runtime_api() {
         .route("/system/enterprise/config/encryption_secret", get(crate::environment::read_enterprise_env_config_encryption_secret))
         .route("/system/enterprise/configs", get(crate::environment::read_enterprise_configs))
         .route("/retrieval/fs/extract", get(crate::file_data::extract_data))
+        .route("/security/prompt-injection/sanitize", post(crate::prompt_injection::api::sanitize))
         .route("/media/jobs", post(crate::media::create_job))
         .route("/media/jobs/{id}/events", get(crate::media::get_job_events))
         .route("/media/jobs/{id}", delete(crate::media::cancel_job))

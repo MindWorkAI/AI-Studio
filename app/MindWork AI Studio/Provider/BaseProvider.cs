@@ -269,10 +269,10 @@ public abstract class BaseProvider : IProvider, ISecretId
     {
         exception = new();
 
-        if (!line.StartsWith("data: ", StringComparison.InvariantCulture))
+        if (!TryGetServerSentEventData(line, out var jsonData))
             return false;
 
-        var jsonData = line[6..].Trim();
+        jsonData = jsonData.Trim();
         if (string.IsNullOrWhiteSpace(jsonData) || jsonData is "[DONE]")
             return false;
 
@@ -302,6 +302,21 @@ public abstract class BaseProvider : IProvider, ISecretId
         {
             return false;
         }
+    }
+
+    private static bool TryGetServerSentEventData(string line, out string data)
+    {
+        const string DATA_PREFIX = "data:";
+        data = string.Empty;
+
+        if (!line.StartsWith(DATA_PREFIX, StringComparison.InvariantCulture))
+            return false;
+
+        data = line[DATA_PREFIX.Length..];
+        if (data.StartsWith(' '))
+            data = data[1..];
+
+        return true;
     }
 
     private static bool IsProviderStreamFailure(JsonElement root)
@@ -360,7 +375,36 @@ public abstract class BaseProvider : IProvider, ISecretId
 
         errorCode = TryGetString(root, "code");
         errorType = TryGetString(root, "type");
-        errorMessage = TryGetString(root, "message");
+
+        // Services built on FastAPI, such as Helmholtz Blablador, word their errors as "detail":
+        errorMessage = TryGetString(root, "message") ?? TryGetString(root, "detail");
+    }
+
+    /// <summary>
+    /// Reads the error message a provider sent in the body of a failed response.
+    /// </summary>
+    /// <remarks>
+    /// Providers word their errors differently, but they all put a sentence somewhere into the
+    /// body. Passing that sentence on is what lets a user act on the problem instead of only
+    /// learning that something went wrong.
+    /// </remarks>
+    /// <param name="responseBody">The body of the failed response.</param>
+    /// <returns>The message, or an empty string when the body carries none.</returns>
+    private static string ReadProviderErrorMessage(string responseBody)
+    {
+        if (string.IsNullOrWhiteSpace(responseBody))
+            return string.Empty;
+
+        try
+        {
+            using var document = JsonDocument.Parse(responseBody);
+            TryGetProviderStreamError(document.RootElement, out _, out _, out var errorMessage);
+            return errorMessage ?? string.Empty;
+        }
+        catch (JsonException)
+        {
+            return string.Empty;
+        }
     }
 
     private static bool TryGetErrorElement(JsonElement root, out JsonElement errorElement)
@@ -661,13 +705,13 @@ public abstract class BaseProvider : IProvider, ISecretId
             if (this.TryCreateProviderRequestExceptionFromStreamLine(providerName, line, out var providerRequestException))
                 throw providerRequestException;
 
-            // Skip lines that do not start with "data: ". Regard
+            // Skip lines that do not start with "data:". According
             // to the specification, we only want to read the data lines:
-            if (!line.StartsWith("data: ", StringComparison.InvariantCulture))
+            if (!TryGetServerSentEventData(line, out var jsonData))
                 continue;
 
             // Check if the line is the end of the stream:
-            if (line.StartsWith("data: [DONE]", StringComparison.InvariantCulture))
+            if (jsonData is "[DONE]")
                 yield break;
 
             //
@@ -681,10 +725,6 @@ public abstract class BaseProvider : IProvider, ISecretId
                 
                 try
                 {
-                    // We know that the line starts with "data: ". Hence, we can
-                    // skip the first 6 characters to get the JSON data after that.
-                    var jsonData = line[6..];
-
                     // Deserialize the JSON data:
                     providerResponse = JsonSerializer.Deserialize<TAnnotation>(jsonData, JSON_SERIALIZER_OPTIONS);
 
@@ -713,10 +753,6 @@ public abstract class BaseProvider : IProvider, ISecretId
                 TDelta? providerResponse;
                 try
                 {
-                    // We know that the line starts with "data: ". Hence, we can
-                    // skip the first 6 characters to get the JSON data after that.
-                    var jsonData = line[6..];
-
                     // Deserialize the JSON data:
                     providerResponse = JsonSerializer.Deserialize<TDelta>(jsonData, JSON_SERIALIZER_OPTIONS);
 
@@ -866,20 +902,19 @@ public abstract class BaseProvider : IProvider, ISecretId
             if (line.StartsWith("event: response.completed", StringComparison.InvariantCulture))
                 yield break;
             
+            if (!TryGetServerSentEventData(line, out var jsonData))
+                continue;
+
             //
             // Find delta lines:
             //
-            if (line.StartsWith("""
-                                data: {"type":"response.output_text.delta"
-                                """, StringComparison.InvariantCulture))
+            if (jsonData.StartsWith("""
+                                    {"type":"response.output_text.delta"
+                                    """, StringComparison.InvariantCulture))
             {
                 TDelta? providerResponse;
                 try
                 {
-                    // We know that the line starts with "data: ". Hence, we can
-                    // skip the first 6 characters to get the JSON data after that.
-                    var jsonData = line[6..];
-
                     // Deserialize the JSON data:
                     providerResponse = JsonSerializer.Deserialize<TDelta>(jsonData, JSON_SERIALIZER_OPTIONS);
 
@@ -903,18 +938,14 @@ public abstract class BaseProvider : IProvider, ISecretId
             //
             // Find annotation added lines:
             //
-            else if (annotationSupported && line.StartsWith(
+            else if (annotationSupported && jsonData.StartsWith(
                          """
-                         data: {"type":"response.output_text.annotation.added"
+                         {"type":"response.output_text.annotation.added"
                          """, StringComparison.InvariantCulture))
             {
                 TAnnotation? providerResponse;
                 try
                 {
-                    // We know that the line starts with "data: ". Hence, we can
-                    // skip the first 6 characters to get the JSON data after that.
-                    var jsonData = line[6..];
-
                     // Deserialize the JSON data:
                     providerResponse = JsonSerializer.Deserialize<TAnnotation>(jsonData, JSON_SERIALIZER_OPTIONS);
 
@@ -1011,6 +1042,35 @@ public abstract class BaseProvider : IProvider, ISecretId
             yield return content;
     }
 
+    /// <summary>
+    /// Builds the message a user gets to see when a transcription request failed.
+    /// </summary>
+    /// <remarks>
+    /// AI Studio always sends WebM/Opus. Some providers run their speech recognition behind a
+    /// decoder which reads WAV only, and they answer with a bad request whose body says that it
+    /// could not decode the file. Nobody can do anything about that inside AI Studio, so we name
+    /// the likely cause and point at the provider instead of showing the raw message.
+    /// </remarks>
+    /// <param name="statusCode">The status code the provider answered with.</param>
+    /// <param name="responseBody">The body the provider answered with.</param>
+    /// <returns>The message to show, or an empty string when we have nothing to say.</returns>
+    private string GetTranscriptionFailureUserMessage(HttpStatusCode statusCode, string responseBody)
+    {
+        var failureReason = this.ClassifyProviderRequestFailure(statusCode, responseBody);
+        var classifiedMessage = this.GetProviderRequestFailureUserMessage(failureReason);
+        if (!string.IsNullOrWhiteSpace(classifiedMessage))
+            return classifiedMessage;
+
+        if (statusCode is HttpStatusCode.BadRequest && responseBody.Contains("not decode", StringComparison.OrdinalIgnoreCase))
+            return string.Format(TB("The provider '{0}' was not able to read the audio file. It probably does not support the WebM/Opus format which AI Studio sends. Please contact the provider about it."), this.InstanceName);
+
+        var providerMessage = ReadProviderErrorMessage(responseBody);
+        if (!string.IsNullOrWhiteSpace(providerMessage))
+            return string.Format(TB("The provider '{0}' reported an error: {1}"), this.InstanceName, providerMessage);
+
+        return string.Empty;
+    }
+
     protected async Task<TranscriptionResult> PerformStandardTranscriptionRequest(RequestedSecret requestedSecret, Model transcriptionModel, string audioFilePath, Host host = Host.NONE, CancellationToken token = default)
     {
         try
@@ -1080,8 +1140,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             if (!response.IsSuccessStatusCode)
             {
                 this.logger.LogError("Transcription request failed with status code {ResponseStatusCode} and body: '{ResponseBody}'.", response.StatusCode, responseBody);
-                var providerRequestFailure = this.ClassifyProviderRequestFailure(response.StatusCode, responseBody);
-                return TranscriptionResult.Failure(this.GetProviderRequestFailureUserMessage(providerRequestFailure));
+                return TranscriptionResult.Failure(this.GetTranscriptionFailureUserMessage(response.StatusCode, responseBody));
             }
 
             var transcriptionResponse = JsonSerializer.Deserialize<TranscriptionResponse>(responseBody, JSON_SERIALIZER_OPTIONS);
@@ -1160,6 +1219,15 @@ public abstract class BaseProvider : IProvider, ISecretId
                 this.logger.LogError("Embedding request failed with status code {ResponseStatusCode} and body: '{ResponseBody}'.", response.StatusCode, responseBody);
                 var providerRequestFailure = this.ClassifyProviderRequestFailure(response.StatusCode, responseBody);
                 var userMessage = this.GetProviderRequestFailureUserMessage(providerRequestFailure);
+
+                // We know nothing about this failure, so we pass on what the provider said about it:
+                if (string.IsNullOrWhiteSpace(userMessage))
+                {
+                    var providerMessage = ReadProviderErrorMessage(responseBody);
+                    if (!string.IsNullOrWhiteSpace(providerMessage))
+                        userMessage = string.Format(TB("The provider '{0}' reported an error: {1}"), this.InstanceName, providerMessage);
+                }
+
                 if (!string.IsNullOrWhiteSpace(userMessage))
                     await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, userMessage));
 
@@ -1212,7 +1280,7 @@ public abstract class BaseProvider : IProvider, ISecretId
     
     protected static bool TryPopIntParameter(IDictionary<string, object> parameters, string key, out int value)
     {
-        value = default;
+        value = 0;
         if (!TryPopParameter(parameters, key, out var raw) || raw is null)
             return false;
         
@@ -1222,15 +1290,15 @@ public abstract class BaseProvider : IProvider, ISecretId
                 value = i;
                 return true;
             
-            case long l when l is >= int.MinValue and <= int.MaxValue:
+            case long l and >= int.MinValue and <= int.MaxValue:
                 value = (int)l;
                 return true;
             
-            case double d when d is >= int.MinValue and <= int.MaxValue:
+            case double d and >= int.MinValue and <= int.MaxValue:
                 value = (int)d;
                 return true;
             
-            case decimal m when m is >= int.MinValue and <= int.MaxValue:
+            case decimal m and >= int.MinValue and <= int.MaxValue:
                 value = (int)m;
                 return true;
         }
@@ -1240,7 +1308,7 @@ public abstract class BaseProvider : IProvider, ISecretId
     
     protected static bool TryPopBoolParameter(IDictionary<string, object> parameters, string key, out bool value)
     {
-        value = default;
+        value = false;
         if (!TryPopParameter(parameters, key, out var raw) || raw is null)
             return false;
         

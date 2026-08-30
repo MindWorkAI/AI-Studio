@@ -2,6 +2,7 @@
 using AIStudio.Chat;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Tools.AssistantSessions;
+using AIStudio.Tools.Security;
 
 namespace AIStudio.Assistants.SlideBuilder;
 
@@ -255,7 +256,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
 
     protected override async Task OnInitializedAsync()
     {
-        var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_SLIDE_BUILDER_ASSISTANT).FirstOrDefault();
+        var deferredContent = MessageBus.INSTANCE.TakeDeferredMessages<string>(Event.SEND_TO_SLIDE_BUILDER_ASSISTANT).LastOrDefault();
         if (deferredContent is not null)
             this.inputContent = deferredContent;
         
@@ -373,6 +374,13 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
                           """);
         }
 
+        //
+        // One report for the whole batch: reading twenty documents must produce one dialog
+        // listing all of them, not twenty dialogs in a row.
+        //
+        var guardService = Program.SERVICE_PROVIDER.GetRequiredService<PromptInjectionGuardService>();
+        await using var promptInjectionScope = guardService.BeginAction();
+
         var numDocuments = 1;
         foreach (var document in documents)
         {
@@ -382,7 +390,28 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
                 continue;
             }
 
-            var fileContent = await this.RustService.ReadArbitraryFileData(document.FilePath, int.MaxValue);
+            var extraction = await this.RustService.ReadArbitraryFileData(document.FilePath, int.MaxValue);
+            if (!extraction.HasUsableContent)
+            {
+                this.Logger.LogError("Reading the document '{FilePath}' failed and it will not be used: code={ErrorCode}, message='{ErrorMessage}'.", document.FilePath, extraction.ErrorCode, extraction.ErrorMessage);
+                await this.MessageBus.SendError(new(Icons.Material.Filled.Description, extraction.ToUserMessage(document.FileName)));
+                continue;
+            }
+
+            if (extraction.Outcome is FileExtractionOutcome.PARTIAL)
+            {
+                this.Logger.LogWarning("Parts of the document '{FilePath}' could not be read: pages={FailedPages}.", document.FilePath, string.Join(", ", extraction.FailedPages));
+                await this.MessageBus.SendWarning(new(Icons.Material.Filled.Description, extraction.ToPartialUserMessage(document.FileName)));
+            }
+
+            // The file was read correctly, but its extension lies about what it contains:
+            if (extraction.HasExtensionMismatch)
+            {
+                this.Logger.LogWarning("The document '{FilePath}' is actually a '{DetectedFormat}'.", document.FilePath, extraction.DetectedFormat);
+                await this.MessageBus.SendWarning(new(Icons.Material.Filled.RuleFolder, extraction.ToExtensionMismatchUserMessage(document.FileName)));
+            }
+
+            var fileContent = extraction.Content;
             sb.AppendLine($"""
                            
                            ## DOCUMENT {numDocuments}:

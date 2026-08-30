@@ -83,8 +83,7 @@ internal sealed partial class LuaResponse
 
         if (string.IsNullOrWhiteSpace(this.Assistant.Title) ||
             string.IsNullOrWhiteSpace(this.Assistant.Description) ||
-            string.IsNullOrWhiteSpace(this.Assistant.SystemPrompt) ||
-            string.IsNullOrWhiteSpace(this.Assistant.SubmitText))
+            !IsValidAssistantMetadata(this.Assistant))
         {
             error = LuaResponseParseError.INCOMPLETE_ASSISTANT_METADATA;
             return false;
@@ -104,6 +103,38 @@ internal sealed partial class LuaResponse
 
         return true;
     }
+
+    private static bool IsValidAssistantMetadata(AssistantBuilderAssistantMetadata assistant) => assistant.Kind switch
+    {
+        "FORM" => !string.IsNullOrWhiteSpace(assistant.SystemPrompt) &&
+                  !string.IsNullOrWhiteSpace(assistant.SubmitText) &&
+                  assistant.AllowAiStudioProfiles.HasValue &&
+                  assistant.Launch is null,
+        "CHAT_LAUNCHER" => assistant.SystemPrompt is null &&
+                           assistant.SubmitText is null &&
+                           assistant.AllowAiStudioProfiles is null &&
+                           IsValidChatLaunchMetadata(assistant.Launch),
+        _ => false,
+    };
+
+    private static bool IsValidChatLaunchMetadata(AssistantBuilderChatLaunchMetadata? launch)
+    {
+        if (launch is null || string.IsNullOrWhiteSpace(launch.WorkspaceName))
+            return false;
+
+        if (!IsOptionalGuid(launch.ProviderId, allowEmpty: false) ||
+            !IsOptionalGuid(launch.ProfileId, allowEmpty: true) ||
+            !IsOptionalGuid(launch.ChatTemplateId, allowEmpty: true))
+            return false;
+
+        return launch.DataSourceIds is null ||
+               launch.DataSourceIds.Length > 0 &&
+               launch.DataSourceIds.All(id => Guid.TryParse(id, out var parsed) && parsed != Guid.Empty) &&
+               launch.DataSourceIds.Distinct(StringComparer.OrdinalIgnoreCase).Count() == launch.DataSourceIds.Length;
+    }
+
+    private static bool IsOptionalGuid(string? value, bool allowEmpty) => value is null ||
+        Guid.TryParse(value, out var parsed) && (allowEmpty || parsed != Guid.Empty);
 
     private static string ExtractJson(string input)
     {
