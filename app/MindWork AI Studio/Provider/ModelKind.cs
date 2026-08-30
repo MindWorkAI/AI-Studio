@@ -48,14 +48,33 @@ public enum ModelKind
     IMAGE_GENERATION,
 
     /// <summary>
+    /// The model generates or edits videos.
+    /// </summary>
+    VIDEO_GENERATION,
+
+    /// <summary>
     /// The model transcribes audio into text.
     /// </summary>
     TRANSCRIPTION,
 
     /// <summary>
-    /// The model synthesizes speech from text.
+    /// The model speaks: it synthesizes speech from text, or answers in audio itself.
     /// </summary>
+    /// <remarks>
+    /// This covers the pure text-to-speech models as well as those which hold a conversation in
+    /// audio, such as the audio models of OpenAI. The latter do accept text, but they are made for
+    /// spoken input and output, so they do not belong among the chat models.
+    /// </remarks>
     SPEECH_SYNTHESIS,
+
+    /// <summary>
+    /// The model holds a spoken conversation over a live connection.
+    /// </summary>
+    /// <remarks>
+    /// These models expect a streaming connection of their own, usually a WebSocket, instead of the
+    /// chat completion API. They cannot be used for a normal chat.
+    /// </remarks>
+    REALTIME,
 
     /// <summary>
     /// The model extracts text from images or scanned documents.

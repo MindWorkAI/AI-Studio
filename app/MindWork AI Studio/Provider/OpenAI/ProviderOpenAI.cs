@@ -264,17 +264,16 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
     /// <inheritdoc />
     public override async Task<ModelLoadResult> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
+        //
+        // The prefixes are what OpenAI calls its chat models. That knowledge is specific to this
+        // provider, so it stays here. Which of those models are made for something other than
+        // chatting is not: the shared model kind detection sorts the image, video, audio, live
+        // speech, and transcription models out for us.
+        //
         var result = await this.LoadModels(SecretStoreType.LLM_PROVIDER, ["chatgpt-", "gpt-", "o1-", "o3-", "o4-"], token, apiKeyProvisional);
         return result with
         {
-            Models =
-            [
-                ..result.Models.Where(model => !model.Id.Contains("image", StringComparison.OrdinalIgnoreCase) &&
-                                               !model.Id.Contains("realtime", StringComparison.OrdinalIgnoreCase) &&
-                                               !model.Id.Contains("audio", StringComparison.OrdinalIgnoreCase) &&
-                                               !model.Id.Contains("tts", StringComparison.OrdinalIgnoreCase) &&
-                                               !model.Id.Contains("transcribe", StringComparison.OrdinalIgnoreCase))
-            ]
+            Models = [..result.Models.Where(model => model.IsChatModel())]
         };
     }
 
