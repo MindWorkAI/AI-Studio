@@ -1,4 +1,5 @@
 @using AIStudio.Provider
+@using AIStudio.Provider.HuggingFace
 @using AIStudio.Provider.SelfHosted
 @inherits MSGComponentBase
 
@@ -62,6 +63,24 @@
                         }
                     }
                 </MudSelect>
+            }
+
+            @if (this.DataLLMProvider.IsHFInstanceProviderNeeded())
+            {
+                <MudSelect T="HFInferenceProvider" Value="@this.HFInferenceProviderId" ValueChanged="@this.OnHFInferenceProviderChanged" Label="@T("Hugging Face Inference Provider")" Class="mb-3" OpenIcon="@Icons.Material.Filled.Dns" AdornmentColor="Color.Info" Adornment="Adornment.Start" Disabled="@this.IsEnterpriseConfiguration" Validation="@this.providerValidation.ValidatingHFInstanceProviderForEmbeddings">
+                    @foreach (HFInferenceProvider inferenceProvider in Enum.GetValues(typeof(HFInferenceProvider)))
+                    {
+                        @if (inferenceProvider.SupportsEmbeddings())
+                        {
+                            <MudSelectItem Value="@inferenceProvider">
+                                @inferenceProvider.ToName()
+                            </MudSelectItem>
+                        }
+                    }
+                </MudSelect>
+                <MudJustifiedText Class="mb-3">
+                    @T("Hugging Face offers embeddings through a few of its inference providers only, which is why this list is shorter than the one for chatting.")
+                </MudJustifiedText>
             }
 
             <MudField FullWidth="true" Label="@T("Model selection")" Variant="Variant.Outlined" Class="mb-3">

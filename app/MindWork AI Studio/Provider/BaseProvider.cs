@@ -376,8 +376,13 @@ public abstract class BaseProvider : IProvider, ISecretId
         errorCode = TryGetString(root, "code");
         errorType = TryGetString(root, "type");
 
-        // Services built on FastAPI, such as Helmholtz Blablador, word their errors as "detail":
-        errorMessage = TryGetString(root, "message") ?? TryGetString(root, "detail");
+        //
+        // Services built on FastAPI, such as Helmholtz Blablador, word their errors as "detail".
+        // And some providers put the sentence straight into "error" instead of an object, e.g.
+        // {"error": "Model not supported by provider novita"}. The object form was handled above,
+        // so reading "error" here can only meet the plain sentence:
+        //
+        errorMessage = TryGetString(root, "message") ?? TryGetString(root, "detail") ?? TryGetString(root, "error");
     }
 
     /// <summary>
@@ -510,16 +515,35 @@ public abstract class BaseProvider : IProvider, ISecretId
             
             if(nextResponse.StatusCode is HttpStatusCode.BadRequest)
             {
+                //
+                // The provider explains the problem in the body, while the reason phrase says no
+                // more than "Bad Request". We show that explanation and fall back to the phrase
+                // only when the body carries none:
+                //
+                var badRequestMessage = ReadProviderErrorMessage(errorBody);
+                if (string.IsNullOrWhiteSpace(badRequestMessage))
+                    badRequestMessage = nextResponse.ReasonPhrase;
+
+                //
+                // When we recognize what went wrong, we say what it means for the user instead of
+                // guessing at the message format. The classification happened above already:
+                //
+                var classifiedMessage = this.GetProviderRequestFailureUserMessage(providerRequestFailure);
+                if(!string.IsNullOrWhiteSpace(classifiedMessage))
+                {
+                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, classifiedMessage));
+                }
+
                 // Check if the error body contains "context" and "token" (case-insensitive),
                 // which indicates that the context window is likely exceeded:
-                if(errorBody.Contains("context", StringComparison.InvariantCultureIgnoreCase) &&
+                else if(errorBody.Contains("context", StringComparison.InvariantCultureIgnoreCase) &&
                    errorBody.Contains("token", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The data of the chat, including all file attachments, is probably too large for the selected model and provider. The provider message is: '{2}'"), this.InstanceName, this.Provider, nextResponse.ReasonPhrase)));
+                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The data of the chat, including all file attachments, is probably too large for the selected model and provider. The provider message is: '{2}'"), this.InstanceName, this.Provider, badRequestMessage)));
                 }
                 else
                 {
-                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The required message format might be changed. The provider message is: '{2}'"), this.InstanceName, this.Provider, nextResponse.ReasonPhrase)));
+                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The required message format might be changed. The provider message is: '{2}'"), this.InstanceName, this.Provider, badRequestMessage)));
                 }
 
                 this.logger.LogError("Failed request with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);

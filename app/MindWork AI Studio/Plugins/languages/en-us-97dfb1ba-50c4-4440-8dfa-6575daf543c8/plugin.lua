@@ -5946,6 +5946,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGMETHODDIALOG::T662524223"] = "A lin
 -- Cancel
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGMETHODDIALOG::T900713019"] = "Cancel"
 
+-- Hugging Face Inference Provider
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T1085481431"] = "Hugging Face Inference Provider"
+
 -- Failed to store the API key in the operating system. The message was: {0}. Please try again.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T1122745046"] = "Failed to store the API key in the operating system. The message was: {0}. Please try again."
 
@@ -5969,6 +5972,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T1847791252"] = "Up
 
 -- Failed to load the API key from the operating system. The message was: {0}. You might ignore this message and provide the API key again.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T1870831108"] = "Failed to load the API key from the operating system. The message was: {0}. You might ignore this message and provide the API key again."
+
+-- Hugging Face offers embeddings through a few of its inference providers only, which is why this list is shorter than the one for chatting.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T194295715"] = "Hugging Face offers embeddings through a few of its inference providers only, which is why this list is shorter than the one for chatting."
 
 -- Model
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T2189814010"] = "Model"
@@ -6362,6 +6368,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1870831108"] = "Failed to l
 
 -- Speech input
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1874348907"] = "Speech input"
+
+-- Choose which inference provider should answer your requests. When you pick one of the automatic options instead, Hugging Face selects a provider for you and switches to another one when your choice is unavailable.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1889879830"] = "Choose which inference provider should answer your requests. When you pick one of the automatic options instead, Hugging Face selects a provider for you and switches to another one when your choice is unavailable."
 
 -- Please enter a model name.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1936099896"] = "Please enter a model name."
@@ -7989,6 +7998,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SINGLEINPUTDIALOG::T4030229154"] = "Your Inp
 -- Cancel
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SINGLEINPUTDIALOG::T900713019"] = "Cancel"
 
+-- Hugging Face Inference Provider
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T1085481431"] = "Hugging Face Inference Provider"
+
 -- Failed to store the API key in the operating system. The message was: {0}. Please try again.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T1122745046"] = "Failed to store the API key in the operating system. The message was: {0}. Please try again."
 
@@ -8030,6 +8042,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T2810182573"] =
 
 -- Instance Name
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T2842060373"] = "Instance Name"
+
+-- Hugging Face transcribes audio through a few of its inference providers only, which is why this list is shorter than the one for chatting.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T3397943774"] = "Hugging Face transcribes audio through a few of its inference providers only, which is why this list is shorter than the one for chatting."
 
 -- Please enter a transcription model name.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T3703662664"] = "Please enter a transcription model name."
@@ -9275,6 +9290,21 @@ UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCELEVELEXTENSIONS::T3188327965"] = 
 
 -- Very Low
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCELEVELEXTENSIONS::T786675843"] = "Very Low"
+
+-- Automatic: the cheapest provider
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::HUGGINGFACE::HFINFERENCEPROVIDEREXTENSIONS::T1680748563"] = "Automatic: the cheapest provider"
+
+-- Automatic: your preferred order
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::HUGGINGFACE::HFINFERENCEPROVIDEREXTENSIONS::T2027398472"] = "Automatic: your preferred order"
+
+-- Automatic: the fastest provider
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::HUGGINGFACE::HFINFERENCEPROVIDEREXTENSIONS::T997045984"] = "Automatic: the fastest provider"
+
+-- No Hugging Face inference provider offers the selected model. Please check the model name and whether it is still available on Hugging Face.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::HUGGINGFACE::PROVIDERHUGGINGFACE::T1055093108"] = "No Hugging Face inference provider offers the selected model. Please check the model name and whether it is still available on Hugging Face."
+
+-- The Hugging Face inference provider '{0}' does not offer the selected model. Please select another inference provider, or let Hugging Face choose one for you.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::HUGGINGFACE::PROVIDERHUGGINGFACE::T3314840969"] = "The Hugging Face inference provider '{0}' does not offer the selected model. Please select another inference provider, or let Hugging Face choose one for you."
 
 -- Self-hosted
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::LLMPROVIDERSEXTENSIONS::T146444217"] = "Self-hosted"
@@ -11199,8 +11229,14 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::PROVIDERVALIDATION::T3550629491"] 
 -- Please enter an instance name.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::PROVIDERVALIDATION::T3999823516"] = "Please enter an instance name."
 
+-- This Hugging Face inference provider does not transcribe audio. Please select another one.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::PROVIDERVALIDATION::T4142849031"] = "This Hugging Face inference provider does not transcribe audio. Please select another one."
+
 -- Please select an Hugging Face inference provider.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::PROVIDERVALIDATION::T497939286"] = "Please select an Hugging Face inference provider."
+
+-- This Hugging Face inference provider does not create embeddings. Please select another one.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::PROVIDERVALIDATION::T649507886"] = "This Hugging Face inference provider does not create embeddings. Please select another one."
 
 -- Please select a model.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::PROVIDERVALIDATION::T818893091"] = "Please select a model."

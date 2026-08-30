@@ -86,6 +86,7 @@ public partial class SettingsPanelTranscription : SettingsPanelProviderBase
             { x => x.IsSelfHosted, transcriptionProvider.IsSelfHosted },
             { x => x.IsEditing, true },
             { x => x.DataHost, transcriptionProvider.Host },
+            { x => x.HFInferenceProviderId, transcriptionProvider.HFInferenceProvider },
             { x => x.IsEnterpriseConfiguration, transcriptionProvider.IsEnterpriseConfiguration },
         };
 

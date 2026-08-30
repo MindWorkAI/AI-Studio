@@ -69,19 +69,20 @@
 
             @if (this.DataLLMProvider.IsHFInstanceProviderNeeded())
             {
-                <MudSelect @bind-Value="@this.HFInferenceProviderId" Label="@T("Hugging Face Inference Provider")" Class="mb-3" OpenIcon="@Icons.Material.Filled.Dns" AdornmentColor="Color.Info" Adornment="Adornment.Start" Disabled="@this.IsEnterpriseConfiguration" Validation="@this.providerValidation.ValidatingHFInstanceProvider">
+                <MudSelect T="HFInferenceProvider" Value="@this.HFInferenceProviderId" ValueChanged="@this.OnHFInferenceProviderChanged" Label="@T("Hugging Face Inference Provider")" Class="mb-3" OpenIcon="@Icons.Material.Filled.Dns" AdornmentColor="Color.Info" Adornment="Adornment.Start" Disabled="@this.IsEnterpriseConfiguration" Validation="@this.providerValidation.ValidatingHFInstanceProvider">
                     @foreach (HFInferenceProvider inferenceProvider in Enum.GetValues(typeof(HFInferenceProvider)))
                     {
-                        <MudSelectItem Value="@inferenceProvider">
-                            @inferenceProvider.ToName()
-                        </MudSelectItem>
-                    }             
+                        @if (inferenceProvider.SupportsChat())
+                        {
+                            <MudSelectItem Value="@inferenceProvider">
+                                @inferenceProvider.ToName()
+                            </MudSelectItem>
+                        }
+                    }
                 </MudSelect>
-                @* ReSharper disable Asp.Entity *@
                 <MudJustifiedText Class="mb-3">
-                    Please double-check if your model name matches the curl specifications provided by the inference provider. If it doesn't, you might get a <b>Not Found</b> error when trying to use the model. Here's a <MudLink Href="https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct?inference_api=true&inference_provider=novita&language=sh" Target="_blank">curl example</MudLink>.
+                    @T("Choose which inference provider should answer your requests. When you pick one of the automatic options instead, Hugging Face selects a provider for you and switches to another one when your choice is unavailable.")
                 </MudJustifiedText>
-                @* ReSharper restore Asp.Entity *@
             }       
 
             @if (!this.IsLLMModelSelectionHidden)
@@ -90,7 +91,7 @@
                     <MudStack Row="@true" AlignItems="AlignItems.Center" StretchItems="StretchItems.End">
                         @if (this.DataLLMProvider.IsLLMModelProvidedManually())
                         {
-                            <MudButton Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.OpenInBrowser" Href="@this.DataLLMProvider.GetModelsOverviewURL(this.HFInferenceProviderId)" Target="_blank">
+                            <MudButton Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.OpenInBrowser" Href="@this.ModelsOverviewURL" Target="_blank">
                                 @T("Show available models")
                             </MudButton>
                             <MudTextField
@@ -108,6 +109,12 @@
                         }
                         else
                         {
+                            @if (!string.IsNullOrWhiteSpace(this.ModelsOverviewURL))
+                            {
+                                <MudButton Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.OpenInBrowser" Href="@this.ModelsOverviewURL" Target="_blank">
+                                    @T("Show available models")
+                                </MudButton>
+                            }
                             <MudButton Disabled="@(this.IsEnterpriseConfiguration || !this.DataLLMProvider.CanLoadModels(this.DataHost, this.dataAPIKey))" Variant="Variant.Filled" Size="Size.Small" StartIcon="@Icons.Material.Filled.Refresh" OnClick="@this.ReloadModels">
                                 @T("Load models")
                             </MudButton>

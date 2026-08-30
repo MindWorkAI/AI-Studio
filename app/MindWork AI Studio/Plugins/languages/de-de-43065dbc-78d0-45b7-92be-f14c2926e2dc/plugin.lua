@@ -5946,6 +5946,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGMETHODDIALOG::T662524223"] = "Ein L
 -- Cancel
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGMETHODDIALOG::T900713019"] = "Abbrechen"
 
+-- Hugging Face Inference Provider
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T1085481431"] = "Hugging Face-Inferenzanbieter"
+
 -- Failed to store the API key in the operating system. The message was: {0}. Please try again.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T1122745046"] = "Der API-Schlüssel konnte nicht im Betriebssystem gespeichert werden. Die Meldung war: {0}. Bitte versuchen Sie es erneut."
 
@@ -5969,6 +5972,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T1847791252"] = "Ak
 
 -- Failed to load the API key from the operating system. The message was: {0}. You might ignore this message and provide the API key again.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T1870831108"] = "Der API-Schlüssel konnte nicht vom Betriebssystem geladen werden. Die Meldung war: {0}. Sie können diese Meldung ignorieren und den API-Schlüssel erneut eingeben."
+
+-- Hugging Face offers embeddings through a few of its inference providers only, which is why this list is shorter than the one for chatting.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T194295715"] = "Hugging Face bietet Einbettungen nur über einige seiner Inferenzanbieter an. Deshalb ist diese Liste kürzer als die für Chats."
 
 -- Model
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T2189814010"] = "Modell"
@@ -6362,6 +6368,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1870831108"] = "Der API-Sch
 
 -- Speech input
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1874348907"] = "Spracheingabe"
+
+-- Choose which inference provider should answer your requests. When you pick one of the automatic options instead, Hugging Face selects a provider for you and switches to another one when your choice is unavailable.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1889879830"] = "Wählen Sie aus, welcher Inferenzanbieter Ihre Anfragen beantworten soll. Wenn Sie stattdessen eine der automatischen Optionen auswählen, wählt Hugging Face einen Anbieter für Sie aus und wechselt zu einem anderen, wenn der von Ihnen ausgewählte Anbieter nicht verfügbar ist."
 
 -- Please enter a model name.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::PROVIDERDIALOG::T1936099896"] = "Bitte geben Sie einen Modellnamen ein."
@@ -7989,6 +7998,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SINGLEINPUTDIALOG::T4030229154"] = "Ihre Ein
 -- Cancel
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SINGLEINPUTDIALOG::T900713019"] = "Abbrechen"
 
+-- Hugging Face Inference Provider
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T1085481431"] = "Hugging Face-Inferenzanbieter"
+
 -- Failed to store the API key in the operating system. The message was: {0}. Please try again.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T1122745046"] = "Der API-Schlüssel konnte nicht im Betriebssystem gespeichert werden. Die Meldung lautete: '{0}'. Bitte versuchen Sie es erneut."
 
@@ -8030,6 +8042,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T2810182573"] =
 
 -- Instance Name
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T2842060373"] = "Instanzname"
+
+-- Hugging Face transcribes audio through a few of its inference providers only, which is why this list is shorter than the one for chatting.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T3397943774"] = "Hugging Face transkribiert Audio nur über einige seiner Inferenzanbieter. Deshalb ist diese Liste kürzer als die für den Chat."
 
 -- Please enter a transcription model name.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T3703662664"] = "Bitte geben Sie den Namen eines Transkriptionsmodells ein."
@@ -9275,6 +9290,21 @@ UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCELEVELEXTENSIONS::T3188327965"] = 
 
 -- Very Low
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::CONFIDENCELEVELEXTENSIONS::T786675843"] = "Sehr niedrig"
+
+-- Automatic: the cheapest provider
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::HUGGINGFACE::HFINFERENCEPROVIDEREXTENSIONS::T1680748563"] = "Automatisch: der günstigste Anbieter"
+
+-- Automatic: your preferred order
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::HUGGINGFACE::HFINFERENCEPROVIDEREXTENSIONS::T2027398472"] = "Automatisch: Ihre bevorzugte Reihenfolge"
+
+-- Automatic: the fastest provider
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::HUGGINGFACE::HFINFERENCEPROVIDEREXTENSIONS::T997045984"] = "Automatisch: der schnellste Anbieter"
+
+-- No Hugging Face inference provider offers the selected model. Please check the model name and whether it is still available on Hugging Face.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::HUGGINGFACE::PROVIDERHUGGINGFACE::T1055093108"] = "Kein Hugging-Face-Inferenzanbieter bietet das ausgewählte Modell an. Bitte prüfen Sie den Modellnamen und ob das Modell auf Hugging Face noch verfügbar ist."
+
+-- The Hugging Face inference provider '{0}' does not offer the selected model. Please select another inference provider, or let Hugging Face choose one for you.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::HUGGINGFACE::PROVIDERHUGGINGFACE::T3314840969"] = "Der Hugging Face-Inferenzanbieter „{0}“ bietet das ausgewählte Modell nicht an. Bitte wählen Sie einen anderen Inferenzanbieter aus oder lassen Sie Hugging Face einen Anbieter für Sie auswählen."
 
 -- Self-hosted
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::LLMPROVIDERSEXTENSIONS::T146444217"] = "Selbst gehostet"
@@ -11199,8 +11229,14 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::PROVIDERVALIDATION::T3550629491"] 
 -- Please enter an instance name.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::PROVIDERVALIDATION::T3999823516"] = "Bitte geben Sie einen Instanznamen ein."
 
+-- This Hugging Face inference provider does not transcribe audio. Please select another one.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::PROVIDERVALIDATION::T4142849031"] = "Dieser Hugging-Face-Inferenzanbieter transkribiert keine Audiodateien. Bitte wählen Sie einen anderen aus."
+
 -- Please select an Hugging Face inference provider.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::PROVIDERVALIDATION::T497939286"] = "Bitte wählen Sie einen Hugging Face-Inferenzanbieter aus."
+
+-- This Hugging Face inference provider does not create embeddings. Please select another one.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::PROVIDERVALIDATION::T649507886"] = "Dieser Hugging-Face-Inferenzanbieter erstellt keine Einbettungen. Bitte wählen Sie einen anderen aus."
 
 -- Please select a model.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::PROVIDERVALIDATION::T818893091"] = "Bitte wählen Sie ein Modell aus."

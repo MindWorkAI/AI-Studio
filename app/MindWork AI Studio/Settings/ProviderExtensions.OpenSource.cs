@@ -463,6 +463,84 @@ public static partial class ProviderExtensions
             ];
 
         //
+        // Google Gemma models. Gemma is the open-weights family, while Gemini is not, which is why
+        // Gemma is handled here and Gemini in the Google implementation.
+        //
+        if (modelName.IndexOf("gemma") is not -1)
+        {
+            //
+            // Every checkpoint of the Gemma 4 generation is multimodal and understands video as
+            // well; there is no text-only variant. Audio input is limited to the E2B, E4B, and 12B
+            // checkpoints. The models can think, but only when the request asks them to: their chat
+            // template keeps the thinking channel closed by default.
+            //
+            if (modelName.IndexOf("gemma-4") is not -1 ||
+                modelName.IndexOf("gemma4") is not -1 ||
+                modelName.IndexOf("gemma 4") is not -1)
+            {
+                if (modelName.IndexOf("e2b") is not -1 ||
+                    modelName.IndexOf("e4b") is not -1 ||
+                    modelName.IndexOf("12b") is not -1)
+                    return
+                    [
+                        Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                        Capability.AUDIO_INPUT, Capability.VIDEO_INPUT,
+                        Capability.TEXT_OUTPUT,
+
+                        Capability.OPTIONAL_REASONING, Capability.FUNCTION_CALLING,
+                        Capability.CHAT_COMPLETION_API,
+                    ];
+
+                return
+                [
+                    Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                    Capability.VIDEO_INPUT,
+                    Capability.TEXT_OUTPUT,
+
+                    Capability.OPTIONAL_REASONING, Capability.FUNCTION_CALLING,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+            }
+
+            //
+            // Gemma 3 accepts images from the 4B checkpoint upwards; the 1B one is text-only. This
+            // generation does not reason. The check for the small checkpoint looks for "-1b" rather
+            // than "1b", so that a name such as gemma-3-31b does not match it.
+            //
+            if (modelName.IndexOf("gemma-3") is not -1 ||
+                modelName.IndexOf("gemma3") is not -1 ||
+                modelName.IndexOf("gemma 3") is not -1)
+            {
+                if (modelName.IndexOf("-1b") is not -1)
+                    return
+                    [
+                        Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
+
+                        Capability.FUNCTION_CALLING,
+                        Capability.CHAT_COMPLETION_API,
+                    ];
+
+                return
+                [
+                    Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT,
+                    Capability.TEXT_OUTPUT,
+
+                    Capability.FUNCTION_CALLING,
+                    Capability.CHAT_COMPLETION_API,
+                ];
+            }
+
+            //
+            // The earlier generations take text only and were not built for tool usage:
+            //
+            return
+            [
+                Capability.TEXT_INPUT, Capability.TEXT_OUTPUT,
+                Capability.CHAT_COMPLETION_API,
+            ];
+        }
+
+        //
         // Z AI / GLM models:
         //
         if (modelName.IndexOf("glm") is not -1)

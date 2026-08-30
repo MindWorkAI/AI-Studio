@@ -46,7 +46,16 @@ public static class ModelKindExtensions
 
     private static readonly string[] IMAGE_GENERATION_MARKERS = ["flux", "stable-diffusion", "sdxl", "dall-e", "midjourney", "gpt-image"];
 
-    private static readonly string[] VIDEO_GENERATION_MARKERS = ["sora", "veo-", "kling", "runway"];
+    private static readonly string[] VIDEO_GENERATION_MARKERS = ["sora", "veo-", "runway"];
+
+    //
+    // Markers which have to stand as a word of their own. "kling" is such a case: taken as a plain
+    // substring, it also matches the organization "Klingspor", the model "Inkling", and the
+    // fine-tune "Llama-2-7b-chat-klingon" -- all of them models to chat with, which would vanish
+    // from the user's list. The video models themselves are named "kling-v1" or "kling-video",
+    // where the name ends at a separator.
+    //
+    private static readonly string[] VIDEO_GENERATION_WORD_MARKERS = ["kling"];
 
     //
     // Voxtral is marketed as an audio model which understands speech, so one could expect it to work
@@ -101,7 +110,7 @@ public static class ModelKindExtensions
         if (HasAnyMarker(model.Id, IMAGE_GENERATION_MARKERS))
             return ModelKind.IMAGE_GENERATION;
 
-        if (HasAnyMarker(model.Id, VIDEO_GENERATION_MARKERS))
+        if (HasAnyMarker(model.Id, VIDEO_GENERATION_MARKERS) || HasAnyWordMarker(model.Id, VIDEO_GENERATION_WORD_MARKERS))
             return ModelKind.VIDEO_GENERATION;
 
         if (HasAnyMarker(model.Id, REALTIME_MARKERS))
@@ -158,4 +167,53 @@ public static class ModelKindExtensions
 
         return false;
     }
+
+    /// <summary>
+    /// Checks whether the model name contains one of the markers as a word of its own.
+    /// </summary>
+    /// <remarks>
+    /// A short marker which is also a common syllable cannot be looked for as a plain substring:
+    /// it would match names which have nothing to do with it, and the model would be sorted into
+    /// the wrong kind. Such a marker counts only where a name segment begins and ends with it.
+    /// </remarks>
+    /// <param name="modelId">The ID of the model.</param>
+    /// <param name="markers">The markers to look for.</param>
+    /// <returns>True, when one of the markers stands as a word of its own.</returns>
+    private static bool HasAnyWordMarker(string modelId, string[] markers)
+    {
+        foreach (var marker in markers)
+        {
+            var searchIndex = 0;
+            while (searchIndex <= modelId.Length - marker.Length)
+            {
+                var markerIndex = modelId.IndexOf(marker, searchIndex, StringComparison.OrdinalIgnoreCase);
+                if (markerIndex is -1)
+                    break;
+
+                if (IsWholeWord(modelId, marker, markerIndex))
+                    return true;
+
+                // The same marker may appear again later in the name, so we keep looking:
+                searchIndex = markerIndex + 1;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool IsWholeWord(string modelId, string marker, int markerIndex)
+    {
+        if (markerIndex > 0 && !IsSeparator(modelId[markerIndex - 1]))
+            return false;
+
+        var endIndex = markerIndex + marker.Length;
+        return endIndex >= modelId.Length || IsSeparator(modelId[endIndex]);
+    }
+
+    /// <summary>
+    /// The characters which separate the parts of a model name, such as in "fal-ai/kling-video".
+    /// </summary>
+    /// <param name="character">The character to check.</param>
+    /// <returns>True, when the character separates two parts of a name.</returns>
+    private static bool IsSeparator(char character) => character is '/' or '-' or '_' or '.' or ' ' or ':';
 }

@@ -88,6 +88,7 @@ public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
             { x => x.IsSelfHosted, embeddingProvider.IsSelfHosted },
             { x => x.IsEditing, true },
             { x => x.DataHost, embeddingProvider.Host },
+            { x => x.HFInferenceProviderId, embeddingProvider.HFInferenceProvider },
             { x => x.IsEnterpriseConfiguration, embeddingProvider.IsEnterpriseConfiguration },
         };
 
