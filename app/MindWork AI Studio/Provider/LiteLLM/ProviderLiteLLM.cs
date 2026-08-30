@@ -66,9 +66,10 @@ public sealed class ProviderLiteLLM(string hostname) : BaseProvider(LLMProviders
     }
 
     /// <inheritdoc />
-    public override Task<IReadOnlyList<IReadOnlyList<float>>> EmbedTextAsync(Model embeddingModel, SettingsManager settingsManager, CancellationToken token = default, params List<string> texts)
+    public override async Task<IReadOnlyList<IReadOnlyList<float>>> EmbedTextAsync(Model embeddingModel, SettingsManager settingsManager, CancellationToken token = default, params List<string> texts)
     {
-        return Task.FromResult<IReadOnlyList<IReadOnlyList<float>>>([]);
+        var requestedSecret = await Program.RUST_SERVICE.GetAPIKey(this, SecretStoreType.EMBEDDING_PROVIDER);
+        return await this.PerformStandardTextEmbeddingRequest(requestedSecret, embeddingModel, token: token, texts: texts);
     }
 
     /// <inheritdoc />
@@ -86,7 +87,7 @@ public sealed class ProviderLiteLLM(string hostname) : BaseProvider(LLMProviders
     /// <inheritdoc />
     public override Task<ModelLoadResult> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return Task.FromResult(ModelLoadResult.FromModels([]));
+        return this.LoadModels(SecretStoreType.EMBEDDING_PROVIDER, static model => model.IsEmbeddingModel(), token, apiKeyProvisional);
     }
 
     /// <inheritdoc />

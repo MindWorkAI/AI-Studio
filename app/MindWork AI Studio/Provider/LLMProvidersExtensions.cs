@@ -196,6 +196,7 @@ public static class LLMProvidersExtensions
         LLMProviders.IONOS => true,
         LLMProviders.GWDG => true,
         LLMProviders.OPEN_ROUTER => true,
+        LLMProviders.LITE_LLM => true,
 
         //
         // Providers that do not support embeddings:
@@ -208,7 +209,6 @@ public static class LLMProvidersExtensions
         LLMProviders.HUGGINGFACE => false,
         LLMProviders.PERPLEXITY => false,
         LLMProviders.HETZNER => false,
-        LLMProviders.LITE_LLM => false,
 
         //
         // Self-hosted providers are treated as a special case anyway.
