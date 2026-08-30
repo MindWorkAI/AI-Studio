@@ -106,9 +106,9 @@ public partial class AssistantBatchProcessing
     private async Task WriteLogAsync(string resolvedOutputDirectory)
     {
         var sb = new StringBuilder();
-        sb.AppendLine(BatchProcessingCsv.ToCsvRow(LOG_SEPARATOR, T("File"), T("Time"), T("Model"), T("Status"), T("Details")));
+        sb.AppendLine(CsvWriter.ToRow(LOG_SEPARATOR, T("File"), T("Time"), T("Model"), T("Status"), T("Details")));
         foreach (var fileResult in this.fileResults.Where(x => x.Status is not BatchProcessingFileStatus.QUEUED and not BatchProcessingFileStatus.PROCESSING))
-            sb.AppendLine(BatchProcessingCsv.ToCsvRow(LOG_SEPARATOR, fileResult.RelativePath, fileResult.ProcessedAt.ToString(TIME_FORMAT, CultureInfo.InvariantCulture), fileResult.ModelName, fileResult.Status.ToString(), fileResult.Message));
+            sb.AppendLine(CsvWriter.ToRow(LOG_SEPARATOR, fileResult.RelativePath, fileResult.ProcessedAt.ToString(TIME_FORMAT, CultureInfo.InvariantCulture), fileResult.ModelName, fileResult.Status.ToString(), fileResult.Message));
 
         await this.WriteCsvFileAsync(Path.Join(resolvedOutputDirectory, LOG_FILENAME), sb.ToString());
     }
@@ -120,9 +120,9 @@ public partial class AssistantBatchProcessing
     {
         var separator = this.csvSeparator.Character(this.customCsvSeparator);
         var sb = new StringBuilder();
-        sb.AppendLine(BatchProcessingCsv.ToCsvRow(separator, T("File"), this.ResultColumnHeader));
+        sb.AppendLine(CsvWriter.ToRow(separator, T("File"), this.ResultColumnHeader));
         foreach (var fileResult in this.fileResults.Where(x => x.Status is BatchProcessingFileStatus.DONE))
-            sb.AppendLine(BatchProcessingCsv.ToCsvRow(separator, fileResult.RelativePath, fileResult.ResultText));
+            sb.AppendLine(CsvWriter.ToRow(separator, fileResult.RelativePath, fileResult.ResultText));
 
         await this.WriteCsvFileAsync(Path.Join(resolvedOutputDirectory, this.ResolveResultsFileName()), sb.ToString());
     }

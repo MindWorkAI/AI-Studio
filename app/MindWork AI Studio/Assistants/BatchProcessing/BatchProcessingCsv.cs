@@ -3,35 +3,13 @@ using System.Text;
 namespace AIStudio.Assistants.BatchProcessing;
 
 /// <summary>
-/// Reads and writes the CSV files of the batch processing assistant. Fields
-/// are quoted according to RFC 4180 using the separator selected for the
-/// respective file.
+/// Reads the CSV files of the batch processing assistant. Writing them is the job of CsvWriter,
+/// which quotes fields according to RFC 4180 using the separator selected for the respective file.
 /// </summary>
 public static class BatchProcessingCsv
 {
-    public static string ToCsvRow(char separator, params string[] fields) => string.Join(separator, fields.Select(field => ToCsvField(field, separator)));
-
     /// <summary>
-    /// Quotes one CSV field according to RFC 4180.
-    /// </summary>
-    private static string ToCsvField(string text, char separator)
-    {
-        if (string.IsNullOrEmpty(text))
-            return string.Empty;
-
-        // Quoting the complete field is important for long and multi-line AI
-        // answers: neither separators nor line breaks within an answer may
-        // create another column or row.
-        if (!text.Contains(separator) && !text.Contains('"') && !text.Contains('\n') && !text.Contains('\r'))
-            return text;
-
-        return $"""
-                "{text.Replace("\"", "\"\"")}"
-                """;
-    }
-
-    /// <summary>
-    /// Parses a CSV text which was written by <see cref="ToCsvRow"/>.
+    /// Parses a CSV text which was written by CsvWriter.ToRow.
     /// </summary>
     /// <remarks>
     /// We parse the file ourselves instead of splitting lines, because quoted
