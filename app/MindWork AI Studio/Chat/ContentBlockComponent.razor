@@ -67,10 +67,13 @@
                             {
                                 <MudMenuItem OnClick="@(() => this.ExportDocument(documentFormat))" Icon="@documentFormat.ToIcon()" Label="@documentFormat.ToName()"/>
                             }
-                            @if (this.TabularExport is { } tabularExport)
+                            @if (this.MessageTables.Count > 0)
                             {
                                 <MudDivider/>
-                                <MudMenuItem OnClick="@(() => this.ExportDocument(tabularExport.Format))" Icon="@tabularExport.Format.ToIcon()" Label="@tabularExport.Format.ToName()"/>
+                                @foreach (var messageTable in this.MessageTables)
+                                {
+                                    <MudMenuItem OnClick="@(() => this.ExportTable(messageTable))" Icon="@messageTable.Format.ToIcon()" Label="@this.ExportLabel(messageTable)"/>
+                                }
                             }
                             <MudDivider/>
                             @foreach (var textFormat in FileExportFormatExtensions.TEXT_FORMATS)
