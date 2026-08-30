@@ -106,6 +106,12 @@ public partial class ContentBlockComponent : MSGComponentBase
     private bool hasActiveMathContainer;
     private bool isDisposed;
 
+    /// <summary>
+    /// Whether this block can be exported at all. Only text carries something a document can hold;
+    /// an image, for example, has no representation any of our export formats could write.
+    /// </summary>
+    private bool CanExport => this.Content.TryGetMarkdownText(out _);
+
     private bool HasCsv => PlainFileExport.TryExtractCsvContent(this.Content, out _);
 
     #region Overrides of ComponentBase

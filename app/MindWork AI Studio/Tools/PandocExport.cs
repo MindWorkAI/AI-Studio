@@ -27,6 +27,17 @@ public static class PandocExport
         if (!format.UsesPandoc() || format.ToFileTypeFilter() is not { } fileTypeFilter)
             throw new ArgumentOutOfRangeException(nameof(format), format, "Pandoc cannot write this format.");
 
+        //
+        // We read the text before we ask for a path: when there is nothing to convert, the user
+        // should learn that right away instead of picking a file first and getting an error afterwards.
+        //
+        if (!markdownContent.TryGetMarkdownText(out var markdownText))
+        {
+            LOGGER.LogWarning("Cannot export the content as {ExportFormat}, because it carries no text.", format);
+            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Cancel, TB("Only text messages can be exported.")));
+            return false;
+        }
+
         var response = await rustService.SaveFile(TB("Export chat"), [fileTypeFilter]);
         if (response.UserCancelled)
         {
@@ -41,15 +52,6 @@ public static class PandocExport
         {
             var tempMarkdownFile = Guid.NewGuid().ToString();
             tempMarkdownFilePath = Path.Combine(Path.GetTempPath(), tempMarkdownFile);
-            
-            // Extract text content from chat:
-            var markdownText = markdownContent switch
-            {
-                ContentText text => text.Text,
-                ContentImage _ => "Image export is not yet possible.",
-
-                _ => "Unknown content type. Cannot export document."
-            };
 
             // Write text content to a temporary file:
             await File.WriteAllTextAsync(tempMarkdownFilePath, markdownText);

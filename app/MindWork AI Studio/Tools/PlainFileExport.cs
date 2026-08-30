@@ -63,6 +63,17 @@ public static partial class PlainFileExport
         if (format.UsesPandoc() || format.ToFileTypeFilter() is not { } fileTypeFilter)
             throw new ArgumentOutOfRangeException(nameof(format), format, "AI Studio cannot write this format itself.");
 
+        //
+        // We read the text before we ask for a path: when there is nothing to write, the user
+        // should learn that right away instead of picking a file first and getting an error afterward.
+        //
+        if (!markdownContent.TryGetMarkdownText(out var markdownText))
+        {
+            LOGGER.LogWarning("Cannot export the content as {ExportFormat}, because it carries no text.", format);
+            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Cancel, TB("Only text messages can be exported.")));
+            return false;
+        }
+
         var response = await rustService.SaveFile(TB("Export chat"), [fileTypeFilter]);
         if (response.UserCancelled)
         {
@@ -76,12 +87,7 @@ public static partial class PlainFileExport
         {
             var fileContent = format switch
             {
-                FileExportFormat.MARKDOWN => markdownContent switch
-                {
-                    ContentText text => text.Text,
-                    ContentImage _ => "Image export is not yet possible.",
-                    _ => "Unknown content type. Cannot export document."
-                },
+                FileExportFormat.MARKDOWN => markdownText,
                 FileExportFormat.CSV when TryExtractCsvContent(markdownContent, out var csvContent) => csvContent,
                 _ => throw new ArgumentOutOfRangeException(nameof(format), format, null),
             };

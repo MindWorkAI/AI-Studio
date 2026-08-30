@@ -59,7 +59,7 @@
                     </MudTooltip>
                 }
 
-                @if (this.Role is ChatRole.AI)
+                @if (this.Role is ChatRole.AI && this.CanExport)
                 {
                     <MudTooltip Text="@T("Export chat")" Placement="Placement.Bottom">
                         <MudMenu Icon="@Icons.Material.Filled.Save">
