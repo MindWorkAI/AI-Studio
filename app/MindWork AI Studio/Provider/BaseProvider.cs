@@ -1097,6 +1097,15 @@ public abstract class BaseProvider : IProvider, ISecretId
             
             form.Add(new StringContent(modelName), "model");
 
+            //
+            // Ask for the plain JSON format explicitly. We only ever read the 'text' field, so the
+            // additional data of 'verbose_json' would be wasted anyway. More importantly, gateways
+            // fill in a format of their own when the client names none: LiteLLM asks for
+            // 'verbose_json' to get the duration it needs for its cost tracking, and the newer
+            // transcription models of OpenAI reject that format.
+            //
+            form.Add(new StringContent("json"), "response_format");
+
             using var request = new HttpRequestMessage(HttpMethod.Post, host.TranscriptionURL());
             request.Content = form;
 
