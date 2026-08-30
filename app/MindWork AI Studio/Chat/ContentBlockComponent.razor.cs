@@ -117,6 +117,7 @@ public partial class ContentBlockComponent : MSGComponentBase
     private MarkdownRenderPlan cachedMarkdownRenderPlan = MarkdownRenderPlan.EMPTY;
     private string cachedMessageTablesInput = string.Empty;
     private IReadOnlyList<MessageTable> cachedMessageTables = [];
+    private char csvSeparator = ',';
     private ElementReference mathContentContainer;
     private string lastMathRenderSignature = string.Empty;
     private bool hasActiveMathContainer;
@@ -151,7 +152,7 @@ public partial class ContentBlockComponent : MSGComponentBase
                 return this.cachedMessageTables;
 
             this.cachedMessageTablesInput = markdown;
-            this.cachedMessageTables = PlainFileExport.ExtractTables(markdown);
+            this.cachedMessageTables = PlainFileExport.ExtractTables(markdown, this.csvSeparator);
             return this.cachedMessageTables;
         }
     }
@@ -161,13 +162,13 @@ public partial class ContentBlockComponent : MSGComponentBase
     /// </summary>
     /// <remarks>
     /// With a single table the format alone says everything. As soon as an answer holds more than
-    /// one, the user has to be able to tell them apart: the heading of the first column does that,
-    /// unless it is missing or two tables happen to start with the same one, and then we count them.
+    /// one, the user has to be able to tell them apart: the heading above a table does that, unless
+    /// it is missing or two tables share one, and then we count them.
     /// </remarks>
     private string ExportLabel(MessageTable table)
     {
         var tables = this.MessageTables;
-        if (tables.DistinctBy(entry => entry.Ordinal).Count() < 2)
+        if (tables.Count < 2)
             return table.Format.ToName();
 
         var captionIsTelling = !string.IsNullOrWhiteSpace(table.Caption)
@@ -189,6 +190,22 @@ public partial class ContentBlockComponent : MSGComponentBase
     {
         this.RegisterStreamingEvents();
         await base.OnInitializedAsync();
+
+        //
+        // Which separator a CSV needs depends on the language, and asking for the language means
+        // waiting for the settings. The first render therefore uses the comma we start with; once
+        // we know better, we ask for another render. Nobody can have opened the export menu in
+        // between, so no file is ever written with the wrong separator.
+        //
+        var languagePlugin = await this.SettingsManager.GetActiveLanguagePlugin();
+        var separator = CsvWriter.SeparatorFor(languagePlugin.IETFTag);
+        if (separator == this.csvSeparator)
+            return;
+
+        this.csvSeparator = separator;
+        this.cachedMessageTablesInput = string.Empty;
+        this.cachedMessageTables = [];
+        await this.InvokeAsync(this.StateHasChanged);
     }
 
     protected override Task OnParametersSetAsync()
@@ -651,7 +668,7 @@ public partial class ContentBlockComponent : MSGComponentBase
     {
         try
         {
-            await PlainFileExport.ToFile(this.RustService, this.EffectiveExportTitle, table.Format, table.Content);
+            await PlainFileExport.ToFile(this.RustService, this.EffectiveExportTitle, table.Format, table.Content, table.Caption);
         }
         catch (ArgumentOutOfRangeException e)
         {

@@ -20,14 +20,14 @@ public static class PlainFileExport
     /// </summary>
     /// <remarks>
     /// Two kinds of tables end up in an answer. Almost always it is a Markdown table written with
-    /// pipes, which is what a model produces on its own; we turn its cells into a file and offer
-    /// both separators, because a comma collides with the decimal comma of German numbers. Rarely
-    /// a model answers with a fenced code block marked as csv or tsv, which already is the
-    /// finished file: we hand that through untouched rather than taking it apart and reassembling it.
+    /// pipes, which is what a model produces on its own; we turn its cells into a file. Rarely a
+    /// model answers with a fenced code block marked as csv or tsv, which already is the finished
+    /// file: we hand that through untouched rather than taking it apart and reassembling it.
     /// </remarks>
     /// <param name="markdown">The Markdown text of the message.</param>
+    /// <param name="separator">The separator to write a Markdown table with, see CsvWriter.SeparatorFor.</param>
     /// <returns>The tables, or an empty list when the message holds none.</returns>
-    public static IReadOnlyList<MessageTable> ExtractTables(string markdown)
+    public static IReadOnlyList<MessageTable> ExtractTables(string markdown, char separator)
     {
         if (string.IsNullOrWhiteSpace(markdown))
             return [];
@@ -39,28 +39,40 @@ public static class PlainFileExport
         //
         var document = Markdig.Markdown.Parse(markdown, Markdown.SAFE_MARKDOWN_PIPELINE);
 
+        //
+        // What a table is about stands above it, not in it: models introduce their tables with a
+        // heading. We remember every heading with its line so that each table can take the last
+        // one before it, and fall back to its own first column heading when there is none.
+        //
+        var headings = document.Descendants<HeadingBlock>()
+            .Select(heading => (heading.Line, Text: ToPlainText(heading)))
+            .Where(heading => !string.IsNullOrWhiteSpace(heading.Text))
+            .OrderBy(heading => heading.Line)
+            .ToList();
+
         var tables = document.Descendants<Table>()
-            .Select(table => (table.Line, Contents: ToContents(table)));
+            .Select(table => (table.Line, Content: ToContent(table, separator)));
 
         var codeBlocks = document.Descendants<FencedCodeBlock>()
-            .Select(block => (block.Line, Contents: ToContents(block)));
+            .Select(block => (block.Line, Content: ToContent(block)));
 
-        //
-        // The ordinal counts the tables of the message, not the entries of the menu, so the two
-        // entries of one Markdown table share it. That is what lets the menu name a table even
-        // when another one in the same answer starts with the same heading.
-        //
         return tables.Concat(codeBlocks)
-            .Where(entry => entry.Contents.Count > 0)
+            .Where(entry => entry.Content is not null)
             .OrderBy(entry => entry.Line)
-            .SelectMany((entry, index) => entry.Contents.Select(content => new MessageTable(index + 1, content.Caption, content.Format, content.Content)))
+            .Select((entry, index) => new MessageTable(
+                index + 1,
+                Caption: HeadingAbove(entry.Line) is { Length: > 0 } heading ? heading : entry.Content!.Value.Fallback,
+                entry.Content!.Value.Format,
+                entry.Content.Value.Text))
             .ToList();
+
+        string HeadingAbove(int line) => headings.LastOrDefault(heading => heading.Line < line).Text ?? string.Empty;
     }
 
     /// <summary>
-    /// Turns a Markdown table into one file per separator we offer.
+    /// Turns a Markdown table into a file.
     /// </summary>
-    private static IReadOnlyList<(string Caption, FileExportFormat Format, string Content)> ToContents(Table table)
+    private static (string Fallback, FileExportFormat Format, string Text)? ToContent(Table table, char separator)
     {
         var rows = table.OfType<TableRow>()
             .Select(row => row.OfType<TableCell>().Select(ToPlainText).ToArray())
@@ -68,21 +80,19 @@ public static class PlainFileExport
             .ToList();
 
         if (rows.Count is 0)
-            return [];
+            return null;
 
-        var caption = rows[0].FirstOrDefault() ?? string.Empty;
+        var text = new StringBuilder();
+        foreach (var fields in rows)
+            text.AppendLine(CsvWriter.ToRow(separator, fields));
 
-        return
-        [
-            (caption, FileExportFormat.CSV, ToDelimitedText(rows, ',')),
-            (caption, FileExportFormat.TSV, ToDelimitedText(rows, '\t')),
-        ];
+        return (rows[0].FirstOrDefault() ?? string.Empty, FileExportFormat.CSV, text.ToString());
     }
 
     /// <summary>
     /// Turns a fenced code block into a file, when the model marked it as tabular data.
     /// </summary>
-    private static IReadOnlyList<(string Caption, FileExportFormat Format, string Content)> ToContents(FencedCodeBlock block)
+    private static (string Fallback, FileExportFormat Format, string Text)? ToContent(FencedCodeBlock block)
     {
         var format = block.Info?.Trim() switch
         {
@@ -93,41 +103,32 @@ public static class PlainFileExport
         };
 
         if (format is FileExportFormat.NONE)
-            return [];
+            return null;
 
         var content = block.Lines.ToString();
-        var separator = format is FileExportFormat.TSV ? '\t' : ',';
+        var blockSeparator = format is FileExportFormat.TSV ? '\t' : ',';
         var firstLine = content.AsSpan();
         var lineEnd = firstLine.IndexOf('\n');
         if (lineEnd >= 0)
             firstLine = firstLine[..lineEnd];
 
-        var separatorPosition = firstLine.IndexOf(separator);
-        var caption = (separatorPosition >= 0 ? firstLine[..separatorPosition] : firstLine).Trim().Trim('"').ToString();
+        var separatorPosition = firstLine.IndexOf(blockSeparator);
+        var fallback = (separatorPosition >= 0 ? firstLine[..separatorPosition] : firstLine).Trim().Trim('"').ToString();
 
-        return [(caption, format, content)];
-    }
-
-    private static string ToDelimitedText(IEnumerable<string[]> rows, char separator)
-    {
-        var text = new StringBuilder();
-        foreach (var fields in rows)
-            text.AppendLine(CsvWriter.ToRow(separator, fields));
-
-        return text.ToString();
+        return (fallback, format, content);
     }
 
     /// <summary>
-    /// Reads the text of a table cell, without the Markdown which decorates it.
+    /// Reads the text of a table cell or a heading, without the Markdown which decorates it.
     /// </summary>
     /// <remarks>
     /// A spreadsheet has no use for the asterisks around a bold number: they would keep it from
-    /// being completely recognized as a number. So we keep what a reader would read and drop the rest.
+    /// being recognized as a number. So we keep what a reader would read and drop the rest.
     /// </remarks>
-    private static string ToPlainText(TableCell cell)
+    private static string ToPlainText(MarkdownObject container)
     {
         var text = new StringBuilder();
-        foreach (var inline in cell.Descendants<LeafInline>())
+        foreach (var inline in container.Descendants<LeafInline>())
             switch (inline)
             {
                 case CodeInline code:
@@ -164,13 +165,15 @@ public static class PlainFileExport
     /// <param name="format">The format to write. Must be a format which does not use Pandoc.</param>
     /// <param name="fileContent">What to write. The caller decides whether that is the entire
     /// message or one table out of it.</param>
+    /// <param name="fileName">What the file is about, used to suggest a name in the save dialog.
+    /// Null falls back to a generic name.</param>
     /// <returns>True, when the file was written.</returns>
-    public static async Task<bool> ToFile(RustService rustService, string dialogTitle, FileExportFormat format, string fileContent)
+    public static async Task<bool> ToFile(RustService rustService, string dialogTitle, FileExportFormat format, string fileContent, string? fileName = null)
     {
         if (format.UsesPandoc() || format.ToFileTypeFilter() is not { } fileTypeFilter)
             throw new ArgumentOutOfRangeException(nameof(format), format, "AI Studio cannot write this format itself.");
 
-        var response = await rustService.SaveFile(dialogTitle, [fileTypeFilter], format.ToSuggestedFileName());
+        var response = await rustService.SaveFile(dialogTitle, [fileTypeFilter], format.ToSuggestedFileName(fileName));
         if (response.UserCancelled)
         {
             LOGGER.LogInformation("User cancelled the save dialog.");

@@ -53,8 +53,8 @@ public static class FileExportFormatExtensions
         FileExportFormat.LATEX => TB("LaTeX (.tex)"),
         FileExportFormat.MARKDOWN => TB("Markdown (.md)"),
         FileExportFormat.HTML => TB("Webpage (.html)"),
-        FileExportFormat.CSV => TB("Table, comma-separated (.csv)"),
-        FileExportFormat.TSV => TB("Table, tab-separated (.tsv)"),
+        FileExportFormat.CSV => TB("Table (.csv)"),
+        FileExportFormat.TSV => TB("Table (.tsv)"),
 
         _ => TB("Unknown format"),
     };
@@ -99,12 +99,65 @@ public static class FileExportFormatExtensions
     /// </summary>
     /// <remarks>
     /// Without a name, the dialog opens with an empty field and the user easily ends up with a
-    /// file which carries no extension at all. The name is deliberately not translated: a file
-    /// name should survive being copied between systems and locales.
+    /// file which carries no extension at all. The fallback name is deliberately not translated:
+    /// a file name should survive being copied between systems and locales.
     /// </remarks>
     /// <param name="format">The format.</param>
+    /// <param name="name">What the file is about, for example the heading above a table. Anything
+    /// a file name cannot hold is removed. Null or blank falls back to a generic name.</param>
     /// <returns>The suggested file name, including its extension.</returns>
-    public static string ToSuggestedFileName(this FileExportFormat format) => $"export{format.ToFileExtension()}";
+    public static string ToSuggestedFileName(this FileExportFormat format, string? name = null)
+    {
+        var fileName = ToFileNameFragment(name);
+        return $"{(fileName.Length is 0 ? "export" : fileName)}{format.ToFileExtension()}";
+    }
+
+    /// <summary>
+    /// Turns arbitrary text into something a file system accepts as a name.
+    /// </summary>
+    /// <remarks>
+    /// We do not ask the runtime which characters are invalid: macOS forbids almost nothing, so a
+    /// name taken from there would break as soon as the file reaches a Windows share. The fixed
+    /// set below is what no common file system accepts, plus the length limit which keeps the name
+    /// readable in a dialog.
+    /// </remarks>
+    private static string ToFileNameFragment(string? name)
+    {
+        const int MAX_LENGTH = 60;
+        const string FORBIDDEN_CHARACTERS = @"\/:*?""<>|";
+
+        if (string.IsNullOrWhiteSpace(name))
+            return string.Empty;
+
+        var fragment = new StringBuilder(name.Length);
+        var lastWasSpace = false;
+        foreach (var character in name)
+        {
+            var isSpace = char.IsWhiteSpace(character) || char.IsControl(character) || FORBIDDEN_CHARACTERS.Contains(character);
+            if (isSpace)
+            {
+                // Collapse whatever we dropped into a single space, so "Table 1: People"
+                // becomes "Table 1 People" instead of "Table 1  People":
+                if (fragment.Length > 0)
+                    lastWasSpace = true;
+
+                continue;
+            }
+
+            if (lastWasSpace)
+            {
+                fragment.Append(' ');
+                lastWasSpace = false;
+            }
+
+            fragment.Append(character);
+            if (fragment.Length >= MAX_LENGTH)
+                break;
+        }
+
+        // A trailing dot makes a file invisible on Unix and is dropped by Windows:
+        return fragment.ToString().TrimEnd('.');
+    }
 
     /// <summary>
     /// Returns the filter which the save dialog offers for the format.

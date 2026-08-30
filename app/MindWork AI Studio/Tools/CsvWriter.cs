@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace AIStudio.Tools;
 
 /// <summary>
@@ -6,6 +8,33 @@ namespace AIStudio.Tools;
 /// </summary>
 public static class CsvWriter
 {
+    /// <summary>
+    /// The separator a spreadsheet expects from a CSV file written for the given language.
+    /// </summary>
+    /// <remarks>
+    /// Wherever a comma separates the decimals of a number, it cannot separate the columns of a
+    /// file as well: German Excel therefore expects a semicolon and puts a comma-separated file
+    /// into a single column. This is the same rule Excel itself follows when it writes a CSV, so
+    /// we ask the culture rather than keeping a list of languages of our own.
+    /// </remarks>
+    /// <param name="ietfTag">The IETF tag of the language, for example "de-DE".</param>
+    /// <returns>The separator to write with.</returns>
+    public static char SeparatorFor(string ietfTag)
+    {
+        if (string.IsNullOrWhiteSpace(ietfTag))
+            return ',';
+
+        try
+        {
+            var culture = CultureInfo.GetCultureInfo(ietfTag);
+            return culture.NumberFormat.NumberDecimalSeparator is "," ? ';' : ',';
+        }
+        catch (CultureNotFoundException)
+        {
+            return ',';
+        }
+    }
+
     /// <summary>
     /// Joins the given fields into one row.
     /// </summary>
