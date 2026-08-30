@@ -85,4 +85,14 @@ public enum ModelKind
     /// The model classifies content for policy violations.
     /// </summary>
     MODERATION,
+
+    /// <summary>
+    /// Not a model at all.
+    /// </summary>
+    /// <remarks>
+    /// Some providers list entries in their models endpoint which are no models, such as OpenAI's
+    /// 'container' resource for its code interpreter. A provider talking to such an entry gets an
+    /// error, so they must not appear in any of the model lists we show.
+    /// </remarks>
+    OTHER,
 }

@@ -23,6 +23,12 @@ namespace AIStudio.Provider;
 public static class ModelKindExtensions
 {
     //
+    // Checked first, because these entries are no models at all: whatever else their name might
+    // suggest, none of the other kinds applies to them.
+    //
+    private static readonly string[] OTHER_MARKERS = ["container"];
+
+    //
     // Reranking is checked before embedding: rerankers are commonly named after the embedding model
     // they belong to, e.g. Qwen3-VL-Reranker-8B next to Qwen3-VL-Embedding-8B.
     //
@@ -60,7 +66,9 @@ public static class ModelKindExtensions
 
     //
     // The models for spoken conversations over a live connection. They speak their own protocol,
-    // usually a WebSocket, and answer a chat completion request with an error.
+    // usually a WebSocket, and answer a chat completion request with an error. Checked before
+    // transcription, because some of them carry the name of a transcription model, such as
+    // OpenAI's 'gpt-realtime-whisper'. Those still need the live connection.
     //
     private static readonly string[] REALTIME_MARKERS = ["realtime"];
 
@@ -78,6 +86,9 @@ public static class ModelKindExtensions
         if (string.IsNullOrWhiteSpace(model.Id) || model.IsSystemModel)
             return ModelKind.CHAT;
 
+        if (HasAnyMarker(model.Id, OTHER_MARKERS))
+            return ModelKind.OTHER;
+
         if (HasAnyMarker(model.Id, RERANKING_MARKERS))
             return ModelKind.RERANKING;
 
@@ -93,14 +104,14 @@ public static class ModelKindExtensions
         if (HasAnyMarker(model.Id, VIDEO_GENERATION_MARKERS))
             return ModelKind.VIDEO_GENERATION;
 
+        if (HasAnyMarker(model.Id, REALTIME_MARKERS))
+            return ModelKind.REALTIME;
+
         if (HasAnyMarker(model.Id, TRANSCRIPTION_MARKERS))
             return ModelKind.TRANSCRIPTION;
 
         if (HasAnyMarker(model.Id, SPEECH_SYNTHESIS_MARKERS))
             return ModelKind.SPEECH_SYNTHESIS;
-
-        if (HasAnyMarker(model.Id, REALTIME_MARKERS))
-            return ModelKind.REALTIME;
 
         if (HasAnyMarker(model.Id, OCR_MARKERS))
             return ModelKind.OCR;
