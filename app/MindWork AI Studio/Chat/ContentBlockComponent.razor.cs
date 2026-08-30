@@ -174,8 +174,13 @@ public partial class ContentBlockComponent : MSGComponentBase
         var captionIsTelling = !string.IsNullOrWhiteSpace(table.Caption)
                                && tables.Where(entry => entry.Ordinal != table.Ordinal).All(entry => !string.Equals(entry.Caption, table.Caption, StringComparison.Ordinal));
 
+        //
+        // The caption is the heading the model wrote, so it already carries the language of the
+        // answer and needs no translation of ours. Only the fallback, where we have to count the
+        // tables ourselves, is our own wording.
+        //
         return captionIsTelling
-            ? string.Format(this.T("Table \"{0}\" ({1})"), table.Caption, table.Format.ToFileExtension())
+            ? $"{table.Caption} ({table.Format.ToFileExtension()})"
             : string.Format(this.T("Table {0} ({1})"), table.Ordinal, table.Format.ToFileExtension());
     }
 
