@@ -74,11 +74,11 @@
                             <MudMenuItem OnClick="@(() => this.ExportDocument(FileExportFormat.LATEX))" Icon="@Icons.Material.Filled.Functions">
                                 @T("LaTeX (.tex)")
                             </MudMenuItem>
-                            @if (this.HasCsv)
+                            @if (this.TabularExport is { } tabularExport)
                             {
                                 <MudDivider />
-                                <MudMenuItem OnClick="@(() => this.ExportDocument(FileExportFormat.CSV))" Icon="@Icons.Material.Filled.TableChart">
-                                    @T("CSV (.csv)")
+                                <MudMenuItem OnClick="@(() => this.ExportDocument(tabularExport.Format))" Icon="@tabularExport.Format.ToIcon()">
+                                    @tabularExport.Format.ToName()
                                 </MudMenuItem>
                             }
                             <MudDivider />

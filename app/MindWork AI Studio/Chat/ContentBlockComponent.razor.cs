@@ -101,6 +101,8 @@ public partial class ContentBlockComponent : MSGComponentBase
     private int lastRenderHash;
     private string cachedMarkdownRenderPlanInput = string.Empty;
     private MarkdownRenderPlan cachedMarkdownRenderPlan = MarkdownRenderPlan.EMPTY;
+    private string cachedTabularExportInput = string.Empty;
+    private TabularExtract? cachedTabularExport;
     private ElementReference mathContentContainer;
     private string lastMathRenderSignature = string.Empty;
     private bool hasActiveMathContainer;
@@ -112,7 +114,29 @@ public partial class ContentBlockComponent : MSGComponentBase
     /// </summary>
     private bool CanExport => this.Content.TryGetMarkdownText(out _);
 
-    private bool HasCsv => PlainFileExport.TryExtractCsvContent(this.Content, out _);
+    /// <summary>
+    /// The table this block holds, if any, so that the export menu can offer it.
+    /// </summary>
+    /// <remarks>
+    /// The result is cached the same way the Markdown render plan is: the render tree asks for
+    /// this on every render, and during streaming every token causes one. Without the cache, the
+    /// regex would run over the whole message once per token.
+    /// </remarks>
+    private TabularExtract? TabularExport
+    {
+        get
+        {
+            if (!this.Content.TryGetMarkdownText(out var markdown))
+                return null;
+
+            if (ReferenceEquals(this.cachedTabularExportInput, markdown) || string.Equals(this.cachedTabularExportInput, markdown, StringComparison.Ordinal))
+                return this.cachedTabularExport;
+
+            this.cachedTabularExportInput = markdown;
+            this.cachedTabularExport = PlainFileExport.TryExtractTabularContent(markdown, out var extract) ? extract : null;
+            return this.cachedTabularExport;
+        }
+    }
 
     #region Overrides of ComponentBase
 
@@ -557,29 +581,19 @@ public partial class ContentBlockComponent : MSGComponentBase
     {
         try
         {
-            switch (format)
-            {
-                case FileExportFormat.MARKDOWN:
-                case FileExportFormat.CSV:
-                    await PlainFileExport.ToFile(this.RustService, format, this.Content);
-                    break;
-
-                case FileExportFormat.MICROSOFT_WORD:
-                case FileExportFormat.OPEN_DOCUMENT_TEXT:
-                case FileExportFormat.HTML:
-                case FileExportFormat.LATEX:
-                    await PandocExport.ToDocument(this.RustService, this.DialogService, format, this.Content);
-                    break;
-
-                default:
-                    LOGGER.LogError($"No exporter is registered for {format}.");
-                    return;
-            }
+            //
+            // The format itself knows who writes it, so we do not have to keep a list of formats
+            // here which would fall out of sync with the one in FileExportFormatExtensions.
+            //
+            if (format.UsesPandoc())
+                await PandocExport.ToDocument(this.RustService, this.DialogService, format, this.Content);
+            else
+                await PlainFileExport.ToFile(this.RustService, format, this.Content);
         }
         catch (ArgumentOutOfRangeException e)
         {
-            await this.MessageBus.SendError(new(Icons.Material.Filled.Error, string.Format(this.T("Failed to export document to unknown file format '{0}'."), format)));
-            LOGGER.LogError($"Failed to export document, because the format ('{format}') is unknown to our Pandoc service:\n{e}");
+            await this.MessageBus.SendError(new(Icons.Material.Filled.Error, string.Format(this.T("Failed to export this message, because the file format '{0}' is unknown."), format)));
+            LOGGER.LogError(e, "Failed to export the content, because no exporter writes the format {ExportFormat}.", format);
         }
     }
     

@@ -13,44 +13,56 @@ public static partial class PlainFileExport
     private static string TB(string fallbackEn) => I18N.I.T(fallbackEn, typeof(PlainFileExport).Namespace, nameof(PlainFileExport));
 
     /// <summary>
-    /// Extracts the content of the first complete Markdown code block marked as CSV.
+    /// Reads the first complete Markdown code block which holds tabular data.
     /// </summary>
-    public static bool TryExtractCsvContent(IContent content, out string csvContent)
+    /// <remarks>
+    /// Models mark such a block with the name of the separator they used. The separator only
+    /// decides the file format where it has an established extension of its own: comma, semicolon,
+    /// and pipe separated data all belong into a .csv file, whereas tab separated data has .tsv.
+    /// </remarks>
+    /// <param name="markdown">The Markdown text to read.</param>
+    /// <param name="extract">The tabular data, or the default when there is none.</param>
+    /// <returns>True, when the text holds tabular data.</returns>
+    public static bool TryExtractTabularContent(string markdown, out TabularExtract extract)
     {
-        if (content is ContentText text)
+        var match = TabularCodeFenceRegex().Match(markdown);
+        if (!match.Success)
         {
-            var match = CsvCodeFenceRegex().Match(text.Text);
-            if (match.Success)
-            {
-                csvContent = match.Groups["content"].Value;
-                return true;
-            }
+            extract = default;
+            return false;
         }
 
-        csvContent = string.Empty;
-        return false;
+        var format = match.Groups["separator"].Value.Equals("tsv", StringComparison.OrdinalIgnoreCase)
+            ? FileExportFormat.TSV
+            : FileExportFormat.CSV;
+
+        extract = new(match.Groups["content"].Value, format);
+        return true;
     }
 
     [GeneratedRegex(
         """
-        # Matches an opening Markdown code fence and captures its delimiter.
-        ^(?<fence>`{3,}|~{3,})
+        # Matches an opening Markdown code fence, which CommonMark lets you indent by up to three
+        # spaces, and captures both the delimiter and the character it is made of.
+        ^[ ]{0,3}(?<fence>(?<fenceChar>`|~)\k<fenceChar>{2,})
 
-        # Matches the csv language identifier and the end of the opening fence line.
-        # Also allow tab-separated, pipe-separated and semicolon separated values at the code fence
-        [ \t]*(csv|tsv|psv|ssv)[ \t]*\r?\n
+        # Matches the name of the separator the model used, followed by the end of the opening
+        # fence line. Besides comma separated values, models also produce tab, pipe, and semicolon
+        # separated ones.
+        [ \t]*(?<separator>csv|tsv|psv|ssv)[ \t]*\r?\n
 
         # Captures the content of the first matching fenced code block.
         (?<content>[\s\S]*?)
 
-        # Matches the corresponding closing fence followed by a line ending or end of input.
-        ^\k<fence>[ \t]*(?=\r?\n|$)
+        # Matches the closing fence, which CommonMark lets you write longer than the opening one,
+        # followed by a line ending or the end of the input.
+        ^[ ]{0,3}\k<fence>\k<fenceChar>*[ \t]*(?=\r?\n|$)
         """,
         RegexOptions.IgnoreCase |
         RegexOptions.Multiline |
         RegexOptions.IgnorePatternWhitespace)]
-    private static partial Regex CsvCodeFenceRegex();
-    
+    private static partial Regex TabularCodeFenceRegex();
+
     /// <summary>
     /// Writes the given content to a plain text file and lets the user save it.
     /// </summary>
@@ -64,13 +76,30 @@ public static partial class PlainFileExport
             throw new ArgumentOutOfRangeException(nameof(format), format, "AI Studio cannot write this format itself.");
 
         //
-        // We read the text before we ask for a path: when there is nothing to write, the user
-        // should learn that right away instead of picking a file first and getting an error afterward.
+        // We work out what we are going to write before we ask for a path: when there is nothing
+        // to write, the user should learn that right away instead of picking a file first and
+        // getting an error afterward.
         //
         if (!markdownContent.TryGetMarkdownText(out var markdownText))
         {
             LOGGER.LogWarning("Cannot export the content as {ExportFormat}, because it carries no text.", format);
             await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Cancel, TB("Only text messages can be exported.")));
+            return false;
+        }
+
+        string fileContent;
+        if (format is FileExportFormat.MARKDOWN)
+            fileContent = markdownText;
+        else if (TryExtractTabularContent(markdownText, out var tabularExtract) && tabularExtract.Format == format)
+            fileContent = tabularExtract.Content;
+        else
+        {
+            //
+            // The message changed between showing the menu entry and clicking it: what looked like
+            // a table a moment ago is gone, or it is no longer the format the user asked for.
+            //
+            LOGGER.LogWarning("Cannot export the content as {ExportFormat}, because it holds no matching table.", format);
+            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Cancel, TB("This message no longer holds a table which could be exported.")));
             return false;
         }
 
@@ -85,13 +114,6 @@ public static partial class PlainFileExport
 
         try
         {
-            var fileContent = format switch
-            {
-                FileExportFormat.MARKDOWN => markdownText,
-                FileExportFormat.CSV when TryExtractCsvContent(markdownContent, out var csvContent) => csvContent,
-                _ => throw new ArgumentOutOfRangeException(nameof(format), format, null),
-            };
-
             await File.WriteAllTextAsync(response.SaveFilePath, fileContent);
             await MessageBus.INSTANCE.SendSuccess(new(Icons.Material.Filled.CheckCircle, TB("Document export successful")));
             
