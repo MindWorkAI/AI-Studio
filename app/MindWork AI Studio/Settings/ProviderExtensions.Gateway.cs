@@ -4,16 +4,26 @@ namespace AIStudio.Settings;
 
 public static partial class ProviderExtensions
 {
-    private static List<Capability> GetModelCapabilitiesOpenRouter(Model model)
+    /// <summary>
+    /// Determines the capabilities of a model offered through a gateway.
+    /// </summary>
+    /// <remarks>
+    /// A gateway serves the models of many other providers rather than models of its own. OpenRouter,
+    /// LiteLLM, and the Hugging Face router all work that way, and all three name their models the
+    /// same: "vendor/model-name".
+    /// </remarks>
+    /// <param name="model">The model as the gateway names it.</param>
+    /// <returns>The capabilities of the model when reached through a gateway.</returns>
+    private static List<Capability> GetModelCapabilitiesGateway(Model model)
     {
         //
-        // OpenRouter model IDs follow the pattern "vendor/model-name". Examples:
+        // Model IDs follow the pattern "vendor/model-name". Examples:
         // - openai/gpt-5.6
         // - anthropic/claude-opus-5
         // - google/gemini-3.7-flash
         // - qwen/qwen3.8-flash-next
         //
-        // OpenRouter offers the models of all the other providers. Instead of keeping a
+        // A gateway offers the models of all the other providers. Instead of keeping a
         // second set of rules here, which would always lag behind, we hand the model
         // over to the provider implementation which already knows it. The vendor prefix
         // has to be removed first: some of those implementations match the beginning of
@@ -41,26 +51,26 @@ public static partial class ProviderExtensions
             "perplexity" => GetModelCapabilitiesPerplexity(bareModel),
 
             // Everything else is open source: Qwen, Llama, GLM, Kimi, Muse, Hunyuan,
-            // Nemotron, Grok, and whatever OpenRouter adds next. DeepSeek belongs here
+            // Nemotron, Grok, and whatever a gateway adds next. DeepSeek belongs here
             // as well: its own implementation covers the aliases of the DeepSeek
-            // platform, while OpenRouter uses the names of the open weights.
+            // platform, while the gateways use the names of the open weights.
             _ => GetModelCapabilitiesOpenSource(bareModel),
         };
 
-        return NormalizeForOpenRouter(capabilities);
+        return NormalizeForGateway(capabilities);
     }
 
     /// <summary>
-    /// Adjusts the capabilities reported by another provider for use through OpenRouter.
+    /// Adjusts the capabilities reported by another provider for use through a gateway.
     /// </summary>
     /// <param name="capabilities">The capabilities as reported by the provider implementation.</param>
-    /// <returns>The capabilities as they apply when using the model through OpenRouter.</returns>
+    /// <returns>The capabilities as they apply when using the model through a gateway.</returns>
     /// <remarks>
-    /// OpenRouter serves every model through its OpenAI-compatible chat completion API.
+    /// A gateway serves every model through its OpenAI-compatible chat completion API.
     /// The Responses API is not available there, no matter which API the original
     /// provider offers.
     /// </remarks>
-    private static List<Capability> NormalizeForOpenRouter(List<Capability> capabilities)
+    private static List<Capability> NormalizeForGateway(List<Capability> capabilities)
     {
         capabilities.Remove(Capability.RESPONSES_API);
         if(!capabilities.Contains(Capability.CHAT_COMPLETION_API))
