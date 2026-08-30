@@ -54,9 +54,16 @@ public static partial class ProviderExtensions
             LLMProviders.ALIBABA_CLOUD => GetModelCapabilitiesAlibaba(model),
             LLMProviders.PERPLEXITY => GetModelCapabilitiesPerplexity(model),
             LLMProviders.OPEN_ROUTER => GetModelCapabilitiesOpenRouter(model),
-            LLMProviders.HETZNER => GetModelCapabilitiesOpenSource(model),
-            LLMProviders.IONOS => GetModelCapabilitiesOpenSource(model),
-            LLMProviders.LITE_LLM => GetModelCapabilitiesOpenSource(model),
+            LLMProviders.HETZNER or LLMProviders.IONOS => GetModelCapabilitiesOpenSource(model),
+            
+            //
+            // LiteLLM is a gateway just like OpenRouter, and it names its models the same way:
+            // "vendor/model", e.g. "anthropic/claude-opus-5" or "azure/gpt-5.6". So we let the
+            // OpenRouter detection handle it, which resolves the vendor prefix and asks the
+            // provider who really knows the model. Everything it cannot place is treated as
+            // an open source model, which is the right fallback for a freely named alias:
+            //
+            LLMProviders.LITE_LLM => GetModelCapabilitiesOpenRouter(model),
 
             LLMProviders.GROQ => GetModelCapabilitiesOpenSource(model),
             LLMProviders.FIREWORKS => GetModelCapabilitiesOpenSource(model),
