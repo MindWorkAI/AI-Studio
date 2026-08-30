@@ -10,9 +10,42 @@ public sealed class ProviderHuggingFace : BaseProvider
 {
     private static readonly ILogger<ProviderHuggingFace> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderHuggingFace>();
 
-    public ProviderHuggingFace(HFInferenceProvider hfProvider, Model model) : base(LLMProviders.HUGGINGFACE, new Uri($"https://router.huggingface.co/{hfProvider.Endpoints(model)}"), ExternalHttpTrustPolicy.SYSTEM_TRUST_ONLY, LOGGER)
+    /// <summary>
+    /// The OpenAI-compatible endpoint which serves every inference provider.
+    /// </summary>
+    /// <remarks>
+    /// Hugging Face also keeps a route per provider, such as "/novita/v3/openai/". Those expect the
+    /// model ID as that provider spells it, which differs from the ID on the hub: Novita knows
+    /// "google/gemma-4-31B-it" as "google/gemma-4-31b-it", and the router is case-sensitive. Asking
+    /// for the hub spelling there is answered with "Model not supported by provider novita". This
+    /// endpoint takes the hub spelling and translates it for us, so it is the one we use.
+    /// </remarks>
+    private const string ROUTER_BASE_URL = "https://router.huggingface.co/v1/";
+
+    private readonly HFInferenceProvider hfProvider;
+
+    public ProviderHuggingFace(HFInferenceProvider hfProvider) : base(LLMProviders.HUGGINGFACE, new Uri(ROUTER_BASE_URL), ExternalHttpTrustPolicy.SYSTEM_TRUST_ONLY, LOGGER)
     {
-        LOGGER.LogInformation($"We use the inference provider '{hfProvider}'. Thus we use the base URL 'https://router.huggingface.co/{hfProvider.Endpoints(model)}'.");
+        this.hfProvider = hfProvider;
+        LOGGER.LogInformation($"We use the inference provider '{hfProvider}'. Thus, we address the models as '<model>{hfProvider.ModelSuffix()}'.");
+    }
+
+    /// <summary>
+    /// Builds the model name to send to the router.
+    /// </summary>
+    /// <remarks>
+    /// The router picks the inference provider from a suffix on the model name. When the user wrote
+    /// a suffix themselves, we keep theirs: appending a second one would name a model nobody knows.
+    /// </remarks>
+    /// <param name="model">The model the user chose.</param>
+    /// <returns>The model name including the provider suffix, when one applies.</returns>
+    private string BuildModelIdentifier(Model model)
+    {
+        var modelId = model.Id;
+        if (string.IsNullOrWhiteSpace(modelId) || modelId.Contains(':'))
+            return modelId;
+
+        return $"{modelId}{this.hfProvider.ModelSuffix()}";
     }
 
     #region Implementation of IProvider
@@ -41,7 +74,7 @@ public sealed class ProviderHuggingFace : BaseProvider
 
                                return new ChatCompletionAPIRequest
                                {
-                                   Model = chatModel.Id,
+                                   Model = this.BuildModelIdentifier(chatModel),
 
                                    // Build the messages:
                                    // - First of all the system prompt

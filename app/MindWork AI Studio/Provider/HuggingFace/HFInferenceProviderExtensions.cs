@@ -1,43 +1,90 @@
-﻿namespace AIStudio.Provider.HuggingFace;
+﻿using AIStudio.Tools.PluginSystem;
+
+namespace AIStudio.Provider.HuggingFace;
 
 public static class HFInferenceProviderExtensions
 {
-    public static string Endpoints(this HFInferenceProvider provider, Model model) => provider switch
-    {
-        HFInferenceProvider.CEREBRAS => "cerebras/v1/",
-        HFInferenceProvider.NEBIUS_AI_STUDIO => "nebius/v1/",
-        HFInferenceProvider.SAMBANOVA => "sambanova/v1/",
-        HFInferenceProvider.NOVITA => "novita/v3/openai/",
-        HFInferenceProvider.HYPERBOLIC => "hyperbolic/v1/",
-        HFInferenceProvider.TOGETHER_AI => "together/v1/",
-        HFInferenceProvider.FIREWORKS => "fireworks-ai/inference/v1/",
-        HFInferenceProvider.HF_INFERENCE_API => $"hf-inference/models/{model.ToString()}/v1/",
-        _ => string.Empty,
-    };
-    
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(HFInferenceProviderExtensions).Namespace, nameof(HFInferenceProviderExtensions));
+
+    /// <summary>
+    /// The slug Hugging Face uses for this inference provider.
+    /// </summary>
+    /// <param name="provider">The inference provider.</param>
+    /// <returns>The slug, or an empty string for the routing strategies, which name no provider.</returns>
     public static string EndpointsId(this HFInferenceProvider provider) => provider switch
     {
+        HFInferenceProvider.BASETEN => "baseten",
         HFInferenceProvider.CEREBRAS => "cerebras",
-        HFInferenceProvider.NEBIUS_AI_STUDIO => "nebius",
-        HFInferenceProvider.SAMBANOVA => "sambanova",
-        HFInferenceProvider.NOVITA => "novita",
-        HFInferenceProvider.HYPERBOLIC => "hyperbolic",
-        HFInferenceProvider.TOGETHER_AI => "together",
-        HFInferenceProvider.FIREWORKS => "fireworks",
+        HFInferenceProvider.COHERE => "cohere",
+        HFInferenceProvider.DEEPINFRA => "deepinfra",
+        HFInferenceProvider.FEATHERLESS_AI => "featherless-ai",
+        HFInferenceProvider.FIREWORKS => "fireworks-ai",
+        HFInferenceProvider.GROQ => "groq",
         HFInferenceProvider.HF_INFERENCE_API => "hf-inference",
+        HFInferenceProvider.NOVITA => "novita",
+        HFInferenceProvider.NSCALE => "nscale",
+        HFInferenceProvider.OVHCLOUD => "ovhcloud",
+        HFInferenceProvider.PUBLIC_AI => "publicai",
+        HFInferenceProvider.SCALEWAY => "scaleway",
+        HFInferenceProvider.TOGETHER_AI => "together",
+        HFInferenceProvider.ZAI => "zai-org",
+
         _ => string.Empty,
     };
-    
+
+    /// <summary>
+    /// The suffix which tells the router where to send the request.
+    /// </summary>
+    /// <remarks>
+    /// The router serves every provider through one endpoint. Which provider answers is decided by
+    /// a suffix on the model name, e.g. "google/gemma-4-31B-it:novita". Without a suffix, the router
+    /// picks the fastest provider itself.
+    /// </remarks>
+    /// <param name="provider">The inference provider.</param>
+    /// <returns>The suffix including its colon, or an empty string when the router should choose.</returns>
+    public static string ModelSuffix(this HFInferenceProvider provider) => provider switch
+    {
+        HFInferenceProvider.NONE or HFInferenceProvider.AUTOMATIC => string.Empty,
+
+        HFInferenceProvider.CHEAPEST => ":cheapest",
+        HFInferenceProvider.PREFERRED => ":preferred",
+
+        _ => $":{provider.EndpointsId()}",
+    };
+
+    /// <summary>
+    /// The value to filter the Hugging Face model catalog by.
+    /// </summary>
+    /// <param name="provider">The inference provider.</param>
+    /// <returns>The provider slug, or "all" when no particular provider was chosen.</returns>
+    public static string CatalogFilter(this HFInferenceProvider provider)
+    {
+        var slug = provider.EndpointsId();
+        return string.IsNullOrEmpty(slug) ? "all" : slug;
+    }
+
     public static string ToName(this HFInferenceProvider provider) => provider switch
     {
+        HFInferenceProvider.AUTOMATIC => TB("Automatic: the fastest provider"),
+        HFInferenceProvider.CHEAPEST => TB("Automatic: the cheapest provider"),
+        HFInferenceProvider.PREFERRED => TB("Automatic: your preferred order"),
+
+        HFInferenceProvider.BASETEN => "Baseten",
         HFInferenceProvider.CEREBRAS => "Cerebras",
-        HFInferenceProvider.NEBIUS_AI_STUDIO => "Nebius AI Studio",
-        HFInferenceProvider.SAMBANOVA => "Sambanova",
-        HFInferenceProvider.NOVITA => "Novita",
-        HFInferenceProvider.HYPERBOLIC => "Hyperbolic",
-        HFInferenceProvider.TOGETHER_AI => "Together AI",
+        HFInferenceProvider.COHERE => "Cohere",
+        HFInferenceProvider.DEEPINFRA => "DeepInfra",
+        HFInferenceProvider.FEATHERLESS_AI => "Featherless AI",
         HFInferenceProvider.FIREWORKS => "Fireworks AI",
+        HFInferenceProvider.GROQ => "Groq",
         HFInferenceProvider.HF_INFERENCE_API => "Hugging Face Inference API",
+        HFInferenceProvider.NOVITA => "Novita",
+        HFInferenceProvider.NSCALE => "Nscale",
+        HFInferenceProvider.OVHCLOUD => "OVHcloud",
+        HFInferenceProvider.PUBLIC_AI => "Public AI",
+        HFInferenceProvider.SCALEWAY => "Scaleway",
+        HFInferenceProvider.TOGETHER_AI => "Together AI",
+        HFInferenceProvider.ZAI => "Z.ai",
+
         _ => string.Empty,
     };
 }
