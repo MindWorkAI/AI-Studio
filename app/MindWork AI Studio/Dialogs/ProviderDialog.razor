@@ -72,7 +72,7 @@
                 <MudSelect T="HFInferenceProvider" Value="@this.HFInferenceProviderId" ValueChanged="@this.OnHFInferenceProviderChanged" Label="@T("Hugging Face Inference Provider")" Class="mb-3" OpenIcon="@Icons.Material.Filled.Dns" AdornmentColor="Color.Info" Adornment="Adornment.Start" Disabled="@this.IsEnterpriseConfiguration" Validation="@this.providerValidation.ValidatingHFInstanceProvider">
                     @foreach (HFInferenceProvider inferenceProvider in Enum.GetValues(typeof(HFInferenceProvider)))
                     {
-                        @if (inferenceProvider is not HFInferenceProvider.NONE)
+                        @if (inferenceProvider.SupportsChat())
                         {
                             <MudSelectItem Value="@inferenceProvider">
                                 @inferenceProvider.ToName()

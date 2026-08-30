@@ -184,21 +184,20 @@ public sealed class ProviderHuggingFace : BaseProvider
     /// </summary>
     /// <remarks>
     /// The router reports every model it knows, together with the providers serving it. When the
-    /// user named a provider, we show what that provider offers. Should that leave nothing, we show
-    /// the whole list instead: some providers serve models the list does not attribute to them, and
-    /// an empty selection would leave the user without any way forward.
+    /// user named a provider, we show what that provider offers and nothing else. Showing more
+    /// would be a disservice: every model outside that list is answered with a bad request, and the
+    /// user would only learn about it once they try to chat.
     /// </remarks>
     /// <param name="response">The response of the model endpoint.</param>
     /// <returns>The models to offer.</returns>
     private IEnumerable<Model> SelectChatModels(ModelsResponse response)
     {
-        var chatModels = response.Data.Where(hfModel => new Model(hfModel.Id, null).IsChatModel()).ToList();
+        var chatModels = response.Data.Where(hfModel => new Model(hfModel.Id, null).IsChatModel());
         var providerSlug = this.hfProvider.EndpointsId();
         if (string.IsNullOrEmpty(providerSlug))
             return ToModels(chatModels);
 
-        var servedModels = chatModels.Where(hfModel => IsServedBy(hfModel, providerSlug)).ToList();
-        return ToModels(servedModels.Count > 0 ? servedModels : chatModels);
+        return ToModels(chatModels.Where(hfModel => IsServedBy(hfModel, providerSlug)));
     }
 
     private static IEnumerable<Model> ToModels(IEnumerable<HFModel> hfModels) => hfModels.Select(hfModel => new Model(hfModel.Id, null));

@@ -11202,6 +11202,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::PROVIDERVALIDATION::T125334762"] =
 -- The instance name must be unique; the chosen name is already in use.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::PROVIDERVALIDATION::T1301966140"] = "The instance name must be unique; the chosen name is already in use."
 
+-- This Hugging Face inference provider no longer offers models to chat with. Please select another one.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::PROVIDERVALIDATION::T1379003702"] = "This Hugging Face inference provider no longer offers models to chat with. Please select another one."
+
 -- Please select a provider.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::PROVIDERVALIDATION::T1809312323"] = "Please select a provider."
 

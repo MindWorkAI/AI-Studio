@@ -129,6 +129,13 @@ public sealed class ProviderValidation
         if (inferenceProvider is HFInferenceProvider.NONE)
             return TB("Please select an Hugging Face inference provider.");
 
+        //
+        // A provider which was configured earlier may have stopped serving chat models since. It is
+        // no longer among the choices, so the user has to be told why their selection is empty:
+        //
+        if (!inferenceProvider.SupportsChat())
+            return TB("This Hugging Face inference provider no longer offers models to chat with. Please select another one.");
+
         return null;
     }
 }

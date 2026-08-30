@@ -53,6 +53,26 @@ public static class HFInferenceProviderExtensions
     };
 
     /// <summary>
+    /// Whether this inference provider serves models to chat with.
+    /// </summary>
+    /// <remarks>
+    /// The Hugging Face Inference API is the odd one out: it grew from the classic NLP tasks and
+    /// serves embeddings, speech recognition, classification, and translation, but no chat models
+    /// at all. Asking it for one is answered with "The requested model is not supported by provider
+    /// 'hf-inference'", whichever model is named. So it must not be offered where a chat provider
+    /// is chosen.
+    /// </remarks>
+    /// <param name="provider">The inference provider.</param>
+    /// <returns>True, when the provider serves chat models.</returns>
+    public static bool SupportsChat(this HFInferenceProvider provider) => provider switch
+    {
+        HFInferenceProvider.NONE => false,
+        HFInferenceProvider.HF_INFERENCE_API => false,
+
+        _ => true,
+    };
+
+    /// <summary>
     /// Removes the routing suffix from a model, if it carries one.
     /// </summary>
     /// <remarks>
