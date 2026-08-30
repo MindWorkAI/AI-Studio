@@ -795,7 +795,6 @@ public sealed class SettingsManager
                 return llmProvider switch
                 {
                     LLMProviders.SELF_HOSTED => ConfidenceLevel.HIGH,
-                    LLMProviders.LITE_LLM => ConfidenceLevel.HIGH,
                     
                     _ => ConfidenceLevel.MEDIUM,   
                 };
@@ -804,7 +803,6 @@ public sealed class SettingsManager
                 return llmProvider switch
                 {
                     LLMProviders.SELF_HOSTED => ConfidenceLevel.HIGH,
-                    LLMProviders.LITE_LLM => ConfidenceLevel.HIGH,
                     LLMProviders.DEEP_SEEK => ConfidenceLevel.LOW,
                     LLMProviders.ALIBABA_CLOUD => ConfidenceLevel.LOW,
                     
@@ -815,7 +813,6 @@ public sealed class SettingsManager
                 return llmProvider switch
                 {
                     LLMProviders.SELF_HOSTED => ConfidenceLevel.HIGH,
-                    LLMProviders.LITE_LLM => ConfidenceLevel.HIGH,
                     LLMProviders.MISTRAL => ConfidenceLevel.LOW,
                     LLMProviders.HELMHOLTZ => ConfidenceLevel.LOW,
                     LLMProviders.GWDG => ConfidenceLevel.LOW,
@@ -831,7 +828,6 @@ public sealed class SettingsManager
                 return llmProvider switch
                 {
                     LLMProviders.SELF_HOSTED => ConfidenceLevel.HIGH,
-                    LLMProviders.LITE_LLM => ConfidenceLevel.HIGH,
                     LLMProviders.MISTRAL => ConfidenceLevel.MEDIUM,
                     LLMProviders.HELMHOLTZ => ConfidenceLevel.MEDIUM,
                     LLMProviders.GWDG => ConfidenceLevel.MEDIUM,
@@ -845,7 +841,6 @@ public sealed class SettingsManager
                 return llmProvider switch
                 {
                     LLMProviders.SELF_HOSTED => ConfidenceLevel.HIGH,
-                    LLMProviders.LITE_LLM => ConfidenceLevel.HIGH,
                     LLMProviders.DEEP_SEEK => ConfidenceLevel.MEDIUM,
                     LLMProviders.ALIBABA_CLOUD => ConfidenceLevel.MEDIUM,
                     
@@ -856,7 +851,6 @@ public sealed class SettingsManager
                 return llmProvider switch
                 {
                     LLMProviders.SELF_HOSTED => ConfidenceLevel.HIGH,
-                    LLMProviders.LITE_LLM => ConfidenceLevel.HIGH,
                     
                     _ => ConfidenceLevel.VERY_LOW,   
                 };

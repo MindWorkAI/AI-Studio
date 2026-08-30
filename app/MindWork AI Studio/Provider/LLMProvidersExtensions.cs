@@ -164,10 +164,11 @@ public static class LLMProvidersExtensions
             "https://www.ionos.com/terms-gtc/privacy-policy/"
         ).WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
 
-        // LiteLLM is a self-operated gateway: the user runs the proxy and decides which downstream
-        // providers it routes to, so the data destination cannot be known in advance. It is treated
-        // like a self-hosted endpoint, and the user assigns the trust level themselves.
-        LLMProviders.LITE_LLM => Confidence.SELF_HOSTED.WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
+        // LiteLLM is a gateway the user runs, but it is not a self-hosted LLM: the proxy owner decides
+        // which downstream providers it routes to, and those are usually cloud services. Self-hosting
+        // the proxy therefore says nothing about where the data ends up, so we do not claim the trust
+        // of a self-hosted model here and let the user assign the level themselves.
+        LLMProviders.LITE_LLM => Confidence.USER_OPERATED_GATEWAY.WithSources("https://docs.litellm.ai/docs/data_security").WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
 
         LLMProviders.SELF_HOSTED => Confidence.SELF_HOSTED.WithLevel(settingsManager.GetConfiguredConfidenceLevel(llmProvider)),
         
