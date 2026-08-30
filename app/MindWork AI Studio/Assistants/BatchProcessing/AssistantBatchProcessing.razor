@@ -1,0 +1,241 @@
+@attribute [Route(Routes.ASSISTANT_BATCH_PROCESSING)]
+@inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogBatchProcessing>
+@using AIStudio.Settings.DataModel
+@using AIStudio.Tools.Rust
+
+<MudText Typo="Typo.h5" Class="mb-3">
+    @T("Input")
+</MudText>
+
+<SelectDirectory Label="@T("Folder containing your documents")" DirectoryDialogTitle="@T("Select the folder containing your documents")" @bind-Directory="@this.inputDirectory" Validation="@this.ValidateInputDirectory" Disabled="@this.isProcessingBatch"/>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-1">
+    <MudTextField T="string" @bind-Text="@this.filePatterns" Validation="@this.ValidateFilePatterns" Immediate="@true" Disabled="@this.isProcessingBatch" Label="@T("File patterns")" HelperText="@T("Which files should be processed? Separate multiple patterns with a semicolon, e.g., *.pdf;*.docx")" AdornmentIcon="@Icons.Material.Filled.FilterAlt" Adornment="Adornment.Start" Variant="Variant.Outlined" Margin="Margin.Normal" Class="flex-grow-1" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+    <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Restore" Disabled="@this.isProcessingBatch" OnClick="@this.RestoreDefaultFilePatterns">
+        @T("Restore default patterns")
+    </MudButton>
+</MudStack>
+
+<MudJustifiedText Typo="Typo.body2" Class="mb-3">
+    @T("Supported audio and video files are transcribed automatically without an additional dialog. Each transcript is stored next to its media file as '<media-file>.transcript.md' and reused when an interrupted run is continued.")
+</MudJustifiedText>
+
+<MudTextSwitch Label="@T("Include subfolders?")" Disabled="@this.isProcessingBatch" Value="@this.includeSubdirectories" ValueChanged="@(v => this.includeSubdirectories = v)" LabelOn="@T("Yes, process files in subfolders as well")" LabelOff="@T("No, only process files in the selected folder")"/>
+
+@if (this.includeSubdirectories)
+{
+    <MudJustifiedText Typo="Typo.body2" Class="mb-3">
+        @T("A separate output folder is excluded from document discovery. This includes the default 'ai-results' folder, so results from an earlier run are not processed again. If the input folder itself is used for output, known batch result files are excluded instead.")
+    </MudJustifiedText>
+}
+
+<MudText Typo="Typo.h5" Class="mb-3 mt-6">
+    @T("Instructions")
+</MudText>
+
+<MudSelect T="BatchProcessingPromptSource" Value="@this.promptSource" ValueChanged="@this.PromptSourceChanged" Disabled="@this.isProcessingBatch" AdornmentIcon="@Icons.Material.Filled.EditNote" Adornment="Adornment.Start" Label="@T("Source of the instructions")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3">
+    @foreach (var source in Enum.GetValues<BatchProcessingPromptSource>())
+    {
+        <MudSelectItem Value="@source">
+            @source.Name()
+        </MudSelectItem>
+    }
+</MudSelect>
+
+@if (this.promptSource is BatchProcessingPromptSource.FREE_PROMPT)
+{
+    <ReadFileContent Text="@T("Load prompt from file")" @bind-FileContent="@this.freePrompt" EnableDragDrop="true" Layer="@DropLayers.ASSISTANTS" CatchAllDocuments="true" Disabled="@this.isProcessingBatch"/>
+
+    <MudTextField T="string" @bind-Text="@this.freePrompt" Validation="@this.ValidateFreePrompt" Immediate="@true" Disabled="@this.isProcessingBatch" Label="@T("What should the AI do with each document?")" HelperText="@T("These instructions are applied to every single document of the batch run.")" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="5" AutoGrow="@true" MaxLines="26" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+}
+else if (this.promptSource is BatchProcessingPromptSource.FILE_IMPORT)
+{
+    <ReadFileContent Text="@T("Select the file with your instructions")" @bind-FileContent="@this.ImportedPrompt" Filter="@([FileTypes.MARKDOWN])" ShowAttachedDocumentState="@true" EnableDragDrop="true" Layer="@DropLayers.ASSISTANTS" CatchAllDocuments="true" Disabled="@this.isProcessingBatch"/>
+
+    @if (!string.IsNullOrWhiteSpace(this.promptFilePath))
+    {
+        <MudText Typo="Typo.body2" Class="mb-3">@(string.Format(T("Configured instructions file: {0}"), this.promptFilePath))</MudText>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(this.promptFileLoadIssue))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true" Class="mb-3">@this.promptFileLoadIssue</MudAlert>
+    }
+
+    <MudJustifiedText Typo="Typo.body2" Class="mb-3">
+        @T("The content of the selected file is used as the instructions for every single document of the batch run.")
+    </MudJustifiedText>
+}
+else
+{
+    @if (this.ConfiguredPolicyIsMissing)
+    {
+        <MudAlert Severity="Severity.Warning" Dense="true" Class="mb-3">@T("The configured default policy no longer exists. Please select another document analysis policy.")</MudAlert>
+    }
+
+    @if (this.SettingsManager.ConfigurationData.DocumentAnalysis.Policies.Count is 0)
+    {
+        <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+            @T("You have not yet created any document analysis policies. Please use the Document Analysis Assistant to create a policy first.")
+        </MudJustifiedText>
+        <MudButton Href="@Routes.ASSISTANT_DOCUMENT_ANALYSIS" Variant="Variant.Filled" Color="Color.Primary" Class="mb-3">
+            @T("Open the Document Analysis Assistant")
+        </MudButton>
+    }
+    else
+    {
+        <MudSelect T="DataDocumentAnalysisPolicy" Value="@this.selectedPolicy" ValueChanged="@this.SelectedPolicyChanged" Disabled="@this.isProcessingBatch" AdornmentIcon="@Icons.Material.Filled.Policy" Adornment="Adornment.Start" Label="@T("Document analysis policy")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3">
+            @foreach (var policy in this.SettingsManager.ConfigurationData.DocumentAnalysis.Policies)
+            {
+                <MudSelectItem Value="@policy">
+                    @policy.PolicyName
+                </MudSelectItem>
+            }
+        </MudSelect>
+
+        @if (this.selectedPolicy is not null && !string.IsNullOrWhiteSpace(this.selectedPolicy.PolicyDescription))
+        {
+            <MudJustifiedText Typo="Typo.body2" Class="mb-3">
+                @this.selectedPolicy.PolicyDescription
+            </MudJustifiedText>
+        }
+    }
+}
+
+<MudText Typo="Typo.h5" Class="mb-3 mt-6">
+    @T("Output")
+</MudText>
+
+<MudSelect T="BatchProcessingOutputMode" @bind-Value="@this.outputMode" Disabled="@this.isProcessingBatch" AdornmentIcon="@Icons.Material.Filled.Output" Adornment="Adornment.Start" Label="@T("Output mode")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3">
+    @foreach (var mode in Enum.GetValues<BatchProcessingOutputMode>())
+    {
+        <MudSelectItem Value="@mode">
+            @mode.Name()
+        </MudSelectItem>
+    }
+</MudSelect>
+
+@if (this.outputMode is BatchProcessingOutputMode.MARKDOWN_FILES)
+{
+    <MudJustifiedText Typo="Typo.body2" Class="mb-3">
+        @T("Each answer is stored as its own Markdown file. Those files are named after the document, e.g., the answer for report.pdf is stored as report_result.md.")
+    </MudJustifiedText>
+}
+else
+{
+    <MudTextField T="string" @bind-Text="@this.csvFileName" Validation="@this.ValidateCsvFileName" Immediate="@true" Disabled="@this.isProcessingBatch" Label="@T("Name of the results table (optional)")" HelperText="@T("The file name of the CSV results table. We add the ending .csv when it is missing. When left empty, we use 'batch-results.csv'.")" AdornmentIcon="@Icons.Material.Filled.Description" Adornment="Adornment.Start" Variant="Variant.Outlined" Margin="Margin.Normal" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+
+    <MudTextField T="string" @bind-Text="@this.resultColumnHeader" Disabled="@this.isProcessingBatch" Label="@T("Header of the result column (optional)")" HelperText="@T("The results table contains one row per document, starting with the file name. Here you can name the column that holds the AI answer, e.g., Summary. When left empty, we use 'Result'.")" AdornmentIcon="@Icons.Material.Filled.TableChart" Adornment="Adornment.Start" Variant="Variant.Outlined" Margin="Margin.Normal" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+
+    <MudSelect T="BatchProcessingCsvSeparator" @bind-Value="@this.csvSeparator" Disabled="@this.isProcessingBatch" AdornmentIcon="@Icons.Material.Filled.FormatListBulleted" Adornment="Adornment.Start" Label="@T("Column separator")" HelperText="@T("Choose which character separates the columns of the results table.")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3">
+        @foreach (var separator in Enum.GetValues<BatchProcessingCsvSeparator>())
+        {
+            <MudSelectItem Value="@separator">
+                @separator.Name()
+            </MudSelectItem>
+        }
+    </MudSelect>
+
+    @if (this.csvSeparator is BatchProcessingCsvSeparator.CUSTOM)
+    {
+        <MudTextField T="string" @bind-Text="@this.customCsvSeparator" Validation="@this.ValidateCustomCsvSeparator" Immediate="@true" Disabled="@this.isProcessingBatch" Label="@T("Custom column separator")" HelperText="@T("Enter one punctuation or symbol character.")" AdornmentIcon="@Icons.Material.Filled.Edit" Adornment="Adornment.Start" Variant="Variant.Outlined" Margin="Margin.Normal" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+    }
+}
+
+<SelectDirectory Label="@T("Output folder (optional)")" DirectoryDialogTitle="@T("Select the output folder")" @bind-Directory="@this.outputDirectory" Disabled="@this.isProcessingBatch"/>
+
+<MudJustifiedText Typo="Typo.body2" Class="mb-3">
+    @T("We always write a semicolon-separated log named log.csv, which lists every document with its processing time, the model, the status, and the details of any error. When you start another run on the same output folder, we ask you whether to continue that run: documents which failed or are missing in the log are then processed again. When no output folder is selected, everything is written to the subfolder 'ai-results' within the input folder.")
+</MudJustifiedText>
+
+<MudText Typo="Typo.h5" Class="mb-3 mt-6">
+    @T("Processing pace")
+</MudText>
+
+@if (MinimumDelayIsManaged)
+{
+    <MudAlert Severity="Severity.Info" Dense="true" Class="mb-3">
+        @(string.Format(T("Your organization requires a pause of at least {0} seconds between files."), this.ManagedMinimumDelaySeconds))
+    </MudAlert>
+}
+else
+{
+    <MudTextSlider T="int" Label="@T("Minimum pause between files")" Min="@DataBatchProcessing.MIN_DELAY_SECONDS" Max="@DataBatchProcessing.MAX_DELAY_SECONDS" Step="1" Unit="@T("seconds")" @bind-Value="@this.minimumDelaySeconds" Disabled="@(() => this.isProcessingBatch)"/>
+}
+
+<MudTextSlider T="int" Label="@T("Maximum pause between files")" Min="@this.EffectiveMinimumDelaySeconds" Max="@DataBatchProcessing.MAX_DELAY_SECONDS" Step="1" Unit="@T("seconds")" @bind-Value="@this.maximumDelaySeconds" Disabled="@(() => this.isProcessingBatch)"/>
+
+<MudJustifiedText Typo="Typo.body2" Class="mb-3">
+    @T("Before the next file starts, AI Studio waits for a random number of whole seconds from this interval. The minimum is always 6 seconds and the maximum is 300 seconds (5 minutes). Restored files and the end of a run do not add another pause.")
+</MudJustifiedText>
+
+@if (this.pauseBeforeNextFileSeconds > 0)
+{
+    <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.HourglassTop" Dense="true" Class="mb-3">
+        @(string.Format(T("Waiting {0} seconds before starting the next file."), this.pauseBeforeNextFileSeconds))
+    </MudAlert>
+}
+
+<ProviderSelection @bind-ProviderSettings="@this.ProviderSettings" ValidateProvider="@this.ValidatingProviderWithBatchState" Disabled="@this.isProcessingBatch" ExplicitMinimumConfidence="@this.GetMinimumConfidenceLevel()"/>
+
+@if (this.fileResults.Count > 0)
+{
+    <MudText Typo="Typo.h5" Class="mb-3 mt-6">
+        @T("Progress")
+    </MudText>
+
+    <MudProgressLinear Color="Color.Primary" Value="@(this.fileResults.Count == 0 ? 0 : 100.0 * this.numProcessedFiles / this.fileResults.Count)" Class="mb-1"/>
+    <MudText Typo="Typo.body2" Class="mb-3">
+        @(string.Format(T("{0} of {1} files processed"), this.numProcessedFiles, this.fileResults.Count))
+    </MudText>
+
+    @if (this.isProcessingBatch)
+    {
+        <MudButton OnClick="@this.CancelBatchProcessingAsync" Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Cancel" Class="mb-3">
+            @T("Cancel the batch run")
+        </MudButton>
+    }
+
+    <MudSimpleTable Dense="@true" Hover="@true" Class="mb-3">
+        <thead>
+            <tr>
+                <th>@T("Status")</th>
+                <th>@T("File")</th>
+                <th>@T("Details")</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var fileResult in this.fileResults)
+            {
+                <tr>
+                    <td>
+                        @switch (fileResult.Status)
+                        {
+                            case BatchProcessingFileStatus.QUEUED:
+                                <MudIcon Icon="@Icons.Material.Filled.Schedule" Size="Size.Small" Title="@T("Queued")"/>
+                                break;
+
+                            case BatchProcessingFileStatus.PROCESSING:
+                                <MudProgressCircular Color="Color.Primary" Size="Size.Small" Indeterminate="@true"/>
+                                break;
+
+                            case BatchProcessingFileStatus.DONE:
+                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" Title="@T("Done")"/>
+                                break;
+
+                            case BatchProcessingFileStatus.FAILED:
+                                <MudIcon Icon="@Icons.Material.Filled.Error" Color="Color.Error" Size="Size.Small" Title="@T("Failed")"/>
+                                break;
+
+                            case BatchProcessingFileStatus.CANCELED:
+                                <MudIcon Icon="@Icons.Material.Filled.Cancel" Color="Color.Warning" Size="Size.Small" Title="@T("Canceled")"/>
+                                break;
+                        }
+                    </td>
+                    <td>@fileResult.RelativePath</td>
+                    <td>@fileResult.Message</td>
+                </tr>
+            }
+        </tbody>
+    </MudSimpleTable>
+}

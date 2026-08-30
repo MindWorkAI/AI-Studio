@@ -168,6 +168,16 @@ public sealed partial class VisualBriefingStore(
     private SemaphoreSlim GetLock(Guid briefingId) => this.briefingLocks.GetOrAdd(briefingId, _ => new(1, 1));
 
     /// <summary>
+    /// Drops the lock of a briefing which does not exist anymore.
+    /// </summary>
+    /// <remarks>
+    /// Otherwise, this dictionary keeps one entry per briefing the app ever touched. We do not
+    /// dispose the semaphore: another operation might still wait on it, and disposing it under
+    /// their feet would turn a deleted briefing into an exception somewhere else.
+    /// </remarks>
+    private void ForgetLock(Guid briefingId) => this.briefingLocks.TryRemove(briefingId, out _);
+
+    /// <summary>
     /// Defines <c>BriefingDirectory</c> for the visual briefing feature.
     /// </summary>
     private string BriefingDirectory(Guid briefingId) => Path.Combine(this.RootDirectory, briefingId.ToString("D"));

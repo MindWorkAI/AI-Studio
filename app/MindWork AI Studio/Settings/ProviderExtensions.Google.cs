@@ -10,14 +10,13 @@ public static partial class ProviderExtensions
 
         if (modelName.IndexOf("gemini-") is not -1)
         {
-            // Chat-compatible Gemini 3.x reasoning models:
-            if (modelName is "gemini-3.5-flash" ||
+            // Chat-compatible Gemini 3.x reasoning models. We match the entire 3.x line
+            // so that new releases are covered as well: they all reason, and the
+            // thinking level can only be lowered, never turned off. The two rolling
+            // aliases carry no version number and are listed separately:
+            if (modelName.IndexOf("gemini-3") is not -1 ||
                 modelName is "gemini-flash-latest" ||
-                modelName is "gemini-3.1-flash-lite" ||
-                modelName is "gemini-3-flash-preview" ||
-                modelName is "gemini-pro-latest" ||
-                modelName is "gemini-3.1-pro-preview" ||
-                modelName is "gemini-3.1-pro-preview-customtools")
+                modelName is "gemini-pro-latest")
                 return
                 [
                     Capability.TEXT_INPUT, Capability.MULTIPLE_IMAGE_INPUT, Capability.AUDIO_INPUT,

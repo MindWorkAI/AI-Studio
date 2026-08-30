@@ -61,6 +61,9 @@ public sealed class MediaTranscriptionService(
             return this.activeBatches.Contains(owner);
     }
 
+    /// <summary>Gets whether the currently configured transcription provider can be used.</summary>
+    public bool HasUsableTranscriptionProvider => this.ResolveProvider() is not null;
+
     /// <summary>Gets the last retained state for one owner.</summary>
     public MediaImportSnapshot? GetSnapshot(MediaImportOwner owner)
     {
@@ -170,7 +173,7 @@ public sealed class MediaTranscriptionService(
         }
 
         this.UpdateImportState(target, Path.GetFileName(mediaPaths[0]), MediaTranscriptionPhase.QUEUED, null, MediaImportStatus.QUEUED);
-        _ = Task.Run(() => this.RunAttachmentBatchAsync(mediaPaths, target, ownerChat));
+        Task.Run(() => this.RunAttachmentBatchAsync(mediaPaths, target, ownerChat)).Observe($"{nameof(MediaTranscriptionService)}: running an attachment batch");
         return true;
     }
 
@@ -188,7 +191,7 @@ public sealed class MediaTranscriptionService(
         }
 
         this.UpdateImportState(target, Path.GetFileName(mediaPath), MediaTranscriptionPhase.QUEUED, null, MediaImportStatus.QUEUED);
-        _ = Task.Run(() => this.RunTextImportAsync(mediaPath, target));
+        Task.Run(() => this.RunTextImportAsync(mediaPath, target)).Observe($"{nameof(MediaTranscriptionService)}: running a text import");
         return true;
     }
 
@@ -403,12 +406,12 @@ public sealed class MediaTranscriptionService(
     }
 
     /// <summary>
-    /// Transcribes a voice recording independently of the visible import lane.
+    /// Transcribes an audio or video file without starting a visible import operation.
     /// </summary>
-    /// <param name="mediaPath">Voice recording path.</param>
+    /// <param name="mediaPath">Audio or video file path.</param>
     /// <param name="token">Caller cancellation token.</param>
     /// <returns>A typed terminal result.</returns>
-    public async Task<MediaTranscriptionResult> TranscribeVoiceAsync(string mediaPath, CancellationToken token = default)
+    public async Task<MediaTranscriptionResult> TranscribeAsync(string mediaPath, CancellationToken token = default)
     {
         this.ThrowIfDisposed();
         var operation = this.CreateOperation(null, token);
@@ -422,6 +425,14 @@ public sealed class MediaTranscriptionService(
             this.ReleaseOperation(operation);
         }
     }
+
+    /// <summary>
+    /// Transcribes a voice recording independently of the visible import lane.
+    /// </summary>
+    /// <param name="mediaPath">Voice recording path.</param>
+    /// <param name="token">Caller cancellation token.</param>
+    /// <returns>A typed terminal result.</returns>
+    public Task<MediaTranscriptionResult> TranscribeVoiceAsync(string mediaPath, CancellationToken token = default) => this.TranscribeAsync(mediaPath, token);
 
     /// <summary>Cancels only the queued or active operation belonging to one owner.</summary>
     public async Task StopAsync(MediaImportOwner owner)
@@ -520,7 +531,15 @@ public sealed class MediaTranscriptionService(
                     fileName,
                     operation.Id,
                     providerResult.ErrorMessage);
-                return MediaTranscriptionResult.Failed(TB("The transcription provider could not transcribe the media file."));
+
+                //
+                // When the provider told us why it failed, the user gets to read it. Only that
+                // message says whether to wait, to check the API key, or to ask the provider for
+                // a format it can read:
+                //
+                return MediaTranscriptionResult.Failed(string.IsNullOrWhiteSpace(providerResult.ErrorMessage)
+                    ? TB("The transcription provider could not transcribe the media file.")
+                    : providerResult.ErrorMessage);
             }
 
             return MediaTranscriptionResult.Succeeded(providerResult.Text.Trim());

@@ -179,17 +179,23 @@ public partial class WorkspaceSelectionDialog : MSGComponentBase
 
     #region Overrides of MSGComponentBase
 
+    /// <summary>
+    /// Removes the escape key handler from the browser before this dialog goes away.
+    /// </summary>
+    /// <remarks>
+    /// The base class runs this before DisposeResources, which is what lets us await the call. The
+    /// previous attempt discarded it inside a try/catch: a failing JS call reports itself on the task,
+    /// not to the caller, so that catch never ran and the fault ended up as an unobserved task
+    /// exception whenever the circuit was already gone.
+    /// </remarks>
+    protected override async ValueTask DisposeResourcesAsync()
+    {
+        await this.JsRuntime.TryInvokeVoidAsync(this.CircuitState, "unregisterEscapeHandler", this.escapeHandlerId);
+        await base.DisposeResourcesAsync();
+    }
+
     protected override void DisposeResources()
     {
-        try
-        {
-            _ = this.JsRuntime.InvokeVoidAsync("unregisterEscapeHandler", this.escapeHandlerId).AsTask();
-        }
-        catch
-        {
-            // Ignore JS cleanup errors while the dialog is being disposed.
-        }
-
         this.dotNetReference?.Dispose();
         this.dotNetReference = null;
 

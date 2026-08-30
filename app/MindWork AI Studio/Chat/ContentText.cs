@@ -5,6 +5,8 @@ using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.RAG.RAGProcesses;
+using AIStudio.Tools.Rust;
+using AIStudio.Tools.Security;
 
 namespace AIStudio.Chat;
 
@@ -14,6 +16,7 @@ namespace AIStudio.Chat;
 public sealed class ContentText : IContent
 {
     private static readonly ILogger<ContentText> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ContentText>();
+    
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ContentText).Namespace, nameof(ContentText));
     
     /// <summary>
@@ -34,11 +37,11 @@ public sealed class ContentText : IContent
 
     /// <inheritdoc />
     [JsonIgnore]
-    public Func<Task> StreamingDone { get; set; } = () => Task.CompletedTask;
+    public Func<Task> StreamingDone { get; set; } = IContent.NO_STREAMING_HANDLER;
 
     /// <inheritdoc />
     [JsonIgnore]
-    public Func<Task> StreamingEvent { get; set; } = () => Task.CompletedTask;
+    public Func<Task> StreamingEvent { get; set; } = IContent.NO_STREAMING_HANDLER;
 
     /// <inheritdoc />
     public List<Source> Sources { get; set; } = [];
@@ -266,50 +269,113 @@ public sealed class ContentText : IContent
             // Get the list of existing documents:
             var existingDocuments = normalizedAttachments.Where(x => x.Type is FileAttachmentType.DOCUMENT && x.Exists).ToList();
 
-            // Log warning for missing files:
+            //
+            // Report missing files. We tell the user about them instead of only logging: on a
+            // network drive, a file which is temporarily unreachable looks exactly like a deleted
+            // one, and silently dropping it would let the AI answer without that document.
+            //
             var missingDocuments = normalizedAttachments.Except(existingDocuments).Where(x => x.Type is FileAttachmentType.DOCUMENT).ToList();
-            if (missingDocuments.Count > 0)
-                foreach (var missingDocument in missingDocuments)
-                    LOGGER.LogWarning("File attachment no longer exists and will be skipped: '{MissingDocument}'.", missingDocument.FilePath);
-            
+            foreach (var missingDocument in missingDocuments)
+            {
+                LOGGER.LogWarning("File attachment no longer exists and will be skipped: '{MissingDocument}'.", missingDocument.FilePath);
+                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.FindInPage, string.Format(TB("The file '{0}' is currently not available and was not sent."), missingDocument.FileName)));
+            }
+
             // Only proceed if there are existing, allowed documents:
             if (existingDocuments.Count > 0)
             {
-                // Check Pandoc availability once before processing file attachments
-                var pandocState = await Pandoc.CheckAvailabilityAsync(Program.RUST_SERVICE, showMessages: true, showSuccessMessage: false);
+                //
+                // Pandoc is only needed for the few formats we convert with it. PDFs, text files,
+                // spreadsheets, and presentations are read by the runtime itself, so a missing
+                // Pandoc installation must not stop them.
+                //
+                var pandocIsUsable = true;
+                if (existingDocuments.Any(document => FileTypes.RequiresPandoc(document.FilePath)))
+                {
+                    var pandocState = await Pandoc.CheckAvailabilityAsync(Program.RUST_SERVICE, showMessages: true, showSuccessMessage: false);
+                    pandocIsUsable = pandocState is { IsAvailable: true, CheckWasSuccessful: true };
 
-                if (!pandocState.IsAvailable)
-                    LOGGER.LogWarning("File attachments could not be processed because Pandoc is not available.");
-                else if (!pandocState.CheckWasSuccessful)
-                    LOGGER.LogWarning("File attachments could not be processed because the Pandoc version check failed.");
-                else
+                    if (!pandocState.IsAvailable)
+                        LOGGER.LogWarning("File attachments which need Pandoc could not be processed because Pandoc is not available.");
+                    else if (!pandocState.CheckWasSuccessful)
+                        LOGGER.LogWarning("File attachments which need Pandoc could not be processed because the Pandoc version check failed.");
+                }
+
+                //
+                // One report for the whole batch: attaching twenty documents must produce one
+                // dialog listing all of them, not twenty dialogs in a row.
+                //
+                var guardService = Program.SERVICE_PROVIDER.GetRequiredService<PromptInjectionGuardService>();
+                await using var promptInjectionScope = guardService.BeginAction();
+
+                //
+                // The document blocks are collected separately, so we only announce attached
+                // files when at least one of them could actually be read. Announcing files we
+                // then hand over as empty blocks makes the AI answer about an empty document.
+                //
+                var documentBlocks = new StringBuilder();
+                foreach(var document in existingDocuments)
+                {
+                    if (document.IsForbidden)
+                    {
+                        LOGGER.LogWarning("File attachment '{FilePath}' has a forbidden file type and will be skipped.", document.FilePath);
+                        continue;
+                    }
+
+                    if (!pandocIsUsable && FileTypes.RequiresPandoc(document.FilePath))
+                    {
+                        LOGGER.LogWarning("The file attachment '{FilePath}' needs Pandoc and will be skipped.", document.FilePath);
+                        await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Description, FileExtractionErrorCode.PANDOC_UNAVAILABLE.ToUserMessage(document.FileName)));
+                        continue;
+                    }
+
+                    var extraction = await Program.RUST_SERVICE.ReadArbitraryFileData(document.FilePath, int.MaxValue);
+                    if (!extraction.HasUsableContent)
+                    {
+                        LOGGER.LogError("Reading the file attachment '{FilePath}' failed and it will not be sent: code={ErrorCode}, message='{ErrorMessage}'.", document.FilePath, extraction.ErrorCode, extraction.ErrorMessage);
+                        await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Description, extraction.ToUserMessage(document.FileName)));
+                        continue;
+                    }
+
+                    //
+                    // The file is usable, but we lost parts of it. The user has to know which
+                    // parts are missing, because the answer will be based on the rest.
+                    //
+                    if (extraction.Outcome is FileExtractionOutcome.PARTIAL)
+                    {
+                        LOGGER.LogWarning("Parts of the file attachment '{FilePath}' could not be read: pages={FailedPages}.", document.FilePath, string.Join(", ", extraction.FailedPages));
+                        await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.Description, extraction.ToPartialUserMessage(document.FileName)));
+                    }
+
+                    // The file was read correctly, but its extension lies about what it contains:
+                    if (extraction.HasExtensionMismatch)
+                    {
+                        LOGGER.LogWarning("The file attachment '{FilePath}' is actually a '{DetectedFormat}'.", document.FilePath, extraction.DetectedFormat);
+                        await MessageBus.INSTANCE.SendWarning(new(Icons.Material.Filled.RuleFolder, extraction.ToExtensionMismatchUserMessage(document.FileName)));
+                    }
+
+                    documentBlocks.AppendLine();
+                    documentBlocks.AppendLine("---------------------------------------");
+                    documentBlocks.AppendLine($"File path: {document.FilePath}");
+                    documentBlocks.AppendLine("File content:");
+                    documentBlocks.AppendLine("````");
+                    documentBlocks.AppendLine(extraction.Content);
+                    documentBlocks.AppendLine("````");
+                }
+
+                if (documentBlocks.Length > 0)
                 {
                     sb.AppendLine();
                     sb.AppendLine("The following files are attached to this message:");
-                    foreach(var document in existingDocuments)
-                    {
-                        if (document.IsForbidden)
-                        {
-                            LOGGER.LogWarning("File attachment '{FilePath}' has a forbidden file type and will be skipped.", document.FilePath);
-                            continue;
-                        }
-                        
-                        sb.AppendLine();
-                        sb.AppendLine("---------------------------------------");
-                        sb.AppendLine($"File path: {document.FilePath}");
-                        sb.AppendLine("File content:");
-                        sb.AppendLine("````");
-                        sb.AppendLine(await Program.RUST_SERVICE.ReadArbitraryFileData(document.FilePath, int.MaxValue));
-                        sb.AppendLine("````");
-                    }
-                    
-                    var numImages = normalizedAttachments.Count(x => x is { IsImage: true, Exists: true });
-                    if (numImages > 0)
-                    {
-                        sb.AppendLine();
-                        sb.AppendLine($"Additionally, there are {numImages} image file(s) attached to this message. ");
-                        sb.AppendLine("Please consider them as part of the message content and use them to answer accordingly.");
-                    }
+                    sb.Append(documentBlocks);
+                }
+
+                var numImages = normalizedAttachments.Count(x => x is { IsImage: true, Exists: true });
+                if (numImages > 0)
+                {
+                    sb.AppendLine();
+                    sb.AppendLine($"Additionally, there are {numImages} image file(s) attached to this message. ");
+                    sb.AppendLine("Please consider them as part of the message content and use them to answer accordingly.");
                 }
             }
         }

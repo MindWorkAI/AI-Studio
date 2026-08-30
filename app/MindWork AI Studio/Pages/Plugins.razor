@@ -5,13 +5,26 @@
 @attribute [Route(Routes.PLUGINS)]
 
 <div class="inner-scrolling-context">
-    <MudText Typo="Typo.h3" Class="mb-2">
-        @T("Plugins")
-    </MudText>
+    <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-2">
+        <MudText Typo="Typo.h3">
+            @T("Plugins")
+        </MudText>
+        <MudSpacer />
+        <LockableButton Text="@T("Import")"
+                        Tooltip="@T("Import plugin from a file")"
+                        Icon="@IMPORT_ICON"
+                        ButtonVariant="Variant.Outlined"
+                        ButtonColor="Color.Default"
+                        NoMargin="@true"
+                        Class="flex-none"
+                        Disabled="@(() => this.isImportingAssistantPlugin)"
+                        IsLocked="@(() => !this.AllowPluginImport)"
+                        OnClickAsync="@this.ImportAssistantPluginAsync"/>
+    </MudStack>
     
     <InnerScrolling>
         
-        <MudTable Items="@PluginFactory.AvailablePlugins" Hover="@true" GroupBy="@this.groupConfig" Class="border-dashed border rounded-lg">
+        <MudTable Items="@PluginFactory.AvailablePlugins" Hover="@true" GroupBy="@this.groupConfig" Class="@this.PluginTableClass">
             <ColGroup>
                 <col style="width: 2em;" />
                 <col style="width: 2.1em; "/>
@@ -50,7 +63,10 @@
                 <MudTd>
                     <MudAvatar Size="Size.Medium" Style="width: 2em; height: 2em;" Class="align-content-stretch">
                         <div class="plugin-icon-container">
-                            @((MarkupString)context.IconSVG)
+                            @if (!string.IsNullOrEmpty(context.IconDataUrl))
+                            {
+                                <img src="@context.IconDataUrl" alt="" aria-hidden="true" draggable="false" />
+                            }
                         </div>
                     </MudAvatar>
                 </MudTd>
@@ -65,12 +81,13 @@
                     </MudStack>
                 </MudTd>
                 <MudTd>
-                    <MudStack Row="true" Spacing="0" AlignItems="AlignItems.Center">
+                    <MudStack Row="true" Spacing="0" AlignItems="AlignItems.Center" Justify="Justify.FlexEnd">
                         @if (context.Type is PluginType.ASSISTANT)
                         {
                             var assistantPlugin = PluginFactory.RunningPlugins.OfType<PluginAssistants>().FirstOrDefault(x => x.Id == context.Id);
                             <AssistantPluginSecurityCard Plugin="@assistantPlugin" Compact="@true"/>
                         }
+                        
                         @if (context is { IsInternal: false, Type: not PluginType.CONFIGURATION })
                         {
                             var isEnabled = this.SettingsManager.IsPluginEnabled(context);
@@ -80,7 +97,7 @@
                             </MudTooltip>
                         }
 
-                        <MudButtonGroup Class="ms-3">
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="0" Class="ms-3" Style="gap: 4px;">
                             @if (context is { IsInternal: false } && !string.IsNullOrWhiteSpace(context.SourceURL))
                             {
                                 var sourceUrl = context.SourceURL;
@@ -89,7 +106,7 @@
                                 {
                                     var isDefaultSupportContact = string.Equals(sourceUrl, AssistantPluginGenerationService.DEFAULT_SUPPORT_CONTACT, StringComparison.Ordinal);
                                     <MudTooltip Text="@(isDefaultSupportContact ? string.Empty : T("Send a mail"))">
-                                                                                                                 <MudIconButton Icon="@Icons.Material.Filled.Email" Href="@sourceUrl" Target="_blank" Size="Size.Medium" Disabled="@isDefaultSupportContact"/>
+                                        <MudIconButton Icon="@Icons.Material.Filled.Email" Href="@sourceUrl" Target="_blank" Size="Size.Medium" Disabled="@isDefaultSupportContact"/>
                                     </MudTooltip>
                                 }
                                 else
@@ -107,19 +124,30 @@
                                     <MudIconButton Icon="@Icons.Material.Filled.Code" Size="Size.Medium" OnClick="@(() => this.OpenAssistantPluginEditorDialogAsync(editablePlugin))"/>
                                 </MudTooltip>
                             }
+                            
+                            @if (context is IAvailablePlugin shareablePlugin && CanSharePlugin(shareablePlugin))
+                            {
+                                <MudTooltip Text="@(this.AllowPluginSharing ? this.SharePluginTooltip : this.SharePluginLockText)">
+                                    <MudIconButton Icon="@SharePluginIcon" Size="Size.Medium" OnClick="@(() => this.SharePluginAsync(shareablePlugin))" Disabled="@(this.isSharingPlugin || !this.AllowPluginSharing)"/>
+                                </MudTooltip>
+                            }
 
+                            @* A direct chat launcher has nothing to prompt about: its settings are
+                               plain selections, so it gets the mechanical dialog instead of the AI
+                               revision. *@
                             @if (context is IAvailablePlugin revisionPlugin && CanReviseAssistantPlugin(revisionPlugin))
                             {
-                                <MudTooltip Text="@T("Revise assistant plugin with AI")">
-                                    <MudIconButton Icon="@Icons.Material.Filled.AutoMode" Size="Size.Medium" OnClick="@(() => this.OpenAssistantPluginRevisionDialogAsync(revisionPlugin))"/>
+                                var isLauncher = IsDirectChatLauncher(revisionPlugin);
+                                <MudTooltip Text="@(isLauncher ? T("Change what this tile opens") : T("Revise assistant plugin with AI"))">
+                                    <MudIconButton Icon="@(isLauncher ? Icons.Material.Filled.Tune : Icons.Material.Filled.AutoMode)" Size="Size.Medium" OnClick="@(() => this.OpenAssistantPluginRevisionDialogAsync(revisionPlugin))"/>
                                 </MudTooltip>
                             }
 
                             @if (context is IAvailablePlugin availablePlugin)
                             {
-                                <AssistantPluginDeleteAction Plugin="@availablePlugin" />
+                                <PluginDeleteAction Plugin="@availablePlugin" />
                             }
-                        </MudButtonGroup>
+                        </MudStack>
                     </MudStack>
                 </MudTd>
             </RowTemplate>

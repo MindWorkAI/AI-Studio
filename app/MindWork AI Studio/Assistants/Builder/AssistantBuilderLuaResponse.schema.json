@@ -12,10 +12,7 @@
   ],
   "properties": {
     "schema_version": {
-      "type": "string",
-      "enum": [
-        "assistant_builder_lua_response_v1"
-      ]
+      "const": "assistant_builder_lua_response_v2"
     },
     "plugin": {
       "type": "object",
@@ -45,9 +42,26 @@
       }
     },
     "assistant": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/formAssistant"
+        },
+        {
+          "$ref": "#/$defs/chatLauncherAssistant"
+        }
+      ]
+    },
+    "full_lua": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "$defs": {
+    "formAssistant": {
       "type": "object",
       "additionalProperties": false,
       "required": [
+        "kind",
         "title",
         "description",
         "system_prompt",
@@ -55,6 +69,9 @@
         "allow_ai_studio_profiles"
       ],
       "properties": {
+        "kind": {
+          "const": "FORM"
+        },
         "title": {
           "type": "string",
           "minLength": 1
@@ -76,9 +93,71 @@
         }
       }
     },
-    "full_lua": {
-      "type": "string",
-      "minLength": 1
+    "chatLauncherAssistant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "title",
+        "description",
+        "launch"
+      ],
+      "properties": {
+        "kind": {
+          "const": "CHAT_LAUNCHER"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "launch": {
+          "$ref": "#/$defs/chatLaunch"
+        }
+      }
+    },
+    "chatLaunch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "workspace_name"
+      ],
+      "properties": {
+        "workspace_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "provider_id": {
+          "type": "string",
+          "format": "uuid",
+          "not": {
+            "const": "00000000-0000-0000-0000-000000000000"
+          }
+        },
+        "profile_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "chat_template_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "data_source_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "format": "uuid",
+            "not": {
+              "const": "00000000-0000-0000-0000-000000000000"
+            }
+          }
+        }
+      }
     }
   }
 }

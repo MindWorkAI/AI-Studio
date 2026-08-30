@@ -9,6 +9,39 @@
 {
     <MudTextField T="string" @bind-Text="@this.assistantDescription" Validation="@this.ValidateAssistantDescription" AdornmentIcon="@Icons.Material.Filled.AutoAwesome" Adornment="Adornment.Start" Label="@T("Describe your assistant")" HelperText="@T("Describe the task, inputs, and desired output in your own words. The model will infer all the plugin details.")" Placeholder="@T("I need an assistant that turns meeting notes into clear tasks with owners and deadlines.")" Variant="Variant.Outlined" Lines="8" AutoGrow="@true" MaxLines="18" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 
+    @* This switch chooses between the two kinds of assistant the Builder can create, so it stays
+       outside the advanced options. Its fields are required, and a collapsed panel would hide
+       both them and their validation messages. It asks a question and labels both of its states,
+       so the choice reads the same way as the switches in the app settings. *@
+    <MudField Label="@T("What kind of assistant should this be?")" Variant="Variant.Outlined" Underline="@false" Class="mb-3" InnerPadding="@false">
+        <MudSwitch T="bool" Value="@this.createChatLauncher" ValueChanged="@this.CreateChatLauncherChanged" Color="Color.Primary">
+            @(this.createChatLauncher
+                ? T("A direct chat launcher tile that opens a preconfigured chat right away")
+                : T("A full assistant with its own input form"))
+        </MudSwitch>
+    </MudField>
+    <MudJustifiedText Typo="Typo.body2" Class="mb-3">
+        @(this.createChatLauncher
+            ? T("The direct chat launcher tile has no input form of its own. It opens a new chat right away, in the workspace you name below and with the provider, profile, chat template, and data sources you select there.")
+            : T("The assistant asks users for input through a form and builds its own prompt from it."))
+    </MudJustifiedText>
+    @if (this.createChatLauncher)
+    {
+        @* The dashed frame shows that these fields belong together: they describe one chat the
+           launcher tile opens. The title lives here rather than in the advanced options, because a
+           launcher has no other visible content: its tile is the whole assistant. *@
+        <MudPaper Class="pa-3 mb-3 border-dashed border rounded-lg">
+            <MudTextField T="string" @bind-Text="@this.assistantName" AdornmentIcon="@Icons.Material.Filled.Assistant" Adornment="Adornment.Start" IconSize="Size.Small" Label="@T("Tile title (optional)")" HelperText="@T("The title shown on the tile. Leave it empty to let the model choose one.")" Placeholder="@T("Weekly Report Chat")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+            <DirectChatLauncherForm WorkspaceName="@this.launcherWorkspaceName"
+                                    WorkspaceNameChanged="@this.LauncherWorkspaceNameChanged"
+                                    @bind-ProviderId="@this.launcherProviderId"
+                                    @bind-ProfileId="@this.launcherProfileId"
+                                    @bind-ChatTemplateId="@this.launcherChatTemplateId"
+                                    @bind-DataSourceIds="@this.launcherDataSourceIds"
+                                    ValidateWorkspaceName="@this.ValidateLauncherWorkspaceName"/>
+        </MudPaper>
+    }
+
     <MudExpansionPanels Dense="@true" Elevation="0" Class="mb-3 rounded">
         <MudExpansionPanel Dense="@true" Class="border-solid border rounded pt-n4" Style="border-color: #BDBDBD">
             <TitleContent>
@@ -20,22 +53,30 @@
                 </div>
             </TitleContent>
             <ChildContent>
-                <MudTextField T="string" @bind-Text="@this.assistantName" AdornmentIcon="@Icons.Material.Filled.Assistant" Adornment="Adornment.Start" IconSize="Size.Small" Label="@T("Display Name (Optional)")" Placeholder="@T("Meeting Task Extractor")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+                @* A launcher shows this field inside its own frame above, next to the chat settings
+                   it belongs with. *@
+                @if (!this.createChatLauncher)
+                {
+                    <MudTextField T="string" @bind-Text="@this.assistantName" AdornmentIcon="@Icons.Material.Filled.Assistant" Adornment="Adornment.Start" IconSize="Size.Small" Label="@T("Display Name (Optional)")" Placeholder="@T("Meeting Task Extractor")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+                }
                 <EnumSelection T="AssistantCategory" NameFunc="@(category => category.NameSelecting())" @bind-Value="@this.selectedCategory" ValidateSelection="@this.ValidatingCategory" Icon="@Icons.Material.Filled.Category" IconSize="Size.Small" Label="@T("Category (Optional)")" AllowOther="@true" OtherValue="AssistantCategory.OTHER" @bind-OtherInput="@this.customCategory" ValidateOther="@this.ValidateCustomCategory" LabelOther="@T("Custom assistant category")" />
-                <MudTextField T="string" @bind-Text="@this.typicalInput" AdornmentIcon="@Icons.Material.Filled.Login" Adornment="Adornment.Start" IconSize="Size.Small" Label="@T("Typical input (Optional)")" Placeholder="@T("What users provide, e.g. text, notes, files, or a URL")" Variant="Variant.Outlined" Margin="Margin.Dense" Lines="3" AutoGrow="@true" MaxLines="8" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
-                <MudTextField T="string" @bind-Text="@this.expectedOutput" AdornmentIcon="@Icons.Material.Filled.Logout" Adornment="Adornment.Start" IconSize="Size.Small" Label="@T("Expected output (Optional)")" Placeholder="@T("What users should get, e.g. a summary or checklist")" Variant="Variant.Outlined" Margin="Margin.Dense" Lines="3" AutoGrow="@true" MaxLines="8" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
-                <MudSelect T="AssistantComponentType" Label="@T("Input and UI components (Optional)")" MultiSelection="@true" @bind-SelectedValues="@this.selectedAssistantComponents" MultiSelectionTextFunc="@this.GetSelectedAssistantComponentText" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3 rounded-lg" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.ViewDay" IconSize="Size.Small">
-                    @foreach (var component in ASSISTANT_COMPONENT_OPTIONS)
-                    {
-                        <MudSelectItem T="AssistantComponentType" Value="@component">
-                            @component.GetDisplayName()
-                        </MudSelectItem>
-                    }
-                </MudSelect>
-                <EnumSelection T="CommonLanguages" NameFunc="@(language => language.NameSelectingOptional())" @bind-Value="@this.selectedOutputLanguage" Icon="@Icons.Material.Filled.Translate" IconSize="Size.Small" Label="@T("(Optional) Output language")" AllowOther="@true" OtherValue="CommonLanguages.OTHER" @bind-OtherInput="@this.customOutputLanguage" ValidateOther="@this.ValidateCustomOutputLanguage" LabelOther="@T("Custom output language")" />
-                <MudSwitch T="bool" @bind-Value="@this.allowGeneratedAssistantProfiles" Label="@T("Allow AI Studio profiles")" LabelPlacement="Placement.End" Color="Color.Primary" Class="mb-3"/>
-                <MudTextField T="string" @bind-Text="@this.extraRules" AdornmentIcon="@Icons.Material.Filled.Rule" Adornment="Adornment.Start" IconSize="Size.Small" Label="@T("Additional rules (Optional)")" Placeholder="@T("What to avoid or consider, e.g. do not invent missing facts")" Variant="Variant.Outlined" Margin="Margin.Dense" Lines="3" AutoGrow="@true" MaxLines="10" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
-                <MudTextField T="string" @bind-Text="@this.exampleRequest" AdornmentIcon="@Icons.Material.Filled.Lightbulb" Adornment="Adornment.Start" IconSize="Size.Small" Label="@T("Example prompt (Optional)")" Placeholder="@T("An expected user prompt, e.g. summarize this document")" Variant="Variant.Outlined" Margin="Margin.Dense" Lines="3" AutoGrow="@true" MaxLines="10" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+                @if (!this.createChatLauncher)
+                {
+                    <MudTextField T="string" @bind-Text="@this.typicalInput" AdornmentIcon="@Icons.Material.Filled.Login" Adornment="Adornment.Start" IconSize="Size.Small" Label="@T("Typical input (Optional)")" Placeholder="@T("What users provide, e.g. text, notes, files, or a URL")" Variant="Variant.Outlined" Margin="Margin.Dense" Lines="3" AutoGrow="@true" MaxLines="8" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+                    <MudTextField T="string" @bind-Text="@this.expectedOutput" AdornmentIcon="@Icons.Material.Filled.Logout" Adornment="Adornment.Start" IconSize="Size.Small" Label="@T("Expected output (Optional)")" Placeholder="@T("What users should get, e.g. a summary or checklist")" Variant="Variant.Outlined" Margin="Margin.Dense" Lines="3" AutoGrow="@true" MaxLines="8" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+                    <MudSelect T="AssistantComponentType" Label="@T("Input and UI components (Optional)")" MultiSelection="@true" @bind-SelectedValues="@this.selectedAssistantComponents" MultiSelectionTextFunc="@this.GetSelectedAssistantComponentText" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3 rounded-lg" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.ViewDay" IconSize="Size.Small">
+                        @foreach (var component in ASSISTANT_COMPONENT_OPTIONS)
+                        {
+                            <MudSelectItem T="AssistantComponentType" Value="@component">
+                                @component.GetDisplayName()
+                            </MudSelectItem>
+                        }
+                    </MudSelect>
+                    <EnumSelection T="CommonLanguages" NameFunc="@(language => language.NameSelectingOptional())" @bind-Value="@this.selectedOutputLanguage" Icon="@Icons.Material.Filled.Translate" IconSize="Size.Small" Label="@T("(Optional) Output language")" AllowOther="@true" OtherValue="CommonLanguages.OTHER" @bind-OtherInput="@this.customOutputLanguage" ValidateOther="@this.ValidateCustomOutputLanguage" LabelOther="@T("Custom output language")" />
+                    <MudSwitch T="bool" @bind-Value="@this.allowGeneratedAssistantProfiles" Label="@T("Allow AI Studio profiles")" LabelPlacement="Placement.End" Color="Color.Primary" Class="mb-3"/>
+                    <MudTextField T="string" @bind-Text="@this.extraRules" AdornmentIcon="@Icons.Material.Filled.Rule" Adornment="Adornment.Start" IconSize="Size.Small" Label="@T("Additional rules (Optional)")" Placeholder="@T("What to avoid or consider, e.g. do not invent missing facts")" Variant="Variant.Outlined" Margin="Margin.Dense" Lines="3" AutoGrow="@true" MaxLines="10" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+                    <MudTextField T="string" @bind-Text="@this.exampleRequest" AdornmentIcon="@Icons.Material.Filled.Lightbulb" Adornment="Adornment.Start" IconSize="Size.Small" Label="@T("Example prompt (Optional)")" Placeholder="@T("An expected user prompt, e.g. summarize this document")" Variant="Variant.Outlined" Margin="Margin.Dense" Lines="3" AutoGrow="@true" MaxLines="10" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+                }
             </ChildContent>
         </MudExpansionPanel>
     </MudExpansionPanels>
@@ -111,7 +152,7 @@ else
                                       @T("The generated assistant could not be checked.")
                                       @if (!string.IsNullOrWhiteSpace(this.installFlowIssue))
                                       {
-                                          <span> @string.Format(T("Issue: {0}"), this.installFlowIssue)</span>
+                                          <span>&#32;@string.Format(T("Issue: {0}"), this.installFlowIssue)</span>
                                       }
                                   </MudAlert>
                               }
@@ -143,7 +184,7 @@ else
                                       @T("The assistant could not be installed.")
                                       @if (!string.IsNullOrWhiteSpace(this.installFlowIssue))
                                       {
-                                          <span> @string.Format(T("Issue: {0}"), this.installFlowIssue)</span>
+                                          <span>&#32;@string.Format(T("Issue: {0}"), this.installFlowIssue)</span>
                                       }
                                   </MudAlert>
                               }
@@ -177,7 +218,7 @@ else
                                       @T("The security audit could not be completed.")
                                       @if (!string.IsNullOrWhiteSpace(this.installFlowIssue))
                                       {
-                                          <span> @string.Format(T("Issue: {0}"), this.installFlowIssue)</span>
+                                          <span>&#32;@string.Format(T("Issue: {0}"), this.installFlowIssue)</span>
                                       }
                                   </MudAlert>
                               }
@@ -209,7 +250,7 @@ else
                                       @T("The assistant cannot be enabled.")
                                       @if (!string.IsNullOrWhiteSpace(this.installFlowIssue))
                                       {
-                                          <span> @string.Format(T("Issue: {0}"), this.installFlowIssue)</span>
+                                          <span>&#32;@string.Format(T("Issue: {0}"), this.installFlowIssue)</span>
                                       }
                                   </MudAlert>
                               }

@@ -9,7 +9,7 @@ using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Components;
 
-public partial class AssistantBlock<TSettings> : MSGComponentBase where TSettings : IComponent
+public partial class AssistantBlock<TSettings> : MSGComponentBase, IAssistantCategoryMember where TSettings : IComponent
 {
     /// <summary>
     /// Describes the assistant session indicator shown on top of the assistant icon.
@@ -58,6 +58,12 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase where TSetting
     [Parameter]
     public PreviewFeatures RequiredPreviewFeature { get; set; } = PreviewFeatures.NONE;
 
+    /// <summary>
+    /// Gets or sets the assistant category this block belongs to, if any.
+    /// </summary>
+    [CascadingParameter]
+    public AssistantCategoryBlock? Category { get; set; }
+
     [Inject]
     private MudTheme ColorTheme { get; init; } = null!;
 
@@ -88,7 +94,8 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase where TSetting
 
     private string BlockStyle => $"border-width: 3px; border-color: {this.BorderColor}; border-radius: 12px; border-style: solid; max-width: 20em;";
 
-    private bool IsVisible => this.SettingsManager.IsAssistantVisible(this.Component, assistantName: this.Name, requiredPreviewFeature: this.RequiredPreviewFeature);
+    /// <inheritdoc />
+    public bool IsVisible => this.SettingsManager.IsAssistantVisible(this.Component, assistantName: this.Name, requiredPreviewFeature: this.RequiredPreviewFeature);
 
     private bool HasSettingsPanel => typeof(TSettings) != typeof(NoSettingsPanel);
 
@@ -153,18 +160,20 @@ public partial class AssistantBlock<TSettings> : MSGComponentBase where TSetting
     protected override async Task OnInitializedAsync()
     {
         this.MediaTranscriptionService.StateChanged += this.OnMediaImportStateChanged;
+        this.Category?.RegisterAssistant(this);
         await base.OnInitializedAsync();
     }
 
     private void OnMediaImportStateChanged(MediaImportOwner owner)
     {
         if (this.OwnedByThisBlock(owner))
-            _ = this.InvokeAsync(this.StateHasChanged);
+            this.InvokeAsync(this.StateHasChanged).Observe($"{nameof(AssistantBlock<TSettings>)}: rendering a media import change");
     }
 
     protected override void DisposeResources()
     {
         this.MediaTranscriptionService.StateChanged -= this.OnMediaImportStateChanged;
+        this.Category?.UnregisterAssistant(this);
         base.DisposeResources();
     }
 

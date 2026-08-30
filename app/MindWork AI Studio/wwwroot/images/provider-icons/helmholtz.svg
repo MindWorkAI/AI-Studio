@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="119" height="103" viewBox="0 0 119 103" role="img" aria-labelledby="title desc">
+  <title id="title">Blablador Icon</title>
+  <desc id="desc">Schwarzes, stilisiertes Gesichtssymbol auf weiß gefüllter Iconfläche; der Außenbereich ist transparent.</desc>
+
+  <!-- Die Iconfläche ist weiß; außerhalb dieses Pfads bleibt die SVG transparent. -->
+  <path
+    d="M36 7.5H84.5C94.2 7.5 102 15.3 102 25V91.5L85 79H35C25.1 79 17 70.9 17 61V25.5C17 15.6 25.1 7.5 35 7.5H36Z"
+    fill="#fff"
+    stroke="#000"
+    stroke-width="5"
+    stroke-linejoin="miter"
+  />
+
+  <!-- Innere Falz/Trennlinie -->
+  <path d="M85 31V79" fill="none" stroke="#000" stroke-width="5" stroke-linecap="butt" />
+
+  <!-- Gesicht -->
+  <circle cx="36.5" cy="30.5" r="6.75" fill="#000" />
+  <circle cx="67.5" cy="30.5" r="6.75" fill="#000" />
+  <path d="M42.5 45.5H61V51H54.5V59.5H49V51H42.5Z" fill="#000" />
+</svg>

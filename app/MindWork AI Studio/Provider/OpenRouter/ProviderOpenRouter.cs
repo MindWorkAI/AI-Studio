@@ -115,16 +115,8 @@ public sealed class ProviderOpenRouter() : BaseProvider(LLMProviders.OPEN_ROUTER
             storeType,
             "models",
             modelResponse => modelResponse.Data
-                .Where(n =>
-                    !n.Id.Contains("whisper", StringComparison.OrdinalIgnoreCase) &&
-                    !n.Id.Contains("dall-e", StringComparison.OrdinalIgnoreCase) &&
-                    !n.Id.Contains("tts", StringComparison.OrdinalIgnoreCase) &&
-                    !n.Id.Contains("embedding", StringComparison.OrdinalIgnoreCase) &&
-                    !n.Id.Contains("moderation", StringComparison.OrdinalIgnoreCase) &&
-                    !n.Id.Contains("stable-diffusion", StringComparison.OrdinalIgnoreCase) &&
-                    !n.Id.Contains("flux", StringComparison.OrdinalIgnoreCase) &&
-                    !n.Id.Contains("midjourney", StringComparison.OrdinalIgnoreCase))
-                .Select(n => new Model(n.Id, n.Name)),
+                .Select(n => new Model(n.Id, n.Name))
+                .Where(model => model.IsChatModel()),
             token,
             apiKeyProvisional,
             requestConfigurator: (request, secretKey) =>

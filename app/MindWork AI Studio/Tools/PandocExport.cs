@@ -14,9 +14,9 @@ public static class PandocExport
     private sealed record ExportTarget(string DisplayName, string PandocOutputFormat, FileTypeFilter FileType);
 
     private static readonly ExportTarget MICROSOFT_WORD = new("Microsoft Word (.docx)", "docx", FileTypes.MS_WORD);
-    private static readonly ExportTarget OPEN_DOCUMENT_TEXT = new("OpenDocument Text (.odt)", "odt", FileTypes.OPEN_DOCUMENT_TEXT);
-    private static readonly ExportTarget HTML = new("Hypertext (.html)", "html", FileTypes.HYPERTEXT);
-    private static readonly ExportTarget LATEX = new("LaTeX (.tex)", "latex", FileTypes.LATEX);
+    private static readonly ExportTarget OPEN_DOCUMENT_TEXT = new("OpenDocument Text (.odt)", "odt", FileTypes.ODT);
+    private static readonly ExportTarget HTML = new("Hypertext (.html)", "html", FileTypes.HTML);
+    private static readonly ExportTarget LATEX = new("LaTeX (.tex)", "latex", FileTypes.TEX);
     
     private static string TB(string fallbackEn) => I18N.I.T(fallbackEn, typeof(PandocExport).Namespace, nameof(PandocExport));
     
