@@ -127,8 +127,18 @@ public static class PlainFileExport
     /// </remarks>
     private static string ToPlainText(MarkdownObject container)
     {
+        //
+        // A leaf block, a heading for example, keeps its text in an inline container of its own.
+        // Asking the block itself for its descendants walks its child blocks, and a leaf block has
+        // none, so we would get nothing back. A table cell is a container block and needs the
+        // opposite: its text sits in the paragraphs below it.
+        //
+        var inlines = container is LeafBlock leafBlock
+            ? leafBlock.Inline?.Descendants<LeafInline>() ?? []
+            : container.Descendants<LeafInline>();
+
         var text = new StringBuilder();
-        foreach (var inline in container.Descendants<LeafInline>())
+        foreach (var inline in inlines)
             switch (inline)
             {
                 case CodeInline code:
