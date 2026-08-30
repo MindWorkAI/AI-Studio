@@ -72,6 +72,19 @@ public static class HFInferenceProviderExtensions
     public static bool SupportsEmbeddings(this HFInferenceProvider provider) => provider is HFInferenceProvider.TOGETHER_AI or HFInferenceProvider.DEEPINFRA;
 
     /// <summary>
+    /// Whether this inference provider transcribes audio for us.
+    /// </summary>
+    /// <remarks>
+    /// The same two providers as for embeddings, and for the same reason: transcription lives on a
+    /// provider's own route, and only these two answer the OpenAI-compatible form there. Others do
+    /// transcribe for Hugging Face, but not in a shape we could send an audio file to: fal-ai and
+    /// Replicate both turn the request down with "Model not supported by provider".
+    /// </remarks>
+    /// <param name="provider">The inference provider.</param>
+    /// <returns>True, when we can transcribe audio through this provider.</returns>
+    public static bool SupportsTranscription(this HFInferenceProvider provider) => provider is HFInferenceProvider.TOGETHER_AI or HFInferenceProvider.DEEPINFRA;
+
+    /// <summary>
     /// The base URL of the provider's own OpenAI-compatible route.
     /// </summary>
     /// <remarks>

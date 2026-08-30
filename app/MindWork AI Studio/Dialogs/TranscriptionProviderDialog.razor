@@ -1,4 +1,5 @@
 @using AIStudio.Provider
+@using AIStudio.Provider.HuggingFace
 @using AIStudio.Provider.SelfHosted
 @inherits MSGComponentBase
 
@@ -62,6 +63,24 @@
                         }
                     }
                 </MudSelect>
+            }
+
+            @if (this.DataLLMProvider.IsHFInstanceProviderNeeded())
+            {
+                <MudSelect T="HFInferenceProvider" Value="@this.HFInferenceProviderId" ValueChanged="@this.OnHFInferenceProviderChanged" Label="@T("Hugging Face Inference Provider")" Class="mb-3" OpenIcon="@Icons.Material.Filled.Dns" AdornmentColor="Color.Info" Adornment="Adornment.Start" Disabled="@this.IsEnterpriseConfiguration" Validation="@this.providerValidation.ValidatingHFInstanceProviderForTranscription">
+                    @foreach (HFInferenceProvider inferenceProvider in Enum.GetValues(typeof(HFInferenceProvider)))
+                    {
+                        @if (inferenceProvider.SupportsTranscription())
+                        {
+                            <MudSelectItem Value="@inferenceProvider">
+                                @inferenceProvider.ToName()
+                            </MudSelectItem>
+                        }
+                    }
+                </MudSelect>
+                <MudJustifiedText Class="mb-3">
+                    @T("Hugging Face transcribes audio through a few of its inference providers only, which is why this list is shorter than the one for chatting.")
+                </MudJustifiedText>
             }
 
             @if (!this.DataLLMProvider.IsTranscriptionModelSelectionHidden(this.DataHost))

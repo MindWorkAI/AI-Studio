@@ -6,9 +6,9 @@ namespace AIStudio.Provider.HuggingFace;
 /// <remarks>
 /// Hugging Face serves chatting and everything else from different places. Chat completions go to
 /// the router's own OpenAI-compatible endpoint, which accepts the model IDs as the hub writes them
-/// and picks an inference provider from a suffix. Embeddings do not exist there at all and have to
-/// be asked of one provider's own route. Because the base URL is fixed when a provider instance is
-/// built, the instance has to know from the start which of the two it is for.
+/// and picks an inference provider from a suffix. Embeddings and transcription do not exist there
+/// at all and have to be asked of one provider's own route. Because the base URL is fixed when a
+/// provider instance is built, the instance has to know from the start which one it is for.
 /// </remarks>
 public enum HFEndpointKind
 {
@@ -21,4 +21,9 @@ public enum HFEndpointKind
     /// The OpenAI-compatible route of one inference provider, which serves embeddings.
     /// </summary>
     EMBEDDING,
+
+    /// <summary>
+    /// The OpenAI-compatible route of one inference provider, which transcribes audio.
+    /// </summary>
+    TRANSCRIPTION,
 }

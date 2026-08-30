@@ -179,6 +179,12 @@ CONFIG["TRANSCRIPTION_PROVIDERS"] = {}
 --     -- above: when both are set, the embedded key is ignored and a warning is logged.
 --     -- ["AllowUserProvidedAPIKey"] = true,
 --
+--     -- Optional: Hugging Face inference provider. Only relevant for UsedLLMProvider = HUGGINGFACE.
+--     -- Hugging Face transcribes audio through some of its inference providers only, so the choice
+--     -- is narrower than for chatting. Allowed values are: DEEPINFRA and TOGETHER_AI. The automatic
+--     -- options are not available here, because a transcription request has to name its provider.
+--     -- ["HFInferenceProvider"] = "TOGETHER_AI",
+--
 --     ["Model"] = {
 --         ["Id"] = "<the model ID>",
 --         ["DisplayName"] = "<user-friendly name of the model>",

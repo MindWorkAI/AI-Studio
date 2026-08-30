@@ -194,9 +194,15 @@ public sealed class ProviderHuggingFace : BaseProvider
     #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
     
     /// <inheritdoc />
-    public override Task<TranscriptionResult> TranscribeAudioAsync(Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default)
+    public override async Task<TranscriptionResult> TranscribeAudioAsync(Model transcriptionModel, string audioFilePath, SettingsManager settingsManager, CancellationToken token = default)
     {
-        return Task.FromResult(TranscriptionResult.Failure());
+        var requestedSecret = await Program.RUST_SERVICE.GetAPIKey(this, SecretStoreType.TRANSCRIPTION_PROVIDER);
+
+        //
+        // Note that we send the model as it is: this request goes to the provider's own route,
+        // where a routing suffix would be part of the name and name nothing:
+        //
+        return await this.PerformStandardTranscriptionRequest(requestedSecret, transcriptionModel, audioFilePath, token: token);
     }
     
     /// <inhertidoc />
@@ -282,7 +288,10 @@ public sealed class ProviderHuggingFace : BaseProvider
     /// <inheritdoc />
     public override Task<ModelLoadResult> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return Task.FromResult(ModelLoadResult.FromModels([]));
+        if (!this.hfProvider.SupportsTranscription())
+            return Task.FromResult(ModelLoadResult.FromModels([]));
+
+        return this.LoadHubModels(SecretStoreType.TRANSCRIPTION_PROVIDER, "automatic-speech-recognition", apiKeyProvisional, token);
     }
     
     #endregion

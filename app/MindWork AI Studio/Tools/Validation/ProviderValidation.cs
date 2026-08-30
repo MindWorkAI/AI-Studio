@@ -156,4 +156,27 @@ public sealed class ProviderValidation
 
         return null;
     }
+
+    /// <summary>
+    /// Validates the Hugging Face inference provider chosen for transcription.
+    /// </summary>
+    /// <remarks>
+    /// As with embeddings, only some of the inference providers transcribe audio for us, so the
+    /// choice is narrower than it is for chatting.
+    /// </remarks>
+    /// <param name="inferenceProvider">The inference provider to validate.</param>
+    /// <returns>The message to show, or null when the selection is fine.</returns>
+    public string? ValidatingHFInstanceProviderForTranscription(HFInferenceProvider inferenceProvider)
+    {
+        if(this.GetProvider() is not LLMProviders.HUGGINGFACE)
+            return null;
+
+        if (inferenceProvider is HFInferenceProvider.NONE)
+            return TB("Please select an Hugging Face inference provider.");
+
+        if (!inferenceProvider.SupportsTranscription())
+            return TB("This Hugging Face inference provider does not transcribe audio. Please select another one.");
+
+        return null;
+    }
 }

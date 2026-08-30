@@ -7998,6 +7998,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SINGLEINPUTDIALOG::T4030229154"] = "Ihre Ein
 -- Cancel
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SINGLEINPUTDIALOG::T900713019"] = "Abbrechen"
 
+-- Hugging Face Inference Provider
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T1085481431"] = "Hugging Face-Inferenzanbieter"
+
 -- Failed to store the API key in the operating system. The message was: {0}. Please try again.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T1122745046"] = "Der API-Schlüssel konnte nicht im Betriebssystem gespeichert werden. Die Meldung lautete: '{0}'. Bitte versuchen Sie es erneut."
 
@@ -8039,6 +8042,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T2810182573"] =
 
 -- Instance Name
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T2842060373"] = "Instanzname"
+
+-- Hugging Face transcribes audio through a few of its inference providers only, which is why this list is shorter than the one for chatting.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T3397943774"] = "Hugging Face transkribiert Audio nur über einige seiner Inferenzanbieter. Deshalb ist diese Liste kürzer als die für den Chat."
 
 -- Please enter a transcription model name.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::TRANSCRIPTIONPROVIDERDIALOG::T3703662664"] = "Bitte geben Sie den Namen eines Transkriptionsmodells ein."
@@ -11222,6 +11228,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::PROVIDERVALIDATION::T3550629491"] 
 
 -- Please enter an instance name.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::PROVIDERVALIDATION::T3999823516"] = "Bitte geben Sie einen Instanznamen ein."
+
+-- This Hugging Face inference provider does not transcribe audio. Please select another one.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::PROVIDERVALIDATION::T4142849031"] = "Dieser Hugging-Face-Inferenzanbieter transkribiert keine Audiodateien. Bitte wählen Sie einen anderen aus."
 
 -- Please select an Hugging Face inference provider.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::PROVIDERVALIDATION::T497939286"] = "Bitte wählen Sie einen Hugging Face-Inferenzanbieter aus."

@@ -253,8 +253,15 @@ public static class LLMProvidersExtensions
         LLMProviders.ANTHROPIC => false,
         LLMProviders.X => false,
         LLMProviders.DEEP_SEEK => false,
-        LLMProviders.HUGGINGFACE => false,
         LLMProviders.PERPLEXITY => false,
+
+        //
+        // Hugging Face transcribes audio, but like embeddings, not through the router endpoint we
+        // chat with: that one answers "/v1/audio/transcriptions" with a plain "Not Found". Only
+        // some of the inference providers answer the OpenAI-compatible form, which
+        // HFInferenceProviderExtensions.SupportsTranscription decides.
+        //
+        LLMProviders.HUGGINGFACE => true,
 
         //
         // Self-hosted providers are treated as a special case anyway.
@@ -291,7 +298,7 @@ public static class LLMProvidersExtensions
     /// <returns>The provider instance.</returns>
     public static IProvider CreateProvider(this TranscriptionProvider transcriptionProviderSettings)
     {
-        return transcriptionProviderSettings.UsedLLMProvider.CreateProvider(transcriptionProviderSettings.Name, transcriptionProviderSettings.Host, transcriptionProviderSettings.Hostname, HFInferenceProvider.NONE, configuredProviderId: transcriptionProviderSettings.Id, isEnterpriseConfiguration: transcriptionProviderSettings.IsEnterpriseConfiguration);
+        return transcriptionProviderSettings.UsedLLMProvider.CreateProvider(transcriptionProviderSettings.Name, transcriptionProviderSettings.Host, transcriptionProviderSettings.Hostname, transcriptionProviderSettings.HFInferenceProvider, configuredProviderId: transcriptionProviderSettings.Id, isEnterpriseConfiguration: transcriptionProviderSettings.IsEnterpriseConfiguration, hfEndpointKind: HFEndpointKind.TRANSCRIPTION);
     }
     
     private static IProvider CreateProvider(this LLMProviders provider, string instanceName, Host host, string hostname, HFInferenceProvider inferenceProvider, string configuredProviderId = "", string expertProviderApiParameter = "", bool isEnterpriseConfiguration = false, HFEndpointKind hfEndpointKind = HFEndpointKind.CHAT)
