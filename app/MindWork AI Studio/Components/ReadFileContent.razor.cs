@@ -344,7 +344,7 @@ public partial class ReadFileContent : MSGComponentBase
 
         try
         {
-            var extraction = await UserFile.LoadFileData(filePath, this.RustService, this.DialogService);
+            var extraction = await UserFile.LoadFileData(filePath, this.RustService, this.PandocAvailabilityService);
 
             // The failure was already reported by UserFile.LoadFileData, so we only stop here:
             if (!extraction.HasUsableContent)
