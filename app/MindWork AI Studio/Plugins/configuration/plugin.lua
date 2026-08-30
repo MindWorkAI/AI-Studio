@@ -494,6 +494,13 @@ CONFIG["SETTINGS"] = {}
 -- Configure the default output mode.
 -- Allowed values are: INDIVIDUAL_FILES, TABLE_ONLY
 -- CONFIG["SETTINGS"]["DataBatchProcessing.OutputMode"] = "INDIVIDUAL_FILES"
+--
+-- Configure the file format of the individual result files. Used only when the output
+-- mode is INDIVIDUAL_FILES. Everything except MARKDOWN is converted by Pandoc, which
+-- AI Studio installs on demand.
+-- Allowed values are: MICROSOFT_WORD, OPEN_DOCUMENT_TEXT, LATEX, MARKDOWN, HTML
+-- CONFIG["SETTINGS"]["DataBatchProcessing.ResultFileFormat"] = "MARKDOWN"
+--
 -- CONFIG["SETTINGS"]["DataBatchProcessing.CsvFileName"] = "batch-results.csv"
 -- CONFIG["SETTINGS"]["DataBatchProcessing.ResultColumnHeader"] = "Result"
 -- Allowed CSV separator values are: COMMA, SEMICOLON, PIPE, TAB, CUSTOM
@@ -523,6 +530,7 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataBatchProcessing.PromptFilePath.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataBatchProcessing.PreselectedPolicyId.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataBatchProcessing.OutputMode.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataBatchProcessing.ResultFileFormat.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataBatchProcessing.CsvFileName.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataBatchProcessing.ResultColumnHeader.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataBatchProcessing.CsvSeparator.AllowUserOverride"] = true

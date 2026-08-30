@@ -88,6 +88,7 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
     private string promptFileLoadIssue = string.Empty;
     private DataDocumentAnalysisPolicy? selectedPolicy;
     private BatchProcessingOutputMode outputMode = BatchProcessingOutputMode.INDIVIDUAL_FILES;
+    private FileExportFormat resultFileFormat = FileExportFormat.MARKDOWN;
     private string resultColumnHeader = string.Empty;
     private string csvFileName = string.Empty;
     private BatchProcessingCsvSeparator csvSeparator = BatchProcessingCsvSeparator.SEMICOLON;
@@ -161,6 +162,7 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
             this.promptFilePath = string.Empty;
             this.selectedPolicy = null;
             this.outputMode = BatchProcessingOutputMode.INDIVIDUAL_FILES;
+            this.resultFileFormat = FileExportFormat.MARKDOWN;
             this.resultColumnHeader = string.Empty;
             this.csvFileName = string.Empty;
             this.csvSeparator = BatchProcessingCsvSeparator.SEMICOLON;
@@ -180,6 +182,7 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
         this.selectedPolicy = this.SettingsManager.ConfigurationData.DocumentAnalysis.Policies
             .FirstOrDefault(policy => policy.Id == settings.PreselectedPolicyId);
         this.outputMode = settings.OutputMode;
+        this.resultFileFormat = settings.ResultFileFormat;
         this.resultColumnHeader = settings.ResultColumnHeader;
         this.csvFileName = settings.CsvFileName;
         this.csvSeparator = settings.CsvSeparator;

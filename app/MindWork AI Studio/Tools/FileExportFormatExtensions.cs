@@ -42,6 +42,15 @@ public static class FileExportFormatExtensions
     ];
 
     /// <summary>
+    /// Every format an entire answer can be written as.
+    /// </summary>
+    /// <remarks>
+    /// The tabular formats are missing on purpose: they hold one table out of an answer, never the
+    /// answer itself. Whoever offers a table adds them.
+    /// </remarks>
+    public static readonly IReadOnlyList<FileExportFormat> ANSWER_FORMATS = [..DOCUMENT_FORMATS, ..TEXT_FORMATS];
+
+    /// <summary>
     /// Returns the name of the format as shown to the user.
     /// </summary>
     /// <param name="format">The format.</param>

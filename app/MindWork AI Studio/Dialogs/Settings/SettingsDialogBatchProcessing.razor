@@ -43,7 +43,11 @@
 
             <MudText Typo="Typo.h6" Class="mb-3 mt-6">@T("Output")</MudText>
             <ConfigurationSelect OptionDescription="@T("Default output mode")" Disabled="@this.DefaultsDisabled" SelectedValue="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.OutputMode)" Data="@this.OutputModeData" SelectionUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.OutputMode = value)" IsLocked="() => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.OutputMode, out var meta) && meta.IsLocked"/>
-            @if (this.SettingsManager.ConfigurationData.BatchProcessing.OutputMode is BatchProcessingOutputMode.TABLE_ONLY)
+            @if (this.SettingsManager.ConfigurationData.BatchProcessing.OutputMode is BatchProcessingOutputMode.INDIVIDUAL_FILES)
+            {
+                <ConfigurationSelect OptionDescription="@T("Default file format")" Disabled="@this.DefaultsDisabled" SelectedValue="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.ResultFileFormat)" Data="@ResultFileFormatData" SelectionUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.ResultFileFormat = value)" OptionHelp="@T("Choose the format of new result files. Everything except Markdown is converted by Pandoc.")" IsLocked="() => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.ResultFileFormat, out var meta) && meta.IsLocked"/>
+            }
+            else
             {
                 <ConfigurationText OptionDescription="@T("Default results table name")" Disabled="@this.DefaultsDisabled" Icon="@Icons.Material.Filled.Description" Text="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.CsvFileName)" TextUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.CsvFileName = value)" IsLocked="() => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.CsvFileName, out var meta) && meta.IsLocked"/>
                 <ConfigurationText OptionDescription="@T("Default result column header")" Disabled="@this.DefaultsDisabled" Icon="@Icons.Material.Filled.TableChart" Text="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.ResultColumnHeader)" TextUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.ResultColumnHeader = value)" IsLocked="() => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.ResultColumnHeader, out var meta) && meta.IsLocked"/>
