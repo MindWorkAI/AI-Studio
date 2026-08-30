@@ -86,6 +86,18 @@ public static class FileExportFormatExtensions
     };
 
     /// <summary>
+    /// Returns the file name the save dialog starts with.
+    /// </summary>
+    /// <remarks>
+    /// Without a name, the dialog opens with an empty field and the user easily ends up with a
+    /// file which carries no extension at all. The name is deliberately not translated: a file
+    /// name should survive being copied between systems and locales.
+    /// </remarks>
+    /// <param name="format">The format.</param>
+    /// <returns>The suggested file name, including its extension.</returns>
+    public static string ToSuggestedFileName(this FileExportFormat format) => $"export{format.ToFileExtension()}";
+
+    /// <summary>
     /// Returns the filter which the save dialog offers for the format.
     /// </summary>
     /// <param name="format">The format.</param>

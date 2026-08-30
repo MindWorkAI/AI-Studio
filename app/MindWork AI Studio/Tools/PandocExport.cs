@@ -19,10 +19,12 @@ public static class PandocExport
     /// </summary>
     /// <param name="rustService">The Rust service, used for the save dialog and for Pandoc.</param>
     /// <param name="dialogService">The dialog service, used to offer the Pandoc installation.</param>
+    /// <param name="dialogTitle">The title of the save dialog. The caller knows what the user is
+    /// looking at, a chat message or the result of an assistant, so the caller names it.</param>
     /// <param name="format">The format to write. Must be a format which uses Pandoc.</param>
     /// <param name="markdownContent">The content to export.</param>
     /// <returns>True, when the document was written.</returns>
-    public static async Task<bool> ToDocument(RustService rustService, IDialogService dialogService, FileExportFormat format, IContent markdownContent)
+    public static async Task<bool> ToDocument(RustService rustService, IDialogService dialogService, string dialogTitle, FileExportFormat format, IContent markdownContent)
     {
         if (!format.UsesPandoc() || format.ToFileTypeFilter() is not { } fileTypeFilter)
             throw new ArgumentOutOfRangeException(nameof(format), format, "Pandoc cannot write this format.");
@@ -38,7 +40,7 @@ public static class PandocExport
             return false;
         }
 
-        var response = await rustService.SaveFile(TB("Export chat"), [fileTypeFilter]);
+        var response = await rustService.SaveFile(dialogTitle, [fileTypeFilter], format.ToSuggestedFileName());
         if (response.UserCancelled)
         {
             LOGGER.LogInformation("User cancelled the save dialog.");
@@ -72,7 +74,7 @@ public static class PandocExport
                 if (!pandocState.IsAvailable)
                 {
                     LOGGER.LogError("Pandoc is not available after installation attempt.");
-                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Cancel, TB("Pandoc is required for document export.")));
+                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Cancel, TB("Pandoc is required for this export.")));
                     return false;
                 }
             }
@@ -106,19 +108,19 @@ public static class PandocExport
             if (process.ExitCode is not 0)
             {
                 LOGGER.LogError("Pandoc failed with exit code {ProcessExitCode}: '{ErrorText}'", process.ExitCode, error);
-                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Cancel, TB("Error during document export")));
+                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Cancel, TB("The export failed.")));
                 return false;
             }
 
             LOGGER.LogInformation("Pandoc conversion successful.");
-            await MessageBus.INSTANCE.SendSuccess(new(Icons.Material.Filled.CheckCircle, TB("Document export successful")));
+            await MessageBus.INSTANCE.SendSuccess(new(Icons.Material.Filled.CheckCircle, TB("The export succeeded.")));
             
             return true;
         }
         catch (Exception ex)
         {
             LOGGER.LogError(ex, "Error during {ExportFormat} export.", format);
-            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Cancel, TB("Error during document export")));
+            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Cancel, TB("The export failed.")));
             return false;
         }
         finally

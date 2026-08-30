@@ -67,10 +67,12 @@ public static partial class PlainFileExport
     /// Writes the given content to a plain text file and lets the user save it.
     /// </summary>
     /// <param name="rustService">The Rust service, used for the save dialog.</param>
+    /// <param name="dialogTitle">The title of the save dialog. The caller knows what the user is
+    /// looking at, a chat message or the result of an assistant, so the caller names it.</param>
     /// <param name="format">The format to write. Must be a format which does not use Pandoc.</param>
     /// <param name="markdownContent">The content to export.</param>
     /// <returns>True, when the file was written.</returns>
-    public static async Task<bool> ToFile(RustService rustService, FileExportFormat format, IContent markdownContent)
+    public static async Task<bool> ToFile(RustService rustService, string dialogTitle, FileExportFormat format, IContent markdownContent)
     {
         if (format.UsesPandoc() || format.ToFileTypeFilter() is not { } fileTypeFilter)
             throw new ArgumentOutOfRangeException(nameof(format), format, "AI Studio cannot write this format itself.");
@@ -103,7 +105,7 @@ public static partial class PlainFileExport
             return false;
         }
 
-        var response = await rustService.SaveFile(TB("Export chat"), [fileTypeFilter]);
+        var response = await rustService.SaveFile(dialogTitle, [fileTypeFilter], format.ToSuggestedFileName());
         if (response.UserCancelled)
         {
             LOGGER.LogInformation("User cancelled the save dialog.");
@@ -115,14 +117,14 @@ public static partial class PlainFileExport
         try
         {
             await File.WriteAllTextAsync(response.SaveFilePath, fileContent);
-            await MessageBus.INSTANCE.SendSuccess(new(Icons.Material.Filled.CheckCircle, TB("Document export successful")));
+            await MessageBus.INSTANCE.SendSuccess(new(Icons.Material.Filled.CheckCircle, TB("The export succeeded.")));
             
             return true;
         }
         catch (Exception ex)
         {
             LOGGER.LogError(ex, "Error during {ExportFormat} export.", format);
-            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Cancel, TB("Error during document export")));
+            await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Cancel, TB("The export failed.")));
             return false;
         }
     }

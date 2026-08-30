@@ -61,7 +61,7 @@
 
                 @if (this.Role is ChatRole.AI && this.CanExport)
                 {
-                    <MudTooltip Text="@T("Export chat")" Placement="Placement.Bottom">
+                    <MudTooltip Text="@T("Export this message")" Placement="Placement.Bottom">
                         <MudMenu Icon="@Icons.Material.Filled.Save">
                             <MudMenuItem OnClick="@(() => this.ExportDocument(FileExportFormat.MICROSOFT_WORD))" Icon="@Icons.Custom.FileFormats.FileWord">
                                 @T("Microsoft Word (.docx)")
