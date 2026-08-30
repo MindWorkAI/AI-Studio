@@ -5946,6 +5946,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGMETHODDIALOG::T662524223"] = "Ein L
 -- Cancel
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGMETHODDIALOG::T900713019"] = "Abbrechen"
 
+-- Hugging Face Inference Provider
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T1085481431"] = "Hugging Face-Inferenzanbieter"
+
 -- Failed to store the API key in the operating system. The message was: {0}. Please try again.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T1122745046"] = "Der API-Schlüssel konnte nicht im Betriebssystem gespeichert werden. Die Meldung war: {0}. Bitte versuchen Sie es erneut."
 
@@ -5969,6 +5972,9 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T1847791252"] = "Ak
 
 -- Failed to load the API key from the operating system. The message was: {0}. You might ignore this message and provide the API key again.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T1870831108"] = "Der API-Schlüssel konnte nicht vom Betriebssystem geladen werden. Die Meldung war: {0}. Sie können diese Meldung ignorieren und den API-Schlüssel erneut eingeben."
+
+-- Hugging Face offers embeddings through a few of its inference providers only, which is why this list is shorter than the one for chatting.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T194295715"] = "Hugging Face bietet Einbettungen nur über einige seiner Inferenzanbieter an. Deshalb ist diese Liste kürzer als die für Chats."
 
 -- Model
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::EMBEDDINGPROVIDERDIALOG::T2189814010"] = "Modell"
@@ -11202,9 +11208,6 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::PROVIDERVALIDATION::T125334762"] =
 -- The instance name must be unique; the chosen name is already in use.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::PROVIDERVALIDATION::T1301966140"] = "Der Instanzname muss eindeutig sein; der gewählte Name wird bereits verwendet."
 
--- This Hugging Face inference provider no longer offers models to chat with. Please select another one.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::PROVIDERVALIDATION::T1379003702"] = "Dieser Hugging-Face-Inferenzanbieter bietet keine Modelle mehr zum Chatten an. Bitte wählen Sie einen anderen Anbieter aus."
-
 -- Please select a provider.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::PROVIDERVALIDATION::T1809312323"] = "Bitte wählen Sie einen Anbieter aus."
 
@@ -11222,6 +11225,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::PROVIDERVALIDATION::T3999823516"] 
 
 -- Please select an Hugging Face inference provider.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::PROVIDERVALIDATION::T497939286"] = "Bitte wählen Sie einen Hugging Face-Inferenzanbieter aus."
+
+-- This Hugging Face inference provider does not create embeddings. Please select another one.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::PROVIDERVALIDATION::T649507886"] = "Dieser Hugging-Face-Inferenzanbieter erstellt keine Einbettungen. Bitte wählen Sie einen anderen aus."
 
 -- Please select a model.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::VALIDATION::PROVIDERVALIDATION::T818893091"] = "Bitte wählen Sie ein Modell aus."

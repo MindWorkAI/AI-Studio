@@ -121,14 +121,14 @@ CONFIG["LLM_PROVIDERS"] = {}
 --
 --     -- Optional: Hugging Face inference provider. Only relevant for UsedLLMProvider = HUGGINGFACE.
 --     -- Allowed values are: BASETEN, CEREBRAS, COHERE, DEEPINFRA, FEATHERLESS_AI, FIREWORKS, GROQ,
---     -- HF_INFERENCE_API, NOVITA, NSCALE, OVHCLOUD, PUBLIC_AI, SCALEWAY, TOGETHER_AI, ZAI
+--     -- NOVITA, NSCALE, OVHCLOUD, PUBLIC_AI, SCALEWAY, TOGETHER_AI, ZAI
 --     -- Instead of naming a provider, you may let Hugging Face choose one:
 --     -- AUTOMATIC (the fastest), CHEAPEST, or PREFERRED (the order configured in your
 --     -- Hugging Face account). An automatic choice also fails over to another provider when the
 --     -- selected one is unavailable.
 --     -- Note: Hugging Face stopped routing HYPERBOLIC, SAMBANOVA, and NEBIUS_AI_STUDIO in July
---     -- 2026. Configurations still naming one of them are treated as if no provider was set, and
---     -- the user is asked to choose again.
+--     -- 2026, and HF_INFERENCE_API serves no models we can reach. Configurations still naming one
+--     -- of them are treated as if no provider was set, and the user is asked to choose again.
 --     -- ["HFInferenceProvider"] = "NOVITA",
 --
 --     -- Optional: Encrypted API key for cloud providers or secured on-premise models.
@@ -209,6 +209,12 @@ CONFIG["EMBEDDING_PROVIDERS"] = {}
 --     -- provider (see LLM_PROVIDERS example for details). Mutually exclusive with "APIKey"
 --     -- above: when both are set, the embedded key is ignored and a warning is logged.
 --     -- ["AllowUserProvidedAPIKey"] = true,
+--
+--     -- Optional: Hugging Face inference provider. Only relevant for UsedLLMProvider = HUGGINGFACE.
+--     -- Hugging Face serves embeddings through some of its inference providers only, so the choice
+--     -- is narrower than for chatting. Allowed values are: DEEPINFRA and TOGETHER_AI. The automatic
+--     -- options are not available here, because an embedding request has to name its provider.
+--     -- ["HFInferenceProvider"] = "TOGETHER_AI",
 --
 --     ["Model"] = {
 --         ["Id"] = "<the model ID, e.g., nomic-embed-text>",

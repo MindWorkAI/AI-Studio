@@ -206,9 +206,16 @@ public static class LLMProvidersExtensions
         LLMProviders.FIREWORKS => false,
         LLMProviders.X => false,
         LLMProviders.DEEP_SEEK => false,
-        LLMProviders.HUGGINGFACE => false,
         LLMProviders.PERPLEXITY => false,
         LLMProviders.HETZNER => false,
+
+        //
+        // Hugging Face serves embeddings, but not through the router endpoint we chat with: that
+        // one answers "/v1/embeddings" with a plain "Not Found". They have to be asked of one
+        // inference provider directly, and only some of them answer the OpenAI-compatible form.
+        // Which ones is decided by HFInferenceProviderExtensions.SupportsEmbeddings.
+        //
+        LLMProviders.HUGGINGFACE => true,
 
         //
         // Self-hosted providers are treated as a special case anyway.
@@ -274,7 +281,7 @@ public static class LLMProvidersExtensions
     /// <returns>The provider instance.</returns>
     public static IProvider CreateProvider(this EmbeddingProvider embeddingProviderSettings)
     {
-        return embeddingProviderSettings.UsedLLMProvider.CreateProvider(embeddingProviderSettings.Name, embeddingProviderSettings.Host, embeddingProviderSettings.Hostname, HFInferenceProvider.NONE, configuredProviderId: embeddingProviderSettings.Id, isEnterpriseConfiguration: embeddingProviderSettings.IsEnterpriseConfiguration);
+        return embeddingProviderSettings.UsedLLMProvider.CreateProvider(embeddingProviderSettings.Name, embeddingProviderSettings.Host, embeddingProviderSettings.Hostname, embeddingProviderSettings.HFInferenceProvider, configuredProviderId: embeddingProviderSettings.Id, isEnterpriseConfiguration: embeddingProviderSettings.IsEnterpriseConfiguration, hfEndpointKind: HFEndpointKind.EMBEDDING);
     }
     
     /// <summary>
@@ -287,7 +294,7 @@ public static class LLMProvidersExtensions
         return transcriptionProviderSettings.UsedLLMProvider.CreateProvider(transcriptionProviderSettings.Name, transcriptionProviderSettings.Host, transcriptionProviderSettings.Hostname, HFInferenceProvider.NONE, configuredProviderId: transcriptionProviderSettings.Id, isEnterpriseConfiguration: transcriptionProviderSettings.IsEnterpriseConfiguration);
     }
     
-    private static IProvider CreateProvider(this LLMProviders provider, string instanceName, Host host, string hostname, HFInferenceProvider inferenceProvider, string configuredProviderId = "", string expertProviderApiParameter = "", bool isEnterpriseConfiguration = false)
+    private static IProvider CreateProvider(this LLMProviders provider, string instanceName, Host host, string hostname, HFInferenceProvider inferenceProvider, string configuredProviderId = "", string expertProviderApiParameter = "", bool isEnterpriseConfiguration = false, HFEndpointKind hfEndpointKind = HFEndpointKind.CHAT)
     {
         try
         {
@@ -308,7 +315,7 @@ public static class LLMProvidersExtensions
 
                 LLMProviders.GROQ => new ProviderGroq { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, IsEnterpriseConfiguration = isEnterpriseConfiguration },
                 LLMProviders.FIREWORKS => new ProviderFireworks { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, IsEnterpriseConfiguration = isEnterpriseConfiguration },
-                LLMProviders.HUGGINGFACE => new ProviderHuggingFace(inferenceProvider) { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, IsEnterpriseConfiguration = isEnterpriseConfiguration },
+                LLMProviders.HUGGINGFACE => new ProviderHuggingFace(inferenceProvider, hfEndpointKind) { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, IsEnterpriseConfiguration = isEnterpriseConfiguration },
 
                 LLMProviders.SELF_HOSTED => new ProviderSelfHosted(host, hostname) { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, IsEnterpriseConfiguration = isEnterpriseConfiguration },
 

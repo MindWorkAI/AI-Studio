@@ -11,9 +11,11 @@
 /// NONE must stay the first value: settings are read through the tolerant enum converter, which
 /// falls back to the first value whenever it meets a name we no longer know. That is what happens
 /// to a configuration naming one of the providers Hugging Face stopped routing in July 2026
-/// (Hyperbolic, SambaNova, Nebius, NVIDIA, Clarifai, Black Forest Labs). Such a provider has to end
-/// up on NONE, where the validation asks the user to choose again. Were a routing strategy first,
-/// those configurations would silently switch to automatic routing instead.
+/// (Hyperbolic, SambaNova, Nebius, NVIDIA, Clarifai, Black Forest Labs), and to one naming the
+/// Hugging Face Inference API, which serves no model we can reach: it has no chat models at all,
+/// and its OpenAI-compatible routes for embeddings and transcription do not exist. Such a provider
+/// has to end up on NONE, where the validation asks the user to choose again. Were a routing
+/// strategy first, those configurations would silently switch to automatic routing instead.
 /// </remarks>
 public enum HFInferenceProvider
 {
@@ -36,7 +38,6 @@ public enum HFInferenceProvider
     FEATHERLESS_AI,
     FIREWORKS,
     GROQ,
-    HF_INFERENCE_API,
     NOVITA,
     NSCALE,
     OVHCLOUD,

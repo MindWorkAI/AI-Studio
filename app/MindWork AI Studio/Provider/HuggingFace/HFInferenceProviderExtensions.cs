@@ -20,7 +20,6 @@ public static class HFInferenceProviderExtensions
         HFInferenceProvider.FEATHERLESS_AI => "featherless-ai",
         HFInferenceProvider.FIREWORKS => "fireworks-ai",
         HFInferenceProvider.GROQ => "groq",
-        HFInferenceProvider.HF_INFERENCE_API => "hf-inference",
         HFInferenceProvider.NOVITA => "novita",
         HFInferenceProvider.NSCALE => "nscale",
         HFInferenceProvider.OVHCLOUD => "ovhcloud",
@@ -55,21 +54,40 @@ public static class HFInferenceProviderExtensions
     /// <summary>
     /// Whether this inference provider serves models to chat with.
     /// </summary>
-    /// <remarks>
-    /// The Hugging Face Inference API is the odd one out: it grew from the classic NLP tasks and
-    /// serves embeddings, speech recognition, classification, and translation, but no chat models
-    /// at all. Asking it for one is answered with "The requested model is not supported by provider
-    /// 'hf-inference'", whichever model is named. So it must not be offered where a chat provider
-    /// is chosen.
-    /// </remarks>
     /// <param name="provider">The inference provider.</param>
     /// <returns>True, when the provider serves chat models.</returns>
-    public static bool SupportsChat(this HFInferenceProvider provider) => provider switch
-    {
-        HFInferenceProvider.NONE => false,
-        HFInferenceProvider.HF_INFERENCE_API => false,
+    public static bool SupportsChat(this HFInferenceProvider provider) => provider is not HFInferenceProvider.NONE;
 
-        _ => true,
+    /// <summary>
+    /// Whether this inference provider creates embeddings for us.
+    /// </summary>
+    /// <remarks>
+    /// Embeddings are a much shorter story than chatting. The router serves them nowhere near its
+    /// own endpoint, only through the route of a provider, and only two of those answer the
+    /// OpenAI-compatible form we send. The routing strategies are out by their nature: without a
+    /// named provider there is no route to address.
+    /// </remarks>
+    /// <param name="provider">The inference provider.</param>
+    /// <returns>True, when we can create embeddings through this provider.</returns>
+    public static bool SupportsEmbeddings(this HFInferenceProvider provider) => provider is HFInferenceProvider.TOGETHER_AI or HFInferenceProvider.DEEPINFRA;
+
+    /// <summary>
+    /// The base URL of the provider's own OpenAI-compatible route.
+    /// </summary>
+    /// <remarks>
+    /// Only chatting goes through the router's own endpoint. Everything else has to address the
+    /// provider directly, and they do not agree on where their OpenAI-compatible API sits: DeepInfra
+    /// keeps it below an additional "openai" segment, and answers the path without it with
+    /// "Not allowed to POST /v1/embeddings for provider deepinfra".
+    /// </remarks>
+    /// <param name="provider">The inference provider.</param>
+    /// <returns>The base URL, or an empty string when the provider has no such route.</returns>
+    public static string ProviderBaseURL(this HFInferenceProvider provider) => provider switch
+    {
+        HFInferenceProvider.TOGETHER_AI => "https://router.huggingface.co/together/v1/",
+        HFInferenceProvider.DEEPINFRA => "https://router.huggingface.co/deepinfra/v1/openai/",
+
+        _ => string.Empty,
     };
 
     /// <summary>
@@ -114,7 +132,6 @@ public static class HFInferenceProviderExtensions
         HFInferenceProvider.FEATHERLESS_AI => "Featherless AI",
         HFInferenceProvider.FIREWORKS => "Fireworks AI",
         HFInferenceProvider.GROQ => "Groq",
-        HFInferenceProvider.HF_INFERENCE_API => "Hugging Face Inference API",
         HFInferenceProvider.NOVITA => "Novita",
         HFInferenceProvider.NSCALE => "Nscale",
         HFInferenceProvider.OVHCLOUD => "OVHcloud",

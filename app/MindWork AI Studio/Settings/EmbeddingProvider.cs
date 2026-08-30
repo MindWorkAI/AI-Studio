@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 
 using AIStudio.Provider;
+using AIStudio.Provider.HuggingFace;
 using AIStudio.Tools.PluginSystem;
 
 using SharedTools;
@@ -22,7 +23,8 @@ public sealed record EmbeddingProvider(
     string Hostname = "http://localhost:1234",
     Host Host = Host.NONE,
     bool AllowUserProvidedAPIKey = false,
-    string CustomIconDataUrl = "") : ConfigurationBaseObject, ISecretId, IUserProvidedAPIKey
+    string CustomIconDataUrl = "",
+    HFInferenceProvider HFInferenceProvider = HFInferenceProvider.NONE) : ConfigurationBaseObject, ISecretId, IUserProvidedAPIKey
 {
     private static readonly ILogger<EmbeddingProvider> LOGGER = Program.LOGGER_FACTORY.CreateLogger<EmbeddingProvider>();
 
@@ -103,6 +105,16 @@ public sealed record EmbeddingProvider(
         if (table.TryGetValue("AllowUserProvidedAPIKey", out var allowUserProvidedApiKeyValue) && allowUserProvidedApiKeyValue.TryRead<bool>(out var allowUserProvidedApiKeyBool))
             allowUserProvidedApiKey = allowUserProvidedApiKeyBool;
 
+        var hfInferenceProvider = HFInferenceProvider.NONE;
+        if (table.TryGetValue("HFInferenceProvider", out var hfInferenceProviderValue) && hfInferenceProviderValue.TryRead<string>(out var hfInferenceProviderText))
+        {
+            if (!Enum.TryParse(hfInferenceProviderText, true, out hfInferenceProvider))
+            {
+                LOGGER.LogWarning($"The configured embedding provider {idx} does not contain a valid Hugging Face inference provider enum value. (Plugin ID: {configPluginId})");
+                hfInferenceProvider = HFInferenceProvider.NONE;
+            }
+        }
+
         var customIconDataUrl = string.Empty;
         if (table.TryGetValue("IconPath", out var iconPathValue))
         {
@@ -126,6 +138,7 @@ public sealed record EmbeddingProvider(
             Host = host,
             AllowUserProvidedAPIKey = allowUserProvidedApiKey,
             CustomIconDataUrl = customIconDataUrl,
+            HFInferenceProvider = hfInferenceProvider,
         };
 
         // Handle an encrypted API key if present. When the user manages their own key for this
@@ -192,6 +205,14 @@ public sealed record EmbeddingProvider(
     /// <returns>A Lua configuration section string.</returns>
     public string ExportAsConfigurationSection(string? encryptedApiKey = null)
     {
+        var hfInferenceProviderLine = string.Empty;
+        if (this.HFInferenceProvider is not HFInferenceProvider.NONE)
+        {
+            hfInferenceProviderLine = $"""
+                                       ["HFInferenceProvider"] = "{this.HFInferenceProvider}",
+                                       """;
+        }
+
         var apiKeyLine = string.Empty;
         if (!string.IsNullOrWhiteSpace(encryptedApiKey))
         {
@@ -205,9 +226,10 @@ public sealed record EmbeddingProvider(
                     ["Id"] = "{{Guid.NewGuid().ToString()}}",
                     ["Name"] = "{{LuaTools.EscapeLuaString(this.Name)}}",
                     ["UsedLLMProvider"] = "{{this.UsedLLMProvider}}",
-                 
+
                     ["Host"] = "{{this.Host}}",
                     ["Hostname"] = "{{LuaTools.EscapeLuaString(this.Hostname)}}",
+                    {{hfInferenceProviderLine}}
                     {{apiKeyLine}}
                     ["Model"] = {
                         ["Id"] = "{{LuaTools.EscapeLuaString(this.Model.Id)}}",

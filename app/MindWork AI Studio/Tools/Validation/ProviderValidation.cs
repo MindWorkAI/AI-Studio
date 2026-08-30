@@ -126,15 +126,33 @@ public sealed class ProviderValidation
         if(this.GetProvider() is not LLMProviders.HUGGINGFACE)
             return null;
 
+        if (!inferenceProvider.SupportsChat())
+            return TB("Please select an Hugging Face inference provider.");
+
+        return null;
+    }
+
+    /// <summary>
+    /// Validates the Hugging Face inference provider chosen for embeddings.
+    /// </summary>
+    /// <remarks>
+    /// Far fewer providers create embeddings for us than serve chat models, so a selection which is
+    /// fine for chatting may not be for embeddings. A provider configured before the choice narrowed
+    /// is no longer among the options, which would leave the user with an empty field and no reason
+    /// given.
+    /// </remarks>
+    /// <param name="inferenceProvider">The inference provider to validate.</param>
+    /// <returns>The message to show, or null when the selection is fine.</returns>
+    public string? ValidatingHFInstanceProviderForEmbeddings(HFInferenceProvider inferenceProvider)
+    {
+        if(this.GetProvider() is not LLMProviders.HUGGINGFACE)
+            return null;
+
         if (inferenceProvider is HFInferenceProvider.NONE)
             return TB("Please select an Hugging Face inference provider.");
 
-        //
-        // A provider which was configured earlier may have stopped serving chat models since. It is
-        // no longer among the choices, so the user has to be told why their selection is empty:
-        //
-        if (!inferenceProvider.SupportsChat())
-            return TB("This Hugging Face inference provider no longer offers models to chat with. Please select another one.");
+        if (!inferenceProvider.SupportsEmbeddings())
+            return TB("This Hugging Face inference provider does not create embeddings. Please select another one.");
 
         return null;
     }

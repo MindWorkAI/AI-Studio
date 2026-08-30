@@ -1,5 +1,6 @@
 using AIStudio.Components;
 using AIStudio.Provider;
+using AIStudio.Provider.HuggingFace;
 using AIStudio.Settings;
 using AIStudio.Tools.Services;
 using AIStudio.Tools.Validation;
@@ -68,6 +69,12 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
     /// </summary>
     [Parameter]
     public Model DataModel { get; set; }
+
+    /// <summary>
+    /// The Hugging Face inference provider to use.
+    /// </summary>
+    [Parameter]
+    public HFInferenceProvider HFInferenceProviderId { get; set; } = HFInferenceProvider.NONE;
     
     /// <summary>
     /// Should the dialog be in editing mode?
@@ -151,6 +158,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
             IsEnterpriseConfiguration = this.IsEnterpriseConfiguration,
             EnterpriseConfigurationPluginId = Guid.Empty,
             CustomIconDataUrl = this.DataCustomIconDataUrl,
+            HFInferenceProvider = this.HFInferenceProviderId,
         };
     }
     
@@ -312,6 +320,22 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
         this.DataHost = selectedHost;
         this.DataModel = default;
         this.dataManuallyModel = string.Empty;
+        this.availableModels.Clear();
+        this.dataLoadingModelsIssue = string.Empty;
+    }
+
+    /// <summary>
+    /// Resets the model selection when the user picks another Hugging Face inference provider.
+    /// </summary>
+    /// <remarks>
+    /// Each inference provider offers embedding models of its own, so the models loaded for the
+    /// previous one say nothing about the new one.
+    /// </remarks>
+    /// <param name="selectedInferenceProvider">The inference provider the user chose.</param>
+    private void OnHFInferenceProviderChanged(HFInferenceProvider selectedInferenceProvider)
+    {
+        this.HFInferenceProviderId = selectedInferenceProvider;
+        this.DataModel = default;
         this.availableModels.Clear();
         this.dataLoadingModelsIssue = string.Empty;
     }
