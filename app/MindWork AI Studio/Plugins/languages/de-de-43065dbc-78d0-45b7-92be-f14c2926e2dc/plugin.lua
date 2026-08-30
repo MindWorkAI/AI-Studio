@@ -318,6 +318,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T1809312323"] = "Bitte wä
 -- The assistant failed. The message is: '{0}'
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T1833836281"] = "Der Assistent ist fehlgeschlagen. Die Meldung lautet: „{0}“"
 
+-- Export result
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T1840311560"] = "Ergebnis exportieren"
+
 -- The media transcription was canceled.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::ASSISTANTBASE::T241403726"] = "Die Transkription des Mediums wurde abgebrochen."
 
@@ -3183,9 +3186,6 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1347427447"] = "Möchte
 -- Yes, remove the AI response and edit it
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1350385882"] = "Ja, entferne die KI-Antwort und bearbeite sie."
 
--- Webpage
-UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1578631058"] = "Webseite"
-
 -- Yes, regenerate it
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T1603883875"] = "Ja, neu generieren"
 
@@ -3201,38 +3201,23 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2018431076"] = "Möchte
 -- Removes this block
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2093355991"] = "Entfernt diesen Block"
 
--- LaTeX (.tex)
-UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2233607007"] = "LaTeX (.tex)"
-
--- OpenDocument Text (.odt)
-UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2253393351"] = "OpenDocument-Text (.odt)"
-
 -- Regenerate Message
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2308444540"] = "Nachricht neu erstellen"
 
--- Markdown (.md)
-UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2319970170"] = "Markdown (.md)"
+-- Failed to export this message, because the file format '{0}' is unknown.
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2544592344"] = "Diese Nachricht konnte nicht exportiert werden, da das Dateiformat „{0}“ unbekannt ist."
 
--- Hypertext (.html)
-UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2504486680"] = "Hypertext (.html)"
-
--- CSV (.csv)
-UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2853636652"] = "CSV (.csv)"
+-- Export AI response
+UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T2822776450"] = "KI-Antwort exportieren"
 
 -- Number of attachments
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3018847255"] = "Anzahl der Anhänge"
-
--- Microsoft Word (.docx)
-UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3054800422"] = "Microsoft Word (.docx)"
 
 -- Cannot render content of type {0} yet.
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3175548294"] = "Der Inhaltstyp {0} kann noch nicht angezeigt werden."
 
 -- Edit
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3267849393"] = "Bearbeiten"
-
--- Failed to export document to unknown file format '{0}'.
-UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3566938024"] = "Export des Dokuments in das unbekannte Dateiformat „{0}“ fehlgeschlagen."
 
 -- Regenerate
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T3587744975"] = "Neu generieren"
@@ -3245,12 +3230,6 @@ UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T4070211974"] = "Nachric
 
 -- No, keep it
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T4188329028"] = "Nein, behalten"
-
--- LibreOffice / OpenOffice
-UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T4258507172"] = "LibreOffice / OpenOffice"
-
--- Export chat
-UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTBLOCKCOMPONENT::T72398679"] = "Chat exportieren"
 
 -- The file '{0}' is currently not available and was not sent.
 UI_TEXT_CONTENT["AISTUDIO::CHAT::CONTENTTEXT::T1432544573"] = "Die Datei „{0}“ ist derzeit nicht verfügbar und wurde nicht gesendet."
@@ -9996,6 +9975,30 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::EXTERNALHTTPCLIENTTIMEOUT::T599774443"] = "Das
 -- policy files
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::EXTERNALHTTPCLIENTTIMEOUT::T632340680"] = "Richtliniendateien"
 
+-- Table, tab-separated (.tsv)
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXPORTFORMATEXTENSIONS::T1120414862"] = "Tabelle, mit Tabs getrennt (.tsv)"
+
+-- Table, comma-separated (.csv)
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXPORTFORMATEXTENSIONS::T1539587981"] = "Tabelle, mit Kommata getrennt (.csv)"
+
+-- OpenDocument Text (.odt), e.g. LibreOffice
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXPORTFORMATEXTENSIONS::T1612025407"] = "OpenDocument-Text (.odt), z. B. LibreOffice"
+
+-- LaTeX (.tex)
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXPORTFORMATEXTENSIONS::T2233607007"] = "LaTeX (.tex)"
+
+-- Markdown (.md)
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXPORTFORMATEXTENSIONS::T2319970170"] = "Markdown (.md)"
+
+-- Microsoft Word (.docx)
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXPORTFORMATEXTENSIONS::T3054800422"] = "Microsoft Word (.docx)"
+
+-- Webpage (.html)
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXPORTFORMATEXTENSIONS::T3651679344"] = "Webseite (.html)"
+
+-- Unknown format
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXPORTFORMATEXTENSIONS::T677355172"] = "Unbekanntes Format"
+
 -- The file type of '{0}' could not be determined, so the file was not sent.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONRESULTEXTENSIONS::T1459702734"] = "Der Dateityp von „{0}“ konnte nicht bestimmt werden. Daher wurde die Datei nicht gesendet."
 
@@ -10098,29 +10101,32 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T695293525"] = "AI Studio konnte die n
 -- AI Studio couldn't install Pandoc.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOC::T932858631"] = "AI Studio konnte Pandoc nicht installieren."
 
--- Error during document export
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOCEXPORT::T1606201199"] = "Fehler beim Dokumentexport"
+-- The export succeeded.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOCEXPORT::T1713926719"] = "Der Export war erfolgreich."
 
 -- Pandoc Installation
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOCEXPORT::T185447014"] = "Pandoc-Installation"
 
--- Document export successful
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOCEXPORT::T2074749452"] = "Dokumentexport erfolgreich"
+-- The export failed.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOCEXPORT::T1895034475"] = "Der Export ist fehlgeschlagen."
 
--- Pandoc is required for document export.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOCEXPORT::T274234461"] = "Pandoc wird für den Dokumentexport benötigt."
+-- Pandoc is required for this export.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOCEXPORT::T3548302476"] = "Für diesen Export ist Pandoc erforderlich."
 
--- Export chat
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOCEXPORT::T72398679"] = "Chat exportieren"
+-- Only text messages can be exported.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PANDOCEXPORT::T3576815370"] = "Nur Textnachrichten können exportiert werden."
 
--- Error during document export
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLAINFILEEXPORT::T1606201199"] = "Fehler beim Dokumentexport"
+-- The export succeeded.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLAINFILEEXPORT::T1713926719"] = "Der Export war erfolgreich."
 
--- Document export successful
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLAINFILEEXPORT::T2074749452"] = "Dokumentexport erfolgreich"
+-- The export failed.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLAINFILEEXPORT::T1895034475"] = "Der Export ist fehlgeschlagen."
 
--- Export chat
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLAINFILEEXPORT::T72398679"] = "Chat exportieren"
+-- This message no longer holds a table which could be exported.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLAINFILEEXPORT::T2940651523"] = "Diese Nachricht enthält keine Tabelle mehr, die exportiert werden könnte."
+
+-- Only text messages can be exported.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLAINFILEEXPORT::T3576815370"] = "Nur Textnachrichten können exportiert werden."
 
 -- Text
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::DATAMODEL::ASSISTANTCOMPONENTTYPEEXTENSIONS::T1041509726"] = "Text"
@@ -10646,9 +10652,6 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T3543954504"] = "Zertifikatsb
 
 -- Source like prefix
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T378481461"] = "Source Code ähnlicher Prefix"
-
--- Markdown
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T4132508012"] = "Markdown"
 
 -- Document
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::RUST::FILETYPES::T4165204724"] = "Dokument"
