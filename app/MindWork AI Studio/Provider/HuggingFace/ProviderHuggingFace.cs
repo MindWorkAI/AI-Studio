@@ -1,14 +1,18 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Net;
+using System.Runtime.CompilerServices;
 
 using AIStudio.Chat;
 using AIStudio.Provider.OpenAI;
 using AIStudio.Settings;
+using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Provider.HuggingFace;
 
 public sealed class ProviderHuggingFace : BaseProvider
 {
     private static readonly ILogger<ProviderHuggingFace> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderHuggingFace>();
+
+    private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ProviderHuggingFace).Namespace, nameof(ProviderHuggingFace));
 
     /// <summary>
     /// The OpenAI-compatible endpoint which serves every inference provider.
@@ -47,6 +51,66 @@ public sealed class ProviderHuggingFace : BaseProvider
 
         return $"{modelId}{this.hfProvider.ModelSuffix()}";
     }
+
+    /// <summary>
+    /// Recognizes the router's answer for a model the chosen inference provider does not serve.
+    /// </summary>
+    /// <remarks>
+    /// Not every model is available at every inference provider, and the router says so with a bad
+    /// request. Without this, the user would be told that the message format might have changed,
+    /// which points them at something they cannot fix and away from the one thing they can: picking
+    /// another provider. The router words this failure as the error code "model_not_supported",
+    /// while the providers behind it word it as a sentence of their own.
+    /// </remarks>
+    /// <param name="value">A piece of the failed response: an error code, a message, or the body.</param>
+    /// <returns>True, when this text names an unsupported model.</returns>
+    private static bool IsModelNotSupportedError(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return false;
+
+        return value.Contains("model_not_supported", StringComparison.OrdinalIgnoreCase) ||
+               value.Contains("not supported by provider", StringComparison.OrdinalIgnoreCase) ||
+               value.Contains("not supported by any provider", StringComparison.OrdinalIgnoreCase);
+    }
+
+    #region Overrides of BaseProvider
+
+    /// <inheritdoc />
+    protected override ProviderRequestFailureReason ClassifyProviderRequestFailure(HttpStatusCode statusCode, string responseBody)
+    {
+        if (statusCode is HttpStatusCode.BadRequest && IsModelNotSupportedError(responseBody))
+            return ProviderRequestFailureReason.MODEL_NOT_SUPPORTED_BY_PROVIDER;
+
+        return base.ClassifyProviderRequestFailure(statusCode, responseBody);
+    }
+
+    /// <inheritdoc />
+    protected override ProviderRequestFailureReason ClassifyProviderRequestFailure(string? errorCode, string? errorType, string? errorMessage, string responseBody)
+    {
+        if (IsModelNotSupportedError(errorCode) || IsModelNotSupportedError(errorType) || IsModelNotSupportedError(errorMessage))
+            return ProviderRequestFailureReason.MODEL_NOT_SUPPORTED_BY_PROVIDER;
+
+        return base.ClassifyProviderRequestFailure(errorCode, errorType, errorMessage, responseBody);
+    }
+
+    /// <inheritdoc />
+    protected override string GetProviderRequestFailureUserMessage(ProviderRequestFailureReason failureReason)
+    {
+        if (failureReason is not ProviderRequestFailureReason.MODEL_NOT_SUPPORTED_BY_PROVIDER)
+            return base.GetProviderRequestFailureUserMessage(failureReason);
+
+        //
+        // When Hugging Face chose the provider itself, naming it back to the user would help
+        // nobody: they never picked it, and no other choice of provider is left to try:
+        //
+        if (this.hfProvider is HFInferenceProvider.NONE or HFInferenceProvider.AUTOMATIC or HFInferenceProvider.CHEAPEST or HFInferenceProvider.PREFERRED)
+            return TB("No Hugging Face inference provider offers the selected model. Please check the model name and whether it is still available on Hugging Face.");
+
+        return string.Format(TB("The Hugging Face inference provider '{0}' does not offer the selected model. Please select another inference provider, or let Hugging Face choose one for you."), this.hfProvider.ToName());
+    }
+
+    #endregion
 
     #region Implementation of IProvider
 

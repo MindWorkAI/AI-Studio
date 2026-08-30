@@ -9286,6 +9286,12 @@ UI_TEXT_CONTENT["AISTUDIO::PROVIDER::HUGGINGFACE::HFINFERENCEPROVIDEREXTENSIONS:
 -- Automatic: the fastest provider
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::HUGGINGFACE::HFINFERENCEPROVIDEREXTENSIONS::T997045984"] = "Automatic: the fastest provider"
 
+-- No Hugging Face inference provider offers the selected model. Please check the model name and whether it is still available on Hugging Face.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::HUGGINGFACE::PROVIDERHUGGINGFACE::T1055093108"] = "No Hugging Face inference provider offers the selected model. Please check the model name and whether it is still available on Hugging Face."
+
+-- The Hugging Face inference provider '{0}' does not offer the selected model. Please select another inference provider, or let Hugging Face choose one for you.
+UI_TEXT_CONTENT["AISTUDIO::PROVIDER::HUGGINGFACE::PROVIDERHUGGINGFACE::T3314840969"] = "The Hugging Face inference provider '{0}' does not offer the selected model. Please select another inference provider, or let Hugging Face choose one for you."
+
 -- Self-hosted
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::LLMPROVIDERSEXTENSIONS::T146444217"] = "Self-hosted"
 
