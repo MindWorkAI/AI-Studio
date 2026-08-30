@@ -77,7 +77,7 @@
 
             @if (this.ShowResult && !this.ShowEntireChatThread && this.ResultingContentBlock?.Content != null)
             {
-                <ContentBlockComponent Role="@(this.ResultingContentBlock.Role)" Type="@(this.ResultingContentBlock.ContentType)" Time="@(this.ResultingContentBlock.Time)" Content="@this.ResultingContentBlock.Content" ExportDialogTitle="@TB("Export result")"/>
+                <ContentBlockComponent Role="@(this.ResultingContentBlock.Role)" Type="@(this.ResultingContentBlock.ContentType)" Time="@(this.ResultingContentBlock.Time)" Content="@this.ResultingContentBlock.Content" ExportTitle="@TB("Export result")"/>
             }
             
             @if(this.ShowResult && this.ShowEntireChatThread && this.ChatThread is not null)
@@ -86,7 +86,7 @@
                 {
                     @if (block is { HideFromUser: false, Content: not null })
                     {
-                        <ContentBlockComponent Role="@block.Role" Type="@block.ContentType" Time="@block.Time" Content="@block.Content" ExportDialogTitle="@TB("Export result")"/>
+                        <ContentBlockComponent Role="@block.Role" Type="@block.ContentType" Time="@block.Time" Content="@block.Content" ExportTitle="@TB("Export result")"/>
                     }
                 }
             }

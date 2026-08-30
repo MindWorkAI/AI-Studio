@@ -88,15 +88,17 @@ public partial class ContentBlockComponent : MSGComponentBase
     public Func<bool> RegenerateEnabled { get; set; } = () => false;
 
     /// <summary>
-    /// The title of the save dialog when this block gets exported.
+    /// What the export offers, used both as the label of the export button and as the title of
+    /// the save dialog.
     /// </summary>
     /// <remarks>
-    /// A block is a chat message in the chat, but the result of an assistant in an assistant, and
-    /// there the user sees no chat at all. Whoever renders this block knows which of the two it is.
-    /// Null falls back to the chat wording.
+    /// Only AI blocks can be exported, so this always names something the AI produced. In the chat
+    /// that is its response, whereas in an assistant it is the result, and there the user sees no
+    /// chat at all. Whoever renders this block knows which of the two it is. Null falls back to
+    /// the chat wording.
     /// </remarks>
     [Parameter]
-    public string? ExportDialogTitle { get; set; }
+    public string? ExportTitle { get; set; }
     
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
@@ -135,6 +137,11 @@ public partial class ContentBlockComponent : MSGComponentBase
     /// is final and the search happens once per render of a settled block.
     /// </remarks>
     private TabularExtract? TabularExport => this.Content.TryGetMarkdownText(out var markdown) && PlainFileExport.TryExtractTabularContent(markdown, out var extract) ? extract : null;
+
+    /// <summary>
+    /// What the export offers, falling back to the chat wording when nobody named it.
+    /// </summary>
+    private string EffectiveExportTitle => this.ExportTitle ?? this.T("Export AI response");
 
     #region Overrides of ComponentBase
 
@@ -583,11 +590,10 @@ public partial class ContentBlockComponent : MSGComponentBase
             // The format itself knows who writes it, so we do not have to keep a list of formats
             // here which would fall out of sync with the one in FileExportFormatExtensions.
             //
-            var dialogTitle = this.ExportDialogTitle ?? this.T("Export message");
             if (format.UsesPandoc())
-                await PandocExport.ToDocument(this.RustService, this.DialogService, dialogTitle, format, this.Content);
+                await PandocExport.ToDocument(this.RustService, this.DialogService, this.EffectiveExportTitle, format, this.Content);
             else
-                await PlainFileExport.ToFile(this.RustService, dialogTitle, format, this.Content);
+                await PlainFileExport.ToFile(this.RustService, this.EffectiveExportTitle, format, this.Content);
         }
         catch (ArgumentOutOfRangeException e)
         {
