@@ -1,17 +1,17 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Security;
 using AIStudio.Tools.Web;
 
 namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations;
 
-public sealed class SearXNGWebSearchTool : IToolImplementation
+public sealed class SearXNGWebSearchTool(WebPageRetrievalService webPageRetrievalService, PromptInjectionGuardService promptInjectionGuardService, ILogger<SearXNGWebSearchTool> logger) : IToolImplementation
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(SearXNGWebSearchTool).Namespace, nameof(SearXNGWebSearchTool));
 
     private readonly SearXNGSearchClient searchClient = new();
-    private readonly SearXNGPageRetrievalService pageRetrievalService;
-    private readonly ILogger<SearXNGWebSearchTool> logger;
+    private readonly SearXNGPageRetrievalService pageRetrievalService = new(webPageRetrievalService);
 
     private const int DEFAULT_MAX_RESULTS = 5;
     private const int MAX_RESULTS = 20;
@@ -35,15 +35,11 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
     
     private const int MAX_LOG_QUERY_LENGTH = 1000;
 
-    public SearXNGWebSearchTool(WebPageRetrievalService webPageRetrievalService, ILogger<SearXNGWebSearchTool> logger)
-    {
-        this.pageRetrievalService = new SearXNGPageRetrievalService(webPageRetrievalService);
-        this.logger = logger;
-    }
-
     public string ImplementationKey => ToolSelectionRules.WEB_SEARCH_TOOL_ID;
 
     public string Icon => Icons.Material.Filled.Language;
+
+    public bool ReturnsUntrustedExternalContent => true;
 
     public IReadOnlySet<string> SensitiveTraceArgumentNames => new HashSet<string>(StringComparer.Ordinal);
 
@@ -215,7 +211,7 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
         if (page is > MAX_PAGE)
             throw new ArgumentException($"Argument 'page' must be less than or equal to {MAX_PAGE}.");
 
-        this.logger.LogInformation(
+        logger.LogInformation(
             "Starting web search. ToolCallId={ToolCallId}, Query={Query}, Language={Language}, TimeRange={TimeRange}, Page={Page}, Limit={Limit}",
             context.ToolCallId,
             FormatQueryForLog(query),
@@ -243,16 +239,37 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
             minContentCharactersPerResult,
             token);
 
+        //
+        // Every retrieved page is untrusted material from the public web, so all of it is
+        // filtered for prompt injections before the model sees any of it. One request covers
+        // the whole search, which also means the user gets one report instead of one per page.
+        //
+        // The published date and the fallback title come from the search engine rather than from
+        // the page, and they are what this tool reports, so they take the place of the page's own
+        // values here. Both are attacker-controlled just as the page is: whoever ranks for a
+        // query decides what the search engine returns as their title.
+        //
+        var sanitizedContents = await WebPageContentSanitizer.SanitizeAsync(
+            promptInjectionGuardService,
+            retrievalResult.Results
+                .Select(result => (
+                    Content: WebPageModelContent.From(result.RetrievedPage.ExtractedPage, result.ReturnedMarkdown) with
+                    {
+                        Title = SearXNGSearchClient.FirstNonEmpty(result.RetrievedPage.ExtractedPage.Title, result.Candidate.Title),
+                        PublishedTime = result.Candidate.PublishedDate,
+                    },
+                    Source: PromptInjectionSource.WebContent(result.RetrievedPage.Page.FinalUrl.ToString())))
+                .ToList());
+
         var resultArray = new JsonArray();
         var sources = new List<Source>();
-        foreach (var result in retrievalResult.Results)
+        for (var resultIndex = 0; resultIndex < retrievalResult.Results.Count; resultIndex++)
         {
-            resultArray.Add(BuildResultJson(result));
+            var result = retrievalResult.Results[resultIndex];
+            var sanitizedContent = sanitizedContents[resultIndex];
+            resultArray.Add(BuildResultJson(result, sanitizedContent));
             var finalUrl = result.RetrievedPage.Page.FinalUrl.ToString();
-            var title = SearXNGSearchClient.FirstNonEmpty(
-                result.RetrievedPage.ExtractedPage.Title,
-                result.Candidate.Title,
-                finalUrl);
+            var title = SearXNGSearchClient.FirstNonEmpty(sanitizedContent.Title, finalUrl);
             sources.Add(new Source(title, finalUrl, SourceOrigin.TOOL));
         }
 
@@ -267,7 +284,7 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
             resultObject["diagnostic"] = "No result page could be retrieved as readable public HTML. Pages may have failed, timed out, been blocked by network safety checks, used an unsupported content type, or contained no readable static content.";
 
         var retrievalStatistics = retrievalResult.ErrorStatistics;
-        this.logger.LogInformation(
+        logger.LogInformation(
             "Completed web search. ToolCallId={ToolCallId}, CandidateCount={CandidateCount}, ResultCount={ResultCount}, BlockedPageCount={BlockedPageCount}, PageTimeoutCount={PageTimeoutCount}, FailedPageCount={FailedPageCount}, EmptyContentCount={EmptyContentCount}, RetrievalTimedOut={RetrievalTimedOut}, ReturnedContentCharacters={ReturnedContentCharacters}, TruncatedResultCount={TruncatedResultCount}",
             context.ToolCallId,
             searchResponse.CandidateCount,
@@ -277,7 +294,7 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
             retrievalStatistics.FailedCount,
             retrievalStatistics.EmptyContentCount,
             retrievalResult.RetrievalTimedOut,
-            retrievalResult.Results.Sum(result => result.ReturnedMarkdown.Length),
+            sanitizedContents.Sum(content => content.Markdown.Length),
             retrievalResult.Results.Count(result => result.ContentTruncated));
 
         return new ToolExecutionResult
@@ -287,7 +304,7 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
         };
     }
 
-    private static JsonObject BuildResultJson(WebSearchPageResult result)
+    private static JsonObject BuildResultJson(WebSearchPageResult result, WebPageModelContent sanitizedContent)
     {
         var extractedPage = result.RetrievedPage.ExtractedPage;
         var page = result.RetrievedPage.Page;
@@ -296,15 +313,15 @@ public sealed class SearXNGWebSearchTool : IToolImplementation
         {
             ["rank"] = result.Candidate.Rank,
             ["final_url"] = page.FinalUrl.ToString(),
-            ["published_date"] = result.Candidate.PublishedDate,
+            ["published_date"] = sanitizedContent.PublishedTime,
         };
         var pageContent = new JsonObject
         {
             ["status"] = result.ContentTruncated || originalContentCharacters < 500 ? "partial or truncated" : "complete",
-            ["title"] = extractedPage.Title,
-            ["description"] = extractedPage.Description,
-            ["authors"] = BuildJsonArray(extractedPage.Authors),
-            ["content"] = result.ReturnedMarkdown,
+            ["title"] = sanitizedContent.Title,
+            ["description"] = sanitizedContent.Description,
+            ["authors"] = BuildJsonArray(sanitizedContent.Authors),
+            ["content"] = sanitizedContent.Markdown,
         };
 
         return new JsonObject

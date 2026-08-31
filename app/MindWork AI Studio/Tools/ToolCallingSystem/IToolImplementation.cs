@@ -12,6 +12,20 @@ public interface IToolImplementation
 
     public IReadOnlySet<string> SensitiveTraceArgumentNames { get; }
 
+    /// <summary>
+    /// Whether this tool returns content it fetched from outside AI Studio, such as a web page.
+    /// </summary>
+    /// <remarks>
+    /// Such content is attacker-controlled and must be filtered for prompt injections before a
+    /// model sees it. A tool that returns it filters it itself, because only the tool knows which
+    /// of its fields came from where — see the web search and read web page tools, which do so
+    /// through the web page content sanitizer.<br/><br/>
+    /// Declaring it here keeps the obligation visible in one place, and gives tools that cannot
+    /// carry it out themselves, such as tools defined by plugin authors, a flag the tool executor
+    /// can act on for them.
+    /// </remarks>
+    public bool ReturnsUntrustedExternalContent => false;
+
     public string GetDisplayName() => TB("Tool");
 
     public string GetDescription() => TB("Tool description");

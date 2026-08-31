@@ -2,11 +2,12 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using AIStudio.Provider;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Security;
 using AIStudio.Tools.Web;
 
 namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations;
 
-public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalService, ILogger<ReadWebPageTool> logger) : IToolImplementation
+public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalService, PromptInjectionGuardService promptInjectionGuardService, ILogger<ReadWebPageTool> logger) : IToolImplementation
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ReadWebPageTool).Namespace, nameof(ReadWebPageTool));
 
@@ -20,6 +21,8 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
     public string ImplementationKey => ToolSelectionRules.READ_WEB_PAGE_TOOL_ID;
 
     public string Icon => Icons.Material.Filled.Article;
+
+    public bool ReturnsUntrustedExternalContent => true;
 
     public IReadOnlySet<string> SensitiveTraceArgumentNames => new HashSet<string>(StringComparer.Ordinal);
 
@@ -50,10 +53,7 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
         _ => null,
     };
 
-    public Task<ToolConfigurationState?> ValidateConfigurationAsync(
-        ToolDefinition definition,
-        IReadOnlyDictionary<string, string> settingsValues,
-        CancellationToken token = default)
+    public Task<ToolConfigurationState?> ValidateConfigurationAsync(ToolDefinition definition, IReadOnlyDictionary<string, string> settingsValues, CancellationToken token = default)
     {
         var positiveIntegerErrorFormat = TB("The setting '{0}' must be a positive integer.");
         if (!ToolSettingsValueParser.TryReadOptionalPositiveInt(settingsValues, "timeoutSeconds", positiveIntegerErrorFormat, out _, out var timeoutError))
@@ -143,6 +143,17 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
             warnings.Add($"The extracted page content was truncated from {originalContentCharacters} to {markdown.Length} characters.");
         }
 
+        //
+        // The page is untrusted material from the public web, so it is filtered for prompt
+        // injections before the model sees any of it. This happens after truncating: only the
+        // text that actually reaches the model needs checking, and a page can be far larger
+        // than what is returned.
+        //
+        var modelContent = await WebPageContentSanitizer.SanitizeAsync(
+            promptInjectionGuardService,
+            WebPageModelContent.From(extractedPage, markdown),
+            PromptInjectionSource.WebContent(page.FinalUrl.ToString()));
+
         logger.LogInformation(
             "Completed web page retrieval. ToolCallId={ToolCallId}, RequestedUrl={RequestedUrl}, FinalUrl={FinalUrl}, WasRedirected={WasRedirected}, ContentType={ContentType}, OriginalContentCharacters={OriginalContentCharacters}, ReturnedContentCharacters={ReturnedContentCharacters}, ContentTruncated={ContentTruncated}, RequiredProviderConfidence={RequiredProviderConfidence}",
             context.ToolCallId,
@@ -151,45 +162,39 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
             !page.RequestedUrl.Equals(page.FinalUrl),
             page.ContentType,
             originalContentCharacters,
-            markdown.Length,
+            modelContent.Markdown.Length,
             contentTruncated,
             retrievedPage.RequiredProviderConfidence);
 
         return new ToolExecutionResult
         {
-            JsonContent = BuildModelContent(page, extractedPage, retrievedPage.RetrievedAtUtc, markdown, originalContentCharacters, contentTruncated, warnings),
-            Sources = string.IsNullOrWhiteSpace(markdown)
+            JsonContent = BuildModelContent(page, modelContent, retrievedPage.RetrievedAtUtc, originalContentCharacters, contentTruncated, warnings),
+            Sources = string.IsNullOrWhiteSpace(modelContent.Markdown)
                 ? []
-                : [new Source(string.IsNullOrWhiteSpace(extractedPage.Title) ? page.FinalUrl.ToString() : extractedPage.Title, page.FinalUrl.ToString(), SourceOrigin.TOOL)],
+                : [new Source(string.IsNullOrWhiteSpace(modelContent.Title) ? page.FinalUrl.ToString() : modelContent.Title, page.FinalUrl.ToString(), SourceOrigin.TOOL)],
             RequiredProviderConfidence = retrievedPage.RequiredProviderConfidence,
         };
     }
 
-    private static JsonNode? BuildModelContent(
-        HTMLParserWebPage page,
-        ExtractedWebPage extractedPage,
-        DateTimeOffset retrievedAtUtc,
-        string websiteContentAsMarkdown,
-        int originalContentCharacters,
-        bool contentTruncated,
-        IReadOnlyList<string> warnings)
+    private static JsonNode? BuildModelContent(HTMLParserWebPage page, WebPageModelContent modelContent, DateTimeOffset retrievedAtUtc, int originalContentCharacters,
+        bool contentTruncated, IReadOnlyList<string> warnings)
     {
-        var metadata = new JsonObject
-        {
-        };
+        var websiteContentAsMarkdown = modelContent.Markdown;
+        var metadata = new JsonObject();
 
         var status = string.IsNullOrWhiteSpace(websiteContentAsMarkdown)
             ? "empty response"
             : contentTruncated || originalContentCharacters < 500
                 ? "partial"
                 : "complete";
+        
         var warningArray = new JsonArray();
         foreach (var warning in warnings)
             warningArray.Add(warning);
 
-        AddIfNotEmpty(metadata, "language", extractedPage.Language);
-        AddIfNotEmpty(metadata, "published_time", extractedPage.PublishedTime);
-        AddIfNotEmpty(metadata, "modified_time", extractedPage.ModifiedTime);
+        AddIfNotEmpty(metadata, "language", modelContent.Language);
+        AddIfNotEmpty(metadata, "published_time", modelContent.PublishedTime);
+        AddIfNotEmpty(metadata, "modified_time", modelContent.ModifiedTime);
         AddIfNotEmpty(metadata, "media_type", page.ContentType);
         metadata["warnings"] = warningArray;
         if (contentTruncated)
@@ -203,10 +208,9 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
             ["text_content"] = websiteContentAsMarkdown,
         };
 
-        AddIfNotEmpty(content, "title", extractedPage.Title);
-        AddIfNotEmpty(content, "description", extractedPage.Description);
-        AddStringArrayIfNotEmpty(content, "authors", extractedPage.Authors);
-
+        AddIfNotEmpty(content, "title", modelContent.Title);
+        AddIfNotEmpty(content, "description", modelContent.Description);
+        AddStringArrayIfNotEmpty(content, "authors", modelContent.Authors);
 
         var result = new JsonObject
         {
@@ -255,10 +259,7 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
         return allowedPrivateHosts.Any(pattern => pattern.IsMatch(normalizedHost));
     }
 
-    private static bool TryReadAllowedPrivateHostPatterns(
-        string? rawValue,
-        out List<AllowedPrivateHostPattern> patterns,
-        out string error)
+    private static bool TryReadAllowedPrivateHostPatterns(string? rawValue, out List<AllowedPrivateHostPattern> patterns, out string error)
     {
         patterns = [];
         error = string.Empty;
@@ -286,6 +287,7 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
         patterns = patterns
             .Distinct()
             .ToList();
+        
         return true;
     }
 
@@ -322,6 +324,7 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
                     return string.IsNullOrWhiteSpace(name) ? "*****" : $"{name}=*****";
                 })),
         };
+        
         var formattedUrl = builder.Uri.AbsoluteUri;
         return formattedUrl.Length <= MAX_LOG_URL_LENGTH
             ? formattedUrl
