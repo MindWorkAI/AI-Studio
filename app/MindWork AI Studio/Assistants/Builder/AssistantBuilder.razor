@@ -7,6 +7,7 @@
 
 @if (this.step is BuilderStep.DESCRIBE)
 {
+    <ReadFileContent Text="@T("Load description from file")" @bind-FileContent="@this.assistantDescription" EnableDragDrop="true" Layer="@DropLayers.ASSISTANTS" CatchAllDocuments="true"/>
     <MudTextField T="string" @bind-Text="@this.assistantDescription" Validation="@this.ValidateAssistantDescription" AdornmentIcon="@Icons.Material.Filled.AutoAwesome" Adornment="Adornment.Start" Label="@T("Describe your assistant")" HelperText="@T("Describe the task, inputs, and desired output in your own words. The model will infer all the plugin details.")" Placeholder="@T("I need an assistant that turns meeting notes into clear tasks with owners and deadlines.")" Variant="Variant.Outlined" Lines="8" AutoGrow="@true" MaxLines="18" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 
     @* This switch chooses between the two kinds of assistant the Builder can create, so it stays

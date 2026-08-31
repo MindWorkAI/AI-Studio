@@ -804,6 +804,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2521082424"] 
 -- The assistant '{0}' was installed.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T254606977"] = "Der Assistent „{0}“ wurde installiert."
 
+-- Load description from file
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2686336585"] = "Beschreibung aus Datei laden"
+
 -- I need an assistant that turns meeting notes into clear tasks with owners and deadlines.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T2703350865"] = "Ich brauche einen Assistenten, der Besprechungsnotizen in klare Aufgaben mit Verantwortlichen und Fristen umwandelt."
 
