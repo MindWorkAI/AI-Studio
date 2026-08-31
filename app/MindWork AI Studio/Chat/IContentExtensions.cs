@@ -17,4 +17,27 @@ public static class IContentExtensions
         content.StreamingEvent = IContent.NO_STREAMING_HANDLER;
         content.StreamingDone = IContent.NO_STREAMING_HANDLER;
     }
+
+    /// <summary>
+    /// Reads this content as the Markdown text the AI produced.
+    /// </summary>
+    /// <remarks>
+    /// Only text content carries Markdown. Everything else, an image for example, has no text
+    /// representation at all, which is why this reports failure instead of returning a placeholder:
+    /// a caller which writes files must not put an excuse into the file it writes.
+    /// </remarks>
+    /// <param name="content">The content to read.</param>
+    /// <param name="markdown">The Markdown text, or an empty string when there is none.</param>
+    /// <returns>True, when this content carries Markdown text.</returns>
+    public static bool TryGetMarkdownText(this IContent content, out string markdown)
+    {
+        if (content is ContentText text)
+        {
+            markdown = text.Text;
+            return true;
+        }
+
+        markdown = string.Empty;
+        return false;
+    }
 }

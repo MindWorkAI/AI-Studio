@@ -42,7 +42,17 @@ public sealed class DataBatchProcessing(Expression<Func<Data, DataBatchProcessin
 
     public string PreselectedPolicyId { get; set; } = ManagedConfiguration.Register(configSelection, value => value.PreselectedPolicyId, string.Empty);
 
-    public BatchProcessingOutputMode OutputMode { get; set; } = ManagedConfiguration.Register(configSelection, value => value.OutputMode, BatchProcessingOutputMode.MARKDOWN_FILES);
+    public BatchProcessingOutputMode OutputMode { get; set; } = ManagedConfiguration.Register(configSelection, value => value.OutputMode, BatchProcessingOutputMode.INDIVIDUAL_FILES);
+
+    /// <summary>
+    /// The file format of the individual result files, one per processed document.
+    /// </summary>
+    /// <remarks>
+    /// Only formats which hold an entire answer, see FileExportFormatExtensions.ANSWER_FORMATS.
+    /// The tabular formats belong to the output mode TABLE_ONLY, which writes one table for the
+    /// whole run instead of one file per document.
+    /// </remarks>
+    public FileExportFormat ResultFileFormat { get; set; } = ManagedConfiguration.Register(configSelection, value => value.ResultFileFormat, FileExportFormat.MARKDOWN);
 
     public string CsvFileName { get; set; } = ManagedConfiguration.Register(configSelection, value => value.CsvFileName, string.Empty);
 

@@ -5,6 +5,7 @@ using AIStudio.Chat;
 using AIStudio.Dialogs;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Tools.AssistantSessions;
+using AIStudio.Tools.Services;
 using Microsoft.AspNetCore.Components;
 
 #if !DEBUG
@@ -27,6 +28,9 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
 
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
+
+    [Inject]
+    private PandocAvailabilityService PandocAvailability { get; init; } = null!;
 
     protected override Tools.Components Component => Tools.Components.PROMPT_OPTIMIZER_ASSISTANT;
 
@@ -581,7 +585,7 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
             this.isLoadingCustomPromptGuide = true;
 
             // A failure was already reported by UserFile.LoadFileData, so we only keep the content:
-            var extraction = await UserFile.LoadFileData(fileAttachment.FilePath, this.RustService, this.DialogService);
+            var extraction = await UserFile.LoadFileData(fileAttachment.FilePath, this.RustService, this.PandocAvailability);
             this.customPromptingGuidelineContent = extraction.HasUsableContent ? extraction.Content : string.Empty;
         }
         catch

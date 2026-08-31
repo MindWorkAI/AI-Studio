@@ -71,8 +71,8 @@ public partial class AssistantBatchProcessing
     /// <summary>
     /// Checks whether a document can be restored from the previous run. Beyond
     /// the log entry, the result of the previous run must still exist: in the
-    /// table mode the answer within the results table, in the Markdown mode the
-    /// result file. Without the result, restoring would mark the document as
+    /// table mode the answer within the results table, in the individual file
+    /// mode the result file. Without the result, restoring would mark the document as
     /// done while its answer is lost, so we process it again instead.
     /// </summary>
     private bool CanRestoreFromPreviousRun(string relativePath, string resolvedOutputDirectory, Dictionary<string, BatchProcessingLogEntry> previousLog, Dictionary<string, string> previousResults, out BatchProcessingLogEntry? logEntry)
@@ -106,9 +106,9 @@ public partial class AssistantBatchProcessing
     private async Task WriteLogAsync(string resolvedOutputDirectory)
     {
         var sb = new StringBuilder();
-        sb.AppendLine(BatchProcessingCsv.ToCsvRow(LOG_SEPARATOR, T("File"), T("Time"), T("Model"), T("Status"), T("Details")));
+        sb.AppendLine(CsvWriter.ToRow(LOG_SEPARATOR, T("File"), T("Time"), T("Model"), T("Status"), T("Details")));
         foreach (var fileResult in this.fileResults.Where(x => x.Status is not BatchProcessingFileStatus.QUEUED and not BatchProcessingFileStatus.PROCESSING))
-            sb.AppendLine(BatchProcessingCsv.ToCsvRow(LOG_SEPARATOR, fileResult.RelativePath, fileResult.ProcessedAt.ToString(TIME_FORMAT, CultureInfo.InvariantCulture), fileResult.ModelName, fileResult.Status.ToString(), fileResult.Message));
+            sb.AppendLine(CsvWriter.ToRow(LOG_SEPARATOR, fileResult.RelativePath, fileResult.ProcessedAt.ToString(TIME_FORMAT, CultureInfo.InvariantCulture), fileResult.ModelName, fileResult.Status.ToString(), fileResult.Message));
 
         await this.WriteCsvFileAsync(Path.Join(resolvedOutputDirectory, LOG_FILENAME), sb.ToString());
     }
@@ -120,9 +120,9 @@ public partial class AssistantBatchProcessing
     {
         var separator = this.csvSeparator.Character(this.customCsvSeparator);
         var sb = new StringBuilder();
-        sb.AppendLine(BatchProcessingCsv.ToCsvRow(separator, T("File"), this.ResultColumnHeader));
+        sb.AppendLine(CsvWriter.ToRow(separator, T("File"), this.ResultColumnHeader));
         foreach (var fileResult in this.fileResults.Where(x => x.Status is BatchProcessingFileStatus.DONE))
-            sb.AppendLine(BatchProcessingCsv.ToCsvRow(separator, fileResult.RelativePath, fileResult.ResultText));
+            sb.AppendLine(CsvWriter.ToRow(separator, fileResult.RelativePath, fileResult.ResultText));
 
         await this.WriteCsvFileAsync(Path.Join(resolvedOutputDirectory, this.ResolveResultsFileName()), sb.ToString());
     }
@@ -232,7 +232,7 @@ public partial class AssistantBatchProcessing
     }
 
     /// <summary>
-    /// Creates the name of the Markdown result file for one document.
+    /// Creates the name of the result file for one document, in the chosen file format.
     /// </summary>
     /// <remarks>
     /// Two documents of the same run may share their name and differ only in
@@ -242,13 +242,14 @@ public partial class AssistantBatchProcessing
     /// </remarks>
     private string CreateResultFileName(string sourceFileName)
     {
+        var extension = this.resultFileFormat.ToFileExtension();
         var stem = Path.GetFileNameWithoutExtension(sourceFileName);
-        var candidate = $"{stem}{RESULT_FILE_SUFFIX}";
+        var candidate = $"{stem}{RESULT_FILE_SUFFIX}{extension}";
 
         var counter = 2;
         while (!this.usedResultFileNames.Add(candidate))
         {
-            candidate = $"{stem}_result_{counter}.md";
+            candidate = $"{stem}{RESULT_FILE_SUFFIX}_{counter}{extension}";
             counter++;
         }
 

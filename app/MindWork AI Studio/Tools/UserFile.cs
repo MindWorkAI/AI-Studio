@@ -1,8 +1,6 @@
-﻿using AIStudio.Dialogs;
-using AIStudio.Tools.PluginSystem;
+﻿using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Services;
-using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Tools;
 
@@ -21,10 +19,10 @@ public static class UserFile
     /// </remarks>
     /// <param name="filePath">The full path to the file to be read. Must not be null or empty.</param>
     /// <param name="rustService">Rust service used to read file content.</param>
-    /// <param name="dialogService">Dialogservice used to display the Pandoc installation dialog if needed.</param>
+    /// <param name="pandocAvailability">Makes sure Pandoc is there and offers its installation.</param>
     /// <param name="token">Cancels the extraction when the caller no longer needs the content.</param>
     /// <returns>The result of reading the file.</returns>
-    public static async Task<FileExtractionResult> LoadFileData(string filePath, RustService rustService, IDialogService dialogService, CancellationToken token = default)
+    public static async Task<FileExtractionResult> LoadFileData(string filePath, RustService rustService, PandocAvailabilityService pandocAvailability, CancellationToken token = default)
     {
         if (string.IsNullOrEmpty(filePath))
         {
@@ -41,24 +39,13 @@ public static class UserFile
         //
         if (FileTypes.RequiresPandoc(filePath))
         {
-            var pandocState = await Pandoc.CheckAvailabilityAsync(rustService, showSuccessMessage: false);
+            // We report a missing Pandoc ourselves, because we can name the file which cannot be read:
+            var pandocState = await pandocAvailability.EnsureAvailabilityAsync(showSuccessMessage: false, showDialog: true, showErrorMessage: false);
             if (!pandocState.IsAvailable)
             {
-                var dialogParameters = new DialogParameters<PandocDialog>
-                {
-                    { x => x.ShowInitialResultInSnackbar, false },
-                };
-
-                var dialogReference = await dialogService.ShowAsync<PandocDialog>(TB("Pandoc Installation"), dialogParameters, DialogOptions.FULLSCREEN);
-                await dialogReference.Result;
-
-                pandocState = await Pandoc.CheckAvailabilityAsync(rustService, showSuccessMessage: true);
-                if (!pandocState.IsAvailable)
-                {
-                    LOGGER.LogError("Pandoc is not available after installation attempt, so '{FilePath}' cannot be read.", filePath);
-                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Cancel, FileExtractionErrorCode.PANDOC_UNAVAILABLE.ToUserMessage(fileName)));
-                    return FileExtractionResult.Failed(FileExtractionErrorCode.PANDOC_UNAVAILABLE, "Pandoc is required to read this file, but it is not available.");
-                }
+                LOGGER.LogError("Pandoc is not available after installation attempt, so '{FilePath}' cannot be read.", filePath);
+                await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Cancel, FileExtractionErrorCode.PANDOC_UNAVAILABLE.ToUserMessage(fileName)));
+                return FileExtractionResult.Failed(FileExtractionErrorCode.PANDOC_UNAVAILABLE, "Pandoc is required to read this file, but it is not available.");
             }
         }
 

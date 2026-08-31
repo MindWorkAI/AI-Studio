@@ -64,12 +64,12 @@ public partial class DocumentCheckDialog : MSGComponentBase
 
     [Inject]
     private RustService RustService { get; init; } = null!;
-    
-    [Inject]
-    private IDialogService DialogService { get; init; } = null!;
-    
+
     [Inject]
     private ILogger<DocumentCheckDialog> Logger { get; init; } = null!;
+
+    [Inject]
+    private PandocAvailabilityService PandocAvailability { get; init; } = null!;
     
     protected override async Task OnInitializedAsync()
     {
@@ -97,7 +97,7 @@ public partial class DocumentCheckDialog : MSGComponentBase
 
             try
             {
-                var extraction = await UserFile.LoadFileData(this.Document.FilePath, this.RustService, this.DialogService, this.extractionCancellation.Token);
+                var extraction = await UserFile.LoadFileData(this.Document.FilePath, this.RustService, this.PandocAvailability, this.extractionCancellation.Token);
                 if (this.isDisposed)
                     return;
 

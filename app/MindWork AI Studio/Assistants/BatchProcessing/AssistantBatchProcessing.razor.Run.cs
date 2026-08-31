@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using System.Globalization;
-using System.Text;
 
 namespace AIStudio.Assistants.BatchProcessing;
 
@@ -13,6 +12,19 @@ public partial class AssistantBatchProcessing
             return;
 
         var (resolvedOutputDirectory, files) = runPreparation.Value;
+
+        //
+        // Every format but Markdown is written by Pandoc, so it has to be there before the first
+        // document. Asking per document would put the installation dialog in front of the user
+        // hundreds of times, and starting without it would spend time and tokens on answers we
+        // cannot write anywhere:
+        //
+        if (this.outputMode is BatchProcessingOutputMode.INDIVIDUAL_FILES && this.resultFileFormat.UsesPandoc())
+        {
+            var pandocState = await this.PandocAvailability.EnsureAvailabilityAsync(showSuccessMessage: false, showDialog: true);
+            if (!pandocState.IsAvailable)
+                return;
+        }
 
         //
         // When the output folder already contains a log, a previous run was
@@ -63,7 +75,7 @@ public partial class AssistantBatchProcessing
                 if (DateTimeOffset.TryParseExact(logEntry.Time, TIME_FORMAT, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out var processedAt))
                     fileResult.ProcessedAt = processedAt;
 
-                // Reserve the Markdown file name of the previous run, so that a
+                // Reserve the result file name of the previous run, so that a
                 // document processed now cannot overwrite that earlier result:
                 if (!string.IsNullOrWhiteSpace(logEntry.Details))
                     this.usedResultFileNames.Add(logEntry.Details);
@@ -211,12 +223,26 @@ public partial class AssistantBatchProcessing
         }
 
         fileResult.ResultText = aiAnswer;
-        if (this.outputMode is BatchProcessingOutputMode.MARKDOWN_FILES)
+        if (this.outputMode is BatchProcessingOutputMode.INDIVIDUAL_FILES)
         {
             try
             {
                 var resultFilePath = Path.Join(resolvedOutputDirectory, this.CreateResultFileName(fileResult.FileName));
-                await File.WriteAllTextAsync(resultFilePath, aiAnswer, Encoding.UTF8, CancellationToken.None);
+                if (this.resultFileFormat.UsesPandoc())
+                {
+                    //
+                    // Pandoc reports a failure instead of throwing, because one document which
+                    // cannot be converted must not end a run over hundreds of them:
+                    //
+                    if (!await PandocExport.ConvertAsync(this.RustService, aiAnswer, resultFilePath, this.resultFileFormat, token))
+                    {
+                        this.FinishFileResult(fileResult, BatchProcessingFileStatus.FAILED, T("Was not able to convert the answer into the chosen file format."));
+                        return;
+                    }
+                }
+                else
+                    await File.WriteAllTextAsync(resultFilePath, aiAnswer, this.resultFileFormat.ToFileEncoding(), CancellationToken.None);
+
                 this.FinishFileResult(fileResult, BatchProcessingFileStatus.DONE, Path.GetFileName(resultFilePath));
             }
             catch (Exception e)
