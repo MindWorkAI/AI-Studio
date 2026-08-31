@@ -28,6 +28,10 @@ public enum Components
     // ReSharper restore InconsistentNaming
     
     CHAT,
+
+    // Internal identity for plugin-provided assistants. Its defaults are derived from CHAT,
+    // but it remains separate from the built-in chat component and its session state.
+    DYNAMIC_ASSISTANT,
     WRITER,
     APP_SETTINGS,
     
@@ -36,4 +40,6 @@ public enum Components
     AGENT_RETRIEVAL_CONTEXT_VALIDATION,
     AGENT_ASSISTANT_PLUGIN_AUDIT,
     LOG_VIEWER_ASSISTANT,
+    VISUAL_BRIEFING_ASSISTANT,
+    BATCH_PROCESSING_ASSISTANT,
 }

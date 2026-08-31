@@ -15,16 +15,8 @@ public partial class ReadFileContent : MSGComponentBase
     [CascadingParameter]
     private MediaImportOwner? ImportOwner { get; set; }
 
-    private MediaImportOwner EffectiveImportOwner => this.ImportOwner ?? this.fallbackMediaImportOwner;
-
     [Parameter]
     public string MediaImportTargetId { get; set; } = string.Empty;
-
-    private string EffectiveMediaImportTargetId => string.IsNullOrWhiteSpace(this.MediaImportTargetId)
-        ? string.IsNullOrWhiteSpace(this.Text) ? "primary" : this.Text
-        : this.MediaImportTargetId;
-
-    private MediaImportTarget EffectiveMediaImportTarget => new(this.EffectiveImportOwner, this.EffectiveMediaImportTargetId);
 
     [Parameter]
     public string Text { get; set; } = string.Empty;
@@ -34,6 +26,18 @@ public partial class ReadFileContent : MSGComponentBase
     
     [Parameter]
     public EventCallback<string> FileContentChanged { get; set; }
+
+    /// <summary>
+    /// Reports the path after a file was loaded successfully.
+    /// </summary>
+    [Parameter]
+    public EventCallback<string> FilePathLoaded { get; set; }
+
+    /// <summary>
+    /// If true, the component will display the state of the attached document (if any).
+    /// </summary>
+    [Parameter]
+    public bool ShowAttachedDocumentState { get; set; }
 
     [Parameter]
     public bool Disabled { get; set; }
@@ -52,6 +56,13 @@ public partial class ReadFileContent : MSGComponentBase
     /// </summary>
     [Parameter]
     public bool CatchAllDocuments { get; set; }
+
+    /// <summary>
+    /// Optionally restricts the file types offered by the native file picker
+    /// and accepted by this component.
+    /// </summary>
+    [Parameter]
+    public FileTypeFilter[]? Filter { get; set; }
     
     [Inject]
     private RustService RustService { get; init; } = null!;
@@ -75,11 +86,34 @@ public partial class ReadFileContent : MSGComponentBase
     private uint numDropAreasAboveThis;
     private bool isComponentHovered;
     private bool isFileDialogOpen;
+    private bool hasLoadedFileContent;
+    private string loadedFileName = string.Empty;
+    
     private bool IsCurrentTargetBusy => this.MediaTranscriptionService.GetSnapshot(this.EffectiveImportOwner) is { IsBusy: true } snapshot
                                         && snapshot.Target == this.EffectiveMediaImportTarget;
+    
     private bool IsUnavailable => this.Disabled || this.isFileDialogOpen || this.MediaTranscriptionService.IsBusy(this.EffectiveImportOwner);
 
+    private MediaImportOwner EffectiveImportOwner => this.ImportOwner ?? this.fallbackMediaImportOwner;
+    
+    private string EffectiveMediaImportTargetId => string.IsNullOrWhiteSpace(this.MediaImportTargetId)
+        ? string.IsNullOrWhiteSpace(this.Text) ? "primary" : this.Text
+        : this.MediaImportTargetId;
+
+    private MediaImportTarget EffectiveMediaImportTarget => new(this.EffectiveImportOwner, this.EffectiveMediaImportTargetId);
+    
     #region Overrides of MSGComponentBase
+
+    protected override void OnParametersSet()
+    {
+        if (string.IsNullOrWhiteSpace(this.FileContent))
+        {
+            this.hasLoadedFileContent = false;
+            this.loadedFileName = string.Empty;
+        }
+
+        base.OnParametersSet();
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -98,12 +132,12 @@ public partial class ReadFileContent : MSGComponentBase
     private void OnMediaImportStateChanged(MediaImportOwner owner)
     {
         if (owner == this.EffectiveImportOwner)
-            _ = this.InvokeAsync(async () =>
+            this.InvokeAsync(async () =>
             {
                 await this.SyncCompletedMediaTextAsync();
                 await this.ConsumeStandaloneMediaOutcomeAsync();
                 this.StateHasChanged();
-            });
+            }).Observe($"{nameof(ReadFileContent)}: syncing transcribed text");
     }
 
     /// <summary>Consumes outcomes for dialog-local controls that have no assistant owner surface.</summary>
@@ -145,14 +179,24 @@ public partial class ReadFileContent : MSGComponentBase
         if (delivery is null || delivery.Text is not { } text)
             return;
 
-        await this.FileContentChanged.InvokeAsync(text);
+        var fileName = this.MediaTranscriptionService.GetSnapshot(this.EffectiveImportOwner) is { Target: var target } snapshot
+                       && target == this.EffectiveMediaImportTarget
+            ? snapshot.CurrentFileName
+            : string.Empty;
+        await this.ApplyFileContentAsync(text, fileName);
         this.MediaTranscriptionService.AcknowledgeDelivery(delivery);
     }
 
-    /// <summary>Unsubscribes from the singleton media service.</summary>
+    /// <summary>Unsubscribes from the singleton media service and releases the drop area.</summary>
     protected override void DisposeResources()
     {
         this.MediaTranscriptionService.StateChanged -= this.OnMediaImportStateChanged;
+
+        // Release the drop area. Without this, drop areas below this one would count this component
+        // forever and would stop catching dropped files:
+        if (this.EnableDragDrop)
+            this.MessageBus.SendMessage(this, Event.UNREGISTER_FILE_DROP_AREA, this.Layer).Observe($"{nameof(ReadFileContent)}: releasing the drop area");
+
         base.DisposeResources();
     }
 
@@ -221,7 +265,7 @@ public partial class ReadFileContent : MSGComponentBase
         this.isFileDialogOpen = true;
         try
         {
-            var selectedFile = await this.RustService.SelectFile(T("Select file to read its content"));
+            var selectedFile = await this.RustService.SelectFile(T("Select file to read its content"), this.Filter);
             if (selectedFile.UserCancelled)
             {
                 this.Logger.LogInformation("User cancelled the file selection");
@@ -279,6 +323,13 @@ public partial class ReadFileContent : MSGComponentBase
             return false;
         }
 
+        if (this.Filter is { Length: > 0 } && !FileTypes.IsAllowedPath(filePath, this.Filter))
+        {
+            this.Logger.LogWarning("Selected file does not match the configured file type filter: '{FilePath}'", filePath);
+            await this.MessageBus.SendWarning(new(Icons.Material.Filled.Warning, this.T("Please select a file with a supported file type.")));
+            return false;
+        }
+
         if (FileTypes.IsAllowedPath(filePath, FileTypes.AUDIO) || FileTypes.IsAllowedPath(filePath, FileTypes.VIDEO))
             return await this.LoadMediaTranscriptAsync(filePath);
 
@@ -293,8 +344,13 @@ public partial class ReadFileContent : MSGComponentBase
 
         try
         {
-            var fileContent = await UserFile.LoadFileData(filePath, this.RustService, this.DialogService);
-            await this.FileContentChanged.InvokeAsync(fileContent);
+            var extraction = await UserFile.LoadFileData(filePath, this.RustService, this.PandocAvailabilityService);
+
+            // The failure was already reported by UserFile.LoadFileData, so we only stop here:
+            if (!extraction.HasUsableContent)
+                return false;
+
+            await this.ApplyFileContentAsync(extraction.Content, filePath);
             this.Logger.LogInformation("Successfully loaded file content: {FilePath}", filePath);
             return true;
         }
@@ -304,6 +360,14 @@ public partial class ReadFileContent : MSGComponentBase
             await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.Error, T("Failed to load file content")));
             return false;
         }
+    }
+
+    private async Task ApplyFileContentAsync(string fileContent, string filePath)
+    {
+        await this.FileContentChanged.InvokeAsync(fileContent);
+        await this.FilePathLoaded.InvokeAsync(filePath);
+        this.loadedFileName = Path.GetFileName(filePath);
+        this.hasLoadedFileContent = true;
     }
 
     private async Task<bool> LoadMediaTranscriptAsync(string filePath)
@@ -340,6 +404,17 @@ public partial class ReadFileContent : MSGComponentBase
         return this.MediaTranscriptionService.TryStartTextImport(
             filePath,
             this.EffectiveMediaImportTarget);
+    }
+
+    private string FileLoadedTooltip()
+    {
+        if (!this.hasLoadedFileContent)
+            return string.Empty;
+
+        if (string.IsNullOrWhiteSpace(this.loadedFileName))
+            return this.T("File content loaded");
+
+        return string.Format(this.T("Attached file '{0}'."), this.loadedFileName);
     }
 
     private bool CanCatchDroppedFile() => this.numDropAreasAboveThis is 0 && (this.isComponentHovered || this.CatchAllDocuments);

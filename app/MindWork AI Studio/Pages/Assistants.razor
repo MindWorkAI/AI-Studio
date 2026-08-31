@@ -12,42 +12,26 @@
 
     <InnerScrolling>
 
-        @if (this.SettingsManager.IsAnyCategoryAssistantVisible("General",
-            (Components.TEXT_SUMMARIZER_ASSISTANT, PreviewFeatures.NONE),
-            (Components.TRANSLATION_ASSISTANT, PreviewFeatures.NONE),
-            (Components.GRAMMAR_SPELLING_ASSISTANT, PreviewFeatures.NONE),
-            (Components.REWRITE_ASSISTANT, PreviewFeatures.NONE),
-            (Components.PROMPT_OPTIMIZER_ASSISTANT, PreviewFeatures.NONE),
-            (Components.SYNONYMS_ASSISTANT, PreviewFeatures.NONE),
-            (Components.META_ASSISTANT, PreviewFeatures.PRE_META_ASSISTANT_V1)
-            ))
-        {
-            <MudText Typo="Typo.h4" Class="mb-2 mr-3">
-                @T("General")
-            </MudText>
-            <MudStack Row="@true" Wrap="@Wrap.Wrap" Class="mb-3">
-                <AssistantBlock TSettings="SettingsDialogTextSummarizer" Component="Components.TEXT_SUMMARIZER_ASSISTANT" Name="@T("Text Summarizer")" Description="@T("Use an LLM to summarize a given text.")" Icon="@Icons.Material.Filled.TextSnippet" Link="@Routes.ASSISTANT_SUMMARIZER"/>
-                <AssistantBlock TSettings="SettingsDialogTranslation" Component="Components.TRANSLATION_ASSISTANT" Name="@T("Translation")" Description="@T("Translate text into another language.")" Icon="@Icons.Material.Filled.Translate" Link="@Routes.ASSISTANT_TRANSLATION"/>
-                <AssistantBlock TSettings="SettingsDialogGrammarSpelling" Component="Components.GRAMMAR_SPELLING_ASSISTANT" Name="@T("Grammar & Spelling")" Description="@T("Check grammar and spelling of a given text.")" Icon="@Icons.Material.Filled.Edit" Link="@Routes.ASSISTANT_GRAMMAR_SPELLING"/>
-                <AssistantBlock TSettings="SettingsDialogRewrite" Component="Components.REWRITE_ASSISTANT" Name="@T("Rewrite & Improve")" Description="@T("Rewrite and improve a given text for a chosen style.")" Icon="@Icons.Material.Filled.Edit" Link="@Routes.ASSISTANT_REWRITE"/>
-                <AssistantBlock TSettings="SettingsDialogPromptOptimizer" Component="Components.PROMPT_OPTIMIZER_ASSISTANT" Name="@T("Prompt Optimizer")" Description="@T("Optimize your prompt using a structured guideline.")" Icon="@Icons.Material.Filled.AutoFixHigh" Link="@Routes.ASSISTANT_PROMPT_OPTIMIZER"/>
-                <AssistantBlock TSettings="SettingsDialogSynonyms" Component="Components.SYNONYMS_ASSISTANT" Name="@T("Synonyms")" Description="@T("Find synonyms for a given word or phrase.")" Icon="@Icons.Material.Filled.Spellcheck" Link="@Routes.ASSISTANT_SYNONYMS"/>
-                <AssistantBlock TSettings="NoSettingsPanel" Component="Components.META_ASSISTANT" RequiredPreviewFeature="PreviewFeatures.PRE_META_ASSISTANT_V1" Name="@T("Assistant Builder")" Description="@T("Generate your own assistants.")" Icon="@Icons.Material.Filled.AutoMode" Link="@Routes.ASSISTANT_META_ASSISTANT"/>
-            </MudStack>
-        }
+        <AssistantCategoryBlock Title="@T("General")" HeaderClass="mb-2 mr-3">
+            <AssistantBlock TSettings="SettingsDialogTextSummarizer" Component="Components.TEXT_SUMMARIZER_ASSISTANT" Name="@T("Text Summarizer")" Description="@T("Use an LLM to summarize a given text.")" Icon="@Icons.Material.Filled.TextSnippet" Link="@Routes.ASSISTANT_SUMMARIZER"/>
+            <AssistantBlock TSettings="SettingsDialogTranslation" Component="Components.TRANSLATION_ASSISTANT" Name="@T("Translation")" Description="@T("Translate text into another language.")" Icon="@Icons.Material.Filled.Translate" Link="@Routes.ASSISTANT_TRANSLATION"/>
+            <AssistantBlock TSettings="SettingsDialogGrammarSpelling" Component="Components.GRAMMAR_SPELLING_ASSISTANT" Name="@T("Grammar & Spelling")" Description="@T("Check grammar and spelling of a given text.")" Icon="@Icons.Material.Filled.Edit" Link="@Routes.ASSISTANT_GRAMMAR_SPELLING"/>
+            <AssistantBlock TSettings="SettingsDialogRewrite" Component="Components.REWRITE_ASSISTANT" Name="@T("Rewrite & Improve")" Description="@T("Rewrite and improve a given text for a chosen style.")" Icon="@Icons.Material.Filled.Edit" Link="@Routes.ASSISTANT_REWRITE"/>
+            <AssistantBlock TSettings="SettingsDialogPromptOptimizer" Component="Components.PROMPT_OPTIMIZER_ASSISTANT" Name="@T("Prompt Optimizer")" Description="@T("Optimize your prompt using a structured guideline.")" Icon="@Icons.Material.Filled.AutoFixHigh" Link="@Routes.ASSISTANT_PROMPT_OPTIMIZER"/>
+            <AssistantBlock TSettings="SettingsDialogSynonyms" Component="Components.SYNONYMS_ASSISTANT" Name="@T("Synonyms")" Description="@T("Find synonyms for a given word or phrase.")" Icon="@Icons.Material.Filled.Spellcheck" Link="@Routes.ASSISTANT_SYNONYMS"/>
+            <AssistantBlock TSettings="NoSettingsPanel" Component="Components.META_ASSISTANT" RequiredPreviewFeature="PreviewFeatures.PRE_META_ASSISTANT_V1" Name="@T("Assistant Builder")" Description="@T("Generate your own assistants.")" Icon="@Icons.Material.Filled.AutoMode" Link="@Routes.ASSISTANT_META_ASSISTANT"/>
+        </AssistantCategoryBlock>
 
         @if (this.AssistantPlugins.Count > 0)
         {
-            <MudText Typo="Typo.h4" Class="mb-2 mr-3 mt-6">
-                @T("Installed Assistants")
-            </MudText>
-            <MudStack Row="@true" Wrap="@Wrap.Wrap" Class="mb-3">
+            <AssistantCategoryBlock Title="@T("Installed Assistants")">
                 @foreach (var assistantPlugin in this.AssistantPlugins)
                 {
                     var securityState = PluginAssistantSecurityResolver.Resolve(this.SettingsManager, assistantPlugin);
                     var launchLink = assistantPlugin.StartsChatDirectly ? string.Empty : $"{Routes.ASSISTANT_DYNAMIC}?assistantId={assistantPlugin.Id}";
                     var availablePlugin = PluginFactory.AvailablePlugins.OfType<IAvailablePlugin>().FirstOrDefault(plugin => plugin.Id == assistantPlugin.Id);
                     <AssistantBlock TSettings="NoSettingsPanel"
+                                    Component="Components.DYNAMIC_ASSISTANT"
                                     Name="@T(assistantPlugin.AssistantTitle)"
                                     Description="@T(assistantPlugin.Description)"
                                     Icon="@Icons.Material.Filled.FindInPage"
@@ -56,9 +40,10 @@
                                     Link="@launchLink"
                                     OnClick="@(() => this.StartAssistantPluginAsync(assistantPlugin))">
                         <AdditionalActions>
+                            <DirectChatLauncherSettingsAction Plugin="@assistantPlugin" />
                             @if (availablePlugin is not null)
                             {
-                                <AssistantPluginDeleteAction Plugin="@availablePlugin" />
+                                <PluginDeleteAction Plugin="@availablePlugin" />
                             }
                         </AdditionalActions>
                         <SecurityBadge>
@@ -66,74 +51,35 @@
                         </SecurityBadge>
                     </AssistantBlock>
                 }
-            </MudStack>
+            </AssistantCategoryBlock>
         }
 
-        @if (this.SettingsManager.IsAnyCategoryAssistantVisible("Business",
-            (Components.EMAIL_ASSISTANT, PreviewFeatures.NONE),
-            (Components.DOCUMENT_ANALYSIS_ASSISTANT, PreviewFeatures.NONE),
-            (Components.MY_TASKS_ASSISTANT, PreviewFeatures.NONE),
-            (Components.AGENDA_ASSISTANT, PreviewFeatures.NONE),
-            (Components.JOB_POSTING_ASSISTANT, PreviewFeatures.NONE),
-            (Components.LEGAL_CHECK_ASSISTANT, PreviewFeatures.NONE),
-            (Components.ICON_FINDER_ASSISTANT, PreviewFeatures.NONE),
-            (Components.SLIDE_BUILDER_ASSISTANT, PreviewFeatures.NONE)
-            ))
-        {
-            <MudText Typo="Typo.h4" Class="mb-2 mr-3 mt-6">
-                @T("Business")
-            </MudText>
-            <MudStack Row="@true" Wrap="@Wrap.Wrap" Class="mb-3">
-                <AssistantBlock TSettings="SettingsDialogWritingEMails" Component="Components.EMAIL_ASSISTANT" Name="@T("E-Mail")" Description="@T("Generate an e-mail for a given context.")" Icon="@Icons.Material.Filled.Email" Link="@Routes.ASSISTANT_EMAIL"/>
-                <AssistantBlock TSettings="SettingsDialogDocumentAnalysis" Component="Components.DOCUMENT_ANALYSIS_ASSISTANT" Name="@T("Document Analysis")" Description="@T("Analyze a document regarding defined rules and extract key information.")" Icon="@Icons.Material.Filled.DocumentScanner" Link="@Routes.ASSISTANT_DOCUMENT_ANALYSIS"/>
-                <AssistantBlock TSettings="SettingsDialogMyTasks" Component="Components.MY_TASKS_ASSISTANT" Name="@T("My Tasks")" Description="@T("Analyze a text or an email for tasks you need to complete.")" Icon="@Icons.Material.Filled.Task" Link="@Routes.ASSISTANT_MY_TASKS"/>
-                <AssistantBlock TSettings="SettingsDialogAgenda" Component="Components.AGENDA_ASSISTANT" Name="@T("Agenda Planner")" Description="@T("Generate an agenda for a given meeting, seminar, etc.")" Icon="@Icons.Material.Filled.CalendarToday" Link="@Routes.ASSISTANT_AGENDA"/>
-                <AssistantBlock TSettings="SettingsDialogJobPostings" Component="Components.JOB_POSTING_ASSISTANT" Name="@T("Job Posting")" Description="@T("Generate a job posting for a given job description.")" Icon="@Icons.Material.Filled.Work" Link="@Routes.ASSISTANT_JOB_POSTING"/>
-                <AssistantBlock TSettings="SettingsDialogLegalCheck" Component="Components.LEGAL_CHECK_ASSISTANT" Name="@T("Legal Check")" Description="@T("Ask a question about a legal document.")" Icon="@Icons.Material.Filled.Gavel" Link="@Routes.ASSISTANT_LEGAL_CHECK"/>
-                <AssistantBlock TSettings="SettingsDialogIconFinder" Component="Components.ICON_FINDER_ASSISTANT" Name="@T("Icon Finder")" Description="@T("Use an LLM to find an icon for a given context.")" Icon="@Icons.Material.Filled.FindInPage" Link="@Routes.ASSISTANT_ICON_FINDER"/>
-                <AssistantBlock TSettings="SettingsDialogSlideBuilder" Component="Components.SLIDE_BUILDER_ASSISTANT" Name="@T("Slide Planner Assistant")" Description="@T("Develop slide content based on a given topic and content.")" Icon="@Icons.Material.Filled.Slideshow" Link="@Routes.ASSISTANT_SLIDE_BUILDER"/>
-            </MudStack>
-        }
+        <AssistantCategoryBlock Title="@T("Business")">
+            <AssistantBlock TSettings="SettingsDialogWritingEMails" Component="Components.EMAIL_ASSISTANT" Name="@T("E-Mail")" Description="@T("Generate an e-mail for a given context.")" Icon="@Icons.Material.Filled.Email" Link="@Routes.ASSISTANT_EMAIL"/>
+            <AssistantBlock TSettings="SettingsDialogDocumentAnalysis" Component="Components.DOCUMENT_ANALYSIS_ASSISTANT" Name="@T("Document Analysis")" Description="@T("Analyze a document regarding defined rules and extract key information.")" Icon="@Icons.Material.Filled.DocumentScanner" Link="@Routes.ASSISTANT_DOCUMENT_ANALYSIS"/>
+            <AssistantBlock TSettings="SettingsDialogBatchProcessing" Component="Components.BATCH_PROCESSING_ASSISTANT" Name="@T("Batch Processing")" Description="@T("Process all documents of a folder in one batch run and collect the results.")" Icon="@Icons.Material.Filled.DynamicFeed" Link="@Routes.ASSISTANT_BATCH_PROCESSING"/>
+            <AssistantBlock TSettings="SettingsDialogMyTasks" Component="Components.MY_TASKS_ASSISTANT" Name="@T("My Tasks")" Description="@T("Analyze a text or an email for tasks you need to complete.")" Icon="@Icons.Material.Filled.Task" Link="@Routes.ASSISTANT_MY_TASKS"/>
+            <AssistantBlock TSettings="SettingsDialogAgenda" Component="Components.AGENDA_ASSISTANT" Name="@T("Agenda Planner")" Description="@T("Generate an agenda for a given meeting, seminar, etc.")" Icon="@Icons.Material.Filled.CalendarToday" Link="@Routes.ASSISTANT_AGENDA"/>
+            <AssistantBlock TSettings="SettingsDialogJobPostings" Component="Components.JOB_POSTING_ASSISTANT" Name="@T("Job Posting")" Description="@T("Generate a job posting for a given job description.")" Icon="@Icons.Material.Filled.Work" Link="@Routes.ASSISTANT_JOB_POSTING"/>
+            <AssistantBlock TSettings="SettingsDialogLegalCheck" Component="Components.LEGAL_CHECK_ASSISTANT" Name="@T("Legal Check")" Description="@T("Ask a question about a legal document.")" Icon="@Icons.Material.Filled.Gavel" Link="@Routes.ASSISTANT_LEGAL_CHECK"/>
+            <AssistantBlock TSettings="SettingsDialogIconFinder" Component="Components.ICON_FINDER_ASSISTANT" Name="@T("Icon Finder")" Description="@T("Use an LLM to find an icon for a given context.")" Icon="@Icons.Material.Filled.FindInPage" Link="@Routes.ASSISTANT_ICON_FINDER"/>
+            <AssistantBlock TSettings="SettingsDialogSlideBuilder" Component="Components.SLIDE_BUILDER_ASSISTANT" Name="@T("Slide Planner Assistant")" Description="@T("Develop slide content based on a given topic and content.")" Icon="@Icons.Material.Filled.Slideshow" Link="@Routes.ASSISTANT_SLIDE_BUILDER"/>
+            <AssistantBlock TSettings="SettingsDialogVisualBriefing" Component="Components.VISUAL_BRIEFING_ASSISTANT" RequiredPreviewFeature="Components.VISUAL_BRIEFING_ASSISTANT.RequiredPreviewFeature()" Name="@T("Visual Briefing Assistant")" Description="@T("Turn documents, data, images, audio, and video into an audience-ready interactive briefing.")" Icon="@Icons.Material.Filled.DashboardCustomize" Link="@Routes.ASSISTANT_VISUAL_BRIEFING" />
+        </AssistantCategoryBlock>
 
-        @if (this.SettingsManager.IsAnyCategoryAssistantVisible("Learning",
-            (Components.BIAS_DAY_ASSISTANT, PreviewFeatures.NONE)
-            ))
-        {
-            <MudText Typo="Typo.h4" Class="mb-2 mr-3 mt-6">
-                @T("Learning")
-            </MudText>
-            <MudStack Row="@true" Wrap="@Wrap.Wrap" Class="mb-3">
-                <AssistantBlock TSettings="SettingsDialogAssistantBias" Component="Components.BIAS_DAY_ASSISTANT" Name="@T("Bias of the Day")" Description="@T("Learn about one cognitive bias every day.")" Icon="@Icons.Material.Filled.Psychology" Link="@Routes.ASSISTANT_BIAS"/>
-            </MudStack>
-        }
+        <AssistantCategoryBlock Title="@T("Learning")">
+            <AssistantBlock TSettings="SettingsDialogAssistantBias" Component="Components.BIAS_DAY_ASSISTANT" Name="@T("Bias of the Day")" Description="@T("Learn about one cognitive bias every day.")" Icon="@Icons.Material.Filled.Psychology" Link="@Routes.ASSISTANT_BIAS"/>
+        </AssistantCategoryBlock>
 
-        @if (this.SettingsManager.IsAnyCategoryAssistantVisible("Software Engineering",
-            (Components.CODING_ASSISTANT, PreviewFeatures.NONE),
-            (Components.ERI_ASSISTANT, PreviewFeatures.PRE_RAG_2024),
-            (Components.LOG_VIEWER_ASSISTANT, PreviewFeatures.NONE)
-            ))
-        {
-            <MudText Typo="Typo.h4" Class="mb-2 mr-3 mt-6">
-                @T("Software Engineering")
-            </MudText>
-            <MudStack Row="@true" Wrap="@Wrap.Wrap" Class="mb-3">
-                <AssistantBlock TSettings="SettingsDialogCoding" Component="Components.CODING_ASSISTANT" Name="@T("Coding")" Description="@T("Get coding and debugging support from an LLM.")" Icon="@Icons.Material.Filled.Code" Link="@Routes.ASSISTANT_CODING"/>
-                <AssistantBlock TSettings="SettingsDialogERIServer" Component="Components.ERI_ASSISTANT" RequiredPreviewFeature="PreviewFeatures.PRE_RAG_2024" Name="@T("ERI Server")" Description="@T("Generate an ERI server to integrate business systems.")" Icon="@Icons.Material.Filled.PrivateConnectivity" Link="@Routes.ASSISTANT_ERI"/>
-            </MudStack>
-        }
+        <AssistantCategoryBlock Title="@T("Software Engineering")">
+            <AssistantBlock TSettings="SettingsDialogCoding" Component="Components.CODING_ASSISTANT" Name="@T("Coding")" Description="@T("Get coding and debugging support from an LLM.")" Icon="@Icons.Material.Filled.Code" Link="@Routes.ASSISTANT_CODING"/>
+            <AssistantBlock TSettings="SettingsDialogERIServer" Component="Components.ERI_ASSISTANT" RequiredPreviewFeature="PreviewFeatures.PRE_RAG_2024" Name="@T("ERI Server")" Description="@T("Generate an ERI server to integrate business systems.")" Icon="@Icons.Material.Filled.PrivateConnectivity" Link="@Routes.ASSISTANT_ERI"/>
+        </AssistantCategoryBlock>
 
-        @if (this.SettingsManager.IsAnyCategoryAssistantVisible("AI Studio Development",
-            (Components.I18N_ASSISTANT, PreviewFeatures.NONE)
-            ))
-        {
-            <MudText Typo="Typo.h4" Class="mb-2 mr-3 mt-6">
-                @T("AI Studio Development")
-            </MudText>
-            <MudStack Row="@true" Wrap="@Wrap.Wrap" Class="mb-3">
-                <AssistantBlock TSettings="SettingsDialogI18N" Component="Components.I18N_ASSISTANT" Name="@T("Localization")" Description="@T("Translate AI Studio text content into other languages")" Icon="@Icons.Material.Filled.Translate" Link="@Routes.ASSISTANT_AI_STUDIO_I18N"/>
-                <AssistantBlock TSettings="NoSettingsPanel" Component="Components.LOG_VIEWER_ASSISTANT" Name="@T("Log Viewer")" Description="@T("View and filter AI Studio log files.")" Icon="@Icons.Material.Filled.Article" Link="@Routes.ASSISTANT_LOG_VIEWER"/>
-            </MudStack>
-        }
+        <AssistantCategoryBlock Title="@T("AI Studio Development")">
+            <AssistantBlock TSettings="SettingsDialogI18N" Component="Components.I18N_ASSISTANT" Name="@T("Localization")" Description="@T("Translate AI Studio text content into other languages")" Icon="@Icons.Material.Filled.Translate" Link="@Routes.ASSISTANT_AI_STUDIO_I18N"/>
+            <AssistantBlock TSettings="NoSettingsPanel" Component="Components.LOG_VIEWER_ASSISTANT" Name="@T("Log Viewer")" Description="@T("View and filter AI Studio log files.")" Icon="@Icons.Material.Filled.Article" Link="@Routes.ASSISTANT_LOG_VIEWER"/>
+        </AssistantCategoryBlock>
 
     </InnerScrolling>
 </div>

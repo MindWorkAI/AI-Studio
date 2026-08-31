@@ -4,7 +4,7 @@
 Do you want to manage MindWork AI Studio in a corporate environment or within an organization? This documentation explains what you need to do and how it works. First, here's an overview of the entire process:
 
 - You can distribute MindWork AI Studio to employees' devices using tools like Microsoft System Center Configuration Manager (SCCM).
-- Employees can get updates through the built-in update feature. Enterprise configuration can disable automatic checks or the entire built-in update feature so that the IT department controls which version gets distributed.
+- Employees can get updates through the built-in update feature. Enterprise configuration can disable automatic checks or the entire built-in update feature so that the IT department controls which version gets distributed. Installations you rolled out yourself never update themselves anyway, so the two kinds can coexist on one device.
 - AI Studio checks about every 16 minutes to see where and which configuration it should load. This information is loaded from the local system. On Windows, you might use the registry, for example.
 - If it finds the necessary metadata, AI Studio downloads the configuration as a ZIP file from the specified server.
 - The configuration is an AI Studio plugin written in Lua.
@@ -20,6 +20,36 @@ Set `CONFIG["SETTINGS"]["DataApp.UpdateInterval"]` in the configuration plugin t
 - `DISABLE_UPDATES` disables automatic and manual update checks and installations. AI Studio tells users that updates are managed by their organization and directs questions to their IT department. This policy takes effect immediately when the enterprise configuration changes.
 
 Use `DISABLE_UPDATES` when your organization distributes approved versions through its own software-management process.
+
+### Installations that never update themselves
+
+AI Studio recognizes installations its updater cannot replace and never updates those, no matter what `DataApp.UpdateInterval` and `DataApp.UpdateInstallation` say. You can therefore leave automatic updates enabled for your whole organization: the installations you rolled out ignore them and receive their versions from you, while installations your colleagues fetched from GitHub keep updating themselves.
+
+This matters most on Windows. The installer we publish installs per user below `%LOCALAPPDATA%`, and the updater runs exactly that installer. Updating an installation that sits anywhere else therefore does not replace it: a second installation appears below `%LOCALAPPDATA%` while yours stays untouched, and from then on it is a matter of chance which one a colleague starts. Loosening the permissions of your deployment does not change this — the updater never writes into the current location to begin with.
+
+AI Studio recognizes these cases:
+
+| Case | How AI Studio recognizes it | What users are told |
+|---|---|---|
+| Marker file | A file named `managed-installation` next to the program file | Updates come from their IT department |
+| Machine-wide program directory | The program file sits below `%ProgramFiles%`, `%ProgramFiles(x86)%`, or `%ProgramW6432%` | Updates come from their IT department |
+| Location the user cannot write to | The directory that would have to be replaced is not writable for the current user, e.g. `/Applications` on a device managed through MDM, or `/opt` on Linux | Updates come from their IT department |
+| Self-chosen directory (Windows only) | Everything else outside `%LOCALAPPDATA%`, e.g. `D:\Tools\MindWork AI Studio` | They have to install a new version themselves, with a link to the latest release |
+| Flatpak | Running inside a Flatpak sandbox | Updates come from their Flatpak distribution |
+
+The information page reports which case applies, so a support request can start from that instead of guesswork.
+
+#### The marker file
+
+Place an empty file named `managed-installation` next to the program file, in the same directory as `MindWork AI Studio.exe` on Windows or as the executable on Linux. Its content is ignored; only its existence matters. The marker applies to that one installation, so a colleague who installed AI Studio from GitHub on the same device is not affected by it.
+
+Use the marker when the other cases do not cover your deployment, for example, when you roll out our regular per-user installer through Intune, or when you install into a directory of your own such as `D:\Program Files\MindWork AI Studio`.
+
+On macOS there is no marker file: any additional file inside the app bundle would break its code signature. A bundle in a location your users cannot write to is recognized anyway. If you want AI Studio to name your organization explicitly on macOS, set `DataApp.UpdateInterval` to `DISABLE_UPDATES`, which takes precedence over all of this.
+
+#### Existing double installations
+
+This recognition prevents new double installations; it does not clean up ones that already exist. On affected devices, remove the second installation below `%LOCALAPPDATA%\MindWork AI Studio\` together with its uninstall entry under `HKEY_CURRENT_USER`, and make sure that shortcuts point at your deployment again.
 
 ## Configure the devices
 So that MindWork AI Studio knows where to load which configuration, this information must be provided as metadata on employees' devices. Currently, the following options are available:
@@ -54,7 +84,7 @@ The preferred format is a fixed set of indexed pairs:
 
 Each configuration ID must be a valid [GUID](https://en.wikipedia.org/wiki/Universally_unique_identifier#Globally_unique_identifier). Up to 100,000 indexed configuration slots are supported per device.
 
-If multiple configurations define the same setting, the first definition wins. For indexed pairs and policy files, the order is slot `00000`, then `00001`, and so on up to `99999`.
+The slot order determines which configurations are downloaded, not which one wins a conflict. When two of your configuration plugins define the same setting or the same object, the declared priority decides. See [Priority of configuration plugins](#priority-of-configuration-plugins).
 
 For backwards compatibility, the older slot names `0` to `9` without an underscore are still supported. AI Studio also accepts other numeric slot suffixes with up to five digits. Slot suffixes are matched exactly, so `config_id_1`, `config_id_01`, and `config_id_00001` are treated as separate slots. Use the five-digit format with an underscore for new deployments.
 
@@ -98,15 +128,15 @@ This path is intended for a Flatpak provisioning extension like:
 
 ```yaml
 add-extensions:
-  org.MindWorkAI.AIStudio.provisioning:
+  org.mindworkai.AIStudio.provisioning:
     directory: etc/MindWorkAI
     no-autodownload: true
 ```
 
 Policy files can then be provided on the host through the extension directories. For example:
 
-- System-wide, read-only: `/var/lib/flatpak/extension/org.MindWorkAI.AIStudio.provisioning/x86_64/stable/`
-- User-specific: `$XDG_DATA_HOME/flatpak/extension/org.MindWorkAI.AIStudio.provisioning/x86_64/stable/`
+- System-wide, read-only: `/var/lib/flatpak/extension/org.mindworkai.AIStudio.provisioning/x86_64/stable/`
+- User-specific: `$XDG_DATA_HOME/flatpak/extension/org.mindworkai.AIStudio.provisioning/x86_64/stable/`
 
 Files placed there are mounted into the sandbox at `/app/etc/MindWorkAI/`. Use the same policy file names and YAML format described below.
 
@@ -276,13 +306,111 @@ ID = "9072b77d-ca81-40da-be6a-861da525ef7b"
 
 ## Important: Mark enterprise-managed plugins explicitly
 
-Configuration plugins deployed by your configuration server should define:
+Plugins deployed by your configuration server should define:
 
 ```lua
 DEPLOYED_USING_CONFIG_SERVER = true
 ```
 
-Local, manually managed configuration plugins should set this to `false`. If the field is missing, AI Studio falls back to the plugin path (`.config`) to determine whether the plugin is managed and logs a warning.
+This holds for every plugin type, not just for configurations. Local, manually managed plugins should set this to `false`. If the field is missing on a plugin below `.config` or `.config-tests`, AI Studio falls back to the plugin path, treats the plugin as managed, and logs a warning.
+
+Inside those two directories the field is a courtesy, not a requirement: the path already proves who the plugin belongs to. You need it for plugins you roll out **past** those directories, for example when your MDM solution places an assistant plugin under `plugins/assistants/`. Such a plugin has no path to prove its origin, and this field is the only marker it has.
+
+What the field decides, and what it does not:
+
+- **The plugin path alone** decides which configurations speak for your organization: which approvals for assistant plugins are honored, which configuration wins a conflict, and which configuration AI Studio withdraws once you stop referencing it. A configuration stored under `.config` is therefore removed when your organization no longer references its ID, whatever this field says. A plugin that declares `false` while sitting below `.config` does not escape any of this — AI Studio logs the contradiction and treats it as managed.
+- **The path and the field together** decide whether a plugin is protected against the user. Whoever carries either marker cannot be deleted, edited, shared, or replaced through the user interface. Your IT department stays the only party that changes it.
+
+## Priority of configuration plugins
+
+When you deploy more than one configuration, two of your configuration plugins may manage the same setting or define the same object, e.g. the same LLM provider. The optional `PRIORITY` field decides which one wins:
+
+```lua
+PRIORITY = 100
+```
+
+A configuration plugin with a higher priority is applied later and therefore wins. The field is optional and defaults to `0`.
+
+A typical layered setup:
+
+| Configuration | `PRIORITY` | Role |
+|---|---|---|
+| Organization-wide base | `0` | Providers, update behavior, and security settings for everybody |
+| Department | `100` | Refines the base, e.g. a different default model |
+| Project or lab | `200` | Refines the department configuration |
+
+A configuration only overrides what it actually defines. Everything it does not mention keeps the value of the configuration below it. The same applies when you remove a configuration later: its settings fall back to the configuration below, not to the AI Studio defaults. Once no configuration manages a setting anymore, see [Withdrawing a configuration](#withdrawing-a-configuration).
+
+Give two configurations that must override each other different priorities. With an equal priority, the order is stable across restarts but arbitrary, so the outcome is not the one you designed.
+
+Two guarantees are independent of the priority:
+
+- A local configuration plugin never wins against one your IT department deployed, whatever priority it declares. Local plugins are always applied afterwards, and they may not take over a setting or an object that belongs to one of your configurations.
+- Two plugins must not share the same plugin ID. If that happens, AI Studio keeps the one your IT department deployed and logs a warning for the other.
+
+The single exception is a configuration you stage for a test under `.config-tests`. It is applied after your deployed configurations and wins a shared plugin ID, so that you can try out the next version of a configuration under its final ID. See [Local staging and testing](#local-staging-and-testing).
+
+### Settings that hold a list or a table
+
+For a setting that holds a list or a table, the winning configuration replaces the whole collection. It does not merge the entries. A department configuration that lists a single entry drops every entry the base configuration had set for that setting.
+
+This is intentional: replacing is the only way a department can take something back. A department that wants an assistant to be visible again can only achieve that by not listing it.
+
+Plan for it in these settings:
+
+| Setting | What a partial list costs you |
+|---|---|
+| `DataApp.HiddenAssistants` | Assistants hidden by the base configuration become **visible** again |
+| `DataSourceSecuritySettings.TrustedProviderIds` | Providers trusted by the base configuration lose that status |
+| `DataApp.ExternalHttpCustomRootCertificateAllowedHosts` | Hosts of the base configuration stop trusting your root certificates |
+| `DataConfidence.CustomConfidenceScheme` | Providers left out fall back to the AI Studio default confidence |
+| `DataChat.PreselectedDataSourceIds` | Data sources preselected by the base configuration are no longer preselected |
+
+The rule of thumb: whenever a configuration with a higher priority touches one of these settings, it has to repeat every entry it wants to keep. Watch `DataApp.HiddenAssistants` in particular, because it is the only one in this list that opens something up instead of restricting it.
+
+Two settings are the exception and add up instead of replacing:
+
+- `DataApp.EnabledPreviewFeatures` — enable one preview feature for the whole organization and another one for a single department, and users of that department get both.
+- `DataAssistantPluginAudit.EnterpriseApprovedPlugins` — a department configuration can approve additional assistant plugins without repeating the approvals of the base configuration. Approving is a pure allowlist over hashes, so there is nothing a replacing list could express that adding does not.
+
+In both cases each configuration keeps its own contribution, so removing one of them only withdraws what this configuration had granted. While a configuration plugin is deployed but cannot be loaded, its approvals are kept: AI Studio does not withdraw approvals it cannot currently read.
+
+One clarification for `DataChat.PreselectedDataSourceIds`: the IDs are not limited to the data sources of the same configuration. They are resolved against every known data source, including those of your other configurations and the ones a user configured. IDs that resolve to nothing are ignored.
+
+## Deploying other plugin types
+
+A deployment is not limited to a configuration, even though the directory it lands in is called `.config`. Your configuration server serves one archive per configuration ID, and you may use it for every kind of plugin: assistant plugins today, further types such as tool plugins as they arrive. Read the directory name as "centrally configured and rolled out", not as "configurations only".
+
+Put each plugin into its own subdirectory of the archive:
+
+```
+9072b77d-ca81-40da-be6a-861da525ef7b.zip
+├── plugin.lua                      ← your configuration plugin, ID = 9072b77d-…
+└── translation-assistant/
+    └── plugin.lua                  ← an assistant plugin with an ID of its own
+```
+
+AI Studio extracts the whole tree and picks up every `plugin.lua` in it. A few rules apply:
+
+- **Only the configuration plugin carries the configuration ID.** Every other plugin has its own `ID`, as any plugin does. The archive does not have to contain a configuration plugin at all: an archive that only ships an assistant plugin is fine.
+- **Everything in the archive belongs to your organization.** Users cannot delete, edit, share, or replace any of it, whatever the individual plugins declare about themselves.
+- **The withdrawal takes the whole deployment.** Once you stop referencing the configuration ID, AI Studio removes that directory including every plugin you shipped in it. See [Withdrawing a configuration](#withdrawing-a-configuration).
+- **Assistant plugins still need an approval or an audit.** Deploying an assistant does not approve it. List its hash in `CONFIG["SETTINGS"]["DataAssistantPluginAudit.EnterpriseApprovedPlugins"]` of a configuration you deploy, otherwise users have to run a local security audit before they can activate it. An approval does not enable the assistant either; add `Activate` to the approval for that. See [Enterprise approval for assistant plugins](#enterprise-approval-for-assistant-plugins) and [Enabling an assistant plugin for your colleagues](#enabling-an-assistant-plugin-for-your-colleagues).
+
+If you would rather not use the configuration server for this, roll the plugin out with your MDM solution into the ordinary plugin directory and mark it with `DEPLOYED_USING_CONFIG_SERVER = true`. It is then protected against changes just the same, but it is not tied to a configuration ID, so you have to remove it the same way you placed it.
+
+## Withdrawing a configuration
+
+A configuration does not have to stay forever: you stop deploying it, a user deletes a configuration they installed themselves, or a test configuration ends with the next restart. AI Studio then removes what that configuration brought along, such as its providers, data sources, profiles, chat templates, and its approvals for assistant plugins.
+
+Settings go one step further. AI Studio remembers the value each setting had before a configuration took it over and hands it back once no configuration manages that setting anymore. Somebody who had chosen a start page before your configuration set one therefore gets their own start page back, not the AI Studio default.
+
+Two cases differ:
+
+- **There is nothing to hand back.** When a setting still had its AI Studio default at the moment your configuration took it over, that default returns. The same applies to settings which a configuration already managed before AI Studio v26.8.1, because nothing was remembered back then.
+- **Somebody used `AllowUserOverride`.** A setting you offered as an organization default, and which the user changed afterwards, keeps the user's value. Their decision outlives your configuration.
+
+A configuration that is deployed but cannot be loaded, e.g. because of an error in its Lua code, is not withdrawn. It still manages the device, so everything it brought along stays untouched until you actually stop deploying it.
 
 ## Example AI Studio configuration
 The latest example of an AI Studio configuration via configuration plugin can always be found in the repository in the `app/MindWork AI Studio/Plugins/configuration` folder. Here are the links to the files:
@@ -290,7 +418,7 @@ The latest example of an AI Studio configuration via configuration plugin can al
 - [The icon](../app/MindWork%20AI%20Studio/Plugins/configuration/icon.lua)
 - [The configuration with explanations](../app/MindWork%20AI%20Studio/Plugins/configuration/plugin.lua)
 
-Please note that the icon must be an SVG vector graphic. Raster graphics like PNGs, GIFs, and others aren’t supported. You can use the sample icon, which looks like a gear.
+Please note that the icon must be an SVG vector graphic. Raster graphics like PNGs, GIFs, and others aren’t supported. You can use the sample icon, which looks like a gear. AI Studio shows plugin icons in an isolated image element, so set the colors inside the SVG itself: `currentColor` and CSS rules from the app do not reach the icon. Your organization is responsible for holding the rights to any icon it ships. You can also give each configured provider its own icon, see [Giving providers your own icon](#giving-providers-your-own-icon).
 
 Currently, you can configure the following things:
 - Any number of LLM providers (self-hosted or cloud providers with encrypted API keys)
@@ -315,6 +443,18 @@ AI Studio computes the approval hash as a SHA-256 digest over all `.lua` files i
 
 If any Lua file changes, the hash changes automatically and the enterprise approval no longer applies.
 
+### Only your configurations may approve
+
+Approvals are honored only in configuration plugins that speak for your organization: plugins a configuration server deployed, meaning plugins stored under the `.config` directory, and plugins you staged for a test under `.config-tests`. AI Studio ignores the approvals of any other locally placed configuration plugin and writes a warning to the log.
+
+The reason is what an approval does: it marks an assistant plugin as safe without any security audit, and AI Studio then tells the user that their organization approved it. Anyone who can drop a file into the plugin directory could otherwise disable the security audit for an assistant plugin of their choosing while the app vouches for it in your name.
+
+This is decided by where the plugin is stored, not by its `DEPLOYED_USING_CONFIG_SERVER` field. That field is part of the plugin itself, so any plugin could claim it.
+
+The field does count elsewhere, namely for protecting a plugin against the user, and that is not a contradiction: there the field only ever takes a possibility away from whoever declared it. Granting an approval works the other way round, so it needs a source no plugin can write.
+
+If you want to test approvals before rolling a configuration out, see [Local staging and testing](#local-staging-and-testing).
+
 ### Configuration example
 
 Add the approval list to `CONFIG["SETTINGS"]` in your configuration plugin:
@@ -331,7 +471,47 @@ CONFIG["SETTINGS"]["DataAssistantPluginAudit.EnterpriseApprovedPlugins"] = {
 }
 ```
 
-`PluginHash` is required. All other fields are optional and are shown in the UI as approval metadata.
+`PluginHash` is required. All other fields are optional. `DisplayName`, `Comment`, `ApprovedBy`, and `ApprovedAtUtc` are shown in the UI as approval metadata; `Activate` and `AllowUserOverride` are described in the next section.
+
+### Enabling an assistant plugin for your colleagues
+
+An approval only says that an assistant plugin is safe. Whether it is enabled is a second decision, and it stays with your colleagues unless you make it: after a rollout the assistant is approved, but everybody still has to find it on the plugin page and switch it on. Two optional fields of an approval let you make that decision instead:
+
+```lua
+CONFIG["SETTINGS"]["DataAssistantPluginAudit.EnterpriseApprovedPlugins"] = {
+    {
+        ["PluginHash"] = "0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF",
+        ["DisplayName"] = "Corporate Translation Assistant",
+        ["Activate"] = true,
+        ["AllowUserOverride"] = true,
+    }
+}
+```
+
+`AllowUserOverride` works exactly as it does for every other managed setting: without it, what you set is locked; with it, you only provide a default.
+
+| `Activate` | `AllowUserOverride` | Result |
+| --- | --- | --- |
+| absent | any | Approved. Everybody enables the assistant themselves. This is the behavior of every approval written before these fields existed. |
+| `true` | `true` | AI Studio enables the assistant once. Your colleagues may switch it off again, and their decision survives every restart. |
+| `true` | absent | AI Studio enables the assistant and keeps it enabled. The switch on the plugin page is greyed out, and the security card says why. |
+
+A default is applied exactly once per plugin, not on every start: otherwise it would keep overruling a colleague who deliberately switched the assistant off. AI Studio forgets that it applied the default as soon as no approval asks for it anymore, so rolling the same plugin out again later takes effect again.
+
+#### Activating needs the rollout, not only the approval
+
+AI Studio only enables an assistant plugin your organization actually rolled out: one below `.config` or `.config-tests`, or one you marked with `DEPLOYED_USING_CONFIG_SERVER`, as described in [Deploying other plugin types](#deploying-other-plugin-types).
+
+The reason is the hash. An approval is matched by the plugin content alone, so it also covers a byte-identical copy a user placed in their own plugin directory. For an approval that is correct, because the hash is the code. For enabling a plugin on somebody's behalf it is not enough: you would be enforcing a copy you never shipped, cannot update, and cannot withdraw. Such a copy therefore stays approved, and nobody's settings are changed for it. AI Studio notes this in the log.
+
+#### When several configurations approve the same plugin
+
+`Activate` and `AllowUserOverride` are combined in opposite directions, so a department cannot quietly take back what your base configuration locked:
+
+- One configuration asking for the activation is enough. Not asking for it says nothing against it.
+- The freedom to switch the assistant off survives only when every configuration that asks for the activation grants it.
+
+An approval that does not ask for the activation at all says nothing about that freedom and is not counted.
 
 ### Generating the hash
 
@@ -342,6 +522,71 @@ dotnet run --project app/Build -- assistant-plugin-hash "<plugin-dir>" --lua-sni
 ```
 
 This prints the canonical hash and, with `--lua-snippet`, also prints a ready-to-paste Lua snippet for `CONFIG["SETTINGS"]`.
+
+## Local staging and testing
+
+Before you roll a configuration out through a configuration web server, you can stage it on a device and test it end to end, including the enterprise approvals for assistant plugins described above. This needs no configuration web server, no registry, policy, or environment entry, and no encryption secret.
+
+AI Studio has a dedicated directory for this: `.config-tests`. Anything stored there speaks for your organization exactly like a deployed plugin, and it takes every plugin type just like a real deployment does, so you can reproduce the directory structure of your later archive one to one. In exchange, AI Studio empties the directory on every start, so a test is valid for one session.
+
+Do not use the `.config` directory for this. It belongs to your configuration web server, and AI Studio removes everything there that your organization does not reference anymore.
+
+### The data directory
+
+Plugins live in the data directory of AI Studio:
+
+| Platform | Data directory |
+| --- | --- |
+| Windows | `%LOCALAPPDATA%\com.github.mindwork-ai.ai-studio\data` |
+| macOS | `~/Library/Application Support/com.github.mindwork-ai.ai-studio/data` |
+| Linux | `$XDG_DATA_HOME/com.github.mindwork-ai.ai-studio/data`, usually `~/.local/share/com.github.mindwork-ai.ai-studio/data` |
+| Linux (Flatpak) | `~/.var/app/org.mindworkai.AIStudio/data/com.github.mindwork-ai.ai-studio/data` |
+
+### Staging a deployment
+
+Place the files **while AI Studio is running**: the test directory is emptied whenever the app starts.
+
+1. Start AI Studio. It creates `<data directory>/plugins/.config-tests/` if it does not exist yet.
+2. Create a directory below it and place your `plugin.lua` there, e.g. `.config-tests/my-department-draft/`. The directory name is up to you here: a plugin is identified by the `ID` field inside it, not by the directory it lives in.
+3. Place every other plugin of the deployment in a subdirectory of it, e.g. `.config-tests/my-department-draft/translation-assistant/`. This mirrors the archive you will serve later, as described in [Deploying other plugin types](#deploying-other-plugin-types).
+4. AI Studio watches the plugin directory and picks everything up without a restart. The security card of the assistant then states that your organization approved it, exactly as it will after the rollout. If your approval sets `Activate`, the assistant is enabled right away, so you see the state your colleagues will start from.
+
+You can also keep an assistant plugin you are only iterating on in `<data directory>/plugins/assistants/<any name>/`. Your test configuration approves it by hash either way. The difference is that a plugin outside `.config-tests` is not protected against the user, so this variant no longer mirrors the later rollout.
+
+While a test configuration is loaded, the Information page reports it, including the directory it was staged in. After a restart, that same page tells you that a test configuration was removed, so nobody has to wonder where the directory went.
+
+What behaves like the later rollout:
+
+- The approvals for assistant plugins are honored.
+- Settings and configuration objects the test configuration manages are protected against local configuration plugins.
+- Everything staged there is protected against the user: no plugin of the test deployment can be deleted, edited, shared, or replaced through the user interface.
+- When the test configuration declares the same plugin `ID` as one your organization deployed, the test configuration wins. This is how you try out the next version of an existing configuration under its final ID.
+
+What deliberately does not:
+
+- It does not survive a restart.
+- It is not tied to a configuration ID, so nothing is withdrawn by removing an ID from your devices. A test ends as described in [Cleaning up](#cleaning-up).
+
+### Testing with a small group
+
+To let colleagues take part in the test, place the same directories on each of their devices while AI Studio runs, for example through a script, your MDM solution, or a login script. A configuration web server is not involved, and nothing has to be enabled inside AI Studio. Ordinary user accounts can take part: the data directory belongs to the user, so no administrator rights are needed to place the files.
+
+Keep in mind that everybody in the group loses the test configuration the next time they start AI Studio. Either repeat the step, or let your script place the files at every login.
+
+### Cleaning up
+
+Restart AI Studio: the test directory is emptied, the approvals are gone, and the assistant requires a security audit again. Every setting your test configuration had taken over returns to the value it had before the test, as described in [Withdrawing a configuration](#withdrawing-a-configuration).
+
+To end a test without restarting, delete the directory you created under `.config-tests` yourself. AI Studio watches the plugin directory and reacts right away, with the same result as a restart. There is no button for this on the plugin page: a test deployment carries the protection of a real one, so the user interface does not remove it. Whoever stages a test writes into the data directory anyway, so both ways are open to them.
+
+### Security note
+
+A test configuration carries the rights of an organization configuration without anybody having deployed it. Two properties keep that in check, and you should not work around either of them:
+
+- The directory is emptied on every start, so nothing staged for a test can settle in unnoticed.
+- No feature inside AI Studio writes into that directory. Importing, sharing, and deleting plugins never touch it, so a user cannot be talked into staging a configuration by opening a file.
+
+The data directory belongs to the user account, so whoever can write there can approve assistant plugins in the name of your organization until the next restart. Treat write access to the data directory as equivalent to deploying a configuration, and protect it accordingly on managed devices.
 
 ## Encrypted API Keys
 
@@ -394,3 +639,115 @@ CONFIG["LLM_PROVIDERS"][#CONFIG["LLM_PROVIDERS"]+1] = {
 ```
 
 The API key will be automatically decrypted when the configuration is loaded and stored securely in the operating system's credential store (Windows Credential Manager / macOS Keychain).
+
+## Letting users provide their own API key
+
+Sometimes you want to hand out a preconfigured provider -- a fixed host, model, and instance name
+-- without embedding a shared API key for it. Each user then brings their own key, for example
+their personal OpenAI or Anthropic account, while everything else about the provider stays exactly
+as your organization configured it.
+
+Set `AllowUserProvidedAPIKey` on the provider:
+
+```lua
+CONFIG["LLM_PROVIDERS"][#CONFIG["LLM_PROVIDERS"]+1] = {
+    ["Id"] = "9072b77d-ca81-40da-be6a-861da525ef7b",
+    ["InstanceName"] = "Corporate OpenAI GPT-4",
+    ["UsedLLMProvider"] = "OPEN_AI",
+    ["Host"] = "NONE",
+    ["Hostname"] = "",
+    ["AllowUserProvidedAPIKey"] = true,
+    ["AdditionalJsonApiParameters"] = "",
+    ["Model"] = {
+        ["Id"] = "gpt-4",
+        ["DisplayName"] = "GPT-4",
+    }
+}
+```
+
+With `AllowUserProvidedAPIKey` set, the provider still shows up as managed by your organization,
+and users still cannot change the host, model, instance name, or any other field. The settings
+page shows a key icon instead of the usual lock icon for this provider; opening it only offers the
+API key field, with everything else disabled.
+
+The flag works the same way for embedding and transcription providers:
+
+```lua
+CONFIG["EMBEDDING_PROVIDERS"][#CONFIG["EMBEDDING_PROVIDERS"]+1] = {
+    ["Id"] = "3f0a4e8c-1d6b-4a91-8f2e-7c5d9b0a4e13",
+    ["Name"] = "Corporate Embeddings",
+    ["UsedLLMProvider"] = "OPEN_AI",
+    ["Host"] = "NONE",
+    ["Hostname"] = "",
+    ["AllowUserProvidedAPIKey"] = true,
+    ["Model"] = {
+        ["Id"] = "text-embedding-3-large",
+        ["DisplayName"] = "Text Embedding 3 Large",
+    }
+}
+
+CONFIG["TRANSCRIPTION_PROVIDERS"][#CONFIG["TRANSCRIPTION_PROVIDERS"]+1] = {
+    ["Id"] = "b1c7d24f-5e83-4a06-9d1b-2f8e6a3c7d50",
+    ["Name"] = "Corporate Transcription",
+    ["UsedLLMProvider"] = "OPEN_AI",
+    ["Host"] = "NONE",
+    ["Hostname"] = "",
+    ["AllowUserProvidedAPIKey"] = true,
+    ["Model"] = {
+        ["Id"] = "whisper-1",
+        ["DisplayName"] = "Whisper",
+    }
+}
+```
+
+For embedding providers, the settings page keeps the test button available next to the key icon, so
+users can verify their own key right after entering it.
+
+This is mutually exclusive with an embedded `APIKey` on the same provider: if both are present,
+AI Studio ignores the embedded key and logs a warning, because the whole point of the flag is that
+each user manages their own key. Combine the two across different providers if you need it -- one
+provider with a shared, embedded key and another with `AllowUserProvidedAPIKey` -- but not on the
+same provider.
+
+The user's key follows the same "withdrawing a configuration" philosophy as everything else in this
+document: if your configuration stops offering this provider, AI Studio removes the provider from
+the settings but leaves the user's key in the OS keyring rather than deleting it, in case the same
+provider comes back later. See [Withdrawing a configuration](#withdrawing-a-configuration).
+
+## Giving providers your own icon
+
+By default, AI Studio shows the logo of the underlying AI provider next to each provider entry. When
+you would rather show your own project or department logo, point the optional `IconPath` field at an
+SVG file inside your configuration plugin:
+
+```lua
+CONFIG["LLM_PROVIDERS"][#CONFIG["LLM_PROVIDERS"]+1] = {
+    ["Id"] = "9072b77d-ca81-40da-be6a-861da525ef7b",
+    ["InstanceName"] = "Corporate OpenAI GPT-4",
+    ["UsedLLMProvider"] = "OPEN_AI",
+    ["Host"] = "NONE",
+    ["Hostname"] = "",
+    ["IconPath"] = "assets/project-icon.svg",
+    ["Model"] = {
+        ["Id"] = "gpt-4",
+        ["DisplayName"] = "GPT-4",
+    }
+}
+```
+
+The field works the same way for embedding and transcription providers.
+
+The path is relative to your `plugin.lua` and must stay inside the plugin directory. AI Studio
+rejects absolute paths, `..` segments, links pointing out of that directory, files which do not end
+in `.svg`, files larger than 32 KiB, and anything which is not well-formed SVG. A rejected or
+missing icon is never fatal: AI Studio logs a warning, and the provider loads with its built-in
+logo.
+
+Two things to keep in mind when you prepare the icon:
+
+- **Colors belong inside the SVG.** AI Studio shows every icon in an isolated image element, so
+  `currentColor` and CSS rules from the app do not reach it. Choose colors which work on both light
+  and dark surfaces.
+- **Your organization holds the rights.** Whatever icon you ship -- for a provider through
+  `IconPath`, or for the configuration plugin itself through its `icon.lua` -- your organization is
+  responsible for holding the rights to use it.

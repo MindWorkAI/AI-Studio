@@ -2,6 +2,17 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Incremental implementation workflow
+
+When the developer asks to implement a plan step by step, complete exactly one coherent plan item at
+a time. After each item:
+
+1. Run the relevant Rider or RustRover build through MCP and perform any other appropriate checks.
+2. Summarize the diff and any remaining problems.
+3. Suggest a short, concise commit title in US English.
+4. Stop and wait until the developer has reviewed and committed the changes before continuing.
+5. Never push the changes; the developer performs all pushes.
+
 ## Project Overview
 
 MindWork AI Studio is a cross-platform desktop application for interacting with Large Language Models (LLMs). The app uses a hybrid architecture combining a Rust Tauri runtime (for the native desktop shell) with a .NET Blazor Server web application (for the UI and business logic).
@@ -29,14 +40,44 @@ dotnet run build
 ```
 This builds the .NET app as a Tauri "sidecar" binary, which is required even for development.
 
-### Running .NET builds from an agent
-- Do not run `.NET` builds such as `dotnet run build`, `dotnet build`, or similar build commands from an agent. Codex agents can hit a known sandbox issue during `.NET` builds, typically surfacing as `CSSM_ModuleLoad()` or other sandbox-related failures.
-- Instead, ask the user to run the `.NET` build locally in their IDE and report the result back.
-- Recommend the canonical repo build flow for the user: open an IDE terminal in the repository and run `cd app/Build && dotnet run build`.
-- If the context fits better, it is also acceptable to ask the user to start the build using their IDE's built-in build action, as long as it is clear the build must be run locally by the user.
-- After asking for the build, wait for the user's feedback before diagnosing issues, making follow-up changes, or suggesting the next step.
-- Treat the user's build output, error messages, or success confirmation as the source of truth for further troubleshooting.
-- For reference: https://github.com/openai/codex/issues/4915
+### Running builds from an agent
+Agents must not start builds through their own shell: agent shells run sandboxed, and `.NET` builds
+hit a known sandbox issue there, typically surfacing as `CSSM_ModuleLoad()` or other sandbox-related
+failures (for reference: https://github.com/openai/codex/issues/4915). This applies to `dotnet run build`,
+`dotnet build`, `cargo build`, and similar commands.
+
+Instead, use the JetBrains IDE MCP servers. They execute in the IDE process, which runs outside the
+agent sandbox:
+
+- `rider` for the .NET solution at `app/MindWork AI Studio.sln`
+- `rustrover` for the Rust runtime at `runtime/`
+
+Pass the `rootFolder` parameter on every call, e.g. the absolute path of the `app` directory for Rider
+and of `runtime` for RustRover. It avoids ambiguous calls when several IDE windows are open.
+
+**Compile check of the .NET code:** start `mcp__rider__build_solution_start`, then poll
+`mcp__rider__build_solution_state` until its state is `Completed` and read `buildIsSuccess` plus the
+collected problems. `mcp__rider__get_project_problems` reports the current Problems View without
+triggering a new build.
+
+**Build script commands** such as the canonical build or the I18N collection run through the IDE
+terminal, because they are more than a solution build:
+
+```
+mcp__rider__execute_terminal_command  command: "cd app/Build && dotnet run build"
+mcp__rider__execute_terminal_command  command: "cd app/Build && dotnet run collect-i18n"
+```
+
+**Rust builds** work the same way through the matching `rustrover` tools.
+
+Notes:
+- The IDE may ask the user to confirm a terminal command. Wait for the result instead of retrying the
+  command in the agent shell.
+- When the IDE is not running or its MCP server is unavailable, fall back to asking the user to run
+  `cd app/Build && dotnet run build` locally, and wait for their feedback before diagnosing issues or
+  making follow-up changes.
+- Treat the build output, error messages, or success confirmation as the source of truth for further
+  troubleshooting, no matter whether it came from the MCP server or from the user.
 
 ### Running Tests
 Currently, no automated test suite exists in the repository.
@@ -113,12 +154,12 @@ Plugins can configure:
 - etc.
 
 Configuration plugins provide three kinds of values:
-- **Managed settings:** simple values such as booleans, numbers, strings, enums, lists, or sets handled through `ManagedConfiguration`. These values may be locked or used as organization defaults.
+- **Managed settings:** simple values such as booleans, numbers, strings, enums, lists, or sets handled through `ManagedConfiguration`. These values may be locked or used as organization defaults. Which configuration plugin owns a locked setting is persisted in `Data.ManagedLockedConfigurations`, and organization defaults are tracked in `Data.ManagedEditableDefaults`. Both are cleaned up generically by `ManagedConfiguration.CleanupLeftOverManagedConfigurations(...)` when the owning plugin is gone. The value a setting had before a configuration plugin took it over is kept in `Data.ManagedUserValueSnapshots` and restored by that same clean-up, so removing a plugin hands the user's own value back instead of the app default.
 - **Managed configuration objects:** complex Lua tables that are persisted into `SettingsManager.ConfigurationData`, implement `IConfigurationObject`, and are cleaned up through `PluginConfigurationObject.CleanLeftOverConfigurationObjects(...)`. Examples include providers, profiles, chat templates, data sources, and document analysis policies.
 - **Live plugin content:** complex Lua tables that implement `ILivePluginContent` and are read live from running plugins instead of being persisted to `ConfigurationData`. Examples include `MANDATORY_INFOS` and `INTRODUCTIONS`. If live plugin content creates persistent side data, add a dedicated cleanup path for that side data, like mandatory-info acceptances.
 
 When adding configuration plugin capabilities:
-- For managed settings, update the corresponding data class in `app/MindWork AI Studio/Settings/DataModel/` to call `ManagedConfiguration.Register(...)`, process the setting in `PluginConfiguration.TryProcessConfiguration`, and check for leftover managed configuration in `PluginFactory.Loading.LoadAll`.
+- For managed settings, update the corresponding data class in `app/MindWork AI Studio/Settings/DataModel/` to call `ManagedConfiguration.Register(...)` and process the setting in `PluginConfiguration.TryProcessConfiguration`. Cleaning up the setting when its configuration plugin was removed needs no extra step: `ManagedConfiguration.CleanupLeftOverManagedConfigurations(...)` iterates all registered settings. Do not add per-setting cleanup calls to `PluginFactory.Loading.LoadAll`.
 - For managed configuration objects, update `PluginConfigurationObject.cs` and `PluginConfigurationObjectType.cs`, persist them in the appropriate `ConfigurationData` collection, and add cleanup via `PluginConfigurationObject.CleanLeftOverConfigurationObjects(...)`.
 - For live plugin content, add a data type implementing `ILivePluginContent`, parse it in `PluginConfiguration`, expose it through `PluginFactory`, and add any required cleanup only for persistent side data.
 - Always document the new capability in `app/MindWork AI Studio/Plugins/configuration/plugin.lua`.
@@ -206,7 +247,7 @@ Multi-level confidence scheme allows users to control which providers see which 
 - **No automated formatting for Rust or .NET files** - Never run automated formatters on Rust files (`.rs`) or .NET files (`.cs`, `.razor`, `.csproj`, etc.). Only make the minimal manual formatting changes required for the specific edit.
 - **I18N resources are generated** - Do not manually edit `app/MindWork AI Studio/Assistants/I18N/allTexts.lua`, `app/MindWork AI Studio/Plugins/languages/en-us-97dfb1ba-50c4-4440-8dfa-6575daf543c8/plugin.lua`, or `app/MindWork AI Studio/Plugins/languages/de-de-43065dbc-78d0-45b7-92be-f14c2926e2dc/plugin.lua`. These files are updated automatically by the I18N process.
 - **Spaces in paths** - Always quote paths with spaces in bash commands
-- **Agent-run .NET builds** - Do not run `.NET` builds from an agent. Ask the user to run the build locally in their IDE, preferably via `cd app/Build && dotnet run build` in an IDE terminal, then wait for their feedback before continuing.
+- **Agent-run builds** - Never start `.NET` or Rust builds in the agent's own shell; it is sandboxed. Use the `rider` and `rustrover` MCP servers instead, which build in the IDE outside that sandbox. See "Running builds from an agent" above.
 - **Debug environment** - Reads `startup.env` file with IPC credentials
 - **Production environment** - Runtime launches .NET sidecar with environment variables
 - **MudBlazor** - Component library requires DI setup in Program.cs

@@ -14,9 +14,16 @@ namespace AIStudio.Tools.PluginSystem;
 /// Loading other modules outside the plugin directory is not allowed.
 /// </remarks>
 /// <param name="pluginDirectory">The directory where the plugin is located.</param>
-public sealed class PluginLoader(string pluginDirectory) : ILuaModuleLoader
+/// <param name="allowedBaseDirectory">
+/// The directory the plugin directory must be nested in. Without it, the installed plugins directory
+/// is used. Validating a plugin before its installation needs this, because the plugin is not
+/// installed yet and lives in a staging directory outside the installed plugins directory.
+/// </param>
+public sealed class PluginLoader(string pluginDirectory, string? allowedBaseDirectory = null) : ILuaModuleLoader
 {
     private static readonly string PLUGIN_BASE_PATH = Path.Join(SettingsManager.DataDirectory, "plugins");
+
+    private readonly string baseDirectory = string.IsNullOrWhiteSpace(allowedBaseDirectory) ? PLUGIN_BASE_PATH : allowedBaseDirectory;
 
     #region Implementation of ILuaModuleLoader
 
@@ -26,11 +33,11 @@ public sealed class PluginLoader(string pluginDirectory) : ILuaModuleLoader
         // Ensure that the user doesn't try to escape the plugin directory:
         if (moduleName.Contains("..") || pluginDirectory.Contains(".."))
             return false;
-        
-        // Ensure that the plugin directory is nested in the plugin base path:
-        if (!pluginDirectory.StartsWith(PLUGIN_BASE_PATH, StringComparison.OrdinalIgnoreCase))
+
+        // Ensure that the plugin directory is nested in the allowed base directory:
+        if (!pluginDirectory.StartsWith(this.baseDirectory, StringComparison.OrdinalIgnoreCase))
             return false;
-        
+
         var path = Path.Join(pluginDirectory, $"{moduleName}.lua");
         return File.Exists(path);
     }
@@ -40,7 +47,7 @@ public sealed class PluginLoader(string pluginDirectory) : ILuaModuleLoader
     {
         var path = Path.Join(pluginDirectory, $"{moduleName}.lua");
         var code = await File.ReadAllTextAsync(path, Encoding.UTF8, cancellationToken);
-		
+
         return new(moduleName, code);
     }
 

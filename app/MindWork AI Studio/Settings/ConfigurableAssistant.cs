@@ -25,10 +25,11 @@ public enum ConfigurableAssistant
     ERI_ASSISTANT,
     DOCUMENT_ANALYSIS_ASSISTANT,
     SLIDE_BUILDER_ASSISTANT,
+    LOG_VIEWER_ASSISTANT,
+    VISUAL_BRIEFING_ASSISTANT,
+    BATCH_PROCESSING_ASSISTANT,
 
     // ReSharper disable InconsistentNaming
     I18N_ASSISTANT,
     // ReSharper restore InconsistentNaming
-
-    LOG_VIEWER_ASSISTANT,
 }

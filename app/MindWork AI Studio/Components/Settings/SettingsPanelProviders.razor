@@ -9,38 +9,48 @@
     <MudJustifiedText Typo="Typo.body1" Class="mb-3">
         @T("What we call a provider is the combination of an LLM provider such as OpenAI and a model like GPT-4o. You can configure as many providers as you want. This way, you can use the appropriate model for each task. As an LLM provider, you can also choose local providers. However, to use this app, you must configure at least one provider.")
     </MudJustifiedText>
-    <MudTable Items="@this.SettingsManager.ConfigurationData.Providers" Hover="@true" Class="border-dashed border rounded-lg">
+    <MudTable Items="@this.SettingsManager.GetAllProviders()" Hover="@true" GroupBy="@GROUP_CONFIG" Class="border-dashed border rounded-lg">
         <ColGroup>
-            <col style="width: 3em;"/>
-            <col style="width: 12em;"/>
             <col style="width: 12em;"/>
             <col/>
             <col style="width: 22em;"/>
         </ColGroup>
         <HeaderContent>
-            <MudTh>#</MudTh>
             <MudTh>@T("Instance Name")</MudTh>
-            <MudTh>@T("Provider")</MudTh>
             <MudTh>@T("Model")</MudTh>
             <MudTh>@T("Actions")</MudTh>
         </HeaderContent>
+        <GroupHeaderTemplate>
+            <MudTh Class="provider-group-header" colspan="4">
+                @if (context.Key is LLMProviders llmProvider)
+                {
+                    <ProviderLabel ProviderType="@llmProvider" Text="@llmProvider.ToName()" />
+                }
+            </MudTh>
+        </GroupHeaderTemplate>
         <RowTemplate>
-            <MudTd>@context.Num</MudTd>
-            <MudTd>@context.InstanceName</MudTd>
-            <MudTd>@context.UsedLLMProvider.ToName()</MudTd>
+            <MudTd>
+                <ProviderLabel ProviderSettings="@context" Text="@context.InstanceName" />
+            </MudTd>
             <MudTd>@this.GetLLMProviderModelName(context)</MudTd>
             <MudTd>
                 <MudStack Row="true" Class="mb-2 mt-2" Spacing="1" Wrap="Wrap.Wrap">
-                    @if (context.IsTrustedByConfiguration(this.SettingsManager))
+                    @if (context.IsTrustedForDataSourceSecurityChecks(this.SettingsManager))
                     {
-                        <MudTooltip Text="@T("This provider is trusted by your organization for data source security checks.")">
+                        <MudTooltip Text="@(context.IsSelfHosted ? T("This self-hosted provider is trusted for data source security checks.") : T("This provider is trusted by your organization for data source security checks."))">
                             <MudIconButton Color="Color.Success" Icon="@Icons.Material.Filled.VerifiedUser" Disabled="true"/>
                         </MudTooltip>
                     }
-                    @if (context.IsEnterpriseConfiguration)
+                    @if (context.IsEnterpriseConfiguration && !context.AllowUserProvidedAPIKey)
                     {
                         <MudTooltip Text="@T("This provider is managed by your organization.")">
                             <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Business" Disabled="true"/>
+                        </MudTooltip>
+                    }
+                    else if (context.IsEnterpriseConfiguration && context.AllowUserProvidedAPIKey)
+                    {
+                        <MudTooltip Text="@T("This provider is managed by your organization. You can set your own API key.")">
+                            <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Key" OnClick="@(() => this.EditLLMProvider(context))"/>
                         </MudTooltip>
                     }
                     else
@@ -66,7 +76,7 @@
         </RowTemplate>
     </MudTable>
 
-    @if(this.SettingsManager.ConfigurationData.Providers.Count == 0)
+    @if(this.SettingsManager.GetAllProviders().Count == 0)
     {
         <MudText Typo="Typo.h6" Class="mt-3">
             @T("No providers configured yet.")

@@ -78,6 +78,8 @@ Since March 2025: We have started developing the plugin system. There will be la
     </h3>
     </summary>
 
+- v26.8.1: Added Hetzner's EU-hosted inference API as a provider, along with support for the latest open-source models like DeepSeek V4, GLM 5.2, Kimi K2.7 & K3, and Qwen 3.6 & 3.8; added the Visual Briefing Assistant as a preview feature and the Batch Processing Assistant to process entire folders of documents in one run; you can now share, import, and delete plugins; greatly improved working with files, including much better Word and OpenDocument support; expanded enterprise IT support with configuration priorities, test configurations before rollout, and policies for plugin sharing and imports.
+- v26.7.3: Added support for the latest OpenAI, Anthropic, and Google models; introduced audio and video transcription, a log viewer assistant, and AI-assisted editing and code management in the Assistant Builder; expanded presentation support with OpenDocument files, speaker notes, comments, and metadata; and improved Linux integration, enterprise update controls, and reliability after waking from sleep.
 - v26.7.1: Added the assistant builder as a beta preview for creating assistant plugins without coding; assistants can now keep running in the background; improved provider capability visibility and expert overrides, expanded enterprise controls for data source behavior and trusted assistant plugins, and made chats, assistants, and source links more reliable.
 - v26.6.2: Expanded enterprise configuration options with chat defaults, custom introduction panels, trust settings for data security, and managed confidence levels; added auto-backups for app settings & the possibility to view managed profiles and chat templates.
 - v26.6.1: Increased enterprise configuration capacity for large organizations, broader Flatpak deployment support, startup and Linux package diagnostics, chat search across all workspaces, improved workspace workflows, better model discovery for self-hosted llama.cpp providers, and fixes for profile and chat template updates, workspace naming, and startup behavior.
@@ -88,8 +90,6 @@ Since March 2025: We have started developing the plugin system. There will be la
 - v0.10.0: Added support for newer models like Mistral 3 & GPT 5.2, OpenRouter as LLM and embedding provider, the possibility to use file attachments in chats, and support for images as input.
 - v0.9.51: Added support for [Perplexity](https://www.perplexity.ai/); citations added so that LLMs can provide source references (e.g., some OpenAI models, Perplexity); added support for OpenAI's Responses API so that all text LLMs from OpenAI now work in MindWork AI Studio, including Deep Research models; web searches are now possible (some OpenAI models, Perplexity).
 - v0.9.50: Added support for self-hosted LLMs using [vLLM](https://blog.vllm.ai/2023/06/20/vllm.html).
-- v0.9.46: Released our plugin system, a German language plugin, early support for enterprise environments, and configuration plugins. Additionally, we added the Pandoc integration for future data processing and file generation.
-- v0.9.45: Added chat templates to AI Studio, allowing you to create and use a library of system prompts for your chats.
  
 </details>
 
@@ -115,6 +115,9 @@ MindWork AI Studio is a free desktop app for macOS, Windows, and Linux. It provi
   - [DeepSeek](https://www.deepseek.com/en)
   - [Alibaba Cloud](https://www.alibabacloud.com) (Qwen)
   - [OpenRouter](https://openrouter.ai/)
+  - [Hetzner](https://experiments.hetzner.com) (experimental inference API running open-source models in the EU)
+  - [IONOS](https://cloud.ionos.com/managed/ai-model-hub) (AI Model Hub running open-source models in Germany)
+  - [LiteLLM](https://www.litellm.ai/) (an AI gateway you run yourself, in front of models from many providers)
   - [Hugging Face](https://huggingface.co/) using their [inference providers](https://huggingface.co/docs/inference-providers/index) such as Cerebras, Nebius, Sambanova, Novita, Hyperbolic, Together AI, Fireworks, Hugging Face
   - Self-hosted models using [llama.cpp](https://github.com/ggerganov/llama.cpp), [ollama](https://github.com/ollama/ollama), [LM Studio](https://lmstudio.ai/), and [vLLM](https://github.com/vllm-project/vllm)
   - [Groq](https://groq.com/)
@@ -213,5 +216,22 @@ MindWork AI Studio is licensed under the `FSL-1.1-MIT` license (functional sourc
 - **Future License**: Good news! The license for each release of MindWork AI Studio will automatically convert to an MIT license two years from its release date. This makes it even easier for you to use the software in the future.
 
 For more details, refer to the [LICENSE](LICENSE.md) file. This license structure ensures you have plenty of freedom to use and enjoy the software while protecting our work.
+
+</details>
+
+<details>
+    <summary>
+    <h2 style="display:inline-block">
+        Trademarks
+    </h2>
+    </summary>
+
+The license above covers our own software. It says nothing about the trademarks of other companies, so here is where AI Studio stands on those.
+
+AI Studio ships the logos of the AI providers it supports and shows them next to the matching provider entry, so you can see at a glance which service a provider connects to. All product names, logos, and trademarks are the property of their respective owners. Their use here identifies compatible services and implies no endorsement, sponsorship, or business relationship between MindWork AI Studio and these companies.
+
+Some of these logos come from the [Simple Icons](https://github.com/simple-icons/simple-icons) project, which publishes them under [CC0-1.0](https://github.com/simple-icons/simple-icons/blob/16.21.0/LICENSE.md); the trademarks themselves are not part of that release. The remaining ones were taken from the official brand resources of the respective provider. The source of every single file is documented in [the provider icon notes](app/MindWork%20AI%20Studio/wwwroot/images/provider-icons/README.md). All logos ship with AI Studio and are loaded from your device, so showing one never sends a request to the provider.
+
+Organizations can replace these logos with their own icons through a configuration plugin. When an organization does so, it is responsible for holding the rights to the icons it provides.
 
 </details>

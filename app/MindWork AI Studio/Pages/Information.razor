@@ -69,6 +69,7 @@
                     {
                         <MudListItem T="string" Icon="@Icons.Material.Outlined.Storage" Text="@this.LinuxPackageType"/>
                     }
+                    <MudListItem T="string" Icon="@Icons.Material.Outlined.InstallDesktop" Text="@this.InstallationKind"/>
                     <MudListItem T="string" Icon="@Icons.Material.Outlined.Business">
                         @switch (HasAnyActiveEnvironment)
                         {
@@ -156,6 +157,31 @@
                                                           NotConfiguredText="@T("Encryption secret: is not configured")"/>
                                 </MudCollapse>
                                 break;
+                        }
+
+                        @*
+                            A staged test configuration speaks for the organization without anybody
+                            having deployed it. We report it without the details having to be expanded:
+                        *@
+                        @if (this.testConfigPlugins.Count > 0)
+                        {
+                            <MudText Typo="Typo.body1" Class="mt-2">
+                                @T("A test configuration is active. It acts like a configuration of your organization and may, for example, approve assistant plugins. AI Studio removes it the next time you start the app.")
+                            </MudText>
+                            @foreach (var testConfigPlugin in this.testConfigPlugins)
+                            {
+                                <ConfigPluginInfoCard HeaderIcon="@Icons.Material.Filled.Science"
+                                                      HeaderText="@testConfigPlugin.Name"
+                                                      Items="@this.BuildTestConfigurationItems(testConfigPlugin)"
+                                                      ShowWarning="@true"
+                                                      WarningText="@T("Test configuration: nobody deployed this configuration. It is valid until you restart AI Studio.")"/>
+                            }
+                        }
+                        else if (PluginFactory.RemovedTestConfigurationsAtStartup > 0)
+                        {
+                            <MudText Typo="Typo.body1" Class="mt-2">
+                                @string.Format(T("AI Studio removed {0} test configuration(s) while starting. A test configuration is valid for one session: place it again while AI Studio is running."), PluginFactory.RemovedTestConfigurationsAtStartup)
+                            </MudText>
                         }
 
                         @if (this.HasEnterpriseConfigurationDetails)
@@ -250,21 +276,52 @@
                 </MudJustifiedText>
                 
                 <MudJustifiedText Class="mb-3" Typo="Typo.body1">
-                    @T("By clicking on the respective path, the path is copied to the clipboard. You might open these files with a text editor to view their contents.")
+                    @T("You can view and filter these files directly in AI Studio with the Log Viewer. Click a path to copy it to the clipboard, or use the folder button to open its location in your file manager. You can also open the files with a text editor.")
                 </MudJustifiedText>
+
+                <MudButton Variant="Variant.Filled"
+                           StartIcon="@Icons.Material.Filled.Article"
+                           Href="@Routes.ASSISTANT_LOG_VIEWER"
+                           Class="mb-3">
+                    @T("Open Log Viewer")
+                </MudButton>
                 
                 <MudText Typo="Typo.h4">
                     @T("Startup log file")
                 </MudText>
                 <MudList T="string" Class="mb-3">
-                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Folder" Text="@this.logPaths.LogStartupPath" OnClick="@(() => this.CopyStartupLogPath())"/>
+                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Folder">
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="1" Style="width: 100%; min-width: 0;">
+                            <MudLink OnClick="@this.CopyStartupLogPath" Style="min-width: 0; overflow-wrap: anywhere;">
+                                @this.logPaths.LogStartupPath
+                            </MudLink>
+                            <MudTooltip Text="@T("Open in folder")">
+                                <MudIconButton Icon="@Icons.Material.Filled.FolderOpen"
+                                               Size="Size.Medium"
+                                               Disabled="@string.IsNullOrWhiteSpace(this.logPaths.LogStartupPath)"
+                                               OnClick="@(() => this.OpenLogInFileManager(this.logPaths.LogStartupPath))"/>
+                            </MudTooltip>
+                        </MudStack>
+                    </MudListItem>
                 </MudList>
                 
                 <MudText Typo="Typo.h4">
                     @T("Usage log file")
                 </MudText>
                 <MudList T="string" Class="mb-3">
-                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Folder" Text="@this.logPaths.LogAppPath" OnClick="@(() => this.CopyAppLogPath())"/>
+                    <MudListItem T="string" Icon="@Icons.Material.Outlined.Folder">
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Spacing="1" Style="width: 100%; min-width: 0;">
+                            <MudLink OnClick="@this.CopyAppLogPath" Style="min-width: 0; overflow-wrap: anywhere;">
+                                @this.logPaths.LogAppPath
+                            </MudLink>
+                            <MudTooltip Text="@T("Open in folder")">
+                                <MudIconButton Icon="@Icons.Material.Filled.FolderOpen"
+                                               Size="Size.Medium"
+                                               Disabled="@string.IsNullOrWhiteSpace(this.logPaths.LogAppPath)"
+                                               OnClick="@(() => this.OpenLogInFileManager(this.logPaths.LogAppPath))"/>
+                            </MudTooltip>
+                        </MudStack>
+                    </MudListItem>
                 </MudList>
             </ExpansionPanel>
 
@@ -284,6 +341,8 @@
                     <ThirdPartyComponent Name="CodeBeam.MudBlazor.Extensions" Developer="Mehmet Can Karagöz & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/CodeBeamOrg/CodeBeam.MudBlazor.Extensions/blob/dev/LICENSE" RepositoryUrl="https://github.com/CodeBeamOrg/CodeBeam.MudBlazor.Extensions" UseCase="@T("This library is used to extend the MudBlazor library. It provides additional components that are not part of the MudBlazor library.")"/>
                     <ThirdPartyComponent Name="Rust" Developer="Graydon Hoare, Rust Foundation, Rust developers & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/rust-lang/rust/blob/master/LICENSE-MIT" RepositoryUrl="https://github.com/rust-lang/rust" UseCase="@T("The .NET backend cannot be started as a desktop app. Therefore, I use a second backend in Rust, which I call runtime. With Rust as the runtime, Tauri can be used to realize a typical desktop app. Thanks to Rust, this app can be offered for Windows, macOS, and Linux desktops. Rust is a great language for developing safe and high-performance software.")"/>
                     <ThirdPartyComponent Name="Tauri" Developer="Daniel Thompson-Yvetot, Lucas Nogueira, Tensor, Boscop, Serge Zaitsev, George Burton & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/tauri-apps/tauri/blob/dev/LICENSE_MIT" RepositoryUrl="https://github.com/tauri-apps/tauri" UseCase="@T("Tauri is used to host the Blazor user interface. It is a great project that allows the creation of desktop applications using web technologies. I love Tauri!")"/>
+                    <ThirdPartyComponent Name="Apache ECharts" Developer="Yi Shen, 100pah, Ovilia, kener, Apache Software Foundation & Open Source Community" LicenseName="Apache-2.0" LicenseUrl="https://github.com/apache/echarts/blob/master/LICENSE" RepositoryUrl="https://github.com/apache/echarts" UseCase="@T("Apache ECharts is embedded only in exported visual briefings that use supported data-driven charts.")"/>
+                    <ThirdPartyComponent Name="image-rs" Developer="Aurelia Molzer, Jonathan Behrens, nwin, Sergey Davidoff, Michael Schmidt, Johannes Vollmer, Sven Nilsen, Sergio Gonzalez-Martin, Radzivon Bartoshyk, Philippe Solodov, ccgn, nabijaczleweli & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/image-rs/image/blob/main/LICENSE-MIT" RepositoryUrl="https://github.com/image-rs/image" UseCase="@T("The image crate decodes and optimizes PNG, JPEG, and WebP visual assets locally before they are analyzed and embedded in visual briefings.")"/>
                     
                     @if (OperatingSystem.IsLinux())
                     {
@@ -292,6 +351,9 @@
                     }
                     
                     <ThirdPartyComponent Name="Qdrant Edge" Developer="Andrey Vasnetsov, Tim Visée, Arnaud Gourlay, Luis Cossío, Ivan Pleshkov, Roman Titov, xzfc, JojiiOfficial & Open Source Community" LicenseName="Apache-2.0" LicenseUrl="https://github.com/qdrant/qdrant/blob/master/LICENSE" RepositoryUrl="https://github.com/qdrant/qdrant" UseCase="@T("Qdrant Edge is an embedded vector database and vector similarity search engine. We use it to realize local RAG—retrieval-augmented generation—within AI Studio. Thanks for the effort and great work that has been and is being put into Qdrant.")"/>
+                    <ThirdPartyComponent Name="regex" Developer="Andrew Gallant, Alex Crichton, The Rust Project Developers & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/rust-lang/regex/blob/master/LICENSE-MIT" RepositoryUrl="https://github.com/rust-lang/regex" UseCase="@T("The regex crate detects structural and obfuscated prompt-injection patterns in untrusted document content. Its linear-time matching without backtracking keeps these scans predictable, even for hostile input.")"/>
+                    <ThirdPartyComponent Name="aho-corasick" Developer="Alfred V. Aho, Margaret J. Corasick, Andrew Gallant & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/BurntSushi/aho-corasick/blob/master/LICENSE-MIT" RepositoryUrl="https://github.com/BurntSushi/aho-corasick" UseCase="@T("The aho-corasick crate searches the fixed catalog of prompt-injection phrases in one pass, allowing AI Studio to scan large documents efficiently. We thank Alfred V. Aho and Margaret J. Corasick for publishing the algorithm in 1975, and Andrew Gallant and the Open Source Community for bringing it to Rust.")"/>
+                    <ThirdPartyComponent Name="toml" Developer="Ed Page, Alex Crichton, ordian, Eric Huss & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/toml-rs/toml/blob/main/LICENSE-MIT" RepositoryUrl="https://github.com/toml-rs/toml" UseCase="@T("The toml crate parses the embedded prompt-injection phrase catalog when the runtime starts. This keeps the detection rules separate from the Rust implementation and easier to maintain.")"/>
                     <ThirdPartyComponent Name="axum" Developer="David Pedersen, Jonas Platte, tottoto, David Mládek, Yann Simon, Tobias Bieniek, Open Source Community & Tokio Project" LicenseName="MIT" LicenseUrl="https://github.com/tokio-rs/axum/blob/main/LICENSE" RepositoryUrl="https://github.com/tokio-rs/axum" UseCase="@T("Axum is used to provide the small internal service that connects the Rust runtime with the app's user interface. This lets both parts of AI Studio exchange information while the app is running.")"/>
                     <ThirdPartyComponent Name="axum-server" Developer="Eray Karatay, Adi Salimgereyev, daxpedda & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/programatik29/axum-server/blob/master/LICENSE" RepositoryUrl="https://github.com/programatik29/axum-server" UseCase="@T("Axum server runs the internal axum service over a secure local connection. This helps AI Studio protect the communication between the Rust runtime and the user interface.")"/>
                     <ThirdPartyComponent Name="Rustls" Developer="Joe Birr-Pixton, Dirkjan Ochtman, Daniel McCarney, Brian Smith, Jacob Hoffman-Andrews, Jorge Aparicio & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/rustls/rustls/blob/main/LICENSE-MIT" RepositoryUrl="https://github.com/rustls/rustls" UseCase="@T("Rustls helps secure the internal connection between the app's user interface and the Rust runtime. This protects the local communication that AI Studio needs while it is running.")"/>
@@ -310,8 +372,11 @@
                     <ThirdPartyComponent Name="base64" Developer="Marshall Pierce, Alice Maz & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/marshallpierce/rust-base64/blob/master/LICENSE-MIT" RepositoryUrl="https://github.com/marshallpierce/rust-base64" UseCase="@T("For some data transfers, we need to encode the data in base64. This Rust library is great for this purpose.")"/>
                     <ThirdPartyComponent Name="Rust Crypto" Developer="Artyom Pavlov, Tony Arcieri, Brian Warner, Arthur Gautier, Vlad Filippov, Friedel Ziegelmayer, Nicolas Stalder & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/RustCrypto/traits/blob/master/cipher/LICENSE-MIT" RepositoryUrl="https://github.com/RustCrypto" UseCase="@T("When transferring sensitive data between Rust runtime and .NET app, we encrypt the data. We use some libraries from the Rust Crypto project for this purpose: cipher, aes, cbc, pbkdf2, hmac, and sha2. We are thankful for the great work of the Rust Crypto project.")"/>
                     <ThirdPartyComponent Name="rcgen" Developer="RustTLS developers, est31 & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/rustls/rcgen/blob/main/LICENSE" RepositoryUrl="https://github.com/rustls/rcgen" UseCase="@T("For the secure communication between the user interface and the runtime, we need to create certificates. This Rust library is great for this purpose.")"/>
-                    <ThirdPartyComponent Name="windows-registry" Developer="Microsoft, Kenny Kerr, Ryan Levick, Rafael Rivera, sivadeilra, Marijn Suijten & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/microsoft/windows-rs/blob/master/license-mit" RepositoryUrl="https://github.com/microsoft/windows-rs" UseCase="@T("This library is used to access the Windows registry. We use this for Windows enterprise environments to read the desired configuration.")"/>
+                    <ThirdPartyComponent Name="windows-rs" Developer="Microsoft, Kenny Kerr, Ryan Levick, Rafael Rivera, sivadeilra, Marijn Suijten & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/microsoft/windows-rs/blob/master/license-mit" RepositoryUrl="https://github.com/microsoft/windows-rs" UseCase="@T("The windows-rs project provides access to Windows APIs from Rust. We use several libraries from this project: windows-registry is used to read the desired configuration in Windows enterprise environments. The windows and windows-collections libraries are used to open the native Windows share dialog, e.g., when you share a plugin with others.")"/>
+                    <ThirdPartyComponent Name="objc2" Developer="Steven Sheldon, Mads Marquart, silvanshade, Dzmitry Malyshau, Felix Nemo Kaaman, adamnemecek, Samuel Sleight, Paul Mabileau & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/madsmtm/objc2/blob/main/LICENSE-MIT.txt" RepositoryUrl="https://github.com/madsmtm/objc2" UseCase="@T("The objc2 project provides access to Apple's Objective-C frameworks from Rust. On macOS, we use the libraries objc2, objc2-app-kit, and objc2-foundation to open the native macOS share sheet, e.g., when you share a plugin with others.")"/>
                     <ThirdPartyComponent Name="file-format" Developer="Mickaël Malécot & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/mmalecot/file-format/blob/main/LICENSE-MIT" RepositoryUrl="https://github.com/mmalecot/file-format" UseCase="@T("This library identifies files by their content. It is used for document streaming and as the first safety and media classification step before local audio processing.")"/>
+                    <ThirdPartyComponent Name="chardetng" Developer="Henri Sivonen & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/hsivonen/chardetng/blob/main/LICENSE-MIT" RepositoryUrl="https://github.com/hsivonen/chardetng" UseCase="@T("Text files are not always saved in the same encoding: files written on Windows often use a legacy one. chardetng recognizes which encoding a text file uses, so AI Studio can read it instead of rejecting it.")"/>
+                    <ThirdPartyComponent Name="encoding_rs" Developer="Henri Sivonen, M. Larsen, kornelski, Manish Goregaokar & Open Source Community" LicenseName="MIT & BSD-3-Clause" LicenseUrl="https://github.com/hsivonen/encoding_rs/blob/main/COPYRIGHT" RepositoryUrl="https://github.com/hsivonen/encoding_rs" UseCase="@T("Once the encoding of a text file is known, encoding_rs turns its content into the text AI Studio works with. Together with chardetng, this lets AI Studio read text, CSV, and similar files no matter which encoding they were saved in.")"/>
                     <ThirdPartyComponent Name="Symphonia" Developer="Philip Deljanov & Open Source Community" LicenseName="MPL-2.0" LicenseUrl="https://github.com/pdeljanov/Symphonia/blob/v0.6.0/LICENSE" RepositoryUrl="https://github.com/pdeljanov/Symphonia" UseCase="@T("Symphonia is used for media container demuxing and audio decoding. The exact MPL-covered source is available from the repository linked and is identified in the offline notices bundled with AI Studio.")"/>
                     <ThirdPartyComponent Name="Ropus" Developer="0x4D44, Xiph.Org, Skype Limited, Octasic, Jean-Marc Valin, Timothy B. Terriberry, CSIRO, Gregory Maxwell, Mark Borgerding, Erik de Castro Lopo, Mozilla, Amazon & Open Source Community" LicenseName="BSD-3-Clause" LicenseUrl="https://github.com/0x4D44/ropus/blob/main/LICENSE" RepositoryUrl="https://github.com/0x4d44/ropus" UseCase="@T("Ropus provides the Opus encoder and decoder used by the media pipeline.")"/>
                     <ThirdPartyComponent Name="Rubato" Developer="Henrik Enquist & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/HEnquist/rubato/blob/master/LICENSE-MIT" RepositoryUrl="https://github.com/HEnquist/rubato" UseCase="@T("We use Rubato to resample the decoded audio to 48 kHz before the Opus encoding.")"/>
@@ -328,7 +393,19 @@
                     <ThirdPartyComponent Name="ReverseMarkdown" Developer="Babu Annamalai & Open Source Community" LicenseName="MIT" LicenseUrl="https://github.com/mysticmind/reversemarkdown-net/blob/master/LICENSE" RepositoryUrl="https://github.com/mysticmind/reversemarkdown-net" UseCase="@T("This library is used to convert HTML to Markdown. This is necessary, e.g., when you provide a URL as input for an assistant.")"/>
                     <ThirdPartyComponent Name="wikEd diff" Developer="Cacycle & Open Source Community" LicenseName="None (public domain)" LicenseUrl="https://en.wikipedia.org/wiki/User:Cacycle/diff#License" RepositoryUrl="https://en.wikipedia.org/wiki/User:Cacycle/diff" UseCase="@T("This library is used to display the differences between two texts. This is necessary, e.g., for the grammar and spelling assistant.")"/>
                     <ThirdPartyComponent Name="CodeJar" Developer="Anton Medvedev" LicenseName="MIT" LicenseUrl="https://github.com/antonmedv/codejar/blob/master/LICENSE" RepositoryUrl="https://github.com/antonmedv/codejar/" UseCase="@T("CodeJar is a lightweight embeddable code editor for the browser.")"/>
+                    <ThirdPartyComponent Name="Simple Icons" Developer="Simple Icons Contributors & Open Source Community" LicenseName="CC0-1.0" LicenseUrl="https://github.com/simple-icons/simple-icons/blob/16.21.0/LICENSE.md" RepositoryUrl="https://github.com/simple-icons/simple-icons" UseCase="@T("Several of the provider logos in AI Studio use the icon paths and brand colors published by the Simple Icons project, which releases them into the public domain under CC0. The trademarks themselves are not part of that release and remain the property of their respective owners.")"/>
                 </MudGrid>
+            </ExpansionPanel>
+            <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Copyright" HeaderText="@T("Trademarks & Brand Assets")">
+                <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+                    @T("AI Studio shows the logo of an AI provider next to its entry, so you can see at a glance which service a provider connects to. All product names, logos, and trademarks are the property of their respective owners. Their use here identifies compatible services and implies no endorsement, sponsorship, or business relationship between MindWork AI Studio and these companies.")
+                </MudJustifiedText>
+                <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+                    @T("Some of these logos come from the Simple Icons project, which publishes them under CC0. The remaining ones were taken from the official brand resources of the respective provider. Every logo ships with AI Studio and is loaded from your device, so showing it never sends a request to the provider.")
+                </MudJustifiedText>
+                <MudJustifiedText Typo="Typo.body1">
+                    @T("Organizations can replace these logos with their own icons through a configuration plugin. When your organization does so, it is responsible for holding the rights to the icons it provides.")
+                </MudJustifiedText>
             </ExpansionPanel>
             <ExpansionPanel HeaderIcon="@Icons.Material.Filled.Verified" HeaderText="License: FSL-1.1-MIT">
                 <MudMarkdown Value="@LICENSE" Props="Markdown.DefaultConfig" MarkdownPipeline="Markdown.SAFE_MARKDOWN_PIPELINE"/>

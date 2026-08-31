@@ -8,4 +8,5 @@ public enum ShortcutBackend
     NONE,
     PORTAL,
     TAURI,
+    LOCAL,
 }

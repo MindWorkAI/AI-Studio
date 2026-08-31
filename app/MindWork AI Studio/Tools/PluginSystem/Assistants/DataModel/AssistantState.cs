@@ -1,4 +1,5 @@
 using AIStudio.Assistants.Dynamic;
+using AIStudio.Chat;
 using Lua;
 
 namespace AIStudio.Tools.PluginSystem.Assistants.DataModel;
@@ -11,6 +12,7 @@ public sealed class AssistantState
     public readonly Dictionary<string, bool> Booleans = new(StringComparer.Ordinal);
     public readonly Dictionary<string, WebContentState> WebContent = new(StringComparer.Ordinal);
     public readonly Dictionary<string, FileContentState> FileContent = new(StringComparer.Ordinal);
+    public readonly Dictionary<string, FileAttachmentState> FileAttachments = new(StringComparer.Ordinal);
     public readonly Dictionary<string, string> Colors = new(StringComparer.Ordinal);
     public readonly Dictionary<string, string> Dates = new(StringComparer.Ordinal);
     public readonly Dictionary<string, string> DateRanges = new(StringComparer.Ordinal);
@@ -24,6 +26,7 @@ public sealed class AssistantState
         this.Booleans.Clear();
         this.WebContent.Clear();
         this.FileContent.Clear();
+        this.FileAttachments.Clear();
         this.Colors.Clear();
         this.Dates.Clear();
         this.DateRanges.Clear();
@@ -43,6 +46,7 @@ public sealed class AssistantState
         CopyDictionary(other.Booleans, this.Booleans);
         CopyDictionary(other.WebContent, this.WebContent);
         CopyDictionary(other.FileContent, this.FileContent);
+        CopyDictionary(other.FileAttachments, this.FileAttachments);
         CopyDictionary(other.Colors, this.Colors);
         CopyDictionary(other.Dates, this.Dates);
         CopyDictionary(other.DateRanges, this.DateRanges);
@@ -143,6 +147,22 @@ public sealed class AssistantState
             return true;
         }
 
+        if (this.FileAttachments.TryGetValue(fieldName, out var fileAttachmentState))
+        {
+            expectedType = "string[]";
+            if (value.TryRead<LuaTable>(out var fileAttachmentTable))
+            {
+                fileAttachmentState.DocumentPaths = ReadFileAttachmentValues(fileAttachmentTable);
+                return true;
+            }
+
+            if (!value.TryRead<string>(out var fileAttachmentValue))
+                return false;
+
+            fileAttachmentState.DocumentPaths = string.IsNullOrWhiteSpace(fileAttachmentValue) ? [] : [FileAttachment.FromPath(fileAttachmentValue)];
+            return true;
+        }
+
         if (this.Colors.ContainsKey(fieldName))
         {
             expectedType = "string";
@@ -231,6 +251,11 @@ public sealed class AssistantState
             return webContentValue.Content;
         if (this.FileContent.TryGetValue(name, out var fileContentValue))
             return fileContentValue.Content;
+        if (this.FileAttachments.TryGetValue(name, out var fileAttachmentsValue))
+            return AssistantLuaConversion.CreateLuaArray(
+                fileAttachmentsValue.DocumentPaths
+                    .OrderBy(static attachment => attachment.FilePath, StringComparer.Ordinal)
+                    .Select(static attachment => attachment.FilePath));
         if (this.Colors.TryGetValue(name, out var colorValue))
             return colorValue;
         if (this.Dates.TryGetValue(name, out var dateValue))
@@ -295,6 +320,19 @@ public sealed class AssistantState
         {
             if (entry.Value.TryRead<string>(out var value) && !string.IsNullOrWhiteSpace(value))
                 parsedValues.Add(value);
+        }
+
+        return parsedValues;
+    }
+
+    private static HashSet<FileAttachment> ReadFileAttachmentValues(LuaTable values)
+    {
+        var parsedValues = new HashSet<FileAttachment>();
+
+        foreach (var entry in values)
+        {
+            if (entry.Value.TryRead<string>(out var value) && !string.IsNullOrWhiteSpace(value))
+                parsedValues.Add(FileAttachment.FromPath(value));
         }
 
         return parsedValues;

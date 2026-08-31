@@ -1,6 +1,6 @@
 [package]
 name = "mindwork-ai-studio"
-version = "26.7.3"
+version = "26.8.2"
 edition = "2024"
 description = "MindWork AI Studio"
 authors = ["Thorsten Sommer"]
@@ -39,7 +39,19 @@ pbkdf2 = "0.13.0"
 hmac = "0.13.0"
 sha2 = "0.11.0"
 rcgen = { version = "0.14.8", features = ["pem"] }
-file-format = "0.29.0"
+
+# The readers are needed to identify a file by its content instead of its extension: zip covers
+# OOXML and ODF, cfb the legacy Office formats, txt tells actual text from binary data, and exe
+# recognizes executables which carry a harmless extension. Without them, every ZIP-based document
+# is only detected as a plain archive.
+file-format = { version = "0.29.0", features = ["reader-zip", "reader-cfb", "reader-txt", "reader-exe"] }
+
+# Text files are not always UTF-8: on Windows they are frequently encoded in Windows-1252, whose
+# umlauts are single bytes and therefore invalid UTF-8. chardetng guesses the encoding, encoding_rs
+# decodes it.
+chardetng = "1.0.0"
+encoding_rs = "0.8.35"
+
 symphonia = { version = "0.6", default-features = false, features = ["aac", "aiff", "alac", "caf", "flac", "isomp4", "mkv", "mp1", "mp2", "mp3", "ogg", "pcm", "vorbis", "wav"] }
 ropus = "=0.12.18"
 rubato = { version = "4", default-features = false, features = ["fft_resampler"] }
@@ -49,12 +61,21 @@ pdfium-render = "0.9.1"
 sys-locale = "0.3.2"
 whoami = "2.1.2"
 cfg-if = "1.0.4"
-pptx-to-md = "0.4.0"
+pptx-to-md = "1.0.0"
+docx-to-md = "0.1.0"
 tempfile = "3.27.0"
 strum_macros = "0.28.0"
 sysinfo = "0.39.6"
 bytes = "1.12.1"
 qdrant-edge = "0.7.2"
+
+# Prompt-injection detection. `regex` gives us linear-time matching without backtracking, so
+# a hostile document cannot make a scan blow up, and `aho-corasick` matches the ~1600 fixed
+# phrases in one pass no matter how long that list grows.
+regex = "1.13.1"
+aho-corasick = "1.1.5"
+toml = "1.1.4"
+image = { version = "0.25.10", default-features = false, features = ["jpeg", "png", "webp"] }
 
 [patch.crates-io]
 # Issue: It was not possible to build qdrant-edge for macOS. See PR 9312: https://github.com/qdrant/qdrant/pull/9312
@@ -68,9 +89,14 @@ permutation_iterator = { git = "https://github.com/SommerEngineering/permutation
 [target.'cfg(target_os = "windows")'.dependencies]
 windows-registry = "0.6.1"
 windows-native-keyring-store = "1.1.0"
+windows = { version = "=0.61.3", features = ["ApplicationModel_DataTransfer", "Foundation", "Foundation_Collections", "Storage", "Storage_Streams", "Win32_Foundation", "Win32_System_WinRT", "Win32_UI_Shell"] }
+windows-collections = "=0.2.0"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 apple-native-keyring-store = { version = "1.0.0", features = ["keychain"] }
+objc2 = "0.6.3"
+objc2-app-kit = { version = "0.3.2", features = ["NSResponder", "NSSharingService", "NSView"] }
+objc2-foundation = { version = "0.3.2", features = ["NSArray", "NSGeometry", "NSString", "NSURL"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 ashpd = { version = "0.13.12", default-features = false, features = ["tokio", "open_uri", "global_shortcuts"] }
@@ -100,4 +126,26 @@ opt-level = 3
 opt-level = 3
 
 [profile.dev.package.webm-iterable]
+opt-level = 3
+
+# Scanning a document for prompt injections is just as CPU-heavy, and unoptimized matching
+# engines dominate it completely: a 1580-page PDF takes about 3 seconds to scan when these
+# crates are optimized and over a minute when they are not. Without this, every developer
+# measuring the app against a large document measures the build profile instead of the scan.
+# The engines are `regex-automata` and `aho-corasick`; `regex` is the wrapper around the
+# former, `regex-syntax` compiles the ~1600 phrases once at startup, and `memchr` provides
+# the SIMD prefilters both engines rely on.
+[profile.dev.package.regex]
+opt-level = 3
+
+[profile.dev.package.regex-automata]
+opt-level = 3
+
+[profile.dev.package.regex-syntax]
+opt-level = 3
+
+[profile.dev.package.aho-corasick]
+opt-level = 3
+
+[profile.dev.package.memchr]
 opt-level = 3

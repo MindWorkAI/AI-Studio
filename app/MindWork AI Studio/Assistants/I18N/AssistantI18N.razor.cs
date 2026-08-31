@@ -67,7 +67,7 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
             #if DEBUG
             AsyncAction = async () => await this.WriteToPluginFile(),
             #else
-            AsyncAction = async () => await this.RustService.CopyText2Clipboard(this.Snackbar, this.finalLuaCode.ToString()),
+            AsyncAction = async () => await this.RustService.CopyText2Clipboard(this.finalLuaCode.ToString()),
             #endif
             DisabledActionParam = () => this.finalLuaCode.Length == 0,
         },
@@ -90,7 +90,7 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
             this.customTargetLanguage = string.Empty;
         }
 
-        _ = this.OnChangedLanguage();
+        this.OnChangedLanguage().Observe($"{nameof(AssistantI18N)}: applying a language change");
     }
     
     protected override bool MightPreselectValues()
@@ -478,13 +478,13 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
     {
         if (this.selectedLanguagePlugin is null)
         {
-            this.Snackbar.Add(T("No language plugin selected."), Severity.Error);
+            await this.MessageBus.SendError(new(Icons.Material.Filled.Translate, T("No language plugin selected.")));
             return;
         }
 
         if (this.finalLuaCode.Length == 0)
         {
-            this.Snackbar.Add(T("No Lua code generated yet."), Severity.Error);
+            await this.MessageBus.SendError(new(Icons.Material.Filled.Code, T("No Lua code generated yet.")));
             return;
         }
 
@@ -500,7 +500,7 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
             if (!File.Exists(pluginFilePath))
             {
                 this.Logger.LogError("Plugin file not found: {PluginFilePath}.", pluginFilePath);
-                this.Snackbar.Add(T("Plugin file not found."), Severity.Error);
+                await this.MessageBus.SendError(new(Icons.Material.Filled.FindInPage, T("Plugin file not found.")));
                 return;
             }
 
@@ -514,7 +514,7 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
             if (markerIndex == -1)
             {
                 this.Logger.LogError("Could not find 'UI_TEXT_CONTENT = {{}}' marker in plugin file: {PluginFilePath}", pluginFilePath);
-                this.Snackbar.Add(T("Could not find 'UI_TEXT_CONTENT = {}' marker in plugin file."), Severity.Error);
+                await this.MessageBus.SendError(new(Icons.Material.Filled.FindInPage, T("Could not find 'UI_TEXT_CONTENT = {}' marker in plugin file.")));
                 return;
             }
 
@@ -524,12 +524,12 @@ public partial class AssistantI18N : AssistantBaseCore<SettingsDialogI18N>
 
             // Write the updated content back to the file:
             await File.WriteAllTextAsync(pluginFilePath, newContent);
-            this.Snackbar.Add(T("Successfully updated plugin file."), Severity.Success);
+            await this.MessageBus.SendSuccess(new(Icons.Material.Filled.Translate, T("Successfully updated plugin file.")));
         }
         catch (Exception ex)
         {
             this.Logger.LogError(ex, "Error writing to plugin file.");
-            this.Snackbar.Add(T("Error writing to plugin file."), Severity.Error);
+            await this.MessageBus.SendError(new(Icons.Material.Filled.Translate, T("Error writing to plugin file.")));
         }
     }
     #endif

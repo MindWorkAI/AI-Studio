@@ -106,7 +106,9 @@ public sealed class ProviderAlibabaCloud() : BaseProvider(LLMProviders.ALIBABA_C
         var result = await this.LoadModels(["q"], SecretStoreType.LLM_PROVIDER, token, apiKeyProvisional);
         return result with
         {
-            Models = [..result.Models.Concat(additionalModels).OrderBy(x => x.Id)]
+            // The API is the authority: when it reports a model we also keep as a fallback above,
+            // its entry comes first and the fallback is dropped.
+            Models = [..result.Models.Concat(additionalModels).DistinctBy(x => x.Id).OrderBy(x => x.Id)]
         };
     }
 
@@ -128,7 +130,9 @@ public sealed class ProviderAlibabaCloud() : BaseProvider(LLMProviders.ALIBABA_C
         var result = await this.LoadModels(["text-embedding-"], SecretStoreType.EMBEDDING_PROVIDER, token, apiKeyProvisional);
         return result with
         {
-            Models = [..result.Models.Concat(additionalModels).OrderBy(x => x.Id)]
+            // The API is the authority: when it reports a model we also keep as a fallback above,
+            // its entry comes first and the fallback is dropped.
+            Models = [..result.Models.Concat(additionalModels).DistinctBy(x => x.Id).OrderBy(x => x.Id)]
         };
     }
 

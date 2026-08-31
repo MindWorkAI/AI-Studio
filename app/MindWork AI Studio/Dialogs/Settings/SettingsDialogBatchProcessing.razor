@@ -1,0 +1,81 @@
+@using AIStudio.Assistants.BatchProcessing
+@using AIStudio.Settings
+@using AIStudio.Settings.DataModel
+@using AIStudio.Tools.Rust
+@inherits SettingsDialogBase
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6" Class="d-flex align-center">
+            <MudIcon Icon="@Icons.Material.Filled.BatchPrediction" Class="mr-2"/>
+            @T("Assistant: Batch Processing defaults")
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudPaper Class="pa-3 mb-8 border-dashed border rounded-lg">
+            <ConfigurationOption OptionDescription="@T("Preselect batch processing options?")" LabelOn="@T("Batch processing options are preselected")" LabelOff="@T("No batch processing options are preselected")" State="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.PreselectOptions)" StateUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.PreselectOptions = value)" OptionHelp="@T("When enabled, new batch runs start with the defaults configured below.")" IsLocked="() => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.PreselectOptions, out var meta) && meta.IsLocked"/>
+
+            <MudText Typo="Typo.h6" Class="mb-3">@T("Input")</MudText>
+            <ConfigurationDirectory OptionDescription="@T("Default input folder")" Disabled="@this.DefaultsDisabled" DirectoryDialogTitle="@T("Select the default input folder")" Text="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.InputDirectory)" TextUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.InputDirectory = value)" OptionHelp="@T("Leave empty when an input folder should be selected for every batch run.")" IsLocked="() => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.InputDirectory, out var meta) && meta.IsLocked"/>
+            <ConfigurationText OptionDescription="@T("Default file patterns")" Disabled="@this.DefaultsDisabled" Icon="@Icons.Material.Filled.FilterAlt" Text="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.FilePatterns)" TextUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.FilePatterns = value)" ResetValue="@(() => DataBatchProcessing.DEFAULT_FILE_PATTERNS)" ResetButtonText="@T("Restore default patterns")" OptionHelp="@T("Separate multiple file patterns with a semicolon, e.g., *.pdf;*.docx. The standard patterns include all supported audio and video formats.")" IsLocked="() => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.FilePatterns, out var meta) && meta.IsLocked"/>
+            <ConfigurationOption OptionDescription="@T("Include subfolders by default?")" Disabled="@this.DefaultsDisabled" LabelOn="@T("Subfolders are included")" LabelOff="@T("Only the selected folder is processed")" State="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.IncludeSubdirectories)" StateUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.IncludeSubdirectories = value)" IsLocked="() => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.IncludeSubdirectories, out var meta) && meta.IsLocked"/>
+
+            <MudText Typo="Typo.h6" Class="mb-3 mt-6">@T("Instructions")</MudText>
+            <ConfigurationSelect OptionDescription="@T("Default source of the instructions")" Disabled="@this.DefaultsDisabled" SelectedValue="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.PromptSource)" Data="@this.PromptSourceData" SelectionUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.PromptSource = value)" IsLocked="() => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.PromptSource, out var meta) && meta.IsLocked"/>
+            @if (this.SettingsManager.ConfigurationData.BatchProcessing.PromptSource is BatchProcessingPromptSource.FREE_PROMPT)
+            {
+                <ReadFileContent Text="@T("Load default prompt from file")" FileContent="@this.SettingsManager.ConfigurationData.BatchProcessing.FreePrompt" FileContentChanged="@this.UpdateFreePromptFromFileAsync" EnableDragDrop="true" Layer="@DropLayers.DIALOGS" CatchAllDocuments="true" Disabled="@this.FreePromptImportDisabled()"/>
+                <ConfigurationText OptionDescription="@T("Default prompt")" Disabled="@this.DefaultsDisabled" Icon="@Icons.Material.Filled.EditNote" NumLines="5" MaxLines="26" Text="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.FreePrompt)" TextUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.FreePrompt = value)" OptionHelp="@T("These instructions are applied to every document of a new batch run.")" IsLocked="() => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.FreePrompt, out var meta) && meta.IsLocked"/>
+            }
+            else if (this.SettingsManager.ConfigurationData.BatchProcessing.PromptSource is BatchProcessingPromptSource.FILE_IMPORT)
+            {
+                <ReadFileContent Text="@T("Load default Markdown instructions file")" Filter="@([FileTypes.MARKDOWN])" FilePathLoaded="@this.UpdatePromptFilePathAsync" EnableDragDrop="true" Layer="@DropLayers.DIALOGS" CatchAllDocuments="true" Disabled="@this.PromptFileImportDisabled()"/>
+                <ConfigurationFile OptionDescription="@T("Default Markdown instructions file")" Disabled="@this.DefaultsDisabled" Icon="@Icons.Material.Filled.Description" Text="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.PromptFilePath)" TextUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.PromptFilePath = value)" FileDialogTitle="@T("Select the default Markdown instructions file")" Filter="@([FileTypes.MARKDOWN])" OptionHelp="@T("The current content of this Markdown file is loaded whenever the defaults are applied.")" IsLocked="() => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.PromptFilePath, out var meta) && meta.IsLocked"/>
+            }
+            else
+            {
+                <ConfigurationSelect OptionDescription="@T("Default document analysis policy")" Disabled="@this.DefaultsDisabled" SelectedValue="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.PreselectedPolicyId)" Data="@this.PolicyData" SelectionUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.PreselectedPolicyId = value)" IsLocked="() => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.PreselectedPolicyId, out var meta) && meta.IsLocked"/>
+                @if (this.SelectedPolicyMissing)
+                {
+                    <MudAlert Severity="Severity.Warning" Dense="true" Class="mb-6">@T("The configured default policy no longer exists. Select another policy before starting a policy-based batch run.")</MudAlert>
+                }
+            }
+
+            <MudText Typo="Typo.h6" Class="mb-3 mt-6">@T("Output")</MudText>
+            <ConfigurationSelect OptionDescription="@T("Default output mode")" Disabled="@this.DefaultsDisabled" SelectedValue="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.OutputMode)" Data="@this.OutputModeData" SelectionUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.OutputMode = value)" IsLocked="() => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.OutputMode, out var meta) && meta.IsLocked"/>
+            @if (this.SettingsManager.ConfigurationData.BatchProcessing.OutputMode is BatchProcessingOutputMode.INDIVIDUAL_FILES)
+            {
+                <ConfigurationSelect OptionDescription="@T("Default file format")" Disabled="@this.DefaultsDisabled" SelectedValue="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.ResultFileFormat)" Data="@ResultFileFormatData" SelectionUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.ResultFileFormat = value)" OptionHelp="@T("Choose the format of new result files. Everything except Markdown is converted by Pandoc.")" IsLocked="() => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.ResultFileFormat, out var meta) && meta.IsLocked"/>
+            }
+            else
+            {
+                <ConfigurationText OptionDescription="@T("Default results table name")" Disabled="@this.DefaultsDisabled" Icon="@Icons.Material.Filled.Description" Text="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.CsvFileName)" TextUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.CsvFileName = value)" IsLocked="() => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.CsvFileName, out var meta) && meta.IsLocked"/>
+                <ConfigurationText OptionDescription="@T("Default result column header")" Disabled="@this.DefaultsDisabled" Icon="@Icons.Material.Filled.TableChart" Text="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.ResultColumnHeader)" TextUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.ResultColumnHeader = value)" IsLocked="() => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.ResultColumnHeader, out var meta) && meta.IsLocked"/>
+                <ConfigurationSelect OptionDescription="@T("Default column separator")" Disabled="@this.DefaultsDisabled" SelectedValue="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.CsvSeparator)" Data="@this.CsvSeparatorData" SelectionUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.CsvSeparator = value)" OptionHelp="@T("Choose which character separates the columns of new results tables.")" IsLocked="() => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.CsvSeparator, out var meta) && meta.IsLocked"/>
+                @if (this.SettingsManager.ConfigurationData.BatchProcessing.CsvSeparator is BatchProcessingCsvSeparator.CUSTOM)
+                {
+                    <ConfigurationText OptionDescription="@T("Default custom column separator")" Disabled="@this.DefaultsDisabled" Icon="@Icons.Material.Filled.Edit" Text="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.CustomCsvSeparator)" TextUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.CustomCsvSeparator = value)" Validation="@this.ValidateCustomCsvSeparator" OptionHelp="@T("Enter one punctuation or symbol character.")" IsLocked="() => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.CustomCsvSeparator, out var meta) && meta.IsLocked"/>
+                }
+            }
+            <ConfigurationDirectory OptionDescription="@T("Default output folder")" Disabled="@this.DefaultsDisabled" DirectoryDialogTitle="@T("Select the default output folder")" Text="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.OutputDirectory)" TextUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.OutputDirectory = value)" OptionHelp="@T("Leave empty to use the ai-results subfolder of the input folder.")" IsLocked="() => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.OutputDirectory, out var meta) && meta.IsLocked"/>
+
+            <MudText Typo="Typo.h6" Class="mb-3 mt-6">@T("Processing pace")</MudText>
+            @if (this.MinimumDelayIsManaged)
+            {
+                <MudAlert Severity="Severity.Info" Dense="true" Class="mb-6">@(string.Format(T("Your organization requires a pause of at least {0} seconds between files. Users can configure only the upper limit."), this.ManagedMinimumDelaySeconds))</MudAlert>
+            }
+            else
+            {
+                <ConfigurationSlider T="int" OptionDescription="@T("Default minimum pause between files")" Min="@DataBatchProcessing.MIN_DELAY_SECONDS" Max="@DataBatchProcessing.MAX_DELAY_SECONDS" Step="1" Unit="@T("seconds")" Disabled="@this.DefaultsDisabled" Value="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.MinimumDelaySeconds)" ValueUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.MinimumDelaySeconds = value)" OptionHelp="@T("The lower end of the random pause interval. AI Studio never allows less than 6 seconds.")"/>
+            }
+            <ConfigurationSlider T="int" OptionDescription="@T("Default maximum pause between files")" Min="@this.EffectiveMinimumDelaySeconds" Max="@DataBatchProcessing.MAX_DELAY_SECONDS" Step="1" Unit="@T("seconds")" Disabled="@this.DefaultsDisabled" Value="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.MaximumDelaySeconds)" ValueUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.MaximumDelaySeconds = value)" OptionHelp="@T("The upper end of the random pause interval. The app-wide maximum is 300 seconds (5 minutes).")"/>
+
+            <MudText Typo="Typo.h6" Class="mb-3 mt-6">@T("AI selection")</MudText>
+            <ConfigurationMinConfidenceSelection Disabled="@this.DefaultsDisabled" RestrictToGlobalMinimumConfidence="true" SelectedValue="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.MinimumProviderConfidence)" SelectionUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.MinimumProviderConfidence = value)" IsLocked="() => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.MinimumProviderConfidence, out var meta) && meta.IsLocked"/>
+            <ConfigurationProviderSelection Component="Components.BATCH_PROCESSING_ASSISTANT" Data="@this.AvailableLLMProviders" Disabled="@this.DefaultsDisabled" SelectedValue="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.PreselectedProvider)" SelectionUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.PreselectedProvider = value)" IsLocked="() => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.PreselectedProvider, out var meta) && meta.IsLocked"/>
+        </MudPaper>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@this.Close" Variant="Variant.Filled">@T("Close")</MudButton>
+    </DialogActions>
+</MudDialog>

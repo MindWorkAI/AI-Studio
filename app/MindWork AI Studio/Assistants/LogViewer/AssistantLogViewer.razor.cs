@@ -36,9 +36,6 @@ public partial class AssistantLogViewer : MSGComponentBase
     private RustService RustService { get; init; } = null!;
 
     [Inject]
-    private ISnackbar Snackbar { get; init; } = null!;
-
-    [Inject]
     private NavigationManager NavigationManager { get; init; } = null!;
 
     [Inject]
@@ -215,11 +212,7 @@ public partial class AssistantLogViewer : MSGComponentBase
         var path = this.CurrentLogPath;
         if (string.IsNullOrWhiteSpace(path))
         {
-            this.Snackbar.Add(T("The log file path is not available yet."), Severity.Warning, config =>
-            {
-                config.Icon = Icons.Material.Filled.Folder;
-                config.IconSize = Size.Large;
-            });
+            await this.MessageBus.SendWarning(new(Icons.Material.Filled.Folder, T("The log file path is not available yet.")));
             return;
         }
 
@@ -231,30 +224,18 @@ public partial class AssistantLogViewer : MSGComponentBase
         catch (Exception e)
         {
             this.Logger.LogWarning(e, "Could not open the log file location in the file manager.");
-            this.Snackbar.Add(T("Could not open the log file location."), Severity.Error, config =>
-            {
-                config.Icon = Icons.Material.Filled.Folder;
-                config.IconSize = Size.Large;
-            });
+            await this.MessageBus.SendError(new(Icons.Material.Filled.Folder, T("Could not open the log file location.")));
             return;
         }
 
         if (response.Success)
         {
-            this.Snackbar.Add(T("Opened the log file location."), Severity.Success, config =>
-            {
-                config.Icon = Icons.Material.Filled.FolderOpen;
-                config.IconSize = Size.Large;
-            });
+            await this.MessageBus.SendSuccess(new(Icons.Material.Filled.FolderOpen, T("Opened the log file location.")));
             return;
         }
 
         var issue = string.IsNullOrWhiteSpace(response.Issue) ? T("Unknown error") : response.Issue;
-        this.Snackbar.Add(string.Format(T("Could not open the log file location: {0}"), issue), Severity.Error, config =>
-        {
-            config.Icon = Icons.Material.Filled.Folder;
-            config.IconSize = Size.Large;
-        });
+        await this.MessageBus.SendError(new(Icons.Material.Filled.Folder, string.Format(T("Could not open the log file location: {0}"), issue)));
     }
 
     private void ClearFilters()
@@ -479,7 +460,7 @@ public partial class AssistantLogViewer : MSGComponentBase
     {
         this.StopAutoRefresh();
         this.autoRefreshCancellationTokenSource = new CancellationTokenSource();
-        _ = this.AutoRefreshLoopAsync(this.autoRefreshCancellationTokenSource.Token);
+        this.AutoRefreshLoopAsync(this.autoRefreshCancellationTokenSource.Token).Observe($"{nameof(AssistantLogViewer)}: refreshing the log automatically");
     }
 
     private void StopAutoRefresh()

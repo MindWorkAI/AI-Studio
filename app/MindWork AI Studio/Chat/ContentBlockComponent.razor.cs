@@ -10,7 +10,7 @@ namespace AIStudio.Chat;
 /// <summary>
 /// The UI component for a chat content block, i.e., for any IContent.
 /// </summary>
-public partial class ContentBlockComponent : MSGComponentBase, IAsyncDisposable
+public partial class ContentBlockComponent : MSGComponentBase
 {
     private const string CHAT_MATH_SYNC_FUNCTION = "chatMath.syncContainer";
     private const string CHAT_MATH_DISPOSE_FUNCTION = "chatMath.disposeContainer";
@@ -86,6 +86,19 @@ public partial class ContentBlockComponent : MSGComponentBase, IAsyncDisposable
     
     [Parameter]
     public Func<bool> RegenerateEnabled { get; set; } = () => false;
+
+    /// <summary>
+    /// What the export offers, used both as the label of the export button and as the title of
+    /// the save dialog.
+    /// </summary>
+    /// <remarks>
+    /// Only AI blocks can be exported, so this always names something the AI produced. In the chat
+    /// that is its response, whereas in an assistant it is the result, and there the user sees no
+    /// chat at all. Whoever renders this block knows which of the two it is. Null falls back to
+    /// the chat wording.
+    /// </remarks>
+    [Parameter]
+    public string? ExportTitle { get; set; }
     
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
@@ -96,11 +109,20 @@ public partial class ContentBlockComponent : MSGComponentBase, IAsyncDisposable
     [Inject]
     private IJSRuntime JsRuntime { get; init; } = null!;
 
+    [Inject]
+    private ILogger<ContentBlockComponent> Logger { get; init; } = null!;
+
+    [Inject]
+    private PandocAvailabilityService PandocAvailability { get; init; } = null!;
+
     private bool HideContent { get; set; }
     private bool hasRenderHash;
     private int lastRenderHash;
     private string cachedMarkdownRenderPlanInput = string.Empty;
     private MarkdownRenderPlan cachedMarkdownRenderPlan = MarkdownRenderPlan.EMPTY;
+    private string cachedMessageTablesInput = string.Empty;
+    private IReadOnlyList<MessageTable> cachedMessageTables = [];
+    private char csvSeparator = ',';
     private ElementReference mathContentContainer;
     private string lastMathRenderSignature = string.Empty;
     private bool hasActiveMathContainer;
@@ -108,12 +130,94 @@ public partial class ContentBlockComponent : MSGComponentBase, IAsyncDisposable
     private bool showToolTrace;
     private readonly HashSet<int> expandedToolInvocations = [];
 
+    /// <summary>
+    /// Whether this block can be exported.
+    /// </summary>
+    /// <remarks>
+    /// We wait for the stream to finish: half an answer is nothing anybody wants in a document,
+    /// and waiting keeps us from searching for a text which still grows with every token. Only text
+    /// can be completely exported; an image, for example, has no representation our formats could write.
+    /// </remarks>
+    private bool CanExport => this.Content is { InitialRemoteWait: false, IsStreaming: false } && this.Content.TryGetMarkdownText(out _);
+
+    /// <summary>
+    /// The tables this block holds so that the export menu can offer each of them.
+    /// </summary>
+    /// <remarks>
+    /// Cached the same way the Markdown render plan is: reading the tables means parsing the whole
+    /// message, and a block re-renders for reasons which have nothing to do with its text, such as
+    /// switching the theme, which would parse every message of a long chat again.
+    /// </remarks>
+    private IReadOnlyList<MessageTable> MessageTables
+    {
+        get
+        {
+            if (!this.Content.TryGetMarkdownText(out var markdown))
+                return [];
+
+            if (ReferenceEquals(this.cachedMessageTablesInput, markdown) || string.Equals(this.cachedMessageTablesInput, markdown, StringComparison.Ordinal))
+                return this.cachedMessageTables;
+
+            this.cachedMessageTablesInput = markdown;
+            this.cachedMessageTables = PlainFileExport.ExtractTables(markdown, this.csvSeparator);
+            return this.cachedMessageTables;
+        }
+    }
+
+    /// <summary>
+    /// Names one table in the export menu.
+    /// </summary>
+    /// <remarks>
+    /// With a single table the format alone says everything. As soon as an answer holds more than
+    /// one, the user has to be able to tell them apart: the heading above a table does that, unless
+    /// it is missing or two tables share one, and then we count them.
+    /// </remarks>
+    private string ExportLabel(MessageTable table)
+    {
+        var tables = this.MessageTables;
+        if (tables.Count < 2)
+            return table.Format.ToName();
+
+        var captionIsTelling = !string.IsNullOrWhiteSpace(table.Caption)
+                               && tables.Where(entry => entry.Ordinal != table.Ordinal).All(entry => !string.Equals(entry.Caption, table.Caption, StringComparison.Ordinal));
+
+        //
+        // The caption is the heading the model wrote, so it already carries the language of the
+        // answer and needs no translation of ours. Only the fallback, where we have to count the
+        // tables ourselves, is our own wording.
+        //
+        return captionIsTelling
+            ? $"{table.Caption} ({table.Format.ToFileExtension()})"
+            : string.Format(this.T("Table {0} ({1})"), table.Ordinal, table.Format.ToFileExtension());
+    }
+
+    /// <summary>
+    /// What the export offers, falling back to the chat wording when nobody named it.
+    /// </summary>
+    private string EffectiveExportTitle => this.ExportTitle ?? this.T("Export AI response");
+
     #region Overrides of ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
         this.RegisterStreamingEvents();
         await base.OnInitializedAsync();
+
+        //
+        // Which separator a CSV needs depends on the language, and asking for the language means
+        // waiting for the settings. The first render therefore uses the comma we start with; once
+        // we know better, we ask for another render. Nobody can have opened the export menu in
+        // between, so no file is ever written with the wrong separator.
+        //
+        var languagePlugin = await this.SettingsManager.GetActiveLanguagePlugin();
+        var separator = CsvWriter.SeparatorFor(languagePlugin.IETFTag);
+        if (separator == this.csvSeparator)
+            return;
+
+        this.csvSeparator = separator;
+        this.cachedMessageTablesInput = string.Empty;
+        this.cachedMessageTables = [];
+        await this.InvokeAsync(this.StateHasChanged);
     }
 
     protected override Task OnParametersSetAsync()
@@ -318,7 +422,13 @@ public partial class ContentBlockComponent : MSGComponentBase, IAsyncDisposable
         if (string.Equals(this.lastMathRenderSignature, mathRenderSignature, StringComparison.Ordinal))
             return;
 
-        await this.JsRuntime.InvokeVoidAsync(CHAT_MATH_SYNC_FUNCTION, this.mathContentContainer, mathRenderSignature);
+        //
+        // Remember what the browser shows only when it really got the call: otherwise, a call which was
+        // lost while the connection was down would make us skip the math rendering after the reconnect.
+        //
+        if (!await this.JsRuntime.TryInvokeVoidAsync(this.CircuitState, CHAT_MATH_SYNC_FUNCTION, this.mathContentContainer, mathRenderSignature))
+            return;
+
         this.lastMathRenderSignature = mathRenderSignature;
         this.hasActiveMathContainer = true;
     }
@@ -331,16 +441,7 @@ public partial class ContentBlockComponent : MSGComponentBase, IAsyncDisposable
             return;
         }
 
-        try
-        {
-            await this.JsRuntime.InvokeVoidAsync(CHAT_MATH_DISPOSE_FUNCTION, this.mathContentContainer);
-        }
-        catch (JSDisconnectedException)
-        {
-        }
-        catch (ObjectDisposedException)
-        {
-        }
+        await this.JsRuntime.TryInvokeVoidAsync(this.CircuitState, CHAT_MATH_DISPOSE_FUNCTION, this.mathContentContainer);
 
         this.hasActiveMathContainer = false;
         this.lastMathRenderSignature = string.Empty;
@@ -619,9 +720,47 @@ public partial class ContentBlockComponent : MSGComponentBase, IAsyncDisposable
             await this.RemoveBlockFunc(this.Content);
     }
     
-    private async Task ExportToWord()
+    /// <summary>
+    /// Exports the entire message.
+    /// </summary>
+    private async Task ExportDocument(FileExportFormat format)
     {
-        await PandocExport.ToMicrosoftWord(this.RustService, this.DialogService, T("Export Chat to Microsoft Word"), this.Content);
+        try
+        {
+            //
+            // The format itself knows who writes it, so we do not have to keep a list of formats
+            // here which would fall out of sync with the one in FileExportFormatExtensions.
+            //
+            if (format.UsesPandoc())
+                await PandocExport.ToDocument(this.RustService, this.PandocAvailability, this.EffectiveExportTitle, format, this.Content);
+            else if (this.Content.TryGetMarkdownText(out var markdown))
+                await PlainFileExport.ToFile(this.RustService, this.EffectiveExportTitle, format, markdown);
+        }
+        catch (ArgumentOutOfRangeException e)
+        {
+            await this.ReportUnknownExportFormat(e, format);
+        }
+    }
+
+    /// <summary>
+    /// Exports one table out of the message, exactly as the menu offered it.
+    /// </summary>
+    private async Task ExportTable(MessageTable table)
+    {
+        try
+        {
+            await PlainFileExport.ToFile(this.RustService, this.EffectiveExportTitle, table.Format, table.Content, table.Caption);
+        }
+        catch (ArgumentOutOfRangeException e)
+        {
+            await this.ReportUnknownExportFormat(e, table.Format);
+        }
+    }
+
+    private async Task ReportUnknownExportFormat(ArgumentOutOfRangeException exception, FileExportFormat format)
+    {
+        await this.MessageBus.SendError(new(Icons.Material.Filled.Error, string.Format(this.T("Failed to export this message, because the file format '{0}' is unknown."), format)));
+        this.Logger.LogError(exception, "Failed to export the content, because no exporter writes the format {ExportFormat}.", format);
     }
     
     private async Task RegenerateBlock()
@@ -674,16 +813,24 @@ public partial class ContentBlockComponent : MSGComponentBase, IAsyncDisposable
     private async Task OpenAttachmentsDialog()
     {
         var result = await ReviewAttachmentsDialog.OpenDialogAsync(this.DialogService, this.Content.FileAttachments.ToHashSet());
-        this.Content.FileAttachments = result.ToList();
+        this.Content.FileAttachments = [.. result];
     }
 
-    public async ValueTask DisposeAsync()
+    protected override async ValueTask DisposeResourcesAsync()
     {
         if (this.isDisposed)
             return;
 
         this.isDisposed = true;
+
+        //
+        // Our handlers close over this component, while the content belongs to the chat thread and
+        // outlives us. We only detach what is still ours, though: when this content is streaming
+        // again, another component has registered its own handlers in the meantime.
+        //
+        if (this.Content.StreamingDone == this.AfterStreaming)
+            this.Content.ResetStreamingHandlers();
+
         await this.DisposeMathContainerIfNeededAsync();
-        this.Dispose();
     }
 }

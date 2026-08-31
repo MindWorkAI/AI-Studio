@@ -102,7 +102,7 @@ Confirm the installation of the required GNOME runtime from Flathub when Flatpak
 
 #### Pandoc Extension (Strongly Recommended)
 
-Pandoc is required for essential file features, including regular file attachments in chats, importing and converting Office documents, and other document-based functionality. We therefore strongly recommend installing the Pandoc extension. AI Studio checks whether a compatible Pandoc version is already available.
+Pandoc is required for some file features, namely attaching HTML files and exporting chats as a Word document. Every other file type, PDFs, Word and OpenDocument text files, spreadsheets, and presentations among them, is read by AI Studio itself and works without Pandoc. We still recommend installing the Pandoc extension so that all file features are available. AI Studio checks whether a compatible Pandoc version is already available.
 
 For Intel/AMD, download `MindWork.AI.Studio.Plugin.Pandoc_x86_64.flatpak` and run:
 
@@ -123,7 +123,7 @@ flatpak install --user ./MindWork.AI.Studio.Plugin.Pandoc_aarch64.flatpak
 Start AI Studio from your application menu or run:
 
 ```bash
-flatpak run org.MindWorkAI.AIStudio
+flatpak run org.mindworkai.AIStudio
 ```
 
 If no application-menu entry appears, sign out of your desktop session completely and sign in again, or restart the system.

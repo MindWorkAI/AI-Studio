@@ -74,6 +74,16 @@ public enum Event
     SHOW_SUCCESS,
 
     /// <summary>
+    /// Requests display of an informational notification.
+    /// </summary>
+    SHOW_INFO,
+
+    /// <summary>
+    /// Requests display of a prompt-injection alert dialog.
+    /// </summary>
+    SHOW_PROMPT_INJECTION_ALERT,
+
+    /// <summary>
     /// Carries an event received from the Tauri runtime.
     /// </summary>
     TAURI_EVENT_RECEIVED,
@@ -302,5 +312,10 @@ public enum Event
     /// <summary>
     /// Sends content to the slide builder assistant.
     /// </summary>
-    SEND_TO_SLIDE_BUILDER_ASSISTANT
+    SEND_TO_SLIDE_BUILDER_ASSISTANT,
+
+    /// <summary>
+    /// Sends content to the Visual Briefing Assistant.
+    /// </summary>
+    SEND_TO_VISUAL_BRIEFING_ASSISTANT
 }

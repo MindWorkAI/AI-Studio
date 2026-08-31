@@ -1,0 +1,72 @@
+using System.Linq.Expressions;
+
+using AIStudio.Assistants.BatchProcessing;
+using AIStudio.Provider;
+
+namespace AIStudio.Settings.DataModel;
+
+/// <summary>
+/// Stores managed defaults for the Batch Processing Assistant.
+/// </summary>
+/// <param name="configSelection">The managed-configuration selector.</param>
+public sealed class DataBatchProcessing(Expression<Func<Data, DataBatchProcessing>>? configSelection = null)
+{
+    public const string DEFAULT_FILE_PATTERNS = "*.pdf;*.docx;*.pptx;*.xlsx;*.md;*.txt;*.mp3;*.wav;*.wave;*.aac;*.flac;*.ogg;*.opus;*.m4a;*.m4b;*.wma;*.alac;*.aif;*.aiff;*.caf;*.mp4;*.m4v;*.avi;*.mkv;*.mov;*.wmv;*.flv;*.webm";
+    public const int MIN_DELAY_SECONDS = 6;
+    public const int MAX_DELAY_SECONDS = 300;
+    public const int DEFAULT_MIN_DELAY_SECONDS = 6;
+    public const int DEFAULT_MAX_DELAY_SECONDS = 10;
+
+    /// <summary>
+    /// Initializes an unmanaged Batch Processing settings instance.
+    /// </summary>
+    public DataBatchProcessing() : this(null)
+    {
+    }
+
+    public bool PreselectOptions { get; set; } = ManagedConfiguration.Register(configSelection, value => value.PreselectOptions, false);
+
+    public string InputDirectory { get; set; } = ManagedConfiguration.Register(configSelection, value => value.InputDirectory, string.Empty);
+
+    public string OutputDirectory { get; set; } = ManagedConfiguration.Register(configSelection, value => value.OutputDirectory, string.Empty);
+
+    public string FilePatterns { get; set; } = ManagedConfiguration.Register(configSelection, value => value.FilePatterns, DEFAULT_FILE_PATTERNS);
+
+    public bool IncludeSubdirectories { get; set; } = ManagedConfiguration.Register(configSelection, value => value.IncludeSubdirectories, false);
+
+    public BatchProcessingPromptSource PromptSource { get; set; } = ManagedConfiguration.Register(configSelection, value => value.PromptSource, BatchProcessingPromptSource.FREE_PROMPT);
+
+    public string FreePrompt { get; set; } = ManagedConfiguration.Register(configSelection, value => value.FreePrompt, string.Empty);
+
+    public string PromptFilePath { get; set; } = ManagedConfiguration.Register(configSelection, value => value.PromptFilePath, string.Empty);
+
+    public string PreselectedPolicyId { get; set; } = ManagedConfiguration.Register(configSelection, value => value.PreselectedPolicyId, string.Empty);
+
+    public BatchProcessingOutputMode OutputMode { get; set; } = ManagedConfiguration.Register(configSelection, value => value.OutputMode, BatchProcessingOutputMode.INDIVIDUAL_FILES);
+
+    /// <summary>
+    /// The file format of the individual result files, one per processed document.
+    /// </summary>
+    /// <remarks>
+    /// Only formats which hold an entire answer, see FileExportFormatExtensions.ANSWER_FORMATS.
+    /// The tabular formats belong to the output mode TABLE_ONLY, which writes one table for the
+    /// whole run instead of one file per document.
+    /// </remarks>
+    public FileExportFormat ResultFileFormat { get; set; } = ManagedConfiguration.Register(configSelection, value => value.ResultFileFormat, FileExportFormat.MARKDOWN);
+
+    public string CsvFileName { get; set; } = ManagedConfiguration.Register(configSelection, value => value.CsvFileName, string.Empty);
+
+    public string ResultColumnHeader { get; set; } = ManagedConfiguration.Register(configSelection, value => value.ResultColumnHeader, string.Empty);
+
+    public BatchProcessingCsvSeparator CsvSeparator { get; set; } = ManagedConfiguration.Register(configSelection, value => value.CsvSeparator, BatchProcessingCsvSeparator.SEMICOLON);
+
+    public string CustomCsvSeparator { get; set; } = ManagedConfiguration.Register(configSelection, value => value.CustomCsvSeparator, string.Empty);
+
+    public int MinimumDelaySeconds { get; set; } = ManagedConfiguration.Register(configSelection, value => value.MinimumDelaySeconds, DEFAULT_MIN_DELAY_SECONDS);
+
+    public int MaximumDelaySeconds { get; set; } = DEFAULT_MAX_DELAY_SECONDS;
+
+    public ConfidenceLevel MinimumProviderConfidence { get; set; } = ManagedConfiguration.Register(configSelection, value => value.MinimumProviderConfidence, ConfidenceLevel.NONE);
+
+    public string PreselectedProvider { get; set; } = ManagedConfiguration.Register(configSelection, value => value.PreselectedProvider, string.Empty);
+}

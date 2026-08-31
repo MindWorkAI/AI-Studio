@@ -1,4 +1,5 @@
 ﻿using AIStudio.Provider;
+using AIStudio.Provider.HuggingFace;
 
 namespace AIStudio.Settings;
 
@@ -15,6 +16,23 @@ public static partial class ProviderExtensions
         return provider.CapabilityOverrides?.ApplyTo(automaticCapabilities) ?? automaticCapabilities;
     }
     
+    /// <summary>
+    /// Get whether the model used by the configured provider accepts images as input.
+    /// </summary>
+    /// <remarks>
+    /// Two capabilities express image input, one for a single image and one for several. Anything that
+    /// wants to know whether an image may be sent has to accept both, which is why the question is asked
+    /// here instead of at each call site: attaching a file and validating an already attached file must
+    /// never disagree about it.
+    /// </remarks>
+    /// <param name="provider">The configured provider.</param>
+    /// <returns><c>true</c> when the model accepts image input.</returns>
+    public static bool SupportsImageInput(this Provider provider)
+    {
+        var capabilities = provider.GetModelCapabilities();
+        return capabilities.Contains(Capability.SINGLE_IMAGE_INPUT) || capabilities.Contains(Capability.MULTIPLE_IMAGE_INPUT);
+    }
+
     /// <summary>
     /// Get the capabilities of a model for a specific provider.
     /// </summary>
@@ -36,11 +54,27 @@ public static partial class ProviderExtensions
             LLMProviders.DEEP_SEEK => GetModelCapabilitiesDeepSeek(model),
             LLMProviders.ALIBABA_CLOUD => GetModelCapabilitiesAlibaba(model),
             LLMProviders.PERPLEXITY => GetModelCapabilitiesPerplexity(model),
-            LLMProviders.OPEN_ROUTER => GetModelCapabilitiesOpenRouter(model),
+            LLMProviders.OPEN_ROUTER => GetModelCapabilitiesGateway(model),
+            LLMProviders.HETZNER or LLMProviders.IONOS => GetModelCapabilitiesOpenSource(model),
+            
+            //
+            // LiteLLM is a gateway just like OpenRouter, and it names its models the same way:
+            // "vendor/model", e.g. "anthropic/claude-opus-5" or "azure/gpt-5.6". So we let the
+            // gateway detection handle it, which resolves the vendor prefix and asks the
+            // provider who really knows the model. Everything it cannot place is treated as
+            // an open source model, which is the right fallback for a freely named alias:
+            //
+            LLMProviders.LITE_LLM => GetModelCapabilitiesGateway(model),
 
-            LLMProviders.GROQ => GetModelCapabilitiesOpenSource(model),
-            LLMProviders.FIREWORKS => GetModelCapabilitiesOpenSource(model),
-            LLMProviders.HUGGINGFACE => GetModelCapabilitiesOpenSource(model),
+            LLMProviders.GROQ or LLMProviders.FIREWORKS => GetModelCapabilitiesOpenSource(model),
+
+            //
+            // Hugging Face names its models the way the hub does, "org/model", which is the same
+            // shape the other gateways use. So we let the gateway detection resolve the organization
+            // and ask the provider implementation which really knows the model. The routing suffix
+            // has to go first: it says which inference provider answers, not what the model is.
+            //
+            LLMProviders.HUGGINGFACE => GetModelCapabilitiesGateway(model.WithoutRoutingSuffix()),
         
             LLMProviders.HELMHOLTZ => GetModelCapabilitiesOpenSource(model),
             LLMProviders.GWDG => GetModelCapabilitiesOpenSource(model),

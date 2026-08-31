@@ -142,7 +142,9 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, n
         var result = await this.LoadModels(SecretStoreType.LLM_PROVIDER, token, apiKeyProvisional);
         return result with
         {
-            Models = [..result.Models.Concat(additionalModels).OrderBy(x => x.Id)]
+            // The API is the authority: when it reports a model we also keep as a fallback above,
+            // its entry comes first and the fallback is dropped.
+            Models = [..result.Models.Concat(additionalModels).DistinctBy(x => x.Id).OrderBy(x => x.Id)]
         };
     }
 

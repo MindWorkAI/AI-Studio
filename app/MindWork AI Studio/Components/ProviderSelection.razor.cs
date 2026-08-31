@@ -1,5 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
-
 using AIStudio.Provider;
 using AIStudio.Settings;
 
@@ -83,7 +81,6 @@ public partial class ProviderSelection : MSGComponentBase
         _ => this.T("Uses reasoning (thinking)"),
     };
     
-    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
     private IEnumerable<AIStudio.Settings.Provider> GetAvailableProviders()
     {
         switch (this.Component)
@@ -91,37 +88,41 @@ public partial class ProviderSelection : MSGComponentBase
             case null:
                 this.Logger.LogError("Component is null! Cannot filter providers based on component settings. Missed CascadingParameter?");
                 yield break;
-            
+
             case Tools.Components.NONE:
                 this.Logger.LogError("Component is NONE! Cannot filter providers based on component settings. Used wrong component?");
                 yield break;
-            
+
             case { } component:
-                
-                // Get the minimum confidence level for this component, and/or the global minimum if enforced:
-                var minimumLevel = this.SettingsManager.GetMinimumConfidenceLevel(component);
-                
-                // Override with the explicit minimum level if set and higher:
-                if (this.ExplicitMinimumConfidence is not ConfidenceLevel.UNKNOWN && this.ExplicitMinimumConfidence > minimumLevel)
-                    minimumLevel = this.ExplicitMinimumConfidence;
-                
-                // Filter providers based on the minimum confidence level:
-                foreach (var provider in this.SettingsManager.ConfigurationData.Providers)
-                    if (provider.UsedLLMProvider != LLMProviders.NONE)
-                        if (provider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level >= minimumLevel)
-                            yield return provider;
+
+                // Filter providers based on the minimum confidence level of this component, the
+                // enforced global minimum, and the explicit minimum level when it is higher:
+                foreach (var provider in this.SettingsManager.GetConfidentProviders(component, this.ExplicitMinimumConfidence))
+                    yield return provider;
                 break;
         }
     }
 
     #region Overrides of MSGComponentBase
 
-    protected override Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
+    protected override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
     {
         if (triggeredEvent is Event.CONFIGURATION_CHANGED or Event.PLUGINS_RELOADED)
-            this.StateHasChanged();
+        {
+            //
+            // We hold a copy of the provider record, which is a snapshot taken when it was selected.
+            // Once the user edits that provider, our copy is stale and would keep showing the old
+            // name and the old icon, so we resolve it again and hand the fresh one to our parent:
+            //
+            var updatedProvider = this.SettingsManager.GetProviderById(this.ProviderSettings.Id);
+            if (updatedProvider != AIStudio.Settings.Provider.NONE && updatedProvider != this.ProviderSettings)
+            {
+                this.ProviderSettings = updatedProvider;
+                await this.ProviderSettingsChanged.InvokeAsync(updatedProvider);
+            }
 
-        return Task.CompletedTask;
+            this.StateHasChanged();
+        }
     }
 
     #endregion

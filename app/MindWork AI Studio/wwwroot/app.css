@@ -1,3 +1,21 @@
+/*
+ * This file is meant for global styling only: font faces, custom properties, and the overrides that
+ * reach into markup we do not render ourselves, such as MudBlazor internals or third-party output.
+ * Styling that belongs to a single component belongs next to that component in a `.razor.css` file,
+ * the way `Assistants/VisualBriefing/VisualBriefingAssistant.razor.css` does it.
+ *
+ * A number of component-specific blocks below do not follow that rule yet, the log viewer and the code
+ * editor being the largest. Moving them is not a matter of cutting and pasting: Blazor only adds the
+ * scope attribute to elements a component writes in its own markup, and it appends that attribute to
+ * the last part of a selector. Rules that target a MudBlazor component, markup injected through a
+ * `MarkupString`, rendered Markdown, or nodes created by JavaScript therefore stop matching once they
+ * are scoped. They have to be rewritten with `::deep`, which in turn needs an ancestor element the
+ * component itself renders. The log viewer has no such element at all today.
+ *
+ * So please do not add component-specific rules here just because a neighbouring one is already here.
+ * Nothing about a broken selector fails the build; it only looks wrong at runtime.
+ */
+
 /* roboto-300 - latin */
 @font-face {
     font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
@@ -53,9 +71,17 @@
     height: var(--mud-icon-size-large);
 }
 
-.plugin-icon-container svg {
+.plugin-icon-container img {
     width: 100%;
     height: 100%;
+    object-fit: contain;
+}
+
+.provider-icon {
+    width: 1.5em;
+    height: 1.5em;
+    object-fit: contain;
+    flex: none;
 }
 
 .mud-popover-open.InnerScrollingFix {
@@ -101,6 +127,12 @@
 /* Fix for MudBlazor, tooltips inside of navmenu */
 .mud-navmenu .mud-tooltip-root {
     display: initial !important;
+}
+
+/* MudStepperWithoutActions overrides the stepper actions with empty content. MudBlazor still renders
+   the action bar around them, which would leave an empty padded row below the last step. */
+.mud-stepper-without-actions .mud-stepper-actions {
+    display: none;
 }
 
 /* Context div for inner scrolling component */
@@ -386,4 +418,29 @@
 
 .code-editor .lua-variable {
     color: var(--mw-code-editor-variable, #267f99);
+}
+
+/*
+ * Group headers of the provider tables in the settings (LLM providers, embedding providers,
+ * transcription providers). The rule targets the entire group row, so that the expand button
+ * gets the same compact padding and shading as the header cell itself.
+ */
+tr:has(> .provider-group-header) {
+    cursor: pointer;
+}
+
+tr:has(> .provider-group-header) > .mud-table-cell {
+    padding-top: 0.25em;
+    padding-bottom: 0.25em;
+    background-color: var(--mud-palette-background-gray);
+    border-top: 1px solid var(--mud-palette-lines-default);
+    border-bottom: 1px solid var(--mud-palette-lines-default);
+}
+
+tr:has(> .provider-group-header) .mud-icon-button {
+    padding: 0.15em;
+}
+
+.provider-group-header {
+    font-weight: 600;
 }

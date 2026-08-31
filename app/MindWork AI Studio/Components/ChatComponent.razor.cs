@@ -15,7 +15,7 @@ using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Components;
 
-public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
+public partial class ChatComponent : MSGComponentBase
 {
     private readonly Guid draftMediaOwnerId = Guid.NewGuid();
     private const string CHAT_INPUT_ID = "chat-user-input";
@@ -134,7 +134,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 
         this.lastAppliedStandardDataSourceOptions = this.SettingsManager.ConfigurationData.Chat.PreselectedDataSourceOptions.CreateCopy();
 
-        var deferredInput = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_CHAT_INPUT).FirstOrDefault();
+        var deferredInput = MessageBus.INSTANCE.TakeDeferredMessages<string>(Event.SEND_TO_CHAT_INPUT).LastOrDefault();
         if (!string.IsNullOrWhiteSpace(deferredInput))
             this.ComposerState.SetUserInput(deferredInput);
 
@@ -142,16 +142,24 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         // Check for deferred messages of the kind 'SEND_TO_CHAT',
         // aka the user sends an assistant result to the chat:
         //
-        var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<ChatThread>(Event.SEND_TO_CHAT).FirstOrDefault();
-        if (deferredContent is not null)
+        var deferredRequest = MessageBus.INSTANCE.TakeDeferredMessages<ChatStartRequest>(Event.SEND_TO_CHAT).LastOrDefault();
+        if (deferredRequest is not null)
         {
             //
             // Yes, the user sent an assistant result to the chat.
             //
             
             // Use chat thread sent by the user:
-            this.ChatThread = deferredContent;
+            this.ChatThread = deferredRequest.ChatThread;
             this.ChatThread.IncludeDateTime = true;
+
+            //
+            // Apply the chat template of the incoming chat to the composer. Like everywhere else,
+            // a draft the user typed themselves wins: we must not discard it just because someone
+            // started a preconfigured chat in the meantime.
+            //
+            if (deferredRequest.ApplySelectedChatTemplateToComposer && !this.ComposerState.HasUserDraft)
+                this.ComposerState.ApplyTemplate(this.SettingsManager.GetChatTemplateById(this.ChatThread.SelectedChatTemplate));
             
             this.Logger.LogInformation($"The chat '{this.ChatThread.ChatId}' with {this.ChatThread.Blocks.Count} messages was deferred and will be rendered now.");
             this.MarkCurrentChatAsLoadedParameter();
@@ -182,7 +190,8 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 //
                 // Check if the user wants to apply the standard chat data source options:
                 //
-                if (this.SettingsManager.ConfigurationData.Chat.SendToChatDataSourceBehavior is SendToChatDataSourceBehavior.APPLY_STANDARD_CHAT_DATA_SOURCE_OPTIONS)
+                if (!deferredRequest.PreserveDataSourceOptions &&
+                    this.SettingsManager.ConfigurationData.Chat.SendToChatDataSourceBehavior is SendToChatDataSourceBehavior.APPLY_STANDARD_CHAT_DATA_SOURCE_OPTIONS)
                     this.ChatThread.DataSourceOptions = this.SettingsManager.ConfigurationData.Chat.PreselectedDataSourceOptions.CreateCopy();
 
                 //
@@ -237,7 +246,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         // component sends a message to the chat component to load
         // the chat with the bias:
         //
-        var deferredLoading = MessageBus.INSTANCE.CheckDeferredMessages<LoadChat>(Event.LOAD_CHAT).FirstOrDefault();
+        var deferredLoading = MessageBus.INSTANCE.TakeDeferredMessages<LoadChat>(Event.LOAD_CHAT).LastOrDefault();
         if (deferredLoading != default)
         {
             this.loadChat = deferredLoading;
@@ -264,11 +273,11 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private void OnMediaImportStateChanged(MediaImportOwner owner)
     {
         if (owner == this.CurrentMediaImportOwner)
-            _ = this.InvokeAsync(async () =>
+            this.InvokeAsync(async () =>
             {
                 await this.ConsumeMediaOutcomeAsync();
                 this.StateHasChanged();
-            });
+            }).Observe($"{nameof(ChatComponent)}: consuming a media import outcome");
     }
 
     /// <summary>Consumes a terminal media notification when its chat is visible.</summary>
@@ -1315,9 +1324,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 
     #endregion
     
-    #region Implementation of IAsyncDisposable
+    #region Overrides of MSGComponentBase
 
-    public async ValueTask DisposeAsync()
+    protected override async ValueTask DisposeResourcesAsync()
     {
         this.MediaTranscriptionService.StateChanged -= this.OnMediaImportStateChanged;
         if(this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
@@ -1327,7 +1336,6 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         }
 
         await this.AIJobService.SetForegroundAsync(AIJobKind.CHAT_GENERATION, this.foregroundChatId, false);
-        this.Dispose();
     }
 
     #endregion

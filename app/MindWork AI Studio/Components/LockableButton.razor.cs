@@ -18,13 +18,41 @@ public partial class LockableButton : ConfigurationBaseCore
     
     [Parameter]
     public string Class { get; set; } = string.Empty;
-    
+
+    /// <summary>
+    /// An optional tooltip for the button. It is not shown while the button is locked,
+    /// because the lock icon explains the situation in that case.
+    /// </summary>
+    [Parameter]
+    public string Tooltip { get; set; } = string.Empty;
+
+    /// <summary>
+    /// The visual variant of the button.
+    /// </summary>
+    [Parameter]
+    public Variant ButtonVariant { get; set; } = Variant.Filled;
+
+    /// <summary>
+    /// The color of the button.
+    /// </summary>
+    [Parameter]
+    public Color ButtonColor { get; set; } = Color.Primary;
+
+    /// <summary>
+    /// Should the default bottom margin be removed? Useful when the button is placed in a
+    /// toolbar instead of a settings panel.
+    /// </summary>
+    [Parameter]
+    public bool NoMargin { get; set; }
+
     #region Overrides of ConfigurationBase
 
     /// <inheritdoc />
     protected override bool Stretch => false;
 
     protected override string GetClassForBase => this.Class;
+
+    protected override string MarginClass => this.NoMargin ? string.Empty : base.MarginClass;
 
     #endregion
     

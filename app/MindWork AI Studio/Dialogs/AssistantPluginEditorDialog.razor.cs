@@ -12,10 +12,7 @@ public partial class AssistantPluginEditorDialog : MSGComponentBase
 {
     [Inject]
     protected RustService RustService { get; init; } = null!;
-    
-    [Inject]
-    protected ISnackbar Snackbar { get; init; } = null!;
-    
+
     private const string PLUGIN_FILE_NAME = "plugin.lua";
     private static readonly ILogger LOGGER = Program.LOGGER_FACTORY.CreateLogger(nameof(AssistantPluginEditorDialog));
     
@@ -32,7 +29,7 @@ public partial class AssistantPluginEditorDialog : MSGComponentBase
     private IMudDialogInstance MudDialog { get; set; } = null!;
 
     [Inject]
-    private AssistantPluginInstallService AssistantPluginInstallService { get; init; } = null!;
+    private PluginInstallService PluginInstallService { get; init; } = null!;
 
     [Parameter]
     public Guid PluginId { get; set; }
@@ -75,6 +72,14 @@ public partial class AssistantPluginEditorDialog : MSGComponentBase
                 return;
             }
 
+            // An assistant an organization rolled out must keep the content its enterprise approval
+            // was granted for, so only its IT department may change it:
+            if (this.plugin.IsManagedByConfigServer)
+            {
+                this.issue = T("Only locally managed assistant plugins can be edited.");
+                return;
+            }
+
             this.pluginFile = Path.Join(this.plugin.LocalPath, PLUGIN_FILE_NAME);
             if (!File.Exists(this.pluginFile))
             {
@@ -108,7 +113,7 @@ public partial class AssistantPluginEditorDialog : MSGComponentBase
         try
         {
             var editedLua = await this.codeEditor.GetCodeAsync();
-            var result = await this.AssistantPluginInstallService.UpdateInstalledAssistantAsync(this.plugin, editedLua, CancellationToken.None);
+            var result = await this.PluginInstallService.UpdateInstalledAssistantAsync(this.plugin, editedLua, CancellationToken.None);
             if (!result.Success)
             {
                 LOGGER.LogError($"Failed to update assistant plugin '{result.PluginName}' ({result.PluginId}) in '{result.PluginDirectory}' with issue '{result.Issue}'.");
@@ -134,7 +139,7 @@ public partial class AssistantPluginEditorDialog : MSGComponentBase
 
     private void Cancel() => this.MudDialog.Cancel();
     
-    private async Task CopyToClipboard() => await this.RustService.CopyText2Clipboard(this.Snackbar, this.Result2Copy());
+    private async Task CopyToClipboard() => await this.RustService.CopyText2Clipboard(this.Result2Copy());
 
     private static bool AreSamePath(string left, string right)
     {

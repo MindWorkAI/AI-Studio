@@ -1,5 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
-
 using AIStudio.Components;
 using AIStudio.Settings;
 using AIStudio.Tools.Services;
@@ -19,9 +17,6 @@ public abstract class SettingsDialogBase : MSGComponentBase
     [Inject]
     protected RustService RustService { get; init; } = null!;
 
-    [Inject]
-    protected ISnackbar Snackbar { get; init; } = null!;
-    
     protected readonly List<ConfigurationSelectData<string>> AvailableLLMProviders = new();
     protected readonly List<ConfigurationSelectData<string>> AvailableEmbeddingProviders = new();
     
@@ -43,18 +38,17 @@ public abstract class SettingsDialogBase : MSGComponentBase
     
     protected void Close() => this.MudDialog.Cancel();
     
-    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
     private void UpdateProviders()
     {
         this.AvailableLLMProviders.Clear();
-        foreach (var provider in this.SettingsManager.ConfigurationData.Providers)
+        foreach (var provider in this.SettingsManager.GetAllProviders())
             this.AvailableLLMProviders.Add(new (provider.InstanceName, provider.Id));
     }
     
     private void UpdateEmbeddingProviders()
     {
         this.AvailableEmbeddingProviders.Clear();
-        foreach (var provider in this.SettingsManager.ConfigurationData.EmbeddingProviders)
+        foreach (var provider in this.SettingsManager.GetAllEmbeddingProviders())
             this.AvailableEmbeddingProviders.Add(new (provider.Name, provider.Id));
     }
 
