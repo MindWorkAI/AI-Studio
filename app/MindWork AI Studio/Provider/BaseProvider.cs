@@ -1076,7 +1076,6 @@ public abstract class BaseProvider : IProvider, ISecretId
                 providerSettings,
                 chatThread.RuntimeComponent,
                 chatThread.RuntimeSelectedToolIds,
-                providerSettings.GetModelCapabilities(),
                 this.Provider.GetConfidence(settingsManager).Level,
                 settingsManager.IsToolSelectionVisible(chatThread.RuntimeComponent));
 
@@ -1281,7 +1280,15 @@ public abstract class BaseProvider : IProvider, ISecretId
             yield return content;
     }
 
-    private AIStudio.Settings.Provider CreateSettingsProvider(Model chatModel) => new()
+    /// <summary>
+    /// Describes this provider instance with the given model as configured provider settings.
+    /// </summary>
+    /// <remarks>
+    /// Anything asking about model capabilities must go through this, because the expert
+    /// capability overrides live on the settings object: a provider that builds its own settings
+    /// instance without them silently ignores what the user configured.
+    /// </remarks>
+    protected AIStudio.Settings.Provider CreateSettingsProvider(Model chatModel) => new()
     {
         UsedLLMProvider = this.Provider,
         Model = chatModel,

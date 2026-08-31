@@ -91,8 +91,10 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
             _ => systemPromptRole,
         };
 
-        // Read the model capabilities:
-        var modelCapabilities = this.Provider.GetModelCapabilities(chatModel);
+        // Read the model capabilities. Through the settings provider, so that the user's expert
+        // capability overrides apply:
+        var providerSettings = this.CreateSettingsProvider(chatModel);
+        var modelCapabilities = providerSettings.GetModelCapabilities();
         
         // Check if we are using the Responses API or the Chat Completion API:
         var usingResponsesAPI = modelCapabilities.Contains(Capability.RESPONSES_API);
@@ -176,15 +178,9 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
         IReadOnlyList<(ToolDefinition Definition, IToolImplementation Implementation)> runnableTools = toolRegistry is null
             ? []
             : await toolRegistry.GetRunnableToolsAsync(
-                new AIStudio.Settings.Provider
-                {
-                    UsedLLMProvider = this.Provider,
-                    Model = chatModel,
-                    InstanceName = this.InstanceName,
-                },
+                providerSettings,
                 chatThread.RuntimeComponent,
                 chatThread.RuntimeSelectedToolIds,
-                modelCapabilities,
                 providerConfidence,
                 settingsManager.IsToolSelectionVisible(chatThread.RuntimeComponent));
 

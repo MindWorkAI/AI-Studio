@@ -227,13 +227,13 @@ public sealed class ToolRegistry
         return items;
     }
 
-    public async Task<IReadOnlyList<(ToolDefinition Definition, IToolImplementation Implementation)>> GetRunnableToolsAsync(
-        AIStudio.Settings.Provider provider,
-        AIStudio.Tools.Components component,
-        IEnumerable<string> selectedToolIds,
-        IReadOnlyCollection<Capability> modelCapabilities,
-        ConfidenceLevel providerConfidence,
-        bool isToolSelectionVisible)
+    /// <remarks>
+    /// Model capabilities are not a parameter on purpose: they are read from the given provider,
+    /// which carries the user's expert capability overrides. Passing them in separately allowed a
+    /// caller to gate tools on capabilities that differed from the ones the availability check saw.
+    /// </remarks>
+    public async Task<IReadOnlyList<(ToolDefinition Definition, IToolImplementation Implementation)>> GetRunnableToolsAsync(AIStudio.Settings.Provider provider,
+        Components component, IEnumerable<string> selectedToolIds, ConfidenceLevel providerConfidence, bool isToolSelectionVisible)
     {
         if (!this.settingsManager.AreToolsEnabled())
         {
@@ -251,13 +251,6 @@ public sealed class ToolRegistry
         if (!toolCallingAvailability.IsAvailable)
         {
             this.logger.LogDebug("Tool calling is unavailable for provider '{Provider}' with model '{ModelId}': {Reason}", provider.InstanceName, provider.Model.Id, toolCallingAvailability.Message);
-            return [];
-        }
-
-        if (!modelCapabilities.Contains(Capability.FUNCTION_CALLING) ||
-            (!modelCapabilities.Contains(Capability.CHAT_COMPLETION_API) && !modelCapabilities.Contains(Capability.RESPONSES_API)))
-        {
-            this.logger.LogDebug("Tool calling is unavailable for provider '{Provider}' with model '{ModelId}' because the model lacks the required API or function-calling capability.", provider.InstanceName, provider.Model.Id);
             return [];
         }
 
