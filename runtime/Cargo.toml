@@ -1,6 +1,6 @@
 [package]
 name = "mindwork-ai-studio"
-version = "26.8.1"
+version = "26.8.2"
 edition = "2024"
 description = "MindWork AI Studio"
 authors = ["Thorsten Sommer"]
@@ -74,7 +74,7 @@ qdrant-edge = "0.7.2"
 # phrases in one pass no matter how long that list grows.
 regex = "1.13.1"
 aho-corasick = "1.1.5"
-toml = "1.1.4+spec-1.1.0"
+toml = "1.1.4"
 image = { version = "0.25.10", default-features = false, features = ["jpeg", "png", "webp"] }
 
 [patch.crates-io]
