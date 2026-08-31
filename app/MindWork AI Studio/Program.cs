@@ -12,6 +12,7 @@ using AIStudio.Tools.PluginSystem.Assistants;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Security;
 using AIStudio.Tools.Services;
+using AIStudio.Tools.ToolCallingSystem.Harness;
 using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations;
 using AIStudio.Tools.Web;
 
@@ -173,6 +174,7 @@ internal sealed class Program
         builder.Services.AddSingleton<IToolImplementation, SearXNGWebSearchTool>();
         builder.Services.AddSingleton<ToolRegistry>();
         builder.Services.AddSingleton<ToolExecutor>();
+        builder.Services.AddSingleton<IToolCallingLoop, ToolCallingLoop>();
         builder.Services.AddSingleton<ThreadSafeRandom>();
         builder.Services.AddSingleton<AIJobService>();
         builder.Services.AddSingleton<AssistantSessionService>();

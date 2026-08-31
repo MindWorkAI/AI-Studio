@@ -9420,9 +9420,6 @@ UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T2107463087"] = "Wir haben ve
 -- The provider '{0}' was not able to read the audio file. It probably does not support the WebM/Opus format which AI Studio sends. Please contact the provider about it.
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T2304106455"] = "Der Anbieter „{0}“ konnte die Audiodatei nicht lesen. Er unterstützt vermutlich das WebM/Opus-Format nicht, das AI Studio sendet. Bitte kontaktieren Sie den Anbieter dazu."
 
--- The provider '{0}' returned an invalid tool calling response. Check the provider's tool calling configuration and see the logs for details.
-UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T2768311456"] = "Der Anbieter '{0}' hat eine ungültige Tool-Aufruf-Antwort zurückgegeben. Überprüfen Sie die Tool-Aufruf-Konfiguration des Anbieters und sehen Sie sich die Protokolle für Details an."
-
 -- We tried to communicate with the LLM provider '{0}' (type={1}). Something was not found. The provider message is: '{2}'
 UI_TEXT_CONTENT["AISTUDIO::PROVIDER::BASEPROVIDER::T3014737766"] = "Wir haben versucht, mit dem LLM-Anbieter „{0}“ (Typ={1}) zu kommunizieren. Etwas wurde nicht gefunden. Die Nachricht des Anbieters lautet: „{2}“"
 
@@ -11333,6 +11330,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEEXTENSIONS::T4261248356"] = "Von der KI 
 
 -- Sources used by tools
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEEXTENSIONS::T535360212"] = "Quellen, die von Werkzeugen verwendet werden"
+
+-- The provider '{0}' returned an invalid tool calling response. Check the provider's tool calling configuration and see the logs for details.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::HARNESS::TOOLCALLINGMESSAGES::T2768311456"] = "Der Anbieter „{0}“ hat eine ungültige Antwort für Tool-Aufrufe zurückgegeben. Überprüfen Sie die Tool-Aufruf-Konfiguration des Anbieters und sehen Sie für weitere Details in den Protokollen nach."
 
 -- Tool
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::ITOOLIMPLEMENTATION::T3517012711"] = "Werkzeug"

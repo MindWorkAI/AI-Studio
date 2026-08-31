@@ -11,6 +11,7 @@ using AIStudio.Provider.OpenAI;
 using AIStudio.Provider.SelfHosted;
 using AIStudio.Settings;
 using AIStudio.Tools.ToolCallingSystem;
+using AIStudio.Tools.ToolCallingSystem.Harness;
 using AIStudio.Tools.MIME;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
@@ -1046,28 +1047,6 @@ public abstract class BaseProvider : IProvider, ISecretId
         var currentAssistantContent = chatThread.Blocks.LastOrDefault(x => x.Role is ChatRole.AI)?.Content as ContentText;
         currentAssistantContent?.ToolInvocations.Clear();
 
-        async Task ResetToolRuntimeStatusAsync()
-        {
-            if (currentAssistantContent is null)
-                return;
-
-            currentAssistantContent.ToolRuntimeStatus = new();
-            await currentAssistantContent.StreamingEvent();
-        }
-
-        async Task ShowToolRuntimeStatusAsync(IEnumerable<string> toolNames)
-        {
-            if (currentAssistantContent is null)
-                return;
-
-            currentAssistantContent.ToolRuntimeStatus = new ToolRuntimeStatus
-            {
-                IsRunning = true,
-                ToolNames = toolNames.ToList(),
-            };
-            await currentAssistantContent.StreamingEvent();
-        }
-
         TextMessage systemPrompt;
         if (toolRegistry is not null && toolExecutor is not null)
         {
@@ -1087,163 +1066,28 @@ public abstract class BaseProvider : IProvider, ISecretId
 
             if (runnableTools.Count > 0)
             {
-                var providerTools = runnableTools.Select(x => ProviderToolAdapters.ToChatCompletionTool(x.Definition)).ToList();
+                var adapter = new ChatCompletionToolCallingAdapter<TRequest>(requestFactory, systemPrompt, apiParameters,
+                    runnableTools.Select(x => ProviderToolAdapters.ToChatCompletionTool(x.Definition)).ToList(), runnableTools,
+                    (requestDto, requestToken) => this.ExecuteChatCompletionRequest(requestDto, requestPath, requestedSecret, headersAction, requestToken),
+                    this.InstanceName, this.logger);
 
-                var internalMessages = new List<IMessageBase>();
-                var toolCallCount = 0;
-                var toolResultCharacterCount = 0L;
-                var toolSources = new List<Source>();
-                while (true)
+                var loop = Program.SERVICE_PROVIDER.GetRequiredService<IToolCallingLoop>();
+                var loopContext = new ToolCallingLoopContext
                 {
-                    var finalResponseInstruction = ToolSelectionRules.GetToolCallsUnavailableInstruction(toolCallCount, toolResultCharacterCount);
-                    var finalResponseRequired = finalResponseInstruction is not null;
-                    var requestSystemPrompt = finalResponseRequired
-                        ? systemPrompt with
-                        {
-                            Content = $"{systemPrompt.Content}{Environment.NewLine}{Environment.NewLine}{finalResponseInstruction}",
-                        }
-                        : systemPrompt;
-                    ChatCompletionAPIRequest requestDtoBase = await requestFactory(
-                        requestSystemPrompt,
-                        apiParameters,
-                        finalResponseRequired ? null : providerTools);
-                    var requestDto = requestDtoBase with
-                    {
-                        Messages = [..requestDtoBase.Messages, ..internalMessages],
-                        Stream = false,
-                        ParallelToolCalls = requestDtoBase.Tools is null ? null : false,
-                    };
-                    var response = await this.ExecuteChatCompletionRequest(requestDto, requestPath, requestedSecret, headersAction, token);
-                    if (response is null)
-                    {
-                        await ResetToolRuntimeStatusAsync();
-                        yield break;
-                    }
+                    ChatThread = chatThread,
+                    RunnableTools = runnableTools,
+                    ToolExecutor = toolExecutor,
+                    Provider = this,
+                    CurrentAssistantContent = currentAssistantContent,
+                    ProviderInstanceName = this.InstanceName,
+                    ProviderType = this.Provider,
+                    ModelId = chatModel.Id,
+                };
 
-                    var responseChoice = response.Choices?.FirstOrDefault();
-                    if (responseChoice is null || responseChoice.Message is null)
-                    {
-                        this.logger.LogError(
-                            "The tool calling response did not contain a usable choice. ProviderInstanceName={ProviderInstanceName}, ProviderType={ProviderType}, ModelId={ModelId}, ChoiceCount={ChoiceCount}",
-                            this.InstanceName,
-                            this.Provider,
-                            chatModel.Id,
-                            response.Choices?.Count ?? 0);
-                        await ResetToolRuntimeStatusAsync();
-                        throw new ProviderRequestException(
-                            ProviderRequestFailureReason.NONE,
-                            string.Format(TB("The provider '{0}' returned an invalid tool calling response. Check the provider's tool calling configuration and see the logs for details."), this.InstanceName));
-                    }
+                await foreach (var content in loop.RunAsync(adapter, loopContext, token))
+                    yield return content;
 
-                    var responseMessage = responseChoice.Message;
-                    var toolCalls = this.PrepareChatCompletionToolCalls(responseMessage.ToolCalls ?? [], runnableTools);
-                    if (toolCalls.Count == 0)
-                    {
-                        await ResetToolRuntimeStatusAsync();
-                        if (!string.IsNullOrWhiteSpace(responseMessage.Content))
-                            yield return new ContentStreamChunk(responseMessage.Content, [..toolSources]);
-                        else if (toolCallCount > 0)
-                            yield return new ContentStreamChunk("The model completed the tool call but did not return a final answer.", [..toolSources]);
-                        else
-                        {
-                            this.logger.LogError(
-                                "The tool calling response did not contain text or tool calls. ProviderInstanceName={ProviderInstanceName}, ProviderType={ProviderType}, ModelId={ModelId}, FinishReason={FinishReason}, Role={Role}, HasReasoningContent={HasReasoningContent}",
-                                this.InstanceName,
-                                this.Provider,
-                                chatModel.Id,
-                                responseChoice.FinishReason,
-                                responseMessage.Role,
-                                !string.IsNullOrWhiteSpace(responseMessage.ReasoningContent));
-                            throw new ProviderRequestException(
-                                ProviderRequestFailureReason.NONE,
-                                string.Format(TB("The provider '{0}' returned an invalid tool calling response. Check the provider's tool calling configuration and see the logs for details."), this.InstanceName));
-                        }
-
-                        yield break;
-                    }
-
-                    if (finalResponseRequired)
-                    {
-                        await ResetToolRuntimeStatusAsync();
-                        if (!string.IsNullOrWhiteSpace(responseMessage.Content))
-                            yield return new ContentStreamChunk(responseMessage.Content, [..toolSources]);
-                        else
-                            yield return new ContentStreamChunk("The model did not return a final answer after completing the available tool calls.", [..toolSources]);
-
-                        yield break;
-                    }
-
-                    try
-                    {
-                        var validToolNames = toolCalls
-                            .Where(x => x.IsValid)
-                            .Select(x => runnableTools.FirstOrDefault(tool => tool.Definition.Function.Name.Equals(x.ToolCall.Function!.Name, StringComparison.Ordinal)).Implementation?.GetDisplayName() ?? x.ToolCall.Function!.Name!)
-                            .ToList();
-                        if (validToolNames.Count > 0)
-                            await ShowToolRuntimeStatusAsync(validToolNames);
-
-                        internalMessages.Add(new AssistantToolCallMessage
-                        {
-                            Content = responseMessage.RawContent,
-                            ReasoningContent = responseMessage.ReasoningContent,
-                            ToolCalls = toolCalls.Select(x => x.ToolCall).ToList(),
-                        });
-
-                        foreach (var preparedToolCall in toolCalls)
-                        {
-                            var toolCall = preparedToolCall.ToolCall;
-                            if (!preparedToolCall.IsValid)
-                            {
-                                toolCallCount++;
-                                var (invalidToolContent, invalidTrace, _, _) = toolExecutor.CreateInvalidToolCallResult(toolCall.Id!, toolCallCount);
-                                toolResultCharacterCount += invalidToolContent.Length;
-                                currentAssistantContent?.ToolInvocations.Add(invalidTrace);
-                                internalMessages.Add(new ToolResultMessage
-                                {
-                                    Content = invalidToolContent,
-                                    ToolCallId = toolCall.Id!,
-                                });
-                                continue;
-                            }
-
-                            var toolCallsUnavailableInstruction = ToolSelectionRules.GetToolCallsUnavailableInstruction(toolCallCount, toolResultCharacterCount);
-                            if (toolCallsUnavailableInstruction is not null)
-                            {
-                                internalMessages.Add(new ToolResultMessage
-                                {
-                                    Content = toolCallsUnavailableInstruction,
-                                    ToolCallId = toolCall.Id!,
-                                });
-                                continue;
-                            }
-
-                            toolCallCount++;
-                            var (toolContent, trace, requiredProviderConfidence, sources) = await toolExecutor.ExecuteAsync(
-                                toolCall.Id!,
-                                toolCall.Function!.Name!,
-                                toolCall.Function!.Arguments!,
-                                runnableTools,
-                                this,
-                                toolCallCount,
-                                token);
-                            toolResultCharacterCount += toolContent.Length;
-
-                            chatThread.RequireProviderConfidence(requiredProviderConfidence);
-                            toolSources.MergeSources(sources);
-                            currentAssistantContent?.ToolInvocations.Add(trace);
-                            internalMessages.Add(new ToolResultMessage
-                            {
-                                Content = toolContent,
-                                ToolCallId = toolCall.Id!,
-                            });
-                        }
-
-                    }
-                    finally
-                    {
-                        await ResetToolRuntimeStatusAsync();
-                    }
-                }
+                yield break;
             }
 
         }
@@ -1296,70 +1140,16 @@ public abstract class BaseProvider : IProvider, ISecretId
         CapabilityOverrides = this.CapabilityOverrides,
     };
 
-    private IList<PreparedChatCompletionToolCall> PrepareChatCompletionToolCalls(
-        IEnumerable<ChatCompletionToolCall?> toolCalls,
-        IReadOnlyList<(ToolDefinition Definition, IToolImplementation Implementation)> runnableTools)
+    private async Task<ChatCompletionResponse?> ExecuteChatCompletionRequest(ChatCompletionAPIRequest requestDto, string requestPath, RequestedSecret requestedSecret,
+        Action<HttpRequestHeaders>? headersAction, CancellationToken token)
     {
-        var preparedToolCalls = new List<PreparedChatCompletionToolCall>();
-        foreach (var returnedToolCall in toolCalls)
-        {
-            var toolCallId = string.IsNullOrWhiteSpace(returnedToolCall?.Id)
-                ? $"call_{Guid.NewGuid():N}"
-                : returnedToolCall.Id;
-            var returnedFunctionName = returnedToolCall?.Function?.Name;
-            var returnedArguments = returnedToolCall?.Function?.Arguments;
-            var isValid = returnedToolCall?.Function is not null &&
-                          !string.IsNullOrWhiteSpace(returnedFunctionName) &&
-                          ToolExecutor.IsValidArgumentsJson(returnedArguments);
-            var normalizedToolCall = new ChatCompletionToolCall
-            {
-                Id = toolCallId,
-                Type = string.IsNullOrWhiteSpace(returnedToolCall?.Type) ? "function" : returnedToolCall.Type,
-                AdditionalMetadata = returnedToolCall?.AdditionalMetadata ?? new Dictionary<string, JsonElement>(),
-                Function = new ChatCompletionToolFunction
-                {
-                    Name = string.IsNullOrWhiteSpace(returnedFunctionName) ? "invalid_tool_call" : returnedFunctionName,
-                    Arguments = returnedArguments ?? "{}",
-                },
-            };
+        var responseData = await this.SendRequest(RequestBuilder, token);
+        if (responseData.IsFailedAfterAllRetries)
+            return null;
 
-            if (!isValid)
-            {
-                this.logger.LogWarning("Received an invalid Chat Completions tool call. ToolCallId={ToolCallId}", toolCallId);
-                preparedToolCalls.Add(new PreparedChatCompletionToolCall(normalizedToolCall, false));
-                continue;
-            }
+        using var response = responseData.Response!;
+        return await response.Content.ReadFromJsonAsync<ChatCompletionResponse>(JSON_SERIALIZER_OPTIONS, token);
 
-            var canonicalName = runnableTools
-                .Select(x => x.Definition.Function.Name)
-                .FirstOrDefault(x => x.Equals(returnedFunctionName!.Trim(), StringComparison.Ordinal));
-            if (canonicalName is not null && !canonicalName.Equals(returnedFunctionName, StringComparison.Ordinal))
-            {
-                this.logger.LogWarning("Canonicalized tool call function name '{ReturnedFunctionName}' to '{CanonicalFunctionName}'.", returnedFunctionName, canonicalName);
-                normalizedToolCall = normalizedToolCall with
-                {
-                    Function = normalizedToolCall.Function! with
-                    {
-                        Name = canonicalName,
-                    },
-                };
-            }
-
-            preparedToolCalls.Add(new PreparedChatCompletionToolCall(normalizedToolCall, true));
-        }
-
-        return preparedToolCalls;
-    }
-
-    private readonly record struct PreparedChatCompletionToolCall(ChatCompletionToolCall ToolCall, bool IsValid);
-
-    private async Task<ChatCompletionResponse?> ExecuteChatCompletionRequest(
-        ChatCompletionAPIRequest requestDto,
-        string requestPath,
-        RequestedSecret requestedSecret,
-        Action<HttpRequestHeaders>? headersAction,
-        CancellationToken token)
-    {
         async Task<HttpRequestMessage> RequestBuilder()
         {
             var request = new HttpRequestMessage(HttpMethod.Post, requestPath);
@@ -1370,13 +1160,6 @@ public abstract class BaseProvider : IProvider, ISecretId
             request.Content = new StringContent(JsonSerializer.Serialize(requestDto, JSON_SERIALIZER_OPTIONS), Encoding.UTF8, "application/json");
             return request;
         }
-
-        var responseData = await this.SendRequest(RequestBuilder, token);
-        if (responseData.IsFailedAfterAllRetries)
-            return null;
-
-        using var response = responseData.Response!;
-        return await response.Content.ReadFromJsonAsync<ChatCompletionResponse>(JSON_SERIALIZER_OPTIONS, token);
     }
 
     /// <summary>

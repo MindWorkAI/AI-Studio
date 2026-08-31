@@ -21,7 +21,19 @@ The provider only sees local tools that are
 - configured correctly and
 - allowed by the provider confidence rules.
 
-Local tool-call loops share two limits from `ToolSelectionRules`: `MAX_TOOL_CALLS` limits the number of calls, while `MAX_TOOL_RESULT_CHARACTERS` limits the cumulative size of results returned to the model. All local provider tool-call paths enforce both limits and ask the model for a final response after either limit is reached.
+## The Harness
+
+One loop drives every provider: `ToolCallingLoop` in `Tools/ToolCallingSystem/Harness/`, resolved through DI as `IToolCallingLoop`. It asks the model, runs what the model asked for, and asks again, until the model answers or a limit is reached. Providers do not implement that loop; they hand it an adapter.
+
+An `IToolCallingProviderAdapter` translates between the loop and one provider API's wire format. It is stateful and belongs to a single streaming call, because it accumulates the conversation the next round has to see. It answers three questions:
+
+- Run one non-streamed round and report what the model said, as a `ToolCallingRound`.
+- Record the model's turn, so the next round sees it.
+- Record one tool result, correlated by call ID.
+
+Everything else is the loop's business and therefore identical everywhere: the two limits from `ToolSelectionRules` (`MAX_TOOL_CALLS` for the number of calls, `MAX_TOOL_RESULT_CHARACTERS` for their cumulative size), asking for a final answer once a limit is reached, rejecting unusable calls, the running-tool status in the UI, collecting tool sources, and raising the chat's required provider confidence.
+
+Adding a provider API means writing an adapter, not another loop. `ChatCompletionToolCallingAdapter` and `ResponsesToolCallingAdapter` in `Provider/OpenAI/` are the existing ones. Replacing the harness itself — an agent mode, say — means another `IToolCallingLoop`; the adapters stay as they are.
 
 ## Provider API Shapes
 
@@ -55,7 +67,7 @@ The OpenAI Responses API uses a flat function shape:
 
 Keep this difference contained in provider adapter code. `ProviderToolAdapters` maps a canonical `ToolDefinition` to the Chat Completions or Responses wire shape. Tool implementations should not know which provider API shape was used.
 
-Tool result handling also differs by API. Chat Completions returns tool calls in `message.tool_calls` and receives results as `role: "tool"` messages. Responses returns `function_call` output items and receives results as `function_call_output` input items correlated by `call_id`. Both paths still execute local tools through `ToolExecutor`, so validation, provider confidence checks, trace formatting, and blocked-call behavior stay shared.
+Tool result handling also differs by API, and this is what the adapters exist for. Chat Completions returns tool calls in `message.tool_calls` and receives results as `role: "tool"` messages; a missing tool call ID can be supplied by AI Studio, because the ID only has to match between our request and our answer. Responses returns `function_call` output items and receives results as `function_call_output` input items correlated by `call_id`; there the ID comes from the provider, so a call without one cannot be answered at all and ends the conversation. Responses also requires the whole output of a round to be sent back for the next one, reasoning items included.
 
 AI Studio currently executes local tool calls sequentially. Therefore, Chat Completions requests with tools always set `parallel_tool_calls` to `false`, limiting each model response to at most one tool call. Requests without tools omit the parameter, and additional API parameters cannot override this behavior. Models can still request additional tools across subsequent responses.
 

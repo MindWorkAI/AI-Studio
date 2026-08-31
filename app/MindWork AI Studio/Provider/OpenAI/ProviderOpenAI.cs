@@ -9,6 +9,7 @@ using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.ToolCallingSystem;
+using AIStudio.Tools.ToolCallingSystem.Harness;
 using AIStudio.Tools.Services;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -220,17 +221,28 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
 
         if (usingResponsesAPI && toolExecutor is not null && runnableTools.Count > 0)
         {
-            await foreach (var content in this.StreamResponsesWithLocalTools(
-                               chatModel,
-                               chatThread,
-                               baseInput,
-                               apiParameters,
-                               providerTools,
-                               runnableTools,
-                               toolExecutor,
-                               currentAssistantContent,
-                               requestedSecret,
-                               token))
+            var adapter = new ResponsesToolCallingAdapter(
+                chatModel,
+                baseInput,
+                apiParameters,
+                providerTools,
+                runnableTools,
+                (requestDto, requestToken) => this.ExecuteResponsesRequest(requestDto, requestedSecret, requestToken));
+
+            var loop = Program.SERVICE_PROVIDER.GetRequiredService<IToolCallingLoop>();
+            var loopContext = new ToolCallingLoopContext
+            {
+                ChatThread = chatThread,
+                RunnableTools = runnableTools,
+                ToolExecutor = toolExecutor,
+                Provider = this,
+                CurrentAssistantContent = currentAssistantContent,
+                ProviderInstanceName = this.InstanceName,
+                ProviderType = this.Provider,
+                ModelId = chatModel.Id,
+            };
+
+            await foreach (var content in loop.RunAsync(adapter, loopContext, token))
                 yield return content;
 
             yield break;
@@ -300,202 +312,6 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
         else
             await foreach (var content in this.StreamChatCompletionInternal<ChatCompletionDeltaStreamLine, ChatCompletionAnnotationStreamLine>("OpenAI", RequestBuilder, token))
                 yield return content;
-    }
-
-    private async IAsyncEnumerable<ContentStreamChunk> StreamResponsesWithLocalTools(
-        Model chatModel,
-        ChatThread chatThread,
-        IList<object> baseInput,
-        IDictionary<string, object> apiParameters,
-        IList<object> providerTools,
-        IReadOnlyList<(ToolDefinition Definition, IToolImplementation Implementation)> runnableTools,
-        ToolExecutor toolExecutor,
-        ContentText? currentAssistantContent,
-        RequestedSecret requestedSecret,
-        [EnumeratorCancellation] CancellationToken token)
-    {
-        var localProviderTools = runnableTools
-            .Select(x => (object)ProviderToolAdapters.ToResponsesTool(x.Definition))
-            .ToList();
-        var localFunctionNames = runnableTools
-            .Select(x => x.Definition.Function.Name)
-            .ToHashSet(StringComparer.Ordinal);
-        var effectiveProviderTools = providerTools
-            .Where(x => x is not ProviderTool providerTool || !localFunctionNames.Contains(providerTool.Type))
-            .Concat(localProviderTools)
-            .ToList();
-        // Preserve every output item required to continue the response, including
-        // reasoning items emitted alongside function calls.
-        var internalItems = new List<object>();
-        var toolCallCount = 0;
-        var toolResultCharacterCount = 0L;
-        var toolSources = new List<Source>();
-
-        while (true)
-        {
-            var finalResponseInstruction = ToolSelectionRules.GetToolCallsUnavailableInstruction(toolCallCount, toolResultCharacterCount);
-            var finalResponseRequired = finalResponseInstruction is not null;
-            var requestInput = new List<object>(baseInput);
-            if (finalResponseRequired && requestInput.FirstOrDefault() is TextMessage systemPrompt)
-            {
-                requestInput[0] = systemPrompt with
-                {
-                    Content = $"{systemPrompt.Content}{Environment.NewLine}{Environment.NewLine}{finalResponseInstruction}",
-                };
-            }
-            requestInput.AddRange(internalItems);
-
-            var requestDto = new ResponsesAPIRequest
-            {
-                Model = chatModel.Id,
-                Input = requestInput,
-                Stream = false,
-                Store = false,
-                Tools = finalResponseRequired ? [] : effectiveProviderTools,
-                AdditionalApiParameters = apiParameters,
-            };
-            var response = await this.ExecuteResponsesRequest(requestDto, requestedSecret, token);
-            if (response is null)
-            {
-                await ResetToolRuntimeStatusAsync(currentAssistantContent);
-                yield break;
-            }
-
-            toolSources.MergeSources(response.GetSources());
-            var functionCalls = response.GetFunctionCalls();
-            if (functionCalls.Any(x => string.IsNullOrWhiteSpace(x.CallId)))
-            {
-                toolCallCount++;
-                var (invalidToolContent, invalidTrace, _, _) = toolExecutor.CreateInvalidToolCallResult(string.Empty, toolCallCount);
-                toolResultCharacterCount += invalidToolContent.Length;
-                currentAssistantContent?.ToolInvocations.Add(invalidTrace);
-                await ResetToolRuntimeStatusAsync(currentAssistantContent);
-                yield return new ContentStreamChunk(invalidToolContent, [..toolSources]);
-                yield break;
-            }
-
-            if (finalResponseRequired)
-            {
-                await ResetToolRuntimeStatusAsync(currentAssistantContent);
-
-                var textOutput = response.GetTextOutput();
-                if (!string.IsNullOrWhiteSpace(textOutput))
-                    yield return new ContentStreamChunk(textOutput, [..toolSources]);
-                else
-                    yield return new ContentStreamChunk("The model did not return a final answer after completing the available tool calls.", [..toolSources]);
-
-                yield break;
-            }
-
-            if (functionCalls.Count == 0)
-            {
-                await ResetToolRuntimeStatusAsync(currentAssistantContent);
-
-                var textOutput = response.GetTextOutput();
-                if (!string.IsNullOrWhiteSpace(textOutput))
-                    yield return new ContentStreamChunk(textOutput, [..toolSources]);
-                else if (toolCallCount > 0)
-                    yield return new ContentStreamChunk("The model completed the tool call but did not return a final answer.", [..toolSources]);
-
-                yield break;
-            }
-
-            try
-            {
-                var preparedFunctionCalls = functionCalls
-                    .Select(x => new PreparedResponsesFunctionCall(
-                        x,
-                        !string.IsNullOrWhiteSpace(x.Name) && ToolExecutor.IsValidArgumentsJson(x.Arguments)))
-                    .ToList();
-                var validToolNames = preparedFunctionCalls
-                    .Where(x => x.IsValid)
-                    .Select(x => runnableTools.FirstOrDefault(tool => tool.Definition.Function.Name.Equals(x.FunctionCall.Name, StringComparison.Ordinal)).Implementation?.GetDisplayName() ?? x.FunctionCall.Name!)
-                    .ToList();
-                if (validToolNames.Count > 0)
-                    await ShowToolRuntimeStatusAsync(currentAssistantContent, validToolNames);
-
-                foreach (var outputItem in response.Output)
-                    internalItems.Add(outputItem);
-
-                foreach (var preparedFunctionCall in preparedFunctionCalls)
-                {
-                    var functionCall = preparedFunctionCall.FunctionCall;
-                    if (!preparedFunctionCall.IsValid)
-                    {
-                        toolCallCount++;
-                        var (invalidToolContent, invalidTrace, _, _) = toolExecutor.CreateInvalidToolCallResult(functionCall.CallId!, toolCallCount);
-                        toolResultCharacterCount += invalidToolContent.Length;
-                        currentAssistantContent?.ToolInvocations.Add(invalidTrace);
-                        internalItems.Add(new ResponsesFunctionCallOutputItem
-                        {
-                            CallId = functionCall.CallId!,
-                            Output = invalidToolContent,
-                        });
-                        continue;
-                    }
-
-                    var toolCallsUnavailableInstruction = ToolSelectionRules.GetToolCallsUnavailableInstruction(toolCallCount, toolResultCharacterCount);
-                    if (toolCallsUnavailableInstruction is not null)
-                    {
-                        internalItems.Add(new ResponsesFunctionCallOutputItem
-                        {
-                            CallId = functionCall.CallId!,
-                            Output = toolCallsUnavailableInstruction,
-                        });
-                        continue;
-                    }
-
-                    toolCallCount++;
-                    var (toolContent, trace, requiredProviderConfidence, sources) = await toolExecutor.ExecuteAsync(
-                        functionCall.CallId!,
-                        functionCall.Name!,
-                        functionCall.Arguments!,
-                        runnableTools,
-                        this,
-                        toolCallCount,
-                        token);
-                    toolResultCharacterCount += toolContent.Length;
-
-                    chatThread.RequireProviderConfidence(requiredProviderConfidence);
-                    toolSources.MergeSources(sources);
-                    currentAssistantContent?.ToolInvocations.Add(trace);
-                    internalItems.Add(new ResponsesFunctionCallOutputItem
-                    {
-                        CallId = functionCall.CallId!,
-                        Output = toolContent,
-                    });
-                }
-
-            }
-            finally
-            {
-                await ResetToolRuntimeStatusAsync(currentAssistantContent);
-            }
-        }
-    }
-
-    private readonly record struct PreparedResponsesFunctionCall(ResponsesFunctionCallItem FunctionCall, bool IsValid);
-
-    private static async Task ResetToolRuntimeStatusAsync(ContentText? currentAssistantContent)
-    {
-        if (currentAssistantContent is null)
-            return;
-
-        currentAssistantContent.ToolRuntimeStatus = new();
-        await currentAssistantContent.StreamingEvent();
-    }
-
-    private static async Task ShowToolRuntimeStatusAsync(ContentText? currentAssistantContent, IEnumerable<string> toolNames)
-    {
-        if (currentAssistantContent is null)
-            return;
-
-        currentAssistantContent.ToolRuntimeStatus = new ToolRuntimeStatus
-        {
-            IsRunning = true,
-            ToolNames = toolNames.ToList(),
-        };
-        await currentAssistantContent.StreamingEvent();
     }
 
     private async Task<ResponsesResponse?> ExecuteResponsesRequest(ResponsesAPIRequest requestDto, RequestedSecret requestedSecret, CancellationToken token)
