@@ -99,7 +99,7 @@ internal sealed class SearXNGSearchClient
             throw new InvalidOperationException("The SearXNG response JSON must be an object.");
 
         var candidates = BuildCandidates(responseObject["results"] as JsonArray, searchRequest.EffectiveLimit, out var candidateCount);
-        return new SearXNGSearchResponse(candidates, candidateCount);
+        return new SearXNGSearchResponse(candidates, candidateCount, ReadUnresponsiveEngines(responseObject["unresponsive_engines"] as JsonArray));
     }
 
     private static string CreateSingleLineExcerpt(string responseBody)
@@ -195,6 +195,43 @@ internal sealed class SearXNGSearchClient
         return candidatesByUrl.Values
             .OrderBy(candidate => candidate.Rank)
             .ToList();
+    }
+
+    /// <summary>
+    /// Reads which search engines did not answer, and why.
+    /// </summary>
+    /// <remarks>
+    /// SearXNG reports these as pairs of engine name and reason. They are the difference between
+    /// "nothing matches this query" and "the instance has no working engines", which is the usual
+    /// state of a fresh instance whose engines answer with a CAPTCHA or time out. Without them a
+    /// misconfigured instance is indistinguishable from an obscure query.
+    /// </remarks>
+    private static IReadOnlyList<string> ReadUnresponsiveEngines(JsonArray? unresponsiveEngines)
+    {
+        if (unresponsiveEngines is null)
+            return [];
+
+        var engines = new List<string>();
+        foreach (var entry in unresponsiveEngines)
+        {
+            switch (entry)
+            {
+                case JsonArray { Count: > 0 } pair:
+                    var engineName = ReadNodeString(pair[0]);
+                    var reason = pair.Count > 1 ? ReadNodeString(pair[1]) : string.Empty;
+                    if (!string.IsNullOrWhiteSpace(engineName))
+                        engines.Add(string.IsNullOrWhiteSpace(reason) ? engineName : $"{engineName} ({reason})");
+
+                    break;
+
+                // Older SearXNG versions report a plain name instead of a pair:
+                case not null when !string.IsNullOrWhiteSpace(ReadNodeString(entry)):
+                    engines.Add(ReadNodeString(entry));
+                    break;
+            }
+        }
+
+        return engines;
     }
 
     private static string ReadNodeString(JsonNode? node) => node is null ? string.Empty : node.ToString().Trim();
@@ -305,17 +342,13 @@ internal sealed class SearXNGSearchClient
     }.Uri;
 }
 
-internal sealed record SearXNGSearchRequest(
-    Uri SearchUri,
-    string Query,
-    string? Language,
-    string? TimeRange,
-    int? Page,
-    string? SafeSearch,
-    int EffectiveLimit,
-    int TimeoutSeconds);
+internal sealed record SearXNGSearchRequest(Uri SearchUri, string Query, string? Language, string? TimeRange, int? Page,
+    string? SafeSearch, int EffectiveLimit, int TimeoutSeconds);
 
-internal sealed record SearXNGSearchResponse(IReadOnlyList<SearchCandidate> Candidates, int CandidateCount);
+/// <param name="Candidates">The search hits, already deduplicated and limited.</param>
+/// <param name="CandidateCount">How many hits the instance returned within the requested limit.</param>
+/// <param name="UnresponsiveEngines">The engines that did not answer, each with its reason when the instance gave one.</param>
+internal sealed record SearXNGSearchResponse(IReadOnlyList<SearchCandidate> Candidates, int CandidateCount, IReadOnlyList<string> UnresponsiveEngines);
 
 internal sealed class SearchCandidate
 {

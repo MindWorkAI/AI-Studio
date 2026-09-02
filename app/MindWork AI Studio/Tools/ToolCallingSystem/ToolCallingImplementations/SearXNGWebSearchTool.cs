@@ -280,12 +280,29 @@ public sealed class SearXNGWebSearchTool(WebPageRetrievalService webPageRetrieva
             ["retrieval_timed_out"] = retrievalResult.RetrievalTimedOut,
             ["results"] = resultArray,
         };
-        if (retrievalResult.Results.Count == 0)
-            resultObject["diagnostic"] = "No result page could be retrieved as readable public HTML. Pages may have failed, timed out, been blocked by network safety checks, used an unsupported content type, or contained no readable static content.";
+        
+        //
+        // Two very different failures used to share one message. No search hits at all is a
+        // matter of the query or of the instance's engines, while hits that could not be loaded
+        // is a matter of the pages. Telling them apart is what makes the difference actionable,
+        // for the user reading the trace as much as for the model deciding what to do next.
+        //
+        if (searchResponse.CandidateCount == 0)
+        {
+            var unresponsiveEngines = searchResponse.UnresponsiveEngines.Count > 0
+                ? $" The following search engines of the instance did not answer: {string.Join(", ", searchResponse.UnresponsiveEngines)}."
+                : string.Empty;
+
+            resultObject["diagnostic"] = $"The search engine returned no hits for this query.{unresponsiveEngines} Either nothing matches the query, or the SearXNG instance has no working engines for it.";
+            if (searchResponse.UnresponsiveEngines.Count > 0)
+                resultObject["unresponsive_engines"] = BuildJsonArray(searchResponse.UnresponsiveEngines);
+        }
+        else if (retrievalResult.Results.Count == 0)
+            resultObject["diagnostic"] = "The search engine returned hits, but none of their pages could be retrieved as readable public HTML. Pages may have failed, timed out, been blocked by network safety checks, used an unsupported content type, or contained no readable static content.";
 
         var retrievalStatistics = retrievalResult.ErrorStatistics;
         logger.LogInformation(
-            "Completed web search. ToolCallId={ToolCallId}, CandidateCount={CandidateCount}, ResultCount={ResultCount}, BlockedPageCount={BlockedPageCount}, PageTimeoutCount={PageTimeoutCount}, FailedPageCount={FailedPageCount}, EmptyContentCount={EmptyContentCount}, RetrievalTimedOut={RetrievalTimedOut}, ReturnedContentCharacters={ReturnedContentCharacters}, TruncatedResultCount={TruncatedResultCount}",
+            "Completed web search. ToolCallId={ToolCallId}, CandidateCount={CandidateCount}, ResultCount={ResultCount}, BlockedPageCount={BlockedPageCount}, PageTimeoutCount={PageTimeoutCount}, FailedPageCount={FailedPageCount}, EmptyContentCount={EmptyContentCount}, RetrievalTimedOut={RetrievalTimedOut}, ReturnedContentCharacters={ReturnedContentCharacters}, TruncatedResultCount={TruncatedResultCount}, UnresponsiveEngines={UnresponsiveEngines}",
             context.ToolCallId,
             searchResponse.CandidateCount,
             retrievalResult.Results.Count,
@@ -295,7 +312,8 @@ public sealed class SearXNGWebSearchTool(WebPageRetrievalService webPageRetrieva
             retrievalStatistics.EmptyContentCount,
             retrievalResult.RetrievalTimedOut,
             sanitizedContents.Sum(content => content.Markdown.Length),
-            retrievalResult.Results.Count(result => result.ContentTruncated));
+            retrievalResult.Results.Count(result => result.ContentTruncated),
+            searchResponse.UnresponsiveEngines.Count is 0 ? "none" : string.Join(", ", searchResponse.UnresponsiveEngines));
 
         return new ToolExecutionResult
         {
