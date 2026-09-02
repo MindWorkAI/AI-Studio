@@ -22,7 +22,12 @@ internal sealed class SearXNGSearchClient
         }
         catch (Exception exception) when (exception is HttpRequestException or TimeoutException or InvalidOperationException or JsonException)
         {
-            throw new InvalidOperationException("The SearXNG search request failed.", exception);
+            //
+            // The reason has to travel with the message. It reaches the user through the tool
+            // trace and the model through the tool result, and neither can act on "it failed":
+            // a disabled JSON API, a bot check, and a rate limit all need different answers.
+            //
+            throw new InvalidOperationException($"The SearXNG search request failed: {exception.Message}", exception);
         }
     }
 
@@ -58,7 +63,26 @@ internal sealed class SearXNGSearchClient
         {
             var responseExcerpt = CreateSingleLineExcerpt(responseBody);
             var responseDetails = string.IsNullOrWhiteSpace(responseExcerpt) ? string.Empty : $" Response body: {responseExcerpt}";
-            throw new InvalidOperationException($"The SearXNG request failed with status code {(int)response.StatusCode} ({response.StatusCode}).{responseDetails}");
+            var statusHint = response.StatusCode switch
+            {
+                HttpStatusCode.TooManyRequests => " The instance rate-limits this client. Public instances usually do that for automated requests; a self-hosted instance does not.",
+                HttpStatusCode.Forbidden or HttpStatusCode.Unauthorized => " The instance refused the request. It may have the JSON format disabled, or it requires authentication or a bot check.",
+                _ => string.Empty,
+            };
+
+            throw new InvalidOperationException($"The SearXNG request failed with status code {(int)response.StatusCode} ({response.StatusCode}).{statusHint}{responseDetails}");
+        }
+
+        //
+        // A SearXNG instance that does not serve the JSON API answers the HTML page instead —
+        // and some answer a bot check that way, with a success status code. Without this test the
+        // failure surfaces as a JSON syntax error, which points at the wrong thing entirely.
+        //
+        var mediaType = response.Content.Headers.ContentType?.MediaType;
+        if (!string.IsNullOrWhiteSpace(mediaType) && !mediaType.Contains("json", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException(
+                $"The SearXNG instance answered '{mediaType}' instead of JSON. Enable the JSON format in the instance's settings.yml ('search.formats' must contain 'json'). Most public instances do not serve it and put a bot check or rate limit in front of automated requests. Response body: {CreateSingleLineExcerpt(responseBody)}");
         }
 
         JsonNode? responseJson;

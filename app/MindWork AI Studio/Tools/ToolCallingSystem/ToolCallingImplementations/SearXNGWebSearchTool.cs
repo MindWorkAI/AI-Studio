@@ -63,7 +63,7 @@ public sealed class SearXNGWebSearchTool(WebPageRetrievalService webPageRetrieva
 
     public string GetSettingsFieldDescription(string fieldName, ToolSettingsFieldDefinition fieldDefinition) => fieldName switch
     {
-        "baseUrl" => TB("Base URL of the SearXNG instance. You can enter either the instance root URL or the /search endpoint."),
+        "baseUrl" => TB("Base URL of the SearXNG instance. You can enter either the instance root URL or the /search endpoint. The instance must have the JSON format enabled, which means 'json' has to be listed under 'search.formats' in its settings.yml. Public instances usually serve only the web interface and additionally block automated requests, so a self-hosted instance is the reliable option."),
         "defaultLanguage" => TB("Optional fallback language code when the model does not provide a language."),
         "defaultSafeSearch" => TB("Optional safe search policy sent to SearXNG when configured."),
         "maxResults" => TB("Optional default maximum number of results returned to the model when the model does not provide a limit."),
