@@ -173,6 +173,7 @@ When adding, changing, or removing model-driven tools, keep these parts in sync:
 - `app/MindWork AI Studio/Tools/ToolCallingSystem/ToolCallingImplementations/` for the `IToolImplementation` class.
 - `app/MindWork AI Studio/Program.cs` for DI registration of the implementation.
 - `app/MindWork AI Studio/Tools/ToolCallingSystem/ToolSelectionRules.cs` when default tool dependencies or minimum provider confidence rules change.
+- `app/MindWork AI Studio/Tools/ToolCallingSystem/ToolSettingsOptionSources.cs` when a tool setting offers a fixed choice the app maintains, such as languages. Prefer this over repeating the values in the tool definition's `enum`; it keeps the list in one place and gives the user translated names.
 - `app/MindWork AI Studio/Plugins/configuration/plugin.lua` when administrators can configure or manage the tool or its settings.
 
 Tool implementations must treat model-provided arguments as untrusted input. Validate settings and arguments, protect secrets with `SensitiveTraceArgumentNames`, use `ToolExecutionBlockedException` for intentional policy blocks, and check provider confidence before returning sensitive data to the model.

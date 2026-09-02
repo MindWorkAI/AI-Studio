@@ -11383,6 +11383,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS:
 -- (Optional) Global truncation limit for extracted characters returned to the model.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T900659180"] = "(Optional) Global truncation limit for extracted characters returned to the model."
 
+-- The language to search in when the AI model does not ask for a specific one. This is required: without a language, many search engines return no results at all, and the search would come back empty without telling you why. Choose 'Any language' if you do not want to restrict the results.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T114991220"] = "The language to search in when the AI model does not ask for a specific one. This is required: without a language, many search engines return no results at all, and the search would come back empty without telling you why. Choose 'Any language' if you do not want to restrict the results."
+
 -- Maximum Results
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T1273024715"] = "Maximum Results"
 
@@ -11395,14 +11398,8 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS:
 -- Optional minimum character budget reserved for each successfully retrieved website.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T1671995661"] = "Optional minimum character budget reserved for each successfully retrieved website."
 
--- Base URL of the SearXNG instance. You can enter either the instance root URL or the /search endpoint.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T1739312423"] = "Base URL of the SearXNG instance. You can enter either the instance root URL or the /search endpoint."
-
 -- A SearXNG URL is required.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T1746583720"] = "A SearXNG URL is required."
-
--- Optional fallback language code when the model does not provide a language.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T1868101906"] = "Optional fallback language code when the model does not provide a language."
 
 -- The total content budget must reserve at least {0} characters for each of up to {1} results.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T2124070269"] = "The total content budget must reserve at least {0} characters for each of up to {1} results."
@@ -11418,9 +11415,6 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS:
 
 -- The configured SearXNG URL is not a valid absolute URL.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T3038368943"] = "The configured SearXNG URL is not a valid absolute URL."
-
--- The default safe search setting must be 0, 1, or 2.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T3187215042"] = "The default safe search setting must be 0, 1, or 2."
 
 -- Search Timeout Seconds
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T3219072199"] = "Search Timeout Seconds"
@@ -11452,11 +11446,17 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS:
 -- Optional HTTP timeout for the SearXNG search request in seconds.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T408390115"] = "Optional HTTP timeout for the SearXNG search request in seconds."
 
+-- Base URL of the SearXNG instance. You can enter either the instance root URL or the /search endpoint. The instance must have the JSON format enabled, which means 'json' has to be listed under 'search.formats' in its settings.yml. Public instances usually serve only the web interface and additionally block automated requests, so a self-hosted instance is the reliable option.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T4198847064"] = "Base URL of the SearXNG instance. You can enter either the instance root URL or the /search endpoint. The instance must have the JSON format enabled, which means 'json' has to be listed under 'search.formats' in its settings.yml. Public instances usually serve only the web interface and additionally block automated requests, so a self-hosted instance is the reliable option."
+
 -- The setting '{0}' must be a positive integer.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T4199432074"] = "The setting '{0}' must be a positive integer."
 
 -- Minimum Content Characters Budget Per Website
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T4200431837"] = "Minimum Content Characters Budget Per Website"
+
+-- The setting '{0}' holds the value '{1}', which is not one of the available options. Please choose one of the offered values.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T68683294"] = "The setting '{0}' holds the value '{1}', which is not one of the available options. Please choose one of the offered values."
 
 -- Optional total character budget shared by all retrieved pages.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T836062282"] = "Optional total character budget shared by all retrieved pages."
@@ -11472,6 +11472,18 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLRUNTIMESTATUS::T2834986
 
 -- Using tool: {0}
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLRUNTIMESTATUS::T4185351801"] = "Using tool: {0}"
+
+-- Moderate
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLSETTINGSOPTIONSOURCES::T177463328"] = "Moderate"
+
+-- Strict
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLSETTINGSOPTIONSOURCES::T1834358932"] = "Strict"
+
+-- Off
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLSETTINGSOPTIONSOURCES::T231126186"] = "Off"
+
+-- Any language
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLSETTINGSOPTIONSOURCES::T747012729"] = "Any language"
 
 -- The file path is null or empty and the file therefore can not be loaded.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::USERFILE::T932243993"] = "The file path is null or empty and the file therefore can not be loaded."

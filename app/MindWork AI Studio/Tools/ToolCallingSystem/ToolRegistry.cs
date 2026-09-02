@@ -160,6 +160,26 @@ public sealed class ToolRegistry
             return false;
         }
 
+        var fieldsWithBothOptionKinds = definition.SettingsSchema.Properties
+            .Where(x => !string.IsNullOrWhiteSpace(x.Value.OptionSource) && x.Value.EnumValues.Count > 0)
+            .Select(x => x.Key)
+            .ToList();
+        if (fieldsWithBothOptionKinds.Count > 0)
+        {
+            issue = $"these settings declare both an option source and an enum list: {string.Join(", ", fieldsWithBothOptionKinds)}";
+            return false;
+        }
+
+        var fieldsWithUnknownOptionSource = definition.SettingsSchema.Properties
+            .Where(x => !string.IsNullOrWhiteSpace(x.Value.OptionSource) && !ToolSettingsOptionSources.IsKnown(x.Value.OptionSource))
+            .Select(x => $"{x.Key} ('{x.Value.OptionSource}')")
+            .ToList();
+        if (fieldsWithUnknownOptionSource.Count > 0)
+        {
+            issue = $"these settings reference an unknown option source: {string.Join(", ", fieldsWithUnknownOptionSource)}";
+            return false;
+        }
+
         if (definition.SettingsSchema.Required.Any(string.IsNullOrWhiteSpace))
         {
             issue = "required setting names cannot be empty";

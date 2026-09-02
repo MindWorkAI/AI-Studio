@@ -702,10 +702,15 @@ CONFIG["SETTINGS"] = {}
 -- }
 
 -- Configure the Web Search tool. All values are strings.
--- WebSearchBaseUrl: SearXNG HTTP(S) root URL or /search endpoint.
--- CONFIG["SETTINGS"]["DataTools.WebSearchBaseUrl"] = "https://searxng.website/"
--- WebSearchDefaultLanguage: language code sent to SearXNG.
--- CONFIG["SETTINGS"]["DataTools.WebSearchDefaultLanguage"] = "de"
+-- WebSearchBaseUrl: SearXNG HTTP(S) root URL or /search endpoint. The instance must have the
+-- JSON format enabled, i.e. "json" listed under search.formats in its settings.yml. Public
+-- instances usually serve only the web interface and block automated requests, so use an
+-- instance your organization operates.
+-- CONFIG["SETTINGS"]["DataTools.WebSearchBaseUrl"] = "https://searxng.example.org/"
+-- WebSearchDefaultLanguage: required. IETF language tag sent to SearXNG, or "all" for no
+-- restriction. Without a language many search engines return no results at all, so the tool
+-- counts as unconfigured while this is empty.
+-- CONFIG["SETTINGS"]["DataTools.WebSearchDefaultLanguage"] = "de-DE"
 -- WebSearchDefaultSafeSearch: SearXNG safe-search level "0", "1", or "2".
 -- CONFIG["SETTINGS"]["DataTools.WebSearchDefaultSafeSearch"] = "1"
 -- WebSearchMaxResults: result count as an integer string.

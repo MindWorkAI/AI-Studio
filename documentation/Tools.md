@@ -220,7 +220,11 @@ The example above is documentation-only. Do not keep demo tools in the productio
 
 Tool settings are stored through `ToolSettingsService`. Plain settings are stored in the regular configuration data. Settings marked with `"secret": true` are stored in the OS keyring through the Rust service.
 
-Use `ValidateConfigurationAsync` when a setting needs more than "required field is present" validation, such as URL syntax, numeric limits, mutually exclusive options, or allowlist parsing.
+A setting offering a fixed choice declares it either as an `enum` list in the definition, or as an `optionSource` naming a list the app maintains — see `ToolSettingsOptionSources`. Prefer an option source for anything the app already knows, such as languages: the list then exists once in code instead of once per tool definition, and the dialog shows translated names instead of raw values. The two are mutually exclusive, and `ToolRegistry` rejects a definition that uses both or names an unknown source.
+
+A setting whose absence makes the tool fail belongs in `required`, not in a description. The tool then counts as unconfigured until it is set, which the UI shows and which keeps the tool out of the model's reach — instead of the tool running and returning nothing. The web search language is the example: without it, most search engines return no results at all.
+
+Use `ValidateConfigurationAsync` when a setting needs more than "required field is present" validation, such as URL syntax, numeric limits, mutually exclusive options, or allowlist parsing. Validate values coming from an option source there too: a stored value can predate the current list or arrive from an organization's configuration.
 
 Use `SensitiveTraceArgumentNames` for model-provided arguments that must not be shown in tool traces. Do not return secrets in `TextContent`, `JsonContent`, exception messages, logs, or trace formatting.
 

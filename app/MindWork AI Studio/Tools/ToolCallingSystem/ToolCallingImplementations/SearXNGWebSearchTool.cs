@@ -64,7 +64,7 @@ public sealed class SearXNGWebSearchTool(WebPageRetrievalService webPageRetrieva
     public string GetSettingsFieldDescription(string fieldName, ToolSettingsFieldDefinition fieldDefinition) => fieldName switch
     {
         "baseUrl" => TB("Base URL of the SearXNG instance. You can enter either the instance root URL or the /search endpoint. The instance must have the JSON format enabled, which means 'json' has to be listed under 'search.formats' in its settings.yml. Public instances usually serve only the web interface and additionally block automated requests, so a self-hosted instance is the reliable option."),
-        "defaultLanguage" => TB("Optional fallback language code when the model does not provide a language."),
+        "defaultLanguage" => TB("The language to search in when the AI model does not ask for a specific one. This is required: without a language, many search engines return no results at all, and the search would come back empty without telling you why. Choose 'Any language' if you do not want to restrict the results."),
         "defaultSafeSearch" => TB("Optional safe search policy sent to SearXNG when configured."),
         "maxResults" => TB("Optional default maximum number of results returned to the model when the model does not provide a limit."),
         "searchTimeoutSeconds" => TB("Optional HTTP timeout for the SearXNG search request in seconds."),
@@ -103,13 +103,26 @@ public sealed class SearXNGWebSearchTool(WebPageRetrievalService webPageRetrieva
             });
         }
 
-        var defaultSafeSearch = settingsValues.GetValueOrDefault("defaultSafeSearch");
-        if (!string.IsNullOrWhiteSpace(defaultSafeSearch) && defaultSafeSearch is not ("0" or "1" or "2"))
+        //
+        // Both fields are picked from a list in the UI, but a stored value can predate that list
+        // or come from an organization's configuration. An unknown value would be sent to SearXNG
+        // and quietly yield nothing, so it is reported instead.
+        //
+        if (!TryValidateOptionValue(settingsValues, "defaultLanguage", ToolSettingsOptionSources.COMMON_LANGUAGES, out var languageError))
         {
             return Task.FromResult<ToolConfigurationState?>(new ToolConfigurationState
             {
                 IsConfigured = false,
-                Message = TB("The default safe search setting must be 0, 1, or 2."),
+                Message = languageError,
+            });
+        }
+
+        if (!TryValidateOptionValue(settingsValues, "defaultSafeSearch", ToolSettingsOptionSources.SAFE_SEARCH, out var safeSearchError))
+        {
+            return Task.FromResult<ToolConfigurationState?>(new ToolConfigurationState
+            {
+                IsConfigured = false,
+                Message = safeSearchError,
             });
         }
 
@@ -404,6 +417,24 @@ public sealed class SearXNGWebSearchTool(WebPageRetrievalService webPageRetrieva
         return singleLineQuery.Length <= MAX_LOG_QUERY_LENGTH
             ? singleLineQuery
             : $"{singleLineQuery[..MAX_LOG_QUERY_LENGTH]}...";
+    }
+
+    /// <summary>
+    /// Checks that a stored value is one the option source still offers.
+    /// </summary>
+    /// <remarks>
+    /// An empty value passes: whether the field may be empty is decided by the settings schema's
+    /// required list, which the tool settings service checks before this method runs.
+    /// </remarks>
+    private static bool TryValidateOptionValue(IReadOnlyDictionary<string, string> settingsValues, string fieldName, string optionSource, out string error)
+    {
+        error = string.Empty;
+        var value = settingsValues.GetValueOrDefault(fieldName);
+        if (string.IsNullOrWhiteSpace(value) || ToolSettingsOptionSources.GetValues(optionSource).Contains(value))
+            return true;
+
+        error = string.Format(TB("The setting '{0}' holds the value '{1}', which is not one of the available options. Please choose one of the offered values."), fieldName, value);
+        return false;
     }
 
     private static bool TryNormalizeSearchUri(string rawUrl, out Uri searchUri, out string error) =>
