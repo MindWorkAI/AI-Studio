@@ -39,14 +39,16 @@ public static class ProviderToolAdapters
     /// Builds the tool shape used by the Anthropic messages API.
     /// </summary>
     /// <remarks>
-    /// Same schema, different field names: Anthropic calls the parameters an input schema and
-    /// takes the description without nesting it under a function object.
+    /// Different field names — Anthropic calls the parameters an input schema and takes the
+    /// description without nesting it under a function object — and, unlike the two OpenAI
+    /// shapes, a different way of stating that a parameter is optional. See the Anthropic tool
+    /// schema translation for why the schema cannot be passed through unchanged.
     /// </remarks>
     public static AnthropicTool ToAnthropicTool(ToolDefinition definition) => new()
     {
         Name = definition.Function.Name,
         Description = definition.Function.DescriptionForLLM,
-        InputSchema = definition.Function.Parameters,
+        InputSchema = AnthropicToolSchema.FromToolParameters(definition.Function.Parameters),
         Strict = definition.Function.Strict,
     };
 }

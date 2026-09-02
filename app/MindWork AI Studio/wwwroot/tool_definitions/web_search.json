@@ -70,7 +70,7 @@
             "string",
             "null"
           ],
-          "description": "Optional IETF language tag restricting the search to one language, such as 'de-DE', 'en-US', or 'all' for no restriction. Use null to search in the language configured for this tool. Do not pass a language name such as 'German': search engines expect the tag and silently return nothing for anything else."
+          "description": "Optional IETF language tag restricting the search to one language, such as 'de-DE', 'en-US', or 'all' for no restriction. Leave it out to search in the language configured for this tool. Do not pass a language name such as 'German': search engines expect the tag and silently return nothing for anything else."
         },
         "time_range": {
           "type": [

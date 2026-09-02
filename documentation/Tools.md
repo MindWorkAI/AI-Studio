@@ -80,6 +80,14 @@ The Anthropic messages API names the schema differently and does not nest the fu
 
 Keep this difference contained in provider adapter code. Tool implementations should not know which provider API shape was used.
 
+### Optional Parameters Are Written The OpenAI Way
+
+`function.parameters` in a tool definition follows OpenAI's strict-mode convention: **every** property is listed in `required`, and an optional parameter is instead made nullable with `"type": ["string", "null"]`. That is what OpenAI's `strict: true` demands, and it is the form to write in a definition file.
+
+Anthropic states optionality the ordinary JSON Schema way — an optional parameter is absent from `required` — and its validator rejects `null` as an enum value (`Invalid schema: Enum value None does not match declared type`). `AnthropicToolSchema.FromToolParameters` therefore translates the schema before sending it: it removes the `null` type, drops `null` enum values, and takes the affected properties out of `required`. Nothing is lost, because a tool treats an absent argument and a null one the same way.
+
+So the canonical schema is not provider-neutral — it is OpenAI-shaped, and one adapter translates away from it. Worth remembering when adding a provider whose API is neither: the translation belongs in its adapter, not in the definition.
+
 Tool result handling also differs by API, and this is what the adapters exist for.
 
 - **Chat Completions** returns tool calls in `message.tool_calls` and receives results as `role: "tool"` messages, one per result. A missing tool call ID can be supplied by AI Studio, because the ID only has to match between our request and our answer.
