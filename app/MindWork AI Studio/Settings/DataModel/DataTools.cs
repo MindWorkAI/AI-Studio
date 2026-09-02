@@ -10,6 +10,9 @@ public sealed class DataTools(Expression<Func<Data, DataTools>>? configSelection
     {
     }
 
+    /// <summary>
+    /// The settings the user entered per tool: tool ID, then field name.
+    /// </summary>
     public Dictionary<string, Dictionary<string, string>> Settings { get; set; } = [];
 
     public Dictionary<string, HashSet<string>> DefaultToolIdsByComponent { get; set; } = [];
@@ -31,63 +34,33 @@ public sealed class DataTools(Expression<Func<Data, DataTools>>? configSelection
         x => x.MinimumProviderConfidenceByToolId,
         new Dictionary<string, string>(StringComparer.Ordinal));
 
-    public string WebSearchBaseUrl { get; set; } = ManagedConfiguration.Register<DataTools>(
+    /// <summary>
+    /// Tool settings an organization fixed, which the user cannot change. Keys are
+    /// "toolId.fieldName".
+    /// </summary>
+    /// <remarks>
+    /// Keyed by tool and field rather than held in a property per setting, because a property per
+    /// setting only works for the tools AI Studio ships. Tools defined by plugin authors are not
+    /// known at compile time, yet an organization has to be able to configure them the same way.
+    /// <br/><br/>
+    /// Secrets never travel this way. They belong in the operating system's keyring, which a
+    /// configuration file cannot reach.
+    /// </remarks>
+    public Dictionary<string, string> LockedToolSettings { get; set; } = ManagedConfiguration.Register<DataTools, Dictionary<string, string>>(
         configSelection,
-        x => x.WebSearchBaseUrl,
-        string.Empty);
+        x => x.LockedToolSettings,
+        new Dictionary<string, string>(StringComparer.Ordinal));
 
-    public string WebSearchDefaultLanguage { get; set; } = ManagedConfiguration.Register<DataTools>(
+    /// <summary>
+    /// Tool settings an organization pre-filled but left changeable. Keys are "toolId.fieldName".
+    /// </summary>
+    /// <remarks>
+    /// Applies until the user saves a value of their own, which then wins. That is the difference
+    /// to the locked settings above, and the reason both exist: an organization can fix the search
+    /// instance while leaving the timeouts to the user.
+    /// </remarks>
+    public Dictionary<string, string> DefaultToolSettings { get; set; } = ManagedConfiguration.Register<DataTools, Dictionary<string, string>>(
         configSelection,
-        x => x.WebSearchDefaultLanguage,
-        string.Empty);
-
-    public string WebSearchDefaultSafeSearch { get; set; } = ManagedConfiguration.Register<DataTools>(
-        configSelection,
-        x => x.WebSearchDefaultSafeSearch,
-        string.Empty);
-
-    public string WebSearchMaxResults { get; set; } = ManagedConfiguration.Register<DataTools>(
-        configSelection,
-        x => x.WebSearchMaxResults,
-        string.Empty);
-
-    public string WebSearchTimeoutSeconds { get; set; } = ManagedConfiguration.Register<DataTools>(
-        configSelection,
-        x => x.WebSearchTimeoutSeconds,
-        string.Empty);
-
-    public string WebSearchMaxTotalContentCharacters { get; set; } = ManagedConfiguration.Register<DataTools>(
-        configSelection,
-        x => x.WebSearchMaxTotalContentCharacters,
-        string.Empty);
-
-    public string WebSearchMinContentCharactersPerResult { get; set; } = ManagedConfiguration.Register<DataTools>(
-        configSelection,
-        x => x.WebSearchMinContentCharactersPerResult,
-        string.Empty);
-
-    public string WebSearchPageTimeoutSeconds { get; set; } = ManagedConfiguration.Register<DataTools>(
-        configSelection,
-        x => x.WebSearchPageTimeoutSeconds,
-        string.Empty);
-
-    public string WebSearchRetrievalTimeoutSeconds { get; set; } = ManagedConfiguration.Register<DataTools>(
-        configSelection,
-        x => x.WebSearchRetrievalTimeoutSeconds,
-        string.Empty);
-
-    public string ReadWebPageTimeoutSeconds { get; set; } = ManagedConfiguration.Register<DataTools>(
-        configSelection,
-        x => x.ReadWebPageTimeoutSeconds,
-        string.Empty);
-
-    public string ReadWebPageMaxContentCharacters { get; set; } = ManagedConfiguration.Register<DataTools>(
-        configSelection,
-        x => x.ReadWebPageMaxContentCharacters,
-        string.Empty);
-
-    public string ReadWebPageAllowedPrivateHosts { get; set; } = ManagedConfiguration.Register<DataTools>(
-        configSelection,
-        x => x.ReadWebPageAllowedPrivateHosts,
-        string.Empty);
+        x => x.DefaultToolSettings,
+        new Dictionary<string, string>(StringComparer.Ordinal));
 }

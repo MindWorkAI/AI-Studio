@@ -297,17 +297,22 @@ Every successfully retrieved page with readable content is also returned as a st
 
 Retrieved Markdown shares a configurable total character budget. Every successful result first receives its configured minimum allocation; the remaining budget is then assigned in ranking order. Short pages leave their unused allocation available to later results. A page whose content is truncated, or whose original extracted content contains fewer than 500 characters, reports the status `partial or truncated`. Truncated content uses the shared truncation marker.
 
-Every non-secret tool field that administrators should be able to manage centrally must have an explicit enterprise mapping in `ToolSettingsService`. Add its backing setting to the appropriate `Settings/DataModel` class, register it with `ManagedConfiguration.Register(...)`, process it in `PluginConfiguration`, clean leftovers in `PluginFactory.Loading`, and document its purpose, data type, and an example assignment in `Plugins/configuration/plugin.lua`. Locked enterprise values override the local field, while editable enterprise defaults apply only until a user saves a local value. Secret fields require the existing OS-keyring path and must not be routed through plain enterprise settings.
+Every non-secret tool setting is centrally manageable without any code: an organization addresses it by `"<toolId>.<fieldName>"` in `DataTools.LockedToolSettings` or `DataTools.DefaultToolSettings`. A locked value wins over everything and cannot be changed by the user; a default pre-fills the field until the user saves a value of their own. Nothing has to be registered per setting, which is what allows tools defined by plugin authors — unknown when AI Studio was built — to be configured the same way.
+
+What remains to do for a new setting is documenting it: add its field name, meaning, and data type to the tool's field list in `Plugins/configuration/plugin.lua`.
+
+Secret fields never travel this way. They live in the OS keyring, which a configuration file cannot write to.
 
 ## Checklist
 
-- Add the JSON definition in `wwwroot/tool_definitions`.
-- Add the `IToolImplementation` class.
+- Add the `IToolImplementation` class, including its `GetDefinition()`.
 - Register the implementation in `Program.cs`.
+- Put every argument and setting name in a constant that the schema and the reading code share.
+- Set `MinimumProviderConfidence` to what the tool actually exposes.
+- Mark a setting the tool cannot work without as `Required`, rather than saying so in its description.
 - Validate settings and model arguments.
 - Filter content fetched from outside AI Studio for prompt injections, and declare `ReturnsUntrustedExternalContent`.
-- Add the enterprise mapping for each administratively configurable non-secret setting.
 - Protect secrets and sensitive trace arguments.
 - Add provider-confidence checks when tool output may contain sensitive data.
-- Update configuration plugin documentation when admins can manage the setting.
+- Document each setting's field name, meaning, and data type in `Plugins/configuration/plugin.lua`, so administrators can manage it.
 - Add a changelog entry when users or administrators are affected.

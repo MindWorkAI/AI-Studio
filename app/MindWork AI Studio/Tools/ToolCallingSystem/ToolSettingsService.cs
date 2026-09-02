@@ -8,43 +8,30 @@ namespace AIStudio.Tools.ToolCallingSystem;
 
 public sealed class ToolSettingsService(SettingsManager settingsManager, RustService rustService)
 {
-    private static readonly Dictionary<(string ToolId, string FieldName), ManagedToolSetting> MANAGED_SETTINGS = new()
-    {
-        [(ToolSelectionRules.WEB_SEARCH_TOOL_ID, "baseUrl")] = CreateManagedToolSetting(x => x.WebSearchBaseUrl, (tools, value) => tools.WebSearchBaseUrl = value),
-        [(ToolSelectionRules.WEB_SEARCH_TOOL_ID, "defaultLanguage")] = CreateManagedToolSetting(x => x.WebSearchDefaultLanguage),
-        [(ToolSelectionRules.WEB_SEARCH_TOOL_ID, "defaultSafeSearch")] = CreateManagedToolSetting(x => x.WebSearchDefaultSafeSearch),
-        [(ToolSelectionRules.WEB_SEARCH_TOOL_ID, "maxResults")] = CreateManagedToolSetting(x => x.WebSearchMaxResults),
-        [(ToolSelectionRules.WEB_SEARCH_TOOL_ID, "searchTimeoutSeconds")] = CreateManagedToolSetting(x => x.WebSearchTimeoutSeconds),
-        [(ToolSelectionRules.WEB_SEARCH_TOOL_ID, "maxTotalContentCharacters")] = CreateManagedToolSetting(x => x.WebSearchMaxTotalContentCharacters),
-        [(ToolSelectionRules.WEB_SEARCH_TOOL_ID, "minContentCharactersPerResult")] = CreateManagedToolSetting(x => x.WebSearchMinContentCharactersPerResult),
-        [(ToolSelectionRules.WEB_SEARCH_TOOL_ID, "pageTimeoutSeconds")] = CreateManagedToolSetting(x => x.WebSearchPageTimeoutSeconds),
-        [(ToolSelectionRules.WEB_SEARCH_TOOL_ID, "allPagesRetrievalTimeoutSeconds")] = CreateManagedToolSetting(x => x.WebSearchRetrievalTimeoutSeconds),
-        [(ToolSelectionRules.READ_WEB_PAGE_TOOL_ID, "timeoutSeconds")] = CreateManagedToolSetting(x => x.ReadWebPageTimeoutSeconds),
-        [(ToolSelectionRules.READ_WEB_PAGE_TOOL_ID, "maxContentCharacters")] = CreateManagedToolSetting(x => x.ReadWebPageMaxContentCharacters),
-        [(ToolSelectionRules.READ_WEB_PAGE_TOOL_ID, "allowedPrivateHosts")] = CreateManagedToolSetting(x => x.ReadWebPageAllowedPrivateHosts, (tools, value) => tools.ReadWebPageAllowedPrivateHosts = value),
-    };
+    /// <summary>
+    /// Builds the key under which an organization's configuration addresses one tool setting.
+    /// </summary>
+    private static string ManagedSettingKey(string toolId, string fieldName) => $"{toolId}.{fieldName}";
 
+    /// <summary>
+    /// Reads the effective settings of one tool.
+    /// </summary>
+    /// <remarks>
+    /// Three sources, in this order: a value an organization locked wins over everything, then
+    /// the value the user saved, then a default an organization pre-filled. Secrets never come
+    /// from a configuration file — they live in the operating system's keyring.
+    /// </remarks>
     public async Task<Dictionary<string, string>> GetSettingsAsync(ToolDefinition definition)
     {
         var values = new Dictionary<string, string>(StringComparer.Ordinal);
         var storedValues = settingsManager.ConfigurationData.Tools.Settings.GetValueOrDefault(definition.Id);
+        var lockedSettings = settingsManager.ConfigurationData.Tools.LockedToolSettings;
+        var defaultSettings = settingsManager.ConfigurationData.Tools.DefaultToolSettings;
+
         foreach (var property in definition.SettingsSchema.Properties)
         {
             var fieldName = property.Key;
             var fieldDefinition = property.Value;
-            if (TryGetManagedSetting(definition, fieldName, out var managedSetting))
-            {
-                var meta = managedSetting.GetMeta();
-                if (meta?.IsLocked is true || managedSetting.SetLegacyLocalValue is not null)
-                    values[fieldName] = managedSetting.GetValue(settingsManager.ConfigurationData.Tools);
-                else if (storedValues?.TryGetValue(fieldName, out var managedStoredValue) is true)
-                    values[fieldName] = managedStoredValue;
-                else if (meta?.ManagedMode is ManagedConfigurationMode.EDITABLE_DEFAULT)
-                    values[fieldName] = managedSetting.GetValue(settingsManager.ConfigurationData.Tools);
-
-                continue;
-            }
-
             if (fieldDefinition.Secret)
             {
                 var response = await rustService.GetSecret(new ToolSettingsSecretId(definition.Id, fieldName), SecretStoreType.TOOL_SETTINGS, isTrying: true);
@@ -54,8 +41,13 @@ public sealed class ToolSettingsService(SettingsManager settingsManager, RustSer
                 continue;
             }
 
-            if (storedValues?.TryGetValue(fieldName, out var storedValue) is true)
+            var managedKey = ManagedSettingKey(definition.Id, fieldName);
+            if (lockedSettings.TryGetValue(managedKey, out var lockedValue))
+                values[fieldName] = lockedValue;
+            else if (storedValues?.TryGetValue(fieldName, out var storedValue) is true)
                 values[fieldName] = storedValue;
+            else if (defaultSettings.TryGetValue(managedKey, out var defaultValue))
+                values[fieldName] = defaultValue;
         }
 
         return values;
@@ -120,18 +112,10 @@ public sealed class ToolSettingsService(SettingsManager settingsManager, RustSer
             values.TryGetValue(fieldName, out var value);
             value ??= string.Empty;
 
-            if (TryGetManagedSetting(definition, fieldName, out var managedSetting))
-            {
-                if (managedSetting.GetMeta()?.IsLocked is true)
-                    continue;
-
-                if (managedSetting.SetLegacyLocalValue is not null)
-                    managedSetting.SetLegacyLocalValue(settingsManager.ConfigurationData.Tools, value);
-                else
-                    storedValues[fieldName] = value;
-
+            // A locked setting belongs to the organization; whatever the dialog sent for it is
+            // discarded rather than stored where it would never be read again:
+            if (this.IsFieldLocked(definition, fieldName))
                 continue;
-            }
 
             if (fieldDefinition.Secret)
             {
@@ -151,26 +135,9 @@ public sealed class ToolSettingsService(SettingsManager settingsManager, RustSer
         await MessageBus.INSTANCE.SendMessage<object?>(null, Event.CONFIGURATION_CHANGED, null);
     }
 
+    /// <summary>
+    /// Whether an organization fixed this setting, which makes it read-only for the user.
+    /// </summary>
     public bool IsFieldLocked(ToolDefinition definition, string fieldName) =>
-        TryGetManagedSetting(definition, fieldName, out var managedSetting) &&
-        managedSetting.GetMeta()?.IsLocked is true;
-
-    private static bool TryGetManagedSetting(ToolDefinition definition, string fieldName, out ManagedToolSetting managedSetting) =>
-        MANAGED_SETTINGS.TryGetValue((definition.Id, fieldName), out managedSetting!);
-
-    private static ManagedToolSetting CreateManagedToolSetting(
-        Expression<Func<DataTools, string>> propertyExpression,
-        Action<DataTools, string>? setLegacyLocalValue = null)
-    {
-        var getValue = propertyExpression.Compile();
-        return new ManagedToolSetting(
-            getValue,
-            () => ManagedConfiguration.TryGet(x => x.Tools, propertyExpression, out var meta) ? meta : null,
-            setLegacyLocalValue);
-    }
-
-    private sealed record ManagedToolSetting(
-        Func<DataTools, string> GetValue,
-        Func<ConfigMeta<DataTools, string>?> GetMeta,
-        Action<DataTools, string>? SetLegacyLocalValue);
+        settingsManager.ConfigurationData.Tools.LockedToolSettings.ContainsKey(ManagedSettingKey(definition.Id, fieldName));
 }

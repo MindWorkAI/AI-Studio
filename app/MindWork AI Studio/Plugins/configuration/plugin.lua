@@ -701,47 +701,57 @@ CONFIG["SETTINGS"] = {}
 --     ["read_web_page"] = "VERY_LOW"
 -- }
 
--- Configure the Web Search tool. All values are strings.
--- WebSearchBaseUrl: SearXNG HTTP(S) root URL or /search endpoint. The instance must have the
--- JSON format enabled, i.e. "json" listed under search.formats in its settings.yml. Public
--- instances usually serve only the web interface and block automated requests, so use an
--- instance your organization operates.
--- CONFIG["SETTINGS"]["DataTools.WebSearchBaseUrl"] = "https://searxng.example.org/"
--- WebSearchDefaultLanguage: required. IETF language tag sent to SearXNG, or "all" for no
--- restriction. Without a language many search engines return no results at all, so the tool
--- counts as unconfigured while this is empty.
--- CONFIG["SETTINGS"]["DataTools.WebSearchDefaultLanguage"] = "de-DE"
--- WebSearchDefaultSafeSearch: SearXNG safe-search level "0", "1", or "2".
--- CONFIG["SETTINGS"]["DataTools.WebSearchDefaultSafeSearch"] = "1"
--- WebSearchMaxResults: result count as an integer string.
--- CONFIG["SETTINGS"]["DataTools.WebSearchMaxResults"] = "5"
--- WebSearchTimeoutSeconds: SearXNG request timeout in seconds as an integer string.
--- CONFIG["SETTINGS"]["DataTools.WebSearchTimeoutSeconds"] = "20"
--- WebSearchMaxTotalContentCharacters: total content-character budget as an integer string.
--- CONFIG["SETTINGS"]["DataTools.WebSearchMaxTotalContentCharacters"] = "100000"
--- WebSearchMinContentCharactersPerResult: per-result content allocation as an integer string.
--- CONFIG["SETTINGS"]["DataTools.WebSearchMinContentCharactersPerResult"] = "3000"
--- WebSearchPageTimeoutSeconds: per-page timeout in seconds as an integer string.
--- CONFIG["SETTINGS"]["DataTools.WebSearchPageTimeoutSeconds"] = "30"
--- WebSearchRetrievalTimeoutSeconds: overall page-retrieval timeout in seconds as an integer string.
--- CONFIG["SETTINGS"]["DataTools.WebSearchRetrievalTimeoutSeconds"] = "90"
-
--- Configure the Read Web Page tool. All values are strings.
--- ReadWebPageTimeoutSeconds: page-loading timeout in seconds as an integer string.
--- CONFIG["SETTINGS"]["DataTools.ReadWebPageTimeoutSeconds"] = "30"
--- ReadWebPageMaxContentCharacters: content-character limit as an integer string.
--- CONFIG["SETTINGS"]["DataTools.ReadWebPageMaxContentCharacters"] = "30000"
--- ReadWebPageAllowedPrivateHosts: comma-separated private or VPN host patterns.
--- Public pages do not need to be listed. Wildcards only match subdomains, so add the root domain separately.
--- Allowed private hosts require a provider with HIGH confidence or a provider trusted by the organization.
--- AI Studio only tries the current user's operating-system sign-in for explicitly allowed HTTPS targets
--- when these provider requirements are met, and it does not reuse browser cookies.
--- CONFIG["SETTINGS"]["DataTools.ReadWebPageAllowedPrivateHosts"] = "dlr.de, *.dlr.de"
-
--- The 12 Web Search and Read Web Page settings are locked by default. Add
--- ".AllowUserOverride" = true to any of them to provide an editable organization default instead.
--- A saved local value then takes precedence.
--- CONFIG["SETTINGS"]["DataTools.WebSearchBaseUrl.AllowUserOverride"] = true
+-- Configure the settings of individual tools. Keys are "<tool ID>.<field name>", values are
+-- always strings. This works for every tool, including tools added by plugins, because nothing
+-- here needs to be known to AI Studio in advance.
+--
+-- Two tables decide how firmly a value applies:
+--   LockedToolSettings  - the user cannot change it, and it is reapplied on every update.
+--   DefaultToolSettings - pre-fills the setting; a value the user saves afterwards wins.
+--
+-- Secrets never belong here. A tool field marked as secret is kept in the operating system's
+-- keyring, which a configuration file cannot write to.
+--
+-- Field names of the Web Search tool:
+--   baseUrl                          SearXNG HTTP(S) root URL or /search endpoint. The instance
+--                                    must have the JSON format enabled, i.e. "json" listed under
+--                                    search.formats in its settings.yml. Public instances usually
+--                                    serve only the web interface and block automated requests,
+--                                    so use an instance your organization operates.
+--   defaultLanguage                  Required. IETF language tag such as "de-DE", or "all" for no
+--                                    restriction. Without a language many search engines return
+--                                    no results at all, so the tool counts as unconfigured while
+--                                    this is empty.
+--   defaultSafeSearch                Safe-search level "0", "1", or "2".
+--   maxResults                       Result count, as an integer string.
+--   searchTimeoutSeconds             SearXNG request timeout in seconds.
+--   pageTimeoutSeconds               Per-page timeout in seconds.
+--   allPagesRetrievalTimeoutSeconds  Overall page-retrieval timeout in seconds.
+--   maxTotalContentCharacters        Total content-character budget.
+--   minContentCharactersPerResult    Per-result content allocation.
+--
+-- Field names of the Read Web Page tool:
+--   timeoutSeconds        Page-loading timeout in seconds.
+--   maxContentCharacters  Content-character limit.
+--   allowedPrivateHosts   Comma-separated private or VPN host patterns. Public pages need not be
+--                         listed. Wildcards match subdomains only, so add the root domain
+--                         separately. Allowed private hosts require a provider with HIGH
+--                         confidence or one trusted by the organization. AI Studio only tries the
+--                         current user's operating-system sign-in for explicitly allowed HTTPS
+--                         targets when those provider requirements are met, and it never reuses
+--                         browser cookies.
+--
+-- CONFIG["SETTINGS"]["DataTools.LockedToolSettings"] = {
+--     ["web_search.baseUrl"] = "https://searxng.example.org/",
+--     ["web_search.defaultLanguage"] = "de-DE",
+--     ["read_web_page.allowedPrivateHosts"] = "example.org, *.example.org"
+-- }
+--
+-- CONFIG["SETTINGS"]["DataTools.DefaultToolSettings"] = {
+--     ["web_search.maxResults"] = "5",
+--     ["web_search.defaultSafeSearch"] = "1",
+--     ["read_web_page.timeoutSeconds"] = "30"
+-- }
 
 -- Configure the HTTP timeout for external requests, in seconds.
 -- The default is 3600 (1 hour).

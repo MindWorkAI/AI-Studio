@@ -169,12 +169,11 @@ When adding configuration plugin capabilities:
 **Documentation:** `documentation/Tools.md`
 
 When adding, changing, or removing model-driven tools, keep these parts in sync:
-- `app/MindWork AI Studio/wwwroot/tool_definitions/` for the tool JSON definition.
-- `app/MindWork AI Studio/Tools/ToolCallingSystem/ToolCallingImplementations/` for the `IToolImplementation` class.
+- `app/MindWork AI Studio/Tools/ToolCallingSystem/ToolCallingImplementations/` for the `IToolImplementation` class, which states its own `ToolDefinition` through `GetDefinition()`. There are no tool definition files; a tool arriving from elsewhere brings an `IToolDefinitionSource` instead.
 - `app/MindWork AI Studio/Program.cs` for DI registration of the implementation.
-- `app/MindWork AI Studio/Tools/ToolCallingSystem/ToolSelectionRules.cs` when default tool dependencies or minimum provider confidence rules change.
-- `app/MindWork AI Studio/Tools/ToolCallingSystem/ToolSettingsOptionSources.cs` when a tool setting offers a fixed choice the app maintains, such as languages. Prefer this over repeating the values in the tool definition's `enum`; it keeps the list in one place and gives the user translated names.
-- `app/MindWork AI Studio/Plugins/configuration/plugin.lua` when administrators can configure or manage the tool or its settings.
+- `app/MindWork AI Studio/Tools/ToolCallingSystem/ToolSelectionRules.cs` when the shared tool-call limits change. A tool's own minimum provider confidence belongs in its definition, not here.
+- `app/MindWork AI Studio/Tools/ToolCallingSystem/ToolSettingsOptionSources.cs` when a tool setting offers a fixed choice the app maintains, such as languages. Prefer this over spelling the values out in the settings schema; it keeps the list in one place and gives the user translated names.
+- `app/MindWork AI Studio/Plugins/configuration/plugin.lua` to document each setting's field name, meaning, and data type. Tool settings need no code to be centrally manageable: an organization addresses them by `"<toolId>.<fieldName>"` in `DataTools.LockedToolSettings` or `DataTools.DefaultToolSettings`.
 
 Tool implementations must treat model-provided arguments as untrusted input. Validate settings and arguments, protect secrets with `SensitiveTraceArgumentNames`, use `ToolExecutionBlockedException` for intentional policy blocks, and check provider confidence before returning sensitive data to the model.
 
