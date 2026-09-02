@@ -50,6 +50,9 @@ public partial class ChatComponent : MSGComponentBase
     private ILogger<ChatComponent> Logger { get; set; } = null!;
 
     [Inject]
+    private ToolRegistry ToolRegistry { get; set; } = null!;
+
+    [Inject]
     private IDialogService DialogService { get; init; } = null!;
     
     [Inject]
@@ -905,7 +908,7 @@ public partial class ChatComponent : MSGComponentBase
         this.Logger.LogDebug($"Start processing user input using provider '{this.Provider.InstanceName}' with model '{this.Provider.Model}'.");
         this.StateHasChanged();
         this.ChatThread!.RuntimeComponent = Tools.Components.CHAT;
-        this.ChatThread.RuntimeSelectedToolIds = this.SettingsManager.FilterToolIdsForProvider(this.Provider, this.selectedToolIds);
+        this.ChatThread.RuntimeSelectedToolIds = this.ToolRegistry.FilterToolIdsForProvider(this.Provider, this.selectedToolIds);
         await this.AIJobService.TryStartChatGenerationAsync(new ChatGenerationRequest
         {
             ChatThread = this.ChatThread,

@@ -108,8 +108,14 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
         //
         // Prepare the tools we want to use:
         //
+        var toolRegistry = Program.SERVICE_PROVIDER.GetService<ToolRegistry>();
         var providerConfidence = this.Provider.GetConfidence(settingsManager).Level;
-        var minimumWebSearchConfidence = settingsManager.GetMinimumProviderConfidenceForTool(ToolSelectionRules.WEB_SEARCH_TOOL_ID);
+
+        //
+        // The provider-native web search is held to the same confidence the local web search tool
+        // asks for: to the user it is the same act, whoever performs the search.
+        //
+        var minimumWebSearchConfidence = toolRegistry?.GetMinimumProviderConfidence(ToolSelectionRules.WEB_SEARCH_TOOL_ID) ?? ConfidenceLevel.NONE;
         var isWebSearchAllowed = settingsManager.IsToolActive(ToolSelectionRules.WEB_SEARCH_TOOL_ID) &&
                                  ToolSelectionRules.IsProviderConfidenceAllowed(providerConfidence, minimumWebSearchConfidence);
         IList<object> providerTools = modelCapabilities.Contains(Capability.WEB_SEARCH) && isWebSearchAllowed
@@ -171,7 +177,6 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
             yield break;
         }
 
-        var toolRegistry = Program.SERVICE_PROVIDER.GetService<ToolRegistry>();
         var toolExecutor = Program.SERVICE_PROVIDER.GetService<ToolExecutor>();
         var currentAssistantContent = chatThread.Blocks.LastOrDefault(x => x.Role is ChatRole.AI)?.Content as ContentText;
         currentAssistantContent?.ToolInvocations.Clear();

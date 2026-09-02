@@ -54,23 +54,24 @@ public partial class SettingsPanelTools : SettingsPanelBase
     private IEnumerable<ConfidenceLevel> GetSelectableConfidenceLevels() =>
         Enum.GetValues<ConfidenceLevel>().OrderBy(x => x).Where(x => x is not ConfidenceLevel.UNKNOWN);
 
-    private string GetCurrentConfidenceLevelName(ToolCatalogItem item) => this.GetConfidenceLevelName(this.GetMinimumProviderConfidence(item));
+    private string GetCurrentConfidenceLevelName(ToolCatalogItem item) => this.GetConfidenceLevelName(GetMinimumProviderConfidence(item));
 
     private string GetConfidenceLevelName(ConfidenceLevel confidenceLevel) => confidenceLevel is ConfidenceLevel.NONE
         ? this.T("No minimum confidence level chosen")
         : confidenceLevel.GetName();
 
     private string SetCurrentConfidenceLevelColorStyle(ToolCatalogItem item) =>
-        $"background-color: {this.GetMinimumProviderConfidence(item).GetColor(this.SettingsManager)};";
+        $"background-color: {GetMinimumProviderConfidence(item).GetColor(this.SettingsManager)};";
 
     private bool IsToolConfidenceManaged() =>
         ManagedConfiguration.TryGet(x => x.Tools, x => x.MinimumProviderConfidenceByToolId, out var meta) && meta.IsLocked;
 
-    private ConfidenceLevel GetMinimumProviderConfidence(ToolCatalogItem item) => this.SettingsManager.GetMinimumProviderConfidenceForTool(item.Definition.Id);
+    // The catalog already carries the resolved level, so there is nothing to look up again:
+    private static ConfidenceLevel GetMinimumProviderConfidence(ToolCatalogItem item) => item.MinimumProviderConfidence;
 
     private async Task ChangeMinimumProviderConfidence(ToolCatalogItem item, ConfidenceLevel confidenceLevel)
     {
-        this.SettingsManager.SetMinimumProviderConfidenceForTool(item.Definition.Id, confidenceLevel);
+        this.SettingsManager.SetMinimumProviderConfidenceForTool(item.Definition.Id, confidenceLevel, item.Definition.MinimumProviderConfidence);
         await this.SettingsManager.StoreSettings();
         this.items = await this.ToolRegistry.GetCatalogAsync(this.ToolRegistry.GetAllDefinitions());
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);

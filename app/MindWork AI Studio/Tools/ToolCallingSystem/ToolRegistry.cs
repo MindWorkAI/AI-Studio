@@ -1,13 +1,19 @@
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 using AIStudio.Provider;
 using AIStudio.Settings;
 
-using Microsoft.AspNetCore.Hosting;
-
 namespace AIStudio.Tools.ToolCallingSystem;
 
+
+/// <summary>
+/// Holds the tools AI Studio knows and decides which of them a request may use.
+/// </summary>
+/// <remarks>
+/// Definitions arrive through tool definition sources — the app's own tools from code, later the
+/// ones plugin authors write. Every definition passes the same validation regardless of where it
+/// came from, which matters most for the ones AI Studio does not control.
+/// </remarks>
 public sealed class ToolRegistry
 {
     private readonly ILogger<ToolRegistry> logger;
@@ -17,8 +23,8 @@ public sealed class ToolRegistry
     private readonly Dictionary<string, IToolImplementation> implementationsByKey = new(StringComparer.Ordinal);
 
     public ToolRegistry(
-        IWebHostEnvironment webHostEnvironment,
         IEnumerable<IToolImplementation> implementations,
+        IEnumerable<IToolDefinitionSource> definitionSources,
         SettingsManager settingsManager,
         ToolSettingsService toolSettingsService,
         ILogger<ToolRegistry> logger)
@@ -39,35 +45,18 @@ public sealed class ToolRegistry
                 this.logger.LogWarning("Skipping duplicate tool implementation key '{ImplementationKey}'.", implementation.ImplementationKey);
         }
 
-        var definitionsDirectory = webHostEnvironment.WebRootFileProvider.GetDirectoryContents("tool_definitions");
-        if (!definitionsDirectory.Exists)
-        {
-            this.logger.LogWarning("The tool definitions directory was not found.");
-            return;
-        }
-
-        var serializerOptions = new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true,
-        };
-        serializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.SnakeCaseLower, allowIntegerValues: false));
-
+        //
+        // Function names are checked across all sources together: two tools offering the same
+        // name would be indistinguishable to a model, no matter who defined them.
+        //
         var functionNames = new HashSet<string>(StringComparer.Ordinal);
-        foreach (var file in definitionsDirectory.Where(x => !x.IsDirectory && x.Name.EndsWith(".json", StringComparison.OrdinalIgnoreCase)))
+        foreach (var source in definitionSources)
         {
-            try
+            foreach (var definition in source.GetDefinitions())
             {
-                using var stream = file.CreateReadStream();
-                var definition = JsonSerializer.Deserialize<ToolDefinition>(stream, serializerOptions);
-                if (definition is null)
-                {
-                    this.logger.LogWarning("Skipping tool definition '{ToolFile}' because it could not be deserialized.", file.Name);
-                    continue;
-                }
-
                 if (!TryValidateDefinition(definition, out var validationIssue))
                 {
-                    this.logger.LogWarning("Skipping tool definition '{ToolFile}': {ValidationIssue}", file.Name, validationIssue);
+                    this.logger.LogWarning("Skipping tool definition '{ToolId}' from source '{SourceName}': {ValidationIssue}", definition.Id, source.SourceName, validationIssue);
                     continue;
                 }
 
@@ -77,23 +66,17 @@ public sealed class ToolRegistry
                     continue;
                 }
 
-                if (this.definitionsById.ContainsKey(definition.Id))
+                if (!this.definitionsById.TryAdd(definition.Id, definition))
                 {
-                    this.logger.LogWarning("Skipping duplicate tool definition ID '{ToolId}' from '{ToolFile}'.", definition.Id, file.Name);
+                    this.logger.LogWarning("Skipping duplicate tool definition ID '{ToolId}' from source '{SourceName}'.", definition.Id, source.SourceName);
                     continue;
                 }
 
                 if (!functionNames.Add(definition.Function.Name))
                 {
                     this.logger.LogWarning("Skipping tool definition '{ToolId}' because function name '{FunctionName}' is already registered.", definition.Id, definition.Function.Name);
-                    continue;
+                    this.definitionsById.Remove(definition.Id);
                 }
-
-                this.definitionsById.Add(definition.Id, definition);
-            }
-            catch (Exception exception)
-            {
-                this.logger.LogWarning(exception, "Skipping invalid tool definition file '{ToolFile}'.", file.Name);
             }
         }
     }
@@ -219,6 +202,57 @@ public sealed class ToolRegistry
 
     public IToolImplementation? GetImplementation(string implementationKey) => this.implementationsByKey.GetValueOrDefault(implementationKey);
 
+    /// <summary>
+    /// The provider confidence a tool needs: its own minimum, unless the user or an administrator
+    /// raised or lowered it.
+    /// </summary>
+    /// <remarks>
+    /// This is the place that knows both halves — the definition's own minimum and the stored
+    /// overrides — so callers holding only a tool ID come here instead of to the settings.
+    /// </remarks>
+    public ConfidenceLevel GetMinimumProviderConfidence(string toolId) => this.GetDefinition(toolId) is { } definition
+        ? this.GetMinimumProviderConfidence(definition)
+        : ConfidenceLevel.NONE;
+
+    public ConfidenceLevel GetMinimumProviderConfidence(ToolDefinition definition) =>
+        this.settingsManager.GetMinimumProviderConfidenceForTool(definition.Id, definition.MinimumProviderConfidence);
+
+    /// <summary>
+    /// Narrows a selection of tool IDs to those the given provider may actually use.
+    /// </summary>
+    /// <remarks>
+    /// Used before a request is sent, so the chat records what will really be available rather
+    /// than what the user once ticked. Lives here because judging a tool needs its definition:
+    /// the settings know the overrides, the definition knows the tool's own minimum.
+    /// </remarks>
+    /// <param name="provider">The provider the request goes to.</param>
+    /// <param name="selectedToolIds">The tools the user selected.</param>
+    /// <returns>The subset that is enabled, active, and allowed by the provider's confidence.</returns>
+    public HashSet<string> FilterToolIdsForProvider(AIStudio.Settings.Provider provider, IEnumerable<string> selectedToolIds)
+    {
+        if (!this.settingsManager.AreToolsEnabled())
+            return [];
+
+        if (!provider.GetToolCallingAvailability().IsAvailable)
+            return [];
+
+        var providerConfidence = provider.UsedLLMProvider.GetConfidence(this.settingsManager).Level;
+        var filtered = ToolSelectionRules.NormalizeSelection(selectedToolIds);
+        foreach (var toolId in filtered.ToList())
+        {
+            if (!this.settingsManager.IsToolActive(toolId))
+            {
+                filtered.Remove(toolId);
+                continue;
+            }
+
+            if (!ToolSelectionRules.IsProviderConfidenceAllowed(providerConfidence, this.GetMinimumProviderConfidence(toolId)))
+                filtered.Remove(toolId);
+        }
+
+        return filtered;
+    }
+
     public async Task<IReadOnlyList<ToolCatalogItem>> GetCatalogAsync(AIStudio.Tools.Components component)
     {
         var definitions = this.GetDefinitionsForComponent(component);
@@ -240,7 +274,7 @@ public sealed class ToolRegistry
                 Implementation = implementation,
                 ConfigurationState = await this.toolSettingsService.GetConfigurationStateAsync(definition, implementation),
                 IsActive = this.settingsManager.IsToolActive(definition.Id),
-                MinimumProviderConfidence = this.settingsManager.GetMinimumProviderConfidenceForTool(definition.Id),
+                MinimumProviderConfidence = this.GetMinimumProviderConfidence(definition),
             });
         }
 
@@ -300,7 +334,7 @@ public sealed class ToolRegistry
                 continue;
             }
 
-            var resolution = this.settingsManager.GetMinimumProviderConfidenceResolutionForTool(definition.Id);
+            var resolution = this.settingsManager.GetMinimumProviderConfidenceResolutionForTool(definition.Id, definition.MinimumProviderConfidence);
             var minimumToolConfidence = resolution.ConfidenceLevel;
             this.logger.LogDebug("Tool '{ToolId}' uses minimum provider confidence '{ConfidenceLevel}' from {Source}.", definition.Id, minimumToolConfidence, resolution.Source);
 

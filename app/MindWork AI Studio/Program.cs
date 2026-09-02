@@ -172,6 +172,7 @@ internal sealed class Program
         builder.Services.AddSingleton<WebPageRetrievalService>();
         builder.Services.AddSingleton<IToolImplementation, ReadWebPageTool>();
         builder.Services.AddSingleton<IToolImplementation, SearXNGWebSearchTool>();
+        builder.Services.AddSingleton<IToolDefinitionSource, CodeToolDefinitionSource>();
         builder.Services.AddSingleton<ToolRegistry>();
         builder.Services.AddSingleton<ToolExecutor>();
         builder.Services.AddSingleton<IToolCallingLoop, ToolCallingLoop>();

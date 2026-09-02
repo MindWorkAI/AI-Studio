@@ -28,6 +28,9 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     [Inject]
     protected RustService RustService { get; init; } = null!;
+
+    [Inject]
+    protected ToolRegistry ToolRegistry { get; init; } = null!;
     
     [Inject]
     protected NavigationManager NavigationManager { get; init; } = null!;
@@ -468,7 +471,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             this.ChatThread.SelectedProvider = this.ProviderSettings.Id;
             this.ChatThread.RuntimeComponent = this.Component;
             this.ChatThread.RuntimeSelectedToolIds = this.SettingsManager.IsToolSelectionVisible(this.Component)
-                ? this.SettingsManager.FilterToolIdsForProvider(this.ProviderSettings, this.selectedToolIds)
+                ? this.ToolRegistry.FilterToolIdsForProvider(this.ProviderSettings, this.selectedToolIds)
                 : [];
         }
 

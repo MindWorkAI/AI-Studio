@@ -797,40 +797,6 @@ public sealed class SettingsManager
         return [];
     }
 
-    public HashSet<string> FilterToolIdsForProvider(AIStudio.Settings.Provider provider, IEnumerable<string> selectedToolIds)
-    {
-        if (!this.AreToolsEnabled())
-            return [];
-
-        var toolCallingAvailability = provider.GetToolCallingAvailability();
-        if (!toolCallingAvailability.IsAvailable)
-            return [];
-
-        var modelCapabilities = provider.GetModelCapabilities();
-        var supportsRequiredApis =
-            modelCapabilities.Contains(Capability.CHAT_COMPLETION_API) ||
-            modelCapabilities.Contains(Capability.RESPONSES_API);
-        if (!supportsRequiredApis || !modelCapabilities.Contains(Capability.FUNCTION_CALLING))
-            return [];
-
-        var providerConfidence = provider.UsedLLMProvider.GetConfidence(this).Level;
-        var filtered = ToolSelectionRules.NormalizeSelection(selectedToolIds);
-
-        foreach (var toolId in filtered.ToList())
-        {
-            if (!this.IsToolActive(toolId))
-            {
-                filtered.Remove(toolId);
-                continue;
-            }
-
-            var minimumToolConfidence = this.GetMinimumProviderConfidenceForTool(toolId);
-            if (!ToolSelectionRules.IsProviderConfidenceAllowed(providerConfidence, minimumToolConfidence))
-                filtered.Remove(toolId);
-        }
-
-        return filtered;
-    }
 
     public bool AreToolsEnabled() => this.ConfigurationData.Tools.EnableTools;
 
@@ -863,7 +829,17 @@ public sealed class SettingsManager
             this.ConfigurationData.Tools.VisibleToolSelectionComponents.Remove(key);
     }
 
-    public ToolMinimumProviderConfidenceResolution GetMinimumProviderConfidenceResolutionForTool(string toolId)
+    /// <summary>
+    /// Resolves which provider confidence a tool needs, and where that value came from.
+    /// </summary>
+    /// <remarks>
+    /// The default is passed in rather than looked up here. It belongs to the tool definition,
+    /// and the definitions live in the tool registry — which already depends on this class, so
+    /// asking it back would be a circle. Every caller has the definition at hand anyway.
+    /// </remarks>
+    /// <param name="toolId">The tool to resolve the confidence for.</param>
+    /// <param name="defaultLevel">The tool's own minimum, used when nothing overrides it.</param>
+    public ToolMinimumProviderConfidenceResolution GetMinimumProviderConfidenceResolutionForTool(string toolId, ConfidenceLevel defaultLevel)
     {
         if (ManagedConfiguration.TryGet(x => x.Tools, x => x.MinimumProviderConfidenceByToolId, out var configMeta) && configMeta.IsLocked)
         {
@@ -894,14 +870,19 @@ public sealed class SettingsManager
             return new(confidenceLevel, "stored override");
         }
 
-        return new(ToolSelectionRules.GetDefaultMinimumProviderConfidence(toolId), "default fallback");
+        return new(defaultLevel, "default fallback");
     }
 
-    public ConfidenceLevel GetMinimumProviderConfidenceForTool(string toolId) => this.GetMinimumProviderConfidenceResolutionForTool(toolId).ConfidenceLevel;
+    public ConfidenceLevel GetMinimumProviderConfidenceForTool(string toolId, ConfidenceLevel defaultLevel) => this.GetMinimumProviderConfidenceResolutionForTool(toolId, defaultLevel).ConfidenceLevel;
 
-    public void SetMinimumProviderConfidenceForTool(string toolId, ConfidenceLevel confidenceLevel)
+    /// <summary>
+    /// Stores which provider confidence a tool needs.
+    /// </summary>
+    /// <param name="toolId">The tool to store the confidence for.</param>
+    /// <param name="confidenceLevel">The level the user chose.</param>
+    /// <param name="defaultLevel">The tool's own minimum. Choosing it again removes the override.</param>
+    public void SetMinimumProviderConfidenceForTool(string toolId, ConfidenceLevel confidenceLevel, ConfidenceLevel defaultLevel)
     {
-        var defaultLevel = ToolSelectionRules.GetDefaultMinimumProviderConfidence(toolId);
         if (confidenceLevel == defaultLevel)
         {
             this.ConfigurationData.Tools.MinimumProviderConfidenceByToolId.Remove(toolId);

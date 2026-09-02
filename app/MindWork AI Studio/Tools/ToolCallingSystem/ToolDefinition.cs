@@ -1,6 +1,8 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
+using AIStudio.Provider;
+
 namespace AIStudio.Tools.ToolCallingSystem;
 
 public sealed class ToolDefinition
@@ -16,6 +18,16 @@ public sealed class ToolDefinition
     public ToolSettingsSchema SettingsSchema { get; init; } = new();
 
     public string SystemPromptInstructions { get; init; } = string.Empty;
+
+    /// <summary>
+    /// The lowest provider confidence this tool may be used with, unless an administrator or the
+    /// user says otherwise.
+    /// </summary>
+    /// <remarks>
+    /// Belongs to the tool, because only the tool knows what it exposes: a web search sends the
+    /// user's question to a search engine, so it asks for more trust than a calculator would.
+    /// </remarks>
+    public ConfidenceLevel MinimumProviderConfidence { get; init; } = ConfidenceLevel.NONE;
 
     public ToolFunctionDefinition Function { get; init; } = new();
 }

@@ -8,6 +8,17 @@ public interface IToolImplementation
 {
     public string ImplementationKey { get; }
 
+    /// <summary>
+    /// Describes this tool: what the model may call, which settings it needs, and where it may
+    /// be used.
+    /// </summary>
+    /// <remarks>
+    /// For a tool written in C#, the definition and the implementation are one object. Tools that
+    /// arrive from elsewhere — a plugin, an assistant — get their definition from their own
+    /// definition source instead, and are matched to an implementation by their implementation key.
+    /// </remarks>
+    public ToolDefinition GetDefinition();
+
     public string Icon => Icons.Material.Filled.Build;
 
     public IReadOnlySet<string> SensitiveTraceArgumentNames { get; }

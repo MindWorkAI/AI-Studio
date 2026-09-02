@@ -87,9 +87,10 @@ public partial class ToolSelection : MSGComponentBase
         await this.SelectedToolIdsChanged.InvokeAsync(updated);
     }
 
-    private ConfidenceLevel GetMinimumProviderConfidence(ToolCatalogItem item) => this.SettingsManager.GetMinimumProviderConfidenceForTool(item.Definition.Id);
+    // The catalog already carries the resolved level, so there is nothing to look up again:
+    private static ConfidenceLevel GetMinimumProviderConfidence(ToolCatalogItem item) => item.MinimumProviderConfidence;
 
-    private bool IsBlockedByProviderConfidence(ToolCatalogItem item) => !ToolSelectionRules.IsProviderConfidenceAllowed(this.ProviderConfidence, this.GetMinimumProviderConfidence(item));
+    private bool IsBlockedByProviderConfidence(ToolCatalogItem item) => !ToolSelectionRules.IsProviderConfidenceAllowed(this.ProviderConfidence, GetMinimumProviderConfidence(item));
 
     private string? GetProviderConfidenceHint(ToolCatalogItem item)
     {
@@ -98,7 +99,7 @@ public partial class ToolSelection : MSGComponentBase
 
         return string.Format(
             this.T("This tool requires provider confidence {0}. The selected provider has {1}."),
-            this.GetMinimumProviderConfidence(item).GetName(),
+            GetMinimumProviderConfidence(item).GetName(),
             this.ProviderConfidence.GetName());
     }
 
