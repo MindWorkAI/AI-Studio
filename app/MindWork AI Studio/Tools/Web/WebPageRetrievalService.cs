@@ -87,46 +87,46 @@ public sealed class WebPageRetrievalService(HTMLParser htmlParser)
         return exception.InnerException is null ? null : FindBlockedException(exception.InnerException);
     }
 
-    private static async Task<IReadOnlyList<IPAddress>> ResolveValidatedUrlAddressesAsync(
-        Uri url,
-        WebPageRetrievalOptions options,
-        CancellationToken token)
+    private static async Task<IReadOnlyList<IPAddress>> ResolveValidatedUrlAddressesAsync(Uri url, WebPageRetrievalOptions options, CancellationToken token)
     {
         if (url is not { Scheme: "http" or "https" })
-            throw new WebPageAccessBlockedException(
-                "Only HTTP and HTTPS URLs are supported.",
-                WebPageAccessBlockReason.UNSUPPORTED_SCHEME);
+            throw new WebPageAccessBlockedException("Only HTTP and HTTPS URLs are supported.", WebPageAccessBlockReason.UNSUPPORTED_SCHEME);
 
-        if (IsBlockedHostName(url.Host))
-            throw new WebPageAccessBlockedException(
-                "Local web page URLs are not supported.",
-                WebPageAccessBlockReason.LOCAL_HOST_NAME);
+        if (!options.TargetChosenByUser && IsBlockedHostName(url.Host))
+            throw new WebPageAccessBlockedException("Local web page URLs are not supported.", WebPageAccessBlockReason.LOCAL_HOST_NAME);
 
         var addresses = await ResolveHostAddressesAsync(url, token);
         if (addresses.Count == 0)
             throw new InvalidOperationException($"The host '{url.Host}' did not resolve to an IP address.");
 
+        //
+        // Where the target came from decides which targets are acceptable. A URL a model produced
+        // may not reach into the local network, because the model was talked into it by whatever
+        // it read. A URL the user typed carries no such doubt: it is their machine and their
+        // network, and refusing an internal wiki or a local server would only be in their way.
+        //
+        // What stays in force either way is everything protecting against a URL leading somewhere
+        // other than where it appears to: the connection is bound to the addresses validated
+        // here, and every redirect passes through this method again.
+        //
+        if (options.TargetChosenByUser)
+            return addresses;
+
         if (addresses.Any(IsNeverAllowedAddress))
-            throw new WebPageAccessBlockedException(
-                "Local, link-local, multicast, and unspecified network addresses are not supported.",
-                WebPageAccessBlockReason.NEVER_ALLOWED_ADDRESS);
+            throw new WebPageAccessBlockedException("Local, link-local, multicast, and unspecified network addresses are not supported.", WebPageAccessBlockReason.NEVER_ALLOWED_ADDRESS);
 
         if (!addresses.Any(IsNonPublicAddress))
             return addresses;
 
         if (options.PublicTargetsOnly || options.IsPrivateHostAllowed?.Invoke(url.Host) is not true)
-            throw new WebPageAccessBlockedException(
-                "Private or local-network web page URLs are not supported unless their host is explicitly allowed.",
-                WebPageAccessBlockReason.PRIVATE_HOST_NOT_ALLOWED);
+            throw new WebPageAccessBlockedException("Private or local-network web page URLs are not supported unless their host is explicitly allowed.", WebPageAccessBlockReason.PRIVATE_HOST_NOT_ALLOWED);
 
         if (options.ProviderConfidence >= ConfidenceLevel.HIGH || options.ProviderIsTrustedByConfiguration)
             return addresses;
 
         if (options.OnPrivateHostProviderBlockAsync is not null)
             await options.OnPrivateHostProviderBlockAsync(url, options.ProviderConfidence);
-        throw new WebPageAccessBlockedException(
-            "This private or VPN web page requires a High-confidence provider or a provider trusted by configuration.",
-            WebPageAccessBlockReason.INSUFFICIENT_PROVIDER_CONFIDENCE);
+        throw new WebPageAccessBlockedException("This private or VPN web page requires a High-confidence provider or a provider trusted by configuration.", WebPageAccessBlockReason.INSUFFICIENT_PROVIDER_CONFIDENCE);
     }
 
     private static async Task<IReadOnlyList<IPAddress>> ResolveHostAddressesAsync(Uri url, CancellationToken token)
@@ -236,6 +236,20 @@ public sealed class WebPageRetrievalService(HTMLParser htmlParser)
 public sealed class WebPageRetrievalOptions
 {
     public required int TimeoutSeconds { get; init; }
+
+    /// <summary>
+    /// Whether the user named this exact URL, as opposed to a model asking for it.
+    /// </summary>
+    /// <remarks>
+    /// Lifts the restrictions on which targets may be reached — private networks, loopback, and
+    /// hosts named localhost — because those exist to keep a model from reaching into the user's
+    /// network, and the user is not a model. The network-level protections stay: the connection
+    /// is still bound to validated addresses, redirects are still checked, the response size is
+    /// still capped, and only HTML is still accepted.<br/><br/>
+    /// Never set this for a URL that reached AI Studio through a model, however plausible it
+    /// looks.
+    /// </remarks>
+    public bool TargetChosenByUser { get; init; }
 
     public bool PublicTargetsOnly { get; init; }
 

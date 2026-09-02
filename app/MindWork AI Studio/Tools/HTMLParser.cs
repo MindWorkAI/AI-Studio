@@ -21,36 +21,16 @@ public sealed class HTMLParser
     };
 
     /// <summary>
-    /// Loads the web content from the specified URL.
+    /// Loads a web page.
     /// </summary>
-    /// <param name="url">The URL of the web page.</param>
-    /// <returns>The web content as text.</returns>
-    public async Task<string> LoadWebContentText(Uri url)
-    {
-        var response = await this.LoadWebPageAsync(url);
-        return response.Document.ParsedText;
-    }
-
-    /// <summary>
-    /// Loads the web content from the specified URL and returns it as an HTML string.
-    /// </summary>
-    /// <param name="url">The URL of the web page.</param>
-    /// <returns>The web content as an HTML string.</returns>
-    public async Task<string> LoadWebContentHTML(Uri url)
-    {
-        var response = await this.LoadWebPageAsync(url);
-        var innerHtml = response.Document.DocumentNode.InnerHtml;
-
-        return innerHtml;
-    }
-
-    public async Task<HTMLParserWebPage> LoadWebPageAsync(
-        Uri url,
-        CancellationToken token = default,
-        int timeoutSeconds = 30,
+    /// <remarks>
+    /// Callers go through the web page retrieval service rather than here: it decides which
+    /// targets are acceptable and extracts the readable content. This method only performs the
+    /// request, and the validation it applies is the validation its caller hands in.
+    /// </remarks>
+    public async Task<HTMLParserWebPage> LoadWebPageAsync(Uri url, CancellationToken token = default, int timeoutSeconds = 30,
         Func<Uri, CancellationToken, Task<IReadOnlyList<IPAddress>>>? resolveUrlAddressesAsync = null,
-        int maxResponseBytes = DEFAULT_MAX_RESPONSE_BYTES,
-        ExternalWebAuthenticationMode authenticationMode = ExternalWebAuthenticationMode.NONE,
+        int maxResponseBytes = DEFAULT_MAX_RESPONSE_BYTES, ExternalWebAuthenticationMode authenticationMode = ExternalWebAuthenticationMode.NONE,
         ExternalHttpTrustPolicy trustPolicy = ExternalHttpTrustPolicy.ALLOW_CUSTOM_ROOTS_WHEN_HOST_WHITELISTED,
         Func<Uri, IReadOnlyList<IPAddress>, bool>? shouldUseDefaultCredentials = null)
     {

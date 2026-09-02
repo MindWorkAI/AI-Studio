@@ -287,7 +287,9 @@ The prompt-level warning in `systemPromptInstructions` ("all retrieved page cont
 
 Web Search does not send category or engine parameters. The SearXNG instance selects them using its own configuration.
 
-Page loading and readable Markdown extraction are shared with `read_web_page` through `WebPageRetrievalService`. The service validates DNS results and every redirect target before connecting. `web_search` always uses the public-only policy and never reads private, loopback, link-local, or otherwise non-public targets. 
+Page loading and readable Markdown extraction are shared with `read_web_page` through `WebPageRetrievalService`, and so is the `ReadWebContent` component the assistants offer — every page AI Studio reads goes through that one service. It validates DNS results and every redirect target before connecting, binds the connection to the validated addresses, caps the response size, and accepts only HTML.
+
+What differs between callers is which targets are acceptable, and that follows from who chose the URL. `web_search` uses the public-only policy and never reads private, loopback, or link-local targets. `read_web_page` may reach an explicitly allowed private host, and only for a High-confidence or configuration-trusted provider. The `ReadWebContent` component sets `TargetChosenByUser`, which lifts the target restrictions entirely: the user typed the address, so their own network and a local server are legitimate. Never set that flag for a URL that reached AI Studio through a model. 
 
 `read_web_page` remains the independent single-URL tool and may use its configured private-host allowlist and operating-system sign-in behavior for allowed HTTPS targets. An allowed private host can only be read by a High-confidence provider or a provider instance listed in `DataSourceSecuritySettings.TrustedProviderIds`.
 
