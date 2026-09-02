@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using AIStudio.Tools;
+using AIStudio.Tools.Web;
 
 namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations;
 
@@ -58,7 +59,7 @@ internal sealed class SearXNGSearchClient
         timeoutCts.CancelAfter(TimeSpan.FromSeconds(searchRequest.TimeoutSeconds));
 
         using var response = await SendAsync(httpClient, request, timeoutCts.Token, searchRequest.TimeoutSeconds, token);
-        var responseBody = await ReadContentAsStringWithLimitAsync(response.Content, MAX_RESPONSE_BYTES, timeoutCts.Token);
+        var responseBody = await HttpContentReader.ReadAsStringWithLimitAsync(response.Content, MAX_RESPONSE_BYTES, timeoutCts.Token);
         if (!response.IsSuccessStatusCode)
         {
             var responseExcerpt = CreateSingleLineExcerpt(responseBody);
@@ -277,28 +278,6 @@ internal sealed class SearXNGSearchClient
         return uriBuilder.Uri;
     }
 
-    private static async Task<string> ReadContentAsStringWithLimitAsync(HttpContent content, int maxResponseBytes, CancellationToken token)
-    {
-        if (content.Headers.ContentLength is long contentLength && contentLength > maxResponseBytes)
-            throw new InvalidOperationException($"The SearXNG response body is too large. Maximum allowed size is {maxResponseBytes} bytes.");
-
-        await using var stream = await content.ReadAsStreamAsync(token);
-        await using var buffer = new MemoryStream();
-        var chunk = new byte[8192];
-        while (true)
-        {
-            var read = await stream.ReadAsync(chunk, token);
-            if (read == 0)
-                break;
-
-            if (buffer.Length + read > maxResponseBytes)
-                throw new InvalidOperationException($"The SearXNG response body is too large. Maximum allowed size is {maxResponseBytes} bytes.");
-
-            buffer.Write(chunk, 0, read);
-        }
-
-        return Encoding.UTF8.GetString(buffer.ToArray());
-    }
 
     private static async Task<HttpResponseMessage> SendAsync(
         HttpClient httpClient,

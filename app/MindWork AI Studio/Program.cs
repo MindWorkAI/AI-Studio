@@ -194,7 +194,9 @@ internal sealed class Program
         builder.Services.AddSingleton<DataSourceService>();
         builder.Services.AddSingleton<DirectChatService>();
         builder.Services.AddScoped<PandocAvailabilityService>();
-        builder.Services.AddTransient<HTMLParser>();
+        
+        // Stateless: every method works on its arguments alone, so one instance serves everyone.
+        builder.Services.AddSingleton<HTMLParser>();
         builder.Services.AddTransient<AgentDataSourceSelection>();
         builder.Services.AddTransient<AgentRetrievalContextValidation>();
         builder.Services.AddTransient<AgentTextContentCleaner>();

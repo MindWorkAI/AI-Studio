@@ -43,7 +43,7 @@ internal static class WebPageContentExtractor
         "cookie-banner", "cookie-consent", "consent-banner", "newsletter-popup", "share-buttons", "social-share"
     };
 
-    public static ExtractedWebPage Extract(HTMLParser htmlParser, HtmlDocument document, Uri finalUrl)
+    public static ExtractedWebPage Extract(HtmlDocument document, Uri finalUrl)
     {
         var jsonLdMetadata = ExtractJsonLdMetadata(document, finalUrl);
         var contentBaseUrl = ResolveUrl(finalUrl, GetAttribute(document.DocumentNode.SelectSingleNode("//base[@href]"), "href")) ?? finalUrl;
@@ -65,7 +65,7 @@ internal static class WebPageContentExtractor
             .Select(x => LimitLength(x, MAX_OUTLINE_ITEM_CHARACTERS))
             .Distinct(StringComparer.Ordinal)
             .ToList();
-        var markdown = htmlParser.ParseToMarkdown(contentRoot.InnerHtml)
+        var markdown = HTMLParser.ParseToMarkdown(contentRoot.InnerHtml)
             .Replace("\r\n", "\n", StringComparison.Ordinal)
             .Replace('\r', '\n')
             .Trim();
@@ -84,7 +84,7 @@ internal static class WebPageContentExtractor
             GetItemPropValue(document, "headline"),
             GetNodeText(contentRoot.SelectSingleNode(".//h1")),
             GetMetaContent(document, "name", "twitter:title"),
-            htmlParser.ExtractTitle(document));
+            HTMLParser.ExtractTitle(document));
         var description = FirstNonEmpty(
             jsonLdMetadata.Description,
             GetMetaContent(document, "property", "og:description"),

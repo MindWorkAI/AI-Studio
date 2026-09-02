@@ -64,7 +64,7 @@ public sealed class WebPageRetrievalService(HTMLParser htmlParser)
         return new RetrievedWebPage
         {
             Page = page,
-            ExtractedPage = WebPageContentExtractor.Extract(htmlParser, page.Document, page.FinalUrl),
+            ExtractedPage = WebPageContentExtractor.Extract(page.Document, page.FinalUrl),
             RetrievedAtUtc = DateTimeOffset.UtcNow,
             RequiredProviderConfidence = requiredProviderConfidence,
         };
@@ -187,11 +187,17 @@ public sealed class WebPageRetrievalService(HTMLParser htmlParser)
 
         if (address.AddressFamily is AddressFamily.InterNetworkV6)
         {
-            return address.Equals(IPAddress.IPv6Any) ||
-                   address.Equals(IPAddress.IPv6None) ||
-                   address.Equals(IPAddress.IPv6Loopback) ||
-                   address.IsIPv6LinkLocal ||
-                   address.IsIPv6Multicast;
+            if (address.Equals(IPAddress.IPv6Any) ||
+                address.Equals(IPAddress.IPv6None) ||
+                address.Equals(IPAddress.IPv6Loopback) ||
+                address.IsIPv6LinkLocal ||
+                address.IsIPv6Multicast)
+                return true;
+
+            // Checked here as well as among the non-public addresses, because an embedded
+            // loopback or link-local address must stay refused outright rather than become
+            // something an allowlist can permit:
+            return TryGetEmbeddedIPv4Address(address) is { } embeddedAddress && IsNeverAllowedAddress(embeddedAddress);
         }
 
         return true;
@@ -220,11 +226,47 @@ public sealed class WebPageRetrievalService(HTMLParser htmlParser)
         if (address.AddressFamily is AddressFamily.InterNetworkV6)
         {
             var bytes = address.GetAddressBytes();
-            return (bytes[0] & 0xfe) == 0xfc ||
-                   address.IsIPv6SiteLocal;
+            if ((bytes[0] & 0xfe) == 0xfc || address.IsIPv6SiteLocal)
+                return true;
+
+            return TryGetEmbeddedIPv4Address(address) is { } embeddedAddress && IsNonPublicAddress(embeddedAddress);
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// Reads the IPv4 address an IPv6 address carries inside it, if it does.
+    /// </summary>
+    /// <remarks>
+    /// Several transition mechanisms embed an IPv4 address in an IPv6 one. Judged by their IPv6
+    /// form alone, they all look like ordinary public addresses, so <c>64:ff9b::10.0.0.1</c> would
+    /// reach the local network that plain <c>10.0.0.1</c> is refused for.<br/><br/>
+    /// The address is only read, never replaced: the connection has to go to the IPv6 address as
+    /// resolved, because the embedded IPv4 address is reached through a gateway rather than
+    /// directly. Only the judgement about it uses what is inside.
+    /// </remarks>
+    private static IPAddress? TryGetEmbeddedIPv4Address(IPAddress address)
+    {
+        if (address.AddressFamily is not AddressFamily.InterNetworkV6)
+            return null;
+
+        var bytes = address.GetAddressBytes();
+
+        // NAT64 well-known prefix 64:ff9b::/96 — the last four bytes are the IPv4 address:
+        if (bytes[0] is 0x00 && bytes[1] is 0x64 && bytes[2] is 0xff && bytes[3] is 0x9b &&
+            bytes[4..12].All(part => part is 0x00))
+            return new IPAddress(bytes[12..16]);
+
+        // 6to4 2002::/16 — the IPv4 address follows the prefix:
+        if (bytes[0] is 0x20 && bytes[1] is 0x02)
+            return new IPAddress(bytes[2..6]);
+
+        // Teredo 2001:0000::/32 — the client's IPv4 address sits at the end, bitwise inverted:
+        if (bytes[0] is 0x20 && bytes[1] is 0x01 && bytes[2] is 0x00 && bytes[3] is 0x00)
+            return new IPAddress(bytes[12..16].Select(part => (byte)~part).ToArray());
+
+        return null;
     }
 
     private static bool IsSupportedHtmlContentType(string? contentType) =>
