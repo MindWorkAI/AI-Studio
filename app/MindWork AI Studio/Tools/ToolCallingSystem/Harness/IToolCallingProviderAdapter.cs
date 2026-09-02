@@ -44,5 +44,9 @@ public interface IToolCallingProviderAdapter
     /// </summary>
     /// <param name="callId">The ID of the call this result belongs to.</param>
     /// <param name="content">The result as the model should see it.</param>
-    public void RecordToolResult(string callId, string content);
+    /// <param name="isError">
+    /// Whether the tool failed instead of returning a result. Only some APIs can express this;
+    /// the others carry the failure in the content, which is where it has to be legible anyway.
+    /// </param>
+    public void RecordToolResult(string callId, string content, bool isError = false);
 }

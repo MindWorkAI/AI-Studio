@@ -325,9 +325,7 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
         {
             var responseBody = await response.Content.ReadAsStringAsync(token);
             LOGGER.LogError("Tool calling Responses API request failed with status code {ResponseStatusCode} and body: '{ResponseBody}'.", response.StatusCode, responseBody);
-            await MessageBus.INSTANCE.SendError(new(
-                Icons.Material.Filled.Build,
-                string.Format(TB("The tool calling request failed with status code {0}. See the logs for details."), (int)response.StatusCode)));
+            await ToolCallingMessages.SendToolCallingRequestFailedAsync((int)response.StatusCode);
             return null;
         }
 

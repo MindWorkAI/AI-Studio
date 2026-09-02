@@ -81,7 +81,11 @@ public sealed class ResponsesToolCallingAdapter(Model chatModel, IList<object> b
     }
 
     /// <inheritdoc />
-    public void RecordToolResult(string callId, string content) => this.internalItems.Add(new ResponsesFunctionCallOutputItem
+    /// <remarks>
+    /// The Responses API has no error flag on a function call output, so a failure travels in the
+    /// output like any other result.
+    /// </remarks>
+    public void RecordToolResult(string callId, string content, bool isError = false) => this.internalItems.Add(new ResponsesFunctionCallOutputItem
     {
         CallId = callId,
         Output = content,

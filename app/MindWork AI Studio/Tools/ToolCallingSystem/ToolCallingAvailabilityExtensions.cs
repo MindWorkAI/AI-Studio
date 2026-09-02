@@ -13,9 +13,6 @@ public static class ToolCallingAvailabilityExtensions
         if (provider == AIStudio.Settings.Provider.NONE || provider.UsedLLMProvider is LLMProviders.NONE)
             return new(false, TB("Please select an LLM provider."));
 
-        if (provider.UsedLLMProvider is LLMProviders.ANTHROPIC)
-            return new(false, TB("Tool calling for this provider is not implemented yet."));
-
         var modelCapabilities = provider.GetModelCapabilities();
         var supportsRequiredApis =
             modelCapabilities.Contains(Capability.CHAT_COMPLETION_API) ||

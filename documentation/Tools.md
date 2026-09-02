@@ -33,7 +33,9 @@ An `IToolCallingProviderAdapter` translates between the loop and one provider AP
 
 Everything else is the loop's business and therefore identical everywhere: the two limits from `ToolSelectionRules` (`MAX_TOOL_CALLS` for the number of calls, `MAX_TOOL_RESULT_CHARACTERS` for their cumulative size), asking for a final answer once a limit is reached, rejecting unusable calls, the running-tool status in the UI, collecting tool sources, and raising the chat's required provider confidence.
 
-Adding a provider API means writing an adapter, not another loop. `ChatCompletionToolCallingAdapter` and `ResponsesToolCallingAdapter` in `Provider/OpenAI/` are the existing ones. Replacing the harness itself — an agent mode, say — means another `IToolCallingLoop`; the adapters stay as they are.
+Adding a provider API means writing an adapter, not another loop. The existing ones are `ChatCompletionToolCallingAdapter` and `ResponsesToolCallingAdapter` in `Provider/OpenAI/`, and `AnthropicToolCallingAdapter` in `Provider/Anthropic/`. Replacing the harness itself — an agent mode, say — means another `IToolCallingLoop`; the adapters stay as they are.
+
+`ProviderToolAdapters` maps a canonical `ToolDefinition` to each wire shape: `ToChatCompletionTool`, `ToResponsesTool`, `ToAnthropicTool`.
 
 ## Provider API Shapes
 
@@ -65,9 +67,24 @@ The OpenAI Responses API uses a flat function shape:
 }
 ```
 
-Keep this difference contained in provider adapter code. `ProviderToolAdapters` maps a canonical `ToolDefinition` to the Chat Completions or Responses wire shape. Tool implementations should not know which provider API shape was used.
+The Anthropic messages API names the schema differently and does not nest the function:
 
-Tool result handling also differs by API, and this is what the adapters exist for. Chat Completions returns tool calls in `message.tool_calls` and receives results as `role: "tool"` messages; a missing tool call ID can be supplied by AI Studio, because the ID only has to match between our request and our answer. Responses returns `function_call` output items and receives results as `function_call_output` input items correlated by `call_id`; there the ID comes from the provider, so a call without one cannot be answered at all and ends the conversation. Responses also requires the whole output of a round to be sent back for the next one, reasoning items included.
+```json
+{
+  "name": "get_current_weather",
+  "description": "Get the current weather in a given location.",
+  "input_schema": {},
+  "strict": true
+}
+```
+
+Keep this difference contained in provider adapter code. Tool implementations should not know which provider API shape was used.
+
+Tool result handling also differs by API, and this is what the adapters exist for.
+
+- **Chat Completions** returns tool calls in `message.tool_calls` and receives results as `role: "tool"` messages, one per result. A missing tool call ID can be supplied by AI Studio, because the ID only has to match between our request and our answer.
+- **Responses** returns `function_call` output items and receives results as `function_call_output` input items correlated by `call_id`. There the ID comes from the provider, so a call without one cannot be answered at all and ends the conversation. The whole output of a round has to be sent back for the next one, reasoning items included.
+- **Anthropic** works in content blocks: the model's turn is one assistant message whose blocks may mix `text`, `thinking`, and `tool_use`, and it has to be returned unchanged — thinking blocks in particular. All results of a round belong in a **single** user message as `tool_result` blocks; splitting them across several messages teaches the model to stop asking for more than one tool at a time. It is also the only one of the three with an error flag on a result (`is_error`), which the harness sets for failed and blocked calls.
 
 AI Studio currently executes local tool calls sequentially. Therefore, Chat Completions requests with tools always set `parallel_tool_calls` to `false`, limiting each model response to at most one tool call. Requests without tools omit the parameter, and additional API parameters cannot override this behavior. Models can still request additional tools across subsequent responses.
 

@@ -84,7 +84,11 @@ public sealed class ChatCompletionToolCallingAdapter<TRequest>(
     });
 
     /// <inheritdoc />
-    public void RecordToolResult(string callId, string content) => this.internalMessages.Add(new ToolResultMessage
+    /// <remarks>
+    /// Chat Completions has no error flag on a tool message, so a failure travels in the content
+    /// like any other result.
+    /// </remarks>
+    public void RecordToolResult(string callId, string content, bool isError = false) => this.internalMessages.Add(new ToolResultMessage
     {
         Content = content,
         ToolCallId = callId,

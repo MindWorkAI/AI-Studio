@@ -123,7 +123,7 @@ public sealed class ToolCallingLoop(ILogger<ToolCallingLoop> logger) : IToolCall
                         var (invalidContent, invalidTrace, _, _) = context.ToolExecutor.CreateInvalidToolCallResult(call.CallId, toolCallCount);
                         toolResultCharacterCount += invalidContent.Length;
                         context.AddToolInvocation(invalidTrace);
-                        adapter.RecordToolResult(call.CallId, invalidContent);
+                        adapter.RecordToolResult(call.CallId, invalidContent, isError: true);
                         continue;
                     }
 
@@ -152,7 +152,10 @@ public sealed class ToolCallingLoop(ILogger<ToolCallingLoop> logger) : IToolCall
                     context.ChatThread.RequireProviderConfidence(requiredProviderConfidence);
                     toolSources.MergeSources(sources);
                     context.AddToolInvocation(trace);
-                    adapter.RecordToolResult(call.CallId, toolContent);
+
+                    // A blocked call counts as a failure towards the model as much as an errored
+                    // one does: in both cases it did not get the data it asked for.
+                    adapter.RecordToolResult(call.CallId, toolContent, trace.Status is not ToolInvocationTraceStatus.SUCCESS);
                 }
             }
             finally
