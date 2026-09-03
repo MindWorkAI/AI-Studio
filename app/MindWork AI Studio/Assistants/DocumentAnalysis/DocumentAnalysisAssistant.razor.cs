@@ -878,26 +878,52 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         }
 
         await this.AutoSave();
-        await this.Form!.Validate();
-        if (!this.InputIsValid)
+
+        //
+        // Only what the export actually writes is checked. Validating the whole form would demand
+        // a selected provider, which the export does not contain: it describes the policy, not the
+        // way one user happens to run it.
+        //
+        var policyIssues = this.GetPolicyExportIssues();
+        if (policyIssues.Count > 0)
         {
             //
             // Name the issues in both places. A message saying only that something is invalid
             // leaves the user searching a long form, and leaves us without a clue in the log:
             //
             this.Logger.LogWarning(
-                "Was not able to export the document analysis policy '{PolicyName}'. The form reported {IssueCount} validation issue(s): {Issues}",
+                "Was not able to export the document analysis policy '{PolicyName}'. It has {IssueCount} validation issue(s): {Issues}",
                 this.selectedPolicy?.PolicyName,
-                this.InputIssues.Length,
-                string.Join(" | ", this.InputIssues));
+                policyIssues.Count,
+                string.Join(" | ", policyIssues));
 
-            var issues = this.InputIssues.Length is 0 ? string.Empty : $" {string.Join(" ", this.InputIssues)}";
-            await this.MessageBus.SendError(new (Icons.Material.Filled.Policy, this.T("The selected policy contains invalid data. Please fix the issues before exporting the policy.") + issues));
+            await this.MessageBus.SendError(new (Icons.Material.Filled.Policy, $"{this.T("The selected policy contains invalid data. Please fix the issues before exporting the policy.")} {string.Join(" ", policyIssues)}"));
             return;
         }
 
         var luaCode = this.GenerateLuaPolicyExport();
         await this.RustService.CopyText2Clipboard(luaCode);
+    }
+
+    /// <summary>
+    /// Checks the fields the export writes, using the same rules the form applies to them.
+    /// </summary>
+    private List<string> GetPolicyExportIssues()
+    {
+        List<string> issues = [];
+        foreach (var issue in new[]
+                 {
+                     this.ValidatePolicyName(this.policyName),
+                     this.ValidatePolicyDescription(this.policyDescription),
+                     this.ValidateAnalysisRules(this.policyAnalysisRules),
+                     this.ValidateOutputRules(this.policyOutputRules),
+                 })
+        {
+            if (!string.IsNullOrWhiteSpace(issue))
+                issues.Add(issue);
+        }
+
+        return issues;
     }
 
     private string GenerateLuaPolicyExport()
@@ -908,6 +934,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         var preselectedProvider = string.IsNullOrWhiteSpace(this.selectedPolicy.PreselectedProvider) ? string.Empty : this.selectedPolicy.PreselectedProvider;
         var preselectedProfile = string.IsNullOrWhiteSpace(this.selectedPolicy.PreselectedProfile) ? string.Empty : this.selectedPolicy.PreselectedProfile;
         var id = string.IsNullOrWhiteSpace(this.selectedPolicy.Id) ? Guid.NewGuid().ToString() : this.selectedPolicy.Id;
+        var allowedToolIds = string.Join(", ", this.selectedPolicy.AllowedToolIds.OrderBy(x => x, StringComparer.Ordinal).Select(x => LuaTools.ToLuaStringLiteral(x)));
         
         return $$"""
                  CONFIG["DOCUMENT_ANALYSIS_POLICIES"][#CONFIG["DOCUMENT_ANALYSIS_POLICIES"]+1] = {
@@ -923,6 +950,12 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
                      -- Allowed values are: NONE, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
                      ["MinimumProviderConfidence"] = "{{this.selectedPolicy.MinimumProviderConfidence}}",
                  
+                     -- The tools an analysis with this policy may use, by tool ID.
+                     -- This is a limit, not a preselection: a tool which is not listed here cannot
+                     -- be used for this policy. An empty list means no tools. A listed tool must
+                     -- still meet the confidence requirements of the provider in use.
+                     ["AllowedToolIds"] = { {{allowedToolIds}} },
+
                      -- Optional: preselect a provider or profile by ID.
                      -- The IDs must exist in CONFIG["LLM_PROVIDERS"] or CONFIG["PROFILES"].
                      ["PreselectedProvider"] = "{{preselectedProvider}}",
