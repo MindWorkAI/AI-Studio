@@ -881,7 +881,18 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         await this.Form!.Validate();
         if (!this.InputIsValid)
         {
-            await this.MessageBus.SendError(new (Icons.Material.Filled.Policy, this.T("The selected policy contains invalid data. Please fix the issues before exporting the policy.")));
+            //
+            // Name the issues in both places. A message saying only that something is invalid
+            // leaves the user searching a long form, and leaves us without a clue in the log:
+            //
+            this.Logger.LogWarning(
+                "Was not able to export the document analysis policy '{PolicyName}'. The form reported {IssueCount} validation issue(s): {Issues}",
+                this.selectedPolicy?.PolicyName,
+                this.InputIssues.Length,
+                string.Join(" | ", this.InputIssues));
+
+            var issues = this.InputIssues.Length is 0 ? string.Empty : $" {string.Join(" ", this.InputIssues)}";
+            await this.MessageBus.SendError(new (Icons.Material.Filled.Policy, this.T("The selected policy contains invalid data. Please fix the issues before exporting the policy.") + issues));
             return;
         }
 
