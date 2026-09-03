@@ -267,7 +267,7 @@ public sealed class SearXNGWebSearchTool(WebPageRetrievalService webPageRetrieva
             throw new ArgumentException($"Invalid time_range '{timeRange}'.");
 
         language = string.IsNullOrWhiteSpace(language) ? context.SettingsValues.GetValueOrDefault(DEFAULT_LANGUAGE_SETTING) : language;
-        var safeSearch = context.SettingsValues.GetValueOrDefault(DEFAULT_SAFE_SEARCH_SETTING);
+        var safeSearch = ReadSafeSearchValue(context.SettingsValues);
 
         var defaultLimit = ToolSettingsValueParser.ReadOptionalPositiveInt(context.SettingsValues, MAX_RESULTS_SETTING) ?? DEFAULT_MAX_RESULTS;
         var effectiveLimit = Math.Min(requestedLimit ?? defaultLimit, MAX_RESULTS);
@@ -483,6 +483,25 @@ public sealed class SearXNGWebSearchTool(WebPageRetrievalService webPageRetrieva
     /// An empty value passes: whether the field may be empty is decided by the settings schema's
     /// required list, which the tool settings service checks before this method runs.
     /// </remarks>
+    /// <summary>
+    /// Translates the configured safe search policy into what SearXNG expects.
+    /// </summary>
+    /// <remarks>
+    /// The setting holds the policy by name, so that a configuration plugin reads as STRICT rather
+    /// than as 2. An unset or unreadable value sends nothing at all and leaves the decision to the
+    /// instance's own configuration.
+    /// </remarks>
+    private static string? ReadSafeSearchValue(IReadOnlyDictionary<string, string> settingsValues)
+    {
+        var configuredPolicy = settingsValues.GetValueOrDefault(DEFAULT_SAFE_SEARCH_SETTING);
+        if (string.IsNullOrWhiteSpace(configuredPolicy))
+            return null;
+
+        return Enum.TryParse<SafeSearchPolicy>(configuredPolicy, true, out var policy)
+            ? policy.ToSearXNGValue()
+            : null;
+    }
+
     private static bool TryValidateOptionValue(IReadOnlyDictionary<string, string> settingsValues, string fieldName, string optionSource, out string error)
     {
         error = string.Empty;

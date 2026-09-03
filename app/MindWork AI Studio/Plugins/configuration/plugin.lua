@@ -722,7 +722,8 @@ CONFIG["SETTINGS"] = {}
 --                                    restriction. Without a language many search engines return
 --                                    no results at all, so the tool counts as unconfigured while
 --                                    this is empty.
---   defaultSafeSearch                Safe-search level "0", "1", or "2".
+--   defaultSafeSearch                How strictly the search engine filters explicit results.
+--                                    Allowed values are: OFF, MODERATE, STRICT.
 --   maxResults                       Result count, as an integer string.
 --   searchTimeoutSeconds             SearXNG request timeout in seconds.
 --   pageTimeoutSeconds               Per-page timeout in seconds.
@@ -749,7 +750,7 @@ CONFIG["SETTINGS"] = {}
 --
 -- CONFIG["SETTINGS"]["DataTools.DefaultToolSettings"] = {
 --     ["web_search.maxResults"] = "5",
---     ["web_search.defaultSafeSearch"] = "1",
+--     ["web_search.defaultSafeSearch"] = "MODERATE",
 --     ["read_web_page.timeoutSeconds"] = "30"
 -- }
 

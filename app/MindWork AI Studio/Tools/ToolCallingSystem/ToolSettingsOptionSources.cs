@@ -51,9 +51,9 @@ public static class ToolSettingsOptionSources
         COMMON_LANGUAGES => BuildLanguageOptions(),
         SAFE_SEARCH =>
         [
-            new("0", TB("Off")),
-            new("1", TB("Moderate")),
-            new("2", TB("Strict")),
+            new(nameof(SafeSearchPolicy.OFF), TB("Off")),
+            new(nameof(SafeSearchPolicy.MODERATE), TB("Moderate")),
+            new(nameof(SafeSearchPolicy.STRICT), TB("Strict")),
         ],
 
         _ => [],
