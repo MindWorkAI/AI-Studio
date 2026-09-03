@@ -70,6 +70,7 @@ public partial class AssistantBatchProcessing
                 fileResult.Status = BatchProcessingFileStatus.DONE;
                 fileResult.Message = logEntry.Details;
                 fileResult.ModelName = logEntry.Model;
+                fileResult.UsedTools = logEntry.UsedTools;
                 fileResult.ResultText = previousResults.GetValueOrDefault(relativePath, string.Empty);
 
                 if (DateTimeOffset.TryParseExact(logEntry.Time, TIME_FORMAT, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out var processedAt))
@@ -194,7 +195,7 @@ public partial class AssistantBatchProcessing
         string aiAnswer;
         try
         {
-            aiAnswer = await this.CallAIAsync(fileResult.FileName, fileContent, token);
+            (aiAnswer, fileResult.UsedTools) = await this.CallAIAsync(fileResult.FileName, fileContent, token);
         }
         catch (OperationCanceledException)
         {

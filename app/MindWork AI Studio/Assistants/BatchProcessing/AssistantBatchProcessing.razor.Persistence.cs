@@ -106,9 +106,9 @@ public partial class AssistantBatchProcessing
     private async Task WriteLogAsync(string resolvedOutputDirectory)
     {
         var sb = new StringBuilder();
-        sb.AppendLine(CsvWriter.ToRow(LOG_SEPARATOR, T("File"), T("Time"), T("Model"), T("Status"), T("Details")));
+        sb.AppendLine(CsvWriter.ToRow(LOG_SEPARATOR, T("File"), T("Time"), T("Model"), T("Status"), T("Details"), T("Tools used")));
         foreach (var fileResult in this.fileResults.Where(x => x.Status is not BatchProcessingFileStatus.QUEUED and not BatchProcessingFileStatus.PROCESSING))
-            sb.AppendLine(CsvWriter.ToRow(LOG_SEPARATOR, fileResult.RelativePath, fileResult.ProcessedAt.ToString(TIME_FORMAT, CultureInfo.InvariantCulture), fileResult.ModelName, fileResult.Status.ToString(), fileResult.Message));
+            sb.AppendLine(CsvWriter.ToRow(LOG_SEPARATOR, fileResult.RelativePath, fileResult.ProcessedAt.ToString(TIME_FORMAT, CultureInfo.InvariantCulture), fileResult.ModelName, fileResult.Status.ToString(), fileResult.Message, fileResult.UsedTools));
 
         await this.WriteCsvFileAsync(Path.Join(resolvedOutputDirectory, LOG_FILENAME), sb.ToString());
     }
@@ -176,7 +176,9 @@ public partial class AssistantBatchProcessing
         try
         {
             var content = await File.ReadAllTextAsync(logFilePath);
-            var rows = BatchProcessingCsv.ParseWithDetectedSeparator(content, 5, LOG_SEPARATOR, '|');
+            // A log written before the tools column existed has five fields. It stays
+            // readable, so that a run started with an earlier version can be continued:
+            var rows = BatchProcessingCsv.ParseWithDetectedSeparator(content, [6, 5], LOG_SEPARATOR, '|');
 
             // The first row is the header, which we skip:
             foreach (var row in rows.Skip(1))
@@ -184,7 +186,7 @@ public partial class AssistantBatchProcessing
                 if (row.Count < 5 || string.IsNullOrWhiteSpace(row[0]))
                     continue;
 
-                entries[row[0]] = new BatchProcessingLogEntry(row[0], row[1], row[2], row[3], row[4]);
+                entries[row[0]] = new BatchProcessingLogEntry(row[0], row[1], row[2], row[3], row[4], row.Count > 5 ? row[5] : string.Empty);
             }
         }
         catch (Exception e)
@@ -213,7 +215,7 @@ public partial class AssistantBatchProcessing
 
             var content = await File.ReadAllTextAsync(resultsFilePath);
             var configuredSeparator = this.csvSeparator.Character(this.customCsvSeparator);
-            var rows = BatchProcessingCsv.ParseWithDetectedSeparator(content, 2, configuredSeparator, ';', '|', ',', '\t');
+            var rows = BatchProcessingCsv.ParseWithDetectedSeparator(content, [2], configuredSeparator, ';', '|', ',', '\t');
             foreach (var row in rows.Skip(1))
             {
                 if (row.Count < 2 || string.IsNullOrWhiteSpace(row[0]))
