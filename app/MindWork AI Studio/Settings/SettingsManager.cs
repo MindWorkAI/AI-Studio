@@ -804,12 +804,15 @@ public sealed class SettingsManager
         this.AreToolsEnabled() &&
         !this.ConfigurationData.Tools.DisabledToolIds.Contains(toolId);
 
+    /// <remarks>
+    /// The document analysis is deliberately absent: there its policy names the tools, so the user
+    /// has nothing to select.
+    /// </remarks>
     public bool IsToolSelectionVisible(AIStudio.Tools.Components component) => component switch
     {
         AIStudio.Tools.Components.CHAT or
         AIStudio.Tools.Components.CODING_ASSISTANT or
-        AIStudio.Tools.Components.SLIDE_BUILDER_ASSISTANT or
-        AIStudio.Tools.Components.DOCUMENT_ANALYSIS_ASSISTANT => true,
+        AIStudio.Tools.Components.SLIDE_BUILDER_ASSISTANT => true,
         _ => this.ConfigurationData.Tools.VisibleToolSelectionComponents.Contains(component.ToString()),
     };
 
@@ -818,8 +821,7 @@ public sealed class SettingsManager
         if (component is
             AIStudio.Tools.Components.CHAT or
             AIStudio.Tools.Components.CODING_ASSISTANT or
-            AIStudio.Tools.Components.SLIDE_BUILDER_ASSISTANT or
-            AIStudio.Tools.Components.DOCUMENT_ANALYSIS_ASSISTANT)
+            AIStudio.Tools.Components.SLIDE_BUILDER_ASSISTANT)
             return;
 
         var key = component.ToString();

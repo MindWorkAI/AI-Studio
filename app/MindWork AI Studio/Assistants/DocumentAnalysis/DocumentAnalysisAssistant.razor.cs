@@ -7,6 +7,7 @@ using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.AssistantSessions;
+using AIStudio.Tools.ToolCallingSystem;
 
 using Microsoft.AspNetCore.Components;
 
@@ -17,12 +18,56 @@ using AIStudio.Tools.Security;
 
 namespace AIStudio.Assistants.DocumentAnalysis;
 
-public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialogDocumentAnalysis>
+public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPanel>
 {
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
 
     protected override Tools.Components Component => Tools.Components.DOCUMENT_ANALYSIS_ASSISTANT;
+
+    /// <summary>
+    /// The policy decides which tools its analysis uses; the user does not pick them.
+    /// </summary>
+    /// <remarks>
+    /// Two ways of working, one answer: someone writing a policy for themselves settles the tools
+    /// while writing it, and a policy rolled out by an organization arrives ready to use, with the
+    /// tools its authors tested it with. Either way there is nothing left for the user to switch,
+    /// which is why the tool selection does not appear in this assistant.
+    /// </remarks>
+    protected override IReadOnlySet<string>? AssistantManagedToolIds => this.policyAllowedToolIds;
+
+    /// <summary>
+    /// The tools of this policy which the selected provider is not trusted enough to receive.
+    /// </summary>
+    /// <remarks>
+    /// A policy may well permit a tool that reaches sensitive data while the user picks a provider
+    /// they trust less. That tool is then dropped for the run — silently, unless we say so, which
+    /// is what the warning above the documents is for. Tools switched off by the organization are
+    /// not counted here: choosing another provider would not bring them back.
+    /// </remarks>
+    private IReadOnlyList<string> ToolsBeyondProviderConfidence
+    {
+        get
+        {
+            if (this.policyAllowedToolIds.Count is 0 || !this.SettingsManager.AreToolsEnabled())
+                return [];
+
+            var providerConfidence = this.ProviderSettings == Settings.Provider.NONE
+                ? ConfidenceLevel.NONE
+                : this.ProviderSettings.UsedLLMProvider.GetConfidence(this.SettingsManager).Level;
+
+            return this.availableToolItems
+                .Where(x => this.policyAllowedToolIds.Contains(x.Definition.Id) && x.IsActive)
+                .Where(x => !ToolSelectionRules.IsProviderConfidenceAllowed(providerConfidence, x.MinimumProviderConfidence))
+                .Select(x => x.Implementation.GetDisplayName())
+                .ToList();
+        }
+    }
+
+    /// <summary>
+    /// Whether the selected provider can call tools at all, while the policy expects some.
+    /// </summary>
+    private bool PolicyToolsNeedToolCallingProvider => this.policyAllowedToolIds.Count > 0 && this.SettingsManager.AreToolsEnabled() && !this.ProviderSettings.GetToolCallingAvailability().IsAvailable;
     
     protected override string Title => T("Document Analysis Assistant");
     
@@ -178,6 +223,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
             this.policyAnalysisRules = string.Empty;
             this.policyOutputRules = string.Empty;
             this.policyMinimumProviderConfidence = ConfidenceLevel.NONE;
+            this.policyAllowedToolIds = [];
             this.policyPreselectedProviderId = string.Empty;
             this.policyPreselectedProfile = ProfilePreselection.NoProfile;
         }
@@ -205,6 +251,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
             this.policyAnalysisRules = this.selectedPolicy.AnalysisRules;
             this.policyOutputRules = this.selectedPolicy.OutputRules;
             this.policyMinimumProviderConfidence = this.selectedPolicy.MinimumProviderConfidence;
+            this.policyAllowedToolIds = [..this.selectedPolicy.AllowedToolIds];
             this.policyPreselectedProviderId = this.selectedPolicy.PreselectedProvider;
             this.policyPreselectedProfile = ProfilePreselection.FromStoredValue(this.selectedPolicy.PreselectedProfile);
 
@@ -234,6 +281,11 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
         await base.OnInitializedAsync();
         this.ApplyFilters([], [ Event.CONFIGURATION_CHANGED, Event.PLUGINS_RELOADED ]);
         this.UpdateProviders();
+        this.availableToolItems = await this.ToolRegistry.GetCatalogAsync(this.Component);
+        this.availableTools = this.availableToolItems
+            .Select(x => new ConfigurationSelectData<string>(x.Implementation.GetDisplayName(), x.Definition.Id))
+            .ToList();
+
         this.ApplyPolicyPreselection(preferPolicyPreselection: true);
     }
 
@@ -262,6 +314,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
             this.selectedPolicy.AnalysisRules = this.policyAnalysisRules;
             this.selectedPolicy.OutputRules = this.policyOutputRules;
             this.selectedPolicy.MinimumProviderConfidence = this.policyMinimumProviderConfidence;
+            this.selectedPolicy.AllowedToolIds = [..this.policyAllowedToolIds];
         }
 
         await this.SettingsManager.StoreSettings();
@@ -276,10 +329,13 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
     private string policyAnalysisRules = string.Empty;
     private string policyOutputRules = string.Empty;
     private ConfidenceLevel policyMinimumProviderConfidence = ConfidenceLevel.NONE;
+    private HashSet<string> policyAllowedToolIds = [];
     private string policyPreselectedProviderId = string.Empty;
     private ProfilePreselection policyPreselectedProfile = ProfilePreselection.NoProfile;
     private HashSet<FileAttachment> loadedDocumentPaths = [];
     private readonly List<ConfigurationSelectData<string>> availableLLMProviders = new();
+    private List<ConfigurationSelectData<string>> availableTools = [];
+    private IReadOnlyList<ToolCatalogItem> availableToolItems = [];
     private static readonly AssistantSessionStateKey<DataDocumentAnalysisPolicy?> SELECTED_POLICY_STATE_KEY = new(nameof(selectedPolicy));
     private static readonly AssistantSessionStateKey<bool> POLICY_IS_PROTECTED_STATE_KEY = new(nameof(policyIsProtected));
     private static readonly AssistantSessionStateKey<bool> POLICY_HIDE_POLICY_DEFINITION_STATE_KEY = new(nameof(policyHidePolicyDefinition));
@@ -526,6 +582,15 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<SettingsDialo
         }
 
         return this.SettingsManager.GetAppPreselectedProfile();
+    }
+
+    /// <summary>
+    /// Takes over the tools this policy permits.
+    /// </summary>
+    private async Task PolicyAllowedToolsWasChangedAsync(HashSet<string> allowedToolIds)
+    {
+        this.policyAllowedToolIds = allowedToolIds;
+        await this.AutoSave();
     }
 
     private async Task PolicyMinimumConfidenceWasChangedAsync(ConfidenceLevel level)

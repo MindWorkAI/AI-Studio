@@ -1,5 +1,5 @@
 @attribute [Route(Routes.ASSISTANT_DOCUMENT_ANALYSIS)]
-@inherits AssistantBaseCore<AIStudio.Dialogs.Settings.SettingsDialogDocumentAnalysis>
+@inherits AssistantBaseCore<AIStudio.Dialogs.Settings.NoSettingsPanel>
 @using AIStudio.Settings
 @using AIStudio.Settings.DataModel
 
@@ -106,7 +106,9 @@ else
 
                 <ConfigurationMinConfidenceSelection Disabled="@(() => this.IsNoPolicySelectedOrProtected)" RestrictToGlobalMinimumConfidence="true" SelectedValue="@(() => this.policyMinimumProviderConfidence)" SelectionUpdateAsync="@(async level => await this.PolicyMinimumConfidenceWasChangedAsync(level))" />
 
-                <ConfigurationProviderSelection Component="Components.DOCUMENT_ANALYSIS_ASSISTANT" Data="@this.availableLLMProviders" Disabled="@(() => this.IsNoPolicySelectedOrProtected)" SelectedValue="@(() => this.policyPreselectedProviderId)" SelectionUpdate="@(providerId => this.PolicyPreselectedProviderWasChanged(providerId))" ExplicitMinimumConfidence="@this.GetPolicyMinimumConfidenceLevel()"/>
+                <ConfigurationMultiSelect TData="string" OptionDescription="@T("Tools this policy permits")" Disabled="@(() => this.IsNoPolicySelectedOrProtected)" SelectedValues="@(() => this.policyAllowedToolIds)" Data="@this.availableTools" SelectionUpdateAsync="@(async selection => await this.PolicyAllowedToolsWasChangedAsync(selection))" OptionHelp="@T("Only the tools selected here can be used by the AI for an analysis with this policy. Every tool still has to meet the confidence requirements of the selected provider, so a tool may remain unavailable even when this policy permits it.")" EmptySelectionText="@T("No tools permitted")" SingleSelectionText="@T("This policy permits 1 tool")" MultipleSelectionText="@T("This policy permits {0} tools")" />
+
+                <ConfigurationProviderSelection Component="Components.DOCUMENT_ANALYSIS_ASSISTANT" Data="@this.availableLLMProviders" Disabled="@(() => this.IsNoPolicySelectedOrProtected)" SelectedValue="@(() => this.policyPreselectedProviderId)" SelectionUpdate="@this.PolicyPreselectedProviderWasChanged" ExplicitMinimumConfidence="@this.GetPolicyMinimumConfidenceLevel()"/>
 
                 <ConfigurationSelect OptionDescription="@T("Preselect a profile")" Disabled="@(() => this.IsNoPolicySelected)" SelectedValue="@(() => this.policyPreselectedProfile)" Data="@ConfigurationSelectDataFactory.GetComponentProfilesData(this.SettingsManager.ConfigurationData.Profiles)" SelectionUpdateAsync="@(async selection => await this.PolicyPreselectedProfileWasChangedAsync(selection))" OptionHelp="@T("Choose whether the policy should use the app default profile, no profile, or a specific profile.")"/>
 
@@ -170,4 +172,22 @@ else
     </MudExpansionPanels>
 }
     
+@*
+    The policy names the tools, so the user cannot switch a blocked one on. Saying nothing would
+    let the analysis quietly run without them, which is why the warning sits right at the provider
+    selection: choosing another provider is what resolves it.
+*@
+@if (this.PolicyToolsNeedToolCallingProvider)
+{
+    <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="@true" Class="mb-3">
+        @T("This policy uses tools, but the selected model cannot use tools. The analysis runs without them. Please choose a model which supports tools.")
+    </MudAlert>
+}
+else if (this.ToolsBeyondProviderConfidence.Count > 0)
+{
+    <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="@true" Class="mb-3">
+        @(string.Format(T("Not all tools of this policy can be used with the selected AI provider: {0}. Please choose a provider with a higher confidence level to use all tools of this policy."), string.Join(", ", this.ToolsBeyondProviderConfidence)))
+    </MudAlert>
+}
+
 <ProviderSelection @bind-ProviderSettings="@this.ProviderSettings" ValidateProvider="@this.ValidatingProvider" ExplicitMinimumConfidence="@this.GetPolicyMinimumConfidenceLevel()"/>

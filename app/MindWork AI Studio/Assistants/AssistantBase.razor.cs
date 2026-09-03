@@ -406,16 +406,38 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     }
 
     /// <summary>
+    /// The tools this assistant runs with when its own rules name them, instead of asking the user.
+    /// </summary>
+    /// <remarks>
+    /// Null is the normal case: the user picks the tools. An assistant whose configuration already
+    /// says which tools belong to a run — a document analysis policy, for instance — returns them
+    /// here. Its tool selection then disappears from the footer, because there is nothing left to
+    /// choose: whoever wrote the policy has decided, and a user working with a policy rolled out by
+    /// their organization gets it as configured.
+    /// </remarks>
+    protected virtual IReadOnlySet<string>? AssistantManagedToolIds => null;
+
+    /// <summary>
     /// The tools this assistant may hand to a model with the provider it currently uses.
     /// </summary>
     /// <remarks>
-    /// Empty while the tool selection is hidden for this assistant: what the user cannot see, the
-    /// assistant does not use. The provider filter belongs here rather than into the stored
-    /// selection, because a provider with too little confidence must not cost the user a tool for
-    /// good.
+    /// Whether the tools come from the assistant's own rules or from the user, the provider filter
+    /// always has the last word: a tool asking for more confidence than the selected provider has
+    /// never reaches the model, no matter who put it on the list. That filter belongs here rather
+    /// than into the stored selection, because a provider with too little confidence must not cost
+    /// the user a tool for good.
     /// </remarks>
-    protected HashSet<string> GetRunnableToolIds() => this.SettingsManager.IsToolSelectionVisible(this.Component)
-        ? this.ToolRegistry.FilterToolIdsForProvider(this.ProviderSettings, this.selectedToolIds) : [];
+    protected HashSet<string> GetRunnableToolIds()
+    {
+        if (this.AssistantManagedToolIds is not null)
+            return this.ToolRegistry.FilterToolIdsForProvider(this.ProviderSettings, this.AssistantManagedToolIds);
+
+        // What the user cannot see, the assistant does not use:
+        if (!this.SettingsManager.IsToolSelectionVisible(this.Component))
+            return [];
+
+        return this.ToolRegistry.FilterToolIdsForProvider(this.ProviderSettings, this.selectedToolIds);
+    }
 
     private Task SelectedToolIdsChanged(HashSet<string> updatedToolIds)
     {

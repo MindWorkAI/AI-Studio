@@ -29,6 +29,12 @@ public partial class ConfigurationMultiSelect<TData> : ConfigurationBaseCore
     public Action<HashSet<TData>> SelectionUpdate { get; set; } = _ => { };
 
     /// <summary>
+    /// An asynchronous action that is called when the selection changes.
+    /// </summary>
+    [Parameter]
+    public Func<HashSet<TData>, Task> SelectionUpdateAsync { get; set; } = _ => Task.CompletedTask;
+
+    /// <summary>
     /// Determines whether a specific item is locked by a configuration plugin.
     /// </summary>
     [Parameter]
@@ -58,11 +64,10 @@ public partial class ConfigurationMultiSelect<TData> : ConfigurationBaseCore
     
     private async Task OptionChanged(IEnumerable<TData?>? updatedValues)
     {
-        if(updatedValues is null)
-            this.SelectionUpdate([]);
-        else
-            this.SelectionUpdate(updatedValues.Where(n => n is not null).ToHashSet()!);
-        
+        HashSet<TData> selection = updatedValues is null ? [] : updatedValues.Where(n => n is not null).ToHashSet()!;
+        this.SelectionUpdate(selection);
+        await this.SelectionUpdateAsync(selection);
+
         await this.SettingsManager.StoreSettings();
         await this.InformAboutChange();
     }

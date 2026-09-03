@@ -1066,6 +1066,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::COMMONCODINGLANGUAGEEXTENSIONS::T
 -- None
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::COMMONCODINGLANGUAGEEXTENSIONS::T810547195"] = "None"
 
+-- No tools permitted
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T1001872773"] = "No tools permitted"
+
 -- {0} - Document Analysis Session
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T108097007"] = "{0} - Document Analysis Session"
 
@@ -1080,6 +1083,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTA
 
 -- Please provide a description of your analysis rules. This rules will be used to instruct the AI on how to analyze the documents.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T1291179736"] = "Please provide a description of your analysis rules. This rules will be used to instruct the AI on how to analyze the documents."
+
+-- Only the tools selected here can be used by the AI for an analysis with this policy. Every tool still has to meet the confidence requirements of the selected provider, so a tool may remain unavailable even when this policy permits it.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T1692505801"] = "Only the tools selected here can be used by the AI for an analysis with this policy. Every tool still has to meet the confidence requirements of the selected provider, so a tool may remain unavailable even when this policy permits it."
 
 -- Yes, protect this policy
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T1762380857"] = "Yes, protect this policy"
@@ -1120,6 +1126,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTA
 -- Preselect a profile
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T2322771068"] = "Preselect a profile"
 
+-- Not all tools of this policy can be used with the selected AI provider: {0}. Please choose a provider with a higher confidence level to use all tools of this policy.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T2346179856"] = "Not all tools of this policy can be used with the selected AI provider: {0}. Please choose a provider with a higher confidence level to use all tools of this policy."
+
 -- The analysis rules specify what the AI should pay particular attention to while reviewing the documents you provide, and which aspects it should highlight or save. For example, if you want to extract the potential of green hydrogen for agriculture from a variety of general publications, you can explicitly define this in the analysis rules.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T238145218"] = "The analysis rules specify what the AI should pay particular attention to while reviewing the documents you provide, and which aspects it should highlight or save. For example, if you want to extract the potential of green hydrogen for agriculture from a variety of general publications, you can explicitly define this in the analysis rules."
 
@@ -1131,6 +1140,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTA
 
 -- Policy definition
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T2491168104"] = "Policy definition"
+
+-- This policy permits 1 tool
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T2498795664"] = "This policy permits 1 tool"
 
 -- Export policy as configuration section
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T2556564432"] = "Export policy as configuration section"
@@ -1161,6 +1173,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTA
 
 -- Delete this policy
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T3119086260"] = "Delete this policy"
+
+-- Tools this policy permits
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T31356122"] = "Tools this policy permits"
 
 -- Policy {0}
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T3157740273"] = "Policy {0}"
@@ -1204,8 +1219,14 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTA
 -- Delete document analysis policy
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T4293094335"] = "Delete document analysis policy"
 
+-- This policy uses tools, but the selected model cannot use tools. The analysis runs without them. Please choose a model which supports tools.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T454153019"] = "This policy uses tools, but the selected model cannot use tools. The analysis runs without them. Please choose a model which supports tools."
+
 -- Please provide a description of your output rules. This rules will be used to instruct the AI on how to format the output of the analysis.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T652187065"] = "Please provide a description of your output rules. This rules will be used to instruct the AI on how to format the output of the analysis."
+
+-- This policy permits {0} tools
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T71972680"] = "This policy permits {0} tools"
 
 -- After the AI has processed all documents, it needs your instructions on how the result should be formatted. Would you like a structured list with keywords or a continuous text? Should the output include emojis or be written in formal business language? You can specify all these preferences in the output rules. There, you can also predefine a desired structure—for example, by using Markdown formatting to define headings, paragraphs, or bullet points.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T726434276"] = "After the AI has processed all documents, it needs your instructions on how the result should be formatted. Would you like a structured list with keywords or a continuous text? Should the output include emojis or be written in formal business language? You can specify all these preferences in the output rules. There, you can also predefine a desired structure—for example, by using Markdown formatting to define headings, paragraphs, or bullet points."
@@ -7404,12 +7425,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T926703
 
 -- Export configuration
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T975426229"] = "Export configuration"
-
--- Close
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDOCUMENTANALYSIS::T3448155331"] = "Close"
-
--- Assistant: Document Analysis Options
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDOCUMENTANALYSIS::T687448148"] = "Assistant: Document Analysis Options"
 
 -- When enabled, you can preselect some ERI server options.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGERISERVER::T1280666275"] = "When enabled, you can preselect some ERI server options."

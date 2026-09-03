@@ -1068,6 +1068,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::COMMONCODINGLANGUAGEEXTENSIONS::T
 -- None
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::COMMONCODINGLANGUAGEEXTENSIONS::T810547195"] = "Keine"
 
+-- No tools permitted
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T1001872773"] = "Keine Werkzeuge erlaubt"
+
 -- {0} - Document Analysis Session
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T108097007"] = "{0} – Sitzung zur Dokumentenanalyse"
 
@@ -1082,6 +1085,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTA
 
 -- Please provide a description of your analysis rules. This rules will be used to instruct the AI on how to analyze the documents.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T1291179736"] = "Bitte geben Sie eine Beschreibung Ihrer Analyseregeln an. Diese Regeln werden verwendet, um die KI anzuweisen, wie die Dokumente analysiert werden sollen."
+
+-- Only the tools selected here can be used by the AI for an analysis with this policy. Every tool still has to meet the confidence requirements of the selected provider, so a tool may remain unavailable even when this policy permits it.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T1692505801"] = "Nur die hier ausgewählten Werkzeuge dürfen von der KI für eine Analyse mit diesem Regelwerk verwendet werden. Jedes Werkzeug muss weiterhin die Vertrauensanforderungen des ausgewählten Anbieters erfüllen. Daher kann ein Werkzeug auch dann nicht verfügbar sein, wenn dieses Regelwerk seine Verwendung zulässt."
 
 -- Yes, protect this policy
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T1762380857"] = "Ja, dieses Regelwerk schützen"
@@ -1122,6 +1128,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTA
 -- Preselect a profile
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T2322771068"] = "Profil vorauswählen"
 
+-- Not all tools of this policy can be used with the selected AI provider: {0}. Please choose a provider with a higher confidence level to use all tools of this policy.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T2346179856"] = "Nicht alle Werkzeuge dieses Regelwerks können mit dem ausgewählten KI-Anbieter verwendet werden: \"{0}\". Bitte wählen Sie einen Anbieter mit einer höheren Vertrauensstufe, um alle Werkzeuge dieses Regelwerks nutzen zu können."
+
 -- The analysis rules specify what the AI should pay particular attention to while reviewing the documents you provide, and which aspects it should highlight or save. For example, if you want to extract the potential of green hydrogen for agriculture from a variety of general publications, you can explicitly define this in the analysis rules.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T238145218"] = "Die Analyseregeln legen fest, worauf die KI bei der Prüfung der von Ihnen bereitgestellten Dokumente besonders achten und welche Aspekte sie hervorheben oder speichern soll. Wenn Sie beispielsweise das Potenzial von grünem Wasserstoff für die Landwirtschaft aus einer Vielzahl allgemeiner Publikationen extrahieren möchten, können Sie dies in den Analyseregeln explizit definieren."
 
@@ -1133,6 +1142,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTA
 
 -- Policy definition
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T2491168104"] = "Definition des Regelwerks"
+
+-- This policy permits 1 tool
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T2498795664"] = "Dieses Regelwerk erlaubt 1 Werkzeug"
 
 -- Export policy as configuration section
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T2556564432"] = "Exportieren Sie das Regelwerk als Konfigurationsabschnitt"
@@ -1163,6 +1175,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTA
 
 -- Delete this policy
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T3119086260"] = "Dieses Regelwerk löschen"
+
+-- Tools this policy permits
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T31356122"] = "Werkzeuge, die dieses Regelwerk erlaubt"
 
 -- Policy {0}
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T3157740273"] = "Regelwerk {0}"
@@ -1206,8 +1221,14 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTA
 -- Delete document analysis policy
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T4293094335"] = "Regelwerk löschen"
 
+-- This policy uses tools, but the selected model cannot use tools. The analysis runs without them. Please choose a model which supports tools.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T454153019"] = "Dieses Regelwerk verwendet Werkzeuge, aber das ausgewählte Modell kann keine Werkzeuge verwenden. Die Analyse wird ohne sie ausgeführt. Bitte wählen Sie ein Modell, das Werkzeuge unterstützt."
+
 -- Please provide a description of your output rules. This rules will be used to instruct the AI on how to format the output of the analysis.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T652187065"] = "Bitte geben Sie eine Beschreibung der Regeln für die Ausgabe an. Diese Regeln werden verwendet, um die KI anzuweisen, wie die Ausgabe der Analyse formatiert werden soll."
+
+-- This policy permits {0} tools
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T71972680"] = "Dieses Regelwerk erlaubt {0} Werkzeuge"
 
 -- After the AI has processed all documents, it needs your instructions on how the result should be formatted. Would you like a structured list with keywords or a continuous text? Should the output include emojis or be written in formal business language? You can specify all these preferences in the output rules. There, you can also predefine a desired structure—for example, by using Markdown formatting to define headings, paragraphs, or bullet points.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T726434276"] = "Nachdem die KI alle Dokumente verarbeitet hat, benötigt sie Ihre Anweisungen, wie das Ergebnis formatiert werden soll. Möchten Sie eine strukturierte Liste mit Schlüsselwörtern oder einen fließenden Text? Soll die Ausgabe Emojis enthalten oder in formeller Geschäftssprache verfasst sein? Alle diese Präferenzen können Sie in den Ausgaberegeln festlegen. Dort können Sie auch eine gewünschte Struktur vordefinieren – zum Beispiel durch Verwendung von Markdown-Formatierung, um Überschriften, Absätze oder Aufzählungspunkte zu definieren."
@@ -7407,12 +7428,6 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T926703
 -- Export configuration
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T975426229"] = "Konfiguration exportieren"
 
--- Close
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDOCUMENTANALYSIS::T3448155331"] = "Schließen"
-
--- Assistant: Document Analysis Options
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDOCUMENTANALYSIS::T687448148"] = "Assistent: Optionen für die Dokumentenanalyse"
-
 -- When enabled, you can preselect some ERI server options.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGERISERVER::T1280666275"] = "Wenn aktiviert, können Sie einige ERI-Serveroptionen vorauswählen."
 
@@ -8152,7 +8167,7 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSDIALOG::T3616903110"] 
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSDIALOG::T3730473128"] = "Werkzeugeinstellungen"
 
 -- This tool has been disabled by your organization.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSDIALOG::T3794167684"] = "Dieses Tool wurde von Ihrer Organisation deaktiviert."
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSDIALOG::T3794167684"] = "Dieses Werkzeug wurde von Ihrer Organisation deaktiviert."
 
 -- The selected tool could not be loaded.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSDIALOG::T3907843187"] = "Das ausgewählte Werkzeug konnte nicht geladen werden."
@@ -11341,7 +11356,7 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEEXTENSIONS::T4261248356"] = "Von der KI 
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SOURCEEXTENSIONS::T535360212"] = "Quellen, die von Werkzeugen verwendet werden"
 
 -- The provider '{0}' returned an invalid tool calling response. Check the provider's tool calling configuration and see the logs for details.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::HARNESS::TOOLCALLINGMESSAGES::T2768311456"] = "Der Anbieter „{0}“ hat eine ungültige Antwort für Tool-Aufrufe zurückgegeben. Überprüfen Sie die Tool-Aufruf-Konfiguration des Anbieters und sehen Sie für weitere Details in den Protokollen nach."
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::HARNESS::TOOLCALLINGMESSAGES::T2768311456"] = "Der Anbieter „{0}“ hat eine ungültige Antwort für Werkzeug-Aufrufe zurückgegeben. Überprüfen Sie die Werkzeug-Aufruf-Konfiguration des Anbieters und sehen Sie für weitere Details in den Protokollen nach."
 
 -- The tool calling request failed with status code {0}. See the logs for details.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::HARNESS::TOOLCALLINGMESSAGES::T3117779001"] = "Die Anfrage zum Aufruf des Werkzeugs ist mit dem Statuscode {0} fehlgeschlagen. Weitere Details finden Sie in den Protokollen."
@@ -11356,7 +11371,7 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::ITOOLIMPLEMENTATION::T40564
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGAVAILABILITYEXTENSIONS::T1110311702"] = "Bitte wählen Sie einen LLM-Anbieter aus."
 
 -- Tool calling support is not enabled by default for this model, but you can enable this capability in the expert settings of the provider if you are sure the model supports it.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGAVAILABILITYEXTENSIONS::T3805542503"] = "Die Unterstützung für Tool-Aufrufe ist standardmäßig nicht aktiviert, aber Sie können diese Funktion in den Experteneinstellungen des Anbieters aktivieren, wenn Sie sicher sind, dass das Modell dies unterstützt."
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGAVAILABILITYEXTENSIONS::T3805542503"] = "Die Unterstützung für Werkzeug-Aufrufe ist standardmäßig nicht aktiviert, aber Sie können diese Funktion in den Experteneinstellungen des Anbieters aktivieren, wenn Sie sicher sind, dass das Modell dies unterstützt."
 
 -- Allowed private hosts must be host names only, without scheme or path.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::READWEBPAGETOOL::T2196457612"] = "Zulässige private Hosts dürfen nur Hostnamen enthalten, ohne Schema oder Pfad."
@@ -11479,10 +11494,10 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS:
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLCALLINGIMPLEMENTATIONS::SEARXNGWEBSEARCHTOOL::T993547568"] = "SearXNG-URL"
 
 -- Using tools: {0}
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLRUNTIMESTATUS::T2834986024"] = "Verwendung von Tools: {0}"
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLRUNTIMESTATUS::T2834986024"] = "Verwendung von Werkzeugen: {0}"
 
 -- Using tool: {0}
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLRUNTIMESTATUS::T4185351801"] = "Verwendetes Tool: {0}"
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLRUNTIMESTATUS::T4185351801"] = "Verwendetes Werkzeug: {0}"
 
 -- Moderate
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLSETTINGSOPTIONSOURCES::T177463328"] = "Mittelmäßig"

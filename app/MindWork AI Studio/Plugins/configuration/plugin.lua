@@ -1024,7 +1024,15 @@ CONFIG["DOCUMENT_ANALYSIS_POLICIES"] = {}
 --     -- Optional: minimum provider confidence required for this policy.
 --     -- Allowed values are: NONE, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
 --     ["MinimumProviderConfidence"] = "MEDIUM",
--- 
+--
+--     -- Optional: the tools an analysis with this policy may use, by tool ID.
+--     -- This is a limit, not a preselection: a tool which is not listed here cannot be
+--     -- used for this policy. Omitting the list, or leaving it empty, means no tools.
+--     -- A listed tool must still meet the confidence requirements of the provider in
+--     -- use, so a tool may stay unavailable even though this policy permits it.
+--     -- Tool IDs include: web_search, read_web_page
+--     ["AllowedToolIds"] = { "web_search" },
+--
 --     -- Optional: preselect a provider or profile by ID.
 --     -- The IDs must exist in CONFIG["LLM_PROVIDERS"] or CONFIG["PROFILES"].
 --     ["PreselectedProvider"] = "00000000-0000-0000-0000-000000000000",
