@@ -56,7 +56,7 @@ public sealed class ToolCallingLoop(ILogger<ToolCallingLoop> logger) : IToolCall
             {
                 toolCallCount++;
                 var (unanswerableContent, unanswerableTrace, _, _) = context.ToolExecutor.CreateInvalidToolCallResult(string.Empty, toolCallCount);
-                context.AddToolInvocation(unanswerableTrace);
+                await context.AddToolInvocationAsync(unanswerableTrace);
                 await context.ResetToolRuntimeStatusAsync();
                 yield return new ContentStreamChunk(unanswerableContent, [..toolSources]);
                 yield break;
@@ -122,7 +122,7 @@ public sealed class ToolCallingLoop(ILogger<ToolCallingLoop> logger) : IToolCall
                         toolCallCount++;
                         var (invalidContent, invalidTrace, _, _) = context.ToolExecutor.CreateInvalidToolCallResult(call.CallId, toolCallCount);
                         toolResultCharacterCount += invalidContent.Length;
-                        context.AddToolInvocation(invalidTrace);
+                        await context.AddToolInvocationAsync(invalidTrace);
                         adapter.RecordToolResult(call.CallId, invalidContent, isError: true);
                         continue;
                     }
@@ -151,7 +151,7 @@ public sealed class ToolCallingLoop(ILogger<ToolCallingLoop> logger) : IToolCall
                     toolResultCharacterCount += toolContent.Length;
                     context.ChatThread.RequireProviderConfidence(requiredProviderConfidence);
                     toolSources.MergeSources(sources);
-                    context.AddToolInvocation(trace);
+                    await context.AddToolInvocationAsync(trace);
 
                     // A blocked call counts as a failure towards the model as much as an errored
                     // one does: in both cases it did not get the data it asked for.

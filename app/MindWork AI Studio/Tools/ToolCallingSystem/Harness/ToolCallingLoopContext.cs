@@ -44,7 +44,19 @@ public sealed class ToolCallingLoopContext
     /// <summary>
     /// Records one tool invocation for the UI.
     /// </summary>
-    public void AddToolInvocation(ToolInvocationTrace trace) => this.CurrentAssistantContent?.ToolInvocations.Add(trace);
+    /// <remarks>
+    /// Tells the UI right away, so a finished call shows up while the next one is still running.
+    /// Waiting for the round to end would leave the user watching a list that lags behind what the
+    /// model is doing.
+    /// </remarks>
+    public async Task AddToolInvocationAsync(ToolInvocationTrace trace)
+    {
+        if (this.CurrentAssistantContent is null)
+            return;
+
+        this.CurrentAssistantContent.ToolInvocations.Add(trace);
+        await this.CurrentAssistantContent.StreamingEvent();
+    }
 
     /// <summary>
     /// Tells the UI that the named tools are running.
