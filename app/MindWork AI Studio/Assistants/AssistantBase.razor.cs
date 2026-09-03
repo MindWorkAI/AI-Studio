@@ -439,7 +439,14 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         return this.ToolRegistry.FilterToolIdsForProvider(this.ProviderSettings, this.selectedToolIds);
     }
 
-    private Task SelectedToolIdsChanged(HashSet<string> updatedToolIds)
+    /// <summary>
+    /// Takes over a changed tool selection, no matter where the user made it.
+    /// </summary>
+    /// <remarks>
+    /// The footer offers one; an assistant may instead put the tools next to the setting they
+    /// belong to, as the batch processing does with its instructions. Both end up here.
+    /// </remarks>
+    protected Task SelectedToolIdsChanged(HashSet<string> updatedToolIds)
     {
         this.selectedToolIds = ToolSelectionRules.NormalizeSelection(updatedToolIds);
         return Task.CompletedTask;

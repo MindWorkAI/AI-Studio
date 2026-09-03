@@ -25,7 +25,17 @@ public partial class ToolDefaultsConfiguration : MSGComponentBase
         ? this.T("Choose which tools should be preselected for new chats.")
         : this.T("Choose which tools should be preselected for new runs of this assistant.");
 
+    /// <summary>
+    /// Whether preselecting tools is pointless right now.
+    /// </summary>
+    /// <remarks>
+    /// Only where the toggle above decides whether the user ever sees a tool selection: a hidden
+    /// selection makes its defaults meaningless. Without that toggle the assistant reaches its
+    /// tools some other way — from a form field of its own, for instance — and the defaults do
+    /// apply.
+    /// </remarks>
     private bool AreDefaultToolsDisabled =>
+        this.IncludeVisibilityToggle &&
         this.Component is not AIStudio.Tools.Components.CHAT &&
         !this.SettingsManager.IsToolSelectionVisible(this.Component);
 

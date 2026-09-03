@@ -41,6 +41,18 @@
                 }
             }
 
+            @* The tools belong to the instructions, which is why they sit here rather than at the end of the dialog. *@
+            @if (this.SettingsManager.ConfigurationData.BatchProcessing.PromptSource is BatchProcessingPromptSource.POLICY)
+            {
+                <MudJustifiedText Typo="Typo.body2" Class="mb-3">
+                    @T("A policy brings its own tools, so there is nothing to preselect here. You configure them with the policy in the Document Analysis Assistant.")
+                </MudJustifiedText>
+            }
+            else
+            {
+                <ToolDefaultsConfiguration Component="Components.BATCH_PROCESSING_ASSISTANT" IncludeVisibilityToggle="@false" />
+            }
+
             <MudText Typo="Typo.h6" Class="mb-3 mt-6">@T("Output")</MudText>
             <ConfigurationSelect OptionDescription="@T("Default output mode")" Disabled="@this.DefaultsDisabled" SelectedValue="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.OutputMode)" Data="@this.OutputModeData" SelectionUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.OutputMode = value)" IsLocked="() => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.OutputMode, out var meta) && meta.IsLocked"/>
             @if (this.SettingsManager.ConfigurationData.BatchProcessing.OutputMode is BatchProcessingOutputMode.INDIVIDUAL_FILES)
@@ -74,7 +86,6 @@
             <ConfigurationMinConfidenceSelection Disabled="@this.DefaultsDisabled" RestrictToGlobalMinimumConfidence="true" SelectedValue="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.MinimumProviderConfidence)" SelectionUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.MinimumProviderConfidence = value)" IsLocked="() => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.MinimumProviderConfidence, out var meta) && meta.IsLocked"/>
             <ConfigurationProviderSelection Component="Components.BATCH_PROCESSING_ASSISTANT" Data="@this.AvailableLLMProviders" Disabled="@this.DefaultsDisabled" SelectedValue="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.PreselectedProvider)" SelectionUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.PreselectedProvider = value)" IsLocked="() => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.PreselectedProvider, out var meta) && meta.IsLocked"/>
         </MudPaper>
-        <ToolDefaultsConfiguration Component="Components.BATCH_PROCESSING_ASSISTANT" />
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="@this.Close" Variant="Variant.Filled">@T("Close")</MudButton>
