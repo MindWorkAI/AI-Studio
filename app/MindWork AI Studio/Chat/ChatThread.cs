@@ -55,6 +55,18 @@ public sealed record ChatThread
     public string SelectedChatTemplate { get; set; } = string.Empty;
 
     /// <summary>
+    /// Specifies the tools selected for the chat thread, as the user chose them.
+    /// </summary>
+    /// <remarks>
+    /// Null means the thread never stored a selection, which is the case for every chat written
+    /// before tools existed: those open with the defaults of their component. An empty set is the
+    /// opposite statement — the user switched every tool off and wants it to stay that way.<br/><br/>
+    /// This is the unfiltered selection. What a provider may actually run is decided per request,
+    /// because a provider with too little confidence must not cost the user a tool permanently.
+    /// </remarks>
+    public HashSet<string>? SelectedToolIds { get; set; }
+
+    /// <summary>
     /// Indicates whether to include the current date and time in the system prompt.
     /// False by default for backward compatibility.
     /// </summary>

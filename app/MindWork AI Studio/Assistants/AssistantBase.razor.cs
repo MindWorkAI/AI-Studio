@@ -470,6 +470,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             this.ChatThread.Blocks.Add(this.ResultingContentBlock);
             this.ChatThread.SelectedProvider = this.ProviderSettings.Id;
             this.ChatThread.RuntimeComponent = this.Component;
+            this.ChatThread.SelectedToolIds = [..this.selectedToolIds];
             this.ChatThread.RuntimeSelectedToolIds = this.SettingsManager.IsToolSelectionVisible(this.Component)
                 ? this.ToolRegistry.FilterToolIdsForProvider(this.ProviderSettings, this.selectedToolIds)
                 : [];

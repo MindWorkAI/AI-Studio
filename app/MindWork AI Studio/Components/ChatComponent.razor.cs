@@ -761,6 +761,7 @@ public partial class ChatComponent : MSGComponentBase
             SelectedProvider = this.Provider.Id,
             SelectedProfile = this.currentProfile.Id,
             SelectedChatTemplate = this.currentChatTemplate.Id,
+            SelectedToolIds = [..this.selectedToolIds],
             SystemPrompt = SystemPrompts.DEFAULT,
             WorkspaceId = this.currentWorkspaceId,
             ChatId = Guid.NewGuid(),
@@ -805,6 +806,7 @@ public partial class ChatComponent : MSGComponentBase
                 SelectedProvider = this.Provider.Id,
                 SelectedProfile = this.currentProfile.Id,
                 SelectedChatTemplate = this.currentChatTemplate.Id,
+                SelectedToolIds = [..this.selectedToolIds],
                 SystemPrompt = SystemPrompts.DEFAULT,
                 WorkspaceId = this.currentWorkspaceId,
                 ChatId = Guid.NewGuid(),
@@ -908,6 +910,7 @@ public partial class ChatComponent : MSGComponentBase
         this.Logger.LogDebug($"Start processing user input using provider '{this.Provider.InstanceName}' with model '{this.Provider.Model}'.");
         this.StateHasChanged();
         this.ChatThread!.RuntimeComponent = Tools.Components.CHAT;
+        this.ChatThread.SelectedToolIds = [..this.selectedToolIds];
         this.ChatThread.RuntimeSelectedToolIds = this.ToolRegistry.FilterToolIdsForProvider(this.Provider, this.selectedToolIds);
         await this.AIJobService.TryStartChatGenerationAsync(new ChatGenerationRequest
         {
@@ -930,6 +933,19 @@ public partial class ChatComponent : MSGComponentBase
     private Task SelectedToolIdsChanged(HashSet<string> updatedToolIds)
     {
         this.selectedToolIds = ToolSelectionRules.NormalizeSelection(updatedToolIds);
+
+        //
+        // The thread keeps the selection so that reopening the chat tomorrow brings the same tools
+        // back. What is stored is what the user chose, not what the current provider is allowed to
+        // run: filtering here would quietly drop a tool for good the moment the user switches to a
+        // provider with less confidence.
+        //
+        if (this.ChatThread is not null)
+        {
+            this.ChatThread.SelectedToolIds = [..this.selectedToolIds];
+            this.hasUnsavedChanges = true;
+        }
+
         return Task.CompletedTask;
     }
     
@@ -1045,6 +1061,7 @@ public partial class ChatComponent : MSGComponentBase
                 SelectedProvider = this.Provider.Id,
                 SelectedProfile = this.currentProfile.Id,
                 SelectedChatTemplate = this.currentChatTemplate.Id,
+                SelectedToolIds = [..this.selectedToolIds],
                 SystemPrompt = SystemPrompts.DEFAULT,
                 WorkspaceId = this.currentWorkspaceId,
                 ChatId = Guid.NewGuid(),
@@ -1120,6 +1137,7 @@ public partial class ChatComponent : MSGComponentBase
             await this.SyncWorkspaceHeaderWithChatThreadAsync();
             await this.SyncForegroundChatAsync();
             this.dataSourceSelectionComponent?.ChangeOptionWithoutSaving(this.ChatThread.DataSourceOptions, this.ChatThread.AISelectedDataSources);
+            this.selectedToolIds = ToolSelectionRules.NormalizeSelection(this.ChatThread.SelectedToolIds ?? this.SettingsManager.GetDefaultToolIds(Tools.Components.CHAT));
         }
         else
         {
