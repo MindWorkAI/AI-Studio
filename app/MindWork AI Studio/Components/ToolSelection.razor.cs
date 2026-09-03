@@ -71,6 +71,33 @@ public partial class ToolSelection : MSGComponentBase
 
     private void Hide() => this.showSelection = false;
 
+    /// <summary>
+    /// Whether this tool can be switched at all right now.
+    /// </summary>
+    /// <remarks>
+    /// The switch and the row click share this, so both agree on when a tool is out of reach: the
+    /// organization disabled it, it is not configured, the provider lacks the confidence it needs,
+    /// a response is running, or the model cannot call tools in the first place.
+    /// </remarks>
+    private bool IsRowDisabled(ToolCatalogItem item) => !item.IsActive || !item.ConfigurationState.IsConfigured || this.IsBlockedByProviderConfidence(item) ||
+                                                        this.Disabled || !this.SupportsTools;
+
+    /// <summary>
+    /// Switches a tool when the user clicks anywhere in its row.
+    /// </summary>
+    /// <remarks>
+    /// Hitting the switch itself is needless precision work, so the text, the icon, and the empty
+    /// space count as well. Only the settings button is left out, because it sits outside the
+    /// button that spans the rest of the row.
+    /// </remarks>
+    private async Task ToggleToolFromRow(ToolCatalogItem item)
+    {
+        if (this.IsRowDisabled(item))
+            return;
+
+        await this.ChangeSelection(item.Definition.Id, !this.SelectedToolIds.Contains(item.Definition.Id));
+    }
+
     private async Task ChangeSelection(string toolId, bool isSelected)
     {
         if (isSelected && !this.SettingsManager.IsToolActive(toolId))

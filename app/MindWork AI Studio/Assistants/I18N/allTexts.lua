@@ -971,40 +971,40 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T911303749"] =
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::ASSISTANTBUILDER::T997013004"] = "Potentially Unsafe Assistant"
 
 -- The generated Lua plugin code does not contain a readable plugin ID.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::LUARESPONSEPARSEERROR::T1163279436"] = "The generated Lua plugin code does not contain a readable plugin ID."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::LUARESPONSEPARSEERROREXTENSION::T1163279436"] = "The generated Lua plugin code does not contain a readable plugin ID."
 
 -- The model's answer is missing the assistant metadata.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::LUARESPONSEPARSEERROR::T1389066899"] = "The model's answer is missing the assistant metadata."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::LUARESPONSEPARSEERROREXTENSION::T1389066899"] = "The model's answer is missing the assistant metadata."
 
 -- The model's answer contains incomplete plugin metadata.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::LUARESPONSEPARSEERROR::T181258566"] = "The model's answer contains incomplete plugin metadata."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::LUARESPONSEPARSEERROREXTENSION::T181258566"] = "The model's answer contains incomplete plugin metadata."
 
 -- The model's answer contains incomplete assistant metadata.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::LUARESPONSEPARSEERROR::T1863964049"] = "The model's answer contains incomplete assistant metadata."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::LUARESPONSEPARSEERROREXTENSION::T1863964049"] = "The model's answer contains incomplete assistant metadata."
 
 -- The model returned an empty JSON object.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::LUARESPONSEPARSEERROR::T2410202327"] = "The model returned an empty JSON object."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::LUARESPONSEPARSEERROREXTENSION::T2410202327"] = "The model returned an empty JSON object."
 
 -- The model returned an unusable JSON response.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::LUARESPONSEPARSEERROR::T2967613975"] = "The model returned an unusable JSON response."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::LUARESPONSEPARSEERROREXTENSION::T2967613975"] = "The model returned an unusable JSON response."
 
 -- The model returned an invalid response.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::LUARESPONSEPARSEERROR::T3368485003"] = "The model returned an invalid response."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::LUARESPONSEPARSEERROREXTENSION::T3368485003"] = "The model returned an invalid response."
 
 -- The model response does not contain the generated Lua plugin code.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::LUARESPONSEPARSEERROR::T3523772974"] = "The model response does not contain the generated Lua plugin code."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::LUARESPONSEPARSEERROREXTENSION::T3523772974"] = "The model response does not contain the generated Lua plugin code."
 
 -- The model returned an invalid response: {0}
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::LUARESPONSEPARSEERROR::T3546551801"] = "The model returned an invalid response: {0}"
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::LUARESPONSEPARSEERROREXTENSION::T3546551801"] = "The model returned an invalid response: {0}"
 
 -- The model's answer is missing the plugin metadata.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::LUARESPONSEPARSEERROR::T3731646796"] = "The model's answer is missing the plugin metadata."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::LUARESPONSEPARSEERROREXTENSION::T3731646796"] = "The model's answer is missing the plugin metadata."
 
 -- The model response is missing or unreadable.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::LUARESPONSEPARSEERROR::T3865942038"] = "The model response is missing or unreadable."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::LUARESPONSEPARSEERROREXTENSION::T3865942038"] = "The model response is missing or unreadable."
 
 -- The model responded with an unsupported or deprecated JSON schema.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::LUARESPONSEPARSEERROR::T531597860"] = "The model responded with an unsupported or deprecated JSON schema."
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::BUILDER::LUARESPONSEPARSEERROREXTENSION::T531597860"] = "The model responded with an unsupported or deprecated JSON schema."
 
 -- Coding Assistant
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::CODING::ASSISTANTCODING::T1082499335"] = "Coding Assistant"

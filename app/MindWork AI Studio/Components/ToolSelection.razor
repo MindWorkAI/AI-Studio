@@ -43,22 +43,35 @@
                         var isSelected = this.SelectedToolIds.Contains(item.Definition.Id);
                         var isConfigured = item.ConfigurationState.IsConfigured;
                         var providerConfidenceHint = this.GetProviderConfidenceHint(item);
-                        var isBlockedByProviderConfidence = this.IsBlockedByProviderConfidence(item);
                         <MudPaper Class="pa-2 mb-2 border rounded-lg">
                             <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
-                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                                    <MudSwitch T="bool" Color="Color.Primary" Value="@isSelected" ValueChanged="@(value => this.ChangeSelection(item.Definition.Id, value))" Disabled="@(!item.IsActive || !isConfigured || isBlockedByProviderConfidence || this.Disabled || !this.SupportsTools)" />
-                                    <MudIcon Icon="@item.Implementation.Icon" Color="Color.Info" />
-                                    @if (!item.IsActive)
-                                    {
-                                        <MudTooltip Text="@T("This tool has been disabled by your organization.")">
-                                            <MudIcon Icon="@Icons.Material.Filled.Lock" Color="Color.Error" Size="Size.Small" />
+                                @*
+                                    Everything but the settings button switches the tool, so aiming for the
+                                    small switch is optional. The button spans that part of the row, which
+                                    keeps the settings button outside of it without any event plumbing.
+                                *@
+                                <MudButton Variant="Variant.Text" Color="Color.Default" Class="px-2 py-1 justify-start"
+                                           Style="min-width:auto; text-transform:none; flex-grow:1;"
+                                           Disabled="@this.IsRowDisabled(item)" OnClick="@(async () => await this.ToggleToolFromRow(item))">
+                                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                        @*
+                                            The switch only shows the state; the surrounding button does the switching.
+                                            It therefore takes no pointer events at all: its label reaches past the visible
+                                            switch and would otherwise swallow the clicks landing in that strip.
+                                        *@
+                                        <MudSwitch T="bool" Color="Color.Primary" Value="@isSelected" ReadOnly="@true" Disabled="@this.IsRowDisabled(item)" Style="pointer-events: none;" />
+                                        <MudIcon Icon="@item.Implementation.Icon" Color="Color.Info" />
+                                        @if (!item.IsActive)
+                                        {
+                                            <MudTooltip Text="@T("This tool has been disabled by your organization.")">
+                                                <MudIcon Icon="@Icons.Material.Filled.Lock" Color="Color.Error" Size="Size.Small" />
+                                            </MudTooltip>
+                                        }
+                                        <MudTooltip Text="@item.Implementation.GetDescription()">
+                                            <MudText Typo="Typo.body1">@item.Implementation.GetDisplayName()</MudText>
                                         </MudTooltip>
-                                    }
-                                    <MudTooltip Text="@item.Implementation.GetDescription()">
-                                        <MudText Typo="Typo.body1">@item.Implementation.GetDisplayName()</MudText>
-                                    </MudTooltip>
-                                </MudStack>
+                                    </MudStack>
+                                </MudButton>
                                 <MudIconButton Icon="@Icons.Material.Filled.Settings" OnClick="@(async () => await this.OpenSettings(item.Definition.Id))" />
                             </MudStack>
                             @if (!isConfigured)
