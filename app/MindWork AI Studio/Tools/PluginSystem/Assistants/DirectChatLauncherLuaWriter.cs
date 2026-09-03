@@ -1,6 +1,8 @@
 using System.Text;
 using System.Text.RegularExpressions;
 
+using SharedTools;
+
 namespace AIStudio.Tools.PluginSystem.Assistants;
 
 /// <summary>
@@ -169,6 +171,15 @@ public static class DirectChatLauncherLuaWriter
             builder.AppendLine("    [\"DataSourceIds\"] = {");
             foreach (var dataSourceId in dataSourceIds)
                 builder.AppendLine($"        \"{dataSourceId}\",");
+
+            builder.AppendLine("    },");
+        }
+
+        if (definition.Launch.ToolIds is { Count: > 0 } toolIds)
+        {
+            builder.AppendLine("    [\"ToolIds\"] = {");
+            foreach (var toolId in toolIds)
+                builder.AppendLine($"        {LuaTools.ToLuaStringLiteral(toolId)},");
 
             builder.AppendLine("    },");
         }

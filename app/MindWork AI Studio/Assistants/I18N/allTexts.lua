@@ -3721,6 +3721,12 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T700666808"] = "Mana
 -- Available Data Sources
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T86053874"] = "Available Data Sources"
 
+-- Tools (Optional)
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T1019749907"] = "Tools (Optional)"
+
+-- These tools are preselected when the chat opens. Users can change the selection in the chat, and every tool has to meet the confidence requirements of the provider in use.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T1286170698"] = "These tools are preselected when the chat opens. Users can change the selection in the chat, and every tool has to meet the confidence requirements of the provider in use."
+
 -- Chat provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DIRECTCHATLAUNCHERFORM::T1648955896"] = "Chat provider"
 
@@ -10455,6 +10461,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T3
 
 -- The provided ASSISTANT lua table does not contain a valid system prompt.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T3402798667"] = "The provided ASSISTANT lua table does not contain a valid system prompt."
+
+-- The ASSISTANT table contains invalid ToolIds. Expected a non-empty list of unique, non-empty tool IDs.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T3416855489"] = "The ASSISTANT table contains invalid ToolIds. Expected a non-empty list of unique, non-empty tool IDs."
 
 -- The ASSISTANT table does not contain a valid system prompt.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::PLUGINSYSTEM::ASSISTANTS::PLUGINASSISTANTS::T3723171842"] = "The ASSISTANT table does not contain a valid system prompt."

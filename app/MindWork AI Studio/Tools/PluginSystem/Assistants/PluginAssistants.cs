@@ -226,10 +226,11 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
                 if (!TryReadOptionalGuid(assistantTable, "ProviderId", false, out var providerId, out message) ||
                     !TryReadOptionalGuid(assistantTable, "ProfileId", true, out var profileId, out message) ||
                     !TryReadOptionalGuid(assistantTable, "ChatTemplateId", true, out var chatTemplateId, out message) ||
-                    !TryReadOptionalDataSourceIds(assistantTable, out var dataSourceIds, out message))
+                    !TryReadOptionalDataSourceIds(assistantTable, out var dataSourceIds, out message) ||
+                    !TryReadOptionalToolIds(assistantTable, out var toolIds, out message))
                     return false;
 
-                this.ChatLaunchConfiguration = new(workspaceName, providerId, profileId, chatTemplateId, dataSourceIds);
+                this.ChatLaunchConfiguration = new(workspaceName, providerId, profileId, chatTemplateId, dataSourceIds, toolIds);
 
                 return true;
 
@@ -288,6 +289,47 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
         }
 
         dataSourceIds = parsedIds.ToImmutableArray();
+        return true;
+    }
+
+    /// <summary>
+    /// Reads the tools a launcher preselects for its chat.
+    /// </summary>
+    /// <remarks>
+    /// Unlike the data sources, these are plain tool IDs rather than GUIDs, and an ID unknown to
+    /// this installation is not an error: a launcher may name a tool that arrives with a plugin
+    /// which is not installed yet. The chat drops what it cannot offer.
+    /// </remarks>
+    private static bool TryReadOptionalToolIds(LuaTable assistantTable, out IReadOnlyList<string>? toolIds, out string message)
+    {
+        toolIds = null;
+        message = string.Empty;
+
+        if (!assistantTable.TryGetValue("ToolIds", out var toolIdsValue))
+            return true;
+
+        if (!toolIdsValue.TryRead<LuaTable>(out var toolIdsTable) || toolIdsTable.ArrayLength == 0)
+        {
+            message = TB("The ASSISTANT table contains invalid ToolIds. Expected a non-empty list of unique, non-empty tool IDs.");
+            return false;
+        }
+
+        var parsedIds = new List<string>(toolIdsTable.ArrayLength);
+        var uniqueIds = new HashSet<string>(StringComparer.Ordinal);
+        for (var index = 1; index <= toolIdsTable.ArrayLength; index++)
+        {
+            if (!toolIdsTable[index].TryRead<string>(out var toolId) ||
+                string.IsNullOrWhiteSpace(toolId) ||
+                !uniqueIds.Add(toolId.Trim()))
+            {
+                message = TB("The ASSISTANT table contains invalid ToolIds. Expected a non-empty list of unique, non-empty tool IDs.");
+                return false;
+            }
+
+            parsedIds.Add(toolId.Trim());
+        }
+
+        toolIds = parsedIds.ToImmutableArray();
         return true;
     }
 

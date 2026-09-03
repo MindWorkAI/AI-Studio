@@ -62,6 +62,29 @@ public partial class DirectChatLauncherForm : MSGComponentBase
     public EventCallback<IEnumerable<string>> DataSourceIdsChanged { get; set; }
 
     /// <summary>
+    /// The tools preselected for the chat. An empty selection keeps the normal chat defaults.
+    /// </summary>
+    /// <remarks>
+    /// A preselection, not a limit: the user can switch tools in the chat as usual. What a tool
+    /// may actually do is decided there, by the confidence of the provider in use.
+    /// </remarks>
+    [Parameter]
+    public HashSet<string> ToolIds { get; set; } = [];
+
+    [Parameter]
+    public EventCallback<HashSet<string>> ToolIdsChanged { get; set; }
+
+    /// <summary>
+    /// Whether the tool selection is offered at all.
+    /// </summary>
+    /// <remarks>
+    /// The Assistant Builder has a model write the launcher's Lua, and until that model knows about
+    /// tools, offering the field there would promise something the generated plugin does not carry.
+    /// </remarks>
+    [Parameter]
+    public bool ShowToolSelection { get; set; } = true;
+
+    /// <summary>
     /// Validates the workspace name. The hosts differ here: the Builder requires a name only while
     /// its launcher switch is on, whereas the settings dialog always requires one.
     /// </summary>
@@ -133,6 +156,12 @@ public partial class DirectChatLauncherForm : MSGComponentBase
 
         this.DataSourceIds = selectedDataSourceIds;
         await this.DataSourceIdsChanged.InvokeAsync(selectedDataSourceIds);
+    }
+
+    private async Task SetToolIds(HashSet<string> toolIds)
+    {
+        this.ToolIds = toolIds;
+        await this.ToolIdsChanged.InvokeAsync(toolIds);
     }
 
     private string GetSelectedDataSourceText(List<string?>? selectedValues)

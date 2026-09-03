@@ -3,6 +3,7 @@ using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.PluginSystem.Assistants;
+using AIStudio.Tools.ToolCallingSystem;
 using ProviderSettings = AIStudio.Settings.Provider;
 
 namespace AIStudio.Tools.Services;
@@ -72,6 +73,12 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
             SelectedProvider = providerResult.Provider == ProviderSettings.NONE ? string.Empty : providerResult.Provider.Id,
             SelectedProfile = profile.Id,
             SelectedChatTemplate = chatTemplate.Id,
+            //
+            // Only what this launcher names, and only the tools this installation actually knows.
+            // Null keeps the chat's own defaults, which is what a launcher without tools wants.
+            // The provider confidence is checked later, when the chat sends a message.
+            //
+            SelectedToolIds = launchConfiguration.ToolIds is null ? null : ToolSelectionRules.NormalizeSelection(launchConfiguration.ToolIds.Where(settingsManager.IsToolActive)),
             SystemPrompt = SystemPrompts.DEFAULT,
             WorkspaceId = workspaceId,
             ChatId = Guid.NewGuid(),

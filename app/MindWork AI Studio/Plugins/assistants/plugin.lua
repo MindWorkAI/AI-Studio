@@ -443,4 +443,11 @@ ASSISTANT = {
     ["DataSourceIds"] = {
         "<optional data source GUID>",
     },
+    -- Optional: the tools preselected when the chat opens. Users may change the selection
+    -- in the chat afterwards, and every tool has to meet the confidence requirements of the
+    -- provider in use. A tool ID unknown to the installation is ignored.
+    -- Tool IDs include: web_search, read_web_page
+    ["ToolIds"] = {
+        "<optional tool ID>",
+    },
 }
