@@ -131,26 +131,3 @@ internal sealed class SearXNGPageRetrievalService(WebPageRetrievalService webPag
 
     private sealed record RetrievedSearchPage(SearchCandidate Candidate, RetrievedWebPage RetrievedPage);
 }
-
-internal sealed record WebSearchPageRetrievalResult(
-    IReadOnlyList<WebSearchPageResult> Results,
-    bool RetrievalTimedOut,
-    WebSearchPageRetrievalStatistics ErrorStatistics);
-
-internal sealed record WebSearchPageRetrievalStatistics(
-    int AttemptedCount,
-    int BlockedCount,
-    int PageTimedOutCount,
-    int FailedCount,
-    int EmptyContentCount);
-
-internal sealed class WebSearchPageResult(SearchCandidate candidate, RetrievedWebPage retrievedPage)
-{
-    public SearchCandidate Candidate { get; } = candidate;
-
-    public RetrievedWebPage RetrievedPage { get; } = retrievedPage;
-
-    public string ReturnedMarkdown { get; set; } = string.Empty;
-
-    public bool ContentTruncated { get; set; }
-}

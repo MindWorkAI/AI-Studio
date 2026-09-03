@@ -224,20 +224,3 @@ public sealed class HTMLParser
     /// <returns>The converted Markdown content.</returns>
     public static string ParseToMarkdown(string html) => MARKDOWN_CONVERTER.Convert(html);
 }
-
-public sealed class HTMLParserWebPage
-{
-    public required Uri RequestedUrl { get; init; }
-
-    public required Uri FinalUrl { get; init; }
-
-    public required string ContentType { get; init; }
-
-    public required HtmlDocument Document { get; init; }
-}
-
-public enum ExternalWebAuthenticationMode
-{
-    NONE,
-    OS_DEFAULT_CREDENTIALS
-}
