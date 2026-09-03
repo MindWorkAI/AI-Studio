@@ -281,10 +281,9 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         await base.OnInitializedAsync();
         this.ApplyFilters([], [ Event.CONFIGURATION_CHANGED, Event.PLUGINS_RELOADED ]);
         this.UpdateProviders();
+        
+        // Only for the warning about tools the provider cannot receive; the selection field brings its own catalog:
         this.availableToolItems = await this.ToolRegistry.GetCatalogAsync(this.Component);
-        this.availableTools = this.availableToolItems
-            .Select(x => new ConfigurationSelectData<string>(x.Implementation.GetDisplayName(), x.Definition.Id))
-            .ToList();
 
         this.ApplyPolicyPreselection(preferPolicyPreselection: true);
     }
@@ -334,7 +333,6 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
     private ProfilePreselection policyPreselectedProfile = ProfilePreselection.NoProfile;
     private HashSet<FileAttachment> loadedDocumentPaths = [];
     private readonly List<ConfigurationSelectData<string>> availableLLMProviders = new();
-    private List<ConfigurationSelectData<string>> availableTools = [];
     private IReadOnlyList<ToolCatalogItem> availableToolItems = [];
     private static readonly AssistantSessionStateKey<DataDocumentAnalysisPolicy?> SELECTED_POLICY_STATE_KEY = new(nameof(selectedPolicy));
     private static readonly AssistantSessionStateKey<bool> POLICY_IS_PROTECTED_STATE_KEY = new(nameof(policyIsProtected));
