@@ -352,9 +352,3 @@ public sealed class GlobalShortcutService : BackgroundService, IMessageBusReceiv
 
     private readonly record struct ShortcutRuntimeBinding(string Shortcut, ShortcutBackend Backend);
 }
-
-public sealed record GlobalShortcutRuntimeState(
-    Shortcut ShortcutId,
-    string Shortcut,
-    ShortcutBackend Backend,
-    bool IsSuspended);

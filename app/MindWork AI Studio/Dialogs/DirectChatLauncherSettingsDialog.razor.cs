@@ -8,8 +8,6 @@ using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Dialogs;
 
-public sealed record DirectChatLauncherSettingsDialogResult(Guid PluginId, string PluginName, PluginAssistantAudit? Audit);
-
 /// <summary>
 /// Changes the settings of an installed direct chat launcher without asking a model.
 /// </summary>

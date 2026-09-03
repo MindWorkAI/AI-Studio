@@ -6,8 +6,6 @@ using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Dialogs;
 
-public sealed record AssistantPluginEditorDialogResult(Guid PluginId, string PluginName);
-
 public partial class AssistantPluginEditorDialog : MSGComponentBase
 {
     [Inject]
