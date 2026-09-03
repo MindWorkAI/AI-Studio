@@ -405,7 +405,19 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         this.selectedToolIds = this.SettingsManager.GetDefaultToolIds(this.Component);
     }
 
-    protected Task SelectedToolIdsChanged(HashSet<string> updatedToolIds)
+    /// <summary>
+    /// The tools this assistant may hand to a model with the provider it currently uses.
+    /// </summary>
+    /// <remarks>
+    /// Empty while the tool selection is hidden for this assistant: what the user cannot see, the
+    /// assistant does not use. The provider filter belongs here rather than into the stored
+    /// selection, because a provider with too little confidence must not cost the user a tool for
+    /// good.
+    /// </remarks>
+    protected HashSet<string> GetRunnableToolIds() => this.SettingsManager.IsToolSelectionVisible(this.Component)
+        ? this.ToolRegistry.FilterToolIdsForProvider(this.ProviderSettings, this.selectedToolIds) : [];
+
+    private Task SelectedToolIdsChanged(HashSet<string> updatedToolIds)
     {
         this.selectedToolIds = ToolSelectionRules.NormalizeSelection(updatedToolIds);
         return Task.CompletedTask;
@@ -471,9 +483,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             this.ChatThread.SelectedProvider = this.ProviderSettings.Id;
             this.ChatThread.RuntimeComponent = this.Component;
             this.ChatThread.SelectedToolIds = [..this.selectedToolIds];
-            this.ChatThread.RuntimeSelectedToolIds = this.SettingsManager.IsToolSelectionVisible(this.Component)
-                ? this.ToolRegistry.FilterToolIdsForProvider(this.ProviderSettings, this.selectedToolIds)
-                : [];
+            this.ChatThread.RuntimeSelectedToolIds = this.GetRunnableToolIds();
         }
 
         this.IsProcessing = true;
@@ -942,6 +952,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         state.Set(RESULTING_CONTENT_BLOCK_STATE_KEY, this.ResultingContentBlock);
         state.Set(INPUT_ISSUES_STATE_KEY, this.InputIssues);
         state.Set(IS_PROCESSING_STATE_KEY, this.IsProcessing);
+        state.Set(SELECTED_TOOL_IDS_STATE_KEY, this.selectedToolIds);
         this.CaptureCustomAssistantSessionState(state);
 
         return state.ToDictionary();
@@ -969,6 +980,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         reader.Restore(RESULTING_CONTENT_BLOCK_STATE_KEY, value => this.ResultingContentBlock = value);
         reader.Restore(INPUT_ISSUES_STATE_KEY, value => this.InputIssues = value);
         reader.Restore(IS_PROCESSING_STATE_KEY, value => this.IsProcessing = value);
+        reader.Restore(SELECTED_TOOL_IDS_STATE_KEY, value => this.selectedToolIds = ToolSelectionRules.NormalizeSelection(value));
         this.RestoreCustomAssistantSessionState(reader);
     }
 

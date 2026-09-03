@@ -74,6 +74,7 @@
             <ConfigurationMinConfidenceSelection Disabled="@this.DefaultsDisabled" RestrictToGlobalMinimumConfidence="true" SelectedValue="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.MinimumProviderConfidence)" SelectionUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.MinimumProviderConfidence = value)" IsLocked="() => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.MinimumProviderConfidence, out var meta) && meta.IsLocked"/>
             <ConfigurationProviderSelection Component="Components.BATCH_PROCESSING_ASSISTANT" Data="@this.AvailableLLMProviders" Disabled="@this.DefaultsDisabled" SelectedValue="@(() => this.SettingsManager.ConfigurationData.BatchProcessing.PreselectedProvider)" SelectionUpdate="@(value => this.SettingsManager.ConfigurationData.BatchProcessing.PreselectedProvider = value)" IsLocked="() => ManagedConfiguration.TryGet(x => x.BatchProcessing, x => x.PreselectedProvider, out var meta) && meta.IsLocked"/>
         </MudPaper>
+        <ToolDefaultsConfiguration Component="Components.BATCH_PROCESSING_ASSISTANT" />
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="@this.Close" Variant="Variant.Filled">@T("Close")</MudButton>

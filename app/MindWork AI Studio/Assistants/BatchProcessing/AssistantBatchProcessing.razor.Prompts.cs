@@ -88,16 +88,24 @@ public partial class AssistantBatchProcessing
 
     private async Task<string> CallAIAsync(string fileName, string fileContent, CancellationToken token)
     {
+        //
+        // Every file of the batch gets the tools the user picked for the job. The batch builds its
+        // own throwaway thread per file instead of going through the assistant's own thread, so it
+        // has to hand the tools over itself.
+        //
         var chatThread = new ChatThread
         {
             IncludeDateTime = false,
             SelectedProvider = this.ProviderSettings.Id,
             SelectedProfile = Profile.NO_PROFILE.Id,
+            SelectedToolIds = [..this.selectedToolIds],
             SystemPrompt = this.SystemPrompt,
             WorkspaceId = Guid.Empty,
             ChatId = Guid.NewGuid(),
             Name = this.Title,
             Blocks = [],
+            RuntimeComponent = this.Component,
+            RuntimeSelectedToolIds = this.GetRunnableToolIds(),
         };
 
         var userPrompt = new ContentText
