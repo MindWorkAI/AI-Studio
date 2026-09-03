@@ -2485,6 +2485,9 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T267
 -- Analysis goal
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T2718020690"] = "Analysis goal"
 
+-- To enhance the validity of the SWOT analysis, please upload supplementary documents that provide empirical or contextual data for a comprehensive internal and external assessment.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T3485401617"] = "To enhance the validity of the SWOT analysis, please upload supplementary documents that provide empirical or contextual data for a comprehensive internal and external assessment."
+
 -- Create SWOT analysis
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T3549988380"] = "Create SWOT analysis"
 
@@ -2497,8 +2500,8 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T384
 -- Specify topics the SWOT analysis should pay particular attention to.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T3857591121"] = "Specify topics the SWOT analysis should pay particular attention to."
 
--- Analysis Goal
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T573440114"] = "Analysis Goal"
+-- Analysis Options
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T3882472641"] = "Analysis Options"
 
 -- (Optional) Analysis focus
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T578386116"] = "(Optional) Analysis focus"
@@ -2506,11 +2509,11 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T578
 -- Please provide a custom language.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T656744944"] = "Please provide a custom language."
 
+-- Contextual Knowledge
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T701558710"] = "Contextual Knowledge"
+
 -- Subject of analysis
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T871926658"] = "Subject of analysis"
-
--- Background Knowledge
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T986091845"] = "Background Knowledge"
 
 -- Find synonyms for the following word or phrase:
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SYNONYM::ASSISTANTSYNONYMS::T1793532807"] = "Find synonyms for the following word or phrase:"

@@ -2472,17 +2472,29 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T101
 -- Create a SWOT analysis of my content
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T1113304215"] = "Stärken, Schwächen, Chancen und Risiken meiner Inhalte analysieren"
 
--- Source material
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T1697755825"] = "Ihre Eingabe"
-
 -- SWOT Analysis
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T1864542518"] = "SWOT-Analyse"
+
+-- Input
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGBATCHPROCESSING::T2677268763"] = "Input"
+
+-- Document for analysis
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T203688407"] = "Dokument zur Analyse"
+
+-- Please describe the goal the SWOT analysis should support.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T2136978542"] = "Bitte beschreiben Sie das Ziel, das die SWOT-Analyse unterstützen soll."
 
 -- Target language
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T237828418"] = "Deutsch (Deutschland)"
 
--- Describe the decision or question the SWOT analysis should support.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T2901719160"] = "Beschreibe die Entscheidung oder Frage, die die SWOT-Analyse unterstützen soll."
+-- Input
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T2677268763"] = "Eingabe"
+
+-- Analysis goal
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T2718020690"] = "Analyseziel"
+
+-- To enhance the validity of the SWOT analysis, please upload supplementary documents that provide empirical or contextual data for a comprehensive internal and external assessment.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T3485401617"] = "Um die Aussagekraft der SWOT-Analyse zu erhöhen, laden Sie bitte ergänzende Dokumente hoch, die empirische oder kontextbezogene Daten für eine umfassende interne und externe Bewertung liefern."
 
 -- Create SWOT analysis
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T3549988380"] = "Erstelle eine SWOT-Analyse"
@@ -2496,14 +2508,20 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T384
 -- Specify topics the SWOT analysis should pay particular attention to.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T3857591121"] = "Geben Sie die Themen an, auf die die SWOT-Analyse besonders achten soll."
 
--- (Optional) Analysis goal
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T4150922727"] = "(Optional) Analyseziel"
+-- Analysis Options
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T3882472641"] = "Analyseoptionen"
 
 -- (Optional) Analysis focus
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T578386116"] = "(Optional) Analysefokus"
 
 -- Please provide a custom language.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T656744944"] = "Benutzerdefinierte Sprache"
+
+-- Contextual Knowledge
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T701558710"] = "Kontextuelles Wissen"
+
+-- Subject of analysis
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SWOTANALYSIS::ASSISTANTSWOTANALYSIS::T871926658"] = "Gegenstand der Analyse"
 
 -- Find synonyms for the following word or phrase:
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::SYNONYM::ASSISTANTSYNONYMS::T1793532807"] = "Finde Synonyme für das folgende Wort oder die folgende Phrase:"

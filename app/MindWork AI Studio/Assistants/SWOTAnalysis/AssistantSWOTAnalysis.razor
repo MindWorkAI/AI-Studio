@@ -12,14 +12,17 @@
 <ReadFileContent @bind-FileContent="@this.inputText" EnableDragDrop="true" Layer="@DropLayers.ASSISTANTS" CatchAllDocuments="true"/>
 
 <MudText Typo="Typo.h5" Class="mb-3 mt-6">
-    @T("Analysis Goal")
+    @T("Analysis Options")
 </MudText>
 <MudTextField T="string" Disabled="@this.isAgentRunning" @bind-Text="@this.analysisGoal" Validation="@this.ValidatingAnalysisGoal" AdornmentIcon="@Icons.Material.Filled.TrackChanges" Adornment="Adornment.Start" Label="@T("Analysis goal")" Variant="Variant.Outlined" Lines="4" AutoGrow="@true" Class="mb-3"/>
 <ReadFileContent @bind-FileContent="@this.analysisGoal" EnableDragDrop="true" Layer="@DropLayers.ASSISTANTS" CatchAllDocuments="true"/>
-<MudTextField T="string" Disabled="@this.isAgentRunning" @bind-Text="@this.importantAspects" AdornmentIcon="@Icons.Material.Filled.List" Adornment="Adornment.Start" Label="@T("(Optional) Analysis focus")" HelperText="@T("Specify topics the SWOT analysis should pay particular attention to.")" Variant="Variant.Outlined" Lines="2" AutoGrow="@true" Class="mb-3"/>
+<MudTextField T="string" Disabled="@this.isAgentRunning" @bind-Text="@this.importantAspects" AdornmentIcon="@Icons.Material.Filled.List" Adornment="Adornment.Start" Label="@T("(Optional) Analysis focus")" HelperText="@T("Specify topics the SWOT analysis should pay particular attention to.")" Variant="Variant.Outlined" Lines="4" AutoGrow="@true" Class="mb-3"/>
 
 <MudText Typo="Typo.h5" Class="mb-3 mt-6">
-    @T("Background Knowledge")
+    @T("Contextual Knowledge")
+</MudText>
+<MudText Typo="Typo.body2" Class="mb-4">
+    @T("To enhance the validity of the SWOT analysis, please upload supplementary documents that provide empirical or contextual data for a comprehensive internal and external assessment.")
 </MudText>
 <AttachDocuments Name="SWOT Analysis Context Material" Layer="@DropLayers.ASSISTANTS" @bind-DocumentPaths="@this.contextMaterials" CatchAllDocuments="true" UseSmallForm="false" Provider="@this.ProviderSettings"/>
 
