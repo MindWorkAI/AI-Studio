@@ -49,6 +49,48 @@ public interface IToolImplementation
 
     public string? GetSettingsFieldDefaultValue(string fieldName, ToolSettingsFieldDefinition fieldDefinition) => null;
 
+    /// <summary>
+    /// The heading shown above one group of settings.
+    /// </summary>
+    /// <remarks>
+    /// The group name in the schema is an identifier, so it is not what the user should read.
+    /// A tool that declares groups translates their headings here, the same way it does for
+    /// its field labels.
+    /// </remarks>
+    public string GetSettingsGroupLabel(string groupKey) => groupKey;
+
+    /// <summary>
+    /// Links offered next to one group of settings, such as where to create an account.
+    /// </summary>
+    public IReadOnlyList<ToolSettingsGroupLink> GetSettingsGroupLinks(string groupKey) => [];
+
+    /// <summary>
+    /// Whether one settings field is worth showing, given what is filled in at the moment.
+    /// </summary>
+    /// <remarks>
+    /// For a setting that only has a meaning once something else is set, such as choosing
+    /// between services while only one of them is configured. It is asked again after every
+    /// change in the dialog, so a field can appear the moment it starts to matter.<br/><br/>
+    /// A hidden field keeps its stored value, because hiding it is not clearing it. Two things
+    /// follow from that: a required field must never be hidden, and a check on a hidden field
+    /// must not be able to fail, or the user is left with a message about something they
+    /// cannot see.
+    /// </remarks>
+    public bool IsSettingsFieldVisible(string fieldName, IReadOnlyDictionary<string, string> settingsValues) => true;
+
+    /// <summary>
+    /// What the user should know about their settings without any of it being wrong.
+    /// </summary>
+    /// <remarks>
+    /// For a combination that is allowed, saveable, and does less than it looks like it does:
+    /// something configured that a policy then keeps out of use, for instance. A setting that is
+    /// actually wrong belongs in the configuration state instead, which is what stops the dialog
+    /// from saving it.<br/><br/>
+    /// Asked again after every change in the dialog, like the field visibility, so a warning
+    /// appears and disappears with the value it is about.
+    /// </remarks>
+    public IReadOnlyList<string> GetSettingsWarnings(IReadOnlyDictionary<string, string> settingsValues) => [];
+
     public Task<ToolConfigurationState?> ValidateConfigurationAsync(
         ToolDefinition definition,
         IReadOnlyDictionary<string, string> settingsValues,

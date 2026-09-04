@@ -144,6 +144,21 @@ public sealed class ToolRegistry
             return false;
         }
 
+        //
+        // An empty group is how a field says it belongs to no group. Whitespace looks the
+        // same in the settings file but is a different string, so it would open a second,
+        // nameless group next to the ungrouped fields:
+        //
+        var fieldsWithBlankGroup = definition.SettingsSchema.Properties
+            .Where(x => x.Value.Group.Length > 0 && string.IsNullOrWhiteSpace(x.Value.Group))
+            .Select(x => x.Key)
+            .ToList();
+        if (fieldsWithBlankGroup.Count > 0)
+        {
+            issue = $"these settings declare a blank group name: {string.Join(", ", fieldsWithBlankGroup)}";
+            return false;
+        }
+
         var fieldsWithBothOptionKinds = definition.SettingsSchema.Properties
             .Where(x => !string.IsNullOrWhiteSpace(x.Value.OptionSource) && x.Value.EnumValues.Count > 0)
             .Select(x => x.Key)

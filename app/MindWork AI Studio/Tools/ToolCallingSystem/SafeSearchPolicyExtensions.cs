@@ -17,4 +17,14 @@ public static class SafeSearchPolicyExtensions
 
         _ => "0",
     };
+
+    /// <summary>
+    /// The value Tavily expects for its safe search parameter.
+    /// </summary>
+    /// <remarks>
+    /// Tavily knows filtering only as on or off, so a moderate policy is filtered as strictly as
+    /// a strict one. Of the two ways to round that, filtering more than was asked for is the one
+    /// that cannot surprise anyone.
+    /// </remarks>
+    public static bool ToTavilyValue(this SafeSearchPolicy policy) => policy is not SafeSearchPolicy.OFF;
 }
