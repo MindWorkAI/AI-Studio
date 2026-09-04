@@ -1,6 +1,6 @@
 using AIStudio.Tools.Web;
 
-namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations;
+namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.WebSearch;
 
 internal sealed class WebSearchPageResult(SearchCandidate candidate, RetrievedWebPage retrievedPage)
 {

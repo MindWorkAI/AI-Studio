@@ -4,7 +4,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using AIStudio.Tools.Web;
 
-namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations;
+namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.WebSearch.SearXNG;
 
 internal sealed class SearXNGSearchClient
 {
@@ -183,9 +183,9 @@ internal sealed class SearXNGSearchClient
                 OriginalUrls = [originalUrl],
                 Title = ReadNodeString(result["title"]),
                 Snippet = ReadNodeString(result["content"]),
-                PublishedDate = FirstNonEmpty(ReadNodeString(result["publishedDate"]), ReadNodeString(result["published_date"])),
+                PublishedDate = SearchCandidate.FirstNonEmpty(ReadNodeString(result["publishedDate"]), ReadNodeString(result["published_date"])),
             };
-            var normalizedUrl = NormalizeUrl(retrievalUrl);
+            var normalizedUrl = SearchCandidate.NormalizeUrl(retrievalUrl);
             if (candidatesByUrl.TryGetValue(normalizedUrl, out var existingCandidate))
                 existingCandidate.Merge(candidate);
             else
@@ -302,17 +302,6 @@ internal sealed class SearXNGSearchClient
             throw new InvalidOperationException($"The SearXNG request failed: {exception.Message}", exception);
         }
     }
-
-    internal static string NormalizeUrl(Uri url)
-    {
-        var scheme = url.Scheme.ToLowerInvariant();
-        var host = url.IdnHost.TrimEnd('.').ToLowerInvariant();
-        var port = url.IsDefaultPort ? string.Empty : $":{url.Port}";
-        var userInfo = string.IsNullOrEmpty(url.UserInfo) ? string.Empty : $"{url.UserInfo}@";
-        return $"{scheme}://{userInfo}{host}{port}{url.AbsolutePath}{url.Query}";
-    }
-
-    internal static string FirstNonEmpty(params string[] values) => values.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value)) ?? string.Empty;
 
     private static Uri RemoveFragment(Uri url) => new UriBuilder(url)
     {

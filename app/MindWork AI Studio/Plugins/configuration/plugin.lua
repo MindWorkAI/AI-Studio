@@ -713,7 +713,7 @@ CONFIG["SETTINGS"] = {}
 -- keyring, which a configuration file cannot write to.
 --
 -- Field names of the Web Search tool:
---   baseUrl                          SearXNG HTTP(S) root URL or /search endpoint. The instance
+--   searxng.baseUrl                  SearXNG HTTP(S) root URL or /search endpoint. The instance
 --                                    must have the JSON format enabled, i.e. "json" listed under
 --                                    search.formats in its settings.yml. Public instances usually
 --                                    serve only the web interface and block automated requests,
@@ -725,7 +725,7 @@ CONFIG["SETTINGS"] = {}
 --   defaultSafeSearch                How strictly the search engine filters explicit results.
 --                                    Allowed values are: OFF, MODERATE, STRICT.
 --   maxResults                       Result count, as an integer string.
---   searchTimeoutSeconds             SearXNG request timeout in seconds.
+--   searchTimeoutSeconds             Search request timeout in seconds.
 --   pageTimeoutSeconds               Per-page timeout in seconds.
 --   allPagesRetrievalTimeoutSeconds  Overall page-retrieval timeout in seconds.
 --   maxTotalContentCharacters        Total content-character budget.
@@ -743,7 +743,7 @@ CONFIG["SETTINGS"] = {}
 --                         browser cookies.
 --
 -- CONFIG["SETTINGS"]["DataTools.LockedToolSettings"] = {
---     ["web_search.baseUrl"] = "https://searxng.example.org/",
+--     ["web_search.searxng.baseUrl"] = "https://searxng.example.org/",
 --     ["web_search.defaultLanguage"] = "de-DE",
 --     ["read_web_page.allowedPrivateHosts"] = "example.org, *.example.org"
 -- }

@@ -14,6 +14,8 @@ using AIStudio.Tools.Security;
 using AIStudio.Tools.Services;
 using AIStudio.Tools.ToolCallingSystem.Harness;
 using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations;
+using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.WebSearch;
+using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.WebSearch.SearXNG;
 using AIStudio.Tools.Web;
 
 using Microsoft.AspNetCore.Components.Server.Circuits;
@@ -171,7 +173,8 @@ internal sealed class Program
         builder.Services.AddSingleton<ToolSettingsService>();
         builder.Services.AddSingleton<WebPageRetrievalService>();
         builder.Services.AddSingleton<IToolImplementation, ReadWebPageTool>();
-        builder.Services.AddSingleton<IToolImplementation, SearXNGWebSearchTool>();
+        builder.Services.AddSingleton<IWebSearchBackend, SearXNGSearchBackend>();
+        builder.Services.AddSingleton<IToolImplementation, WebSearchTool>();
         builder.Services.AddSingleton<IToolDefinitionSource, CodeToolDefinitionSource>();
         builder.Services.AddSingleton<ToolRegistry>();
         builder.Services.AddSingleton<ToolExecutor>();

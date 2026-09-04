@@ -1,8 +1,8 @@
 using AIStudio.Tools.Web;
 
-namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations;
+namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.WebSearch;
 
-internal sealed class SearXNGPageRetrievalService(WebPageRetrievalService webPageRetrievalService)
+internal sealed class WebSearchResultRetrievalService(WebPageRetrievalService webPageRetrievalService)
 {
     private const int MAX_PARALLEL_RETRIEVALS = 4;
 
@@ -108,7 +108,7 @@ internal sealed class SearXNGPageRetrievalService(WebPageRetrievalService webPag
     }
 
     private static List<WebSearchPageResult> MergeFinalUrlDuplicates(IEnumerable<RetrievedSearchPage> retrievedPages) => retrievedPages
-        .GroupBy(result => SearXNGSearchClient.NormalizeUrl(result.RetrievedPage.Page.FinalUrl), StringComparer.Ordinal)
+        .GroupBy(result => SearchCandidate.NormalizeUrl(result.RetrievedPage.Page.FinalUrl), StringComparer.Ordinal)
         .Select(group =>
         {
             var rankedGroup = group.OrderBy(result => result.Candidate.Rank).ToList();

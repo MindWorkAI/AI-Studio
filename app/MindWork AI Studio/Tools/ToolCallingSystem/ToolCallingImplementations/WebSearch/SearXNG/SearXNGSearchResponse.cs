@@ -1,4 +1,4 @@
-namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations;
+namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.WebSearch.SearXNG;
 
 /// <param name="Candidates">The search hits, already deduplicated and limited.</param>
 /// <param name="CandidateCount">How many hits the instance returned within the requested limit.</param>
