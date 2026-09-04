@@ -155,6 +155,7 @@ public partial class ChatComponent : MSGComponentBase
             // Use chat thread sent by the user:
             this.ChatThread = deferredRequest.ChatThread;
             this.ChatThread.IncludeDateTime = true;
+            this.ApplyToolSelectionOfLoadedChat();
 
             //
             // Apply the chat template of the incoming chat to the composer. Like everywhere else,
@@ -338,6 +339,7 @@ public partial class ChatComponent : MSGComponentBase
                 await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
                 this.Logger.LogInformation($"The chat '{this.ChatThread!.ChatId}' with title '{this.ChatThread.Name}' ({this.ChatThread.Blocks.Count} messages) was loaded successfully.");
 
+                this.ApplyToolSelectionOfLoadedChat();
                 await this.SyncWorkspaceHeaderWithChatThreadAsync();
                 await this.SelectProviderWhenLoadingChat();
             }
@@ -930,6 +932,18 @@ public partial class ChatComponent : MSGComponentBase
             await this.AIJobService.CancelChatGenerationAsync(this.ChatThread.ChatId);
     }
 
+    /// <summary>
+    /// Takes over the tool selection of the chat that was just loaded or handed to this component.
+    /// </summary>
+    /// <remarks>
+    /// A thread without a selection means the chat defaults: that is a chat saved before tools
+    /// existed, as well as one a launcher opened without naming any. Both want what the settings
+    /// preselect. Every path that puts a thread into this component has to come through here, or
+    /// the footer would keep showing the tools of the chat before it.
+    /// </remarks>
+    private void ApplyToolSelectionOfLoadedChat() =>
+        this.selectedToolIds = ToolSelectionRules.NormalizeSelection(this.ChatThread?.SelectedToolIds ?? this.SettingsManager.GetDefaultToolIds(Tools.Components.CHAT));
+
     private Task SelectedToolIdsChanged(HashSet<string> updatedToolIds)
     {
         this.selectedToolIds = ToolSelectionRules.NormalizeSelection(updatedToolIds);
@@ -1137,7 +1151,7 @@ public partial class ChatComponent : MSGComponentBase
             await this.SyncWorkspaceHeaderWithChatThreadAsync();
             await this.SyncForegroundChatAsync();
             this.dataSourceSelectionComponent?.ChangeOptionWithoutSaving(this.ChatThread.DataSourceOptions, this.ChatThread.AISelectedDataSources);
-            this.selectedToolIds = ToolSelectionRules.NormalizeSelection(this.ChatThread.SelectedToolIds ?? this.SettingsManager.GetDefaultToolIds(Tools.Components.CHAT));
+            this.ApplyToolSelectionOfLoadedChat();
         }
         else
         {
