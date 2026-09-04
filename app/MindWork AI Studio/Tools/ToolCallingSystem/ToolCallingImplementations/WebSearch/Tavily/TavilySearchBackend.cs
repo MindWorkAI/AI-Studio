@@ -47,7 +47,12 @@ public sealed class TavilySearchBackend : IWebSearchBackend
 
     public string SettingsGroup => SETTINGS_GROUP;
 
-    public int MaxPage => MAX_PAGE;
+    /// <remarks>
+    /// Every filter is available, and the two offered search depths are what keeps that true:
+    /// Tavily's faster depths drop the safe search parameter, and a capability claimed here has
+    /// to hold for every search this backend runs, not just for most of them.
+    /// </remarks>
+    public WebSearchCapabilities Capabilities { get; } = new(SupportsSafeSearch: true, SupportsTimeRange: true, SupportsLanguage: true, MaxPage: MAX_PAGE);
 
     public void DeclareSettings(ToolSettingsSchemaBuilder builder) => builder
         .InGroup(SETTINGS_GROUP)

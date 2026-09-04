@@ -78,6 +78,19 @@ public interface IToolImplementation
     /// </remarks>
     public bool IsSettingsFieldVisible(string fieldName, IReadOnlyDictionary<string, string> settingsValues) => true;
 
+    /// <summary>
+    /// What the user should know about their settings without any of it being wrong.
+    /// </summary>
+    /// <remarks>
+    /// For a combination that is allowed, saveable, and does less than it looks like it does:
+    /// something configured that a policy then keeps out of use, for instance. A setting that is
+    /// actually wrong belongs in the configuration state instead, which is what stops the dialog
+    /// from saving it.<br/><br/>
+    /// Asked again after every change in the dialog, like the field visibility, so a warning
+    /// appears and disappears with the value it is about.
+    /// </remarks>
+    public IReadOnlyList<string> GetSettingsWarnings(IReadOnlyDictionary<string, string> settingsValues) => [];
+
     public Task<ToolConfigurationState?> ValidateConfigurationAsync(
         ToolDefinition definition,
         IReadOnlyDictionary<string, string> settingsValues,

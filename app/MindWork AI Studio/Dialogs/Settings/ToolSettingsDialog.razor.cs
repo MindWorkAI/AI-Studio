@@ -118,6 +118,16 @@ public partial class ToolSettingsDialog : SettingsDialogBase
 
     private IReadOnlyList<ToolSettingsGroupLink> GetGroupLinks(string groupKey) => this.implementation?.GetSettingsGroupLinks(groupKey) ?? [];
 
+    /// <summary>
+    /// What the tool wants to say about the settings as they stand right now.
+    /// </summary>
+    /// <remarks>
+    /// Asked on every render, so a warning follows the value it is about instead of waiting for
+    /// the next save. These are not errors: they describe settings that are allowed and do
+    /// something other than what they look like, and the dialog saves them either way.
+    /// </remarks>
+    private IReadOnlyList<string> GetSettingsWarnings() => this.implementation?.GetSettingsWarnings(this.values) ?? [];
+
     private string GetFieldLabel(string fieldName, ToolSettingsFieldDefinition fieldDefinition) =>
         this.implementation?.GetSettingsFieldLabel(fieldName, fieldDefinition) ?? fieldDefinition.Title;
 

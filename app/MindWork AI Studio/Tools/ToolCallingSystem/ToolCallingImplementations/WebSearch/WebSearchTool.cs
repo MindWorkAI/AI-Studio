@@ -239,6 +239,29 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
         return fieldName is not PRIMARY_BACKEND_SETTING || ReadBackendStrategy(settingsValues) is not WebSearchBackendStrategy.PARALLEL;
     }
 
+    /// <remarks>
+    /// One combination is worth a warning: a safe search policy together with a service that
+    /// cannot apply it. Everything is filled in correctly, searches run, and one of the
+    /// configured services is simply never asked. That is the right behaviour — a policy is not
+    /// a suggestion — but not something to work out from results that came back thinner than
+    /// expected.
+    /// </remarks>
+    public IReadOnlyList<string> GetSettingsWarnings(IReadOnlyDictionary<string, string> settingsValues)
+    {
+        if (ReadSafeSearchPolicy(settingsValues) is null or SafeSearchPolicy.OFF)
+            return [];
+
+        var unfilteredBackends = this.dispatcher.GetConfiguredBackends(settingsValues)
+            .Where(backend => !backend.Capabilities.SupportsSafeSearch)
+            .Select(backend => backend.Backend.ToName())
+            .ToList();
+
+        if (unfilteredBackends.Count is 0)
+            return [];
+
+        return [string.Format(TB("These search services cannot filter explicit results and are therefore not used while a safe search policy is configured: {0}."), string.Join(", ", unfilteredBackends))];
+    }
+
     public Task<ToolConfigurationState?> ValidateConfigurationAsync(
         ToolDefinition definition,
         IReadOnlyDictionary<string, string> settingsValues,
@@ -340,6 +363,41 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
                 IsConfigured = false,
                 Message = safeSearchError,
             });
+        }
+
+        //
+        // A policy that no service can apply is not a search that quietly runs unfiltered, it is
+        // a pair of settings that contradict each other. Saying so here is what keeps that
+        // decision out of the searches, where nobody would look for it.
+        //
+        if (ReadSafeSearchPolicy(settingsValues) is not (null or SafeSearchPolicy.OFF))
+        {
+            var filteringBackends = configuredBackends.Where(backend => backend.Capabilities.SupportsSafeSearch).ToList();
+            if (filteringBackends.Count == 0)
+            {
+                return Task.FromResult<ToolConfigurationState?>(new ToolConfigurationState
+                {
+                    IsConfigured = false,
+                    Message = TB("None of the configured search services can filter explicit results, but a safe search policy is configured. Please configure a search service that can filter, or set the safe search policy to off."),
+                });
+            }
+
+            //
+            // Every other strategy has the remaining services to fall back on. This one does not:
+            // the chosen service is the only one it ever asks, so a policy it cannot apply leaves
+            // the tool with nothing to search with.
+            //
+            var chosenBackend = ReadPrimaryBackend(settingsValues);
+            if (chosenBackend is not null &&
+                ReadBackendStrategy(settingsValues) is WebSearchBackendStrategy.SPECIFIC &&
+                filteringBackends.All(backend => backend.Backend != chosenBackend))
+            {
+                return Task.FromResult<ToolConfigurationState?>(new ToolConfigurationState
+                {
+                    IsConfigured = false,
+                    Message = string.Format(TB("The preferred search service {0} cannot filter explicit results, but a safe search policy is configured and it is the only service that would be used. Please choose another service, let the services be used one after another, or set the safe search policy to off."), chosenBackend.Value.ToName()),
+                });
+            }
         }
 
         if (!ToolSettingsValueParser.TryReadOptionalPositiveInt(settingsValues, MAX_RESULTS_SETTING, positiveIntegerErrorFormat, out _, out var maxResultsError))

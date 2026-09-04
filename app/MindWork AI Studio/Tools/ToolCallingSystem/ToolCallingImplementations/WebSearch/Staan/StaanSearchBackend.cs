@@ -53,7 +53,13 @@ public sealed class StaanSearchBackend : IWebSearchBackend
 
     public string SettingsGroup => SETTINGS_GROUP;
 
-    public int MaxPage => MAX_PAGE;
+    /// <remarks>
+    /// Staan's search takes a query, a market, and an offset, and nothing else: there is no
+    /// safe search parameter and no way to ask for recent results. The market is what restricts
+    /// the language, which is the one filter Staan does have — even though it restricts the
+    /// region along with it.
+    /// </remarks>
+    public WebSearchCapabilities Capabilities { get; } = new(SupportsSafeSearch: false, SupportsTimeRange: false, SupportsLanguage: true, MaxPage: MAX_PAGE);
 
     public void DeclareSettings(ToolSettingsSchemaBuilder builder) => builder
         .InGroup(SETTINGS_GROUP)
@@ -124,10 +130,13 @@ public sealed class StaanSearchBackend : IWebSearchBackend
         if (query.Query.Length > MAX_QUERY_CHARACTERS)
             throw new InvalidOperationException($"Staan accepts a search query of at most {MAX_QUERY_CHARACTERS} characters, but this query has {query.Query.Length}. Search again with a shorter query.");
 
+        //
+        // That Staan cannot restrict a search to a period of time is reported by the tool from
+        // this backend's capabilities, so it is not repeated here. What stays here is the market,
+        // because no capability flag can express which language Staan searched instead.
+        //
         var notes = new List<string>();
         var market = ResolveMarket(query.Language, settingsValues, notes);
-        if (!string.IsNullOrWhiteSpace(query.TimeRange))
-            notes.Add($"Staan cannot restrict a search to a period of time, so these results are not limited to the requested time range '{query.TimeRange}'.");
 
         var searchRequest = new StaanSearchRequest { Query = query.Query, Market = market, Offset = ReadOffset(query.Page) };
         var response = await this.searchClient.SearchAsync(apiKey.Trim(), searchRequest, query.TimeoutSeconds, token);

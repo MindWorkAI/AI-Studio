@@ -26,7 +26,12 @@ public sealed class SearXNGSearchBackend : IWebSearchBackend
 
     public string SettingsGroup => SETTINGS_GROUP;
 
-    public int MaxPage => MAX_PAGE;
+    /// <remarks>
+    /// An instance passes every filter on to the engines it asks, so all of them are on offer
+    /// here. How faithfully a single engine honours one of them is that engine's business, and
+    /// an instance already reports the engines that did not answer at all.
+    /// </remarks>
+    public WebSearchCapabilities Capabilities { get; } = new(SupportsSafeSearch: true, SupportsTimeRange: true, SupportsLanguage: true, MaxPage: MAX_PAGE);
 
     public void DeclareSettings(ToolSettingsSchemaBuilder builder) => builder
         .InGroup(SETTINGS_GROUP)

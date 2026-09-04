@@ -37,7 +37,7 @@ internal sealed class WebSearchDispatcher(IEnumerable<IWebSearchBackend> backend
             ? await SearchInParallelAsync(backendsToAsk, query, settingsValues, token)
             : await SearchOneAfterAnotherAsync(backendsToAsk, query, settingsValues, token);
 
-        AppendBackendNotes(notes, outcomes);
+        AppendBackendNotes(notes, outcomes, query);
         var backendResults = outcomes.Select(outcome => outcome.Result).OfType<WebSearchBackendResult>().ToList();
 
         //
@@ -93,7 +93,34 @@ internal sealed class WebSearchDispatcher(IEnumerable<IWebSearchBackend> backend
         else
             backendsToAsk = [chosenBackend, ..configuredBackends.Where(backend => backend != chosenBackend)];
 
-        return RemoveBackendsWithoutThisPage(backendsToAsk, query, notes);
+        var backendsThatCanFilter = RemoveBackendsWithoutSafeSearch(backendsToAsk, query, notes);
+        return RemoveBackendsWithoutThisPage(backendsThatCanFilter, query, notes);
+    }
+
+    /// <summary>
+    /// Drops the services that cannot apply the configured safe search policy.
+    /// </summary>
+    /// <remarks>
+    /// The policy belongs to the user, and an organization can lock it. A service that cannot
+    /// filter would answer with unfiltered hits, which is the one thing the policy exists to
+    /// prevent, so it is not asked — however good its results would have been.<br/><br/>
+    /// A policy that leaves no service at all is a matter of the settings rather than of this
+    /// search, and the settings report it before it comes to this. Reaching it here means the
+    /// settings changed since, so it says what to change rather than what failed.
+    /// </remarks>
+    private static IReadOnlyList<IWebSearchBackend> RemoveBackendsWithoutSafeSearch(IReadOnlyList<IWebSearchBackend> backendsToAsk, WebSearchQuery query, List<string> notes)
+    {
+        if (query.SafeSearch is null or SafeSearchPolicy.OFF)
+            return backendsToAsk;
+
+        var remainingBackends = backendsToAsk.Where(backend => backend.Capabilities.SupportsSafeSearch).ToList();
+        if (remainingBackends.Count is 0)
+            throw new InvalidOperationException(TB("None of the search services this search would use can filter explicit results, which the configured safe search policy requires. Please configure a search service that can filter, or turn the policy off."));
+
+        foreach (var backend in backendsToAsk.Where(backend => !backend.Capabilities.SupportsSafeSearch))
+            notes.Add($"{backend.Backend.ToName()} was not asked, because it cannot filter explicit results and the configured safe search policy requires that.");
+
+        return remainingBackends;
     }
 
     /// <summary>
@@ -109,11 +136,11 @@ internal sealed class WebSearchDispatcher(IEnumerable<IWebSearchBackend> backend
         if (query.Page is null or <= 1)
             return backendsToAsk;
 
-        var remainingBackends = backendsToAsk.Where(backend => query.Page <= backend.MaxPage).ToList();
+        var remainingBackends = backendsToAsk.Where(backend => query.Page <= backend.Capabilities.MaxPage).ToList();
         if (remainingBackends.Count is 0)
-            throw new ArgumentException($"Argument 'page' must be less than or equal to {backendsToAsk.Max(backend => backend.MaxPage)}.");
+            throw new ArgumentException($"Argument 'page' must be less than or equal to {backendsToAsk.Max(backend => backend.Capabilities.MaxPage)}.");
 
-        foreach (var backend in backendsToAsk.Where(backend => query.Page > backend.MaxPage))
+        foreach (var backend in backendsToAsk.Where(backend => query.Page > backend.Capabilities.MaxPage))
             notes.Add($"{backend.Backend.ToName()} was not asked, because it does not serve result page {query.Page}.");
 
         return remainingBackends;
@@ -173,7 +200,7 @@ internal sealed class WebSearchDispatcher(IEnumerable<IWebSearchBackend> backend
     /// while only one was: a search through a single service has nobody to be confused with,
     /// and its notes already name it where that matters.
     /// </remarks>
-    private static void AppendBackendNotes(List<string> notes, IReadOnlyList<BackendOutcome> outcomes)
+    private static void AppendBackendNotes(List<string> notes, IReadOnlyList<BackendOutcome> outcomes, WebSearchQuery query)
     {
         var attributesNotes = outcomes.Count > 1;
         foreach (var outcome in outcomes)
@@ -186,6 +213,7 @@ internal sealed class WebSearchDispatcher(IEnumerable<IWebSearchBackend> backend
                 continue;
             }
 
+            AppendUnsupportedFilterNotes(notes, outcome.Backend, query);
             if (attributesNotes && result.Candidates.Count is 0)
                 notes.Add($"{backendName} returned no hits.");
 
@@ -193,6 +221,32 @@ internal sealed class WebSearchDispatcher(IEnumerable<IWebSearchBackend> backend
                 notes.Add(attributesNotes ? $"{backendName}: {note}" : note);
         }
     }
+
+    /// <summary>
+    /// Says which of the filters the model asked for a service could not apply.
+    /// </summary>
+    /// <remarks>
+    /// The model asked for these, and it can read the answer and search again, so a service
+    /// that cannot honour one of them is asked anyway and reports what it did instead. Hits
+    /// from last year read exactly like hits from last week, which is what makes the silence
+    /// worse than the missing filter.<br/><br/>
+    /// Only for a service that was really asked, which is why this is not part of choosing
+    /// them: in a failover most of the chosen services are never reached, and a note about one
+    /// of those explains nothing about the answer.
+    /// </remarks>
+    private static void AppendUnsupportedFilterNotes(List<string> notes, IWebSearchBackend backend, WebSearchQuery query)
+    {
+        var backendName = backend.Backend.ToName();
+        var capabilities = backend.Capabilities;
+        if (!capabilities.SupportsTimeRange && !string.IsNullOrWhiteSpace(query.TimeRange))
+            notes.Add($"{backendName} cannot restrict a search to a period of time, so its hits are not limited to the requested time range '{query.TimeRange}'.");
+
+        if (!capabilities.SupportsLanguage && HasLanguageRestriction(query))
+            notes.Add($"{backendName} cannot restrict a search to one language, so its hits can be in any language rather than in '{query.Language}'.");
+    }
+
+    private static bool HasLanguageRestriction(WebSearchQuery query) =>
+        !string.IsNullOrWhiteSpace(query.Language) && !string.Equals(query.Language, ToolSettingsOptionSources.ANY_LANGUAGE, StringComparison.OrdinalIgnoreCase);
 
     /// <summary>
     /// Merges the hits of several services into one ranked list.

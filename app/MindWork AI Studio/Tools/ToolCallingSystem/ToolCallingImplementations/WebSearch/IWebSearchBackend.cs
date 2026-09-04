@@ -27,9 +27,13 @@ public interface IWebSearchBackend
     public string SettingsGroup { get; }
 
     /// <summary>
-    /// The highest result page this backend can serve.
+    /// What this backend can do with the parts of a search besides the query.
     /// </summary>
-    public int MaxPage { get; }
+    /// <remarks>
+    /// Read before the search rather than reported after it, because some of it decides
+    /// whether this backend is asked for a particular search at all.
+    /// </remarks>
+    public WebSearchCapabilities Capabilities { get; }
 
     /// <summary>
     /// Adds this backend's settings fields to the tool's schema.
