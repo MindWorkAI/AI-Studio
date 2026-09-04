@@ -82,7 +82,7 @@ CONFIG["LLM_PROVIDERS"] = {}
 --     ["InstanceName"] = "<user-friendly name for the combination of server and model>",
 --     ["UsedLLMProvider"] = "SELF_HOSTED",
 -- 
---     -- Allowed values for Host are: LM_STUDIO, LLAMACPP, OLLAMA, and VLLM
+--     -- Allowed values for Host are: LM_STUDIO, LLAMACPP, OLLAMA, VLLM, and LLMMAN
 --     ["Host"] = "OLLAMA",
 --     ["Hostname"] = "<https address of the server>",
 -- 
@@ -200,7 +200,7 @@ CONFIG["EMBEDDING_PROVIDERS"] = {}
 --     ["Name"] = "<user-friendly name for the embedding provider>",
 --     ["UsedLLMProvider"] = "SELF_HOSTED",
 --
---     -- Allowed values for Host are: LM_STUDIO, LLAMACPP, OLLAMA, and VLLM
+--     -- Allowed values for Host are: LM_STUDIO, LLAMACPP, OLLAMA, VLLM, and LLMMAN
 --     ["Host"] = "OLLAMA",
 --     ["Hostname"] = "<https address of the server>",
 --

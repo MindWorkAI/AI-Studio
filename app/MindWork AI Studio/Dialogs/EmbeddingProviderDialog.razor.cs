@@ -127,7 +127,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
             GetPreviousInstanceName = () => this.dataEditingPreviousInstanceName,
             GetUsedInstanceNames = () => this.UsedInstanceNames,
             GetHost = () => this.DataHost,
-            IsModelProvidedManually = () => this.DataLLMProvider is LLMProviders.SELF_HOSTED && this.DataHost is Host.OLLAMA,
+            IsModelProvidedManually = () => this.DataLLMProvider is LLMProviders.SELF_HOSTED && this.DataHost is (Host.OLLAMA or Host.LLMMAN),
         };
     }
     
@@ -137,7 +137,7 @@ public partial class EmbeddingProviderDialog : MSGComponentBase, ISecretId
         Model model = default;
         if(this.DataLLMProvider is LLMProviders.SELF_HOSTED)
         {
-            if (this.DataHost is Host.OLLAMA)
+            if (this.DataHost is Host.OLLAMA or Host.LLMMAN)
                 model = new Model(this.dataManuallyModel, null);
             else if (this.DataHost is Host.LM_STUDIO)
                 model = this.DataModel;
