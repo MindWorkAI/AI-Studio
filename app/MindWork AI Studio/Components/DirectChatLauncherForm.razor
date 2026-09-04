@@ -43,7 +43,4 @@
     }
 </MudSelect>
 
-@if (this.ShowToolSelection)
-{
-    <ToolSelectionField Component="Components.CHAT" SelectedToolIds="@this.ToolIds" SelectedToolIdsChanged="@this.SetToolIds" Label="@T("Tools (Optional)")" Help="@T("These tools are preselected when the chat opens. Users can change the selection in the chat, and every tool has to meet the confidence requirements of the provider in use.")"/>
-}
+<ToolSelectionField Component="Components.CHAT" SelectedToolIds="@this.ToolIds" SelectedToolIdsChanged="@this.SetToolIds" Label="@T("Tools (Optional)")" Help="@T("These tools are preselected when the chat opens. Users can change the selection in the chat, and every tool has to meet the confidence requirements of the provider in use.")"/>

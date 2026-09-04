@@ -7,4 +7,5 @@ internal sealed class AssistantBuilderChatLaunchMetadata
     public string? ProfileId { get; init; }
     public string? ChatTemplateId { get; init; }
     public string[]? DataSourceIds { get; init; }
+    public string[]? ToolIds { get; init; }
 }

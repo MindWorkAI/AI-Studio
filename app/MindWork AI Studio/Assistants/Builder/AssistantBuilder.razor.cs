@@ -6,6 +6,7 @@ using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.PluginSystem.Assistants;
 using AIStudio.Tools.PluginSystem.Assistants.DataModel;
 using AIStudio.Tools.Services;
+using AIStudio.Tools.ToolCallingSystem;
 using Microsoft.AspNetCore.Components;
 using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
@@ -101,6 +102,7 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
     private string launcherProfileId = string.Empty;
     private string launcherChatTemplateId = string.Empty;
     private IEnumerable<string> launcherDataSourceIds = [];
+    private HashSet<string> launcherToolIds = [];
     private IEnumerable<AssistantComponentType> selectedAssistantComponents = [];
     private CommonLanguages selectedOutputLanguage = CommonLanguages.AS_IS;
     private string customOutputLanguage = string.Empty;
@@ -138,6 +140,7 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
     private static readonly AssistantSessionStateKey<string> LAUNCHER_PROFILE_ID_STATE_KEY = new(nameof(launcherProfileId));
     private static readonly AssistantSessionStateKey<string> LAUNCHER_CHAT_TEMPLATE_ID_STATE_KEY = new(nameof(launcherChatTemplateId));
     private static readonly AssistantSessionStateKey<List<string>> LAUNCHER_DATA_SOURCE_IDS_STATE_KEY = new(nameof(launcherDataSourceIds));
+    private static readonly AssistantSessionStateKey<HashSet<string>> LAUNCHER_TOOL_IDS_STATE_KEY = new(nameof(launcherToolIds));
     private static readonly AssistantSessionStateKey<List<AssistantComponentType>> SELECTED_ASSISTANT_COMPONENTS_STATE_KEY = new(nameof(selectedAssistantComponents));
     private static readonly AssistantSessionStateKey<CommonLanguages> SELECTED_OUTPUT_LANGUAGE_STATE_KEY = new(nameof(selectedOutputLanguage));
     private static readonly AssistantSessionStateKey<string> CUSTOM_OUTPUT_LANGUAGE_STATE_KEY = new(nameof(customOutputLanguage));
@@ -243,6 +246,7 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
         this.launcherProfileId = string.Empty;
         this.launcherChatTemplateId = string.Empty;
         this.launcherDataSourceIds = [];
+        this.launcherToolIds = [];
         this.selectedAssistantComponents = [];
         this.selectedOutputLanguage = CommonLanguages.AS_IS;
         this.customOutputLanguage = string.Empty;
@@ -279,6 +283,7 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
         state.Set(LAUNCHER_PROFILE_ID_STATE_KEY, this.launcherProfileId);
         state.Set(LAUNCHER_CHAT_TEMPLATE_ID_STATE_KEY, this.launcherChatTemplateId);
         state.SetList(LAUNCHER_DATA_SOURCE_IDS_STATE_KEY, this.launcherDataSourceIds);
+        state.SetHashSet(LAUNCHER_TOOL_IDS_STATE_KEY, this.launcherToolIds);
         state.SetList(SELECTED_ASSISTANT_COMPONENTS_STATE_KEY, this.selectedAssistantComponents);
         state.Set(SELECTED_OUTPUT_LANGUAGE_STATE_KEY, this.selectedOutputLanguage);
         state.Set(CUSTOM_OUTPUT_LANGUAGE_STATE_KEY, this.customOutputLanguage);
@@ -320,6 +325,7 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
         state.Restore(LAUNCHER_PROFILE_ID_STATE_KEY, value => this.launcherProfileId = value);
         state.Restore(LAUNCHER_CHAT_TEMPLATE_ID_STATE_KEY, value => this.launcherChatTemplateId = value);
         state.Restore(LAUNCHER_DATA_SOURCE_IDS_STATE_KEY, value => this.launcherDataSourceIds = value);
+        state.Restore(LAUNCHER_TOOL_IDS_STATE_KEY, value => this.launcherToolIds = ToolSelectionRules.NormalizeSelection(value));
         state.Restore(SELECTED_ASSISTANT_COMPONENTS_STATE_KEY, value => this.selectedAssistantComponents = value);
         state.Restore(SELECTED_OUTPUT_LANGUAGE_STATE_KEY, value => this.selectedOutputLanguage = value);
         state.Restore(CUSTOM_OUTPUT_LANGUAGE_STATE_KEY, value => this.customOutputLanguage = value);
@@ -543,12 +549,14 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
             return null;
 
         var dataSourceIds = this.launcherDataSourceIds.Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+        var toolIds = ToolSelectionRules.NormalizeSelection(this.launcherToolIds).ToArray();
         return new(
             this.launcherWorkspaceName.Trim(),
             NullIfEmpty(this.launcherProviderId),
             NullIfEmpty(this.launcherProfileId),
             NullIfEmpty(this.launcherChatTemplateId),
-            dataSourceIds.Length == 0 ? null : dataSourceIds);
+            dataSourceIds.Length == 0 ? null : dataSourceIds,
+            toolIds.Length == 0 ? null : toolIds);
     }
 
     private void CreateChatLauncherChanged(bool createLauncher)

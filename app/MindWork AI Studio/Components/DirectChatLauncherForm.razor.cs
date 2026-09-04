@@ -75,16 +75,6 @@ public partial class DirectChatLauncherForm : MSGComponentBase
     public EventCallback<HashSet<string>> ToolIdsChanged { get; set; }
 
     /// <summary>
-    /// Whether the tool selection is offered at all.
-    /// </summary>
-    /// <remarks>
-    /// The Assistant Builder has a model write the launcher's Lua, and until that model knows about
-    /// tools, offering the field there would promise something the generated plugin does not carry.
-    /// </remarks>
-    [Parameter]
-    public bool ShowToolSelection { get; set; } = true;
-
-    /// <summary>
     /// Validates the workspace name. The hosts differ here: the Builder requires a name only while
     /// its launcher switch is on, whereas the settings dialog always requires one.
     /// </summary>

@@ -127,16 +127,30 @@ internal sealed partial class LuaResponse
             !IsOptionalGuid(launch.ChatTemplateId, allowEmpty: true))
             return false;
 
-        return launch.DataSourceIds is null ||
-               launch.DataSourceIds.Length > 0 &&
-               launch.DataSourceIds.All(id => Guid.TryParse(id, out var parsed) && parsed != Guid.Empty) &&
-               launch.DataSourceIds.Distinct(StringComparer.OrdinalIgnoreCase).Count() == launch.DataSourceIds.Length;
+        if (launch.DataSourceIds is not null &&
+            (launch.DataSourceIds.Length == 0 ||
+             !launch.DataSourceIds.All(id => Guid.TryParse(id, out var parsed) && parsed != Guid.Empty) ||
+             launch.DataSourceIds.Distinct(StringComparer.OrdinalIgnoreCase).Count() != launch.DataSourceIds.Length))
+            return false;
+
+        // Tool IDs are plain names, so only their shape can be checked here:
+        return launch.ToolIds is null ||
+               launch.ToolIds.Length > 0 &&
+               launch.ToolIds.All(id => !string.IsNullOrWhiteSpace(id)) &&
+               launch.ToolIds.Distinct(StringComparer.Ordinal).Count() == launch.ToolIds.Length;
     }
 
     private static bool IsOptionalGuid(string? value, bool allowEmpty) => value is null ||
         Guid.TryParse(value, out var parsed) && (allowEmpty || parsed != Guid.Empty);
 
-    private static string ExtractJson(string input)
+    /// <summary>
+    /// Reads the first complete JSON object out of a model answer that may carry text around it.
+    /// </summary>
+    /// <remarks>
+    /// Shared with the launcher texts response, which is a different shape but arrives the same
+    /// way, wrapped in whatever prose the model felt like adding.
+    /// </remarks>
+    internal static string ExtractJson(string input)
     {
         var start = input.IndexOf('{');
         if (start < 0)
