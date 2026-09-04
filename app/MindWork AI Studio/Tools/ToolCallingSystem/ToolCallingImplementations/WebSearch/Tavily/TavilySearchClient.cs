@@ -66,10 +66,8 @@ internal sealed class TavilySearchClient
         //
         using var httpClient = ExternalHttpClientTimeout.CreateHttpClient(searchUri, ExternalHttpTrustPolicy.SYSTEM_TRUST_ONLY);
         httpClient.Timeout = Timeout.InfiniteTimeSpan;
-        using var request = new HttpRequestMessage(HttpMethod.Post, searchUri)
-        {
-            Content = JsonContent.Create(searchRequest, options: WebSearchJson.OPTIONS),
-        };
+        using var request = new HttpRequestMessage(HttpMethod.Post, searchUri);
+        request.Content = JsonContent.Create(searchRequest, options: WebSearchJson.OPTIONS);
 
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
         using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(token);

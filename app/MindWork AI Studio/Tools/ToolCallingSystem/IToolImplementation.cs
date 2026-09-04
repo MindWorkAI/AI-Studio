@@ -64,6 +64,20 @@ public interface IToolImplementation
     /// </summary>
     public IReadOnlyList<ToolSettingsGroupLink> GetSettingsGroupLinks(string groupKey) => [];
 
+    /// <summary>
+    /// Whether one settings field is worth showing, given what is filled in at the moment.
+    /// </summary>
+    /// <remarks>
+    /// For a setting that only has a meaning once something else is set, such as choosing
+    /// between services while only one of them is configured. It is asked again after every
+    /// change in the dialog, so a field can appear the moment it starts to matter.<br/><br/>
+    /// A hidden field keeps its stored value, because hiding it is not clearing it. Two things
+    /// follow from that: a required field must never be hidden, and a check on a hidden field
+    /// must not be able to fail, or the user is left with a message about something they
+    /// cannot see.
+    /// </remarks>
+    public bool IsSettingsFieldVisible(string fieldName, IReadOnlyDictionary<string, string> settingsValues) => true;
+
     public Task<ToolConfigurationState?> ValidateConfigurationAsync(
         ToolDefinition definition,
         IReadOnlyDictionary<string, string> settingsValues,

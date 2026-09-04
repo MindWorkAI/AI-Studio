@@ -133,7 +133,7 @@ public sealed class TavilySearchBackend : IWebSearchBackend
 
         var response = await this.searchClient.SearchAsync(apiKey.Trim(), searchRequest, query.TimeoutSeconds, token);
         var hits = response.Results.Select(result => new SearchHit(result.Url, result.Title, result.Content));
-        var candidates = SearchCandidateCollector.Collect(hits, query.Limit, out var candidateCount);
+        var candidates = SearchCandidateCollector.Collect(WebSearchBackend.TAVILY, hits, query.Limit, out var candidateCount);
         return new WebSearchBackendResult(WebSearchBackend.TAVILY, candidates, candidateCount, notes);
     }
 

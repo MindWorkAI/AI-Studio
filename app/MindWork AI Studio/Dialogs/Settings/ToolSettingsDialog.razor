@@ -28,7 +28,7 @@
                 <MudAlert Severity="Severity.Error" Class="mb-4">@this.validationMessage</MudAlert>
             }
 
-            @foreach (var group in this.fieldGroups)
+            @foreach (var group in this.BuildVisibleFieldGroups())
             {
                 <MudPaper Class="pa-3 mb-4 border-dashed border rounded-lg">
                 @if (this.ShowsGroupHeader(group))

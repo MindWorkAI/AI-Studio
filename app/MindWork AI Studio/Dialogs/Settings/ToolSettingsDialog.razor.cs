@@ -66,15 +66,44 @@ public partial class ToolSettingsDialog : SettingsDialogBase
     }
 
     /// <summary>
+    /// The groups as they are rendered right now, without the fields the tool is hiding.
+    /// </summary>
+    /// <remarks>
+    /// Which fields make sense can depend on what is filled in, so this is built on every
+    /// render rather than once: a field the tool starts to offer has to appear as soon as the
+    /// value it depends on changes. A group whose every field is hidden is left out entirely,
+    /// so no empty box is rendered.<br/><br/>
+    /// Cheap enough to be called more than once per render: a tool has a handful of settings,
+    /// and asking the tool about one of them costs a dictionary lookup or two.
+    /// </remarks>
+    private IReadOnlyList<FieldGroup> BuildVisibleFieldGroups()
+    {
+        if (this.implementation is null)
+            return this.fieldGroups;
+
+        var visibleGroups = new List<FieldGroup>();
+        foreach (var group in this.fieldGroups)
+        {
+            var visibleFields = group.Fields.Where(field => this.implementation.IsSettingsFieldVisible(field.Key, this.values)).ToList();
+            if (visibleFields.Count > 0)
+                visibleGroups.Add(new FieldGroup(group.Key, visibleFields));
+        }
+
+        return visibleGroups;
+    }
+
+    /// <summary>
     /// Whether one group shows a heading above its fields.
     /// </summary>
     /// <remarks>
     /// A tool that declares no groups has a single nameless group holding everything, and a
     /// heading above the only box would say nothing the dialog's title does not say already.
     /// As soon as there is a second box, each of them has to state which one it is — the box
-    /// holding the fields that belong to no group in particular included.
+    /// holding the fields that belong to no group in particular included.<br/><br/>
+    /// It counts the boxes that are actually rendered, so a group the tool hides entirely does
+    /// not leave the remaining box with a heading it does not need.
     /// </remarks>
-    private bool ShowsGroupHeader(FieldGroup group) => this.fieldGroups.Count > 1 || !string.IsNullOrEmpty(group.Key);
+    private bool ShowsGroupHeader(FieldGroup group) => this.BuildVisibleFieldGroups().Count > 1 || !string.IsNullOrEmpty(group.Key);
 
     /// <remarks>
     /// The ungrouped fields have no name of their own, so the label hook hands back their

@@ -13,11 +13,12 @@ internal static class SearchCandidateCollector
     /// <summary>
     /// Collects the hits into ranked candidates.
     /// </summary>
+    /// <param name="backend">The search service the hits came from.</param>
     /// <param name="hits">The hits, in the order the search service ranked them.</param>
     /// <param name="limit">The most hits to use.</param>
     /// <param name="candidateCount">How many hits were used, before equivalent URLs were merged.</param>
     /// <returns>The candidates, ordered by rank.</returns>
-    public static IReadOnlyList<SearchCandidate> Collect(IEnumerable<SearchHit> hits, int limit, out int candidateCount)
+    public static IReadOnlyList<SearchCandidate> Collect(WebSearchBackend backend, IEnumerable<SearchHit> hits, int limit, out int candidateCount)
     {
         var rankedHits = hits.Take(limit).ToList();
 
@@ -45,6 +46,7 @@ internal static class SearchCandidateCollector
                 Rank = index + 1,
                 RetrievalUrl = retrievalUrl,
                 OriginalUrls = [hit.Url],
+                Backends = [backend],
                 Title = hit.Title,
                 Snippet = hit.Snippet,
                 PublishedDate = hit.PublishedDate,

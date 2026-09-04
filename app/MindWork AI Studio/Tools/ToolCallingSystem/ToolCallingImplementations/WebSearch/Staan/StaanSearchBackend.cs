@@ -142,7 +142,7 @@ public sealed class StaanSearchBackend : IWebSearchBackend
             notes.Add($"Staan corrected the query and searched for '{alteredQuery}' instead.");
 
         var hits = (response.Web?.Results ?? []).Select(result => new SearchHit(result.Url, result.Title, result.Snippet));
-        var candidates = SearchCandidateCollector.Collect(hits, query.Limit, out var candidateCount);
+        var candidates = SearchCandidateCollector.Collect(WebSearchBackend.STAAN, hits, query.Limit, out var candidateCount);
         return new WebSearchBackendResult(WebSearchBackend.STAAN, candidates, candidateCount, notes);
     }
 

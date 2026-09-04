@@ -8,6 +8,16 @@ public sealed class SearchCandidate
 
     public required List<string> OriginalUrls { get; init; }
 
+    /// <summary>
+    /// The search services this hit came from.
+    /// </summary>
+    /// <remarks>
+    /// A list rather than a single service, because two of them asked at once can return the
+    /// same page, and then the merged candidate is a hit both of them found. That is worth
+    /// reporting: it says more about the page than either service does alone.
+    /// </remarks>
+    public required List<WebSearchBackend> Backends { get; init; }
+
     public required string Title { get; set; }
 
     public required string Snippet { get; set; }
@@ -19,6 +29,7 @@ public sealed class SearchCandidate
         Rank = this.Rank,
         RetrievalUrl = this.RetrievalUrl,
         OriginalUrls = [..this.OriginalUrls],
+        Backends = [..this.Backends],
         Title = this.Title,
         Snippet = this.Snippet,
         PublishedDate = this.PublishedDate,
@@ -42,6 +53,7 @@ public sealed class SearchCandidate
         }
 
         AddDistinct(this.OriginalUrls, candidate.OriginalUrls, StringComparer.Ordinal);
+        AddDistinct(this.Backends, candidate.Backends);
     }
 
     /// <summary>
@@ -68,7 +80,7 @@ public sealed class SearchCandidate
     /// </summary>
     internal static string FirstNonEmpty(params string[] values) => values.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value)) ?? string.Empty;
 
-    private static void AddDistinct(List<string> target, IEnumerable<string> values, StringComparer comparer)
+    private static void AddDistinct<T>(List<T> target, IEnumerable<T> values, IEqualityComparer<T>? comparer = null)
     {
         foreach (var value in values)
         {

@@ -160,7 +160,7 @@ internal sealed class SearXNGSearchClient
                 .ThenBy(result => result["title"]?.ToString(), StringComparer.OrdinalIgnoreCase)
             : resultObjects;
 
-        return SearchCandidateCollector.Collect(orderedResults.Select(ToSearchHit), effectiveLimit, out candidateCount);
+        return SearchCandidateCollector.Collect(WebSearchBackend.SEARXNG, orderedResults.Select(ToSearchHit), effectiveLimit, out candidateCount);
     }
 
     private static SearchHit ToSearchHit(JsonObject result) => new(

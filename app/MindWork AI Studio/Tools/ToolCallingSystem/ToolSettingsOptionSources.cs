@@ -1,4 +1,5 @@
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.WebSearch;
 
 namespace AIStudio.Tools.ToolCallingSystem;
 
@@ -41,7 +42,21 @@ public static class ToolSettingsOptionSources
     /// </remarks>
     public const string ANY_LANGUAGE = "all";
 
-    public static bool IsKnown(string optionSource) => optionSource is COMMON_LANGUAGES or SAFE_SEARCH;
+    /// <summary>
+    /// The search services the web search tool can be pointed at.
+    /// </summary>
+    /// <remarks>
+    /// The values are the names of the backend enum members, which is also how a chosen service
+    /// is stored and how an organization's configuration addresses one.
+    /// </remarks>
+    public const string WEB_SEARCH_BACKENDS = "web_search_backends";
+
+    /// <summary>
+    /// The ways the web search tool can use several configured search services.
+    /// </summary>
+    public const string WEB_SEARCH_BACKEND_STRATEGY = "web_search_backend_strategy";
+
+    public static bool IsKnown(string optionSource) => optionSource is COMMON_LANGUAGES or SAFE_SEARCH or WEB_SEARCH_BACKENDS or WEB_SEARCH_BACKEND_STRATEGY;
 
     /// <summary>
     /// Resolves one option source to its current values and names.
@@ -57,6 +72,19 @@ public static class ToolSettingsOptionSources
             new(nameof(SafeSearchPolicy.OFF), TB("Off")),
             new(nameof(SafeSearchPolicy.MODERATE), TB("Moderate")),
             new(nameof(SafeSearchPolicy.STRICT), TB("Strict")),
+        ],
+
+        //
+        // Product names, so they come from the backend enum itself rather than from a
+        // translation. Adding a search service therefore adds it to this list, and to the
+        // dropdown offering it, without a line of code here:
+        //
+        WEB_SEARCH_BACKENDS => Enum.GetValues<WebSearchBackend>().Select(backend => new ToolSettingsOption(backend.ToString(), backend.ToName())).ToList(),
+        WEB_SEARCH_BACKEND_STRATEGY =>
+        [
+            new(nameof(WebSearchBackendStrategy.FAILOVER), TB("One after another, until one answers")),
+            new(nameof(WebSearchBackendStrategy.PARALLEL), TB("All of them at once, results combined")),
+            new(nameof(WebSearchBackendStrategy.SPECIFIC), TB("Only the preferred one")),
         ],
 
         _ => [],

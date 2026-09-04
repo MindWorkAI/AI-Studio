@@ -8,24 +8,26 @@ using AIStudio.Tools.Web;
 namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.WebSearch;
 
 /// <summary>
-/// Searches the web through one of the configured search backends and returns the readable
-/// content of the best matching pages.
+/// Searches the web through the configured search backends and returns the readable content
+/// of the best matching pages.
 /// </summary>
 /// <remarks>
-/// The tool owns everything that is the same whichever service answers: the arguments the
+/// The tool owns everything that is the same however many services answer: the arguments the
 /// model may pass, the limits they are clamped to, loading the result pages, filtering them
-/// for prompt injections, and the shape of the result. Which service is asked, and how the
-/// search is expressed in its API, belongs to a search backend.
+/// for prompt injections, and the shape of the result. How a search is expressed in a
+/// service's API belongs to a search backend, and which of them are asked for it belongs to
+/// the dispatcher.
 /// </remarks>
 public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPageRetrievalService webPageRetrievalService, PromptInjectionGuardService promptInjectionGuardService, ILogger<WebSearchTool> logger) : IToolImplementation
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(WebSearchTool).Namespace, nameof(WebSearchTool));
 
     //
-    // Ordered by the backend enum, so that the order in which backends are offered and tried
-    // does not depend on how the dependency injection container happened to hand them over:
+    // The dispatcher holds the backends: which of them answers a search, and in which order,
+    // is what it decides, so the order they are offered and tried in belongs to it rather than
+    // to the container that handed them over.
     //
-    private readonly IReadOnlyList<IWebSearchBackend> searchBackends = backends.OrderBy(backend => backend.Backend).ToList();
+    private readonly WebSearchDispatcher dispatcher = new(backends);
 
     private readonly WebSearchResultRetrievalService pageRetrievalService = new(webPageRetrievalService);
 
@@ -49,6 +51,21 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
 
     private const int MAX_LOG_QUERY_LENGTH = 1000;
 
+    private const WebSearchBackendStrategy DEFAULT_BACKEND_STRATEGY = WebSearchBackendStrategy.FAILOVER;
+
+    /// <summary>
+    /// How many configured services it takes for the choice between them to be worth offering.
+    /// </summary>
+    /// <remarks>
+    /// One service leaves nothing to decide: every strategy asks it, and it is the preferred
+    /// one whether or not anybody said so. Both settings appear with the second service, and
+    /// they are only checked while they are visible — a stored value the dialog is hiding must
+    /// not be able to make the tool unconfigurable.
+    /// </remarks>
+    private const int MIN_BACKENDS_FOR_STRATEGY_CHOICE = 2;
+
+    private const string BACKEND_STRATEGY_SETTING = "backendStrategy";
+    private const string PRIMARY_BACKEND_SETTING = "primaryBackend";
     private const string DEFAULT_LANGUAGE_SETTING = "defaultLanguage";
     private const string DEFAULT_SAFE_SEARCH_SETTING = "defaultSafeSearch";
     private const string MAX_RESULTS_SETTING = "maxResults";
@@ -103,15 +120,19 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
     /// The backends come first, because they are what the user has to fill in before the tool
     /// works at all. None of their fields is required, since a user who configured one
     /// backend must be able to save without filling in the others; that at least one of them
-    /// is configured is checked when the settings are validated.
+    /// is configured is checked when the settings are validated.<br/><br/>
+    /// What follows them is how they are used together, and only then the settings of the
+    /// search itself — which is the order the questions come up in.
     /// </remarks>
     private ToolSettingsSchema BuildSettingsSchema()
     {
         var builder = ToolSettingsSchemaBuilder.Create();
-        foreach (var backend in this.searchBackends)
+        foreach (var backend in this.dispatcher.Backends)
             backend.DeclareSettings(builder);
 
         return builder
+            .OptionalChoice(BACKEND_STRATEGY_SETTING, ToolSettingsOptionSources.WEB_SEARCH_BACKEND_STRATEGY)
+            .OptionalChoice(PRIMARY_BACKEND_SETTING, ToolSettingsOptionSources.WEB_SEARCH_BACKENDS)
             .RequiredChoice(DEFAULT_LANGUAGE_SETTING, ToolSettingsOptionSources.COMMON_LANGUAGES)
             .OptionalChoice(DEFAULT_SAFE_SEARCH_SETTING, ToolSettingsOptionSources.SAFE_SEARCH)
             .Optional(MAX_RESULTS_SETTING)
@@ -145,6 +166,8 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
 
         return fieldName switch
         {
+            BACKEND_STRATEGY_SETTING => TB("Use Of Several Search Services"),
+            PRIMARY_BACKEND_SETTING => TB("Preferred Search Service"),
             DEFAULT_LANGUAGE_SETTING => TB("Default Language"),
             DEFAULT_SAFE_SEARCH_SETTING => TB("Default Safe Search Policy"),
             MAX_RESULTS_SETTING => TB("Maximum Results"),
@@ -165,6 +188,8 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
 
         return fieldName switch
         {
+            BACKEND_STRATEGY_SETTING => TB("What to do with the search services you configured. Asking them one after another moves on to the next one whenever the one before it found nothing, which is the sensible choice for almost everyone. Asking all of them at once combines their results and uses one request of every service for each search, which finds more but spends your free requests several times as fast. When this is not set, the services are asked one after another."),
+            PRIMARY_BACKEND_SETTING => TB("Which search service to ask first, and the only one asked when you chose to use just the preferred one. When this is not set, the services are asked in a fixed order."),
             DEFAULT_LANGUAGE_SETTING => TB("The language to search in when the AI model does not ask for a specific one. This is required: without a language, many search engines return no results at all, and the search would come back empty without telling you why. Choose 'Any language' if you do not want to restrict the results."),
             DEFAULT_SAFE_SEARCH_SETTING => TB("Optional safe search policy sent to the search service when configured."),
             MAX_RESULTS_SETTING => TB("Optional default maximum number of results returned to the model when the model does not provide a limit."),
@@ -195,6 +220,25 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
         };
     }
 
+    /// <remarks>
+    /// Both of these decide between search services, so they appear once there is something to
+    /// decide: a second configured service. The preferred service additionally has no meaning
+    /// while every service is asked anyway.<br/><br/>
+    /// Neither is given a default value on purpose. The dialog would append the stored value to
+    /// the description, and a strategy reads as a sentence rather than as a value — so what
+    /// happens without a choice is part of the description instead.
+    /// </remarks>
+    public bool IsSettingsFieldVisible(string fieldName, IReadOnlyDictionary<string, string> settingsValues)
+    {
+        if (fieldName is not (BACKEND_STRATEGY_SETTING or PRIMARY_BACKEND_SETTING))
+            return true;
+
+        if (this.dispatcher.CountConfiguredBackends(settingsValues) < MIN_BACKENDS_FOR_STRATEGY_CHOICE)
+            return false;
+
+        return fieldName is not PRIMARY_BACKEND_SETTING || ReadBackendStrategy(settingsValues) is not WebSearchBackendStrategy.PARALLEL;
+    }
+
     public Task<ToolConfigurationState?> ValidateConfigurationAsync(
         ToolDefinition definition,
         IReadOnlyDictionary<string, string> settingsValues,
@@ -208,7 +252,7 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
         // backend has to be configured. What the tool cannot work without is one of them, so
         // that is checked here instead:
         //
-        var configuredBackends = this.searchBackends.Where(backend => backend.IsConfigured(settingsValues)).ToList();
+        var configuredBackends = this.dispatcher.GetConfiguredBackends(settingsValues);
         if (configuredBackends.Count == 0)
         {
             return Task.FromResult<ToolConfigurationState?>(new ToolConfigurationState
@@ -226,6 +270,51 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
                 {
                     IsConfigured = false,
                     Message = backendError,
+                });
+            }
+        }
+
+        if (!TryValidateOptionValue(settingsValues, BACKEND_STRATEGY_SETTING, ToolSettingsOptionSources.WEB_SEARCH_BACKEND_STRATEGY, out var backendStrategyError))
+        {
+            return Task.FromResult<ToolConfigurationState?>(new ToolConfigurationState
+            {
+                IsConfigured = false,
+                Message = backendStrategyError,
+            });
+        }
+
+        if (!TryValidateOptionValue(settingsValues, PRIMARY_BACKEND_SETTING, ToolSettingsOptionSources.WEB_SEARCH_BACKENDS, out var primaryBackendError))
+        {
+            return Task.FromResult<ToolConfigurationState?>(new ToolConfigurationState
+            {
+                IsConfigured = false,
+                Message = primaryBackendError,
+            });
+        }
+
+        //
+        // Only while the user can see the two fields. A search runs either way — it falls back
+        // to the configured services and says so in its notes — but a choice that no longer
+        // fits is worth reporting while there is a field to correct it in.
+        //
+        if (configuredBackends.Count >= MIN_BACKENDS_FOR_STRATEGY_CHOICE)
+        {
+            var primaryBackend = ReadPrimaryBackend(settingsValues);
+            if (primaryBackend is not null && configuredBackends.All(backend => backend.Backend != primaryBackend))
+            {
+                return Task.FromResult<ToolConfigurationState?>(new ToolConfigurationState
+                {
+                    IsConfigured = false,
+                    Message = string.Format(TB("The preferred search service {0} is not configured. Please configure it, or choose one of the services you did configure."), primaryBackend.Value.ToName()),
+                });
+            }
+
+            if (primaryBackend is null && ReadBackendStrategy(settingsValues) is WebSearchBackendStrategy.SPECIFIC)
+            {
+                return Task.FromResult<ToolConfigurationState?>(new ToolConfigurationState
+                {
+                    IsConfigured = false,
+                    Message = TB("Please choose the preferred search service, or let the services be used one after another."),
                 });
             }
         }
@@ -323,7 +412,6 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
 
     public async Task<ToolExecutionResult> ExecuteAsync(JsonElement arguments, ToolExecutionContext context, CancellationToken token = default)
     {
-        var searchBackend = this.ResolveBackend(context.SettingsValues);
         var query = ReadRequiredString(arguments, QUERY_ARGUMENT);
         var language = ReadOptionalString(arguments, LANGUAGE_ARGUMENT);
         var timeRange = ReadOptionalString(arguments, TIME_RANGE_ARGUMENT);
@@ -345,20 +433,28 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
         var allPagesRetrievalTimeoutSeconds = Math.Min(ToolSettingsValueParser.ReadOptionalPositiveInt(context.SettingsValues, ALL_PAGES_RETRIEVAL_TIMEOUT_SECONDS_SETTING) ?? DEFAULT_ALL_PAGES_RETRIEVAL_TIMEOUT_SECONDS, MAX_ALL_PAGES_RETRIEVAL_TIMEOUT_SECONDS);
         if (maxTotalContentCharacters < minContentCharactersPerResult * MAX_RESULTS)
             throw new InvalidOperationException(TB("The configured web search content budget is not valid."));
-        if (page > searchBackend.MaxPage)
-            throw new ArgumentException($"Argument 'page' must be less than or equal to {searchBackend.MaxPage}.");
 
+        //
+        // Which services answer this search is the dispatcher's decision, so a page beyond what
+        // a service can serve is its decision as well: with several services asked, one of them
+        // not reaching that page does not have to end the search.
+        //
+        var backendStrategy = ReadBackendStrategy(context.SettingsValues);
+        var primaryBackend = ReadPrimaryBackend(context.SettingsValues);
         logger.LogInformation(
-            "Starting web search. ToolCallId={ToolCallId}, Backend={Backend}, Query={Query}, Language={Language}, TimeRange={TimeRange}, Page={Page}, Limit={Limit}",
+            "Starting web search. ToolCallId={ToolCallId}, Strategy={Strategy}, PrimaryBackend={PrimaryBackend}, Query={Query}, Language={Language}, TimeRange={TimeRange}, Page={Page}, Limit={Limit}",
             context.ToolCallId,
-            searchBackend.Backend,
+            backendStrategy,
+            primaryBackend,
             FormatQueryForLog(query),
             language,
             timeRange,
             page,
             effectiveLimit);
 
-        var searchResponse = await searchBackend.SearchAsync(
+        var searchResponse = await this.dispatcher.SearchAsync(
+            backendStrategy,
+            primaryBackend,
             new WebSearchQuery(
                 query,
                 language,
@@ -413,6 +509,12 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
 
         var resultObject = new JsonObject
         {
+            //
+            // Which services answered belongs in the result rather than only in the log: it is
+            // what tells apart a thin answer from one search service having nothing to say and
+            // a thin answer from the others never having been asked.
+            //
+            ["backends"] = BuildJsonArray(searchResponse.Backends.Select(backend => backend.ToName())),
             ["candidate_count"] = searchResponse.CandidateCount,
             ["result_count"] = retrievalResult.Results.Count,
             ["retrieval_timed_out"] = retrievalResult.RetrievalTimedOut,
@@ -434,15 +536,16 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
         // for the user reading the trace as much as for the model deciding what to do next.
         //
         if (searchResponse.CandidateCount == 0)
-            resultObject["diagnostic"] = "The search engine returned no hits for this query. Either nothing matches the query, or the configured search service has no working engines for it.";
+            resultObject["diagnostic"] = "No search service returned a hit for this query. Either nothing matches the query, or the configured services have no working engines for it. The notes say what each of them reported.";
         else if (retrievalResult.Results.Count == 0)
-            resultObject["diagnostic"] = "The search engine returned hits, but none of their pages could be retrieved as readable public HTML. Pages may have failed, timed out, been blocked by network safety checks, used an unsupported content type, or contained no readable static content.";
+            resultObject["diagnostic"] = "The search returned hits, but none of their pages could be retrieved as readable public HTML. Pages may have failed, timed out, been blocked by network safety checks, used an unsupported content type, or contained no readable static content.";
 
         var retrievalStatistics = retrievalResult.ErrorStatistics;
         logger.LogInformation(
-            "Completed web search. ToolCallId={ToolCallId}, Backend={Backend}, CandidateCount={CandidateCount}, ResultCount={ResultCount}, BlockedPageCount={BlockedPageCount}, PageTimeoutCount={PageTimeoutCount}, FailedPageCount={FailedPageCount}, EmptyContentCount={EmptyContentCount}, RetrievalTimedOut={RetrievalTimedOut}, ReturnedContentCharacters={ReturnedContentCharacters}, TruncatedResultCount={TruncatedResultCount}, Notes={Notes}",
+            "Completed web search. ToolCallId={ToolCallId}, Strategy={Strategy}, Backends={Backends}, CandidateCount={CandidateCount}, ResultCount={ResultCount}, BlockedPageCount={BlockedPageCount}, PageTimeoutCount={PageTimeoutCount}, FailedPageCount={FailedPageCount}, EmptyContentCount={EmptyContentCount}, RetrievalTimedOut={RetrievalTimedOut}, ReturnedContentCharacters={ReturnedContentCharacters}, TruncatedResultCount={TruncatedResultCount}, Notes={Notes}",
             context.ToolCallId,
-            searchResponse.Backend,
+            backendStrategy,
+            string.Join(", ", searchResponse.Backends.Select(backend => backend.ToName())),
             searchResponse.CandidateCount,
             retrievalResult.Results.Count,
             retrievalStatistics.BlockedCount,
@@ -466,22 +569,41 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
     /// </summary>
     private IWebSearchBackend? FindBackend(string groupKey) => string.IsNullOrEmpty(groupKey)
         ? null
-        : this.searchBackends.FirstOrDefault(backend => string.Equals(backend.SettingsGroup, groupKey, StringComparison.Ordinal));
+        : this.dispatcher.Backends.FirstOrDefault(backend => string.Equals(backend.SettingsGroup, groupKey, StringComparison.Ordinal));
 
     /// <summary>
-    /// The backend to search with.
+    /// Reads how the configured search services are to be used.
     /// </summary>
     /// <remarks>
-    /// The tool counts as unconfigured while no backend is configured, so reaching this without
-    /// one means the settings changed between the check and the call.
+    /// Stored by name, like the safe search policy, so that an organization's configuration
+    /// reads as PARALLEL rather than as a number. An unset or unreadable value asks the
+    /// services one after another, which is the behaviour that costs the least and surprises
+    /// nobody.
     /// </remarks>
-    private IWebSearchBackend ResolveBackend(IReadOnlyDictionary<string, string> settingsValues)
+    private static WebSearchBackendStrategy ReadBackendStrategy(IReadOnlyDictionary<string, string> settingsValues)
     {
-        var configuredBackend = this.searchBackends.FirstOrDefault(backend => backend.IsConfigured(settingsValues));
-        if (configuredBackend is null)
-            throw new InvalidOperationException(TB("No search service is configured for the web search."));
+        var configuredStrategy = settingsValues.GetValueOrDefault(BACKEND_STRATEGY_SETTING);
+        if (string.IsNullOrWhiteSpace(configuredStrategy))
+            return DEFAULT_BACKEND_STRATEGY;
 
-        return configuredBackend;
+        return Enum.TryParse<WebSearchBackendStrategy>(configuredStrategy, true, out var strategy) ? strategy : DEFAULT_BACKEND_STRATEGY;
+    }
+
+    /// <summary>
+    /// Reads which search service is the preferred one, or null when none was chosen.
+    /// </summary>
+    /// <remarks>
+    /// Whether the chosen service is configured at all is not decided here: the dispatcher has
+    /// to handle a choice that no longer fits anyway, because the settings can change between
+    /// a search and the next one.
+    /// </remarks>
+    private static WebSearchBackend? ReadPrimaryBackend(IReadOnlyDictionary<string, string> settingsValues)
+    {
+        var configuredBackend = settingsValues.GetValueOrDefault(PRIMARY_BACKEND_SETTING);
+        if (string.IsNullOrWhiteSpace(configuredBackend))
+            return null;
+
+        return Enum.TryParse<WebSearchBackend>(configuredBackend, true, out var backend) ? backend : null;
     }
 
     private static JsonObject BuildResultJson(WebSearchPageResult result, WebPageModelContent sanitizedContent)
@@ -492,6 +614,10 @@ public sealed class WebSearchTool(IEnumerable<IWebSearchBackend> backends, WebPa
         var searchMetadata = new JsonObject
         {
             ["rank"] = result.Candidate.Rank,
+
+            // Two services having found the same page says something about the page that
+            // neither of them says alone, so it is reported per hit and not only per search:
+            ["backends"] = BuildJsonArray(result.Candidate.Backends.Select(backend => backend.ToName())),
             ["final_url"] = page.FinalUrl.ToString(),
             ["published_date"] = sanitizedContent.PublishedTime,
         };
