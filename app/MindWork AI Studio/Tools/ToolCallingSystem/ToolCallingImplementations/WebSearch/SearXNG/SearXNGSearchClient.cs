@@ -61,8 +61,7 @@ internal sealed class SearXNGSearchClient
         var responseBody = await HttpContentReader.ReadAsStringWithLimitAsync(response.Content, MAX_RESPONSE_BYTES, timeoutCts.Token);
         if (!response.IsSuccessStatusCode)
         {
-            var responseExcerpt = CreateSingleLineExcerpt(responseBody);
-            var responseDetails = string.IsNullOrWhiteSpace(responseExcerpt) ? string.Empty : $" Response body: {responseExcerpt}";
+            var responseDetails = SearchResponseExcerpt.CreateDetails(responseBody);
             var statusHint = response.StatusCode switch
             {
                 HttpStatusCode.TooManyRequests => " The instance rate-limits this client. Public instances usually do that for automated requests; a self-hosted instance does not.",
@@ -82,7 +81,7 @@ internal sealed class SearXNGSearchClient
         if (!string.IsNullOrWhiteSpace(mediaType) && !mediaType.Contains("json", StringComparison.OrdinalIgnoreCase))
         {
             throw new InvalidOperationException(
-                $"The SearXNG instance answered '{mediaType}' instead of JSON. Enable the JSON format in the instance's settings.yml ('search.formats' must contain 'json'). Most public instances do not serve it and put a bot check or rate limit in front of automated requests. Response body: {CreateSingleLineExcerpt(responseBody)}");
+                $"The SearXNG instance answered '{mediaType}' instead of JSON. Enable the JSON format in the instance's settings.yml ('search.formats' must contain 'json'). Most public instances do not serve it and put a bot check or rate limit in front of automated requests. Response body: {SearchResponseExcerpt.Create(responseBody)}");
         }
 
         JsonNode? responseJson;
@@ -100,14 +99,6 @@ internal sealed class SearXNGSearchClient
 
         var candidates = BuildCandidates(responseObject["results"] as JsonArray, searchRequest.EffectiveLimit, out var candidateCount);
         return new SearXNGSearchResponse(candidates, candidateCount, ReadUnresponsiveEngines(responseObject["unresponsive_engines"] as JsonArray));
-    }
-
-    private static string CreateSingleLineExcerpt(string responseBody)
-    {
-        var sanitizedResponseBody = string.Concat(responseBody.Select(character => char.IsControl(character) ? ' ' : character));
-        var excerpt = string.Join(" ", sanitizedResponseBody
-            .Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
-        return excerpt[..Math.Min(excerpt.Length, 400)];
     }
 
     public static bool TryNormalizeSearchUri(
@@ -153,7 +144,13 @@ internal sealed class SearXNGSearchClient
         return true;
     }
 
-    private static List<SearchCandidate> BuildCandidates(JsonArray? resultArray, int effectiveLimit, out int candidateCount)
+    /// <remarks>
+    /// The instance returns its results in an order already, but that order merges the rankings
+    /// of several engines into positions. The score it reports for each result is the same
+    /// ranking without that rounding, so it is preferred; only when no result carries one is the
+    /// instance's own order kept.
+    /// </remarks>
+    private static IReadOnlyList<SearchCandidate> BuildCandidates(JsonArray? resultArray, int effectiveLimit, out int candidateCount)
     {
         var resultObjects = resultArray?.OfType<JsonObject>().ToList() ?? [];
         var hasSortableScores = resultObjects.Any(result => TryGetScore(result, out _));
@@ -162,40 +159,15 @@ internal sealed class SearXNGSearchClient
                 .OrderByDescending(result => TryGetScore(result, out var score) ? score : double.MinValue)
                 .ThenBy(result => result["title"]?.ToString(), StringComparer.OrdinalIgnoreCase)
             : resultObjects;
-        var rankedResults = orderedResults
-            .Take(effectiveLimit)
-            .ToList();
-        candidateCount = rankedResults.Count;
 
-        var candidatesByUrl = new Dictionary<string, SearchCandidate>(StringComparer.Ordinal);
-        for (var index = 0; index < rankedResults.Count; index++)
-        {
-            var result = rankedResults[index];
-            var originalUrl = ReadNodeString(result["url"]);
-            if (!Uri.TryCreate(originalUrl, UriKind.Absolute, out var url) || url is not { Scheme: "http" or "https" })
-                continue;
-
-            var retrievalUrl = RemoveFragment(url);
-            var candidate = new SearchCandidate
-            {
-                Rank = index + 1,
-                RetrievalUrl = retrievalUrl,
-                OriginalUrls = [originalUrl],
-                Title = ReadNodeString(result["title"]),
-                Snippet = ReadNodeString(result["content"]),
-                PublishedDate = SearchCandidate.FirstNonEmpty(ReadNodeString(result["publishedDate"]), ReadNodeString(result["published_date"])),
-            };
-            var normalizedUrl = SearchCandidate.NormalizeUrl(retrievalUrl);
-            if (candidatesByUrl.TryGetValue(normalizedUrl, out var existingCandidate))
-                existingCandidate.Merge(candidate);
-            else
-                candidatesByUrl[normalizedUrl] = candidate;
-        }
-
-        return candidatesByUrl.Values
-            .OrderBy(candidate => candidate.Rank)
-            .ToList();
+        return SearchCandidateCollector.Collect(orderedResults.Select(ToSearchHit), effectiveLimit, out candidateCount);
     }
+
+    private static SearchHit ToSearchHit(JsonObject result) => new(
+        ReadNodeString(result["url"]),
+        ReadNodeString(result["title"]),
+        ReadNodeString(result["content"]),
+        SearchCandidate.FirstNonEmpty(ReadNodeString(result["publishedDate"]), ReadNodeString(result["published_date"])));
 
     /// <summary>
     /// Reads which search engines did not answer, and why.
@@ -302,9 +274,4 @@ internal sealed class SearXNGSearchClient
             throw new InvalidOperationException($"The SearXNG request failed: {exception.Message}", exception);
         }
     }
-
-    private static Uri RemoveFragment(Uri url) => new UriBuilder(url)
-    {
-        Fragment = string.Empty,
-    }.Uri;
 }

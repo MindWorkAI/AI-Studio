@@ -11,4 +11,5 @@ namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.WebSearch;
 public enum WebSearchBackend
 {
     SEARXNG,
+    STAAN,
 }

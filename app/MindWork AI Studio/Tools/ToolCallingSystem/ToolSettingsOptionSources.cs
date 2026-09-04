@@ -34,9 +34,12 @@ public static class ToolSettingsOptionSources
     /// <remarks>
     /// This is SearXNG's own wording for it, and the reason the language list here is not simply
     /// the common languages: those offer "do not change" and "other", which a search engine
-    /// cannot act on.
+    /// cannot act on.<br/><br/>
+    /// A search backend whose service words it differently, or which cannot search without a
+    /// language at all, recognizes the value by this constant and says in its result what it
+    /// did instead.
     /// </remarks>
-    private const string ANY_LANGUAGE = "all";
+    public const string ANY_LANGUAGE = "all";
 
     public static bool IsKnown(string optionSource) => optionSource is COMMON_LANGUAGES or SAFE_SEARCH;
 

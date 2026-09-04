@@ -35,7 +35,7 @@
                 {
                     <MudStack Row="@true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Wrap="Wrap.Wrap" Class="mb-3">
                         <MudText Typo="Typo.subtitle2">@this.GetGroupLabel(group.Key)</MudText>
-                        <MudStack Row="@true" AlignItems="AlignItems.Center" Spacing="1" Wrap="Wrap.Wrap">
+                        <MudStack Row="@true" AlignItems="AlignItems.Center" Spacing="2" Wrap="Wrap.Wrap">
                             @foreach (var link in this.GetGroupLinks(group.Key))
                             {
                                 <MudButton Variant="Variant.Filled" Size="Size.Small" StartIcon="@link.Icon" Href="@link.Url" Target="_blank">
