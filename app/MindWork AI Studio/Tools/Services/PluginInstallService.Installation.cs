@@ -101,7 +101,7 @@ public sealed partial class PluginInstallService
         // The plugin is not installed yet: it sits in a staging directory outside the installed
         // plugins directory. We allow that directory as the module base, so the plugin can load its
         // own Lua modules, e.g., an icon.lua, while we validate it:
-        var plugin = await PluginFactory.Load(pluginDirectory, pluginCode, token, pluginDirectory);
+        var plugin = await PluginFactory.Load(pluginDirectory, pluginCode, pluginDirectory, token);
         if (!acceptedTypes.Contains(plugin.Type))
             return PluginValidationResult.Failure(string.Format(wrongTypeIssue, string.Join("; ", plugin.Issues)));
 

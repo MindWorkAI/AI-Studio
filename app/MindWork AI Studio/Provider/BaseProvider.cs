@@ -182,16 +182,15 @@ public abstract class BaseProvider : IProvider, ISecretId
         _ => GetDefaultModelLoadFailureReason(response),
     };
 
-    protected async Task<ModelLoadResult> LoadModelsResponse<TResponse>(
-        SecretStoreType storeType,
+    protected async Task<ModelLoadResult> LoadModelsResponse<TResponse>(SecretStoreType storeType,
         string requestPath,
         Func<TResponse, IEnumerable<Model>> modelFactory,
-        CancellationToken token,
         string? apiKeyProvisional = null,
         Func<HttpResponseMessage, string, ModelLoadFailureReason>? failureReasonSelector = null,
         Action<HttpRequestMessage, string>? requestConfigurator = null,
         JsonSerializerOptions? jsonSerializerOptions = null,
-        bool isTryingSecret = false)
+        bool isTryingSecret = false,
+        CancellationToken token = default)
     {
         var secretKey = await this.GetModelLoadingSecretKey(storeType, apiKeyProvisional, isTryingSecret);
         if (string.IsNullOrWhiteSpace(secretKey) && !isTryingSecret)
@@ -449,6 +448,10 @@ public abstract class BaseProvider : IProvider, ISecretId
     /// <summary>
     /// Sends a request and handles rate limiting by exponential backoff.
     /// </summary>
+    /// <remarks>
+    /// Two cancellation tokens, so one of them cannot be the last parameter: the user token
+    /// survives a retry, while the request token belongs to the single attempt being made.
+    /// </remarks>
     /// <param name="requestBuilder">A function that builds the request.</param>
     /// <param name="userCancellationToken">The user cancellation token.</param>
     /// <param name="requestCancellationToken">The token to use for the HTTP request.</param>
@@ -1295,6 +1298,10 @@ public abstract class BaseProvider : IProvider, ISecretId
         }
     }
     
+    /// <remarks>
+    /// The cancellation token is not the last parameter, unlike everywhere else in this codebase:
+    /// C# demands that a params parameter comes last.
+    /// </remarks>
     protected async Task<IReadOnlyList<IReadOnlyList<float>>> PerformStandardTextEmbeddingRequest(RequestedSecret requestedSecret, Model embeddingModel, Host host = Host.NONE, CancellationToken token = default, params List<string> texts)
     {
         try

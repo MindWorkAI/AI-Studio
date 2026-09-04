@@ -371,37 +371,36 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
     /// <inheritdoc />
     public override Task<ModelLoadResult> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModels(SecretStoreType.LLM_PROVIDER, static model => model.IsChatModel(), token, apiKeyProvisional);
+        return this.LoadModels(SecretStoreType.LLM_PROVIDER, static model => model.IsChatModel(), apiKeyProvisional, token);
     }
 
     /// <inheritdoc />
     public override Task<ModelLoadResult> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModels(SecretStoreType.IMAGE_PROVIDER, static model => model.IsImageModel(), token, apiKeyProvisional);
+        return this.LoadModels(SecretStoreType.IMAGE_PROVIDER, static model => model.IsImageModel(), apiKeyProvisional, token);
     }
 
     /// <inheritdoc />
     public override Task<ModelLoadResult> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModels(SecretStoreType.EMBEDDING_PROVIDER, static model => model.IsEmbeddingModel(), token, apiKeyProvisional);
+        return this.LoadModels(SecretStoreType.EMBEDDING_PROVIDER, static model => model.IsEmbeddingModel(), apiKeyProvisional, token);
     }
 
     /// <inheritdoc />
     public override Task<ModelLoadResult> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModels(SecretStoreType.TRANSCRIPTION_PROVIDER, static model => model.IsTranscriptionModel(), token, apiKeyProvisional);
+        return this.LoadModels(SecretStoreType.TRANSCRIPTION_PROVIDER, static model => model.IsTranscriptionModel(), apiKeyProvisional, token);
     }
     
     #endregion
 
-    private Task<ModelLoadResult> LoadModels(SecretStoreType storeType, Func<Model, bool> isWantedKind, CancellationToken token, string? apiKeyProvisional = null)
+    private Task<ModelLoadResult> LoadModels(SecretStoreType storeType, Func<Model, bool> isWantedKind, string? apiKeyProvisional, CancellationToken token)
     {
         return this.LoadModelsResponse<ModelsResponse>(
             storeType,
             "models",
             modelResponse => modelResponse.Data.Where(isWantedKind),
-            token,
-            apiKeyProvisional);
+            apiKeyProvisional, token: token);
     }
 
     private static bool HasInsufficientQuotaError(string responseBody)

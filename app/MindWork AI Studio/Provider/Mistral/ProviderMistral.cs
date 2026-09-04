@@ -139,7 +139,6 @@ public sealed class ProviderMistral() : BaseProvider(LLMProviders.MISTRAL, new U
             storeType,
             "models",
             modelResponse => modelResponse.Data.Select(n => new Provider.Model(n.Id, null)),
-            token,
-            apiKeyProvisional);
+            apiKeyProvisional, token: token);
     }
 }

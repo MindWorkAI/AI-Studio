@@ -35,11 +35,11 @@ public sealed class HTMLParser
     /// targets are acceptable and extracts the readable content. This method only performs the
     /// request, and the validation it applies is the validation its caller hands in.
     /// </remarks>
-    public async Task<HTMLParserWebPage> LoadWebPageAsync(Uri url, CancellationToken token = default, int timeoutSeconds = 30,
+    public async Task<HTMLParserWebPage> LoadWebPageAsync(Uri url, int timeoutSeconds = 30,
         Func<Uri, CancellationToken, Task<IReadOnlyList<IPAddress>>>? resolveUrlAddressesAsync = null,
         int maxResponseBytes = DEFAULT_MAX_RESPONSE_BYTES, ExternalWebAuthenticationMode authenticationMode = ExternalWebAuthenticationMode.NONE,
         ExternalHttpTrustPolicy trustPolicy = ExternalHttpTrustPolicy.ALLOW_CUSTOM_ROOTS_WHEN_HOST_WHITELISTED,
-        Func<Uri, IReadOnlyList<IPAddress>, bool>? shouldUseDefaultCredentials = null)
+        Func<Uri, IReadOnlyList<IPAddress>, bool>? shouldUseDefaultCredentials = null, CancellationToken token = default)
     {
         using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(token);
         timeoutCts.CancelAfter(TimeSpan.FromSeconds(timeoutSeconds));

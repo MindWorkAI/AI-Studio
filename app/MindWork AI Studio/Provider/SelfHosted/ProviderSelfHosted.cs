@@ -96,12 +96,12 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
             switch (host)
             {
                 case Host.LLAMA_CPP:
-                    return await this.LoadLlamaCppTextModels(["embed"], [], token, apiKeyProvisional);
+                    return await this.LoadLlamaCppTextModels(["embed"], [], apiKeyProvisional, token);
             
                 case Host.LM_STUDIO:
                 case Host.OLLAMA:
                 case Host.VLLM:
-                    return await this.LoadModels( SecretStoreType.LLM_PROVIDER, ["embed"], [], token, apiKeyProvisional);
+                    return await this.LoadModels( SecretStoreType.LLM_PROVIDER, ["embed"], [], apiKeyProvisional, token);
             }
 
             return ModelLoadResult.FromModels([]);
@@ -128,7 +128,7 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
                 case Host.LM_STUDIO:
                 case Host.OLLAMA:
                 case Host.VLLM:
-                    return await this.LoadModels( SecretStoreType.EMBEDDING_PROVIDER, [], ["embed"], token, apiKeyProvisional);
+                    return await this.LoadModels( SecretStoreType.EMBEDDING_PROVIDER, [], ["embed"], apiKeyProvisional, token);
             }
 
             return ModelLoadResult.FromModels([]);
@@ -155,7 +155,7 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
                 
                 case Host.OLLAMA:
                 case Host.VLLM:
-                    return await this.LoadModels(SecretStoreType.TRANSCRIPTION_PROVIDER, [], [], token, apiKeyProvisional);
+                    return await this.LoadModels(SecretStoreType.TRANSCRIPTION_PROVIDER, [], [], apiKeyProvisional, token);
                 
                 default:
                     return ModelLoadResult.FromModels([]);
@@ -170,7 +170,7 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
     
     #endregion
 
-    private async Task<ModelLoadResult> LoadModels(SecretStoreType storeType, string[] ignorePhrases, string[] filterPhrases, CancellationToken token, string? apiKeyProvisional = null)
+    private async Task<ModelLoadResult> LoadModels(SecretStoreType storeType, string[] ignorePhrases, string[] filterPhrases, string? apiKeyProvisional, CancellationToken token)
     {
         var secretKey = await this.GetModelLoadingSecretKey(storeType, apiKeyProvisional, true);
 
@@ -208,7 +208,7 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
         if (host is not Host.LLAMA_CPP || !chatModel.IsSystemModel)
             return chatModel;
 
-        var modelLoadResult = await this.LoadLlamaCppTextModels(["embed"], [], token);
+        var modelLoadResult = await this.LoadLlamaCppTextModels(["embed"], [], null, token);
         if (!modelLoadResult.Success)
             return chatModel;
 
@@ -245,7 +245,7 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
         return chatModel;
     }
 
-    private async Task<ModelLoadResult> LoadLlamaCppTextModels(string[] ignorePhrases, string[] filterPhrases, CancellationToken token, string? apiKeyProvisional = null)
+    private async Task<ModelLoadResult> LoadLlamaCppTextModels(string[] ignorePhrases, string[] filterPhrases, string? apiKeyProvisional, CancellationToken token)
     {
         var secretKey = await this.GetModelLoadingSecretKey(SecretStoreType.LLM_PROVIDER, apiKeyProvisional, true);
 

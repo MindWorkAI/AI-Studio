@@ -85,7 +85,7 @@ public sealed partial class VisualBriefingStore
             var source = manifest.Sources.FirstOrDefault(candidate => candidate.SourceId == sourceId)
                          ?? throw new InvalidOperationException("The media source does not exist in this briefing.");
             var transcriptPath = this.TranscriptPath(briefingId, source.SourceId);
-            await WriteTextAtomicAsync(transcriptPath, transcript, token);
+            await WriteTextAtomicAsync(transcriptPath, transcript, overwrite: true, token);
             source.TranscriptStatus = VisualBriefingTranscriptStatus.CURRENT;
             ApplyFileSnapshot(source, source.Path);
             manifest.ModifiedAtUtc = DateTimeOffset.UtcNow;

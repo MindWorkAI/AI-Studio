@@ -69,7 +69,7 @@ public sealed class ProviderHetzner() : BaseProvider(LLMProviders.HETZNER, new U
     /// <inheritdoc />
     public override Task<ModelLoadResult> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModelsResponse<ModelsResponse>(SecretStoreType.LLM_PROVIDER, "models", modelResponse => modelResponse.Data.Where(model => model.IsChatModel()), token, apiKeyProvisional);
+        return this.LoadModelsResponse<ModelsResponse>(SecretStoreType.LLM_PROVIDER, "models", modelResponse => modelResponse.Data.Where(model => model.IsChatModel()), apiKeyProvisional, token: token);
     }
 
     /// <inheritdoc />

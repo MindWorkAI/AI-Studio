@@ -139,12 +139,12 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
     /// Runs a security audit for the specified assistant plugin and parses the LLM response into a structured result.
     /// </summary>
     /// <param name="plugin">The assistant plugin to audit.</param>
-    /// <param name="token">A cancellation token for prompt generation and the audit request.</param>
     /// <param name="fallbackProvider">The provider to use when no provider is configured for the audit agent.</param>
+    /// <param name="token">A cancellation token for prompt generation and the audit request.</param>
     /// <returns>
     /// The parsed audit result, or an <c>UNKNOWN</c> result when no provider is configured or the model response cannot be used.
     /// </returns>
-    public async Task<AssistantAuditResult> AuditAsync(PluginAssistants plugin, CancellationToken token = default, AIStudio.Settings.Provider? fallbackProvider = null)
+    public async Task<AssistantAuditResult> AuditAsync(PluginAssistants plugin, Settings.Provider? fallbackProvider = null, CancellationToken token = default)
     {
         var provider = this.ResolveProvider(fallbackProvider);
         if (provider == AIStudio.Settings.Provider.NONE)

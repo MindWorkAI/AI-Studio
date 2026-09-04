@@ -76,7 +76,7 @@ public sealed class ProviderX() : BaseProvider(LLMProviders.X, new Uri("https://
     /// <inheritdoc />
     public override async Task<ModelLoadResult> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        var result = await this.LoadModels(SecretStoreType.LLM_PROVIDER, ["grok-"], token, apiKeyProvisional);
+        var result = await this.LoadModels(SecretStoreType.LLM_PROVIDER, ["grok-"], apiKeyProvisional, token);
         return result with
         {
             Models = [..result.Models.Where(n => !n.Id.Contains("-image", StringComparison.OrdinalIgnoreCase))]
@@ -103,7 +103,7 @@ public sealed class ProviderX() : BaseProvider(LLMProviders.X, new Uri("https://
     
     #endregion
     
-    private Task<ModelLoadResult> LoadModels(SecretStoreType storeType, string[] prefixes, CancellationToken token, string? apiKeyProvisional = null)
+    private Task<ModelLoadResult> LoadModels(SecretStoreType storeType, string[] prefixes, string? apiKeyProvisional, CancellationToken token)
     {
         return this.LoadModelsResponse<ModelsResponse>(
             storeType,
@@ -116,7 +116,6 @@ public sealed class ProviderX() : BaseProvider(LLMProviders.X, new Uri("https://
                         DisplayName = "Grok 2.0 (latest)",
                     }
                 ]),
-            token,
-            apiKeyProvisional);
+            apiKeyProvisional, token: token);
     }
 }

@@ -210,7 +210,7 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, n
             new Model("claude-3-opus-latest", "Claude 3 Opus (Latest)"),
         };
         
-        var result = await this.LoadModels(SecretStoreType.LLM_PROVIDER, token, apiKeyProvisional);
+        var result = await this.LoadModels(SecretStoreType.LLM_PROVIDER, apiKeyProvisional, token);
         return result with
         {
             // The API is the authority: when it reports a model we also keep as a fallback above,
@@ -238,13 +238,12 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, n
     }
     #endregion
 
-    private Task<ModelLoadResult> LoadModels(SecretStoreType storeType, CancellationToken token, string? apiKeyProvisional = null)
+    private Task<ModelLoadResult> LoadModels(SecretStoreType storeType, string? apiKeyProvisional, CancellationToken token)
     {
         return this.LoadModelsResponse<ModelsResponse>(
             storeType,
             "models?limit=100",
             modelResponse => modelResponse.Data,
-            token,
             apiKeyProvisional,
             failureReasonSelector: (response, _) => response.StatusCode switch
             {
@@ -258,6 +257,6 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, n
                 request.Headers.Add("x-api-key", secretKey);
                 request.Headers.Add("anthropic-version", "2023-06-01");
             },
-            jsonSerializerOptions: JSON_SERIALIZER_OPTIONS);
+            jsonSerializerOptions: JSON_SERIALIZER_OPTIONS, token: token);
     }
 }

@@ -83,7 +83,7 @@ public static partial class PluginFactory
                     }
                     
                     var pluginPath = Path.GetDirectoryName(pluginMainFile)!;
-                    var plugin = await Load(pluginPath, code, cancellationToken);
+                    var plugin = await Load(pluginPath, code, cancellationToken: cancellationToken);
             
                     switch (plugin)
                     {
@@ -356,13 +356,13 @@ public static partial class PluginFactory
 
     /// <param name="pluginPath">The directory the plugin is located in, or null when the code has no directory yet.</param>
     /// <param name="code">The Lua code of the plugin's main file.</param>
-    /// <param name="cancellationToken">Cancellation token for running the Lua code.</param>
     /// <param name="allowedBaseDirectory">
-    /// The directory the plugin path must be nested in. Without it, the installed plugins directory
-    /// is used. Validating a plugin before its installation needs this, because the plugin lives in
-    /// a staging directory at that point and could not load any of its own Lua modules otherwise.
+    ///     The directory the plugin path must be nested in. Without it, the installed plugins directory
+    ///     is used. Validating a plugin before its installation needs this, because the plugin lives in
+    ///     a staging directory at that point and could not load any of its own Lua modules otherwise.
     /// </param>
-    public static async Task<PluginBase> Load(string? pluginPath, string code, CancellationToken cancellationToken = default, string? allowedBaseDirectory = null)
+    /// <param name="cancellationToken">Cancellation token for running the Lua code.</param>
+    public static async Task<PluginBase> Load(string? pluginPath, string code, string? allowedBaseDirectory = null, CancellationToken cancellationToken = default)
     {
         if(ForbiddenPlugins.Check(code) is { IsForbidden: true } forbiddenState)
             return new NoPlugin($"This plugin is forbidden: {forbiddenState.Message}");

@@ -87,7 +87,7 @@ public sealed class ProviderOpenRouter() : BaseProvider(LLMProviders.OPEN_ROUTER
     /// <inheritdoc />
     public override Task<ModelLoadResult> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModels(SecretStoreType.LLM_PROVIDER, token, apiKeyProvisional);
+        return this.LoadModels(SecretStoreType.LLM_PROVIDER, apiKeyProvisional, token);
     }
 
     /// <inheritdoc />
@@ -99,7 +99,7 @@ public sealed class ProviderOpenRouter() : BaseProvider(LLMProviders.OPEN_ROUTER
     /// <inheritdoc />
     public override Task<ModelLoadResult> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadEmbeddingModels(token, apiKeyProvisional);
+        return this.LoadEmbeddingModels(apiKeyProvisional, token);
     }
     
     /// <inheritdoc />
@@ -110,7 +110,7 @@ public sealed class ProviderOpenRouter() : BaseProvider(LLMProviders.OPEN_ROUTER
 
     #endregion
 
-    private Task<ModelLoadResult> LoadModels(SecretStoreType storeType, CancellationToken token, string? apiKeyProvisional = null)
+    private Task<ModelLoadResult> LoadModels(SecretStoreType storeType, string? apiKeyProvisional, CancellationToken token)
     {
         return this.LoadModelsResponse<OpenRouterModelsResponse>(
             storeType,
@@ -118,29 +118,29 @@ public sealed class ProviderOpenRouter() : BaseProvider(LLMProviders.OPEN_ROUTER
             modelResponse => modelResponse.Data
                 .Select(n => new Model(n.Id, n.Name))
                 .Where(model => model.IsChatModel()),
-            token,
             apiKeyProvisional,
             requestConfigurator: (request, secretKey) =>
             {
                 request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
                 request.Headers.Add("HTTP-Referer", PROJECT_WEBSITE);
                 request.Headers.Add("X-Title", PROJECT_NAME);
-            });
+            },
+            token: token);
     }
 
-    private Task<ModelLoadResult> LoadEmbeddingModels(CancellationToken token, string? apiKeyProvisional = null)
+    private Task<ModelLoadResult> LoadEmbeddingModels(string? apiKeyProvisional, CancellationToken token)
     {
         return this.LoadModelsResponse<OpenRouterModelsResponse>(
             SecretStoreType.EMBEDDING_PROVIDER,
             "embeddings/models",
             modelResponse => modelResponse.Data.Select(n => new Model(n.Id, n.Name)),
-            token,
             apiKeyProvisional,
             requestConfigurator: (request, secretKey) =>
             {
                 request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", secretKey);
                 request.Headers.Add("HTTP-Referer", PROJECT_WEBSITE);
                 request.Headers.Add("X-Title", PROJECT_NAME);
-            });
+            },
+            token: token);
     }
 }

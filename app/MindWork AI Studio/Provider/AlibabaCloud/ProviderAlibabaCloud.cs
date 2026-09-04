@@ -103,7 +103,7 @@ public sealed class ProviderAlibabaCloud() : BaseProvider(LLMProviders.ALIBABA_C
             new Model("qwen2.5-vl-3b-instruct", "Qwen2.5-VL 3b"),  
         };
         
-        var result = await this.LoadModels(["q"], SecretStoreType.LLM_PROVIDER, token, apiKeyProvisional);
+        var result = await this.LoadModels(["q"], SecretStoreType.LLM_PROVIDER, apiKeyProvisional, token);
         return result with
         {
             // The API is the authority: when it reports a model we also keep as a fallback above,
@@ -127,7 +127,7 @@ public sealed class ProviderAlibabaCloud() : BaseProvider(LLMProviders.ALIBABA_C
             new Model("text-embedding-v3", "text-embedding-v3"),
         };
         
-        var result = await this.LoadModels(["text-embedding-"], SecretStoreType.EMBEDDING_PROVIDER, token, apiKeyProvisional);
+        var result = await this.LoadModels(["text-embedding-"], SecretStoreType.EMBEDDING_PROVIDER, apiKeyProvisional, token);
         return result with
         {
             // The API is the authority: when it reports a model we also keep as a fallback above,
@@ -148,14 +148,12 @@ public sealed class ProviderAlibabaCloud() : BaseProvider(LLMProviders.ALIBABA_C
 
     #endregion
     
-    private Task<ModelLoadResult> LoadModels(string[] prefixes, SecretStoreType storeType, CancellationToken token, string? apiKeyProvisional = null)
+    private Task<ModelLoadResult> LoadModels(string[] prefixes, SecretStoreType storeType, string? apiKeyProvisional, CancellationToken token)
     {
         return this.LoadModelsResponse<ModelsResponse>(
             storeType,
             "models",
             modelResponse => modelResponse.Data.Where(model => prefixes.Any(prefix => model.Id.StartsWith(prefix, StringComparison.InvariantCulture))),
-            token,
-            apiKeyProvisional);
+            apiKeyProvisional, token: token);
     }
-    
 }

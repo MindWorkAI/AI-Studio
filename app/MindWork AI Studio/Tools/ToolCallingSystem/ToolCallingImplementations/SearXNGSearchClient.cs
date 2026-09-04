@@ -278,7 +278,11 @@ internal sealed class SearXNGSearchClient
         return uriBuilder.Uri;
     }
 
-
+    /// <remarks>
+    /// Two cancellation tokens, so one of them cannot be the last parameter: the request token
+    /// carries the search timeout, while the caller token says the user gave up. Telling them
+    /// apart is what turns a cancellation into either a timeout message or a silent abort.
+    /// </remarks>
     private static async Task<HttpResponseMessage> SendAsync(
         HttpClient httpClient,
         HttpRequestMessage request,

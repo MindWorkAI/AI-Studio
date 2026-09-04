@@ -80,7 +80,7 @@ public class ProviderGroq() : BaseProvider(LLMProviders.GROQ, new Uri("https://a
     /// <inheritdoc />
     public override async Task<ModelLoadResult> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        var result = await this.LoadModels(SecretStoreType.LLM_PROVIDER, token, apiKeyProvisional);
+        var result = await this.LoadModels(SecretStoreType.LLM_PROVIDER, apiKeyProvisional, token);
         return result with
         {
             Models = [..result.Models.Where(model => model.IsChatModel())]
@@ -102,7 +102,7 @@ public class ProviderGroq() : BaseProvider(LLMProviders.GROQ, new Uri("https://a
     /// <inheritdoc />
     public override async Task<ModelLoadResult> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        var result = await this.LoadModels(SecretStoreType.TRANSCRIPTION_PROVIDER, token, apiKeyProvisional);
+        var result = await this.LoadModels(SecretStoreType.TRANSCRIPTION_PROVIDER, apiKeyProvisional, token);
         return result with
         {
             Models = [..result.Models.Where(model => model.IsTranscriptionModel())]
@@ -111,13 +111,12 @@ public class ProviderGroq() : BaseProvider(LLMProviders.GROQ, new Uri("https://a
     
     #endregion
 
-    private Task<ModelLoadResult> LoadModels(SecretStoreType storeType, CancellationToken token, string? apiKeyProvisional = null)
+    private Task<ModelLoadResult> LoadModels(SecretStoreType storeType, string? apiKeyProvisional, CancellationToken token)
     {
         return this.LoadModelsResponse<ModelsResponse>(
             storeType,
             "models",
             modelResponse => modelResponse.Data,
-            token,
-            apiKeyProvisional);
+            apiKeyProvisional, token: token);
     }
 }

@@ -20,7 +20,6 @@ public sealed class WebPageRetrievalService(HTMLParser htmlParser)
         {
             page = await htmlParser.LoadWebPageAsync(
                 url,
-                token,
                 options.TimeoutSeconds,
                 async (candidateUrl, validationToken) =>
                 {
@@ -37,7 +36,8 @@ public sealed class WebPageRetrievalService(HTMLParser htmlParser)
                     var shouldTryOsSso = ShouldTryOsSso(url, candidateUrl, addresses, options);
                     triedOsSso |= shouldTryOsSso;
                     return shouldTryOsSso;
-                });
+                },
+                token: token);
         }
         catch (OperationCanceledException) when (!token.IsCancellationRequested)
         {

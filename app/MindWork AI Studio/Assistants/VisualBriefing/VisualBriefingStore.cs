@@ -107,17 +107,16 @@ public sealed partial class VisualBriefingStore(
         string json,
         CancellationToken token)
     {
-        await WriteTextAtomicAsync(path, json, token, overwrite: false);
+        await WriteTextAtomicAsync(path, json, overwrite: false, token);
     }
 
     /// <summary>
     /// Defines <c>WriteTextAtomicAsync</c> for the visual briefing feature.
     /// </summary>
-    private static async Task WriteTextAtomicAsync(
-        string targetPath,
+    private static async Task WriteTextAtomicAsync(string targetPath,
         string content,
-        CancellationToken token,
-        bool overwrite = true)
+        bool overwrite,
+        CancellationToken token)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
         var temporaryPath = $"{targetPath}.tmp-{Guid.NewGuid():N}";

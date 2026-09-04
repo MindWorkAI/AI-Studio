@@ -95,7 +95,7 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
             return InitialFailure(issue);
 
         var fullLua = parsedResponse.FullLua.Trim();
-        var generatedPlugin = await PluginFactory.Load(null, fullLua, token);
+        var generatedPlugin = await PluginFactory.Load(null, fullLua, cancellationToken: token);
         if (generatedPlugin is not PluginAssistants generatedAssistant || !generatedAssistant.IsValid)
             return InitialFailure(TB("The generated assistant plugin is not a valid assistant plugin."));
 
@@ -176,7 +176,7 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
         // answer. Loading it anyway keeps a broken launcher from reaching the user's plugin
         // folder, and the log says where to look:
         //
-        var generatedPlugin = await PluginFactory.Load(null, fullLua, token);
+        var generatedPlugin = await PluginFactory.Load(null, fullLua, cancellationToken: token);
         if (generatedPlugin is not PluginAssistants generatedLauncher || !generatedLauncher.IsValid || !generatedLauncher.StartsChatDirectly)
         {
             logger.LogError($"The chat launcher written for plugin '{request.PluginId}' is not a valid launcher plugin.");
@@ -217,7 +217,7 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
             return RevisionFailure(issue);
 
         var revisedLua = parsedResponse.FullLua.Trim();
-        var parsedRevision = await PluginFactory.Load(plugin.PluginPath, revisedLua, token);
+        var parsedRevision = await PluginFactory.Load(plugin.PluginPath, revisedLua, cancellationToken: token);
         if (parsedRevision is not PluginAssistants revisedAssistant || !revisedAssistant.IsValid)
             return RevisionFailure(TB("The revised assistant plugin is not a valid assistant plugin."));
 

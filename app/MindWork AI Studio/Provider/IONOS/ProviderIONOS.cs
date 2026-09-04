@@ -84,7 +84,7 @@ public sealed class ProviderIONOS() : BaseProvider(LLMProviders.IONOS, new Uri("
     /// <inheritdoc />
     public override Task<ModelLoadResult> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModels(SecretStoreType.LLM_PROVIDER, model => model.IsChatModel(), token, apiKeyProvisional);
+        return this.LoadModels(SecretStoreType.LLM_PROVIDER, model => model.IsChatModel(), apiKeyProvisional, token);
     }
 
     /// <inheritdoc />
@@ -96,7 +96,7 @@ public sealed class ProviderIONOS() : BaseProvider(LLMProviders.IONOS, new Uri("
     /// <inheritdoc />
     public override Task<ModelLoadResult> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModels(SecretStoreType.EMBEDDING_PROVIDER, model => model.IsEmbeddingModel(), token, apiKeyProvisional);
+        return this.LoadModels(SecretStoreType.EMBEDDING_PROVIDER, model => model.IsEmbeddingModel(), apiKeyProvisional, token);
     }
 
     /// <inheritdoc />
@@ -117,10 +117,10 @@ public sealed class ProviderIONOS() : BaseProvider(LLMProviders.IONOS, new Uri("
     /// </remarks>
     /// <param name="storeType">The secret store to read the API key from.</param>
     /// <param name="isWantedKind">Decides whether a model belongs to the requested kind.</param>
-    /// <param name="token">The cancellation token.</param>
     /// <param name="apiKeyProvisional">An API key which was not stored yet.</param>
+    /// <param name="token">The cancellation token.</param>
     /// <returns>The models of the requested kind.</returns>
-    private Task<ModelLoadResult> LoadModels(SecretStoreType storeType, Func<Model, bool> isWantedKind, CancellationToken token, string? apiKeyProvisional = null)
+    private Task<ModelLoadResult> LoadModels(SecretStoreType storeType, Func<Model, bool> isWantedKind, string? apiKeyProvisional, CancellationToken token)
     {
         return this.LoadModelsResponse<ModelsResponse>(
             storeType,
@@ -128,7 +128,6 @@ public sealed class ProviderIONOS() : BaseProvider(LLMProviders.IONOS, new Uri("
             modelResponse => modelResponse.Data
                 .Where(model => !model.Id.EndsWith(MIGRATION_ALIAS_SUFFIX, StringComparison.OrdinalIgnoreCase))
                 .Where(isWantedKind),
-            token,
-            apiKeyProvisional);
+            apiKeyProvisional, token: token);
     }
 }

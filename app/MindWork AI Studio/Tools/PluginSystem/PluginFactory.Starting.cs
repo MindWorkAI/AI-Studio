@@ -179,7 +179,7 @@ public static partial class PluginFactory
         }
 
         var code = await File.ReadAllTextAsync(pluginMainFile, Encoding.UTF8, cancellationToken);
-        var plugin = await Load(meta.LocalPath, code, cancellationToken);
+        var plugin = await Load(meta.LocalPath, code, cancellationToken: cancellationToken);
         plugin.PluginPath = meta.LocalPath;
         if (plugin is NoPlugin noPlugin)
         {

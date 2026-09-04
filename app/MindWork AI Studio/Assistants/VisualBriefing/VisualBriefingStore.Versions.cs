@@ -132,8 +132,7 @@ public sealed partial class VisualBriefingStore
             await WriteTextAtomicAsync(
                 Path.Combine(this.VersionsDirectory(manifest.BriefingId), version.FileName),
                 html,
-                token,
-                overwrite: false);
+                overwrite: false, token);
             
             manifest.Versions.Add(version);
             if (request.EditMode is not (VisualBriefingEditMode.CHANGE_DESIGN or VisualBriefingEditMode.RECOMPILE))
@@ -357,7 +356,7 @@ public sealed partial class VisualBriefingStore
                     var storedVersion = await this.OpenIntegrityCheckedVersionAsync(existing.BriefingId, knownRevision.RevisionId, token);
                     if (storedVersion is null)
                     {
-                        await WriteTextAtomicAsync(this.VersionPath(existing.BriefingId, knownRevision), html, token);
+                        await WriteTextAtomicAsync(this.VersionPath(existing.BriefingId, knownRevision), html, overwrite: true, token);
                         var restoredHashes = ComputeSectionHashes(parts);
                         knownRevision.DataHash = restoredHashes.DataHash;
                         knownRevision.AssetHash = restoredHashes.AssetHash;
@@ -415,8 +414,7 @@ public sealed partial class VisualBriefingStore
             await WriteTextAtomicAsync(
                 Path.Combine(this.VersionsDirectory(existing.BriefingId), version.FileName),
                 html,
-                token,
-                overwrite: false);
+                overwrite: false, token);
             
             existing.Versions.Add(version);
             existing.ModifiedAtUtc = DateTimeOffset.UtcNow;

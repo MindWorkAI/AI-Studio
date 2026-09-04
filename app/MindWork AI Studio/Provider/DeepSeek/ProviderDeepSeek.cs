@@ -75,7 +75,7 @@ public sealed class ProviderDeepSeek() : BaseProvider(LLMProviders.DEEP_SEEK, ne
     /// <inheritdoc />
     public override Task<ModelLoadResult> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModels(SecretStoreType.LLM_PROVIDER, token, apiKeyProvisional);
+        return this.LoadModels(SecretStoreType.LLM_PROVIDER, apiKeyProvisional, token);
     }
 
     /// <inheritdoc />
@@ -98,13 +98,12 @@ public sealed class ProviderDeepSeek() : BaseProvider(LLMProviders.DEEP_SEEK, ne
 
     #endregion
 
-    private Task<ModelLoadResult> LoadModels(SecretStoreType storeType, CancellationToken token, string? apiKeyProvisional = null)
+    private Task<ModelLoadResult> LoadModels(SecretStoreType storeType, string? apiKeyProvisional, CancellationToken token)
     {
         return this.LoadModelsResponse<ModelsResponse>(
             storeType,
             "models",
             modelResponse => modelResponse.Data.Where(model => model.IsChatModel()),
-            token,
-            apiKeyProvisional);
+            apiKeyProvisional, token: token);
     }
 }
