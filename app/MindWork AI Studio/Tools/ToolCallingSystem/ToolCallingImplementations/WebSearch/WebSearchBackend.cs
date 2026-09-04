@@ -12,4 +12,5 @@ public enum WebSearchBackend
 {
     SEARXNG,
     STAAN,
+    TAVILY,
 }
