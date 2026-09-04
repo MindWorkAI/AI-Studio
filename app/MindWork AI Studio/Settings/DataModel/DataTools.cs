@@ -41,8 +41,11 @@ public sealed class DataTools(Expression<Func<Data, DataTools>>? configSelection
     /// setting only works for the tools AI Studio ships. Tools defined by plugin authors are not
     /// known at compile time, yet an organization has to be able to configure them the same way.
     /// <br/><br/>
-    /// Secrets never travel this way. They belong in the operating system's keyring, which a
-    /// configuration file cannot reach.
+    /// A secret field travels here too, but only encrypted with the enterprise secret, in the
+    /// same "ENC:v1:" form the providers use for their API keys. What is stored is therefore
+    /// ciphertext, worthless without a secret that lives outside every deployed file. A plaintext
+    /// secret is refused rather than used, and a secret is never accepted as a pre-filled default
+    /// — see the tool settings service for both rules.
     /// </remarks>
     public Dictionary<string, string> LockedToolSettings { get; set; } = ManagedConfiguration.Register(
         configSelection,

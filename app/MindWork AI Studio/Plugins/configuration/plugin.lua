@@ -709,20 +709,50 @@ CONFIG["SETTINGS"] = {}
 --   LockedToolSettings  - the user cannot change it, and it is reapplied on every update.
 --   DefaultToolSettings - pre-fills the setting; a value the user saves afterwards wins.
 --
--- Secrets never belong here. A tool field marked as secret is kept in the operating system's
--- keyring, which a configuration file cannot write to.
+-- A tool field marked as secret, such as an API key, can be rolled out as well — but only
+-- encrypted with the enterprise encryption secret, in the same "ENC:v1:<base64>" form the
+-- providers above use, and only through LockedToolSettings. A locked secret leaves whatever
+-- the user entered untouched, so their own key returns when you stop deploying yours. A
+-- plaintext secret is refused with a warning in the log rather than used.
 --
--- Field names of the Web Search tool:
+-- Field names of the Web Search tool. At least one of its search services has to be configured
+-- before the tool can be used; which one you pick is up to you, since all three can be rolled
+-- out from here:
 --   searxng.baseUrl                  SearXNG HTTP(S) root URL or /search endpoint. The instance
 --                                    must have the JSON format enabled, i.e. "json" listed under
 --                                    search.formats in its settings.yml. Public instances usually
 --                                    serve only the web interface and block automated requests,
 --                                    so use an instance your organization operates.
+--   staan.apiKey                     Secret. Staan API key, encrypted as described above and set
+--                                    through LockedToolSettings, or entered by the user in the
+--                                    tool's settings dialog.
+--   staan.market                     Which market Staan searches when the AI model asks for a
+--                                    language Staan does not offer, or for none in particular.
+--                                    Staan searches one market at a time and cannot search
+--                                    without one. Allowed values are: de-de, en-us, fr-fr.
+--   tavily.apiKey                    Secret. Tavily API key, encrypted as described above and set
+--                                    through LockedToolSettings, or entered by the user in the
+--                                    tool's settings dialog.
+--   tavily.searchDepth               How thoroughly Tavily searches. A basic search costs one
+--                                    request of the account's monthly quota, an advanced search
+--                                    costs two. Allowed values are: basic, advanced.
+--   backendStrategy                  What to do when more than one search service is configured.
+--                                    FAILOVER asks them one after another until one returns hits.
+--                                    PARALLEL asks all of them at once and combines their
+--                                    results, which uses one request of every service per search.
+--                                    SPECIFIC asks only the preferred service. The default is
+--                                    FAILOVER. Allowed values are: FAILOVER, PARALLEL, SPECIFIC.
+--   primaryBackend                   Which search service to ask first, and the only one asked
+--                                    with the SPECIFIC strategy. Left empty, the services are
+--                                    asked in a fixed order. Allowed values are: SEARXNG, STAAN,
+--                                    TAVILY.
 --   defaultLanguage                  Required. IETF language tag such as "de-DE", or "all" for no
 --                                    restriction. Without a language many search engines return
 --                                    no results at all, so the tool counts as unconfigured while
 --                                    this is empty.
---   defaultSafeSearch                How strictly the search engine filters explicit results.
+--   defaultSafeSearch                How strictly the search services filter explicit results. A
+--                                    service that cannot filter at all is not asked while this is
+--                                    set to MODERATE or STRICT, which currently applies to Staan.
 --                                    Allowed values are: OFF, MODERATE, STRICT.
 --   maxResults                       Result count, as an integer string.
 --   searchTimeoutSeconds             Search request timeout in seconds.
@@ -745,12 +775,15 @@ CONFIG["SETTINGS"] = {}
 -- CONFIG["SETTINGS"]["DataTools.LockedToolSettings"] = {
 --     ["web_search.searxng.baseUrl"] = "https://searxng.example.org/",
 --     ["web_search.defaultLanguage"] = "de-DE",
+--     ["web_search.backendStrategy"] = "FAILOVER",
+--     ["web_search.tavily.apiKey"] = "ENC:v1:<base64-encoded encrypted data>",
 --     ["read_web_page.allowedPrivateHosts"] = "example.org, *.example.org"
 -- }
 --
 -- CONFIG["SETTINGS"]["DataTools.DefaultToolSettings"] = {
 --     ["web_search.maxResults"] = "5",
 --     ["web_search.defaultSafeSearch"] = "MODERATE",
+--     ["web_search.tavily.searchDepth"] = "basic",
 --     ["read_web_page.timeoutSeconds"] = "30"
 -- }
 

@@ -1,9 +1,10 @@
 using AIStudio.Settings;
+using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Services;
 
 namespace AIStudio.Tools.ToolCallingSystem;
 
-public sealed class ToolSettingsService(SettingsManager settingsManager, RustService rustService)
+public sealed class ToolSettingsService(SettingsManager settingsManager, RustService rustService, ILogger<ToolSettingsService> logger)
 {
     /// <summary>
     /// Builds the key under which an organization's configuration addresses one tool setting.
@@ -15,8 +16,13 @@ public sealed class ToolSettingsService(SettingsManager settingsManager, RustSer
     /// </summary>
     /// <remarks>
     /// Three sources, in this order: a value an organization locked wins over everything, then
-    /// the value the user saved, then a default an organization pre-filled. Secrets never come
-    /// from a configuration file — they live in the operating system's keyring.
+    /// the value the user saved, then a default an organization pre-filled.<br/><br/>
+    /// A secret knows only two of them. It comes from the operating system's keyring, where what
+    /// the user typed lives, or — locked — from the organization's configuration, encrypted with
+    /// the enterprise secret. There is deliberately no pre-filled default for a secret: a
+    /// pre-filled value is one the user may save as their own, which would copy the
+    /// organization's key into their keyring, where removing the configuration plugin could no
+    /// longer take it back.
     /// </remarks>
     public async Task<Dictionary<string, string>> GetSettingsAsync(ToolDefinition definition)
     {
@@ -29,8 +35,23 @@ public sealed class ToolSettingsService(SettingsManager settingsManager, RustSer
         {
             var fieldName = property.Key;
             var fieldDefinition = property.Value;
+            var managedKey = ManagedSettingKey(definition.Id, fieldName);
             if (fieldDefinition.Secret)
             {
+                //
+                // A locked secret belongs to the organization, and the user's own is then not
+                // even read: whoever fixed this field decided which key is used, and reaching
+                // for another one would undo that decision. The keyring keeps what the user
+                // typed, untouched, which is what hands it back when the plugin is gone.
+                //
+                if (lockedSettings.TryGetValue(managedKey, out var lockedSecret))
+                {
+                    if (this.TryDecryptManagedSecret(definition.Id, fieldName, lockedSecret, out var managedSecret))
+                        values[fieldName] = managedSecret;
+
+                    continue;
+                }
+
                 var response = await rustService.GetSecret(new ToolSettingsSecretId(definition.Id, fieldName), SecretStoreType.TOOL_SETTINGS, isTrying: true);
                 if (response.Success)
                     values[fieldName] = await response.Secret.Decrypt(Program.ENCRYPTION);
@@ -38,7 +59,6 @@ public sealed class ToolSettingsService(SettingsManager settingsManager, RustSer
                 continue;
             }
 
-            var managedKey = ManagedSettingKey(definition.Id, fieldName);
             if (lockedSettings.TryGetValue(managedKey, out var lockedValue))
                 values[fieldName] = lockedValue;
             else if (storedValues?.TryGetValue(fieldName, out var storedValue) is true)
@@ -137,4 +157,49 @@ public sealed class ToolSettingsService(SettingsManager settingsManager, RustSer
     /// </summary>
     public bool IsFieldLocked(ToolDefinition definition, string fieldName) =>
         settingsManager.ConfigurationData.Tools.LockedToolSettings.ContainsKey(ManagedSettingKey(definition.Id, fieldName));
+
+    /// <summary>
+    /// Decrypts a secret an organization deployed through a configuration plugin.
+    /// </summary>
+    /// <remarks>
+    /// The value arrives encrypted with the enterprise secret and is decrypted here, on the way
+    /// to the tool, rather than copied into the keyring. A configuration file holding ciphertext
+    /// is worth nothing without that secret, which lives outside every file AI Studio deploys —
+    /// in the registry or an environment variable.<br/><br/>
+    /// Only the encrypted form is accepted: a plaintext secret in a configuration file would be
+    /// readable by everyone the file reaches, so it is refused rather than used. That is the same
+    /// rule the LLM providers and the data sources follow for their keys.<br/><br/>
+    /// A secret that cannot be decrypted leaves the field empty, which makes the tool count as
+    /// unconfigured and say so. The alternative — searching with somebody else's key — would be
+    /// worse than not searching.
+    /// </remarks>
+    private bool TryDecryptManagedSecret(string toolId, string fieldName, string? encryptedSecret, out string secret)
+    {
+        secret = string.Empty;
+        var managedKey = ManagedSettingKey(toolId, fieldName);
+        if (string.IsNullOrWhiteSpace(encryptedSecret))
+            return false;
+
+        if (!EnterpriseEncryption.IsEncrypted(encryptedSecret))
+        {
+            logger.LogWarning("The managed tool setting '{ManagedKey}' holds a plaintext secret. Only encrypted secrets, starting with 'ENC:v1:', are supported.", managedKey);
+            return false;
+        }
+
+        var encryption = PluginFactory.EnterpriseEncryption;
+        if (encryption?.IsAvailable is not true)
+        {
+            logger.LogWarning("The managed tool setting '{ManagedKey}' holds an encrypted secret, but no enterprise encryption secret is configured.", managedKey);
+            return false;
+        }
+
+        if (!encryption.TryDecrypt(encryptedSecret, out var decryptedSecret))
+        {
+            logger.LogWarning("Failed to decrypt the managed tool setting '{ManagedKey}'. The enterprise encryption secret may be the wrong one.", managedKey);
+            return false;
+        }
+
+        secret = decryptedSecret;
+        return true;
+    }
 }
