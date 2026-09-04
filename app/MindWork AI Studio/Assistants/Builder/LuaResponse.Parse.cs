@@ -109,10 +109,15 @@ internal sealed partial class LuaResponse
         "FORM" => !string.IsNullOrWhiteSpace(assistant.SystemPrompt) &&
                   !string.IsNullOrWhiteSpace(assistant.SubmitText) &&
                   assistant.AllowAiStudioProfiles.HasValue &&
+                  IsValidToolIds(assistant.ToolIds) &&
                   assistant.Launch is null,
+
+        // A launcher names its tools inside launch, so the same field one level up would be a
+        // second, competing selection:
         "CHAT_LAUNCHER" => assistant.SystemPrompt is null &&
                            assistant.SubmitText is null &&
                            assistant.AllowAiStudioProfiles is null &&
+                           assistant.ToolIds is null &&
                            IsValidChatLaunchMetadata(assistant.Launch),
         _ => false,
     };
@@ -133,12 +138,18 @@ internal sealed partial class LuaResponse
              launch.DataSourceIds.Distinct(StringComparer.OrdinalIgnoreCase).Count() != launch.DataSourceIds.Length))
             return false;
 
-        // Tool IDs are plain names, so only their shape can be checked here:
-        return launch.ToolIds is null ||
-               launch.ToolIds.Length > 0 &&
-               launch.ToolIds.All(id => !string.IsNullOrWhiteSpace(id)) &&
-               launch.ToolIds.Distinct(StringComparer.Ordinal).Count() == launch.ToolIds.Length;
+        return IsValidToolIds(launch.ToolIds);
     }
+
+    /// <remarks>
+    /// Tool IDs are plain names, so only their shape can be checked here. Whether the named tools
+    /// exist is decided later, against the tools this AI Studio actually has.
+    /// </remarks>
+    private static bool IsValidToolIds(string[]? toolIds) =>
+        toolIds is null ||
+        toolIds.Length > 0 &&
+        toolIds.All(id => !string.IsNullOrWhiteSpace(id)) &&
+        toolIds.Distinct(StringComparer.Ordinal).Count() == toolIds.Length;
 
     private static bool IsOptionalGuid(string? value, bool allowEmpty) => value is null ||
         Guid.TryParse(value, out var parsed) && (allowEmpty || parsed != Guid.Empty);
