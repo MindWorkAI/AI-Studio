@@ -111,7 +111,10 @@ public partial class AssistantBatchProcessing
             Blocks = [],
             RuntimeComponent = this.Component,
             RuntimeSelectedToolIds = this.GetRunnableToolIds(),
-            RuntimeToolsAreAssistantManaged = this.AssistantManagedToolIds is not null,
+
+            // Always true here, unlike in the assistant base: a batch run takes its tools from the
+            // selected policy or from its own field, never from the tool selection in the footer.
+            RuntimeToolsAreAssistantManaged = true,
         };
 
         var userPrompt = new ContentText
