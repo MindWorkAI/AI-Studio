@@ -24,7 +24,7 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
     public override string InstanceName { get; set; } = "Self-hosted";
 
     /// <inheritdoc />
-    public override bool HasModelLoadingCapability => host is Host.OLLAMA or Host.LM_STUDIO or Host.VLLM or Host.LLAMA_CPP;
+    public override bool HasModelLoadingCapability => host is Host.OLLAMA or Host.LM_STUDIO or Host.VLLM or Host.LLAMA_CPP or Host.LLMMAN;
     
     /// <inheritdoc />
     public override async IAsyncEnumerable<ContentStreamChunk> StreamChatCompletion(Provider.Model chatModel, ChatThread chatThread, SettingsManager settingsManager, [EnumeratorCancellation] CancellationToken token = default)
@@ -101,6 +101,7 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
                 case Host.LM_STUDIO:
                 case Host.OLLAMA:
                 case Host.VLLM:
+                case Host.LLMMAN:
                     return await this.LoadModels( SecretStoreType.LLM_PROVIDER, ["embed"], [], apiKeyProvisional, token);
             }
 
@@ -128,6 +129,7 @@ public sealed class ProviderSelfHosted(Host host, string hostname) : BaseProvide
                 case Host.LM_STUDIO:
                 case Host.OLLAMA:
                 case Host.VLLM:
+                case Host.LLMMAN:
                     return await this.LoadModels( SecretStoreType.EMBEDDING_PROVIDER, [], ["embed"], apiKeyProvisional, token);
             }
 
