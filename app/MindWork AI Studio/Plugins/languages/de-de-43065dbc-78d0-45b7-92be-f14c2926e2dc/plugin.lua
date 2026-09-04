@@ -1137,9 +1137,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTA
 -- Preselect a profile
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T2322771068"] = "Profil vorauswählen"
 
--- Not all tools of this policy can be used with the selected AI provider: {0}. Please choose a provider with a higher confidence level to use all tools of this policy.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T2346179856"] = "Nicht alle Werkzeuge dieses Regelwerks können mit dem ausgewählten KI-Anbieter verwendet werden: \"{0}\". Bitte wählen Sie einen Anbieter mit einer höheren Vertrauensstufe, um alle Werkzeuge dieses Regelwerks nutzen zu können."
-
 -- The analysis rules specify what the AI should pay particular attention to while reviewing the documents you provide, and which aspects it should highlight or save. For example, if you want to extract the potential of green hydrogen for agriculture from a variety of general publications, you can explicitly define this in the analysis rules.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T238145218"] = "Die Analyseregeln legen fest, worauf die KI bei der Prüfung der von Ihnen bereitgestellten Dokumente besonders achten und welche Aspekte sie hervorheben oder speichern soll. Wenn Sie beispielsweise das Potenzial von grünem Wasserstoff für die Landwirtschaft aus einer Vielzahl allgemeiner Publikationen extrahieren möchten, können Sie dies in den Analyseregeln explizit definieren."
 
@@ -1227,9 +1224,6 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTA
 -- Delete document analysis policy
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T4293094335"] = "Regelwerk löschen"
 
--- This policy uses tools, but the selected model cannot use tools. The analysis runs without them. Please choose a model which supports tools.
-UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T454153019"] = "Dieses Regelwerk verwendet Werkzeuge, aber das ausgewählte Modell kann keine Werkzeuge verwenden. Die Analyse wird ohne sie ausgeführt. Bitte wählen Sie ein Modell, das Werkzeuge unterstützt."
-
 -- Please provide a description of your output rules. This rules will be used to instruct the AI on how to format the output of the analysis.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTANT::T652187065"] = "Bitte geben Sie eine Beschreibung der Regeln für die Ausgabe an. Diese Regeln werden verwendet, um die KI anzuweisen, wie die Ausgabe der Analyse formatiert werden soll."
 
@@ -1253,6 +1247,12 @@ UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DOCUMENTANALYSIS::DOCUMENTANALYSISASSISTA
 
 -- Revise Assistant
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DYNAMIC::ASSISTANTDYNAMIC::T1070696505"] = "Assistent überarbeiten"
+
+-- Tools of this assistant
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DYNAMIC::ASSISTANTDYNAMIC::T1456501183"] = "Werkzeuge dieses Assistenten"
+
+-- The author of this assistant chose these tools, so they cannot be changed here. Every tool has to meet the confidence requirements of the selected provider, so a tool may stay unavailable even when this assistant names it.
+UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DYNAMIC::ASSISTANTDYNAMIC::T1835492160"] = "Der Autor dieses Assistenten hat diese Werkzeuge ausgewählt. Daher können sie hier nicht geändert werden. Jedes Werkzeug muss die Zuverlässigkeitsanforderungen des ausgewählten Anbieters erfüllen. Deshalb kann ein Werkzeug nicht verfügbar bleiben, auch wenn dieser Assistent es benennt."
 
 -- No assistant plugin are currently installed.
 UI_TEXT_CONTENT["AISTUDIO::ASSISTANTS::DYNAMIC::ASSISTANTDYNAMIC::T1913566603"] = "Derzeit sind keine Assistant-Plugins installiert."
@@ -3390,11 +3390,17 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T1841954939"
 -- Company approved
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T2036497459"] = "Organisationsfreigabe"
 
+-- Uses 1 tool
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T2143098104"] = "Verwendet 1 Werkzeug"
+
 -- Approved name
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T2282386733"] = "Genehmigter Name"
 
 -- Required minimum
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T2354026284"] = "Erforderliches Minimum"
+
+-- Tools
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T2499909372"] = "Werkzeuge"
 
 -- Audit provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T2757790517"] = "Audit-Anbieter"
@@ -3413,6 +3419,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T3240350158"
 
 -- Confidence
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T3243388657"] = "Gewissheit"
+
+-- Uses {0} tools
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T3368476832"] = "Verwendet {0} Werkzeuge"
 
 -- Unknown
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ASSISTANTPLUGINSECURITYCARD::T3424652889"] = "Unbekannt"
@@ -3779,6 +3788,12 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::HALLUZINATIONREMINDER::T3528806904"] = "L
 
 -- Issues
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::ISSUES::T3229841001"] = "Probleme"
+
+-- Not all tools selected for this run can be used with the chosen AI provider: {0}. Please choose a provider with a higher confidence level to use all of them.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEDTOOLSWARNING::T2430645786"] = "Nicht alle für diesen Durchlauf ausgewählten Werkzeuge können mit dem gewählten KI-Anbieter „{0}“ verwendet werden. Bitte wählen Sie einen Anbieter mit einer höheren Vertrauensstufe, um alle Werkzeuge zu nutzen."
+
+-- Tools were selected for this run, but the chosen model cannot use tools. It runs without them. Please choose a model which supports tools.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEDTOOLSWARNING::T3008114108"] = "Für diesen Durchlauf wurden Werkzeuge ausgewählt, aber das ausgewählte Modell kann keine Werkzeuge verwenden. Es wird ohne sie ausgeführt. Bitte wählen Sie ein Modell, das Werkzeuge unterstützt."
 
 -- Your Pandoc installation meets the requirements.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::MANAGEPANDOCDEPENDENCY::T1167365374"] = "Ihre Pandoc-Installation erfüllt die Anforderungen."
@@ -10986,6 +11001,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T2
 -- The current plugin.lua content is empty.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T2491968008"] = "Der aktuelle Inhalt von plugin.lua ist leer."
 
+-- Tools
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T2499909372"] = "Werkzeuge"
+
 -- Inputs
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T2647381688"] = "Eingaben"
 
@@ -11003,6 +11021,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T2
 
 -- UI Components
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3053707933"] = "UI-Komponenten"
+
+-- The generated assistant plugin must be a form assistant, not a chat launcher.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3203271639"] = "Das generierte Assistenten-Plugin muss ein Formularassistent und darf kein Chat-Schnellstart sein."
 
 -- Assistant Plugin Revision
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3245954919"] = "Revision des Assistenten-Plugins"
@@ -11024,9 +11045,6 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3
 
 -- The revised assistant metadata does not match the revised plugin.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3578379466"] = "Die überarbeiteten Assistenten-Metadaten stimmen nicht mit dem überarbeiteten Plugin überein."
-
--- The generated assistant plugin does not match the selected chat launcher configuration.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3631147451"] = "Das generierte Assistenten-Plugin entspricht nicht der ausgewählten Konfiguration des Chat-Schnellstarts."
 
 -- Safety Notes
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3633499050"] = "Sicherheitshinweise"
@@ -11057,6 +11075,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T4
 
 -- Prompt Strategy
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T410529216"] = "Prompt-Strategie"
+
+-- The generated chat launcher is not a valid assistant plugin.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T4182589474"] = "Der generierte Chat-Schnellstart ist kein gültiges Assistenten-Plugin."
 
 -- The draft model did not return a usable answer.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T4183375977"] = "Das Entwurfsmodell hat keine brauchbare Antwort zurückgegeben."
