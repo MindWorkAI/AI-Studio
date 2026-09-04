@@ -186,7 +186,7 @@ public sealed class ToolRegistry
         functionName.Length <= 64 &&
         functionName.All(character => char.IsAsciiLetterOrDigit(character) || character is '_' or '-');
 
-    public IReadOnlyList<ToolDefinition> GetDefinitionsForComponent(AIStudio.Tools.Components component)
+    public IReadOnlyList<ToolDefinition> GetDefinitionsForComponent(Components component)
     {
         return this.definitionsById.Values
             .Where(x => x.VisibleIn.IsVisibleIn(component))
@@ -253,7 +253,7 @@ public sealed class ToolRegistry
         return filtered;
     }
 
-    public async Task<IReadOnlyList<ToolCatalogItem>> GetCatalogAsync(AIStudio.Tools.Components component)
+    public async Task<IReadOnlyList<ToolCatalogItem>> GetCatalogAsync(Components component)
     {
         var definitions = this.GetDefinitionsForComponent(component);
         return await this.GetCatalogAsync(definitions);
@@ -270,7 +270,7 @@ public sealed class ToolRegistry
     /// provider confidence stays out of this: it belongs to the moment a message is sent, not to
     /// the selection, and it may well be a different provider by then.
     /// </remarks>
-    public async Task<HashSet<string>> FilterSelectableToolIdsAsync(AIStudio.Tools.Components component, IEnumerable<string> toolIds)
+    public async Task<HashSet<string>> FilterSelectableToolIdsAsync(Components component, IEnumerable<string> toolIds)
     {
         var wantedToolIds = ToolSelectionRules.NormalizeSelection(toolIds);
         if (wantedToolIds.Count is 0 || !this.settingsManager.AreToolsEnabled())

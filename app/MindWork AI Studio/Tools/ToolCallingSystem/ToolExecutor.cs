@@ -4,8 +4,6 @@ using System.Text.Json;
 using AIStudio.Provider;
 using AIStudio.Settings;
 
-using Microsoft.Extensions.DependencyInjection;
-
 namespace AIStudio.Tools.ToolCallingSystem;
 
 public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogger<ToolExecutor> logger)

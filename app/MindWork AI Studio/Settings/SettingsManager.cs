@@ -3,7 +3,6 @@ using System.Text.Json;
 
 using AIStudio.Provider;
 using AIStudio.Settings.DataModel;
-using AIStudio.Tools;
 using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Services;

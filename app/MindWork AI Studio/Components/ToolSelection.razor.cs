@@ -1,6 +1,5 @@
 using AIStudio.Dialogs.Settings;
 using AIStudio.Provider;
-using AIStudio.Settings;
 using AIStudio.Tools.ToolCallingSystem;
 
 using Microsoft.AspNetCore.Components;

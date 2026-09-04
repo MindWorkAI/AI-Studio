@@ -1,5 +1,3 @@
-using AIStudio.Provider;
-
 namespace AIStudio.Tools.ToolCallingSystem.Harness;
 
 /// <summary>

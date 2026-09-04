@@ -10,9 +10,6 @@ using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.ToolCallingSystem.Harness;
-using AIStudio.Tools.Services;
-
-using Microsoft.Extensions.DependencyInjection;
 
 namespace AIStudio.Provider.OpenAI;
 
@@ -124,7 +121,7 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
         
         
         // Parse the API parameters:
-        var apiParameters = this.ParseAdditionalApiParameters("input", "store", "tools");
+        var additionalApiParameters = this.ParseAdditionalApiParameters("input", "store", "tools");
 
         if (!usingResponsesAPI)
         {
@@ -222,14 +219,14 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
             });
 
         var baseInput = new List<object> { systemPrompt };
-        baseInput.AddRange(messages.Cast<object>());
+        baseInput.AddRange(messages);
 
         if (usingResponsesAPI && toolExecutor is not null && runnableTools.Count > 0)
         {
             var adapter = new ResponsesToolCallingAdapter(
                 chatModel,
                 baseInput,
-                apiParameters,
+                additionalApiParameters,
                 providerTools,
                 runnableTools,
                 (requestDto, requestToken) => this.ExecuteResponsesRequest(requestDto, requestedSecret, requestToken));
@@ -271,9 +268,9 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
             
                 // Right now, we only support streaming completions:
                 Stream = true,
-                AdditionalApiParameters = apiParameters
+                AdditionalApiParameters = additionalApiParameters
             }, JSON_SERIALIZER_OPTIONS),
-            
+
             // Responses API request:
             true => JsonSerializer.Serialize(new ResponsesAPIRequest
             {
@@ -292,7 +289,7 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
                 Tools = providerTools,
                 
                 // Additional API parameters:
-                AdditionalApiParameters = apiParameters
+                AdditionalApiParameters = additionalApiParameters
                 
             }, JSON_SERIALIZER_OPTIONS),
         };

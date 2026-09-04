@@ -5,7 +5,6 @@ using AIStudio.Components;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
-using AIStudio.Tools;
 using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.ERIClient.DataModel;
 
@@ -155,6 +154,7 @@ public sealed record ChatThread
     /// is extended with the profile chosen.
     /// </remarks>
     /// <param name="settingsManager">The settings manager instance to use.</param>
+    /// <param name="runnableToolDefinitions">The tools which may run in this thread. Their instructions become part of the system prompt. Null when the thread runs without tools.</param>
     /// <returns>The prepared system prompt.</returns>
     public string PrepareSystemPrompt(SettingsManager settingsManager, IEnumerable<ToolDefinition>? runnableToolDefinitions = null)
     {

@@ -3,7 +3,6 @@ using AIStudio.Dialogs;
 using AIStudio.Tools.Services;
 using AIStudio.Tools.ToolCallingSystem;
 using Microsoft.AspNetCore.Components;
-using MudBlazor;
 
 namespace AIStudio.Chat;
 

@@ -207,7 +207,7 @@ public sealed class ReadWebPageTool(WebPageRetrievalService webPageRetrievalServ
         };
     }
 
-    private static JsonNode? BuildModelContent(HTMLParserWebPage page, WebPageModelContent modelContent, DateTimeOffset retrievedAtUtc, int originalContentCharacters,
+    private static JsonNode BuildModelContent(HTMLParserWebPage page, WebPageModelContent modelContent, DateTimeOffset retrievedAtUtc, int originalContentCharacters,
         bool contentTruncated, IReadOnlyList<string> warnings)
     {
         var websiteContentAsMarkdown = modelContent.Markdown;

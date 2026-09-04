@@ -1,7 +1,4 @@
-using System.Linq.Expressions;
-
 using AIStudio.Settings;
-using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Services;
 
 namespace AIStudio.Tools.ToolCallingSystem;
@@ -132,7 +129,7 @@ public sealed class ToolSettingsService(SettingsManager settingsManager, RustSer
         }
 
         await settingsManager.StoreSettings();
-        await MessageBus.INSTANCE.SendMessage<object?>(null, Event.CONFIGURATION_CHANGED, null);
+        await MessageBus.INSTANCE.SendMessage<object?>(null, Event.CONFIGURATION_CHANGED);
     }
 
     /// <summary>

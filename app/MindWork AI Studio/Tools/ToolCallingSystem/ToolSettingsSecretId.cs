@@ -1,5 +1,3 @@
-using AIStudio.Tools;
-
 namespace AIStudio.Tools.ToolCallingSystem;
 
 internal sealed record ToolSettingsSecretId(string ToolId, string FieldName) : ISecretId

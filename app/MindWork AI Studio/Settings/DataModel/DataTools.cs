@@ -1,7 +1,5 @@
 using System.Linq.Expressions;
 
-using AIStudio.Settings;
-
 namespace AIStudio.Settings.DataModel;
 
 public sealed class DataTools(Expression<Func<Data, DataTools>>? configSelection = null)
@@ -29,7 +27,7 @@ public sealed class DataTools(Expression<Func<Data, DataTools>>? configSelection
         x => x.DisabledToolIds,
         []);
 
-    public Dictionary<string, string> MinimumProviderConfidenceByToolId { get; set; } = ManagedConfiguration.Register<DataTools, Dictionary<string, string>>(
+    public Dictionary<string, string> MinimumProviderConfidenceByToolId { get; set; } = ManagedConfiguration.Register(
         configSelection,
         x => x.MinimumProviderConfidenceByToolId,
         new Dictionary<string, string>(StringComparer.Ordinal));
@@ -46,7 +44,7 @@ public sealed class DataTools(Expression<Func<Data, DataTools>>? configSelection
     /// Secrets never travel this way. They belong in the operating system's keyring, which a
     /// configuration file cannot reach.
     /// </remarks>
-    public Dictionary<string, string> LockedToolSettings { get; set; } = ManagedConfiguration.Register<DataTools, Dictionary<string, string>>(
+    public Dictionary<string, string> LockedToolSettings { get; set; } = ManagedConfiguration.Register(
         configSelection,
         x => x.LockedToolSettings,
         new Dictionary<string, string>(StringComparer.Ordinal));
@@ -59,7 +57,7 @@ public sealed class DataTools(Expression<Func<Data, DataTools>>? configSelection
     /// to the locked settings above, and the reason both exist: an organization can fix the search
     /// instance while leaving the timeouts to the user.
     /// </remarks>
-    public Dictionary<string, string> DefaultToolSettings { get; set; } = ManagedConfiguration.Register<DataTools, Dictionary<string, string>>(
+    public Dictionary<string, string> DefaultToolSettings { get; set; } = ManagedConfiguration.Register(
         configSelection,
         x => x.DefaultToolSettings,
         new Dictionary<string, string>(StringComparer.Ordinal));

@@ -16,8 +16,6 @@ using AIStudio.Tools.MIME;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
 
-using Microsoft.Extensions.DependencyInjection;
-
 using Host = AIStudio.Provider.SelfHosted.Host;
 
 namespace AIStudio.Provider;

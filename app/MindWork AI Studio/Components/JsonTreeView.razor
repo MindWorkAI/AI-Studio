@@ -1,5 +1,3 @@
-@using MudBlazor
-
 <MudTreeView T="JsonTreeNode"
              Items="@this.items"
              ReadOnly="true"
@@ -7,7 +5,7 @@
              Dense="true"
              ExpandOnClick="true">
     <ItemTemplate Context="item">
-        @if (item.Value is JsonTreeNode node)
+        @if (item.Value is { } node)
         {
             <MudTreeViewItem T="JsonTreeNode"
                              Icon="@node.Icon"
