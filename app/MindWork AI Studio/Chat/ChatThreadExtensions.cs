@@ -27,6 +27,24 @@ public static class ChatThreadExtensions
         if (chatThread is null)
             return true;
         
+        var settingsManager = Program.SERVICE_PROVIDER.GetRequiredService<SettingsManager>();
+        var providerConfidence = provider switch
+        {
+            IProvider p => p.Provider.GetConfidence(settingsManager).Level,
+            AIStudio.Settings.Provider p => p.UsedLLMProvider.GetConfidence(settingsManager).Level,
+
+            _ => ConfidenceLevel.UNKNOWN,
+        };
+        var isTrustedByConfiguration = provider switch
+        {
+            IProvider p => p.IsTrustedByConfiguration(settingsManager),
+            AIStudio.Settings.Provider p => p.IsTrustedByConfiguration(settingsManager),
+
+            _ => false,
+        };
+        if (providerConfidence < chatThread.RequiredProviderConfidence && !isTrustedByConfiguration)
+            return false;
+
         // The chat thread is available, but the data security is not specified.
         // Means, we never used RAG or RAG was enabled, but no data sources were selected.
         // That's fine as well:
@@ -36,7 +54,6 @@ public static class ChatThreadExtensions
         //
         // Is the provider trusted for data-source security checks?
         //
-        var settingsManager = Program.SERVICE_PROVIDER.GetRequiredService<SettingsManager>();
         var isTrustedProvider = provider switch
         {
             IProvider p => p.IsTrustedForDataSourceSecurityChecks(settingsManager),

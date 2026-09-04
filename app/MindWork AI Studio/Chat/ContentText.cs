@@ -7,6 +7,7 @@ using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.RAG.RAGProcesses;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Security;
+using AIStudio.Tools.ToolCallingSystem;
 
 namespace AIStudio.Chat;
 
@@ -48,6 +49,11 @@ public sealed class ContentText : IContent
     
     /// <inheritdoc />
     public List<FileAttachment> FileAttachments { get; set; } = [];
+
+    public List<ToolInvocationTrace> ToolInvocations { get; set; } = [];
+
+    [JsonIgnore]
+    public ToolRuntimeStatus ToolRuntimeStatus { get; set; } = new();
 
     /// <inheritdoc />
     public async Task<ChatThread> CreateFromProviderAsync(IProvider provider, Model chatModel, IContent? lastUserPrompt, ChatThread? chatThread, CancellationToken token = default)
@@ -251,6 +257,20 @@ public sealed class ContentText : IContent
         IsStreaming = this.IsStreaming,
         Sources = [..this.Sources],
         FileAttachments = [..this.FileAttachments],
+        ToolInvocations = [..this.ToolInvocations.Select(x => new ToolInvocationTrace
+        {
+            Order = x.Order,
+            ToolId = x.ToolId,
+            ToolName = x.ToolName,
+            ToolIcon = x.ToolIcon,
+            ToolCallId = x.ToolCallId,
+            Status = x.Status,
+            WasExecuted = x.WasExecuted,
+            StatusMessage = x.StatusMessage,
+            Arguments = new Dictionary<string, string>(x.Arguments, StringComparer.Ordinal),
+            Result = x.Result,
+            JsonResult = x.JsonResult?.DeepClone(),
+        })],
     };
 
     #endregion

@@ -5,13 +5,15 @@ using System.Text.Json;
 using AIStudio.Chat;
 using AIStudio.Provider.OpenAI;
 using AIStudio.Settings;
+using AIStudio.Tools.Rust;
+using AIStudio.Tools.ToolCallingSystem;
+using AIStudio.Tools.ToolCallingSystem.Harness;
 
 namespace AIStudio.Provider.Anthropic;
 
 public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, new Uri("https://api.anthropic.com/v1/"), ExternalHttpTrustPolicy.SYSTEM_TRUST_ONLY, LOGGER)
 {
     private static readonly ILogger<ProviderAnthropic> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderAnthropic>();
-
     #region Implementation of IProvider
 
     /// <inheritdoc />
@@ -70,18 +72,59 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, n
                 }
             }
         );
-        
+
+        //
+        // Prepare the tools we want to use. When the model may call one, the conversation runs
+        // through the harness instead of being streamed straight away: tool rounds are not
+        // streamed, only the final answer is.
+        //
+        var toolRegistry = Program.SERVICE_PROVIDER.GetService<ToolRegistry>();
+        var toolExecutor = Program.SERVICE_PROVIDER.GetService<ToolExecutor>();
+        var currentAssistantContent = chatThread.Blocks.LastOrDefault(x => x.Role is ChatRole.AI)?.Content as ContentText;
+        currentAssistantContent?.ToolInvocations.Clear();
+
+        var providerSettings = this.CreateSettingsProvider(chatModel);
+        var runnableTools = toolRegistry is null
+            ? []
+            : await toolRegistry.GetRunnableToolsAsync(providerSettings, chatThread.RuntimeComponent, chatThread.RuntimeSelectedToolIds,
+                this.Provider.GetConfidence(settingsManager).Level, chatThread.MayRunTools(settingsManager));
+
+        var systemPrompt = chatThread.PrepareSystemPrompt(settingsManager, runnableTools.Select(x => x.Definition));
+        if (toolExecutor is not null && runnableTools.Count > 0)
+        {
+            var adapter = new AnthropicToolCallingAdapter(chatModel, [..messages], systemPrompt, maxTokens, apiParameters, runnableTools,
+                (requestDto, requestToken) => this.ExecuteMessagesRequest(requestDto, requestedSecret, requestToken));
+
+            var loop = Program.SERVICE_PROVIDER.GetRequiredService<IToolCallingLoop>();
+            var loopContext = new ToolCallingLoopContext
+            {
+                ChatThread = chatThread,
+                RunnableTools = runnableTools,
+                ToolExecutor = toolExecutor,
+                Provider = this,
+                CurrentAssistantContent = currentAssistantContent,
+                ProviderInstanceName = this.InstanceName,
+                ProviderType = this.Provider,
+                ModelId = chatModel.Id,
+            };
+
+            await foreach (var content in loop.RunAsync(adapter, loopContext, token))
+                yield return content;
+
+            yield break;
+        }
+
         // Prepare the Anthropic HTTP chat request:
         var chatRequest = JsonSerializer.Serialize(new ChatRequest
         {
             Model = chatModel.Id,
-            
+
             // Build the messages:
             Messages = [..messages],
-            
-            System = chatThread.PrepareSystemPrompt(settingsManager),
+
+            System = systemPrompt,
             MaxTokens = maxTokens,
-            
+
             // Right now, we only support streaming completions:
             Stream = true,
             AdditionalApiParameters = apiParameters
@@ -105,6 +148,33 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, n
         
         await foreach (var content in this.StreamChatCompletionInternal<ResponseStreamLine, NoChatCompletionAnnotationStreamLine>("Anthropic", RequestBuilder, token))
             yield return content;
+    }
+
+    /// <summary>
+    /// Runs one non-streamed messages request, as the tool rounds need it.
+    /// </summary>
+    /// <remarks>
+    /// Tool rounds are not streamed: the whole answer has to be there before its tool calls can
+    /// be executed. Only the final answer reaches the user through the streaming path.
+    /// </remarks>
+    /// <returns>The answer, or null when the request failed and the user was already told.</returns>
+    private async Task<AnthropicResponse?> ExecuteMessagesRequest(ChatRequest requestDto, RequestedSecret requestedSecret, CancellationToken token)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, "messages");
+        request.Headers.Add("x-api-key", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
+        request.Headers.Add("anthropic-version", "2023-06-01");
+        request.Content = new StringContent(JsonSerializer.Serialize(requestDto, JSON_SERIALIZER_OPTIONS), Encoding.UTF8, "application/json");
+
+        using var response = await this.HttpClient.SendAsync(request, token);
+        if (!response.IsSuccessStatusCode)
+        {
+            var responseBody = await response.Content.ReadAsStringAsync(token);
+            LOGGER.LogError("Tool calling messages request failed with status code {ResponseStatusCode} and body: '{ResponseBody}'.", response.StatusCode, responseBody);
+            await ToolCallingMessages.SendToolCallingRequestFailedAsync((int)response.StatusCode);
+            return null;
+        }
+
+        return await response.Content.ReadFromJsonAsync<AnthropicResponse>(JSON_SERIALIZER_OPTIONS, token);
     }
 
     #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
@@ -140,7 +210,7 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, n
             new Model("claude-3-opus-latest", "Claude 3 Opus (Latest)"),
         };
         
-        var result = await this.LoadModels(SecretStoreType.LLM_PROVIDER, token, apiKeyProvisional);
+        var result = await this.LoadModels(SecretStoreType.LLM_PROVIDER, apiKeyProvisional, token);
         return result with
         {
             // The API is the authority: when it reports a model we also keep as a fallback above,
@@ -166,16 +236,14 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, n
     {
         return Task.FromResult(ModelLoadResult.FromModels([]));
     }
-    
     #endregion
-    
-    private Task<ModelLoadResult> LoadModels(SecretStoreType storeType, CancellationToken token, string? apiKeyProvisional = null)
+
+    private Task<ModelLoadResult> LoadModels(SecretStoreType storeType, string? apiKeyProvisional, CancellationToken token)
     {
         return this.LoadModelsResponse<ModelsResponse>(
             storeType,
             "models?limit=100",
             modelResponse => modelResponse.Data,
-            token,
             apiKeyProvisional,
             failureReasonSelector: (response, _) => response.StatusCode switch
             {
@@ -189,6 +257,6 @@ public sealed class ProviderAnthropic() : BaseProvider(LLMProviders.ANTHROPIC, n
                 request.Headers.Add("x-api-key", secretKey);
                 request.Headers.Add("anthropic-version", "2023-06-01");
             },
-            jsonSerializerOptions: JSON_SERIALIZER_OPTIONS);
+            jsonSerializerOptions: JSON_SERIALIZER_OPTIONS, token: token);
     }
 }

@@ -9,8 +9,6 @@ using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Dialogs;
 
-public sealed record AssistantPluginRevisionDialogResult(Guid PluginId, string PluginName, PluginAssistantAudit? Audit);
-
 public partial class AssistantPluginRevisionDialog : MSGComponentBase
 {
     private const string PLUGIN_FILE_NAME = "plugin.lua";

@@ -42,6 +42,8 @@ public static class DataSourceSecurityTrustExtensions
 
     public static bool IsTrustedByConfiguration(this TranscriptionProvider provider, SettingsManager settingsManager) => IsTrustedProviderId(provider.Id, settingsManager);
 
+    public static bool IsTrustedByConfiguration(this IProvider provider, SettingsManager settingsManager) => IsTrustedProviderId(provider.ConfiguredProviderId, settingsManager);
+
     private static bool IsTrustedProviderId(string providerId, SettingsManager settingsManager)
     {
         if (string.IsNullOrWhiteSpace(providerId))

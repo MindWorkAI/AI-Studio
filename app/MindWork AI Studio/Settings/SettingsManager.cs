@@ -3,6 +3,7 @@ using System.Text.Json;
 
 using AIStudio.Provider;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Services;
 
@@ -15,6 +16,8 @@ namespace AIStudio.Settings;
 /// </summary>
 public sealed class SettingsManager
 {
+    public readonly record struct ToolMinimumProviderConfidenceResolution(ConfidenceLevel ConfidenceLevel, string Source);
+
     private const string SETTINGS_FILENAME = "settings.json";
     private const Version CURRENT_SETTINGS_VERSION = Version.V6;
     
@@ -782,6 +785,112 @@ public sealed class SettingsManager
             return ChatTemplate.NO_CHAT_TEMPLATE;
 
         return this.ConfigurationData.ChatTemplates.FirstOrDefault(x => x.Id.Equals(chatTemplateId, StringComparison.OrdinalIgnoreCase)) ?? ChatTemplate.NO_CHAT_TEMPLATE;
+    }
+
+    public HashSet<string> GetDefaultToolIds(AIStudio.Tools.Components component)
+    {
+        var key = component.ToString();
+        if (this.ConfigurationData.Tools.DefaultToolIdsByComponent.TryGetValue(key, out var toolIds))
+            return ToolSelectionRules.NormalizeSelection(toolIds);
+
+        return [];
+    }
+
+
+    public bool AreToolsEnabled() => this.ConfigurationData.Tools.EnableTools;
+
+    public bool IsToolActive(string toolId) =>
+        this.AreToolsEnabled() &&
+        !this.ConfigurationData.Tools.DisabledToolIds.Contains(toolId);
+
+    /// <remarks>
+    /// The document analysis is deliberately absent: there its policy names the tools, so the user
+    /// has nothing to select.
+    /// </remarks>
+    public bool IsToolSelectionVisible(AIStudio.Tools.Components component) => component switch
+    {
+        AIStudio.Tools.Components.CHAT or
+        AIStudio.Tools.Components.CODING_ASSISTANT or
+        AIStudio.Tools.Components.SLIDE_BUILDER_ASSISTANT => true,
+        _ => this.ConfigurationData.Tools.VisibleToolSelectionComponents.Contains(component.ToString()),
+    };
+
+    public void SetToolSelectionVisibility(AIStudio.Tools.Components component, bool isVisible)
+    {
+        if (component is
+            AIStudio.Tools.Components.CHAT or
+            AIStudio.Tools.Components.CODING_ASSISTANT or
+            AIStudio.Tools.Components.SLIDE_BUILDER_ASSISTANT)
+            return;
+
+        var key = component.ToString();
+        if (isVisible)
+            this.ConfigurationData.Tools.VisibleToolSelectionComponents.Add(key);
+        else
+            this.ConfigurationData.Tools.VisibleToolSelectionComponents.Remove(key);
+    }
+
+    /// <summary>
+    /// Resolves which provider confidence a tool needs, and where that value came from.
+    /// </summary>
+    /// <remarks>
+    /// The default is passed in rather than looked up here. It belongs to the tool definition,
+    /// and the definitions live in the tool registry — which already depends on this class, so
+    /// asking it back would be a circle. Every caller has the definition at hand anyway.
+    /// </remarks>
+    /// <param name="toolId">The tool to resolve the confidence for.</param>
+    /// <param name="defaultLevel">The tool's own minimum, used when nothing overrides it.</param>
+    public ToolMinimumProviderConfidenceResolution GetMinimumProviderConfidenceResolutionForTool(string toolId, ConfidenceLevel defaultLevel)
+    {
+        if (ManagedConfiguration.TryGet(x => x.Tools, x => x.MinimumProviderConfidenceByToolId, out var configMeta) && configMeta.IsLocked)
+        {
+            var managedValues = configMeta.GetValue();
+            if (managedValues.TryGetValue(toolId, out var configuredManagedLevel) &&
+                Enum.TryParse<ConfidenceLevel>(configuredManagedLevel, true, out var managedConfidenceLevel) &&
+                Enum.IsDefined(managedConfidenceLevel) &&
+                managedConfidenceLevel is not ConfidenceLevel.UNKNOWN)
+            {
+                return new(managedConfidenceLevel, "managed config");
+            }
+
+            if (managedValues.ContainsKey(toolId))
+            {
+                this.logger.LogError(
+                    "Managed minimum provider confidence '{ConfiguredLevel}' for tool '{ToolId}' is invalid. Requiring HIGH as a safe fallback.",
+                    configuredManagedLevel,
+                    toolId);
+                return new(ConfidenceLevel.HIGH, "invalid managed config; safe fallback");
+            }
+        }
+
+        if (this.ConfigurationData.Tools.MinimumProviderConfidenceByToolId.TryGetValue(toolId, out var configuredLevel) &&
+            Enum.TryParse<ConfidenceLevel>(configuredLevel, true, out var confidenceLevel) &&
+            Enum.IsDefined(confidenceLevel) &&
+            confidenceLevel is not ConfidenceLevel.UNKNOWN)
+        {
+            return new(confidenceLevel, "stored override");
+        }
+
+        return new(defaultLevel, "default fallback");
+    }
+
+    public ConfidenceLevel GetMinimumProviderConfidenceForTool(string toolId, ConfidenceLevel defaultLevel) => this.GetMinimumProviderConfidenceResolutionForTool(toolId, defaultLevel).ConfidenceLevel;
+
+    /// <summary>
+    /// Stores which provider confidence a tool needs.
+    /// </summary>
+    /// <param name="toolId">The tool to store the confidence for.</param>
+    /// <param name="confidenceLevel">The level the user chose.</param>
+    /// <param name="defaultLevel">The tool's own minimum. Choosing it again removes the override.</param>
+    public void SetMinimumProviderConfidenceForTool(string toolId, ConfidenceLevel confidenceLevel, ConfidenceLevel defaultLevel)
+    {
+        if (confidenceLevel == defaultLevel)
+        {
+            this.ConfigurationData.Tools.MinimumProviderConfidenceByToolId.Remove(toolId);
+            return;
+        }
+
+        this.ConfigurationData.Tools.MinimumProviderConfidenceByToolId[toolId] = confidenceLevel.ToString();
     }
 
     public ConfidenceLevel GetConfiguredConfidenceLevel(LLMProviders llmProvider)

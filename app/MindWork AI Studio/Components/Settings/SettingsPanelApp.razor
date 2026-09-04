@@ -28,7 +28,7 @@
         var availablePreviewFeatures = ConfigurationSelectDataFactory.GetPreviewFeaturesData(this.SettingsManager).ToList();
         if (availablePreviewFeatures.Count > 0)
         {
-            <ConfigurationMultiSelect OptionDescription="@T("Select preview features")" SelectedValues="@this.GetSelectedPreviewFeatures" Data="@availablePreviewFeatures" SelectionUpdate="@this.UpdateEnabledPreviewFeatures" OptionHelp="@T("Which preview features would you like to enable?")" IsItemLocked="@this.IsPluginContributedPreviewFeature" IsLocked="() => ManagedConfiguration.TryGet(x => x.App, x => x.EnabledPreviewFeatures, out var meta) && meta.IsLocked"/>
+            <ConfigurationMultiSelect OptionDescription="@T("Select preview features")" SelectedValues="@this.GetSelectedPreviewFeatures" Data="@availablePreviewFeatures" SelectionUpdate="@this.UpdateEnabledPreviewFeatures" OptionHelp="@T("Which preview features would you like to enable?")" IsItemLocked="@this.IsPluginContributedPreviewFeature" IsLocked="() => ManagedConfiguration.TryGet(x => x.App, x => x.EnabledPreviewFeatures, out var meta) && meta.IsLocked" EmptySelectionText="@T("No preview features selected.")" SingleSelectionText="@T("You have selected 1 preview feature.")" MultipleSelectionText="@T("You have selected {0} preview features.")"/>
         }
     }
 

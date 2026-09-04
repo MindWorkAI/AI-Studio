@@ -31,6 +31,24 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
 
     protected override Tools.Components Component => Tools.Components.BATCH_PROCESSING_ASSISTANT;
 
+    /// <summary>
+    /// The tools a run uses, taken from wherever the instructions come from.
+    /// </summary>
+    /// <remarks>
+    /// Never from the footer: the tools belong to the instructions, and that is where they are
+    /// chosen. Working from a document analysis policy means following it, tools included, so
+    /// there is nothing left to pick. With instructions of one's own, the field next to them
+    /// decides.
+    /// </remarks>
+    protected override IReadOnlySet<string> AssistantManagedToolIds => this.promptSource is BatchProcessingPromptSource.POLICY
+        ? this.PolicyToolIds
+        : this.SelectedToolIds;
+
+    /// <summary>
+    /// The tools of the selected policy, or none while no policy is selected.
+    /// </summary>
+    private HashSet<string> PolicyToolIds => this.selectedPolicy is null ? [] : [..this.selectedPolicy.AllowedToolIds];
+
     protected override string Title => T("Batch Processing Assistant");
 
     protected override string Description => T("Process all documents and media files of a folder in one batch run: documents are converted to Markdown, while audio and video files are transcribed automatically, before their content is sent to the AI along with your instructions. You choose whether each answer is stored as its own Markdown file or whether all answers are collected in one CSV results table. A log records what happened to every file, so a run which was interrupted or produced errors can be continued later. A single failing file never stops the entire run.");

@@ -90,6 +90,15 @@
         },
         "allow_ai_studio_profiles": {
           "type": "boolean"
+        },
+        "tool_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
         }
       }
     },
@@ -155,6 +164,15 @@
             "not": {
               "const": "00000000-0000-0000-0000-000000000000"
             }
+          }
+        },
+        "tool_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
           }
         }
       }

@@ -1,4 +1,6 @@
 using System.Globalization;
+
+using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Services;
@@ -205,6 +207,9 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
             return false;
         }
 
+        if (!TryValidateMinimumProviderConfidenceConfiguration(settingsTable, out message))
+            return false;
+
         this.DeclaredSettingsCount = CountDeclaredSettings(settingsTable);
         
         // Config: check for updates, and if so, how often?
@@ -257,6 +262,21 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         
         // Config: global voice recording shortcut
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.ShortcutVoiceRecording, this.Id, settingsTable, dryRun);
+
+        // Config: global tool availability
+        ManagedConfiguration.TryProcessConfiguration(x => x.Tools, x => x.EnableTools, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.Tools, x => x.DisabledToolIds, this.Id, settingsTable, dryRun);
+
+        // Config: minimum provider confidence per tool
+        ManagedConfiguration.TryProcessConfiguration(x => x.Tools, x => x.MinimumProviderConfidenceByToolId, this.Id, settingsTable, dryRun);
+
+        //
+        // Config: settings of the individual tools, keyed by tool and field. Two tables rather
+        // than a property per setting, so that tools an administrator's AI Studio does not know
+        // at compile time — the ones plugin authors define — can be configured just the same.
+        //
+        ManagedConfiguration.TryProcessConfiguration(x => x.Tools, x => x.LockedToolSettings, this.Id, settingsTable, dryRun);
+        ManagedConfiguration.TryProcessConfiguration(x => x.Tools, x => x.DefaultToolSettings, this.Id, settingsTable, dryRun);
 
         // Config: timeout for external HTTP requests
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.HttpClientTimeoutSeconds, this.Id, settingsTable, dryRun);
@@ -368,6 +388,37 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.UseTranscriptionProvider, Guid.Empty, this.Id, settingsTable, dryRun);
 
         message = string.Empty;
+        return true;
+    }
+
+    private static bool TryValidateMinimumProviderConfidenceConfiguration(LuaTable settingsTable, out string message)
+    {
+        const string SETTING_NAME = "DataTools.MinimumProviderConfidenceByToolId";
+        message = string.Empty;
+        if (!settingsTable.TryGetValue(SETTING_NAME, out var configuredValue))
+            return true;
+
+        if (configuredValue.Type is not LuaValueType.Table || !configuredValue.TryRead<LuaTable>(out var configuredTable))
+        {
+            message = $"The setting '{SETTING_NAME}' must be a table of tool IDs and confidence levels.";
+            return false;
+        }
+
+        var previousKey = LuaValue.Nil;
+        while (configuredTable.TryGetNext(previousKey, out var pair))
+        {
+            previousKey = pair.Key;
+            if (!pair.Key.TryRead<string>(out var toolId) || string.IsNullOrWhiteSpace(toolId) ||
+                !pair.Value.TryRead<string>(out var configuredLevel) ||
+                !Enum.TryParse<ConfidenceLevel>(configuredLevel, true, out var confidenceLevel) ||
+                !Enum.IsDefined(confidenceLevel) ||
+                confidenceLevel is ConfidenceLevel.UNKNOWN)
+            {
+                message = $"The setting '{SETTING_NAME}' contains an invalid tool ID or confidence level. Allowed confidence levels are NONE, UNTRUSTED, VERY_LOW, LOW, MODERATE, MEDIUM, and HIGH.";
+                return false;
+            }
+        }
+
         return true;
     }
 

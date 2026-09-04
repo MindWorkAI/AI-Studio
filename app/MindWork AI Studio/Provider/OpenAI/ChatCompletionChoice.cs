@@ -7,7 +7,7 @@ namespace AIStudio.Provider.OpenAI;
 /// <param name="Delta">The delta text of the choice.</param>
 public record ChatCompletionChoice(int Index, ChatCompletionDelta Delta)
 {
-    public ChatCompletionChoice() : this(0, new (string.Empty))
+    public ChatCompletionChoice() : this(0, new())
     {
     }
 }

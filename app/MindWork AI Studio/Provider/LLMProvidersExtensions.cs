@@ -278,7 +278,7 @@ public static class LLMProvidersExtensions
     /// <returns>The provider instance.</returns>
     public static IProvider CreateProvider(this AIStudio.Settings.Provider providerSettings)
     {
-        return providerSettings.UsedLLMProvider.CreateProvider(providerSettings.InstanceName, providerSettings.Host, providerSettings.Hostname, providerSettings.HFInferenceProvider, providerSettings.Id, providerSettings.AdditionalJsonApiParameters, providerSettings.IsEnterpriseConfiguration);
+        return providerSettings.UsedLLMProvider.CreateProvider(providerSettings.InstanceName, providerSettings.Host, providerSettings.Hostname, providerSettings.HFInferenceProvider, providerSettings.Id, providerSettings.AdditionalJsonApiParameters, providerSettings.IsEnterpriseConfiguration, capabilityOverrides: providerSettings.CapabilityOverrides);
     }
     
     /// <summary>
@@ -301,11 +301,11 @@ public static class LLMProvidersExtensions
         return transcriptionProviderSettings.UsedLLMProvider.CreateProvider(transcriptionProviderSettings.Name, transcriptionProviderSettings.Host, transcriptionProviderSettings.Hostname, transcriptionProviderSettings.HFInferenceProvider, configuredProviderId: transcriptionProviderSettings.Id, isEnterpriseConfiguration: transcriptionProviderSettings.IsEnterpriseConfiguration, hfEndpointKind: HFEndpointKind.TRANSCRIPTION);
     }
     
-    private static IProvider CreateProvider(this LLMProviders provider, string instanceName, Host host, string hostname, HFInferenceProvider inferenceProvider, string configuredProviderId = "", string expertProviderApiParameter = "", bool isEnterpriseConfiguration = false, HFEndpointKind hfEndpointKind = HFEndpointKind.CHAT)
+    private static IProvider CreateProvider(this LLMProviders provider, string instanceName, Host host, string hostname, HFInferenceProvider inferenceProvider, string configuredProviderId = "", string expertProviderApiParameter = "", bool isEnterpriseConfiguration = false, HFEndpointKind hfEndpointKind = HFEndpointKind.CHAT, ProviderCapabilityOverrides? capabilityOverrides = null)
     {
         try
         {
-            return provider switch
+            IProvider providerInstance = provider switch
             {
                 LLMProviders.OPEN_AI => new ProviderOpenAI { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, IsEnterpriseConfiguration = isEnterpriseConfiguration },
                 LLMProviders.ANTHROPIC => new ProviderAnthropic { InstanceName = instanceName, ConfiguredProviderId = configuredProviderId, AdditionalJsonApiParameters = expertProviderApiParameter, IsEnterpriseConfiguration = isEnterpriseConfiguration },
@@ -331,6 +331,11 @@ public static class LLMProvidersExtensions
 
                 _ => new NoProvider(),
             };
+
+            if (providerInstance is BaseProvider baseProvider)
+                baseProvider.CapabilityOverrides = capabilityOverrides;
+
+            return providerInstance;
         }
         catch (Exception e)
         {

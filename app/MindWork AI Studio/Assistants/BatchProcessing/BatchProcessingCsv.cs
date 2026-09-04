@@ -99,7 +99,12 @@ public static class BatchProcessingCsv
     /// content with it. Preferred separators are used as fallbacks for files
     /// whose first record does not reveal a valid separator.
     /// </summary>
-    public static List<List<string>> ParseWithDetectedSeparator(string content, int expectedNumFields, params char[] preferredSeparators)
+    /// <remarks>
+    /// Several accepted field counts allow a file written by an earlier version
+    /// to be read as well. The log gained a column, and a run started with the
+    /// previous version must still be continuable.
+    /// </remarks>
+    public static List<List<string>> ParseWithDetectedSeparator(string content, IReadOnlyList<int> acceptedNumFields, params char[] preferredSeparators)
     {
         var firstRecord = ReadFirstRecord(content);
         var candidates = new List<char>();
@@ -135,7 +140,7 @@ public static class BatchProcessingCsv
         foreach (var separator in candidates)
         {
             var header = Parse(firstRecord, separator);
-            if (header.Count is 1 && header[0].Count == expectedNumFields)
+            if (header.Count is 1 && acceptedNumFields.Contains(header[0].Count))
                 return Parse(content, separator);
         }
 

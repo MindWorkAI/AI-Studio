@@ -8,8 +8,6 @@ using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Dialogs;
 
-public sealed record DirectChatLauncherSettingsDialogResult(Guid PluginId, string PluginName, PluginAssistantAudit? Audit);
-
 /// <summary>
 /// Changes the settings of an installed direct chat launcher without asking a model.
 /// </summary>
@@ -50,6 +48,7 @@ public partial class DirectChatLauncherSettingsDialog : MSGComponentBase
     private string profileId = string.Empty;
     private string chatTemplateId = string.Empty;
     private IEnumerable<string> dataSourceIds = [];
+    private HashSet<string> toolIds = [];
     private string issue = string.Empty;
     private bool canEdit;
     private bool isLoading = true;
@@ -116,6 +115,7 @@ public partial class DirectChatLauncherSettingsDialog : MSGComponentBase
             this.profileId = launch.ProfileId?.ToString() ?? string.Empty;
             this.chatTemplateId = launch.ChatTemplateId?.ToString() ?? string.Empty;
             this.dataSourceIds = launch.DataSourceIds?.Select(id => id.ToString()).ToArray() ?? [];
+            this.toolIds = launch.ToolIds is null ? [] : [..launch.ToolIds];
             this.canEdit = true;
         }
         catch (Exception e)
@@ -159,7 +159,8 @@ public partial class DirectChatLauncherSettingsDialog : MSGComponentBase
             ParseOptionalGuid(this.providerId),
             ParseOptionalGuid(this.profileId),
             ParseOptionalGuid(this.chatTemplateId),
-            selectedDataSourceIds.Length == 0 ? null : selectedDataSourceIds);
+            selectedDataSourceIds.Length == 0 ? null : selectedDataSourceIds,
+            this.toolIds.Count == 0 ? null : this.toolIds.Order(StringComparer.Ordinal).ToArray());
     }
 
     private async Task SaveAsync()

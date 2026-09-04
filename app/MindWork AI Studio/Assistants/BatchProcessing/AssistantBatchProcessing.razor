@@ -47,6 +47,8 @@
     <ReadFileContent Text="@T("Load prompt from file")" @bind-FileContent="@this.freePrompt" EnableDragDrop="true" Layer="@DropLayers.ASSISTANTS" CatchAllDocuments="true" Disabled="@this.isProcessingBatch"/>
 
     <MudTextField T="string" @bind-Text="@this.freePrompt" Validation="@this.ValidateFreePrompt" Immediate="@true" Disabled="@this.isProcessingBatch" Label="@T("What should the AI do with each document?")" HelperText="@T("These instructions are applied to every single document of the batch run.")" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="5" AutoGrow="@true" MaxLines="26" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+
+    <ToolSelectionField Component="@this.Component" SelectedToolIds="@this.SelectedToolIds" SelectedToolIdsChanged="@this.SelectedToolIdsChanged" Disabled="@this.isProcessingBatch" Label="@T("Tools for this batch run")" Help="@T("The AI may use these tools while working on each document. Every tool has to meet the confidence requirements of the selected provider, so a tool may stay unavailable even when it is selected here.")"/>
 }
 else if (this.promptSource is BatchProcessingPromptSource.FILE_IMPORT)
 {
@@ -65,6 +67,8 @@ else if (this.promptSource is BatchProcessingPromptSource.FILE_IMPORT)
     <MudJustifiedText Typo="Typo.body2" Class="mb-3">
         @T("The content of the selected file is used as the instructions for every single document of the batch run.")
     </MudJustifiedText>
+
+    <ToolSelectionField Component="@this.Component" SelectedToolIds="@this.SelectedToolIds" SelectedToolIdsChanged="@this.SelectedToolIdsChanged" Disabled="@this.isProcessingBatch" Label="@T("Tools for this batch run")" Help="@T("The AI may use these tools while working on each document. Every tool has to meet the confidence requirements of the selected provider, so a tool may stay unavailable even when it is selected here.")"/>
 }
 else
 {
@@ -98,6 +102,12 @@ else
             <MudJustifiedText Typo="Typo.body2" Class="mb-3">
                 @this.selectedPolicy.PolicyDescription
             </MudJustifiedText>
+        }
+
+        @* Read-only: the policy decides its tools, and this run follows the policy. *@
+        @if (this.selectedPolicy is not null)
+        {
+            <ToolSelectionField Component="@this.Component" SelectedToolIds="@this.PolicyToolIds" ReadOnly="@true" Label="@T("Tools of this policy")" Help="@T("These tools are part of the selected policy and cannot be changed here. Every tool has to meet the confidence requirements of the selected provider, so a tool may stay unavailable even when the policy permits it.")"/>
         }
     }
 }
@@ -183,6 +193,15 @@ else
     <MudAlert Severity="Severity.Info" Icon="@Icons.Material.Filled.HourglassTop" Dense="true" Class="mb-3">
         @(string.Format(T("Waiting {0} seconds before starting the next file."), this.pauseBeforeNextFileSeconds))
     </MudAlert>
+}
+
+@*
+    Only for a policy run: where the user picks the tools themselves, the selection field already
+    shows what is locked, and they can simply switch a blocked tool off.
+*@
+@if (this.promptSource is BatchProcessingPromptSource.POLICY)
+{
+    <ManagedToolsWarning Component="@this.Component" ToolIds="@this.PolicyToolIds" ProviderSettings="@this.ProviderSettings"/>
 }
 
 <ProviderSelection @bind-ProviderSettings="@this.ProviderSettings" ValidateProvider="@this.ValidatingProviderWithBatchState" Disabled="@this.isProcessingBatch" ExplicitMinimumConfidence="@this.GetMinimumConfidenceLevel()"/>

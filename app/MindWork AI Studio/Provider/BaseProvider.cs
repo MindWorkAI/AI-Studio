@@ -10,6 +10,8 @@ using AIStudio.Provider.Anthropic;
 using AIStudio.Provider.OpenAI;
 using AIStudio.Provider.SelfHosted;
 using AIStudio.Settings;
+using AIStudio.Tools.ToolCallingSystem;
+using AIStudio.Tools.ToolCallingSystem.Harness;
 using AIStudio.Tools.MIME;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
@@ -86,6 +88,8 @@ public abstract class BaseProvider : IProvider, ISecretId
 
     /// <inheritdoc />
     public string AdditionalJsonApiParameters { get; init; } = string.Empty;
+
+    internal ProviderCapabilityOverrides? CapabilityOverrides { get; set; }
 
     /// <inheritdoc />
     public abstract bool HasModelLoadingCapability { get; }
@@ -176,16 +180,15 @@ public abstract class BaseProvider : IProvider, ISecretId
         _ => GetDefaultModelLoadFailureReason(response),
     };
 
-    protected async Task<ModelLoadResult> LoadModelsResponse<TResponse>(
-        SecretStoreType storeType,
+    protected async Task<ModelLoadResult> LoadModelsResponse<TResponse>(SecretStoreType storeType,
         string requestPath,
         Func<TResponse, IEnumerable<Model>> modelFactory,
-        CancellationToken token,
         string? apiKeyProvisional = null,
         Func<HttpResponseMessage, string, ModelLoadFailureReason>? failureReasonSelector = null,
         Action<HttpRequestMessage, string>? requestConfigurator = null,
         JsonSerializerOptions? jsonSerializerOptions = null,
-        bool isTryingSecret = false)
+        bool isTryingSecret = false,
+        CancellationToken token = default)
     {
         var secretKey = await this.GetModelLoadingSecretKey(storeType, apiKeyProvisional, isTryingSecret);
         if (string.IsNullOrWhiteSpace(secretKey) && !isTryingSecret)
@@ -443,6 +446,10 @@ public abstract class BaseProvider : IProvider, ISecretId
     /// <summary>
     /// Sends a request and handles rate limiting by exponential backoff.
     /// </summary>
+    /// <remarks>
+    /// Two cancellation tokens, so one of them cannot be the last parameter: the user token
+    /// survives a retry, while the request token belongs to the single attempt being made.
+    /// </remarks>
     /// <param name="requestBuilder">A function that builds the request.</param>
     /// <param name="userCancellationToken">The user cancellation token.</param>
     /// <param name="requestCancellationToken">The token to use for the HTTP request.</param>
@@ -1017,13 +1024,14 @@ public abstract class BaseProvider : IProvider, ISecretId
         Model chatModel,
         ChatThread chatThread,
         SettingsManager settingsManager,
-        Func<TextMessage, IDictionary<string, object>, Task<TRequest>> requestFactory,
+        Func<TextMessage, IDictionary<string, object>, IList<object>?, Task<TRequest>> requestFactory,
         SecretStoreType storeType = SecretStoreType.LLM_PROVIDER,
         bool isTryingSecret = false,
         string systemPromptRole = "system",
         string requestPath = "chat/completions",
         Action<HttpRequestHeaders>? headersAction = null,
         [EnumeratorCancellation] CancellationToken token = default)
+        where TRequest : ChatCompletionAPIRequest
         where TDelta : IResponseStreamLine
         where TAnnotation : IAnnotationStreamLine
     {
@@ -1032,18 +1040,69 @@ public abstract class BaseProvider : IProvider, ISecretId
         if(!requestedSecret.Success && !isTryingSecret)
             yield break;
 
-        // Prepare the system prompt:
-        var systemPrompt = new TextMessage
-        {
-            Role = systemPromptRole,
-            Content = chatThread.PrepareSystemPrompt(settingsManager),
-        };
-
         // Parse the API parameters:
-        var apiParameters = this.ParseAdditionalApiParameters();
+        var apiParameters = this.ParseAdditionalApiParameters("parallel_tool_calls");
+
+        var toolRegistry = Program.SERVICE_PROVIDER.GetService<ToolRegistry>();
+        var toolExecutor = Program.SERVICE_PROVIDER.GetService<ToolExecutor>();
+        var currentAssistantContent = chatThread.Blocks.LastOrDefault(x => x.Role is ChatRole.AI)?.Content as ContentText;
+        currentAssistantContent?.ToolInvocations.Clear();
+
+        TextMessage systemPrompt;
+        if (toolRegistry is not null && toolExecutor is not null)
+        {
+            var providerSettings = this.CreateSettingsProvider(chatModel);
+            var runnableTools = await toolRegistry.GetRunnableToolsAsync(
+                providerSettings,
+                chatThread.RuntimeComponent,
+                chatThread.RuntimeSelectedToolIds,
+                this.Provider.GetConfidence(settingsManager).Level,
+                chatThread.MayRunTools(settingsManager));
+
+            systemPrompt = new TextMessage
+            {
+                Role = systemPromptRole,
+                Content = chatThread.PrepareSystemPrompt(settingsManager, runnableTools.Select(x => x.Definition)),
+            };
+
+            if (runnableTools.Count > 0)
+            {
+                var adapter = new ChatCompletionToolCallingAdapter<TRequest>(requestFactory, systemPrompt, apiParameters,
+                    runnableTools.Select(x => ProviderToolAdapters.ToChatCompletionTool(x.Definition)).ToList(), runnableTools,
+                    (requestDto, requestToken) => this.ExecuteChatCompletionRequest(requestDto, requestPath, requestedSecret, headersAction, requestToken),
+                    this.InstanceName, this.logger);
+
+                var loop = Program.SERVICE_PROVIDER.GetRequiredService<IToolCallingLoop>();
+                var loopContext = new ToolCallingLoopContext
+                {
+                    ChatThread = chatThread,
+                    RunnableTools = runnableTools,
+                    ToolExecutor = toolExecutor,
+                    Provider = this,
+                    CurrentAssistantContent = currentAssistantContent,
+                    ProviderInstanceName = this.InstanceName,
+                    ProviderType = this.Provider,
+                    ModelId = chatModel.Id,
+                };
+
+                await foreach (var content in loop.RunAsync(adapter, loopContext, token))
+                    yield return content;
+
+                yield break;
+            }
+
+        }
+        else
+        {
+            systemPrompt = new TextMessage
+            {
+                Role = systemPromptRole,
+                Content = chatThread.PrepareSystemPrompt(settingsManager),
+            };
+        }
 
         // Prepare the provider HTTP chat request:
-        var providerChatRequest = JsonSerializer.Serialize(await requestFactory(systemPrompt, apiParameters), JSON_SERIALIZER_OPTIONS);
+        var providerChatRequest = JsonSerializer.Serialize(await requestFactory(systemPrompt, apiParameters, null), JSON_SERIALIZER_OPTIONS);
 
         async Task<HttpRequestMessage> RequestBuilder()
         {
@@ -1064,6 +1123,44 @@ public abstract class BaseProvider : IProvider, ISecretId
 
         await foreach (var content in this.StreamChatCompletionInternal<TDelta, TAnnotation>(providerName, RequestBuilder, token))
             yield return content;
+    }
+
+    /// <summary>
+    /// Describes this provider instance with the given model as configured provider settings.
+    /// </summary>
+    /// <remarks>
+    /// Anything asking about model capabilities must go through this, because the expert
+    /// capability overrides live on the settings object: a provider that builds its own settings
+    /// instance without them silently ignores what the user configured.
+    /// </remarks>
+    protected AIStudio.Settings.Provider CreateSettingsProvider(Model chatModel) => new()
+    {
+        UsedLLMProvider = this.Provider,
+        Model = chatModel,
+        InstanceName = this.InstanceName,
+        CapabilityOverrides = this.CapabilityOverrides,
+    };
+
+    private async Task<ChatCompletionResponse?> ExecuteChatCompletionRequest(ChatCompletionAPIRequest requestDto, string requestPath, RequestedSecret requestedSecret,
+        Action<HttpRequestHeaders>? headersAction, CancellationToken token)
+    {
+        var responseData = await this.SendRequest(RequestBuilder, token);
+        if (responseData.IsFailedAfterAllRetries)
+            return null;
+
+        using var response = responseData.Response!;
+        return await response.Content.ReadFromJsonAsync<ChatCompletionResponse>(JSON_SERIALIZER_OPTIONS, token);
+
+        async Task<HttpRequestMessage> RequestBuilder()
+        {
+            var request = new HttpRequestMessage(HttpMethod.Post, requestPath);
+            if (requestedSecret.Success)
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
+
+            headersAction?.Invoke(request.Headers);
+            request.Content = new StringContent(JsonSerializer.Serialize(requestDto, JSON_SERIALIZER_OPTIONS), Encoding.UTF8, "application/json");
+            return request;
+        }
     }
 
     /// <summary>
@@ -1199,6 +1296,10 @@ public abstract class BaseProvider : IProvider, ISecretId
         }
     }
     
+    /// <remarks>
+    /// The cancellation token is not the last parameter, unlike everywhere else in this codebase:
+    /// C# demands that a params parameter comes last.
+    /// </remarks>
     protected async Task<IReadOnlyList<IReadOnlyList<float>>> PerformStandardTextEmbeddingRequest(RequestedSecret requestedSecret, Model embeddingModel, Host host = Host.NONE, CancellationToken token = default, params List<string> texts)
     {
         try

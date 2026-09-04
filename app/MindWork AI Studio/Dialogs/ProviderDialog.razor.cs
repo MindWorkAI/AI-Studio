@@ -120,6 +120,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     private static readonly IReadOnlyList<Capability> SWITCH_CAPABILITY_OVERRIDES =
     [
         Capability.AUDIO_INPUT,
+        Capability.FUNCTION_CALLING,
         Capability.MULTIPLE_IMAGE_INPUT,
         Capability.SPEECH_INPUT,
         Capability.VIDEO_INPUT
@@ -621,6 +622,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     private string GetCapabilityOverrideLabel(Capability capability) => capability switch
     {
         Capability.AUDIO_INPUT => T("Audio input"),
+        Capability.FUNCTION_CALLING => T("Tool calling"),
         Capability.MULTIPLE_IMAGE_INPUT => T("Multiple image input"),
         Capability.SPEECH_INPUT => T("Speech input"),
         Capability.VIDEO_INPUT => T("Video input"),

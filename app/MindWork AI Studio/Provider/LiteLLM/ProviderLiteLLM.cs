@@ -29,7 +29,7 @@ public sealed class ProviderLiteLLM(string hostname) : BaseProvider(LLMProviders
                            chatModel,
                            chatThread,
                            settingsManager,
-                           async (systemPrompt, apiParameters) =>
+                           async (systemPrompt, apiParameters, tools) =>
                            {
                                // Build the list of messages:
                                var messages = await chatThread.Blocks.BuildMessagesUsingDirectImageUrlAsync(this.Provider, chatModel);
@@ -44,6 +44,7 @@ public sealed class ProviderLiteLLM(string hostname) : BaseProvider(LLMProviders
                                    Messages = [systemPrompt, ..messages],
 
                                    Stream = true,
+                                   Tools = tools,
                                    AdditionalApiParameters = apiParameters
                                };
                            },
@@ -76,7 +77,7 @@ public sealed class ProviderLiteLLM(string hostname) : BaseProvider(LLMProviders
     /// <inheritdoc />
     public override Task<ModelLoadResult> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModels(SecretStoreType.LLM_PROVIDER, static model => model.IsChatModel(), token, apiKeyProvisional);
+        return this.LoadModels(SecretStoreType.LLM_PROVIDER, static model => model.IsChatModel(), apiKeyProvisional, token);
     }
 
     /// <inheritdoc />
@@ -88,13 +89,13 @@ public sealed class ProviderLiteLLM(string hostname) : BaseProvider(LLMProviders
     /// <inheritdoc />
     public override Task<ModelLoadResult> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModels(SecretStoreType.EMBEDDING_PROVIDER, static model => model.IsEmbeddingModel(), token, apiKeyProvisional);
+        return this.LoadModels(SecretStoreType.EMBEDDING_PROVIDER, static model => model.IsEmbeddingModel(), apiKeyProvisional, token);
     }
 
     /// <inheritdoc />
     public override Task<ModelLoadResult> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModels(SecretStoreType.TRANSCRIPTION_PROVIDER, static model => model.IsTranscriptionModel(), token, apiKeyProvisional);
+        return this.LoadModels(SecretStoreType.TRANSCRIPTION_PROVIDER, static model => model.IsTranscriptionModel(), apiKeyProvisional, token);
     }
 
     #endregion
@@ -108,7 +109,7 @@ public sealed class ProviderLiteLLM(string hostname) : BaseProvider(LLMProviders
         return new Uri($"{normalizedHostname}/v1/");
     }
 
-    private Task<ModelLoadResult> LoadModels(SecretStoreType storeType, Func<Model, bool> isWantedKind, CancellationToken token, string? apiKeyProvisional = null)
+    private Task<ModelLoadResult> LoadModels(SecretStoreType storeType, Func<Model, bool> isWantedKind, string? apiKeyProvisional, CancellationToken token)
     {
         //
         // The gateway serves every kind of model through one endpoint, so we have to sort
@@ -119,8 +120,7 @@ public sealed class ProviderLiteLLM(string hostname) : BaseProvider(LLMProviders
             storeType,
             "models",
             modelResponse => modelResponse.Data.Where(IsRealModel).Where(isWantedKind),
-            token,
-            apiKeyProvisional);
+            apiKeyProvisional, token: token);
     }
 
     /// <summary>

@@ -175,6 +175,12 @@
                     <ProfileSelection MarginLeft="" @bind-CurrentProfile="@this.CurrentProfile"/>
                 }
 
+                @* No selection where the assistant's own rules already name the tools: *@
+                @if (this.SettingsManager.AreToolsEnabled() && this.AssistantManagedToolIds is null && this.SettingsManager.IsToolSelectionVisible(this.Component))
+                {
+                    <ToolSelection Component="@this.Component" LLMProvider="@this.ProviderSettings" SelectedToolIds="@this.SelectedToolIds" SelectedToolIdsChanged="@this.SelectedToolIdsChanged" Disabled="@this.IsProcessing" />
+                }
+
                 <MudSpacer />
                 <HalluzinationReminder ContainerClass="my-0 ml-2"/>
             </MudStack>

@@ -29,7 +29,7 @@ public sealed class ProviderHetzner() : BaseProvider(LLMProviders.HETZNER, new U
                            chatModel,
                            chatThread,
                            settingsManager,
-                           async (systemPrompt, apiParameters) =>
+                           async (systemPrompt, apiParameters, tools) =>
                            {
                                var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel);
 
@@ -38,6 +38,7 @@ public sealed class ProviderHetzner() : BaseProvider(LLMProviders.HETZNER, new U
                                    Model = chatModel.Id,
                                    Messages = [systemPrompt, ..messages],
                                    Stream = true,
+                                   Tools = tools,
                                    AdditionalApiParameters = apiParameters
                                };
                            },
@@ -68,7 +69,7 @@ public sealed class ProviderHetzner() : BaseProvider(LLMProviders.HETZNER, new U
     /// <inheritdoc />
     public override Task<ModelLoadResult> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModelsResponse<ModelsResponse>(SecretStoreType.LLM_PROVIDER, "models", modelResponse => modelResponse.Data.Where(model => model.IsChatModel()), token, apiKeyProvisional);
+        return this.LoadModelsResponse<ModelsResponse>(SecretStoreType.LLM_PROVIDER, "models", modelResponse => modelResponse.Data.Where(model => model.IsChatModel()), apiKeyProvisional, token: token);
     }
 
     /// <inheritdoc />

@@ -17,6 +17,7 @@ public static class SecretStoreTypeExtensions
         SecretStoreType.TRANSCRIPTION_PROVIDER => "transcription",
         SecretStoreType.IMAGE_PROVIDER => "image",
         SecretStoreType.DATA_SOURCE => "data-source",
+        SecretStoreType.TOOL_SETTINGS => "tool",
         
         _ => "provider",
     };

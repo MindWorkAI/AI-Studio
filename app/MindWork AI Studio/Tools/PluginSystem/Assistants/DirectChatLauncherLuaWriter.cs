@@ -1,6 +1,8 @@
 using System.Text;
 using System.Text.RegularExpressions;
 
+using SharedTools;
+
 namespace AIStudio.Tools.PluginSystem.Assistants;
 
 /// <summary>
@@ -65,12 +67,27 @@ public static class DirectChatLauncherLuaWriter
         plugin.ReadAllLuaFiles().Keys.Any(relativePath => !string.Equals(relativePath, PLUGIN_FILE_NAME, StringComparison.OrdinalIgnoreCase));
 
     /// <summary>
-    /// Writes the complete plugin.lua for the given launcher.
+    /// Writes the complete plugin.lua for an installed launcher whose settings changed.
     /// </summary>
     /// <param name="plugin">The installed launcher whose metadata is carried over.</param>
     /// <param name="definition">The name, title, description, and chat settings the user chose.</param>
     /// <returns>The plugin.lua content, ready to be validated and written.</returns>
-    public static string Write(PluginAssistants plugin, DirectChatLauncherDefinition definition)
+    public static string Write(PluginAssistants plugin, DirectChatLauncherDefinition definition) =>
+        Write(DirectChatLauncherPluginMetadata.FromPlugin(plugin), definition);
+
+    /// <summary>
+    /// Writes the complete plugin.lua for a launcher.
+    /// </summary>
+    /// <remarks>
+    /// A launcher is fully described by its metadata plus a flat ASSISTANT table, so this is the
+    /// whole file rather than a starting point. The Assistant Builder uses that: for a launcher it
+    /// asks a model for the texts only and writes the file itself, because there is nothing left
+    /// for a model to decide.
+    /// </remarks>
+    /// <param name="plugin">The metadata of the launcher, either carried over or newly chosen.</param>
+    /// <param name="definition">The name, title, description, and chat settings the user chose.</param>
+    /// <returns>The plugin.lua content, ready to be validated and written.</returns>
+    public static string Write(DirectChatLauncherPluginMetadata plugin, DirectChatLauncherDefinition definition)
     {
         var builder = new StringBuilder();
 
@@ -169,6 +186,15 @@ public static class DirectChatLauncherLuaWriter
             builder.AppendLine("    [\"DataSourceIds\"] = {");
             foreach (var dataSourceId in dataSourceIds)
                 builder.AppendLine($"        \"{dataSourceId}\",");
+
+            builder.AppendLine("    },");
+        }
+
+        if (definition.Launch.ToolIds is { Count: > 0 } toolIds)
+        {
+            builder.AppendLine("    [\"ToolIds\"] = {");
+            foreach (var toolId in toolIds)
+                builder.AppendLine($"        {LuaTools.ToLuaStringLiteral(toolId)},");
 
             builder.AppendLine("    },");
         }

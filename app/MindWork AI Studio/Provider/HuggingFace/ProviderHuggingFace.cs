@@ -163,7 +163,7 @@ public sealed class ProviderHuggingFace : BaseProvider
                            chatModel,
                            chatThread,
                            settingsManager,
-                           async (systemPrompt, apiParameters) =>
+                           async (systemPrompt, apiParameters, tools) =>
                            {
                                // Build the list of messages:
                                var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel);
@@ -178,6 +178,7 @@ public sealed class ProviderHuggingFace : BaseProvider
                                    Messages = [systemPrompt, ..messages],
 
                                    Stream = true,
+                                   Tools = tools,
                                    AdditionalApiParameters = apiParameters
                                };
                            },
@@ -220,7 +221,7 @@ public sealed class ProviderHuggingFace : BaseProvider
     /// <inheritdoc />
     public override Task<ModelLoadResult> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModelsResponse<ModelsResponse>(SecretStoreType.LLM_PROVIDER, "models", this.SelectChatModels, token, apiKeyProvisional);
+        return this.LoadModelsResponse<ModelsResponse>(SecretStoreType.LLM_PROVIDER, "models", this.SelectChatModels, apiKeyProvisional, token: token);
     }
 
     /// <summary>
@@ -282,7 +283,7 @@ public sealed class ProviderHuggingFace : BaseProvider
     private Task<ModelLoadResult> LoadHubModels(SecretStoreType storeType, string pipelineTag, string? apiKeyProvisional, CancellationToken token)
     {
         var requestURL = $"{HUB_MODELS_URL}{this.hfProvider.EndpointsId()}&pipeline_tag={pipelineTag}";
-        return this.LoadModelsResponse<IList<HubModel>>(storeType, requestURL, hubModels => hubModels.Select(hubModel => new Model(hubModel.Id, null)), token, apiKeyProvisional);
+        return this.LoadModelsResponse<IList<HubModel>>(storeType, requestURL, hubModels => hubModels.Select(hubModel => new Model(hubModel.Id, null)), apiKeyProvisional, token: token);
     }
     
     /// <inheritdoc />

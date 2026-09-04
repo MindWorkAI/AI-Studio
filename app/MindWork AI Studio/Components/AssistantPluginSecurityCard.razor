@@ -33,16 +33,25 @@
                             <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="@state.AuditColor">
                                 @state.AuditLabel
                             </MudChip>
+                            
                             @if (!string.IsNullOrWhiteSpace(state.SourceLabel))
                             {
                                 <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="@state.SourceColor" Icon="@state.SourceIcon">
                                     @state.SourceLabel
                                 </MudChip>
                             }
+                            
                             @if (!string.IsNullOrWhiteSpace(state.AvailabilityLabel))
                             {
                                 <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="@state.AvailabilityColor" Icon="@state.AvailabilityIcon">
                                     @state.AvailabilityLabel
+                                </MudChip>
+                            }
+                            
+                            @if (this.PluginToolIds.Count > 0)
+                            {
+                                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info" Icon="@Icons.Material.Filled.Handyman">
+                                    @this.GetToolCountLabel()
                                 </MudChip>
                             }
                         </div>
@@ -135,6 +144,15 @@
                                                 </td>
                                                 <td><MudText Typo="Typo.body2">@state.SourceLabel</MudText></td>
                                             </tr>
+                                            @if (this.PluginToolIds.Count > 0)
+                                            {
+                                                <tr>
+                                                    <td>
+                                                        <MudText Typo="Typo.body2"><b>@T("Tools")</b></MudText>
+                                                    </td>
+                                                    <td><code style="font-size: 0.8rem;">@string.Join(", ", this.PluginToolIds)</code></td>
+                                                </tr>
+                                            }
                                             <tr>
                                                 <td>
                                                     <MudText Typo="Typo.body2"><b>@T("Current hash")</b></MudText>

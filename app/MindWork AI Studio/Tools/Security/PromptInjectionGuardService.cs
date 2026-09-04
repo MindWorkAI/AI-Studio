@@ -65,6 +65,88 @@ public sealed class PromptInjectionGuardService(
     }
 
     /// <summary>
+    /// Filters prompt injections out of several texts in one runtime request.
+    /// </summary>
+    /// <remarks>
+    /// For content that belongs to one user action, such as every page a web search returned.
+    /// The user gets a single report for the whole action, and texts sharing a source are
+    /// reported as that one source.<br/><br/>
+    /// Returns usable text in every case, for the reason given on the single-text overload. When
+    /// the check cannot run, every text is passed through unchanged.
+    /// </remarks>
+    /// <param name="texts">The contents to filter, each with its source.</param>
+    /// <returns>The contents with any suspicious passages removed, in the order they came in.</returns>
+    public async Task<IReadOnlyList<string>> SanitizeAsync(IReadOnlyList<PromptInjectionText> texts)
+    {
+        if (texts.Count is 0)
+            return [];
+
+        //
+        // Empty fields are common — many pages have no description or authors — and the runtime
+        // has nothing to do with them. Only the texts with content are sent, and their positions
+        // are remembered so the answer can be put back in the caller's order.
+        //
+        var sanitizedTexts = texts.Select(x => x.Text).ToArray();
+        List<int> indicesToScan = [];
+        for (var index = 0; index < texts.Count; index++)
+        {
+            if (!string.IsNullOrWhiteSpace(texts[index].Text))
+                indicesToScan.Add(index);
+        }
+
+        if (indicesToScan.Count is 0)
+            return sanitizedTexts;
+
+        var responses = await rustService.SanitizePromptInjectionsBatch(indicesToScan.Select(index => texts[index].Text).ToList());
+        if (responses is null)
+        {
+            var sources = texts.Select(x => x.Source).Distinct().ToList();
+            logger.LogError("Could not check {SourceCount} content source(s) for prompt injections. The content is used unchanged. Sources: {SourceLabels}", sources.Count, string.Join(", ", sources.Select(x => $"{x.Kind} '{x.Label}'")));
+            await MessageBus.INSTANCE.SendWarning(new(
+                Icons.Material.Filled.GppMaybe,
+                sources.Count is 1
+                    ? string.Format(TB("AI Studio could not check '{0}' for prompt injections. The content is used as it is."), sources[0].NotificationLabel)
+                    : string.Format(TB("AI Studio could not check {0} sources for prompt injections. The content is used as it is."), sources.Count)));
+
+            return sanitizedTexts;
+        }
+
+        //
+        // Findings are collected per source, not per text: a page whose content and title were
+        // both filtered is one thing that happened to the user, not two.
+        //
+        var findingsBySource = new Dictionary<PromptInjectionSource, (List<PromptInjectionFinding> Findings, int RedactedCount)>();
+        for (var responseIndex = 0; responseIndex < indicesToScan.Count; responseIndex++)
+        {
+            var response = responses[responseIndex];
+            var textIndex = indicesToScan[responseIndex];
+            sanitizedTexts[textIndex] = response.SanitizedText;
+            if (response.RedactedCount is 0)
+                continue;
+
+            var source = texts[textIndex].Source;
+            if (!findingsBySource.TryGetValue(source, out var aggregate))
+                aggregate = ([], 0);
+
+            aggregate.Findings.AddRange(response.Findings);
+            findingsBySource[source] = (aggregate.Findings, aggregate.RedactedCount + response.RedactedCount);
+        }
+
+        if (findingsBySource.Count is 0)
+            return sanitizedTexts;
+
+        //
+        // One scope around all sources, so a search across five pages reports once instead of
+        // five times:
+        //
+        await using var reportingScope = this.BeginAction();
+        foreach (var (source, aggregate) in findingsBySource)
+            await this.ReportAsync(new(source, aggregate.Findings, aggregate.RedactedCount));
+
+        return sanitizedTexts;
+    }
+
+    /// <summary>
     /// Records what was filtered out of one piece of content and tells the user about it.
     /// </summary>
     /// <remarks>

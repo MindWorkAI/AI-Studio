@@ -29,7 +29,7 @@ public sealed class ProviderMistral() : BaseProvider(LLMProviders.MISTRAL, new U
                            chatModel,
                            chatThread,
                            settingsManager,
-                           async (systemPrompt, apiParameters) =>
+                           async (systemPrompt, apiParameters, tools) =>
                            {
                                if (TryPopBoolParameter(apiParameters, "safe_prompt", out var parsedSafePrompt))
                                    apiParameters["safe_prompt"] = parsedSafePrompt;
@@ -51,6 +51,7 @@ public sealed class ProviderMistral() : BaseProvider(LLMProviders.MISTRAL, new U
 
                                    // Right now, we only support streaming completions:
                                    Stream = true,
+                                   Tools = tools,
                                    AdditionalApiParameters = apiParameters
                                };
                            },
@@ -138,7 +139,6 @@ public sealed class ProviderMistral() : BaseProvider(LLMProviders.MISTRAL, new U
             storeType,
             "models",
             modelResponse => modelResponse.Data.Select(n => new Provider.Model(n.Id, null)),
-            token,
-            apiKeyProvisional);
+            apiKeyProvisional, token: token);
     }
 }

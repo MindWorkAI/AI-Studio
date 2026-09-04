@@ -3,6 +3,7 @@ using AIStudio.Dialogs;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.AIJobs;
 using AIStudio.Tools.Media;
 using AIStudio.Tools.Services;
@@ -49,6 +50,9 @@ public partial class ChatComponent : MSGComponentBase
     private ILogger<ChatComponent> Logger { get; set; } = null!;
 
     [Inject]
+    private ToolRegistry ToolRegistry { get; set; } = null!;
+
+    [Inject]
     private IDialogService DialogService { get; init; } = null!;
     
     [Inject]
@@ -76,6 +80,7 @@ public partial class ChatComponent : MSGComponentBase
     private bool mustLoadChat;
     private LoadChat loadChat;
     private bool autoSaveEnabled;
+    private HashSet<string> selectedToolIds = [];
     private bool previousInputForbidden = true;
     private Guid lastSeenChatId = Guid.Empty;
     private AIStudio.Settings.Provider lastSeenProvider = AIStudio.Settings.Provider.NONE;
@@ -113,7 +118,7 @@ public partial class ChatComponent : MSGComponentBase
     protected override async Task OnInitializedAsync()
     {
         this.MediaTranscriptionService.StateChanged += this.OnMediaImportStateChanged;
-        
+
         // Apply the filters for the message bus:
         this.ApplyFilters([], [ Event.HAS_CHAT_UNSAVED_CHANGES, Event.RESET_CHAT_STATE, Event.CHAT_STREAMING_DONE, Event.AI_JOB_CHANGED, Event.AI_JOB_FINISHED, Event.CHAT_GENERATION_CHANGED, Event.WORKSPACE_RENAMED, Event.CONFIGURATION_CHANGED ]);
         
@@ -128,6 +133,7 @@ public partial class ChatComponent : MSGComponentBase
         this.currentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(Tools.Components.CHAT);
         if (!this.ComposerState.HasUserDraft && !this.ComposerState.HasComposerContent)
             this.ComposerState.ApplyTemplate(this.currentChatTemplate);
+        this.selectedToolIds = ToolSelectionRules.NormalizeSelection(this.SettingsManager.GetDefaultToolIds(Tools.Components.CHAT));
 
         this.lastAppliedStandardDataSourceOptions = this.SettingsManager.ConfigurationData.Chat.PreselectedDataSourceOptions.CreateCopy();
 
@@ -149,6 +155,7 @@ public partial class ChatComponent : MSGComponentBase
             // Use chat thread sent by the user:
             this.ChatThread = deferredRequest.ChatThread;
             this.ChatThread.IncludeDateTime = true;
+            this.ApplyToolSelectionOfLoadedChat();
 
             //
             // Apply the chat template of the incoming chat to the composer. Like everywhere else,
@@ -332,6 +339,7 @@ public partial class ChatComponent : MSGComponentBase
                 await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
                 this.Logger.LogInformation($"The chat '{this.ChatThread!.ChatId}' with title '{this.ChatThread.Name}' ({this.ChatThread.Blocks.Count} messages) was loaded successfully.");
 
+                this.ApplyToolSelectionOfLoadedChat();
                 await this.SyncWorkspaceHeaderWithChatThreadAsync();
                 await this.SelectProviderWhenLoadingChat();
             }
@@ -617,9 +625,8 @@ public partial class ChatComponent : MSGComponentBase
     {
         var previousProvider = this.Provider;
         var previousChatTemplate = this.currentChatTemplate;
-        var chatProviderId = this.ChatThread?.SelectedProvider;
 
-        this.Provider = this.SettingsManager.GetChatProviderForLoadedChat(chatProviderId);
+        this.Provider = this.SettingsManager.GetChatProviderForLoadedChat(this.Provider.Id);
         if (this.Provider != previousProvider)
             await this.ProviderChanged.InvokeAsync(this.Provider);
 
@@ -756,6 +763,7 @@ public partial class ChatComponent : MSGComponentBase
             SelectedProvider = this.Provider.Id,
             SelectedProfile = this.currentProfile.Id,
             SelectedChatTemplate = this.currentChatTemplate.Id,
+            SelectedToolIds = [..this.selectedToolIds],
             SystemPrompt = SystemPrompts.DEFAULT,
             WorkspaceId = this.currentWorkspaceId,
             ChatId = Guid.NewGuid(),
@@ -778,6 +786,8 @@ public partial class ChatComponent : MSGComponentBase
         if (this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner))
             return;
 
+        await this.RefreshProviderSelectionFromConfigurationAsync();
+
         if (!this.IsProviderSelected)
             return;
         
@@ -798,6 +808,7 @@ public partial class ChatComponent : MSGComponentBase
                 SelectedProvider = this.Provider.Id,
                 SelectedProfile = this.currentProfile.Id,
                 SelectedChatTemplate = this.currentChatTemplate.Id,
+                SelectedToolIds = [..this.selectedToolIds],
                 SystemPrompt = SystemPrompts.DEFAULT,
                 WorkspaceId = this.currentWorkspaceId,
                 ChatId = Guid.NewGuid(),
@@ -899,15 +910,18 @@ public partial class ChatComponent : MSGComponentBase
         }
         
         this.Logger.LogDebug($"Start processing user input using provider '{this.Provider.InstanceName}' with model '{this.Provider.Model}'.");
+        this.StateHasChanged();
+        this.ChatThread!.RuntimeComponent = Tools.Components.CHAT;
+        this.ChatThread.SelectedToolIds = [..this.selectedToolIds];
+        this.ChatThread.RuntimeSelectedToolIds = this.ToolRegistry.FilterToolIdsForProvider(this.Provider, this.selectedToolIds);
         await this.AIJobService.TryStartChatGenerationAsync(new ChatGenerationRequest
         {
-            ChatThread = this.ChatThread!,
+            ChatThread = this.ChatThread,
             AIText = aiText,
             LastUserPrompt = lastUserPrompt,
             ProviderSettings = this.Provider,
             IsForeground = true,
         });
-
         await this.SyncForegroundChatAsync();
         this.StateHasChanged();
     }
@@ -916,6 +930,37 @@ public partial class ChatComponent : MSGComponentBase
     {
         if (this.ChatThread is not null)
             await this.AIJobService.CancelChatGenerationAsync(this.ChatThread.ChatId);
+    }
+
+    /// <summary>
+    /// Takes over the tool selection of the chat that was just loaded or handed to this component.
+    /// </summary>
+    /// <remarks>
+    /// A thread without a selection means the chat defaults: that is a chat saved before tools
+    /// existed, as well as one a launcher opened without naming any. Both want what the settings
+    /// preselect. Every path that puts a thread into this component has to come through here, or
+    /// the footer would keep showing the tools of the chat before it.
+    /// </remarks>
+    private void ApplyToolSelectionOfLoadedChat() =>
+        this.selectedToolIds = ToolSelectionRules.NormalizeSelection(this.ChatThread?.SelectedToolIds ?? this.SettingsManager.GetDefaultToolIds(Tools.Components.CHAT));
+
+    private Task SelectedToolIdsChanged(HashSet<string> updatedToolIds)
+    {
+        this.selectedToolIds = ToolSelectionRules.NormalizeSelection(updatedToolIds);
+
+        //
+        // The thread keeps the selection so that reopening the chat tomorrow brings the same tools
+        // back. What is stored is what the user chose, not what the current provider is allowed to
+        // run: filtering here would quietly drop a tool for good the moment the user switches to a
+        // provider with less confidence.
+        //
+        if (this.ChatThread is not null)
+        {
+            this.ChatThread.SelectedToolIds = [..this.selectedToolIds];
+            this.hasUnsavedChanges = true;
+        }
+
+        return Task.CompletedTask;
     }
     
     private async Task SaveThread()
@@ -980,6 +1025,7 @@ public partial class ChatComponent : MSGComponentBase
         //
         this.hasUnsavedChanges = false;
         this.ComposerState.Clear();
+        this.selectedToolIds = ToolSelectionRules.NormalizeSelection(this.SettingsManager.GetDefaultToolIds(Tools.Components.CHAT));
         this.RefreshCurrentProfileAndChatTemplate();
         
         //
@@ -1029,6 +1075,7 @@ public partial class ChatComponent : MSGComponentBase
                 SelectedProvider = this.Provider.Id,
                 SelectedProfile = this.currentProfile.Id,
                 SelectedChatTemplate = this.currentChatTemplate.Id,
+                SelectedToolIds = [..this.selectedToolIds],
                 SystemPrompt = SystemPrompts.DEFAULT,
                 WorkspaceId = this.currentWorkspaceId,
                 ChatId = Guid.NewGuid(),
@@ -1104,6 +1151,7 @@ public partial class ChatComponent : MSGComponentBase
             await this.SyncWorkspaceHeaderWithChatThreadAsync();
             await this.SyncForegroundChatAsync();
             this.dataSourceSelectionComponent?.ChangeOptionWithoutSaving(this.ChatThread.DataSourceOptions, this.ChatThread.AISelectedDataSources);
+            this.ApplyToolSelectionOfLoadedChat();
         }
         else
         {
@@ -1122,6 +1170,19 @@ public partial class ChatComponent : MSGComponentBase
         }
         
         this.StateHasChanged();
+    }
+
+    private async Task RefreshProviderSelectionFromConfigurationAsync()
+    {
+        var updatedProvider = this.SettingsManager.GetPreselectedProvider(Tools.Components.CHAT, this.Provider.Id);
+        var providerChanged = updatedProvider != this.Provider;
+        if (providerChanged)
+            this.Provider = updatedProvider;
+
+        if (!providerChanged)
+            return;
+
+        await this.ProviderChanged.InvokeAsync(this.Provider);
     }
     
     private async Task ResetState()
@@ -1275,6 +1336,7 @@ public partial class ChatComponent : MSGComponentBase
                     this.StateHasChanged();
                 }
                 break;
+
         }
     }
 

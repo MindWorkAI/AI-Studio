@@ -109,10 +109,15 @@ internal sealed partial class LuaResponse
         "FORM" => !string.IsNullOrWhiteSpace(assistant.SystemPrompt) &&
                   !string.IsNullOrWhiteSpace(assistant.SubmitText) &&
                   assistant.AllowAiStudioProfiles.HasValue &&
+                  IsValidToolIds(assistant.ToolIds) &&
                   assistant.Launch is null,
+
+        // A launcher names its tools inside launch, so the same field one level up would be a
+        // second, competing selection:
         "CHAT_LAUNCHER" => assistant.SystemPrompt is null &&
                            assistant.SubmitText is null &&
                            assistant.AllowAiStudioProfiles is null &&
+                           assistant.ToolIds is null &&
                            IsValidChatLaunchMetadata(assistant.Launch),
         _ => false,
     };
@@ -127,16 +132,36 @@ internal sealed partial class LuaResponse
             !IsOptionalGuid(launch.ChatTemplateId, allowEmpty: true))
             return false;
 
-        return launch.DataSourceIds is null ||
-               launch.DataSourceIds.Length > 0 &&
-               launch.DataSourceIds.All(id => Guid.TryParse(id, out var parsed) && parsed != Guid.Empty) &&
-               launch.DataSourceIds.Distinct(StringComparer.OrdinalIgnoreCase).Count() == launch.DataSourceIds.Length;
+        if (launch.DataSourceIds is not null &&
+            (launch.DataSourceIds.Length == 0 ||
+             !launch.DataSourceIds.All(id => Guid.TryParse(id, out var parsed) && parsed != Guid.Empty) ||
+             launch.DataSourceIds.Distinct(StringComparer.OrdinalIgnoreCase).Count() != launch.DataSourceIds.Length))
+            return false;
+
+        return IsValidToolIds(launch.ToolIds);
     }
+
+    /// <remarks>
+    /// Tool IDs are plain names, so only their shape can be checked here. Whether the named tools
+    /// exist is decided later, against the tools this AI Studio actually has.
+    /// </remarks>
+    private static bool IsValidToolIds(string[]? toolIds) =>
+        toolIds is null ||
+        toolIds.Length > 0 &&
+        toolIds.All(id => !string.IsNullOrWhiteSpace(id)) &&
+        toolIds.Distinct(StringComparer.Ordinal).Count() == toolIds.Length;
 
     private static bool IsOptionalGuid(string? value, bool allowEmpty) => value is null ||
         Guid.TryParse(value, out var parsed) && (allowEmpty || parsed != Guid.Empty);
 
-    private static string ExtractJson(string input)
+    /// <summary>
+    /// Reads the first complete JSON object out of a model answer that may carry text around it.
+    /// </summary>
+    /// <remarks>
+    /// Shared with the launcher texts response, which is a different shape but arrives the same
+    /// way, wrapped in whatever prose the model felt like adding.
+    /// </remarks>
+    internal static string ExtractJson(string input)
     {
         var start = input.IndexOf('{');
         if (start < 0)

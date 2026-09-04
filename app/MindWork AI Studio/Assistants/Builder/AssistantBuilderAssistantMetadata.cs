@@ -8,5 +8,6 @@ internal sealed class AssistantBuilderAssistantMetadata
     public string? SystemPrompt { get; init; }
     public string? SubmitText { get; init; }
     public bool? AllowAiStudioProfiles { get; init; }
+    public string[]? ToolIds { get; init; }
     public AssistantBuilderChatLaunchMetadata? Launch { get; init; }
 }

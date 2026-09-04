@@ -23,7 +23,18 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
     private IDialogService DialogService { get; init; } = null!;
 
     protected override Tools.Components Component => Tools.Components.DOCUMENT_ANALYSIS_ASSISTANT;
-    
+
+    /// <summary>
+    /// The policy decides which tools its analysis uses; the user does not pick them.
+    /// </summary>
+    /// <remarks>
+    /// Two ways of working, one answer: someone writing a policy for themselves settles the tools
+    /// while writing it, and a policy rolled out by an organization arrives ready to use, with the
+    /// tools its authors tested it with. Either way there is nothing left for the user to switch,
+    /// which is why the tool selection does not appear in this assistant.
+    /// </remarks>
+    protected override IReadOnlySet<string> AssistantManagedToolIds => this.policyAllowedToolIds;
+
     protected override string Title => T("Document Analysis Assistant");
     
     protected override string Description => T("The document analysis assistant helps you to analyze and extract information from documents based on predefined policies. You can create, edit, and manage document analysis policies that define how documents should be processed and what information should be extracted. Some policies might be protected by your organization and cannot be modified or deleted.");
@@ -178,6 +189,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
             this.policyAnalysisRules = string.Empty;
             this.policyOutputRules = string.Empty;
             this.policyMinimumProviderConfidence = ConfidenceLevel.NONE;
+            this.policyAllowedToolIds = [];
             this.policyPreselectedProviderId = string.Empty;
             this.policyPreselectedProfile = ProfilePreselection.NoProfile;
         }
@@ -205,6 +217,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
             this.policyAnalysisRules = this.selectedPolicy.AnalysisRules;
             this.policyOutputRules = this.selectedPolicy.OutputRules;
             this.policyMinimumProviderConfidence = this.selectedPolicy.MinimumProviderConfidence;
+            this.policyAllowedToolIds = [..this.selectedPolicy.AllowedToolIds];
             this.policyPreselectedProviderId = this.selectedPolicy.PreselectedProvider;
             this.policyPreselectedProfile = ProfilePreselection.FromStoredValue(this.selectedPolicy.PreselectedProfile);
 
@@ -262,6 +275,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
             this.selectedPolicy.AnalysisRules = this.policyAnalysisRules;
             this.selectedPolicy.OutputRules = this.policyOutputRules;
             this.selectedPolicy.MinimumProviderConfidence = this.policyMinimumProviderConfidence;
+            this.selectedPolicy.AllowedToolIds = [..this.policyAllowedToolIds];
         }
 
         await this.SettingsManager.StoreSettings();
@@ -276,6 +290,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
     private string policyAnalysisRules = string.Empty;
     private string policyOutputRules = string.Empty;
     private ConfidenceLevel policyMinimumProviderConfidence = ConfidenceLevel.NONE;
+    private HashSet<string> policyAllowedToolIds = [];
     private string policyPreselectedProviderId = string.Empty;
     private ProfilePreselection policyPreselectedProfile = ProfilePreselection.NoProfile;
     private HashSet<FileAttachment> loadedDocumentPaths = [];
@@ -526,6 +541,15 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         }
 
         return this.SettingsManager.GetAppPreselectedProfile();
+    }
+
+    /// <summary>
+    /// Takes over the tools this policy permits.
+    /// </summary>
+    private async Task PolicyAllowedToolsWasChangedAsync(HashSet<string> allowedToolIds)
+    {
+        this.policyAllowedToolIds = allowedToolIds;
+        await this.AutoSave();
     }
 
     private async Task PolicyMinimumConfidenceWasChangedAsync(ConfidenceLevel level)
@@ -813,15 +837,52 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         }
 
         await this.AutoSave();
-        await this.Form!.Validate();
-        if (!this.InputIsValid)
+
+        //
+        // Only what the export actually writes is checked. Validating the whole form would demand
+        // a selected provider, which the export does not contain: it describes the policy, not the
+        // way one user happens to run it.
+        //
+        var policyIssues = this.GetPolicyExportIssues();
+        if (policyIssues.Count > 0)
         {
-            await this.MessageBus.SendError(new (Icons.Material.Filled.Policy, this.T("The selected policy contains invalid data. Please fix the issues before exporting the policy.")));
+            //
+            // Name the issues in both places. A message saying only that something is invalid
+            // leaves the user searching a long form, and leaves us without a clue in the log:
+            //
+            this.Logger.LogWarning(
+                "Was not able to export the document analysis policy '{PolicyName}'. It has {IssueCount} validation issue(s): {Issues}",
+                this.selectedPolicy?.PolicyName,
+                policyIssues.Count,
+                string.Join(" | ", policyIssues));
+
+            await this.MessageBus.SendError(new (Icons.Material.Filled.Policy, $"{this.T("The selected policy contains invalid data. Please fix the issues before exporting the policy.")} {string.Join(" ", policyIssues)}"));
             return;
         }
 
         var luaCode = this.GenerateLuaPolicyExport();
         await this.RustService.CopyText2Clipboard(luaCode);
+    }
+
+    /// <summary>
+    /// Checks the fields the export writes, using the same rules the form applies to them.
+    /// </summary>
+    private List<string> GetPolicyExportIssues()
+    {
+        List<string> issues = [];
+        foreach (var issue in new[]
+                 {
+                     this.ValidatePolicyName(this.policyName),
+                     this.ValidatePolicyDescription(this.policyDescription),
+                     this.ValidateAnalysisRules(this.policyAnalysisRules),
+                     this.ValidateOutputRules(this.policyOutputRules),
+                 })
+        {
+            if (!string.IsNullOrWhiteSpace(issue))
+                issues.Add(issue);
+        }
+
+        return issues;
     }
 
     private string GenerateLuaPolicyExport()
@@ -832,6 +893,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         var preselectedProvider = string.IsNullOrWhiteSpace(this.selectedPolicy.PreselectedProvider) ? string.Empty : this.selectedPolicy.PreselectedProvider;
         var preselectedProfile = string.IsNullOrWhiteSpace(this.selectedPolicy.PreselectedProfile) ? string.Empty : this.selectedPolicy.PreselectedProfile;
         var id = string.IsNullOrWhiteSpace(this.selectedPolicy.Id) ? Guid.NewGuid().ToString() : this.selectedPolicy.Id;
+        var allowedToolIds = string.Join(", ", this.selectedPolicy.AllowedToolIds.OrderBy(x => x, StringComparer.Ordinal).Select(x => LuaTools.ToLuaStringLiteral(x)));
         
         return $$"""
                  CONFIG["DOCUMENT_ANALYSIS_POLICIES"][#CONFIG["DOCUMENT_ANALYSIS_POLICIES"]+1] = {
@@ -847,6 +909,12 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
                      -- Allowed values are: NONE, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
                      ["MinimumProviderConfidence"] = "{{this.selectedPolicy.MinimumProviderConfidence}}",
                  
+                     -- The tools an analysis with this policy may use, by tool ID.
+                     -- This is a limit, not a preselection: a tool which is not listed here cannot
+                     -- be used for this policy. An empty list means no tools. A listed tool must
+                     -- still meet the confidence requirements of the provider in use.
+                     ["AllowedToolIds"] = { {{allowedToolIds}} },
+
                      -- Optional: preselect a provider or profile by ID.
                      -- The IDs must exist in CONFIG["LLM_PROVIDERS"] or CONFIG["PROFILES"].
                      ["PreselectedProvider"] = "{{preselectedProvider}}",

@@ -2,6 +2,7 @@ using AIStudio.Agents;
 using AIStudio.Agents.AssistantAudit;
 using AIStudio.Assistants.VisualBriefing;
 using AIStudio.Settings;
+using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.Databases;
 using AIStudio.Tools.AIJobs;
 using AIStudio.Tools.AssistantSessions;
@@ -11,6 +12,9 @@ using AIStudio.Tools.PluginSystem.Assistants;
 using AIStudio.Tools.Rust;
 using AIStudio.Tools.Security;
 using AIStudio.Tools.Services;
+using AIStudio.Tools.ToolCallingSystem.Harness;
+using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations;
+using AIStudio.Tools.Web;
 
 using Microsoft.AspNetCore.Components.Server.Circuits;
 using Microsoft.AspNetCore.DataProtection;
@@ -164,6 +168,14 @@ internal sealed class Program
         builder.Services.AddMudMarkdownClipboardService<MarkdownClipboardService>();
         builder.Services.AddSingleton<SettingsManager>();
         builder.Services.AddSingleton<PromptInjectionGuardService>();
+        builder.Services.AddSingleton<ToolSettingsService>();
+        builder.Services.AddSingleton<WebPageRetrievalService>();
+        builder.Services.AddSingleton<IToolImplementation, ReadWebPageTool>();
+        builder.Services.AddSingleton<IToolImplementation, SearXNGWebSearchTool>();
+        builder.Services.AddSingleton<IToolDefinitionSource, CodeToolDefinitionSource>();
+        builder.Services.AddSingleton<ToolRegistry>();
+        builder.Services.AddSingleton<ToolExecutor>();
+        builder.Services.AddSingleton<IToolCallingLoop, ToolCallingLoop>();
         builder.Services.AddSingleton<ThreadSafeRandom>();
         builder.Services.AddSingleton<AIJobService>();
         builder.Services.AddSingleton<AssistantSessionService>();
@@ -182,7 +194,9 @@ internal sealed class Program
         builder.Services.AddSingleton<DataSourceService>();
         builder.Services.AddSingleton<DirectChatService>();
         builder.Services.AddScoped<PandocAvailabilityService>();
-        builder.Services.AddTransient<HTMLParser>();
+        
+        // Stateless: every method works on its arguments alone, so one instance serves everyone.
+        builder.Services.AddSingleton<HTMLParser>();
         builder.Services.AddTransient<AgentDataSourceSelection>();
         builder.Services.AddTransient<AgentRetrievalContextValidation>();
         builder.Services.AddTransient<AgentTextContentCleaner>();

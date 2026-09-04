@@ -109,7 +109,7 @@ CONFIG["LLM_PROVIDERS"] = {}
 --
 --     -- Optional: expert capability overrides.
 --     -- Allowed keys are exactly:
---     -- AUDIO_INPUT, MULTIPLE_IMAGE_INPUT, SPEECH_INPUT, VIDEO_INPUT,
+--     -- AUDIO_INPUT, FUNCTION_CALLING, MULTIPLE_IMAGE_INPUT, SPEECH_INPUT, VIDEO_INPUT,
 --     -- OPTIONAL_REASONING, ALWAYS_REASONING, REASONING_BY_DEFAULT
 --     -- Allowed values are booleans only.
 --     -- For default-on reasoning (rhinking), set OPTIONAL_REASONING and REASONING_BY_DEFAULT to true.
@@ -683,6 +683,77 @@ CONFIG["SETTINGS"] = {}
 -- Examples are: "CmdOrControl+Shift+D", "Alt+F9", "F8"
 -- CONFIG["SETTINGS"]["DataApp.ShortcutVoiceRecording"] = "CmdOrControl+1"
 
+-- Configure whether tools are available at all. The default is true.
+-- When tools are disabled globally, tool selection is hidden in chats and assistants,
+-- but the global tool settings remain available to administrators.
+-- CONFIG["SETTINGS"]["DataTools.EnableTools"] = false
+
+-- Disable individual tools by their stable tool ID. The default is an empty set.
+-- Unknown IDs are safely ignored and can be deployed before a future tool is installed.
+-- CONFIG["SETTINGS"]["DataTools.DisabledToolIds"] = { "web_search" }
+
+-- Configure the minimum provider confidence level required for individual tools.
+-- Tool IDs include: web_search, read_web_page
+-- Allowed values are: NONE, UNTRUSTED, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
+-- Defaults: web_search = VERY_LOW, read_web_page = VERY_LOW
+-- CONFIG["SETTINGS"]["DataTools.MinimumProviderConfidenceByToolId"] = {
+--     ["web_search"] = "VERY_LOW",
+--     ["read_web_page"] = "VERY_LOW"
+-- }
+
+-- Configure the settings of individual tools. Keys are "<tool ID>.<field name>", values are
+-- always strings. This works for every tool, including tools added by plugins, because nothing
+-- here needs to be known to AI Studio in advance.
+--
+-- Two tables decide how firmly a value applies:
+--   LockedToolSettings  - the user cannot change it, and it is reapplied on every update.
+--   DefaultToolSettings - pre-fills the setting; a value the user saves afterwards wins.
+--
+-- Secrets never belong here. A tool field marked as secret is kept in the operating system's
+-- keyring, which a configuration file cannot write to.
+--
+-- Field names of the Web Search tool:
+--   baseUrl                          SearXNG HTTP(S) root URL or /search endpoint. The instance
+--                                    must have the JSON format enabled, i.e. "json" listed under
+--                                    search.formats in its settings.yml. Public instances usually
+--                                    serve only the web interface and block automated requests,
+--                                    so use an instance your organization operates.
+--   defaultLanguage                  Required. IETF language tag such as "de-DE", or "all" for no
+--                                    restriction. Without a language many search engines return
+--                                    no results at all, so the tool counts as unconfigured while
+--                                    this is empty.
+--   defaultSafeSearch                How strictly the search engine filters explicit results.
+--                                    Allowed values are: OFF, MODERATE, STRICT.
+--   maxResults                       Result count, as an integer string.
+--   searchTimeoutSeconds             SearXNG request timeout in seconds.
+--   pageTimeoutSeconds               Per-page timeout in seconds.
+--   allPagesRetrievalTimeoutSeconds  Overall page-retrieval timeout in seconds.
+--   maxTotalContentCharacters        Total content-character budget.
+--   minContentCharactersPerResult    Per-result content allocation.
+--
+-- Field names of the Read Web Page tool:
+--   timeoutSeconds        Page-loading timeout in seconds.
+--   maxContentCharacters  Content-character limit.
+--   allowedPrivateHosts   Comma-separated private or VPN host patterns. Public pages need not be
+--                         listed. Wildcards match subdomains only, so add the root domain
+--                         separately. Allowed private hosts require a provider with HIGH
+--                         confidence or one trusted by the organization. AI Studio only tries the
+--                         current user's operating-system sign-in for explicitly allowed HTTPS
+--                         targets when those provider requirements are met, and it never reuses
+--                         browser cookies.
+--
+-- CONFIG["SETTINGS"]["DataTools.LockedToolSettings"] = {
+--     ["web_search.baseUrl"] = "https://searxng.example.org/",
+--     ["web_search.defaultLanguage"] = "de-DE",
+--     ["read_web_page.allowedPrivateHosts"] = "example.org, *.example.org"
+-- }
+--
+-- CONFIG["SETTINGS"]["DataTools.DefaultToolSettings"] = {
+--     ["web_search.maxResults"] = "5",
+--     ["web_search.defaultSafeSearch"] = "MODERATE",
+--     ["read_web_page.timeoutSeconds"] = "30"
+-- }
+
 -- Configure the HTTP timeout for external requests, in seconds.
 -- The default is 3600 (1 hour).
 -- CONFIG["SETTINGS"]["DataApp.HttpClientTimeoutSeconds"] = 3600
@@ -774,7 +845,8 @@ CONFIG["SETTINGS"] = {}
 -- Configure provider instances trusted by your organization for data-source security checks.
 -- These IDs may refer to LLM providers, embedding providers, or transcription providers
 -- defined in this configuration. Trusted providers are treated like self-hosted providers
--- only for data-source security checks and related local data warnings.
+-- only for data-source security checks and related local data warnings. Trusted LLM providers
+-- can also use read_web_page for explicitly allowed private or VPN hosts.
 --
 -- Replaces, does not merge: a configuration with a higher priority replaces this list
 -- completely, so providers trusted by the base configuration lose that status. Repeat
@@ -952,7 +1024,15 @@ CONFIG["DOCUMENT_ANALYSIS_POLICIES"] = {}
 --     -- Optional: minimum provider confidence required for this policy.
 --     -- Allowed values are: NONE, VERY_LOW, LOW, MODERATE, MEDIUM, HIGH
 --     ["MinimumProviderConfidence"] = "MEDIUM",
--- 
+--
+--     -- Optional: the tools an analysis with this policy may use, by tool ID.
+--     -- This is a limit, not a preselection: a tool which is not listed here cannot be
+--     -- used for this policy. Omitting the list, or leaving it empty, means no tools.
+--     -- A listed tool must still meet the confidence requirements of the provider in
+--     -- use, so a tool may stay unavailable even though this policy permits it.
+--     -- Tool IDs include: web_search, read_web_page
+--     ["AllowedToolIds"] = { "web_search" },
+--
 --     -- Optional: preselect a provider or profile by ID.
 --     -- The IDs must exist in CONFIG["LLM_PROVIDERS"] or CONFIG["PROFILES"].
 --     ["PreselectedProvider"] = "00000000-0000-0000-0000-000000000000",

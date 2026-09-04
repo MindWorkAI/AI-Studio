@@ -22,6 +22,7 @@ public abstract class AssistantLowerBase : MSGComponentBase
     protected static readonly AssistantSessionStateKey<ContentBlock?> RESULTING_CONTENT_BLOCK_STATE_KEY = new(nameof(ResultingContentBlock));
     protected static readonly AssistantSessionStateKey<string[]> INPUT_ISSUES_STATE_KEY = new(nameof(InputIssues));
     protected static readonly AssistantSessionStateKey<bool> IS_PROCESSING_STATE_KEY = new(nameof(IsProcessing));
+    protected static readonly AssistantSessionStateKey<HashSet<string>> SELECTED_TOOL_IDS_STATE_KEY = new("SelectedToolIds");
     
     protected AIStudio.Settings.Provider ProviderSettings = Settings.Provider.NONE;
     protected bool InputIsValid;
