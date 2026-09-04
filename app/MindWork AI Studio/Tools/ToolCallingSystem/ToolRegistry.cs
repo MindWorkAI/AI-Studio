@@ -259,6 +259,30 @@ public sealed class ToolRegistry
         return await this.GetCatalogAsync(definitions);
     }
 
+    /// <summary>
+    /// Reduces a set of tool IDs to the tools a user could switch on themselves in this component.
+    /// </summary>
+    /// <remarks>
+    /// For preselecting tools on someone's behalf, such as when a launcher opens a chat. A tool
+    /// this installation does not know, one an organization switched off, or one whose settings are
+    /// incomplete cannot be enabled by hand either, so handing it over as enabled would show the
+    /// user a state they could not have produced and could not fix from where they are. The
+    /// provider confidence stays out of this: it belongs to the moment a message is sent, not to
+    /// the selection, and it may well be a different provider by then.
+    /// </remarks>
+    public async Task<HashSet<string>> FilterSelectableToolIdsAsync(AIStudio.Tools.Components component, IEnumerable<string> toolIds)
+    {
+        var wantedToolIds = ToolSelectionRules.NormalizeSelection(toolIds);
+        if (wantedToolIds.Count is 0 || !this.settingsManager.AreToolsEnabled())
+            return [];
+
+        var catalog = await this.GetCatalogAsync(component);
+        return catalog
+            .Where(x => wantedToolIds.Contains(x.Definition.Id) && x is { IsActive: true, ConfigurationState.IsConfigured: true })
+            .Select(x => x.Definition.Id)
+            .ToHashSet(StringComparer.Ordinal);
+    }
+
     public async Task<IReadOnlyList<ToolCatalogItem>> GetCatalogAsync(IEnumerable<ToolDefinition> definitions)
     {
         var definitionList = definitions.ToList();

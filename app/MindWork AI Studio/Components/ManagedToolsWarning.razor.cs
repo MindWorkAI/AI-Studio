@@ -43,6 +43,28 @@ public partial class ManagedToolsWarning : MSGComponentBase
     private bool NeedsToolCallingProvider => this.ToolIds.Count > 0 && this.SettingsManager.AreToolsEnabled() && !this.ProviderSettings.GetToolCallingAvailability().IsAvailable;
 
     /// <summary>
+    /// The tools of this run whose settings are incomplete, so they cannot run at all.
+    /// </summary>
+    /// <remarks>
+    /// Unlike the confidence case, no provider resolves this: the tool itself is missing something,
+    /// such as the web search without a server address. Tools an organization switched off are left
+    /// out, because completing their settings would not bring them back either.
+    /// </remarks>
+    private IReadOnlyList<string> ToolsNeedingConfiguration
+    {
+        get
+        {
+            if (this.ToolIds.Count is 0 || !this.SettingsManager.AreToolsEnabled())
+                return [];
+
+            return this.availableTools
+                .Where(x => this.ToolIds.Contains(x.Definition.Id) && x.IsActive && !x.ConfigurationState.IsConfigured)
+                .Select(x => x.Implementation.GetDisplayName())
+                .ToList();
+        }
+    }
+
+    /// <summary>
     /// The tools of this run which the selected provider is not trusted enough to receive.
     /// </summary>
     /// <remarks>

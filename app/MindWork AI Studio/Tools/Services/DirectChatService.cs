@@ -8,7 +8,7 @@ using ProviderSettings = AIStudio.Settings.Provider;
 
 namespace AIStudio.Tools.Services;
 
-public sealed class DirectChatService(SettingsManager settingsManager, DataSourceService dataSourceService, ILogger<DirectChatService> logger)
+public sealed class DirectChatService(SettingsManager settingsManager, DataSourceService dataSourceService, ToolRegistry toolRegistry, ILogger<DirectChatService> logger)
 {
     private static string TB(string fallbackEn) => I18N.I.T(fallbackEn, typeof(DirectChatService).Namespace, nameof(DirectChatService));
 
@@ -67,18 +67,24 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
             return new(null, string.Format(TB("The workspace '{0}' could not be opened or created."), launchConfiguration.WorkspaceName));
         }
 
+        //
+        // Only the tools the user could have switched on themselves. A launcher may name one whose
+        // settings are incomplete — an unconfigured web search, say — and starting the chat with it
+        // enabled would show a state the user cannot produce by hand and cannot fix from the chat.
+        // Null keeps the chat's own defaults, which is what a launcher without tools wants.
+        //
+        var selectedToolIds = launchConfiguration.ToolIds is null
+            ? null
+            : await toolRegistry.FilterSelectableToolIdsAsync(Components.CHAT, launchConfiguration.ToolIds);
+
         var chatThread = new ChatThread
         {
             IncludeDateTime = true,
             SelectedProvider = providerResult.Provider == ProviderSettings.NONE ? string.Empty : providerResult.Provider.Id,
             SelectedProfile = profile.Id,
             SelectedChatTemplate = chatTemplate.Id,
-            //
-            // Only what this launcher names, and only the tools this installation actually knows.
-            // Null keeps the chat's own defaults, which is what a launcher without tools wants.
-            // The provider confidence is checked later, when the chat sends a message.
-            //
-            SelectedToolIds = launchConfiguration.ToolIds is null ? null : ToolSelectionRules.NormalizeSelection(launchConfiguration.ToolIds.Where(settingsManager.IsToolActive)),
+            // The provider confidence is checked later, when the chat sends a message:
+            SelectedToolIds = selectedToolIds,
             SystemPrompt = SystemPrompts.DEFAULT,
             WorkspaceId = workspaceId,
             ChatId = Guid.NewGuid(),
