@@ -199,7 +199,6 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-        await this.LoadToolWarningCatalogAsync();
 
         if (this.pendingChatLauncher is not { } launcherPlugin)
             return;
@@ -297,7 +296,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
         this.Logger.LogInformation($"AssistantDynamic of plugin '{revisionResult.PluginName}' ({revisionResult.PluginName}) was successfully revised with audit result {revisionResult.Audit?.Level ?? AssistantAuditLevel.UNKNOWN}.");
         var updatedPlugin = PluginFactory.RunningPlugins.OfType<PluginAssistants>().FirstOrDefault(x => x.Id == revisionResult.PluginId);
         if (updatedPlugin is not null && !updatedPlugin.StartsChatDirectly)
-            await this.ApplyUpdatedAssistantPluginAsync(updatedPlugin);
+            this.ApplyUpdatedAssistantPlugin(updatedPlugin);
 
         await this.MessageBus.SendSuccess(new(Icons.Material.Filled.AutoFixHigh, string.Format(this.T("The assistant '{0}' has been updated."), revisionResult.PluginName)));
         await this.MessageBus.SendMessage<bool>(this, Event.PLUGINS_RELOADED);
@@ -358,7 +357,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
         return builder.ToString().Trim();
     }
 
-    private async Task ApplyUpdatedAssistantPluginAsync(PluginAssistants updatedPlugin)
+    private void ApplyUpdatedAssistantPlugin(PluginAssistants updatedPlugin)
     {
         this.assistantPlugin = updatedPlugin;
         this.RootComponent = updatedPlugin.RootComponent;
@@ -380,8 +379,6 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
         this.assistantState.Clear();
         if (this.RootComponent is not null)
             this.InitializeComponentState(this.RootComponent.Children);
-
-        await this.LoadToolWarningCatalogAsync();
     }
 
     #endregion
@@ -395,15 +392,6 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
     /// into one that lets the user choose.
     /// </remarks>
     private static HashSet<string>? ReadPluginToolIds(PluginAssistants plugin) => plugin.AssistantToolIds is { } toolIds ? ToolSelectionRules.NormalizeSelection(toolIds) : null;
-
-    /// <summary>
-    /// Loads the tool catalog behind the warnings, but only for a plugin that names tools at all.
-    /// </summary>
-    private async Task LoadToolWarningCatalogAsync()
-    {
-        if (this.assistantToolIds is { Count: > 0 })
-            await this.EnsureManagedToolCatalogAsync();
-    }
 
     private string ResolveImageSource(AssistantImage image)
     {

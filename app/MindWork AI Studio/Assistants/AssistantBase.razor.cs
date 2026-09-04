@@ -440,65 +440,6 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     }
 
     /// <summary>
-    /// The catalog behind the warnings below, loaded only for assistants that name their own tools.
-    /// </summary>
-    private IReadOnlyList<ToolCatalogItem> managedToolCatalog = [];
-
-    /// <summary>
-    /// Loads what the warnings need to name a tool, as soon as the assistant has any.
-    /// </summary>
-    /// <remarks>
-    /// An assistant may learn about its tools long after it was initialized, when the user picks a
-    /// policy or a revised plugin arrives, so this loads the catalog rather than the current tools
-    /// and is safe to call again. Assistants whose tools the user selects never need it: their
-    /// selection component brings its own catalog.
-    /// </remarks>
-    protected async Task EnsureManagedToolCatalogAsync()
-    {
-        if (this.managedToolCatalog.Count > 0 || !this.SettingsManager.AreToolsEnabled())
-            return;
-
-        this.managedToolCatalog = await this.ToolRegistry.GetCatalogAsync(this.Component);
-    }
-
-    /// <summary>
-    /// The tools this assistant was told to use, but which the selected provider is not trusted
-    /// enough to receive.
-    /// </summary>
-    /// <remarks>
-    /// Whoever named these tools — a policy, a plugin author — did so without knowing which provider
-    /// the user would pick. A tool that reaches sensitive data is dropped for a provider trusted too
-    /// little, and silently so unless the assistant says it. Tools switched off in the settings are
-    /// not counted here: choosing another provider would not bring them back.
-    /// </remarks>
-    protected IReadOnlyList<string> ManagedToolsBeyondProviderConfidence
-    {
-        get
-        {
-            if (this.AssistantManagedToolIds is not { Count: > 0 } managedToolIds || !this.SettingsManager.AreToolsEnabled())
-                return [];
-
-            var providerConfidence = this.ProviderSettings == Settings.Provider.NONE
-                ? ConfidenceLevel.NONE
-                : this.ProviderSettings.UsedLLMProvider.GetConfidence(this.SettingsManager).Level;
-
-            return this.managedToolCatalog
-                .Where(x => managedToolIds.Contains(x.Definition.Id) && x.IsActive)
-                .Where(x => !ToolSelectionRules.IsProviderConfidenceAllowed(providerConfidence, x.MinimumProviderConfidence))
-                .Select(x => x.Implementation.GetDisplayName())
-                .ToList();
-        }
-    }
-
-    /// <summary>
-    /// Whether this assistant expects tools while the selected provider cannot call any.
-    /// </summary>
-    protected bool ManagedToolsNeedToolCallingProvider =>
-        this.AssistantManagedToolIds is { Count: > 0 } &&
-        this.SettingsManager.AreToolsEnabled() &&
-        !this.ProviderSettings.GetToolCallingAvailability().IsAvailable;
-
-    /// <summary>
     /// Takes over a changed tool selection, no matter where the user made it.
     /// </summary>
     /// <remarks>

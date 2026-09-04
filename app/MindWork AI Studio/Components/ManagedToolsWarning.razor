@@ -1,0 +1,14 @@
+@inherits MSGComponentBase
+
+@if (this.NeedsToolCallingProvider)
+{
+    <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="@true" Class="@this.Class">
+        @T("Tools were selected for this run, but the chosen model cannot use tools. It runs without them. Please choose a model which supports tools.")
+    </MudAlert>
+}
+else if (this.ToolsBeyondProviderConfidence.Count > 0)
+{
+    <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="@true" Class="@this.Class">
+        @(string.Format(T("Not all tools selected for this run can be used with the chosen AI provider: {0}. Please choose a provider with a higher confidence level to use all of them."), string.Join(", ", this.ToolsBeyondProviderConfidence)))
+    </MudAlert>
+}

@@ -172,22 +172,7 @@ else
     </MudExpansionPanels>
 }
     
-@*
-    The policy names the tools, so the user cannot switch a blocked one on. Saying nothing would
-    let the analysis quietly run without them, which is why the warning sits right at the provider
-    selection: choosing another provider is what resolves it.
-*@
-@if (this.ManagedToolsNeedToolCallingProvider)
-{
-    <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="@true" Class="mb-3">
-        @T("This policy uses tools, but the selected model cannot use tools. The analysis runs without them. Please choose a model which supports tools.")
-    </MudAlert>
-}
-else if (this.ManagedToolsBeyondProviderConfidence.Count > 0)
-{
-    <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="@true" Class="mb-3">
-        @(string.Format(T("Not all tools of this policy can be used with the selected AI provider: {0}. Please choose a provider with a higher confidence level to use all tools of this policy."), string.Join(", ", this.ManagedToolsBeyondProviderConfidence)))
-    </MudAlert>
-}
+@* The warning sits right at the provider selection, because choosing another provider resolves it: *@
+<ManagedToolsWarning Component="@this.Component" ToolIds="@this.policyAllowedToolIds" ProviderSettings="@this.ProviderSettings"/>
 
 <ProviderSelection @bind-ProviderSettings="@this.ProviderSettings" ValidateProvider="@this.ValidatingProvider" ExplicitMinimumConfidence="@this.GetPolicyMinimumConfidenceLevel()"/>

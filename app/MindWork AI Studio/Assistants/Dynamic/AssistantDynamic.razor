@@ -38,25 +38,13 @@ else
     @*
         The plugin names the tools, so there is nothing for the user to switch on or off. What is
         left is to say which tools run here, and to warn when the selected provider keeps one of
-        them out of reach: choosing another provider is what resolves that.
+        them out of reach.
     *@
-    @if (this.assistantToolIds is { Count: > 0 } && this.SettingsManager.AreToolsEnabled())
+    @if (this.assistantToolIds is { Count: > 0 } toolIds && this.SettingsManager.AreToolsEnabled())
     {
         <MudPaper Class="pa-4 ma-4" Elevation="0">
-            @if (this.ManagedToolsNeedToolCallingProvider)
-            {
-                <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="@true" Class="mb-3">
-                    @T("This assistant uses tools, but the selected model cannot use tools. It runs without them. Please choose a model which supports tools.")
-                </MudAlert>
-            }
-            else if (this.ManagedToolsBeyondProviderConfidence.Count > 0)
-            {
-                <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="@true" Class="mb-3">
-                    @(string.Format(T("Not all tools of this assistant can be used with the selected AI provider: {0}. Please choose a provider with a higher confidence level to use all of them."), string.Join(", ", this.ManagedToolsBeyondProviderConfidence)))
-                </MudAlert>
-            }
-
-            <ToolSelectionField Component="@this.Component" SelectedToolIds="@this.assistantToolIds" ReadOnly="@true" Label="@T("Tools of this assistant")" Help="@T("The author of this assistant chose these tools, so they cannot be changed here. Every tool has to meet the confidence requirements of the selected provider, so a tool may stay unavailable even when this assistant names it.")"/>
+            <ManagedToolsWarning Component="@this.Component" ToolIds="@toolIds" ProviderSettings="@this.ProviderSettings"/>
+            <ToolSelectionField Component="@this.Component" SelectedToolIds="@toolIds" ReadOnly="@true" Label="@T("Tools of this assistant")" Help="@T("The author of this assistant chose these tools, so they cannot be changed here. Every tool has to meet the confidence requirements of the selected provider, so a tool may stay unavailable even when this assistant names it.")"/>
         </MudPaper>
     }
 

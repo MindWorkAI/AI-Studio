@@ -248,10 +248,6 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         await base.OnInitializedAsync();
         this.ApplyFilters([], [ Event.CONFIGURATION_CHANGED, Event.PLUGINS_RELOADED ]);
         this.UpdateProviders();
-        
-        // Only for the warning about tools the provider cannot receive; the selection field brings its own catalog:
-        await this.EnsureManagedToolCatalogAsync();
-
         this.ApplyPolicyPreselection(preferPolicyPreselection: true);
     }
 

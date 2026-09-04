@@ -195,6 +195,15 @@ else
     </MudAlert>
 }
 
+@*
+    Only for a policy run: where the user picks the tools themselves, the selection field already
+    shows what is locked, and they can simply switch a blocked tool off.
+*@
+@if (this.promptSource is BatchProcessingPromptSource.POLICY)
+{
+    <ManagedToolsWarning Component="@this.Component" ToolIds="@this.PolicyToolIds" ProviderSettings="@this.ProviderSettings"/>
+}
+
 <ProviderSelection @bind-ProviderSettings="@this.ProviderSettings" ValidateProvider="@this.ValidatingProviderWithBatchState" Disabled="@this.isProcessingBatch" ExplicitMinimumConfidence="@this.GetMinimumConfidenceLevel()"/>
 
 @if (this.fileResults.Count > 0)
