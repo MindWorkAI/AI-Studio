@@ -169,8 +169,8 @@ When adding configuration plugin capabilities:
 **Documentation:** `documentation/Tools.md`
 
 When adding, changing, or removing model-driven tools, keep these parts in sync:
-- `app/MindWork AI Studio/Tools/ToolCallingSystem/ToolCallingImplementations/` for the `IToolImplementation` class, which states its own `ToolDefinition` through `GetDefinition()`. There are no tool definition files; a tool arriving from elsewhere brings an `IToolDefinitionSource` instead.
-- `app/MindWork AI Studio/Program.cs` for DI registration of the implementation.
+- `app/MindWork AI Studio/Tools/ToolCallingSystem/ToolCallingImplementations/` for the `IToolImplementation` class, which states its own `ToolDefinition` through `GetDefinition()`, written with `ToolSettingsSchemaBuilder` for its settings and `ToolParameterSchemaBuilder` for the arguments the model passes. There are no tool definition files; a tool arriving from elsewhere brings an `IToolDefinitionSource` instead.
+- `app/MindWork AI Studio/Program.cs` for DI registration of the implementation. Registering it as an `IToolImplementation` is enough, because `CodeToolDefinitionSource` collects the definitions of all of them.
 - `app/MindWork AI Studio/Tools/ToolCallingSystem/ToolSelectionRules.cs` when the shared tool-call limits change. A tool's own minimum provider confidence belongs in its definition, not here.
 - `app/MindWork AI Studio/Tools/ToolCallingSystem/ToolSettingsOptionSources.cs` when a tool setting offers a fixed choice the app maintains, such as languages. Prefer this over spelling the values out in the settings schema; it keeps the list in one place and gives the user translated names.
 - `app/MindWork AI Studio/Plugins/configuration/plugin.lua` to document each setting's field name, meaning, and data type. Tool settings need no code to be centrally manageable: an organization addresses them by `"<toolId>.<fieldName>"` in `DataTools.LockedToolSettings` or `DataTools.DefaultToolSettings`.

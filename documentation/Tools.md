@@ -6,12 +6,9 @@ Tools are currently part of the .NET app. They are currently not Lua plugins and
 
 ## Architecture
 
-A tool has two parts:
+A tool written in C# is a single class: an `IToolImplementation` in `app/MindWork AI Studio/Tools/ToolCallingSystem/ToolCallingImplementations/` that states what it is through `GetDefinition()` and does what it promises in `ExecuteAsync`. There are no tool definition files.
 
-- A JSON definition in `app/MindWork AI Studio/wwwroot/tool_definitions/`
-- A C# implementation of `IToolImplementation` in `app/MindWork AI Studio/Tools/ToolCallingSystem/ToolCallingImplementations/`
-
-At startup, `ToolRegistry` reads all JSON definitions and matches each definition to a registered implementation by `implementationKey`. `ToolExecutor` runs the implementation when a provider returns a matching function call.
+Where a definition comes from and what it is are two different questions, and `IToolDefinitionSource` separates them. `CodeToolDefinitionSource` asks every registered implementation for its definition. A tool arriving from elsewhere — one written by a plugin author, say — brings a source of its own instead and is joined to an implementation by its implementation key. `ToolRegistry` validates every definition the same way no matter where it came from, which matters most for the ones AI Studio does not control, and `ToolExecutor` runs the implementation when a provider returns a matching function call.
 
 The provider only sees local tools that are
 
@@ -39,54 +36,15 @@ Adding a provider API means writing an adapter, not another loop. The existing o
 
 ## Provider API Shapes
 
-The JSON definition in `wwwroot/tool_definitions` is the single source of truth for a local function tool. There are no separate local tool definition files for different provider APIs. Provider-specific request shapes are generated in code from the same `ToolDefinition`.
+A tool states its function once, in its `ToolDefinition`, and the adapters generate each API's request shape from it. What differs is naming and nesting: Chat Completions compatible APIs put the function under a `function` object, the OpenAI Responses API takes the same fields flat, and the Anthropic messages API calls the schema `input_schema` and nests nothing. Keep that difference inside `ProviderToolAdapters`; a tool implementation never learns which shape was used.
 
-Chat Completions compatible APIs use a nested function shape:
+### Optional Parameters Are Written The Ordinary Way
 
-```json
-{
-  "type": "function",
-  "function": {
-    "name": "get_current_weather",
-    "description": "Get the current weather in a given location.",
-    "parameters": {},
-    "strict": true
-  }
-}
-```
+`Function.Parameters` is plain JSON Schema: an optional argument is simply absent from `required`. That is what `ToolParameterSchemaBuilder` writes, and Anthropic reads it as written.
 
-The OpenAI Responses API uses a flat function shape:
+OpenAI's strict mode wants it differently. It insists that **every** property appear in `required`, so an argument that may be left out has to say so by allowing null instead — `"type": ["string", "null"]`, plus `null` among its enum values where it has any. `OpenAIStrictToolSchema.FromToolParameters` therefore converts on the way out, for both OpenAI shapes and only where `Strict` is set. Nothing is lost, because a tool treats an absent argument and a null one the same way.
 
-```json
-{
-  "type": "function",
-  "name": "get_current_weather",
-  "description": "Get the current weather in a given location.",
-  "parameters": {},
-  "strict": true
-}
-```
-
-The Anthropic messages API names the schema differently and does not nest the function:
-
-```json
-{
-  "name": "get_current_weather",
-  "description": "Get the current weather in a given location.",
-  "input_schema": {},
-  "strict": true
-}
-```
-
-Keep this difference contained in provider adapter code. Tool implementations should not know which provider API shape was used.
-
-### Optional Parameters Are Written The OpenAI Way
-
-`function.parameters` in a tool definition follows OpenAI's strict-mode convention: **every** property is listed in `required`, and an optional parameter is instead made nullable with `"type": ["string", "null"]`. That is what OpenAI's `strict: true` demands, and it is the form to write in a definition file.
-
-Anthropic states optionality the ordinary JSON Schema way — an optional parameter is absent from `required` — and its validator rejects `null` as an enum value (`Invalid schema: Enum value None does not match declared type`). `AnthropicToolSchema.FromToolParameters` therefore translates the schema before sending it: it removes the `null` type, drops `null` enum values, and takes the affected properties out of `required`. Nothing is lost, because a tool treats an absent argument and a null one the same way.
-
-So the canonical schema is not provider-neutral — it is OpenAI-shaped, and one adapter translates away from it. Worth remembering when adding a provider whose API is neither: the translation belongs in its adapter, not in the definition.
+So the canonical schema is provider-neutral, and the provider that wants something else translates away from it in its own adapter. That is where the next such conversion belongs too — not in the definition.
 
 Tool result handling also differs by API, and this is what the adapters exist for.
 
@@ -102,90 +60,18 @@ Provider-native tools are separate from local function tools and do not have a `
 
 If a tool throws `ToolExecutionBlockedException`, `ToolExecutor` returns the exception message as plain text to the model and records the trace as `BLOCKED`. Other exceptions are logged with details and returned to the model as plain text in the form `Tool execution failed: ...`, with the trace recorded as `ERROR`.
 
-## Definition File
+## Writing A Tool
 
-Create one JSON file per tool under `wwwroot/tool_definitions`. The file describes component visibility, optional settings, the function schema sent to the model, and optional per-tool policy guidance injected centrally into the system prompt. User-visible names and icons come from the registered `IToolImplementation`, not the JSON definition.
+Implement `IToolImplementation` and register the class in `Program.cs`. Definition and implementation are one object here: `GetDefinition()` describes where the tool may be used, which settings it needs, the lowest provider confidence it may run with, the function schema sent to the model, and optional per-tool policy guidance injected centrally into the system prompt. User-visible names, descriptions, and icons come from the implementation's own members, never from the definition — only those can be translated.
 
-Example:
-
-```json
-{
-  "schemaVersion": 1,
-  "id": "get_current_weather",
-  "implementationKey": "get_current_weather",
-  "visibleIn": {
-    "chat": true,
-    "assistants": true,
-    "allowedComponents": [
-      "chat",
-      "translation_assistant"
-    ],
-    "deniedComponents": [
-      "legal_check_assistant"
-    ]
-  },
-  "settingsSchema": {
-    "type": "object",
-    "properties": {
-      "demoLabel": {
-        "type": "string",
-        "secret": false
-      }
-    },
-    "required": [
-      "demoLabel"
-    ]
-  },
-  "systemPromptInstructions": "Use this tool only when the user asks for current weather conditions.",
-  "function": {
-    "name": "get_current_weather",
-    "descriptionForLLM": "Get the current weather in a given location.",
-    "strict": true,
-    "parameters": {
-      "type": "object",
-      "properties": {
-        "city": {
-          "type": "string",
-          "description": "The city to find the weather for, e.g. 'San Francisco'."
-        },
-        "state": {
-          "type": "string",
-          "description": "The two-letter abbreviation for the state, e.g. 'CA'."
-        },
-        "unit": {
-          "type": "string",
-          "description": "The unit to fetch the temperature in.",
-          "enum": [
-            "celsius",
-            "fahrenheit"
-          ]
-        }
-      },
-      "required": [
-        "city",
-        "state",
-        "unit"
-      ],
-      "additionalProperties": false
-    }
-  }
-}
-```
-
-Use stable lower-case IDs with underscores. Keep `id`, `implementationKey`, and `function.name` identical unless there is a clear compatibility reason not to.
-
-`visibleIn.allowedComponents` and `visibleIn.deniedComponents` are optional lists of `Components` enum values written in `snake_case`. Unknown values make the definition invalid. When both lists are empty, the legacy `chat` and `assistants` flags apply. As soon as either list contains an entry, the lists replace those flags: an empty allow list starts by allowing every component, a non-empty allow list allows only its entries, and the deny list is applied last and always wins.
-
-Keep `function.descriptionForLLM` focused on what the tool does. This value is mapped to the provider's function `description` field and is only shown to the LLM. Put sequencing rules, answer-format guidance, or other behavior instructions in `systemPromptInstructions`. When runnable tools are selected, their non-empty policy text is combined centrally and appended to the effective system prompt.
-
-## Implementation
-
-Implement `IToolImplementation` and register the class in `Program.cs` as an `IToolImplementation`.
+Two builders write the schemas: `ToolSettingsSchemaBuilder` for the settings, `ToolParameterSchemaBuilder` for the arguments the model passes.
 
 Example:
 
 ```csharp
 using System.Text.Json;
+
+using AIStudio.Provider;
 using AIStudio.Tools.PluginSystem;
 
 namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations;
@@ -194,7 +80,43 @@ public sealed class GetCurrentWeatherTool : IToolImplementation
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(GetCurrentWeatherTool).Namespace, nameof(GetCurrentWeatherTool));
 
-    public string ImplementationKey => "get_current_weather";
+    private const string TOOL_ID = "get_current_weather";
+
+    private const string DEMO_LABEL_SETTING = "demoLabel";
+
+    private const string CITY_ARGUMENT = "city";
+    private const string UNIT_ARGUMENT = "unit";
+
+    public string ImplementationKey => TOOL_ID;
+
+    /// <inheritdoc />
+    public ToolDefinition GetDefinition() => new()
+    {
+        Id = TOOL_ID,
+        ImplementationKey = TOOL_ID,
+
+        // Asking for the weather sends the city the model chose to a weather service:
+        MinimumProviderConfidence = ConfidenceLevel.VERY_LOW,
+        VisibleIn = new()
+        {
+            DeniedComponents = [Components.LEGAL_CHECK_ASSISTANT],
+        },
+
+        SettingsSchema = ToolSettingsSchemaBuilder.Create()
+            .Required(DEMO_LABEL_SETTING)
+            .Build(),
+
+        SystemPromptInstructions = "Use this tool only when the user asks for current weather conditions.",
+        Function = new()
+        {
+            Name = TOOL_ID,
+            DescriptionForLLM = "Get the current weather in a given location.",
+            Parameters = ToolParameterSchemaBuilder.Create()
+                .RequiredString(CITY_ARGUMENT, "The city to find the weather for, e.g. 'San Francisco'.")
+                .RequiredEnum(UNIT_ARGUMENT, "The unit to report the temperature in.", "celsius", "fahrenheit")
+                .Build(),
+        },
+    };
 
     public string Icon => Icons.Material.Filled.Cloud;
 
@@ -202,32 +124,31 @@ public sealed class GetCurrentWeatherTool : IToolImplementation
 
     public string GetDisplayName() => TB("Current Weather");
 
-    public string GetDescription() => TB("Use this demo tool to retrieve the current weather for a given city and state."); // this Description is shown to the user
+    public string GetDescription() => TB("Use this demo tool to retrieve the current weather for a given city."); // this description is shown to the user
 
     public string GetSettingsFieldLabel(string fieldName, ToolSettingsFieldDefinition fieldDefinition) => fieldName switch
     {
-        "demoLabel" => TB("Demo Label"),
+        DEMO_LABEL_SETTING => TB("Demo Label"),
         _ => TB(fieldDefinition.Title),
     };
 
     public string GetSettingsFieldDescription(string fieldName, ToolSettingsFieldDefinition fieldDefinition) => fieldName switch
     {
-        "demoLabel" => TB("Required demo setting for validating tool settings."),
+        DEMO_LABEL_SETTING => TB("Required demo setting for validating tool settings."),
         _ => TB(fieldDefinition.Description),
     };
 
     public Task<ToolExecutionResult> ExecuteAsync(JsonElement arguments, ToolExecutionContext context, CancellationToken token = default)
     {
-        var city = arguments.TryGetProperty("city", out var cityValue) ? cityValue.GetString() ?? string.Empty : string.Empty;
-        var state = arguments.TryGetProperty("state", out var stateValue) ? stateValue.GetString() ?? string.Empty : string.Empty;
-        var unit = arguments.TryGetProperty("unit", out var unitValue) ? unitValue.GetString() ?? string.Empty : string.Empty;
+        var city = arguments.TryGetProperty(CITY_ARGUMENT, out var cityValue) ? cityValue.GetString() ?? string.Empty : string.Empty;
+        var unit = arguments.TryGetProperty(UNIT_ARGUMENT, out var unitValue) ? unitValue.GetString() ?? string.Empty : string.Empty;
 
         if (unit is not ("celsius" or "fahrenheit"))
             throw new ArgumentException($"Invalid unit '{unit}'.");
 
         return Task.FromResult(new ToolExecutionResult
         {
-            TextContent = $"The weather in {city}, {state} is 85 degrees {unit}.",
+            TextContent = $"The weather in {city} is 85 degrees {unit}.",
         });
     }
 }
@@ -241,13 +162,19 @@ builder.Services.AddSingleton<IToolImplementation, GetCurrentWeatherTool>();
 
 The example above is documentation-only. Do not keep demo tools in the production tool catalog.
 
+Use stable lower-case IDs with underscores, and keep `Id`, `ImplementationKey`, and `Function.Name` identical unless there is a clear compatibility reason not to. Give every argument and setting name a constant that the schema and the reading code share, as the example does: the two then cannot drift apart.
+
+`VisibleIn.AllowedComponents` and `VisibleIn.DeniedComponents` are optional lists of `Components` values; a value outside the enum makes the definition invalid. When both lists are empty, the `Chat` and `Assistants` flags apply. As soon as either list has an entry, the lists replace those flags: an empty allow list starts by allowing every component, a non-empty allow list allows only its entries, and the deny list is applied last and always wins.
+
+Keep `Function.DescriptionForLLM` focused on what the tool does. This value is mapped to the provider's function `description` field and is only shown to the LLM. Put sequencing rules, answer-format guidance, or other behavior instructions in `SystemPromptInstructions`. When runnable tools are selected, their non-empty policy text is combined centrally and appended to the effective system prompt.
+
 ## Settings And Secrets
 
-Tool settings are stored through `ToolSettingsService`. Plain settings are stored in the regular configuration data. Settings marked with `"secret": true` are stored in the OS keyring through the Rust service.
+Tool settings are stored through `ToolSettingsService`. Plain settings are stored in the regular configuration data. Settings declared with `RequiredSecret` or `OptionalSecret` are stored in the OS keyring through the Rust service.
 
-A setting offering a fixed choice declares it either as an `enum` list in the definition, or as an `optionSource` naming a list the app maintains — see `ToolSettingsOptionSources`. Prefer an option source for anything the app already knows, such as languages: the list then exists once in code instead of once per tool definition, and the dialog shows translated names instead of raw values. The two are mutually exclusive, and `ToolRegistry` rejects a definition that uses both or names an unknown source.
+A setting offering a fixed choice takes it from an option source: `RequiredChoice` and `OptionalChoice` name a list the app maintains — see `ToolSettingsOptionSources`. The list then exists once in code instead of once per tool, and the dialog shows translated names instead of raw values. A definition may alternatively spell its values out in the field's `enum` list, which is how a definition arriving as data offers a choice of its own. The two are mutually exclusive, and `ToolRegistry` rejects a definition that uses both or names an unknown source.
 
-A setting whose absence makes the tool fail belongs in `required`, not in a description. The tool then counts as unconfigured until it is set, which the UI shows and which keeps the tool out of the model's reach — instead of the tool running and returning nothing. The web search language is the example: without it, most search engines return no results at all.
+A setting whose absence makes the tool fail is declared with `Required`, rather than saying so in its description. The tool then counts as unconfigured until it is set, which the UI shows and which keeps the tool out of the model's reach — instead of the tool running and returning nothing. The web search language is the example: without it, most search engines return no results at all.
 
 Use `ValidateConfigurationAsync` when a setting needs more than "required field is present" validation, such as URL syntax, numeric limits, mutually exclusive options, or allowlist parsing. Validate values coming from an option source there too: a stored value can predate the current list or arrive from an organization's configuration.
 
@@ -289,15 +216,13 @@ Web Search does not send category or engine parameters. The SearXNG instance sel
 
 Page loading and readable Markdown extraction are shared with `read_web_page` through `WebPageRetrievalService`, and so is the `ReadWebContent` component the assistants offer — every page AI Studio reads goes through that one service. It validates DNS results and every redirect target before connecting, binds the connection to the validated addresses, caps the response size, and accepts only HTML.
 
-What differs between callers is which targets are acceptable, and that follows from who chose the URL. `web_search` uses the public-only policy and never reads private, loopback, or link-local targets. `read_web_page` may reach an explicitly allowed private host, and only for a High-confidence or configuration-trusted provider. The `ReadWebContent` component sets `TargetChosenByUser`, which lifts the target restrictions entirely: the user typed the address, so their own network and a local server are legitimate. Never set that flag for a URL that reached AI Studio through a model. 
+What differs between callers is which targets are acceptable, and that follows from who chose the URL. `web_search` uses the public-only policy and never reads private, loopback, or link-local targets. `read_web_page` may reach an explicitly allowed private host, and only for a High-confidence or configuration-trusted provider. The `ReadWebContent` component sets `TargetChosenByUser`, which lifts the target restrictions entirely: the user typed the address, so their own network and a local server are legitimate. Never set that flag for a URL that reached AI Studio through a model.
 
 `read_web_page` remains the independent single-URL tool and may use its configured private-host allowlist and operating-system sign-in behavior for allowed HTTPS targets. An allowed private host can only be read by a High-confidence provider or a provider instance listed in `DataSourceSecuritySettings.TrustedProviderIds`.
 
-The `web_search` result separates each hit into `search_metadata` and `page`. Its top-level execution metadata contains `candidate_count`, `result_count`, and `retrieval_timed_out`. Search-result URLs and final redirect URLs are deduplicated separately so metadata from merged candidates is retained with the best rank.
+Every successfully retrieved page with readable content is also returned as a structured tool source, using the final URL after redirects and the extracted page title. The provider collects these sources across local tool calls and attaches them to the final response under the separate “Sources used by tools” heading. Failed, blocked, empty, and duplicate retrievals do not add sources — a pattern worth copying for any tool that returns material the user may want to check.
 
-Every successfully retrieved page with readable content is also returned as a structured tool source. The source uses the final URL after redirects and prefers the extracted page title, followed by the search-result title and URL as fallbacks. The provider collects these sources across local tool calls and attaches them to the final response under the separate “Sources used by tools” heading. Failed, blocked, empty, and duplicate retrievals do not add sources.
-
-Retrieved Markdown shares a configurable total character budget. Every successful result first receives its configured minimum allocation; the remaining budget is then assigned in ranking order. Short pages leave their unused allocation available to later results. A page whose content is truncated, or whose original extracted content contains fewer than 500 characters, reports the status `partial or truncated`. Truncated content uses the shared truncation marker.
+Retrieved Markdown shares a configurable total character budget: every successful result first receives its configured minimum allocation, the rest is assigned in ranking order, and short pages leave their unused allocation to later results.
 
 Every non-secret tool setting is centrally manageable without any code: an organization addresses it by `"<toolId>.<fieldName>"` in `DataTools.LockedToolSettings` or `DataTools.DefaultToolSettings`. A locked value wins over everything and cannot be changed by the user; a default pre-fills the field until the user saves a value of their own. Nothing has to be registered per setting, which is what allows tools defined by plugin authors — unknown when AI Studio was built — to be configured the same way.
 
