@@ -131,7 +131,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
 
     protected virtual bool HasSettingsPanel => typeof(TSettings) != typeof(NoSettingsPanel);
     
-    protected HashSet<string> selectedToolIds = [];
+    protected HashSet<string> SelectedToolIds = [];
 
     private readonly Timer formChangeTimer = new(TimeSpan.FromSeconds(1.6));
 
@@ -191,7 +191,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         this.ProviderSettings = this.SettingsManager.GetPreselectedProvider(this.Component);
         this.CurrentProfile = this.SettingsManager.GetPreselectedProfile(this.Component);
         this.CurrentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(this.Component);
-        this.selectedToolIds = this.SettingsManager.GetDefaultToolIds(this.Component);
+        this.SelectedToolIds = this.SettingsManager.GetDefaultToolIds(this.Component);
         await this.OnDefaultsAppliedAsync();
         this.assistantSessionKey = new(this.Component, this.AssistantSessionInstanceId);
         await this.AttachAssistantSessionIfAvailable();
@@ -402,7 +402,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         this.ProviderSettings = this.SettingsManager.GetPreselectedProvider(this.Component);
         this.CurrentProfile = this.SettingsManager.GetPreselectedProfile(this.Component);
         this.CurrentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(this.Component);
-        this.selectedToolIds = this.SettingsManager.GetDefaultToolIds(this.Component);
+        this.SelectedToolIds = this.SettingsManager.GetDefaultToolIds(this.Component);
     }
 
     /// <summary>
@@ -436,7 +436,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         if (!this.SettingsManager.IsToolSelectionVisible(this.Component))
             return [];
 
-        return this.ToolRegistry.FilterToolIdsForProvider(this.ProviderSettings, this.selectedToolIds);
+        return this.ToolRegistry.FilterToolIdsForProvider(this.ProviderSettings, this.SelectedToolIds);
     }
 
     /// <summary>
@@ -448,7 +448,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     /// </remarks>
     protected Task SelectedToolIdsChanged(HashSet<string> updatedToolIds)
     {
-        this.selectedToolIds = ToolSelectionRules.NormalizeSelection(updatedToolIds);
+        this.SelectedToolIds = ToolSelectionRules.NormalizeSelection(updatedToolIds);
         return Task.CompletedTask;
     }
     
@@ -511,7 +511,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
             this.ChatThread.Blocks.Add(this.ResultingContentBlock);
             this.ChatThread.SelectedProvider = this.ProviderSettings.Id;
             this.ChatThread.RuntimeComponent = this.Component;
-            this.ChatThread.SelectedToolIds = [..this.selectedToolIds];
+            this.ChatThread.SelectedToolIds = [..this.SelectedToolIds];
             this.ChatThread.RuntimeSelectedToolIds = this.GetRunnableToolIds();
             this.ChatThread.RuntimeToolsAreAssistantManaged = this.AssistantManagedToolIds is not null;
         }
@@ -982,7 +982,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         state.Set(RESULTING_CONTENT_BLOCK_STATE_KEY, this.ResultingContentBlock);
         state.Set(INPUT_ISSUES_STATE_KEY, this.InputIssues);
         state.Set(IS_PROCESSING_STATE_KEY, this.IsProcessing);
-        state.Set(SELECTED_TOOL_IDS_STATE_KEY, this.selectedToolIds);
+        state.Set(SELECTED_TOOL_IDS_STATE_KEY, this.SelectedToolIds);
         this.CaptureCustomAssistantSessionState(state);
 
         return state.ToDictionary();
@@ -1010,7 +1010,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         reader.Restore(RESULTING_CONTENT_BLOCK_STATE_KEY, value => this.ResultingContentBlock = value);
         reader.Restore(INPUT_ISSUES_STATE_KEY, value => this.InputIssues = value);
         reader.Restore(IS_PROCESSING_STATE_KEY, value => this.IsProcessing = value);
-        reader.Restore(SELECTED_TOOL_IDS_STATE_KEY, value => this.selectedToolIds = ToolSelectionRules.NormalizeSelection(value));
+        reader.Restore(SELECTED_TOOL_IDS_STATE_KEY, value => this.SelectedToolIds = ToolSelectionRules.NormalizeSelection(value));
         this.RestoreCustomAssistantSessionState(reader);
     }
 

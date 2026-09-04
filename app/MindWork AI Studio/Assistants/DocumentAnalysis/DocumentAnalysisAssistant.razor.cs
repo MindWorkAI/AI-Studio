@@ -7,7 +7,6 @@ using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.AssistantSessions;
-using AIStudio.Tools.ToolCallingSystem;
 
 using Microsoft.AspNetCore.Components;
 
@@ -34,7 +33,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
     /// tools its authors tested it with. Either way there is nothing left for the user to switch,
     /// which is why the tool selection does not appear in this assistant.
     /// </remarks>
-    protected override IReadOnlySet<string>? AssistantManagedToolIds => this.policyAllowedToolIds;
+    protected override IReadOnlySet<string> AssistantManagedToolIds => this.policyAllowedToolIds;
 
     protected override string Title => T("Document Analysis Assistant");
     

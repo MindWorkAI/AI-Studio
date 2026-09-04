@@ -48,7 +48,7 @@
 
     <MudTextField T="string" @bind-Text="@this.freePrompt" Validation="@this.ValidateFreePrompt" Immediate="@true" Disabled="@this.isProcessingBatch" Label="@T("What should the AI do with each document?")" HelperText="@T("These instructions are applied to every single document of the batch run.")" Variant="Variant.Outlined" Margin="Margin.Normal" Lines="5" AutoGrow="@true" MaxLines="26" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
 
-    <ToolSelectionField Component="@this.Component" SelectedToolIds="@this.selectedToolIds" SelectedToolIdsChanged="@this.SelectedToolIdsChanged" Disabled="@this.isProcessingBatch" Label="@T("Tools for this batch run")" Help="@T("The AI may use these tools while working on each document. Every tool has to meet the confidence requirements of the selected provider, so a tool may stay unavailable even when it is selected here.")"/>
+    <ToolSelectionField Component="@this.Component" SelectedToolIds="@this.SelectedToolIds" SelectedToolIdsChanged="@this.SelectedToolIdsChanged" Disabled="@this.isProcessingBatch" Label="@T("Tools for this batch run")" Help="@T("The AI may use these tools while working on each document. Every tool has to meet the confidence requirements of the selected provider, so a tool may stay unavailable even when it is selected here.")"/>
 }
 else if (this.promptSource is BatchProcessingPromptSource.FILE_IMPORT)
 {
@@ -68,7 +68,7 @@ else if (this.promptSource is BatchProcessingPromptSource.FILE_IMPORT)
         @T("The content of the selected file is used as the instructions for every single document of the batch run.")
     </MudJustifiedText>
 
-    <ToolSelectionField Component="@this.Component" SelectedToolIds="@this.selectedToolIds" SelectedToolIdsChanged="@this.SelectedToolIdsChanged" Disabled="@this.isProcessingBatch" Label="@T("Tools for this batch run")" Help="@T("The AI may use these tools while working on each document. Every tool has to meet the confidence requirements of the selected provider, so a tool may stay unavailable even when it is selected here.")"/>
+    <ToolSelectionField Component="@this.Component" SelectedToolIds="@this.SelectedToolIds" SelectedToolIdsChanged="@this.SelectedToolIdsChanged" Disabled="@this.isProcessingBatch" Label="@T("Tools for this batch run")" Help="@T("The AI may use these tools while working on each document. Every tool has to meet the confidence requirements of the selected provider, so a tool may stay unavailable even when it is selected here.")"/>
 }
 else
 {

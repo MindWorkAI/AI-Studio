@@ -320,11 +320,6 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
     }
 
     /// <summary>
-    /// Formats all Lua source files of an assistant plugin into a single review-friendly manifest string.
-    /// </summary>
-    /// <param name="luaFiles">The Lua files keyed by their relative path.</param>
-    /// <returns>A concatenated manifest string ordered by file name.</returns>
-    /// <summary>
     /// Names the tools a plugin requests, so the auditor can weigh them against its stated purpose.
     /// </summary>
     /// <remarks>
@@ -354,6 +349,11 @@ public sealed class AssistantAuditAgent(ILogger<AssistantAuditAgent> logger, ILo
         return builder.ToString().TrimEnd();
     }
 
+    /// <summary>
+    /// Formats all Lua source files of an assistant plugin into a single review-friendly manifest string.
+    /// </summary>
+    /// <param name="luaFiles">The Lua files keyed by their relative path.</param>
+    /// <returns>A concatenated manifest string ordered by file name.</returns>
     private static string FormatLuaManifest(IReadOnlyDictionary<string, string> luaFiles)
     {
         if (luaFiles.Count == 0)

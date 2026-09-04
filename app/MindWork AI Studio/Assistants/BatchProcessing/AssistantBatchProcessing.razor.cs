@@ -40,9 +40,9 @@ public partial class AssistantBatchProcessing : AssistantBaseCore<SettingsDialog
     /// there is nothing left to pick. With instructions of one's own, the field next to them
     /// decides.
     /// </remarks>
-    protected override IReadOnlySet<string>? AssistantManagedToolIds => this.promptSource is BatchProcessingPromptSource.POLICY
+    protected override IReadOnlySet<string> AssistantManagedToolIds => this.promptSource is BatchProcessingPromptSource.POLICY
         ? this.PolicyToolIds
-        : this.selectedToolIds;
+        : this.SelectedToolIds;
 
     /// <summary>
     /// The tools of the selected policy, or none while no policy is selected.

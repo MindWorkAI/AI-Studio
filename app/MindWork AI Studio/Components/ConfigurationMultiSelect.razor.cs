@@ -64,7 +64,9 @@ public partial class ConfigurationMultiSelect<TData> : ConfigurationBaseCore
     
     private async Task OptionChanged(IEnumerable<TData?>? updatedValues)
     {
-        HashSet<TData> selection = updatedValues is null ? [] : updatedValues.Where(n => n is not null).ToHashSet()!;
+        // OfType drops the nulls and gives back the non-nullable element type in one step, which
+        // Where cannot: it keeps the nullable type no matter what the predicate proves.
+        var selection = updatedValues is null ? [] : updatedValues.OfType<TData>().ToHashSet();
         this.SelectionUpdate(selection);
         await this.SelectionUpdateAsync(selection);
 

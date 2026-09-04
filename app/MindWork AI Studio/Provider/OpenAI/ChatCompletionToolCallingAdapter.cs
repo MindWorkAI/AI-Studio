@@ -52,6 +52,9 @@ public sealed class ChatCompletionToolCallingAdapter<TRequest>(
         if (response is null)
             return null;
 
+        // The response comes from a provider, so its shape is a promise rather than a guarantee:
+        // a JSON null for the choices field overwrites the initialized property with null.
+        // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
         var responseChoice = response.Choices?.FirstOrDefault();
         if (responseChoice?.Message is null)
         {

@@ -81,6 +81,15 @@ public sealed class ToolRegistry
         }
     }
 
+    /// <summary>
+    /// Whether a tool definition is complete enough to register.
+    /// </summary>
+    /// <remarks>
+    /// What a definition cannot be is null in its parts: definitions are C# objects whose members
+    /// are non-nullable and initialized, so only their content is checked here. Should definitions
+    /// one day arrive from outside as data — a tool plugin, say — that assumption ends at the point
+    /// where the data becomes a definition, and it is there that null has to be caught.
+    /// </remarks>
     private static bool TryValidateDefinition(ToolDefinition definition, out string issue)
     {
         issue = string.Empty;
@@ -102,7 +111,7 @@ public sealed class ToolRegistry
             return false;
         }
 
-        if (definition.Function is null || !IsValidFunctionName(definition.Function.Name))
+        if (!IsValidFunctionName(definition.Function.Name))
         {
             issue = "the function name must contain 1-64 ASCII letters, digits, underscores, or hyphens";
             return false;
@@ -114,20 +123,14 @@ public sealed class ToolRegistry
             return false;
         }
 
-        if (definition.VisibleIn is null ||
-            definition.VisibleIn.AllowedComponents is null ||
-            definition.VisibleIn.DeniedComponents is null ||
-            definition.VisibleIn.AllowedComponents.Any(component => !Enum.IsDefined(component)) ||
+        if (definition.VisibleIn.AllowedComponents.Any(component => !Enum.IsDefined(component)) ||
             definition.VisibleIn.DeniedComponents.Any(component => !Enum.IsDefined(component)))
         {
             issue = "the visibility definition must contain valid component lists";
             return false;
         }
 
-        if (definition.SettingsSchema is null ||
-            !string.Equals(definition.SettingsSchema.Type, "object", StringComparison.OrdinalIgnoreCase) ||
-            definition.SettingsSchema.Properties is null ||
-            definition.SettingsSchema.Required is null)
+        if (!string.Equals(definition.SettingsSchema.Type, "object", StringComparison.OrdinalIgnoreCase))
         {
             issue = "the settings schema must have type 'object'";
             return false;
@@ -135,11 +138,9 @@ public sealed class ToolRegistry
 
         if (definition.SettingsSchema.Properties.Any(x =>
                 string.IsNullOrWhiteSpace(x.Key) ||
-                x.Value is null ||
-                !string.Equals(x.Value.Type, "string", StringComparison.OrdinalIgnoreCase) ||
-                x.Value.EnumValues is null))
+                !string.Equals(x.Value.Type, "string", StringComparison.OrdinalIgnoreCase)))
         {
-            issue = "settings properties must be named string fields with valid enum lists";
+            issue = "settings properties must be named string fields";
             return false;
         }
 

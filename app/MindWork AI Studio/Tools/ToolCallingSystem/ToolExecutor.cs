@@ -62,8 +62,15 @@ public sealed class ToolExecutor(ToolSettingsService toolSettingsService, ILogge
             using var document = JsonDocument.Parse(string.IsNullOrWhiteSpace(argumentsJson) ? "{}" : argumentsJson);
             formattedArguments = FormatArguments(document.RootElement, runnableTool.Implementation?.SensitiveTraceArgumentNames ?? EmptySensitiveTraceArgumentNames.INSTANCE);
         }
-        catch
+        catch (JsonException)
         {
+            //
+            // Only the trace loses its arguments here; the execution below parses the same JSON
+            // again and reports a broken call properly. The message says which call it was, but
+            // nothing about its content: arguments may carry secrets, and a parser message quotes
+            // the text it stumbled over.
+            //
+            logger.LogWarning("Could not read the arguments of a tool call for its trace. ToolName={ToolName}, ToolCallId={ToolCallId}", toolName, toolCallId);
         }
 
         logger.LogInformation(

@@ -297,10 +297,6 @@ internal sealed class SearXNGSearchClient
         {
             throw new TimeoutException($"The SearXNG request timed out after {timeoutSeconds} seconds.");
         }
-        catch (OperationCanceledException)
-        {
-            throw;
-        }
         catch (HttpRequestException exception)
         {
             throw new InvalidOperationException($"The SearXNG request failed: {exception.Message}", exception);

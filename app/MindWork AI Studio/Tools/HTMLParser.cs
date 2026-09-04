@@ -56,10 +56,23 @@ public sealed class HTMLParser
                                         resolvedAddresses is not null &&
                                         shouldUseDefaultCredentials?.Invoke(currentUrl, resolvedAddresses) is true;
             using var handler = CreateHandler(currentUrl, resolvedAddresses, useDefaultCredentials, trustPolicy, cookieContainer);
-            using var httpClient = new HttpClient(handler)
-            {
-                Timeout = Timeout.InfiniteTimeSpan,
-            };
+            
+            //
+            // One client per redirect step, against the usual advice to keep them long-lived:
+            // every step carries its own handler, and that handler is what makes this request
+            // safe. It pins the connection to the IP addresses vetted for this exact URL, decides
+            // whether the user's OS credentials may be sent, and applies the trust policy for this
+            // host. A shared or pooled client would carry one of those decisions into a request it
+            // was never made for. Socket exhaustion is not a concern here either: these requests
+            // happen at human pace, one per web search result.
+            //
+            // ReSharper disable ShortLivedHttpClient
+            using var httpClient = new HttpClient(handler);
+            // ReSharper restore ShortLivedHttpClient
+
+            // Set after the using declaration, so a throwing assignment still disposes the client.
+            // The timeout is the caller's linked token instead, which also covers the redirects:
+            httpClient.Timeout = Timeout.InfiniteTimeSpan;
 
             using var request = CreateRequest(currentUrl);
             using var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, timeoutCts.Token);
@@ -213,7 +226,10 @@ public sealed class HTMLParser
 
     public static string ExtractTitle(HtmlDocument document)
     {
-        var title = document.DocumentNode.SelectSingleNode("//title")?.InnerText?.Trim();
+        // HtmlAgilityPack annotates SelectSingleNode as never returning null, but a page without a
+        // title element makes it do exactly that:
+        // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
+        var title = document.DocumentNode.SelectSingleNode("//title")?.InnerText.Trim();
         return WebUtility.HtmlDecode(title ?? string.Empty).Trim();
     }
 

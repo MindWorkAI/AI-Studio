@@ -3,6 +3,17 @@ using System.Text;
 using System.Text.Json;
 using HtmlAgilityPack;
 
+//
+// HtmlAgilityPack annotates SelectSingleNode, SelectNodes, the attribute indexer, and ParentNode as
+// never returning null, and all four return null in practice: a document without a body element, an
+// XPath expression that matches nothing, an attribute a page does not set, a node without a parent.
+// The null checks below are therefore load-bearing, and following the analyzer's advice to drop
+// them would produce NullReferenceExceptions on real pages.
+//
+// ReSharper disable ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
+// ReSharper disable ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+// ReSharper disable NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
+
 namespace AIStudio.Tools.Web;
 
 internal static class WebPageContentExtractor

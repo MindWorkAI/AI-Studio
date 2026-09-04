@@ -29,7 +29,7 @@ public static class ToolSelectionRules
     public static string BuildToolPolicyPrompt(IEnumerable<ToolDefinition> definitions)
     {
         var policySections = definitions
-            .Select(x => (ToolName: x.Function.Name, PolicyLines: x.SystemPromptInstructions?.Trim()))
+            .Select(x => (ToolName: x.Function.Name, PolicyLines: x.SystemPromptInstructions.Trim()))
             .Where(x => !string.IsNullOrWhiteSpace(x.PolicyLines))
             .Select(x => $"## Tool `{x.ToolName}`{Environment.NewLine}{x.PolicyLines}")
             .Distinct(StringComparer.Ordinal)

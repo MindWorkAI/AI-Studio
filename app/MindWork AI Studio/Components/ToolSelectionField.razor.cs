@@ -39,10 +39,10 @@ public partial class ToolSelectionField : MSGComponentBase
     public bool Disabled { get; set; }
 
     [Parameter]
-    public string? Label { get; set; }
+    public string Label { get; set; } = string.Empty;
 
     [Parameter]
-    public string? Help { get; set; }
+    public string Help { get; set; } = string.Empty;
 
     [Inject]
     private ToolRegistry ToolRegistry { get; init; } = null!;

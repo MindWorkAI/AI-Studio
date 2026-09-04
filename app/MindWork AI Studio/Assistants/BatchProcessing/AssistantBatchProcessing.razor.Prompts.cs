@@ -103,7 +103,7 @@ public partial class AssistantBatchProcessing
             IncludeDateTime = false,
             SelectedProvider = this.ProviderSettings.Id,
             SelectedProfile = Profile.NO_PROFILE.Id,
-            SelectedToolIds = [..this.selectedToolIds],
+            SelectedToolIds = [..this.SelectedToolIds],
             SystemPrompt = this.SystemPrompt,
             WorkspaceId = Guid.Empty,
             ChatId = Guid.NewGuid(),
