@@ -18,6 +18,7 @@ public partial class ToolSettingsDialog : SettingsDialogBase
     private ToolDefinition? toolDefinition;
     private IToolImplementation? implementation;
     private Dictionary<string, string> values = new(StringComparer.Ordinal);
+    private IReadOnlyList<FieldGroup> fieldGroups = [];
     private string validationMessage = string.Empty;
 
     protected override async Task OnInitializedAsync()
@@ -28,10 +29,45 @@ public partial class ToolSettingsDialog : SettingsDialogBase
         {
             this.implementation = this.ToolRegistry.GetImplementation(this.toolDefinition.ImplementationKey);
             this.values = await this.ToolSettingsService.GetSettingsAsync(this.toolDefinition);
+            this.fieldGroups = BuildFieldGroups(this.toolDefinition);
         }
     }
 
     private string GetValue(string fieldName) => this.values.GetValueOrDefault(fieldName, string.Empty);
+
+    /// <summary>
+    /// Splits the tool's settings fields into the groups the tool declared for them.
+    /// </summary>
+    /// <remarks>
+    /// Groups appear in the order in which their first field appears in the schema, and the
+    /// fields keep the order the tool wrote them in. That is the order the fields have always
+    /// been rendered in, so a tool without groups looks exactly as it did before: one group
+    /// with an empty name, holding everything.<br/><br/>
+    /// A schema does not change while the dialog is open, so this runs once rather than on
+    /// every render.
+    /// </remarks>
+    private static IReadOnlyList<FieldGroup> BuildFieldGroups(ToolDefinition definition)
+    {
+        var groups = new List<FieldGroup>();
+        var groupIndexByKey = new Dictionary<string, int>(StringComparer.Ordinal);
+        foreach (var property in definition.SettingsSchema.Properties)
+        {
+            if (!groupIndexByKey.TryGetValue(property.Value.Group, out var groupIndex))
+            {
+                groupIndex = groups.Count;
+                groupIndexByKey[property.Value.Group] = groupIndex;
+                groups.Add(new FieldGroup(property.Value.Group, []));
+            }
+
+            groups[groupIndex].Fields.Add(property);
+        }
+
+        return groups;
+    }
+
+    private string GetGroupLabel(string groupKey) => this.implementation?.GetSettingsGroupLabel(groupKey) ?? groupKey;
+
+    private IReadOnlyList<ToolSettingsGroupLink> GetGroupLinks(string groupKey) => this.implementation?.GetSettingsGroupLinks(groupKey) ?? [];
 
     private string GetFieldLabel(string fieldName, ToolSettingsFieldDefinition fieldDefinition) =>
         this.implementation?.GetSettingsFieldLabel(fieldName, fieldDefinition) ?? fieldDefinition.Title;
@@ -81,4 +117,8 @@ public partial class ToolSettingsDialog : SettingsDialogBase
         await this.ToolSettingsService.SaveSettingsAsync(this.toolDefinition, this.values);
         this.MudDialog.Close();
     }
+
+    /// <param name="Key">The group's name from the schema, or empty for the ungrouped fields.</param>
+    /// <param name="Fields">The fields of this group, in the order the tool declared them.</param>
+    private sealed record FieldGroup(string Key, List<KeyValuePair<string, ToolSettingsFieldDefinition>> Fields);
 }

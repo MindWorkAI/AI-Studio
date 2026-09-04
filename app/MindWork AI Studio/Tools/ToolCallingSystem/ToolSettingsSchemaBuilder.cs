@@ -15,7 +15,23 @@ public sealed class ToolSettingsSchemaBuilder
     private readonly Dictionary<string, ToolSettingsFieldDefinition> properties = new(StringComparer.Ordinal);
     private readonly HashSet<string> requiredNames = new(StringComparer.Ordinal);
 
+    private string currentGroup = string.Empty;
+
     public static ToolSettingsSchemaBuilder Create() => new();
+
+    /// <summary>
+    /// Puts every field declared after this call into one group.
+    /// </summary>
+    /// <remarks>
+    /// Call it again with another name to start the next group, or with an empty name to
+    /// leave grouping behind. Groups are shown in the order in which they first appear here,
+    /// and so are the fields within them.
+    /// </remarks>
+    public ToolSettingsSchemaBuilder InGroup(string groupKey)
+    {
+        this.currentGroup = groupKey;
+        return this;
+    }
 
     /// <summary>
     /// A field the tool cannot work without.
@@ -54,6 +70,7 @@ public sealed class ToolSettingsSchemaBuilder
         {
             OptionSource = optionSource,
             Secret = isSecret,
+            Group = this.currentGroup,
         };
 
         if (isRequired)

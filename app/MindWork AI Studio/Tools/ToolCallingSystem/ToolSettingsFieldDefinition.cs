@@ -27,6 +27,18 @@ public sealed class ToolSettingsFieldDefinition
     public bool Secret { get; init; }
 
     /// <summary>
+    /// Name of the group this field belongs to, or empty when it stands on its own.
+    /// </summary>
+    /// <remarks>
+    /// The fields of one group are rendered together, under a heading the implementation
+    /// translates and next to whatever links it offers for them. Use it when a tool
+    /// configures several separate things that each need a few fields, such as one search
+    /// backend per group. A tool with a handful of settings that all belong to it needs no
+    /// groups at all.
+    /// </remarks>
+    public string Group { get; init; } = string.Empty;
+
+    /// <summary>
     /// The values and names to offer for this field, from whichever way it declares them.
     /// </summary>
     public IReadOnlyList<ToolSettingsOption> GetOptions() => string.IsNullOrWhiteSpace(this.OptionSource)

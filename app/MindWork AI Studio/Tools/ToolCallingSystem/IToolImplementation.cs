@@ -49,6 +49,21 @@ public interface IToolImplementation
 
     public string? GetSettingsFieldDefaultValue(string fieldName, ToolSettingsFieldDefinition fieldDefinition) => null;
 
+    /// <summary>
+    /// The heading shown above one group of settings.
+    /// </summary>
+    /// <remarks>
+    /// The group name in the schema is an identifier, so it is not what the user should read.
+    /// A tool that declares groups translates their headings here, the same way it does for
+    /// its field labels.
+    /// </remarks>
+    public string GetSettingsGroupLabel(string groupKey) => groupKey;
+
+    /// <summary>
+    /// Links offered next to one group of settings, such as where to create an account.
+    /// </summary>
+    public IReadOnlyList<ToolSettingsGroupLink> GetSettingsGroupLinks(string groupKey) => [];
+
     public Task<ToolConfigurationState?> ValidateConfigurationAsync(
         ToolDefinition definition,
         IReadOnlyDictionary<string, string> settingsValues,

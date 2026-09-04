@@ -36,6 +36,8 @@ public sealed class SearXNGWebSearchTool(WebPageRetrievalService webPageRetrieva
     
     private const int MAX_LOG_QUERY_LENGTH = 1000;
 
+    private const string SEARXNG_GROUP = "searxng";
+
     private const string BASE_URL_SETTING = "baseUrl";
     private const string DEFAULT_LANGUAGE_SETTING = "defaultLanguage";
     private const string DEFAULT_SAFE_SEARCH_SETTING = "defaultSafeSearch";
@@ -68,7 +70,9 @@ public sealed class SearXNGWebSearchTool(WebPageRetrievalService webPageRetrieva
         // trust in the provider that formulated it:
         MinimumProviderConfidence = ConfidenceLevel.VERY_LOW,
         SettingsSchema = ToolSettingsSchemaBuilder.Create()
+            .InGroup(SEARXNG_GROUP)
             .Required(BASE_URL_SETTING)
+            .InGroup(string.Empty)
             .RequiredChoice(DEFAULT_LANGUAGE_SETTING, ToolSettingsOptionSources.COMMON_LANGUAGES)
             .OptionalChoice(DEFAULT_SAFE_SEARCH_SETTING, ToolSettingsOptionSources.SAFE_SEARCH)
             .Optional(MAX_RESULTS_SETTING)
@@ -103,6 +107,24 @@ public sealed class SearXNGWebSearchTool(WebPageRetrievalService webPageRetrieva
     public string GetDisplayName() => TB("Web Search");
 
     public string GetDescription() => TB("Search the web with a configured SearXNG instance and retrieve the readable content of the best matching pages.");
+
+    public string GetSettingsGroupLabel(string groupKey) => groupKey switch
+    {
+        SEARXNG_GROUP => TB("SearXNG instance"),
+        _ => groupKey,
+    };
+
+    //
+    // The search settings rather than the documentation's front page: that is where an
+    // instance's result formats are listed, and whether 'json' is among them decides whether
+    // this tool can talk to the instance at all. It is the most common reason a freshly set
+    // up instance answers nothing.
+    //
+    public IReadOnlyList<ToolSettingsGroupLink> GetSettingsGroupLinks(string groupKey) => groupKey switch
+    {
+        SEARXNG_GROUP => [new(TB("Documentation"), "https://docs.searxng.org/admin/settings/settings_search.html")],
+        _ => [],
+    };
 
     public string GetSettingsFieldLabel(string fieldName, ToolSettingsFieldDefinition fieldDefinition) => fieldName switch
     {
