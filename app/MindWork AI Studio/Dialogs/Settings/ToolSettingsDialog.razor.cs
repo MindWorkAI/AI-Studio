@@ -65,7 +65,27 @@ public partial class ToolSettingsDialog : SettingsDialogBase
         return groups;
     }
 
-    private string GetGroupLabel(string groupKey) => this.implementation?.GetSettingsGroupLabel(groupKey) ?? groupKey;
+    /// <summary>
+    /// Whether one group shows a heading above its fields.
+    /// </summary>
+    /// <remarks>
+    /// A tool that declares no groups has a single nameless group holding everything, and a
+    /// heading above the only box would say nothing the dialog's title does not say already.
+    /// As soon as there is a second box, each of them has to state which one it is — the box
+    /// holding the fields that belong to no group in particular included.
+    /// </remarks>
+    private bool ShowsGroupHeader(FieldGroup group) => this.fieldGroups.Count > 1 || !string.IsNullOrEmpty(group.Key);
+
+    /// <remarks>
+    /// The ungrouped fields have no name of their own, so the label hook hands back their
+    /// empty group name. A tool may still name them through that same hook; when it does not,
+    /// they are simply what is left over next to the named groups.
+    /// </remarks>
+    private string GetGroupLabel(string groupKey)
+    {
+        var label = this.implementation?.GetSettingsGroupLabel(groupKey) ?? groupKey;
+        return string.IsNullOrEmpty(label) ? T("General") : label;
+    }
 
     private IReadOnlyList<ToolSettingsGroupLink> GetGroupLinks(string groupKey) => this.implementation?.GetSettingsGroupLinks(groupKey) ?? [];
 

@@ -31,7 +31,7 @@
             @foreach (var group in this.fieldGroups)
             {
                 <MudPaper Class="pa-3 mb-4 border-dashed border rounded-lg">
-                @if (!string.IsNullOrEmpty(group.Key))
+                @if (this.ShowsGroupHeader(group))
                 {
                     <MudStack Row="@true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Wrap="Wrap.Wrap" Class="mb-3">
                         <MudText Typo="Typo.subtitle2">@this.GetGroupLabel(group.Key)</MudText>
