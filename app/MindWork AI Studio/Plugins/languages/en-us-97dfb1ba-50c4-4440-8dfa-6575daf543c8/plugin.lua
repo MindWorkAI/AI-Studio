@@ -10983,6 +10983,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T1
 -- The revision model did not return a usable answer.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T1411545143"] = "The revision model did not return a usable answer."
 
+-- The revised assistant plugin asks for tools this AI Studio does not have: \"{0}\". Please try again.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T1427741438"] = "The revised assistant plugin asks for tools this AI Studio does not have: \\\"{0}\\\". Please try again."
+
 -- Description
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T1725856265"] = "Description"
 
@@ -11024,6 +11027,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T2
 
 -- UI Components
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3053707933"] = "UI Components"
+
+-- The generated assistant plugin asks for tools this AI Studio does not have: \"{0}\". Please try again.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3058747041"] = "The generated assistant plugin asks for tools this AI Studio does not have: \\\"{0}\\\". Please try again."
 
 -- The generated assistant plugin must be a form assistant, not a chat launcher.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3203271639"] = "The generated assistant plugin must be a form assistant, not a chat launcher."
