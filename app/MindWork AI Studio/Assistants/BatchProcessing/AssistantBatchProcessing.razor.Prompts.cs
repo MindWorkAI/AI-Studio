@@ -111,6 +111,7 @@ public partial class AssistantBatchProcessing
             Blocks = [],
             RuntimeComponent = this.Component,
             RuntimeSelectedToolIds = this.GetRunnableToolIds(),
+            RuntimeToolsAreAssistantManaged = this.AssistantManagedToolIds is not null,
         };
 
         var userPrompt = new ContentText

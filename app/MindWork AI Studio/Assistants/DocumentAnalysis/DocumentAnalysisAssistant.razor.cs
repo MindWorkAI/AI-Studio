@@ -36,39 +36,6 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
     /// </remarks>
     protected override IReadOnlySet<string>? AssistantManagedToolIds => this.policyAllowedToolIds;
 
-    /// <summary>
-    /// The tools of this policy which the selected provider is not trusted enough to receive.
-    /// </summary>
-    /// <remarks>
-    /// A policy may well permit a tool that reaches sensitive data while the user picks a provider
-    /// they trust less. That tool is then dropped for the run — silently, unless we say so, which
-    /// is what the warning above the documents is for. Tools switched off by the organization are
-    /// not counted here: choosing another provider would not bring them back.
-    /// </remarks>
-    private IReadOnlyList<string> ToolsBeyondProviderConfidence
-    {
-        get
-        {
-            if (this.policyAllowedToolIds.Count is 0 || !this.SettingsManager.AreToolsEnabled())
-                return [];
-
-            var providerConfidence = this.ProviderSettings == Settings.Provider.NONE
-                ? ConfidenceLevel.NONE
-                : this.ProviderSettings.UsedLLMProvider.GetConfidence(this.SettingsManager).Level;
-
-            return this.availableToolItems
-                .Where(x => this.policyAllowedToolIds.Contains(x.Definition.Id) && x.IsActive)
-                .Where(x => !ToolSelectionRules.IsProviderConfidenceAllowed(providerConfidence, x.MinimumProviderConfidence))
-                .Select(x => x.Implementation.GetDisplayName())
-                .ToList();
-        }
-    }
-
-    /// <summary>
-    /// Whether the selected provider can call tools at all, while the policy expects some.
-    /// </summary>
-    private bool PolicyToolsNeedToolCallingProvider => this.policyAllowedToolIds.Count > 0 && this.SettingsManager.AreToolsEnabled() && !this.ProviderSettings.GetToolCallingAvailability().IsAvailable;
-    
     protected override string Title => T("Document Analysis Assistant");
     
     protected override string Description => T("The document analysis assistant helps you to analyze and extract information from documents based on predefined policies. You can create, edit, and manage document analysis policies that define how documents should be processed and what information should be extracted. Some policies might be protected by your organization and cannot be modified or deleted.");
@@ -283,7 +250,7 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
         this.UpdateProviders();
         
         // Only for the warning about tools the provider cannot receive; the selection field brings its own catalog:
-        this.availableToolItems = await this.ToolRegistry.GetCatalogAsync(this.Component);
+        await this.EnsureManagedToolCatalogAsync();
 
         this.ApplyPolicyPreselection(preferPolicyPreselection: true);
     }
@@ -333,7 +300,6 @@ public partial class DocumentAnalysisAssistant : AssistantBaseCore<NoSettingsPan
     private ProfilePreselection policyPreselectedProfile = ProfilePreselection.NoProfile;
     private HashSet<FileAttachment> loadedDocumentPaths = [];
     private readonly List<ConfigurationSelectData<string>> availableLLMProviders = new();
-    private IReadOnlyList<ToolCatalogItem> availableToolItems = [];
     private static readonly AssistantSessionStateKey<DataDocumentAnalysisPolicy?> SELECTED_POLICY_STATE_KEY = new(nameof(selectedPolicy));
     private static readonly AssistantSessionStateKey<bool> POLICY_IS_PROTECTED_STATE_KEY = new(nameof(policyIsProtected));
     private static readonly AssistantSessionStateKey<bool> POLICY_HIDE_POLICY_DEFINITION_STATE_KEY = new(nameof(policyHidePolicyDefinition));

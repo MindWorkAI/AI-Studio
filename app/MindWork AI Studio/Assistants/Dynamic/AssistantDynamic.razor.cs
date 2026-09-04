@@ -9,6 +9,7 @@ using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.PluginSystem.Assistants;
 using AIStudio.Tools.PluginSystem.Assistants.DataModel;
 using AIStudio.Tools.Services;
+using AIStudio.Tools.ToolCallingSystem;
 using Lua;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.WebUtilities;
@@ -34,6 +35,13 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
     protected override bool ShowProfileSelection => this.showFooterProfileSelection;
     protected override string SubmitText => this.submitText;
     protected override Func<Task> SubmitAction => this.Submit;
+
+    /// <remarks>
+    /// A plugin that names its tools has decided for the user: its author wrote and tested the
+    /// assistant with exactly these. Null keeps the footer selection for every other plugin.
+    /// </remarks>
+    protected override IReadOnlySet<string>? AssistantManagedToolIds => this.assistantToolIds;
+
     protected override bool SubmitDisabled => this.isSecurityBlocked;
     // Dynamic assistants do not have dedicated settings yet. Their internal identity keeps their
     // session and media state separate while ComponentsExtensions derives their defaults from chat.
@@ -50,6 +58,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
     private bool allowProfiles = true;
     private string submitText = string.Empty;
     private bool showFooterProfileSelection = true;
+    private HashSet<string>? assistantToolIds;
     private PluginAssistants? assistantPlugin;
     
     private readonly AssistantState assistantState = new();
@@ -69,6 +78,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
     private static readonly AssistantSessionStateKey<bool> ALLOW_PROFILES_STATE_KEY = new(nameof(allowProfiles));
     private static readonly AssistantSessionStateKey<string> SUBMIT_TEXT_STATE_KEY = new(nameof(submitText));
     private static readonly AssistantSessionStateKey<bool> SHOW_FOOTER_PROFILE_SELECTION_STATE_KEY = new(nameof(showFooterProfileSelection));
+    private static readonly AssistantSessionStateKey<HashSet<string>?> ASSISTANT_TOOL_IDS_STATE_KEY = new(nameof(assistantToolIds));
     private static readonly AssistantSessionStateKey<PluginAssistants?> ASSISTANT_PLUGIN_STATE_KEY = new(nameof(assistantPlugin));
     private static readonly AssistantSessionStateKey<AssistantState> ASSISTANT_STATE_STATE_KEY = new(nameof(assistantState));
     private static readonly AssistantSessionStateKey<Dictionary<string, string>> IMAGE_CACHE_STATE_KEY = new(nameof(imageCache));
@@ -90,6 +100,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
         state.Set(ALLOW_PROFILES_STATE_KEY, this.allowProfiles);
         state.Set(SUBMIT_TEXT_STATE_KEY, this.submitText);
         state.Set(SHOW_FOOTER_PROFILE_SELECTION_STATE_KEY, this.showFooterProfileSelection);
+        state.Set(ASSISTANT_TOOL_IDS_STATE_KEY, this.assistantToolIds);
         state.Set(ASSISTANT_PLUGIN_STATE_KEY, this.assistantPlugin);
         state.Set(ASSISTANT_STATE_STATE_KEY, this.assistantState.Clone());
         state.SetDictionary(IMAGE_CACHE_STATE_KEY, this.imageCache);
@@ -110,6 +121,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
         state.Restore(ALLOW_PROFILES_STATE_KEY, value => this.allowProfiles = value);
         state.Restore(SUBMIT_TEXT_STATE_KEY, value => this.submitText = value);
         state.Restore(SHOW_FOOTER_PROFILE_SELECTION_STATE_KEY, value => this.showFooterProfileSelection = value);
+        state.Restore(ASSISTANT_TOOL_IDS_STATE_KEY, value => this.assistantToolIds = value);
         state.Restore(ASSISTANT_PLUGIN_STATE_KEY, value => this.assistantPlugin = value);
         state.Restore(ASSISTANT_STATE_STATE_KEY, value => this.assistantState.CopyFrom(value));
         state.RestoreDictionary(IMAGE_CACHE_STATE_KEY, this.imageCache);
@@ -159,6 +171,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
         this.systemPrompt = pluginAssistant.SystemPrompt;
         this.submitText = pluginAssistant.SubmitText;
         this.allowProfiles = pluginAssistant.AllowProfiles;
+        this.assistantToolIds = ReadPluginToolIds(pluginAssistant);
         this.showFooterProfileSelection = !pluginAssistant.HasEmbeddedProfileSelection;
         this.pluginPath = pluginAssistant.PluginPath;
         var pluginHash = pluginAssistant.ComputeAuditHash();
@@ -186,6 +199,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
+        await this.LoadToolWarningCatalogAsync();
 
         if (this.pendingChatLauncher is not { } launcherPlugin)
             return;
@@ -283,7 +297,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
         this.Logger.LogInformation($"AssistantDynamic of plugin '{revisionResult.PluginName}' ({revisionResult.PluginName}) was successfully revised with audit result {revisionResult.Audit?.Level ?? AssistantAuditLevel.UNKNOWN}.");
         var updatedPlugin = PluginFactory.RunningPlugins.OfType<PluginAssistants>().FirstOrDefault(x => x.Id == revisionResult.PluginId);
         if (updatedPlugin is not null && !updatedPlugin.StartsChatDirectly)
-            this.ApplyUpdatedAssistantPlugin(updatedPlugin);
+            await this.ApplyUpdatedAssistantPluginAsync(updatedPlugin);
 
         await this.MessageBus.SendSuccess(new(Icons.Material.Filled.AutoFixHigh, string.Format(this.T("The assistant '{0}' has been updated."), revisionResult.PluginName)));
         await this.MessageBus.SendMessage<bool>(this, Event.PLUGINS_RELOADED);
@@ -344,7 +358,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
         return builder.ToString().Trim();
     }
 
-    private void ApplyUpdatedAssistantPlugin(PluginAssistants updatedPlugin)
+    private async Task ApplyUpdatedAssistantPluginAsync(PluginAssistants updatedPlugin)
     {
         this.assistantPlugin = updatedPlugin;
         this.RootComponent = updatedPlugin.RootComponent;
@@ -353,6 +367,7 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
         this.systemPrompt = updatedPlugin.SystemPrompt;
         this.submitText = updatedPlugin.SubmitText;
         this.allowProfiles = updatedPlugin.AllowProfiles;
+        this.assistantToolIds = ReadPluginToolIds(updatedPlugin);
         this.showFooterProfileSelection = !updatedPlugin.HasEmbeddedProfileSelection;
         this.pluginPath = updatedPlugin.PluginPath;
         var pluginHash = updatedPlugin.ComputeAuditHash();
@@ -365,9 +380,30 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
         this.assistantState.Clear();
         if (this.RootComponent is not null)
             this.InitializeComponentState(this.RootComponent.Children);
+
+        await this.LoadToolWarningCatalogAsync();
     }
 
     #endregion
+
+    /// <summary>
+    /// Reads the tools this plugin names for its assistant.
+    /// </summary>
+    /// <remarks>
+    /// An ID this installation does not know stays in the set on purpose: the tool may arrive with
+    /// a plugin installed later, and dropping it here would silently turn a plugin that names tools
+    /// into one that lets the user choose.
+    /// </remarks>
+    private static HashSet<string>? ReadPluginToolIds(PluginAssistants plugin) => plugin.AssistantToolIds is { } toolIds ? ToolSelectionRules.NormalizeSelection(toolIds) : null;
+
+    /// <summary>
+    /// Loads the tool catalog behind the warnings, but only for a plugin that names tools at all.
+    /// </summary>
+    private async Task LoadToolWarningCatalogAsync()
+    {
+        if (this.assistantToolIds is { Count: > 0 })
+            await this.EnsureManagedToolCatalogAsync();
+    }
 
     private string ResolveImageSource(AssistantImage image)
     {

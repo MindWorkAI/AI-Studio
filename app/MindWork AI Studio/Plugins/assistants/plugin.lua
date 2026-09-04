@@ -73,6 +73,19 @@ ASSISTANT = {
     ["SystemPrompt"] = "<prompt that fundamentally changes behaviour, personality and task focus of your assistant. Invisible to the user>", -- required
     ["SubmitText"] = "<label for submit button>", -- required
     ["AllowProfiles"] = true, -- if true, allows AiStudios profiles; required
+    
+    -- Optional: the tools your assistant runs with. Naming them takes the choice away from the
+    -- user: the tool selection disappears from the assistant, and it always runs with exactly
+    -- these tools. Omit the field to let users select the tools themselves.
+    -- Naming a tool is a wish, not a permission: a tool switched off in the settings stays off,
+    -- and every tool still has to meet the confidence requirements of the provider in use. Users
+    -- see the tools your assistant asks for before they enable it, and the security audit weighs
+    -- them against what your assistant claims to do.
+    -- Tool IDs include: web_search, read_web_page
+    ["ToolIds"] = {
+        "web_search",
+    },
+    
     ["UI"] = {
         ["Type"] = "FORM",
         ["Children"] = {

@@ -287,7 +287,7 @@ public sealed class ToolRegistry
     /// caller to gate tools on capabilities that differed from the ones the availability check saw.
     /// </remarks>
     public async Task<IReadOnlyList<(ToolDefinition Definition, IToolImplementation Implementation)>> GetRunnableToolsAsync(AIStudio.Settings.Provider provider,
-        Components component, IEnumerable<string> selectedToolIds, ConfidenceLevel providerConfidence, bool isToolSelectionVisible)
+        Components component, IEnumerable<string> selectedToolIds, ConfidenceLevel providerConfidence, bool mayRunTools)
     {
         if (!this.settingsManager.AreToolsEnabled())
         {
@@ -295,9 +295,14 @@ public sealed class ToolRegistry
             return [];
         }
 
-        if (!isToolSelectionVisible)
+        //
+        // Where the user selects the tools, they must be able to see that selection; where the
+        // assistant's own rules name them, there is nothing to see. Which of the two applies is
+        // decided by the caller, because only it knows where its tools came from:
+        //
+        if (!mayRunTools)
         {
-            this.logger.LogDebug("Tool calling is skipped for component '{Component}' because tool selection is not visible.", component);
+            this.logger.LogDebug("Tool calling is skipped for component '{Component}' because its tool selection is hidden and no assistant rule names the tools.", component);
             return [];
         }
 

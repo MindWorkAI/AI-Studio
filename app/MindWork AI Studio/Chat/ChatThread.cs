@@ -124,6 +124,25 @@ public sealed record ChatThread
 
     [JsonIgnore]
     public HashSet<string> RuntimeSelectedToolIds { get; set; } = [];
+
+    /// <summary>
+    /// Whether the tools of this run were named by the assistant's own rules instead of chosen by
+    /// the user.
+    /// </summary>
+    /// <remarks>
+    /// A user who cannot see a tool selection must not get tools they never picked, which is why
+    /// running tools normally requires a visible selection. That rule misses the case where nobody
+    /// asked the user in the first place: a document analysis policy or an assistant plugin names
+    /// its tools, and hiding the selection is the point rather than an obstacle. This flag tells
+    /// the providers which of the two they are looking at.
+    /// </remarks>
+    [JsonIgnore]
+    public bool RuntimeToolsAreAssistantManaged { get; set; }
+
+    /// <summary>
+    /// Whether this thread may run tools at all.
+    /// </summary>
+    public bool MayRunTools(SettingsManager settingsManager) => this.RuntimeToolsAreAssistantManaged || settingsManager.IsToolSelectionVisible(this.RuntimeComponent);
     
     private bool allowProfile = true;
 

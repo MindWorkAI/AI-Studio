@@ -188,7 +188,7 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
                 chatThread.RuntimeComponent,
                 chatThread.RuntimeSelectedToolIds,
                 providerConfidence,
-                settingsManager.IsToolSelectionVisible(chatThread.RuntimeComponent));
+                chatThread.MayRunTools(settingsManager));
 
         var toolAwareDefinitions = toolExecutor is null
             ? Enumerable.Empty<ToolDefinition>()

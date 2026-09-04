@@ -177,16 +177,16 @@ else
     let the analysis quietly run without them, which is why the warning sits right at the provider
     selection: choosing another provider is what resolves it.
 *@
-@if (this.PolicyToolsNeedToolCallingProvider)
+@if (this.ManagedToolsNeedToolCallingProvider)
 {
     <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="@true" Class="mb-3">
         @T("This policy uses tools, but the selected model cannot use tools. The analysis runs without them. Please choose a model which supports tools.")
     </MudAlert>
 }
-else if (this.ToolsBeyondProviderConfidence.Count > 0)
+else if (this.ManagedToolsBeyondProviderConfidence.Count > 0)
 {
     <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="@true" Class="mb-3">
-        @(string.Format(T("Not all tools of this policy can be used with the selected AI provider: {0}. Please choose a provider with a higher confidence level to use all tools of this policy."), string.Join(", ", this.ToolsBeyondProviderConfidence)))
+        @(string.Format(T("Not all tools of this policy can be used with the selected AI provider: {0}. Please choose a provider with a higher confidence level to use all tools of this policy."), string.Join(", ", this.ManagedToolsBeyondProviderConfidence)))
     </MudAlert>
 }
 

@@ -1056,7 +1056,7 @@ public abstract class BaseProvider : IProvider, ISecretId
                 chatThread.RuntimeComponent,
                 chatThread.RuntimeSelectedToolIds,
                 this.Provider.GetConfidence(settingsManager).Level,
-                settingsManager.IsToolSelectionVisible(chatThread.RuntimeComponent));
+                chatThread.MayRunTools(settingsManager));
 
             systemPrompt = new TextMessage
             {
