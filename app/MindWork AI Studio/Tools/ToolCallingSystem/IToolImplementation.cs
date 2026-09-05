@@ -65,6 +65,29 @@ public interface IToolImplementation
     public IReadOnlyList<ToolSettingsGroupLink> GetSettingsGroupLinks(string groupKey) => [];
 
     /// <summary>
+    /// Independently selectable areas of this tool's configuration export.
+    /// </summary>
+    /// <remarks>
+    /// By default, each settings group is one area, including an area for ungrouped fields.
+    /// Override this when the export needs a different partition. IDs must be unique and stable;
+    /// labels must be translated. Areas contain schema field names, never values or secrets.
+    /// Selecting an area does not implicitly include general settings or other areas, and a
+    /// field hidden in the settings dialog is still exportable.
+    /// </remarks>
+    public IReadOnlyList<ExportableSettings> GetExportableSettings(ToolDefinition definition) => definition.SettingsSchema.Properties
+            .GroupBy(property => property.Value.Group, StringComparer.Ordinal)
+            .Select(group =>
+            {
+                var label = this.GetSettingsGroupLabel(group.Key);
+                return new ExportableSettings(
+                    group.Key,
+                    string.IsNullOrEmpty(label) ? TB("General") : label,
+                    group.Select(property => property.Key).ToList()
+                );
+            })
+            .ToList();
+
+    /// <summary>
     /// Whether one settings field is worth showing, given what is filled in at the moment.
     /// </summary>
     /// <remarks>
