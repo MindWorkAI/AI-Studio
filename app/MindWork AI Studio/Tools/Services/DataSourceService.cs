@@ -9,6 +9,8 @@ namespace AIStudio.Tools.Services;
 
 public sealed class DataSourceService
 {
+    private readonly record struct ParticipatingProvider(string Role, bool IsTrusted, ConfidenceLevel ConfidenceLevel);
+
     private readonly RustService rustService;
     private readonly SettingsManager settingsManager;
     private readonly ILogger<DataSourceService> logger;
@@ -27,9 +29,10 @@ public sealed class DataSourceService
     /// It also returns the data sources selected before when they are still allowed.
     /// </summary>
     /// <param name="selectedLLMProvider">The selected LLM provider.</param>
+    /// <param name="dataSourceOptions">The active data source options, which determine which agent providers participate.</param>
     /// <param name="previousSelectedDataSources">The data sources selected before.</param>
     /// <returns>The allowed data sources and the data sources selected before -- when they are still allowed.</returns>
-    public async Task<AllowedSelectedDataSources> GetDataSources(AIStudio.Settings.Provider selectedLLMProvider, IReadOnlyCollection<IDataSource>? previousSelectedDataSources = null)
+    public async Task<AllowedSelectedDataSources> GetDataSources(AIStudio.Settings.Provider selectedLLMProvider, DataSourceOptions dataSourceOptions, IReadOnlyCollection<IDataSource>? previousSelectedDataSources = null)
     {
         //
         // Case: Somehow the selected LLM provider was not set. The default provider
@@ -42,7 +45,10 @@ public sealed class DataSourceService
             return new([], []);
         }
         
-        return await this.GetDataSources(selectedLLMProvider.IsTrustedForDataSourceSecurityChecks(this.settingsManager), previousSelectedDataSources);
+        var usingTrustedProvider = selectedLLMProvider.IsTrustedForDataSourceSecurityChecks(this.settingsManager);
+        var participatingProviders = this.GetParticipatingProviders(selectedLLMProvider.Id, dataSourceOptions,
+            new("chat provider", usingTrustedProvider, selectedLLMProvider.GetConfidenceLevel(this.settingsManager)));
+        return await this.GetDataSources(usingTrustedProvider, participatingProviders, previousSelectedDataSources);
     }
 
     /// <summary>
@@ -51,9 +57,10 @@ public sealed class DataSourceService
     /// this method checks only the supplied data sources.
     /// </summary>
     /// <param name="selectedLLMProvider">The selected LLM provider.</param>
+    /// <param name="dataSourceOptions">The active data source options, which determine which agent providers participate.</param>
     /// <param name="requestedDataSources">The data sources to check.</param>
     /// <returns>The requested data sources that are allowed for the provider.</returns>
-    public async Task<IReadOnlyList<IDataSource>> GetAllowedDataSources(AIStudio.Settings.Provider selectedLLMProvider, IReadOnlyCollection<IDataSource> requestedDataSources)
+    public async Task<IReadOnlyList<IDataSource>> GetAllowedDataSources(AIStudio.Settings.Provider selectedLLMProvider, DataSourceOptions dataSourceOptions, IReadOnlyCollection<IDataSource> requestedDataSources)
     {
         if (selectedLLMProvider == Settings.Provider.NONE)
         {
@@ -61,7 +68,10 @@ public sealed class DataSourceService
             return [];
         }
 
-        return await this.GetAllowedDataSources(selectedLLMProvider.IsTrustedForDataSourceSecurityChecks(this.settingsManager), requestedDataSources);
+        var usingTrustedProvider = selectedLLMProvider.IsTrustedForDataSourceSecurityChecks(this.settingsManager);
+        var participatingProviders = this.GetParticipatingProviders(selectedLLMProvider.Id, dataSourceOptions,
+            new("chat provider", usingTrustedProvider, selectedLLMProvider.GetConfidenceLevel(this.settingsManager)));
+        return await this.GetAllowedDataSources(usingTrustedProvider, participatingProviders, requestedDataSources);
     }
     
     /// <summary>
@@ -69,9 +79,10 @@ public sealed class DataSourceService
     /// It also returns the data sources selected before when they are still allowed.
     /// </summary>
     /// <param name="selectedLLMProvider">The selected LLM provider.</param>
+    /// <param name="dataSourceOptions">The active data source options, which determine which agent providers participate.</param>
     /// <param name="previousSelectedDataSources">The data sources selected before.</param>
     /// <returns>The allowed data sources and the data sources selected before -- when they are still allowed.</returns>
-    public async Task<AllowedSelectedDataSources> GetDataSources(IProvider selectedLLMProvider, IReadOnlyCollection<IDataSource>? previousSelectedDataSources = null)
+    public async Task<AllowedSelectedDataSources> GetDataSources(IProvider selectedLLMProvider, DataSourceOptions dataSourceOptions, IReadOnlyCollection<IDataSource>? previousSelectedDataSources = null)
     {
         //
         // Case: Somehow the selected LLM provider was not set. The default provider
@@ -84,27 +95,60 @@ public sealed class DataSourceService
             return new([], []);
         }
         
-        return await this.GetDataSources(selectedLLMProvider.IsTrustedForDataSourceSecurityChecks(this.settingsManager), previousSelectedDataSources);
+        var usingTrustedProvider = selectedLLMProvider.IsTrustedForDataSourceSecurityChecks(this.settingsManager);
+        var participatingProviders = this.GetParticipatingProviders(selectedLLMProvider.ConfiguredProviderId, dataSourceOptions,
+            new("chat provider", usingTrustedProvider, selectedLLMProvider.GetConfidenceLevel(this.settingsManager)));
+        return await this.GetDataSources(usingTrustedProvider, participatingProviders, previousSelectedDataSources);
     }
     
-    private async Task<AllowedSelectedDataSources> GetDataSources(bool usingTrustedProvider, IReadOnlyCollection<IDataSource>? previousSelectedDataSources = null)
+    private IReadOnlyList<ParticipatingProvider> GetParticipatingProviders(string currentProviderId, DataSourceOptions dataSourceOptions, ParticipatingProvider currentProvider)
+    {
+        var providers = new List<ParticipatingProvider> { currentProvider };
+
+        if (dataSourceOptions.AutomaticDataSourceSelection)
+            this.AddAgentProvider(providers, Components.AGENT_DATA_SOURCE_SELECTION, currentProviderId, "data source selection agent");
+
+        if (dataSourceOptions.AutomaticValidation && this.settingsManager.ConfigurationData.AgentRetrievalContextValidation.EnableRetrievalContextValidation)
+            this.AddAgentProvider(providers, Components.AGENT_RETRIEVAL_CONTEXT_VALIDATION, currentProviderId, "retrieval context validation agent");
+
+        return providers;
+    }
+
+    private void AddAgentProvider(List<ParticipatingProvider> providers, Components component, string currentProviderId, string role)
+    {
+        var provider = this.settingsManager.GetPreselectedProvider(component, currentProviderId, true);
+        if (provider == Settings.Provider.NONE)
+        {
+            this.logger.LogWarning($"No provider is available for the {role}. Data sources cannot be made available while this agent is enabled.");
+            providers.Add(new(role, false, ConfidenceLevel.NONE));
+            return;
+        }
+
+        providers.Add(new(
+            role,
+            provider.IsTrustedForDataSourceSecurityChecks(this.settingsManager),
+            provider.GetConfidenceLevel(this.settingsManager)));
+    }
+
+    private async Task<AllowedSelectedDataSources> GetDataSources(bool usingTrustedProvider, IReadOnlyList<ParticipatingProvider> participatingProviders, IReadOnlyCollection<IDataSource>? previousSelectedDataSources = null)
     {
         var allDataSources = this.settingsManager.ConfigurationData.DataSources.ToList();
         var previousSelectedDataSourceIds = previousSelectedDataSources?.Select(source => source.Id).ToHashSet(StringComparer.Ordinal) ?? [];
-        var filteredDataSources = await this.GetAllowedDataSources(usingTrustedProvider, allDataSources);
+        var filteredDataSources = await this.GetAllowedDataSources(usingTrustedProvider, participatingProviders, allDataSources);
         var filteredSelectedDataSources = filteredDataSources.Where(source => previousSelectedDataSourceIds.Contains(source.Id)).ToList();
         
         return new(filteredDataSources, filteredSelectedDataSources);
     }
 
-    private async Task<IReadOnlyList<IDataSource>> GetAllowedDataSources(bool usingTrustedProvider, IReadOnlyCollection<IDataSource> requestedDataSources)
+    private async Task<IReadOnlyList<IDataSource>> GetAllowedDataSources(bool usingTrustedProvider, IReadOnlyList<ParticipatingProvider> participatingProviders, IReadOnlyCollection<IDataSource> requestedDataSources)
     {
         var filteredDataSources = new List<IDataSource>(requestedDataSources.Count);
         var tasks = new List<Task<IDataSource?>>(requestedDataSources.Count);
 
         // Start all checks in parallel:
         foreach (var source in requestedDataSources)
-            tasks.Add(this.CheckOneDataSource(source, usingTrustedProvider));
+            tasks.Add(this.CheckOneDataSource(source, usingTrustedProvider, participatingProviders));
+
 
         // Wait for all checks and collect the results:
         foreach (var task in tasks)
@@ -117,8 +161,35 @@ public sealed class DataSourceService
         return filteredDataSources;
     }
     
-    private async Task<IDataSource?> CheckOneDataSource(IDataSource source, bool usingTrustedProvider)
+    private async Task<IDataSource?> CheckOneDataSource(IDataSource source, bool usingTrustedProvider, IReadOnlyList<ParticipatingProvider> participatingProviders)
     {
+        if (source is IInternalDataSource internalSource)
+        {
+            foreach (var provider in participatingProviders)
+            {
+                if (!provider.ConfidenceLevel.AllowsDataSourceConfidenceLevel(internalSource.ConfidenceLevel))
+                {
+                    this.logger.LogWarning($"The internal data source '{source.Name}' (id={source.Id}) requires provider confidence '{internalSource.ConfidenceLevel.GetName()}'. The {provider.Role} only has confidence '{provider.ConfidenceLevel.GetName()}'. We skip this source.");
+                    return null;
+                }
+            }
+
+            if (!DataSourceEmbeddingProviders.TryResolve(this.settingsManager, source, out var embeddingProvider))
+            {
+                this.logger.LogWarning($"The internal data source '{source.Name}' (id={source.Id}) has no usable embedding provider. We skip this source.");
+                return null;
+            }
+
+            var embeddingProviderConfidence = embeddingProvider.GetConfidenceLevel(this.settingsManager);
+            if (!embeddingProviderConfidence.AllowsDataSourceConfidenceLevel(internalSource.ConfidenceLevel))
+            {
+                this.logger.LogWarning($"The internal data source '{source.Name}' (id={source.Id}) requires provider confidence '{internalSource.ConfidenceLevel.GetName()}'. Its embedding provider '{embeddingProvider.Name}' only has confidence '{embeddingProviderConfidence.GetName()}'. We skip this source.");
+                return null;
+            }
+
+            return source;
+        }
+
         //
         // Unfortunately, we have to live-check any ERI source for its security requirements.
         // Because the ERI server operator might change the security requirements at any time.
@@ -153,8 +224,11 @@ public sealed class DataSourceService
             eriSourceRequirements = securityRequest.Data;
             this.logger.LogInformation($"Security requirements for ERI source '{source.Name}' (id={source.Id}) retrieved successfully.");
         }
-        
-        switch (source.SecurityPolicy)
+
+        if (source is not IExternalDataSource externalSource)
+            return source;
+
+        switch (externalSource.SecurityPolicy)
         {
             case DataSourceSecurity.ALLOW_ANY:
                 

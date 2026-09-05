@@ -1,3 +1,5 @@
+using AIStudio.Provider;
+using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.ERIClient.DataModel;
 using AIStudio.Tools.PluginSystem;
@@ -6,7 +8,11 @@ namespace AIStudio.Tools.Validation;
 
 public sealed class DataSourceValidation
 {
+    public const int MAX_NAME_LENGTH = 40;
+
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(DataSourceValidation).Namespace, nameof(DataSourceValidation));
+
+    public static bool IsNameValid(string name) => !string.IsNullOrWhiteSpace(name) && name.Length <= MAX_NAME_LENGTH && !name.Any(char.IsControl);
     
     public Func<string> GetSecretStorageIssue { get; init; } = () => string.Empty;
     
@@ -17,8 +23,14 @@ public sealed class DataSourceValidation
     public Func<AuthMethod> GetAuthMethod { get; init; } = () => AuthMethod.NONE;
 
     public Func<SecurityRequirements?> GetSecurityRequirements { get; init; } = () => null;
-    
+
     public Func<bool> GetSelectedCloudEmbedding { get; init; } = () => false;
+
+    public Func<EmbeddingProvider?> GetSelectedEmbeddingProvider { get; init; } = () => null;
+
+    public Func<ConfidenceLevel> GetConfidenceLevel { get; init; } = () => ConfidenceLevel.NONE;
+
+    public Func<SettingsManager?> GetSettingsManager { get; init; } = () => null;
     
     public Func<bool> GetTestedConnection { get; init; } = () => false;
     
@@ -47,19 +59,19 @@ public sealed class DataSourceValidation
         
         return null;
     }
-    
+
     public string? ValidateSecurityPolicy(DataSourceSecurity securityPolicy)
     {
         if(securityPolicy is DataSourceSecurity.NOT_SPECIFIED)
             return TB("Please select your security policy.");
-        
+
         var dataSourceSecurity = this.GetSecurityRequirements();
         if (dataSourceSecurity is null)
             return null;
-        
+
         if(dataSourceSecurity.Value.AllowedProviderType is ProviderType.SELF_HOSTED && securityPolicy is not DataSourceSecurity.SELF_HOSTED)
             return TB("This data source can only be used with a self-hosted LLM provider. Please change the security policy.");
-        
+
         return null;
     }
     
@@ -106,11 +118,14 @@ public sealed class DataSourceValidation
     
     public string? ValidatingName(string dataSourceName)
     {
-        if(string.IsNullOrWhiteSpace(dataSourceName))
+        if (string.IsNullOrWhiteSpace(dataSourceName))
             return TB("The name must not be empty.");
-        
-        if (dataSourceName.Length > 40)
+
+        if (dataSourceName.Length > MAX_NAME_LENGTH)
             return TB("The name must not exceed 40 characters.");
+
+        if (dataSourceName.Any(char.IsControl))
+            return TB("The name must not contain control characters.");
         
         var lowerName = dataSourceName.ToLowerInvariant();
         if(lowerName != this.GetPreviousDataSourceName() && this.GetUsedDataSourceNames().Contains(lowerName))
@@ -149,6 +164,20 @@ public sealed class DataSourceValidation
         return null;
     }
 
+    public string? ValidateEmbeddingProviderAccess(string embeddingId)
+    {
+        var embeddingIssue = this.ValidateEmbeddingId(embeddingId);
+        return embeddingIssue ?? this.ValidateSelectedEmbeddingProviderAccess();
+    }
+
+    public string? ValidateDataSourceConfidenceLevel(ConfidenceLevel confidenceLevel)
+    {
+        if(confidenceLevel is ConfidenceLevel.NONE)
+            return TB("Please select a required provider confidence level.");
+
+        return this.ValidateSelectedEmbeddingProviderAccess();
+    }
+
     public string? ValidateUserAcknowledgedCloudEmbedding(bool value)
     {
         if(this.GetSelectedCloudEmbedding() && !value)
@@ -174,5 +203,22 @@ public sealed class DataSourceValidation
             return TB("Please select one valid authentication method.");
         
         return null;
+    }
+
+    private string? ValidateSelectedEmbeddingProviderAccess()
+    {
+        var selectedEmbedding = this.GetSelectedEmbeddingProvider();
+        var settingsManager = this.GetSettingsManager();
+        if(selectedEmbedding is null || settingsManager is null)
+            return null;
+
+        var confidenceLevel = this.GetConfidenceLevel();
+        if(selectedEmbedding.GetConfidenceLevel(settingsManager).AllowsDataSourceConfidenceLevel(confidenceLevel))
+            return null;
+
+        return string.Format(
+            TB("The selected embedding provider has confidence '{0}', but this data source requires provider confidence '{1}'. Select an embedding provider with equal or higher confidence or lower the required confidence level."),
+            selectedEmbedding.GetConfidenceLevel(settingsManager).GetName(),
+            confidenceLevel.GetName());
     }
 }

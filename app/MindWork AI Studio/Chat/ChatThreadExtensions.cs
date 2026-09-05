@@ -11,12 +11,12 @@ public static class ChatThreadExtensions
     /// </summary>
     /// <remarks>
     /// We don't check if the provider is allowed to use the data sources of the chat thread.
-    /// That kind of check is done in the RAG process itself.<br/><br/>
+    /// That kind of check is done when the available data sources are resolved.<br/><br/>
     /// 
     /// One thing which is not so obvious: after RAG was used on this thread, the entire chat
     /// thread is kind of a data source by itself. Why? Because the augmentation data collected
     /// from the data sources is stored in the chat thread. This means we must check if the
-    /// selected provider is allowed to use this thread's data.
+    /// selected provider is allowed to use this thread's data security and confidence level.
     /// </remarks>
     /// <param name="chatThread">The chat thread to check.</param>
     /// <param name="provider">The provider to check.</param>
@@ -26,23 +26,24 @@ public static class ChatThreadExtensions
         // No chat thread available means we have a new chat. That's fine:
         if (chatThread is null)
             return true;
-        
+
         var settingsManager = Program.SERVICE_PROVIDER.GetRequiredService<SettingsManager>();
         var providerConfidence = provider switch
         {
-            IProvider p => p.Provider.GetConfidence(settingsManager).Level,
-            AIStudio.Settings.Provider p => p.UsedLLMProvider.GetConfidence(settingsManager).Level,
+            IProvider p => p.GetConfidenceLevel(settingsManager),
+            AIStudio.Settings.Provider p => p.GetConfidenceLevel(settingsManager),
 
             _ => ConfidenceLevel.UNKNOWN,
         };
-        var isTrustedByConfiguration = provider switch
-        {
-            IProvider p => p.IsTrustedByConfiguration(settingsManager),
-            AIStudio.Settings.Provider p => p.IsTrustedByConfiguration(settingsManager),
 
-            _ => false,
-        };
-        if (providerConfidence < chatThread.RequiredProviderConfidence && !isTrustedByConfiguration)
+        //
+        // The confidence axis is checked on its own: a provider trusted by configuration counts as
+        // self-hosted for data-source security, which is the check further down, but that trust
+        // says nothing about how confidential the provider is. An organization which wants its
+        // contractually covered cloud provider to pass here raises its level through the custom
+        // confidence scheme instead.
+        //
+        if (providerConfidence < chatThread.RequiredProviderConfidence)
             return false;
 
         // The chat thread is available, but the data security is not specified.

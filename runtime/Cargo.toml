@@ -76,6 +76,7 @@ regex = "1.13.1"
 aho-corasick = "1.1.5"
 toml = "1.1.4"
 image = { version = "0.25.10", default-features = false, features = ["jpeg", "png", "webp"] }
+tokenizers = "0.23.1"
 
 [patch.crates-io]
 # Issue: It was not possible to build qdrant-edge for macOS. See PR 9312: https://github.com/qdrant/qdrant/pull/9312

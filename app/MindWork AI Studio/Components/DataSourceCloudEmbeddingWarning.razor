@@ -1,0 +1,9 @@
+@inherits MSGComponentBase
+
+<MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="@true" Class="mb-3">
+    <MudText Typo="Typo.body2">
+        @this.WarningText
+    </MudText>
+</MudAlert>
+
+<MudTextSwitch Value="@this.UserAcknowledged" ValueChanged="@this.UserAcknowledgedChanged" Label="@T("I confirm that I have read and understood the above")" LabelOn="@T("Yes, please send my data to the external embedding provider")" LabelOff="@T("No, I will choose another embedding")" Validation="@this.Validation"/>

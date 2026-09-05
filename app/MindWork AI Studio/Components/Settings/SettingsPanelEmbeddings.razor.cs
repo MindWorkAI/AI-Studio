@@ -2,6 +2,8 @@ using System.Globalization;
 using AIStudio.Dialogs;
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Tools.Services;
+using AIStudio.Tools.Rust;
 
 using Microsoft.AspNetCore.Components;
 
@@ -11,6 +13,9 @@ namespace AIStudio.Components.Settings;
 
 public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
 {
+    [Inject]
+    private DataSourceEmbeddingService DataSourceEmbeddingService { get; init; } = null!;
+
     /// <summary>
     /// Groups the table by the used LLM provider. The embedding provider list is already sorted by
     /// that provider, so all instances of one LLM provider form a single, coherent group.
@@ -68,6 +73,7 @@ public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
         await this.UpdateEmbeddingProviders();
         
         await this.SettingsManager.StoreSettings();
+        await this.DataSourceEmbeddingService.QueueAllInternalDataSourcesAsync();
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
     
@@ -88,6 +94,9 @@ public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
             { x => x.IsSelfHosted, embeddingProvider.IsSelfHosted },
             { x => x.IsEditing, true },
             { x => x.DataHost, embeddingProvider.Host },
+            { x => x.DataTokenizerPath, embeddingProvider.TokenizerPath },
+            { x => x.DataTokenLimit, embeddingProvider.EffectiveTokenLimit },
+            { x => x.DataEmbeddingBatchSize, embeddingProvider.EffectiveEmbeddingBatchSize },
             { x => x.HFInferenceProviderId, embeddingProvider.HFInferenceProvider },
             { x => x.IsEnterpriseConfiguration, embeddingProvider.IsEnterpriseConfiguration },
         };
@@ -118,6 +127,7 @@ public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
         await this.UpdateEmbeddingProviders();
         
         await this.SettingsManager.StoreSettings();
+        await this.DataSourceEmbeddingService.QueueAllInternalDataSourcesAsync();
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
 
@@ -134,14 +144,43 @@ public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
             return;
         
         var deleteSecretResponse = await this.RustService.DeleteAPIKey(provider, SecretStoreType.EMBEDDING_PROVIDER);
-        if(deleteSecretResponse.Success)
+        var deleteTokenizerResponse = await this.RustService.DeleteTokenizer(TokenizerModelId.ForEmbeddingProvider(provider));
+        if(deleteSecretResponse.Success && deleteTokenizerResponse.Success)
         {
+            this.SettingsManager.ConfigurationData.EmbeddingProviders.Remove(provider);
+            await this.SettingsManager.StoreSettings();
+        }
+        else
+        {
+            var issueDialogParameters = new DialogParameters<ConfirmDialog>
+            {
+                { x => x.Message, string.Format(T("Couldn't delete the embedding provider '{0}'. The issue: {1}. We can ignore this issue and delete the embedding provider anyway. Do you want to ignore it and delete this embedding provider?"), provider.Name, BuildDeleteIssue(deleteSecretResponse, deleteTokenizerResponse)) },
+            };
+
+            var issueDialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete Embedding Provider"), issueDialogParameters, DialogOptions.FULLSCREEN);
+            var issueDialogResult = await issueDialogReference.Result;
+            if (issueDialogResult is null || issueDialogResult.Canceled)
+                return;
+
             this.SettingsManager.ConfigurationData.EmbeddingProviders.Remove(provider);
             await this.SettingsManager.StoreSettings();
         }
 
         await this.UpdateEmbeddingProviders();
+        await this.DataSourceEmbeddingService.QueueAllInternalDataSourcesAsync();
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+    }
+
+    private static string BuildDeleteIssue(DeleteSecretResponse deleteSecretResponse, TokenizerResponse deleteTokenizerResponse)
+    {
+        var issues = new List<string>();
+        if (!deleteSecretResponse.Success)
+            issues.Add(deleteSecretResponse.Issue);
+
+        if (!deleteTokenizerResponse.Success)
+            issues.Add(deleteTokenizerResponse.Message);
+
+        return string.Join(" | ", issues);
     }
 
     private async Task ExportEmbeddingProvider(EmbeddingProvider provider)
@@ -183,7 +222,7 @@ public partial class SettingsPanelEmbeddings : SettingsPanelProviderBase
             return;
 
         var embeddingProvider = provider.CreateProvider();
-        var embeddings = await embeddingProvider.EmbedTextAsync(provider.Model, this.SettingsManager, default, new List<string> { inputText });
+        var embeddings = await embeddingProvider.EmbedTextAsync(provider.Model, this.SettingsManager, CancellationToken.None, inputText);
 
         if (embeddings.Count == 0)
         {

@@ -2,11 +2,39 @@ using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.ERIClient.DataModel;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Services;
+using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Dialogs.Settings;
 
 public partial class SettingsDialogDataSources : SettingsDialogBase
 {
+    [Inject]
+    private DataSourceEmbeddingService DataSourceEmbeddingService { get; init; } = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        this.ApplyFilters([], [ Event.CONFIGURATION_CHANGED, Event.RAG_EMBEDDING_STATUS_CHANGED ]);
+    }
+
+    protected override async Task ProcessIncomingMessage<T>(ComponentBase? sendingComponent, Event triggeredEvent, T? data) where T : default
+    {
+        await base.ProcessIncomingMessage(sendingComponent, triggeredEvent, data);
+        if (triggeredEvent is Event.RAG_EMBEDDING_STATUS_CHANGED)
+            this.StateHasChanged();
+    }
+
+    private static Color GetIndexingStatusColor(DataSourceEmbeddingStatus? status)
+    {
+        if (status is null || status.State is DataSourceEmbeddingState.IDLE or DataSourceEmbeddingState.QUEUED or DataSourceEmbeddingState.RUNNING)
+            return Color.Warning;
+
+        return status.State is DataSourceEmbeddingState.FAILED || status.FailedFiles > 0
+            ? Color.Error
+            : Color.Success;
+    }
+
     private string GetEmbeddingName(IDataSource dataSource)
     {
         if(dataSource is IInternalDataSource internalDataSource)
@@ -22,6 +50,39 @@ public partial class SettingsDialogDataSources : SettingsDialogBase
             return T("External (ERI)");
         
         return T("Unknown");
+    }
+
+    private bool CanRefreshDataSource(IDataSource dataSource)
+    {
+        return this.DataSourceEmbeddingService.CanRefreshDataSource(dataSource);
+    }
+
+    private bool HasRefreshableDataSources()
+    {
+        return this.SettingsManager.ConfigurationData.DataSources.Any(this.CanRefreshDataSource);
+    }
+
+    private async Task AutomaticRefreshChanged(bool enabled)
+    {
+        this.SettingsManager.ConfigurationData.App.DataSourceIndexing.AutomaticRefresh = enabled;
+        await this.SettingsManager.StoreSettings();
+        this.DataSourceEmbeddingService.RefreshAutomaticWatchers();
+        await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+    }
+
+    private async Task RefreshAllDataSources()
+    {
+        await this.DataSourceEmbeddingService.QueueAllInternalDataSourcesAsync();
+        await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+    }
+
+    private async Task RefreshDataSource(IDataSource dataSource)
+    {
+        if (!this.CanRefreshDataSource(dataSource))
+            return;
+
+        await this.DataSourceEmbeddingService.QueueDataSourceAsync(dataSource);
+        await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
     
     private async Task AddDataSource(DataSourceType type)
@@ -85,6 +146,7 @@ public partial class SettingsDialogDataSources : SettingsDialogBase
         
         this.SettingsManager.ConfigurationData.DataSources.Add(addedDataSource);
         await this.SettingsManager.StoreSettings();
+        await this.DataSourceEmbeddingService.QueueDataSourceAsync(addedDataSource);
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
 
@@ -188,6 +250,8 @@ public partial class SettingsDialogDataSources : SettingsDialogBase
             return;
 
         IDataSource? editedDataSource = null;
+        var lockDataSourceIdentity = dataSource is IInternalDataSource
+            && await this.DataSourceEmbeddingService.ShouldLockDataSourceIdentityAsync(dataSource.Id);
         switch (dataSource)
         {
             case DataSourceLocalFile localFile:
@@ -195,6 +259,7 @@ public partial class SettingsDialogDataSources : SettingsDialogBase
                 {
                     { x => x.IsEditing, true },
                     { x => x.DataSource, localFile },
+                    { x => x.LockSourceAndEmbedding, lockDataSourceIdentity },
                     { x => x.AvailableEmbeddings, this.AvailableEmbeddingProviders }
                 };
         
@@ -211,6 +276,7 @@ public partial class SettingsDialogDataSources : SettingsDialogBase
                 {
                     { x => x.IsEditing, true },
                     { x => x.DataSource, localDirectory },
+                    { x => x.LockSourceAndEmbedding, lockDataSourceIdentity },
                     { x => x.AvailableEmbeddings, this.AvailableEmbeddingProviders }
                 };
         
@@ -244,6 +310,7 @@ public partial class SettingsDialogDataSources : SettingsDialogBase
         this.SettingsManager.ConfigurationData.DataSources[this.SettingsManager.ConfigurationData.DataSources.IndexOf(dataSource)] = editedDataSource;
 
         await this.SettingsManager.StoreSettings();
+        await this.DataSourceEmbeddingService.QueueDataSourceAsync(editedDataSource);
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
     
@@ -254,7 +321,7 @@ public partial class SettingsDialogDataSources : SettingsDialogBase
 
         var dialogParameters = new DialogParameters<ConfirmDialog>
         {
-            { x => x.Message, string.Format(T("Are you sure you want to delete the data source '{0}' of type {1}?"), dataSource.Name, dataSource.Type.GetDisplayName()) },
+            { x => x.Message, string.Format(T("Are you sure you want to delete the data source '{0}' of type '{1}'?"), dataSource.Name, dataSource.Type.GetDisplayName()) },
         };
         
         var dialogReference = await this.DialogService.ShowAsync<ConfirmDialog>(T("Delete Data Source"), dialogParameters, DialogOptions.FULLSCREEN);
@@ -285,6 +352,7 @@ public partial class SettingsDialogDataSources : SettingsDialogBase
         {
             this.SettingsManager.ConfigurationData.DataSources.Remove(dataSource);
             await this.SettingsManager.StoreSettings();
+            await this.DataSourceEmbeddingService.RemoveDataSourceAsync(dataSource);
             await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
         }
     }

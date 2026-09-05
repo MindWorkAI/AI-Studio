@@ -3,6 +3,7 @@ using System.Text.Json;
 using AIStudio.Chat;
 using AIStudio.Provider;
 using AIStudio.Settings;
+using AIStudio.Settings.DataModel;
 using AIStudio.Tools.RAG;
 using AIStudio.Tools.Services;
 
@@ -129,19 +130,30 @@ public sealed class AgentRetrievalContextValidation (ILogger<AgentRetrievalConte
     /// you can set the provider once and then call the validation method in parallel.
     /// </remarks>
     /// <param name="provider">The current LLM provider. When the user doesn't preselect an agent provider, the agent uses this provider.</param>
-    public void SetLLMProvider(IProvider provider)
+    /// <param name="requiredDataSecurity">The data security required by the retrieved data.</param>
+    /// <param name="requiredConfidenceLevel">The minimum provider confidence required by the retrieved data.</param>
+    public bool SetLLMProvider(IProvider provider, DataSourceSecurity requiredDataSecurity = DataSourceSecurity.NOT_SPECIFIED, ConfidenceLevel requiredConfidenceLevel = ConfidenceLevel.NONE)
     {
         // We start with the provider currently selected by the user:
-        var agentProvider = this.SettingsManager.GetPreselectedProvider(Tools.Components.AGENT_RETRIEVAL_CONTEXT_VALIDATION, provider.Id, true);
+        var agentProvider = this.SettingsManager.GetPreselectedProvider(Tools.Components.AGENT_RETRIEVAL_CONTEXT_VALIDATION, provider.ConfiguredProviderId, true);
         if (agentProvider == Settings.Provider.NONE)
         {
             logger.LogWarning("No provider is selected for the agent.");
-            return;
+            this.ProviderSettings = Settings.Provider.NONE;
+            return false;
+        }
+
+        if (!agentProvider.AllowsDataSourceAccess(this.SettingsManager, requiredDataSecurity, requiredConfidenceLevel))
+        {
+            logger.LogWarning($"The agent for retrieval context validation uses provider '{agentProvider.InstanceName}' with confidence '{agentProvider.GetConfidenceLevel(this.SettingsManager).GetName()}', but the retrieved data requires data security '{requiredDataSecurity}' and provider confidence '{requiredConfidenceLevel.GetName()}'. The agent cannot validate retrieval contexts.");
+            this.ProviderSettings = Settings.Provider.NONE;
+            return false;
         }
         
         // Assign the provider settings to the agent:
         logger.LogInformation($"The agent for the retrieval context validation uses the provider '{agentProvider.InstanceName}' ({agentProvider.UsedLLMProvider.ToName()}, confidence={agentProvider.UsedLLMProvider.GetConfidence(this.SettingsManager).Level.GetName()}).");
         this.ProviderSettings = agentProvider;
+        return true;
     }
     
     /// <summary>

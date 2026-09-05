@@ -92,6 +92,9 @@ public abstract class BaseProvider : IProvider, ISecretId
     internal ProviderCapabilityOverrides? CapabilityOverrides { get; set; }
 
     /// <inheritdoc />
+    public string TokenizerPath { get; init; } = string.Empty;
+
+    /// <inheritdoc />
     public abstract bool HasModelLoadingCapability { get; }
 
     /// <inheritdoc />

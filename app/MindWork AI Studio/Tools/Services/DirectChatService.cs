@@ -187,10 +187,24 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
             requestedDataSources.Add(dataSource);
         }
 
+        //
+        // The options the launched chat will run under. We build them here already, because the
+        // data-source check depends on them: they decide which agent providers take part, and an
+        // agent with too little confidence makes a data source unavailable.
+        //
+        var standardOptions = settingsManager.ConfigurationData.Chat.PreselectedDataSourceOptions;
+        var launchedDataSourceOptions = new DataSourceOptions
+        {
+            DisableDataSources = false,
+            AutomaticDataSourceSelection = false,
+            AutomaticValidation = standardOptions.AutomaticValidation,
+            PreselectedDataSourceIds = requestedDataSources.Select(source => source.Id).ToList(),
+        };
+
         IReadOnlyList<IDataSource> availableDataSources;
         try
         {
-            availableDataSources = await dataSourceService.GetAllowedDataSources(provider, requestedDataSources);
+            availableDataSources = await dataSourceService.GetAllowedDataSources(provider, launchedDataSourceOptions, requestedDataSources);
         }
         catch (Exception exception)
         {
@@ -203,13 +217,6 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
         if (unavailableDataSources.Count > 0)
             return new(null, string.Format(TB("The following data sources selected by the assistant chat launcher are currently unavailable or not permitted for the selected provider: {0}"), string.Join(", ", unavailableDataSources)));
 
-        var standardOptions = settingsManager.ConfigurationData.Chat.PreselectedDataSourceOptions;
-        return new(new()
-        {
-            DisableDataSources = false,
-            AutomaticDataSourceSelection = false,
-            AutomaticValidation = standardOptions.AutomaticValidation,
-            PreselectedDataSourceIds = requestedDataSources.Select(source => source.Id).ToList(),
-        }, string.Empty);
+        return new(launchedDataSourceOptions, string.Empty);
     }
 }

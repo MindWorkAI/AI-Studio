@@ -6,12 +6,13 @@ use std::sync::Mutex;
 use axum::Json;
 use log::{error, info, warn};
 use once_cell::sync::Lazy;
-use qdrant_edge::external::serde_json::json;
+use qdrant_edge::external::serde_json::{json, Value};
 use qdrant_edge::external::uuid::Uuid;
 use qdrant_edge::{
     Condition, Distance, EdgeConfig, EdgeOptimizersConfig, EdgeShard, EdgeVectorParams,
-    FieldCondition, Filter, HnswIndexConfig, Match, MatchValue, PointId, PointInsertOperations,
-    PointOperations, PointStruct, UpdateOperation, ValueVariants, Vectors,
+    FieldCondition, Filter, HnswIndexConfig, Match, MatchValue, NamedQuery, Payload, PointId,
+    PointInsertOperations, PointOperations, PointStruct, QueryEnum, ScoredPoint, SearchRequest,
+    UpdateOperation, ValueVariants, VectorInternal, Vectors, WithPayloadInterface, WithVector,
 };
 use serde::{Deserialize, Serialize};
 use tauri::Manager;
@@ -26,6 +27,10 @@ const HNSW_EF_CONSTRUCT: usize = 100;
 const HNSW_FULL_SCAN_THRESHOLD_KB: usize = 10_000;
 const HNSW_MAX_INDEXING_THREADS: usize = 0;
 const VECTOR_INDEXING_THRESHOLD_KB: usize = 10_000;
+const STORE_INITIALIZATION_MARKER: &str = "store_name.txt";
+const STORE_INITIALIZATION_MARKER_TEMP: &str = "store_name.tmp";
+const STORE_DISPLAY_NAME_MARKER: &str = "data_source_name.txt";
+const STORE_DISPLAY_NAME_MARKER_TEMP: &str = "data_source_name.tmp";
 
 type QdrantEdgeResult<T> = Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
@@ -67,19 +72,28 @@ pub struct QdrantEdgeStoragePoint {
     pub data_source_id: String,
     pub data_source_name: String,
     pub data_source_type: String,
+    pub chunk_id: String,
+    pub parent_file_id: String,
     pub file_path: String,
+    pub absolute_path: String,
     pub file_name: String,
     pub relative_path: String,
+    pub file_type: String,
+    pub page_number: Option<i32>,
     pub chunk_index: i32,
     pub text: String,
     pub fingerprint: String,
+    pub creation_utc: String,
     pub last_write_utc: String,
     pub embedded_at_utc: String,
+    pub confidence_level: String,
+    pub confidence_level_rank: i32,
 }
 
 #[derive(Deserialize)]
 pub struct EnsureQdrantEdgeStoreRequest {
     pub store_name: String,
+    pub data_source_name: String,
     pub vector_size: usize,
 }
 
@@ -90,9 +104,21 @@ pub struct InsertQdrantEdgeEmbeddingRequest {
 }
 
 #[derive(Deserialize)]
+pub struct SearchQdrantEdgeEmbeddingRequest {
+    pub store_name: String,
+    pub vector: Vec<f32>,
+    pub max_matches: usize,
+}
+
+#[derive(Deserialize)]
 pub struct DeleteQdrantEdgeEmbeddingByFileRequest {
     pub store_name: String,
     pub file_path: String,
+}
+
+#[derive(Deserialize)]
+pub struct OptimizeQdrantEdgeStoreRequest {
+    pub store_name: String,
 }
 
 #[derive(Deserialize)]
@@ -101,9 +127,40 @@ pub struct DeleteQdrantEdgeStoreRequest {
 }
 
 #[derive(Serialize)]
-pub struct QdrantEdgeOperationResponse {
+pub struct QdrantEdgeResponse<T> {
     pub success: bool,
     pub issue: String,
+    pub data: Option<T>,
+}
+
+#[derive(Serialize)]
+pub struct QdrantEdgeEnsureStoreResult {
+    pub created: bool,
+}
+
+#[derive(Serialize)]
+pub struct QdrantEdgeSearchResult {
+    pub point_id: String,
+    pub score: f32,
+    pub data_source_id: String,
+    pub data_source_name: String,
+    pub data_source_type: String,
+    pub chunk_id: String,
+    pub parent_file_id: String,
+    pub file_path: String,
+    pub absolute_path: String,
+    pub file_name: String,
+    pub relative_path: String,
+    pub file_type: String,
+    pub page_number: Option<i32>,
+    pub chunk_index: i32,
+    pub text: String,
+    pub fingerprint: String,
+    pub creation_utc: String,
+    pub last_write_utc: String,
+    pub embedded_at_utc: String,
+    pub confidence_level: String,
+    pub confidence_level_rank: i32,
 }
 
 #[derive(Clone, Serialize)]
@@ -129,41 +186,80 @@ impl QdrantEdgeDatabase {
 
     fn store_path(&self, store_name: &str) -> QdrantEdgeResult<PathBuf> {
         validate_store_name(store_name)?;
-        Ok(self.base_path.join("stores").join(store_name))
+        Ok(self.base_path.join("stores").join(store_directory_name(store_name)))
     }
 
     // To ensure a shard exists and that you can insert a vector
-    fn get_or_create_store(&mut self, store_name: &str, vector_size: usize) -> QdrantEdgeResult<&EdgeShard> {
+    fn get_or_create_store(&mut self, store_name: &str, vector_size: usize) -> QdrantEdgeResult<(&EdgeShard, bool)> {
+        let (path, is_initialized) = self.reconcile_store_state(store_name)?;
         if self.shards.contains_key(store_name) {
-            return Ok(self.shards.get(store_name).unwrap());
+            return Ok((self.shards.get(store_name).unwrap(), false));
         }
 
-        let path = self.store_path(store_name)?;
-        let shard = if has_existing_store(&path) {
-            EdgeShard::load(&path, None)?
+        let shard = if is_initialized {
+            EdgeShard::load(&path, None).map_err(|error| {
+                format!("Failed to load vector store '{store_name}' from '{}': {error}", path.display())
+            })?
         } else {
-            fs::create_dir_all(&path)?;
-            EdgeShard::new(&path, edge_config(vector_size))?
+            fs::create_dir_all(&path).map_err(|error| {
+                format!("Failed to create directory for vector store '{store_name}' at '{}': {error}", path.display())
+            })?;
+            let shard = match EdgeShard::new(&path, edge_config(vector_size)) {
+                Ok(shard) => shard,
+                Err(error) => {
+                    let cleanup_issue = remove_partial_store(&path);
+                    return Err(format!("Failed to create vector store '{store_name}' at '{}': {error}{cleanup_issue}", path.display()).into());
+                },
+            };
+
+            if let Err(error) = write_store_initialization_marker(&path, store_name) {
+                drop(shard);
+                let cleanup_issue = remove_partial_store(&path);
+                return Err(format!("Failed to finalize vector store '{store_name}' at '{}': {error}{cleanup_issue}", path.display()).into());
+            }
+
+            shard
         };
 
         self.shards.insert(store_name.to_string(), shard);
-        Ok(self.shards.get(store_name).unwrap())
+        Ok((self.shards.get(store_name).unwrap(), !is_initialized))
     }
 
     // To check whether a shard exists so you can delete a file from it
     fn get_existing_store(&mut self, store_name: &str) -> QdrantEdgeResult<Option<&EdgeShard>> {
+        let (path, is_initialized) = self.reconcile_store_state(store_name)?;
         if self.shards.contains_key(store_name) {
             return Ok(self.shards.get(store_name));
         }
 
-        let path = self.store_path(store_name)?;
-        if !has_existing_store(&path) {
+        if !is_initialized {
             return Ok(None);
         }
 
-        let shard = EdgeShard::load(&path, None)?;
+        let shard = EdgeShard::load(&path, None).map_err(|error| {
+            format!("Failed to load vector store '{store_name}' from '{}': {error}", path.display())
+        })?;
         self.shards.insert(store_name.to_string(), shard);
         Ok(self.shards.get(store_name))
+    }
+
+    fn reconcile_store_state(&mut self, store_name: &str) -> QdrantEdgeResult<(PathBuf, bool)> {
+        let path = self.store_path(store_name)?;
+        let is_initialized = store_is_initialized(&path, store_name)?;
+
+        if self.shards.contains_key(store_name) && !is_initialized {
+            warn!(Source = "Qdrant Edge"; "Removing stale cached vector store '{}' because its initialized data directory no longer exists.", store_name);
+            self.shards.remove(store_name);
+        }
+
+        if path.exists() && !is_initialized {
+            warn!(Source = "Qdrant Edge"; "Removing incompletely initialized vector store '{}' before continuing.", store_name);
+            fs::remove_dir_all(&path).map_err(|error| {
+                format!("Failed to remove incomplete vector store '{store_name}' at '{}': {error}", path.display())
+            })?;
+        }
+
+        Ok((path, is_initialized))
     }
 
     fn info(&self) -> QdrantEdgeResult<QdrantEdgeInfo> {
@@ -171,7 +267,7 @@ impl QdrantEdgeDatabase {
         let stores_count = if stores_path.exists() {
             fs::read_dir(stores_path)?
                 .filter_map(Result::ok)
-                .filter(|entry| entry.path().is_dir())
+                .filter(|entry| entry.path().join(STORE_INITIALIZATION_MARKER).is_file())
                 .count()
         } else {
             0
@@ -185,10 +281,15 @@ impl QdrantEdgeDatabase {
         })
     }
 
-    fn ensure_store_exists(&mut self, store_name: &str, vector_size: usize) -> QdrantEdgeResult<()> {
+    fn ensure_store_exists(&mut self, store_name: &str, data_source_name: &str, vector_size: usize) -> QdrantEdgeResult<QdrantEdgeEnsureStoreResult> {
         validate_vector_size(vector_size)?;
-        self.get_or_create_store(store_name, vector_size)?;
-        Ok(())
+        validate_data_source_name(data_source_name)?;
+        let store_path = self.store_path(store_name)?;
+        let (_, created) = self.get_or_create_store(store_name, vector_size)?;
+        write_store_display_name(&store_path, data_source_name)?;
+        Ok(QdrantEdgeEnsureStoreResult {
+            created,
+        })
     }
 
     fn insert_embedding(&mut self, store_name: &str, points: Vec<QdrantEdgeStoragePoint>) -> QdrantEdgeResult<()> {
@@ -202,17 +303,55 @@ impl QdrantEdgeDatabase {
             return Err("All vectors in one insert request must have the same size.".into());
         }
 
-        let shard = self.get_or_create_store(store_name, vector_size)?;
+        let data_source_name = first_point.data_source_name.clone();
+        validate_data_source_name(&data_source_name)?;
+        if points.iter().any(|point| point.data_source_name != data_source_name) {
+            return Err("All points in one insert request must belong to the same data source name.".into());
+        }
+
+        let store_path = self.store_path(store_name)?;
+        let (shard, _) = self.get_or_create_store(store_name, vector_size)?;
+        write_store_display_name(&store_path, &data_source_name)?;
         let points = points
             .into_iter()
             .map(to_qdrant_edge_point)
-            .collect::<Vec<_>>();
+            .collect::<QdrantEdgeResult<Vec<_>>>()?;
 
         shard.update(UpdateOperation::PointOperation(
             PointOperations::UpsertPoints(PointInsertOperations::PointsList(points)),
         ))?;
         shard.flush();
         Ok(())
+    }
+
+    fn search_embedding(&mut self, store_name: &str, vector: Vec<f32>, max_matches: usize) -> QdrantEdgeResult<Vec<QdrantEdgeSearchResult>> {
+        if max_matches == 0 {
+            return Ok(vec![]);
+        }
+
+        validate_vector_size(vector.len())?;
+        let Some(shard) = self.get_existing_store(store_name)? else {
+            return Ok(vec![]);
+        };
+
+        let search_results = shard.search(SearchRequest {
+            query: QueryEnum::Nearest(NamedQuery::new(
+                VectorInternal::Dense(vector),
+                VECTOR_NAME,
+            )),
+            filter: None,
+            params: None,
+            limit: max_matches,
+            offset: 0,
+            with_payload: Some(WithPayloadInterface::Bool(true)),
+            with_vector: Some(WithVector::Bool(false)),
+            score_threshold: None,
+        })?;
+
+        Ok(search_results
+            .into_iter()
+            .map(to_qdrant_edge_search_result)
+            .collect())
     }
 
     fn delete_embedding_by_file(&mut self, store_name: &str, file_path: &str) -> QdrantEdgeResult<()> {
@@ -223,6 +362,19 @@ impl QdrantEdgeDatabase {
         shard.update(UpdateOperation::PointOperation(
             PointOperations::DeletePointsByFilter(match_keyword_filter("file_path", file_path)?),
         ))?;
+        shard.flush();
+        Ok(())
+    }
+
+    fn optimize_store(&mut self, store_name: &str) -> QdrantEdgeResult<()> {
+        let Some(shard) = self.get_existing_store(store_name)? else {
+            return Ok(());
+        };
+
+        let optimized = shard.optimize()?;
+        if optimized {
+            info!(Source = "Qdrant Edge"; "Optimized vector store '{}'.", store_name);
+        }
         shard.flush();
         Ok(())
     }
@@ -241,6 +393,11 @@ impl QdrantEdgeDatabase {
     fn base_path(&self) -> PathBuf {
         self.base_path.clone()
     }
+}
+
+fn store_directory_name(store_name: &str) -> String {
+    let stable_id = store_name.strip_prefix("rag_").unwrap_or(store_name);
+    format!("store_{stable_id}")
 }
 
 fn qdrant_edge_base_path() -> QdrantEdgeResult<PathBuf> {
@@ -276,26 +433,38 @@ pub async fn qdrant_edge_info(_token: APIToken) -> Json<QdrantEdgeServiceInfo> {
     })
 }
 
-pub async fn ensure_qdrant_edge_store(_token: APIToken, Json(request): Json<EnsureQdrantEdgeStoreRequest>) -> Json<QdrantEdgeOperationResponse> {
-    execute_qdrant_edge_operation(|database| {
-        database.ensure_store_exists(&request.store_name, request.vector_size)
+pub async fn ensure_qdrant_edge_store(_token: APIToken, Json(request): Json<EnsureQdrantEdgeStoreRequest>) -> Json<QdrantEdgeResponse<QdrantEdgeEnsureStoreResult>> {
+    execute_qdrant_edge_request(|database| {
+        database.ensure_store_exists(&request.store_name, &request.data_source_name, request.vector_size)
     })
 }
 
-pub async fn insert_qdrant_edge_embedding(_token: APIToken, Json(request): Json<InsertQdrantEdgeEmbeddingRequest>) -> Json<QdrantEdgeOperationResponse> {
-    execute_qdrant_edge_operation(|database| {
+pub async fn insert_qdrant_edge_embedding(_token: APIToken, Json(request): Json<InsertQdrantEdgeEmbeddingRequest>) -> Json<QdrantEdgeResponse<()>> {
+    execute_qdrant_edge_request(|database| {
         database.insert_embedding(&request.store_name, request.points)
     })
 }
 
-pub async fn delete_qdrant_edge_embedding_by_file(_token: APIToken, Json(request): Json<DeleteQdrantEdgeEmbeddingByFileRequest>) -> Json<QdrantEdgeOperationResponse> {
-    execute_qdrant_edge_operation(|database| {
+pub async fn search_qdrant_edge_embeddings(_token: APIToken, Json(request): Json<SearchQdrantEdgeEmbeddingRequest>) -> Json<QdrantEdgeResponse<Vec<QdrantEdgeSearchResult>>> {
+    execute_qdrant_edge_request(|database| {
+        database.search_embedding(&request.store_name, request.vector, request.max_matches)
+    })
+}
+
+pub async fn delete_qdrant_edge_embedding_by_file(_token: APIToken, Json(request): Json<DeleteQdrantEdgeEmbeddingByFileRequest>) -> Json<QdrantEdgeResponse<()>> {
+    execute_qdrant_edge_request(|database| {
         database.delete_embedding_by_file(&request.store_name, &request.file_path)
     })
 }
 
-pub async fn delete_qdrant_edge_store(_token: APIToken, Json(request): Json<DeleteQdrantEdgeStoreRequest>) -> Json<QdrantEdgeOperationResponse> {
-    execute_qdrant_edge_operation(|database| {
+pub async fn optimize_qdrant_edge_store(_token: APIToken, Json(request): Json<OptimizeQdrantEdgeStoreRequest>) -> Json<QdrantEdgeResponse<()>> {
+    execute_qdrant_edge_request(|database| {
+        database.optimize_store(&request.store_name)
+    })
+}
+
+pub async fn delete_qdrant_edge_store(_token: APIToken, Json(request): Json<DeleteQdrantEdgeStoreRequest>) -> Json<QdrantEdgeResponse<()>> {
+    execute_qdrant_edge_request(|database| {
         database.delete_store(&request.store_name)
     })
 }
@@ -338,29 +507,33 @@ pub fn stop_qdrant_edge_database() {
     set_qdrant_edge_unavailable("Qdrant Edge was stopped.".to_string());
 }
 
-fn execute_qdrant_edge_operation<F>(operation: F) -> Json<QdrantEdgeOperationResponse>
+fn execute_qdrant_edge_request<T, F>(operation: F) -> Json<QdrantEdgeResponse<T>>
 where
-    F: FnOnce(&mut QdrantEdgeDatabase) -> QdrantEdgeResult<()>,
+    T: Serialize,
+    F: FnOnce(&mut QdrantEdgeDatabase) -> QdrantEdgeResult<T>,
 {
     let mut database_guard = QDRANT_EDGE_DATABASE.lock().unwrap();
     let Some(database) = database_guard.as_mut() else {
-        return Json(QdrantEdgeOperationResponse {
+        return Json(QdrantEdgeResponse {
             success: false,
             issue: "Qdrant Edge is not available.".to_string(),
+            data: None,
         });
     };
 
     match operation(database) {
-        Ok(_) => Json(QdrantEdgeOperationResponse {
+        Ok(data) => Json(QdrantEdgeResponse {
             success: true,
             issue: String::new(),
+            data: Some(data),
         }),
         Err(e) => {
             let issue = e.to_string();
-            error!(Source = "Qdrant Edge"; "Qdrant Edge operation failed: {issue}");
-            Json(QdrantEdgeOperationResponse {
+            error!(Source = "Qdrant Edge"; "Qdrant Edge request failed: {issue}");
+            Json(QdrantEdgeResponse {
                 success: false,
                 issue,
+                data: None,
             })
         },
     }
@@ -477,13 +650,76 @@ fn edge_optimizers_config() -> EdgeOptimizersConfig {
     }
 }
 
-fn has_existing_store(path: &Path) -> bool {
-    path.join("edge_config.json").exists() || path.join("segments").exists()
+fn store_is_initialized(path: &Path, store_name: &str) -> QdrantEdgeResult<bool> {
+    if !path.join("edge_config.json").is_file() || !path.join("segments").is_dir() {
+        return Ok(false);
+    }
+
+    let marker_path = path.join(STORE_INITIALIZATION_MARKER);
+    if !marker_path.exists() {
+        return Ok(false);
+    }
+
+    let initialized_store_name = fs::read_to_string(&marker_path).map_err(|error| {
+        format!("Failed to read vector store initialization marker '{}': {error}", marker_path.display())
+    })?;
+    if initialized_store_name != store_name {
+        return Err(format!("Vector store path collision at '{}': expected store '{}', but the path belongs to '{}'.", path.display(), store_name, initialized_store_name).into());
+    }
+
+    Ok(true)
+}
+
+fn write_store_initialization_marker(path: &Path, store_name: &str) -> std::io::Result<()> {
+    write_store_marker(path, STORE_INITIALIZATION_MARKER, STORE_INITIALIZATION_MARKER_TEMP, store_name)
+}
+
+fn write_store_display_name(path: &Path, data_source_name: &str) -> std::io::Result<()> {
+    write_store_marker(path, STORE_DISPLAY_NAME_MARKER, STORE_DISPLAY_NAME_MARKER_TEMP, data_source_name)
+}
+
+fn write_store_marker(path: &Path, marker_name: &str, temporary_marker_name: &str, value: &str) -> std::io::Result<()> {
+    let marker_path = path.join(marker_name);
+    if fs::read_to_string(&marker_path).is_ok_and(|current_value| current_value == value) {
+        return Ok(());
+    }
+
+    let temporary_marker_path = path.join(temporary_marker_name);
+    fs::write(&temporary_marker_path, value)?;
+    if marker_path.exists() {
+        fs::remove_file(&marker_path)?;
+    }
+    fs::rename(temporary_marker_path, marker_path)
+}
+
+fn remove_partial_store(path: &Path) -> String {
+    match fs::remove_dir_all(path) {
+        Ok(()) => String::new(),
+        Err(error) => format!(" The incomplete store could not be removed: {error}"),
+    }
 }
 
 fn validate_vector_size(vector_size: usize) -> QdrantEdgeResult<()> {
     if vector_size == 0 {
         return Err("Vector size must be greater than zero.".into());
+    }
+
+    Ok(())
+}
+
+fn validate_data_source_name(data_source_name: &str) -> QdrantEdgeResult<()> {
+    const MAX_DATA_SOURCE_NAME_LENGTH: usize = 40;
+
+    if data_source_name.trim().is_empty() {
+        return Err("Data source name cannot be empty.".into());
+    }
+
+    if data_source_name.chars().count() > MAX_DATA_SOURCE_NAME_LENGTH {
+        return Err(format!("Data source name exceeds the maximum length of {MAX_DATA_SOURCE_NAME_LENGTH} characters.").into());
+    }
+
+    if data_source_name.chars().any(|c| c.is_control()) {
+        return Err("Data source name contains unsupported control characters.".into());
     }
 
     Ok(())
@@ -500,41 +736,90 @@ fn vector_store_version() -> QdrantEdgeResult<String> {
     Ok(metadata.vector_store_version.clone())
 }
 
-fn to_qdrant_edge_point(point: QdrantEdgeStoragePoint) -> qdrant_edge::PointStructPersisted {
-    PointStruct::new(
-        to_point_id(&point.point_id),
+fn to_qdrant_edge_point(point: QdrantEdgeStoragePoint) -> QdrantEdgeResult<qdrant_edge::PointStructPersisted> {
+    Ok(PointStruct::new(
+        to_point_id(&point.point_id)?,
         Vectors::new_named([(VECTOR_NAME, point.vector)]),
         json!({
             "data_source_id": point.data_source_id,
             "data_source_name": point.data_source_name,
             "data_source_type": point.data_source_type,
+            "chunk_id": point.chunk_id,
+            "parent_file_id": point.parent_file_id,
             "file_path": point.file_path,
+            "absolute_path": point.absolute_path,
             "file_name": point.file_name,
             "relative_path": point.relative_path,
+            "file_type": point.file_type,
+            "page_number": point.page_number,
             "chunk_index": point.chunk_index,
             "text": point.text,
             "fingerprint": point.fingerprint,
+            "creation_utc": point.creation_utc,
             "last_write_utc": point.last_write_utc,
             "embedded_at_utc": point.embedded_at_utc,
+            "confidence_level": point.confidence_level,
+            "confidence_level_rank": point.confidence_level_rank,
         }),
     )
-    .into()
+    .into())
 }
 
-fn to_point_id(point_id: &str) -> PointId {
+fn to_qdrant_edge_search_result(point: ScoredPoint) -> QdrantEdgeSearchResult {
+    let payload = point.payload.unwrap_or_default();
+    QdrantEdgeSearchResult {
+        point_id: point_id_to_string(point.id),
+        score: point.score,
+        data_source_id: payload_string(&payload, "data_source_id"),
+        data_source_name: payload_string(&payload, "data_source_name"),
+        data_source_type: payload_string(&payload, "data_source_type"),
+        chunk_id: payload_string(&payload, "chunk_id"),
+        parent_file_id: payload_string(&payload, "parent_file_id"),
+        file_path: payload_string(&payload, "file_path"),
+        absolute_path: payload_string(&payload, "absolute_path"),
+        file_name: payload_string(&payload, "file_name"),
+        relative_path: payload_string(&payload, "relative_path"),
+        file_type: payload_string(&payload, "file_type"),
+        page_number: payload_i32(&payload, "page_number"),
+        chunk_index: payload_i32(&payload, "chunk_index").unwrap_or_default(),
+        text: payload_string(&payload, "text"),
+        fingerprint: payload_string(&payload, "fingerprint"),
+        creation_utc: payload_string(&payload, "creation_utc"),
+        last_write_utc: payload_string(&payload, "last_write_utc"),
+        embedded_at_utc: payload_string(&payload, "embedded_at_utc"),
+        confidence_level: payload_string(&payload, "confidence_level"),
+        confidence_level_rank: payload_i32(&payload, "confidence_level_rank").unwrap_or_default(),
+    }
+}
+
+fn to_point_id(point_id: &str) -> QdrantEdgeResult<PointId> {
     Uuid::parse_str(point_id)
         .map(PointId::Uuid)
-        .unwrap_or_else(|_| PointId::NumId(stable_u64(point_id)))
+        .map_err(|_| "Vector point ID must be a valid UUID.".into())
 }
 
-fn stable_u64(value: &str) -> u64 {
-    let mut hash = 0xcbf29ce484222325_u64;
-    for byte in value.as_bytes() {
-        hash ^= u64::from(*byte);
-        hash = hash.wrapping_mul(0x100000001b3);
+fn point_id_to_string(point_id: PointId) -> String {
+    match point_id {
+        PointId::NumId(id) => id.to_string(),
+        PointId::Uuid(uuid) => uuid.to_string(),
     }
+}
 
-    hash
+fn payload_string(payload: &Payload, key: &str) -> String {
+    payload
+        .0
+        .get(key)
+        .and_then(Value::as_str)
+        .unwrap_or_default()
+        .to_string()
+}
+
+fn payload_i32(payload: &Payload, key: &str) -> Option<i32> {
+    payload
+        .0
+        .get(key)
+        .and_then(Value::as_i64)
+        .and_then(|value| i32::try_from(value).ok())
 }
 
 fn match_keyword_filter(field_name: &str, value: &str) -> QdrantEdgeResult<Filter> {
@@ -554,17 +839,19 @@ fn match_keyword_filter(field_name: &str, value: &str) -> QdrantEdgeResult<Filte
 }
 
 fn validate_store_name(store_name: &str) -> QdrantEdgeResult<()> {
+    const MAX_STORE_NAME_LENGTH: usize = 128;
+
     if store_name.is_empty() {
         return Err("Vector store name cannot be empty.".into());
     }
 
-    if matches!(store_name, "." | "..") {
-        return Err(format!("Vector store name '{store_name}' is not supported.").into());
+    if store_name.len() > MAX_STORE_NAME_LENGTH {
+        return Err(format!("Vector store name exceeds the maximum length of {MAX_STORE_NAME_LENGTH} bytes.").into());
     }
 
     if store_name
         .chars()
-        .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-' || c == '.')
+        .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
     {
         return Ok(());
     }
@@ -578,12 +865,66 @@ mod tests {
 
     #[test]
     fn validate_store_name_allows_safe_store_names() {
-        assert!(validate_store_name("rag_1234-abcd.ef").is_ok());
+        assert!(validate_store_name("rag_1234-abcd").is_ok());
     }
 
     #[test]
-    fn validate_store_name_rejects_path_traversal_names() {
+    fn validate_store_name_rejects_path_syntax() {
         assert!(validate_store_name(".").is_err());
         assert!(validate_store_name("..").is_err());
+        assert!(validate_store_name("../store").is_err());
+        assert!(validate_store_name("store\\name").is_err());
+    }
+
+    #[test]
+    fn validate_store_name_rejects_oversized_names() {
+        assert!(validate_store_name(&"a".repeat(129)).is_err());
+    }
+
+    #[test]
+    fn store_directory_name_contains_the_stable_data_source_id() {
+        assert_eq!(
+            store_directory_name("rag_6cc665a82b1e4d42bc748015b7b391ec"),
+            "store_6cc665a82b1e4d42bc748015b7b391ec"
+        );
+    }
+
+    #[test]
+    fn validate_data_source_name_allows_display_names_but_rejects_invalid_values() {
+        assert!(validate_data_source_name("Mäßig Confidence C#").is_ok());
+        assert!(validate_data_source_name(" ").is_err());
+        assert!(validate_data_source_name("invalid\nname").is_err());
+        assert!(validate_data_source_name(&"a".repeat(41)).is_err());
+    }
+
+    #[test]
+    fn ensure_store_reports_creation_and_updates_the_display_name() {
+        let test_directory = std::env::temp_dir().join(format!(
+            "ai-studio-qdrant-ensure-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        let store_name = "rag_6cc665a82b1e4d42bc748015b7b391ec";
+        let mut database = QdrantEdgeDatabase::new(test_directory.clone());
+
+        let created = database.ensure_store_exists(store_name, "Original name", 3).unwrap();
+        assert!(created.created);
+
+        let existing = database.ensure_store_exists(store_name, "Renamed source", 3).unwrap();
+        assert!(!existing.created);
+        let display_name_path = database.store_path(store_name).unwrap().join(STORE_DISPLAY_NAME_MARKER);
+        assert_eq!(fs::read_to_string(display_name_path).unwrap(), "Renamed source");
+
+        drop(database);
+        fs::remove_dir_all(test_directory).unwrap();
+    }
+
+    #[test]
+    fn point_ids_must_be_valid_uuids() {
+        assert!(to_point_id("6cc665a8-2b1e-4d42-bc74-8015b7b391ec").is_ok());
+        assert!(to_point_id("deliberate-collision-input").is_err());
     }
 }

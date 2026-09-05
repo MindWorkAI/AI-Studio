@@ -74,7 +74,7 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
             // data sources changed its security requirements.
             //
             List<IDataSource> preselectedDataSources = chatThread.DataSourceOptions.PreselectedDataSourceIds.Select(id => settings.ConfigurationData.DataSources.FirstOrDefault(ds => ds.Id == id)).Where(ds => ds is not null).ToList()!;
-            var dataSources = await dataSourceService.GetDataSources(provider, preselectedDataSources);
+            var dataSources = await dataSourceService.GetDataSources(provider, chatThread.DataSourceOptions, preselectedDataSources);
             var selectedDataSources = dataSources.SelectedDataSources;
             
             //
@@ -92,7 +92,7 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
                 //
                 // No, the user made the choice manually:
                 //
-                var selectedDataSourceInfo = selectedDataSources.Select(ds => ds.Name).Aggregate((a, b) => $"'{a}', '{b}'");
+                var selectedDataSourceInfo = string.Join(", ", selectedDataSources.Select(ds => $"'{ds.Name}'"));
                 LOGGER.LogInformation($"The user selected the data sources manually. {selectedDataSources.Count} data source(s) are selected: {selectedDataSourceInfo}.");
             }
 
@@ -104,12 +104,15 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
             else
             {
                 var previousDataSecurity = chatThread.DataSecurity;
+                var previousRequiredProviderConfidence = chatThread.RequiredProviderConfidence;
                 
                 //
                 // Update the data security of the chat thread. We consider the current data security
                 // of the chat thread and the data security of the selected data sources:
                 //
-                var dataSecurityRestrictedToSelfHosted = selectedDataSources.Any(x => x.SecurityPolicy is DataSourceSecurity.SELF_HOSTED);
+                var dataSecurityRestrictedToSelfHosted = selectedDataSources
+                    .OfType<IExternalDataSource>()
+                    .Any(dataSource => dataSource.SecurityPolicy is DataSourceSecurity.SELF_HOSTED);
                 chatThread.DataSecurity = dataSecurityRestrictedToSelfHosted switch
                 {
                     //
@@ -150,6 +153,12 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
                 
                 if (previousDataSecurity != chatThread.DataSecurity)
                     LOGGER.LogInformation($"The data security of the chat thread was updated from '{previousDataSecurity}' to '{chatThread.DataSecurity}'.");
+
+                foreach (var dataSource in selectedDataSources.OfType<IInternalDataSource>())
+                    chatThread.RequireProviderConfidence(dataSource.ConfidenceLevel);
+
+                if (previousRequiredProviderConfidence != chatThread.RequiredProviderConfidence)
+                    LOGGER.LogInformation($"The required provider confidence of the chat thread was updated from '{previousRequiredProviderConfidence.GetName()}' to '{chatThread.RequiredProviderConfidence.GetName()}'.");
             }
             
             //
@@ -205,17 +214,7 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
             
             var ragSources = new List<ISource>();
             foreach (var retrievalContext in dataContexts)
-            {
-                var title = retrievalContext.DataSourceName;
-                if(string.IsNullOrWhiteSpace(title))
-                    continue;
-                
-                var link = retrievalContext.Path;
-                if(!link.StartsWith("http", StringComparison.OrdinalIgnoreCase))
-                    continue;
-
-                ragSources.Add(new Source(title, link, SourceOrigin.RAG));
-            }
+                ragSources.AddRange(CreateSources(retrievalContext));
 
             // Merge the sources, avoiding duplicates:
             aiAnswerSources.MergeSources(ragSources);
@@ -225,4 +224,63 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
     }
 
     #endregion
+
+    private static IReadOnlyList<ISource> CreateSources(IRetrievalContext retrievalContext)
+    {
+        var sources = new List<ISource>();
+        AddSource(sources, GetReferenceTitle(retrievalContext), GetReferenceLink(retrievalContext));
+        foreach (var link in retrievalContext.Links)
+            AddSource(sources, retrievalContext.DataSourceName, link);
+
+        return sources;
+    }
+
+    private static void AddSource(ICollection<ISource> sources, string title, string link)
+    {
+        if (string.IsNullOrWhiteSpace(title) || !TryNormalizeSourceLink(link, out var normalizedLink))
+            return;
+
+        sources.Add(new Source(title, normalizedLink, SourceOrigin.RAG));
+    }
+
+    private static string GetReferenceTitle(IRetrievalContext retrievalContext) =>
+        retrievalContext is RetrievalTextContext { ReferenceTitle: { Length: > 0 } referenceTitle }
+            ? referenceTitle
+            : retrievalContext.DataSourceName;
+
+    private static string GetReferenceLink(IRetrievalContext retrievalContext) =>
+        retrievalContext is RetrievalTextContext { ReferenceLink: { Length: > 0 } referenceLink }
+            ? referenceLink
+            : retrievalContext.Path;
+
+    private static bool TryNormalizeSourceLink(string link, out string normalizedLink)
+    {
+        normalizedLink = string.Empty;
+        if (string.IsNullOrWhiteSpace(link))
+            return false;
+
+        if (Uri.TryCreate(link, UriKind.Absolute, out var absoluteUri) && IsSupportedSourceUri(absoluteUri))
+        {
+            normalizedLink = absoluteUri.AbsoluteUri;
+            return true;
+        }
+
+        try
+        {
+            if (!Path.IsPathRooted(link))
+                return false;
+
+            normalizedLink = new Uri(Path.GetFullPath(link)).AbsoluteUri;
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static bool IsSupportedSourceUri(Uri uri) =>
+        string.Equals(uri.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase)
+        || string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase)
+        || string.Equals(uri.Scheme, Uri.UriSchemeFile, StringComparison.OrdinalIgnoreCase);
 }

@@ -4,11 +4,13 @@ using System.Text.Json;
 using AIStudio.Components;
 using AIStudio.Provider;
 using AIStudio.Provider.HuggingFace;
+using AIStudio.Tools.Rust;
 using AIStudio.Settings;
 using AIStudio.Tools.Services;
 using AIStudio.Tools.Validation;
 
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 
 using Host = AIStudio.Provider.SelfHosted.Host;
 
@@ -108,6 +110,9 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     public string AdditionalJsonApiParameters { get; set; } = string.Empty;
 
     [Parameter]
+    public string DataTokenizerPath { get; set; } = string.Empty;
+
+    [Parameter]
     public ProviderCapabilityOverrides? DataCapabilityOverrides { get; set; }
     
     [Inject]
@@ -134,7 +139,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         ReasoningOverrideMode.ON_BY_DEFAULT,
         ReasoningOverrideMode.ALWAYS_ON
     ];
-    
+
     /// <summary>
     /// The list of used instance names. We need this to check for uniqueness.
     /// </summary>
@@ -148,6 +153,12 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     private string dataAPIKeyStorageIssue = string.Empty;
     private string dataEditingPreviousInstanceName = string.Empty;
     private string dataLoadingModelsIssue = string.Empty;
+    private string dataFilePath = string.Empty;
+    private string dataCustomTokenizerValidationIssue = string.Empty;
+    private Task dataTokenizerValidationTask = Task.CompletedTask;
+    private bool dataStoreWasAttempted;
+    private bool isTokenizerFileDialogOpen;
+    private int dataTokenizerValidationRevision;
     private bool usesLegacySystemModelFallback;
     private bool showExpertSettings;
     private ProviderCapabilityOverrides capabilityOverrides = new();
@@ -169,6 +180,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
             GetUsedInstanceNames = () => this.UsedInstanceNames,
             GetHost = () => this.DataHost,
             IsModelProvidedManually = () => this.DataLLMProvider.IsLLMModelProvidedManually(),
+            GetCustomTokenizerValidationIssue = () => this.dataCustomTokenizerValidationIssue,
             IsModelSelectionHidden = () => this.IsLLMModelSelectionHidden,
         };
     }
@@ -190,6 +202,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
             Host = this.DataHost,
             HFInferenceProvider = this.HFInferenceProviderId,
             AdditionalJsonApiParameters = this.AdditionalJsonApiParameters,
+            TokenizerPath = this.dataFilePath,
             CapabilityOverrides = this.capabilityOverrides.HasOverrides ? this.capabilityOverrides : null,
             CustomIconDataUrl = this.DataCustomIconDataUrl,
         };
@@ -226,6 +239,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         if(this.IsEditing)
         {
             this.dataEditingPreviousInstanceName = this.DataInstanceName.ToLowerInvariant();
+            this.dataFilePath = this.DataTokenizerPath;
             
             // When using Fireworks, we must copy the model name:
             if (this.DataLLMProvider.IsLLMModelProvidedManually())
@@ -291,6 +305,8 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
 
     private async Task Store()
     {
+        this.dataStoreWasAttempted = true;
+        await this.dataTokenizerValidationTask;
         await this.form.Validate();
         if (!string.IsNullOrWhiteSpace(this.dataAPIKeyStorageIssue))
             this.dataAPIKeyStorageIssue = string.Empty;
@@ -307,6 +323,15 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         // When the data is not valid, we don't store it:
         if (!this.dataIsValid)
             return;
+
+        var tokenizerResponse = await this.StoreOrDeleteTokenizerAsync();
+        if (!tokenizerResponse.Success)
+        {
+            this.dataCustomTokenizerValidationIssue = tokenizerResponse.Message;
+            await this.form.Validate();
+            return;
+        }
+        this.dataFilePath = tokenizerResponse.StoredPath;
         
         // Use the data model to store the provider.
         // We just return this data to the parent component:
@@ -360,6 +385,90 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
             this.dataAPIKeyStorageIssue = string.Empty;
             await this.form.Validate();
         }
+    }
+
+    private async Task OpenTokenizerFileDialog()
+    {
+        if (this.isTokenizerFileDialogOpen)
+            return;
+
+        this.isTokenizerFileDialogOpen = true;
+        try
+        {
+            var response = await this.RustService.SelectFile(T("Choose a custom tokenizer here"), [ FileTypes.JSON ], string.IsNullOrWhiteSpace(this.dataFilePath) ? null : this.dataFilePath);
+            if (!response.UserCancelled)
+                await this.OnDataFilePathChanged(response.SelectedFilePath);
+        }
+        finally
+        {
+            this.isTokenizerFileDialogOpen = false;
+        }
+    }
+
+    private Task ClearPathTokenizer(MouseEventArgs _)
+    {
+        return this.OnDataFilePathChanged(string.Empty);
+    }
+
+    private async Task OnDataFilePathChanged(string filePath)
+    {
+        this.dataFilePath = filePath;
+        var validationRevision = ++this.dataTokenizerValidationRevision;
+        this.dataTokenizerValidationTask = this.ValidateCustomTokenizer(filePath, validationRevision);
+        await this.dataTokenizerValidationTask;
+
+        if (validationRevision != this.dataTokenizerValidationRevision)
+            return;
+
+        if (this.dataStoreWasAttempted)
+            await this.form.Validate();
+        else
+            this.form.ResetValidation();
+    }
+
+    private async Task ValidateCustomTokenizer(string filePath, int validationRevision)
+    {
+        if (string.IsNullOrWhiteSpace(filePath))
+        {
+            if (validationRevision == this.dataTokenizerValidationRevision)
+                this.dataCustomTokenizerValidationIssue = string.Empty;
+
+            return;
+        }
+
+        try
+        {
+            var response = await this.RustService.ValidateTokenizer(filePath);
+            if (validationRevision != this.dataTokenizerValidationRevision)
+                return;
+
+            if (response.Success)
+                this.dataCustomTokenizerValidationIssue = string.Empty;
+            else
+                this.dataCustomTokenizerValidationIssue = T("Invalid tokenizer: ") + response.Message;
+        }
+        catch (Exception e)
+        {
+            if (validationRevision != this.dataTokenizerValidationRevision)
+                return;
+
+            this.Logger.LogError(e, "Failed to validate custom tokenizer.");
+            this.dataCustomTokenizerValidationIssue = T("Failed to validate the selected tokenizer. Please try again.");
+        }
+    }
+
+    /// <summary>
+    /// Stores a new tokenizer or deletes the existing one, based on the specified tokenizer path.
+    /// If the path is null or empty, any existing tokenizer is removed.
+    /// Otherwise, the tokenizer is stored at the specified path.
+    /// </summary>
+    private Task<TokenizerResponse> StoreOrDeleteTokenizerAsync()
+    {
+        var tokenizerId = TokenizerModelId.ForProviderId(this.DataId);
+        if (string.IsNullOrWhiteSpace(this.dataFilePath))
+            return this.RustService.DeleteTokenizer(tokenizerId);
+
+        return this.RustService.StoreTokenizer(tokenizerId, this.dataFilePath);
     }
 
     private void OnProviderChanged(LLMProviders selectedProvider)
@@ -795,10 +904,10 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
 
         return true;
     }
-    
+
     private string GetExpertStyles => this.showExpertSettings ? "border-2 border-dashed rounded pa-2" : string.Empty;
-    
-    private static string GetPlaceholderExpertSettings => 
+
+    private static string GetPlaceholderExpertSettings =>
       """
       "temperature": 0.5,
       "top_p": 0.9,

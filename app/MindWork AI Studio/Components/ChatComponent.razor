@@ -35,7 +35,7 @@
     <FooterContent>
         <MediaTranscriptionStatus Owner="@this.CurrentMediaImportOwner"/>
         <MudElement Style="flex: 0 0 auto;">
-            <MudTextField
+            <UserPromptComponent
                 T="string"
                 @ref="@this.inputField"
                 @bind-Text="@this.UserInput"
@@ -51,8 +51,11 @@
                 Disabled="@this.IsInputForbidden()"
                 Immediate="@true"
                 OnKeyUp="@this.InputKeyEvent"
+                WhenTextChangedAsync="@(_ =>this.CalculateTokenCount())"
                 UserAttributes="@USER_INPUT_ATTRIBUTES"
                 Class="@this.UserInputClass"
+                DebounceTime="TimeSpan.FromSeconds(1)" 
+                HelperText="@this.TokenCountMessage"
                 Style="@this.UserInputStyle"/>
         </MudElement>
         <MudToolBar WrapContent="true" Gutters="@false" Class="border border-solid rounded" Style="border-color: lightgrey; gap: 2px;">
@@ -132,7 +135,7 @@
             
             @if (PreviewFeatures.PRE_RAG_2024.IsEnabled(this.SettingsManager))
             {
-                <DataSourceSelection @ref="@this.dataSourceSelectionComponent" PopoverTriggerMode="PopoverTriggerMode.BUTTON" LLMProvider="@this.Provider" DataSourceOptions="@this.GetCurrentDataSourceOptions()" DataSourceOptionsChanged="@(async options => await this.SetCurrentDataSourceOptions(options))" DataSourcesAISelected="@this.GetAgentSelectedDataSources()"/>
+                <DataSourceSelection @ref="@this.dataSourceSelectionComponent" PopoverTriggerMode="PopoverTriggerMode.ICON" LLMProvider="@this.Provider" DataSourceOptions="@this.GetCurrentDataSourceOptions()" DataSourceOptionsChanged="@(async options => await this.SetCurrentDataSourceOptions(options))" DataSourcesAISelected="@this.GetAgentSelectedDataSources()"/>
             }
             
             @if (this.SettingsManager.ConfigurationData.Confidence.ShowProviderConfidence)
@@ -149,7 +152,7 @@
 
             @if (!this.ChatThread.IsLLMProviderAllowed(this.Provider))
             {
-                <MudTooltip Text="@T("The selected provider is not allowed in this chat due to data security reasons.")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
+                <MudTooltip Text="@T("The selected provider is not allowed in this chat due to data security or confidence-level requirements.")" Placement="@TOOLBAR_TOOLTIP_PLACEMENT">
                     <MudIconButton Icon="@Icons.Material.Filled.Error" Color="Color.Error"/>
                 </MudTooltip>
             }

@@ -1,3 +1,4 @@
+@using AIStudio.Settings
 @using AIStudio.Settings.DataModel
 @inherits SettingsDialogBase
 
@@ -14,30 +15,58 @@
             @T("You might configure different data sources. A data source can include one file, all files in a directory, or data from your company. Later, you can incorporate these data sources as needed when the AI requires this data to complete a certain task.")
         </MudJustifiedText>
 
+        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-3" Wrap="Wrap.Wrap">
+            <MudTextSwitch Label="@T("Automatic local data source refresh")" Value="@this.SettingsManager.ConfigurationData.App.DataSourceIndexing.AutomaticRefresh" LabelOn="@T("Local data sources refresh when files change.")" LabelOff="@T("Local data sources refresh only when triggered manually.")" ValueChanged="@this.AutomaticRefreshChanged"/>
+            <MudTooltip Text="@T("Refresh all")">
+                <MudIconButton Color="Color.Primary" Icon="@Icons.Material.Filled.Sync" Disabled="@(!this.HasRefreshableDataSources())" OnClick="@this.RefreshAllDataSources"/>
+            </MudTooltip>
+        </MudStack>
+
+        @{ var embeddingStatuses = this.DataSourceEmbeddingService.GetStatuses().ToDictionary(status => status.DataSourceId, StringComparer.OrdinalIgnoreCase); }
         <MudTable Items="@this.SettingsManager.ConfigurationData.DataSources" Hover="@true" Class="border-dashed border rounded-lg">
             <ColGroup>
                 <col style="width: 3em;"/>
                 <col/>
-                <col style="width: 12em;"/>
-                <col style="width: 12em;"/>
-                <col style="width: 40em;"/>
+                <col style="width: 9em;"/>
+                <col style="width: 10em;"/>
+                <col style="width: 8em;"/>
+                <col style="width: 16em;"/>
             </ColGroup>
             <HeaderContent>
                 <MudTh>#</MudTh>
                 <MudTh>@T("Name")</MudTh>
                 <MudTh>@T("Type")</MudTh>
                 <MudTh>@T("Embedding")</MudTh>
+                <MudTh>@T("Indexed files")</MudTh>
                 <MudTh>@T("Actions")</MudTh>
             </HeaderContent>
             <RowTemplate>
+                @{ var embeddingStatus = embeddingStatuses.GetValueOrDefault(context.Id); }
                 <MudTd>@context.Num</MudTd>
-                <MudTd>@context.Name</MudTd>
-                <MudTd>@context.Type.GetDisplayName()</MudTd>
-                <MudTd>@this.GetEmbeddingName(context)</MudTd>
+                <MudTd Style="white-space: normal; overflow-wrap: anywhere;">@context.Name</MudTd>
+                <MudTd Style="white-space: nowrap;">@context.Type.GetDisplayName()</MudTd>
+                <MudTd Style="white-space: nowrap;">@this.GetEmbeddingName(context)</MudTd>
+                <MudTd>
+                    @if (context is IInternalDataSource)
+                    {
+                        <MudTooltip Text="@(embeddingStatus?.StateLabel ?? T("Waiting for indexing status"))">
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                                <MudIcon Icon="@Icons.Material.Filled.Circle" Color="@GetIndexingStatusColor(embeddingStatus)" Size="Size.Small" Style="width: 0.75rem; height: 0.75rem; flex-shrink: 0;"/>
+                                <MudText Typo="Typo.body2">@(embeddingStatus is null ? T("Not available") : string.Format(T("{0} of {1}"), embeddingStatus.IndexedFiles, embeddingStatus.TotalFiles))</MudText>
+                            </MudStack>
+                        </MudTooltip>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">@T("Not applicable")</MudText>
+                    }
+                </MudTd>
                 
                 <MudTd>
-                    <MudStack Row="true" Class="mb-2 mt-2" Wrap="Wrap.Wrap">
-                        <MudIconButton Variant="Variant.Filled" Color="Color.Info" Icon="@Icons.Material.Filled.Info" OnClick="() => this.ShowInformation(context)"/>
+                    <MudStack Row="true" Class="mb-2 mt-2" Spacing="1" Wrap="Wrap.NoWrap">
+                        <MudTooltip Text="@T("Information")">
+                            <MudIconButton Color="Color.Info" Icon="@Icons.Material.Outlined.Info" OnClick="() => this.ShowInformation(context)"/>
+                        </MudTooltip>
                         @if (context.IsEnterpriseConfiguration)
                         {
                             <MudTooltip Text="@T("This data source is managed by your organization.")">
@@ -46,16 +75,19 @@
                         }
                         else
                         {
-                            <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Edit" OnClick="() => this.EditDataSource(context)">
-                                @T("Edit")
-                            </MudButton>
+                            <MudTooltip Text="@T("Edit")">
+                                <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Edit" OnClick="() => this.EditDataSource(context)"/>
+                            </MudTooltip>
+                            <MudTooltip Text="@T("Refresh")">
+                                <MudIconButton Color="Color.Primary" Icon="@Icons.Material.Filled.Sync" Disabled="@(!this.CanRefreshDataSource(context))" OnClick="() => this.RefreshDataSource(context)"/>
+                            </MudTooltip>
                             @if (context is DataSourceERI_V1)
                             {
-                                <AdminExportButton Variant="Variant.Filled" OnClick="@(() => this.ExportDataSource(context))" />
+                                <AdminExportButton OnClick="@(() => this.ExportDataSource(context))" />
                             }
-                            <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="() => this.DeleteDataSource(context)">
-                                @T("Delete")
-                            </MudButton>
+                            <MudTooltip Text="@T("Delete")">
+                                <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Delete" OnClick="() => this.DeleteDataSource(context)"/>
+                            </MudTooltip>
                         }
                     </MudStack>
                 </MudTd>
@@ -69,21 +101,23 @@
             </MudText>
         }
         
-        <MudMenu EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="@T("Add Data Source")" Color="Color.Primary" Variant="Variant.Filled" AnchorOrigin="Origin.CenterCenter" TransformOrigin="Origin.TopLeft" Class="mt-3 mb-6">
-            <MudMenuItem OnClick="() => this.AddDataSource(DataSourceType.ERI_V1)">
-                @T("External Data (ERI-Server v1)")
-            </MudMenuItem>
-            <MudMenuItem OnClick="() => this.AddDataSource(DataSourceType.LOCAL_DIRECTORY)">
-                @T("Local Directory")
-            </MudMenuItem>
-            <MudMenuItem OnClick="() => this.AddDataSource(DataSourceType.LOCAL_FILE)">
-                @T("Local File")
-            </MudMenuItem>
-        </MudMenu>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="@this.Close" Variant="Variant.Filled">
-            @T("Close")
-        </MudButton>
+        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Style="width: 100%;">
+            <MudMenu EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="@T("Add Data Source")" Color="Color.Primary" Variant="Variant.Filled" AnchorOrigin="Origin.TopLeft" TransformOrigin="Origin.BottomLeft">
+                <MudMenuItem OnClick="() => this.AddDataSource(DataSourceType.ERI_V1)">
+                    @T("External Data (ERI-Server v1)")
+                </MudMenuItem>
+                <MudMenuItem OnClick="() => this.AddDataSource(DataSourceType.LOCAL_DIRECTORY)">
+                    @T("Local Directory")
+                </MudMenuItem>
+                <MudMenuItem OnClick="() => this.AddDataSource(DataSourceType.LOCAL_FILE)">
+                    @T("Local File")
+                </MudMenuItem>
+            </MudMenu>
+            <MudButton OnClick="@this.Close" Variant="Variant.Filled">
+                @T("Close")
+            </MudButton>
+        </MudStack>
     </DialogActions>
 </MudDialog>

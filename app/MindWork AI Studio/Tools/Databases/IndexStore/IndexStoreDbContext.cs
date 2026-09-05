@@ -1,0 +1,116 @@
+using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
+
+namespace AIStudio.Tools.Databases.IndexStore;
+
+internal sealed class IndexStoreDbContext(DbContextOptions<IndexStoreDbContext> options) : DbContext(options)
+{
+    public static DbContextOptions<IndexStoreDbContext> CreateOptions(string databasePath) => new DbContextOptionsBuilder<IndexStoreDbContext>()
+        .UseSqlite(BuildConnectionString(databasePath))
+        .Options;
+
+    public DbSet<EmbeddingStateDataSourceEntity> DataSources => this.Set<EmbeddingStateDataSourceEntity>();
+
+    public DbSet<EmbeddingStateFileEntity> EmbeddedFiles => this.Set<EmbeddingStateFileEntity>();
+
+    public DbSet<EmbeddingStateChunkEntity> EmbeddingChunks => this.Set<EmbeddingStateChunkEntity>();
+
+    public DbSet<IndexStoreSearchResultEntity> SearchResults => this.Set<IndexStoreSearchResultEntity>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        var utcDateTimeOffsetConverter = new IndexStoreDateTimeOffsetConverter();
+
+        modelBuilder.Entity<EmbeddingStateDataSourceEntity>(entity =>
+        {
+            entity.ToTable("data_sources");
+            entity.HasKey(dataSource => dataSource.DataSourceId);
+
+            entity.Property(dataSource => dataSource.DataSourceId).HasColumnName("data_source_id");
+            entity.Property(dataSource => dataSource.DataSourceName).HasColumnName("data_source_name").IsRequired();
+            entity.Property(dataSource => dataSource.DataSourceType).HasColumnName("data_source_type").IsRequired();
+            entity.Property(dataSource => dataSource.EmbeddingProviderId).HasColumnName("embedding_provider_id").IsRequired();
+            entity.Property(dataSource => dataSource.EmbeddingSignature).HasColumnName("embedding_signature").IsRequired();
+            entity.Property(dataSource => dataSource.SourceHash).HasColumnName("source_hash").IsRequired().HasDefaultValue(string.Empty);
+            entity.Property(dataSource => dataSource.VectorSize).HasColumnName("vector_size").HasDefaultValue(0);
+            entity.Property(dataSource => dataSource.UpdatedAtUtc).HasColumnName("updated_at_utc").HasConversion(utcDateTimeOffsetConverter).IsRequired();
+
+            entity
+                .HasMany(dataSource => dataSource.Files)
+                .WithOne(file => file.DataSource)
+                .HasForeignKey(file => file.DataSourceId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<EmbeddingStateFileEntity>(entity =>
+        {
+            entity.ToTable("embedded_files");
+            entity.HasKey(file => file.ParentFileId);
+
+            entity.Property(file => file.ParentFileId).HasColumnName("parent_file_id");
+            entity.Property(file => file.DataSourceId).HasColumnName("data_source_id").IsRequired();
+            entity.Property(file => file.AbsolutePath).HasColumnName("absolute_path").UseCollation("NOCASE").IsRequired();
+            entity.Property(file => file.FileName).HasColumnName("file_name").IsRequired();
+            entity.Property(file => file.RelativePath).HasColumnName("relative_path").IsRequired();
+            entity.Property(file => file.FileType).HasColumnName("file_type").IsRequired();
+            entity.Property(file => file.Fingerprint).HasColumnName("fingerprint").IsRequired();
+            entity.Property(file => file.FileSize).HasColumnName("file_size");
+            entity.Property(file => file.CreationUtc).HasColumnName("creation_utc").HasConversion(utcDateTimeOffsetConverter).IsRequired();
+            entity.Property(file => file.LastWriteUtc).HasColumnName("last_write_utc").HasConversion(utcDateTimeOffsetConverter).IsRequired();
+            entity.Property(file => file.EmbeddedAtUtc).HasColumnName("embedded_at_utc").HasConversion(utcDateTimeOffsetConverter).IsRequired();
+            entity.Property(file => file.ChunkCount).HasColumnName("chunk_count");
+            entity.Property(file => file.ConfidenceLevel).HasColumnName("confidence_level").IsRequired();
+            entity.Property(file => file.ConfidenceLevelRank).HasColumnName("confidence_level_rank");
+
+            entity.HasIndex(file => file.DataSourceId).HasDatabaseName("idx_embedded_files_data_source");
+            entity.HasIndex(file => file.AbsolutePath).HasDatabaseName("idx_embedded_files_absolute_path");
+            entity.HasIndex(file => file.FileType).HasDatabaseName("idx_embedded_files_file_type");
+            entity.HasIndex(file => file.ConfidenceLevelRank).HasDatabaseName("idx_embedded_files_confidence");
+            entity.HasIndex(file => new { file.DataSourceId, file.AbsolutePath }).HasDatabaseName("idx_embedded_files_data_source_absolute_path").IsUnique();
+
+            entity
+                .HasMany(file => file.Chunks)
+                .WithOne(chunk => chunk.File)
+                .HasForeignKey(chunk => chunk.ParentFileId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<EmbeddingStateChunkEntity>(entity =>
+        {
+            entity.ToTable("embedding_chunks");
+            entity.HasKey(chunk => chunk.Id);
+
+            entity.Property(chunk => chunk.Id).HasColumnName("id").ValueGeneratedOnAdd();
+            entity.Property(chunk => chunk.ChunkId).HasColumnName("chunk_id").IsRequired();
+            entity.Property(chunk => chunk.ParentFileId).HasColumnName("parent_file_id").IsRequired();
+            entity.Property(chunk => chunk.PageNumber).HasColumnName("page_number");
+            entity.Property(chunk => chunk.ChunkIndex).HasColumnName("chunk_index");
+            entity.Property(chunk => chunk.ChunkText).HasColumnName("chunk_text").IsRequired();
+            entity.Property(chunk => chunk.EmbeddedAtUtc).HasColumnName("embedded_at_utc").HasConversion(utcDateTimeOffsetConverter).IsRequired();
+
+            entity.HasIndex(chunk => chunk.ChunkId).HasDatabaseName("idx_embedding_chunks_chunk_id").IsUnique();
+            entity.HasIndex(chunk => chunk.ParentFileId).HasDatabaseName("idx_embedding_chunks_parent_file");
+            entity.HasIndex(chunk => chunk.PageNumber).HasDatabaseName("idx_embedding_chunks_page");
+            entity.HasIndex(chunk => new { chunk.ParentFileId, chunk.ChunkIndex }).HasDatabaseName("idx_embedding_chunks_parent_file_chunk_index").IsUnique();
+        });
+
+        modelBuilder.Entity<IndexStoreSearchResultEntity>(entity =>
+        {
+            entity.HasNoKey();
+            entity.ToView("embedding_chunk_search_results");
+
+            entity.Property(result => result.CreationUtc).HasConversion(utcDateTimeOffsetConverter);
+            entity.Property(result => result.LastWriteUtc).HasConversion(utcDateTimeOffsetConverter);
+            entity.Property(result => result.EmbeddedAtUtc).HasConversion(utcDateTimeOffsetConverter);
+        });
+    }
+
+    private static string BuildConnectionString(string databasePath) => new SqliteConnectionStringBuilder
+    {
+        DataSource = databasePath,
+        Mode = SqliteOpenMode.ReadWriteCreate,
+        Cache = SqliteCacheMode.Shared,
+        ForeignKeys = true,
+        DefaultTimeout = 30,
+    }.ToString();
+}

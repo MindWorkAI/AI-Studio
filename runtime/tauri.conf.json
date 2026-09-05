@@ -28,7 +28,8 @@
     ],
     "resources": [
       "resources/libraries/*",
-      "resources/notices/*"
+      "resources/notices/*",
+      "resources/tokenizers/*"
     ],
     "macOS": {
       "exceptionDomain": "localhost"

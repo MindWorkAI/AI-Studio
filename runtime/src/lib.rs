@@ -22,5 +22,6 @@ pub mod runtime_api_token;
 pub mod stale_process_cleanup;
 pub mod share_sheet;
 mod sidecar_types;
+pub mod tokenizer;
 mod file_actions;
 pub mod global_shortcuts;

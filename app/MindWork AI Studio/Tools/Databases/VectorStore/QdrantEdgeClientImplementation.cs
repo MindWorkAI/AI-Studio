@@ -9,13 +9,15 @@ public sealed class QdrantEdgeClientImplementation(
     string path,
     string version,
     int storesCount,
-    RustService rustService) : DatabaseClient(name, path), IVectorStoreClient
+    RustService rustService) : VectorStoreClient(name, path)
 {
     private const string DATABASE_NAME = "Qdrant Edge";
     private const string INFO_PATH = "/system/qdrant-edge/info";
     private const string ENSURE_PATH = "/system/qdrant-edge/ensure";
     private const string INSERT_PATH = "/system/qdrant-edge/insert";
+    private const string SEARCH_PATH = "/system/qdrant-edge/search";
     private const string DELETE_FILE_PATH = "/system/qdrant-edge/delete-file";
+    private const string OPTIMIZE_PATH = "/system/qdrant-edge/optimize";
     private const string DELETE_STORE_PATH = "/system/qdrant-edge/delete-store";
     
     private readonly string path = path;
@@ -80,16 +82,32 @@ public sealed class QdrantEdgeClientImplementation(
         yield return (TB("Number of vector stores"), displayStoresCount.ToString());
     }
 
-    public Task EnsureVectorStoreExists(string storeName, int vectorSize, CancellationToken token) =>
-        rustService.ExecuteDatabaseOperation(DATABASE_NAME, ENSURE_PATH, new EnsureVectorStoreRequest(storeName, vectorSize), token);
+    public override async Task<VectorStoreEnsureResult> EnsureVectorStoreExists(string storeName, string dataSourceName, int vectorSize, CancellationToken token) =>
+        await rustService.ExecuteDatabaseQuery<EnsureVectorStoreRequest, VectorStoreEnsureResult>(DATABASE_NAME, ENSURE_PATH,
+            new EnsureVectorStoreRequest(storeName, dataSourceName, vectorSize), token) ?? throw new InvalidOperationException("The vector store ensure response was empty.");
 
-    public Task InsertEmbedding(string storeName, IReadOnlyList<VectorStoragePoint> points, CancellationToken token) =>
+    public override Task InsertEmbedding(string storeName, IReadOnlyList<VectorStoragePoint> points, CancellationToken token) =>
         rustService.ExecuteDatabaseOperation(DATABASE_NAME, INSERT_PATH, new InsertEmbeddingRequest(storeName, points), token);
 
-    public Task DeleteEmbeddingByFile(string storeName, string filePath, CancellationToken token) =>
+    public override async Task<IReadOnlyList<VectorSearchResult>> SearchEmbeddingAsync(string storeName, IReadOnlyList<float> vector, int maxMatches, CancellationToken token)
+    {
+        if (maxMatches <= 0)
+            return [];
+
+        return await rustService.ExecuteDatabaseQuery<SearchEmbeddingRequest, List<VectorSearchResult>>(
+            DATABASE_NAME,
+            SEARCH_PATH,
+            new SearchEmbeddingRequest(storeName, vector, maxMatches),
+            token) ?? [];
+    }
+
+    public override Task DeleteEmbeddingByFile(string storeName, string filePath, CancellationToken token) =>
         rustService.ExecuteDatabaseOperation(DATABASE_NAME, DELETE_FILE_PATH, new DeleteEmbeddingByFileRequest(storeName, filePath), token);
 
-    public Task DeleteVectorStore(string storeName, CancellationToken token) =>
+    public override Task OptimizeVectorStore(string storeName, CancellationToken token) =>
+        rustService.ExecuteDatabaseOperation(DATABASE_NAME, OPTIMIZE_PATH, new OptimizeVectorStoreRequest(storeName), token);
+
+    public override Task DeleteVectorStore(string storeName, CancellationToken token) =>
         rustService.ExecuteDatabaseOperation(DATABASE_NAME, DELETE_STORE_PATH, new DeleteVectorStoreRequest(storeName), token);
 
     public override void Dispose()
@@ -104,11 +122,15 @@ public sealed class QdrantEdgeClientImplementation(
     }
 
     // ReSharper disable NotAccessedPositionalProperty.Local
-    private sealed record EnsureVectorStoreRequest(string StoreName, int VectorSize);
+    private sealed record EnsureVectorStoreRequest(string StoreName, string DataSourceName, int VectorSize);
 
     private sealed record InsertEmbeddingRequest(string StoreName, IReadOnlyList<VectorStoragePoint> Points);
 
+    private sealed record SearchEmbeddingRequest(string StoreName, IReadOnlyList<float> Vector, int MaxMatches);
+
     private sealed record DeleteEmbeddingByFileRequest(string StoreName, string FilePath);
+
+    private sealed record OptimizeVectorStoreRequest(string StoreName);
     
     private sealed record DeleteVectorStoreRequest(string StoreName);
     // ReSharper restore NotAccessedPositionalProperty.Local

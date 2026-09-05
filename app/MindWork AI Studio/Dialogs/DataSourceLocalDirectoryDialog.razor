@@ -1,4 +1,6 @@
 @using AIStudio.Settings.DataModel
+@using AIStudio.Tools.Validation
+@using AIStudio.Provider
 @inherits MSGComponentBase
 
 <MudDialog>
@@ -10,8 +12,8 @@
                 @bind-Text="@this.dataName"
                 Label="@T("Data Source Name")"
                 Class="mb-6"
-                MaxLength="40"
-                Counter="40"
+                MaxLength="@DataSourceValidation.MAX_NAME_LENGTH"
+                Counter="@DataSourceValidation.MAX_NAME_LENGTH"
                 Immediate="@true"
                 Validation="@this.dataSourceValidation.ValidatingName"
                 Adornment="Adornment.Start"
@@ -41,42 +43,73 @@
             <MudJustifiedText Typo="Typo.body1" Class="mb-3">
                 @T("Select a root directory for this data source. All data in this directory and all its subdirectories will be processed for this data source.")
             </MudJustifiedText>
-            <SelectDirectory @bind-Directory="@this.dataPath" Label="@T("Selected base directory for this data source")" DirectoryDialogTitle="@T("Select the base directory")" Validation="@this.dataSourceValidation.ValidatePath" />
+            @if (!this.CanChangeSourceAndEmbedding)
+            {
+                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mb-3">
+                    @T("This data source already has indexed embeddings. Delete and recreate it to change the folder path or embedding model.")
+                </MudAlert>
+            }
+            @if (this.CanChangeSourceAndEmbedding)
+            {
+                <SelectDirectory @bind-Directory="@this.dataPath" Label="@T("Selected base directory for this data source")" DirectoryDialogTitle="@T("Select the base directory")" Validation="@this.dataSourceValidation.ValidatePath" />
+            }
+            else
+            {
+                <MudTextField
+                    T="string"
+                    Text="@this.dataPath"
+                    Label="@T("Selected base directory for this data source")"
+                    Class="mb-3"
+                    ReadOnly="@true"
+                    Validation="@this.dataSourceValidation.ValidatePath"
+                    Adornment="Adornment.Start"
+                    AdornmentIcon="@Icons.Material.Filled.Folder"
+                    UserAttributes="@SPELLCHECK_ATTRIBUTES"
+                    Variant="Variant.Outlined"
+                />
+            }
 
             <MudJustifiedText Typo="Typo.body1" Class="mb-3">
                 @T("In order for the AI to be able to determine the appropriate data at any time, you must choose an embedding method.")
             </MudJustifiedText>
-            <MudSelect @bind-Value="@this.dataEmbeddingId" Label="@T("Embedding")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateEmbeddingId">
-                @foreach (var embedding in this.AvailableEmbeddings)
-                {
-                    <MudSelectItem Value="@embedding.Value">
-                        @if (this.GetEmbeddingProvider(embedding.Value) is { } provider)
-                        {
-                            <ProviderLabel ProviderType="@provider.UsedLLMProvider" CustomIconDataUrl="@provider.CustomIconDataUrl" Text="@embedding.Name" />
-                        }
-                        else
-                        {
-                            @embedding.Name
-                        }
-                    </MudSelectItem>
-                }
-            </MudSelect>
+            @if (this.CanChangeSourceAndEmbedding)
+            {
+                <MudSelect @bind-Value="@this.dataEmbeddingId" Label="@T("Embedding")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateEmbeddingProviderAccess">
+                    @foreach (var embedding in this.AvailableEmbeddings)
+                    {
+                        <MudSelectItem Value="@embedding.Value">
+                            @if (this.GetEmbeddingProvider(embedding.Value) is { } provider)
+                            {
+                                <ProviderLabel ProviderType="@provider.UsedLLMProvider" CustomIconDataUrl="@provider.CustomIconDataUrl" Text="@embedding.Name" />
+                            }
+                            else
+                            {
+                                @embedding.Name
+                            }
+                        </MudSelectItem>
+                    }
+                </MudSelect>
+            }
+            else
+            {
+                <MudTextField
+                    T="string"
+                    Text="@this.SelectedEmbeddingNameText"
+                    Label="@T("Embedding")"
+                    Class="mb-3"
+                    ReadOnly="@true"
+                    Adornment="Adornment.Start"
+                    AdornmentIcon="@Icons.Material.Filled.DataObject"
+                    AdornmentColor="Color.Info"
+                    Variant="Variant.Outlined"
+                />
+            }
             
             @if (!string.IsNullOrWhiteSpace(this.dataEmbeddingId))
             {
                 if (this.SelectedCloudEmbedding)
                 {
-                    <MudJustifiedText Typo="Typo.body1" Color="Color.Error" Class="mb-3">
-                        @if (string.IsNullOrWhiteSpace(this.dataPath))
-                        {
-                            @T("Please note: the embedding you selected runs in the cloud. All your data will be sent to the cloud. Please confirm that you have read and understood this.")
-                        }
-                        else
-                        {
-                            @string.Format(T("Please note: the embedding you selected runs in the cloud. All your data from the folder '{0}' and all its subdirectories will be sent to the cloud. Please confirm that you have read and understood this."), this.dataPath)
-                        }
-                    </MudJustifiedText>
-                    <MudTextSwitch @bind-Value="@this.dataUserAcknowledgedCloudEmbedding" Label="@T("I confirm that I have read and understood the above")" LabelOn="@T("Yes, please send my data to the cloud")" LabelOff="@T("No, I will chose another embedding")" Validation="@this.dataSourceValidation.ValidateUserAcknowledgedCloudEmbedding"/>
+                    <DataSourceCloudEmbeddingWarning DataSourceType="DataSourceType.LOCAL_DIRECTORY" SourcePath="@this.dataPath" @bind-UserAcknowledged="@this.dataUserAcknowledgedCloudEmbedding" Validation="@this.dataSourceValidation.ValidateUserAcknowledgedCloudEmbedding"/>
                 }
                 else
                 {
@@ -88,16 +121,74 @@
             
             <ManagePandocDependency IntroText="@T("For some data types, such as Office files, MindWork AI Studio requires the open-source application Pandoc.")"/>
 
-            <MudSelect @bind-Value="@this.dataSecurityPolicy" Text="@this.dataSecurityPolicy.ToSelectionText()" Label="@T("Your security policy")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateSecurityPolicy">
-                @foreach (var policy in Enum.GetValues<DataSourceSecurity>())
+            <MudSelect @bind-Value="@this.dataConfidenceLevel" Text="@this.dataConfidenceLevel.GetName()" Label="@T("Required provider confidence level")" Class="mb-3" OpenIcon="@Icons.Material.Filled.ExpandMore" AdornmentColor="Color.Info" Adornment="Adornment.Start" Validation="@this.dataSourceValidation.ValidateDataSourceConfidenceLevel">
+                @foreach (var level in this.ConfidenceLevels)
                 {
-                    <MudSelectItem Value="@policy">
-                        @policy.ToSelectionText()
+                    <MudSelectItem Value="@level.Value">
+                        @level.Name
                     </MudSelectItem>
                 }
             </MudSelect>
             
-            <MudNumericField T="ushort" Min="10" @bind-Value="@this.dataMaxMatches" Label="@T("How many matches do you want at most per query?")" Variant="Variant.Outlined" Step="10" />
+            <MudStack Class="mb-3">
+                <MudButton OnClick="@this.ToggleExpertSettings" Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Tune">
+                    @(this.showExpertSettings ? T("Hide Expert Settings") : T("Show Expert Settings"))
+                </MudButton>
+                <MudDivider/>
+                <MudCollapse Expanded="@this.showExpertSettings" Class="@this.GetExpertStyles">
+                    @if (!string.IsNullOrWhiteSpace(this.dataEmbeddingId))
+                    {
+                        <MudTextField
+                            T="string"
+                            Text="@this.SelectedEmbeddingTokenizerText"
+                            Label="@T("Tokenizer")"
+                            Class="mb-3"
+                            ReadOnly="@true"
+                            Variant="Variant.Outlined"
+                            Adornment="Adornment.Start"
+                            AdornmentIcon="@Icons.Material.Filled.TextFields"
+                            AdornmentColor="Color.Info"/>
+                    }
+                    <MudJustifiedText Typo="Typo.body1" Class="mb-3">
+                        @T("Optional expert settings for how this data source is split before embedding.")
+                    </MudJustifiedText>
+                    <MudNumericField
+                        T="int"
+                        @bind-Value="@this.dataMaxChunkTokenLength"
+                        Label="@T("Token limit")"
+                        Class="mb-3"
+                        Min="1"
+                        Immediate="@true"
+                        Validation="@this.ValidateMaxChunkTokenLength"
+                        HelperText="@this.MaxChunkTokenLengthHelperText"
+                        Variant="Variant.Outlined"
+                        Adornment="Adornment.Start"
+                        AdornmentIcon="@Icons.Material.Filled.FormatListNumbered"
+                        AdornmentColor="Color.Info"/>
+                    <MudNumericField
+                        T="int"
+                        @bind-Value="@this.dataChunkOverlapTokenLength"
+                        Label="@T("Token overlap")"
+                        Min="0"
+                        Immediate="@true"
+                        Validation="@this.ValidateChunkOverlapTokenLength"
+                        HelperText="@this.ChunkOverlapTokenLengthHelperText"
+                        Variant="Variant.Outlined"
+                        Adornment="Adornment.Start"
+                        AdornmentIcon="@Icons.Material.Filled.CompareArrows"
+                        AdornmentColor="Color.Info"/>
+                    <MudNumericField
+                        T="ushort"
+                        Min="10"
+                        @bind-Value="@this.dataMaxMatches"
+                        Label="@T("How many matches do you want at most per query?")"
+                        Variant="Variant.Outlined"
+                        Step="10"
+                        Adornment="Adornment.Start"
+                        AdornmentIcon="@Icons.Material.Filled.Search"
+                        AdornmentColor="Color.Info"/>
+                </MudCollapse>
+            </MudStack>
         </MudForm>
         <Issues IssuesData="@this.dataIssues"/>
     </DialogContent>

@@ -94,6 +94,9 @@ CONFIG["LLM_PROVIDERS"] = {}
 --     -- Please do not add the enclosing curly braces {} here. Also, no trailing comma is allowed.
 --     ["AdditionalJsonApiParameters"] = "",
 --
+--     -- Optional: tokenizer path for this provider relative to the plugin directory.
+--     -- ["TokenizerPath"] = "",
+--
 --     -- Optional: replace the built-in provider logo with a project-specific icon.
 --     -- The path is relative to this plugin.lua and must point to an SVG file inside
 --     -- this plugin directory, for example: assets/project-icon.svg. Absolute paths,
@@ -210,6 +213,15 @@ CONFIG["EMBEDDING_PROVIDERS"] = {}
 --
 --     -- Optional: Encrypted API key (see LLM_PROVIDERS example for details)
 --     -- ["APIKey"] = "ENC:v1:<base64-encoded encrypted data>",
+
+--     -- Optional: tokenizer path for this provider relative to the plugin directory.
+--     -- ["TokenizerPath"] = "",
+--
+--     -- Optional: maximum number of tokens per embedding chunk. If omitted, AI Studio uses its default.
+--     -- ["TokenLimit"] = 8192,
+--
+--     -- Optional: number of chunks sent to the embedding provider in one request. If omitted, AI Studio sends one chunk per request.
+--     -- ["EmbeddingBatchSize"] = 1,
 --
 --     -- Optional: let each user set their own API key for this otherwise locked embedding
 --     -- provider (see LLM_PROVIDERS example for details). Mutually exclusive with "APIKey"

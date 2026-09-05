@@ -1,4 +1,5 @@
 using AIStudio.Dialogs.Settings;
+using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
 using AIStudio.Tools.Services;
@@ -141,6 +142,8 @@ public partial class DataSourceSelection : MSGComponentBase
     private IReadOnlyCollection<DataSourceAgentSelected> GetSelectedDataSourcesWithAI() => this.DataSourcesAISelected.Where(n => n.Selected).ToList();
 
     private string GetAIReasoning(DataSourceAgentSelected source) => $"AI reasoning (confidence {source.AIDecision.Confidence:P0}): {source.AIDecision.Reason}";
+
+    private string GetConfidenceIconStyle(IInternalDataSource source) => $"{source.ConfidenceLevel.SetColorStyle(this.SettingsManager)} flex-shrink: 0;";
     
     public void ChangeOptionWithoutSaving(DataSourceOptions options, IReadOnlyList<DataSourceAgentSelected>? aiSelectedDataSources = null)
     {
@@ -198,7 +201,7 @@ public partial class DataSourceSelection : MSGComponentBase
         this.StateHasChanged();
             
         // Load the data sources:
-        var sources = await this.DataSourceService.GetDataSources(this.LLMProvider, this.selectedDataSources);
+        var sources = await this.DataSourceService.GetDataSources(this.LLMProvider, this.DataSourceOptions, this.selectedDataSources);
         if (generation != this.loadAndApplyFiltersGeneration)
             return;
 
@@ -222,7 +225,8 @@ public partial class DataSourceSelection : MSGComponentBase
     {
         this.aiBasedSourceSelection = state;
         this.DataSourceOptions.AutomaticDataSourceSelection = this.aiBasedSourceSelection;
-        
+
+        await this.LoadAndApplyFilters();
         await this.OptionsChanged();
     }
     
@@ -230,7 +234,8 @@ public partial class DataSourceSelection : MSGComponentBase
     {
         this.aiBasedValidation = state;
         this.DataSourceOptions.AutomaticValidation = this.aiBasedValidation;
-        
+
+        await this.LoadAndApplyFilters();
         await this.OptionsChanged();
     }
     

@@ -27,17 +27,20 @@ use log::{debug, error, warn};
 use tokio::io::AsyncReadExt;
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::ReceiverStream;
+use tokenizers::tokenizer::Tokenizer;
 
 #[derive(Debug, Serialize)]
 pub struct Chunk {
     pub content: String,
     pub stream_id: String,
     pub metadata: Metadata,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub token_count: Option<usize>,
 }
 
 impl Chunk {
     pub fn new(content: String, metadata: Metadata) -> Self {
-        Chunk { content, stream_id: String::new(), metadata }
+        Chunk { content, stream_id: String::new(), metadata, token_count: None }
     }
 
     /// Creates a chunk which reports a failed extraction. Errors travel through the same
@@ -53,10 +56,16 @@ impl Chunk {
                 page_number: error.page_number,
                 detected_format: error.detected_format.clone(),
             },
+            token_count: None,
         }
     }
 
     pub fn set_stream_id(&mut self, stream_id: &str) { self.stream_id = stream_id.to_string(); }
+
+    pub fn set_token_count(&mut self, tokenizer: &Tokenizer) -> std::result::Result<(), String> {
+        self.token_count = Some(crate::tokenizer::get_segment_token_count(tokenizer, &self.content)?);
+        Ok(())
+    }
 
     /// Whether this chunk's content is prose a prompt injection could hide in.
     ///
@@ -73,9 +82,34 @@ impl Chunk {
                 | Metadata::Presentation { image: Some(_), .. }
         )
     }
+
+    /// Splits an oversized chunk into segments the embedding side can still handle.
+    ///
+    /// Only prose is split. Everything the filter leaves untouched -- image data, error notices --
+    /// is passed on whole: cutting base64 in half would corrupt it, which is exactly the set
+    /// `carries_filterable_text` describes.
+    fn into_bounded_text_segments(self) -> Vec<Self> {
+        if !self.carries_filterable_text() {
+            return vec![self];
+        }
+
+        let ranges = bounded_text_segment_ranges(&self.content);
+        if ranges.len() == 1 {
+            return vec![self];
+        }
+
+        ranges
+            .into_iter()
+            .map(|(start, end)| {
+                let mut segment = Chunk::new(self.content[start..end].to_string(), self.metadata.clone());
+                segment.stream_id = self.stream_id.clone();
+                segment
+            })
+            .collect()
+    }
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Clone, Debug, Serialize)]
 pub enum Metadata {
     Text {
         line_number: usize
@@ -246,7 +280,7 @@ fn classify_io_error(error: &std::io::Error) -> ExtractionErrorCode {
     }
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Clone, Debug, Serialize)]
 pub struct Base64Image {
     pub id: String,
     pub content: String,
@@ -271,6 +305,7 @@ const DOCX: &str = "docx";
 const ODT: &str = "odt";
 const HTML: &str = "html";
 const IMAGE_SEGMENT_SIZE_IN_CHARS: usize = 8_192; // equivalent to ~ 5500 token
+const MAX_TEXT_SEGMENT_LENGTH_IN_CHARS: usize = 100_000;
 
 /// Every PDF file starts with this signature.
 const PDF_MAGIC: &[u8] = b"%PDF-";
@@ -292,6 +327,10 @@ pub struct ExtractDataQuery {
     stream_id: String,
     #[serde(deserialize_with = "deserialize_bool_case_insensitive")]
     extract_images: bool,
+    #[serde(default, deserialize_with = "deserialize_bool_case_insensitive")]
+    include_token_count: bool,
+    #[serde(default)]
+    tokenizer_path: String,
 }
 
 fn deserialize_bool_case_insensitive<'de, D>(deserializer: D) -> std::result::Result<bool, D::Error>
@@ -354,7 +393,11 @@ fn content_event(chunk: &Chunk, stream_id: &str, path: &str) -> Event {
 /// The sanitizer holds chunks back until it has seen enough text to scan across their
 /// boundaries, and releases them in order. Their metadata waited here in the meantime,
 /// which is what keeps a page's text under its own page number.
-fn take_released(held: &mut VecDeque<(u64, Chunk)>, released: Vec<(u64, String)>) -> Vec<Chunk> {
+///
+/// Splitting oversized chunks and counting their tokens happens here as well, and for the same
+/// reason the filter sits where it does: this is where the text the app actually receives comes
+/// into being. Counting earlier would report numbers for text the filter had not finished with.
+fn take_released(held: &mut VecDeque<(u64, Chunk)>, released: Vec<(u64, String)>, tokenizer: Option<&Tokenizer>) -> Vec<Chunk> {
     let mut chunks = Vec::with_capacity(released.len());
 
     for (id, text) in released {
@@ -365,7 +408,21 @@ fn take_released(held: &mut VecDeque<(u64, Chunk)>, released: Vec<(u64, String)>
 
         debug_assert_eq!(held_id, id, "chunks must be released in the order they arrived");
         chunk.content = text;
-        chunks.push(chunk);
+
+        for mut segment in chunk.into_bounded_text_segments() {
+            //
+            // A count we cannot produce is left out instead of failing the extraction: the app
+            // treats a missing count as "not counted yet" and counts that segment itself, so the
+            // document still arrives complete.
+            //
+            if let Some(tokenizer) = tokenizer {
+                if let Err(e) = segment.set_token_count(tokenizer) {
+                    warn!("Failed to count the tokens of a released chunk: {e}");
+                }
+            }
+
+            chunks.push(segment);
+        }
     }
 
     chunks
@@ -443,7 +500,25 @@ pub async fn extract_data(
 
     let stream = stream! {
         match query {
-            Ok(query) => {
+            Ok(query) => 'request: {
+                //
+                // The tokenizer is loaded once, before any chunk is read: it is the same for the
+                // whole file, and a failure here means we cannot answer the request at all.
+                //
+                let tokenizer = if query.include_token_count {
+                    match crate::tokenizer::get_tokenizer(&query.tokenizer_path) {
+                        Ok(tokenizer) => Some(tokenizer),
+                        Err(e) => {
+                            let error = ExtractionError::new(ExtractionErrorCode::InvalidRequest, format!("The tokenizer could not be loaded: {e}"));
+                            warn!("{}", error.message);
+                            yield Ok(error_event(&error, Some(&query.stream_id)));
+                            break 'request;
+                        },
+                    }
+                } else {
+                    None
+                };
+
                 let stream_result = stream_data(&query.path, query.extract_images, &query.stream_id).await;
                 let id_ref = &query.stream_id;
                 let path_ref = &query.path;
@@ -475,7 +550,7 @@ pub async fn extract_data(
                                             break;
                                         };
 
-                                        for released in take_released(&mut held, released_chunks) {
+                                        for released in take_released(&mut held, released_chunks, tokenizer.as_deref()) {
                                             yield Ok(content_event(&released, id_ref, path_ref));
                                         }
 
@@ -494,7 +569,7 @@ pub async fn extract_data(
                                         break;
                                     };
 
-                                    for released in take_released(&mut held, released_chunks) {
+                                    for released in take_released(&mut held, released_chunks, tokenizer.as_deref()) {
                                         yield Ok(content_event(&released, id_ref, path_ref));
                                     }
                                 },
@@ -508,7 +583,7 @@ pub async fn extract_data(
                                     // that failed on top of that releases nothing; the extraction
                                     // error below is reported either way.
                                     if let Some(released_chunks) = scan_off_worker(&mut sanitizer, Sanitizer::flush).await {
-                                        for released in take_released(&mut held, released_chunks) {
+                                        for released in take_released(&mut held, released_chunks, tokenizer.as_deref()) {
                                             yield Ok(content_event(&released, id_ref, path_ref));
                                         }
                                     }
@@ -529,7 +604,7 @@ pub async fn extract_data(
                                 return;
                             };
 
-                            for released in take_released(&mut held, released_chunks) {
+                            for released in take_released(&mut held, released_chunks, tokenizer.as_deref()) {
                                 yield Ok(content_event(&released, id_ref, path_ref));
                             }
                         }
@@ -576,6 +651,34 @@ pub async fn extract_data(
     };
 
     Sse::new(stream)
+}
+
+/// Splits content into ranges no longer than the segment limit, cutting on character boundaries.
+fn bounded_text_segment_ranges(content: &str) -> Vec<(usize, usize)> {
+    let mut ranges = Vec::new();
+    let mut start = 0;
+
+    while start < content.len() {
+        let remaining = &content[start..];
+        let Some(maximum_end_offset) = remaining
+            .char_indices()
+            .nth(MAX_TEXT_SEGMENT_LENGTH_IN_CHARS)
+            .map(|(index, _)| index)
+        else {
+            ranges.push((start, content.len()));
+            break;
+        };
+
+        let end = start + maximum_end_offset;
+        ranges.push((start, end));
+        start = end;
+    }
+
+    if ranges.is_empty() {
+        ranges.push((0, 0));
+    }
+
+    ranges
 }
 
 /// How a file is read.

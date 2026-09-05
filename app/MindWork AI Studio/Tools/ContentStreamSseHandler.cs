@@ -57,6 +57,14 @@ public static class ContentStreamSseHandler
                         return ContentStreamProcessedEvent.FromContent(sseEvent.Content);
 
                     case ContentStreamPresentationMetadata presentationMetadata:
+                        if (!extractImages)
+                        {
+                            var slideNumber = presentationMetadata.Presentation?.SlideNumber ?? 0;
+                            return ContentStreamProcessedEvent.FromContent(slideNumber > 0
+                                ? $"# Slide {slideNumber}\n{sseEvent.Content}"
+                                : sseEvent.Content);
+                        }
+
                         var slideManager = SLIDE_MANAGERS.GetOrAdd(
                             sseEvent.StreamId!,
                             _ => new()

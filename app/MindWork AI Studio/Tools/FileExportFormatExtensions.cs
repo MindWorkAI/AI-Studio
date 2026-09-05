@@ -179,7 +179,7 @@ public static class FileExportFormatExtensions
         FileExportFormat.OPEN_DOCUMENT_TEXT => FileTypes.ODT,
         FileExportFormat.LATEX => FileTypes.TEX,
         FileExportFormat.MARKDOWN => FileTypes.MARKDOWN,
-        FileExportFormat.HTML => FileTypes.HTML,
+        FileExportFormat.HTML => FileTypes.HTML_DOCUMENT,
         FileExportFormat.CSV => FileTypes.CSV,
         FileExportFormat.TSV => FileTypes.TSV,
 
