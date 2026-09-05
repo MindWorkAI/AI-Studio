@@ -57,9 +57,6 @@ public sealed partial class ToolSettingsService
     private static ToolSettingsExportResult BuildConfigurationSection(ToolDefinition definition, IReadOnlyList<ExportableSettings> areas, IReadOnlyDictionary<string, string> values,
         ToolSettingsExportOptions options, ConfidenceLevel minimumProviderConfidence, EnterpriseEncryption? encryption)
     {
-        if (!Enum.IsDefined(options.Mode))
-            return new(ErrorMessage: TB("The selected tool configuration export mode is invalid."));
-
         var lockedValues = new Dictionary<string, string>(StringComparer.Ordinal);
         var defaultValues = new Dictionary<string, string>(StringComparer.Ordinal);
         foreach (var fieldName in GetSelectedFieldNames(definition, areas, options.SelectedAreaIds))
