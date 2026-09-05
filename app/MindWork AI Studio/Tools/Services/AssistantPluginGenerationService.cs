@@ -116,7 +116,7 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
             return InitialFailure(TB("The generated assistant metadata does not match the generated plugin."));
 
         if (this.FindUnknownToolIds(generatedAssistant) is { Count: > 0 } unknownToolIds)
-            return InitialFailure(string.Format(TB("The generated assistant plugin asks for tools this AI Studio does not have: \"{0}\". Please try again."), string.Join(", ", unknownToolIds)));
+            return InitialFailure(string.Format(TB("The generated assistant plugin asks for tools this AI Studio does not have: '{0}'. Please try again."), string.Join(", ", unknownToolIds)));
 
         return new(true, fullLua, parsedResponse.Plugin?.Name ?? string.Empty, string.Empty);
     }
@@ -235,7 +235,7 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
             return RevisionFailure(TB("The revised assistant metadata does not match the revised plugin."));
 
         if (this.FindUnknownToolIds(revisedAssistant, plugin) is { Count: > 0 } unknownToolIds)
-            return RevisionFailure(string.Format(TB("The revised assistant plugin asks for tools this AI Studio does not have: \"{0}\". Please try again."), string.Join(", ", unknownToolIds)));
+            return RevisionFailure(string.Format(TB("The revised assistant plugin asks for tools this AI Studio does not have: '{0}'. Please try again."), string.Join(", ", unknownToolIds)));
 
         return new(true, revisedLua, parsedResponse.Plugin?.Name ?? plugin.Name, string.Empty);
     }

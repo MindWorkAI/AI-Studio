@@ -1,6 +1,6 @@
 use axum::Json;
 use keyring_core::{Entry, Error as KeyringError};
-use log::{error, info, warn};
+use log::{debug, error, info, warn};
 use serde::{Deserialize, Serialize};
 use crate::api_token::APIToken;
 use crate::encryption::{EncryptedText, ENCRYPTION};
@@ -165,7 +165,11 @@ pub async fn get_secret(_token: APIToken, request: Json<RequestSecret>) -> Json<
     let secret = entry.get_password();
     match secret {
         Ok(s) => {
-            info!(Source = "Secret Store"; "Secret for '{service}' and user '{user_name}' was retrieved successfully.");
+            // Reading a secret is routine: it happens for every secret field of every tool
+            // the model calls, so an info line per read only crowds the release log. Storing
+            // and deleting a secret stay at info and warn, because those are rare and the
+            // user asked for them:
+            debug!(Source = "Secret Store"; "Secret for '{service}' and user '{user_name}' was retrieved successfully.");
 
             // Encrypt the secret:
             let encrypted_secret = match ENCRYPTION.encrypt(s.as_str()) {
