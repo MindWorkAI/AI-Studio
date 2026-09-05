@@ -649,7 +649,7 @@ Start from the [example configuration plugin](../app/MindWork%20AI%20Studio/Plug
 2. Select the areas to export. All areas start selected. For Web Search, SearXNG, Staan, Tavily, and General are independent: selecting only Tavily does not include the search language, strategy, or preferred backend. Select General separately when you need those settings.
 3. Choose **Locked settings** or **Editable defaults**. Locked settings go into `DataTools.LockedToolSettings` and cannot be changed by users. Editable defaults go into `DataTools.DefaultToolSettings`; a user's saved value takes precedence over them.
 4. Optionally select **Include encrypted API keys and other secrets**, which starts off. The option is available only when the selected areas contain configured secrets and this machine has a valid enterprise encryption secret. Deploy the same secret to recipients as described in [Setting Up Encrypted API Keys](#setting-up-encrypted-api-keys). Secrets always go into `LockedToolSettings`, including when you choose editable defaults for the other fields. Managed tool secrets are used from the configuration without replacing the user's own keyring entries; removing the managed secret makes the user's own key available again.
-5. Review **Include minimum provider confidence**, which starts on. The exported requirement applies to the whole tool and is always locked. The accompanying `DataTools.MinimumProviderConfidenceByToolId.AllowUserOverride = false` locks the entire confidence table in the plugin, including entries for other tools. Deselect this option if your fragment should not configure provider confidence.
+5. Review **Include minimum provider confidence**, which starts on. The exported requirement applies to the whole tool and is locked, because a managed setting without an `AllowUserOverride` flag is locked by default. The export therefore only adds a comment about that flag instead of writing it: setting it applies to the entire confidence table, including entries for other tools, so that decision stays yours. Deselect this option if your fragment should not configure provider confidence.
 6. Click **Export to clipboard**, then paste the fragment into your plugin after its `CONFIG["SETTINGS"] = {}` initialization and after any assignments that replace the tables you want to extend. Review the code and test the plugin using [Local staging and testing](#local-staging-and-testing) before rollout. The export dialog stays open so you can produce another selection.
 
 The export reads saved, effective settings, including organization-managed values. It does not save settings or change the keyring. Missing values are omitted, explicitly empty non-secret values are preserved, and implicit runtime defaults are not added. Incomplete configurations can be exported so that you can finish them in Lua. If encryption fails, no partial fragment is copied; an empty export also leaves the clipboard unchanged.
@@ -666,7 +666,7 @@ CONFIG["SETTINGS"]["DataTools.LockedToolSettings"]["read_web_page.allowedPrivate
 
 CONFIG["SETTINGS"]["DataTools.MinimumProviderConfidenceByToolId"] = CONFIG["SETTINGS"]["DataTools.MinimumProviderConfidenceByToolId"] or {}
 CONFIG["SETTINGS"]["DataTools.MinimumProviderConfidenceByToolId"]["read_web_page"] = "VERY_LOW"
-CONFIG["SETTINGS"]["DataTools.MinimumProviderConfidenceByToolId.AllowUserOverride"] = false
+-- The whole table is locked unless you set CONFIG["SETTINGS"]["DataTools.MinimumProviderConfidenceByToolId.AllowUserOverride"] = true
 ```
 
 ### Exporting only one search backend

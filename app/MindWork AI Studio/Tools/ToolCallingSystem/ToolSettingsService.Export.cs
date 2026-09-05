@@ -104,8 +104,14 @@ public sealed partial class ToolSettingsService
                 [definition.Id] = minimumProviderConfidence.ToString(),
             });
 
-            // The existing plugin contract locks the entire confidence dictionary, not one entry:
-            lua.AppendLine($"CONFIG[\"SETTINGS\"][\"{MINIMUM_CONFIDENCE}.AllowUserOverride\"] = false");
+            //
+            // A managed setting without an AllowUserOverride flag is locked anyway, so writing
+            // "= false" here would only restate the default — and would silently undo an
+            // administrator's own "= true" further up in the same plugin, for the whole
+            // dictionary rather than this tool's entry. A comment says the same thing without
+            // overwriting anything:
+            //
+            lua.AppendLine($"-- The whole table is locked unless you set CONFIG[\"SETTINGS\"][\"{MINIMUM_CONFIDENCE}.AllowUserOverride\"] = true");
         }
 
         return new(LuaCode: lua.ToString());
