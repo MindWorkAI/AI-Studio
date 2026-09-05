@@ -94,8 +94,6 @@ public sealed partial class ToolSettingsService
             return new(ErrorMessage: TB("The tool's minimum provider confidence level is invalid."));
 
         var lua = new StringBuilder();
-        lua.AppendLine("CONFIG = CONFIG or {}");
-        lua.AppendLine("CONFIG[\"SETTINGS\"] = CONFIG[\"SETTINGS\"] or {}");
         AppendSettings(lua, LOCKED_SETTINGS, lockedValues);
         AppendSettings(lua, DEFAULT_SETTINGS, defaultValues);
 
@@ -124,7 +122,8 @@ public sealed partial class ToolSettingsService
             return;
 
         var table = $"CONFIG[\"SETTINGS\"][\"{settingName}\"]";
-        lua.AppendLine();
+        if (lua.Length > 0)
+            lua.AppendLine();
         lua.AppendLine($"{table} = {table} or {{}}");
         foreach (var (key, value) in values)
             lua.AppendLine($"{table}[\"{LuaTools.EscapeLuaString(key)}\"] = \"{LuaTools.EscapeLuaString(value)}\"");

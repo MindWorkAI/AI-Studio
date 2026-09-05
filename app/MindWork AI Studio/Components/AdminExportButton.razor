@@ -1,0 +1,8 @@
+@inherits MSGComponentBase
+
+@if (this.SettingsManager.ConfigurationData.App.ShowAdminSettings)
+{
+    <MudTooltip Text="@T("Export configuration")">
+        <MudIconButton Variant="@this.Variant" Color="Color.Info" Icon="@Icons.Material.Filled.Dataset" OnClick="@this.Export" aria-label="@T("Export configuration")" />
+    </MudTooltip>
+}

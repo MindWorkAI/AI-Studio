@@ -73,12 +73,7 @@
                             <MudTooltip Text="@T("Edit")">
                                 <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Edit" OnClick="@(() => this.EditEmbeddingProvider(context))"/>
                             </MudTooltip>
-                            @if (this.SettingsManager.ConfigurationData.App.ShowAdminSettings)
-                            {
-                                <MudTooltip Text="@T("Export configuration")">
-                                    <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Dataset" OnClick="@(() => this.ExportEmbeddingProvider(context))"/>
-                                </MudTooltip>
-                            }
+                            <AdminExportButton OnClick="@(() => this.ExportEmbeddingProvider(context))" />
                             <MudTooltip Text="@T("Delete")">
                                 <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Delete" OnClick="@(() => this.DeleteEmbeddingProvider(context))"/>
                             </MudTooltip>
