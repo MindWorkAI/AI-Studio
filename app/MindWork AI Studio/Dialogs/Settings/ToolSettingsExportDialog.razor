@@ -53,7 +53,7 @@
                 }
 
                 <MudSelect T="ToolSettingsExportMode" Label="@T("Export mode")" @bind-Value="this.mode" Variant="Variant.Outlined" Class="mb-4" Disabled="@this.isExporting" HelperText="@T("This choice applies to settings other than secrets and the minimum provider confidence.")">
-                    <MudSelectItem T="ToolSettingsExportMode" Value="@ToolSettingsExportMode.LOCKED">@T("Fixed settings")</MudSelectItem>
+                    <MudSelectItem T="ToolSettingsExportMode" Value="@ToolSettingsExportMode.LOCKED">@T("Locked settings")</MudSelectItem>
                     <MudSelectItem T="ToolSettingsExportMode" Value="@ToolSettingsExportMode.DEFAULT">@T("Editable defaults")</MudSelectItem>
                 </MudSelect>
 
@@ -69,14 +69,14 @@
                     }
                     else
                     {
-                        <MudText Typo="Typo.body2">@T("Secrets are always exported as fixed settings. Recipients need the same enterprise encryption secret to use them.")</MudText>
+                        <MudText Typo="Typo.body2">@T("Secrets are always exported as locked settings. Recipients need the same enterprise encryption secret to use them.")</MudText>
                     }
                 </MudPaper>
 
                 <MudPaper Class="pa-3 mb-4 border-dashed border rounded-lg">
                     <MudCheckBox T="bool" Label="@T("Include minimum provider confidence")" @bind-Value="this.includeMinimumProviderConfidence" Disabled="@this.isExporting" />
                     <MudText Typo="Typo.body2" Class="mb-2">@string.Format(T("Current requirement: {0}"), this.GetMinimumProviderConfidenceName())</MudText>
-                    <MudText Typo="Typo.body2">@T("This is always a fixed requirement for the entire tool. The configuration plugin locks minimum provider confidence levels together for all tools in its confidence table.")</MudText>
+                    <MudText Typo="Typo.body2">@T("This setting is always locked and applies to the entire tool. The configuration plugin locks minimum provider confidence levels together for all tools in its confidence table.")</MudText>
                 </MudPaper>
             }
         }
