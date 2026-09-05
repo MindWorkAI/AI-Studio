@@ -4720,6 +4720,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T3794167684
 -- Status
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T6222351"] = "Status"
 
+-- Export configuration
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTOOLS::T975426229"] = "Export configuration"
+
 -- No transcription provider configured yet.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELTRANSCRIPTION::T1079350363"] = "No transcription provider configured yet."
 
@@ -8218,6 +8221,78 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSDIALOG::T403490413"] =
 -- Cancel
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSDIALOG::T900713019"] = "Cancel"
 
+-- The tool configuration could not be exported. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSEXPORTDIALOG::T1064444653"] = "The tool configuration could not be exported. Please try again."
+
+-- Secrets are always exported as fixed settings. Recipients need the same enterprise encryption secret to use them.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSEXPORTDIALOG::T1201799760"] = "Secrets are always exported as fixed settings. Recipients need the same enterprise encryption secret to use them."
+
+-- The selected areas contain no configured API keys or other secrets.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSEXPORTDIALOG::T1362677286"] = "The selected areas contain no configured API keys or other secrets."
+
+-- This is always a fixed requirement for the entire tool. The configuration plugin locks minimum provider confidence levels together for all tools in its confidence table.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSEXPORTDIALOG::T1477753889"] = "This is always a fixed requirement for the entire tool. The configuration plugin locks minimum provider confidence levels together for all tools in its confidence table."
+
+-- Loading tool configuration...
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSEXPORTDIALOG::T1750745869"] = "Loading tool configuration..."
+
+-- Select all
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSEXPORTDIALOG::T1794248818"] = "Select all"
+
+-- Include minimum provider confidence
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSEXPORTDIALOG::T1823629028"] = "Include minimum provider confidence"
+
+-- The selected areas contain no settings to export.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSEXPORTDIALOG::T197560416"] = "The selected areas contain no settings to export."
+
+-- Include encrypted API keys and other secrets
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSEXPORTDIALOG::T1978141571"] = "Include encrypted API keys and other secrets"
+
+-- Settings to include
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSEXPORTDIALOG::T2051465617"] = "Settings to include"
+
+-- Editable defaults
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSEXPORTDIALOG::T2389486789"] = "Editable defaults"
+
+-- No minimum confidence level chosen
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSEXPORTDIALOG::T2828607242"] = "No minimum confidence level chosen"
+
+-- The tool configuration could not be loaded. Please close this dialog and try again.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSEXPORTDIALOG::T3388093684"] = "The tool configuration could not be loaded. Please close this dialog and try again."
+
+-- Export tool configuration
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSEXPORTDIALOG::T3758205437"] = "Export tool configuration"
+
+-- Export mode
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSEXPORTDIALOG::T3810275878"] = "Export mode"
+
+-- The selected tool could not be loaded.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSEXPORTDIALOG::T3907843187"] = "The selected tool could not be loaded."
+
+-- Each area is independent. Select general settings separately if you want to include them.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSEXPORTDIALOG::T3911375461"] = "Each area is independent. Select general settings separately if you want to include them."
+
+-- This choice applies to settings other than secrets and the minimum provider confidence.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSEXPORTDIALOG::T4236004495"] = "This choice applies to settings other than secrets and the minimum provider confidence."
+
+-- Fixed settings
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSEXPORTDIALOG::T445289446"] = "Fixed settings"
+
+-- Export to clipboard
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSEXPORTDIALOG::T508399334"] = "Export to clipboard"
+
+-- No enterprise encryption secret is configured. API keys and other secrets cannot be exported.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSEXPORTDIALOG::T633982489"] = "No enterprise encryption secret is configured. API keys and other secrets cannot be exported."
+
+-- Export saved settings as Lua code for your configuration plugin. You can combine exports and adapt the code before deploying it.
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSEXPORTDIALOG::T744840132"] = "Export saved settings as Lua code for your configuration plugin. You can combine exports and adapt the code before deploying it."
+
+-- Cancel
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSEXPORTDIALOG::T900713019"] = "Cancel"
+
+-- Current requirement: {0}
+UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::TOOLSETTINGSEXPORTDIALOG::T982466527"] = "Current requirement: {0}"
+
 -- Save
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SHORTCUTDIALOG::T1294818664"] = "Save"
 
@@ -11416,6 +11491,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::HARNESS::TOOLCALLINGMESSAGE
 -- The tool calling request failed with status code {0}. See the logs for details.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::HARNESS::TOOLCALLINGMESSAGES::T3117779001"] = "The tool calling request failed with status code {0}. See the logs for details."
 
+-- General
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::ITOOLIMPLEMENTATION::T1432485131"] = "General"
+
 -- Tool
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::ITOOLIMPLEMENTATION::T3517012711"] = "Tool"
 
@@ -11673,6 +11751,18 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLSETTINGSOPTIONSOURCES::
 
 -- Any language
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLSETTINGSOPTIONSOURCES::T747012729"] = "Any language"
+
+-- The selected tool configuration export mode is invalid.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLSETTINGSSERVICE::T1327976665"] = "The selected tool configuration export mode is invalid."
+
+-- The tool's minimum provider confidence level is invalid.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLSETTINGSSERVICE::T2093219126"] = "The tool's minimum provider confidence level is invalid."
+
+-- Cannot export encrypted tool secrets: No enterprise encryption secret is configured.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLSETTINGSSERVICE::T3174877792"] = "Cannot export encrypted tool secrets: No enterprise encryption secret is configured."
+
+-- The tool secrets could not be encrypted. Nothing was exported.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::TOOLCALLINGSYSTEM::TOOLSETTINGSSERVICE::T403101133"] = "The tool secrets could not be encrypted. Nothing was exported."
 
 -- The file path is null or empty and the file therefore can not be loaded.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::USERFILE::T932243993"] = "The file path is null or empty and the file therefore can not be loaded."

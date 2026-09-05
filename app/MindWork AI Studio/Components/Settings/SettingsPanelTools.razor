@@ -54,6 +54,12 @@
             </MudTd>
             <MudTd>
                 <MudIconButton Icon="@Icons.Material.Filled.Settings" OnClick="@(async () => await this.OpenSettings(context.Definition.Id))" />
+                @if (this.SettingsManager.ConfigurationData.App.ShowAdminSettings)
+                {
+                    <MudTooltip Text="@T("Export configuration")">
+                        <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Dataset" OnClick="@(() => this.OpenExport(context.Definition.Id))" aria-label="@T("Export configuration")" />
+                    </MudTooltip>
+                }
             </MudTd>
         </RowTemplate>
     </MudTable>
