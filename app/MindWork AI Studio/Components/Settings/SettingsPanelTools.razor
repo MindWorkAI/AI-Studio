@@ -53,7 +53,12 @@
                 }
             </MudTd>
             <MudTd>
-                <MudIconButton Icon="@Icons.Material.Filled.Settings" OnClick="@(async () => await this.OpenSettings(context.Definition.Id))" />
+                <MudStack Row="true" Wrap="Wrap.NoWrap" AlignItems="AlignItems.Center" Spacing="0">
+                    <MudTooltip Text="@T("Settings")">
+                        <MudIconButton Icon="@Icons.Material.Filled.Settings" OnClick="@(async () => await this.OpenSettings(context.Definition.Id))" aria-label="@T("Settings")" />
+                    </MudTooltip>
+                    <AdminExportButton OnClick="@(() => this.OpenExport(context.Definition.Id))" />
+                </MudStack>
             </MudTd>
         </RowTemplate>
     </MudTable>

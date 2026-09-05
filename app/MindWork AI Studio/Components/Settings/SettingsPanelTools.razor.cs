@@ -34,6 +34,19 @@ public partial class SettingsPanelTools : SettingsPanelBase
         this.StateHasChanged();
     }
 
+    private async Task OpenExport(string toolId)
+    {
+        if (!this.SettingsManager.ConfigurationData.App.ShowAdminSettings)
+            return;
+
+        var parameters = new DialogParameters<ToolSettingsExportDialog>
+        {
+            { x => x.ToolId, toolId },
+        };
+
+        await this.DialogService.ShowAsync<ToolSettingsExportDialog>(null, parameters, Dialogs.DialogOptions.FULLSCREEN);
+    }
+
     private string GetConfigurationTooltip(ToolCatalogItem item) => item.ConfigurationState.MissingRequiredFields.Count switch
     {
         _ when !string.IsNullOrWhiteSpace(item.ConfigurationState.Message) => item.ConfigurationState.Message,

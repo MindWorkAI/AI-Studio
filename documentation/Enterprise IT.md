@@ -425,6 +425,7 @@ Currently, you can configure the following things:
 - Any number of transcription providers for voice-to-text functionality
 - Any number of embedding providers for RAG
 - Enterprise hash approvals for assistant plugins
+- Tool settings, encrypted tool API keys, and minimum provider confidence requirements
 - The update behavior of AI Studio
 - Various UI and feature settings (see the example configuration for details)
 
@@ -639,6 +640,50 @@ CONFIG["LLM_PROVIDERS"][#CONFIG["LLM_PROVIDERS"]+1] = {
 ```
 
 The API key will be automatically decrypted when the configuration is loaded and stored securely in the operating system's credential store (Windows Credential Manager / macOS Keychain).
+
+## Exporting tool configurations
+
+Start from the [example configuration plugin](../app/MindWork%20AI%20Studio/Plugins/configuration/plugin.lua). The export produces a Lua fragment to insert into that file; it assumes `CONFIG` and `CONFIG["SETTINGS"]` already exist.
+
+1. Enable **Show administration settings** in the app settings. In **Tool Settings**, configure the tool and save your changes, then click its **Export configuration** button next to the settings button.
+2. Select the areas to export. All areas start selected. For Web Search, SearXNG, Staan, Tavily, and General are independent: selecting only Tavily does not include the search language, strategy, or preferred backend. Select General separately when you need those settings.
+3. Choose **Locked settings** or **Editable defaults**. Locked settings go into `DataTools.LockedToolSettings` and cannot be changed by users. Editable defaults go into `DataTools.DefaultToolSettings`; a user's saved value takes precedence over them.
+4. Optionally select **Include encrypted API keys and other secrets**, which starts off. The option is available only when the selected areas contain configured secrets and this machine has a valid enterprise encryption secret. Deploy the same secret to recipients as described in [Setting Up Encrypted API Keys](#setting-up-encrypted-api-keys). Secrets always go into `LockedToolSettings`, including when you choose editable defaults for the other fields. Managed tool secrets are used from the configuration without replacing the user's own keyring entries; removing the managed secret makes the user's own key available again.
+5. Review **Include minimum provider confidence**, which starts on. The exported requirement applies to the whole tool and is locked, because a managed setting without an `AllowUserOverride` flag is locked by default. The export therefore only adds a comment about that flag instead of writing it: setting it applies to the entire confidence table, including entries for other tools, so that decision stays yours. Deselect this option if your fragment should not configure provider confidence.
+6. Click **Export to clipboard**, then paste the fragment into your plugin after its `CONFIG["SETTINGS"] = {}` initialization and after any assignments that replace the tables you want to extend. Review the code and test the plugin using [Local staging and testing](#local-staging-and-testing) before rollout. The export dialog stays open so you can produce another selection.
+
+The export reads saved, effective settings, including organization-managed values. It does not save settings or change the keyring. Missing values are omitted, explicitly empty non-secret values are preserved, and implicit runtime defaults are not added. Incomplete configurations can be exported so that you can finish them in Lua. If encryption fails, no partial fragment is copied; an empty export also leaves the clipboard unchanged.
+
+### Complete tool export
+
+For example, save a timeout of `30`, a content limit of `12000`, and an empty private-host list for **Read Web Page**. Select its General area, **Locked settings**, and **Include minimum provider confidence**. With its default confidence requirement of `VERY_LOW`, the export is:
+
+```lua
+CONFIG["SETTINGS"]["DataTools.LockedToolSettings"] = CONFIG["SETTINGS"]["DataTools.LockedToolSettings"] or {}
+CONFIG["SETTINGS"]["DataTools.LockedToolSettings"]["read_web_page.timeoutSeconds"] = "30"
+CONFIG["SETTINGS"]["DataTools.LockedToolSettings"]["read_web_page.maxContentCharacters"] = "12000"
+CONFIG["SETTINGS"]["DataTools.LockedToolSettings"]["read_web_page.allowedPrivateHosts"] = ""
+
+CONFIG["SETTINGS"]["DataTools.MinimumProviderConfidenceByToolId"] = CONFIG["SETTINGS"]["DataTools.MinimumProviderConfidenceByToolId"] or {}
+CONFIG["SETTINGS"]["DataTools.MinimumProviderConfidenceByToolId"]["read_web_page"] = "VERY_LOW"
+-- The whole table is locked unless you set CONFIG["SETTINGS"]["DataTools.MinimumProviderConfidenceByToolId.AllowUserOverride"] = true
+```
+
+### Exporting only one search backend
+
+For **Web Search**, select only Tavily, choose **Editable defaults**, enable encrypted secrets, and deselect **Include minimum provider confidence**. With a saved search depth of `basic` and an API key, the fragment has this form. The ciphertext below is a placeholder; use the encrypted value generated by your export.
+
+```lua
+CONFIG["SETTINGS"]["DataTools.LockedToolSettings"] = CONFIG["SETTINGS"]["DataTools.LockedToolSettings"] or {}
+CONFIG["SETTINGS"]["DataTools.LockedToolSettings"]["web_search.tavily.apiKey"] = "ENC:v1:<base64-encoded encrypted data>"
+
+CONFIG["SETTINGS"]["DataTools.DefaultToolSettings"] = CONFIG["SETTINGS"]["DataTools.DefaultToolSettings"] or {}
+CONFIG["SETTINGS"]["DataTools.DefaultToolSettings"]["web_search.tavily.searchDepth"] = "basic"
+```
+
+This does not change the SearXNG or Staan settings, the general Web Search settings, or its confidence requirement. Web Search still needs a configured `defaultLanguage`; include it through a separate General-area export, add it manually, or let the user configure it. A backend-only export does not restrict the tool to that backend.
+
+You can combine both fragments in the same plugin: their table initializations preserve earlier entries, and only a later assignment to an identical key replaces its value. A later whole-table assignment such as `CONFIG["SETTINGS"]["DataTools.LockedToolSettings"] = { ... }` replaces those entries, so place exports after it or merge them manually. This behavior applies within one plugin; across separate configuration plugins, the winning plugin replaces the whole managed table as described in [Settings that hold a list or a table](#settings-that-hold-a-list-or-a-table).
 
 ## Letting users provide their own API key
 
