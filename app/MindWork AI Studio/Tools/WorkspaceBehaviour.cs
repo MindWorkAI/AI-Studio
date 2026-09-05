@@ -82,11 +82,23 @@ public static class WorkspaceBehaviour
 
     private static readonly string TEMPORARY_CHATS_ROOT_DIRECTORY = Path.Join(SettingsManager.DataDirectory, "tempChats");
 
-    private static SemaphoreSlim GetChatSemaphore(Guid workspaceId, Guid chatId)
-    {
-        var key = $"{workspaceId}_{chatId}";
-        return CHAT_STORAGE_SEMAPHORES.GetOrAdd(key, _ => new SemaphoreSlim(1, 1));
-    }
+    private static string ChatSemaphoreKey(Guid workspaceId, Guid chatId) => $"{workspaceId}_{chatId}";
+
+    private static SemaphoreSlim GetChatSemaphore(Guid workspaceId, Guid chatId) =>
+        CHAT_STORAGE_SEMAPHORES.GetOrAdd(ChatSemaphoreKey(workspaceId, chatId), _ => new SemaphoreSlim(1, 1));
+
+    /// <summary>
+    /// Drops the storage semaphore of a chat which does not exist anymore.
+    /// </summary>
+    /// <remarks>
+    /// Deleting the chat is the one moment where we know that nobody will ask for this semaphore
+    /// again; without this, the dictionary would keep one entry per chat the app ever touched. We
+    /// do not dispose the semaphore, though: another operation might still be waiting on it, and
+    /// disposing it under their feet would turn a deleted chat into an exception somewhere else.
+    /// The garbage collector takes care of it once the last waiter is gone.
+    /// </remarks>
+    private static void ForgetChatSemaphore(Guid workspaceId, Guid chatId) =>
+        CHAT_STORAGE_SEMAPHORES.TryRemove(ChatSemaphoreKey(workspaceId, chatId), out _);
 
     private static async Task<(bool Acquired, SemaphoreSlim Semaphore)> TryAcquireChatSemaphoreAsync(Guid workspaceId, Guid chatId, string callerName)
     {
@@ -1084,8 +1096,8 @@ public static class WorkspaceBehaviour
                 {
                     x => x.Message, (chat.WorkspaceId == Guid.Empty) switch
                     {
-                        true => TB($"Are you sure you want to delete the temporary chat '{chat.Name}'?"),
-                        false => TB($"Are you sure you want to delete the chat '{chat.Name}' in the workspace '{workspaceName}'?"),
+                        true => string.Format(TB("Are you sure you want to delete the temporary chat '{0}'?"), chat.Name),
+                        false => string.Format(TB("Are you sure you want to delete the chat '{0}' in the workspace '{1}'?"), chat.Name, workspaceName),
                     }
                 },
             };
@@ -1114,6 +1126,7 @@ public static class WorkspaceBehaviour
         finally
         {
             semaphore.Release();
+            ForgetChatSemaphore(workspaceId, chatId);
         }
     }
 

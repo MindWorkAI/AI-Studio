@@ -50,6 +50,29 @@ public sealed class DataSourceService
             new("chat provider", usingTrustedProvider, selectedLLMProvider.GetConfidenceLevel(this.settingsManager)));
         return await this.GetDataSources(usingTrustedProvider, participatingProviders, previousSelectedDataSources);
     }
+
+    /// <summary>
+    /// Returns the requested data sources that are allowed for the selected LLM provider.
+    /// Unlike see GetDataSources(AIStudio.Settings.Provider, IReadOnlyCollection{IDataSource}),
+    /// this method checks only the supplied data sources.
+    /// </summary>
+    /// <param name="selectedLLMProvider">The selected LLM provider.</param>
+    /// <param name="dataSourceOptions">The active data source options, which determine which agent providers participate.</param>
+    /// <param name="requestedDataSources">The data sources to check.</param>
+    /// <returns>The requested data sources that are allowed for the provider.</returns>
+    public async Task<IReadOnlyList<IDataSource>> GetAllowedDataSources(AIStudio.Settings.Provider selectedLLMProvider, DataSourceOptions dataSourceOptions, IReadOnlyCollection<IDataSource> requestedDataSources)
+    {
+        if (selectedLLMProvider == Settings.Provider.NONE)
+        {
+            this.logger.LogWarning("The selected LLM provider is not set. We cannot filter the data sources by any means.");
+            return [];
+        }
+
+        var usingTrustedProvider = selectedLLMProvider.IsTrustedForDataSourceSecurityChecks(this.settingsManager);
+        var participatingProviders = this.GetParticipatingProviders(selectedLLMProvider.Id, dataSourceOptions,
+            new("chat provider", usingTrustedProvider, selectedLLMProvider.GetConfidenceLevel(this.settingsManager)));
+        return await this.GetAllowedDataSources(usingTrustedProvider, participatingProviders, requestedDataSources);
+    }
     
     /// <summary>
     /// Returns a list of data sources that are allowed for the selected LLM provider.
@@ -111,27 +134,31 @@ public sealed class DataSourceService
     {
         var allDataSources = this.settingsManager.ConfigurationData.DataSources.ToList();
         var previousSelectedDataSourceIds = previousSelectedDataSources?.Select(source => source.Id).ToHashSet(StringComparer.Ordinal) ?? [];
-        var filteredDataSources = new List<IDataSource>(allDataSources.Count);
-        var filteredSelectedDataSources = new List<IDataSource>(previousSelectedDataSourceIds.Count);
-        var tasks = new List<Task<IDataSource?>>(allDataSources.Count);
+        var filteredDataSources = await this.GetAllowedDataSources(usingTrustedProvider, participatingProviders, allDataSources);
+        var filteredSelectedDataSources = filteredDataSources.Where(source => previousSelectedDataSourceIds.Contains(source.Id)).ToList();
         
+        return new(filteredDataSources, filteredSelectedDataSources);
+    }
+
+    private async Task<IReadOnlyList<IDataSource>> GetAllowedDataSources(bool usingTrustedProvider, IReadOnlyList<ParticipatingProvider> participatingProviders, IReadOnlyCollection<IDataSource> requestedDataSources)
+    {
+        var filteredDataSources = new List<IDataSource>(requestedDataSources.Count);
+        var tasks = new List<Task<IDataSource?>>(requestedDataSources.Count);
+
         // Start all checks in parallel:
-        foreach (var source in allDataSources)
+        foreach (var source in requestedDataSources)
             tasks.Add(this.CheckOneDataSource(source, usingTrustedProvider, participatingProviders));
-        
+
+
         // Wait for all checks and collect the results:
         foreach (var task in tasks)
         {
             var source = await task;
             if (source is not null)
-            {
                 filteredDataSources.Add(source);
-                if (previousSelectedDataSourceIds.Contains(source.Id))
-                    filteredSelectedDataSources.Add(source);
-            }
         }
-        
-        return new(filteredDataSources, filteredSelectedDataSources);
+
+        return filteredDataSources;
     }
     
     private async Task<IDataSource?> CheckOneDataSource(IDataSource source, bool usingTrustedProvider, IReadOnlyList<ParticipatingProvider> participatingProviders)

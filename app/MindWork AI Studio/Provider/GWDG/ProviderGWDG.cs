@@ -10,6 +10,14 @@ public sealed class ProviderGWDG() : BaseProvider(LLMProviders.GWDG, new Uri("ht
 {
     private static readonly ILogger<ProviderGWDG> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderGWDG>();
 
+    // Source: https://docs.hpc.gwdg.de/services/saia/index.html#embeddings
+    private static readonly Model[] KNOWN_EMBEDDING_MODELS =
+    [
+        new("e5-mistral-7b-instruct", "E5 Mistral 7B Instruct"),
+        new("multilingual-e5-large-instruct", "Multilingual E5 Large Instruct"),
+        new("qwen3-embedding-4b", "Qwen3 Embedding 4B"),
+    ];
+
     #region Implementation of IProvider
 
     /// <inheritdoc />
@@ -29,7 +37,7 @@ public sealed class ProviderGWDG() : BaseProvider(LLMProviders.GWDG, new Uri("ht
                            chatModel,
                            chatThread,
                            settingsManager,
-                           async (systemPrompt, apiParameters) =>
+                           async (systemPrompt, apiParameters, tools) =>
                            {
                                // Build the list of messages:
                                var messages = await chatThread.Blocks.BuildMessagesUsingNestedImageUrlAsync(this.Provider, chatModel);
@@ -44,6 +52,7 @@ public sealed class ProviderGWDG() : BaseProvider(LLMProviders.GWDG, new Uri("ht
                                    Messages = [systemPrompt, ..messages],
 
                                    Stream = true,
+                                   Tools = tools,
                                    AdditionalApiParameters = apiParameters
                                };
                            },
@@ -67,18 +76,19 @@ public sealed class ProviderGWDG() : BaseProvider(LLMProviders.GWDG, new Uri("ht
     }
     
     /// <inhertidoc />
-    public override Task<IReadOnlyList<IReadOnlyList<float>>> EmbedTextAsync(Model embeddingModel, SettingsManager settingsManager, CancellationToken token = default, params List<string> texts)
+    public override async Task<IReadOnlyList<IReadOnlyList<float>>> EmbedTextAsync(Model embeddingModel, SettingsManager settingsManager, CancellationToken token = default, params List<string> texts)
     {
-        return Task.FromResult<IReadOnlyList<IReadOnlyList<float>>>([]);
+        var requestedSecret = await Program.RUST_SERVICE.GetAPIKey(this, SecretStoreType.EMBEDDING_PROVIDER);
+        return await this.PerformStandardTextEmbeddingRequest(requestedSecret, embeddingModel, token: token, texts: texts);
     }
 
     /// <inheritdoc />
     public override async Task<ModelLoadResult> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        var result = await this.LoadModels(SecretStoreType.LLM_PROVIDER, token, apiKeyProvisional);
+        var result = await this.LoadModels(SecretStoreType.LLM_PROVIDER, apiKeyProvisional, token);
         return result with
         {
-            Models = [..result.Models.Where(model => !model.Id.StartsWith("e5-mistral-7b-instruct", StringComparison.InvariantCultureIgnoreCase))]
+            Models = [..result.Models.Where(model => model.IsChatModel())]
         };
     }
 
@@ -89,12 +99,26 @@ public sealed class ProviderGWDG() : BaseProvider(LLMProviders.GWDG, new Uri("ht
     }
     
     /// <inheritdoc />
+    /// <remarks>
+    /// SAIA answers the models endpoint with its chat models only, so asking it for the embedding
+    /// models comes back empty. We therefore fall back to the models the documentation names. The
+    /// endpoint is still asked first: should SAIA start reporting them one day, its answer wins
+    /// over our list. A failed request is passed on unchanged, so a wrong API key stays visible
+    /// as such instead of being covered up by the fallback.
+    /// </remarks>
     public override async Task<ModelLoadResult> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        var result = await this.LoadModels(SecretStoreType.EMBEDDING_PROVIDER, token, apiKeyProvisional);
+        var result = await this.LoadModels(SecretStoreType.EMBEDDING_PROVIDER, apiKeyProvisional, token);
+        if (!result.Success)
+            return result;
+
+        var embeddingModels = result.Models.Where(model => model.IsEmbeddingModel()).ToList();
+        if (embeddingModels.Count is 0)
+            return ModelLoadResult.FromModels(KNOWN_EMBEDDING_MODELS);
+
         return result with
         {
-            Models = [..result.Models.Where(model => model.Id.StartsWith("e5-", StringComparison.InvariantCultureIgnoreCase))]
+            Models = [..embeddingModels]
         };
     }
     
@@ -110,14 +134,13 @@ public sealed class ProviderGWDG() : BaseProvider(LLMProviders.GWDG, new Uri("ht
     
     #endregion
 
-    private async Task<ModelLoadResult> LoadModels(SecretStoreType storeType, CancellationToken token, string? apiKeyProvisional = null)
+    private async Task<ModelLoadResult> LoadModels(SecretStoreType storeType, string? apiKeyProvisional, CancellationToken token)
     {
         var result = await this.LoadModelsResponse<ModelsResponse>(
             storeType,
             "models",
             modelResponse => modelResponse.Data,
-            token,
-            apiKeyProvisional);
+            apiKeyProvisional, token: token);
 
         if (!result.Success)
             LOGGER.LogWarning("Failed to load models for provider {ProviderId}. FailureReason: {FailureReason}. TechnicalDetails: {TechnicalDetails}", this.Id, result.FailureReason, result.TechnicalDetails);

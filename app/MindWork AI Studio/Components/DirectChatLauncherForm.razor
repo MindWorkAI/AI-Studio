@@ -1,0 +1,46 @@
+@inherits MSGComponentBase
+
+@if (this.availableWorkspaces.Count > 0)
+{
+    <MudSelect T="string" Value="@this.WorkspaceName" ValueChanged="@this.SelectExistingWorkspace" Strict="@false" Label="@T("Existing workspace (Optional)")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3 rounded-lg" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Folder">
+        @foreach (var workspace in this.availableWorkspaces)
+        {
+            <MudSelectItem T="string" Value="@workspace.Name">@workspace.Name</MudSelectItem>
+        }
+    </MudSelect>
+}
+
+<MudTextField T="string" Text="@this.WorkspaceName" TextChanged="@this.SetWorkspaceName" Validation="@this.ValidateWorkspaceName" AdornmentIcon="@Icons.Material.Filled.CreateNewFolder" Adornment="Adornment.Start" IconSize="Size.Small" Label="@T("Workspace name")" HelperText="@T("Choose an existing workspace or enter a name that should be created when the launcher is opened.")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3" UserAttributes="@USER_INPUT_ATTRIBUTES"/>
+<MudSelect T="string" Value="@this.ProviderId" ValueChanged="@this.SetProviderId" Label="@T("Chat provider")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3 rounded-lg" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.SmartToy">
+    <MudSelectItem T="string" Value="@string.Empty">@T("Use chat default")</MudSelectItem>
+    @foreach (var provider in this.SettingsManager.GetConfidentProviders(Components.CHAT))
+    {
+        <MudSelectItem T="string" Value="@provider.Id">
+            <ProviderLabel ProviderSettings="@provider" Text="@provider.InstanceName"/>
+        </MudSelectItem>
+    }
+</MudSelect>
+<MudSelect T="string" Value="@this.ProfileId" ValueChanged="@this.SetProfileId" Label="@T("Chat profile")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3 rounded-lg" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Person">
+    <MudSelectItem T="string" Value="@string.Empty">@T("Use chat default")</MudSelectItem>
+    <MudSelectItem T="string" Value="@Guid.Empty.ToString()">@T("Use no profile")</MudSelectItem>
+    @foreach (var profile in this.SettingsManager.ConfigurationData.Profiles)
+    {
+        <MudSelectItem T="string" Value="@profile.Id">@profile.GetSafeName()</MudSelectItem>
+    }
+</MudSelect>
+<MudSelect T="string" Value="@this.ChatTemplateId" ValueChanged="@this.SetChatTemplateId" Label="@T("Chat template")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3 rounded-lg" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Article">
+    <MudSelectItem T="string" Value="@string.Empty">@T("Use chat default")</MudSelectItem>
+    <MudSelectItem T="string" Value="@Guid.Empty.ToString()">@T("Use no chat template")</MudSelectItem>
+    @foreach (var chatTemplate in this.SettingsManager.ConfigurationData.ChatTemplates)
+    {
+        <MudSelectItem T="string" Value="@chatTemplate.Id">@chatTemplate.GetSafeName()</MudSelectItem>
+    }
+</MudSelect>
+<MudSelect T="string" Label="@T("Data sources (Optional)")" MultiSelection="@true" SelectedValues="@this.DataSourceIds" SelectedValuesChanged="@this.SetDataSourceIds" MultiSelectionTextFunc="@this.GetSelectedDataSourceText" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3 rounded-lg" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Source">
+    @foreach (var dataSource in this.SettingsManager.ConfigurationData.DataSources)
+    {
+        <MudSelectItem T="string" Value="@dataSource.Id">@dataSource.Name</MudSelectItem>
+    }
+</MudSelect>
+
+<ToolSelectionField Component="Components.CHAT" SelectedToolIds="@this.ToolIds" SelectedToolIdsChanged="@this.SetToolIds" Label="@T("Tools (Optional)")" Help="@T("These tools are preselected when the chat opens. Users can change the selection in the chat, and every tool has to meet the confidence requirements of the provider in use.")"/>

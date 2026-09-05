@@ -1,4 +1,5 @@
 using AIStudio.Tools.PluginSystem;
+
 // ReSharper disable MemberCanBePrivate.Global
 
 namespace AIStudio.Tools.Rust;
@@ -38,6 +39,10 @@ public static class FileTypes
     /// Gets the standalone HTML filter used for visual briefing import and export.
     /// </summary>
     public static readonly FileTypeFilter VISUAL_BRIEFING_HTML = FileTypeFilter.Leaf(TB("Visual briefing"), "html");
+
+    // Only the canonical extension, without the legacy ".htm": this is what we write when
+    // exporting, whereas the HTML family above is what we accept when reading.
+    public static readonly FileTypeFilter HTML_DOCUMENT = FileTypeFilter.Leaf("HTML", "html");
     public static readonly FileTypeFilter APP        = FileTypeFilter.Leaf("Swift/Kotlin", "swift", "kt");
     public static readonly FileTypeFilter SHELL      = FileTypeFilter.Leaf("Shell", "sh", "bash", "zsh");
     public static readonly FileTypeFilter LOG        = FileTypeFilter.Leaf("Log", "log");
@@ -51,21 +56,32 @@ public static class FileTypes
 
     // Document hierarchy
     public static readonly FileTypeFilter PDF         = FileTypeFilter.Leaf("PDF", "pdf");
+    public static readonly FileTypeFilter MARKDOWN    = FileTypeFilter.Leaf("Markdown", "md");
     public static readonly FileTypeFilter TEXT        = FileTypeFilter.Leaf(TB("Text"), "txt", "md", "rtf");
+    public static readonly FileTypeFilter TABULAR     = FileTypeFilter.Leaf(TB("Tabular text"), "csv", "tsv");
+    public static readonly FileTypeFilter CSV         = FileTypeFilter.Leaf("CSV", "csv");
+    public static readonly FileTypeFilter TSV         = FileTypeFilter.Leaf("TSV", "tsv");
     public static readonly FileTypeFilter MS_WORD     = FileTypeFilter.Leaf("Microsoft Word", "docx");
-    public static readonly FileTypeFilter WORD        = FileTypeFilter.Composite("Word", ["odt"], MS_WORD);
+    public static readonly FileTypeFilter ODT         = FileTypeFilter.Leaf("OpenDocument Text", "odt");
+    public static readonly FileTypeFilter WORD        = FileTypeFilter.Parent("Word", ODT, MS_WORD);
     public static readonly FileTypeFilter EXCEL       = FileTypeFilter.Leaf("Excel", "xls", "xlsx", "xlsm", "xlsb", "xla", "xlam");
-    public static readonly FileTypeFilter OPEN_DOCUMENT_SPREADSHEET = FileTypeFilter.Leaf("OpenDocument Spreadsheet", "ods");
-    public static readonly FileTypeFilter SPREADSHEET = FileTypeFilter.Parent(TB("Spreadsheet"), EXCEL, OPEN_DOCUMENT_SPREADSHEET);
-    public static readonly FileTypeFilter DELIMITED_TABLE = FileTypeFilter.Leaf(TB("Delimited table"), "csv", "tsv");
-    public static readonly FileTypeFilter POWER_POINT = FileTypeFilter.Leaf("PowerPoint", "ppt", "pptx", "odp");
+    public static readonly FileTypeFilter ODS         = FileTypeFilter.Leaf("OpenDocument Spreadsheet", "ods");
+    public static readonly FileTypeFilter SPREADSHEET = FileTypeFilter.Parent(TB("Spreadsheet"), EXCEL, ODS);
+
+    // The legacy binary ".ppt" is missing on purpose: AI Studio has no reader for it, so offering
+    // it would only let users attach a file which cannot be read.
+    public static readonly FileTypeFilter POWER_POINT = FileTypeFilter.Leaf("PowerPoint", "pptx", "odp");
     public static readonly FileTypeFilter MAIL        = FileTypeFilter.Leaf(TB("Mail"), "eml", "msg", "mbox");
     public static readonly FileTypeFilter LATEX       = FileTypeFilter.Leaf("LaTeX", "tex", "bib", "sty", "cls", "log");
+
+    // Only the LaTeX document itself, without the auxiliary files of the LaTeX family: this is
+    // what we write when exporting, whereas the family above is what we accept when reading.
+    public static readonly FileTypeFilter TEX         = FileTypeFilter.Leaf("LaTeX", "tex");
 
     public static readonly FileTypeFilter OFFICE_FILES = FileTypeFilter.Parent(TB("Office Files"),
         WORD, SPREADSHEET, POWER_POINT, PDF);
     public static readonly FileTypeFilter DOCUMENT     = FileTypeFilter.Parent(TB("Document"),
-        TEXT, OFFICE_FILES, SOURCE_CODE, LATEX, DELIMITED_TABLE);
+        TEXT, TABULAR, OFFICE_FILES, SOURCE_CODE, LATEX);
 
     // Media hierarchy
     public static readonly FileTypeFilter IMAGE = FileTypeFilter.Leaf(TB("Image"),
@@ -87,7 +103,27 @@ public static class FileTypes
     public static readonly FileTypeFilter CERTIFICATE_BUNDLE = FileTypeFilter.Leaf(TB("Certificate bundle"), "pem", "crt", "cer");
     public static readonly FileTypeFilter EXECUTABLES = FileTypeFilter.Leaf(TB("Executable"), "exe", "app", "bin", "appimage");
     public static readonly FileTypeFilter SHORTCUT = FileTypeFilter.Leaf(TB("Shortcut"), "lnk");
+    public static readonly FileTypeFilter PLUGIN_ARCHIVE = FileTypeFilter.Leaf(TB("Plugin archive"), PluginArchive.PLUGIN_FILE_EXTENSION.TrimStart('.'), "zip");
     
+    /// <summary>
+    /// The file types AI Studio converts using Pandoc.
+    /// </summary>
+    /// <remarks>
+    /// This is not a user-selectable type, it mirrors the formats the Rust runtime hands to
+    /// Pandoc. Every other document type is read by the runtime itself, so it must never depend
+    /// on a Pandoc installation. Word and OpenDocument text files (.docx, .odt) used to be listed
+    /// here as well; the runtime reads them on its own now. The name is not localized because it
+    /// is never shown.
+    /// </remarks>
+    private static readonly FileTypeFilter PANDOC_CONVERTED = FileTypeFilter.Leaf("Pandoc conversion", "html", "htm");
+
+    /// <summary>
+    /// Determines whether reading the given file needs Pandoc.
+    /// </summary>
+    /// <param name="filePath">The path of the file to check.</param>
+    /// <returns>True, when reading the file needs Pandoc.</returns>
+    public static bool RequiresPandoc(string filePath) => IsAllowedPath(filePath, PANDOC_CONVERTED);
+
     public static FileTypeFilter? AsOneFileType(params FileTypeFilter[]? types)
     {
         if (types == null || types.Length == 0)

@@ -190,7 +190,7 @@ public sealed class AgentRetrievalContextValidation (ILogger<AgentRetrievalConte
             await semaphore.WaitAsync(token);
             
             // Start the next validation task:
-            validationTasks.Add(this.ValidateRetrievalContextAsync(lastUserPrompt, chatThread, retrievalContext, token, semaphore));
+            validationTasks.Add(this.ValidateRetrievalContextAsync(lastUserPrompt, chatThread, retrievalContext, semaphore, token));
         }
 
         // Wait for all validation tasks to complete:
@@ -208,10 +208,10 @@ public sealed class AgentRetrievalContextValidation (ILogger<AgentRetrievalConte
     /// <param name="lastUserPrompt">The last user prompt.</param>
     /// <param name="chatThread">The chat thread.</param>
     /// <param name="retrievalContext">The retrieval context to validate.</param>
-    /// <param name="token">The cancellation token.</param>
     /// <param name="semaphore">The optional semaphore to limit the number of parallel validations.</param>
+    /// <param name="token">The cancellation token.</param>
     /// <returns>The validation result.</returns>
-    public async Task<RetrievalContextValidationResult> ValidateRetrievalContextAsync(IContent lastUserPrompt, ChatThread chatThread, IRetrievalContext retrievalContext, CancellationToken token = default, SemaphoreSlim? semaphore = null)
+    public async Task<RetrievalContextValidationResult> ValidateRetrievalContextAsync(IContent lastUserPrompt, ChatThread chatThread, IRetrievalContext retrievalContext, SemaphoreSlim? semaphore = null, CancellationToken token = default)
     {
         try
         {

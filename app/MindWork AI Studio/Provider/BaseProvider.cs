@@ -10,6 +10,8 @@ using AIStudio.Provider.Anthropic;
 using AIStudio.Provider.OpenAI;
 using AIStudio.Provider.SelfHosted;
 using AIStudio.Settings;
+using AIStudio.Tools.ToolCallingSystem;
+using AIStudio.Tools.ToolCallingSystem.Harness;
 using AIStudio.Tools.MIME;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Rust;
@@ -86,6 +88,8 @@ public abstract class BaseProvider : IProvider, ISecretId
 
     /// <inheritdoc />
     public string AdditionalJsonApiParameters { get; init; } = string.Empty;
+
+    internal ProviderCapabilityOverrides? CapabilityOverrides { get; set; }
 
     /// <inheritdoc />
     public string TokenizerPath { get; init; } = string.Empty;
@@ -179,16 +183,15 @@ public abstract class BaseProvider : IProvider, ISecretId
         _ => GetDefaultModelLoadFailureReason(response),
     };
 
-    protected async Task<ModelLoadResult> LoadModelsResponse<TResponse>(
-        SecretStoreType storeType,
+    protected async Task<ModelLoadResult> LoadModelsResponse<TResponse>(SecretStoreType storeType,
         string requestPath,
         Func<TResponse, IEnumerable<Model>> modelFactory,
-        CancellationToken token,
         string? apiKeyProvisional = null,
         Func<HttpResponseMessage, string, ModelLoadFailureReason>? failureReasonSelector = null,
         Action<HttpRequestMessage, string>? requestConfigurator = null,
         JsonSerializerOptions? jsonSerializerOptions = null,
-        bool isTryingSecret = false)
+        bool isTryingSecret = false,
+        CancellationToken token = default)
     {
         var secretKey = await this.GetModelLoadingSecretKey(storeType, apiKeyProvisional, isTryingSecret);
         if (string.IsNullOrWhiteSpace(secretKey) && !isTryingSecret)
@@ -272,10 +275,10 @@ public abstract class BaseProvider : IProvider, ISecretId
     {
         exception = new();
 
-        if (!line.StartsWith("data: ", StringComparison.InvariantCulture))
+        if (!TryGetServerSentEventData(line, out var jsonData))
             return false;
 
-        var jsonData = line[6..].Trim();
+        jsonData = jsonData.Trim();
         if (string.IsNullOrWhiteSpace(jsonData) || jsonData is "[DONE]")
             return false;
 
@@ -305,6 +308,21 @@ public abstract class BaseProvider : IProvider, ISecretId
         {
             return false;
         }
+    }
+
+    private static bool TryGetServerSentEventData(string line, out string data)
+    {
+        const string DATA_PREFIX = "data:";
+        data = string.Empty;
+
+        if (!line.StartsWith(DATA_PREFIX, StringComparison.InvariantCulture))
+            return false;
+
+        data = line[DATA_PREFIX.Length..];
+        if (data.StartsWith(' '))
+            data = data[1..];
+
+        return true;
     }
 
     private static bool IsProviderStreamFailure(JsonElement root)
@@ -363,7 +381,41 @@ public abstract class BaseProvider : IProvider, ISecretId
 
         errorCode = TryGetString(root, "code");
         errorType = TryGetString(root, "type");
-        errorMessage = TryGetString(root, "message");
+
+        //
+        // Services built on FastAPI, such as Helmholtz Blablador, word their errors as "detail".
+        // And some providers put the sentence straight into "error" instead of an object, e.g.
+        // {"error": "Model not supported by provider novita"}. The object form was handled above,
+        // so reading "error" here can only meet the plain sentence:
+        //
+        errorMessage = TryGetString(root, "message") ?? TryGetString(root, "detail") ?? TryGetString(root, "error");
+    }
+
+    /// <summary>
+    /// Reads the error message a provider sent in the body of a failed response.
+    /// </summary>
+    /// <remarks>
+    /// Providers word their errors differently, but they all put a sentence somewhere into the
+    /// body. Passing that sentence on is what lets a user act on the problem instead of only
+    /// learning that something went wrong.
+    /// </remarks>
+    /// <param name="responseBody">The body of the failed response.</param>
+    /// <returns>The message, or an empty string when the body carries none.</returns>
+    private static string ReadProviderErrorMessage(string responseBody)
+    {
+        if (string.IsNullOrWhiteSpace(responseBody))
+            return string.Empty;
+
+        try
+        {
+            using var document = JsonDocument.Parse(responseBody);
+            TryGetProviderStreamError(document.RootElement, out _, out _, out var errorMessage);
+            return errorMessage ?? string.Empty;
+        }
+        catch (JsonException)
+        {
+            return string.Empty;
+        }
     }
 
     private static bool TryGetErrorElement(JsonElement root, out JsonElement errorElement)
@@ -397,6 +449,10 @@ public abstract class BaseProvider : IProvider, ISecretId
     /// <summary>
     /// Sends a request and handles rate limiting by exponential backoff.
     /// </summary>
+    /// <remarks>
+    /// Two cancellation tokens, so one of them cannot be the last parameter: the user token
+    /// survives a retry, while the request token belongs to the single attempt being made.
+    /// </remarks>
     /// <param name="requestBuilder">A function that builds the request.</param>
     /// <param name="userCancellationToken">The user cancellation token.</param>
     /// <param name="requestCancellationToken">The token to use for the HTTP request.</param>
@@ -469,16 +525,35 @@ public abstract class BaseProvider : IProvider, ISecretId
             
             if(nextResponse.StatusCode is HttpStatusCode.BadRequest)
             {
+                //
+                // The provider explains the problem in the body, while the reason phrase says no
+                // more than "Bad Request". We show that explanation and fall back to the phrase
+                // only when the body carries none:
+                //
+                var badRequestMessage = ReadProviderErrorMessage(errorBody);
+                if (string.IsNullOrWhiteSpace(badRequestMessage))
+                    badRequestMessage = nextResponse.ReasonPhrase;
+
+                //
+                // When we recognize what went wrong, we say what it means for the user instead of
+                // guessing at the message format. The classification happened above already:
+                //
+                var classifiedMessage = this.GetProviderRequestFailureUserMessage(providerRequestFailure);
+                if(!string.IsNullOrWhiteSpace(classifiedMessage))
+                {
+                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, classifiedMessage));
+                }
+
                 // Check if the error body contains "context" and "token" (case-insensitive),
                 // which indicates that the context window is likely exceeded:
-                if(errorBody.Contains("context", StringComparison.InvariantCultureIgnoreCase) &&
+                else if(errorBody.Contains("context", StringComparison.InvariantCultureIgnoreCase) &&
                    errorBody.Contains("token", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The data of the chat, including all file attachments, is probably too large for the selected model and provider. The provider message is: '{2}'"), this.InstanceName, this.Provider, nextResponse.ReasonPhrase)));
+                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The data of the chat, including all file attachments, is probably too large for the selected model and provider. The provider message is: '{2}'"), this.InstanceName, this.Provider, badRequestMessage)));
                 }
                 else
                 {
-                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The required message format might be changed. The provider message is: '{2}'"), this.InstanceName, this.Provider, nextResponse.ReasonPhrase)));
+                    await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, string.Format(TB("We tried to communicate with the LLM provider '{0}' (type={1}). The required message format might be changed. The provider message is: '{2}'"), this.InstanceName, this.Provider, badRequestMessage)));
                 }
 
                 this.logger.LogError("Failed request with status code {ResponseStatusCode} (message = '{ResponseReasonPhrase}', error body = '{ErrorBody}').", nextResponse.StatusCode, nextResponse.ReasonPhrase, errorBody);
@@ -664,13 +739,13 @@ public abstract class BaseProvider : IProvider, ISecretId
             if (this.TryCreateProviderRequestExceptionFromStreamLine(providerName, line, out var providerRequestException))
                 throw providerRequestException;
 
-            // Skip lines that do not start with "data: ". Regard
+            // Skip lines that do not start with "data:". According
             // to the specification, we only want to read the data lines:
-            if (!line.StartsWith("data: ", StringComparison.InvariantCulture))
+            if (!TryGetServerSentEventData(line, out var jsonData))
                 continue;
 
             // Check if the line is the end of the stream:
-            if (line.StartsWith("data: [DONE]", StringComparison.InvariantCulture))
+            if (jsonData is "[DONE]")
                 yield break;
 
             //
@@ -684,10 +759,6 @@ public abstract class BaseProvider : IProvider, ISecretId
                 
                 try
                 {
-                    // We know that the line starts with "data: ". Hence, we can
-                    // skip the first 6 characters to get the JSON data after that.
-                    var jsonData = line[6..];
-
                     // Deserialize the JSON data:
                     providerResponse = JsonSerializer.Deserialize<TAnnotation>(jsonData, JSON_SERIALIZER_OPTIONS);
 
@@ -716,10 +787,6 @@ public abstract class BaseProvider : IProvider, ISecretId
                 TDelta? providerResponse;
                 try
                 {
-                    // We know that the line starts with "data: ". Hence, we can
-                    // skip the first 6 characters to get the JSON data after that.
-                    var jsonData = line[6..];
-
                     // Deserialize the JSON data:
                     providerResponse = JsonSerializer.Deserialize<TDelta>(jsonData, JSON_SERIALIZER_OPTIONS);
 
@@ -869,20 +936,19 @@ public abstract class BaseProvider : IProvider, ISecretId
             if (line.StartsWith("event: response.completed", StringComparison.InvariantCulture))
                 yield break;
             
+            if (!TryGetServerSentEventData(line, out var jsonData))
+                continue;
+
             //
             // Find delta lines:
             //
-            if (line.StartsWith("""
-                                data: {"type":"response.output_text.delta"
-                                """, StringComparison.InvariantCulture))
+            if (jsonData.StartsWith("""
+                                    {"type":"response.output_text.delta"
+                                    """, StringComparison.InvariantCulture))
             {
                 TDelta? providerResponse;
                 try
                 {
-                    // We know that the line starts with "data: ". Hence, we can
-                    // skip the first 6 characters to get the JSON data after that.
-                    var jsonData = line[6..];
-
                     // Deserialize the JSON data:
                     providerResponse = JsonSerializer.Deserialize<TDelta>(jsonData, JSON_SERIALIZER_OPTIONS);
 
@@ -906,18 +972,14 @@ public abstract class BaseProvider : IProvider, ISecretId
             //
             // Find annotation added lines:
             //
-            else if (annotationSupported && line.StartsWith(
+            else if (annotationSupported && jsonData.StartsWith(
                          """
-                         data: {"type":"response.output_text.annotation.added"
+                         {"type":"response.output_text.annotation.added"
                          """, StringComparison.InvariantCulture))
             {
                 TAnnotation? providerResponse;
                 try
                 {
-                    // We know that the line starts with "data: ". Hence, we can
-                    // skip the first 6 characters to get the JSON data after that.
-                    var jsonData = line[6..];
-
                     // Deserialize the JSON data:
                     providerResponse = JsonSerializer.Deserialize<TAnnotation>(jsonData, JSON_SERIALIZER_OPTIONS);
 
@@ -965,13 +1027,14 @@ public abstract class BaseProvider : IProvider, ISecretId
         Model chatModel,
         ChatThread chatThread,
         SettingsManager settingsManager,
-        Func<TextMessage, IDictionary<string, object>, Task<TRequest>> requestFactory,
+        Func<TextMessage, IDictionary<string, object>, IList<object>?, Task<TRequest>> requestFactory,
         SecretStoreType storeType = SecretStoreType.LLM_PROVIDER,
         bool isTryingSecret = false,
         string systemPromptRole = "system",
         string requestPath = "chat/completions",
         Action<HttpRequestHeaders>? headersAction = null,
         [EnumeratorCancellation] CancellationToken token = default)
+        where TRequest : ChatCompletionAPIRequest
         where TDelta : IResponseStreamLine
         where TAnnotation : IAnnotationStreamLine
     {
@@ -980,18 +1043,69 @@ public abstract class BaseProvider : IProvider, ISecretId
         if(!requestedSecret.Success && !isTryingSecret)
             yield break;
 
-        // Prepare the system prompt:
-        var systemPrompt = new TextMessage
-        {
-            Role = systemPromptRole,
-            Content = chatThread.PrepareSystemPrompt(settingsManager),
-        };
-
         // Parse the API parameters:
-        var apiParameters = this.ParseAdditionalApiParameters();
+        var apiParameters = this.ParseAdditionalApiParameters("parallel_tool_calls");
+
+        var toolRegistry = Program.SERVICE_PROVIDER.GetService<ToolRegistry>();
+        var toolExecutor = Program.SERVICE_PROVIDER.GetService<ToolExecutor>();
+        var currentAssistantContent = chatThread.Blocks.LastOrDefault(x => x.Role is ChatRole.AI)?.Content as ContentText;
+        currentAssistantContent?.ToolInvocations.Clear();
+
+        TextMessage systemPrompt;
+        if (toolRegistry is not null && toolExecutor is not null)
+        {
+            var providerSettings = this.CreateSettingsProvider(chatModel);
+            var runnableTools = await toolRegistry.GetRunnableToolsAsync(
+                providerSettings,
+                chatThread.RuntimeComponent,
+                chatThread.RuntimeSelectedToolIds,
+                this.Provider.GetConfidence(settingsManager).Level,
+                chatThread.MayRunTools(settingsManager));
+
+            systemPrompt = new TextMessage
+            {
+                Role = systemPromptRole,
+                Content = chatThread.PrepareSystemPrompt(settingsManager, runnableTools.Select(x => x.Definition)),
+            };
+
+            if (runnableTools.Count > 0)
+            {
+                var adapter = new ChatCompletionToolCallingAdapter<TRequest>(requestFactory, systemPrompt, apiParameters,
+                    runnableTools.Select(x => ProviderToolAdapters.ToChatCompletionTool(x.Definition)).ToList(), runnableTools,
+                    (requestDto, requestToken) => this.ExecuteChatCompletionRequest(requestDto, requestPath, requestedSecret, headersAction, requestToken),
+                    this.InstanceName, this.logger);
+
+                var loop = Program.SERVICE_PROVIDER.GetRequiredService<IToolCallingLoop>();
+                var loopContext = new ToolCallingLoopContext
+                {
+                    ChatThread = chatThread,
+                    RunnableTools = runnableTools,
+                    ToolExecutor = toolExecutor,
+                    Provider = this,
+                    CurrentAssistantContent = currentAssistantContent,
+                    ProviderInstanceName = this.InstanceName,
+                    ProviderType = this.Provider,
+                    ModelId = chatModel.Id,
+                };
+
+                await foreach (var content in loop.RunAsync(adapter, loopContext, token))
+                    yield return content;
+
+                yield break;
+            }
+
+        }
+        else
+        {
+            systemPrompt = new TextMessage
+            {
+                Role = systemPromptRole,
+                Content = chatThread.PrepareSystemPrompt(settingsManager),
+            };
+        }
 
         // Prepare the provider HTTP chat request:
-        var providerChatRequest = JsonSerializer.Serialize(await requestFactory(systemPrompt, apiParameters), JSON_SERIALIZER_OPTIONS);
+        var providerChatRequest = JsonSerializer.Serialize(await requestFactory(systemPrompt, apiParameters, null), JSON_SERIALIZER_OPTIONS);
 
         async Task<HttpRequestMessage> RequestBuilder()
         {
@@ -1012,6 +1126,73 @@ public abstract class BaseProvider : IProvider, ISecretId
 
         await foreach (var content in this.StreamChatCompletionInternal<TDelta, TAnnotation>(providerName, RequestBuilder, token))
             yield return content;
+    }
+
+    /// <summary>
+    /// Describes this provider instance with the given model as configured provider settings.
+    /// </summary>
+    /// <remarks>
+    /// Anything asking about model capabilities must go through this, because the expert
+    /// capability overrides live on the settings object: a provider that builds its own settings
+    /// instance without them silently ignores what the user configured.
+    /// </remarks>
+    protected AIStudio.Settings.Provider CreateSettingsProvider(Model chatModel) => new()
+    {
+        UsedLLMProvider = this.Provider,
+        Model = chatModel,
+        InstanceName = this.InstanceName,
+        CapabilityOverrides = this.CapabilityOverrides,
+    };
+
+    private async Task<ChatCompletionResponse?> ExecuteChatCompletionRequest(ChatCompletionAPIRequest requestDto, string requestPath, RequestedSecret requestedSecret,
+        Action<HttpRequestHeaders>? headersAction, CancellationToken token)
+    {
+        var responseData = await this.SendRequest(RequestBuilder, token);
+        if (responseData.IsFailedAfterAllRetries)
+            return null;
+
+        using var response = responseData.Response!;
+        return await response.Content.ReadFromJsonAsync<ChatCompletionResponse>(JSON_SERIALIZER_OPTIONS, token);
+
+        async Task<HttpRequestMessage> RequestBuilder()
+        {
+            var request = new HttpRequestMessage(HttpMethod.Post, requestPath);
+            if (requestedSecret.Success)
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
+
+            headersAction?.Invoke(request.Headers);
+            request.Content = new StringContent(JsonSerializer.Serialize(requestDto, JSON_SERIALIZER_OPTIONS), Encoding.UTF8, "application/json");
+            return request;
+        }
+    }
+
+    /// <summary>
+    /// Builds the message a user gets to see when a transcription request failed.
+    /// </summary>
+    /// <remarks>
+    /// AI Studio always sends WebM/Opus. Some providers run their speech recognition behind a
+    /// decoder which reads WAV only, and they answer with a bad request whose body says that it
+    /// could not decode the file. Nobody can do anything about that inside AI Studio, so we name
+    /// the likely cause and point at the provider instead of showing the raw message.
+    /// </remarks>
+    /// <param name="statusCode">The status code the provider answered with.</param>
+    /// <param name="responseBody">The body the provider answered with.</param>
+    /// <returns>The message to show, or an empty string when we have nothing to say.</returns>
+    private string GetTranscriptionFailureUserMessage(HttpStatusCode statusCode, string responseBody)
+    {
+        var failureReason = this.ClassifyProviderRequestFailure(statusCode, responseBody);
+        var classifiedMessage = this.GetProviderRequestFailureUserMessage(failureReason);
+        if (!string.IsNullOrWhiteSpace(classifiedMessage))
+            return classifiedMessage;
+
+        if (statusCode is HttpStatusCode.BadRequest && responseBody.Contains("not decode", StringComparison.OrdinalIgnoreCase))
+            return string.Format(TB("The provider '{0}' was not able to read the audio file. It probably does not support the WebM/Opus format which AI Studio sends. Please contact the provider about it."), this.InstanceName);
+
+        var providerMessage = ReadProviderErrorMessage(responseBody);
+        if (!string.IsNullOrWhiteSpace(providerMessage))
+            return string.Format(TB("The provider '{0}' reported an error: {1}"), this.InstanceName, providerMessage);
+
+        return string.Empty;
     }
 
     protected async Task<TranscriptionResult> PerformStandardTranscriptionRequest(RequestedSecret requestedSecret, Model transcriptionModel, string audioFilePath, Host host = Host.NONE, CancellationToken token = default)
@@ -1039,6 +1220,15 @@ public abstract class BaseProvider : IProvider, ISecretId
                 modelName = "placeholder";
             
             form.Add(new StringContent(modelName), "model");
+
+            //
+            // Ask for the plain JSON format explicitly. We only ever read the 'text' field, so the
+            // additional data of 'verbose_json' would be wasted anyway. More importantly, gateways
+            // fill in a format of their own when the client names none: LiteLLM asks for
+            // 'verbose_json' to get the duration it needs for its cost tracking, and the newer
+            // transcription models of OpenAI reject that format.
+            //
+            form.Add(new StringContent("json"), "response_format");
 
             using var request = new HttpRequestMessage(HttpMethod.Post, host.TranscriptionURL());
             request.Content = form;
@@ -1083,8 +1273,7 @@ public abstract class BaseProvider : IProvider, ISecretId
             if (!response.IsSuccessStatusCode)
             {
                 this.logger.LogError("Transcription request failed with status code {ResponseStatusCode} and body: '{ResponseBody}'.", response.StatusCode, responseBody);
-                var providerRequestFailure = this.ClassifyProviderRequestFailure(response.StatusCode, responseBody);
-                return TranscriptionResult.Failure(this.GetProviderRequestFailureUserMessage(providerRequestFailure));
+                return TranscriptionResult.Failure(this.GetTranscriptionFailureUserMessage(response.StatusCode, responseBody));
             }
 
             var transcriptionResponse = JsonSerializer.Deserialize<TranscriptionResponse>(responseBody, JSON_SERIALIZER_OPTIONS);
@@ -1110,6 +1299,10 @@ public abstract class BaseProvider : IProvider, ISecretId
         }
     }
     
+    /// <remarks>
+    /// The cancellation token is not the last parameter, unlike everywhere else in this codebase:
+    /// C# demands that a params parameter comes last.
+    /// </remarks>
     protected async Task<IReadOnlyList<IReadOnlyList<float>>> PerformStandardTextEmbeddingRequest(RequestedSecret requestedSecret, Model embeddingModel, Host host = Host.NONE, CancellationToken token = default, params List<string> texts)
     {
         try
@@ -1163,6 +1356,15 @@ public abstract class BaseProvider : IProvider, ISecretId
                 this.logger.LogError("Embedding request failed with status code {ResponseStatusCode} and body: '{ResponseBody}'.", response.StatusCode, responseBody);
                 var providerRequestFailure = this.ClassifyProviderRequestFailure(response.StatusCode, responseBody);
                 var userMessage = this.GetProviderRequestFailureUserMessage(providerRequestFailure);
+
+                // We know nothing about this failure, so we pass on what the provider said about it:
+                if (string.IsNullOrWhiteSpace(userMessage))
+                {
+                    var providerMessage = ReadProviderErrorMessage(responseBody);
+                    if (!string.IsNullOrWhiteSpace(providerMessage))
+                        userMessage = string.Format(TB("The provider '{0}' reported an error: {1}"), this.InstanceName, providerMessage);
+                }
+
                 if (!string.IsNullOrWhiteSpace(userMessage))
                     await MessageBus.INSTANCE.SendError(new(Icons.Material.Filled.CloudOff, userMessage));
 
@@ -1215,7 +1417,7 @@ public abstract class BaseProvider : IProvider, ISecretId
     
     protected static bool TryPopIntParameter(IDictionary<string, object> parameters, string key, out int value)
     {
-        value = default;
+        value = 0;
         if (!TryPopParameter(parameters, key, out var raw) || raw is null)
             return false;
         
@@ -1225,15 +1427,15 @@ public abstract class BaseProvider : IProvider, ISecretId
                 value = i;
                 return true;
             
-            case long l when l is >= int.MinValue and <= int.MaxValue:
+            case long l and >= int.MinValue and <= int.MaxValue:
                 value = (int)l;
                 return true;
             
-            case double d when d is >= int.MinValue and <= int.MaxValue:
+            case double d and >= int.MinValue and <= int.MaxValue:
                 value = (int)d;
                 return true;
             
-            case decimal m when m is >= int.MinValue and <= int.MaxValue:
+            case decimal m and >= int.MinValue and <= int.MaxValue:
                 value = (int)m;
                 return true;
         }
@@ -1243,7 +1445,7 @@ public abstract class BaseProvider : IProvider, ISecretId
     
     protected static bool TryPopBoolParameter(IDictionary<string, object> parameters, string key, out bool value)
     {
-        value = default;
+        value = false;
         if (!TryPopParameter(parameters, key, out var raw) || raw is null)
             return false;
         

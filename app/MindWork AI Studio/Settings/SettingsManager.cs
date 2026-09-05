@@ -1,9 +1,9 @@
-using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Text.Json;
 
 using AIStudio.Provider;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.Services;
 
@@ -16,6 +16,8 @@ namespace AIStudio.Settings;
 /// </summary>
 public sealed class SettingsManager
 {
+    public readonly record struct ToolMinimumProviderConfidenceResolution(ConfidenceLevel ConfidenceLevel, string Source);
+
     private const string SETTINGS_FILENAME = "settings.json";
     private const Version CURRENT_SETTINGS_VERSION = Version.V6;
     
@@ -23,7 +25,7 @@ public sealed class SettingsManager
     
     private readonly record struct CurrentSettingsReadResult(Data? SettingsData, SettingsWriteBlockReason FailureReason);
     
-    private static readonly JsonSerializerOptions JSON_OPTIONS = new()
+    internal static readonly JsonSerializerOptions JSON_OPTIONS = new()
     {
         WriteIndented = true,
         Converters = { new TolerantEnumConverter() },
@@ -335,10 +337,35 @@ public sealed class SettingsManager
         }
 
         var settingsJson = JsonSerializer.Serialize(settingsData, JSON_OPTIONS);
-        var tempFile = Path.GetTempFileName();
-        await File.WriteAllTextAsync(tempFile, settingsJson);
-        
-        File.Move(tempFile, settingsPath, true);
+
+        //
+        // We write the new settings next to the previous ones and replace them afterwards, so that
+        // no crash can leave a half-written settings file behind. The temporary file has to live in
+        // the configuration directory for that: replacing a file is a rename, and a rename across a
+        // file system boundary falls back to copying, which is exactly what we want to avoid. The
+        // temporary directory of the operating system is such another file system under Flatpak.
+        //
+        var tempFile = $"{settingsPath}.tmp-{Guid.NewGuid():N}";
+        try
+        {
+            await File.WriteAllTextAsync(tempFile, settingsJson);
+            File.Move(tempFile, settingsPath, true);
+        }
+        catch
+        {
+            try
+            {
+                if (File.Exists(tempFile))
+                    File.Delete(tempFile);
+            }
+            catch (Exception cleanupException)
+            {
+                this.logger.LogWarning(cleanupException, $"Failed to delete the temporary settings file '{tempFile}'.");
+            }
+
+            throw;
+        }
+
         this.logger.LogInformation($"Stored the settings to '{settingsPath}'.");
     }
     
@@ -361,9 +388,16 @@ public sealed class SettingsManager
     /// <summary>
     /// Checks if the given plugin is enabled.
     /// </summary>
+    /// <remarks>
+    /// Which plugins are enabled is the user's decision, with two exceptions. Configuration plugins
+    /// have no switch at all: they carry what an organization configured, so turning them off would
+    /// mean opting out of that configuration. And an organization may require one of the assistant
+    /// plugins it approved to stay enabled, which is decided live from its approvals rather than from
+    /// the user's list.
+    /// </remarks>
     /// <param name="plugin">The plugin to check.</param>
     /// <returns>True, when the plugin is enabled, false otherwise.</returns>
-    public bool IsPluginEnabled(IPluginMetadata plugin) => plugin.Type is PluginType.CONFIGURATION || this.ConfigurationData.EnabledPlugins.Contains(plugin.Id);
+    public bool IsPluginEnabled(IPluginMetadata plugin) => plugin.Type is PluginType.CONFIGURATION || this.ConfigurationData.EnabledPlugins.Contains(plugin.Id) || PluginFactory.IsAssistantActivationEnforced(plugin.Id);
     
     /// <summary>
     /// Returns the active language plugin.
@@ -434,7 +468,6 @@ public sealed class SettingsManager
         return localeTag[..separatorIndex];
     }
     
-    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
     public Provider GetPreselectedProvider(Tools.Components component, string? currentProviderId = null, bool usePreselectionBeforeCurrentProvider = false)
     {
         var minimumLevel = this.GetMinimumConfidenceLevel(component);
@@ -486,15 +519,27 @@ public sealed class SettingsManager
         return this.ConfigurationData.Providers.FirstOrDefault(x => x.Id == this.ConfigurationData.App.PreselectedProvider && x.UsedLLMProvider.GetConfidence(this).Level >= minimumLevel) ?? Provider.NONE;
     }
 
-    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
     public Provider GetChatProviderForLoadedChat(string? chatProviderId = null)
     {
         var minimumLevel = this.GetMinimumConfidenceLevel(Tools.Components.CHAT);
 
-        bool IsSelectableProvider(Provider provider) =>
-            provider != Provider.NONE
-            && provider.UsedLLMProvider != LLMProviders.NONE
-            && provider.UsedLLMProvider.GetConfidence(this).Level >= minimumLevel;
+        var chatProvider = FindProviderById(chatProviderId);
+        if (chatProvider is not null)
+            return chatProvider;
+
+        var defaultChatProvider = this.ConfigurationData.Chat.PreselectOptions
+            ? FindProviderById(this.ConfigurationData.Chat.PreselectedProvider)
+            : null;
+        
+        if (defaultChatProvider is not null)
+            return defaultChatProvider;
+
+        var defaultAppProvider = FindProviderById(this.ConfigurationData.App.PreselectedProvider);
+        if (defaultAppProvider is not null)
+            return defaultAppProvider;
+
+        var selectableProviders = this.ConfigurationData.Providers.Where(IsSelectableProvider).ToList();
+        return selectableProviders.Count == 1 ? selectableProviders[0] : Provider.NONE;
 
         Provider? FindProviderById(string? providerId)
         {
@@ -505,22 +550,185 @@ public sealed class SettingsManager
             return provider is not null && IsSelectableProvider(provider) ? provider : null;
         }
 
-        var chatProvider = FindProviderById(chatProviderId);
-        if (chatProvider is not null)
-            return chatProvider;
+        bool IsSelectableProvider(Provider provider) =>
+            provider != Provider.NONE
+            && provider.UsedLLMProvider != LLMProviders.NONE
+            && provider.UsedLLMProvider.GetConfidence(this).Level >= minimumLevel;
+    }
 
-        var defaultChatProvider = this.ConfigurationData.Chat.PreselectOptions
-            ? FindProviderById(this.ConfigurationData.Chat.PreselectedProvider)
-            : null;
-        if (defaultChatProvider is not null)
-            return defaultChatProvider;
+    /// <summary>
+    /// Returns all configured providers without applying any confidence filtering.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This method applies neither the global minimum confidence level (see
+    /// <see cref="Data.Confidence"/> with <c>EnforceGlobalMinimumConfidence</c>) nor any
+    /// component-specific minimum. Even when the user enforces a global minimum of, say,
+    /// <see cref="ConfidenceLevel.HIGH"/>, this method still returns every configured provider.
+    /// That is intentional: this method serves the provider management UI, duplicate-name checks,
+    /// and the raw select data of provider dropdowns. The dropdowns are filtered afterward by
+    /// ConfigurationProviderSelection, which calls IsProviderConfident.
+    /// </para>
+    /// <para>
+    /// Whenever a provider is about to be used for an LLM request, do not use this method. Use
+    /// GetConfidentProviders, GetPreselectedProvider, or GetChatProviderForLoadedChat instead,
+    /// since they honor the confidence levels.
+    /// </para>
+    /// <para>
+    /// The returned list is a sorted copy of the provider list, ordered by the used LLM provider and
+    /// then by the instance name. This way, all providers of the same LLM provider stay together, and
+    /// newly added providers appear at their alphabetical position instead of at the end. Callers must
+    /// not mutate the returned list: adding, editing, or removing providers stays inside the settings UI.
+    /// </para>
+    /// </remarks>
+    /// <returns>All configured providers, unfiltered.</returns>
+    public IReadOnlyList<Provider> GetAllProviders() => this.ConfigurationData.Providers
+        .OrderBy(x => x.UsedLLMProvider.ToName(), StringComparer.OrdinalIgnoreCase)
+        .ThenBy(x => x.InstanceName, StringComparer.OrdinalIgnoreCase)
+        .ThenBy(x => x.Num)
+        .ToList();
 
-        var defaultAppProvider = FindProviderById(this.ConfigurationData.App.PreselectedProvider);
-        if (defaultAppProvider is not null)
-            return defaultAppProvider;
+    /// <summary>
+    /// Returns the provider with the given id, without applying any confidence filtering.
+    /// </summary>
+    /// <remarks>
+    /// This method resolves a stored provider reference by its id. It applies neither the global
+    /// minimum confidence level nor any component-specific minimum, so it returns the requested
+    /// provider even when the user enforces a higher global minimum. Callers that intend to use the
+    /// returned provider for an LLM request must check it themselves through
+    /// IsProviderConfident or fall back to GetPreselectedProvider.
+    /// </remarks>
+    /// <param name="providerId">The id of the provider to look up.</param>
+    /// <returns>The provider, or <see cref="Provider.NONE"/> when no provider with that id exists.</returns>
+    public Provider GetProviderById(string? providerId)
+    {
+        if (string.IsNullOrWhiteSpace(providerId))
+            return Provider.NONE;
 
-        var selectableProviders = this.ConfigurationData.Providers.Where(IsSelectableProvider).ToList();
-        return selectableProviders.Count == 1 ? selectableProviders[0] : Provider.NONE;
+        if (string.Equals(providerId, Provider.NONE.Id, StringComparison.OrdinalIgnoreCase))
+            return Provider.NONE;
+
+        return this.ConfigurationData.Providers.FirstOrDefault(x => x.Id.Equals(providerId, StringComparison.OrdinalIgnoreCase)) ?? Provider.NONE;
+    }
+
+    /// <summary>
+    /// Determines the minimum confidence level a provider must have for the given component.
+    /// </summary>
+    /// <param name="component">The component for which the providers get filtered.</param>
+    /// <param name="explicitMinimum">An explicit minimum level, which is applied when it is higher than the component's minimum.</param>
+    /// <returns>The effective minimum confidence level.</returns>
+    public ConfidenceLevel GetEffectiveMinimumConfidenceLevel(Tools.Components component, ConfidenceLevel explicitMinimum = ConfidenceLevel.UNKNOWN)
+    {
+        var minimumLevel = this.GetMinimumConfidenceLevel(component);
+        if (explicitMinimum is not ConfidenceLevel.UNKNOWN && explicitMinimum > minimumLevel)
+            return explicitMinimum;
+
+        return minimumLevel;
+    }
+
+    /// <summary>
+    /// Checks whether the given provider satisfies the minimum confidence level of the given component.
+    /// </summary>
+    /// <param name="provider">The provider to check.</param>
+    /// <param name="component">The component for which the provider gets checked.</param>
+    /// <param name="explicitMinimum">An explicit minimum level, which is applied when it is higher than the component's minimum.</param>
+    /// <returns>True, when the provider may be used by the component, false otherwise.</returns>
+    public bool IsProviderConfident(Provider provider, Tools.Components component, ConfidenceLevel explicitMinimum = ConfidenceLevel.UNKNOWN)
+    {
+        if (provider.UsedLLMProvider is LLMProviders.NONE)
+            return false;
+
+        return provider.UsedLLMProvider.GetConfidence(this).Level >= this.GetEffectiveMinimumConfidenceLevel(component, explicitMinimum);
+    }
+
+    /// <summary>
+    /// Returns all providers that satisfy the minimum confidence level of the given component.
+    /// </summary>
+    /// <param name="component">The component for which the providers get filtered.</param>
+    /// <param name="explicitMinimum">An explicit minimum level, which is applied when it is higher than the component's minimum.</param>
+    /// <returns>All providers the component may use, in the same order as GetAllProviders.</returns>
+    public IEnumerable<Provider> GetConfidentProviders(Tools.Components component, ConfidenceLevel explicitMinimum = ConfidenceLevel.UNKNOWN)
+    {
+        var minimumLevel = this.GetEffectiveMinimumConfidenceLevel(component, explicitMinimum);
+        foreach (var provider in this.GetAllProviders())
+            if (provider.UsedLLMProvider is not LLMProviders.NONE && provider.UsedLLMProvider.GetConfidence(this).Level >= minimumLevel)
+                yield return provider;
+    }
+
+    /// <summary>
+    /// Returns all configured embedding providers.
+    /// </summary>
+    /// <remarks>
+    /// The returned list is a sorted copy of the embedding provider list, ordered by the used LLM
+    /// provider and then by the name. Callers must not mutate the returned list: adding, editing, or
+    /// removing embedding providers stays inside the settings UI.
+    /// </remarks>
+    /// <returns>All configured embedding providers.</returns>
+    public IReadOnlyList<EmbeddingProvider> GetAllEmbeddingProviders() => this.ConfigurationData.EmbeddingProviders
+        .OrderBy(x => x.UsedLLMProvider.ToName(), StringComparer.OrdinalIgnoreCase)
+        .ThenBy(x => x.Name, StringComparer.OrdinalIgnoreCase)
+        .ThenBy(x => x.Num)
+        .ToList();
+
+    /// <summary>
+    /// Returns the embedding provider with the given id, without applying any confidence filtering.
+    /// </summary>
+    /// <remarks>
+    /// This method resolves a stored embedding provider reference by its id. It applies neither the
+    /// global minimum confidence level nor any component-specific minimum, so it returns the
+    /// requested embedding provider even when the user enforces a higher global minimum. Callers
+    /// that intend to send data to the returned embedding provider must check it themselves, for
+    /// example through IsTrustedForDataSourceSecurityChecks.
+    /// </remarks>
+    /// <param name="embeddingProviderId">The id of the embedding provider to look up.</param>
+    /// <returns>The embedding provider, or EmbeddingProvider.NONE when no embedding provider with that id exists.</returns>
+    public EmbeddingProvider GetEmbeddingProviderById(string? embeddingProviderId)
+    {
+        if (string.IsNullOrWhiteSpace(embeddingProviderId))
+            return EmbeddingProvider.NONE;
+
+        if (string.Equals(embeddingProviderId, EmbeddingProvider.NONE.Id, StringComparison.OrdinalIgnoreCase))
+            return EmbeddingProvider.NONE;
+
+        return this.ConfigurationData.EmbeddingProviders.FirstOrDefault(x => x.Id.Equals(embeddingProviderId, StringComparison.OrdinalIgnoreCase)) ?? EmbeddingProvider.NONE;
+    }
+
+    /// <summary>
+    /// Returns all configured transcription providers.
+    /// </summary>
+    /// <remarks>
+    /// The returned list is a sorted copy of the transcription provider list, ordered by the used LLM
+    /// provider and then by the name. Callers must not mutate the returned list: adding, editing, or
+    /// removing transcription providers stays inside the settings UI.
+    /// </remarks>
+    /// <returns>All configured transcription providers.</returns>
+    public IReadOnlyList<TranscriptionProvider> GetAllTranscriptionProviders() => this.ConfigurationData.TranscriptionProviders
+        .OrderBy(x => x.UsedLLMProvider.ToName(), StringComparer.OrdinalIgnoreCase)
+        .ThenBy(x => x.Name, StringComparer.OrdinalIgnoreCase)
+        .ThenBy(x => x.Num)
+        .ToList();
+
+    /// <summary>
+    /// Returns the transcription provider with the given id, without applying any confidence filtering.
+    /// </summary>
+    /// <remarks>
+    /// This method resolves a stored transcription provider reference by its id. It applies neither
+    /// the global minimum confidence level nor any component-specific minimum, so it returns the
+    /// requested transcription provider even when the user enforces a higher global minimum. Callers
+    /// that intend to send audio to the returned transcription provider must check its confidence
+    /// level themselves, the way GetFilteredTranscriptionProviders does for the app settings.
+    /// </remarks>
+    /// <param name="transcriptionProviderId">The id of the transcription provider to look up.</param>
+    /// <returns>The transcription provider, or TranscriptionProvider.NONE when no transcription provider with that id exists.</returns>
+    public TranscriptionProvider GetTranscriptionProviderById(string? transcriptionProviderId)
+    {
+        if (string.IsNullOrWhiteSpace(transcriptionProviderId))
+            return TranscriptionProvider.NONE;
+
+        if (string.Equals(transcriptionProviderId, TranscriptionProvider.NONE.Id, StringComparison.OrdinalIgnoreCase))
+            return TranscriptionProvider.NONE;
+
+        return this.ConfigurationData.TranscriptionProviders.FirstOrDefault(x => x.Id.Equals(transcriptionProviderId, StringComparison.OrdinalIgnoreCase)) ?? TranscriptionProvider.NONE;
     }
 
     public Profile GetPreselectedProfile(Tools.Components component)
@@ -579,6 +787,112 @@ public sealed class SettingsManager
         return this.ConfigurationData.ChatTemplates.FirstOrDefault(x => x.Id.Equals(chatTemplateId, StringComparison.OrdinalIgnoreCase)) ?? ChatTemplate.NO_CHAT_TEMPLATE;
     }
 
+    public HashSet<string> GetDefaultToolIds(AIStudio.Tools.Components component)
+    {
+        var key = component.ToString();
+        if (this.ConfigurationData.Tools.DefaultToolIdsByComponent.TryGetValue(key, out var toolIds))
+            return ToolSelectionRules.NormalizeSelection(toolIds);
+
+        return [];
+    }
+
+
+    public bool AreToolsEnabled() => this.ConfigurationData.Tools.EnableTools;
+
+    public bool IsToolActive(string toolId) =>
+        this.AreToolsEnabled() &&
+        !this.ConfigurationData.Tools.DisabledToolIds.Contains(toolId);
+
+    /// <remarks>
+    /// The document analysis is deliberately absent: there its policy names the tools, so the user
+    /// has nothing to select.
+    /// </remarks>
+    public bool IsToolSelectionVisible(AIStudio.Tools.Components component) => component switch
+    {
+        AIStudio.Tools.Components.CHAT or
+        AIStudio.Tools.Components.CODING_ASSISTANT or
+        AIStudio.Tools.Components.SLIDE_BUILDER_ASSISTANT => true,
+        _ => this.ConfigurationData.Tools.VisibleToolSelectionComponents.Contains(component.ToString()),
+    };
+
+    public void SetToolSelectionVisibility(AIStudio.Tools.Components component, bool isVisible)
+    {
+        if (component is
+            AIStudio.Tools.Components.CHAT or
+            AIStudio.Tools.Components.CODING_ASSISTANT or
+            AIStudio.Tools.Components.SLIDE_BUILDER_ASSISTANT)
+            return;
+
+        var key = component.ToString();
+        if (isVisible)
+            this.ConfigurationData.Tools.VisibleToolSelectionComponents.Add(key);
+        else
+            this.ConfigurationData.Tools.VisibleToolSelectionComponents.Remove(key);
+    }
+
+    /// <summary>
+    /// Resolves which provider confidence a tool needs, and where that value came from.
+    /// </summary>
+    /// <remarks>
+    /// The default is passed in rather than looked up here. It belongs to the tool definition,
+    /// and the definitions live in the tool registry — which already depends on this class, so
+    /// asking it back would be a circle. Every caller has the definition at hand anyway.
+    /// </remarks>
+    /// <param name="toolId">The tool to resolve the confidence for.</param>
+    /// <param name="defaultLevel">The tool's own minimum, used when nothing overrides it.</param>
+    public ToolMinimumProviderConfidenceResolution GetMinimumProviderConfidenceResolutionForTool(string toolId, ConfidenceLevel defaultLevel)
+    {
+        if (ManagedConfiguration.TryGet(x => x.Tools, x => x.MinimumProviderConfidenceByToolId, out var configMeta) && configMeta.IsLocked)
+        {
+            var managedValues = configMeta.GetValue();
+            if (managedValues.TryGetValue(toolId, out var configuredManagedLevel) &&
+                Enum.TryParse<ConfidenceLevel>(configuredManagedLevel, true, out var managedConfidenceLevel) &&
+                Enum.IsDefined(managedConfidenceLevel) &&
+                managedConfidenceLevel is not ConfidenceLevel.UNKNOWN)
+            {
+                return new(managedConfidenceLevel, "managed config");
+            }
+
+            if (managedValues.ContainsKey(toolId))
+            {
+                this.logger.LogError(
+                    "Managed minimum provider confidence '{ConfiguredLevel}' for tool '{ToolId}' is invalid. Requiring HIGH as a safe fallback.",
+                    configuredManagedLevel,
+                    toolId);
+                return new(ConfidenceLevel.HIGH, "invalid managed config; safe fallback");
+            }
+        }
+
+        if (this.ConfigurationData.Tools.MinimumProviderConfidenceByToolId.TryGetValue(toolId, out var configuredLevel) &&
+            Enum.TryParse<ConfidenceLevel>(configuredLevel, true, out var confidenceLevel) &&
+            Enum.IsDefined(confidenceLevel) &&
+            confidenceLevel is not ConfidenceLevel.UNKNOWN)
+        {
+            return new(confidenceLevel, "stored override");
+        }
+
+        return new(defaultLevel, "default fallback");
+    }
+
+    public ConfidenceLevel GetMinimumProviderConfidenceForTool(string toolId, ConfidenceLevel defaultLevel) => this.GetMinimumProviderConfidenceResolutionForTool(toolId, defaultLevel).ConfidenceLevel;
+
+    /// <summary>
+    /// Stores which provider confidence a tool needs.
+    /// </summary>
+    /// <param name="toolId">The tool to store the confidence for.</param>
+    /// <param name="confidenceLevel">The level the user chose.</param>
+    /// <param name="defaultLevel">The tool's own minimum. Choosing it again removes the override.</param>
+    public void SetMinimumProviderConfidenceForTool(string toolId, ConfidenceLevel confidenceLevel, ConfidenceLevel defaultLevel)
+    {
+        if (confidenceLevel == defaultLevel)
+        {
+            this.ConfigurationData.Tools.MinimumProviderConfidenceByToolId.Remove(toolId);
+            return;
+        }
+
+        this.ConfigurationData.Tools.MinimumProviderConfidenceByToolId[toolId] = confidenceLevel.ToString();
+    }
+
     public ConfidenceLevel GetConfiguredConfidenceLevel(LLMProviders llmProvider)
     {
         if(llmProvider is LLMProviders.NONE)
@@ -599,8 +913,9 @@ public sealed class SettingsManager
                 {
                     LLMProviders.SELF_HOSTED => ConfidenceLevel.HIGH,
                     LLMProviders.DEEP_SEEK => ConfidenceLevel.LOW,
+                    LLMProviders.ALIBABA_CLOUD => ConfidenceLevel.LOW,
                     
-                    _ => ConfidenceLevel.MEDIUM,   
+                    _ => ConfidenceLevel.MEDIUM,
                 };
             
             case ConfidenceSchemes.TRUST_USA:
@@ -610,7 +925,10 @@ public sealed class SettingsManager
                     LLMProviders.MISTRAL => ConfidenceLevel.LOW,
                     LLMProviders.HELMHOLTZ => ConfidenceLevel.LOW,
                     LLMProviders.GWDG => ConfidenceLevel.LOW,
+                    LLMProviders.HETZNER => ConfidenceLevel.LOW,
+                    LLMProviders.IONOS => ConfidenceLevel.LOW,
                     LLMProviders.DEEP_SEEK => ConfidenceLevel.LOW,
+                    LLMProviders.ALIBABA_CLOUD => ConfidenceLevel.LOW,
                     
                     _ => ConfidenceLevel.MEDIUM,
                 };
@@ -622,6 +940,8 @@ public sealed class SettingsManager
                     LLMProviders.MISTRAL => ConfidenceLevel.MEDIUM,
                     LLMProviders.HELMHOLTZ => ConfidenceLevel.MEDIUM,
                     LLMProviders.GWDG => ConfidenceLevel.MEDIUM,
+                    LLMProviders.HETZNER => ConfidenceLevel.MEDIUM,
+                    LLMProviders.IONOS => ConfidenceLevel.MEDIUM,
                     
                     _ => ConfidenceLevel.LOW,
                 };
@@ -631,6 +951,7 @@ public sealed class SettingsManager
                 {
                     LLMProviders.SELF_HOSTED => ConfidenceLevel.HIGH,
                     LLMProviders.DEEP_SEEK => ConfidenceLevel.MEDIUM,
+                    LLMProviders.ALIBABA_CLOUD => ConfidenceLevel.MEDIUM,
                     
                     _ => ConfidenceLevel.LOW,
                 };

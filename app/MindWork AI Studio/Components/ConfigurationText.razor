@@ -1,17 +1,46 @@
 @inherits ConfigurationBaseCore
 
-<MudTextField
-    T="string"
-    Text="@this.Text()"
-    TextChanged="@this.InternalUpdate"
-    Disabled="@this.IsDisabled"
-    Adornment="Adornment.Start"
-    AdornmentIcon="@this.Icon"
-    AdornmentColor="@this.IconColor"
-    UserAttributes="@SPELLCHECK_ATTRIBUTES"
-    Lines="@this.NumLines"
-    AutoGrow="@this.AutoGrow"
-    MaxLines="@this.GetMaxLines"
-    Immediate="@true"
-    Underline="false"
-/>
+@if (this.ResetValue is null)
+{
+    <MudTextField
+        T="string"
+        Text="@this.Text()"
+        TextChanged="@this.InternalUpdate"
+        Disabled="@this.IsDisabled"
+        Adornment="Adornment.Start"
+        AdornmentIcon="@this.Icon"
+        AdornmentColor="@this.IconColor"
+        UserAttributes="@SPELLCHECK_ATTRIBUTES"
+        Lines="@this.NumLines"
+        AutoGrow="@this.AutoGrow"
+        MaxLines="@this.GetMaxLines"
+        Immediate="@true"
+        Validation="@this.Validation"
+        Underline="false"
+    />
+}
+else
+{
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+        <MudTextField
+            T="string"
+            Text="@this.Text()"
+            TextChanged="@this.InternalUpdate"
+            Disabled="@this.IsDisabled"
+            Adornment="Adornment.Start"
+            AdornmentIcon="@this.Icon"
+            AdornmentColor="@this.IconColor"
+            UserAttributes="@SPELLCHECK_ATTRIBUTES"
+            Lines="@this.NumLines"
+            AutoGrow="@this.AutoGrow"
+            MaxLines="@this.GetMaxLines"
+            Immediate="@true"
+            Validation="@this.Validation"
+            Underline="false"
+            Class="flex-grow-1"
+        />
+        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Restore" Disabled="@this.IsDisabled" OnClick="@this.ResetTextAsync" Class="mb-1">
+            @this.ResetButtonText
+        </MudButton>
+    </MudStack>
+}

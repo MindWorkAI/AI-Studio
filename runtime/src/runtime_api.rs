@@ -1,5 +1,6 @@
 use log::info;
 use once_cell::sync::Lazy;
+use axum::extract::DefaultBodyLimit;
 use axum::routing::{delete, get, post};
 use axum::Router;
 use axum_server::tls_rustls::RustlsConfig;
@@ -10,6 +11,10 @@ use crate::environment::is_dev;
 use crate::network::get_available_port;
 
 static RUSTLS_CRYPTO_PROVIDER_INIT: Once = Once::new();
+
+/// The request body limit for one batch of prompt injection filtering. The app caps the text
+/// it returns to a model well below this, so the limit is headroom, not a working constraint.
+const PROMPT_INJECTION_BATCH_BODY_LIMIT_BYTES: usize = 16 * 1024 * 1024;
 
 /// The port used for the runtime API server. In the development environment, we use a fixed
 /// port, in the production environment we use the next available port. This differentiation
@@ -40,6 +45,7 @@ pub fn start_runtime_api() {
         .route("/system/qdrant-edge/optimize", post(crate::qdrant_edge_database::optimize_qdrant_edge_store))
         .route("/system/qdrant-edge/delete-store", post(crate::qdrant_edge_database::delete_qdrant_edge_store))
         .route("/clipboard/set", post(crate::clipboard::set_clipboard))
+        .route("/share/file", post(crate::share_sheet::share_file))
         .route("/events", get(crate::app_window::get_event_stream))
         .route("/updates/check", get(crate::app_window::check_for_update))
         .route("/updates/install", get(crate::app_window::install_update))
@@ -62,6 +68,15 @@ pub fn start_runtime_api() {
         .route("/system/enterprise/config/encryption_secret", get(crate::environment::read_enterprise_env_config_encryption_secret))
         .route("/system/enterprise/configs", get(crate::environment::read_enterprise_configs))
         .route("/retrieval/fs/extract", get(crate::file_data::extract_data))
+        .route("/security/prompt-injection/sanitize", post(crate::prompt_injection::api::sanitize))
+        //
+        // A batch carries every text of one tool call, which is far more than Axum's 2 MB
+        // default allows. Exceeding that limit would answer 413, and the app treats a failed
+        // filter call as "cannot filter" and uses the text unfiltered — the protection would
+        // drop out silently on exactly the largest results. Hence the explicit limit.
+        //
+        .route("/security/prompt-injection/sanitize-batch", post(crate::prompt_injection::api::sanitize_batch)
+            .layer(DefaultBodyLimit::max(PROMPT_INJECTION_BATCH_BODY_LIMIT_BYTES)))
         .route("/media/jobs", post(crate::media::create_job))
         .route("/media/jobs/{id}/events", get(crate::media::get_job_events))
         .route("/media/jobs/{id}", delete(crate::media::cancel_job))

@@ -80,6 +80,12 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     /// </summary>
     [Parameter]
     public LLMProviders DataLLMProvider { get; set; } = LLMProviders.NONE;
+
+    /// <summary>
+    /// The validated custom icon supplied by a configuration plugin.
+    /// </summary>
+    [Parameter]
+    public string DataCustomIconDataUrl { get; set; } = string.Empty;
     
     /// <summary>
     /// The LLM model to use, e.g., GPT-4o.
@@ -92,6 +98,13 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     /// </summary>
     [Parameter]
     public bool IsEditing { get; init; }
+
+    /// <summary>
+    /// Whether this provider is managed by an enterprise configuration plugin. When true, every
+    /// field except the API key is locked, matching Settings.Provider.IsEnterpriseConfiguration.
+    /// </summary>
+    [Parameter]
+    public bool IsEnterpriseConfiguration { get; set; }
     
     [Parameter]
     public string AdditionalJsonApiParameters { get; set; } = string.Empty;
@@ -112,6 +125,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     private static readonly IReadOnlyList<Capability> SWITCH_CAPABILITY_OVERRIDES =
     [
         Capability.AUDIO_INPUT,
+        Capability.FUNCTION_CALLING,
         Capability.MULTIPLE_IMAGE_INPUT,
         Capability.SPEECH_INPUT,
         Capability.VIDEO_INPUT
@@ -134,6 +148,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     private bool dataIsValid;
     private string[] dataIssues = [];
     private string dataAPIKey = string.Empty;
+    private bool dataHadStoredAPIKeyOnLoad;
     private string dataManuallyModel = string.Empty;
     private string dataAPIKeyStorageIssue = string.Empty;
     private string dataEditingPreviousInstanceName = string.Empty;
@@ -182,13 +197,14 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
             UsedLLMProvider = this.DataLLMProvider,
             Model = this.GetSelectedModel(),
             IsSelfHosted = this.DataLLMProvider is LLMProviders.SELF_HOSTED,
-            IsEnterpriseConfiguration = false,
+            IsEnterpriseConfiguration = this.IsEnterpriseConfiguration,
             Hostname = cleanedHostname.EndsWith('/') ? cleanedHostname[..^1] : cleanedHostname,
             Host = this.DataHost,
             HFInferenceProvider = this.HFInferenceProviderId,
             AdditionalJsonApiParameters = this.AdditionalJsonApiParameters,
             TokenizerPath = this.dataFilePath,
             CapabilityOverrides = this.capabilityOverrides.HasOverrides ? this.capabilityOverrides : null,
+            CustomIconDataUrl = this.DataCustomIconDataUrl,
         };
     }
 
@@ -214,9 +230,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         this.SettingsManager.InjectSpellchecking(SPELLCHECK_ATTRIBUTES);
         
         // Load the used instance names:
-        #pragma warning disable MWAIS0001
-        this.UsedInstanceNames = this.SettingsManager.ConfigurationData.Providers.Select(x => x.InstanceName.ToLowerInvariant()).ToList();
-        #pragma warning restore MWAIS0001
+        this.UsedInstanceNames = this.SettingsManager.GetAllProviders().Select(x => x.InstanceName.ToLowerInvariant()).ToList();
 
         this.capabilityOverrides = this.DataCapabilityOverrides ?? new();
         this.showExpertSettings = !string.IsNullOrWhiteSpace(this.AdditionalJsonApiParameters) || this.capabilityOverrides.HasOverrides;
@@ -227,7 +241,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
             this.dataEditingPreviousInstanceName = this.DataInstanceName.ToLowerInvariant();
             this.dataFilePath = this.DataTokenizerPath;
             
-            // When using Fireworks or Hugging Face, we must copy the model name:
+            // When using Fireworks, we must copy the model name:
             if (this.DataLLMProvider.IsLLMModelProvidedManually())
                 this.dataManuallyModel = this.DataModel.Id;
             
@@ -244,11 +258,17 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
             // Load the API key:
             var requestedSecret = await this.RustService.GetAPIKey(this, SecretStoreType.LLM_PROVIDER, isTrying: this.DataLLMProvider is LLMProviders.SELF_HOSTED);
             if (requestedSecret.Success)
+            {
                 this.dataAPIKey = await requestedSecret.Secret.Decrypt(this.encryption);
+                this.dataHadStoredAPIKeyOnLoad = !string.IsNullOrWhiteSpace(this.dataAPIKey);
+            }
             else
             {
                 this.dataAPIKey = string.Empty;
-                if (this.DataLLMProvider is not LLMProviders.SELF_HOSTED)
+
+                // For an enterprise-managed provider, having no key yet is the expected first-run
+                // state, not a storage failure -- the user is just about to set their own key:
+                if (this.DataLLMProvider is not LLMProviders.SELF_HOSTED && !this.IsEnterpriseConfiguration)
                 {
                     this.dataAPIKeyStorageIssue = string.Format(T("Failed to load the API key from the operating system. The message was: {0}. You might ignore this message and provide the API key again."), requestedSecret.Issue);
                     await this.form.Validate();
@@ -273,8 +293,12 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
 
     #region Implementation of ISecretId
 
-    public string SecretId => this.DataLLMProvider.ToSecretId();
-    
+    // Must mirror Settings.Provider.SecretId exactly: when editing an enterprise-managed
+    // provider, the key has to be stored under the same "ENT::"-prefixed keyring row that the
+    // app reads from at runtime (see BaseProvider.SecretId). Otherwise, a key entered here would
+    // silently end up in the wrong keyring row and never be found again.
+    public string SecretId => this.IsEnterpriseConfiguration ? $"{ISecretId.ENTERPRISE_KEY_PREFIX}::{this.DataLLMProvider.ToSecretId()}" : this.DataLLMProvider.ToSecretId();
+
     public string SecretName => this.DataInstanceName;
 
     #endregion
@@ -322,6 +346,22 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
                 await this.form.Validate();
                 return;
             }
+
+            this.dataHadStoredAPIKeyOnLoad = true;
+        }
+        else if (this.dataHadStoredAPIKeyOnLoad)
+        {
+            // The user cleared a previously stored key. Without this, the old key would simply
+            // stay in the OS keyring untouched and keep being used:
+            var deleteResponse = await this.RustService.DeleteAPIKey(this, SecretStoreType.LLM_PROVIDER);
+            if (!deleteResponse.Success)
+            {
+                this.dataAPIKeyStorageIssue = string.Format(T("Failed to remove the API key from the operating system. The message was: {0}. Please try again."), deleteResponse.Issue);
+                await this.form.Validate();
+                return;
+            }
+
+            this.dataHadStoredAPIKeyOnLoad = false;
         }
 
         this.MudDialog.Close(DialogResult.Ok(addedProviderSettings));
@@ -442,6 +482,24 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         this.usesLegacySystemModelFallback = false;
     }
 
+    /// <summary>
+    /// Resets the model selection when the user picks another Hugging Face inference provider.
+    /// </summary>
+    /// <remarks>
+    /// Which models are on offer depends on the inference provider, so the models loaded for the
+    /// previous one say nothing about the new one. Keeping them would let the user pick a model
+    /// their provider does not serve, which the router answers with an error.
+    /// </remarks>
+    /// <param name="selectedInferenceProvider">The inference provider the user chose.</param>
+    private void OnHFInferenceProviderChanged(HFInferenceProvider selectedInferenceProvider)
+    {
+        this.HFInferenceProviderId = selectedInferenceProvider;
+        this.DataModel = default;
+        this.capabilityOverrides = new();
+        this.availableModels.Clear();
+        this.dataLoadingModelsIssue = string.Empty;
+    }
+
     private void OnHostChanged(Host selectedHost)
     {
         // When the host changes, reset the model selection state:
@@ -499,6 +557,11 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
                                              this.DataLLMProvider is LLMProviders.SELF_HOSTED &&
                                              this.DataHost is Host.LLAMA_CPP &&
                                              this.usesLegacySystemModelFallback;
+
+    /// <summary>
+    /// The catalog of the provider, where the user can read up on the models before choosing one.
+    /// </summary>
+    private string ModelsOverviewURL => this.DataLLMProvider.GetModelsOverviewURL(this.HFInferenceProviderId);
 
     private void UpdateModelSelectionAfterLoading()
     {
@@ -668,6 +731,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
     private string GetCapabilityOverrideLabel(Capability capability) => capability switch
     {
         Capability.AUDIO_INPUT => T("Audio input"),
+        Capability.FUNCTION_CALLING => T("Tool calling"),
         Capability.MULTIPLE_IMAGE_INPUT => T("Multiple image input"),
         Capability.SPEECH_INPUT => T("Speech input"),
         Capability.VIDEO_INPUT => T("Video input"),
@@ -701,7 +765,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
         }
         catch (JsonException)
         {
-            return T("Invalid JSON: Add the parameters in proper JSON formatting, e.g., \"temperature\": 0.5. Remove trailing commas. The usual surrounding curly brackets {} must not be used, though.");
+            return T("""Invalid JSON: Add the parameters in proper JSON formatting, e.g., "temperature": 0.5. Remove trailing commas. The usual surrounding curly brackets {} must not be used, though.""");
         }
     }
 
@@ -834,7 +898,7 @@ public partial class ProviderDialog : MSGComponentBase, ISecretId
 
         if (objectStack.Count != 0)
         {
-            errorMessage = T("Invalid JSON: Add the parameters in proper JSON formatting, e.g., \"temperature\": 0.5. Remove trailing commas. The usual surrounding curly brackets {} must not be used, though.");
+            errorMessage = T("""Invalid JSON: Add the parameters in proper JSON formatting, e.g., "temperature": 0.5. Remove trailing commas. The usual surrounding curly brackets {} must not be used, though.""");
             return false;
         }
 

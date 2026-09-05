@@ -80,9 +80,10 @@ public partial class CodeEditor : ComponentBase, IAsyncDisposable
         if (this.module is null)
             return;
 
+        await this.module.TryInvokeVoidAsync("destroy", this.editorId);
+
         try
         {
-            await this.module.InvokeVoidAsync("destroy", this.editorId);
             await this.module.DisposeAsync();
         }
         catch (JSDisconnectedException)

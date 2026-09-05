@@ -34,14 +34,26 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
     public string SystemPrompt { get; private set; } = string.Empty;
     public string SubmitText { get; private set; } = string.Empty;
     public bool AllowProfiles { get; private set; } = true;
+
+    /// <summary>
+    /// The tools this assistant runs with, when its plugin names any.
+    /// </summary>
+    /// <remarks>
+    /// Null means the plugin says nothing about tools, and the user picks them as in any other
+    /// assistant. A list takes that choice away: the assistant then runs with exactly these tools,
+    /// which is what an author who tested their assistant with them wants. It is a wish, not a
+    /// permission — a tool switched off in the settings, or one the selected provider is not
+    /// trusted enough to receive, stays out of reach either way.
+    /// </remarks>
+    public IReadOnlyList<string>? AssistantToolIds { get; private set; }
     public bool HasEmbeddedProfileSelection { get; private set; }
     public bool HasCustomPromptBuilder => this.buildPromptFunction is not null;
     public bool IsAssistantBuilderGenerated { get; private set; }
     public bool HasDeploymentManagementMetadata { get; private set; }
     public bool IsManagedByConfigServer { get; private set; }
     public AssistantPluginLaunchBehavior LaunchBehavior { get; private set; }
-    public string LaunchWorkspaceName { get; private set; } = string.Empty;
-    public bool StartsChatDirectly => this.LaunchBehavior is AssistantPluginLaunchBehavior.OPEN_WORKSPACE_CHAT_BY_NAME;
+    public AssistantChatLaunchConfiguration? ChatLaunchConfiguration { get; private set; }
+    public bool StartsChatDirectly => this.ChatLaunchConfiguration is not null;
     public const int TEXT_AREA_MAX_VALUE = 524288;
 
     private LuaFunction? buildPromptFunction;
@@ -65,13 +77,21 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
     private bool TryProcessAssistant(out string message)
     {
         message = string.Empty;
+        this.RootComponent = null;
+        this.AssistantTitle = string.Empty;
+        this.AssistantDescription = string.Empty;
+        this.RawSystemPrompt = string.Empty;
+        this.SystemPrompt = string.Empty;
+        this.SubmitText = string.Empty;
+        this.AllowProfiles = true;
+        this.AssistantToolIds = null;
         this.HasEmbeddedProfileSelection = false;
         this.IsAssistantBuilderGenerated = false;
         this.HasDeploymentManagementMetadata = false;
         this.IsManagedByConfigServer = false;
         this.buildPromptFunction = null;
         this.LaunchBehavior = AssistantPluginLaunchBehavior.NONE;
-        this.LaunchWorkspaceName = string.Empty;
+        this.ChatLaunchConfiguration = null;
 
         this.RegisterLuaHelpers();
         this.TryReadAssistantBuilderMetadata();
@@ -97,6 +117,18 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
             message = TB("The provided ASSISTANT lua table does not contain a valid description.");
             return false;
         }
+
+        this.AssistantTitle = assistantTitle;
+        this.AssistantDescription = assistantDescription;
+
+        if (!this.TryReadLaunchConfiguration(assistantTable, out var launchConfigIssue))
+        {
+            message = launchConfigIssue;
+            return false;
+        }
+
+        if (this.StartsChatDirectly)
+            return true;
         
         if (!assistantTable.TryGetValue("SystemPrompt", out var assistantSystemPromptValue) ||
             !assistantSystemPromptValue.TryRead<string>(out var assistantSystemPrompt))
@@ -119,6 +151,9 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
             return false;
         }
 
+        if (!TryReadOptionalToolIds(assistantTable, out var assistantToolIds, out message))
+            return false;
+
         if (assistantTable.TryGetValue("BuildPrompt", out var buildPromptValue))
         {
             if (buildPromptValue.TryRead<LuaFunction>(out var buildPrompt))
@@ -129,18 +164,11 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
 
         var rawSystemPrompt = assistantSystemPrompt.Trim();
 
-        this.AssistantTitle = assistantTitle;
-        this.AssistantDescription = assistantDescription;
         this.RawSystemPrompt = rawSystemPrompt;
         this.SystemPrompt = BuildSecureSystemPrompt(rawSystemPrompt);
         this.SubmitText = assistantSubmitText;
         this.AllowProfiles = assistantAllowProfiles;
-
-        if (!this.TryReadLaunchConfiguration(assistantTable, out var launchConfigIssue))
-        {
-            message = launchConfigIssue;
-            return false;
-        }
+        this.AssistantToolIds = assistantToolIds;
 
         // Ensure that the UI table exists nested in the ASSISTANT table and is a valid Lua table:
         if (!assistantTable.TryGetValue("UI", out var uiVal) || !uiVal.TryRead<LuaTable>(out var uiTable))
@@ -212,7 +240,14 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
                     return false;
                 }
 
-                this.LaunchWorkspaceName = workspaceName;
+                if (!TryReadOptionalGuid(assistantTable, "ProviderId", false, out var providerId, out message) ||
+                    !TryReadOptionalGuid(assistantTable, "ProfileId", true, out var profileId, out message) ||
+                    !TryReadOptionalGuid(assistantTable, "ChatTemplateId", true, out var chatTemplateId, out message) ||
+                    !TryReadOptionalDataSourceIds(assistantTable, out var dataSourceIds, out message) ||
+                    !TryReadOptionalToolIds(assistantTable, out var toolIds, out message))
+                    return false;
+
+                this.ChatLaunchConfiguration = new(workspaceName, providerId, profileId, chatTemplateId, dataSourceIds, toolIds);
 
                 return true;
 
@@ -220,6 +255,100 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
                 message = TB("The ASSISTANT table contains an unsupported LaunchBehavior value.");
                 return false;
         }
+    }
+
+    private static bool TryReadOptionalGuid(LuaTable assistantTable, string fieldName, bool allowEmpty, out Guid? id, out string message)
+    {
+        id = null;
+        message = string.Empty;
+
+        if (!assistantTable.TryGetValue(fieldName, out var idValue))
+            return true;
+
+        if (!idValue.TryRead<string>(out var idText) || !Guid.TryParse(idText, out var parsedId) || (!allowEmpty && parsedId == Guid.Empty))
+        {
+            message = string.Format(TB("The ASSISTANT table contains an invalid {0}. Expected a {1}GUID."), fieldName, allowEmpty ? string.Empty : "non-empty ");
+            return false;
+        }
+
+        id = parsedId;
+        return true;
+    }
+
+    private static bool TryReadOptionalDataSourceIds(LuaTable assistantTable, out IReadOnlyList<Guid>? dataSourceIds, out string message)
+    {
+        dataSourceIds = null;
+        message = string.Empty;
+
+        if (!assistantTable.TryGetValue("DataSourceIds", out var dataSourceIdsValue))
+            return true;
+
+        if (!dataSourceIdsValue.TryRead<LuaTable>(out var dataSourceIdsTable) || dataSourceIdsTable.ArrayLength == 0)
+        {
+            message = TB("The ASSISTANT table contains invalid DataSourceIds. Expected a non-empty list of unique, non-empty GUIDs.");
+            return false;
+        }
+
+        var parsedIds = new List<Guid>(dataSourceIdsTable.ArrayLength);
+        var uniqueIds = new HashSet<Guid>();
+        for (var index = 1; index <= dataSourceIdsTable.ArrayLength; index++)
+        {
+            if (!dataSourceIdsTable[index].TryRead<string>(out var idText) ||
+                !Guid.TryParse(idText, out var parsedId) ||
+                parsedId == Guid.Empty ||
+                !uniqueIds.Add(parsedId))
+            {
+                message = TB("The ASSISTANT table contains invalid DataSourceIds. Expected a non-empty list of unique, non-empty GUIDs.");
+                return false;
+            }
+
+            parsedIds.Add(parsedId);
+        }
+
+        dataSourceIds = parsedIds.ToImmutableArray();
+        return true;
+    }
+
+    /// <summary>
+    /// Reads the tools an assistant names: the ones a launcher preselects for its chat, or the ones
+    /// the assistant itself runs with.
+    /// </summary>
+    /// <remarks>
+    /// Unlike the data sources, these are plain tool IDs rather than GUIDs, and an ID unknown to
+    /// this installation is not an error: a plugin may name a tool that arrives with another plugin
+    /// which is not installed yet. Whoever runs the tools drops what they cannot offer.
+    /// </remarks>
+    private static bool TryReadOptionalToolIds(LuaTable assistantTable, out IReadOnlyList<string>? toolIds, out string message)
+    {
+        toolIds = null;
+        message = string.Empty;
+
+        if (!assistantTable.TryGetValue("ToolIds", out var toolIdsValue))
+            return true;
+
+        if (!toolIdsValue.TryRead<LuaTable>(out var toolIdsTable) || toolIdsTable.ArrayLength == 0)
+        {
+            message = TB("The ASSISTANT table contains invalid ToolIds. Expected a non-empty list of unique, non-empty tool IDs.");
+            return false;
+        }
+
+        var parsedIds = new List<string>(toolIdsTable.ArrayLength);
+        var uniqueIds = new HashSet<string>(StringComparer.Ordinal);
+        for (var index = 1; index <= toolIdsTable.ArrayLength; index++)
+        {
+            if (!toolIdsTable[index].TryRead<string>(out var toolId) ||
+                string.IsNullOrWhiteSpace(toolId) ||
+                !uniqueIds.Add(toolId.Trim()))
+            {
+                message = TB("The ASSISTANT table contains invalid ToolIds. Expected a non-empty list of unique, non-empty tool IDs.");
+                return false;
+            }
+
+            parsedIds.Add(toolId.Trim());
+        }
+
+        toolIds = parsedIds.ToImmutableArray();
+        return true;
     }
 
     public async Task<string?> TryBuildPromptAsync(LuaTable input, CancellationToken cancellationToken = default)
@@ -302,11 +431,39 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
     }
 
     /// <summary>
+    /// The audit hash of this plugin, together with the directory it was computed for.
+    /// </summary>
+    /// <remarks>
+    /// One record instead of two fields, so that a reader always sees a directory and a hash which
+    /// belong together. Recomputing the same hash twice costs nothing but time, mixing up a hash
+    /// with the wrong directory would show a wrong security state.
+    /// </remarks>
+    private sealed record AuditHashCache(string PluginPath, string Hash);
+
+    private AuditHashCache? auditHashCache;
+
+    /// <summary>
     /// Computes a stable audit hash across all Lua files by hashing a canonical
     /// sequence of relative path length, relative path, content length, and content
     /// for each file in ordinal path order.
     /// </summary>
-    public string ComputeAuditHash() => AssistantPluginHash.Compute(this.PluginPath);
+    /// <remarks>
+    /// The result is kept, because computing it reads every Lua file of the plugin, and the plugins
+    /// page as well as the assistants page ask for it on every render. That is safe: the files of
+    /// one plugin instance never change. Whenever something in the plugins directory changes, the
+    /// plugin factory reloads and creates new instances, cf. PluginFactory.Starting.RestartAllPlugins.
+    /// The plugin directory is assigned after the instance was created, so the cache remembers which
+    /// directory it belongs to.
+    /// </remarks>
+    public string ComputeAuditHash()
+    {
+        if (this.auditHashCache is { } cache && string.Equals(cache.PluginPath, this.PluginPath, StringComparison.Ordinal))
+            return cache.Hash;
+
+        var hash = AssistantPluginHash.Compute(this.PluginPath);
+        this.auditHashCache = new(this.PluginPath, hash);
+        return hash;
+    }
 
     private static string BuildSecureSystemPrompt(string pluginSystemPrompt)
     {

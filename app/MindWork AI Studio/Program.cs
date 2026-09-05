@@ -2,6 +2,7 @@ using AIStudio.Agents;
 using AIStudio.Agents.AssistantAudit;
 using AIStudio.Assistants.VisualBriefing;
 using AIStudio.Settings;
+using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.Databases;
 using AIStudio.Tools.AIJobs;
 using AIStudio.Tools.AssistantSessions;
@@ -9,8 +10,17 @@ using AIStudio.Tools.Media;
 using AIStudio.Tools.PluginSystem;
 using AIStudio.Tools.PluginSystem.Assistants;
 using AIStudio.Tools.Rust;
+using AIStudio.Tools.Security;
 using AIStudio.Tools.Services;
+using AIStudio.Tools.ToolCallingSystem.Harness;
+using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations;
+using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.WebSearch;
+using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.WebSearch.SearXNG;
+using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.WebSearch.Staan;
+using AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.WebSearch.Tavily;
+using AIStudio.Tools.Web;
 
+using Microsoft.AspNetCore.Components.Server.Circuits;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Logging.Console;
@@ -114,7 +124,7 @@ internal sealed class Program
             options.FormatterName = TerminalLogger.FORMATTER_NAME;
         }).AddConsoleFormatter<TerminalLogger, ConsoleFormatterOptions>();
 
-        if(runtimeInfo.LinuxPackageType == "flatpak")
+        if(runtimeInfo.LinuxPackageType is LinuxPackageType.FLATPAK)
         {
             try
             {
@@ -161,6 +171,18 @@ internal sealed class Program
         builder.Services.AddSingleton(typeof(RuntimeInfoResponse), runtimeInfo);
         builder.Services.AddMudMarkdownClipboardService<MarkdownClipboardService>();
         builder.Services.AddSingleton<SettingsManager>();
+        builder.Services.AddSingleton<PromptInjectionGuardService>();
+        builder.Services.AddSingleton<ToolSettingsService>();
+        builder.Services.AddSingleton<WebPageRetrievalService>();
+        builder.Services.AddSingleton<IToolImplementation, ReadWebPageTool>();
+        builder.Services.AddSingleton<IWebSearchBackend, SearXNGSearchBackend>();
+        builder.Services.AddSingleton<IWebSearchBackend, StaanSearchBackend>();
+        builder.Services.AddSingleton<IWebSearchBackend, TavilySearchBackend>();
+        builder.Services.AddSingleton<IToolImplementation, WebSearchTool>();
+        builder.Services.AddSingleton<IToolDefinitionSource, CodeToolDefinitionSource>();
+        builder.Services.AddSingleton<ToolRegistry>();
+        builder.Services.AddSingleton<ToolExecutor>();
+        builder.Services.AddSingleton<IToolCallingLoop, ToolCallingLoop>();
         builder.Services.AddSingleton<ThreadSafeRandom>();
         builder.Services.AddSingleton<AIJobService>();
         builder.Services.AddSingleton<AssistantSessionService>();
@@ -173,14 +195,17 @@ internal sealed class Program
         builder.Services.AddSingleton<VisualBriefingBuildOrchestrator>();
         builder.Services.AddSingleton<VisualBriefingPreviewTokenService>();
         builder.Services.AddSingleton<IMediaTranscriptStorage, VisualBriefingTranscriptStorage>();
-        builder.Services.AddSingleton<AssistantPluginInstallService>();
+        builder.Services.AddSingleton<PluginInstallService>();
         builder.Services.AddSingleton<UpdatePolicy>();
         builder.Services.AddSingleton<AssistantPluginGenerationService>();
         builder.Services.AddSingleton<DataSourceService>();
         builder.Services.AddSingleton<DataSourceEmbeddingService>();
         builder.Services.AddSingleton<DataSourceLocalRetrievalService>();
+        builder.Services.AddSingleton<DirectChatService>();
         builder.Services.AddScoped<PandocAvailabilityService>();
-        builder.Services.AddTransient<HTMLParser>();
+        
+        // Stateless: every method works on its arguments alone, so one instance serves everyone.
+        builder.Services.AddSingleton<HTMLParser>();
         builder.Services.AddTransient<AgentDataSourceSelection>();
         builder.Services.AddTransient<AgentRetrievalContextValidation>();
         builder.Services.AddTransient<AgentTextContentCleaner>();
@@ -194,6 +219,15 @@ internal sealed class Program
         builder.Services.AddSingleton<DatabaseClientProvider>();
         builder.Services.AddHostedService<GlobalShortcutService>(serviceProvider => serviceProvider.GetRequiredService<GlobalShortcutService>());
         builder.Services.AddHostedService<RustAvailabilityMonitorService>();
+        builder.Services.AddScoped<NativeShareService>();
+        builder.Services.AddScoped<PluginShareService>();
+
+        //
+        // One circuit state per circuit, and the handler which keeps it up to date. Both are scoped,
+        // because the circuit is the scope: every browser window gets its own pair.
+        //
+        builder.Services.AddScoped<CircuitStateService>();
+        builder.Services.AddScoped<CircuitHandler, AIStudioCircuitHandler>();
         
         // ReSharper disable AccessToDisposedClosure
         builder.Services.AddHostedService<RustService>(_ => rust);
@@ -202,6 +236,13 @@ internal sealed class Program
         builder.Services.AddRazorComponents()
             .AddInteractiveServerComponents(options =>
             {
+                //
+                // We keep disconnected circuits for a long time on purpose: when the machine goes to
+                // sleep, the WebView loses its connection. Without this retention period, the user would
+                // return to a lost app state after waking up the machine (cf. issue #849). Since AI Studio
+                // is a single-user desktop app, at most two circuits are retained, which bounds the memory
+                // this costs us.
+                //
                 options.DisconnectedCircuitRetentionPeriod = TimeSpan.FromDays(30);
                 options.DisconnectedCircuitMaxRetained = 2;
             })
@@ -235,7 +276,22 @@ internal sealed class Program
         // Get a program logger:
         var programLogger = app.Services.GetRequiredService<ILogger<Program>>();
         programLogger.LogInformation("Starting the AI Studio server.");
-        
+
+        //
+        // Observe tasks whose exceptions nobody awaited. We register this before the server starts:
+        // otherwise, everything the startup does — the plugin system, the first message bus traffic —
+        // would fault outside of this handler. The sender of such a task says nothing about where it
+        // came from, which is why we log each inner exception with its own stack trace.
+        //
+        TaskScheduler.UnobservedTaskException += (sender, taskArgs) =>
+        {
+            programLogger.LogError(taskArgs.Exception, $"Unobserved task exception by sender '{sender ?? "n/a"}'.");
+            foreach (var innerException in taskArgs.Exception.Flatten().InnerExceptions)
+                programLogger.LogError(innerException, $"Unobserved task exception detail: {innerException.GetType().FullName}.");
+
+            taskArgs.SetObserved();
+        };
+
         // Store the service provider (DI). We need it later for some classes,
         // which are not part of the request pipeline:
         SERVICE_PROVIDER = app.Services;
@@ -288,13 +344,7 @@ internal sealed class Program
         await encryptionInitializer;
         await rust.AppIsReady();
         programLogger.LogInformation("The AI Studio server is ready.");
-        
-        TaskScheduler.UnobservedTaskException += (sender, taskArgs) =>
-        {
-            programLogger.LogError(taskArgs.Exception, $"Unobserved task exception by sender '{sender ?? "n/a"}'.");
-            taskArgs.SetObserved();
-        };
-        
+
         await serverTask;
         
         RUST_SERVICE.Dispose();

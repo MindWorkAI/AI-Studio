@@ -23,7 +23,7 @@ Every compatibility shim must have:
 
 - Status: Active
 - Introduced: YYYY-MM-DD
-- Remove after: YYYY-MM-DD
+- Remove after: YYYY-MM-DD or a condition e.g., someone is solving an issue on a dependency
 - Code references:
   - path/to/file.cs
 

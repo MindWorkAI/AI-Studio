@@ -75,9 +75,9 @@
             <div id="@BEFORE_RESULT_DIV_ID" class="mt-3">
             </div>
 
-            @if (this.ShowResult && !this.ShowEntireChatThread && this.ResultingContentBlock is not null && this.ResultingContentBlock.Content is not null)
+            @if (this.ShowResult && !this.ShowEntireChatThread && this.ResultingContentBlock?.Content != null)
             {
-                <ContentBlockComponent Role="@(this.ResultingContentBlock.Role)" Type="@(this.ResultingContentBlock.ContentType)" Time="@(this.ResultingContentBlock.Time)" Content="@this.ResultingContentBlock.Content"/>
+                <ContentBlockComponent Role="@(this.ResultingContentBlock.Role)" Type="@(this.ResultingContentBlock.ContentType)" Time="@(this.ResultingContentBlock.Time)" Content="@this.ResultingContentBlock.Content" ExportTitle="@TB("Export result")"/>
             }
             
             @if(this.ShowResult && this.ShowEntireChatThread && this.ChatThread is not null)
@@ -86,7 +86,7 @@
                 {
                     @if (block is { HideFromUser: false, Content: not null })
                     {
-                        <ContentBlockComponent Role="@block.Role" Type="@block.ContentType" Time="@block.Time" Content="@block.Content"/>
+                        <ContentBlockComponent Role="@block.Role" Type="@block.ContentType" Time="@block.Time" Content="@block.Content" ExportTitle="@TB("Export result")"/>
                     }
                 }
             }
@@ -173,6 +173,12 @@
                 @if (this.AllowProfiles && this.ShowProfileSelection)
                 {
                     <ProfileSelection MarginLeft="" @bind-CurrentProfile="@this.CurrentProfile"/>
+                }
+
+                @* No selection where the assistant's own rules already name the tools: *@
+                @if (this.SettingsManager.AreToolsEnabled() && this.AssistantManagedToolIds is null && this.SettingsManager.IsToolSelectionVisible(this.Component))
+                {
+                    <ToolSelection Component="@this.Component" LLMProvider="@this.ProviderSettings" SelectedToolIds="@this.SelectedToolIds" SelectedToolIdsChanged="@this.SelectedToolIdsChanged" Disabled="@this.IsProcessing" />
                 }
 
                 <MudSpacer />

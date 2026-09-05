@@ -21,6 +21,17 @@ public partial class AssistantPluginSecurityCard : MSGComponentBase
         ? new PluginAssistantSecurityState()
         : PluginAssistantSecurityResolver.Resolve(this.SettingsManager, this.Plugin);
 
+    /// <summary>
+    /// The tools this plugin runs with, either in its assistant or in the chat it launches.
+    /// </summary>
+    /// <remarks>
+    /// Tools are a capability, not a detail: an assistant allowed to search the web or read a page
+    /// can carry what a user typed out of the app. Whoever decides whether to enable this plugin
+    /// should see that beforehand, which is why the count sits in the header next to the audit
+    /// level and the tools themselves are named in the details.
+    /// </remarks>
+    private IReadOnlyList<string> PluginToolIds => this.Plugin?.AssistantToolIds ?? this.Plugin?.ChatLaunchConfiguration?.ToolIds ?? [];
+
     private CultureInfo currentCultureInfo = CultureInfo.InvariantCulture;
     private bool showSecurityCard;
     private bool showDetails;
@@ -125,6 +136,10 @@ public partial class AssistantPluginSecurityCard : MSGComponentBase
             ? this.T("No audit yet")
             : this.FormatFileTimestamp(auditedAt.Value.ToLocalTime().DateTime);
     }
+
+    private string GetToolCountLabel() => this.PluginToolIds.Count is 1
+        ? this.T("Uses 1 tool")
+        : string.Format(this.T("Uses {0} tools"), this.PluginToolIds.Count);
 
     private string GetAuditProviderLabel()
     {

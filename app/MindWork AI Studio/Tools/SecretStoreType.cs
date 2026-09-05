@@ -34,4 +34,9 @@ public enum SecretStoreType
     /// Data source secrets. Uses the "data-source::" prefix.
     /// </summary>
     DATA_SOURCE,
+
+    /// <summary>
+    /// Tool setting secrets. Uses the "tool::" prefix.
+    /// </summary>
+    TOOL_SETTINGS,
 }

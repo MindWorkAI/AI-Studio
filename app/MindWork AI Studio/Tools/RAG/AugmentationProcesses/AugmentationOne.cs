@@ -43,7 +43,7 @@ public sealed class AugmentationOne : IAugmentationProcess
         {
             // Let's get the validation agent & set up its provider:
             var validationAgent = Program.SERVICE_PROVIDER.GetService<AgentRetrievalContextValidation>()!;
-            if (validationAgent.SetLLMProvider(provider, chatThread.DataSecurity, chatThread.DataConfidenceLevel))
+            if (validationAgent.SetLLMProvider(provider, chatThread.DataSecurity, chatThread.RequiredProviderConfidence))
             {
                 try
                 {

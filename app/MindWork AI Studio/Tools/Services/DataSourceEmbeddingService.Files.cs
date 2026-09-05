@@ -856,7 +856,7 @@ public sealed partial class DataSourceEmbeddingService
 
     private bool IsDelimitedTableFilePath(string filePath)
     {
-        return FileTypes.IsAllowedPath(filePath, FileTypes.DELIMITED_TABLE);
+        return FileTypes.IsAllowedPath(filePath, FileTypes.TABULAR);
     }
 
     private bool IsSpreadsheetFilePath(string filePath)

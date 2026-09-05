@@ -378,7 +378,7 @@ public sealed class DataSourceLocalRetrievalService(
 
     private static RetrievalContentType GetRetrievalContentType(string fileType)
     {
-        if (FileTypes.IsAllowedExtension(fileType, FileTypes.DELIMITED_TABLE, FileTypes.SPREADSHEET))
+        if (FileTypes.IsAllowedExtension(fileType, FileTypes.TABULAR, FileTypes.SPREADSHEET))
             return RetrievalContentType.TEXT_SPREADSHEET;
 
         if (FileTypes.IsAllowedExtension(fileType, FileTypes.POWER_POINT))

@@ -35,6 +35,23 @@ window.clearDiv = function (divName) {
     targetDiv.innerHTML = '';
 }
 
+// We add a click handler to the provider group headers so that clicking anywhere on the header expands or collapses the group.
+// Right now (August 2026), this is not possible using MudBlazor.
+document.addEventListener('click', function (event) {
+    const target = event.target
+    if (!(target instanceof Element))
+        return
+
+    const groupHeaderRow = target.closest('tr')
+    if (!groupHeaderRow?.querySelector(':scope > .provider-group-header'))
+        return
+
+    if (target.closest('.mud-table-row-expander'))
+        return
+
+    groupHeaderRow.querySelector('.mud-table-row-expander')?.click()
+})
+
 window.scrollToBottom = function(element) {
     element.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'nearest' });
 }

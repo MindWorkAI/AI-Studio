@@ -57,6 +57,9 @@ DEPLOYED_USING_CONFIG_SERVER = false
 ASSISTANT = {
     ["Title"] = "<Title of your assistant>",
     ["Description"] = "<Description presented to the users, explaining your assistant>",
+    ["SystemPrompt"] = "<System prompt for the assistant>",
+    ["SubmitText"] = "<label for submit button>",
+    ["AllowProfiles"] = true,
     ["UI"] = {
         ["Type"] = "FORM",
         ["Children"] = {}
@@ -70,8 +73,19 @@ ASSISTANT = {
     ["SystemPrompt"] = "<prompt that fundamentally changes behaviour, personality and task focus of your assistant. Invisible to the user>", -- required
     ["SubmitText"] = "<label for submit button>", -- required
     ["AllowProfiles"] = true, -- if true, allows AiStudios profiles; required
-    ["LaunchBehavior"] = "<NONE|OPEN_WORKSPACE_CHAT_BY_NAME>", -- optional; when set to OPEN_WORKSPACE_CHAT_BY_NAME the tile opens a chat directly
-    ["WorkspaceName"] = "<name of the workspace to open or create>", -- optional; required for OPEN_WORKSPACE_CHAT_BY_NAME
+    
+    -- Optional: the tools your assistant runs with. Naming them takes the choice away from the
+    -- user: the tool selection disappears from the assistant, and it always runs with exactly
+    -- these tools. Omit the field to let users select the tools themselves.
+    -- Naming a tool is a wish, not a permission: a tool switched off in the settings stays off,
+    -- and every tool still has to meet the confidence requirements of the provider in use. Users
+    -- see the tools your assistant asks for before they enable it, and the security audit weighs
+    -- them against what your assistant claims to do.
+    -- Tool IDs include: web_search, read_web_page
+    ["ToolIds"] = {
+        "web_search",
+    },
+    
     ["UI"] = {
         ["Type"] = "FORM",
         ["Children"] = {
@@ -427,5 +441,26 @@ ASSISTANT = {
                 }
             },
         }
+    },
+}
+
+-- direct chat launcher example; form-only fields and UI are not used in this mode:
+ASSISTANT = {
+    ["Title"] = "<main title of chat launcher>",
+    ["Description"] = "<description of the chat that will be opened>",
+    ["LaunchBehavior"] = "OPEN_WORKSPACE_CHAT_BY_NAME",
+    ["WorkspaceName"] = "<name of the workspace to open or create>",
+    ["ProviderId"] = "<optional provider GUID; omit to use the chat default>",
+    ["ProfileId"] = "<optional profile GUID; use the empty GUID for no profile>",
+    ["ChatTemplateId"] = "<optional chat template GUID; use the empty GUID for no template>",
+    ["DataSourceIds"] = {
+        "<optional data source GUID>",
+    },
+    -- Optional: the tools preselected when the chat opens. Users may change the selection
+    -- in the chat afterwards, and every tool has to meet the confidence requirements of the
+    -- provider in use. A tool ID unknown to the installation is ignored.
+    -- Tool IDs include: web_search, read_web_page
+    ["ToolIds"] = {
+        "<optional tool ID>",
     },
 }

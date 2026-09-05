@@ -13,6 +13,17 @@ namespace AIStudio.Components.Settings;
 
 public partial class SettingsPanelProviders : SettingsPanelProviderBase
 {
+    /// <summary>
+    /// Groups the table by the used LLM provider. The provider list is already sorted by that
+    /// provider, so all instances of one LLM provider form a single, coherent group.
+    /// </summary>
+    private static readonly TableGroupDefinition<AIStudio.Settings.Provider> GROUP_CONFIG = new()
+    {
+        Expandable = true,
+        IsInitiallyExpanded = false,
+        Selector = provider => provider.UsedLLMProvider,
+    };
+
     [Parameter]
     public List<ConfigurationSelectData<string>> AvailableLLMProviders { get; set; } = new();
     
@@ -29,7 +40,7 @@ public partial class SettingsPanelProviders : SettingsPanelProviderBase
 
     #endregion
     
-    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
+    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed", Justification = "Managing the provider list is the purpose of this settings panel. Reading providers goes through the settings manager, but adding, editing, and removing them stays here on purpose.")]
     private async Task AddLLMProvider()
     {
         var dialogParameters = new DialogParameters<ProviderDialog>
@@ -52,21 +63,22 @@ public partial class SettingsPanelProviders : SettingsPanelProviderBase
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
 
-    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
+    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed", Justification = "Managing the provider list is the purpose of this settings panel. Reading providers goes through the settings manager, but adding, editing, and removing them stays here on purpose.")]
     private async Task EditLLMProvider(AIStudio.Settings.Provider provider)
     {
         if(provider == AIStudio.Settings.Provider.NONE)
             return;
-        
-        if (provider.IsEnterpriseConfiguration)
+
+        if (provider.IsEnterpriseConfiguration && !provider.AllowUserProvidedAPIKey)
             return;
-        
+
         var dialogParameters = new DialogParameters<ProviderDialog>
         {
             { x => x.DataNum, provider.Num },
             { x => x.DataId, provider.Id },
             { x => x.DataInstanceName, provider.InstanceName },
             { x => x.DataLLMProvider, provider.UsedLLMProvider },
+            { x => x.DataCustomIconDataUrl, provider.CustomIconDataUrl },
             { x => x.DataModel, provider.Model },
             { x => x.DataHostname, provider.Hostname },
             { x => x.IsSelfHosted, provider.IsSelfHosted },
@@ -76,6 +88,7 @@ public partial class SettingsPanelProviders : SettingsPanelProviderBase
             { x => x.AdditionalJsonApiParameters, provider.AdditionalJsonApiParameters },
             { x => x.DataTokenizerPath, provider.TokenizerPath },
             { x => x.DataCapabilityOverrides, provider.CapabilityOverrides },
+            { x => x.IsEnterpriseConfiguration, provider.IsEnterpriseConfiguration },
         };
 
         var dialogReference = await this.DialogService.ShowAsync<ProviderDialog>(T("Edit LLM Provider"), dialogParameters, DialogOptions.FULLSCREEN);
@@ -83,21 +96,31 @@ public partial class SettingsPanelProviders : SettingsPanelProviderBase
         if (dialogResult is null || dialogResult.Canceled)
             return;
 
+        if (provider.IsEnterpriseConfiguration)
+        {
+            // Only the API key changed, and the dialog already stored it directly. The provider
+            // object itself is managed by the configuration plugin and must not be overwritten
+            // with the dialog's copy -- doing so would let the locked-but-technically-editable
+            // fields drift from what the organization configured.
+            await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
+            return;
+        }
+
         var editedProvider = (AIStudio.Settings.Provider)dialogResult.Data!;
-        
+
         // Set the provider number if it's not set. This is important for providers
         // added before we started saving the provider number.
         if(editedProvider.Num == 0)
             editedProvider = editedProvider with { Num = this.SettingsManager.ConfigurationData.NextProviderNum++ };
-        
+
         this.SettingsManager.ConfigurationData.Providers[this.SettingsManager.ConfigurationData.Providers.IndexOf(provider)] = editedProvider;
         await this.UpdateProviders();
-        
+
         await this.SettingsManager.StoreSettings();
         await this.MessageBus.SendMessage<bool>(this, Event.CONFIGURATION_CHANGED);
     }
 
-    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
+    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed", Justification = "Managing the provider list is the purpose of this settings panel. Reading providers goes through the settings manager, but adding, editing, and removing them stays here on purpose.")]
     private async Task DeleteLLMProvider(AIStudio.Settings.Provider provider)
     {
         var dialogParameters = new DialogParameters<ConfirmDialog>
@@ -172,11 +195,10 @@ public partial class SettingsPanelProviders : SettingsPanelProviderBase
         return modelName.Length > MAX_LENGTH ? "[...] " + modelName[^Math.Min(MAX_LENGTH, modelName.Length)..] : modelName;
     }
     
-    [SuppressMessage("Usage", "MWAIS0001:Direct access to `Providers` is not allowed")]
     private async Task UpdateProviders()
     {
         this.AvailableLLMProviders.Clear();
-        foreach (var provider in this.SettingsManager.ConfigurationData.Providers)
+        foreach (var provider in this.SettingsManager.GetAllProviders())
             this.AvailableLLMProviders.Add(new (provider.InstanceName, provider.Id));
         
         await this.AvailableLLMProvidersChanged.InvokeAsync(this.AvailableLLMProviders);

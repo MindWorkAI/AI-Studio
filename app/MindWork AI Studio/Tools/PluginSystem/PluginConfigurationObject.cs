@@ -36,6 +36,41 @@ public sealed record PluginConfigurationObject
     public required PluginConfigurationObjectType Type { get; init; } = PluginConfigurationObjectType.NONE;
 
     /// <summary>
+    /// The name of the configuration object, e.g. the name of a provider.
+    /// </summary>
+    public string Name { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Where this configuration object sends data to: the host of a self-hosted provider or data
+    /// source, or the name of the cloud provider. Empty for objects without a destination, such as
+    /// chat templates or profiles.
+    /// </summary>
+    /// <remarks>
+    /// We keep this next to the object metadata so the import preview can tell users where a
+    /// configuration would send their prompts before its providers are stored.
+    /// </remarks>
+    public string Endpoint { get; private init; } = string.Empty;
+
+    /// <summary>
+    /// Determines the destination of a configuration object for the import preview.
+    /// </summary>
+    private static string DescribeEndpoint(IConfigurationObject configObject) => configObject switch
+    {
+        Settings.Provider { IsSelfHosted: true } provider => provider.Hostname,
+        Settings.Provider provider => Provider.LLMProvidersExtensions.ToName(provider.UsedLLMProvider),
+
+        EmbeddingProvider { IsSelfHosted: true } embeddingProvider => embeddingProvider.Hostname,
+        EmbeddingProvider embeddingProvider => Provider.LLMProvidersExtensions.ToName(embeddingProvider.UsedLLMProvider),
+
+        TranscriptionProvider { IsSelfHosted: true } transcriptionProvider => transcriptionProvider.Hostname,
+        TranscriptionProvider transcriptionProvider => Provider.LLMProvidersExtensions.ToName(transcriptionProvider.UsedLLMProvider),
+
+        DataSourceERI_V1 dataSource => dataSource.Hostname,
+
+        _ => string.Empty,
+    };
+
+    /// <summary>
     /// Parses Lua table entries into configuration objects of the specified type, populating the
     /// provided list with results.
     /// </summary>
@@ -108,11 +143,11 @@ public sealed record PluginConfigurationObject
 
             var (wasParsingSuccessful, configObject) = configObjectType switch
             {
-                PluginConfigurationObjectType.LLM_PROVIDER => (Settings.Provider.TryParseProviderTable(i, luaObjectTable, configPluginId, out var configurationObject) && configurationObject != Settings.Provider.NONE, configurationObject),
+                PluginConfigurationObjectType.LLM_PROVIDER => (Settings.Provider.TryParseProviderTable(i, luaObjectTable, configPluginId, pluginPath, out var configurationObject) && configurationObject != Settings.Provider.NONE, configurationObject),
                 PluginConfigurationObjectType.CHAT_TEMPLATE => (ChatTemplate.TryParseChatTemplateTable(i, luaObjectTable, configPluginId, pluginPath, out var configurationObject) && configurationObject != ChatTemplate.NO_CHAT_TEMPLATE, configurationObject),
                 PluginConfigurationObjectType.PROFILE => (Profile.TryParseProfileTable(i, luaObjectTable, configPluginId, out var configurationObject) && configurationObject != Profile.NO_PROFILE, configurationObject),
-                PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER => (TranscriptionProvider.TryParseTranscriptionProviderTable(i, luaObjectTable, configPluginId, out var configurationObject) && configurationObject != TranscriptionProvider.NONE, configurationObject),
-                PluginConfigurationObjectType.EMBEDDING_PROVIDER => (EmbeddingProvider.TryParseEmbeddingProviderTable(i, luaObjectTable, configPluginId, out var configurationObject) && configurationObject != EmbeddingProvider.NONE, configurationObject),
+                PluginConfigurationObjectType.TRANSCRIPTION_PROVIDER => (TranscriptionProvider.TryParseTranscriptionProviderTable(i, luaObjectTable, configPluginId, pluginPath, out var configurationObject) && configurationObject != TranscriptionProvider.NONE, configurationObject),
+                PluginConfigurationObjectType.EMBEDDING_PROVIDER => (EmbeddingProvider.TryParseEmbeddingProviderTable(i, luaObjectTable, configPluginId, pluginPath, out var configurationObject) && configurationObject != EmbeddingProvider.NONE, configurationObject),
                 PluginConfigurationObjectType.DOCUMENT_ANALYSIS_POLICY => (DataDocumentAnalysisPolicy.TryProcessConfiguration(i, luaObjectTable, configPluginId, out var configurationObject) && configurationObject is DataDocumentAnalysisPolicy, configurationObject),
 
                 _ => (false, NoConfigurationObject.INSTANCE)
@@ -126,17 +161,22 @@ public sealed record PluginConfigurationObject
                     ConfigPluginId = configPluginId,
                     Id = Guid.Parse(configObject.Id),
                     Type = configObjectType,
+                    Name = configObject.Name,
+                    Endpoint = DescribeEndpoint(configObject),
                 });
 
                 if (dryRun)
                     continue;
 
                 var objectIndex = storedObjects.FindIndex(t => t.Id == configObject.Id);
-                
+
                 // Case: The object already exists, we update it:
                 if (objectIndex > -1)
                 {
                     var existingObject = storedObjects[objectIndex];
+                    if (!MayReplaceConfigurationObject(existingObject, configPluginId))
+                        continue;
+
                     configObject = configObject with { Num = existingObject.Num };
                     storedObjects[objectIndex] = (TClass)configObject;
                 }
@@ -249,6 +289,8 @@ public sealed record PluginConfigurationObject
                 ConfigPluginId = configPluginId,
                 Id = Guid.Parse(configObject.Id),
                 Type = PluginConfigurationObjectType.DATA_SOURCE,
+                Name = configObject.Name,
+                Endpoint = DescribeEndpoint(configObject),
             });
 
             if (dryRun)
@@ -258,6 +300,9 @@ public sealed record PluginConfigurationObject
             if (objectIndex > -1)
             {
                 var existingObject = storedObjects[objectIndex];
+                if (!MayReplaceConfigurationObject(existingObject, configPluginId))
+                    continue;
+
                 configObject = configObject with { Num = existingObject.Num };
                 storedObjects[objectIndex] = configObject;
             }
@@ -287,12 +332,46 @@ public sealed record PluginConfigurationObject
     }
 
     /// <summary>
+    /// Checks whether a configuration plugin may replace a stored configuration object, or whether
+    /// that object belongs to the IT department of an organization.
+    /// </summary>
+    /// <remarks>
+    /// Configuration objects are matched by their ID alone. Without this check, a local configuration
+    /// plugin could claim the ID of an object an organization deployed and replace it, e.g. to point
+    /// a self-hosted LLM provider at a different host.<br/><br/>
+    /// Between two configuration plugins of the same organization, we do not interfere: both belong
+    /// to the IT department, so the one processed later wins, as before.
+    /// </remarks>
+    /// <param name="existingObject">The configuration object which is stored already.</param>
+    /// <param name="configPluginId">The configuration plugin which wants to replace that object.</param>
+    /// <returns>True when the plugin may replace the object, otherwise false.</returns>
+    private static bool MayReplaceConfigurationObject(IConfigurationObject existingObject, Guid configPluginId)
+    {
+        if (!existingObject.IsEnterpriseConfiguration || existingObject.EnterpriseConfigurationPluginId == configPluginId)
+            return true;
+
+        if (!PluginFactory.IsOrganizationConfigurationPlugin(existingObject.EnterpriseConfigurationPluginId))
+            return true;
+
+        if (PluginFactory.IsOrganizationConfigurationPlugin(configPluginId))
+            return true;
+
+        LOG.LogWarning("The configuration plugin '{ConfigPluginId}' tried to replace the object '{ConfigObjectName}' (id={ConfigObjectId}), which belongs to the configuration plugin '{OwningConfigPluginId}' of your organization. Ignoring the attempt: configurations deployed by your organization's IT take precedence.", configPluginId, existingObject.Name, existingObject.Id, existingObject.EnterpriseConfigurationPluginId);
+        return false;
+    }
+
+    /// <summary>
     /// Cleans up configuration objects of a specified type that are no longer associated with any available plugin.
     /// </summary>
     /// <typeparam name="TClass">The type of configuration object to clean up.</typeparam>
     /// <param name="configObjectType">The type of configuration object to process.</param>
     /// <param name="configObjectSelection">A selection expression to retrieve the configuration objects from the main configuration.</param>
     /// <param name="availablePlugins">A list of currently available plugins.</param>
+    /// <param name="deployedEnterpriseConfigPluginIds">
+    /// The IDs of the configuration plugins which an organization deployed on this machine, including
+    /// those which could not be loaded. Objects of a deployed plugin are never removed, because the
+    /// plugin was not removed either.
+    /// </param>
     /// <param name="configObjectList">A list of all existing configuration objects.</param>
     /// <param name="secretStoreType">An optional parameter specifying the type of secret store to use for deleting associated API keys from the OS keyring, if applicable.</param>
     /// <param name="deleteSecret">When true, delete the associated non-API-key secret from the OS keyring.</param>
@@ -301,6 +380,7 @@ public sealed record PluginConfigurationObject
         PluginConfigurationObjectType configObjectType,
         Expression<Func<Data, List<TClass>>> configObjectSelection,
         IList<IAvailablePlugin> availablePlugins,
+        IReadOnlySet<Guid> deployedEnterpriseConfigPluginIds,
         IList<PluginConfigurationObject> configObjectList,
         SecretStoreType? secretStoreType = null,
         bool deleteSecret = false) where TClass : IConfigurationObject
@@ -319,7 +399,17 @@ public sealed record PluginConfigurationObject
             var configObjectSourcePluginId = configuredObject.EnterpriseConfigurationPluginId;
             if(configObjectSourcePluginId == Guid.Empty)
                 continue;
-            
+
+            //
+            // Is the source plugin deployed, but could not be loaded? Then we must not touch any of
+            // its objects. The plugin was not removed, it is broken: it might be invalid Lua code,
+            // a missing `plugin.lua`, or an incomplete download. Removing the objects would delete
+            // the organization's providers and data sources, including their secrets, although the
+            // organization still manages this AI Studio instance:
+            //
+            if(deployedEnterpriseConfigPluginIds.Contains(configObjectSourcePluginId) && availablePlugins.All(plugin => plugin.Id != configObjectSourcePluginId))
+                continue;
+
             // Is the source plugin still available? If not, we can be pretty sure that this configuration object is left
             // over and should be removed:
             var templateSourcePlugin = availablePlugins.FirstOrDefault(plugin => plugin.Id == configObjectSourcePluginId);
@@ -367,6 +457,13 @@ public sealed record PluginConfigurationObject
                     LOG.LogInformation($"Successfully deleted secret for removed enterprise object '{item.Name}' from the OS keyring.");
                 else
                     LOG.LogWarning($"Failed to delete secret for removed enterprise object '{item.Name}' from the OS keyring: {deleteResult.Issue}");
+            }
+            else if(item is IUserProvidedAPIKey { AllowUserProvidedAPIKey: true })
+            {
+                // The user manages their own key for this provider. Keep it in the OS keyring
+                // in case the organization's configuration comes back later, instead of forcing
+                // the user to re-enter it:
+                LOG.LogInformation($"Preserving the user-provided API key for removed enterprise provider '{item.Name}' in the OS keyring.");
             }
             else if(secretStoreType is not null && item is ISecretId secretId)
             {

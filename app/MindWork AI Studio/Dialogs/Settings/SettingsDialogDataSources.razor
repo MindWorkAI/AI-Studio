@@ -81,11 +81,9 @@
                             <MudTooltip Text="@T("Refresh")">
                                 <MudIconButton Color="Color.Primary" Icon="@Icons.Material.Filled.Sync" Disabled="@(!this.CanRefreshDataSource(context))" OnClick="() => this.RefreshDataSource(context)"/>
                             </MudTooltip>
-                            @if (this.SettingsManager.ConfigurationData.App.ShowAdminSettings && context is DataSourceERI_V1)
+                            @if (context is DataSourceERI_V1)
                             {
-                                <MudTooltip Text="@T("Export configuration")">
-                                    <MudIconButton Color="Color.Info" Icon="@Icons.Material.Filled.Dataset" OnClick="() => this.ExportDataSource(context)"/>
-                                </MudTooltip>
+                                <AdminExportButton OnClick="@(() => this.ExportDataSource(context))" />
                             }
                             <MudTooltip Text="@T("Delete")">
                                 <MudIconButton Color="Color.Error" Icon="@Icons.Material.Filled.Delete" OnClick="() => this.DeleteDataSource(context)"/>

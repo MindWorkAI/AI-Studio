@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 
 using AIStudio.Provider;
+using AIStudio.Provider.HuggingFace;
 using AIStudio.Tools.PluginSystem;
 
 using SharedTools;
@@ -23,7 +24,10 @@ public sealed record EmbeddingProvider(
     Host Host = Host.NONE,
     string TokenizerPath = "",
     int EmbeddingBatchSize = 0,
-    int TokenLimit = 0) : ConfigurationBaseObject, ISecretId
+    int TokenLimit = 0,
+    bool AllowUserProvidedAPIKey = false,
+    string CustomIconDataUrl = "",
+    HFInferenceProvider HFInferenceProvider = HFInferenceProvider.NONE) : ConfigurationBaseObject, ISecretId, IUserProvidedAPIKey
 {
     public const int DEFAULT_TOKEN_LIMIT = 8192;
     public const int DEFAULT_EMBEDDING_BATCH_SIZE = 1;
@@ -56,7 +60,7 @@ public sealed record EmbeddingProvider(
 
     #endregion
 
-    public static bool TryParseEmbeddingProviderTable(int idx, LuaTable table, Guid configPluginId, out ConfigurationBaseObject provider)
+    public static bool TryParseEmbeddingProviderTable(int idx, LuaTable table, Guid configPluginId, string pluginPath, out ConfigurationBaseObject provider)
     {
         provider = NONE;
         if (!table.TryGetValue("Id", out var idValue) || !idValue.TryRead<string>(out var idText) || !Guid.TryParse(idText, out var id))
@@ -122,6 +126,29 @@ public sealed record EmbeddingProvider(
             embeddingBatchSize = DEFAULT_EMBEDDING_BATCH_SIZE;
         }
 
+        var allowUserProvidedApiKey = false;
+        if (table.TryGetValue("AllowUserProvidedAPIKey", out var allowUserProvidedApiKeyValue) && allowUserProvidedApiKeyValue.TryRead<bool>(out var allowUserProvidedApiKeyBool))
+            allowUserProvidedApiKey = allowUserProvidedApiKeyBool;
+
+        var hfInferenceProvider = HFInferenceProvider.NONE;
+        if (table.TryGetValue("HFInferenceProvider", out var hfInferenceProviderValue) && hfInferenceProviderValue.TryRead<string>(out var hfInferenceProviderText))
+        {
+            if (!Enum.TryParse(hfInferenceProviderText, true, out hfInferenceProvider))
+            {
+                LOGGER.LogWarning($"The configured embedding provider {idx} does not contain a valid Hugging Face inference provider enum value. (Plugin ID: {configPluginId})");
+                hfInferenceProvider = HFInferenceProvider.NONE;
+            }
+        }
+
+        var customIconDataUrl = string.Empty;
+        if (table.TryGetValue("IconPath", out var iconPathValue))
+        {
+            if (!iconPathValue.TryRead<string>(out var iconPath))
+                LOGGER.LogWarning($"The configured embedding provider {idx} does not contain a valid icon path. Falling back to the built-in provider icon. (Plugin ID: {configPluginId})");
+            else if (!PluginIconFile.TryLoadDataUrl(iconPath, pluginPath, out customIconDataUrl, out var iconIssue))
+                LOGGER.LogWarning($"The configured embedding provider {idx} contains an invalid icon path. Falling back to the built-in provider icon. Issue: {iconIssue} (Plugin ID: {configPluginId})");
+        }
+
         provider = new EmbeddingProvider
         {
             Num = 0, // will be set later by the PluginConfigurationObject
@@ -137,10 +164,20 @@ public sealed record EmbeddingProvider(
             TokenizerPath = tokenizerPath,
             EmbeddingBatchSize = embeddingBatchSize,
             TokenLimit = tokenLimit,
+            AllowUserProvidedAPIKey = allowUserProvidedApiKey,
+            CustomIconDataUrl = customIconDataUrl,
+            HFInferenceProvider = hfInferenceProvider,
         };
 
-        // Handle encrypted API key if present:
-        if (table.TryGetValue("APIKey", out var apiKeyValue) && apiKeyValue.TryRead<string>(out var apiKeyText) && !string.IsNullOrWhiteSpace(apiKeyText))
+        // Handle an encrypted API key if present. When the user manages their own key for this
+        // embedding provider, we must never enqueue an embedded key: doing so would overwrite the
+        // user's key in the OS keyring on every configuration reload.
+        if (allowUserProvidedApiKey)
+        {
+            if (table.TryGetValue("APIKey", out var ignoredApiKeyValue) && ignoredApiKeyValue.TryRead<string>(out var ignoredApiKeyText) && !string.IsNullOrWhiteSpace(ignoredApiKeyText))
+                LOGGER.LogWarning($"The configured embedding provider {idx} sets both AllowUserProvidedAPIKey and an embedded APIKey. Ignoring the embedded key: the user manages their own key for this provider. (Plugin ID: {configPluginId})");
+        }
+        else if (table.TryGetValue("APIKey", out var apiKeyValue) && apiKeyValue.TryRead<string>(out var apiKeyText) && !string.IsNullOrWhiteSpace(apiKeyText))
         {
             if (!EnterpriseEncryption.IsEncrypted(apiKeyText))
                 LOGGER.LogWarning($"The configured embedding provider {idx} contains a plaintext API key. Only encrypted API keys (starting with 'ENC:v1:') are supported. (Plugin ID: {configPluginId})");
@@ -196,6 +233,14 @@ public sealed record EmbeddingProvider(
     /// <returns>A Lua configuration section string.</returns>
     public string ExportAsConfigurationSection(string? encryptedApiKey = null)
     {
+        var hfInferenceProviderLine = string.Empty;
+        if (this.HFInferenceProvider is not HFInferenceProvider.NONE)
+        {
+            hfInferenceProviderLine = $"""
+                                       ["HFInferenceProvider"] = "{this.HFInferenceProvider}",
+                                       """;
+        }
+
         var apiKeyLine = string.Empty;
         if (!string.IsNullOrWhiteSpace(encryptedApiKey))
         {
@@ -209,13 +254,14 @@ public sealed record EmbeddingProvider(
                     ["Id"] = "{{Guid.NewGuid().ToString()}}",
                     ["Name"] = "{{LuaTools.EscapeLuaString(this.Name)}}",
                     ["UsedLLMProvider"] = "{{this.UsedLLMProvider}}",
-                    
+
                     ["TokenizerPath"] = "{{this.TokenizerPath}}",
                     ["TokenLimit"] = {{this.EffectiveTokenLimit}},
                     ["EmbeddingBatchSize"] = {{this.EffectiveEmbeddingBatchSize}},
-                 
+
                     ["Host"] = "{{this.Host}}",
                     ["Hostname"] = "{{LuaTools.EscapeLuaString(this.Hostname)}}",
+                    {{hfInferenceProviderLine}}
                     {{apiKeyLine}}
                     ["Model"] = {
                         ["Id"] = "{{LuaTools.EscapeLuaString(this.Model.Id)}}",

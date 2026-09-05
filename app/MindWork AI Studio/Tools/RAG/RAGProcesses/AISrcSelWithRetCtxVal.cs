@@ -104,7 +104,7 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
             else
             {
                 var previousDataSecurity = chatThread.DataSecurity;
-                var previousDataConfidenceLevel = chatThread.DataConfidenceLevel;
+                var previousRequiredProviderConfidence = chatThread.RequiredProviderConfidence;
                 
                 //
                 // Update the data security of the chat thread. We consider the current data security
@@ -155,11 +155,10 @@ public sealed class AISrcSelWithRetCtxVal : IRagProcess
                     LOGGER.LogInformation($"The data security of the chat thread was updated from '{previousDataSecurity}' to '{chatThread.DataSecurity}'.");
 
                 foreach (var dataSource in selectedDataSources.OfType<IInternalDataSource>())
-                    if (dataSource.ConfidenceLevel > chatThread.DataConfidenceLevel)
-                        chatThread.DataConfidenceLevel = dataSource.ConfidenceLevel;
+                    chatThread.RequireProviderConfidence(dataSource.ConfidenceLevel);
 
-                if (previousDataConfidenceLevel != chatThread.DataConfidenceLevel)
-                    LOGGER.LogInformation($"The data confidence level of the chat thread was updated from '{previousDataConfidenceLevel.GetName()}' to '{chatThread.DataConfidenceLevel.GetName()}'.");
+                if (previousRequiredProviderConfidence != chatThread.RequiredProviderConfidence)
+                    LOGGER.LogInformation($"The required provider confidence of the chat thread was updated from '{previousRequiredProviderConfidence.GetName()}' to '{chatThread.RequiredProviderConfidence.GetName()}'.");
             }
             
             //

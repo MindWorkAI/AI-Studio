@@ -6,8 +6,6 @@ using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Dialogs;
 
-public sealed record AssistantPluginEditorDialogResult(Guid PluginId, string PluginName);
-
 public partial class AssistantPluginEditorDialog : MSGComponentBase
 {
     [Inject]
@@ -29,7 +27,7 @@ public partial class AssistantPluginEditorDialog : MSGComponentBase
     private IMudDialogInstance MudDialog { get; set; } = null!;
 
     [Inject]
-    private AssistantPluginInstallService AssistantPluginInstallService { get; init; } = null!;
+    private PluginInstallService PluginInstallService { get; init; } = null!;
 
     [Parameter]
     public Guid PluginId { get; set; }
@@ -72,6 +70,14 @@ public partial class AssistantPluginEditorDialog : MSGComponentBase
                 return;
             }
 
+            // An assistant an organization rolled out must keep the content its enterprise approval
+            // was granted for, so only its IT department may change it:
+            if (this.plugin.IsManagedByConfigServer)
+            {
+                this.issue = T("Only locally managed assistant plugins can be edited.");
+                return;
+            }
+
             this.pluginFile = Path.Join(this.plugin.LocalPath, PLUGIN_FILE_NAME);
             if (!File.Exists(this.pluginFile))
             {
@@ -105,7 +111,7 @@ public partial class AssistantPluginEditorDialog : MSGComponentBase
         try
         {
             var editedLua = await this.codeEditor.GetCodeAsync();
-            var result = await this.AssistantPluginInstallService.UpdateInstalledAssistantAsync(this.plugin, editedLua, CancellationToken.None);
+            var result = await this.PluginInstallService.UpdateInstalledAssistantAsync(this.plugin, editedLua, CancellationToken.None);
             if (!result.Success)
             {
                 LOGGER.LogError($"Failed to update assistant plugin '{result.PluginName}' ({result.PluginId}) in '{result.PluginDirectory}' with issue '{result.Issue}'.");

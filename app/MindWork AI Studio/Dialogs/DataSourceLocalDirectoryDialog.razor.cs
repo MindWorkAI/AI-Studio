@@ -108,6 +108,12 @@ public partial class DataSourceLocalDirectoryDialog : MSGComponentBase
     }
 
     #endregion
+
+    private EmbeddingProvider? GetEmbeddingProvider(string providerId)
+    {
+        var provider = this.SettingsManager.GetEmbeddingProviderById(providerId);
+        return provider == EmbeddingProvider.NONE ? null : provider;
+    }
     
     private EmbeddingProvider? SelectedEmbedding => this.SettingsManager.ConfigurationData.EmbeddingProviders
         .FirstOrDefault(x => x.Id == this.dataEmbeddingId);

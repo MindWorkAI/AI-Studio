@@ -138,6 +138,11 @@ public partial class VisualBriefingAssistant
         this.MediaTranscriptionService.ClearOwnerState(MediaImportOwner.ForVisualBriefing(id));
         await this.Store.DeleteAsync(id);
         await this.Store.ForgetSelectionAsync(id);
+
+        // The briefing is gone, so neither its build state nor its progress snapshot is of use:
+        this.BuildOrchestrator.ForgetBriefing(id);
+        this.BuildProgressService.Forget(id);
+
         this.ClearSelectedProject();
 
         await this.ReloadListAsync();
@@ -260,7 +265,7 @@ public partial class VisualBriefingAssistant
             : briefing.Versions.OrderByDescending(version => version.VersionNumber).FirstOrDefault()?.RevisionId ?? Guid.Empty;
 
         if (revisionId != Guid.Empty)
-            _ = this.SelectRevisionAsync(revisionId);
+            this.SelectRevisionAsync(revisionId).Observe($"{nameof(VisualBriefingAssistant)}: selecting a revision");
         else
         {
             this.selectedRevisionId = Guid.Empty;

@@ -29,7 +29,7 @@ public sealed class ProviderMistral() : BaseProvider(LLMProviders.MISTRAL, new U
                            chatModel,
                            chatThread,
                            settingsManager,
-                           async (systemPrompt, apiParameters) =>
+                           async (systemPrompt, apiParameters, tools) =>
                            {
                                if (TryPopBoolParameter(apiParameters, "safe_prompt", out var parsedSafePrompt))
                                    apiParameters["safe_prompt"] = parsedSafePrompt;
@@ -51,6 +51,7 @@ public sealed class ProviderMistral() : BaseProvider(LLMProviders.MISTRAL, new U
 
                                    // Right now, we only support streaming completions:
                                    Stream = true,
+                                   Tools = tools,
                                    AdditionalApiParameters = apiParameters
                                };
                            },
@@ -91,10 +92,12 @@ public sealed class ProviderMistral() : BaseProvider(LLMProviders.MISTRAL, new U
         {
             Models =
             [
+                // Codestral is a fill-in-the-middle model, which we cannot use for chats. That is
+                // specific to Mistral's catalog, which is why it is not part of the shared model
+                // kind detection:
                 ..modelResponse.Models.Where(n =>
                     !n.Id.StartsWith("code", StringComparison.OrdinalIgnoreCase) &&
-                    !n.Id.Contains("embed", StringComparison.OrdinalIgnoreCase) &&
-                    !n.Id.Contains("moderation", StringComparison.OrdinalIgnoreCase))
+                    n.IsChatModel())
             ]
         };
     }
@@ -108,7 +111,7 @@ public sealed class ProviderMistral() : BaseProvider(LLMProviders.MISTRAL, new U
         
         return modelResponse with
         {
-            Models = [..modelResponse.Models.Where(n => n.Id.Contains("embed", StringComparison.InvariantCulture))]
+            Models = [..modelResponse.Models.Where(n => n.IsEmbeddingModel())]
         };
     }
     
@@ -136,7 +139,6 @@ public sealed class ProviderMistral() : BaseProvider(LLMProviders.MISTRAL, new U
             storeType,
             "models",
             modelResponse => modelResponse.Data.Select(n => new Provider.Model(n.Id, null)),
-            token,
-            apiKeyProvisional);
+            apiKeyProvisional, token: token);
     }
 }

@@ -90,6 +90,9 @@ public static partial class ProviderExtensions
                 GetQwenReasoningState(parameters)),
 
             LLMProviders.OPEN_ROUTER or
+                LLMProviders.HETZNER or
+                LLMProviders.IONOS or
+                LLMProviders.LITE_LLM or
                 LLMProviders.X or
                 LLMProviders.DEEP_SEEK or
                 LLMProviders.GROQ or

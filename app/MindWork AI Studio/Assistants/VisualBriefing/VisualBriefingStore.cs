@@ -107,17 +107,16 @@ public sealed partial class VisualBriefingStore(
         string json,
         CancellationToken token)
     {
-        await WriteTextAtomicAsync(path, json, token, overwrite: false);
+        await WriteTextAtomicAsync(path, json, overwrite: false, token);
     }
 
     /// <summary>
     /// Defines <c>WriteTextAtomicAsync</c> for the visual briefing feature.
     /// </summary>
-    private static async Task WriteTextAtomicAsync(
-        string targetPath,
+    private static async Task WriteTextAtomicAsync(string targetPath,
         string content,
-        CancellationToken token,
-        bool overwrite = true)
+        bool overwrite,
+        CancellationToken token)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
         var temporaryPath = $"{targetPath}.tmp-{Guid.NewGuid():N}";
@@ -166,6 +165,16 @@ public sealed partial class VisualBriefingStore(
     /// Defines <c>GetLock</c> for the visual briefing feature.
     /// </summary>
     private SemaphoreSlim GetLock(Guid briefingId) => this.briefingLocks.GetOrAdd(briefingId, _ => new(1, 1));
+
+    /// <summary>
+    /// Drops the lock of a briefing which does not exist anymore.
+    /// </summary>
+    /// <remarks>
+    /// Otherwise, this dictionary keeps one entry per briefing the app ever touched. We do not
+    /// dispose the semaphore: another operation might still wait on it, and disposing it under
+    /// their feet would turn a deleted briefing into an exception somewhere else.
+    /// </remarks>
+    private void ForgetLock(Guid briefingId) => this.briefingLocks.TryRemove(briefingId, out _);
 
     /// <summary>
     /// Defines <c>BriefingDirectory</c> for the visual briefing feature.

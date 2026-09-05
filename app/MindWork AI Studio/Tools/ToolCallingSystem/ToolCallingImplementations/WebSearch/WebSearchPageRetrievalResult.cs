@@ -1,0 +1,3 @@
+namespace AIStudio.Tools.ToolCallingSystem.ToolCallingImplementations.WebSearch;
+
+internal sealed record WebSearchPageRetrievalResult(IReadOnlyList<WebSearchPageResult> Results, bool RetrievalTimedOut, WebSearchPageRetrievalStatistics ErrorStatistics);

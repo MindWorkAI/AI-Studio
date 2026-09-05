@@ -5,6 +5,7 @@ using AIStudio.Chat;
 using AIStudio.Dialogs;
 using AIStudio.Dialogs.Settings;
 using AIStudio.Tools.AssistantSessions;
+using AIStudio.Tools.Services;
 using Microsoft.AspNetCore.Components;
 
 #if !DEBUG
@@ -27,6 +28,9 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
 
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
+
+    [Inject]
+    private PandocAvailabilityService PandocAvailability { get; init; } = null!;
 
     protected override Tools.Components Component => Tools.Components.PROMPT_OPTIMIZER_ASSISTANT;
 
@@ -152,7 +156,7 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
         this.ResetGuidelineSummaryToDefault();
         this.hasUpdatedDefaultRecommendations = false;
 
-        var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_PROMPT_OPTIMIZER_ASSISTANT).FirstOrDefault();
+        var deferredContent = MessageBus.INSTANCE.TakeDeferredMessages<string>(Event.SEND_TO_PROMPT_OPTIMIZER_ASSISTANT).LastOrDefault();
         if (deferredContent is not null)
             this.inputPrompt = deferredContent;
 
@@ -579,9 +583,10 @@ public partial class AssistantPromptOptimizer : AssistantBaseCore<SettingsDialog
         try
         {
             this.isLoadingCustomPromptGuide = true;
-            this.customPromptingGuidelineContent = await UserFile.LoadFileData(fileAttachment.FilePath, this.RustService, this.DialogService);
-            if (string.IsNullOrWhiteSpace(this.customPromptingGuidelineContent))
-                await this.MessageBus.SendWarning(new(Icons.Material.Filled.Description, T("The custom prompt guide file is empty or could not be read.")));
+
+            // A failure was already reported by UserFile.LoadFileData, so we only keep the content:
+            var extraction = await UserFile.LoadFileData(fileAttachment.FilePath, this.RustService, this.PandocAvailability);
+            this.customPromptingGuidelineContent = extraction.HasUsableContent ? extraction.Content : string.Empty;
         }
         catch
         {

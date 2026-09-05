@@ -3,6 +3,7 @@ using AIStudio.Dialogs;
 using AIStudio.Provider;
 using AIStudio.Settings;
 using AIStudio.Settings.DataModel;
+using AIStudio.Tools.ToolCallingSystem;
 using AIStudio.Tools.AIJobs;
 using AIStudio.Tools.Media;
 using AIStudio.Tools.Services;
@@ -14,7 +15,7 @@ using DialogOptions = AIStudio.Dialogs.DialogOptions;
 
 namespace AIStudio.Components;
 
-public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
+public partial class ChatComponent : MSGComponentBase
 {
     private readonly Guid draftMediaOwnerId = Guid.NewGuid();
     private const string CHAT_INPUT_ID = "chat-user-input";
@@ -49,6 +50,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private ILogger<ChatComponent> Logger { get; set; } = null!;
 
     [Inject]
+    private ToolRegistry ToolRegistry { get; set; } = null!;
+
+    [Inject]
     private IDialogService DialogService { get; init; } = null!;
     
     [Inject] 
@@ -78,6 +82,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private bool mustLoadChat;
     private LoadChat loadChat;
     private bool autoSaveEnabled;
+    private HashSet<string> selectedToolIds = [];
     private bool previousInputForbidden = true;
     private Guid lastSeenChatId = Guid.Empty;
     private AIStudio.Settings.Provider lastSeenProvider = AIStudio.Settings.Provider.NONE;
@@ -121,7 +126,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     protected override async Task OnInitializedAsync()
     {
         this.MediaTranscriptionService.StateChanged += this.OnMediaImportStateChanged;
-        
+
         // Apply the filters for the message bus:
         this.ApplyFilters([], [ Event.HAS_CHAT_UNSAVED_CHANGES, Event.RESET_CHAT_STATE, Event.CHAT_STREAMING_DONE, Event.AI_JOB_CHANGED, Event.AI_JOB_FINISHED, Event.CHAT_GENERATION_CHANGED, Event.WORKSPACE_RENAMED, Event.CONFIGURATION_CHANGED ]);
         
@@ -136,10 +141,11 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         this.currentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(Tools.Components.CHAT);
         if (!this.ComposerState.HasUserDraft && !this.ComposerState.HasComposerContent)
             this.ComposerState.ApplyTemplate(this.currentChatTemplate);
+        this.selectedToolIds = ToolSelectionRules.NormalizeSelection(this.SettingsManager.GetDefaultToolIds(Tools.Components.CHAT));
 
         this.lastAppliedStandardDataSourceOptions = this.SettingsManager.ConfigurationData.Chat.PreselectedDataSourceOptions.CreateCopy();
 
-        var deferredInput = MessageBus.INSTANCE.CheckDeferredMessages<string>(Event.SEND_TO_CHAT_INPUT).FirstOrDefault();
+        var deferredInput = MessageBus.INSTANCE.TakeDeferredMessages<string>(Event.SEND_TO_CHAT_INPUT).LastOrDefault();
         if (!string.IsNullOrWhiteSpace(deferredInput))
             this.ComposerState.SetUserInput(deferredInput);
 
@@ -147,16 +153,25 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         // Check for deferred messages of the kind 'SEND_TO_CHAT',
         // aka the user sends an assistant result to the chat:
         //
-        var deferredContent = MessageBus.INSTANCE.CheckDeferredMessages<ChatThread>(Event.SEND_TO_CHAT).FirstOrDefault();
-        if (deferredContent is not null)
+        var deferredRequest = MessageBus.INSTANCE.TakeDeferredMessages<ChatStartRequest>(Event.SEND_TO_CHAT).LastOrDefault();
+        if (deferredRequest is not null)
         {
             //
             // Yes, the user sent an assistant result to the chat.
             //
             
             // Use chat thread sent by the user:
-            this.ChatThread = deferredContent;
+            this.ChatThread = deferredRequest.ChatThread;
             this.ChatThread.IncludeDateTime = true;
+            this.ApplyToolSelectionOfLoadedChat();
+
+            //
+            // Apply the chat template of the incoming chat to the composer. Like everywhere else,
+            // a draft the user typed themselves wins: we must not discard it just because someone
+            // started a preconfigured chat in the meantime.
+            //
+            if (deferredRequest.ApplySelectedChatTemplateToComposer && !this.ComposerState.HasUserDraft)
+                this.ComposerState.ApplyTemplate(this.SettingsManager.GetChatTemplateById(this.ChatThread.SelectedChatTemplate));
             
             this.Logger.LogInformation($"The chat '{this.ChatThread.ChatId}' with {this.ChatThread.Blocks.Count} messages was deferred and will be rendered now.");
             this.MarkCurrentChatAsLoadedParameter();
@@ -187,7 +202,8 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 //
                 // Check if the user wants to apply the standard chat data source options:
                 //
-                if (this.SettingsManager.ConfigurationData.Chat.SendToChatDataSourceBehavior is SendToChatDataSourceBehavior.APPLY_STANDARD_CHAT_DATA_SOURCE_OPTIONS)
+                if (!deferredRequest.PreserveDataSourceOptions &&
+                    this.SettingsManager.ConfigurationData.Chat.SendToChatDataSourceBehavior is SendToChatDataSourceBehavior.APPLY_STANDARD_CHAT_DATA_SOURCE_OPTIONS)
                     this.ChatThread.DataSourceOptions = this.SettingsManager.ConfigurationData.Chat.PreselectedDataSourceOptions.CreateCopy();
 
                 //
@@ -242,7 +258,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         // component sends a message to the chat component to load
         // the chat with the bias:
         //
-        var deferredLoading = MessageBus.INSTANCE.CheckDeferredMessages<LoadChat>(Event.LOAD_CHAT).FirstOrDefault();
+        var deferredLoading = MessageBus.INSTANCE.TakeDeferredMessages<LoadChat>(Event.LOAD_CHAT).LastOrDefault();
         if (deferredLoading != default)
         {
             this.loadChat = deferredLoading;
@@ -269,11 +285,11 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     private void OnMediaImportStateChanged(MediaImportOwner owner)
     {
         if (owner == this.CurrentMediaImportOwner)
-            _ = this.InvokeAsync(async () =>
+            this.InvokeAsync(async () =>
             {
                 await this.ConsumeMediaOutcomeAsync();
                 this.StateHasChanged();
-            });
+            }).Observe($"{nameof(ChatComponent)}: consuming a media import outcome");
     }
 
     /// <summary>Consumes a terminal media notification when its chat is visible.</summary>
@@ -331,6 +347,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
                 this.Logger.LogInformation($"The chat '{this.ChatThread!.ChatId}' with title '{this.ChatThread.Name}' ({this.ChatThread.Blocks.Count} messages) was loaded successfully.");
 
+                this.ApplyToolSelectionOfLoadedChat();
                 await this.SyncWorkspaceHeaderWithChatThreadAsync();
                 await this.SelectProviderWhenLoadingChat();
             }
@@ -623,9 +640,8 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     {
         var previousProvider = this.Provider;
         var previousChatTemplate = this.currentChatTemplate;
-        var chatProviderId = this.ChatThread?.SelectedProvider;
 
-        this.Provider = this.SettingsManager.GetChatProviderForLoadedChat(chatProviderId);
+        this.Provider = this.SettingsManager.GetChatProviderForLoadedChat(this.Provider.Id);
         if (this.Provider != previousProvider)
             await this.ProviderChanged.InvokeAsync(this.Provider);
 
@@ -765,6 +781,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             SelectedProvider = this.Provider.Id,
             SelectedProfile = this.currentProfile.Id,
             SelectedChatTemplate = this.currentChatTemplate.Id,
+            SelectedToolIds = [..this.selectedToolIds],
             SystemPrompt = SystemPrompts.DEFAULT,
             WorkspaceId = this.currentWorkspaceId,
             ChatId = Guid.NewGuid(),
@@ -787,6 +804,8 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         if (this.MediaTranscriptionService.IsBusy(this.CurrentMediaImportOwner))
             return;
 
+        await this.RefreshProviderSelectionFromConfigurationAsync();
+
         if (!this.IsProviderSelected)
             return;
         
@@ -807,6 +826,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 SelectedProvider = this.Provider.Id,
                 SelectedProfile = this.currentProfile.Id,
                 SelectedChatTemplate = this.currentChatTemplate.Id,
+                SelectedToolIds = [..this.selectedToolIds],
                 SystemPrompt = SystemPrompts.DEFAULT,
                 WorkspaceId = this.currentWorkspaceId,
                 ChatId = Guid.NewGuid(),
@@ -909,15 +929,18 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         }
         
         this.Logger.LogDebug($"Start processing user input using provider '{this.Provider.InstanceName}' with model '{this.Provider.Model}'.");
+        this.StateHasChanged();
+        this.ChatThread!.RuntimeComponent = Tools.Components.CHAT;
+        this.ChatThread.SelectedToolIds = [..this.selectedToolIds];
+        this.ChatThread.RuntimeSelectedToolIds = this.ToolRegistry.FilterToolIdsForProvider(this.Provider, this.selectedToolIds);
         await this.AIJobService.TryStartChatGenerationAsync(new ChatGenerationRequest
         {
-            ChatThread = this.ChatThread!,
+            ChatThread = this.ChatThread,
             AIText = aiText,
             LastUserPrompt = lastUserPrompt,
             ProviderSettings = this.Provider,
             IsForeground = true,
         });
-
         await this.SyncForegroundChatAsync();
         this.StateHasChanged();
     }
@@ -926,6 +949,37 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
     {
         if (this.ChatThread is not null)
             await this.AIJobService.CancelChatGenerationAsync(this.ChatThread.ChatId);
+    }
+
+    /// <summary>
+    /// Takes over the tool selection of the chat that was just loaded or handed to this component.
+    /// </summary>
+    /// <remarks>
+    /// A thread without a selection means the chat defaults: that is a chat saved before tools
+    /// existed, as well as one a launcher opened without naming any. Both want what the settings
+    /// preselect. Every path that puts a thread into this component has to come through here, or
+    /// the footer would keep showing the tools of the chat before it.
+    /// </remarks>
+    private void ApplyToolSelectionOfLoadedChat() =>
+        this.selectedToolIds = ToolSelectionRules.NormalizeSelection(this.ChatThread?.SelectedToolIds ?? this.SettingsManager.GetDefaultToolIds(Tools.Components.CHAT));
+
+    private Task SelectedToolIdsChanged(HashSet<string> updatedToolIds)
+    {
+        this.selectedToolIds = ToolSelectionRules.NormalizeSelection(updatedToolIds);
+
+        //
+        // The thread keeps the selection so that reopening the chat tomorrow brings the same tools
+        // back. What is stored is what the user chose, not what the current provider is allowed to
+        // run: filtering here would quietly drop a tool for good the moment the user switches to a
+        // provider with less confidence.
+        //
+        if (this.ChatThread is not null)
+        {
+            this.ChatThread.SelectedToolIds = [..this.selectedToolIds];
+            this.hasUnsavedChanges = true;
+        }
+
+        return Task.CompletedTask;
     }
     
     private async Task SaveThread()
@@ -990,6 +1044,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         //
         this.hasUnsavedChanges = false;
         this.ComposerState.Clear();
+        this.selectedToolIds = ToolSelectionRules.NormalizeSelection(this.SettingsManager.GetDefaultToolIds(Tools.Components.CHAT));
         this.RefreshCurrentProfileAndChatTemplate();
         
         //
@@ -1039,6 +1094,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                 SelectedProvider = this.Provider.Id,
                 SelectedProfile = this.currentProfile.Id,
                 SelectedChatTemplate = this.currentChatTemplate.Id,
+                SelectedToolIds = [..this.selectedToolIds],
                 SystemPrompt = SystemPrompts.DEFAULT,
                 WorkspaceId = this.currentWorkspaceId,
                 ChatId = Guid.NewGuid(),
@@ -1114,6 +1170,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
             await this.SyncWorkspaceHeaderWithChatThreadAsync();
             await this.SyncForegroundChatAsync();
             this.dataSourceSelectionComponent?.ChangeOptionWithoutSaving(this.ChatThread.DataSourceOptions, this.ChatThread.AISelectedDataSources);
+            this.ApplyToolSelectionOfLoadedChat();
         }
         else
         {
@@ -1132,6 +1189,19 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         }
         
         this.StateHasChanged();
+    }
+
+    private async Task RefreshProviderSelectionFromConfigurationAsync()
+    {
+        var updatedProvider = this.SettingsManager.GetPreselectedProvider(Tools.Components.CHAT, this.Provider.Id);
+        var providerChanged = updatedProvider != this.Provider;
+        if (providerChanged)
+            this.Provider = updatedProvider;
+
+        if (!providerChanged)
+            return;
+
+        await this.ProviderChanged.InvokeAsync(this.Provider);
     }
     
     private async Task ResetState()
@@ -1316,6 +1386,7 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
                     this.StateHasChanged();
                 }
                 break;
+
         }
     }
 
@@ -1338,9 +1409,9 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
 
     #endregion
     
-    #region Implementation of IAsyncDisposable
+    #region Overrides of MSGComponentBase
 
-    public async ValueTask DisposeAsync()
+    protected override async ValueTask DisposeResourcesAsync()
     {
         this.MediaTranscriptionService.StateChanged -= this.OnMediaImportStateChanged;
         if(this.SettingsManager.ConfigurationData.Workspace.StorageBehavior is WorkspaceStorageBehavior.STORE_CHATS_AUTOMATICALLY)
@@ -1350,7 +1421,6 @@ public partial class ChatComponent : MSGComponentBase, IAsyncDisposable
         }
 
         await this.AIJobService.SetForegroundAsync(AIJobKind.CHAT_GENERATION, this.foregroundChatId, false);
-        this.Dispose();
     }
 
     #endregion

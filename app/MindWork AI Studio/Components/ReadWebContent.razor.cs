@@ -1,5 +1,7 @@
 using AIStudio.Agents;
 using AIStudio.Chat;
+using AIStudio.Tools.Security;
+using AIStudio.Tools.Web;
 
 using Microsoft.AspNetCore.Components;
 
@@ -7,11 +9,26 @@ namespace AIStudio.Components;
 
 public partial class ReadWebContent : MSGComponentBase
 {
+    /// <summary>
+    /// How long loading one page may take.
+    /// </summary>
+    /// <remarks>
+    /// The user is watching a progress indicator while this runs, so it is shorter than what the
+    /// tools allow themselves for a page fetched in the background.
+    /// </remarks>
+    private const int TIMEOUT_SECONDS = 60;
+
     [Inject]
-    private HTMLParser HTMLParser { get; init; } = null!;
-    
+    private WebPageRetrievalService WebPageRetrievalService { get; init; } = null!;
+
+    [Inject]
+    private ILogger<ReadWebContent> Logger { get; init; } = null!;
+
     [Inject]
     private AgentTextContentCleaner AgentTextContentCleaner { get; init; } = null!;
+
+    [Inject]
+    private PromptInjectionGuardService PromptInjectionGuardService { get; init; } = null!;
 
     [Parameter]
     public string Content { get; set; } = string.Empty;
@@ -81,12 +98,24 @@ public partial class ReadWebContent : MSGComponentBase
         {
             this.processStep = this.process[ReadWebContentSteps.LOADING];
             this.StateHasChanged();
-            
-            var html = await this.HTMLParser.LoadWebContentHTML(new Uri(this.providedURL));
-            
+
+            //
+            // The same retrieval the read web page tool uses, so a page is fetched and read one
+            // way throughout AI Studio. The difference is the target policy: here the user typed
+            // the URL, so their own network is not off limits.
+            //
+            var retrievedPage = await this.WebPageRetrievalService.RetrieveAsync(
+                new Uri(this.providedURL),
+                new WebPageRetrievalOptions
+                {
+                    TimeoutSeconds = TIMEOUT_SECONDS,
+                    TargetChosenByUser = true,
+                });
+
             this.processStep = this.process[ReadWebContentSteps.PARSING];
             this.StateHasChanged();
-            markdown = this.HTMLParser.ParseToMarkdown(html);
+            markdown = retrievedPage.ExtractedPage.Markdown;
+            markdown = await this.PromptInjectionGuardService.SanitizeAsync(markdown, PromptInjectionSource.WebContent(this.providedURL));
             
             if (this.PreselectContentCleanerAgent && this.providerSettings != AIStudio.Settings.Provider.NONE)
             {
@@ -120,7 +149,7 @@ public partial class ReadWebContent : MSGComponentBase
                 this.StateHasChanged();
             }
         }
-        catch
+        catch (Exception exception)
         {
             if (this.AgentIsRunning)
             {
@@ -129,6 +158,14 @@ public partial class ReadWebContent : MSGComponentBase
                 await this.AgentIsRunningChanged.InvokeAsync(this.AgentIsRunning);
                 this.StateHasChanged();
             }
+
+            //
+            // Say why nothing was loaded. An empty text field looks like a page without content,
+            // and the reasons a page cannot be read are things the user can act on: a link to a
+            // PDF rather than a page, a host that does not answer, a server refusing the request.
+            //
+            this.Logger.LogWarning(exception, "Could not load the web content from '{ProvidedUrl}'.", this.providedURL);
+            await this.MessageBus.SendError(new(Icons.Material.Filled.CloudOff, string.Format(this.T("The content of '{0}' could not be loaded: {1}"), this.providedURL, exception.Message)));
         }
 
         this.Content = markdown;

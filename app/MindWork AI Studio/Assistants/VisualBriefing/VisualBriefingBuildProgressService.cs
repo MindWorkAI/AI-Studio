@@ -33,4 +33,14 @@ public sealed class VisualBriefingBuildProgressService
     /// </summary>
     public VisualBriefingBuildRecord? GetLatest(Guid briefingId) =>
         this.latest.GetValueOrDefault(briefingId);
+
+    /// <summary>
+    /// Drops the snapshot of a briefing which does not exist anymore.
+    /// </summary>
+    /// <remarks>
+    /// A snapshot is a complete build record. Without this, every briefing which was ever built
+    /// kept one for as long as the app was running.
+    /// </remarks>
+    /// <param name="briefingId">The identifier of the deleted briefing.</param>
+    public void Forget(Guid briefingId) => this.latest.TryRemove(briefingId, out _);
 }

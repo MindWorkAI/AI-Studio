@@ -7,6 +7,9 @@ using System.Text.Json;
 using AIStudio.Chat;
 using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem;
+using AIStudio.Tools.Rust;
+using AIStudio.Tools.ToolCallingSystem;
+using AIStudio.Tools.ToolCallingSystem.Harness;
 
 namespace AIStudio.Provider.OpenAI;
 
@@ -16,7 +19,6 @@ namespace AIStudio.Provider.OpenAI;
 public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Uri("https://api.openai.com/v1/"), ExternalHttpTrustPolicy.SYSTEM_TRUST_ONLY, LOGGER)
 {
     private static readonly ILogger<ProviderOpenAI> LOGGER = Program.LOGGER_FACTORY.CreateLogger<ProviderOpenAI>();
-    
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ProviderOpenAI).Namespace, nameof(ProviderOpenAI));
     
     #region Implementation of IProvider
@@ -87,8 +89,10 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
             _ => systemPromptRole,
         };
 
-        // Read the model capabilities:
-        var modelCapabilities = this.Provider.GetModelCapabilities(chatModel);
+        // Read the model capabilities. Through the settings provider, so that the user's expert
+        // capability overrides apply:
+        var providerSettings = this.CreateSettingsProvider(chatModel);
+        var modelCapabilities = providerSettings.GetModelCapabilities();
         
         // Check if we are using the Responses API or the Chat Completion API:
         var usingResponsesAPI = modelCapabilities.Contains(Capability.RESPONSES_API);
@@ -98,81 +102,156 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
         
         LOGGER.LogInformation("Using the system prompt role '{SystemPromptRole}' and the '{RequestPath}' API for model '{ChatModelId}'.", systemPromptRole, requestPath, chatModel.Id);
         
-        // Prepare the system prompt:
-        var systemPrompt = new TextMessage
-        {
-            Role = systemPromptRole,
-            Content = chatThread.PrepareSystemPrompt(settingsManager),
-        };
-
         //
         // Prepare the tools we want to use:
         //
-        IList<ProviderTool> providerTools = modelCapabilities.Contains(Capability.WEB_SEARCH) switch
-        {
-            true => [ ProviderTools.WEB_SEARCH ],
-            _ => []
-        };
+        var toolRegistry = Program.SERVICE_PROVIDER.GetService<ToolRegistry>();
+        var providerConfidence = this.Provider.GetConfidence(settingsManager).Level;
+
+        //
+        // The provider-native web search is held to the same confidence the local web search tool
+        // asks for: to the user it is the same act, whoever performs the search.
+        //
+        var minimumWebSearchConfidence = toolRegistry?.GetMinimumProviderConfidence(ToolSelectionRules.WEB_SEARCH_TOOL_ID) ?? ConfidenceLevel.NONE;
+        var isWebSearchAllowed = settingsManager.IsToolActive(ToolSelectionRules.WEB_SEARCH_TOOL_ID) &&
+                                 ToolSelectionRules.IsProviderConfidenceAllowed(providerConfidence, minimumWebSearchConfidence);
+        IList<object> providerTools = modelCapabilities.Contains(Capability.WEB_SEARCH) && isWebSearchAllowed
+            ? [ ProviderTools.WEB_SEARCH ]
+            : [];
         
         
         // Parse the API parameters:
-        var apiParameters = this.ParseAdditionalApiParameters("input", "store", "tools");
+        var additionalApiParameters = this.ParseAdditionalApiParameters("input", "store", "tools");
+
+        if (!usingResponsesAPI)
+        {
+            await foreach (var content in this.StreamOpenAICompatibleChatCompletion<ChatCompletionAPIRequest, ChatCompletionDeltaStreamLine, ChatCompletionAnnotationStreamLine>(
+                               "OpenAI",
+                               chatModel,
+                               chatThread,
+                               settingsManager,
+                               async (systemPrompt, apiParameters, tools) =>
+                               {
+                                   var messages = await chatThread.Blocks.BuildMessagesAsync(
+                                       this.Provider,
+                                       chatModel,
+                                       role => role switch
+                                       {
+                                           ChatRole.USER => "user",
+                                           ChatRole.AI => "assistant",
+                                           ChatRole.AGENT => "assistant",
+                                           ChatRole.SYSTEM => systemPromptRole,
+                                           _ => "user",
+                                       },
+                                       text => new SubContentText
+                                       {
+                                           Text = text,
+                                       },
+                                       async attachment => new SubContentImageUrlNested
+                                       {
+                                           ImageUrl = new SubContentImageUrlData
+                                           {
+                                               Url = await attachment.TryAsBase64(token: token) is (true, var base64Content)
+                                                   ? $"data:{attachment.DetermineMimeType()};base64,{base64Content}"
+                                                   : string.Empty,
+                                           },
+                                       });
+
+                                   return new ChatCompletionAPIRequest
+                                   {
+                                       Model = chatModel.Id,
+                                       Messages = [systemPrompt, ..messages],
+                                       Stream = true,
+                                       Tools = tools,
+                                       AdditionalApiParameters = apiParameters,
+                                   };
+                               },
+                               systemPromptRole: systemPromptRole,
+                               requestPath: "chat/completions",
+                               token: token))
+                yield return content;
+
+            yield break;
+        }
+
+        var toolExecutor = Program.SERVICE_PROVIDER.GetService<ToolExecutor>();
+        var currentAssistantContent = chatThread.Blocks.LastOrDefault(x => x.Role is ChatRole.AI)?.Content as ContentText;
+        currentAssistantContent?.ToolInvocations.Clear();
+
+        IReadOnlyList<(ToolDefinition Definition, IToolImplementation Implementation)> runnableTools = toolRegistry is null
+            ? []
+            : await toolRegistry.GetRunnableToolsAsync(
+                providerSettings,
+                chatThread.RuntimeComponent,
+                chatThread.RuntimeSelectedToolIds,
+                providerConfidence,
+                chatThread.MayRunTools(settingsManager));
+
+        var toolAwareDefinitions = toolExecutor is null
+            ? Enumerable.Empty<ToolDefinition>()
+            : runnableTools.Select(x => x.Definition);
+        var systemPrompt = new TextMessage
+        {
+            Role = systemPromptRole,
+            Content = chatThread.PrepareSystemPrompt(settingsManager, toolAwareDefinitions),
+        };
 
         // Build the list of messages:
         var messages = await chatThread.Blocks.BuildMessagesAsync(
             this.Provider, chatModel,
-
-            // OpenAI-specific role mapping:
             role => role switch
             {
                 ChatRole.USER => "user",
                 ChatRole.AI => "assistant",
                 ChatRole.AGENT => "assistant",
                 ChatRole.SYSTEM => systemPromptRole,
-
                 _ => "user",
             },
-
-            // OpenAI's text sub-content depends on the model, whether we are using
-            // the Responses API or the Chat Completion API:
-            text => usingResponsesAPI switch
+            text => new SubContentInputText
             {
-                // Responses API uses INPUT_TEXT:
-                true => new SubContentInputText
-                {
-                    Text = text,
-                },
-
-                // Chat Completion API uses TEXT:
-                false => new SubContentText
-                {
-                    Text = text,
-                },
+                Text = text,
             },
-
-            // OpenAI's image sub-content depends on the model as well,
-            // whether we are using the Responses API or the Chat Completion API:
-            async attachment => usingResponsesAPI switch
+            async attachment => new SubContentInputImage
             {
-                // Responses API uses INPUT_IMAGE:
-                true => new SubContentInputImage
-                {
-                    ImageUrl = await attachment.TryAsBase64(token: token) is (true, var base64Content)
-                        ? $"data:{attachment.DetermineMimeType()};base64,{base64Content}"
-                        : string.Empty,
-                },
-                
-                // Chat Completion API uses IMAGE_URL:
-                false => new SubContentImageUrlNested
-                {
-                    ImageUrl = new SubContentImageUrlData
-                    {
-                        Url = await attachment.TryAsBase64(token: token) is (true, var base64Content)
-                            ? $"data:{attachment.DetermineMimeType()};base64,{base64Content}"
-                            : string.Empty,
-                    },
-                }
+                ImageUrl = await attachment.TryAsBase64(token: token) is (true, var base64Content)
+                    ? $"data:{attachment.DetermineMimeType()};base64,{base64Content}"
+                    : string.Empty,
             });
+
+        var baseInput = new List<object> { systemPrompt };
+        baseInput.AddRange(messages);
+
+        if (usingResponsesAPI && toolExecutor is not null && runnableTools.Count > 0)
+        {
+            var adapter = new ResponsesToolCallingAdapter(
+                chatModel,
+                baseInput,
+                additionalApiParameters,
+                providerTools,
+                runnableTools,
+                (requestDto, requestToken) => this.ExecuteResponsesRequest(requestDto, requestedSecret, requestToken));
+
+            var loop = Program.SERVICE_PROVIDER.GetRequiredService<IToolCallingLoop>();
+            var loopContext = new ToolCallingLoopContext
+            {
+                ChatThread = chatThread,
+                RunnableTools = runnableTools,
+                ToolExecutor = toolExecutor,
+                Provider = this,
+                CurrentAssistantContent = currentAssistantContent,
+                ProviderInstanceName = this.InstanceName,
+                ProviderType = this.Provider,
+                ModelId = chatModel.Id,
+            };
+
+            await foreach (var content in loop.RunAsync(adapter, loopContext, token))
+                yield return content;
+
+            yield break;
+        }
+
+        if (runnableTools.Count > 0)
+            providerTools = [];
         
         //
         // Create the request: either for the Responses API or the Chat Completion API
@@ -189,16 +268,16 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
             
                 // Right now, we only support streaming completions:
                 Stream = true,
-                AdditionalApiParameters = apiParameters
+                AdditionalApiParameters = additionalApiParameters
             }, JSON_SERIALIZER_OPTIONS),
-            
+
             // Responses API request:
             true => JsonSerializer.Serialize(new ResponsesAPIRequest
             {
                 Model = chatModel.Id,
             
                 // All messages go into the input field:
-                Input = [systemPrompt, ..messages],
+                Input = baseInput,
             
                 // Right now, we only support streaming completions:
                 Stream = true,
@@ -207,10 +286,10 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
                 Store = false,
                 
                 // Tools we want to use:
-                ProviderTools = providerTools,
+                Tools = providerTools,
                 
                 // Additional API parameters:
-                AdditionalApiParameters = apiParameters
+                AdditionalApiParameters = additionalApiParameters
                 
             }, JSON_SERIALIZER_OPTIONS),
         };
@@ -237,6 +316,24 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
                 yield return content;
     }
 
+    private async Task<ResponsesResponse?> ExecuteResponsesRequest(ResponsesAPIRequest requestDto, RequestedSecret requestedSecret, CancellationToken token)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, "responses");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await requestedSecret.Secret.Decrypt(Program.ENCRYPTION));
+        request.Content = new StringContent(JsonSerializer.Serialize(requestDto, JSON_SERIALIZER_OPTIONS), Encoding.UTF8, "application/json");
+
+        using var response = await this.HttpClient.SendAsync(request, token);
+        if (!response.IsSuccessStatusCode)
+        {
+            var responseBody = await response.Content.ReadAsStringAsync(token);
+            LOGGER.LogError("Tool calling Responses API request failed with status code {ResponseStatusCode} and body: '{ResponseBody}'.", response.StatusCode, responseBody);
+            await ToolCallingMessages.SendToolCallingRequestFailedAsync((int)response.StatusCode);
+            return null;
+        }
+
+        return await response.Content.ReadFromJsonAsync<ResponsesResponse>(JSON_SERIALIZER_OPTIONS, token);
+    }
+
     #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
     
     /// <inheritdoc />
@@ -261,59 +358,46 @@ public sealed class ProviderOpenAI() : BaseProvider(LLMProviders.OPEN_AI, new Ur
         return await this.PerformStandardTextEmbeddingRequest(requestedSecret, embeddingModel, token: token, texts: texts);
     }
 
+    //
+    // OpenAI offers every kind of model through one models endpoint, so we have to sort them apart
+    // ourselves. We used to do that with lists of name prefixes kept here. The shared model kind
+    // detection knows those families as well, and it knows them for every provider, so we ask it
+    // instead of maintaining a second set of rules which only ever lagged behind.
+    //
+
     /// <inheritdoc />
-    public override async Task<ModelLoadResult> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override Task<ModelLoadResult> GetTextModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        var result = await this.LoadModels(SecretStoreType.LLM_PROVIDER, ["chatgpt-", "gpt-", "o1-", "o3-", "o4-"], token, apiKeyProvisional);
-        return result with
-        {
-            Models =
-            [
-                ..result.Models.Where(model => !model.Id.Contains("image", StringComparison.OrdinalIgnoreCase) &&
-                                               !model.Id.Contains("realtime", StringComparison.OrdinalIgnoreCase) &&
-                                               !model.Id.Contains("audio", StringComparison.OrdinalIgnoreCase) &&
-                                               !model.Id.Contains("tts", StringComparison.OrdinalIgnoreCase) &&
-                                               !model.Id.Contains("transcribe", StringComparison.OrdinalIgnoreCase))
-            ]
-        };
+        return this.LoadModels(SecretStoreType.LLM_PROVIDER, static model => model.IsChatModel(), apiKeyProvisional, token);
     }
 
     /// <inheritdoc />
     public override Task<ModelLoadResult> GetImageModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModels(SecretStoreType.IMAGE_PROVIDER, ["dall-e-", "gpt-image"], token, apiKeyProvisional);
+        return this.LoadModels(SecretStoreType.IMAGE_PROVIDER, static model => model.IsImageModel(), apiKeyProvisional, token);
     }
-    
+
     /// <inheritdoc />
     public override Task<ModelLoadResult> GetEmbeddingModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        return this.LoadModels(SecretStoreType.EMBEDDING_PROVIDER, ["text-embedding-"], token, apiKeyProvisional);
+        return this.LoadModels(SecretStoreType.EMBEDDING_PROVIDER, static model => model.IsEmbeddingModel(), apiKeyProvisional, token);
     }
-    
+
     /// <inheritdoc />
-    public override async Task<ModelLoadResult> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
+    public override Task<ModelLoadResult> GetTranscriptionModels(string? apiKeyProvisional = null, CancellationToken token = default)
     {
-        var result = await this.LoadModels(SecretStoreType.TRANSCRIPTION_PROVIDER, ["whisper-", "gpt-"], token, apiKeyProvisional);
-        return result with
-        {
-            Models =
-            [
-                ..result.Models.Where(model => model.Id.StartsWith("whisper-", StringComparison.InvariantCultureIgnoreCase) ||
-                                               model.Id.Contains("-transcribe", StringComparison.InvariantCultureIgnoreCase))
-            ]
-        };
+        return this.LoadModels(SecretStoreType.TRANSCRIPTION_PROVIDER, static model => model.IsTranscriptionModel(), apiKeyProvisional, token);
     }
     
     #endregion
 
-    private Task<ModelLoadResult> LoadModels(SecretStoreType storeType, string[] prefixes, CancellationToken token, string? apiKeyProvisional = null)
+    private Task<ModelLoadResult> LoadModels(SecretStoreType storeType, Func<Model, bool> isWantedKind, string? apiKeyProvisional, CancellationToken token)
     {
         return this.LoadModelsResponse<ModelsResponse>(
             storeType,
             "models",
-            modelResponse => modelResponse.Data.Where(model => prefixes.Any(prefix => model.Id.StartsWith(prefix, StringComparison.InvariantCulture))),
-            token,
-            apiKeyProvisional);
+            modelResponse => modelResponse.Data.Where(isWantedKind),
+            apiKeyProvisional, token: token);
     }
 
     private static bool HasInsufficientQuotaError(string responseBody)

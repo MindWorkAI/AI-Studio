@@ -50,6 +50,16 @@ public static class ExternalHttpClientTimeout
         return httpClient;
     }
 
+    public static void ConfigureSocketsHttpHandler(SocketsHttpHandler handler, string host, ExternalHttpTrustPolicy trustPolicy)
+    {
+        var customRootCertificateCache = GetCustomRootCertificateCache();
+        if (!customRootCertificateCache.State.IsUsable)
+            return;
+
+        handler.SslOptions.RemoteCertificateValidationCallback = (_, certificate, chain, sslPolicyErrors) =>
+            ValidateServerCertificateWithCustomRootCertificates(host, certificate, chain, sslPolicyErrors, customRootCertificateCache, trustPolicy);
+    }
+
     public static ExternalHttpCustomRootCertificateState CustomRootCertificateState => GetCustomRootCertificateCache().State;
 
     public static string GetTimeoutDescription()
@@ -356,10 +366,26 @@ public static class ExternalHttpClientTimeout
         CustomRootCertificateCache customRootCertificateCache,
         ExternalHttpTrustPolicy trustPolicy)
     {
+        return ValidateServerCertificateWithCustomRootCertificates(
+            ReadRequestHost(request),
+            certificate,
+            originalChain,
+            sslPolicyErrors,
+            customRootCertificateCache,
+            trustPolicy);
+    }
+
+    private static bool ValidateServerCertificateWithCustomRootCertificates(
+        string host,
+        X509Certificate? certificate,
+        X509Chain? originalChain,
+        SslPolicyErrors sslPolicyErrors,
+        CustomRootCertificateCache customRootCertificateCache,
+        ExternalHttpTrustPolicy trustPolicy)
+    {
         if (sslPolicyErrors is SslPolicyErrors.None)
             return true;
 
-        var host = ReadRequestHost(request);
         if (certificate is null)
         {
             LOGGER.Value.LogError($"Rejected external HTTPS certificate for '{HostForLog(host)}' because the TLS stack did not provide a server certificate. TLS policy errors: {sslPolicyErrors}.");
@@ -392,7 +418,7 @@ public static class ExternalHttpClientTimeout
             customChain.ChainPolicy.TrustMode = X509ChainTrustMode.CustomRootTrust;
             customChain.ChainPolicy.CustomTrustStore.AddRange(customRootCertificateCache.Certificates);
             customChain.ChainPolicy.ApplicationPolicy.Add(new Oid(TLS_SERVER_AUTHENTICATION_EKU_OID));
-            
+
             // Match the .NET 9 HttpClient default used for the initial system-trust validation.
             // Hostname, signature, validity, EKU, and root trust checks remain enabled.
             customChain.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck;
@@ -410,9 +436,9 @@ public static class ExternalHttpClientTimeout
 
             var isValid = customChain.Build(serverCertificate);
             if (isValid)
-                LogCustomRootCertificateAccepted(request);
+                LogCustomRootCertificateAccepted(host);
             else
-                LogCustomRootCertificateValidationFailure(request, sslPolicyErrors, customChain);
+                LogCustomRootCertificateValidationFailure(host, sslPolicyErrors, customChain);
 
             return isValid;
         }
@@ -468,20 +494,15 @@ public static class ExternalHttpClientTimeout
         LOGGER.Value.LogWarning($"External HTTP custom root certificates are enabled from {state.Source}, but no additional root certificates are usable. Bundle path: '{state.BundlePath}'. Issue: {state.Issue}");
     }
 
-    private static void LogCustomRootCertificateAccepted(HttpRequestMessage request)
-    {
-        var host = ReadRequestHost(request);
-        LOGGER.Value.LogWarning($"Accepted an external HTTPS certificate for '{host}' using configured custom root certificates.");
-    }
+    private static void LogCustomRootCertificateAccepted(string host) => LOGGER.Value.LogWarning($"Accepted an external HTTPS certificate for '{host}' using configured custom root certificates.");
 
-    private static void LogCustomRootCertificateValidationFailure(HttpRequestMessage request, SslPolicyErrors sslPolicyErrors, X509Chain chain)
+    private static void LogCustomRootCertificateValidationFailure(string host, SslPolicyErrors sslPolicyErrors, X509Chain chain)
     {
         var chainStatuses = FormatChainStatusesForLog(chain.ChainStatus);
         var elementStatuses = chain.ChainElements
             .Cast<X509ChainElement>()
             .Select((element, index) => $"element {index}: {FormatChainStatusesForLog(element.ChainElementStatus)}")
             .ToList();
-        var host = ReadRequestHost(request);
         LOGGER.Value.LogError($"Rejected external HTTPS certificate for '{HostForLog(host)}' after validation with configured custom root certificates. TLS policy errors: {sslPolicyErrors}. Chain statuses: {chainStatuses}. Chain element statuses: {string.Join("; ", elementStatuses)}");
     }
 
