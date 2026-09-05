@@ -17,6 +17,9 @@ public partial class ToolSettingsExportDialog : SettingsDialogBase
     [Inject]
     private ToolSettingsService ToolSettingsService { get; init; } = null!;
 
+    [Inject]
+    private ILogger<ToolSettingsExportDialog> Logger { get; init; } = null!;
+
     private ToolDefinition? toolDefinition;
     private IToolImplementation? implementation;
     private IReadOnlyList<ExportableSettings> areas = [];
@@ -98,9 +101,11 @@ public partial class ToolSettingsExportDialog : SettingsDialogBase
                 .Select(property => property.Key)
                 .ToHashSet(StringComparer.Ordinal);
         }
-        catch (Exception)
+        catch (Exception e)
         {
-            // A runtime error may contain secret data, so never display the exception text.
+            // A runtime error may contain secret data, so it goes to the log for diagnosis but
+            // never into the dialog:
+            this.Logger.LogError(e, "Failed to load the configuration of the tool '{ToolId}' for export.", this.ToolId);
             this.toolDefinition = null;
             this.message = T("The tool configuration could not be loaded. Please close this dialog and try again.");
         }
@@ -180,8 +185,9 @@ public partial class ToolSettingsExportDialog : SettingsDialogBase
             // administrators can retry or export another selection from the same tool.
             await this.RustService.CopyText2Clipboard(result.LuaCode);
         }
-        catch (Exception)
+        catch (Exception e)
         {
+            this.Logger.LogError(e, "Failed to export the configuration of the tool '{ToolId}'.", this.ToolId);
             this.message = T("The tool configuration could not be exported. Please try again.");
         }
         finally

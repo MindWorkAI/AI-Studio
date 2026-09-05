@@ -54,8 +54,7 @@ public sealed partial class ToolSettingsService
     /// Builds a fragment from one snapshot. A failed encryption returns no Lua, even when other
     /// fields have already been processed, so the caller cannot copy a partial export by accident.
     /// </summary>
-    private static ToolSettingsExportResult BuildConfigurationSection(ToolDefinition definition, IReadOnlyList<ExportableSettings> areas, IReadOnlyDictionary<string, string> values,
-        ToolSettingsExportOptions options, ConfidenceLevel minimumProviderConfidence, EnterpriseEncryption? encryption)
+    private static ToolSettingsExportResult BuildConfigurationSection(ToolDefinition definition, IReadOnlyList<ExportableSettings> areas, IReadOnlyDictionary<string, string> values, ToolSettingsExportOptions options, ConfidenceLevel minimumProviderConfidence, EnterpriseEncryption? encryption)
     {
         var lockedValues = new Dictionary<string, string>(StringComparer.Ordinal);
         var defaultValues = new Dictionary<string, string>(StringComparer.Ordinal);
