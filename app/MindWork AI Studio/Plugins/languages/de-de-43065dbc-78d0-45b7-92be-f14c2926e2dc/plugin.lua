@@ -11034,6 +11034,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONSOURCEKINDEXTENSIONS:
 -- File content
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SECURITY::PROMPTINJECTIONSOURCEKINDEXTENSIONS::T3788064862"] = "Dateiinhalt"
 
+-- The revised assistant plugin asks for tools this AI Studio does not have: '{0}'. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T1002777578"] = "Das überarbeitete Assistenten-Plugin fordert Werkzeuge an, die dieses AI Studio nicht hat: „{0}“. Bitte versuchen Sie es erneut."
+
 -- The Assistant Builder context could not be loaded.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T108292972"] = "Der Kontext des Assistenten-Builders konnte nicht geladen werden."
 
@@ -11048,9 +11051,6 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T1
 
 -- The revision model did not return a usable answer.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T1411545143"] = "Das Überarbeitungsmodell hat keine brauchbare Antwort zurückgegeben."
-
--- The revised assistant plugin asks for tools this AI Studio does not have: \"{0}\". Please try again.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T1427741438"] = "Das überarbeitete Assistenten-Plugin fordert Werkzeuge an, über die dieses AI Studio nicht verfügt: „{0}“. Bitte versuchen Sie es erneut."
 
 -- Description
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T1725856265"] = "Beschreibung"
@@ -11094,9 +11094,6 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T2
 -- UI Components
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3053707933"] = "UI-Komponenten"
 
--- The generated assistant plugin asks for tools this AI Studio does not have: \"{0}\". Please try again.
-UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3058747041"] = "Das generierte Assistenten-Plugin fordert Werkzeuge an, über die dieses AI Studio nicht verfügt: „{0}“. Bitte versuche es erneut."
-
 -- The generated assistant plugin must be a form assistant, not a chat launcher.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3203271639"] = "Das generierte Assistenten-Plugin muss ein Formularassistent und darf kein Chat-Schnellstart sein."
 
@@ -11126,6 +11123,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3
 
 -- Only locally managed assistant plugins can be revised with AI.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3633992223"] = "Nur lokal verwaltete Assistenten-Plugins können mit KI überarbeitet werden."
+
+-- The generated assistant plugin asks for tools this AI Studio does not have: '{0}'. Please try again.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T368041941"] = "Das generierte Assistenten-Plugin fordert Werkzeuge an, die dieses AI Studio nicht hat: „{0}“. Bitte versuchen Sie es erneut."
 
 -- The revised assistant plugin must remain locally managed.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::SERVICES::ASSISTANTPLUGINGENERATIONSERVICE::T3791030033"] = "Das überarbeitete Assistenten-Plugin muss weiterhin lokal verwaltet werden."
