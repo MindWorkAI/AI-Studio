@@ -22,6 +22,7 @@ public partial class ToolSettingsExportDialog : SettingsDialogBase
     private IReadOnlyList<ExportableSettings> areas = [];
     private HashSet<string> selectedAreaIds = new(StringComparer.Ordinal);
     private HashSet<string> configuredSecretFields = new(StringComparer.Ordinal);
+    private HashSet<string> emptyFieldNames = new(StringComparer.Ordinal);
     private ToolSettingsExportMode mode = ToolSettingsExportMode.LOCKED;
     private bool includeSecrets;
     private bool includeMinimumProviderConfidence = true;
@@ -38,6 +39,22 @@ public partial class ToolSettingsExportDialog : SettingsDialogBase
     private bool HasSelectedSecrets => this.areas.Any(area => this.selectedAreaIds.Contains(area.Id) && area.FieldNames.Any(this.configuredSecretFields.Contains));
 
     private bool CanIncludeSecrets => this.HasSelectedSecrets && PluginFactory.EnterpriseEncryption?.IsAvailable is true;
+
+    /// <summary>
+    /// How many of the selected settings hold no value, counting a field shared by two areas once.
+    /// </summary>
+    /// <remarks>
+    /// Saving a tool's settings writes every field of its schema, empty ones included, so an area
+    /// the administrator never filled in still exports. Locked, those empty values are what the
+    /// recipient is left with and cannot change, which is worth saying before the export.
+    /// </remarks>
+    private int EmptySelectedFieldCount => this.areas
+        .Where(area => this.selectedAreaIds.Contains(area.Id))
+        .SelectMany(area => area.FieldNames)
+        .Distinct(StringComparer.Ordinal)
+        .Count(this.emptyFieldNames.Contains);
+
+    private bool WarnAboutEmptyLockedSettings => this.mode is ToolSettingsExportMode.LOCKED && this.EmptySelectedFieldCount > 0;
 
     private bool CanExport => this.IsAdmin && !this.isLoading && !this.isExporting && !this.isDisposed &&
         this.toolDefinition is not null && this.implementation is not null && (this.selectedAreaIds.Count > 0 || this.includeMinimumProviderConfidence);
@@ -64,11 +81,20 @@ public partial class ToolSettingsExportDialog : SettingsDialogBase
             this.areas = this.implementation.GetExportableSettings(this.toolDefinition);
             this.selectedAreaIds = this.areas.Select(area => area.Id).ToHashSet(StringComparer.Ordinal);
 
-            // Retain only the names of configured secret fields, not their plaintext values.
-            // ExportAsync reads effective settings again when the administrator exports.
+            // Retain only field names, never the values themselves, so no plaintext secret lives
+            // in this component. ExportAsync reads effective settings again when the
+            // administrator exports.
             var values = await this.ToolSettingsService.GetSettingsAsync(this.toolDefinition);
             this.configuredSecretFields = this.toolDefinition.SettingsSchema.Properties
                 .Where(property => property.Value.Secret && values.TryGetValue(property.Key, out var value) && !string.IsNullOrWhiteSpace(value))
+                .Select(property => property.Key)
+                .ToHashSet(StringComparer.Ordinal);
+
+            // A field the export writes as an empty value: it has to be present, because a
+            // missing one is skipped rather than exported, and it has to be a non-secret,
+            // because an empty secret is skipped as well.
+            this.emptyFieldNames = this.toolDefinition.SettingsSchema.Properties
+                .Where(property => !property.Value.Secret && values.TryGetValue(property.Key, out var value) && string.IsNullOrWhiteSpace(value))
                 .Select(property => property.Key)
                 .ToHashSet(StringComparer.Ordinal);
         }

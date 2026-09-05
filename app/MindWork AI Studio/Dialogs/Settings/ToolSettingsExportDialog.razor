@@ -57,6 +57,13 @@
                     <MudSelectItem T="ToolSettingsExportMode" Value="@ToolSettingsExportMode.DEFAULT">@T("Editable defaults")</MudSelectItem>
                 </MudSelect>
 
+                @if (this.WarnAboutEmptyLockedSettings)
+                {
+                    <MudAlert Severity="Severity.Warning" Class="mb-4">
+                        @string.Format(T("{0} of the selected settings are empty and are exported as empty locked values. Users cannot change a locked setting, so an empty required one leaves the tool unusable. Deselect the areas you have not configured, or export them as editable defaults."), this.EmptySelectedFieldCount)
+                    </MudAlert>
+                }
+
                 <MudPaper Class="pa-3 mb-4 border-dashed border rounded-lg">
                     <MudCheckBox T="bool" Label="@T("Include encrypted API keys and other secrets")" @bind-Value="this.includeSecrets" Disabled="@(this.isExporting || !this.CanIncludeSecrets)" />
                     @if (PluginFactory.EnterpriseEncryption?.IsAvailable is not true)
