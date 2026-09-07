@@ -163,10 +163,10 @@ public partial class VisualBriefingAssistant
         var generationBriefing = this.selectedBriefing;
         var parentRevisionId = parentRevisionOverride ?? (generationBriefing.Versions.Count == 0 ? null : this.selectedRevisionId);
         var generationProvider = this.editor.Provider;
-        var generationProfile = this.editor.Profile;
+        var generationProfiles = this.SettingsManager.ResolveProfiles(this.editor.ProfileIds);
 
         await this.RunBriefingOperationAsync(generationBriefing, mode, token => this.BuildOrchestrator.BuildAsync(generationBriefing, mode,
-                parentRevisionId, generationProvider, generationProfile, reusableBuildId, token),
+                parentRevisionId, generationProvider, generationProfiles, reusableBuildId, token),
             T("A new visual briefing version was created."),
             T("The visual briefing generation was canceled."),
             T("The visual briefing operation failed unexpectedly. Copy the technical details for support."));

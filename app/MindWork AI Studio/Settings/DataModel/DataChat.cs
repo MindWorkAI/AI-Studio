@@ -42,9 +42,9 @@ public sealed class DataChat(Expression<Func<Data, DataChat>>? configSelection =
     public string PreselectedProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.PreselectedProvider, string.Empty);
     
     /// <summary>
-    /// Preselect a profile?
+    /// Which profiles should be preselected? Null uses the app default.
     /// </summary>
-    public string PreselectedProfile { get; set; } = ManagedConfiguration.Register(configSelection, n => n.PreselectedProfile, string.Empty);
+    public HashSet<string>? PreselectedProfileIds { get; set; } = ManagedConfiguration.RegisterProfilePreselection(configSelection, n => n.PreselectedProfileIds);
     
     /// <summary>
     /// Preselect a chat template?

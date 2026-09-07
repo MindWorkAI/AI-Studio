@@ -12,10 +12,10 @@ public partial class ProfileSelection : MSGComponentBase
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(ProfileSelection).Namespace, nameof(ProfileSelection));
     
     [Parameter]
-    public Profile CurrentProfile { get; set; } = Profile.NO_PROFILE;
+    public HashSet<string> SelectedProfileIds { get; set; } = [];
     
     [Parameter]
-    public EventCallback<Profile> CurrentProfileChanged { get; set; }
+    public EventCallback<HashSet<string>> SelectedProfileIdsChanged { get; set; }
 
     [Parameter]
     public string MarginLeft { get; set; } = "ml-3";
@@ -32,9 +32,22 @@ public partial class ProfileSelection : MSGComponentBase
     [Inject]
     private IDialogService DialogService { get; init; } = null!;
 
-    private readonly string defaultToolTipText = TB("You can switch between your profiles here");
+    private readonly string defaultToolTipText = TB("You can select your profiles here");
 
-    private string ToolTipText => this.Disabled ? this.DisabledText : this.defaultToolTipText;
+    private IReadOnlyList<Profile> SelectedProfiles => this.SettingsManager.ResolveProfiles(this.SelectedProfileIds);
+
+    private string SelectionLabel => this.SelectedProfiles.Count switch
+    {
+        0 => string.Empty,
+        1 => this.SelectedProfiles[0].GetSafeName(),
+        _ => string.Format(TB("{0} profiles"), this.SelectedProfiles.Count),
+    };
+
+    private string ToolTipText => this.Disabled
+        ? this.DisabledText
+        : this.SelectedProfiles.Count > 1
+            ? string.Join(", ", this.SelectedProfiles.Select(profile => profile.GetSafeName()))
+            : this.defaultToolTipText;
     
     private string MarginClass => $"{this.MarginLeft} {this.MarginRight}";
 
@@ -47,19 +60,31 @@ public partial class ProfileSelection : MSGComponentBase
     }
 
     #endregion
-    
+
     private string ProfileIcon(Profile profile)
     {
         if (profile.IsEnterpriseConfiguration)
             return Icons.Material.Filled.Business;
-        
+
         return Icons.Material.Filled.Person4;
     }
     
-    private async Task SelectionChanged(Profile profile)
+    private async Task SelectionChanged(Profile profile, bool selected)
     {
-        this.CurrentProfile = profile;
-        await this.CurrentProfileChanged.InvokeAsync(profile);
+        var updatedSelection = new HashSet<string>(this.SelectedProfileIds, StringComparer.OrdinalIgnoreCase);
+        if (selected)
+            updatedSelection.Add(profile.Id);
+        else
+            updatedSelection.Remove(profile.Id);
+
+        this.SelectedProfileIds = updatedSelection;
+        await this.SelectedProfileIdsChanged.InvokeAsync(updatedSelection);
+    }
+
+    private async Task ClearSelection()
+    {
+        this.SelectedProfileIds = [];
+        await this.SelectedProfileIdsChanged.InvokeAsync([]);
     }
 
     private async Task OpenSettingsDialog()

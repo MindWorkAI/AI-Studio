@@ -21,9 +21,9 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
         if (providerResult.IsExplicit && providerResult.Provider == ProviderSettings.NONE)
             return new(null, providerResult.ErrorMessage);
 
-        var profileResult = this.ResolveProfile(launchConfiguration.ProfileId);
-        var profile = profileResult.Profile;
-        if (profile is null)
+        var profileResult = this.ResolveProfiles(launchConfiguration.ProfileIds);
+        var profiles = profileResult.Profiles;
+        if (profiles is null)
             return new(null, profileResult.ErrorMessage);
 
         var chatTemplateResult = this.ResolveChatTemplate(launchConfiguration.ChatTemplateId);
@@ -36,13 +36,13 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
         // its profile selection for such templates, so keeping the profile would pin one that the
         // user can neither see nor change. We drop it instead of failing the whole launch.
         //
-        if (!chatTemplate.AllowProfileUsage && profile != Profile.NO_PROFILE)
+        if (!chatTemplate.AllowProfileUsage && profiles.Count > 0)
         {
             logger.LogWarning(
-                "Assistant plugin '{PluginName}' selects the profile '{ProfileName}', but its chat template '{ChatTemplateName}' does not allow profiles. The chat starts without a profile.",
-                assistantPlugin.Name, profile.GetSafeName(), chatTemplate.GetSafeName());
+                "Assistant plugin '{PluginName}' selects profiles, but its chat template '{ChatTemplateName}' does not allow profiles. The chat starts without profiles.",
+                assistantPlugin.Name, chatTemplate.GetSafeName());
 
-            profile = Profile.NO_PROFILE;
+            profiles = [];
         }
 
         var dataSourceOptionsResult = await this.ResolveDataSourceOptionsAsync(providerResult.Provider, launchConfiguration.DataSourceIds);
@@ -81,7 +81,7 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
         {
             IncludeDateTime = true,
             SelectedProvider = providerResult.Provider == ProviderSettings.NONE ? string.Empty : providerResult.Provider.Id,
-            SelectedProfile = profile.Id,
+            SelectedProfileIds = profiles.Select(profile => profile.Id).ToHashSet(StringComparer.OrdinalIgnoreCase),
             SelectedChatTemplate = chatTemplate.Id,
             // The provider confidence is checked later, when the chat sends a message:
             SelectedToolIds = selectedToolIds,
@@ -121,23 +121,19 @@ public sealed class DirectChatService(SettingsManager settingsManager, DataSourc
         return new(provider, true, string.Empty);
     }
 
-    private (Profile? Profile, string ErrorMessage) ResolveProfile(Guid? profileId)
+    private (IReadOnlyList<Profile>? Profiles, string ErrorMessage) ResolveProfiles(IReadOnlyList<Guid>? profileIds)
     {
-        if (profileId is null)
-            return new(settingsManager.GetPreselectedProfile(Components.CHAT), string.Empty);
+        if (profileIds is null)
+            return new(settingsManager.GetPreselectedProfiles(Components.CHAT), string.Empty);
 
-        // The launcher explicitly wants no profile:
-        if (profileId == Guid.Empty)
-            return new(Profile.NO_PROFILE, string.Empty);
+        if (profileIds.Count == 0)
+            return new([], string.Empty);
 
-        //
-        // We already handled the empty GUID above, so GetProfileById returning the no-profile
-        // entry here can only mean that the referenced profile is gone:
-        //
-        var profile = settingsManager.GetProfileById(profileId.Value.ToString());
-        return profile == Profile.NO_PROFILE
-            ? new(null, string.Format(TB("The assistant chat launcher references profile '{0}', but that profile does not exist."), profileId))
-            : new(profile, string.Empty);
+        var profiles = settingsManager.ResolveProfiles(profileIds.Select(profileId => profileId.ToString()));
+        if (profiles.Count != profileIds.Count)
+            return new(null, TB("The assistant chat launcher references one or more profiles that do not exist."));
+
+        return new(profiles, string.Empty);
     }
 
     private (ChatTemplate? ChatTemplate, string ErrorMessage) ResolveChatTemplate(Guid? chatTemplateId)

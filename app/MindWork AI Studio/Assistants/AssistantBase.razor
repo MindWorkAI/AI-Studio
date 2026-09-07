@@ -172,7 +172,7 @@
 
                 @if (this.AllowProfiles && this.ShowProfileSelection)
                 {
-                    <ProfileSelection MarginLeft="" @bind-CurrentProfile="@this.CurrentProfile"/>
+                    <ProfileSelection MarginLeft="" @bind-SelectedProfileIds="@this.CurrentProfileIds"/>
                 }
 
                 @* No selection where the assistant's own rules already name the tools: *@

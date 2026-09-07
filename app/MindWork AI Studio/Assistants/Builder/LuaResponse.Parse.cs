@@ -128,7 +128,7 @@ internal sealed partial class LuaResponse
             return false;
 
         if (!IsOptionalGuid(launch.ProviderId, allowEmpty: false) ||
-            !IsOptionalGuid(launch.ProfileId, allowEmpty: true) ||
+            !IsOptionalGuidList(launch.ProfileIds, allowEmptyList: true) ||
             !IsOptionalGuid(launch.ChatTemplateId, allowEmpty: true))
             return false;
 
@@ -153,6 +153,11 @@ internal sealed partial class LuaResponse
 
     private static bool IsOptionalGuid(string? value, bool allowEmpty) => value is null ||
         Guid.TryParse(value, out var parsed) && (allowEmpty || parsed != Guid.Empty);
+
+    private static bool IsOptionalGuidList(string[]? values, bool allowEmptyList) => values is null ||
+        (allowEmptyList || values.Length > 0) &&
+        values.All(value => Guid.TryParse(value, out var parsed) && parsed != Guid.Empty) &&
+        values.Distinct(StringComparer.OrdinalIgnoreCase).Count() == values.Length;
 
     /// <summary>
     /// Reads the first complete JSON object out of a model answer that may carry text around it.

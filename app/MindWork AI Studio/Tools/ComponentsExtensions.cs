@@ -207,23 +207,23 @@ public static class ComponentsExtensions
     {
         var storedValue = component switch
         {
-            Components.AGENDA_ASSISTANT => settingsManager.ConfigurationData.Agenda.PreselectOptions ? settingsManager.ConfigurationData.Agenda.PreselectedProfile : string.Empty,
-            Components.CODING_ASSISTANT => settingsManager.ConfigurationData.Coding.PreselectOptions ? settingsManager.ConfigurationData.Coding.PreselectedProfile : string.Empty,
-            Components.EMAIL_ASSISTANT => settingsManager.ConfigurationData.EMail.PreselectOptions ? settingsManager.ConfigurationData.EMail.PreselectedProfile : string.Empty,
-            Components.LEGAL_CHECK_ASSISTANT => settingsManager.ConfigurationData.LegalCheck.PreselectOptions ? settingsManager.ConfigurationData.LegalCheck.PreselectedProfile : string.Empty,
-            Components.MY_TASKS_ASSISTANT => settingsManager.ConfigurationData.MyTasks.PreselectOptions ? settingsManager.ConfigurationData.MyTasks.PreselectedProfile : string.Empty,
-            Components.BIAS_DAY_ASSISTANT => settingsManager.ConfigurationData.BiasOfTheDay.PreselectOptions ? settingsManager.ConfigurationData.BiasOfTheDay.PreselectedProfile : string.Empty,
-            Components.ERI_ASSISTANT => settingsManager.ConfigurationData.ERI.PreselectOptions ? settingsManager.ConfigurationData.ERI.PreselectedProfile : string.Empty,
-            Components.SLIDE_BUILDER_ASSISTANT => settingsManager.ConfigurationData.SlideBuilder.PreselectOptions ? settingsManager.ConfigurationData.SlideBuilder.PreselectedProfile : string.Empty,
-            Components.VISUAL_BRIEFING_ASSISTANT => settingsManager.ConfigurationData.VisualBriefing.PreselectedProfile,
+            Components.AGENDA_ASSISTANT => settingsManager.ConfigurationData.Agenda.PreselectOptions ? settingsManager.ConfigurationData.Agenda.PreselectedProfileIds : null,
+            Components.CODING_ASSISTANT => settingsManager.ConfigurationData.Coding.PreselectOptions ? settingsManager.ConfigurationData.Coding.PreselectedProfileIds : null,
+            Components.EMAIL_ASSISTANT => settingsManager.ConfigurationData.EMail.PreselectOptions ? settingsManager.ConfigurationData.EMail.PreselectedProfileIds : null,
+            Components.LEGAL_CHECK_ASSISTANT => settingsManager.ConfigurationData.LegalCheck.PreselectOptions ? settingsManager.ConfigurationData.LegalCheck.PreselectedProfileIds : null,
+            Components.MY_TASKS_ASSISTANT => settingsManager.ConfigurationData.MyTasks.PreselectOptions ? settingsManager.ConfigurationData.MyTasks.PreselectedProfileIds : null,
+            Components.BIAS_DAY_ASSISTANT => settingsManager.ConfigurationData.BiasOfTheDay.PreselectOptions ? settingsManager.ConfigurationData.BiasOfTheDay.PreselectedProfileIds : null,
+            Components.ERI_ASSISTANT => settingsManager.ConfigurationData.ERI.PreselectOptions ? settingsManager.ConfigurationData.ERI.PreselectedProfileIds : null,
+            Components.SLIDE_BUILDER_ASSISTANT => settingsManager.ConfigurationData.SlideBuilder.PreselectOptions ? settingsManager.ConfigurationData.SlideBuilder.PreselectedProfileIds : null,
+            Components.VISUAL_BRIEFING_ASSISTANT => settingsManager.ConfigurationData.VisualBriefing.PreselectedProfileIds,
             // Dynamic assistants have no dedicated settings yet, so they derive their defaults from the chat:
-            Components.DYNAMIC_ASSISTANT or Components.CHAT => settingsManager.ConfigurationData.Chat.PreselectOptions ? settingsManager.ConfigurationData.Chat.PreselectedProfile : string.Empty,
+            Components.DYNAMIC_ASSISTANT or Components.CHAT => settingsManager.ConfigurationData.Chat.PreselectOptions ? settingsManager.ConfigurationData.Chat.PreselectedProfileIds : null,
 
             // The Document Analysis Assistant does not have a preselected profile at the component level.
             // The profile is selected per policy instead. We do this inside the Document Analysis Assistant component:
-            Components.DOCUMENT_ANALYSIS_ASSISTANT => Profile.NO_PROFILE.Id,
+            Components.DOCUMENT_ANALYSIS_ASSISTANT => [],
 
-            _ => string.Empty,
+            _ => null,
         };
 
         return ProfilePreselection.FromStoredValue(storedValue);

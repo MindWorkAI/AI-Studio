@@ -210,6 +210,9 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         if (!TryValidateMinimumProviderConfidenceConfiguration(settingsTable, out message))
             return false;
 
+        if (!TryValidateProfilePreselectionConfiguration(settingsTable, out message))
+            return false;
+
         this.DeclaredSettingsCount = CountDeclaredSettings(settingsTable);
         
         // Config: check for updates, and if so, how often?
@@ -346,19 +349,45 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
         // Config: preselected provider?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.PreselectedProvider, Guid.Empty, this.Id, settingsTable, dryRun);
 
-        // Config: preselected profile?
-        ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.PreselectedProfile, Guid.Empty, this.Id, settingsTable, dryRun);
+        // Config: preselected profiles? The singular name remains a compatibility alias.
+        var appProfilesValid = settingsTable.TryGetValue("DataApp.PreselectedProfileIds", out _)
+            ? ManagedConfiguration.TryProcessProfileIds(x => x.App, x => x.PreselectedProfileIds, this.Id, settingsTable, dryRun)
+            : !settingsTable.TryGetValue("DataApp.PreselectedProfile", out _) ||
+              ManagedConfiguration.TryProcessLegacyProfileIds(x => x.App, x => x.PreselectedProfileIds, "DataApp.PreselectedProfile", this.Id, settingsTable, dryRun);
+        if (!appProfilesValid)
+        {
+            message = TB("The configured app profile preselection is invalid.");
+            return false;
+        }
 
         // Config: preselected chat options?
         ManagedConfiguration.TryProcessConfiguration(x => x.Chat, x => x.PreselectOptions, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.Chat, x => x.PreselectedProvider, Guid.Empty, this.Id, settingsTable, dryRun);
-        ManagedConfiguration.TryProcessConfiguration(x => x.Chat, x => x.PreselectedProfile, this.Id, settingsTable, dryRun);
+        var chatProfilesValid = settingsTable.TryGetValue("DataChat.PreselectedProfileIds", out _)
+            ? ManagedConfiguration.TryProcessProfilePreselection(x => x.Chat, x => x.PreselectedProfileIds, this.Id, settingsTable, dryRun)
+            : !settingsTable.TryGetValue("DataChat.PreselectedProfile", out _) ||
+              ManagedConfiguration.TryProcessLegacyProfilePreselection(x => x.Chat, x => x.PreselectedProfileIds, "DataChat.PreselectedProfile", this.Id, settingsTable, dryRun);
+        if (!chatProfilesValid)
+        {
+            message = TB("The configured chat profile preselection is invalid.");
+            return false;
+        }
         ManagedConfiguration.TryProcessConfiguration(x => x.Chat, x => x.PreselectedChatTemplate, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.Chat, x => x.PreselectedDataSourcesDisabled, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.Chat, x => x.PreselectedDataSourcesAutomaticSelection, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.Chat, x => x.PreselectedDataSourcesAutomaticValidation, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.Chat, x => x.PreselectedDataSourceIds, this.Id, settingsTable, dryRun);
         ManagedConfiguration.TryProcessConfiguration(x => x.Chat, x => x.SendToChatDataSourceBehavior, this.Id, settingsTable, dryRun);
+
+        var visualBriefingProfilesValid = settingsTable.TryGetValue("DataVisualBriefing.PreselectedProfileIds", out _)
+            ? ManagedConfiguration.TryProcessProfilePreselection(x => x.VisualBriefing, x => x.PreselectedProfileIds, this.Id, settingsTable, dryRun)
+            : !settingsTable.TryGetValue("DataVisualBriefing.PreselectedProfile", out _) ||
+              ManagedConfiguration.TryProcessLegacyProfilePreselection(x => x.VisualBriefing, x => x.PreselectedProfileIds, "DataVisualBriefing.PreselectedProfile", this.Id, settingsTable, dryRun);
+        if (!visualBriefingProfilesValid)
+        {
+            message = TB("The configured visual briefing profile preselection is invalid.");
+            return false;
+        }
 
         // Config: Batch Processing Assistant defaults?
         ManagedConfiguration.TryProcessConfiguration(x => x.BatchProcessing, x => x.PreselectOptions, this.Id, settingsTable, dryRun);
@@ -386,6 +415,27 @@ public sealed class PluginConfiguration(bool isInternal, LuaState state, PluginT
 
         // Config: transcription provider?
         ManagedConfiguration.TryProcessConfiguration(x => x.App, x => x.UseTranscriptionProvider, Guid.Empty, this.Id, settingsTable, dryRun);
+
+        message = string.Empty;
+        return true;
+    }
+
+    private static bool TryValidateProfilePreselectionConfiguration(LuaTable settings, out string message)
+    {
+        foreach (var settingPrefix in new[] { "DataApp", "DataChat", "DataVisualBriefing" })
+        {
+            var singularName = $"{settingPrefix}.PreselectedProfile";
+            var pluralName = $"{settingPrefix}.PreselectedProfileIds";
+            if (settings.TryGetValue(singularName, out _) && settings.TryGetValue(pluralName, out _))
+            {
+                message = string.Format(TB("The SETTINGS table contains both '{0}' and '{1}'. Use only one of them."), singularName, pluralName);
+                return false;
+            }
+
+            var legacyOverrideName = $"{singularName}.AllowUserOverride";
+            if (settings.TryGetValue(legacyOverrideName, out var legacyOverride))
+                settings[$"{pluralName}.AllowUserOverride"] = legacyOverride;
+        }
 
         message = string.Empty;
         return true;

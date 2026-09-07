@@ -13,8 +13,7 @@ namespace AIStudio.Assistants.VisualBriefing;
 /// <remarks>
 /// This is the single source of truth for the briefing editor. It exists because the editor cannot
 /// bind to <see cref="VisualBriefingLocalSettings"/> directly: that type stores the provider, model,
-/// and profile as identifiers, while the UI binds whole <see cref="ProviderSettings"/> and
-/// <see cref="Profile"/> objects. Keeping one draft object means saving, restoring, and change
+/// and profiles as identifiers, while the UI binds the resolved provider and profile IDs. Keeping one draft object means saving, restoring, and change
 /// detection all read the same fields instead of three hand-maintained lists.
 /// </remarks>
 public sealed class VisualBriefingEditorState
@@ -28,8 +27,8 @@ public sealed class VisualBriefingEditorState
     /// <summary>Gets or sets the selected provider and model.</summary>
     public ProviderSettings Provider { get; set; } = ProviderSettings.NONE;
 
-    /// <summary>Gets or sets the selected profile.</summary>
-    public Profile Profile { get; set; } = Profile.NO_PROFILE;
+    /// <summary>Gets or sets the selected profile IDs.</summary>
+    public HashSet<string> ProfileIds { get; set; } = [];
 
     /// <summary>Gets or sets the current scope or change instruction.</summary>
     public string Instruction { get; set; } = string.Empty;
@@ -93,7 +92,7 @@ public sealed class VisualBriefingEditorState
         CustomProtectionLevel = briefing.Settings.CustomProtectionLevel,
 
         Provider = ResolveProvider(briefing, settingsManager),
-        Profile = settingsManager.GetProfileById(briefing.Settings.ProfileId),
+        ProfileIds = settingsManager.ResolveProfiles(briefing.Settings.ProfileIds).Select(profile => profile.Id).ToHashSet(StringComparer.OrdinalIgnoreCase),
 
         SourceMaterial =
         [
@@ -155,7 +154,7 @@ public sealed class VisualBriefingEditorState
     {
         ProviderId = this.Provider.Id,
         ModelId = this.Provider.Model.Id,
-        ProfileId = this.Profile.Id,
+        ProfileIds = [..this.ProfileIds],
         TargetLanguage = this.TargetLanguage,
         CustomTargetLanguage = this.CustomTargetLanguage,
         AudienceProfile = this.AudienceProfile,

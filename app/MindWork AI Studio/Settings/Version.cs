@@ -14,4 +14,5 @@ public enum Version
     V4,
     V5,
     V6,
+    V7,
 }

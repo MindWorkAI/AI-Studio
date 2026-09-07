@@ -34,6 +34,11 @@ public record ConfigMeta<TClass, TValue> : ConfigMetaBase
     public required TValue Default { get; init; }
 
     /// <summary>
+    /// Whether a managed user-value snapshot may restore JSON null for this setting.
+    /// </summary>
+    public bool AllowNullSnapshot { get; init; }
+
+    /// <summary>
     /// The additive value contributions, one per contributing configuration plugin.
     /// </summary>
     /// <remarks>
@@ -70,10 +75,10 @@ public record ConfigMeta<TClass, TValue> : ConfigMetaBase
         try
         {
             var value = JsonSerializer.Deserialize<TValue>(json, SettingsManager.JSON_OPTIONS);
-            if (value is null)
+            if (value is null && !this.AllowNullSnapshot)
                 return false;
 
-            this.SetValue(value);
+            this.SetValue(value!);
             return true;
         }
         catch (Exception e)

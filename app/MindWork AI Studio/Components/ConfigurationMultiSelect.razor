@@ -7,6 +7,7 @@
     MultiSelectionTextFunc="@this.GetMultiSelectionText"
     SelectedValues="@this.SelectedValues()"
     Strict="@true"
+    MultiSelectionComponent="MultiSelectionComponent.CheckBox"
     Disabled="@this.IsDisabled"
     Margin="Margin.Dense"
     Class="rounded-lg"
@@ -23,8 +24,19 @@
                         <MudTooltip Text="@this.LockedTooltip()" Arrow="true" Placement="Placement.Right" RootStyle="display:inline-flex;">
                             <MudIcon Icon="@Icons.Material.Filled.Lock" Color="Color.Error" Size="Size.Small" Class="mr-1"/>
                         </MudTooltip>
-                        @data.Name
+                        @if (this.ItemTemplate is null)
+                        {
+                            @data.Name
+                        }
+                        else
+                        {
+                            @this.ItemTemplate(data)
+                        }
                     </MudStack>
+                }
+                else if (this.ItemTemplate is not null)
+                {
+                    @this.ItemTemplate(data)
                 }
                 else
                 {

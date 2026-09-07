@@ -1,4 +1,7 @@
 using AIStudio.Assistants.SlideBuilder;
+using AIStudio.Settings;
+
+using System.Text.Json.Serialization;
 
 namespace AIStudio.Assistants.VisualBriefing;
 
@@ -18,9 +21,23 @@ public sealed class VisualBriefingLocalSettings
     public string ModelId { get; set; } = string.Empty;
 
     /// <summary>
-    /// Defines <c>ProfileId</c> for the visual briefing feature.
+    /// Defines <c>ProfileIds</c> for the visual briefing feature.
     /// </summary>
-    public string ProfileId { get; set; } = string.Empty;
+    public HashSet<string> ProfileIds { get; set; } = [];
+
+    [JsonPropertyName("ProfileId")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? LegacyProfileId
+    {
+        get => null;
+        set
+        {
+            if (this.ProfileIds.Count == 0 &&
+                !string.IsNullOrWhiteSpace(value) &&
+                !value.Equals(Profile.NO_PROFILE.Id, StringComparison.OrdinalIgnoreCase))
+                this.ProfileIds.Add(value);
+        }
+    }
 
     /// <summary>
     /// Defines <c>TargetLanguage</c> for the visual briefing feature.

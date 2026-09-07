@@ -15,7 +15,7 @@ public abstract class AssistantLowerBase : MSGComponentBase
     
     protected static readonly AssistantSessionStateKey<AIStudio.Settings.Provider> PROVIDER_SETTINGS_STATE_KEY = new(nameof(ProviderSettings));
     protected static readonly AssistantSessionStateKey<bool> INPUT_IS_VALID_STATE_KEY = new(nameof(InputIsValid));
-    protected static readonly AssistantSessionStateKey<Profile> CURRENT_PROFILE_STATE_KEY = new(nameof(CurrentProfile));
+    protected static readonly AssistantSessionStateKey<HashSet<string>> CURRENT_PROFILE_IDS_STATE_KEY = new(nameof(CurrentProfileIds));
     protected static readonly AssistantSessionStateKey<ChatTemplate> CURRENT_CHAT_TEMPLATE_STATE_KEY = new(nameof(CurrentChatTemplate));
     protected static readonly AssistantSessionStateKey<ChatThread?> CHAT_THREAD_STATE_KEY = new(nameof(ChatThread));
     protected static readonly AssistantSessionStateKey<IContent?> LAST_USER_PROMPT_STATE_KEY = new(nameof(LastUserPrompt));
@@ -26,7 +26,7 @@ public abstract class AssistantLowerBase : MSGComponentBase
     
     protected AIStudio.Settings.Provider ProviderSettings = Settings.Provider.NONE;
     protected bool InputIsValid;
-    protected Profile CurrentProfile = Profile.NO_PROFILE;
+    protected HashSet<string> CurrentProfileIds = [];
     protected ChatTemplate CurrentChatTemplate = ChatTemplate.NO_CHAT_TEMPLATE;
     protected ChatThread? ChatThread;
     protected IContent? LastUserPrompt;

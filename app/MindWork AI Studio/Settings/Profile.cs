@@ -94,6 +94,25 @@ public record Profile(
                 {actions}
                 """;
     }
+
+    public static string ToSystemPrompt(IReadOnlyList<Profile> profiles)
+    {
+        if (profiles.Count == 0)
+            return string.Empty;
+
+        var profileSections = profiles.Select((profile, index) =>
+            $"""
+             ## Profile {index + 1}: {profile.Name}
+
+             {profile.ToSystemPrompt()}
+             """);
+
+        return $"""
+                The user selected the following profiles. Combine them as equally important context. If their instructions conflict, resolve the conflict as well as possible.
+
+                {string.Join("\n\n---\n\n", profileSections)}
+                """;
+    }
     
     public static bool TryParseProfileTable(int idx, LuaTable table, Guid configPluginId, out ConfigurationBaseObject template)
     {

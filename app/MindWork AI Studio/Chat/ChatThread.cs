@@ -44,9 +44,27 @@ public sealed record ChatThread
     public string SelectedProvider { get; set; } = string.Empty;
 
     /// <summary>
-    /// Specifies the profile selected for the chat thread.
+    /// Specifies the profiles selected for the chat thread.
     /// </summary>
-    public string SelectedProfile { get; set; } = string.Empty;
+    public HashSet<string> SelectedProfileIds { get; set; } = [];
+
+    /// <summary>
+    /// Permanently supports reading the singular profile field written by older app versions.
+    /// New chats write only <see cref="SelectedProfileIds"/>.
+    /// </summary>
+    [JsonPropertyName("SelectedProfile")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? LegacySelectedProfile
+    {
+        get => null;
+        set
+        {
+            if (this.SelectedProfileIds.Count == 0 &&
+                !string.IsNullOrWhiteSpace(value) &&
+                !value.Equals(Profile.NO_PROFILE.Id, StringComparison.OrdinalIgnoreCase))
+                this.SelectedProfileIds.Add(value);
+        }
+    }
     
     /// <summary>
     /// Specifies the profile selected for the chat thread.
@@ -218,36 +236,21 @@ public sealed record ChatThread
         
         
         //
-        // Add information from the profile if available and allowed:
+        // Add information from the profiles if available and allowed:
         //
         string systemPromptText;
-        logMessage = $"Using no profile for chat thread '{this.Name}'.";
-        if (string.IsNullOrWhiteSpace(this.SelectedProfile) || !this.allowProfile)
+        logMessage = $"Using no profiles for chat thread '{this.Name}'.";
+        var profiles = this.ResolveSelectedProfiles(settingsManager);
+        if (profiles.Count == 0 || !this.allowProfile)
             systemPromptText = systemPromptWithAugmentedData;
         else
         {
-            if(!Guid.TryParse(this.SelectedProfile, out var profileId))
-                systemPromptText = systemPromptWithAugmentedData;
-            else
-            {
-                if(this.SelectedProfile == Profile.NO_PROFILE.Id || profileId == Guid.Empty)
-                    systemPromptText = systemPromptWithAugmentedData;
-                else
-                {
-                    var profile = settingsManager.GetProfileById(this.SelectedProfile);
-                    if(profile == Profile.NO_PROFILE)
-                        systemPromptText = systemPromptWithAugmentedData;
-                    else
-                    {
-                        logMessage = $"Using profile '{profile.Name}' for chat thread '{this.Name}'.";
-                        systemPromptText = $"""
-                                            {systemPromptWithAugmentedData}
+            logMessage = $"Using profiles '{string.Join("', '", profiles.Select(profile => profile.Name))}' for chat thread '{this.Name}'.";
+            systemPromptText = $"""
+                                {systemPromptWithAugmentedData}
 
-                                            {profile.ToSystemPrompt()}
-                                            """;
-                    }
-                }
-            }
+                                {Profile.ToSystemPrompt(profiles)}
+                                """;
         }
         
         LOGGER.LogInformation(logMessage);
@@ -280,6 +283,14 @@ public sealed record ChatThread
 
                 {systemPromptText}
                 """;
+    }
+
+    private IReadOnlyList<Profile> ResolveSelectedProfiles(SettingsManager settingsManager)
+    {
+        var profiles = settingsManager.ResolveProfiles(this.SelectedProfileIds);
+        var resolvedIds = profiles.Select(profile => profile.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        this.SelectedProfileIds.RemoveWhere(profileId => !resolvedIds.Contains(profileId));
+        return profiles;
     }
 
     /// <summary>

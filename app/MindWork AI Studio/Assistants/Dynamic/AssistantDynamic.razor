@@ -400,7 +400,7 @@ else
                 {
                     var selection = profileSelection;
                     <div class="@selection.Class" style="@GetOptionalStyle(selection.Style)">
-                        <ProfileFormSelection Validation="@(profile => this.ValidateProfileSelection(selection, profile))" @bind-Profile="@this.CurrentProfile" />
+                        <ProfileFormSelection Validation="@(profileIds => this.ValidateProfileSelection(selection, profileIds))" @bind-ProfileIds="@this.CurrentProfileIds" />
                     </div>
                 }
                 break;

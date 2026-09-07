@@ -403,10 +403,14 @@ CONFIG["SETTINGS"] = {}
 -- Please note: using an empty string ("") will lock the preselected provider selection, even though no valid preselected provider is found.
 -- CONFIG["SETTINGS"]["DataApp.PreselectedProvider"] = "00000000-0000-0000-0000-000000000000"
 
--- Configure the preselected profile.
--- It must be one of the profile IDs defined in CONFIG["PROFILES"].
--- Please note: using an empty string ("") will lock the preselected profile selection, even though no valid preselected profile is found.
--- CONFIG["SETTINGS"]["DataApp.PreselectedProfile"] = "00000000-0000-0000-0000-000000000000"
+-- Configure the app-wide preselected profiles.
+-- Every entry must be a unique, non-empty profile ID defined in CONFIG["PROFILES"].
+-- An empty list means that no profiles are preselected.
+-- CONFIG["SETTINGS"]["DataApp.PreselectedProfileIds"] = {
+--     "00000000-0000-0000-0000-000000000000",
+-- }
+-- The legacy singular DataApp.PreselectedProfile setting remains supported by itself.
+-- Supplying the singular and plural setting together is invalid.
 
 -- Configure chat-specific preselected options.
 -- This must be enabled for the chat-specific provider, profile, and chat template to take effect.
@@ -416,11 +420,15 @@ CONFIG["SETTINGS"] = {}
 -- It must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"].
 -- CONFIG["SETTINGS"]["DataChat.PreselectedProvider"] = "00000000-0000-0000-0000-000000000000"
 --
--- Configure the preselected profile for chats.
--- It must be one of the profile IDs defined in CONFIG["PROFILES"].
--- Please note: using an empty string ("") means chats will use the app default profile.
--- Please note: using "00000000-0000-0000-0000-000000000000" means chats will use no profile.
--- CONFIG["SETTINGS"]["DataChat.PreselectedProfile"] = "00000000-0000-0000-0000-000000000000"
+-- Configure the preselected profiles for chats.
+-- Omit this setting to use the app-wide selection. An empty list means no profiles.
+-- A non-empty list replaces the app-wide selection; every entry must be a unique,
+-- non-empty profile ID defined in CONFIG["PROFILES"].
+-- CONFIG["SETTINGS"]["DataChat.PreselectedProfileIds"] = {
+--     "00000000-0000-0000-0000-000000000000",
+-- }
+-- The legacy singular DataChat.PreselectedProfile setting remains supported by itself.
+-- Supplying the singular and plural setting together is invalid.
 --
 -- Configure the preselected chat template for chats.
 -- It must be one of the chat template IDs defined in CONFIG["CHAT_TEMPLATES"].
@@ -458,7 +466,7 @@ CONFIG["SETTINGS"] = {}
 -- Allowed values are: true, false
 -- CONFIG["SETTINGS"]["DataChat.PreselectOptions.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataChat.PreselectedProvider.AllowUserOverride"] = true
--- CONFIG["SETTINGS"]["DataChat.PreselectedProfile.AllowUserOverride"] = true
+-- CONFIG["SETTINGS"]["DataChat.PreselectedProfileIds.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataChat.PreselectedChatTemplate.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesDisabled.AllowUserOverride"] = true
 -- CONFIG["SETTINGS"]["DataChat.PreselectedDataSourcesAutomaticSelection.AllowUserOverride"] = true
@@ -569,9 +577,15 @@ CONFIG["SETTINGS"] = {}
 -- It must be one of the provider IDs defined in CONFIG["LLM_PROVIDERS"].
 -- CONFIG["SETTINGS"]["DataVisualBriefing.PreselectedProvider"] = "00000000-0000-0000-0000-000000000000"
 --
--- Configure the preselected profile for briefing builds.
--- It must be one of the profile IDs defined in CONFIG["PROFILES"].
--- CONFIG["SETTINGS"]["DataVisualBriefing.PreselectedProfile"] = "00000000-0000-0000-0000-000000000000"
+-- Configure the preselected profiles for briefing builds.
+-- Omit this setting to use the app-wide selection. An empty list means no profiles.
+-- A non-empty list replaces the app-wide selection; every entry must be a unique,
+-- non-empty profile ID defined in CONFIG["PROFILES"].
+-- CONFIG["SETTINGS"]["DataVisualBriefing.PreselectedProfileIds"] = {
+--     "00000000-0000-0000-0000-000000000000",
+-- }
+-- The legacy singular DataVisualBriefing.PreselectedProfile setting remains supported by itself.
+-- Supplying the singular and plural setting together is invalid.
 --
 -- Configure the language the briefing content is written in.
 -- Allowed values are: AS_IS, EN_US, EN_GB, ZH_CN, HI_IN, ES_ES, FR_FR, DE_DE, DE_CH, DE_AT,
@@ -1066,10 +1080,14 @@ CONFIG["DOCUMENT_ANALYSIS_POLICIES"] = {}
 --     -- Tool IDs include: web_search, read_web_page
 --     ["AllowedToolIds"] = { "web_search" },
 --
---     -- Optional: preselect a provider or profile by ID.
+--     -- Optional: preselect a provider and profiles by ID.
 --     -- The IDs must exist in CONFIG["LLM_PROVIDERS"] or CONFIG["PROFILES"].
+--     -- Omit PreselectedProfileIds to use the app-wide selection, use an empty list
+--     -- for no profiles, or provide a unique list to replace the app-wide selection.
 --     ["PreselectedProvider"] = "00000000-0000-0000-0000-000000000000",
---     ["PreselectedProfile"] = "00000000-0000-0000-0000-000000000000",
+--     ["PreselectedProfileIds"] = { "00000000-0000-0000-0000-000000000000" },
+--     -- The legacy singular PreselectedProfile field remains supported by itself.
+--     -- Supplying both fields makes the policy invalid.
 --
 --     -- Optional: hide the policy definition section in the UI.
 --     -- When set to true, users will only see the document selection interface

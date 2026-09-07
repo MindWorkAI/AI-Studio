@@ -16,7 +16,7 @@ internal sealed class VisualBriefingContentStage(StructuredLlmStageRunner stageR
     /// </summary>
     private const string SHOW_ALL_VALUE = "*";
 
-    public async Task<VisualBriefingContentArtifact> ExecuteAsync(VisualBriefingManifest manifest, ProviderSettings provider, Profile profile, VisualBriefingEvidenceArtifact evidence, VisualBriefingPlanArtifact plan, VisualBriefingBuildRecord build, CancellationToken token)
+    public async Task<VisualBriefingContentArtifact> ExecuteAsync(VisualBriefingManifest manifest, ProviderSettings provider, IReadOnlyList<Profile> profiles, VisualBriefingEvidenceArtifact evidence, VisualBriefingPlanArtifact plan, VisualBriefingBuildRecord build, CancellationToken token)
     {
         if (build.ContentArtifactId is { } completedId)
         {
@@ -29,7 +29,7 @@ internal sealed class VisualBriefingContentStage(StructuredLlmStageRunner stageR
             manifest.Settings.TargetLanguage.ToString(), manifest.Settings.CustomTargetLanguage, manifest.Settings.AudienceProfile.ToString(),
             manifest.Settings.AudienceAgeGroup.ToString(), manifest.Settings.AudienceOrganizationalLevel.ToString(), manifest.Settings.AudienceExpertise.ToString(),
             manifest.Settings.ShowSourceReferences.ToString(), SourceReferenceFingerprint(manifest), manifest.Settings.ProtectionLevel.ToString(),
-            manifest.Settings.CustomProtectionLevel, provider.Id, provider.Model.Id, profile.Id, VisualBriefingHashing.Compute(profile.ToSystemPrompt()),
+            manifest.Settings.CustomProtectionLevel, provider.Id, provider.Model.Id, string.Join(";", profiles.Select(profile => profile.Id)), VisualBriefingHashing.Compute(Profile.ToSystemPrompt(profiles)),
             VisualBriefingVersions.CONTENT_CONTRACT.ToString());
         
         var stage = VisualBriefingEvidenceStage.Start(build, VisualBriefingBuildStage.CONTENT, computedHash);
@@ -37,7 +37,7 @@ internal sealed class VisualBriefingContentStage(StructuredLlmStageRunner stageR
         await store.SaveBuildAsync(build, token);
         progressService.Publish(build);
         
-        var run = await stageRunner.RunAsync<VisualBriefingContentResponse>(provider, profile, BuildSystemContract(),
+        var run = await stageRunner.RunAsync<VisualBriefingContentResponse>(provider, profiles, BuildSystemContract(),
             BuildPrompt(manifest, evidence, plan), [], VisualBriefingBuildStage.CONTENT, build.OperationId, build.BuildId,
             response => this.ValidateResponseAndProject(manifest, plan, evidence, response), token);
         

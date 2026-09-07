@@ -1,3 +1,5 @@
+using AIStudio.Settings;
+
 using Microsoft.AspNetCore.Components;
 
 namespace AIStudio.Components;
@@ -33,14 +35,13 @@ public partial class DirectChatLauncherForm : MSGComponentBase
     public EventCallback<string> ProviderIdChanged { get; set; }
 
     /// <summary>
-    /// The profile ID for the chat, an empty GUID for explicitly no profile, or an empty string to
-    /// use the chat default.
+    /// The exact profile IDs for the chat, an empty set for no profiles, or null for chat defaults.
     /// </summary>
     [Parameter]
-    public string ProfileId { get; set; } = string.Empty;
+    public HashSet<string>? ProfileIds { get; set; }
 
     [Parameter]
-    public EventCallback<string> ProfileIdChanged { get; set; }
+    public EventCallback<HashSet<string>?> ProfileIdsChanged { get; set; }
 
     /// <summary>
     /// The chat template ID, an empty GUID for explicitly no template, or an empty string to use
@@ -82,6 +83,7 @@ public partial class DirectChatLauncherForm : MSGComponentBase
     public Func<string, string?>? ValidateWorkspaceName { get; set; }
 
     private IReadOnlyList<WorkspaceTreeWorkspace> availableWorkspaces = [];
+    private ProfilePreselectionMode? profileModeOverride;
 
     private static readonly Dictionary<string, object?> USER_INPUT_ATTRIBUTES = new();
 
@@ -124,10 +126,30 @@ public partial class DirectChatLauncherForm : MSGComponentBase
         await this.ProviderIdChanged.InvokeAsync(providerId);
     }
 
-    private async Task SetProfileId(string profileId)
+    private ProfilePreselectionMode SelectedProfileMode => this.profileModeOverride ?? ProfilePreselection.FromStoredValue(this.ProfileIds).Mode;
+
+    private async Task SetProfileMode(ProfilePreselectionMode mode)
     {
-        this.ProfileId = profileId;
-        await this.ProfileIdChanged.InvokeAsync(profileId);
+        this.profileModeOverride = mode;
+        HashSet<string>? profileIds = mode switch
+        {
+            ProfilePreselectionMode.USE_APP_DEFAULT => null,
+            ProfilePreselectionMode.USE_NO_PROFILES => [],
+            ProfilePreselectionMode.USE_SPECIFIC_PROFILES => this.ProfileIds is { Count: > 0 } ? [..this.ProfileIds] : [],
+            _ => null,
+        };
+
+        this.ProfileIds = profileIds;
+        await this.ProfileIdsChanged.InvokeAsync(profileIds);
+    }
+
+    private async Task SetProfileIds(IEnumerable<string?>? profileIds)
+    {
+        var selection = profileIds is null
+            ? []
+            : profileIds.Where(profileId => !string.IsNullOrWhiteSpace(profileId)).Select(profileId => profileId!).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        this.ProfileIds = selection;
+        await this.ProfileIdsChanged.InvokeAsync(selection);
     }
 
     private async Task SetChatTemplateId(string chatTemplateId)
@@ -160,5 +182,16 @@ public partial class DirectChatLauncherForm : MSGComponentBase
             return T("Use the normal chat data source defaults");
 
         return string.Format(T("{0} data source(s) selected"), selectedValues.Count);
+    }
+
+    private string GetSelectedProfileText(List<string?>? selectedValues)
+    {
+        var count = selectedValues?.Count ?? 0;
+        return count switch
+        {
+            0 => T("No profiles selected"),
+            1 => T("1 profile"),
+            _ => string.Format(T("{0} profiles"), count),
+        };
     }
 }

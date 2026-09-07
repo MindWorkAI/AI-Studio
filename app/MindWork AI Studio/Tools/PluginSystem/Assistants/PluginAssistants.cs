@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using AIStudio.Settings;
 using AIStudio.Tools.PluginSystem.Assistants.DataModel;
 using AIStudio.Tools.PluginSystem.Assistants.DataModel.Layout;
 using Lua;
@@ -241,13 +242,13 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
                 }
 
                 if (!TryReadOptionalGuid(assistantTable, "ProviderId", false, out var providerId, out message) ||
-                    !TryReadOptionalGuid(assistantTable, "ProfileId", true, out var profileId, out message) ||
+                    !TryReadOptionalProfileIds(assistantTable, out var profileIds, out message) ||
                     !TryReadOptionalGuid(assistantTable, "ChatTemplateId", true, out var chatTemplateId, out message) ||
                     !TryReadOptionalDataSourceIds(assistantTable, out var dataSourceIds, out message) ||
                     !TryReadOptionalToolIds(assistantTable, out var toolIds, out message))
                     return false;
 
-                this.ChatLaunchConfiguration = new(workspaceName, providerId, profileId, chatTemplateId, dataSourceIds, toolIds);
+                this.ChatLaunchConfiguration = new(workspaceName, providerId, profileIds, chatTemplateId, dataSourceIds, toolIds);
 
                 return true;
 
@@ -306,6 +307,56 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
         }
 
         dataSourceIds = parsedIds.ToImmutableArray();
+        return true;
+    }
+
+    private static bool TryReadOptionalProfileIds(LuaTable assistantTable, out IReadOnlyList<Guid>? profileIds, out string message)
+    {
+        profileIds = null;
+        message = string.Empty;
+        var hasLegacyId = assistantTable.TryGetValue("ProfileId", out _);
+        var hasIds = assistantTable.TryGetValue("ProfileIds", out var profileIdsValue);
+        if (hasLegacyId && hasIds)
+        {
+            message = TB("The ASSISTANT table contains both ProfileId and ProfileIds. Use only one of them.");
+            return false;
+        }
+
+        if (hasLegacyId)
+        {
+            if (!TryReadOptionalGuid(assistantTable, "ProfileId", true, out var profileId, out message))
+                return false;
+
+            profileIds = profileId == Guid.Empty ? [] : profileId is { } id ? [id] : null;
+            return true;
+        }
+
+        if (!hasIds)
+            return true;
+
+        if (!profileIdsValue.TryRead<LuaTable>(out var profileIdsTable))
+        {
+            message = TB("The ASSISTANT table contains invalid ProfileIds. Expected a list of unique, non-empty GUIDs.");
+            return false;
+        }
+
+        var parsedIds = new List<Guid>(profileIdsTable.ArrayLength);
+        var uniqueIds = new HashSet<Guid>();
+        for (var index = 1; index <= profileIdsTable.ArrayLength; index++)
+        {
+            if (!profileIdsTable[index].TryRead<string>(out var idText) ||
+                !Guid.TryParse(idText, out var parsedId) ||
+                parsedId == Guid.Empty ||
+                !uniqueIds.Add(parsedId))
+            {
+                message = TB("The ASSISTANT table contains invalid ProfileIds. Expected a list of unique, non-empty GUIDs.");
+                return false;
+            }
+
+            parsedIds.Add(parsedId);
+        }
+
+        profileIds = parsedIds.ToImmutableArray();
         return true;
     }
 
@@ -383,12 +434,14 @@ public sealed class PluginAssistants(bool isInternal, LuaState state, PluginType
             InitializeState(this.RootComponent.Children, assistantState);
 
         var input = assistantState.ToLuaTable(this.RootComponent?.Children ?? []);
+        input["profiles"] = new LuaTable();
         input["profile"] = new LuaTable
         {
-            ["Name"] = string.Empty,
-            ["NeedToKnow"] = string.Empty,
-            ["Actions"] = string.Empty,
-            ["Num"] = 0,
+            ["Id"] = Profile.NO_PROFILE.Id,
+            ["Name"] = Profile.NO_PROFILE.Name,
+            ["NeedToKnow"] = Profile.NO_PROFILE.NeedToKnow,
+            ["Actions"] = Profile.NO_PROFILE.Actions,
+            ["Num"] = Profile.NO_PROFILE.Num,
         };
 
         var prompt = await this.TryBuildPromptAsync(input, cancellationToken);

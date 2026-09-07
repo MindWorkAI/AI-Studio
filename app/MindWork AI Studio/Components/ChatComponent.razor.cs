@@ -70,7 +70,7 @@ public partial class ChatComponent : MSGComponentBase
     private DataSourceSelection? dataSourceSelectionComponent;
     private DataSourceOptions earlyDataSourceOptions = new();
     private DataSourceOptions lastAppliedStandardDataSourceOptions = new();
-    private Profile currentProfile = Profile.NO_PROFILE;
+    private HashSet<string> currentProfileIds = [];
     private ChatTemplate currentChatTemplate = ChatTemplate.NO_CHAT_TEMPLATE;
     private bool hasUnsavedChanges;
     private bool mustScrollToBottomAfterRender;
@@ -127,7 +127,7 @@ public partial class ChatComponent : MSGComponentBase
         USER_INPUT_ATTRIBUTES["id"] = CHAT_INPUT_ID;
 
         // Get the preselected profile:
-        this.currentProfile = this.SettingsManager.GetPreselectedProfile(Tools.Components.CHAT);
+        this.currentProfileIds = this.SettingsManager.GetPreselectedProfiles(Tools.Components.CHAT).Select(profile => profile.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
         
         // Get the preselected chat template:
         this.currentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(Tools.Components.CHAT);
@@ -586,15 +586,15 @@ public partial class ChatComponent : MSGComponentBase
         return threadName;
     }
     
-    private async Task ProfileWasChanged(Profile profile)
+    private async Task ProfilesWereChanged(HashSet<string> profileIds)
     {
-        this.currentProfile = this.SettingsManager.GetProfileById(profile.Id);
+        this.currentProfileIds = this.SettingsManager.ResolveProfiles(profileIds).Select(profile => profile.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
         if(this.ChatThread is null)
             return;
 
         this.ChatThread = this.ChatThread with
         {
-            SelectedProfile = this.currentProfile.Id,
+            SelectedProfileIds = [..this.currentProfileIds],
         };
         
         await this.ChatThreadChanged.InvokeAsync(this.ChatThread);
@@ -617,7 +617,7 @@ public partial class ChatComponent : MSGComponentBase
 
     private void RefreshCurrentProfileAndChatTemplate()
     {
-        this.currentProfile = this.SettingsManager.GetProfileById(this.currentProfile.Id);
+        this.currentProfileIds = this.SettingsManager.ResolveProfiles(this.currentProfileIds).Select(profile => profile.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
         this.currentChatTemplate = this.SettingsManager.GetChatTemplateById(this.currentChatTemplate.Id);
     }
 
@@ -632,14 +632,12 @@ public partial class ChatComponent : MSGComponentBase
 
         if (this.ChatThread is null)
         {
-            this.currentProfile = this.SettingsManager.GetPreselectedProfile(Tools.Components.CHAT);
+            this.currentProfileIds = this.SettingsManager.GetPreselectedProfiles(Tools.Components.CHAT).Select(profile => profile.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
             this.currentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(Tools.Components.CHAT);
         }
         else
         {
-            this.currentProfile = string.IsNullOrWhiteSpace(this.ChatThread.SelectedProfile)
-                ? this.SettingsManager.GetProfileById(this.currentProfile.Id)
-                : this.SettingsManager.GetProfileById(this.ChatThread.SelectedProfile);
+            this.currentProfileIds = this.SettingsManager.ResolveProfiles(this.ChatThread.SelectedProfileIds).Select(profile => profile.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
 
             this.currentChatTemplate = string.IsNullOrWhiteSpace(this.ChatThread.SelectedChatTemplate)
                 ? this.SettingsManager.GetChatTemplateById(this.currentChatTemplate.Id)
@@ -761,7 +759,7 @@ public partial class ChatComponent : MSGComponentBase
         {
             IncludeDateTime = true,
             SelectedProvider = this.Provider.Id,
-            SelectedProfile = this.currentProfile.Id,
+            SelectedProfileIds = [..this.currentProfileIds],
             SelectedChatTemplate = this.currentChatTemplate.Id,
             SelectedToolIds = [..this.selectedToolIds],
             SystemPrompt = SystemPrompts.DEFAULT,
@@ -806,7 +804,7 @@ public partial class ChatComponent : MSGComponentBase
             {
                 IncludeDateTime = true,
                 SelectedProvider = this.Provider.Id,
-                SelectedProfile = this.currentProfile.Id,
+                SelectedProfileIds = [..this.currentProfileIds],
                 SelectedChatTemplate = this.currentChatTemplate.Id,
                 SelectedToolIds = [..this.selectedToolIds],
                 SystemPrompt = SystemPrompts.DEFAULT,
@@ -828,7 +826,7 @@ public partial class ChatComponent : MSGComponentBase
             
             // Update provider, profile and chat template:
             this.ChatThread.SelectedProvider = this.Provider.Id;
-            this.ChatThread.SelectedProfile = this.currentProfile.Id;
+            this.ChatThread.SelectedProfileIds = [..this.currentProfileIds];
             
             //
             // Remark: We do not update the chat template here
@@ -1073,7 +1071,7 @@ public partial class ChatComponent : MSGComponentBase
             {
                 IncludeDateTime = true,
                 SelectedProvider = this.Provider.Id,
-                SelectedProfile = this.currentProfile.Id,
+                SelectedProfileIds = [..this.currentProfileIds],
                 SelectedChatTemplate = this.currentChatTemplate.Id,
                 SelectedToolIds = [..this.selectedToolIds],
                 SystemPrompt = SystemPrompts.DEFAULT,
@@ -1201,7 +1199,7 @@ public partial class ChatComponent : MSGComponentBase
     private async Task SelectProviderWhenLoadingChat()
     {
         var chatProvider = this.ChatThread?.SelectedProvider;
-        var chatProfile = this.ChatThread?.SelectedProfile;
+        var chatProfileIds = this.ChatThread?.SelectedProfileIds;
         var chatChatTemplate = this.ChatThread?.SelectedChatTemplate;
 
         this.Provider = this.SettingsManager.GetChatProviderForLoadedChat(chatProvider);
@@ -1209,8 +1207,8 @@ public partial class ChatComponent : MSGComponentBase
         await this.ProviderChanged.InvokeAsync(this.Provider);
 
         // Try to select the profile:
-        if (!string.IsNullOrWhiteSpace(chatProfile))
-            this.currentProfile = this.SettingsManager.GetProfileById(chatProfile);
+        if (chatProfileIds is not null)
+            this.currentProfileIds = this.SettingsManager.ResolveProfiles(chatProfileIds).Select(profile => profile.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
         
         // Try to select the chat template:
         if (!string.IsNullOrWhiteSpace(chatChatTemplate))

@@ -1,3 +1,4 @@
+@using AIStudio.Settings
 @inherits MSGComponentBase
 
 @if (this.availableWorkspaces.Count > 0)
@@ -20,14 +21,20 @@
         </MudSelectItem>
     }
 </MudSelect>
-<MudSelect T="string" Value="@this.ProfileId" ValueChanged="@this.SetProfileId" Label="@T("Chat profile")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3 rounded-lg" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Person">
-    <MudSelectItem T="string" Value="@string.Empty">@T("Use chat default")</MudSelectItem>
-    <MudSelectItem T="string" Value="@Guid.Empty.ToString()">@T("Use no profile")</MudSelectItem>
-    @foreach (var profile in this.SettingsManager.ConfigurationData.Profiles)
-    {
-        <MudSelectItem T="string" Value="@profile.Id">@profile.GetSafeName()</MudSelectItem>
-    }
+<MudSelect T="ProfilePreselectionMode" Value="@this.SelectedProfileMode" ValueChanged="@this.SetProfileMode" Label="@T("Chat profiles")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3 rounded-lg" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Person">
+    <MudSelectItem Value="@ProfilePreselectionMode.USE_APP_DEFAULT">@T("Use chat defaults")</MudSelectItem>
+    <MudSelectItem Value="@ProfilePreselectionMode.USE_NO_PROFILES">@T("Use no profiles")</MudSelectItem>
+    <MudSelectItem Value="@ProfilePreselectionMode.USE_SPECIFIC_PROFILES">@T("Use a custom profile selection")</MudSelectItem>
 </MudSelect>
+@if (this.SelectedProfileMode is ProfilePreselectionMode.USE_SPECIFIC_PROFILES)
+{
+    <MudSelect T="string" MultiSelection="true" SelectedValues="@(this.ProfileIds ?? [])" SelectedValuesChanged="@this.SetProfileIds" MultiSelectionTextFunc="@this.GetSelectedProfileText" Label="@T("Profiles")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3 rounded-lg" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Person">
+        @foreach (var profile in this.SettingsManager.ConfigurationData.Profiles)
+        {
+            <MudSelectItem T="string" Value="@profile.Id">@profile.GetSafeName()</MudSelectItem>
+        }
+    </MudSelect>
+}
 <MudSelect T="string" Value="@this.ChatTemplateId" ValueChanged="@this.SetChatTemplateId" Label="@T("Chat template")" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3 rounded-lg" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Article">
     <MudSelectItem T="string" Value="@string.Empty">@T("Use chat default")</MudSelectItem>
     <MudSelectItem T="string" Value="@Guid.Empty.ToString()">@T("Use no chat template")</MudSelectItem>

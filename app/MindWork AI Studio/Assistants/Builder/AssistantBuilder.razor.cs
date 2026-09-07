@@ -99,7 +99,7 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
     private string descriptionSuggestion = string.Empty;
     private string launcherWorkspaceName = string.Empty;
     private string launcherProviderId = string.Empty;
-    private string launcherProfileId = string.Empty;
+    private HashSet<string>? launcherProfileIds;
     private string launcherChatTemplateId = string.Empty;
     private IEnumerable<string> launcherDataSourceIds = [];
     private HashSet<string> launcherToolIds = [];
@@ -137,7 +137,7 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
     private static readonly AssistantSessionStateKey<string> DESCRIPTION_SUGGESTION_STATE_KEY = new(nameof(descriptionSuggestion));
     private static readonly AssistantSessionStateKey<string> LAUNCHER_WORKSPACE_NAME_STATE_KEY = new(nameof(launcherWorkspaceName));
     private static readonly AssistantSessionStateKey<string> LAUNCHER_PROVIDER_ID_STATE_KEY = new(nameof(launcherProviderId));
-    private static readonly AssistantSessionStateKey<string> LAUNCHER_PROFILE_ID_STATE_KEY = new(nameof(launcherProfileId));
+    private static readonly AssistantSessionStateKey<HashSet<string>?> LAUNCHER_PROFILE_IDS_STATE_KEY = new(nameof(launcherProfileIds));
     private static readonly AssistantSessionStateKey<string> LAUNCHER_CHAT_TEMPLATE_ID_STATE_KEY = new(nameof(launcherChatTemplateId));
     private static readonly AssistantSessionStateKey<List<string>> LAUNCHER_DATA_SOURCE_IDS_STATE_KEY = new(nameof(launcherDataSourceIds));
     private static readonly AssistantSessionStateKey<HashSet<string>> LAUNCHER_TOOL_IDS_STATE_KEY = new(nameof(launcherToolIds));
@@ -243,7 +243,7 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
         this.descriptionSuggestion = string.Empty;
         this.launcherWorkspaceName = string.Empty;
         this.launcherProviderId = string.Empty;
-        this.launcherProfileId = string.Empty;
+        this.launcherProfileIds = null;
         this.launcherChatTemplateId = string.Empty;
         this.launcherDataSourceIds = [];
         this.launcherToolIds = [];
@@ -280,7 +280,7 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
         state.Set(DESCRIPTION_SUGGESTION_STATE_KEY, this.descriptionSuggestion);
         state.Set(LAUNCHER_WORKSPACE_NAME_STATE_KEY, this.launcherWorkspaceName);
         state.Set(LAUNCHER_PROVIDER_ID_STATE_KEY, this.launcherProviderId);
-        state.Set(LAUNCHER_PROFILE_ID_STATE_KEY, this.launcherProfileId);
+        state.Set(LAUNCHER_PROFILE_IDS_STATE_KEY, this.launcherProfileIds);
         state.Set(LAUNCHER_CHAT_TEMPLATE_ID_STATE_KEY, this.launcherChatTemplateId);
         state.SetList(LAUNCHER_DATA_SOURCE_IDS_STATE_KEY, this.launcherDataSourceIds);
         state.SetHashSet(LAUNCHER_TOOL_IDS_STATE_KEY, this.launcherToolIds);
@@ -322,7 +322,7 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
         state.Restore(DESCRIPTION_SUGGESTION_STATE_KEY, value => this.descriptionSuggestion = value);
         state.Restore(LAUNCHER_WORKSPACE_NAME_STATE_KEY, value => this.launcherWorkspaceName = value);
         state.Restore(LAUNCHER_PROVIDER_ID_STATE_KEY, value => this.launcherProviderId = value);
-        state.Restore(LAUNCHER_PROFILE_ID_STATE_KEY, value => this.launcherProfileId = value);
+        state.Restore(LAUNCHER_PROFILE_IDS_STATE_KEY, value => this.launcherProfileIds = value);
         state.Restore(LAUNCHER_CHAT_TEMPLATE_ID_STATE_KEY, value => this.launcherChatTemplateId = value);
         state.Restore(LAUNCHER_DATA_SOURCE_IDS_STATE_KEY, value => this.launcherDataSourceIds = value);
         state.Restore(LAUNCHER_TOOL_IDS_STATE_KEY, value => this.launcherToolIds = ToolSelectionRules.NormalizeSelection(value));
@@ -553,7 +553,7 @@ public partial class AssistantBuilder : AssistantBaseCore<NoSettingsPanel>
         return new(
             this.launcherWorkspaceName.Trim(),
             NullIfEmpty(this.launcherProviderId),
-            NullIfEmpty(this.launcherProfileId),
+            this.launcherProfileIds?.Order(StringComparer.OrdinalIgnoreCase).ToArray(),
             NullIfEmpty(this.launcherChatTemplateId),
             dataSourceIds.Length == 0 ? null : dataSourceIds,
             toolIds.Length == 0 ? null : toolIds);

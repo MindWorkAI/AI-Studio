@@ -19,12 +19,12 @@ internal sealed class VisualBriefingEvidenceStage(StructuredLlmStageRunner stage
     /// </summary>
     /// <param name="manifest">The briefing manifest.</param>
     /// <param name="provider">The selected provider and model.</param>
-    /// <param name="profile">The selected prompt profile.</param>
+    /// <param name="profiles">The selected prompt profiles.</param>
     /// <param name="preparedSources">The validated prepared sources.</param>
     /// <param name="build">The persistent build record.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>The validated immutable evidence artifact.</returns>
-    public async Task<VisualBriefingEvidenceArtifact> ExecuteAsync(VisualBriefingManifest manifest, ProviderSettings provider, Profile profile, VisualBriefingPreparedSources preparedSources, VisualBriefingBuildRecord build, CancellationToken token)
+    public async Task<VisualBriefingEvidenceArtifact> ExecuteAsync(VisualBriefingManifest manifest, ProviderSettings provider, IReadOnlyList<Profile> profiles, VisualBriefingPreparedSources preparedSources, VisualBriefingBuildRecord build, CancellationToken token)
     {
         if (build.EvidenceArtifactId is { } completedId)
         {
@@ -33,12 +33,12 @@ internal sealed class VisualBriefingEvidenceStage(StructuredLlmStageRunner stage
                 return completed;
         }
         
-        var stage = Start(build, VisualBriefingBuildStage.EVIDENCE, ComputeInputFingerprint(manifest, provider, profile, preparedSources.SourceFingerprint));
+        var stage = Start(build, VisualBriefingBuildStage.EVIDENCE, ComputeInputFingerprint(manifest, provider, profiles, preparedSources.SourceFingerprint));
         await store.SaveBuildAsync(build, token);
         progressService.Publish(build);
         
         var run = await stageRunner.RunAsync<VisualBriefingEvidenceResponse>(
-            provider, profile, BuildSystemContract(), BuildPrompt(manifest, preparedSources), preparedSources.Attachments, VisualBriefingBuildStage.EVIDENCE,
+            provider, profiles, BuildSystemContract(), BuildPrompt(manifest, preparedSources), preparedSources.Attachments, VisualBriefingBuildStage.EVIDENCE,
             build.OperationId, build.BuildId, response => VisualBriefingValidation.ValidateEvidence(manifest, response), token);
         
         stage.Attempts = run.Attempts;
@@ -71,10 +71,10 @@ internal sealed class VisualBriefingEvidenceStage(StructuredLlmStageRunner stage
         return artifact;
     }
 
-    internal static string ComputeInputFingerprint(VisualBriefingManifest manifest, ProviderSettings provider, Profile profile, string sourceFingerprint) => 
+    internal static string ComputeInputFingerprint(VisualBriefingManifest manifest, ProviderSettings provider, IReadOnlyList<Profile> profiles, string sourceFingerprint) =>
         VisualBriefingHashing.ComputeSections(sourceFingerprint, VisualBriefingHashing.Compute(manifest.Settings.Instruction),
             manifest.Settings.TargetLanguage.ToString(), manifest.Settings.CustomTargetLanguage, provider.Id,
-            provider.Model.Id, profile.Id, VisualBriefingHashing.Compute(profile.ToSystemPrompt()),
+            provider.Model.Id, string.Join(";", profiles.Select(profile => profile.Id)), VisualBriefingHashing.Compute(Profile.ToSystemPrompt(profiles)),
             VisualBriefingVersions.EVIDENCE_CONTRACT.ToString());
 
     private static string BuildSystemContract() =>

@@ -422,15 +422,36 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
             ? this.assistantState.ToLuaTable(rootComponent.Children)
             : new LuaTable();
 
-        var profile = new LuaTable
+        IReadOnlyList<Profile> selectedProfiles = this.AllowProfiles ? this.SettingsManager.ResolveProfiles(this.CurrentProfileIds) : [];
+        var profiles = new LuaTable();
+        for (var index = 0; index < selectedProfiles.Count; index++)
         {
-            ["Name"] = this.CurrentProfile.Name,
-            ["NeedToKnow"] = this.CurrentProfile.NeedToKnow,
-            ["Actions"] = this.CurrentProfile.Actions,
-            ["Num"] = this.CurrentProfile.Num,
-        };
-        
-        state["profile"] = profile;
+            var profile = selectedProfiles[index];
+            profiles[index + 1] = new LuaTable
+            {
+                ["Id"] = profile.Id,
+                ["Name"] = profile.Name,
+                ["NeedToKnow"] = profile.NeedToKnow,
+                ["Actions"] = profile.Actions,
+                ["Num"] = profile.Num,
+            };
+        }
+
+        state["profiles"] = profiles;
+        if (profiles.ArrayLength == 1)
+            state["profile"] = profiles[1];
+        else if (profiles.ArrayLength == 0)
+        {
+            state["profile"] = new LuaTable
+            {
+                ["Id"] = Profile.NO_PROFILE.Id,
+                ["Name"] = Profile.NO_PROFILE.Name,
+                ["NeedToKnow"] = Profile.NO_PROFILE.NeedToKnow,
+                ["Actions"] = Profile.NO_PROFILE.Actions,
+                ["Num"] = Profile.NO_PROFILE.Num,
+            };
+        }
+
         return state;
     }
 
@@ -642,9 +663,9 @@ public partial class AssistantDynamic : AssistantBaseCore<NoSettingsPanel>
             this.assistantState.MultiSelect[fieldName] = values;
         });
 
-    private string? ValidateProfileSelection(AssistantProfileSelection profileSelection, Profile? profile)
+    private string? ValidateProfileSelection(AssistantProfileSelection profileSelection, HashSet<string> profileIds)
     {
-        if (profile != null && profile != Profile.NO_PROFILE) return null;
+        if (this.SettingsManager.ResolveProfiles(profileIds).Count > 0) return null;
         return !string.IsNullOrWhiteSpace(profileSelection.ValidationMessage) ? profileSelection.ValidationMessage : this.T("Please select one of your profiles.");
     }
     

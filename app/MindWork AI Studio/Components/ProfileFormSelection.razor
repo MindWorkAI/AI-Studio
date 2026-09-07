@@ -2,10 +2,10 @@
 @inherits MSGComponentBase
 
 <MudStack Row="true" AlignItems="AlignItems.Baseline" StretchItems="StretchItems.Start" Class="mb-3" Wrap="Wrap.NoWrap">
-    <MudSelect T="Profile" Strict="@true" Disabled="@this.Disabled" Value="@this.Profile" ValueChanged="@this.SelectionChanged" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Person4" Margin="Margin.Dense" Label="@T("Select one of your profiles")" Variant="Variant.Outlined" Class="mb-3" Validation="@this.Validation">
-        @foreach (var profile in this.SettingsManager.ConfigurationData.Profiles.GetAllProfiles())
+    <MudSelect T="string" MultiSelection="@true" Strict="@true" Disabled="@this.Disabled" SelectedValues="@this.ProfileIds" SelectedValuesChanged="@this.SelectionChanged" MultiSelectionTextFunc="@this.GetSelectionText" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Person4" Margin="Margin.Dense" Label="@T("Select your profiles")" Variant="Variant.Outlined" Class="mb-3" Validation="@this.ValidateSelection">
+        @foreach (var profile in this.SettingsManager.ConfigurationData.Profiles)
         {
-            <MudSelectItem Value="profile">
+            <MudSelectItem T="string" Value="@profile.Id">
                 @profile.GetSafeName()
             </MudSelectItem>
         }

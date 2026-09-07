@@ -189,7 +189,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         
         this.MightPreselectValues();
         this.ProviderSettings = this.SettingsManager.GetPreselectedProvider(this.Component);
-        this.CurrentProfile = this.SettingsManager.GetPreselectedProfile(this.Component);
+        this.CurrentProfileIds = this.SettingsManager.GetPreselectedProfiles(this.Component).Select(profile => profile.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
         this.CurrentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(this.Component);
         this.SelectedToolIds = this.SettingsManager.GetDefaultToolIds(this.Component);
         await this.OnDefaultsAppliedAsync();
@@ -362,7 +362,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         {
             IncludeDateTime = false,
             SelectedProvider = this.ProviderSettings.Id,
-            SelectedProfile = this.AllowProfiles ? this.CurrentProfile.Id : Profile.NO_PROFILE.Id,
+            SelectedProfileIds = this.AllowProfiles ? [..this.CurrentProfileIds] : [],
             SystemPrompt = this.SystemPrompt,
             WorkspaceId = Guid.Empty,
             ChatId = Guid.NewGuid(),
@@ -379,7 +379,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         {
             IncludeDateTime = false,
             SelectedProvider = this.ProviderSettings.Id,
-            SelectedProfile = this.AllowProfiles ? this.CurrentProfile.Id : Profile.NO_PROFILE.Id,
+            SelectedProfileIds = this.AllowProfiles ? [..this.CurrentProfileIds] : [],
             SystemPrompt = this.SystemPrompt,
             WorkspaceId = workspaceId,
             ChatId = chatId,
@@ -400,7 +400,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
     protected virtual void ResetProviderAndProfileSelection()
     {
         this.ProviderSettings = this.SettingsManager.GetPreselectedProvider(this.Component);
-        this.CurrentProfile = this.SettingsManager.GetPreselectedProfile(this.Component);
+        this.CurrentProfileIds = this.SettingsManager.GetPreselectedProfiles(this.Component).Select(profile => profile.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
         this.CurrentChatTemplate = this.SettingsManager.GetPreselectedChatTemplate(this.Component);
         this.SelectedToolIds = this.SettingsManager.GetDefaultToolIds(this.Component);
     }
@@ -975,7 +975,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         var state = new AssistantSessionStateWriter();
         state.Set(PROVIDER_SETTINGS_STATE_KEY, this.ProviderSettings);
         state.Set(INPUT_IS_VALID_STATE_KEY, this.InputIsValid);
-        state.Set(CURRENT_PROFILE_STATE_KEY, this.CurrentProfile);
+        state.Set(CURRENT_PROFILE_IDS_STATE_KEY, this.CurrentProfileIds);
         state.Set(CURRENT_CHAT_TEMPLATE_STATE_KEY, this.CurrentChatTemplate);
         state.Set(CHAT_THREAD_STATE_KEY, this.ChatThread);
         state.Set(LAST_USER_PROMPT_STATE_KEY, this.LastUserPrompt);
@@ -1003,7 +1003,7 @@ public abstract partial class AssistantBase<TSettings> : AssistantLowerBase wher
         var reader = new AssistantSessionStateReader(state, this.Title);
         reader.Restore(PROVIDER_SETTINGS_STATE_KEY, value => this.ProviderSettings = value);
         reader.Restore(INPUT_IS_VALID_STATE_KEY, value => this.InputIsValid = value);
-        reader.Restore(CURRENT_PROFILE_STATE_KEY, value => this.CurrentProfile = value);
+        reader.Restore(CURRENT_PROFILE_IDS_STATE_KEY, value => this.CurrentProfileIds = value);
         reader.Restore(CURRENT_CHAT_TEMPLATE_STATE_KEY, value => this.CurrentChatTemplate = value);
         reader.Restore(CHAT_THREAD_STATE_KEY, value => this.ChatThread = value);
         reader.Restore(LAST_USER_PROMPT_STATE_KEY, value => this.LastUserPrompt = value);

@@ -123,7 +123,7 @@
             
             <MudDivider Vertical="true" Style="height: 24px; align-self: center;"/>
             
-            <ProfileSelection MarginLeft="" CurrentProfile="@this.currentProfile" CurrentProfileChanged="@this.ProfileWasChanged" Disabled="@(!this.currentChatTemplate.AllowProfileUsage)" DisabledText="@T("Profile usage is disabled according to your chat template settings.")"/>
+            <ProfileSelection MarginLeft="" SelectedProfileIds="@this.currentProfileIds" SelectedProfileIdsChanged="@this.ProfilesWereChanged" Disabled="@(!this.currentChatTemplate.AllowProfileUsage)" DisabledText="@T("Profile usage is disabled according to your chat template settings.")"/>
 
             @if (this.SettingsManager.AreToolsEnabled())
             {

@@ -1,0 +1,16 @@
+@using AIStudio.Settings
+@inherits MSGComponentBase
+
+<ConfigurationSelect TConfig="ProfilePreselectionMode" OptionDescription="@this.OptionDescription" OptionHelp="@this.OptionHelp" Disabled="@this.Disabled" IsLocked="@this.IsLocked" SelectedValue="@(() => this.SelectedMode)" Data="@this.GetModeData()" SelectionUpdateAsync="@this.ModeChanged" />
+
+@if (this.SelectedMode is ProfilePreselectionMode.USE_SPECIFIC_PROFILES)
+{
+    <ConfigurationMultiSelect TData="string" OptionDescription="@T("Profiles")" Disabled="@this.Disabled" IsLocked="@this.IsLocked" SelectedValues="@(() => this.SpecificProfileIds)" Data="@ConfigurationSelectDataFactory.GetProfilesData(this.SettingsManager.ConfigurationData.Profiles)" SelectionUpdateAsync="@this.ProfilesChanged" MultiSelectionTextFunc="@this.GetSelectionText">
+        <ItemTemplate Context="profileData">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                <MudIcon Icon="@this.ProfileIcon(profileData.Value)" Size="Size.Small" Style="color: var(--mud-palette-action-default);" />
+                <MudText Typo="Typo.body1">@profileData.Name</MudText>
+            </MudStack>
+        </ItemTemplate>
+    </ConfigurationMultiSelect>
+}

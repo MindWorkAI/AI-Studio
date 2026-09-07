@@ -11,7 +11,7 @@ namespace AIStudio.Assistants.VisualBriefing;
 /// </summary>
 internal sealed class VisualBriefingPresentationStage(StructuredLlmStageRunner stageRunner, VisualBriefingStore store, VisualBriefingBuildProgressService progressService, ILogger<VisualBriefingPresentationStage> logger)
 {
-    public async Task<VisualBriefingPresentationArtifact> ExecuteAsync(VisualBriefingManifest manifest, ProviderSettings provider, Profile profile,
+    public async Task<VisualBriefingPresentationArtifact> ExecuteAsync(VisualBriefingManifest manifest, ProviderSettings provider, IReadOnlyList<Profile> profiles,
         VisualBriefingPlanArtifact plan, VisualBriefingContentArtifact content, VisualBriefingPresentationArtifact? parentPresentation,
         VisualBriefingBuildRecord build, CancellationToken token)
     {
@@ -34,15 +34,15 @@ internal sealed class VisualBriefingPresentationStage(StructuredLlmStageRunner s
             parentPresentation?.PayloadHash ?? string.Empty,
             provider.Id,
             provider.Model.Id,
-            profile.Id,
-            VisualBriefingHashing.Compute(profile.ToSystemPrompt()),
+            string.Join(";", profiles.Select(profile => profile.Id)),
+            VisualBriefingHashing.Compute(Profile.ToSystemPrompt(profiles)),
             VisualBriefingVersions.DESIGN_CONTRACT.ToString());
         
         build.UpdatedAtUtc = DateTimeOffset.UtcNow;
         await store.SaveBuildAsync(build, token);
         progressService.Publish(build);
 
-        var run = await stageRunner.RunAsync<VisualBriefingDesignResponse>(provider, profile, BuildSystemContract(),
+        var run = await stageRunner.RunAsync<VisualBriefingDesignResponse>(provider, profiles, BuildSystemContract(),
             BuildPrompt(manifest, plan, parentPresentation), [], VisualBriefingBuildStage.DESIGN, build.OperationId, build.BuildId,
             response => ValidateDesign(manifest, plan, content, response), token);
         

@@ -62,13 +62,13 @@ public partial class VisualBriefingAssistant
     {
         var defaults = this.SettingsManager.ConfigurationData.VisualBriefing;
         var defaultProvider = this.SettingsManager.GetPreselectedProvider(ComponentKind.VISUAL_BRIEFING_ASSISTANT);
-        var defaultProfile = this.SettingsManager.GetPreselectedProfile(ComponentKind.VISUAL_BRIEFING_ASSISTANT);
+        var defaultProfiles = this.SettingsManager.GetPreselectedProfiles(ComponentKind.VISUAL_BRIEFING_ASSISTANT);
         var suggestedName = string.Format(T("Briefing {0}"), DateTimeOffset.Now.ToString("yyyy-MM-dd HH:mm"));
         var settings = new VisualBriefingLocalSettings
         {
             ProviderId = defaultProvider.Id,
             ModelId = defaultProvider.Model.Id,
-            ProfileId = defaultProfile.Id,
+            ProfileIds = defaultProfiles.Select(profile => profile.Id).ToHashSet(StringComparer.OrdinalIgnoreCase),
             TargetLanguage = defaults.PreselectedTargetLanguage,
             CustomTargetLanguage = defaults.PreselectedOtherLanguage,
             AudienceProfile = defaults.PreselectedAudienceProfile,

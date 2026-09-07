@@ -45,7 +45,7 @@ public partial class DirectChatLauncherSettingsDialog : MSGComponentBase
     private string description = string.Empty;
     private string workspaceName = string.Empty;
     private string providerId = string.Empty;
-    private string profileId = string.Empty;
+    private HashSet<string>? profileIds;
     private string chatTemplateId = string.Empty;
     private IEnumerable<string> dataSourceIds = [];
     private HashSet<string> toolIds = [];
@@ -112,7 +112,7 @@ public partial class DirectChatLauncherSettingsDialog : MSGComponentBase
 
             this.workspaceName = launch.WorkspaceName;
             this.providerId = launch.ProviderId?.ToString() ?? string.Empty;
-            this.profileId = launch.ProfileId?.ToString() ?? string.Empty;
+            this.profileIds = launch.ProfileIds is null ? null : launch.ProfileIds.Select(id => id.ToString()).ToHashSet(StringComparer.OrdinalIgnoreCase);
             this.chatTemplateId = launch.ChatTemplateId?.ToString() ?? string.Empty;
             this.dataSourceIds = launch.DataSourceIds?.Select(id => id.ToString()).ToArray() ?? [];
             this.toolIds = launch.ToolIds is null ? [] : [..launch.ToolIds];
@@ -157,7 +157,7 @@ public partial class DirectChatLauncherSettingsDialog : MSGComponentBase
         return new(
             this.workspaceName.Trim(),
             ParseOptionalGuid(this.providerId),
-            ParseOptionalGuid(this.profileId),
+            this.profileIds?.Select(Guid.Parse).Order().ToArray(),
             ParseOptionalGuid(this.chatTemplateId),
             selectedDataSourceIds.Length == 0 ? null : selectedDataSourceIds,
             this.toolIds.Count == 0 ? null : this.toolIds.Order(StringComparer.Ordinal).ToArray());

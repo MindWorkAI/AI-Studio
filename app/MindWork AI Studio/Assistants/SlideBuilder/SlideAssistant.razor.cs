@@ -88,7 +88,8 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
             {
                 return new ChatThread
                 {
-                    SystemPrompt = SystemPrompts.DEFAULT
+                    SystemPrompt = SystemPrompts.DEFAULT,
+                    SelectedProfileIds = [..this.CurrentProfileIds],
                 };
             }
             
@@ -97,6 +98,7 @@ public partial class SlideAssistant : AssistantBaseCore<SettingsDialogSlideBuild
                 ChatId = Guid.NewGuid(),
                 Name = string.Format(T("{0} - Slide Builder Session"), this.inputTitle),
                 SystemPrompt = SystemPrompts.DEFAULT,
+                SelectedProfileIds = [..this.CurrentProfileIds],
                 Blocks =
                 [
                     // Visible user block:

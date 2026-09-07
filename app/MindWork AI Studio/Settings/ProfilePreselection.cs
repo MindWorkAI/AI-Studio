@@ -4,52 +4,54 @@ public readonly record struct ProfilePreselection
 {
     public ProfilePreselectionMode Mode { get; }
 
-    public string SpecificProfileId { get; }
+    public IReadOnlySet<string> SpecificProfileIds { get; }
 
     public bool UseAppDefault => this.Mode == ProfilePreselectionMode.USE_APP_DEFAULT;
 
-    public bool DoNotPreselectProfile => this.Mode == ProfilePreselectionMode.USE_NO_PROFILE;
+    public bool DoNotPreselectProfiles => this.Mode == ProfilePreselectionMode.USE_NO_PROFILES;
 
-    public bool UseSpecificProfile => this.Mode == ProfilePreselectionMode.USE_SPECIFIC_PROFILE;
+    public bool UseSpecificProfiles => this.Mode == ProfilePreselectionMode.USE_SPECIFIC_PROFILES;
 
-    public static ProfilePreselection AppDefault => new(ProfilePreselectionMode.USE_APP_DEFAULT, string.Empty);
+    public static ProfilePreselection AppDefault => new(ProfilePreselectionMode.USE_APP_DEFAULT, new HashSet<string>());
 
-    public static ProfilePreselection NoProfile => new(ProfilePreselectionMode.USE_NO_PROFILE, Profile.NO_PROFILE.Id);
+    public static ProfilePreselection NoProfiles => new(ProfilePreselectionMode.USE_NO_PROFILES, new HashSet<string>());
 
-    private ProfilePreselection(ProfilePreselectionMode mode, string specificProfileId)
+    private ProfilePreselection(ProfilePreselectionMode mode, IReadOnlySet<string> specificProfileIds)
     {
         this.Mode = mode;
-        this.SpecificProfileId = specificProfileId;
+        this.SpecificProfileIds = specificProfileIds;
     }
 
-    public static ProfilePreselection Specific(string profileId)
+    public static ProfilePreselection Specific(IEnumerable<string> profileIds)
     {
-        if (string.IsNullOrWhiteSpace(profileId))
-            throw new ArgumentException("A specific profile preselection requires a profile ID.", nameof(profileId));
+        var normalizedIds = profileIds
+            .Where(profileId => !string.IsNullOrWhiteSpace(profileId) && !profileId.Equals(Profile.NO_PROFILE.Id, StringComparison.OrdinalIgnoreCase))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-        if (profileId.Equals(Profile.NO_PROFILE.Id, StringComparison.OrdinalIgnoreCase))
-            throw new ArgumentException("Use NoProfile for the NO_PROFILE selection.", nameof(profileId));
+        if (normalizedIds.Count == 0)
+            throw new ArgumentException("A specific profile preselection requires at least one profile ID.", nameof(profileIds));
 
-        return new(ProfilePreselectionMode.USE_SPECIFIC_PROFILE, profileId);
+        return new(ProfilePreselectionMode.USE_SPECIFIC_PROFILES, normalizedIds);
     }
 
-    public static ProfilePreselection FromStoredValue(string? storedValue)
+    public static ProfilePreselection FromStoredValue(IEnumerable<string>? storedValue)
     {
-        if (string.IsNullOrWhiteSpace(storedValue))
+        if (storedValue is null)
             return AppDefault;
 
-        if (storedValue.Equals(Profile.NO_PROFILE.Id, StringComparison.OrdinalIgnoreCase))
-            return NoProfile;
+        var profileIds = storedValue
+            .Where(profileId => !string.IsNullOrWhiteSpace(profileId) && !profileId.Equals(Profile.NO_PROFILE.Id, StringComparison.OrdinalIgnoreCase))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-        return new(ProfilePreselectionMode.USE_SPECIFIC_PROFILE, storedValue);
+        return profileIds.Count == 0 ? NoProfiles : Specific(profileIds);
     }
 
-    public static implicit operator string(ProfilePreselection preselection) => preselection.Mode switch
+    public static implicit operator HashSet<string>?(ProfilePreselection preselection) => preselection.Mode switch
     {
-        ProfilePreselectionMode.USE_APP_DEFAULT => string.Empty,
-        ProfilePreselectionMode.USE_NO_PROFILE => Profile.NO_PROFILE.Id,
-        ProfilePreselectionMode.USE_SPECIFIC_PROFILE => preselection.SpecificProfileId,
-        
-        _ => string.Empty,
+        ProfilePreselectionMode.USE_APP_DEFAULT => null,
+        ProfilePreselectionMode.USE_NO_PROFILES => [],
+        ProfilePreselectionMode.USE_SPECIFIC_PROFILES => [..preselection.SpecificProfileIds],
+
+        _ => null,
     };
 }

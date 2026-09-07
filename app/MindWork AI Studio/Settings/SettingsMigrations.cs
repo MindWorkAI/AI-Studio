@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 using AIStudio.Settings.DataModel;
 using AIStudio.Settings.DataModel.PreviousModels;
@@ -73,16 +74,19 @@ public static class SettingsMigrations
 
                 return MigrateV5ToV6(logger, configV5);
 
+            case Version.V6:
+                return MigrateV6ToV7(logger, configData, jsonOptions);
+
             default:
                 logger.LogInformation("No configuration migration is needed.");
-                var configV6 = JsonSerializer.Deserialize<Data>(configData, jsonOptions);
-                if (configV6 is null)
+                var configV7 = JsonSerializer.Deserialize<Data>(configData, jsonOptions);
+                if (configV7 is null)
                 {
-                    logger.LogError("Failed to parse the v6 configuration. Using default values.");
+                    logger.LogError("Failed to parse the v7 configuration. Using default values.");
                     return new();
                 }
 
-                return configV6;
+                return configV7;
         }
     }
 
@@ -266,7 +270,7 @@ public static class SettingsMigrations
         logger.LogInformation("Migrating from v5 to v6...");
         return new()
         {
-            Version = Version.V6,
+            Version = Version.V7,
             Providers = previousConfig.Providers,
             Confidence = new(x => x.Confidence)
             {
@@ -318,5 +322,105 @@ public static class SettingsMigrations
             BiasOfTheDay = previousConfig.BiasOfTheDay,
             I18N = previousConfig.I18N,
         };
+    }
+
+    private static Data MigrateV6ToV7(ILogger<SettingsManager> logger, string configData, JsonSerializerOptions jsonOptions)
+    {
+        logger.LogInformation("Migrating from v6 to v7...");
+        var root = JsonNode.Parse(configData, documentOptions: new JsonDocumentOptions
+        {
+            AllowTrailingCommas = jsonOptions.AllowTrailingCommas,
+        }) as JsonObject;
+        if (root is null)
+        {
+            logger.LogError("Failed to parse the v6 configuration. Using default values.");
+            return new();
+        }
+
+        root[nameof(Data.Version)] = nameof(Version.V7);
+        MigrateProfileSetting(root[nameof(Data.App)] as JsonObject, isAppSetting: true);
+        foreach (var sectionName in new[]
+                 {
+                     nameof(Data.Chat), nameof(Data.Agenda), nameof(Data.Coding), nameof(Data.EMail),
+                     nameof(Data.ERI), nameof(Data.LegalCheck), nameof(Data.MyTasks), nameof(Data.SlideBuilder),
+                     nameof(Data.BiasOfTheDay), nameof(Data.VisualBriefing),
+                 })
+            MigrateProfileSetting(root[sectionName] as JsonObject, isAppSetting: false);
+
+        if (root[nameof(Data.DocumentAnalysis)]?[nameof(DataDocumentAnalysis.Policies)] is JsonArray policies)
+        {
+            foreach (var policy in policies.OfType<JsonObject>())
+                MigrateProfileSetting(policy, isAppSetting: false);
+        }
+
+        MigrateManagedSettingKeys(root[nameof(Data.ManagedLockedConfigurations)] as JsonObject);
+        MigrateManagedSettingKeys(root[nameof(Data.ManagedEditableDefaults)] as JsonObject);
+        MigrateManagedSnapshots(root[nameof(Data.ManagedUserValueSnapshots)] as JsonObject);
+
+        var migrated = root.Deserialize<Data>(jsonOptions);
+        if (migrated is not null)
+            return migrated;
+
+        logger.LogError("Failed to deserialize the migrated v7 configuration. Using default values.");
+        return new();
+    }
+
+    private static void MigrateProfileSetting(JsonObject? section, bool isAppSetting)
+    {
+        if (section is null || !section.Remove("PreselectedProfile", out var oldNode))
+            return;
+
+        var oldValue = oldNode?.GetValue<string>() ?? string.Empty;
+        JsonNode? newValue;
+        if (string.IsNullOrWhiteSpace(oldValue))
+            newValue = isAppSetting ? new JsonArray() : null;
+        else if (Guid.TryParse(oldValue, out var profileId) && profileId == Guid.Empty)
+            newValue = new JsonArray();
+        else
+            newValue = new JsonArray(JsonValue.Create(oldValue));
+
+        section["PreselectedProfileIds"] = newValue;
+    }
+
+    private static void MigrateManagedSettingKeys(JsonObject? settings)
+    {
+        if (settings is null)
+            return;
+
+        foreach (var oldKey in settings.Select(item => item.Key).Where(key => key.EndsWith(".PreselectedProfile", StringComparison.Ordinal)).ToList())
+        {
+            var value = settings[oldKey]?.DeepClone();
+            settings.Remove(oldKey);
+            settings[$"{oldKey}Ids"] = value;
+        }
+    }
+
+    private static void MigrateManagedSnapshots(JsonObject? snapshots)
+    {
+        if (snapshots is null)
+            return;
+
+        foreach (var oldKey in snapshots.Select(item => item.Key).Where(key => key.EndsWith(".PreselectedProfile", StringComparison.Ordinal)).ToList())
+        {
+            var snapshot = snapshots[oldKey]?.GetValue<string>() ?? "null";
+            string migratedSnapshot;
+            try
+            {
+                var oldValue = JsonSerializer.Deserialize<string?>(snapshot);
+                var isAppSetting = oldKey.Equals("DataApp.PreselectedProfile", StringComparison.Ordinal);
+                migratedSnapshot = string.IsNullOrWhiteSpace(oldValue)
+                    ? isAppSetting ? "[]" : "null"
+                    : Guid.TryParse(oldValue, out var profileId) && profileId == Guid.Empty
+                        ? "[]"
+                        : JsonSerializer.Serialize(new[] { oldValue });
+            }
+            catch (JsonException)
+            {
+                migratedSnapshot = oldKey.Equals("DataApp.PreselectedProfile", StringComparison.Ordinal) ? "[]" : "null";
+            }
+
+            snapshots.Remove(oldKey);
+            snapshots[$"{oldKey}Ids"] = migratedSnapshot;
+        }
     }
 }

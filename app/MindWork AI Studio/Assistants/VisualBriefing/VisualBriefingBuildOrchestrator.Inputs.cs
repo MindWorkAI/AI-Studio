@@ -189,7 +189,7 @@ internal sealed partial class VisualBriefingBuildOrchestrator
         VisualBriefingEditMode mode,
         Guid? parentRevisionId,
         ProviderSettings provider,
-        Profile profile,
+        IReadOnlyList<Profile> profiles,
         string sourceFingerprint,
         string? reusedContentHash) =>
         VisualBriefingHashing.ComputeSections(
@@ -197,7 +197,7 @@ internal sealed partial class VisualBriefingBuildOrchestrator
             parentRevisionId?.ToString("D"),
             provider.Id,
             provider.Model.Id,
-            profile.Id,
+            string.Join(";", profiles.Select(profile => profile.Id)),
             sourceFingerprint,
             VisualBriefingHashing.Compute(manifest.Settings.Instruction),
             manifest.Settings.TargetLanguage.ToString(),

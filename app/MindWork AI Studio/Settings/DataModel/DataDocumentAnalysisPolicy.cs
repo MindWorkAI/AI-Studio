@@ -77,9 +77,9 @@ public sealed record DataDocumentAnalysisPolicy : ConfigurationBaseObject
     public string PreselectedProvider { get; set; } = string.Empty;
     
     /// <summary>
-    /// Preselect a profile?
+    /// Which profiles should be preselected? Null uses the app default.
     /// </summary>
-    public string PreselectedProfile { get; set; } = string.Empty;
+    public HashSet<string>? PreselectedProfileIds { get; set; }
 
     /// <summary>
     /// Hide the policy definition section in the UI?
@@ -135,9 +135,31 @@ public sealed record DataDocumentAnalysisPolicy : ConfigurationBaseObject
         if (table.TryGetValue("PreselectedProvider", out var providerValue) && providerValue.TryRead<string>(out var providerId))
             preselectedProvider = providerId;
 
-        var preselectedProfile = string.Empty;
-        if (table.TryGetValue("PreselectedProfile", out var profileValue) && profileValue.TryRead<string>(out var profileId))
-            preselectedProfile = profileId;
+        var hasLegacyProfile = table.TryGetValue("PreselectedProfile", out var profileValue);
+        var hasProfileIds = table.TryGetValue("PreselectedProfileIds", out var profileIdsValue);
+        if (hasLegacyProfile && hasProfileIds)
+        {
+            LOG.LogWarning("The configured document analysis policy {PolicyIndex} contains both PreselectedProfile and PreselectedProfileIds.", idx);
+            return false;
+        }
+
+        HashSet<string>? preselectedProfileIds = null;
+        if (hasLegacyProfile)
+        {
+            if (!profileValue.TryRead<string>(out var profileId) || !TryNormalizeLegacyProfileId(profileId, out preselectedProfileIds))
+            {
+                LOG.LogWarning("The configured document analysis policy {PolicyIndex} contains an invalid PreselectedProfile.", idx);
+                return false;
+            }
+        }
+        else if (hasProfileIds)
+        {
+            if (!profileIdsValue.TryRead<LuaTable>(out var profileIdsTable) || !TryReadProfileIds(profileIdsTable, out preselectedProfileIds))
+            {
+                LOG.LogWarning("The configured document analysis policy {PolicyIndex} contains invalid PreselectedProfileIds. Expected unique, non-empty GUIDs.", idx);
+                return false;
+            }
+        }
 
         var hidePolicyDefinition = false;
         if (table.TryGetValue("HidePolicyDefinition", out var hideValue) && hideValue.TryRead<bool>(out var hide))
@@ -171,13 +193,45 @@ public sealed record DataDocumentAnalysisPolicy : ConfigurationBaseObject
             MinimumProviderConfidence = minimumConfidence,
             AllowedToolIds = allowedToolIds,
             PreselectedProvider = preselectedProvider,
-            PreselectedProfile = preselectedProfile,
+            PreselectedProfileIds = preselectedProfileIds,
             HidePolicyDefinition = hidePolicyDefinition,
             IsProtected = true,
             IsEnterpriseConfiguration = true,
             EnterpriseConfigurationPluginId = configPluginId,
         };
         
+        return true;
+    }
+
+    private static bool TryNormalizeLegacyProfileId(string profileId, out HashSet<string>? profileIds)
+    {
+        profileIds = null;
+        if (string.IsNullOrWhiteSpace(profileId))
+            return true;
+
+        if (!Guid.TryParse(profileId, out var parsed))
+            return false;
+
+        profileIds = parsed == Guid.Empty ? [] : [parsed.ToString()];
+        return true;
+    }
+
+    private static bool TryReadProfileIds(LuaTable table, out HashSet<string>? profileIds)
+    {
+        var parsedIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        for (var index = 1; index <= table.ArrayLength; index++)
+        {
+            if (!table[index].TryRead<string>(out var profileId) ||
+                !Guid.TryParse(profileId, out var parsed) ||
+                parsed == Guid.Empty ||
+                !parsedIds.Add(parsed.ToString()))
+            {
+                profileIds = null;
+                return false;
+            }
+        }
+
+        profileIds = parsedIds;
         return true;
     }
 }

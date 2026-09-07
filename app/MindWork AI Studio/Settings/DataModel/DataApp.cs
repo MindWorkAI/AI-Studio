@@ -98,9 +98,9 @@ public sealed class DataApp(Expression<Func<Data, DataApp>>? configSelection = n
     public string PreselectedProvider { get; set; } = ManagedConfiguration.Register(configSelection, n => n.PreselectedProvider, string.Empty);
     
     /// <summary>
-    /// Should we preselect a profile for the entire app?
+    /// Which profiles should be preselected for the entire app?
     /// </summary>
-    public string PreselectedProfile { get; set; } = ManagedConfiguration.Register(configSelection, n => n.PreselectedProfile, string.Empty);
+    public HashSet<string> PreselectedProfileIds { get; set; } = ManagedConfiguration.Register(configSelection, n => n.PreselectedProfileIds, []);
     
     /// <summary>
     /// Should we preselect a chat template for the entire app?

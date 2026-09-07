@@ -85,11 +85,11 @@ internal sealed partial class VisualBriefingBuildOrchestrator
     /// <param name="mode">The edit mode.</param>
     /// <param name="parentRevisionId">The selected parent revision.</param>
     /// <param name="provider">The selected provider.</param>
-    /// <param name="profile">The selected profile.</param>
+    /// <param name="profiles">The selected profiles.</param>
     /// <param name="reusableContentBuildId">An incompatible update build whose content should be reused as a rebuild.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>The terminal build result.</returns>
-    public async Task<VisualBriefingBuildResult> BuildAsync(VisualBriefingManifest manifest, VisualBriefingEditMode mode, Guid? parentRevisionId, ProviderSettings provider, Profile profile, Guid? reusableContentBuildId = null, CancellationToken token = default)
+    public async Task<VisualBriefingBuildResult> BuildAsync(VisualBriefingManifest manifest, VisualBriefingEditMode mode, Guid? parentRevisionId, ProviderSettings provider, IReadOnlyList<Profile> profiles, Guid? reusableContentBuildId = null, CancellationToken token = default)
     {
         var operationId = Guid.NewGuid();
         var proposedBuildId = Guid.NewGuid();
@@ -142,7 +142,7 @@ internal sealed partial class VisualBriefingBuildOrchestrator
                      VisualBriefingEvidenceStage.ComputeInputFingerprint(
                          manifest,
                          provider,
-                         profile,
+                         profiles,
                          sourceFingerprint),
                      reusableEvidenceInputFingerprint,
                      StringComparison.Ordinal)))
@@ -152,7 +152,7 @@ internal sealed partial class VisualBriefingBuildOrchestrator
                     "The sources or evidence settings changed after the evidence was validated. Start a full rebuild.",
                     $"EvidenceArtifactId={reusableEvidence.ArtifactId:D}; Rule={VisualBriefingValidationRule.REFERENCE_INVALID}.");
             
-            var inputFingerprint = ComputeBuildInputFingerprint(manifest, mode, parentRevisionId, provider, profile, sourceFingerprint, reusableEvidence?.PayloadHash);
+            var inputFingerprint = ComputeBuildInputFingerprint(manifest, mode, parentRevisionId, provider, profiles, sourceFingerprint, reusableEvidence?.PayloadHash);
             var now = DateTimeOffset.UtcNow;
             var candidate = new VisualBriefingBuildRecord
             {
@@ -247,7 +247,7 @@ internal sealed partial class VisualBriefingBuildOrchestrator
             else
             {
                 diagnostics.Stage = VisualBriefingBuildStage.EVIDENCE;
-                evidence = await this.evidenceStage.ExecuteAsync(manifest, provider, profile, prepared!, build, token);
+                evidence = await this.evidenceStage.ExecuteAsync(manifest, provider, profiles, prepared!, build, token);
             }
             
             diagnostics.ContentHashes["evidence"] = evidence.PayloadHash;
@@ -265,7 +265,7 @@ internal sealed partial class VisualBriefingBuildOrchestrator
             else
             {
                 diagnostics.Stage = VisualBriefingBuildStage.PLAN;
-                plan = await this.planStage.ExecuteAsync(manifest, provider, profile, evidence, build, token);
+                plan = await this.planStage.ExecuteAsync(manifest, provider, profiles, evidence, build, token);
             }
             
             diagnostics.ContentHashes["plan"] = plan.PayloadHash;
@@ -286,7 +286,7 @@ internal sealed partial class VisualBriefingBuildOrchestrator
                 
                 try
                 {
-                    content = await this.contentStage.ExecuteAsync(manifest, provider, profile, evidence, plan, build, token);
+                    content = await this.contentStage.ExecuteAsync(manifest, provider, profiles, evidence, plan, build, token);
                 }
                 catch (VisualBriefingBuildException exception) when (mode is VisualBriefingEditMode.UPDATE_CONTENT && exception.Code is VisualBriefingFailureCode.RESPONSE_CONTRACT_INVALID && build.Failure?.ValidationRule is VisualBriefingValidationRule.SLOT_FULFILLMENT_INVALID)
                 {
@@ -330,7 +330,7 @@ internal sealed partial class VisualBriefingBuildOrchestrator
             else
             {
                 diagnostics.Stage = VisualBriefingBuildStage.DESIGN;
-                presentation = await this.presentationStage.ExecuteAsync(manifest, provider, profile, plan, content, mode is VisualBriefingEditMode.CHANGE_DESIGN ? parentContext.Presentation : null, build, token);
+                presentation = await this.presentationStage.ExecuteAsync(manifest, provider, profiles, plan, content, mode is VisualBriefingEditMode.CHANGE_DESIGN ? parentContext.Presentation : null, build, token);
             }
             
             diagnostics.ContentHashes["design"] = presentation.PayloadHash;

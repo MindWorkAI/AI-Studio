@@ -451,7 +451,9 @@ ASSISTANT = {
     ["LaunchBehavior"] = "OPEN_WORKSPACE_CHAT_BY_NAME",
     ["WorkspaceName"] = "<name of the workspace to open or create>",
     ["ProviderId"] = "<optional provider GUID; omit to use the chat default>",
-    ["ProfileId"] = "<optional profile GUID; use the empty GUID for no profile>",
+    ["ProfileIds"] = {
+        "<optional unique profile GUID; use an empty list for no profiles>",
+    },
     ["ChatTemplateId"] = "<optional chat template GUID; use the empty GUID for no template>",
     ["DataSourceIds"] = {
         "<optional data source GUID>",

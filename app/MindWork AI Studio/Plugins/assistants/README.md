@@ -27,7 +27,7 @@ This folder keeps the Lua manifest (`plugin.lua`) that defines a custom assistan
     - [Using component metadata inside BuildPrompt](#using-component-metadata-inside-buildprompt)
       - [Example: build a prompt from two fields](#example-build-a-prompt-from-two-fields)
       - [Example: reuse a label from `Props`](#example-reuse-a-label-from-props)
-    - [Using `profile` inside BuildPrompt](#using-profile-inside-buildprompt)
+    - [Using `profiles` inside BuildPrompt](#using-profiles-inside-buildprompt)
       - [Example: Add user profile context to the prompt](#example-add-user-profile-context-to-the-prompt)
   - [Advanced Layout Options](#advanced-layout-options)
     - [`LAYOUT_GRID` reference](#layout_grid-reference)
@@ -118,7 +118,9 @@ ASSISTANT = {
     ["LaunchBehavior"] = "OPEN_WORKSPACE_CHAT_BY_NAME",
     ["WorkspaceName"] = "XXX",
     ["ProviderId"] = "11111111-1111-1111-1111-111111111111", -- optional
-    ["ProfileId"] = "22222222-2222-2222-2222-222222222222", -- optional
+    ["ProfileIds"] = { -- optional; use an empty list for no profiles
+        "22222222-2222-2222-2222-222222222222",
+    },
     ["ChatTemplateId"] = "33333333-3333-3333-3333-333333333333", -- optional
     ["DataSourceIds"] = { -- optional; when present, at least one unique data source is required
         "44444444-4444-4444-4444-444444444444",
@@ -132,12 +134,13 @@ ASSISTANT = {
 
 - `WorkspaceName` is resolved case-insensitively after trimming.
 - If the workspace does not exist yet, AI Studio creates it automatically.
-- Omitted optional IDs use the chat defaults active when the tile is opened. An explicit empty GUID selects no profile or no chat template; an empty provider or data-source GUID is invalid.
+- Omitted optional fields use the chat defaults active when the tile is opened. `ProfileIds = {}` explicitly selects no profiles; a non-empty list selects exactly those unique profiles. An explicit empty chat-template GUID selects no template. Empty provider, profile, and data-source GUIDs are invalid.
+- The legacy singular `ProfileId` field remains supported when used by itself, including an empty GUID for no profile. Supplying `ProfileId` and `ProfileIds` together is invalid.
 - `ProviderId` overrides both the chat-specific and app-wide default provider. It must name a provider that is permitted for chats at the required confidence level.
 - Explicit data sources are enabled and manually preselected, automatic source selection is disabled, and the normal automatic-validation setting is retained. Every referenced source must currently be available and permitted for the effective provider.
 - Invalid or unavailable references stop the launch with an error before a workspace or chat is created.
 - A selected chat template supplies the chat system prompt, profile allowance, predefined user prompt, attachments, and cloned example conversation. A launcher `SystemPrompt`, if retained in an older plugin, is ignored, so there is never a second competing system prompt.
-- When the selected chat template does not allow profiles, the template wins: the launcher `ProfileId` is dropped and the chat starts without a profile. This matches the disabled profile selection such a template produces in the chat.
+- When the selected chat template does not allow profiles, the template wins: the launcher `ProfileIds` are dropped and the chat starts without profiles. This matches the disabled profile selection such a template produces in the chat.
 - The predefined user prompt and the attachments of the selected chat template are placed into the chat input, unless the user already has an unsent draft there.
 
 ### Editing a launcher in AI Studio
@@ -702,10 +705,14 @@ The function receives a single `input` Lua table with:
   - `Type` (string, e.g. `TEXT_AREA`, `DROPDOWN`, `SWITCH`, `COLOR_PICKER`, `DATE_PICKER`, `DATE_RANGE_PICKER`, `TIME_PICKER`)
   - `Value` (current component value)
   - `Props` (readable component props)
-- `input.profile`: selected profile data
-  - `Name`, `NeedToKnow`, `Actions`, `Num`
-  - When no profile is selected, values match the built-in "Use no profile" entry
-  - `profile` is a reserved key in the input table
+- `input.profiles`: an array containing every selected profile
+  - Each entry contains `Id`, `Name`, `NeedToKnow`, `Actions`, and `Num`
+  - The array is empty when no profiles are selected
+  - `profiles` is a reserved key in the input table
+- `input.profile`: compatibility value available when zero or one profile is selected
+  - It contains the same profile table as the sole entry in `input.profiles`
+  - With no selection, its values match the built-in "Use no profile" entry
+  - The key is absent when multiple profiles are selected
 ```
 input = {
   ["<Name>"] = {
@@ -717,7 +724,17 @@ input = {
       UserPrompt = "<string?>"
     }
   },
-  profile = {
+  profiles = {
+    {
+      Id = "<string>",
+      Name = "<string>",
+      NeedToKnow = "<string>",
+      Actions = "<string>",
+      Num = <number>
+    }
+  },
+  profile = { -- present when zero or one profile is selected
+    Id = "<string>",
     Name = "<string>",
     NeedToKnow = "<string>",
     Actions = "<string>",
@@ -804,17 +821,19 @@ return {
 
 ---
 
-### Using `profile` inside BuildPrompt
-Profiles are optional user context (e.g., "NeedToKnow" and "Actions"). You can inject this directly into the user prompt if you want the LLM to always see it.
+### Using `profiles` inside BuildPrompt
+Profiles are optional user context (e.g., "NeedToKnow" and "Actions"). Iterate over `input.profiles` to include all selected profiles. Use `input.profile` only for compatibility code that deliberately applies to a single selection.
 
 #### Example: Add user profile context to the prompt
 ```lua
 ASSISTANT.BuildPrompt = function(input)
   local parts = {}
-  if input.profile and input.profile.NeedToKnow ~= "" then
-    table.insert(parts, "User context:")
-    table.insert(parts, input.profile.NeedToKnow)
-    table.insert(parts, "")
+  for _, profile in ipairs(input.profiles or {}) do
+    if profile.NeedToKnow ~= "" then
+      table.insert(parts, "User context for " .. profile.Name .. ":")
+      table.insert(parts, profile.NeedToKnow)
+      table.insert(parts, "")
+    end
   end
   table.insert(parts, input.Main and input.Main.Value or "")
   return table.concat(parts, "\n")

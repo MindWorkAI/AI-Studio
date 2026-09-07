@@ -164,7 +164,7 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
             new(
                 chatLaunch.WorkspaceName.Trim(),
                 ParseOptionalGuid(chatLaunch.ProviderId),
-                ParseOptionalGuid(chatLaunch.ProfileId),
+                chatLaunch.ProfileIds?.Select(Guid.Parse).ToArray(),
                 ParseOptionalGuid(chatLaunch.ChatTemplateId),
                 chatLaunch.DataSourceIds?.Select(Guid.Parse).ToArray(),
                 chatLaunch.ToolIds));
@@ -505,9 +505,9 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
             : $$"""
               - Describe a direct chat launcher, not a form assistant.
               - Copy the structured ChatLaunch selections faithfully into the {{TB("Chat Launcher")}}, {{TB("Workspace")}}, {{TB("Chat Configuration")}}, {{TB("Data Sources")}}, and {{TB("Tools")}} sections.
-              - Explain omitted provider, profile, template, data-source, or tool values as using the normal chat defaults.
+              - Explain omitted provider, profiles, template, data-source, or tool values as using the normal chat defaults.
               - In the {{TB("Tools")}} section, say what the preselected tools let the chat do and that users may change the selection once the chat is open.
-              - Explain the empty profile/template GUID as explicitly selecting no profile/template.
+              - Explain an empty profile list as explicitly selecting no profiles and the empty template GUID as selecting no template.
               - Do not propose UI components, submit behavior, BuildPrompt, or a plugin SystemPrompt for a chat launcher.
               """;
 
@@ -619,9 +619,9 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
           - Set assistant.kind to "CHAT_LAUNCHER" exactly when the revised ASSISTANT table uses LaunchBehavior = "OPEN_WORKSPACE_CHAT_BY_NAME"; otherwise set it to "FORM".
           - For a form assistant, include system_prompt, submit_text, and allow_ai_studio_profiles in the JSON assistant object and omit launch. Include tool_ids exactly when the revised ASSISTANT table carries ToolIds.
           - Change ASSISTANT.ToolIds only when the requested change asks for it. Use only tool IDs from the "Available tools" list in the plugin context for tools you add; never invent an ID. Drop the field entirely rather than writing an empty list.
-          - For a chat launcher, include launch with the exact WorkspaceName and optional ProviderId, ProfileId, ChatTemplateId, DataSourceIds, and ToolIds values from the revised ASSISTANT table; omit system_prompt, submit_text, and allow_ai_studio_profiles.
+          - For a chat launcher, include launch with the exact WorkspaceName and optional ProviderId, ProfileIds, ChatTemplateId, DataSourceIds, and ToolIds values from the revised ASSISTANT table; omit system_prompt, submit_text, and allow_ai_studio_profiles.
           - A chat launcher must not include SystemPrompt, SubmitText, AllowProfiles, BuildPrompt, or UI in its ASSISTANT table.
-          - Preserve an empty profile or template GUID when it explicitly means no profile or no template. Do not emit empty provider or data-source GUIDs.
+          - Preserve an empty ProfileIds list when it explicitly means no profiles, and preserve an empty template GUID when it means no template. Do not emit empty provider, profile, or data-source GUIDs.
           - Preserve existing behavior unless the requested change explicitly modifies it.
           - Apply the requested change directly to plugin.lua; do not describe how to change it.
           - Do not create companion files, new require(...) dependencies, hidden behavior, or obfuscated behavior.
@@ -754,7 +754,7 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
 
         if (string.IsNullOrWhiteSpace(launch.WorkspaceName) ||
             !IsOptionalGuid(launch.ProviderId, allowEmpty: false) ||
-            !IsOptionalGuid(launch.ProfileId, allowEmpty: true) ||
+            !IsOptionalGuidList(launch.ProfileIds, allowEmptyList: true) ||
             !IsOptionalGuid(launch.ChatTemplateId, allowEmpty: true))
             return false;
 
@@ -784,8 +784,12 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
         if (actual is null ||
             !string.Equals(requested.WorkspaceName.Trim(), actual.WorkspaceName, StringComparison.Ordinal) ||
             ParseOptionalGuid(requested.ProviderId) != actual.ProviderId ||
-            ParseOptionalGuid(requested.ProfileId) != actual.ProfileId ||
             ParseOptionalGuid(requested.ChatTemplateId) != actual.ChatTemplateId)
+            return false;
+
+        var requestedProfileIds = requested.ProfileIds?.Select(Guid.Parse).ToArray();
+        if (!(requestedProfileIds is null && actual.ProfileIds is null ||
+              requestedProfileIds is not null && actual.ProfileIds is not null && requestedProfileIds.SequenceEqual(actual.ProfileIds)))
             return false;
 
         var requestedDataSourceIds = requested.DataSourceIds?.Select(Guid.Parse).ToArray();
@@ -832,7 +836,7 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
         var request = new AssistantBuilderChatLaunchRequest(
             launch.WorkspaceName,
             launch.ProviderId,
-            launch.ProfileId,
+            launch.ProfileIds,
             launch.ChatTemplateId,
             launch.DataSourceIds,
             launch.ToolIds);
@@ -867,6 +871,11 @@ public sealed class AssistantPluginGenerationService(ToolRegistry toolRegistry, 
 
     private static bool IsOptionalGuid(string? value, bool allowEmpty) => value is null ||
         Guid.TryParse(value, out var parsed) && (allowEmpty || parsed != Guid.Empty);
+
+    private static bool IsOptionalGuidList(IReadOnlyList<string>? values, bool allowEmptyList) => values is null ||
+        (allowEmptyList || values.Count > 0) &&
+        values.All(value => Guid.TryParse(value, out var parsed) && parsed != Guid.Empty) &&
+        values.Distinct(StringComparer.OrdinalIgnoreCase).Count() == values.Count;
 
     private static Guid? ParseOptionalGuid(string? value) => value is null ? null : Guid.Parse(value);
 

@@ -169,14 +169,20 @@ public static class DirectChatLauncherLuaWriter
         builder.AppendLine($"    [\"WorkspaceName\"] = \"{Escape(definition.Launch.WorkspaceName.Trim())}\",");
 
         //
-        // Omitted IDs mean "use the chat defaults", while an empty GUID explicitly selects no
-        // profile or no chat template. An empty provider GUID has no such meaning and is invalid:
+        // Omitted IDs mean "use the chat defaults", while an empty profile list or chat-template
+        // GUID explicitly selects none. An empty provider GUID has no such meaning and is invalid:
         //
         if (definition.Launch.ProviderId is { } providerId && providerId != Guid.Empty)
             builder.AppendLine($"    [\"ProviderId\"] = \"{providerId}\",");
 
-        if (definition.Launch.ProfileId is { } profileId)
-            builder.AppendLine($"    [\"ProfileId\"] = \"{profileId}\",");
+        if (definition.Launch.ProfileIds is { } profileIds)
+        {
+            builder.AppendLine("    [\"ProfileIds\"] = {");
+            foreach (var profileId in profileIds)
+                builder.AppendLine($"        \"{profileId}\",");
+
+            builder.AppendLine("    },");
+        }
 
         if (definition.Launch.ChatTemplateId is { } chatTemplateId)
             builder.AppendLine($"    [\"ChatTemplateId\"] = \"{chatTemplateId}\",");

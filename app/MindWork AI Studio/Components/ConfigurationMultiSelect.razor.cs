@@ -40,6 +40,15 @@ public partial class ConfigurationMultiSelect<TData> : ConfigurationBaseCore
     [Parameter]
     public Func<TData, bool> IsItemLocked { get; set; } = _ => false;
 
+    /// <summary>
+    /// Optional template used to render an item in the list.
+    /// </summary>
+    [Parameter]
+    public RenderFragment<ConfigurationSelectData<TData>>? ItemTemplate { get; set; }
+
+    [Parameter]
+    public Func<List<TData?>?, string>? MultiSelectionTextFunc { get; set; }
+
     [Parameter]
     public string? EmptySelectionText { get; set; }
 
@@ -76,6 +85,9 @@ public partial class ConfigurationMultiSelect<TData> : ConfigurationBaseCore
     
     private string GetMultiSelectionText(List<TData?>? selectedValues)
     {
+        if (this.MultiSelectionTextFunc is not null)
+            return this.MultiSelectionTextFunc(selectedValues);
+
         if(selectedValues is null || selectedValues.Count == 0)
             return this.EmptySelectionText ?? T("No items selected.");
         

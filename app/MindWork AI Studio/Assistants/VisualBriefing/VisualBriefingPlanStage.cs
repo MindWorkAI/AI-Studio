@@ -19,12 +19,12 @@ internal sealed class VisualBriefingPlanStage(StructuredLlmStageRunner stageRunn
     /// </summary>
     /// <param name="manifest">The briefing manifest.</param>
     /// <param name="provider">The selected provider and model.</param>
-    /// <param name="profile">The selected prompt profile.</param>
+    /// <param name="profiles">The selected prompt profiles.</param>
     /// <param name="evidence">The validated evidence artifact.</param>
     /// <param name="build">The persistent build record.</param>
     /// <param name="token">The cancellation token.</param>
     /// <returns>The validated immutable plan artifact.</returns>
-    public async Task<VisualBriefingPlanArtifact> ExecuteAsync(VisualBriefingManifest manifest, ProviderSettings provider, Profile profile, VisualBriefingEvidenceArtifact evidence, VisualBriefingBuildRecord build, CancellationToken token)
+    public async Task<VisualBriefingPlanArtifact> ExecuteAsync(VisualBriefingManifest manifest, ProviderSettings provider, IReadOnlyList<Profile> profiles, VisualBriefingEvidenceArtifact evidence, VisualBriefingBuildRecord build, CancellationToken token)
     {
         if (build.PlanArtifactId is { } completedId)
         {
@@ -36,13 +36,13 @@ internal sealed class VisualBriefingPlanStage(StructuredLlmStageRunner stageRunn
         var stage = VisualBriefingEvidenceStage.Start(build, VisualBriefingBuildStage.PLAN, VisualBriefingHashing.ComputeSections(evidence.PayloadHash,
                 VisualBriefingHashing.Compute(manifest.Settings.Instruction), manifest.Settings.AudienceProfile.ToString(),
                 manifest.Settings.AudienceAgeGroup.ToString(), manifest.Settings.AudienceOrganizationalLevel.ToString(),
-                manifest.Settings.AudienceExpertise.ToString(), provider.Id, provider.Model.Id, profile.Id,
-                VisualBriefingHashing.Compute(profile.ToSystemPrompt()), VisualBriefingVersions.PLAN_CONTRACT.ToString()));
+                manifest.Settings.AudienceExpertise.ToString(), provider.Id, provider.Model.Id, string.Join(";", profiles.Select(profile => profile.Id)),
+                VisualBriefingHashing.Compute(Profile.ToSystemPrompt(profiles)), VisualBriefingVersions.PLAN_CONTRACT.ToString()));
         
         await store.SaveBuildAsync(build, token);
         progressService.Publish(build);
         
-        var run = await stageRunner.RunAsync<VisualBriefingPlanResponse>(provider, profile, BuildSystemContract(), BuildPrompt(manifest, evidence),
+        var run = await stageRunner.RunAsync<VisualBriefingPlanResponse>(provider, profiles, BuildSystemContract(), BuildPrompt(manifest, evidence),
             [], VisualBriefingBuildStage.PLAN, build.OperationId, build.BuildId, response => VisualBriefingValidation.ValidatePlan(evidence, response), token);
         
         stage.Attempts = run.Attempts;

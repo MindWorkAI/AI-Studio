@@ -19,9 +19,9 @@ public sealed class DataVisualBriefing(Expression<Func<Data, DataVisualBriefing>
     }
 
     /// <summary>
-    /// Gets or sets the preselected profile identifier.
+    /// Gets or sets the preselected profile identifiers. Null uses the app default.
     /// </summary>
-    public string PreselectedProfile { get; set; } = ManagedConfiguration.Register(configSelection, value => value.PreselectedProfile, string.Empty);
+    public HashSet<string>? PreselectedProfileIds { get; set; } = ManagedConfiguration.RegisterProfilePreselection(configSelection, value => value.PreselectedProfileIds);
 
     /// <summary>
     /// Gets or sets the preselected provider identifier.

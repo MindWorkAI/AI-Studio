@@ -18,7 +18,7 @@ internal sealed class StructuredLlmStageRunner(
     /// </summary>
     /// <typeparam name="T">The strict response type.</typeparam>
     /// <param name="provider">The selected provider configuration.</param>
-    /// <param name="profile">The selected user profile.</param>
+    /// <param name="profiles">The selected user profiles.</param>
     /// <param name="systemContract">The stage-specific system contract.</param>
     /// <param name="prompt">The user prompt containing stage inputs.</param>
     /// <param name="attachments">The first-turn attachments.</param>
@@ -30,7 +30,7 @@ internal sealed class StructuredLlmStageRunner(
     /// <returns>The validated stage result.</returns>
     public async Task<StructuredLlmStageResult<T>> RunAsync<T>(
         ProviderSettings provider,
-        Profile profile,
+        IReadOnlyList<Profile> profiles,
         string systemContract,
         string prompt,
         IReadOnlyList<FileAttachment> attachments,
@@ -54,8 +54,7 @@ internal sealed class StructuredLlmStageRunner(
                             Before sending, silently verify that the root object is closed and every property conforms to the grammar.
                             Answer with the bare JSON object and nothing else: no explanation, no Markdown, and no code fence.
 
-                            User profile:
-                            {profile.ToSystemPrompt()}
+                            {Profile.ToSystemPrompt(profiles)}
                             """;
         
         var time = DateTimeOffset.UtcNow;

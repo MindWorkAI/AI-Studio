@@ -52,7 +52,7 @@ public sealed class DataBiasOfTheDay
     /// <summary>
     /// Preselect a profile?
     /// </summary>
-    public string PreselectedProfile { get; set; } = string.Empty;
+    public HashSet<string>? PreselectedProfileIds { get; set; }
     
     /// <summary>
     /// Preselect a provider?

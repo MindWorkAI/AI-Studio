@@ -164,9 +164,9 @@ public partial class AssistantMyTasks : AssistantBaseCore<SettingsDialogMyTasks>
             await this.Form.Validate();
     }
 
-    private string? ValidateProfile(Profile profile)
+    private string? ValidateProfiles(HashSet<string> profileIds)
     {
-        if(profile == Profile.NO_PROFILE)
+        if(this.SettingsManager.ResolveProfiles(profileIds).Count == 0)
             return T("Please select one of your profiles.");
         
         return null;

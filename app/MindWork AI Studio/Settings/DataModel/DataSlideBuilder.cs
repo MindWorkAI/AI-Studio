@@ -13,7 +13,7 @@ public class DataSlideBuilder
     /// <summary>
     /// Preselect a profile?
     /// </summary>
-    public string PreselectedProfile { get; set; } = string.Empty;
+    public HashSet<string>? PreselectedProfileIds { get; set; }
     
     /// <summary>
     /// Preselect a Slide Builder provider?

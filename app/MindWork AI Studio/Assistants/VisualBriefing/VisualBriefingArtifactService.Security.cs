@@ -294,9 +294,9 @@ public sealed partial class VisualBriefingArtifactService
         var sensitiveValues = new[]
             {
                 manifest.Settings.ProviderId,
-                manifest.Settings.ProfileId,
                 manifest.Settings.ModelId,
             }
+            .Concat(manifest.Settings.ProfileIds)
             .Where(candidate => !string.IsNullOrWhiteSpace(candidate));
         return sensitiveValues.Any(candidate => text.Contains(candidate, StringComparison.Ordinal));
     }

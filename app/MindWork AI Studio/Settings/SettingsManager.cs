@@ -19,7 +19,7 @@ public sealed class SettingsManager
     public readonly record struct ToolMinimumProviderConfidenceResolution(ConfidenceLevel ConfidenceLevel, string Source);
 
     private const string SETTINGS_FILENAME = "settings.json";
-    private const Version CURRENT_SETTINGS_VERSION = Version.V6;
+    private const Version CURRENT_SETTINGS_VERSION = Version.V7;
     
     private readonly record struct SettingsVersionReadResult(Version Version, SettingsWriteBlockReason FailureReason);
     
@@ -28,6 +28,7 @@ public sealed class SettingsManager
     internal static readonly JsonSerializerOptions JSON_OPTIONS = new()
     {
         WriteIndented = true,
+        AllowTrailingCommas = true,
         Converters = { new TolerantEnumConverter() },
     };
 
@@ -170,7 +171,10 @@ public sealed class SettingsManager
         try
         {
             await using var settingsStream = File.OpenRead(settingsPath);
-            using var settingsDocument = await JsonDocument.ParseAsync(settingsStream);
+            using var settingsDocument = await JsonDocument.ParseAsync(settingsStream, new JsonDocumentOptions
+            {
+                AllowTrailingCommas = JSON_OPTIONS.AllowTrailingCommas,
+            });
             if(!settingsDocument.RootElement.TryGetProperty("Version", out var versionElement))
             {
                 this.logger.LogError($"Failed to read the version of the settings file '{settingsPath}'.");
@@ -731,29 +735,34 @@ public sealed class SettingsManager
         return this.ConfigurationData.TranscriptionProviders.FirstOrDefault(x => x.Id.Equals(transcriptionProviderId, StringComparison.OrdinalIgnoreCase)) ?? TranscriptionProvider.NONE;
     }
 
-    public Profile GetPreselectedProfile(Tools.Components component)
+    public IReadOnlyList<Profile> GetPreselectedProfiles(Tools.Components component)
     {
         var preselection = component.GetProfilePreselection(this);
-        if (preselection.DoNotPreselectProfile)
-            return Profile.NO_PROFILE;
+        if (preselection.DoNotPreselectProfiles)
+            return [];
 
-        if (preselection.UseSpecificProfile)
-            return this.GetProfileById(preselection.SpecificProfileId);
+        if (preselection.UseSpecificProfiles)
+            return this.ResolveProfiles(preselection.SpecificProfileIds);
 
-        var appPreselection = ProfilePreselection.FromStoredValue(this.ConfigurationData.App.PreselectedProfile);
-        if (appPreselection.DoNotPreselectProfile || !appPreselection.UseSpecificProfile)
-            return Profile.NO_PROFILE;
-
-        return this.GetProfileById(appPreselection.SpecificProfileId);
+        return this.GetAppPreselectedProfiles();
     }
 
-    public Profile GetAppPreselectedProfile()
-    {
-        var appPreselection = ProfilePreselection.FromStoredValue(this.ConfigurationData.App.PreselectedProfile);
-        if (appPreselection.DoNotPreselectProfile || !appPreselection.UseSpecificProfile)
-            return Profile.NO_PROFILE;
+    public IReadOnlyList<Profile> GetAppPreselectedProfiles() => this.ResolveProfiles(this.ConfigurationData.App.PreselectedProfileIds);
 
-        return this.GetProfileById(appPreselection.SpecificProfileId);
+    public IReadOnlyList<Profile> ResolveProfiles(IEnumerable<string>? profileIds)
+    {
+        if (profileIds is null)
+            return [];
+
+        var requestedIds = profileIds
+            .Where(profileId => !string.IsNullOrWhiteSpace(profileId))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        requestedIds.Remove(Profile.NO_PROFILE.Id);
+        return this.ConfigurationData.Profiles
+            .Where(profile => requestedIds.Contains(profile.Id))
+            .DistinctBy(profile => profile.Id, StringComparer.OrdinalIgnoreCase)
+            .ToList();
     }
     
     public ChatTemplate GetPreselectedChatTemplate(Tools.Components component)
