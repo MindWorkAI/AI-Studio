@@ -11,6 +11,7 @@ public static class HostExtensions
         Host.WHISPER_CPP => "whisper.cpp",
         Host.OLLAMA => "ollama",
         Host.VLLM => "vLLM",
+        Host.LLMMAN => "llmman",
 
         _ => "Unknown",
     };
@@ -47,6 +48,7 @@ public static class HostExtensions
             case Host.VLLM:
             case Host.LM_STUDIO:
             case Host.LLAMA_CPP:
+            case Host.LLMMAN:
                 return true;
         }
     }
@@ -58,6 +60,7 @@ public static class HostExtensions
             case Host.LM_STUDIO:
             case Host.OLLAMA:
             case Host.VLLM:
+            case Host.LLMMAN:
                 return true;
             
             default:
@@ -78,6 +81,7 @@ public static class HostExtensions
             default:
             case Host.LM_STUDIO:
             case Host.LLAMA_CPP:
+            case Host.LLMMAN:
                 return false;
         }
     }
