@@ -3705,6 +3705,147 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCECLOUDEMBEDDINGWARNING::T6617545
 -- All files in this folder and its subfolders
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCECLOUDEMBEDDINGWARNING::T916879200"] = "All files in this folder and its subfolders"
 
+-- You might configure different data sources. A data source can include one file, all files in a directory, or data from your company. Later, you can incorporate these data sources as needed when the AI requires this data to complete a certain task.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1084943026"] = "You might configure different data sources. A data source can include one file, all files in a directory, or data from your company. Later, you can incorporate these data sources as needed when the AI requires this data to complete a certain task."
+
+-- Automatic local data source refresh
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1208397349"] = "Automatic local data source refresh"
+
+-- Edit Local Directory Data Source
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1215599168"] = "Edit Local Directory Data Source"
+
+-- Refresh
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T135637716"] = "Refresh"
+
+-- Add Local Directory as Data Source
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1454193397"] = "Add Local Directory as Data Source"
+
+-- Delete
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1469573738"] = "Delete"
+
+-- Refresh all
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1503082343"] = "Refresh all"
+
+-- Kerberos/SSO ERI data sources cannot be exported yet. Please configure them manually in the configuration plugin.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1577531115"] = "Kerberos/SSO ERI data sources cannot be exported yet. Please configure them manually in the configuration plugin."
+
+-- Cannot export this ERI data source because the authentication secret could not be encrypted.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1592527757"] = "Cannot export this ERI data source because the authentication secret could not be encrypted."
+
+-- External (ERI)
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1652430727"] = "External (ERI)"
+
+-- Local File
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1687345358"] = "Local File"
+
+-- {0} files were skipped because they contain no readable text. AI Studio reads them again once they change.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T169247705"] = "{0} files were skipped because they contain no readable text. AI Studio reads them again once they change."
+
+-- Delete Data Source
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T1849107431"] = "Delete Data Source"
+
+-- Local Directory Data Source Information
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T2146756020"] = "Local Directory Data Source Information"
+
+-- Edit ERI v1 Data Source
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T221059217"] = "Edit ERI v1 Data Source"
+
+-- Indexed files
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T2235289713"] = "Indexed files"
+
+-- Edit Local File Data Source
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T2453292893"] = "Edit Local File Data Source"
+
+-- ERI v1 Data Source Information
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T26243729"] = "ERI v1 Data Source Information"
+
+-- Name
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T266367750"] = "Name"
+
+-- Not applicable
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T2675917723"] = "Not applicable"
+
+-- No valid embedding
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T2698203405"] = "No valid embedding"
+
+-- Embedding
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T2838542994"] = "Embedding"
+
+-- This data source is managed by your organization.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3031462878"] = "This data source is managed by your organization."
+
+-- Edit
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3267849393"] = "Edit"
+
+-- Are you sure you want to delete the data source '{0}' of type '{1}'?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3337072977"] = "Are you sure you want to delete the data source '{0}' of type '{1}'?"
+
+-- Add Data Source
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3387511033"] = "Add Data Source"
+
+-- Unknown
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3424652889"] = "Unknown"
+
+-- Close
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3448155331"] = "Close"
+
+-- Add Local File as Data Source
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3500365052"] = "Add Local File as Data Source"
+
+-- Type
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3512062061"] = "Type"
+
+-- Local File Data Source Information
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3525663993"] = "Local File Data Source Information"
+
+-- No data sources configured yet.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3549650120"] = "No data sources configured yet."
+
+-- Export Access Token?
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3595669127"] = "Export Access Token?"
+
+-- Local data sources refresh when files change.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3687976654"] = "Local data sources refresh when files change."
+
+-- Not available
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3706935413"] = "Not available"
+
+-- Export ERI Data Source
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3831281036"] = "Export ERI Data Source"
+
+-- Actions
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T3865031940"] = "Actions"
+
+-- This ERI data source has an access token configured. Do you want to include the encrypted access token in the export? Note: The recipient will need the same encryption secret to use the access token.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T4027572258"] = "This ERI data source has an access token configured. Do you want to include the encrypted access token in the export? Note: The recipient will need the same encryption secret to use the access token."
+
+-- Waiting for indexing status
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T4108252513"] = "Waiting for indexing status"
+
+-- Information
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T4256323669"] = "Information"
+
+-- Add ERI v1 Data Source
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T590005498"] = "Add ERI v1 Data Source"
+
+-- Cannot export this ERI data source because no enterprise encryption secret is configured.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T750361472"] = "Cannot export this ERI data source because no enterprise encryption secret is configured."
+
+-- External Data (ERI-Server v1)
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T774473996"] = "External Data (ERI-Server v1)"
+
+-- Cannot export this ERI data source because no authentication secret is configured. The issue was: {0}
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T782820095"] = "Cannot export this ERI data source because no authentication secret is configured. The issue was: {0}"
+
+-- {0} of {1}
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T825342513"] = "{0} of {1}"
+
+-- Local data sources refresh only when triggered manually.
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T854231603"] = "Local data sources refresh only when triggered manually."
+
+-- Local Directory
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCEMANAGEMENT::T926703547"] = "Local Directory"
+
 -- Yes, let the AI decide which data sources are needed.
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::DATASOURCESELECTION::T1031370894"] = "Yes, let the AI decide which data sources are needed."
 
@@ -4553,6 +4694,9 @@ UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCONFIDENCE::T85322
 
 -- Provider
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELCONFIDENCE::T900237532"] = "Provider"
+
+-- Configure Data Sources
+UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELDATASOURCES::T476193103"] = "Configure Data Sources"
 
 -- Embedding Result
 UI_TEXT_CONTENT["AISTUDIO::COMPONENTS::SETTINGS::SETTINGSPANELEMBEDDINGS::T1387042335"] = "Embedding Result"
@@ -7512,146 +7656,11 @@ UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCODING::T516498299"]
 -- Assistant: Coding Options
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGCODING::T585868261"] = "Assistant: Coding Options"
 
--- You might configure different data sources. A data source can include one file, all files in a directory, or data from your company. Later, you can incorporate these data sources as needed when the AI requires this data to complete a certain task.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T1084943026"] = "You might configure different data sources. A data source can include one file, all files in a directory, or data from your company. Later, you can incorporate these data sources as needed when the AI requires this data to complete a certain task."
-
--- Automatic local data source refresh
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T1208397349"] = "Automatic local data source refresh"
-
--- Edit Local Directory Data Source
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T1215599168"] = "Edit Local Directory Data Source"
-
--- Refresh
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T135637716"] = "Refresh"
-
--- Add Local Directory as Data Source
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T1454193397"] = "Add Local Directory as Data Source"
-
--- Delete
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T1469573738"] = "Delete"
-
--- Refresh all
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T1503082343"] = "Refresh all"
-
--- Kerberos/SSO ERI data sources cannot be exported yet. Please configure them manually in the configuration plugin.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T1577531115"] = "Kerberos/SSO ERI data sources cannot be exported yet. Please configure them manually in the configuration plugin."
-
--- Cannot export this ERI data source because the authentication secret could not be encrypted.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T1592527757"] = "Cannot export this ERI data source because the authentication secret could not be encrypted."
-
--- External (ERI)
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T1652430727"] = "External (ERI)"
-
--- Local File
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T1687345358"] = "Local File"
-
--- Delete Data Source
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T1849107431"] = "Delete Data Source"
-
--- Local Directory Data Source Information
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T2146756020"] = "Local Directory Data Source Information"
-
--- Edit ERI v1 Data Source
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T221059217"] = "Edit ERI v1 Data Source"
-
--- Indexed files
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T2235289713"] = "Indexed files"
-
--- Edit Local File Data Source
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T2453292893"] = "Edit Local File Data Source"
-
--- ERI v1 Data Source Information
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T26243729"] = "ERI v1 Data Source Information"
-
--- Name
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T266367750"] = "Name"
-
--- Not applicable
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T2675917723"] = "Not applicable"
-
--- No valid embedding
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T2698203405"] = "No valid embedding"
-
--- Embedding
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T2838542994"] = "Embedding"
-
--- This data source is managed by your organization.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T3031462878"] = "This data source is managed by your organization."
-
--- Edit
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T3267849393"] = "Edit"
-
--- Are you sure you want to delete the data source '{0}' of type '{1}'?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T3337072977"] = "Are you sure you want to delete the data source '{0}' of type '{1}'?"
-
--- Add Data Source
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T3387511033"] = "Add Data Source"
-
--- Unknown
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T3424652889"] = "Unknown"
-
 -- Close
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T3448155331"] = "Close"
 
--- Add Local File as Data Source
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T3500365052"] = "Add Local File as Data Source"
-
--- Type
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T3512062061"] = "Type"
-
--- Local File Data Source Information
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T3525663993"] = "Local File Data Source Information"
-
--- No data sources configured yet.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T3549650120"] = "No data sources configured yet."
-
--- Export Access Token?
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T3595669127"] = "Export Access Token?"
-
--- Local data sources refresh when files change.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T3687976654"] = "Local data sources refresh when files change."
-
--- Not available
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T3706935413"] = "Not available"
-
--- Export ERI Data Source
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T3831281036"] = "Export ERI Data Source"
-
--- Actions
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T3865031940"] = "Actions"
-
--- This ERI data source has an access token configured. Do you want to include the encrypted access token in the export? Note: The recipient will need the same encryption secret to use the access token.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T4027572258"] = "This ERI data source has an access token configured. Do you want to include the encrypted access token in the export? Note: The recipient will need the same encryption secret to use the access token."
-
--- Waiting for indexing status
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T4108252513"] = "Waiting for indexing status"
-
--- Information
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T4256323669"] = "Information"
-
 -- Configured Data Sources
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T543942217"] = "Configured Data Sources"
-
--- Add ERI v1 Data Source
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T590005498"] = "Add ERI v1 Data Source"
-
--- Cannot export this ERI data source because no enterprise encryption secret is configured.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T750361472"] = "Cannot export this ERI data source because no enterprise encryption secret is configured."
-
--- External Data (ERI-Server v1)
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T774473996"] = "External Data (ERI-Server v1)"
-
--- Cannot export this ERI data source because no authentication secret is configured. The issue was: {0}
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T782820095"] = "Cannot export this ERI data source because no authentication secret is configured. The issue was: {0}"
-
--- {0} of {1}
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T825342513"] = "{0} of {1}"
-
--- Local data sources refresh only when triggered manually.
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T854231603"] = "Local data sources refresh only when triggered manually."
-
--- Local Directory
-UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGDATASOURCES::T926703547"] = "Local Directory"
 
 -- When enabled, you can preselect some ERI server options.
 UI_TEXT_CONTENT["AISTUDIO::DIALOGS::SETTINGS::SETTINGSDIALOGERISERVER::T1280666275"] = "When enabled, you can preselect some ERI server options."
@@ -8907,14 +8916,20 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T582100343"] = "Chat in Workspace"
 -- Show your workspaces
 UI_TEXT_CONTENT["AISTUDIO::PAGES::CHAT::T733672375"] = "Show your workspaces"
 
--- AI Studio indexes local RAG data sources in the background. Finished files stay recorded so unchanged files can be skipped after a restart, while added or deleted files are detected during the next run.
-UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T1064986263"] = "AI Studio indexes local RAG data sources in the background. Finished files stay recorded so unchanged files can be skipped after a restart, while added or deleted files are detected during the next run."
-
 -- Current file: {0}
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T1166856644"] = "Current file: {0}"
 
 -- Open the settings
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T1582896271"] = "Open the settings"
+
+-- Skipped files: {0}
+UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T196379388"] = "Skipped files: {0}"
+
+-- Skipped files: {0}. AI Studio reads them again once they change.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T2382275084"] = "Skipped files: {0}. AI Studio reads them again once they change."
+
+-- AI Studio indexes local RAG data sources in the background. Finished files stay recorded so unchanged files can be skipped after a restart, while added or deleted files are detected during the next run. The same applies to documents without readable text, such as scanned pages: AI Studio remembers them and reads them again only once they change.
+UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T2398894096"] = "AI Studio indexes local RAG data sources in the background. Finished files stay recorded so unchanged files can be skipped after a restart, while added or deleted files are detected during the next run. The same applies to documents without readable text, such as scanned pages: AI Studio remembers them and reads them again only once they change."
 
 -- Pending files: {0}
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T2471889605"] = "Pending files: {0}"
@@ -8939,6 +8954,12 @@ UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T3473125711"] = "Indexed files: {0
 
 -- No local data source has been queued for embedding yet.
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T3774205531"] = "No local data source has been queued for embedding yet."
+
+-- Skipped files ({0})
+UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T3841666833"] = "Skipped files ({0})"
+
+-- Skipped until the file changes
+UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T542386347"] = "Skipped until the file changes"
 
 -- Failure details ({0})
 UI_TEXT_CONTENT["AISTUDIO::PAGES::EMBEDDINGS::T843144866"] = "Failure details ({0})"
@@ -10479,6 +10500,9 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::INDEXSTORE::SQLITEINDEXSTORECLIENTI
 -- Reported version
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::INDEXSTORE::SQLITEINDEXSTORECLIENTIMPLEMENTATION::T3556099842"] = "Reported version"
 
+-- Permanently skipped files
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::INDEXSTORE::SQLITEINDEXSTORECLIENTIMPLEMENTATION::T3965853089"] = "Permanently skipped files"
+
 -- Reason
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::DATABASES::NODATABASECLIENT::T1093747001"] = "Reason"
 
@@ -10670,6 +10694,57 @@ UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXPORTFORMATEXTENSIONS::T530872684"] = "Ta
 
 -- Unknown format
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXPORTFORMATEXTENSIONS::T677355172"] = "Unknown format"
+
+-- The file '{0}' does not exist anymore and was not indexed.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T1553912802"] = "The file '{0}' does not exist anymore and was not indexed."
+
+-- No text could be read from the file '{0}', so it was not indexed. It might contain images only, such as a scanned PDF without a text layer. AI Studio reads it again as soon as the file changes.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T1675617688"] = "No text could be read from the file '{0}', so it was not indexed. It might contain images only, such as a scanned PDF without a text layer. AI Studio reads it again as soon as the file changes."
+
+-- The file type of '{0}' could not be determined, so the file was not indexed. AI Studio reads it again as soon as the file changes.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T173921008"] = "The file type of '{0}' could not be determined, so the file was not indexed. AI Studio reads it again as soon as the file changes."
+
+-- The file '{0}' could not be read and was not indexed. When the file is stored on a network drive, the drive might be unavailable, or another program might be blocking the file. AI Studio tries again during the next run.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T1888709599"] = "The file '{0}' could not be read and was not indexed. When the file is stored on a network drive, the drive might be unavailable, or another program might be blocking the file. AI Studio tries again during the next run."
+
+-- The file '{0}' did not provide any content, so it was not indexed. AI Studio reads it again as soon as the file changes.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T1947951545"] = "The file '{0}' did not provide any content, so it was not indexed. AI Studio reads it again as soon as the file changes."
+
+-- The file '{0}' is not a readable PDF, so it was not indexed. It might be damaged or transferred incompletely. AI Studio reads it again as soon as the file changes.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T212983471"] = "The file '{0}' is not a readable PDF, so it was not indexed. It might be damaged or transferred incompletely. AI Studio reads it again as soon as the file changes."
+
+-- The file '{0}' is not a readable spreadsheet, so it was not indexed. It might be damaged or transferred incompletely. AI Studio reads it again as soon as the file changes.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T2156961139"] = "The file '{0}' is not a readable spreadsheet, so it was not indexed. It might be damaged or transferred incompletely. AI Studio reads it again as soon as the file changes."
+
+-- The file '{0}' is protected and could not be opened, so it was not indexed. AI Studio reads it again as soon as the file changes.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T2669995838"] = "The file '{0}' is protected and could not be opened, so it was not indexed. AI Studio reads it again as soon as the file changes."
+
+-- AI Studio was not able to start its PDF engine, so the file '{0}' was not indexed. AI Studio tries again during the next run.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T2752839071"] = "AI Studio was not able to start its PDF engine, so the file '{0}' was not indexed. AI Studio tries again during the next run."
+
+-- Pages of the file '{0}' could not be read, so it was not indexed. They might contain images only. AI Studio reads it again as soon as the file changes.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T2796839868"] = "Pages of the file '{0}' could not be read, so it was not indexed. They might contain images only. AI Studio reads it again as soon as the file changes."
+
+-- Reading the file '{0}' needs Pandoc, which is not available, so the file was not indexed. AI Studio tries again during the next run.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T3025154938"] = "Reading the file '{0}' needs Pandoc, which is not available, so the file was not indexed. AI Studio tries again during the next run."
+
+-- Reading the file '{0}' took too long and was stopped, so the file was not indexed. When the file is stored on a network drive, the connection might be slow or interrupted. AI Studio tries again during the next run.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T3087621660"] = "Reading the file '{0}' took too long and was stopped, so the file was not indexed. When the file is stored on a network drive, the connection might be slow or interrupted. AI Studio tries again during the next run."
+
+-- The file '{0}' could not be read and was not indexed. AI Studio tries again during the next run.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T3236411826"] = "The file '{0}' could not be read and was not indexed. AI Studio tries again during the next run."
+
+-- The file '{0}' is not a text file, so it was not indexed. Its content could not be read as text, which means it might have a wrong file extension. AI Studio reads it again as soon as the file changes.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T3512647923"] = "The file '{0}' is not a text file, so it was not indexed. Its content could not be read as text, which means it might have a wrong file extension. AI Studio reads it again as soon as the file changes."
+
+-- The file type of '{0}' is not supported, so the file was not indexed. AI Studio reads it again as soon as the file changes.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T3515425889"] = "The file type of '{0}' is not supported, so the file was not indexed. AI Studio reads it again as soon as the file changes."
+
+-- The file '{0}' is currently open in another program, which is why it was not indexed. When the file is stored on a shared network drive, a colleague might have it open. AI Studio tries again during the next run.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T3821277097"] = "The file '{0}' is currently open in another program, which is why it was not indexed. When the file is stored on a shared network drive, a colleague might have it open. AI Studio tries again during the next run."
+
+-- The file '{0}' is an executable program and was not indexed, regardless of its file extension.
+UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONERRORCODEEXTENSIONS::T872993901"] = "The file '{0}' is an executable program and was not indexed, regardless of its file extension."
 
 -- The file type of '{0}' could not be determined, so the file was not sent.
 UI_TEXT_CONTENT["AISTUDIO::TOOLS::FILEEXTRACTIONRESULTEXTENSIONS::T1459702734"] = "The file type of '{0}' could not be determined, so the file was not sent."
