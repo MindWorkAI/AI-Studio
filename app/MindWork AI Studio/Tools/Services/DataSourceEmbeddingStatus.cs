@@ -13,11 +13,17 @@ public sealed record DataSourceEmbeddingStatus(
     int FailedFiles,
     string CurrentFile,
     string LastError,
-    IReadOnlyList<DataSourceEmbeddingFailure> Failures)
+    IReadOnlyList<DataSourceEmbeddingFailure> Failures,
+    int PermanentlySkippedFiles = 0)
 {
     private static string TB(string fallbackEN) => I18N.I.T(fallbackEN, typeof(DataSourceEmbeddingStatus).Namespace, nameof(DataSourceEmbeddingStatus));
 
-    public int ProgressPercent => this.TotalFiles <= 0 ? 0 : Math.Clamp((int)Math.Round(this.IndexedFiles * 100d / this.TotalFiles), 0, 100);
+    /// <remarks>
+    /// Files which were skipped for good are done, even though nothing was indexed of them.
+    /// Leaving them out would keep the bar short of the end for a data source which has nothing
+    /// left to do.
+    /// </remarks>
+    public int ProgressPercent => this.TotalFiles <= 0 ? 0 : Math.Clamp((int)Math.Round((this.IndexedFiles + this.PermanentlySkippedFiles) * 100d / this.TotalFiles), 0, 100);
 
     public string StateLabel => this.State switch
     {
